@@ -269,13 +269,13 @@ begin
 end;
 
 function TVCCS.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
 begin
-    with TObj(ptr) do
-    begin
-        RecalcElementData;
-        YPrimInvalid := TRUE;
-        Exclude(Flags, Flg.EditionActive);
-    end;
+    obj := TObj(ptr);
+    obj.RecalcElementData();
+    obj.YPrimInvalid := TRUE;
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -373,11 +373,11 @@ begin
     begin
         Ffiltlen := Ffilter.NumPoints;
         Fwinlen := Trunc(FsampleFreq / BaseFrequency);
-        Reallocmem(y2, sizeof(y2^[1]) * Fwinlen);
-        Reallocmem(z, sizeof(z^[1]) * Ffiltlen);
-        Reallocmem(whist, sizeof(whist^[1]) * Ffiltlen);
-        Reallocmem(wlast, sizeof(wlast^[1]) * Ffiltlen);
-        Reallocmem(zlast, sizeof(zlast^[1]) * Ffiltlen);
+        Reallocmem(y2, sizeof(y2[1]) * Fwinlen);
+        Reallocmem(z, sizeof(z[1]) * Ffiltlen);
+        Reallocmem(whist, sizeof(whist[1]) * Ffiltlen);
+        Reallocmem(wlast, sizeof(wlast[1]) * Ffiltlen);
+        Reallocmem(zlast, sizeof(zlast[1]) * Ffiltlen);
     end;
 end;
 
@@ -398,23 +398,23 @@ begin
         YPrim_Series.Clear;
         YPrim.Clear;
     end;
-  {Yprim = 0  for Ideal Current Source;  just leave it zeroed}
+  // Yprim = 0  for Ideal Current Source;  just leave it zeroed
 
-  {Now Account for Open Conductors}
-  {For any conductor that is open, zero out row and column}
+  // Now Account for Open Conductors
+  // For any conductor that is open, zero out row and column
     inherited CalcYPrim;
     YPrimInvalid := FALSE;
 end;
 
 function TVCCSObj.InjCurrents: Integer;
-{Sum Currents directly into solution array}
+// Sum Currents directly into solution array
 begin
     GetInjCurrents(InjCurrent);
     Result := inherited Injcurrents;  // Adds into system array
 end;
 
 procedure TVCCSObj.GetCurrents(Curr: pComplexArray);
-{Total currents into a device}
+// Total currents into a device
 var
     i: Integer;
 begin
@@ -422,7 +422,7 @@ begin
         GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
     // Add Together with yprim currents
         for i := 1 to Yorder do
-            Curr[i] := -ComplexBuffer^[i];
+            Curr[i] := -ComplexBuffer[i];
     except
         On E: Exception do
             DoErrorMsg(Format(_('GetCurrents for VCCS Element: %s.'), [Name]), 

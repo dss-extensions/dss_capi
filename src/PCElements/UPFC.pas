@@ -285,13 +285,13 @@ begin
 end;
 
 function TUPFC.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
 begin
-    with TObj(ptr) do
-    begin
-        RecalcElementData;
-        YPrimInvalid := TRUE;
-        Exclude(Flags, Flg.EditionActive);
-    end;
+    obj := TObj(ptr);
+    obj.RecalcElementData();
+    obj.YPrimInvalid := TRUE;
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -374,12 +374,12 @@ begin
     QIdeal := 0.0;
 
      // Initialize shift registers
-    Reallocmem(SR0, SizeOf(Sr0^[1]) * Fnphases);
-    Reallocmem(SR1, SizeOf(Sr1^[1]) * Fnphases);
+    Reallocmem(SR0, SizeOf(Sr0[1]) * Fnphases);
+    Reallocmem(SR1, SizeOf(Sr1[1]) * Fnphases);
     for i := 1 to FNphases do
-        Sr0^[i] := 0; //For multiphase model
+        Sr0[i] := 0; //For multiphase model
     for i := 1 to FNphases do
-        Sr1^[i] := 0; //For multiphase model
+        Sr1[i] := 0; //For multiphase model
     for i := 1 to FNphases do
         ERR0[i] := 0; //For multiphase model
 
@@ -440,8 +440,8 @@ begin
     for i := 1 to Fnphases do
         Z[i, i] := Value;
 
-    Reallocmem(SR0, SizeOf(Sr0^[1]) * Fnphases);
-    Reallocmem(SR1, SizeOf(Sr1^[1]) * Fnphases);
+    Reallocmem(SR0, SizeOf(Sr0[1]) * Fnphases);
+    Reallocmem(SR1, SizeOf(Sr1[1]) * Fnphases);
 
     Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 end;
@@ -457,7 +457,7 @@ var
 begin
     // Calc UPFC Losses
     // Build only YPrim Series
-    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) {YPrimInvalid} then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) then // YPrimInvalid
     begin
         if YPrim_Series <> NIL then
             YPrim_Series.Free;
@@ -564,8 +564,7 @@ var
 
 begin
     try
-        with ActiveCircuit.Solution do
-            UPFCON := TRUE;
+        UPFCON := TRUE;
         VinMag := cabs(Vbin);
         if (VinMag > VHLimit) or (VinMag < VLLimit) then
         begin   // Check Limits (Voltage)
@@ -593,12 +592,12 @@ begin
                             TError := -VpqMax;
                         Vpolar := topolar(TError, Vpolar.ang);
                         VTemp := ptocomplex(Vpolar) - VTemp; //Calculates Vpq
-                        CurrOut := SR0^[Cond] + VTemp / cmplx(0, Xs);
-                        SR0^[Cond] := CurrOut;
+                        CurrOut := SR0[Cond] + VTemp / cmplx(0, Xs);
+                        SR0[Cond] := CurrOut;
                     end
                     else
                     begin
-                        CurrOut := SR0^[Cond];
+                        CurrOut := SR0[Cond];
                     end;
                 end;
                 2:
@@ -619,13 +618,13 @@ begin
                             TError := -VpqMax;
                         Vpolar := topolar(TError, Vpolar.ang);
                         VTemp := ptocomplex(Vpolar) - VTemp; //Calculates Vpq
-                        CurrOut := SR0^[Cond] + VTemp / cmplx(0, Xs);
-                        SR0^[Cond] := CurrOut;
+                        CurrOut := SR0[Cond] + VTemp / cmplx(0, Xs);
+                        SR0[Cond] := CurrOut;
                         SyncFlag := FALSE;
                     end
                     else
                     begin
-                        CurrOut := SR0^[Cond];
+                        CurrOut := SR0[Cond];
                         SyncFlag := TRUE;
                     end;
                 end;
@@ -658,19 +657,19 @@ begin
                                 TError := -VpqMax;
                             Vpolar := topolar(TError, Vpolar.ang);
                             VTemp := ptocomplex(Vpolar) - VTemp; //Calculates Vpq
-                            CurrOut := SR0^[Cond] + VTemp / cmplx(0, Xs);
-                            SR0^[Cond] := CurrOut;
+                            CurrOut := SR0[Cond] + VTemp / cmplx(0, Xs);
+                            SR0[Cond] := CurrOut;
                         end
                         else
                         begin
-                            CurrOut := SR0^[Cond];
+                            CurrOut := SR0[Cond];
                         end;
                         SF2 := TRUE;   // Normal control routine
                     end
                     else
                     begin
                         CurrOut := 0; //UPFC off
-                        SR0^[Cond] := CurrOut;
+                        SR0[Cond] := CurrOut;
                         SF2 := FALSE;   // Says to the other controller to do nothing
                     end;
                 end;
@@ -703,13 +702,13 @@ begin
                                 TError := -VpqMax;
                             Vpolar := topolar(TError, Vpolar.ang);
                             VTemp := ptocomplex(Vpolar) - VTemp; //Calculates Vpq
-                            CurrOut := SR0^[Cond] + VTemp / cmplx(0, Xs);
-                            SR0^[Cond] := CurrOut;
+                            CurrOut := SR0[Cond] + VTemp / cmplx(0, Xs);
+                            SR0[Cond] := CurrOut;
                             SyncFlag := FALSE;
                         end
                         else
                         begin
-                            CurrOut := SR0^[Cond];
+                            CurrOut := SR0[Cond];
                             SyncFlag := TRUE;
                         end;
                         SF2 := TRUE;   // Normal control routine
@@ -717,7 +716,7 @@ begin
                     else
                     begin
                         CurrOut := 0; //UPFC off
-                        SR0^[Cond] := CurrOut;
+                        SR0[Cond] := CurrOut;
                         SF2 := FALSE;   // Says to the other controller to do nothing
                         SyncFlag := FALSE;
                     end;
@@ -741,7 +740,7 @@ begin
         begin                                                //Dual mode
             IUPFC := (Vbout - Vbin) / cmplx(0, Xs);
 //            SOut=cmul(Vbout,cong(cadd(IUPFC,SR0[Cond])))     // Just if you want to know the power at the output
-            Result := -Vbin * cong(IUPFC + SR1^[Cond]);
+            Result := -Vbin * cong(IUPFC + SR1[Cond]);
         end;
         2:
         begin                                              //StatCOM
@@ -873,18 +872,15 @@ procedure TUPFCObj.GetInjCurrents(Curr: pComplexArray);
 var
     i: Integer;
 begin
-    with ActiveCircuit.solution do
+    for i := 1 to fnphases do
     begin
-        for i := 1 to fnphases do
-        begin
-            Vbin := NodeV[NodeRef[i]];           //Gets voltage at the input of UPFC Cond i
-            Vbout := NodeV[NodeRef[i + fnphases]]; //Gets voltage at the output of UPFC Cond i
+        Vbin := ActiveCircuit.Solution.NodeV[NodeRef[i]];           //Gets voltage at the input of UPFC Cond i
+        Vbout := ActiveCircuit.Solution.NodeV[NodeRef[i + fnphases]]; //Gets voltage at the output of UPFC Cond i
 
-            // These functions were modified to follow the UPFC Dynamic
-            // (Different from VSource)
-            Curr[i + fnphases] := OutCurr[i];
-            Curr[i] := InCurr[i];
-        end;
+        // These functions were modified to follow the UPFC Dynamic
+        // (Different from VSource)
+        Curr[i + fnphases] := OutCurr[i];
+        Curr[i] := InCurr[i];
     end;
 end;
 
@@ -1016,17 +1012,12 @@ var
     i: Integer;
 begin
     try
-        with ActiveCircuit.Solution do
-        begin
-            ComputeVTerminal;
-
-            YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
-
-            GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
-            // Add Together  with yprim currents
-            for i := 1 to Yorder do
-                Curr[i] := Curr[i] - ComplexBuffer^[i];
-        end;
+        ComputeVTerminal();
+        YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
+        GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
+        // Add Together  with yprim currents
+        for i := 1 to Yorder do
+            Curr[i] := Curr[i] - ComplexBuffer[i];
     except
         On E: Exception do
             DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName]), E.Message,
@@ -1041,11 +1032,10 @@ var
 begin
     inherited DumpProperties(F, Complete);
 
-    with ParentClass do
-        for i := 1 to NumProperties do
-        begin
-            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
-        end;
+    for i := 1 to ParentClass.NumProperties do
+    begin
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+    end;
 
     if Complete then
     begin
@@ -1094,13 +1084,13 @@ begin
         // 9: ; // can't set this one  -readonly
         // 10: ; // can't set this one  -readonly
         11:
-            Sr0^[1].re := Value;
+            Sr0[1].re := Value;
         12:
-            Sr0^[1].im := Value;
+            Sr0[1].im := Value;
         13:
-            Sr1^[1].re := Value;
+            Sr1[1].re := Value;
         14:
-            Sr1^[1].im := Value;
+            Sr1[1].im := Value;
     else
         DoSimpleMsg('%s: variable index %d is read-only.', [FullName, i], 564);
     end;
@@ -1131,13 +1121,13 @@ begin
         10:
             Result := QIdeal;
         11:
-            Result := SR0^[1].re;
+            Result := SR0[1].re;
         12:
-            Result := SR0^[1].im;
+            Result := SR0[1].im;
         13:
-            Result := SR1^[1].re;
+            Result := SR1[1].re;
         14:
-            Result := SR1^[1].im;
+            Result := SR1[1].im;
     end;
 end;
 

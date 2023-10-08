@@ -1,12 +1,11 @@
 unit Mathutil;
 
 // Math utilities
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -32,8 +31,6 @@ type
         destructor Destroy; override;
     end;
 
-    PPICtrl = ^TPICtrl;
-
 function Bessel_I0(const a: Complex): Complex;
 function Bessel_I1(const x: Complex): Complex;
 procedure CalcKPowers(kWkvar, V, I: pComplexArray; N: Integer);
@@ -53,7 +50,6 @@ procedure SymComp2Phase(Vph, V012: pComplexArray);
 procedure SymComp2Phase(Vph, V012: PComplex3);
 function TerminalPowerIn(V, I: pComplexArray; Nphases: Integer): Complex;
 function PctNemaUnbalance(Vph: PComplex3): Double;
-procedure DblInc(var x: Double; const y: Double); inline; // increment a double
 procedure SelectAs2pVersion(useOfficial: Boolean);
 
 var
@@ -122,7 +118,7 @@ begin
 
     // Allocate LT
     LT := NIL;
-    Reallocmem(LT, SizeOf(LT^[1]) * L);
+    Reallocmem(LT, SizeOf(LT[1]) * L);
     if LT = NIL then
     begin
         Error := 1;
@@ -131,7 +127,7 @@ begin
 
     // Zero LT
     for j := 1 to L do
-        LT^[j] := 0;
+        LT[j] := 0;
 
     T1 := 0.0;
 
@@ -143,12 +139,12 @@ begin
     begin
         for  LL := 1 to L do
         begin
-            if LT^[LL] <> 1 then
+            if LT[LL] <> 1 then
             begin
-                RMY := Abs(A^[Index(LL, LL)]) - Abs(T1);
+                RMY := Abs(A[Index(LL, LL)]) - Abs(T1);
                 if RMY > 0.0 then
                 begin
-                    T1 := A^[Index(LL, LL)];
+                    T1 := A[Index(LL, LL)];
                     K := LL;
                 end;
             end;
@@ -163,28 +159,28 @@ begin
         end;
 
         T1 := 0.0;
-        LT^[k] := 1;
+        LT[k] := 1;
         for i := 1 to L do
             if i <> k then
                 for j := 1 to L do
                     if j <> k then
-                        A^[Index(i, j)] :=
-                            A^[Index(i, j)] - A^[Index(i, k)] * A^[Index(k, j)] / A^[Index(k, k)];
+                        A[Index(i, j)] :=
+                            A[Index(i, j)] - A[Index(i, k)] * A[Index(k, j)] / A[Index(k, k)];
 
-        A^[Index(k, k)] := -1.0 / A^[Index(k, k)];
+        A[Index(k, k)] := -1.0 / A[Index(k, k)];
 
         for  i := 1 to L do
             if i <> k then
             begin
-                A^[Index(i, k)] := A^[Index(i, k)] * A^[Index(k, k)];
-                A^[Index(k, i)] := A^[Index(k, i)] * A^[Index(k, k)];
+                A[Index(i, k)] := A[Index(i, k)] * A[Index(k, k)];
+                A[Index(k, i)] := A[Index(k, i)] * A[Index(k, k)];
             end;
 
     end; // M loop
 
     for  j := 1 to L do
         for  k := 1 to L do
-            A^[Index(j, k)] := -A^[Index(j, k)];
+            A[Index(j, k)] := -A[Index(j, k)];
 
     Reallocmem(LT, 0);
 end;
@@ -227,7 +223,7 @@ var
 begin
     for j := 1 to N do
     begin
-        kWkVAR^[j] := V[j] * cong(I[j]) * 0.001;
+        kWkVAR[j] := V[j] * cong(I[j]) * 0.001;
     end;
 end;
 
@@ -323,17 +319,17 @@ begin
     Data := pData;  // make a double pointer
     if Ndata = 1 then
     begin
-        Mean := Data^[1];
-        StdDev := Data^[1];
+        Mean := Data[1];
+        StdDev := Data[1];
         Exit;
     end;
     Mean := 0.0;
     for i := 1 to NData do
-        Mean := Mean + Data^[i];
+        Mean := Mean + Data[i];
     Mean := Mean / Ndata;
     S := 0;               // sum differences from the mean, for greater accuracy
     for i := 1 to Ndata do
-        S := S + Sqr(Mean - Data^[i]);
+        S := S + Sqr(Mean - Data[i]);
     StdDev := Sqrt(S / (Ndata - 1));
 end;
 
@@ -349,17 +345,17 @@ begin
     Data := pData;
     if Ndata = 1 then
     begin
-        Mean := Data^[1];
-        StdDev := Data^[1];
+        Mean := Data[1];
+        StdDev := Data[1];
         Exit;
     end;
     Mean := 0.0;
     for i := 1 to NData do
-        Mean := Mean + Data^[i];
+        Mean := Mean + Data[i];
     Mean := Mean / Ndata;
     S := 0;               // sum differences from the mean, for greater accuracy
     for i := 1 to Ndata do
-        S := S + Sqr(Mean - Data^[i]);
+        S := S + Sqr(Mean - Data[i]);
     StdDev := Sqrt(S / (Ndata - 1));
 end;
 
@@ -502,7 +498,7 @@ var
     VMag: array[1..3] of Double;
 begin
     for i := 1 to 3 do
-        VMag[i] := cabs(Vph^[i]);
+        VMag[i] := cabs(Vph[i]);
 
     Vavg := 0.0;
     for i := 1 to 3 do
@@ -517,11 +513,6 @@ begin
         Result := MaxDiff / Vavg * 100.0  // pct difference
     else
         Result := 0.0;
-end;
-
-procedure DblInc(var x: Double; const y: Double); inline;
-begin
-    x := x + y;
 end;
 
 procedure SelectAs2pVersion(useOfficial: Boolean);
@@ -562,3 +553,4 @@ finalization
     As2p_ours.Free;
     Ap2s_ours.Free;
 end.
+

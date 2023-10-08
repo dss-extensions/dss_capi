@@ -884,7 +884,7 @@ end;
 
 destructor TTransfObj.Destroy;
 begin
-    {Throw away stuff allocated for this object}
+    // Throw away stuff allocated for this object
     Reallocmem(Winding, 0);
     Reallocmem(XSC, 0);
     Reallocmem(TermRef, 0);
@@ -1100,7 +1100,7 @@ procedure TTransfObj.CalcYPrim;
 var
     FreqMultiplier: Double;
 begin
-    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) {YPrimInvalid} then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) then // YPrimInvalid
     begin
          // Reallocate YPrim if something has invalidated old allocation
         if YPrim_Series <> NIL then
@@ -1203,11 +1203,8 @@ begin
     for i := 28 to NumPropsThisClass do
         FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
 
-    with ParentClass do
-    begin
-        for i := NumPropsthisClass + 1 to NumProperties do
-            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
-    end;
+    for i := NumPropsthisClass + 1 to ParentClass.NumProperties do
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
 
     if Complete then
     begin
@@ -1466,13 +1463,12 @@ begin
     ITerm_NL := Allocmem(SizeOf(Complex) * 2 * NumWindings);
 
     // Load up Vterminal - already allocated for all cktelements
-    with ActiveCircuit.Solution do
-        if Assigned(NodeV) then
-            for i := 1 to Yorder do
-                Vterminal[i] := NodeV[NodeRef[i]]
-        else
-            for i := 1 to Yorder do
-                Vterminal[i] := 0;
+    if ActiveCircuit.Solution.NodeV <> NIL then
+        for i := 1 to Yorder do
+            Vterminal[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]]
+    else
+        for i := 1 to Yorder do
+            Vterminal[i] := 0;
 
     k := 0;
     for iPhase := 1 to Fnphases do
@@ -1528,9 +1524,8 @@ begin
     if True then // AllConductorsClosed() then
     begin
         // Load up VTerminal - already allocated for all cktelements
-        with ActiveCircuit.Solution do
-            for i := 1 to Yorder do
-                Vterminal[i] := NodeV[NodeRef[i]];
+        for i := 1 to Yorder do
+            Vterminal[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
 
         k := (iWind - 1) * FNconds;    // Offset for winding
         NeutTerm := Fnphases + k + 1;

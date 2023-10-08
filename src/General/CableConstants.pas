@@ -1,11 +1,9 @@
 unit CableConstants;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 interface
 
 uses
@@ -74,7 +72,7 @@ begin
             Ztemp := FZReduced;
             FirstTime := FALSE;
         end;
-    // now copy part of FYCmatrix to FYCreduced
+        // now copy part of FYCmatrix to FYCreduced
         FYCreduced := TCmatrix.CreateMatrix(Norder);
         for i := 1 to Norder do
             for j := 1 to Norder do
@@ -90,17 +88,16 @@ var
 begin
     Result := FALSE;
 
-(*   Height of cable doesn't matter
-  Removed 5-25-2016 RcD
-  For i := 1 to FNumConds do Begin
-    if (FY[i] >= 0.0) then Begin
-      Result := TRUE;
-      ErrorMessage :=
-        Format('Cable %d height must be < 0. ', [ i ]);
-      Exit
-    End;
-  End;
-*)
+//  Height of cable doesn't matter
+//  Removed 5-25-2016 RcD
+//  For i := 1 to FNumConds do Begin
+//    if (FY[i] >= 0.0) then Begin
+//      Result := TRUE;
+//      ErrorMessage :=
+//        Format('Cable %d height must be < 0. ', [ i ]);
+//      Exit
+//    End;
+//  End;
     for i := 1 to FNumConds do
     begin
         if i <= FNPhases then
@@ -126,17 +123,17 @@ end;
 
 function TCableConstants.Get_EpsR(i: Integer): Double;
 begin
-    Result := FEpsR^[i];
+    Result := FEpsR[i];
 end;
 
 function TCableConstants.Get_InsLayer(i, units: Integer): Double;
 begin
-    Result := FInsLayer^[i] * From_Meters(Units);
+    Result := FInsLayer[i] * From_Meters(Units);
 end;
 
 function TCableConstants.Get_DiaIns(i, units: Integer): Double;
 begin
-    Result := FDiaIns^[i] * From_Meters(Units);
+    Result := FDiaIns[i] * From_Meters(Units);
 end;
 
 function TCableConstants.Get_DiaCable(i, units: Integer): Double;
@@ -147,19 +144,19 @@ end;
 procedure TCableConstants.Set_EpsR(i: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= FNumConds) then
-        FEpsR^[i] := Value;
+        FEpsR[i] := Value;
 end;
 
 procedure TCableConstants.Set_InsLayer(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= FNumConds) then
-        FInsLayer^[i] := Value * To_Meters(units);
+        FInsLayer[i] := Value * To_Meters(units);
 end;
 
 procedure TCableConstants.Set_DiaIns(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= FNumConds) then
-        FDiaIns^[i] := Value * To_Meters(units);
+        FDiaIns[i] := Value * To_Meters(units);
 end;
 
 procedure TCableConstants.Set_DiaCable(i, units: Integer; const Value: Double);
@@ -171,9 +168,9 @@ end;
 constructor TCableConstants.Create(NumConductors: Integer);
 begin
     inherited Create(NumConductors);
-    FEpsR := Allocmem(Sizeof(FEpsR^[1]) * FNumConds);
-    FInsLayer := Allocmem(Sizeof(FInsLayer^[1]) * FNumConds);
-    FDiaIns := Allocmem(Sizeof(FDiaIns^[1]) * FNumConds);
+    FEpsR := Allocmem(Sizeof(FEpsR[1]) * FNumConds);
+    FInsLayer := Allocmem(Sizeof(FInsLayer[1]) * FNumConds);
+    FDiaIns := Allocmem(Sizeof(FDiaIns[1]) * FNumConds);
     FDiaCable := Allocmem(Sizeof(FDiaCable[1]) * FNumConds);
 end;
 
@@ -185,7 +182,5 @@ begin
     Reallocmem(FDiaCable, 0);
     inherited;
 end;
-
-initialization
 
 end.

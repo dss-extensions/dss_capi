@@ -318,7 +318,7 @@ begin
 
                 SetBus(2, S2);    // default setting for Bus2
                 IsShunt := TRUE;
-                PrpSequence^[2] := 0; // Reset this for save function
+                PrpSequence[2] := 0; // Reset this for save function
             end;
         ord(TProp.conn):
             case Connection of
@@ -386,18 +386,18 @@ begin
             if previousIntVal = 1 then
             begin
                 // Save total values to be divided up
-                FTotalkvar := Fkvarrating^[1];
-                Rstep := FR^[1] * FNumSteps;
-                XLstep := FXL^[1] * FNumSteps;
+                FTotalkvar := Fkvarrating[1];
+                Rstep := FR[1] * FNumSteps;
+                XLstep := FXL[1] * FNumSteps;
             end;
 
             // Reallocate arrays  (Must be initialized to nil for first call)
-            Reallocmem(FC, Sizeof(FC^[1]) * FNumSteps);
-            Reallocmem(FXL, Sizeof(FXL^[1]) * FNumSteps);
-            Reallocmem(Fkvarrating, Sizeof(Fkvarrating^[1]) * FNumSteps);
-            Reallocmem(FR, Sizeof(FR^[1]) * FNumSteps);
-            Reallocmem(FHarm, Sizeof(FHarm^[1]) * FNumSteps);
-            Reallocmem(FStates, Sizeof(FStates^[1]) * FNumSteps);
+            Reallocmem(FC, Sizeof(FC[1]) * FNumSteps);
+            Reallocmem(FXL, Sizeof(FXL[1]) * FNumSteps);
+            Reallocmem(Fkvarrating, Sizeof(Fkvarrating[1]) * FNumSteps);
+            Reallocmem(FR, Sizeof(FR[1]) * FNumSteps);
+            Reallocmem(FHarm, Sizeof(FHarm[1]) * FNumSteps);
+            Reallocmem(FStates, Sizeof(FStates[1]) * FNumSteps);
 
             // Special case for FNumSteps=1
             if previousIntVal = 1 then
@@ -408,14 +408,14 @@ begin
                     begin  // kvar        // We'll make a multi-step bank of same net size as at present
                         StepSize := FTotalkvar / FNumSteps;
                         for i := 1 to FNumSteps do
-                            FkvarRating^[i] := StepSize;
+                            FkvarRating[i] := StepSize;
                     end;
 
 
                     2:
                     begin  // Cuf           // We'll make a multi-step bank with all the same as first
                         for i := 2 to FNumSteps do
-                            FC^[i] := FC^[1];  // Make same as first step
+                            FC[i] := FC[1];  // Make same as first step
                     end;
 
                     3:
@@ -430,35 +430,35 @@ begin
                     1:
                     begin
                         for i := 1 to FNumSteps do
-                            FR^[i] := Rstep;
+                            FR[i] := Rstep;
                         for i := 1 to FNumSteps do
-                            FXL^[i] := XLstep;
+                            FXL[i] := XLstep;
                     end;
 
                     2, 3:
                     begin   // Make R and XL same as first step
                         for i := 2 to FNumSteps do
-                            FR^[i] := FR^[1];
+                            FR[i] := FR[1];
                         for i := 2 to FNumSteps do
-                            FXL^[i] := FXL^[1];
+                            FXL[i] := FXL[1];
                     end;
 
                 end;
 
                 for i := 1 to FNumSteps do
-                    Fstates^[i] := 1;   // turn 'em all ON
+                    Fstates[i] := 1;   // turn 'em all ON
                 LastStepInService := FNumSteps;
                 for i := 2 to FNumSteps do
-                    FHarm^[i] := FHarm^[1];  // tune 'em all the same as first
+                    FHarm[i] := FHarm[1];  // tune 'em all the same as first
             end;
         end;
 
         ord(TProp.XL):
         begin
             for i := 1 to Fnumsteps do
-                if FXL^[i] <> 0.0 then
-                    if FR^[i] = 0.0 then
-                        FR^[i] := Abs(FXL^[i]) / 1000.0;  // put in something so it doesn't fail
+                if FXL[i] <> 0.0 then
+                    if FR[i] = 0.0 then
+                        FR[i] := Abs(FXL[i]) / 1000.0;  // put in something so it doesn't fail
             DoHarmonicRecalc := FALSE;  // XL is specified
         end;
         ord(TProp.Harm):
@@ -514,13 +514,13 @@ begin
 
     for i := 1 to FNumSteps do
     begin
-        FC^[i] := Other.FC^[i];
-        Fkvarrating^[i] := Other.Fkvarrating^[i];
-        FR^[i] := Other.FR^[i];
-        FXL^[i] := Other.FXL^[i];
-        FXL^[i] := Other.FXL^[i];
-        FHarm^[i] := Other.FHarm^[i];
-        Fstates^[i] := Other.Fstates^[i];
+        FC[i] := Other.FC[i];
+        Fkvarrating[i] := Other.Fkvarrating[i];
+        FR[i] := Other.FR[i];
+        FXL[i] := Other.FXL[i];
+        FXL[i] := Other.FXL[i];
+        FHarm[i] := Other.FHarm[i];
+        Fstates[i] := Other.Fstates[i];
     end;
 
     kvrating := Other.kvrating;
@@ -531,9 +531,9 @@ begin
         Reallocmem(Cmatrix, 0)
     else
     begin
-        Reallocmem(Cmatrix, SizeOf(Cmatrix^[1]) * Fnphases * Fnphases);
+        Reallocmem(Cmatrix, SizeOf(Cmatrix[1]) * Fnphases * Fnphases);
         for i := 1 to Fnphases * Fnphases do
-            Cmatrix^[i] := Other.Cmatrix^[i];
+            Cmatrix[i] := Other.Cmatrix[i];
     end;
 end;
 
@@ -569,15 +569,15 @@ begin
     InitDblArray(FNumSteps, FHarm, 0.0);
     InitDblArray(FNumSteps, Fkvarrating, 1200.0);
 
-    Fstates^[1] := 1;
+    Fstates[1] := 1;
 
     kvrating := 12.47;
-    InitDblArray(FNumSteps, FC, 1.0 / (TwoPi * BaseFrequency * SQR(kvrating) * 1000.0 / Fkvarrating^[1]));
+    InitDblArray(FNumSteps, FC, 1.0 / (TwoPi * BaseFrequency * SQR(kvrating) * 1000.0 / Fkvarrating[1]));
 
     Connection := TCapacitorConnection.Wye;
     SpecType := 1; // 1=kvar, 2=Cuf, 3=Cmatrix
 
-    NormAmps := FkvarRating^[1] * SQRT3 / kvrating * 1.35;   // 135%
+    NormAmps := FkvarRating[1] * SQRT3 / kvrating * 1.35;   // 135%
     EmergAmps := NormAmps * 1.8 / 1.35;   //180%
     FaultRate := 0.0005;
     PctPerm := 100.0;
@@ -633,9 +633,9 @@ begin
             end;
 
             for i := 1 to FNumSteps do
-                FC^[i] := 1.0 / (w * SQR(PhasekV) * 1000.0 / (FkvarRating^[1] / Fnphases));
+                FC[i] := 1.0 / (w * SQR(PhasekV) * 1000.0 / (FkvarRating[1] / Fnphases));
             for i := 1 to FNumSteps do
-                Ftotalkvar := Ftotalkvar + FkvarRating^[i];
+                Ftotalkvar := Ftotalkvar + FkvarRating[i];
         end;
         2:
         begin // Cuf
@@ -655,7 +655,7 @@ begin
                 end;
             end;
             for i := 1 to FNumSteps do
-                Ftotalkvar := Ftotalkvar + w * FC^[i] * SQR(PhasekV) / 1000.0;
+                Ftotalkvar := Ftotalkvar + w * FC[i] * SQR(PhasekV) / 1000.0;
         end;
         3:
         begin // Cmatrix
@@ -667,12 +667,12 @@ begin
     if DoHarmonicRecalc then  // If harmonic specified, compute filter reactance
         for i := 1 to FNumsteps do
         begin
-            if FHarm^[i] <> 0.0 then
-                FXL^[i] := (1.0 / (w * FC^[i])) / SQR(FHarm^[i])
+            if FHarm[i] <> 0.0 then
+                FXL[i] := (1.0 / (w * FC[i])) / SQR(FHarm[i])
             else
-                FXL^[i] := 0.0;   // Assume 0 harmonic means no filter
-            if FR^[i] = 0.0 then
-                FR^[i] := FXL^[i] / 1000.0;
+                FXL[i] := 0.0;   // Assume 0 harmonic means no filter
+            if FR[i] = 0.0 then
+                FR[i] := FXL[i] / 1000.0;
         end;
 
     kvarPerPhase := Ftotalkvar / Fnphases;
@@ -693,7 +693,7 @@ var
 begin
     // Normally build only Yprim Shunt, but if there are 2 terminals and
     // Bus1 <> Bus 2
-    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) {YPrimInvalid} then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) then // YPrimInvalid
     begin    // Reallocate YPrim if something has invalidated old allocation
         if YPrim_Shunt <> NIL then
             YPrim_Shunt.Free;
@@ -719,7 +719,7 @@ begin
 
     YPrimWork := TcMatrix.CreateMatrix(Yorder);
     for i := 1 to FNumSteps do
-        if FStates^[i] = 1 then
+        if FStates[i] = 1 then
         begin
             MakeYprimWork(YprimWork, i);
             YprimTemp.AddFrom(YprimWork);
@@ -748,11 +748,10 @@ var
 begin
     inherited DumpProperties(F, Complete);
 
-    with ParentClass do
-        for i := 1 to NumProperties do
-        begin
-            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
-        end;
+    for i := 1 to ParentClass.NumProperties do
+    begin
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+    end;
 
     if Complete then
     begin
@@ -779,7 +778,7 @@ begin
             SetLength(newkvars, FNumSteps);
             for i := 1 to FNumSteps do
             begin
-                kvarPerPhase := FkvarRating^[i] / 3.0;  // divide the total kvar equally among3 phases.../Fnphases;
+                kvarPerPhase := FkvarRating[i] / 3.0;  // divide the total kvar equally among3 phases.../Fnphases;
                 newkvars[i - 1] := kvarPerPhase;
             end;
             BeginEdit(True);
@@ -796,13 +795,13 @@ begin
             begin //  C Matrix
                 Cs := 0.0;   // Avg Self
                 for i := 1 to FnPhases do
-                    Cs := Cs + Cmatrix^[(i - 1) * Fnphases + i];
+                    Cs := Cs + Cmatrix[(i - 1) * Fnphases + i];
                 Cs := Cs / FnPhases;
 
                 Cm := 0.0;     //Avg mutual
                 for i := 2 to FnPhases do
                     for j := i to FnPhases do
-                        Cm := Cm + Cmatrix^[(i - 1) * Fnphases + j];
+                        Cm := Cm + Cmatrix[(i - 1) * Fnphases + j];
                 Cm := Cm / (FnPhases * (Fnphases - 1.0) / 2.0);
                 BeginEdit(True);
                 SetInteger(ord(TProp.Phases), 1);

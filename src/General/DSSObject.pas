@@ -1,11 +1,9 @@
 unit DSSObject;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -116,9 +114,8 @@ begin
     FSWriteln(F, 'New ' + EncloseQuotes(FullName));
     if Leaf then
     begin
-        with ParentClass do
-            for i := 1 to NumProperties do
-                FSWriteLn(F, '~ ' + PropertyName[i] + '=' + GetPropertyValue(i));
+        for i := 1 to ParentClass.NumProperties do
+            FSWriteLn(F, '~ ' + ParentClass.PropertyName[i] + '=' + GetPropertyValue(i));
         
         if Complete then
             FSWriteln(F);        
@@ -159,8 +156,7 @@ begin
             str := ''; // set to ignore this property
         if Length(str) > 0 then
         begin
-            with ParentClass do
-                FSWrite(F, ' ' + PropertyName[iProp]);
+            FSWrite(F, ' ' + ParentClass.PropertyName[iProp]);
             FSWrite(F, '=' + CheckForBlanks(str));
         end;
         iProp := GetNextPropertySet(iProp);

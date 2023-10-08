@@ -1,11 +1,9 @@
 unit Pstcalc;
 
- {
-  ----------------------------------------------------------
-  Copyright (c) 2011-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2011-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -67,7 +65,7 @@ var
     bin_ceiling: Double;
     number_bins: Integer;
 
-    {Filter Coefficients}
+    // Filter Coefficients
 
     WA2, WB2, WC2, WD2, WE2, WF2, WG2: Double;  // weighting filter coefficients
     IVAA, IVAB, IVAC, IVAD, IVAE,
@@ -94,7 +92,7 @@ begin
     n := 0;
 
     while ((not found) and (n < number_bins)) do
-        if (y <= bins^[n]) then
+        if (y <= bins[n]) then
             found := TRUE
         else
             n := n + 1;
@@ -103,7 +101,7 @@ begin
     begin
              // Interpolate
         Result := bin_ceiling * (n - 1) / number_bins +
-            (y - bins^[n - 1]) * (bin_ceiling / number_bins) / (bins^[n] - bins^[n - 1]);
+            (y - bins[n - 1]) * (bin_ceiling / number_bins) / (bins[n] - bins[n - 1]);
     end
     else
         Result := 0.0;
@@ -115,9 +113,9 @@ var
 
 begin
     for n := 0 to number_bins - 1 do
-        Bins0^[n] := 0.0;
+        Bins0[n] := 0.0;
     for n := 0 to number_bins - 1 do
-        Bins1^[n] := 0.0;
+        Bins1[n] := 0.0;
 end;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -134,13 +132,13 @@ begin
     num_pts := 0;
     for n := 0 to number_bins - 1 do
     begin
-        num_pts := num_pts + bins0^[n];
-        bins1^[n] := num_pts;
+        num_pts := num_pts + bins0[n];
+        bins1[n] := num_pts;
     end;
 
     for n := 0 to number_bins - 1 do
     begin
-        bins1^[n] := bins1^[n] / num_pts;
+        bins1[n] := bins1[n] / num_pts;
     end;
 
     P01 := SB(0.999, bins1);
@@ -255,7 +253,7 @@ end;
 //////////////////////////////////////////////////////////////////////
 procedure Gather_Bins(X10_value: Double; bins: pBinArray);
 
-{Find out which bin the value belongs in and increment it.}
+    // Find out which bin the value belongs in and increment it.
 
     procedure My_inc(var x: Double);  // special incrementer routine
     begin
@@ -264,9 +262,9 @@ procedure Gather_Bins(X10_value: Double; bins: pBinArray);
 
 begin
     if (X10_value > bin_ceiling) then
-        My_inc(bins^[number_bins - 1])   // increment count
+        My_inc(bins[number_bins - 1])   // increment count
     else
-        My_inc(bins^[trunc(number_bins * X10_value / bin_ceiling)]);
+        My_inc(bins[trunc(number_bins * X10_value / bin_ceiling)]);
 end;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -301,7 +299,7 @@ end;
 procedure Get_Pinst;
 
 begin
-  {RMS input}
+    // RMS input
 
     RMSVin[0] := rms_reference * RMS_sample / rms_input; // per unitize rms value
 
@@ -370,9 +368,9 @@ begin
     bin_ceiling := 350.0;    // previously used 215, increased to be encompass high flicker levels
     number_bins := 16000;
 
-  {Allocate Memory for bins}
-    Bins0 := Allocmem(Sizeof(Bins0^[0]) * number_bins); // 50k is max. # of bins
-    Bins1 := Allocmem(Sizeof(Bins1^[0]) * number_bins); // 50k is max. # of bins
+    // Allocate Memory for bins
+    Bins0 := Allocmem(Sizeof(Bins0[0]) * number_bins); // 50k is max. # of bins
+    Bins1 := Allocmem(Sizeof(Bins1[0]) * number_bins); // 50k is max. # of bins
 
     time := 0.0;        // time clock
     Pst_Timer := 0.0;

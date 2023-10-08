@@ -473,59 +473,55 @@ end;
 
 procedure TRecloserObj.DoPendingAction(const Code, ProxyHdl: Integer);
 begin
-    with ControlledElement do
-    begin
-        ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal of CktElement to terminal 1
-        case Code of
-            Integer(CTRL_OPEN):
-                case FPresentState of
-                    CTRL_CLOSE:
-                        if ArmedForOpen then
-                        begin   // ignore if we became disarmed in meantime
-                            ControlledElement.Closed[0] := FALSE;   // Open all phases of active terminal
-                            if OperationCount > NumReclose then
-                            begin
-                                LockedOut := TRUE;
-                                AppendtoEventLog(Self.FullName, 'Opened, Locked Out');
-                            end
-                            else
-                            begin
-                                if OperationCount > NumFast then
-                                    AppendtoEventLog(Self.FullName, 'Opened, Delayed')
-                                else
-                                    AppendtoEventLog(Self.FullName, 'Opened, Fast');
-                            end;
-                            if PhaseTarget then
-                                AppendtoEventLog(' ', 'Phase Target');
-                            if GroundTarget then
-                                AppendtoEventLog(' ', 'Ground Target');
-                            ArmedForOpen := FALSE;
-                        end;
-                else // Nada
-                end;
-            Integer(CTRL_CLOSE):
-                case FPresentState of
-                    CTRL_OPEN:
-                        if ArmedForClose and not LockedOut then
+    ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal of CktElement to terminal 1
+    case Code of
+        Integer(CTRL_OPEN):
+            case FPresentState of
+                CTRL_CLOSE:
+                    if ArmedForOpen then
+                    begin   // ignore if we became disarmed in meantime
+                        ControlledElement.Closed[0] := FALSE;   // Open all phases of active terminal
+                        if OperationCount > NumReclose then
                         begin
-                            ControlledElement.Closed[0] := TRUE; // Close all phases of active terminal
-                            Inc(OperationCount);
-                            AppendtoEventLog(Self.FullName, 'Closed');
-                            ArmedForClose := FALSE;
+                            LockedOut := TRUE;
+                            AppendtoEventLog(Self.FullName, 'Opened, Locked Out');
+                        end
+                        else
+                        begin
+                            if OperationCount > NumFast then
+                                AppendtoEventLog(Self.FullName, 'Opened, Delayed')
+                            else
+                                AppendtoEventLog(Self.FullName, 'Opened, Fast');
                         end;
-                else // Nada
-                end;
-            Integer(CTRL_RESET):
-                case FPresentState of
-                    CTRL_CLOSE:
-                        if not ArmedForOpen then
-                            OperationCount := 1; // Don't reset if we just rearmed
-                else  // Nada
-                end;
-        else
-            // Do Nothing
-        end;
-
+                        if PhaseTarget then
+                            AppendtoEventLog(' ', 'Phase Target');
+                        if GroundTarget then
+                            AppendtoEventLog(' ', 'Ground Target');
+                        ArmedForOpen := FALSE;
+                    end;
+            else // Nada
+            end;
+        Integer(CTRL_CLOSE):
+            case FPresentState of
+                CTRL_OPEN:
+                    if ArmedForClose and not LockedOut then
+                    begin
+                        ControlledElement.Closed[0] := TRUE; // Close all phases of active terminal
+                        Inc(OperationCount);
+                        AppendtoEventLog(Self.FullName, 'Closed');
+                        ArmedForClose := FALSE;
+                    end;
+            else // Nada
+            end;
+        Integer(CTRL_RESET):
+            case FPresentState of
+                CTRL_CLOSE:
+                    if not ArmedForOpen then
+                        OperationCount := 1; // Don't reset if we just rearmed
+            else  // Nada
+            end;
+    else
+        // Do Nothing
     end;
 end;
 
@@ -554,116 +550,115 @@ begin
         Exit;
     end;
 
-    with MonitoredElement do
+    if OperationCount > NumFast then
     begin
-        if OperationCount > NumFast then
+        GroundCurve := GroundDelayed;
+        PhaseCurve := PhaseDelayed;
+        TDGround := TDGrDelayed;
+        TDPhase := TDPhDelayed;
+    end
+    else
+    begin
+        GroundCurve := GroundFast;
+        PhaseCurve := PhaseFast;
+        TDGround := TDGrFast;
+        TDPhase := TDPhFast;
+    end;
+
+    if FPresentState = CTRL_CLOSE then
+    begin
+        TripTime := -1.0;
+        GroundTime := -1.0;
+        PhaseTime := -1.0;  // No trip
+
+        // Check largest Current of all phases of monitored element
+        MonitoredElement.GetCurrents(cBuffer);
+
+        // Check Ground Trip, if any
+        if GroundCurve <> NIL then
         begin
-            GroundCurve := GroundDelayed;
-            PhaseCurve := PhaseDelayed;
-            TDGround := TDGrDelayed;
-            TDPhase := TDPhDelayed;
+            Csum := 0;
+            for i := (1 + CondOffset) to (Fnphases + CondOffset) do
+                Csum += cBuffer[i];
+            Cmag := Cabs(Csum);
+            if (GroundInst > 0.0) and (Cmag >= GroundInst) and (OperationCount = 1) then
+                GroundTime := 0.01 + DelayTime      // Inst trip on first operation
+            else
+                GroundTime := TDGround * GroundCurve.GetTCCTime(Cmag / GroundTrip);
+        end;
+
+        if Groundtime > 0.0 then
+        begin
+            TripTime := GroundTime;
+            GroundTarget := TRUE;
+        end;
+
+        // If GroundTime > 0 then we have a ground trip
+
+        // Check Phase Trip, if any
+
+        if PhaseCurve <> NIL then
+        begin
+            for i := (1 + CondOffset) to (Fnphases + CondOffset) do
+            begin
+                Cmag := Cabs(cBuffer[i]);
+
+
+                if (PhaseInst > 0.0) and (Cmag >= PhaseInst) and (OperationCount = 1) then
+                begin
+                    PhaseTime := 0.01 + DelayTime;  // Inst trip on first operation
+                    Break;  // FOR - if Inst, no sense checking other phases
+                end
+                else
+                begin
+                    TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip);
+                    if (TimeTest > 0.0) then
+                    begin
+                        if Phasetime < 0.0 then
+                            PhaseTime := TimeTest
+                        else
+                            PhaseTime := Min(PhaseTime, TimeTest);
+                    end;
+                end;
+
+            end;
+        end;
+            // If PhaseTime > 0 then we have a phase trip
+
+        if PhaseTime > 0.0 then
+        begin
+            PhaseTarget := TRUE;
+            if TripTime > 0.0 then
+                TripTime := Min(TripTime, Phasetime)
+            else
+                TripTime := PhaseTime;
+        end;
+
+        if TripTime > 0.0 then
+        begin
+            if not ArmedForOpen then
+            // Then arm for an open operation
+            begin
+                ActiveCircuit.ControlQueue.Push(TripTime + Delaytime, CTRL_OPEN, 0, Self);
+                if OperationCount <= NumReclose then
+                    ActiveCircuit.ControlQueue.Push(TripTime + DelayTime + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
+                ArmedForOpen := TRUE;
+                ArmedForClose := TRUE;
+            end;
         end
         else
         begin
-            GroundCurve := GroundFast;
-            PhaseCurve := PhaseFast;
-            TDGround := TDGrFast;
-            TDPhase := TDPhFast;
+            if ArmedForOpen then
+            // If current dropped below pickup, disarm trip and set for reset
+            begin
+                ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
+                ArmedForOpen := FALSE;
+                ArmedForClose := FALSE;
+                GroundTarget := FALSE;
+                PhaseTarget := FALSE;
+            end;
         end;
-
-        if FPresentState = CTRL_CLOSE then
-        begin
-            TripTime := -1.0;
-            GroundTime := -1.0;
-            PhaseTime := -1.0;  {No trip}
-
-            // Check largest Current of all phases of monitored element
-            MonitoredElement.GetCurrents(cBuffer);
-
-            // Check Ground Trip, if any
-            if GroundCurve <> NIL then
-            begin
-                Csum := 0;
-                for i := (1 + CondOffset) to (Fnphases + CondOffset) do
-                    Csum += cBuffer[i];
-                Cmag := Cabs(Csum);
-                if (GroundInst > 0.0) and (Cmag >= GroundInst) and (OperationCount = 1) then
-                    GroundTime := 0.01 + DelayTime      // Inst trip on first operation
-                else
-                    GroundTime := TDGround * GroundCurve.GetTCCTime(Cmag / GroundTrip);
-            end;
-
-            if Groundtime > 0.0 then
-            begin
-                TripTime := GroundTime;
-                GroundTarget := TRUE;
-            end;
-
-            // If GroundTime > 0 then we have a ground trip
-
-            // Check Phase Trip, if any
-
-            if PhaseCurve <> NIL then
-            begin
-                for i := (1 + CondOffset) to (Fnphases + CondOffset) do
-                begin
-                    Cmag := Cabs(cBuffer[i]);
-
-
-                    if (PhaseInst > 0.0) and (Cmag >= PhaseInst) and (OperationCount = 1) then
-                    begin
-                        PhaseTime := 0.01 + DelayTime;  // Inst trip on first operation
-                        Break;  {FOR - if Inst, no sense checking other phases}
-                    end
-                    else
-                    begin
-                        TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip);
-                        if (TimeTest > 0.0) then
-                        begin
-                            if Phasetime < 0.0 then
-                                PhaseTime := TimeTest
-                            else
-                                PhaseTime := Min(PhaseTime, TimeTest);
-                        end;
-                    end;
-
-                end;
-            end;
-               // If PhaseTime > 0 then we have a phase trip
-
-            if PhaseTime > 0.0 then
-            begin
-                PhaseTarget := TRUE;
-                if TripTime > 0.0 then
-                    TripTime := Min(TripTime, Phasetime)
-                else
-                    TripTime := PhaseTime;
-            end;
-
-            if TripTime > 0.0 then
-            begin
-                if not ArmedForOpen then // Then arm for an open operation
-                begin
-                    ActiveCircuit.ControlQueue.Push(TripTime + Delaytime, CTRL_OPEN, 0, Self);
-                    if OperationCount <= NumReclose then
-                        ActiveCircuit.ControlQueue.Push(TripTime + DelayTime + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
-                    ArmedForOpen := TRUE;
-                    ArmedForClose := TRUE;
-                end;
-            end
-            else
-            begin
-                if ArmedForOpen then // If current dropped below pickup, disarm trip and set for reset
-                begin
-                    ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
-                    ArmedForOpen := FALSE;
-                    ArmedForClose := FALSE;
-                    GroundTarget := FALSE;
-                    PhaseTarget := FALSE;
-                end;
-            end;
-        end;  // IF PresentState=CLOSE
-    end; // With
+    end;  // IF PresentState=CLOSE
 end;
 
 procedure TRecloserObj.Reset;

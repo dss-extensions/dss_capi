@@ -1,11 +1,9 @@
 unit MeterElement;
 
- {
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -29,7 +27,7 @@ type
         PhsAllocationFactor: pDoubleArray;
         CalculatedCurrent: pComplexArray;
         CalculatedVoltage: pComplexArray;
-        AvgAllocFactor: Double; {Average Allocation Factor}
+        AvgAllocFactor: Double; // Average Allocation Factor
 
         constructor Create(ParClass: TDSSClass);
         destructor Destroy; OVERRIDE;
@@ -84,12 +82,12 @@ begin
     AvgAllocFactor := 0.0;
     for i := 1 to Fnphases do
     begin
-        Mag := Cabs(CalculatedCurrent^[i + iOffset]);
+        Mag := Cabs(CalculatedCurrent[i + iOffset]);
         if Mag > 0.0 then
-            PhsAllocationFactor^[i] := SensorCurrent^[i] / Mag
+            PhsAllocationFactor[i] := SensorCurrent[i] / Mag
         else
-            PhsAllocationFactor^[i] := 1.0; // No change
-        AvgAllocFactor := AvgAllocFactor + PhsAllocationFactor^[i];
+            PhsAllocationFactor[i] := 1.0; // No change
+        AvgAllocFactor := AvgAllocFactor + PhsAllocationFactor[i];
     end;
     AvgAllocFactor := AvgAllocFactor / Fnphases;   // Factor for 2- and 3-phase loads
 

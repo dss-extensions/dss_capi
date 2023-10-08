@@ -129,6 +129,7 @@ type
         Rmatrix, Gmatrix,
         XMatrix, Bmatrix: pDoubleArray;  // If not nil then overrides C
         Connection: TReactorConnection;   // 0 or 1 for wye (default) or delta, respectively
+        //TODO: Use enum for ReactorObj.SpecType
         SpecType: Integer;   // 1=kvar, 2=R+jX, 3=R and X matrices, 4=sym components
         IsParallel: LongBool;
         RpSpecified: Boolean;
@@ -656,7 +657,7 @@ var
 begin
     // Normally build only Yprim Shunt, but if there are 2 terminals and
     // Bus1 <> Bus 2
-    if (Yprim = NIL) OR (Yprim.order <> Yorder) {YPrimInvalid} then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) then // YPrimInvalid
     begin    // Reallocate YPrim if something has invalidated old allocation
         if YPrim_Shunt <> NIL then
             YPrim_Shunt.Free;

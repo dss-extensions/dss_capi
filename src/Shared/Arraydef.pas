@@ -1,11 +1,9 @@
 unit Arraydef;
 
- {
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -82,7 +80,7 @@ begin
     begin
         for i := 1 to Size do
         begin
-            pS^[i] := '';  // decrement counter in string
+            pS[i] := '';  // decrement counter in string
         end;
         Reallocmem(ps, 0);  // Throw it away and set it to NIL
     end;

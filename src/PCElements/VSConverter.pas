@@ -340,9 +340,9 @@ begin
     if (FRac = 0.0) and (FXac = 0.0) then
         FRac := EPSILON;
     Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
-    Reallocmem(LastCurrents, SizeOf(LastCurrents^[1]) * Yorder);
+    Reallocmem(LastCurrents, SizeOf(LastCurrents[1]) * Yorder);
     for i := 1 to Yorder do
-        LastCurrents^[i] := 0;
+        LastCurrents[i] := 0;
 end;
 
 procedure TVSConverterObj.CalcYPrim;
@@ -352,7 +352,7 @@ var
     i: Integer;
 begin
     // build YPrim_Series non-zero for just the AC phases, and it will be diagonal
-    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) {YPrimInvalid} then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) then // YPrimInvalid
     begin
         if YPrim_Series <> NIL then
             YPrim_Series.Free;
@@ -398,18 +398,15 @@ var
     i: Integer;
 begin
     try
-        with ActiveCircuit.Solution do
+        ComputeVTerminal();
+        // add the injection currents from both AC and DC nodes, to the
+        // currents from Yprim elements, which should be zero at the DC nodes
+        YPrim.MVMult(Curr, Vterminal);
+        GetInjCurrents(ComplexBuffer);
+        for i := 1 to Yorder do
         begin
-            ComputeVTerminal;
-            // add the injection currents from both AC and DC nodes, to the
-            // currents from Yprim elements, which should be zero at the DC nodes
-            YPrim.MVMult(Curr, Vterminal);
-            GetInjCurrents(ComplexBuffer);
-            for i := 1 to Yorder do
-            begin
-                Curr[i] := Curr[i] - ComplexBuffer^[i];
-                LastCurrents^[i] := Curr[i];
-            end;
+            Curr[i] := Curr[i] - ComplexBuffer[i];
+            LastCurrents[i] := Curr[i];
         end;
     except
         on E: Exception do
@@ -422,7 +419,8 @@ procedure TVSConverterObj.GetInjCurrents(Curr: pComplexArray);
 var
     Vmag: Complex;
     Vdc, Sphase, Stotal: Complex;
-    Pac, Deg, Idc, Idclim{, Iaclim, Itmag}: Double;
+    Pac, Deg, Idc, Idclim: Double;
+    // Iaclim, Itmag: Double;
     i, Nac: Integer;
 begin
     //  AC Voltage source injection currents given by this formula:
@@ -448,14 +446,14 @@ begin
         Vdc.re := 1000.0 * FkVdc;
     Vmag := Vdc * (0.353553 * Fm);
     RotatePhasorDeg(Vmag, 1.0, Fd);
-    ComplexBuffer^[1] := Vmag;
+    ComplexBuffer[1] := Vmag;
     Deg := -360.0 / Nac;
     for i := 2 to Nac do
     begin
         RotatePhasorDeg(Vmag, 1.0, Deg);
-        ComplexBuffer^[i] := Vmag;
+        ComplexBuffer[i] := Vmag;
     end;
-    ComplexBuffer^[FNPhases] := 0;
+    ComplexBuffer[FNPhases] := 0;
     YPrim.MVMult(Curr, ComplexBuffer);
 
   // calculate the converter AC power, exclusive of the losses, using LastCurrents
@@ -463,8 +461,8 @@ begin
     Stotal.im := 0.0;
     for i := 1 to Nac do
     begin
-//    Sphase := ComplexBuffer^[i] * cong(LastCurrents^[i]);
-        Sphase := ComplexBuffer^[i] * cong(Iterminal[i]);
+//    Sphase := ComplexBuffer[i] * cong(LastCurrents[i]);
+        Sphase := ComplexBuffer[i] * cong(Iterminal[i]);
         Stotal := Stotal + Sphase;
     end;
     Pac := Stotal.re;
@@ -495,5 +493,6 @@ begin
     inherited;
 end;
 
-finalization    ModeEnum.Free;
+finalization
+    ModeEnum.Free;
 end.

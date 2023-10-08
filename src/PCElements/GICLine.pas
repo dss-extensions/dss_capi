@@ -299,13 +299,13 @@ begin
 end;
 
 function TGICLine.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
 begin
-    with TObj(ptr) do
-    begin
-        RecalcElementData;
-        YPrimInvalid := TRUE;
-        Exclude(Flags, Flg.EditionActive);
-    end;
+    obj := TObj(ptr);
+    obj.RecalcElementData();
+    obj.YPrimInvalid := TRUE;
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -370,7 +370,7 @@ begin
     Nterms := 2;   // Now a 2-terminal device
     Z := NIL;
     Zinv := NIL;
-     {Basefrequency := 60.0;} // set in base class
+    // Basefrequency := 60.0; // set in base class
 
     R := 1.0;
     X := 0.0;
@@ -418,8 +418,8 @@ begin
     Z := TCmatrix.CreateMatrix(Fnphases);
     Zinv := TCMatrix.CreateMatrix(Fnphases);
 
-    {Update property Value array}
-     { Don't change a specified value; only computed ones}
+    // Update property Value array
+     //  Don't change a specified value; only computed ones
 
     Zs := cmplx(R, X);
     Zm := 0;
@@ -450,7 +450,7 @@ var
     Xc: Double;
 begin
     // Build only YPrim Series
-    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) {YPrimInvalid} then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) then // YPrimInvalid
     begin
         if YPrim_Series <> NIL then
             YPrim_Series.Free;
@@ -468,13 +468,13 @@ begin
     FYprimFreq := ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
-     { Put in Series RL Adjusted for frequency }
+     //  Put in Series RL Adjusted for frequency 
     for i := 1 to Fnphases do
     begin
         for j := 1 to Fnphases do
         begin
             Value := Z[i, j];
-            Value.im := Value.im * FreqMultiplier;  {Modify from base freq}
+            Value.im := Value.im * FreqMultiplier;  // Modify from base freq
             Zinv[i, j] := value;
         end;
     end;
@@ -486,10 +486,10 @@ begin
             Zinv.AddElement(i, i, Cmplx(0.0, Xc));
     end;
 
-    Zinv.Invert();  {Invert in place}
+    Zinv.Invert();  // Invert in place
 
     if Zinv.InvertError > 0 then
-    begin       {If error, put in Large series conductance}
+    begin       // If error, put in Large series conductance
         DoErrorMsg('TGICLineObj.CalcYPrim', 
             Format(_('Matrix Inversion Error for GICLine "%s"'), [Name]),
             _('Invalid impedance specified. Replaced with small resistance.'), 325);
@@ -514,8 +514,8 @@ begin
 
     YPrim.CopyFrom(YPrim_Series);
 
-     {Now Account for Open Conductors}
-     {For any conductor that is open, zero out row and column}
+     // Now Account for Open Conductors
+     // For any conductor that is open, zero out row and column
     inherited CalcYPrim;
 
     YPrimInvalid := FALSE;
@@ -532,48 +532,46 @@ begin
         // equally displaced in time.
         Vmag := Volts;
 
-        with ActiveCircuit.Solution do
-
-            if IsHarmonicModel and (SpectrumObj <> NIL) then
+        if ActiveCircuit.Solution.IsHarmonicModel and (SpectrumObj <> NIL) then
+        begin
+            SrcHarmonic := ActiveCircuit.Solution.Frequency / SrcFrequency;
+            Vharm := SpectrumObj.GetMult(SrcHarmonic) * Vmag;  // Base voltage for this harmonic
+            RotatePhasorDeg(Vharm, SrcHarmonic, Angle);  // Rotate for phase 1 shift
+            for i := 1 to Fnphases do
             begin
-                SrcHarmonic := Frequency / SrcFrequency;
-                Vharm := SpectrumObj.GetMult(SrcHarmonic) * Vmag;  // Base voltage for this harmonic
-                RotatePhasorDeg(Vharm, SrcHarmonic, Angle);  // Rotate for phase 1 shift
-                for i := 1 to Fnphases do
+                Vterminal[i] := Vharm;
+                VTerminal[i + Fnphases] := 0;
+                if (i < Fnphases) then
                 begin
-                    Vterminal[i] := Vharm;
-                    VTerminal^[i + Fnphases] := 0;
-                    if (i < Fnphases) then
-                    begin
-                        case ScanType of
-                            1:
-                                RotatePhasorDeg(Vharm, 1.0, -360.0 / Fnphases); // maintain pos seq
-                            0: ;  // Do nothing for Zero Sequence; All the same
-                        else
-                            RotatePhasorDeg(Vharm, SrcHarmonic, -360.0 / Fnphases); // normal rotation
-                        end;
-                    end;
-                end;
-            end
-            else
-            begin  // non-harmonic modes or no spectrum
-                if abs(Frequency - SrcFrequency) > EPSILON2 then
-                    Vmag := 0.0;  // Solution Frequency and Source Frequency don't match!
-       {NOTE: Re-uses VTerminal space}
-                for i := 1 to Fnphases do
-                begin
-                    case Sequencetype of   // Always 0 for GIC
-                        -1:
-                            Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle + (i - 1) * 360.0 / Fnphases));  // neg seq
-                        0:
-                            Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle));   // all the same for zero sequence
+                    case ScanType of
+                        1:
+                            RotatePhasorDeg(Vharm, 1.0, -360.0 / Fnphases); // maintain pos seq
+                        0: ;  // Do nothing for Zero Sequence; All the same
                     else
-                        Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle - (i - 1) * 360.0 / Fnphases));
+                        RotatePhasorDeg(Vharm, SrcHarmonic, -360.0 / Fnphases); // normal rotation
                     end;
-                // bottom part of the vector is zero
-                    VTerminal^[i + Fnphases] := 0;    // See comments in GetInjCurrents
                 end;
             end;
+        end
+        else
+        begin  // non-harmonic modes or no spectrum
+            if abs(ActiveCircuit.Solution.Frequency - SrcFrequency) > EPSILON2 then
+                Vmag := 0.0;  // Solution Frequency and Source Frequency don't match!
+            // NOTE: Re-uses VTerminal space
+            for i := 1 to Fnphases do
+            begin
+                case Sequencetype of   // Always 0 for GIC
+                    -1:
+                        Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle + (i - 1) * 360.0 / Fnphases));  // neg seq
+                    0:
+                        Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle));   // all the same for zero sequence
+                else
+                    Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle - (i - 1) * 360.0 / Fnphases));
+                end;
+                // bottom part of the vector is zero
+                VTerminal[i + Fnphases] := 0;    // See comments in GetInjCurrents
+            end;
+        end;
 
     except
         DoSimpleMsg('Error computing Voltages for %s. Check specification. Aborting.', [FullName], 326);
@@ -594,19 +592,15 @@ var
     i: Integer;
 begin
     try
-        with ActiveCircuit.Solution do
-        begin
-            for  i := 1 to Yorder do
-                Vterminal[i] := NodeV[NodeRef[i]];
+        for  i := 1 to Yorder do
+            Vterminal[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
 
-            YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
+        YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
 
-            GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
-            // Add Together  with yprim currents
-            for i := 1 to Yorder do
-                Curr[i] := Curr[i] - ComplexBuffer^[i];
-
-        end;
+        GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
+        // Add Together  with yprim currents
+        for i := 1 to Yorder do
+            Curr[i] -= ComplexBuffer[i];
     except
         On E: Exception do
             DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName]), E.Message,
@@ -616,13 +610,13 @@ end;
 
 procedure TGICLineObj.GetInjCurrents(Curr: pComplexArray);
 begin
-   { source injection currents given by this formula:
-     _     _           _         _
-     |Iinj1|           |GICLine  |
-     |     | = [Yprim] |         |
-     |Iinj2|           | 0       |
-     _     _           _         _
-   }
+   //  source injection currents given by this formula:
+   //  _     _           _         _
+   //  |Iinj1|           |GICLine  |
+   //  |     | = [Yprim] |         |
+   //  |Iinj2|           | 0       |
+   //  _     _           _         _
+   //
 
     GetVterminalForSource;  // gets voltage vector above
     YPrim.MVMult(Curr, Vterminal);
@@ -637,11 +631,10 @@ var
 begin
     inherited DumpProperties(F, Complete);
 
-    with ParentClass do
-        for i := 1 to NumProperties do
-        begin
-            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
-        end;
+    for i := 1 to ParentClass.NumProperties do
+    begin
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+    end;
 
     if Complete then
     begin

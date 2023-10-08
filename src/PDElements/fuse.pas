@@ -326,8 +326,8 @@ begin
 
     for i := 1 to Min(FUSEMAXDIM, FNPhases) do 
     begin
-        FPresentState^[i] := CTRL_CLOSE;
-        FNormalState^[i] := CTRL_CLOSE; // default to present state
+        FPresentState[i] := CTRL_CLOSE;
+        FNormalState[i] := CTRL_CLOSE; // default to present state
         ReadyToBlow[i] := FALSE;
         hAction[i] := 0;
     End;
@@ -435,17 +435,14 @@ begin
     if Phs > FUSEMAXDIM then
         Exit;
 
-    with ControlledElement do
-    begin
-        ControlledElement.ActiveTerminalIdx := ElementTerminal;
-        if FPresentState[Phs] = CTRL_CLOSE then
-            if ReadyToBlow[Phs] then
-            begin   // ignore if we became disarmed in meantime
-                ControlledElement.Closed[Phs] := FALSE;   // Open all phases of active terminal
-                AppendtoEventLog(Self.FullName, 'Phase ' + IntToStr(Phs) + ' Blown');
-                hAction[phs] := 0;
-            end;
-    end;
+    ControlledElement.ActiveTerminalIdx := ElementTerminal;
+    if FPresentState[Phs] = CTRL_CLOSE then
+        if ReadyToBlow[Phs] then
+        begin   // ignore if we became disarmed in meantime
+            ControlledElement.Closed[Phs] := FALSE;   // Open all phases of active terminal
+            AppendtoEventLog(Self.FullName, 'Phase ' + IntToStr(Phs) + ' Blown');
+            hAction[phs] := 0;
+        end;
 end;
 
 procedure TFuseObj.Sample;
@@ -457,45 +454,46 @@ begin
     ControlledElement.ActiveTerminalIdx := ElementTerminal;
     MonitoredElement.GetCurrents(cBuffer);
 
-    with MonitoredElement do
-        for i := 1 to Min(FUSEMAXDIM, MonitoredElement.Nphases) do
+    for i := 1 to Min(FUSEMAXDIM, MonitoredElement.Nphases) do
+    begin
+        if ControlledElement.Closed[i]      // Check state of phases of active terminal
+        then
+            FPresentState[i] := CTRL_CLOSE
+        else
+            FPresentState[i] := CTRL_OPEN;
+
+        if FPresentState[i] = CTRL_CLOSE then
         begin
-            if ControlledElement.Closed[i]      // Check state of phases of active terminal
-            then
-                FPresentState[i] := CTRL_CLOSE
-            else
-                FPresentState[i] := CTRL_OPEN;
+            TripTime := -1.0;
 
-            if FPresentState[i] = CTRL_CLOSE then
+            // Check Phase Trip, if any
+
+            if FuseCurve <> NIL then
             begin
-                TripTime := -1.0;
+                Cmag := Cabs(cBuffer[i]);
+                TripTime := FuseCurve.GetTCCTime(Cmag / RatedCurrent);
+            end;
 
-                // Check Phase Trip, if any
-
-                if FuseCurve <> NIL then
+            if TripTime > 0.0 then
+            begin
+                if not ReadyToBlow[i] then
                 begin
-                    Cmag := Cabs(cBuffer[i]);
-                    TripTime := FuseCurve.GetTCCTime(Cmag / RatedCurrent);
+                    // Then arm for an open operation
+                    hAction[i] := ActiveCircuit.ControlQueue.Push(TripTime + Delaytime, i, 0, Self);
+                    ReadyToBlow[i] := TRUE;
                 end;
-
-                if TripTime > 0.0 then
+            end
+            else
+            begin
+                if ReadyToBlow[i] then
                 begin
-                    if not ReadyToBlow[i] then
-                    begin  // Then arm for an open operation
-                        hAction[i] := ActiveCircuit.ControlQueue.Push(TripTime + Delaytime, i, 0, Self);
-                        ReadyToBlow[i] := TRUE;
-                    end;
-                end
-                else
-                begin
-                    if ReadyToBlow[i] then
-                    begin  //  Current has dropped below pickup and it hasn't blown yet
-                        ActiveCircuit.ControlQueue.Delete(hAction[i]);  // Delete the fuse blow action
-                        ReadyToBlow[i] := FALSE;
-                    end;
+                    // Current has dropped below pickup and it hasn't blown yet
+                    ActiveCircuit.ControlQueue.Delete(hAction[i]);  // Delete the fuse blow action
+                    ReadyToBlow[i] := FALSE;
                 end;
-            end; // IF PresentState=CLOSE
-        end;
+            end;
+        end; // IF PresentState=CLOSE
+    end;
 end;
 
 procedure TFuseObj.Reset;

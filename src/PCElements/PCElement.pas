@@ -1,11 +1,9 @@
 unit PCElement;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -102,9 +100,8 @@ var
     i: Integer;
 begin
     Result := 0;
-    with ActiveCircuit.Solution do
-        for i := 1 to Yorder do
-            Currents[NodeRef[i]] += InjCurrent[i];
+    for i := 1 to Yorder do
+        ActiveCircuit.Solution.Currents[NodeRef[i]] += InjCurrent[i];
 end;
 
 procedure TPCElement.GetTerminalCurrents(Curr: pComplexArray);
@@ -135,27 +132,24 @@ var
     i: Integer;
 begin
     try
-        with ActiveCircuit.Solution do
+        if Enabled then
         begin
-            if (Enabled) then
+            if (ActiveCircuit.Solution.LastSolutionWasDirect) and (not (ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel)) then
             begin
-                if (LastSolutionWasDirect) and (not (IsDynamicModel or IsHarmonicModel)) then
-                begin
-           // Take a short cut and get Currents from YPrim only
-           // For case where model is entirely in Y matrix
-                    CalcYPrimContribution(Curr);
-                end
-                else
-                begin
-                    GetTerminalCurrents(Curr);
-                end;
+                // Take a short cut and get Currents from YPrim only
+                // For case where model is entirely in Y matrix
+                CalcYPrimContribution(Curr);
             end
             else
-            begin   // not enabled
-                for i := 1 to Yorder do
-                    Curr[i] := 0;
+            begin
+                GetTerminalCurrents(Curr);
             end;
-        end;  {With}
+        end
+        else
+        begin   // not enabled
+            for i := 1 to Yorder do
+                Curr[i] := 0;
+        end;
 
 
     except
@@ -239,11 +233,10 @@ begin
 
     if Leaf then
     begin
-        with ParentClass do
-            for i := 1 to NumProperties do
-            begin
-                FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
-            end;
+        for i := 1 to ParentClass.NumProperties do
+        begin
+            FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+        end;
 
         if Complete then
         begin

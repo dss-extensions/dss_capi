@@ -592,5 +592,6 @@ begin
     end;
 end;
 
-finalization    ActionEnum.Free;        
+finalization
+    ActionEnum.Free;
 end.

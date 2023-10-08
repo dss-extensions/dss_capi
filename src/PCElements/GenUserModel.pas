@@ -1,17 +1,14 @@
 unit GenUserModel;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-
-  7-7-10
-  Modified to allow DLLS to retain ANSI string type in Edit function and Var names
-  Nominally all strings passed to DLLS are ASCII to make it easier to write code in other languages
-  and legacy defaults
-
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
+//
+// 7-7-10
+// Modified to allow DLLS to retain ANSI string type in Edit function and Var names
+// Nominally all strings passed to DLLS are ASCII to make it easier to write code in other languages
+// and legacy defaults
 
 interface
 
@@ -26,7 +23,7 @@ TYPE
          Fname: String;    // Name of the DLL file containing user model
          FuncError:Boolean;
 
-         {These functions should only be called by the object itself}
+         // These functions should only be called by the object itself
          FNew:    Function(GenVars: Pointer; Var DynaData:TDynamicsRec; Var CallBacks:TDSSCallBacks): Integer;  Stdcall;// Make a new instance
          FDelete: Procedure(var x:Integer); Stdcall;  // deletes specified instance
          FSelect: Function (var x:Integer):Integer; Stdcall;    // Select active instance
@@ -49,11 +46,11 @@ TYPE
 
         FActiveGeneratorVars: Pointer;
 
-        {Save and restore data}
+        // Save and restore data
         FSave:    Procedure; Stdcall;
         FRestore: Procedure; Stdcall;
 
-        {Monitoring functions}
+        // Monitoring functions
         FNumVars:     Function:Integer;Stdcall;
         FGetAllVars:  Procedure(Vars:pDoubleArray);StdCall;  // Get all vars
         FGetVariable: Function(var I:Integer):Double;StdCall;// Get a particular var
@@ -81,7 +78,7 @@ implementation
 Uses Generator, DSSGlobals, dynlibs, Sysutils,
      DSSHelper;
 
-{ TGenUserModel }
+//  TGenUserModel 
 
 function TGenUserModel.CheckFuncError(Addr: Pointer;  FuncName: String): Pointer;
 begin
@@ -118,7 +115,7 @@ begin
         If FID <> 0 Then
          Begin
               Result := True;
-              Select;    {Automatically select if true}
+              Select;    // Automatically select if true
          End
         Else Result := False;
 end;
@@ -142,7 +139,7 @@ end;
 
 procedure TGenUserModel.Set_Name(const Value:String);
 begin
-    {If Model already points to something, then free it}
+    // If Model already points to something, then free it
 
         IF FHandle <> 0 Then
         Begin
@@ -155,7 +152,7 @@ begin
              FreeLibrary(FHandle);
         End;
 
-        {If Value is blank or zero-length, bail out.}
+        // If Value is blank or zero-length, bail out.
         If (Length(Value)=0) or (Length(TrimLeft(Value))=0) Then Exit;
         If comparetext(value, 'none')=0 Then Exit;
 

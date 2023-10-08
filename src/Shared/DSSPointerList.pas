@@ -1,11 +1,9 @@
 unit DSSPointerList;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -35,9 +33,6 @@ type
         List: pPointerArray;
         IncrementSize: Integer;
 
-        function Get_First: Pointer;
-        function Get_Next: Pointer;
-        function Get_Active: Pointer;
     PUBLIC
         constructor Create(Size: Integer);
         destructor Destroy; OVERRIDE;
@@ -47,10 +42,10 @@ type
         function Add(p: Pointer): Integer;  // Returns index of item
         function Get(i: Integer): Pointer; // Changes active item
         function At(i: Integer): Pointer; // Does not change the active item
-        property First: Pointer READ Get_First;
-        property Next: Pointer READ Get_Next;
+        function First(): Pointer;
+        function Next(): Pointer;
         property Count: Integer READ NumInList;
-        property Active: Pointer READ Get_Active;
+        function Active(): Pointer;
         property ActiveIndex: Integer READ ActiveItem;
         procedure ResetActive();
 
@@ -85,14 +80,14 @@ begin
     if NumInList > MaxAllocated then
     begin
         MaxAllocated := MaxAllocated + IncrementSize;
-        ReallocMem(List, SizeOf(List^[1]) * MaxAllocated);
+        ReallocMem(List, SizeOf(List[1]) * MaxAllocated);
     end;
-    List^[NumInList] := p;
+    List[NumInList] := p;
     Result := NumInList;
     ActiveItem := Result;
 end;
 
-function TDSSPointerList.Get_Active: Pointer;
+function TDSSPointerList.Active(): Pointer;
 begin
     if (ActiveItem > 0) and (ActiveItem <= NumInList) then
         Result := Get(ActiveItem)
@@ -100,12 +95,12 @@ begin
         Result := NIL;
 end;
 
-function TDSSPointerList.Get_First: Pointer;
+function TDSSPointerList.First(): Pointer;
 begin
     if NumInList > 0 then
     begin
         ActiveItem := 1;
-        Result := List^[ActiveItem];
+        Result := List[ActiveItem];
     end
     else
     begin
@@ -114,7 +109,7 @@ begin
     end;
 end;
 
-function TDSSPointerList.Get_Next: Pointer;
+function TDSSPointerList.Next(): Pointer;
 begin
     if NumInList > 0 then
     begin
@@ -125,7 +120,7 @@ begin
             Result := NIL;
         end
         else
-            Result := List^[ActiveItem];
+            Result := List[ActiveItem];
     end
     else
     begin
@@ -140,7 +135,7 @@ begin
         Result := NIL
     else
     begin
-        Result := List^[i];
+        Result := List[i];
         ActiveItem := i;
     end;
 end;
@@ -151,7 +146,7 @@ begin
         Result := NIL
     else
     begin
-        Result := List^[i];
+        Result := List[i];
     end;
 end;
 

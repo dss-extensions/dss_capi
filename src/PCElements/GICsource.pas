@@ -230,13 +230,13 @@ begin
 end;
 
 function TGICsource.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
 begin
-    with TObj(ptr) do
-    begin
-        RecalcElementData;   // Updates Volts
-        YPrimInvalid := TRUE;
-        Exclude(Flags, Flg.EditionActive);
-    end;
+    obj := TObj(ptr);
+    obj.RecalcElementData(); // Updates Volts
+    obj.YPrimInvalid := TRUE;
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -366,7 +366,7 @@ var
     NegValue: Complex;
 begin
     // Build only YPrim Series
-    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) {YPrimInvalid} then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) then // YPrimInvalid
     begin
         if YPrim_Series <> NIL then
             YPrim_Series.Free;
@@ -407,18 +407,15 @@ var
 begin
     try
         // If the solution frequency not 0.1 Hz, source is shorted.
-        with ActiveCircuit.Solution do
+        if abs(ActiveCircuit.Solution.Frequency - SrcFrequency) < EPSILON2 then
+            Vmag := Volts
+        else
+            Vmag := 0.0;
+        for i := 1 to Fnphases do
         begin
-            if abs(Frequency - SrcFrequency) < EPSILON2 then
-                Vmag := Volts
-            else
-                Vmag := 0.0;
-            for i := 1 to Fnphases do
-            begin
-                Vterminal[i] := pdegtocomplex(Vmag, (Angle));   // all the same for zero sequence
-                 // bottom part of the vector is zero
-                VTerminal^[i + Fnphases] := 0;    // See comments in GetInjCurrents
-            end;
+            Vterminal[i] := pdegtocomplex(Vmag, (Angle));   // all the same for zero sequence
+                // bottom part of the vector is zero
+            VTerminal[i + Fnphases] := 0;    // See comments in GetInjCurrents
         end;
 
     except
@@ -441,19 +438,15 @@ var
     i: Integer;
 begin
     try
-        with ActiveCircuit.Solution do
-        begin
-            for i := 1 to Yorder do
-                Vterminal[i] := NodeV[NodeRef[i]];
+        for i := 1 to Yorder do
+            Vterminal[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
 
-            YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
+        YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
 
-            GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
-            // Add Together  with yprim currents
-            for i := 1 to Yorder do
-                Curr[i] := Curr[i] - ComplexBuffer^[i];
-
-        end;
+        GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
+        // Add Together  with yprim currents
+        for i := 1 to Yorder do
+            Curr[i] := Curr[i] - ComplexBuffer[i];
     except
         On E: Exception do
             DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName]), E.Message,

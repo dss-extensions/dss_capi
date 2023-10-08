@@ -1,11 +1,9 @@
 unit CNLineConstants;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 interface
 
 uses
@@ -99,7 +97,7 @@ begin
 end;
 
 procedure TCNLineConstants.Calc(f: Double; EarthModel: Integer);
-{Compute base Z and YC matrices in ohms/m for this frequency and earth impedance}
+// Compute base Z and YC matrices in ohms/m for this frequency and earth impedance
 var
     Zi, Zspacing: Complex;
     PowerFreq: Boolean;
@@ -134,7 +132,7 @@ begin
     N := FNumConds + FNPhases;
     Zmat := TCMatrix.CreateMatrix(N);
 
-  {For less than 1 kHz use GMR to better match published data}
+    // For less than 1 kHz use GMR to better match published data
     LFactor := Cmplx(0.0, Fw * mu0 / twopi);
     if (f < 1000.0) and (f > 40.0) then
         PowerFreq := TRUE
@@ -235,7 +233,7 @@ begin
     if ReducedSize > 0 then
         Kron(ReducedSize);  // Was reduced so reduce again to same size
 
-  {Else the Zmatrix is OK as last computed}
+    // Else the Zmatrix is OK as last computed
     FRhoChanged := FALSE;
 end;
 
@@ -256,7 +254,5 @@ begin
     Reallocmem(FRStrand, 0);
     inherited;
 end;
-
-initialization
 
 end.

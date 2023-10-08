@@ -1,11 +1,9 @@
 unit Ucmatrix;
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  Copyright (c) 2018-2021, Paulo Meira
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// Copyright (c) 2018-2023, Paulo Meira
+// All rights reserved.
+// ----------------------------------------------------------
 interface
 
 uses
@@ -41,7 +39,7 @@ type
         procedure AddElemsym(i, j: Integer; Value: Complex);
         function GetElement(i, j: Integer): Complex;
         function GetErrorCode: Integer;
-        procedure MVmult(b, x: pComplexArray); inline; {b = Ax}
+        procedure MVmult(b, x: pComplexArray); inline; // b = Ax
         function GetValuesArrayPtr(var Order: Integer): pComplexArray;
         procedure ZeroRow(iRow: Integer);
         procedure ZeroCol(iCol: Integer);
@@ -106,7 +104,7 @@ var
     v: pComplex;
 begin
     Result := True;
-    v := @Values^[1];
+    v := @Values[1];
     for i := 1 to Norder * Norder do
     begin
         if (v^.re <> 0) or (v^.im <> 0) then
@@ -129,14 +127,14 @@ begin
     
     for j := 1 to Norder do
     begin
-        e := Values^[((j - 1) * Norder + i)];
+        e := Values[((j - 1) * Norder + i)];
         if (e.re <> 0) or (e.im <> 0) then
         begin
             Result := False;
             Exit;
         end;
         
-        e := Values^[((i - 1) * Norder + j)];
+        e := Values[((i - 1) * Norder + j)];
         if (e.re <> 0) or (e.im <> 0) then
         begin
             Result := False;
@@ -160,9 +158,9 @@ begin
         Sum := Cmplx(0.0, 0.0);
         for j := 1 to Norder do
         begin
-            Sum += (Values^[((j - 1) * Norder + i)]) * x^[j]);
+            Sum += (Values[((j - 1) * Norder + i)]) * x[j]);
         end;
-        b^[i] := Sum;
+        b[i] := Sum;
     end;
 end;
 {$ENDIF}
@@ -171,7 +169,7 @@ procedure TcMatrix.Negate;
 var i: integer;
 begin
     for i := 1 to Norder * Norder do
-        Values^[i] := -Values^[i];
+        Values[i] := -Values[i];
 end;
 
 procedure TcMatrix.Invert;
@@ -210,7 +208,7 @@ begin
 
     // Zero LT
     for j := 1 to L do
-        LT^[j] := 0;
+        LT[j] := 0;
 
     T1 := Cmplx(0.0, 0.0);
     K := 1;
@@ -220,12 +218,12 @@ begin
     begin
         for  LL := 1 to L do
         begin
-            if LT^[LL] <> 1 then
+            if LT[LL] <> 1 then
             begin
-                RMY := Cabs(A^[Index(LL, LL)]) - CAbs(T1);  // Will this work??
+                RMY := Cabs(A[Index(LL, LL)]) - CAbs(T1);  // Will this work??
                 if RMY > 0.0 then
                 begin
-                    T1 := A^[Index(LL, LL)];
+                    T1 := A[Index(LL, LL)];
                     K := LL;
                 end;
             end;
@@ -240,59 +238,59 @@ begin
         end;
 
         T1 := Cmplx(0.0, 0.0);
-        LT^[k] := 1;
+        LT[k] := 1;
         for i := 1 to L do
             if i <> k then
                 for j := 1 to L do
                     if j <> k then
-                        A^[Index(i, j)] :=
-                            A^[Index(i, j)] - (A^[Index(i, k)] * A^[Index(k, j)]) / A^[Index(k, k)];
+                        A[Index(i, j)] :=
+                            A[Index(i, j)] - (A[Index(i, k)] * A[Index(k, j)]) / A[Index(k, k)];
 
-        A^[Index(k, k)] := -Cinv(A^[Index(k, k)]); // Invert and negate k,k element
+        A[Index(k, k)] := -Cinv(A[Index(k, k)]); // Invert and negate k,k element
 
         for  i := 1 to L do
             if i <> k then
             begin
-                A^[Index(i, k)] := A^[Index(i, k)] * A^[Index(k, k)];
-                A^[Index(k, i)] := A^[Index(k, i)] * A^[Index(k, k)];
+                A[Index(i, k)] := A[Index(i, k)] * A[Index(k, k)];
+                A[Index(k, i)] := A[Index(k, i)] * A[Index(k, k)];
             end;
 
     end; // M loop
 
     for  j := 1 to L do
         for  k := 1 to L do
-            A^[Index(j, k)] := -A^[Index(j, k)];
+            A[Index(j, k)] := -A[Index(j, k)];
 
-    FreeMem(LT, SizeOF(LT^[1]) * L);
+    FreeMem(LT, SizeOF(LT[1]) * L);
 end;
 
 procedure TcMatrix.SetElement(i, j: Integer; Value: Complex);
 begin
-    Values^[((j - 1) * Norder + i)] := Value;
+    Values[((j - 1) * Norder + i)] := Value;
 end;
 
 procedure TcMatrix.AddElement(i, j: Integer; Value: Complex);
 begin
-    Values^[((j - 1) * Norder + i)] += Value;
+    Values[((j - 1) * Norder + i)] += Value;
 end;
 
 procedure TcMatrix.SetElemsym(i, j: Integer; Value: Complex);
 begin
-    Values^[((j - 1) * Norder + i)] := Value;
+    Values[((j - 1) * Norder + i)] := Value;
     if i <> j then
-        Values^[((i - 1) * Norder + j)] := Value; // ensure symmetry
+        Values[((i - 1) * Norder + j)] := Value; // ensure symmetry
 end;
    
 procedure TcMatrix.AddElemsym(i, j: Integer; Value: Complex);
 begin
-    Values^[((j - 1) * Norder + i)] += Value;
+    Values[((j - 1) * Norder + i)] += Value;
     if i <> j then
-        Values^[((i - 1) * Norder + j)] += Value; // ensure symmetry
+        Values[((i - 1) * Norder + j)] += Value; // ensure symmetry
 end;
 
 function TcMatrix.GetElement(i, j: Integer): Complex;
 begin
-    Result := Values^[((j - 1) * Norder + i)];
+    Result := Values[((j - 1) * Norder + i)];
 end;
 
 function TcMatrix.GetErrorCode: Integer;
@@ -340,7 +338,7 @@ begin
     j := iRow;
     for i := 1 to Norder do
     begin
-        Values^[j] := Zero;
+        Values[j] := Zero;
         Inc(j, Norder);
     end;
 end;
@@ -353,7 +351,7 @@ begin
     Zero := Cmplx(0.0, 0.0);
     for i := ((iCol - 1) * Norder + 1) to (iCol * Norder) do
     begin
-        Values^[i] := Zero;
+        Values[i] := Zero;
     end;
 end;
 
@@ -364,7 +362,7 @@ begin
     Result := Cmplx(0.0, 0.0);
     for i := 1 to Norder do
     begin
-        Result += Values^[((i - 1) * Norder + i)];
+        Result += Values[((i - 1) * Norder + i)];
     end;
 
     if Norder > 0 then
@@ -382,7 +380,7 @@ begin
         for j := i + 1 to Norder do
         begin
             Inc(Ntimes);
-            Result += Values^[((j - 1) * Norder + i)];
+            Result += Values[((j - 1) * Norder + i)];
         end;
 
     if Ntimes > 0 then

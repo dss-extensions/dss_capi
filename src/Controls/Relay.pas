@@ -954,62 +954,61 @@ begin
 
     ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal of CktElement to terminal 1
 
-    with ControlledElement do
-        case Code of
-            Integer(CTRL_OPEN):
-                if FPresentState = CTRL_CLOSE then
-                    if ArmedForOpen then
-                    begin   // ignore if we became disarmed in meantime
-                        ControlledElement.Closed[0] := FALSE;   // Open all phases of active terminal
-                        if (OperationCount > NumReclose) then
-                        begin
-                            LockedOut := TRUE;
-                            if ShowEventLog then
-                                AppendtoEventLog(Self.FullName, Format(_('Opened on %s & Locked Out'), [RelayTarget]));
-                        end
-                        else
-                        if ShowEventLog then
-                            AppendtoEventLog(Self.FullName, Format(_('Opened on %s'), [RelayTarget]));
-
-                        if PhaseTarget and ShowEventLog then
-                            AppendtoEventLog(' ', _('Phase Target'));
-                        if GroundTarget and ShowEventLog then
-                            AppendtoEventLog(' ', _('Ground Target'));
-
-                        ArmedForOpen := FALSE;
-
-                        if ControlType = td21 then
-                            td21_quiet := td21_pt + 1;
-                    end;
-
-            Integer(CTRL_CLOSE):
-                if FPresentState = CTRL_OPEN then
-                    if ArmedForClose and not LockedOut then
+    case Code of
+        Integer(CTRL_OPEN):
+            if FPresentState = CTRL_CLOSE then
+                if ArmedForOpen then
+                begin   // ignore if we became disarmed in meantime
+                    ControlledElement.Closed[0] := FALSE;   // Open all phases of active terminal
+                    if (OperationCount > NumReclose) then
                     begin
-                        ControlledElement.Closed[0] := TRUE; // Close all phases of active terminal
-                        Inc(OperationCount);
+                        LockedOut := TRUE;
                         if ShowEventLog then
-                            AppendtoEventLog(Self.FullName, _('Closed'));
-
-                        ArmedForClose := FALSE;
-
-                        if ControlType = td21 then
-                            td21_quiet := td21_pt div 2;
-                    end;
-
-            Integer(CTRL_RESET):
-                if ArmedForClose and not LockedOut then
-                begin
+                            AppendtoEventLog(Self.FullName, Format(_('Opened on %s & Locked Out'), [RelayTarget]));
+                    end
+                    else
                     if ShowEventLog then
-                        if ShowEventLog then AppendToEventLog(Self.FullName, _('Reset'));
+                        AppendtoEventLog(Self.FullName, Format(_('Opened on %s'), [RelayTarget]));
 
-                    Reset();
+                    if PhaseTarget and ShowEventLog then
+                        AppendtoEventLog(' ', _('Phase Target'));
+                    if GroundTarget and ShowEventLog then
+                        AppendtoEventLog(' ', _('Ground Target'));
+
+                    ArmedForOpen := FALSE;
 
                     if ControlType = td21 then
-                        td21_quiet := td21_pt div 2
+                        td21_quiet := td21_pt + 1;
                 end;
 
-        end;
+        Integer(CTRL_CLOSE):
+            if FPresentState = CTRL_OPEN then
+                if ArmedForClose and not LockedOut then
+                begin
+                    ControlledElement.Closed[0] := TRUE; // Close all phases of active terminal
+                    Inc(OperationCount);
+                    if ShowEventLog then
+                        AppendtoEventLog(Self.FullName, _('Closed'));
+
+                    ArmedForClose := FALSE;
+
+                    if ControlType = td21 then
+                        td21_quiet := td21_pt div 2;
+                end;
+
+        Integer(CTRL_RESET):
+            if ArmedForClose and not LockedOut then
+            begin
+                if ShowEventLog then
+                    if ShowEventLog then AppendToEventLog(Self.FullName, _('Reset'));
+
+                Reset();
+
+                if ControlType = td21 then
+                    td21_quiet := td21_pt div 2
+            end;
+
+    end;
 end;
 
 procedure TRelayObj.Sample;
@@ -1125,30 +1124,27 @@ procedure TRelayObj.GenericLogic;
 var
     VarValue: Double;
 begin
-    with MonitoredElement do
-    begin
-        VarValue := TPCElement(MonitoredElement).Variable[MonitorVarIndex];
+    VarValue := TPCElement(MonitoredElement).Variable[MonitorVarIndex];
 
-        // Check for Trip
-        if (VarValue > OverTrip) or (VarValue < UnderTrip) then
+    // Check for Trip
+    if (VarValue > OverTrip) or (VarValue < UnderTrip) then
+    begin
+        if not ArmedForOpen then  // push the trip operation and arm to trip
         begin
-            if not ArmedForOpen then  // push the trip operation and arm to trip
-            begin
-                RelayTarget := TPCElement(MonitoredElement).VariableName(MonitorVarIndex);
-                LastEventHandle := ActiveCircuit.ControlQueue.Push(Delay_Time + Breaker_time, CTRL_OPEN, 0, Self);
-                OperationCount := NumReclose + 1;  // force a lockout
-                ArmedForOpen := TRUE;
-            end
+            RelayTarget := TPCElement(MonitoredElement).VariableName(MonitorVarIndex);
+            LastEventHandle := ActiveCircuit.ControlQueue.Push(Delay_Time + Breaker_time, CTRL_OPEN, 0, Self);
+            OperationCount := NumReclose + 1;  // force a lockout
+            ArmedForOpen := TRUE;
         end
-        else // Within bounds
-        begin // Less Than pickup value: reset if armed
-            if ArmedForOpen then    // We became unarmed, so reset and disarm
-            begin
-                LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
-                ArmedForOpen := FALSE;
-            end;
+    end
+    else // Within bounds
+    begin // Less Than pickup value: reset if armed
+        if ArmedForOpen then    // We became unarmed, so reset and disarm
+        begin
+            LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
+            ArmedForOpen := FALSE;
         end;
-    end;  {With MonitoredElement}
+    end;
 end;
 
 procedure TRelayObj.NegSeq46Logic;
@@ -1159,37 +1155,34 @@ var
     iOffset: Integer;
     I012: array[1..3] of Complex;
 begin
-    with MonitoredElement do
+    MonitoredElement.ActiveTerminalIdx := MonitoredElementTerminal;
+    MonitoredElement.GetCurrents(cBuffer);
+    iOffset := (MonitoredElementTerminal - 1) * MonitoredElement.NConds;  // offset for active terminal
+    Phase2SymComp(pComplexArray(@cBuffer[iOffset + 1]), pComplexArray(@I012));
+    NegSeqCurrentMag := Cabs(I012[3]);
+    if NegSeqCurrentMag >= PickupAmps46 then
     begin
-        MonitoredElement.ActiveTerminalIdx := MonitoredElementTerminal;
-        MonitoredElement.GetCurrents(cBuffer);
-        iOffset := (MonitoredElementTerminal - 1) * MonitoredElement.NConds;  // offset for active terminal
-        Phase2SymComp(pComplexArray(@cBuffer[iOffset + 1]), pComplexArray(@I012));
-        NegSeqCurrentMag := Cabs(I012[3]);
-        if NegSeqCurrentMag >= PickupAmps46 then
+        if not ArmedForOpen then  // push the trip operation and arm to trip
         begin
-            if not ArmedForOpen then  // push the trip operation and arm to trip
-            begin
-                RelayTarget := '-Seq Curr';
-                // simple estimate of trip time assuming current will be constant
-                if Delay_Time > 0.0 then
-                    Triptime := Delay_Time
-                else
-                    Triptime := Isqt46 / sqr(NegSeqCurrentMag / BaseAmps46); // Sec
-                LastEventHandle := ActiveCircuit.ControlQueue.Push(TripTime + Breaker_time, CTRL_OPEN, 0, Self);
-                OperationCount := NumReclose + 1;  // force a lockout
-                ArmedForOpen := TRUE;
-            end
+            RelayTarget := '-Seq Curr';
+            // simple estimate of trip time assuming current will be constant
+            if Delay_Time > 0.0 then
+                Triptime := Delay_Time
+            else
+                Triptime := Isqt46 / sqr(NegSeqCurrentMag / BaseAmps46); // Sec
+            LastEventHandle := ActiveCircuit.ControlQueue.Push(TripTime + Breaker_time, CTRL_OPEN, 0, Self);
+            OperationCount := NumReclose + 1;  // force a lockout
+            ArmedForOpen := TRUE;
         end
-        else
-        begin // Less Than pickup value: reset if armed
-            if ArmedForOpen then    // We became unarmed, so reset and disarm
-            begin
-                LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
-                ArmedForOpen := FALSE;
-            end;
+    end
+    else
+    begin // Less Than pickup value: reset if armed
+        if ArmedForOpen then    // We became unarmed, so reset and disarm
+        begin
+            LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
+            ArmedForOpen := FALSE;
         end;
-    end; // With MonitoredElement
+    end;
 end;
 
 procedure TRelayObj.OvercurrentLogic;
@@ -1203,266 +1196,259 @@ var
     TripTime,
     TimeTest: Double;
 begin
-    with MonitoredElement do
+    if FPresentState <> CTRL_CLOSE then
+        Exit;
+
+    TripTime := -1.0;
+    GroundTime := -1.0;
+    PhaseTime := -1.0;  // No trip
+
+    // Check largest Current of all phases of monitored element
+    MonitoredElement.GetCurrents(cBuffer);
+
+    // Check Ground Trip, if any
+    if ((GroundCurve <> NIL) or (Delay_Time > 0.0)) and (GroundTrip > 0.0) then
     begin
-        if FPresentState = CTRL_CLOSE then
+        Csum := 0;
+        for i := (1 + CondOffset) to (MonitoredElement.NPhases + CondOffset) do
         begin
-            TripTime := -1.0;
-            GroundTime := -1.0;
-            PhaseTime := -1.0;  {No trip}
+            Csum += cBuffer[i];
+        end;
+        Cmag := Cabs(Csum);
+        if (GroundInst > 0.0) and (Cmag >= GroundInst) and (OperationCount = 1) then
+            GroundTime := 0.01 + Breaker_time      // Inst trip on first operation
+        else
+        if Delay_Time > 0.0 then
+        begin // Definite Time Ground Relay
+            if (Cmag >= GroundTrip) then
+                GroundTime := Delay_Time
+            else
+                GroundTime := -1.0;
+        end
+        else
+            GroundTime := TDGround * GroundCurve.GetTCCTime(Cmag / GroundTrip);
 
-            // Check largest Current of all phases of monitored element
-            MonitoredElement.GetCurrents(cBuffer);
+        if DebugTrace then
+            AppendToEventLog(Self.FullName, Format(
+                _('Ground Trip: Mag=%.3g, Mult=%.3g, Time=%.3g'),
+                [Cmag, Cmag / GroundTrip, GroundTime]
+            ));
+    end;
 
-            // Check Ground Trip, if any
-            if ((GroundCurve <> NIL) or (Delay_Time > 0.0)) and (GroundTrip > 0.0) then
+    if Groundtime > 0.0 then
+    begin
+        TripTime := GroundTime;
+        GroundTarget := TRUE;
+    end;
+
+    // If GroundTime > 0 then we have a ground trip
+
+    // Check Phase Trip, if any
+
+    if ((PhaseCurve <> NIL) or (Delay_Time > 0.0)) and (PhaseTrip > 0.0) then
+    begin
+        for i := (1 + CondOffset) to (MonitoredElement.NPhases + CondOffset) do
+        begin
+            Cmag := Cabs(cBuffer[i]);
+            if (PhaseInst > 0.0) and (Cmag >= PhaseInst) and (OperationCount = 1) then
             begin
-                Csum := 0;
-                for i := (1 + CondOffset) to (Fnphases + CondOffset) do
-                begin
-                    Csum += cBuffer[i];
-                end;
-                Cmag := Cabs(Csum);
-                if (GroundInst > 0.0) and (Cmag >= GroundInst) and (OperationCount = 1) then
-                    GroundTime := 0.01 + Breaker_time      // Inst trip on first operation
-                else
-                if Delay_Time > 0.0 then
-                begin // Definite Time Ground Relay
-                    if (Cmag >= GroundTrip) then
-                        GroundTime := Delay_Time
-                    else
-                        GroundTime := -1.0;
-                end
-                else
-                    GroundTime := TDGround * GroundCurve.GetTCCTime(Cmag / GroundTrip);
-
-                if DebugTrace then
-                    AppendToEventLog(Self.FullName, Format(
-                        _('Ground Trip: Mag=%.3g, Mult=%.3g, Time=%.3g'),
-                        [Cmag, Cmag / GroundTrip, GroundTime]
-                    ));
-            end;
-
-            if Groundtime > 0.0 then
-            begin
-                TripTime := GroundTime;
-                GroundTarget := TRUE;
-            end;
-
-            // If GroundTime > 0 then we have a ground trip
-
-            // Check Phase Trip, if any
-
-            if ((PhaseCurve <> NIL) or (Delay_Time > 0.0)) and (PhaseTrip > 0.0) then
-            begin
-                for i := (1 + CondOffset) to (Fnphases + CondOffset) do
-                begin
-                    Cmag := Cabs(cBuffer[i]);
-                    if (PhaseInst > 0.0) and (Cmag >= PhaseInst) and (OperationCount = 1) then
-                    begin
-                        PhaseTime := 0.01 + Breaker_time;  // Inst trip on first operation
-                        Break;  {FOR - if Inst, no sense checking other phases}
-                    end
-                    else
-                    begin
-                        if Delay_Time > 0.0 then
-                        begin // Definite Time Phase Relay
-                            if (Cmag >= PhaseTrip) then
-                                TimeTest := Delay_Time
-                            else
-                                TimeTest := -1.0;
-                        end
-                        else
-                            TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip);
-                        if (TimeTest > 0.0) then
-                        begin
-                            if Phasetime < 0.0 then
-                                PhaseTime := TimeTest
-                            else
-                                PhaseTime := Min(PhaseTime, TimeTest);
-                        end;
-                    end;
-                end;
-
-                if DebugTrace then
-                    AppendToEventLog(
-                        Self.FullName, Format(
-                        _('Phase %d Trip: Mag=%.3g, Mult=%.3g, Time=%.3g'),
-                        [i-CondOffset, Cmag, Cmag / PhaseTrip, PhaseTime]
-                    ));
-            end;
-            // If PhaseTime > 0 then we have a phase trip
-
-            if PhaseTime > 0.0 then
-            begin
-                PhaseTarget := TRUE;
-                if TripTime > 0.0 then
-                    TripTime := Min(TripTime, Phasetime)
-                else
-                    TripTime := PhaseTime;
-            end;
-
-            if TripTime > 0.0 then
-            begin
-                if not ArmedForOpen then // Then arm for an open operation
-                begin
-                    RelayTarget := '';
-                    if Phasetime > 0.0 then
-                        RelayTarget := RelayTarget + 'Ph';
-                    if Groundtime > 0.0 then
-                        RelayTarget := RelayTarget + ' Gnd';
-                    LastEventHandle := ActiveCircuit.ControlQueue.Push(TripTime + Breaker_time, CTRL_OPEN, 0, Self);
-                    if OperationCount <= NumReclose then
-                        LastEventHandle := ActiveCircuit.ControlQueue.Push(TripTime + Breaker_time + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
-                    ArmedForOpen := TRUE;
-                    ArmedForClose := TRUE;
-                end;
+                PhaseTime := 0.01 + Breaker_time;  // Inst trip on first operation
+                Break;  // FOR - if Inst, no sense checking other phases
             end
             else
             begin
-                if ArmedForOpen then // If current dropped below pickup, disarm trip and set for reset
+                if Delay_Time > 0.0 then
+                begin // Definite Time Phase Relay
+                    if (Cmag >= PhaseTrip) then
+                        TimeTest := Delay_Time
+                    else
+                        TimeTest := -1.0;
+                end
+                else
+                    TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip);
+                if (TimeTest > 0.0) then
                 begin
-                    LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
-                    ArmedForOpen := FALSE;
-                    ArmedForClose := FALSE;
-                    PhaseTarget := FALSE;
-                    GroundTarget := FALSE;
+                    if Phasetime < 0.0 then
+                        PhaseTime := TimeTest
+                    else
+                        PhaseTime := Min(PhaseTime, TimeTest);
                 end;
             end;
-        end; // IF PresentState=CLOSE
-    end; // With MonitoredElement
+        end;
+
+        if DebugTrace then
+            AppendToEventLog(
+                Self.FullName, Format(
+                _('Phase %d Trip: Mag=%.3g, Mult=%.3g, Time=%.3g'),
+                [i-CondOffset, Cmag, Cmag / PhaseTrip, PhaseTime]
+            ));
+    end;
+    // If PhaseTime > 0 then we have a phase trip
+
+    if PhaseTime > 0.0 then
+    begin
+        PhaseTarget := TRUE;
+        if TripTime > 0.0 then
+            TripTime := Min(TripTime, Phasetime)
+        else
+            TripTime := PhaseTime;
+    end;
+
+    if TripTime > 0.0 then
+    begin
+        if not ArmedForOpen then // Then arm for an open operation
+        begin
+            RelayTarget := '';
+            if Phasetime > 0.0 then
+                RelayTarget := RelayTarget + 'Ph';
+            if Groundtime > 0.0 then
+                RelayTarget := RelayTarget + ' Gnd';
+            LastEventHandle := ActiveCircuit.ControlQueue.Push(TripTime + Breaker_time, CTRL_OPEN, 0, Self);
+            if OperationCount <= NumReclose then
+                LastEventHandle := ActiveCircuit.ControlQueue.Push(TripTime + Breaker_time + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
+            ArmedForOpen := TRUE;
+            ArmedForClose := TRUE;
+        end;
+    end
+    else
+    begin
+        if ArmedForOpen then  // If current dropped below pickup, disarm trip and set for reset
+        begin
+            LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
+            ArmedForOpen := FALSE;
+            ArmedForClose := FALSE;
+            PhaseTarget := FALSE;
+            GroundTarget := FALSE;
+        end;
+    end;
 end;
 
 procedure TRelayObj.DistanceLogic;
 var
     i, j: Integer;
     Vloop, Iloop, Zloop, Ires, kIres, Zreach: Complex;
-    i2, min_distance, fault_distance, t_event: Double;
+    i2, min_distance, fault_distance: Double;
     Targets: TStringList = NIL;
     PickedUp: Boolean;
 begin
     If LockedOut Then
         Exit;
 
-    with MonitoredElement do
-    begin
-        PickedUp := False;
-        min_distance := 1.0e30;
-        MonitoredElement.GetCurrents(cBuffer);
+    PickedUp := False;
+    min_distance := 1.0e30;
+    MonitoredElement.GetCurrents(cBuffer);
 
-        if Dist_Reverse then
-            for i := 1 to MonitoredElement.NPhases do
-                cBuffer[i + CondOffset] := -cBuffer[i + CondOffset];
-
-        Ires := 0;
-        for i := 1 to MonitoredElement.Nphases do
-            Ires += cBuffer[i + CondOffset];
-
-        kIres := Dist_K0 * Ires;
-        MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer);
-
+    if Dist_Reverse then
         for i := 1 to MonitoredElement.NPhases do
+            cBuffer[i + CondOffset] := -cBuffer[i + CondOffset];
+
+    Ires := 0;
+    for i := 1 to MonitoredElement.Nphases do
+        Ires += cBuffer[i + CondOffset];
+
+    kIres := Dist_K0 * Ires;
+    MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer);
+
+    for i := 1 to MonitoredElement.NPhases do
+    begin
+        for j := i to MonitoredElement.NPhases do
         begin
-            for j := i to MonitoredElement.NPhases do
+            if (i = j) then
             begin
-                if (i = j) then
-                begin
-                    Vloop := cvBuffer[i];
-                    Iloop := cBuffer[i + CondOffset] + kIres;
-                    Zreach := Dist_Z1 * Mground; // not Dist_Z0 because it's included in Dist_K0
-                end
-                else
-                begin
-                    Vloop := cvBuffer[i] - cvBuffer[j];
-                    Iloop := cBuffer[i + CondOffset] - cBuffer[j + CondOffset];
-                    Zreach := Dist_Z1 * Mphase;
-                end;
+                Vloop := cvBuffer[i];
+                Iloop := cBuffer[i + CondOffset] + kIres;
+                Zreach := Dist_Z1 * Mground; // not Dist_Z0 because it's included in Dist_K0
+            end
+            else
+            begin
+                Vloop := cvBuffer[i] - cvBuffer[j];
+                Iloop := cBuffer[i + CondOffset] - cBuffer[j + CondOffset];
+                Zreach := Dist_Z1 * Mphase;
+            end;
 
-                i2 := Iloop.re * Iloop.re + Iloop.im * Iloop.im;
-                if i2 > 0.1 then
+            i2 := Iloop.re * Iloop.re + Iloop.im * Iloop.im;
+            if i2 > 0.1 then
+            begin
+                Zloop := Vloop / Iloop;
+
+                // start with a very simple rectangular characteristic
+                if DebugTrace and (ActiveCircuit.Solution.DynaVars.t > 0.043) then
+                    AppendToEventLog(self.FullName, Format('Zloop[%d,%d]=%.4f+j%.4f', [i, j, Zloop.re, Zloop.im]));
+
+                if (Zloop.re >= 0) and (Zloop.im >= MIN_DISTANCE_REACTANCE) and (Zloop.re <= Zreach.re) and (Zloop.im <= Zreach.im) then
                 begin
-                    Zloop := Vloop / Iloop;
-
-                    // start with a very simple rectangular characteristic
-                    if DebugTrace and (ActiveCircuit.Solution.DynaVars.t > 0.043) then
-                        AppendToEventLog(self.FullName, Format('Zloop[%d,%d]=%.4f+j%.4f', [i, j, Zloop.re, Zloop.im]));
-
-                    if (Zloop.re >= 0) and (Zloop.im >= MIN_DISTANCE_REACTANCE) and (Zloop.re <= Zreach.re) and (Zloop.im <= Zreach.im) then
+                    if not PickedUp then
                     begin
-                        if not PickedUp then
-                        begin
-                            Targets := TStringList.Create();
-                            Targets.Sorted := True;
-                        end;
-                        if (i = j) then
-                        begin
-                            Targets.Add(Format('G%d', [i]));
-                        end
-                        else
-                        begin
-                            Targets.Add(Format('P%d%d', [i, j]));
-                        end;
-
-                        fault_distance := cabs2(zloop) / cabs2 (zreach);
-                        if fault_distance < min_distance then
-                            min_distance := fault_distance;
-
-                        PickedUp := True;
+                        Targets := TStringList.Create();
+                        Targets.Sorted := True;
                     end;
+                    if (i = j) then
+                    begin
+                        Targets.Add(Format('G%d', [i]));
+                    end
+                    else
+                    begin
+                        Targets.Add(Format('P%d%d', [i, j]));
+                    end;
+
+                    fault_distance := cabs2(zloop) / cabs2 (zreach);
+                    if fault_distance < min_distance then
+                        min_distance := fault_distance;
+
+                    PickedUp := True;
                 end;
             end;
         end;
+    end;
 
-        if PickedUp then
+    if PickedUp then
+    begin
+        if DebugTrace then
+            AppendToEventLog (Self.FullName, 'Picked up');
+
+        if ArmedForReset then
         begin
-            if DebugTrace then
-                AppendToEventLog (Self.FullName, 'Picked up');
+            ActiveCircuit.ControlQueue.Delete(LastEventHandle);
+            ArmedForReset := FALSE;
+        end;
 
-            if ArmedForReset then
+        if not ArmedForOpen then
+        begin
+            RelayTarget := Format(_('21 %.3f pu dist'), [min_distance]);
+            for i := 0 to pred(Targets.Count) do
+                RelayTarget := RelayTarget + ' ' + Targets[i];
+
+            LastEventHandle := ActiveCircuit.ControlQueue.Push(Delay_Time + Breaker_time, CTRL_OPEN, 0, Self);
+            ArmedForOpen := TRUE;
+            if OperationCount <= NumReclose then
             begin
-                ActiveCircuit.ControlQueue.Delete(LastEventHandle);
-                ArmedForReset := FALSE;
-            end;
-
-            if not ArmedForOpen then
-            begin
-                RelayTarget := Format(_('21 %.3f pu dist'), [min_distance]);
-                t_event := ActiveCircuit.Solution.DynaVars.t + Delay_Time + Breaker_time;
-                for i := 0 to pred(Targets.Count) do
-                    RelayTarget := RelayTarget + ' ' + Targets[i];
-
-                LastEventHandle := ActiveCircuit.ControlQueue.Push(ActiveCircuit.Solution.DynaVars.intHour, t_event, CTRL_OPEN, 0, Self);
-                ArmedForOpen := TRUE;
-                if OperationCount <= NumReclose then
-                begin
-                    LastEventHandle := ActiveCircuit.ControlQueue.Push(ActiveCircuit.Solution.DynaVars.intHour, t_event + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
-                    ArmedForClose := TRUE;
-                end;
-            end;
-
-            Targets.Free();
-        end
-        else
-        begin  // not picked up; reset if necessary
-            if (OperationCount > 1) and (ArmedForReset = FALSE) then
-            begin // this implements the reset, whether picked up or not
-                ArmedForReset := TRUE;
-                LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
-            end;
-            if ArmedForOpen then
-            begin // this implements the drop-out, if picked up
-                ArmedForOpen := FALSE;
-                ArmedForClose := FALSE;
+                LastEventHandle := ActiveCircuit.ControlQueue.Push(Delay_Time + Breaker_time + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
+                ArmedForClose := TRUE;
             end;
         end;
-    end; // With MonitoredElement
+
+        Targets.Free();
+    end
+    else
+    begin  // not picked up; reset if necessary
+        if (OperationCount > 1) and (ArmedForReset = FALSE) then
+        begin // this implements the reset, whether picked up or not
+            ArmedForReset := TRUE;
+            LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
+        end;
+        if ArmedForOpen then
+        begin // this implements the drop-out, if picked up
+            ArmedForOpen := FALSE;
+            ArmedForClose := FALSE;
+        end;
+    end;
 end;
 
 procedure TRelayObj.TD21Logic;
 var
     i, j: Integer;
     Vloop, Iloop, Zhsd, Zdir, Uhsd, Uref, Ires, kIres: Complex;
-    i2, i2fault, min_distance, fault_distance, Uref2, Uhsd2, t_event, dt: Double;
+    i2, i2fault, min_distance, fault_distance, Uref2, Uhsd2, dt: Double;
     Targets: TStringList = NIL;
     PickedUp, FaultDetected: Boolean;
     ib, iv, ii: Integer;
@@ -1501,221 +1487,216 @@ begin
     if LockedOut then
         Exit;
 
-    with MonitoredElement Do
+    FaultDetected := False;
+    MonitoredElement.GetCurrents(cBuffer);
+
+    if Dist_Reverse then
+        for i := 1 to MonitoredElement.NPhases do
+            cBuffer[i+CondOffset] := -cBuffer[i+CondOffset];
+
+    i2fault := PhaseTrip * PhaseTrip;
+    for i := 1 to MonitoredElement.Nphases do
     begin
-        FaultDetected := False;
-        MonitoredElement.GetCurrents(cBuffer);
+        i2 := cabs2 (cBuffer[i+CondOffset]);
+        if i2 > i2fault then
+            FaultDetected := True;
+    end;
 
-        if Dist_Reverse then
-            for i := 1 to MonitoredElement.NPhases do
-                cBuffer[i+CondOffset] := -cBuffer[i+CondOffset];
+    if DebugTrace then
+        AppendToEventLog(Self.FullName, Format(
+            'FaultDetected=%s',
+            [BoolToStr(FaultDetected)]
+        ));
 
-        i2fault := PhaseTrip * PhaseTrip;
-        for i := 1 to Nphases do
-        begin
-            i2 := cabs2 (cBuffer[i+CondOffset]);
-            if i2 > i2fault then
-                FaultDetected := True;
-        end;
-
+    MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer);
+    if td21_i < 1 then
+    begin
         if DebugTrace then
-            AppendToEventLog(Self.FullName, Format(
-                'FaultDetected=%s',
-                [BoolToStr(FaultDetected)]
-            ));
+            AppendToEventLog (Self.FullName, 'Initialize cqueue');
 
-        MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer);
-        if td21_i < 1 then
+        for i := 1 to td21_pt do
         begin
-            if DebugTrace then
-                AppendToEventLog (Self.FullName, 'Initialize cqueue');
-
-            for i := 1 to td21_pt do
-            begin
-                ib := (i - 1) * td21_stride;
-                for j := 1 to Nphases do
-                begin
-                    iv := ib + j;
-                    td21_h[iv] := cvBuffer[j];
-                    ii := ib + Nphases + j;
-                    td21_h[ii] := cBuffer[j+CondOffset];
-                end;
-            end;
-            td21_i := 1;
-        end;
-
-        td21_next := (td21_i mod td21_pt) + 1;  // this points to the oldest sample, and the next write location
-
-        // calculate the differential currents and voltages
-        ib := (td21_next - 1) * td21_stride;
-        for j := 1 to Nphases do
-        begin
-            iv := ib + j;
-            td21_Uref[j] := td21_h[iv];
-            td21_dV[j] := cvBuffer[j] - td21_h[iv];
-            ii := ib + Nphases + j;
-            td21_dI[j] := cBuffer[j+CondOffset] - td21_h[ii];
-        end;
-
-        // do the relay processing
-        if ActiveCircuit.Solution.DynaVars.IterationFlag < 1 then
-        begin
-            ib := (td21_i - 1) * td21_stride;
-            for j := 1 to Nphases do
+            ib := (i - 1) * td21_stride;
+            for j := 1 to MonitoredElement.Nphases do
             begin
                 iv := ib + j;
                 td21_h[iv] := cvBuffer[j];
-                ii := ib + Nphases + j;
+                ii := ib + MonitoredElement.Nphases + j;
                 td21_h[ii] := cBuffer[j+CondOffset];
             end;
-            td21_i := td21_next;
-
-            if td21_quiet > 0 then
-                dec(td21_quiet);
         end;
+        td21_i := 1;
+    end;
 
-        if td21_quiet <= 0 then
-        begin  // one cycle since we started, or since the last operation
-            PickedUp := False;
-            min_distance := 1.0e30;
-            Ires := 0;
-            for i := 1 to MonitoredElement.Nphases do
-                Ires += td21_dI[i];
+    td21_next := (td21_i mod td21_pt) + 1;  // this points to the oldest sample, and the next write location
 
-            kIres := Dist_K0 * Ires;
-            for i := 1 to MonitoredElement.NPhases do
+    // calculate the differential currents and voltages
+    ib := (td21_next - 1) * td21_stride;
+    for j := 1 to MonitoredElement.Nphases do
+    begin
+        iv := ib + j;
+        td21_Uref[j] := td21_h[iv];
+        td21_dV[j] := cvBuffer[j] - td21_h[iv];
+        ii := ib + MonitoredElement.Nphases + j;
+        td21_dI[j] := cBuffer[j+CondOffset] - td21_h[ii];
+    end;
+
+    // do the relay processing
+    if ActiveCircuit.Solution.DynaVars.IterationFlag < 1 then
+    begin
+        ib := (td21_i - 1) * td21_stride;
+        for j := 1 to MonitoredElement.Nphases do
+        begin
+            iv := ib + j;
+            td21_h[iv] := cvBuffer[j];
+            ii := ib + MonitoredElement.Nphases + j;
+            td21_h[ii] := cBuffer[j+CondOffset];
+        end;
+        td21_i := td21_next;
+
+        if td21_quiet > 0 then
+            dec(td21_quiet);
+    end;
+
+    if td21_quiet <= 0 then
+    begin  // one cycle since we started, or since the last operation
+        PickedUp := False;
+        min_distance := 1.0e30;
+        Ires := 0;
+        for i := 1 to MonitoredElement.Nphases do
+            Ires += td21_dI[i];
+
+        kIres := Dist_K0 * Ires;
+        for i := 1 to MonitoredElement.NPhases do
+        begin
+            for j := i to MonitoredElement.NPhases do
             begin
-                for j := i to MonitoredElement.NPhases do
+                if (i = j) then
                 begin
-                    if (i = j) then
-                    begin
-                        Uref := td21_Uref[i];
-                        Vloop := td21_dV[i];
-                        Iloop := td21_dI[i] + kIres;
-                        Zhsd := Dist_Z1 * Mground; // not Dist_Z0 because it's included in Dist_K0
-                    end
-                    else
-                    begin
-                        Uref := td21_Uref[i] - td21_Uref[j];
-                        Vloop := td21_dV[i] - td21_dV[j];
-                        Iloop := td21_dI[i] - td21_dI[j];
-                        Zhsd := Dist_Z1 * Mphase;
-                    end;
-
-                    i2 := cabs2 (Iloop);
-                    Uref2 := cabs2 (Uref);
-                    if FaultDetected and (i2 > 0.1) and (Uref2 > 0.1) then
-                    begin
-                        Zdir := -(Vloop / Iloop);
-                        if DebugTrace then
-                            AppendToEventLog(Self.FullName, Format(
-                                'Zhsd[%d,%d]=%.4f+j%.4f, Zdir=%.4f+j%.4f',
-                                [i, j, Zhsd.re, Zhsd.im, Zdir.re, Zdir.im]
-                            ));
-
-                        if (Zdir.re > 0.0) and (Zdir.im > 0.0) then
-                        begin
-                            Uhsd := Zhsd * Iloop - Vloop;
-                            Uhsd2 := cabs2 (Uhsd);
-                            if DebugTrace then
-                                AppendToEventLog(Self.FullName, Format(
-                                    '     Uhsd=%.2f, Uref=%.2f',
-                                    [cabs(Uhsd), cabs(Uref)]
-                                ));
-
-                            if Uhsd2 / Uref2 > 1.0 then
-                            begin // this loop trips
-                                if not PickedUp then
-                                begin
-                                    Targets := TStringList.Create();
-                                    Targets.Sorted := True;
-                                end;
-                                if (i = j) then
-                                    Targets.Add(Format('G%d', [i]))
-                                else
-                                    Targets.Add(Format('P%d%d', [i, j]));
-
-                                fault_distance := 1.0 / sqrt(Uhsd2 / Uref2);
-                                if fault_distance < min_distance then
-                                    min_distance := fault_distance;
-
-                                PickedUp := True;
-                            end;
-                        end;
-                    end;
-                end;
-            end;
-
-            if PickedUp then
-            begin
-                if DebugTrace then
-                    AppendToEventLog (Self.FullName, 'Picked up');
-
-                if ArmedForReset then
+                    Uref := td21_Uref[i];
+                    Vloop := td21_dV[i];
+                    Iloop := td21_dI[i] + kIres;
+                    Zhsd := Dist_Z1 * Mground; // not Dist_Z0 because it's included in Dist_K0
+                end
+                else
                 begin
-                    ActiveCircuit.ControlQueue.Delete(LastEventHandle);
-                    ArmedForReset := FALSE;
-                    if DebugTrace then
-                        AppendToEventLog(Self.FullName, 'Dropping last event.');
+                    Uref := td21_Uref[i] - td21_Uref[j];
+                    Vloop := td21_dV[i] - td21_dV[j];
+                    Iloop := td21_dI[i] - td21_dI[j];
+                    Zhsd := Dist_Z1 * Mphase;
                 end;
 
-                if not ArmedForOpen then
-                    with ActiveCircuit do
-                    begin
-                        RelayTarget := Format ('TD21 %.3f pu dist', [min_distance]);
-                        t_event := Solution.DynaVars.t + Delay_Time + Breaker_time;
-                        for i := 0 to pred(Targets.Count) do
-                            RelayTarget := RelayTarget + ' ' + Targets[i];
-
-                        LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, t_event, CTRL_OPEN, 0, Self);
-                        if DebugTrace then
-                            AppendToEventLog(Self.FullName, Format('Pushing trip event for %.3f', [t_event]));
-
-                        ArmedForOpen := TRUE;
-
-                        if OperationCount <= NumReclose then
-                        begin
-                            LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, t_event + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
-                            if DebugTrace then
-                                AppendToEventLog (Self.FullName, Format(
-                                    'Pushing reclose event for %.3f',
-                                    [t_event + RecloseIntervals[OperationCount]]
-                                ));
-                            ArmedForClose := TRUE;
-                        end;
-                    end;
-
-                Targets.Free();
-            end;
-
-            if not FaultDetected then
-            begin  // not picked up; reset if necessary
-                if (OperationCount > 1) and (not ArmedForReset) then
-                begin // this implements the reset, whether picked up or not
-                    ArmedForReset := TRUE;
-                    LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
-
+                i2 := cabs2 (Iloop);
+                Uref2 := cabs2 (Uref);
+                if FaultDetected and (i2 > 0.1) and (Uref2 > 0.1) then
+                begin
+                    Zdir := -(Vloop / Iloop);
                     if DebugTrace then
                         AppendToEventLog(Self.FullName, Format(
-                            'Pushing reset event for %.3f',
-                            [ActiveCircuit.Solution.DynaVars.t + ResetTime]
+                            'Zhsd[%d,%d]=%.4f+j%.4f, Zdir=%.4f+j%.4f',
+                            [i, j, Zhsd.re, Zhsd.im, Zdir.re, Zdir.im]
                         ));
-                end;
 
-                if ArmedForOpen then
-                begin
-                    td21_quiet := td21_pt + 1;
-                    ArmedForOpen := FALSE;
-                    ArmedForClose := FALSE;
-                    if DebugTrace then
-                        AppendToEventLog(Self.FullName, Format (
-                            'Dropping out at %.3f',
-                            [ActiveCircuit.Solution.DynaVars.t]
-                        ));
+                    if (Zdir.re > 0.0) and (Zdir.im > 0.0) then
+                    begin
+                        Uhsd := Zhsd * Iloop - Vloop;
+                        Uhsd2 := cabs2 (Uhsd);
+                        if DebugTrace then
+                            AppendToEventLog(Self.FullName, Format(
+                                '     Uhsd=%.2f, Uref=%.2f',
+                                [cabs(Uhsd), cabs(Uref)]
+                            ));
+
+                        if Uhsd2 / Uref2 > 1.0 then
+                        begin // this loop trips
+                            if not PickedUp then
+                            begin
+                                Targets := TStringList.Create();
+                                Targets.Sorted := True;
+                            end;
+                            if (i = j) then
+                                Targets.Add(Format('G%d', [i]))
+                            else
+                                Targets.Add(Format('P%d%d', [i, j]));
+
+                            fault_distance := 1.0 / sqrt(Uhsd2 / Uref2);
+                            if fault_distance < min_distance then
+                                min_distance := fault_distance;
+
+                            PickedUp := True;
+                        end;
+                    end;
                 end;
             end;
-        end; // td21_quiet
-    end; // With MonitoredElement
+        end;
+
+        if PickedUp then
+        begin
+            if DebugTrace then
+                AppendToEventLog (Self.FullName, 'Picked up');
+
+            if ArmedForReset then
+            begin
+                ActiveCircuit.ControlQueue.Delete(LastEventHandle);
+                ArmedForReset := FALSE;
+                if DebugTrace then
+                    AppendToEventLog(Self.FullName, 'Dropping last event.');
+            end;
+
+            if not ArmedForOpen then
+            begin
+                RelayTarget := Format ('TD21 %.3f pu dist', [min_distance]);
+                for i := 0 to pred(Targets.Count) do
+                    RelayTarget := RelayTarget + ' ' + Targets[i];
+
+                LastEventHandle := ActiveCircuit.ControlQueue.Push(Delay_Time + Breaker_time, CTRL_OPEN, 0, Self);
+                if DebugTrace then
+                    AppendToEventLog(Self.FullName, Format('Pushing trip event for %.3f', [ActiveCircuit.Solution.DynaVars.t + Delay_Time + Breaker_time]));
+
+                ArmedForOpen := TRUE;
+
+                if OperationCount <= NumReclose then
+                begin
+                    LastEventHandle := ActiveCircuit.ControlQueue.Push(Delay_Time + Breaker_time + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
+                    if DebugTrace then
+                        AppendToEventLog (Self.FullName, Format(
+                            'Pushing reclose event for %.3f',
+                            [ActiveCircuit.Solution.DynaVars.t + Delay_Time + Breaker_time + RecloseIntervals[OperationCount]]
+                        ));
+                    ArmedForClose := TRUE;
+                end;
+            end;
+
+            Targets.Free();
+        end;
+
+        if not FaultDetected then
+        begin  // not picked up; reset if necessary
+            if (OperationCount > 1) and (not ArmedForReset) then
+            begin // this implements the reset, whether picked up or not
+                ArmedForReset := TRUE;
+                LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
+
+                if DebugTrace then
+                    AppendToEventLog(Self.FullName, Format(
+                        'Pushing reset event for %.3f',
+                        [ActiveCircuit.Solution.DynaVars.t + ResetTime]
+                    ));
+            end;
+
+            if ArmedForOpen then
+            begin
+                td21_quiet := td21_pt + 1;
+                ArmedForOpen := FALSE;
+                ArmedForClose := FALSE;
+                if DebugTrace then
+                    AppendToEventLog(Self.FullName, Format (
+                        'Dropping out at %.3f',
+                        [ActiveCircuit.Solution.DynaVars.t]
+                    ));
+            end;
+        end;
+    end; // td21_quiet
 end;
 
 function TRelayObj.GetControlPower(): Complex;
@@ -1756,368 +1737,63 @@ var
     Cmag, Cangle: Double;
     ControlPower: Complex;
 begin
-    with MonitoredElement do
+    if FPresentState <> CTRL_CLOSE then
+        Exit;
+
+    // Identify net balanced power flow.
+    if DOC_P1Blocking then
     begin
-        if FPresentState = CTRL_CLOSE then
+        ControlPower := GetControlPower();
+        if ControlPower.re >= 0.0 then // Forward Power
         begin
-            // Identify net balanced power flow.
-            if DOC_P1Blocking then
+            if ArmedForOpen then
             begin
-                ControlPower := GetControlPower();
-                if ControlPower.re >= 0.0 then // Forward Power
-                begin
-                    if ArmedForOpen then
-                    begin // If net balanced active power is forward, disarm trip and set for reset
-                        LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, self);
-                        ArmedForOpen := FALSE;
-                        ArmedForClose := FALSE;
-                        if DebugTrace then
-                            AppendToEventLog(
-                                Self.FullName, 
-                                Format('DOC - Reset on Forward Net Balanced Active Power: %.2f kW', [ControlPower.re])
-                            );
-                    end
-                    else
-                    begin
-                        if DebugTrace then
-                            AppendToEventLog(
-                                Self.FullName, 
-                                Format('DOC - Forward Net Balanced Active Power: %.2f kW. DOC Element blocked.', [ControlPower.re])
-                            );
-                    end;
-                    Exit; // Do not evaluate trip if power is forward.
-                end;
+                // If net balanced active power is forward, disarm trip and set for reset
+                LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, self);
+                ArmedForOpen := FALSE;
+                ArmedForClose := FALSE;
+                if DebugTrace then
+                    AppendToEventLog(
+                        Self.FullName, 
+                        Format('DOC - Reset on Forward Net Balanced Active Power: %.2f kW', [ControlPower.re])
+                    );
+            end
+            else
+            begin
+                if DebugTrace then
+                    AppendToEventLog(
+                        Self.FullName, 
+                        Format('DOC - Forward Net Balanced Active Power: %.2f kW. DOC Element blocked.', [ControlPower.re])
+                    );
             end;
+            Exit; // Do not evaluate trip if power is forward.
+        end;
+    end;
 
-            TripTime := -1.0;
+    TripTime := -1.0;
 
-            MonitoredElement.GetCurrents(cBuffer);
-            MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer);
+    MonitoredElement.GetCurrents(cBuffer);
+    MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer);
 
-            // Shift angle to cBuffer to be relative to cvBuffer
-            for i := (1 + CondOffset) to (Fnphases + CondOffset) do
-                cBuffer[i] := PDEGtoCompLeX(Cabs(cBuffer[i]), CDANG(cBuffer[i]) - CDANG(cvBuffer[i - CondOffset]));
+    // Shift angle to cBuffer to be relative to cvBuffer
+    for i := (1 + CondOffset) to (MonitoredElement.NPhases + CondOffset) do
+        cBuffer[i] := PDEGtoCompLeX(Cabs(cBuffer[i]), CDANG(cBuffer[i]) - CDANG(cvBuffer[i - CondOffset]));
 
-            for i := (1 + CondOffset) to (Fnphases + CondOffset) do
+    for i := (1 + CondOffset) to (MonitoredElement.NPhases + CondOffset) do
+    begin
+        TimeTest := -1.0;
+        Cmag := Cabs(cBuffer[i]);
+        Cangle := Cdang(cBuffer[i]);
+
+        if (DOC_TiltAngleLow = 90.0) or (DOC_TiltAngleLow = 270.0) then
+        begin
+            if cBuffer[i].re <= -1 * DOC_TripSetLow then
             begin
-                TimeTest := -1.0;
-                Cmag := Cabs(cBuffer[i]);
-                Cangle := Cdang(cBuffer[i]);
-
-                if (DOC_TiltAngleLow = 90.0) or (DOC_TiltAngleLow = 270.0) then
-                begin
-                    if cBuffer[i].re <= -1 * DOC_TripSetLow then
-                    begin
-                        if (DOC_TripSetMag > 0.0) then
-                        begin // Circle Specified.
-                            if Cmag <= DOC_TripSetMag then
-                            begin // Within the Circle
-                                if DOC_TripSetHigh > 0.0 then // High Straight-Line Specified.
-                                begin
-                                    if (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) then
-                                    begin
-                                        if cBuffer[i].re < -1 * DOC_TripSetHigh then
-                                        begin // Left-side of High Straight-Line
-                                            if Delay_Time > 0.0 then
-                                                TimeTest := Delay_Time
-                                            else
-                                            if PhaseCurve <> NIL then
-                                                TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
-                                            else
-                                            if Delay_Time = 0.0 then
-                                                TimeTest := Delay_Time;
-                                        end
-                                        else
-                                        begin  // Right-Side of High Straight-Line
-                                            if DOC_DelayInner > 0.0 then
-                                                TimeTest := DOC_DelayInner
-                                            else
-                                            if DOC_PhaseCurveInner <> NIL then
-                                                TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
-                                            else
-                                            if DOC_DelayInner = 0.0 then
-                                                TimeTest := Delay_Time;
-                                        end;
-                                    end
-                                    else
-                                    begin
-                                        if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer[i].re + DOC_TripSetHigh) then
-                                        begin // Left-side of High Straight-Line
-                                            if Delay_Time > 0.0 then
-                                                TimeTest := Delay_Time
-                                            else
-                                            if PhaseCurve <> NIL then
-                                                TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
-                                            else
-                                            if Delay_Time = 0.0 then
-                                                TimeTest := Delay_Time;
-                                        end
-                                        else
-                                        begin // Right-Side of High Straight-Line
-                                            if DOC_DelayInner > 0.0 then
-                                                TimeTest := DOC_DelayInner
-                                            else
-                                            if DOC_PhaseCurveInner <> NIL then
-                                                TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
-                                            else
-                                            if DOC_DelayInner = 0.0 then
-                                                TimeTest := Delay_Time;
-                                        end;
-                                    end;
-                                end
-                                else
-                                begin // High Straight-Line Not Specified.
-                                    if DOC_DelayInner > 0.0 then
-                                        TimeTest := DOC_DelayInner
-                                    else
-                                    if DOC_PhaseCurveInner <> NIL then
-                                        TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
-                                    else
-                                    if DOC_DelayInner = 0.0 then
-                                        TimeTest := Delay_Time;
-                                end;
-                            end
-                            else
-                            begin // Out of the Circle
-                                if Delay_Time > 0.0 then
-                                    TimeTest := Delay_Time
-                                else
-                                if PhaseCurve <> NIL then
-                                    TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
-                                else
-                                if Delay_Time = 0.0 then
-                                    TimeTest := Delay_Time;
-                            end;
-                        end
-                        else
-                        begin // Circle not Specified
-                            if DOC_TripSetHigh > 0.0 then
-                            begin // High Straight-Line Specified.
-                                if (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) then
-                                begin
-                                    if cBuffer[i].re < -1 * DOC_TripSetHigh then
-                                    begin // Left-side of High Straight-Line
-                                        if Delay_Time > 0.0 then
-                                            TimeTest := Delay_Time
-                                        else
-                                        if PhaseCurve <> NIL then
-                                            TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
-                                        else
-                                        if Delay_Time = 0.0 then
-                                            TimeTest := Delay_Time;
-                                    end
-                                    else
-                                    begin  // Right-Side of High Straight-Line
-                                        if DOC_DelayInner > 0.0 then
-                                            TimeTest := DOC_DelayInner
-                                        else
-                                        if DOC_PhaseCurveInner <> NIL then
-                                            TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
-                                        else
-                                        if DOC_DelayInner = 0.0 then
-                                            TimeTest := Delay_Time;
-                                    end;
-                                end
-                                else
-                                begin
-                                    if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer[i].re + DOC_TripSetHigh) then
-                                    begin // Left-side of High Straight-Line
-                                        if Delay_Time > 0.0 then
-                                            TimeTest := Delay_Time
-                                        else
-                                        if PhaseCurve <> NIL then
-                                            TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
-                                        else
-                                        if Delay_Time = 0.0 then
-                                            TimeTest := Delay_Time;
-                                    end
-                                    else
-                                    begin // Right-Side of High Straight-Line
-                                        if DOC_DelayInner > 0.0 then
-                                            TimeTest := DOC_DelayInner
-                                        else
-                                        if DOC_PhaseCurveInner <> NIL then
-                                            TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
-                                        else
-                                        if DOC_DelayInner = 0.0 then
-                                            TimeTest := Delay_Time;
-                                    end;
-                                end;
-                            end
-                            else
-                            begin  // High Straight-Line Not Specified.
-                                if Delay_Time > 0.0 then
-                                    TimeTest := Delay_Time
-                                else
-                                if PhaseCurve <> NIL then
-                                    TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
-                                else
-                                if Delay_Time = 0.0 then
-                                    TimeTest := Delay_Time;
-                            end;
-                        end;
-                    end;
-                end
-                else
-                begin // 90, 270
-                    if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleLow)) * (cBuffer[i].re + DOC_TripSetLow) then
-                    begin
-                        if DOC_TripSetMag > 0.0 then
-                        begin // Circle Specified.
-                            if Cmag <= DOC_TripSetMag then
-                            begin // Within the Circle
-                                if DOC_TripSetHigh > 0.0 then // High Straight-Line Specified.
-                                begin
-                                    if (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) then
-                                    begin
-                                        if cBuffer[i].re < -1 * DOC_TripSetHigh then
-                                        begin // Left-side of High Straight-Line
-                                            if Delay_Time > 0.0 then
-                                                TimeTest := Delay_Time
-                                            else
-                                            if PhaseCurve <> NIL then
-                                                TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
-                                            else
-                                            if Delay_Time = 0.0 then
-                                                TimeTest := Delay_Time;
-                                        end
-                                        else
-                                        begin  // Right-Side of High Straight-Line
-                                            if DOC_DelayInner > 0.0 then
-                                                TimeTest := DOC_DelayInner
-                                            else
-                                            if DOC_PhaseCurveInner <> NIL then
-                                                TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
-                                            else
-                                            if DOC_DelayInner = 0.0 then
-                                                TimeTest := Delay_Time;
-                                        end;
-                                    end
-                                    else
-                                    begin
-                                        if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer[i].re + DOC_TripSetHigh) then
-                                        begin // Left-side of High Straight-Line
-                                            if Delay_Time > 0.0 then
-                                                TimeTest := Delay_Time
-                                            else
-                                            if PhaseCurve <> NIL then
-                                                TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
-                                            else
-                                            if Delay_Time = 0.0 then
-                                                TimeTest := Delay_Time;
-                                        end
-                                        else
-                                        begin // Right-Side of High Straight-Line
-                                            if DOC_DelayInner > 0.0 then
-                                                TimeTest := DOC_DelayInner
-                                            else
-                                            if DOC_PhaseCurveInner <> NIL then
-                                                TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
-                                            else
-                                            if DOC_DelayInner = 0.0 then
-                                                TimeTest := Delay_Time;
-                                        end;
-                                    end;
-                                end
-                                else
-                                begin // High Straight-Line Not Specified.
-
-                                    if DOC_DelayInner > 0.0 then
-                                        TimeTest := DOC_DelayInner
-                                    else
-                                    if DOC_PhaseCurveInner <> NIL then
-                                        TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
-                                    else
-                                    if DOC_DelayInner = 0.0 then
-                                        TimeTest := Delay_Time;
-                                end;
-                            end
-                            else
-                            begin // Out of the Circle
-                                if Delay_Time > 0.0 then
-                                    TimeTest := Delay_Time
-                                else
-                                if PhaseCurve <> NIL then
-                                    TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
-                                else
-                                if Delay_Time = 0.0 then
-                                    TimeTest := Delay_Time;
-                            end;
-                        end
-                        else
-                        begin // Circle not Specified
-                            if DOC_TripSetHigh > 0.0 then
-                            begin // High Straight-Line Specified.
-                                if (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) then
-                                begin
-                                    if cBuffer[i].re < -1 * DOC_TripSetHigh then
-                                    begin // Left-side of High Straight-Line
-
-                                        if Delay_Time > 0.0 then
-                                            TimeTest := Delay_Time
-                                        else
-                                        if PhaseCurve <> NIL then
-                                            TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
-                                        else
-                                        if Delay_Time = 0.0 then
-                                            TimeTest := Delay_Time;
-                                    end
-                                    else
-                                    begin  // Right-Side of High Straight-Line
-                                        if DOC_DelayInner > 0.0 then
-                                            TimeTest := DOC_DelayInner
-                                        else
-                                        if DOC_PhaseCurveInner <> NIL then
-                                            TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
-                                        else
-                                        if DOC_DelayInner = 0.0 then
-                                            TimeTest := Delay_Time;
-                                    end;
-                                end
-                                else
-                                begin
-                                    if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer[i].re + DOC_TripSetHigh) then
-                                    begin // Left-side of High Straight-Line
-                                        if Delay_Time > 0.0 then
-                                            TimeTest := Delay_Time
-                                        else
-                                        if PhaseCurve <> NIL then
-                                            TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
-                                        else
-                                        if Delay_Time = 0.0 then
-                                            TimeTest := Delay_Time;
-                                    end
-                                    else
-                                    begin // Right-Side of High Straight-Line
-                                        if DOC_DelayInner > 0.0 then
-                                            TimeTest := DOC_DelayInner
-                                        else
-                                        if DOC_PhaseCurveInner <> NIL then
-                                            TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
-                                        else
-                                        if DOC_DelayInner = 0.0 then
-                                            TimeTest := Delay_Time;
-                                    end;
-                                end;
-                            end
-                            else
-                            begin  // High Straight-Line Not Specified.
-                                if Delay_Time > 0.0 then
-                                    TimeTest := Delay_Time
-                                else
-                                if PhaseCurve <> NIL then
-                                    TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
-                                else
-                                if Delay_Time = 0.0 then
-                                    TimeTest := Delay_Time;
-                            end;
-                        end;
-                    end
-                    else
-                    begin
-                        // There might be an intersection between Straight Line Low and High depending on their angles.
-                        // Straight Line High takes precedence.
-                        if DOC_TripSetHigh > 0.0 then
+                if (DOC_TripSetMag > 0.0) then
+                begin // Circle Specified.
+                    if Cmag <= DOC_TripSetMag then
+                    begin // Within the Circle
+                        if DOC_TripSetHigh > 0.0 then // High Straight-Line Specified.
                         begin
                             if (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) then
                             begin
@@ -2132,6 +1808,17 @@ begin
                                     if Delay_Time = 0.0 then
                                         TimeTest := Delay_Time;
                                 end
+                                else
+                                begin  // Right-Side of High Straight-Line
+                                    if DOC_DelayInner > 0.0 then
+                                        TimeTest := DOC_DelayInner
+                                    else
+                                    if DOC_PhaseCurveInner <> NIL then
+                                        TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
+                                    else
+                                    if DOC_DelayInner = 0.0 then
+                                        TimeTest := Delay_Time;
+                                end;
                             end
                             else
                             begin
@@ -2146,73 +1833,362 @@ begin
                                     if Delay_Time = 0.0 then
                                         TimeTest := Delay_Time;
                                 end
+                                else
+                                begin // Right-Side of High Straight-Line
+                                    if DOC_DelayInner > 0.0 then
+                                        TimeTest := DOC_DelayInner
+                                    else
+                                    if DOC_PhaseCurveInner <> NIL then
+                                        TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
+                                    else
+                                    if DOC_DelayInner = 0.0 then
+                                        TimeTest := Delay_Time;
+                                end;
+                            end;
+                        end
+                        else
+                        begin // High Straight-Line Not Specified.
+                            if DOC_DelayInner > 0.0 then
+                                TimeTest := DOC_DelayInner
+                            else
+                            if DOC_PhaseCurveInner <> NIL then
+                                TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
+                            else
+                            if DOC_DelayInner = 0.0 then
+                                TimeTest := Delay_Time;
+                        end;
+                    end
+                    else
+                    begin // Out of the Circle
+                        if Delay_Time > 0.0 then
+                            TimeTest := Delay_Time
+                        else
+                        if PhaseCurve <> NIL then
+                            TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
+                        else
+                        if Delay_Time = 0.0 then
+                            TimeTest := Delay_Time;
+                    end;
+                end
+                else
+                begin // Circle not Specified
+                    if DOC_TripSetHigh > 0.0 then
+                    begin // High Straight-Line Specified.
+                        if (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) then
+                        begin
+                            if cBuffer[i].re < -1 * DOC_TripSetHigh then
+                            begin // Left-side of High Straight-Line
+                                if Delay_Time > 0.0 then
+                                    TimeTest := Delay_Time
+                                else
+                                if PhaseCurve <> NIL then
+                                    TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
+                                else
+                                if Delay_Time = 0.0 then
+                                    TimeTest := Delay_Time;
+                            end
+                            else
+                            begin  // Right-Side of High Straight-Line
+                                if DOC_DelayInner > 0.0 then
+                                    TimeTest := DOC_DelayInner
+                                else
+                                if DOC_PhaseCurveInner <> NIL then
+                                    TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
+                                else
+                                if DOC_DelayInner = 0.0 then
+                                    TimeTest := Delay_Time;
+                            end;
+                        end
+                        else
+                        begin
+                            if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer[i].re + DOC_TripSetHigh) then
+                            begin // Left-side of High Straight-Line
+                                if Delay_Time > 0.0 then
+                                    TimeTest := Delay_Time
+                                else
+                                if PhaseCurve <> NIL then
+                                    TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
+                                else
+                                if Delay_Time = 0.0 then
+                                    TimeTest := Delay_Time;
+                            end
+                            else
+                            begin // Right-Side of High Straight-Line
+                                if DOC_DelayInner > 0.0 then
+                                    TimeTest := DOC_DelayInner
+                                else
+                                if DOC_PhaseCurveInner <> NIL then
+                                    TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
+                                else
+                                if DOC_DelayInner = 0.0 then
+                                    TimeTest := Delay_Time;
                             end;
                         end;
+                    end
+                    else
+                    begin  // High Straight-Line Not Specified.
+                        if Delay_Time > 0.0 then
+                            TimeTest := Delay_Time
+                        else
+                        if PhaseCurve <> NIL then
+                            TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
+                        else
+                        if Delay_Time = 0.0 then
+                            TimeTest := Delay_Time;
                     end;
                 end;
-
-                if (TimeTest >= 0.0) then
-                begin
-                    if DebugTrace then
-                        AppendToEventLog(Self.FullName, Format('Directional Overcurrent - Phase %d Trip: Mag=%.5g, Ang=%.5g, Time=%.5g', [i - CondOffset, Cmag, Cangle, TimeTest]));
-                    if TripTime < 0.0 then
-                        TripTime := TimeTest
-                    else
-                        TripTime := Min(TripTime, TimeTest);
-                end;
             end;
-
-            if TripTime >= 0.0 then
+        end
+        else
+        begin // 90, 270
+            if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleLow)) * (cBuffer[i].re + DOC_TripSetLow) then
             begin
-                if not ArmedForOpen then // Then arm for an open operation
-                begin
-                    RelayTarget := 'DOC';
-                    LastEventHandle := ActiveCircuit.ControlQueue.Push(TripTime + Breaker_time, CTRL_OPEN, 0, Self);
-                    if OperationCount <= NumReclose then
-                        LastEventHandle := ActiveCircuit.ControlQueue.Push(TripTime + Breaker_time + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
-                    ArmedForOpen := TRUE;
-                    ArmedForClose := TRUE;
+                if DOC_TripSetMag > 0.0 then
+                begin // Circle Specified.
+                    if Cmag <= DOC_TripSetMag then
+                    begin // Within the Circle
+                        if DOC_TripSetHigh > 0.0 then // High Straight-Line Specified.
+                        begin
+                            if (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) then
+                            begin
+                                if cBuffer[i].re < -1 * DOC_TripSetHigh then
+                                begin // Left-side of High Straight-Line
+                                    if Delay_Time > 0.0 then
+                                        TimeTest := Delay_Time
+                                    else
+                                    if PhaseCurve <> NIL then
+                                        TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
+                                    else
+                                    if Delay_Time = 0.0 then
+                                        TimeTest := Delay_Time;
+                                end
+                                else
+                                begin  // Right-Side of High Straight-Line
+                                    if DOC_DelayInner > 0.0 then
+                                        TimeTest := DOC_DelayInner
+                                    else
+                                    if DOC_PhaseCurveInner <> NIL then
+                                        TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
+                                    else
+                                    if DOC_DelayInner = 0.0 then
+                                        TimeTest := Delay_Time;
+                                end;
+                            end
+                            else
+                            begin
+                                if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer[i].re + DOC_TripSetHigh) then
+                                begin // Left-side of High Straight-Line
+                                    if Delay_Time > 0.0 then
+                                        TimeTest := Delay_Time
+                                    else
+                                    if PhaseCurve <> NIL then
+                                        TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
+                                    else
+                                    if Delay_Time = 0.0 then
+                                        TimeTest := Delay_Time;
+                                end
+                                else
+                                begin // Right-Side of High Straight-Line
+                                    if DOC_DelayInner > 0.0 then
+                                        TimeTest := DOC_DelayInner
+                                    else
+                                    if DOC_PhaseCurveInner <> NIL then
+                                        TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
+                                    else
+                                    if DOC_DelayInner = 0.0 then
+                                        TimeTest := Delay_Time;
+                                end;
+                            end;
+                        end
+                        else
+                        begin // High Straight-Line Not Specified.
+
+                            if DOC_DelayInner > 0.0 then
+                                TimeTest := DOC_DelayInner
+                            else
+                            if DOC_PhaseCurveInner <> NIL then
+                                TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
+                            else
+                            if DOC_DelayInner = 0.0 then
+                                TimeTest := Delay_Time;
+                        end;
+                    end
+                    else
+                    begin // Out of the Circle
+                        if Delay_Time > 0.0 then
+                            TimeTest := Delay_Time
+                        else
+                        if PhaseCurve <> NIL then
+                            TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
+                        else
+                        if Delay_Time = 0.0 then
+                            TimeTest := Delay_Time;
+                    end;
+                end
+                else
+                begin // Circle not Specified
+                    if DOC_TripSetHigh > 0.0 then
+                    begin // High Straight-Line Specified.
+                        if (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) then
+                        begin
+                            if cBuffer[i].re < -1 * DOC_TripSetHigh then
+                            begin // Left-side of High Straight-Line
+
+                                if Delay_Time > 0.0 then
+                                    TimeTest := Delay_Time
+                                else
+                                if PhaseCurve <> NIL then
+                                    TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
+                                else
+                                if Delay_Time = 0.0 then
+                                    TimeTest := Delay_Time;
+                            end
+                            else
+                            begin  // Right-Side of High Straight-Line
+                                if DOC_DelayInner > 0.0 then
+                                    TimeTest := DOC_DelayInner
+                                else
+                                if DOC_PhaseCurveInner <> NIL then
+                                    TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
+                                else
+                                if DOC_DelayInner = 0.0 then
+                                    TimeTest := Delay_Time;
+                            end;
+                        end
+                        else
+                        begin
+                            if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer[i].re + DOC_TripSetHigh) then
+                            begin // Left-side of High Straight-Line
+                                if Delay_Time > 0.0 then
+                                    TimeTest := Delay_Time
+                                else
+                                if PhaseCurve <> NIL then
+                                    TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
+                                else
+                                if Delay_Time = 0.0 then
+                                    TimeTest := Delay_Time;
+                            end
+                            else
+                            begin // Right-Side of High Straight-Line
+                                if DOC_DelayInner > 0.0 then
+                                    TimeTest := DOC_DelayInner
+                                else
+                                if DOC_PhaseCurveInner <> NIL then
+                                    TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag / DOC_PhaseTripInner)
+                                else
+                                if DOC_DelayInner = 0.0 then
+                                    TimeTest := Delay_Time;
+                            end;
+                        end;
+                    end
+                    else
+                    begin  // High Straight-Line Not Specified.
+                        if Delay_Time > 0.0 then
+                            TimeTest := Delay_Time
+                        else
+                        if PhaseCurve <> NIL then
+                            TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
+                        else
+                        if Delay_Time = 0.0 then
+                            TimeTest := Delay_Time;
+                    end;
                 end;
             end
             else
             begin
-                if ArmedForOpen then // If current dropped below pickup, disarm trip and set for reset
+                // There might be an intersection between Straight Line Low and High depending on their angles.
+                // Straight Line High takes precedence.
+                if DOC_TripSetHigh > 0.0 then
                 begin
-                    LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
-                    ArmedForOpen := FALSE;
-                    ArmedForClose := FALSE;
+                    if (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) then
+                    begin
+                        if cBuffer[i].re < -1 * DOC_TripSetHigh then
+                        begin // Left-side of High Straight-Line
+                            if Delay_Time > 0.0 then
+                                TimeTest := Delay_Time
+                            else
+                            if PhaseCurve <> NIL then
+                                TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
+                            else
+                            if Delay_Time = 0.0 then
+                                TimeTest := Delay_Time;
+                        end
+                    end
+                    else
+                    begin
+                        if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer[i].re + DOC_TripSetHigh) then
+                        begin // Left-side of High Straight-Line
+                            if Delay_Time > 0.0 then
+                                TimeTest := Delay_Time
+                            else
+                            if PhaseCurve <> NIL then
+                                TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag / PhaseTrip)
+                            else
+                            if Delay_Time = 0.0 then
+                                TimeTest := Delay_Time;
+                        end
+                    end;
                 end;
             end;
-        end; // IF PresentState=CLOSE
-    end;  // with MonitoredElement
+        end;
+
+        if (TimeTest >= 0.0) then
+        begin
+            if DebugTrace then
+                AppendToEventLog(Self.FullName, Format('Directional Overcurrent - Phase %d Trip: Mag=%.5g, Ang=%.5g, Time=%.5g', [i - CondOffset, Cmag, Cangle, TimeTest]));
+            if TripTime < 0.0 then
+                TripTime := TimeTest
+            else
+                TripTime := Min(TripTime, TimeTest);
+        end;
+    end;
+
+    if TripTime >= 0.0 then
+    begin
+        if not ArmedForOpen then // Then arm for an open operation
+        begin
+            RelayTarget := 'DOC';
+            LastEventHandle := ActiveCircuit.ControlQueue.Push(TripTime + Breaker_time, CTRL_OPEN, 0, Self);
+            if OperationCount <= NumReclose then
+                LastEventHandle := ActiveCircuit.ControlQueue.Push(TripTime + Breaker_time + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
+            ArmedForOpen := TRUE;
+            ArmedForClose := TRUE;
+        end;
+    end
+    else
+    begin
+        if ArmedForOpen then // If current dropped below pickup, disarm trip and set for reset
+        begin
+            LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
+            ArmedForOpen := FALSE;
+            ArmedForClose := FALSE;
+        end;
+    end;
 end;
 
 procedure TRelayObj.RevPowerLogic;
 var
     S: Complex;
 begin
-    with MonitoredElement do
+    // MonitoredElement.ActiveTerminalIdx := MonitoredElementTerminal;
+    S := MonitoredElement.Power[MonitoredElementTerminal];
+    if S.re < 0.0 then
     begin
-        // MonitoredElement.ActiveTerminalIdx := MonitoredElementTerminal;
-        S := MonitoredElement.Power[MonitoredElementTerminal];
-        if S.re < 0.0 then
+        if Abs(S.Re) > PhaseInst * 1000.0 then
         begin
-            if Abs(S.Re) > PhaseInst * 1000.0 then
+            if not ArmedForOpen then  // push the trip operation and arm to trip
             begin
-                if not ArmedForOpen then  // push the trip operation and arm to trip
-                begin
-                    RelayTarget := 'Rev P';
-                    LastEventHandle := ActiveCircuit.ControlQueue.Push(Delay_Time + Breaker_time, CTRL_OPEN, 0, Self);
-                    OperationCount := NumReclose + 1;  // force a lockout
-                    ArmedForOpen := TRUE;
-                end
+                RelayTarget := 'Rev P';
+                LastEventHandle := ActiveCircuit.ControlQueue.Push(Delay_Time + Breaker_time, CTRL_OPEN, 0, Self);
+                OperationCount := NumReclose + 1;  // force a lockout
+                ArmedForOpen := TRUE;
             end
-            else
-            if ArmedForOpen then    // We became unarmed, so reset and disarm
-            begin
-                LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
-                ArmedForOpen := FALSE;
-            end;
+        end
+        else
+        if ArmedForOpen then    // We became unarmed, so reset and disarm
+        begin
+            LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
+            ArmedForOpen := FALSE;
         end;
     end;
 end;
@@ -2230,118 +2206,115 @@ begin
     if LockedOut then
         Exit;
 
-    with MonitoredElement do
-    begin
-        //**** Fix so that fastest trip time applies ****
-        MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cBuffer);
+    //**** Fix so that fastest trip time applies ****
+    MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cBuffer);
 
-        Vmin := 1.0E50;
-        Vmax := 0.0;
-        for i := 1 to MonitoredElement.NPhases do
+    Vmin := 1.0E50;
+    Vmax := 0.0;
+    for i := 1 to MonitoredElement.NPhases do
+    begin
+        Vmag := Cabs(cBuffer[i]);
+        if Vmag > Vmax then
+            Vmax := Vmag;
+        if Vmag < Vmin then
+            Vmin := Vmag;
+    end;
+
+    // Convert to Per Unit
+    Vmax := Vmax / Vbase;
+    Vmin := Vmin / Vbase;
+
+    if FPresentState = CTRL_CLOSE then
+    begin
+        TripTime := -1.0;
+        OVTime := -1.0;
+        UVTime := -1.0;
+
+
+        // Check OverVoltage Trip, if any
+        if OVCurve <> NIL then
+            OVTime := OVCurve.GetOVtime(Vmax);
+
+        if OVTime > 0.0 then
         begin
-            Vmag := Cabs(cBuffer[i]);
-            if Vmag > Vmax then
-                Vmax := Vmag;
-            if Vmag < Vmin then
-                Vmin := Vmag;
+            TripTime := OVTime;
         end;
 
-        // Convert to Per Unit
-        Vmax := Vmax / Vbase;
-        Vmin := Vmin / Vbase;
+        // If OVTime > 0 then we have a OV trip
 
-        if FPresentState = CTRL_CLOSE then
+        // Check UV Trip, if any
+        if UVCurve <> NIL then
         begin
-            TripTime := -1.0;
-            OVTime := -1.0;
-            UVTime := -1.0;
+            UVTime := UVCurve.GetUVtime(Vmin);
+        end;
 
+        // If UVTime > 0 then we have a UV trip
 
-            // Check OverVoltage Trip, if any
-            if OVCurve <> NIL then
-                OVTime := OVCurve.GetOVtime(Vmax);
-
-            if OVTime > 0.0 then
-            begin
-                TripTime := OVTime;
-            end;
-
-            // If OVTime > 0 then we have a OV trip
-
-            // Check UV Trip, if any
-            if UVCurve <> NIL then
-            begin
-                UVTime := UVCurve.GetUVtime(Vmin);
-            end;
-
-            // If UVTime > 0 then we have a UV trip
-
-            if UVTime > 0.0 then
-            begin
-                if TripTime > 0.0 then
-                begin
-                    TripTime := Min(TripTime, UVTime)   // Min of UV or OV time
-                end
-                else
-                begin
-                    TripTime := UVTime;
-                end;
-            end;
-
+        if UVTime > 0.0 then
+        begin
             if TripTime > 0.0 then
             begin
-                if ArmedForOpen and ((ActiveCircuit.Solution.DynaVars.t + TripTime + Breaker_time) < NextTripTime) then
-                begin
-                    ActiveCircuit.ControlQueue.Delete(LastEventHandle);  // Delete last event from Queue
-                    ArmedForOpen := FALSE;  // force it to go through next IF
-                end;
-
-                if not ArmedForOpen then
-                begin  // Then arm for an open operation
-                    if TripTime = UVTime then
-                    begin
-                        if TripTime = OVTime then
-                            RelayTarget := 'UV + OV'
-                        else
-                            RelayTarget := 'UV';
-                    end
-                    else
-                        Relaytarget := 'OV';
-
-                    NextTripTime := ActiveCircuit.Solution.DynaVars.t + TripTime + Breaker_time;
-                    LastEventHandle := ActiveCircuit.ControlQueue.Push(ActiveCircuit.Solution.DynaVars.intHour, NextTripTime, CTRL_OPEN, 0, Self);
-                    ArmedforOpen := TRUE;
-                end;
+                TripTime := Min(TripTime, UVTime)   // Min of UV or OV time
             end
             else
             begin
-                if ArmedForOpen then // If voltage dropped below pickup, disarm trip and set for reset
-                begin
-                    ActiveCircuit.ControlQueue.Delete(LastEventHandle);  // Delete last event from Queue
-                    NextTripTime := -1.0;
-                    LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
-                    ArmedForOpen := FALSE;
-                end;
+                TripTime := UVTime;
             end;
-        end  // IF PresentState=CLOSE
-        else
-        begin     
-            // Present state is Open, Check for Voltage and then set reclose Interval
-            if (OperationCount <= NumReclose) then
-                if not ArmedForClose then
-                begin
-                    if (Vmax > 0.9) then // OK if voltage > 90%
-                    begin
-                        LastEventHandle := ActiveCircuit.ControlQueue.Push(RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
-                        ArmedForClose := TRUE;
-                    end;
-                end
-                else // Armed, but check to see if voltage dropped before it reclosed and cancel action
-                if Vmax < 0.9 then
-                    ArmedForClose := FALSE;
-
         end;
-    end;  // With MonitoredElement
+
+        if TripTime > 0.0 then
+        begin
+            if ArmedForOpen and ((ActiveCircuit.Solution.DynaVars.t + TripTime + Breaker_time) < NextTripTime) then
+            begin
+                ActiveCircuit.ControlQueue.Delete(LastEventHandle);  // Delete last event from Queue
+                ArmedForOpen := FALSE;  // force it to go through next IF
+            end;
+
+            if not ArmedForOpen then
+            begin  // Then arm for an open operation
+                if TripTime = UVTime then
+                begin
+                    if TripTime = OVTime then
+                        RelayTarget := 'UV + OV'
+                    else
+                        RelayTarget := 'UV';
+                end
+                else
+                    Relaytarget := 'OV';
+
+                NextTripTime := ActiveCircuit.Solution.DynaVars.t + TripTime + Breaker_time;
+                LastEventHandle := ActiveCircuit.ControlQueue.Push(ActiveCircuit.Solution.DynaVars.intHour, NextTripTime, CTRL_OPEN, 0, Self);
+                ArmedforOpen := TRUE;
+            end;
+        end
+        else
+        begin
+            if ArmedForOpen then // If voltage dropped below pickup, disarm trip and set for reset
+            begin
+                ActiveCircuit.ControlQueue.Delete(LastEventHandle);  // Delete last event from Queue
+                NextTripTime := -1.0;
+                LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
+                ArmedForOpen := FALSE;
+            end;
+        end;
+    end  // IF PresentState=CLOSE
+    else
+    begin     
+        // Present state is Open, Check for Voltage and then set reclose Interval
+        if (OperationCount <= NumReclose) then
+            if not ArmedForClose then
+            begin
+                if (Vmax > 0.9) then // OK if voltage > 90%
+                begin
+                    LastEventHandle := ActiveCircuit.ControlQueue.Push(RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
+                    ArmedForClose := TRUE;
+                end;
+            end
+            else // Armed, but check to see if voltage dropped before it reclosed and cancel action
+            if Vmax < 0.9 then
+                ArmedForClose := FALSE;
+
+    end;
 end;
 
 procedure TRelayObj.NegSeq47Logic;
@@ -2350,28 +2323,25 @@ var
     NegSeqVoltageMag: Double;
     V012: array[1..3] of Complex;
 begin
-    with MonitoredElement do
+    MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cBuffer);
+    Phase2SymComp(cBuffer, pComplexArray(@V012)); // Phase to symmetrical components
+    NegSeqVoltageMag := Cabs(V012[3]);
+    if NegSeqVoltageMag >= PickupVolts47 then
     begin
-        MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cBuffer);
-        Phase2SymComp(cBuffer, pComplexArray(@V012)); // Phase to symmetrical components
-        NegSeqVoltageMag := Cabs(V012[3]);
-        if NegSeqVoltageMag >= PickupVolts47 then
+        if not ArmedForOpen then  // push the trip operation and arm to trip
         begin
-            if not ArmedForOpen then  // push the trip operation and arm to trip
-            begin
-                RelayTarget := '-Seq V';
-                LastEventHandle := ActiveCircuit.ControlQueue.Push(Delay_Time + Breaker_time, CTRL_OPEN, 0, Self);
-                OperationCount := NumReclose + 1;  // force a lockout
-                ArmedForOpen := TRUE;
-            end
+            RelayTarget := '-Seq V';
+            LastEventHandle := ActiveCircuit.ControlQueue.Push(Delay_Time + Breaker_time, CTRL_OPEN, 0, Self);
+            OperationCount := NumReclose + 1;  // force a lockout
+            ArmedForOpen := TRUE;
         end
-        else
-        begin  // Less Than pickup value: reset if armed
-            if ArmedForOpen then    // We became unarmed, so reset and disarm
-            begin
-                LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
-                ArmedForOpen := FALSE;
-            end;
+    end
+    else
+    begin  // Less Than pickup value: reset if armed
+        if ArmedForOpen then    // We became unarmed, so reset and disarm
+        begin
+            LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
+            ArmedForOpen := FALSE;
         end;
     end;
 end;

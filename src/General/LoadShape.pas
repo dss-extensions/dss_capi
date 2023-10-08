@@ -121,6 +121,11 @@ type
         Edge = 1
     );
 {$POP}
+    TLSFileType = (
+        PlainText = 0,
+        Float64 = 1,
+        Float32 = 2
+    );
 {$SCOPEDENUMS OFF}
 
     TLoadShape = class(TDSSClass)
@@ -147,8 +152,8 @@ type
         // Function Get_FirstMult:Double;
         // Function Get_NextMult :Double;
         function Get_Interval: Double;
-        procedure SaveToDblFile;
-        procedure SaveToSngFile;
+        procedure SaveToDblFile();
+        procedure SaveToSngFile();
         procedure CalcMeanandStdDev;
         function Get_Mean: Double;
         function Get_StdDev: Double;
@@ -222,6 +227,11 @@ type
         procedure SetDataPointersSingle(HoursPtr: PSingle; PMultPtr: PSingle; QMultPtr: PSingle; SStride: Integer);
         procedure UseFloat32;
         procedure UseFloat64;
+        procedure ReadDblFile(const FileName: String);
+        procedure ReadSngFile(const FileName: String);
+        procedure ReadCSVFile(const FileName: String);
+        procedure Read2ColCSVFile(const FileName: String);
+        function CreateMMF(const S: String; Destination: TMMShapeType): Boolean;        
     end;
 
 implementation
@@ -311,28 +321,27 @@ begin
     obj.StdDev := value;
 end;
 
-procedure DoAction(Obj: TObj; action: TLoadShapeAction);
+procedure DoAction(obj: TObj; action: TLoadShapeAction);
 begin
     case action of
         TLoadShapeAction.Normalize:
-            Obj.Normalize;
+            obj.Normalize();
         TLoadShapeAction.DblSave:
-            Obj.SaveToDblFile;
+            obj.SaveToDblFile();
         TLoadShapeAction.SngSave:
-            Obj.SaveToSngFile;
+            obj.SaveToSngFile();
     end;
 end;
 
-procedure SetNumPoints(Obj: TObj; Value: Integer);
+procedure SetNumPoints(obj: TObj; Value: Integer);
 begin
-    with Obj do 
-        if ExternalMemory then
-        begin
-            DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
-            Exit;
-        end
-        else
-            NumPoints := Value;
+    if obj.ExternalMemory then
+    begin
+        obj.DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        Exit;
+    end
+    else
+        obj.NumPoints := Value;
 end;
 
 procedure TLoadShape.DefineProperties;
@@ -493,7 +502,7 @@ var
     Param: String;
 begin
     DSS.AuxParser.CmdString := mmFileCmd;
-    ParmName := DSS.AuxParser.NextParam;
+    ParmName := DSS.AuxParser.NextParam();
     LocalCol := 1;
 
     if CompareText(Parmname, 'file') = 0 then
@@ -501,13 +510,13 @@ begin
         fileType := TLSFileType.PlainText;
 
         // Look for other options  (may be in either order)
-        ParmName := DSS.AuxParser.NextParam;
+        ParmName := DSS.AuxParser.NextParam();
         Param := DSS.AuxParser.StrValue;
         while Length(Param) > 0 do
         begin
             if CompareTextShortest(ParmName, 'column') = 0 then
                 LocalCol := DSS.AuxParser.IntValue;
-            ParmName := DSS.AuxParser.NextParam;
+            ParmName := DSS.AuxParser.NextParam();
             Param := DSS.AuxParser.StrValue;
         end;
     end
@@ -579,15 +588,14 @@ begin
 end;
 
 // Creates the Memory mapping for the file specified
-function CreateMMF(Obj: TObj; const S: String; Destination: TMMShapeType): Boolean;
+function TLoadShapeObj.CreateMMF(const S: String; Destination: TMMShapeType): Boolean;
 var
     ParmName,
     Param: String;
 begin
-    with Obj do
     try
         DSS.AuxParser.CmdString := S;
-        ParmName := DSS.AuxParser.NextParam;
+        ParmName := DSS.AuxParser.NextParam();
         Param := AdjustInputFilePath(DSS.AuxParser.StrValue);
         if not FileExists(Param) then
         begin
@@ -682,7 +690,7 @@ begin
             end;
             if UseMMF then
             begin
-                if not CreateMMF(self, Value, TMMShapeType.P) then
+                if not CreateMMF(Value, TMMShapeType.P) then
                     Exit; // CreateMMF throws an error message already
                 LoadFileFeatures(TMMShapeType.P);
                 mmDataSize := NumPoints;
@@ -717,7 +725,7 @@ begin
             end;
             if UseMMF then
             begin
-                if not CreateMMF(self, Value, TMMShapeType.Q) then
+                if not CreateMMF(Value, TMMShapeType.Q) then
                     Exit; // CreateMMF throws an error message already
                 LoadFileFeatures(TMMShapeType.Q);
                 if Assigned(dP) then
@@ -738,14 +746,14 @@ begin
 end;
 
 function TLoadShape.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
 begin
-    with TObj(ptr) do
-    begin
-        if Assigned(dP) or Assigned(sP) then
-            SetMaxPandQ;
+    obj := TObj(ptr);
+    if (obj.dP <> NIL) or (obj.sP <> NIL) then
+        obj.SetMaxPandQ();
 
-        Exclude(Flags, Flg.EditionActive);
-    end;
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -847,35 +855,39 @@ begin
     SetMaxPandQ;
 end;
 
-procedure Do2ColCSVFile(Obj: TObj; const FileName: String);
+procedure Do2ColCSVFile(obj: TObj; const FileName: String);
+begin
+    obj.Read2ColCSVFile(FileName);
+end;
+
+procedure TLoadShapeObj.Read2ColCSVFile(const FileName: String);
 //   Process 2-column CSV file (3-col if time expected)
 var
     F: TStream = nil;
     i: Integer;
     s: String;
 begin
-    if Obj.ExternalMemory then
+    if ExternalMemory then
     begin
-        DoSimpleMsg(Obj.DSS, 'Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
     end;
 
     try
-        F := Obj.DSS.GetROFileStream(FileName);
+        F := DSS.GetROFileStream(FileName);
     except
-        DoSimpleMsg(Obj.DSS, 'Error opening file: "%s"', [FileName], 613);
+        DoSimpleMsg('Error opening file: "%s"', [FileName], 613);
         FreeAndNil(F);
         Exit;
     end;
 
-    with Obj do
     try
         if UseMMF then
         begin
             FreeAndNil(F);
             mmDataSize := NumPoints;
             mmFileCmd := 'file=' + FileName + ' column=1';      // Command for P
-            if not CreateMMF(Obj, mmFileCmd, TMMShapeType.P) then  // Creates MMF for the whole file
+            if not CreateMMF(mmFileCmd, TMMShapeType.P) then  // Creates MMF for the whole file
                 Exit; // CreateMMF throws an error message already
             
             mmViewQ := mmView;
@@ -901,19 +913,16 @@ begin
             Inc(i);
             FSReadln(F, s); // read entire line and parse with AuxParser
             // AuxParser allows commas or white space
-            with DSS.AuxParser do
+            DSS.AuxParser.CmdString := s;
+            if Interval = 0.0 then
             begin
-                CmdString := s;
-                if Interval = 0.0 then
-                begin
-                    NextParam;
-                    dH[i] := DblValue;
-                end;
-                NextParam;
-                dP[i] := DblValue;  // first parm
-                NextParam;
-                dQ[i] := DblValue;  // second parm
+                DSS.AuxParser.NextParam();
+                dH[i] := DSS.AuxParser.DblValue;
             end;
+            DSS.AuxParser.NextParam();
+            dP[i] := DSS.AuxParser.DblValue;  // first parm
+            DSS.AuxParser.NextParam();
+            dQ[i] := DSS.AuxParser.DblValue;  // second parm
         end;
         FreeAndNil(F);
         inc(i);
@@ -929,32 +938,36 @@ begin
     end;
 end;
 
-procedure DoCSVFile(Obj: TObj; const FileName: String);
+procedure DoCSVFile(obj: TObj; const FileName: String);
+begin
+    obj.ReadCSVFile(FileName);
+end;
+
+procedure TLoadShapeObj.ReadCSVFile(const FileName: String);
 var
     F: TStream = nil;
     i: Integer;
     s: String;
 begin
-    if Obj.ExternalMemory then
+    if ExternalMemory then
     begin
-        DoSimpleMsg(Obj.DSS, 'Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
     end;
     try
-        F := Obj.DSS.GetROFileStream(FileName);
+        F := DSS.GetROFileStream(FileName);
     except
-        DoSimpleMsg(Obj.DSS, 'Error opening file: "%s"', [FileName], 613);
+        DoSimpleMsg('Error opening file: "%s"', [FileName], 613);
         FreeAndNil(F);
         Exit;
     end;
 
-    with Obj do
     try
         if UseMMF then
         begin
             FreeAndNil(F);
             s := 'file=' + FileName;
-            if CreateMMF(Obj, s, TMMShapeType.P) then
+            if CreateMMF(s, TMMShapeType.P) then
                 Exit; // CreateMMF throws an error message already
 
             LoadFileFeatures(TMMShapeType.P);
@@ -973,17 +986,14 @@ begin
             Inc(i);
             FSReadln(F, s); // read entire line  and parse with AuxParser
             // AuxParser allows commas or white space
-            with DSS.AuxParser do
+            DSS.AuxParser.CmdString := s;
+            if Interval = 0.0 then
             begin
-                CmdString := s;
-                if Interval = 0.0 then
-                begin
-                    NextParam;
-                    dH[i] := DblValue;
-                end;
-                NextParam;
-                dP[i] := DblValue;
+                DSS.AuxParser.NextParam();
+                dH[i] := DSS.AuxParser.DblValue;
             end;
+            DSS.AuxParser.NextParam();
+            dP[i] := DSS.AuxParser.DblValue;
         end;
         FreeAndNil(F);
         inc(i);
@@ -999,7 +1009,12 @@ begin
     end;
 end;
 
-procedure DoSngFile(Obj: TObj; const FileName: String);
+procedure DoSngFile(obj: TObj; const FileName: String);
+begin
+    obj.ReadSngFile(FileName);
+end;
+
+procedure TLoadShapeObj.ReadSngFile(const FileName: String);
 var
     s: String;
     F: TStream = NIL;
@@ -1007,25 +1022,24 @@ var
     i: Integer;
     bytesRead: Int64;
 begin
-    if Obj.ExternalMemory then
+    if ExternalMemory then
     begin
-        DoSimpleMsg(Obj.DSS, _('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61102);
+        DoSimpleMsg(_('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61102);
         Exit;
     end;
     try
-        F := Obj.DSS.GetROFileStream(FileName);
+        F := DSS.GetROFileStream(FileName);
     except
-        DoSimpleMsg(Obj.DSS, 'Error opening file: "%s"', [FileName], 615);
+        DoSimpleMsg('Error opening file: "%s"', [FileName], 615);
         Exit;
     end;
 
-    with Obj do
     try
         if UseMMF then
         begin
             FreeAndNil(F);
             s := 'sngfile=' + FileName;
-            if not CreateMMF(Obj, s, TMMShapeType.P) then
+            if not CreateMMF(s, TMMShapeType.P) then
                 Exit; // CreateMMF throws an error message already
 
             LoadFileFeatures(TMMShapeType.P);
@@ -1100,32 +1114,36 @@ begin
     end;
 end;
 
-procedure DoDblFile(Obj: TObj; const FileName: String);
+procedure DoDblFile(obj: TObj; const FileName: String);
+begin
+    obj.ReadDblFile(FileName);
+end;
+
+procedure TLoadShapeObj.ReadDblFile(const FileName: String);
 var
     s: String;
     F: TStream = NIL;
     i: Integer;
     bytesRead: Int64;
 begin
-    if Obj.ExternalMemory then
+    if ExternalMemory then
     begin
-        DoSimpleMsg(Obj.DSS, _('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61102);
+        DoSimpleMsg(_('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61102);
         Exit;
     end;
     try
-        F := Obj.DSS.GetROFileStream(FileName);
+        F := DSS.GetROFileStream(FileName);
     except
-        DoSimpleMsg(Obj.DSS, 'Error opening file: "%s"', [FileName], 617);
+        DoSimpleMsg('Error opening file: "%s"', [FileName], 617);
         Exit;
     end;
 
-    with Obj do
     try
         if UseMMF then
         begin
             FreeAndNil(F);
             s := 'dblfile=' + FileName;
-            if not CreateMMF(Obj, s, TMMShapeType.P) then
+            if not CreateMMF(s, TMMShapeType.P) then
                 Exit; // CreateMMF throws an error message already
             
             LoadFileFeatures(TMMShapeType.P);
@@ -1134,7 +1152,7 @@ begin
             Exit;
         end;
 
-        UseFloat64;
+        UseFloat64();
         ReAllocmem(dP, sizeof(Double) * NumPoints);
         if Interval = 0.0 then
             ReAllocmem(dH, Sizeof(Double) * NumPoints);
@@ -1253,6 +1271,84 @@ begin
     inherited destroy;
 end;
 
+function InterpretDblArrayMMF(DSS: TDSSContext; mmPtr: pByte; FileType: TLSFileType; Column, INDEX, DataSize: Integer): double;
+//  Gets the value for the value at INDEX within the file mapped (mmPtr)
+//  Considers the flags FileType, Column for locating the data within the file
+//  FileType :
+//    0 - normal file (ANSI char)
+//    1 - dblfile
+//    2 - sngfile
+var
+   DBLByteArray: array[0..7] of byte;
+   SGLByteArray: array[0..3] of byte;
+   // InputLIne, 
+   content: String;
+   byteValue : Byte;
+   OffSet, i, j : Integer;
+begin
+    Result := 1.0; // Default Return Value;
+    OffSet := (INDEX - 1) * DataSize;
+
+    if FileType = TLSFileType.PlainText then  // Normal file (CSV, txt, ASCII based file)
+    begin
+        content := '';
+        byteValue := 0;
+        i := OffSet;
+        if mmPtr[i] = $0A then 
+            inc(i); // in case we are at the end of the previous line
+            
+        j := 0;
+        while byteValue <> $0A do
+        begin
+            byteValue := mmPtr[i];
+            // Concatenates avoiding special chars (EOL)
+            if (byteValue >= 46) and (byteValue < 58) then 
+                content := content + AnsiChar(byteValue);
+
+            if byteValue = 44 then // a comma char was found
+            begin               // If we are at the column, exit, otherwise, keep looking
+                inc(j);         // discarding the previous number (not needed anyway)
+                if j = Column then 
+                    break
+                else 
+                    content := '';
+            end;
+            inc(i);
+        end;
+        try
+            // checks if the extraction was OK, othwerwise, forces the default value
+            if content = '' then 
+                content := '1.0';
+            Result := strtofloat(content);
+        except
+            on E:Exception Do
+            begin
+                DoSimpleMsg(DSS, 'Error reading %d-th numeric array value. Error is:', [i, E.message], 785);
+                Result := i - 1;
+            end;
+        end;
+        Exit;
+    end;
+
+    if (FileType = TLSFileType.Float64) then // DBL files
+    begin
+        // load the list from a file of doubles (no checking done on type of data)
+        for i := 0 to (DataSize - 1) do 
+            DBLByteArray[i] :=  mmPtr[i + OffSet]; // Load data into the temporary buffer
+        Result := double(DBLByteArray); // returns the number (double)
+        Exit;
+    end;
+
+    if (FileType = TLSFileType.Float32) then // SGL files
+    begin
+        // load the list from a file of doubles (no checking done on type of data)
+        for i := 0 to (DataSize - 1) do 
+            SGLByteArray[i] := mmPtr[i + OffSet]; // Load data into the temporary buffer
+        Result := single(SGLByteArray); // returns the number formatted as double
+        Exit;
+    end;
+end;
+
 function TLoadShapeObj.GetMultAtHour(hr: Double): Complex;
 // This function returns a multiplier for the given hour.
 // If no points exist in the curve, the result is  1.0
@@ -1268,7 +1364,7 @@ var
     poffset: Int64; // previous index including stride
     
     function Set_Result_im(const realpart: Double): Double;
-    {Set imaginary part of Result when Qmultipliers not defined}
+    // Set imaginary part of Result when Qmultipliers not defined
     begin
         if UseActual then
             Set_Result_im := 0.0       // if actual, assume zero
@@ -1684,15 +1780,15 @@ begin
                 Exit;
             end;
             if dP <> NIL then
-                Result := GetDSSArray_Real(NumPoints, pDoubleArray(dP))
+                Result := GetDSSArray(NumPoints, pDoubleArray(dP))
             else if sP <> NIL then
-                Result := GetDSSArray_Single(NumPoints, pSingleArray(sP));
+                Result := GetDSSArray(NumPoints, pSingleArray(sP));
         end;
         ord(TProp.hour):
             if dH <> NIL then
-                Result := GetDSSArray_Real(NumPoints, pDoubleArray(dH))
+                Result := GetDSSArray(NumPoints, pDoubleArray(dH))
             else if sH <> NIL then
-                Result := GetDSSArray_Single(NumPoints, pSingleArray(sH));
+                Result := GetDSSArray(NumPoints, pSingleArray(sH));
         ord(TProp.qmult):
         begin
             if UseMMF then
@@ -1701,9 +1797,9 @@ begin
                 Exit;
             end;
             if Assigned(dQ) then
-                Result := GetDSSArray_Real(NumPoints, pDoubleArray(dQ))
+                Result := GetDSSArray(NumPoints, pDoubleArray(dQ))
             else if Assigned(sQ) then
-                Result := GetDSSArray_Single(NumPoints, pSingleArray(sQ));
+                Result := GetDSSArray(NumPoints, pSingleArray(sQ));
         end;
     else
         Result := inherited GetPropertyValue(index);
@@ -1726,7 +1822,7 @@ begin
     end;
 
     try
-        FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s_P.dbl', [Name]);
+        FName := DSS.OutputDirectory + Format('%s_P.dbl', [Name]); // CurrentDSSDir
         F := TBufferedFileStream.Create(FName, fmCreate);
         if UseMMF then
         begin
@@ -1749,7 +1845,7 @@ begin
     if Assigned(dQ) then
     begin
         try
-            FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s_Q.dbl', [Name]);
+            FName := DSS.OutputDirectory + Format('%s_Q.dbl', [Name]); // CurrentDSSDir
             F := TBufferedFileStream.Create(FName, fmCreate);
             if UseMMF then
             begin
@@ -1784,7 +1880,7 @@ begin
     end;
 
     try
-        FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s_P.sng', [Name]);
+        FName := DSS.OutputDirectory + Format('%s_P.sng', [Name]); // CurrentDSSDir
         F := TBufferedFileStream.Create(FName, fmCreate);
         for i := 1 to NumPoints do
         begin
@@ -1802,7 +1898,7 @@ begin
     if Assigned(dQ) then
     begin
         try
-            FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s_Q.sng', [Name]);
+            FName := DSS.OutputDirectory + Format('%s_Q.sng', [Name]); // CurrentDSSDir
             F := TBufferedFileStream.Create(FName, fmCreate);
             for i := 1 to NumPoints do
             begin
@@ -1819,6 +1915,45 @@ begin
     end;
 end;
 
+function iMaxAbsArrayValue(npts: Integer; dbls: pDoubleArray): Integer; overload;
+// Returns index of max array value  in abs value
+var
+    i: Integer;
+    MaxValue: Double;
+begin
+    Result := 0;
+    if npts = 0 then
+        exit;
+
+    Result := 1;
+    MaxValue := abs(dbls[1]);
+    for i := 2 to npts do
+        if abs(dbls[i]) > Maxvalue then
+        begin
+            Maxvalue := abs(dbls[i]);
+            Result := i;   // save index
+        end;
+end;
+
+function iMaxAbsArrayValue(npts: Integer; sngs: pSingleArray): Integer; overload;
+// Returns index of max array value  in abs value
+var
+    i: Integer;
+    MaxValue: Single;
+begin
+    Result := 0;
+    if npts = 0 then
+        exit;
+
+    Result := 1;
+    MaxValue := abs(sngs[1]);
+    for i := 2 to npts do
+        if abs(sngs[i]) > Maxvalue then
+        begin
+            Maxvalue := abs(sngs[i]);
+            Result := i;   // save index
+        end;
+end;
 procedure TLoadShapeObj.SetMaxPandQ;
 var
     iMaxP: Integer;
@@ -1831,26 +1966,26 @@ begin
 
     if Assigned(dP) then
     begin
-        iMaxP := iMaxAbsdblArrayValue(NumPoints, PDoubleArray(dP)) - 1;
+        iMaxP := iMaxAbsArrayValue(NumPoints, PDoubleArray(dP)) - 1;
         if iMaxP >= 0 then
         begin
-            MaxP := dP[{Stride *} iMaxP];
+            MaxP := dP[iMaxP]; // Stride *
             if not MaxQSpecified then
                 if Assigned(dQ) then
-                    MaxQ := dQ[{Stride *} iMaxP]
+                    MaxQ := dQ[iMaxP] // Stride *
                 else
                     MaxQ := 0.0;
         end;
     end
     else
     begin
-        iMaxP := iMaxAbssngArrayValue(NumPoints, PSingleArray(sP)) - 1;
+        iMaxP := iMaxAbsArrayValue(NumPoints, PSingleArray(sP)) - 1;
         if iMaxP >= 0 then
         begin
-            MaxP := sP[{Stride *} iMaxP];
+            MaxP := sP[iMaxP]; // Stride *
             if not MaxQSpecified then
                 if Assigned(sQ) then
-                    MaxQ := sQ[{Stride *} iMaxP]
+                    MaxQ := sQ[iMaxP] // Stride *
                 else
                     MaxQ := 0.0;
         end;
@@ -2159,4 +2294,5 @@ end;
 
 finalization
     ActionEnum.Free;
+    InterpEnum.Free;
 end.

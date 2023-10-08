@@ -1,11 +1,9 @@
 unit ReduceAlgs;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 // Reduction Algorithms
 
@@ -545,12 +543,9 @@ begin
 
     end;
 
-    with DSS.ActiveCircuit do
-    begin
-        ReprocessBusDefs;  // to get new load added and account for disabled devices
-        DoResetMeterZones;  // without eliminated devices
-        Solution.SystemYChanged := TRUE; // force rebuild of Y
-    end;
+    DSS.ActiveCircuit.ReprocessBusDefs();  // to get new load added and account for disabled devices
+    DSS.ActiveCircuit.DoResetMeterZones();  // without eliminated devices
+    DSS.ActiveCircuit.Solution.SystemYChanged := TRUE; // force rebuild of Y
 end;
 
 end.

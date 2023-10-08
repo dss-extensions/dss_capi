@@ -199,7 +199,7 @@ type
         function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
         Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
 
-        procedure ResetRegistersAll;
+        procedure ResetRegistersAll();
         procedure SampleAll();
         procedure UpdateAll;
     end;
@@ -590,30 +590,28 @@ begin
     Result := Obj;
 end;
 
-procedure SetNcondsForConnection(Obj: TObj);
+procedure SetNcondsForConnection(obj: TObj);
 begin
-    with Obj do
-        case Connection of
-            0:
-                NConds := Fnphases + 1;
-            1:
-                case Fnphases of
-                    1, 2:
-                        NConds := Fnphases + 1; // L-L and Open-delta
-                else
-                    NConds := Fnphases;
-                end;
-        end;
+    case obj.Connection of
+        0:
+            obj.NConds := obj.Fnphases + 1;
+        1:
+            case obj.Fnphases of
+                1, 2:
+                    obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
+            else
+                obj.NConds := obj.Fnphases;
+            end;
+    end;
 end;
 
 procedure TPVsystem.UpdateAll;
 var
-    i: Integer;
+    obj: TObj;
 begin
-    for i := 1 to ElementList.Count do
-        with TPVsystemObj(ElementList.Get(i)) do
-            if Enabled then
-                UpdatePVSystem;
+    for obj in ElementList do
+        if obj.Enabled then
+            obj.UpdatePVSystem();
 end;
 
 procedure TPVsystemObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
@@ -728,13 +726,13 @@ begin
 end;
 
 function TPVsystem.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
 begin
-    with TObj(ptr) do
-    begin
-        RecalcElementData;
-        YPrimInvalid := TRUE;
-        Exclude(Flags, Flg.EditionActive);
-    end;
+    obj := TObj(ptr);
+    obj.RecalcElementData();
+    obj.YPrimInvalid := TRUE;
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -810,26 +808,25 @@ begin
     CurrentLimited := Other.CurrentLimited;
 end;
 
-procedure TPVsystem.ResetRegistersAll;  // Force all EnergyMeters in the circuit to reset
+procedure TPVsystem.ResetRegistersAll();  // Force all EnergyMeters in the circuit to reset
 var
-    idx: Integer;
+    elem: TPVSystemObj;
 begin
-    idx := First;
-    while (idx > 0) do
+    for elem in self do
     begin
-        TPVsystemObj(GetActiveObj).ResetRegisters;
-        idx := Next;
+        elem.ResetRegisters();
     end;
 end;
 
 procedure TPVsystem.SampleAll();  // Force all active PV System energy meters  to take a sample
 var
-    i: Integer;
+    elem: TPVSystemObj;
 begin
-    for i := 1 to ElementList.Count do
-        with TPVsystemObj(ElementList.Get(i)) do
-            if Enabled then
-                TakeSample();
+    for elem in ElementList do
+    begin
+        if elem.Enabled then
+            elem.TakeSample();
+    end;
 end;
 
 constructor TPVsystemObj.Create(ParClass: TDSSClass; const SourceName: String);
@@ -1052,21 +1049,20 @@ begin
     dynVars.BaseV := VBase;
     dynVars.Discharging := TRUE;
 
-    with ActiveCircuit.Solution, dynVars do
+    with dynVars do
     begin
         // Initialization just in case
         if length(Vgrid) < NPhases then
             SetLength(Vgrid, NPhases);
 
         for i := 1 to NPhases do
-            Vgrid[i - 1] := ctopolar(NodeV[NodeRef[i]]);
+            Vgrid[i - 1] := ctopolar(ActiveCircuit.Solution.NodeV[NodeRef[i]]);
 
         if IComp > 0 then
         begin
             ZSys := (2 * (Vbase * ILimit)) - IComp;
             BaseV := (ZSys / ILimit) * VError;
         end;
-        
         CalcGFMVoltage(NPhases, Vterminal);
         YPrim.MVMult(InjCurrent, Vterminal);
         set_ITerminalUpdated(FALSE);
@@ -1119,110 +1115,107 @@ begin
     TShapeValue := PVSystemVars.FTemperature; // init here; changed by curve routine
 
     // Check to make sure the PVSystem element is ON
-    with ActiveCircuit, ActiveCircuit.Solution do
-    begin
-        if not (IsDynamicModel or IsHarmonicModel) then     // Leave PVSystem element in whatever state it was prior to entering Dynamic mode
+
+    if (ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel) then
+        // Leave PVSystem element in whatever state it was prior to entering Dynamic mode
+        Exit;
+
+    // Check dispatch to see what state the PVSystem element should be in
+    case ActiveCircuit.Solution.Mode of
+        TSolveMode.SNAPSHOT: ; // Just solve for the present kW, kvar  // Don't check for state change
+        TSolveMode.DAILYMODE:
         begin
-            // Check dispatch to see what state the PVSystem element should be in
-            with Solution do
-                case Mode of
-                    TSolveMode.SNAPSHOT: ; // Just solve for the present kW, kvar  // Don't check for state change
-                    TSolveMode.DAILYMODE:
-                    begin
-                        CalcDailyMult(DynaVars.dblHour);
-                        CalcDailyTemperature(DynaVars.dblHour);
-                    end;
-                    TSolveMode.YEARLYMODE:
-                    begin
-                        CalcYearlyMult(DynaVars.dblHour);
-                        CalcYearlyTemperature(DynaVars.dblHour);
-                    end;
-                    // TSolveMode.MONTECARLO1,
-                    // TSolveMode.MONTEFAULT,
-                    // TSolveMode.FAULTSTUDY,
-                    // TSolveMode.DYNAMICMODE:   ; // // do nothing yet
-                    TSolveMode.GENERALTIME:
-                    begin
-                         // This mode allows use of one class of load shape
-                        case ActiveCircuit.ActiveLoadShapeClass of
-                            USEDAILY:
-                            begin
-                                CalcDailyMult(DynaVars.dblHour);
-                                CalcDailyTemperature(DynaVars.dblHour);
-                            end;
-                            USEYEARLY:
-                            begin
-                                CalcYearlyMult(DynaVars.dblHour);
-                                CalcYearlyTemperature(DynaVars.dblHour);
-                            end;
-                            USEDUTY:
-                            begin
-                                CalcDutyMult(DynaVars.dblHour);
-                                CalcDutyTemperature(DynaVars.dblHour);
-                            end;
-                        else
-                            ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
-                        end;
-                    end;
-
-                // Assume Daily curve, If any, for the following
-                    TSolveMode.MONTECARLO2,
-                    TSolveMode.MONTECARLO3,
-                    TSolveMode.LOADDURATION1,
-                    TSolveMode.LOADDURATION2:
-                    begin
-                        CalcDailyMult(DynaVars.dblHour);
-                        CalcDailyTemperature(DynaVars.dblHour);
-                    end;
-                    TSolveMode.PEAKDAY:
-                    begin
-                        CalcDailyMult(DynaVars.dblHour);
-                        CalcDailyTemperature(DynaVars.dblHour);
-                    end;
-
-                    TSolveMode.DUTYCYCLE:
-                    begin
-                        CalcDutyMult(DynaVars.dblHour);
-                        CalcDutyTemperature(DynaVars.dblHour);
-                    end;
-                // AUTOADDFLAG:  ; 
-                end;
-
-            ComputekWkvar;
-            Pnominalperphase := 1000.0 * kW_out / Fnphases;
-            Qnominalperphase := 1000.0 * kvar_out / Fnphases;
-
-            case VoltageModel of
-
-              //****  Fix this when user model gets connected in
-                3: // YEQ := Cinv(cmplx(0.0, -StoreVARs.Xd))  ;  // Gets negated in CalcYPrim
-
-            else
-
-                YEQ := Cmplx(Pnominalperphase, -Qnominalperphase) / Sqr(Vbase);   // Vbase must be L-N for 3-phase
-
-                if (Vminpu <> 0.0) then
-                    YEQ_Min := YEQ / SQR(Vminpu)  // at 95% voltage
-                else
-                    YEQ_Min := YEQ; // Always a constant Z model
-
-                if (Vmaxpu <> 0.0) then
-                    YEQ_Max := YEQ / SQR(Vmaxpu)   // at 105% voltage
-                else
-                    YEQ_Max := YEQ;
-
-                // Like Model 7 generator, max current is based on amount of current to get out requested power at min voltage
-
-                with PVSystemvars do
+            CalcDailyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+            CalcDailyTemperature(ActiveCircuit.Solution.DynaVars.dblHour);
+        end;
+        TSolveMode.YEARLYMODE:
+        begin
+            CalcYearlyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+            CalcYearlyTemperature(ActiveCircuit.Solution.DynaVars.dblHour);
+        end;
+        // TSolveMode.MONTECARLO1,
+        // TSolveMode.MONTEFAULT,
+        // TSolveMode.FAULTSTUDY,
+        // TSolveMode.DYNAMICMODE:   ; // // do nothing yet
+        TSolveMode.GENERALTIME:
+        begin
+                // This mode allows use of one class of load shape
+            case ActiveCircuit.ActiveLoadShapeClass of
+                USEDAILY:
                 begin
-                    PhaseCurrentLimit := Cmplx(Pnominalperphase, Qnominalperphase) / VBaseMin;
-                    MaxDynPhaseCurrent := Cabs(PhaseCurrentLimit);
+                    CalcDailyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+                    CalcDailyTemperature(ActiveCircuit.Solution.DynaVars.dblHour);
                 end;
+                USEYEARLY:
+                begin
+                    CalcYearlyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+                    CalcYearlyTemperature(ActiveCircuit.Solution.DynaVars.dblHour);
+                end;
+                USEDUTY:
+                begin
+                    CalcDutyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+                    CalcDutyTemperature(ActiveCircuit.Solution.DynaVars.dblHour);
+                end;
+            else
+                ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
             end;
-           // When we leave here, all the YEQ's are in L-N values
+        end;
 
-        end;  // If  NOT (IsDynamicModel or IsHarmonicModel)
-    end;  // With ActiveCircuit
+        // Assume Daily curve, If any, for the following
+        TSolveMode.MONTECARLO2,
+        TSolveMode.MONTECARLO3,
+        TSolveMode.LOADDURATION1,
+        TSolveMode.LOADDURATION2:
+        begin
+            CalcDailyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+            CalcDailyTemperature(ActiveCircuit.Solution.DynaVars.dblHour);
+        end;
+        TSolveMode.PEAKDAY:
+        begin
+            CalcDailyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+            CalcDailyTemperature(ActiveCircuit.Solution.DynaVars.dblHour);
+        end;
+
+        TSolveMode.DUTYCYCLE:
+        begin
+            CalcDutyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+            CalcDutyTemperature(ActiveCircuit.Solution.DynaVars.dblHour);
+        end;
+    // AUTOADDFLAG:  ; 
+    end;
+
+    ComputekWkvar();
+    Pnominalperphase := 1000.0 * kW_out / Fnphases;
+    Qnominalperphase := 1000.0 * kvar_out / Fnphases;
+
+    case VoltageModel of
+
+        //****  Fix this when user model gets connected in
+        3: // YEQ := Cinv(cmplx(0.0, -StoreVARs.Xd))  ;  // Gets negated in CalcYPrim
+
+    else
+
+        YEQ := Cmplx(Pnominalperphase, -Qnominalperphase) / Sqr(Vbase);   // Vbase must be L-N for 3-phase
+
+        if (Vminpu <> 0.0) then
+            YEQ_Min := YEQ / SQR(Vminpu)  // at 95% voltage
+        else
+            YEQ_Min := YEQ; // Always a constant Z model
+
+        if (Vmaxpu <> 0.0) then
+            YEQ_Max := YEQ / SQR(Vmaxpu)   // at 105% voltage
+        else
+            YEQ_Max := YEQ;
+
+        // Like Model 7 generator, max current is based on amount of current to get out requested power at min voltage
+
+        with PVSystemvars do
+        begin
+            PhaseCurrentLimit := Cmplx(Pnominalperphase, Qnominalperphase) / VBaseMin;
+            MaxDynPhaseCurrent := Cabs(PhaseCurrentLimit);
+        end;
+    end;
+    // When we leave here, all the YEQ's are in L-N values
 end;
 
 procedure TPVsystemObj.CalcYPrimMatrix(Ymatrix: TcMatrix);
@@ -1234,93 +1227,90 @@ begin
     FYprimFreq := ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
-    with ActiveCircuit.solution do
+    if ActiveCircuit.Solution.IsHarmonicModel then
     begin
-        if IsHarmonicModel then
-        begin
-          // YEQ is computed from %R and %X -- inverse of Rthev + j Xthev
-            Y := YEQ;   // L-N value computed in initialization routines
+        // YEQ is computed from %R and %X -- inverse of Rthev + j Xthev
+        Y := YEQ;   // L-N value computed in initialization routines
 
-            if Connection = 1 then
-                Y := Y / 3.0; // Convert to delta impedance
-            Y.im := Y.im / FreqMultiplier;
-            Yij := -Y;
-
-            for i := 1 to Fnphases do
-            begin
-                case Connection of
-                    0:
-                    begin
-                        Ymatrix[i, i] := Y;
-                        Ymatrix.AddElement(Fnconds, Fnconds, Y);
-                        Ymatrix[i, Fnconds] := Yij;
-                        Ymatrix[Fnconds, i] := Yij;
-                    end;
-
-                    1:
-                    begin   // Delta connection
-                        Ymatrix[i, i] := Y;
-                        Ymatrix.AddElement(i, i, Y);  // put it in again
-                        for j := 1 to i - 1 do
-                        begin
-                            Ymatrix[i, j] := Yij;
-                            Ymatrix[j, i] := Yij;
-                        end;
-                    end;
-                end;
-            end;
-            Exit;
-        end;
-
-        if GFM_Mode then
-        begin
-            // The inverter is in GFM control modem calculation changes
-            with dynVars do
-            begin
-                RatedkVLL := PresentkV;
-                mKVARating := PVSystemVars.FkVArating;
-                CalcGFMYprim(NPhases, @YMatrix);
-            end;
-            Exit;
-        end;
-
-        
-        //  Regular power flow PVSystem element model
-        
-        // YEQ is always expected as the equivalent line-neutral admittance
-        Y := -YEQ;   // negate for generation    YEQ is L-N quantity
-
-        // ****** Need to modify the base admittance for real harmonics calcs
+        if Connection = 1 then
+            Y := Y / 3.0; // Convert to delta impedance
         Y.im := Y.im / FreqMultiplier;
+        Yij := -Y;
 
-        case Connection of
-            0:
-                begin // WYE
-                    Yij := -Y;
-                    for i := 1 to Fnphases do
-                    begin
-                        YMatrix[i, i] := Y;
-                        YMatrix.AddElement(Fnconds, Fnconds, Y);
-                        YMatrix[i, Fnconds] := Yij;
-                        YMatrix[Fnconds, i] := Yij;
-                    end;
+        for i := 1 to Fnphases do
+        begin
+            case Connection of
+                0:
+                begin
+                    Ymatrix[i, i] := Y;
+                    Ymatrix.AddElement(Fnconds, Fnconds, Y);
+                    Ymatrix[i, Fnconds] := Yij;
+                    Ymatrix[Fnconds, i] := Yij;
                 end;
 
-            1:
-                begin  // Delta  or L-L
-                    Y := Y / 3.0; // Convert to delta impedance
-                    Yij := -Y;
-                    for i := 1 to Fnphases do
+                1:
+                begin   // Delta connection
+                    Ymatrix[i, i] := Y;
+                    Ymatrix.AddElement(i, i, Y);  // put it in again
+                    for j := 1 to i - 1 do
                     begin
-                        j := i + 1;
-                        if j > Fnconds then
-                            j := 1;  // wrap around for closed connections
-                        YMatrix.AddElement(i, i, Y);
-                        YMatrix.AddElement(j, j, Y);
-                        YMatrix.AddElemSym(i, j, Yij);
+                        Ymatrix[i, j] := Yij;
+                        Ymatrix[j, i] := Yij;
                     end;
                 end;
+            end;
         end;
+        Exit;
+    end;
+
+    if GFM_Mode then
+    begin
+        // The inverter is in GFM control modem calculation changes
+        with dynVars do
+        begin
+            RatedkVLL := PresentkV;
+            mKVARating := PVSystemVars.FkVArating;
+            CalcGFMYprim(NPhases, @YMatrix);
+        end;
+        Exit;
+    end;
+
+    
+    //  Regular power flow PVSystem element model
+    
+    // YEQ is always expected as the equivalent line-neutral admittance
+    Y := -YEQ;   // negate for generation    YEQ is L-N quantity
+
+    // ****** Need to modify the base admittance for real harmonics calcs
+    Y.im := Y.im / FreqMultiplier;
+
+    case Connection of
+        0:
+            begin // WYE
+                Yij := -Y;
+                for i := 1 to Fnphases do
+                begin
+                    YMatrix[i, i] := Y;
+                    YMatrix.AddElement(Fnconds, Fnconds, Y);
+                    YMatrix[i, Fnconds] := Yij;
+                    YMatrix[Fnconds, i] := Yij;
+                end;
+            end;
+
+        1:
+            begin  // Delta  or L-L
+                Y := Y / 3.0; // Convert to delta impedance
+                Yij := -Y;
+                for i := 1 to Fnphases do
+                begin
+                    j := i + 1;
+                    if j > Fnconds then
+                        j := 1;  // wrap around for closed connections
+                    YMatrix.AddElement(i, i, Y);
+                    YMatrix.AddElement(j, j, Y);
+                    YMatrix.AddElemSym(i, j, Yij);
+                end;
+            end;
     end;
 end;
 
@@ -1610,39 +1600,38 @@ var
     i: Integer;
     sout: String;
 begin
+    if DSS.InShowResults then
+        Exit;
     try
-        if (not DSS.InshowResults) then
+        WriteStr(sout, Format('%-.g, %d, %-.g, ',
+            [ActiveCircuit.Solution.DynaVARs.t,
+            ActiveCircuit.Solution.Iteration,
+            ActiveCircuit.LoadMultiplier]),
+            DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)), ', ',
+            DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.Solution.LoadModel), ', ',
+            VoltageModel: 0, ', ',
+            (Qnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
+            (Pnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
+            s, ', ');
+        FSWrite(TraceFile, sout);
+        for i := 1 to nphases do
         begin
-            WriteStr(sout, Format('%-.g, %d, %-.g, ',
-                [ActiveCircuit.Solution.DynaVARs.t,
-                ActiveCircuit.Solution.Iteration,
-                ActiveCircuit.LoadMultiplier]),
-                DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)), ', ',
-                DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.Solution.LoadModel), ', ',
-                VoltageModel: 0, ', ',
-                (Qnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
-                (Pnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
-                s, ', ');
+            WriteStr(sout, (Cabs(InjCurrent[i])): 8: 1, ', ');
             FSWrite(TraceFile, sout);
-            for i := 1 to nphases do
-            begin
-                WriteStr(sout, (Cabs(InjCurrent[i])): 8: 1, ', ');
-                FSWrite(TraceFile, sout);
-            end;
-            for i := 1 to nphases do
-            begin
-                WriteStr(sout, (Cabs(ITerminal[i])): 8: 1, ', ');
-                FSWrite(TraceFile, sout);
-            end;
-            for i := 1 to nphases do
-            begin
-                WriteStr(sout, (Cabs(Vterminal[i])): 8: 1, ', ');
-                FSWrite(TraceFile, sout);
-            end;
-
-            FSWriteln(Tracefile);
-            FSFlush(TraceFile);
         end;
+        for i := 1 to nphases do
+        begin
+            WriteStr(sout, (Cabs(ITerminal[i])): 8: 1, ', ');
+            FSWrite(TraceFile, sout);
+        end;
+        for i := 1 to nphases do
+        begin
+            WriteStr(sout, (Cabs(Vterminal[i])): 8: 1, ', ');
+            FSWrite(TraceFile, sout);
+        end;
+
+        FSWriteln(Tracefile);
+        FSFlush(TraceFile);
     except
         On E: Exception do
         begin
@@ -1804,11 +1793,9 @@ begin
     begin
         UserModel.FCalc(Vterminal, Iterminal);
         set_ITerminalUpdated(TRUE);
-        with ActiveCircuit.Solution do
-        begin          // Negate currents from user model for power flow PVSystem element model
-            for i := 1 to FnConds do
-                InjCurrent[i] -= Iterminal[i];
-        end;
+        // Negate currents from user model for power flow PVSystem element model
+        for i := 1 to FnConds do
+            InjCurrent[i] -= Iterminal[i];
     end
     else
         DoSimpleMsg('%s model designated to use user-written model, but user-written model is not defined.', [FullName], 567);
@@ -1860,7 +1847,7 @@ begin
         3:
             if UserModel.Exists then // auto selects model (User model)
             begin
-                // {We have total currents in Iterminal
+                // We have total currents in Iterminal
                 UserModel.FCalc(Vterminal, Iterminal);  // returns terminal currents in Iterminal
             end
             else
@@ -1915,9 +1902,9 @@ begin
 
     ComputeVterminal();
 
-    with ActiveCircuit.Solution, PVSystemVars do
+    with PVSystemVars do
     begin
-        PVSystemHarmonic := Frequency / PVSystemFundamental;
+        PVSystemHarmonic := ActiveCircuit.Solution.Frequency / PVSystemFundamental;
         if SpectrumObj <> NIL then
             E := SpectrumObj.GetMult(PVSystemHarmonic) * VThevHarm // Get base harmonic magnitude
         else
@@ -1951,21 +1938,19 @@ begin
 
         0:
         begin
-            with ActiveCircuit.Solution do
-                for i := 1 to Fnphases do
-                    Vterminal[i] := VDiff(NodeRef[i], NodeRef[Fnconds]);
+            for i := 1 to Fnphases do
+                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[Fnconds]);
         end;
 
         1:
         begin
-            with ActiveCircuit.Solution do
-                for i := 1 to Fnphases do
-                begin
-                    j := i + 1;
-                    if j > Fnconds then
-                        j := 1;
-                    Vterminal[i] := VDiff(NodeRef[i], NodeRef[j]);
-                end;
+            for i := 1 to Fnphases do
+            begin
+                j := i + 1;
+                if j > Fnconds then
+                    j := 1;
+                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[j]);
+            end;
         end;
     end;
 
@@ -1977,35 +1962,32 @@ procedure TPVsystemObj.CalcPVSystemModelContribution();
 // routines may also compute ITerminal  (ITerminalUpdated flag)
 begin
     set_ITerminalUpdated(FALSE);
-    with ActiveCircuit, ActiveCircuit.Solution do
+    if ActiveCircuit.Solution.IsDynamicModel then
     begin
-        if IsDynamicModel then
-        begin
-            DoDynamicMode();
-            Exit;
-        end;
-        if IsHarmonicModel and (Frequency <> Fundamental) then
-        begin
-            DoHarmonicMode();
-            Exit;
-        end;
-        if GFM_Mode then
-        begin
-            DoGFM_Mode();
-            Exit;
-        end;
+        DoDynamicMode();
+        Exit;
+    end;
+    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
+    begin
+        DoHarmonicMode();
+        Exit;
+    end;
+    if GFM_Mode then
+    begin
+        DoGFM_Mode();
+        Exit;
+    end;
 
-        // Compute currents and put into InjTemp array;
-        case VoltageModel of
-            1:
-                DoConstantPQPVsystemObj();
-            2:
-                DoConstantZPVsystemObj();
-            3:
-                DoUserModel();
-        else
-            DoConstantPQPVsystemObj();  // for now, until we implement the other models.
-        end;
+    // Compute currents and put into InjTemp array;
+    case VoltageModel of
+        1:
+            DoConstantPQPVsystemObj();
+        2:
+            DoConstantZPVsystemObj();
+        3:
+            DoUserModel();
+    else
+        DoConstantPQPVsystemObj();  // for now, until we implement the other models.
     end;
     // When this is Done, ITerminal is up to date
 end;
@@ -2023,15 +2005,12 @@ end;
 procedure TPVsystemObj.GetTerminalCurrents(Curr: pComplexArray);
 // Compute total Currents
 begin
-    with ActiveCircuit.Solution do
-    begin
-        if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
-        begin     // recalc the contribution
-            if not PVsystemObjSwitchOpen then
-                CalcPVSystemModelContribution();  // Adds totals in Iterminal as a side effect
-        end;
-        inherited GetTerminalCurrents(Curr);
+    if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+    begin     // recalc the contribution
+        if not PVsystemObjSwitchOpen then
+            CalcPVSystemModelContribution();  // Adds totals in Iterminal as a side effect
     end;
+    inherited GetTerminalCurrents(Curr);
 
     if (DebugTrace) then
         WriteTraceRecord('TotalCurrent');
@@ -2039,20 +2018,17 @@ end;
 
 function TPVsystemObj.InjCurrents(): Integer;
 begin
-    with ActiveCircuit.Solution do
-    begin
-        if LoadsNeedUpdating then
-            SetNominalDEROutput(); // Set the nominal kW, etc for the type of solution being Done
+    if ActiveCircuit.Solution.LoadsNeedUpdating then
+        SetNominalDEROutput(); // Set the nominal kW, etc for the type of solution being Done
 
-        CalcInjCurrentArray();          // Difference between currents in YPrim and total terminal current
+    CalcInjCurrentArray();          // Difference between currents in YPrim and total terminal current
 
-        if (DebugTrace) then
-            WriteTraceRecord('Injection');
+    if (DebugTrace) then
+        WriteTraceRecord('Injection');
 
-        // Add into System Injection Current Array
+    // Add into System Injection Current Array
 
-        Result := inherited InjCurrents();
-    end;
+    Result := inherited InjCurrents();
 end;
 
 procedure TPVsystemObj.ResetRegisters;
@@ -2087,28 +2063,25 @@ var
     HourValue: Double;
 begin
     // Compute energy in PVSystem element branch
-    if Enabled then
-    begin
-        S := cmplx(Get_PresentkW, Get_Presentkvar);
-        Smag := Cabs(S);
-        HourValue := 1.0;
+    if not Enabled then
+        Exit;
 
-        with ActiveCircuit.Solution do
-        begin
-            if ActiveCircuit.PositiveSequence then
-            begin
-                S := S * 3;
-                Smag := 3.0 * Smag;
-            end;
-            Integrate(Reg_kWh, S.re, IntervalHrs);   // Accumulate the power
-            Integrate(Reg_kvarh, S.im, IntervalHrs);
-            SetDragHandRegister(Reg_MaxkW, abs(S.re));
-            SetDragHandRegister(Reg_MaxkVA, Smag);
-            Integrate(Reg_Hours, HourValue, IntervalHrs);  // Accumulate Hours in operation
-            Integrate(Reg_Price, S.re * ActiveCircuit.PriceSignal * 0.001, IntervalHrs);  //
-            FirstSampleAfterReset := FALSE;
-        end;
+    S := cmplx(Get_PresentkW, Get_Presentkvar);
+    Smag := Cabs(S);
+    HourValue := 1.0;
+
+    if ActiveCircuit.PositiveSequence then
+    begin
+        S := S * 3;
+        Smag := 3.0 * Smag;
     end;
+    Integrate(Reg_kWh, S.re, ActiveCircuit.Solution.IntervalHrs);   // Accumulate the power
+    Integrate(Reg_kvarh, S.im, ActiveCircuit.Solution.IntervalHrs);
+    SetDragHandRegister(Reg_MaxkW, abs(S.re));
+    SetDragHandRegister(Reg_MaxkVA, Smag);
+    Integrate(Reg_Hours, HourValue, ActiveCircuit.Solution.IntervalHrs);  // Accumulate Hours in operation
+    Integrate(Reg_Price, S.re * ActiveCircuit.PriceSignal * 0.001, ActiveCircuit.Solution.IntervalHrs);  //
+    FirstSampleAfterReset := FALSE;
 end;
 
 procedure TPVsystemObj.UpdatePVSystem;
@@ -2139,18 +2112,15 @@ begin
 
     ComputeIterminal();  // Get present value of current
 
-    with ActiveCircuit.solution do
-    begin
-        case Connection of
-            0:
-            begin // wye - neutral is explicit
-                Va := NodeV[NodeRef[1]] - NodeV[NodeRef[Fnconds]];
-            end;
+    case Connection of
+        0:
+        begin // wye - neutral is explicit
+            Va := ActiveCircuit.Solution.NodeV[NodeRef[1]] - ActiveCircuit.Solution.NodeV[NodeRef[Fnconds]];
+        end;
 
-            1:
-            begin  // delta -- assume neutral is at zero
-                Va := NodeV[NodeRef[1]];
-            end;
+        1:
+        begin  // delta -- assume neutral is at zero
+            Va := ActiveCircuit.Solution.NodeV[NodeRef[1]];
         end;
     end;
 
@@ -2185,27 +2155,24 @@ begin
             end;
         end;
         SafeMode := FALSE;
-        with ActiveCircuit.Solution do
-        begin
-            case ActiveCircuit.ActiveLoadShapeClass of
-                USEDAILY:
-                begin
-                    CalcDailyMult(DynaVars.dblHour);
-                    CalcDailyTemperature(DynaVars.dblHour);
-                end;
-                USEYEARLY:
-                begin
-                    CalcYearlyMult(DynaVars.dblHour);
-                    CalcYearlyTemperature(DynaVars.dblHour);
-                end;
-                USEDUTY:
-                begin
-                    CalcDutyMult(DynaVars.dblHour);
-                    CalcDutyTemperature(DynaVars.dblHour);
-                end;
-            else
-                ShapeFactor := CDOUBLEONE // default to 1 + j1 if not known
+        case ActiveCircuit.ActiveLoadShapeClass of
+            USEDAILY:
+            begin
+                CalcDailyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+                CalcDailyTemperature(ActiveCircuit.Solution.DynaVars.dblHour);
             end;
+            USEYEARLY:
+            begin
+                CalcYearlyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+                CalcYearlyTemperature(ActiveCircuit.Solution.DynaVars.dblHour);
+            end;
+            USEDUTY:
+            begin
+                CalcDutyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+                CalcDutyTemperature(ActiveCircuit.Solution.DynaVars.dblHour);
+            end;
+        else
+            ShapeFactor := CDOUBLEONE // default to 1 + j1 if not known
         end;
 
         ComputePanelPower();
@@ -2235,30 +2202,28 @@ begin
         YEQ := 1 / Zthev; // used for current calcs  Always L-N
 
         ComputeIterminal();
-        with ActiveCircuit.Solution do
+
+        LS := XThev / (2 * PI * DSS.DefaultBaseFreq);
+
+        for i := 0 to (NPhases - 1) do
         begin
-            LS := XThev / (2 * PI * DSS.DefaultBaseFreq);
+            dit[i] := 0;
+            Vgrid[i] := ctopolar(ActiveCircuit.Solution.NodeV[NodeRef[i + 1]]);
+            if GFM_Mode then
+                it[i] := 0
+            else
+                it[i] := ((PanelkW * 1000) / Vgrid[i].mag) / NumPhases;
+            
+            m[i] := ((RS * it[i]) + Vgrid[i].mag) / RatedVDC; // Duty factor in terms of actual voltage
 
-            for i := 0 to (NPhases - 1) do
-            begin
-                dit[i] := 0;
-                Vgrid[i] := ctopolar(NodeV[NodeRef[i + 1]]);
-                if GFM_Mode then
-                    it[i] := 0
-                else
-                    it[i] := ((PanelkW * 1000) / Vgrid[i].mag) / NumPhases;
-                
-                m[i] := ((RS * it[i]) + Vgrid[i].mag) / RatedVDC; // Duty factor in terms of actual voltage
-
-                if m[i] > 1 then
-                    m[i] := 1;
-                ISPDelta[i] := 0;
-                AngDelta[i] := 0;
-            end;
-            if DynamicEqObj <> NIL then
-                for i := 0 to High(DynamicEqVals) do
-                    DynamicEqVals[i][1] := 0.0; // Initializes the memory values for the dynamic equation
+            if m[i] > 1 then
+                m[i] := 1;
+            ISPDelta[i] := 0;
+            AngDelta[i] := 0;
         end;
+        if DynamicEqObj <> NIL then
+            for i := 0 to High(DynamicEqVals) do
+                DynamicEqVals[i][1] := 0.0; // Initializes the memory values for the dynamic equation
     end;
 end;
 
@@ -2279,43 +2244,39 @@ begin
     end;
 
     // Compute actual power output for the PVPanel
-    with ActiveCircuit.Solution do
-    begin
-        case ActiveCircuit.ActiveLoadShapeClass of
-            USEDAILY:
-            begin
-                CalcDailyMult(DynaVars.dblHour);
-                CalcDailyTemperature(DynaVars.dblHour);
-            end;
-            USEYEARLY:
-            begin
-                CalcYearlyMult(DynaVars.dblHour);
-                CalcYearlyTemperature(DynaVars.dblHour);
-            end;
-            USEDUTY:
-            begin
-                CalcDutyMult(DynaVars.dblHour);
-                CalcDutyTemperature(DynaVars.dblHour);
-            end;
-        else
-            ShapeFactor := CDOUBLEONE // default to 1 + j1 if not known
+    case ActiveCircuit.ActiveLoadShapeClass of
+        USEDAILY:
+        begin
+            CalcDailyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+            CalcDailyTemperature(ActiveCircuit.Solution.DynaVars.dblHour);
         end;
+        USEYEARLY:
+        begin
+            CalcYearlyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+            CalcYearlyTemperature(ActiveCircuit.Solution.DynaVars.dblHour);
+        end;
+        USEDUTY:
+        begin
+            CalcDutyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+            CalcDutyTemperature(ActiveCircuit.Solution.DynaVars.dblHour);
+        end;
+    else
+        ShapeFactor := CDOUBLEONE // default to 1 + j1 if not known
     end;
     
     ComputePanelPower();
     
-    with ActiveCircuit.Solution, PVSystemVars, dynVars do
+    with PVSystemVars, dynVars do
     begin
         IMaxPPhase := (PanelkW / BasekV) / NumPhases;
         for i := 0 to (NumPhases - 1) do // multiphase approach
         begin
-            with DynaVars do
-                if (IterationFlag = 0) then
-                begin // First iteration of new time step
-                    itHistory[i] := it[i] + 0.5 * h * dit[i];
-                end;
+            if (ActiveCircuit.Solution.DynaVars.IterationFlag = 0) then
+            begin // First iteration of new time step
+                itHistory[i] := it[i] + 0.5 * ActiveCircuit.Solution.DynaVars.h * dit[i];
+            end;
             
-            Vgrid[i] := ctopolar(NodeV[NodeRef[i + 1]]); // Voltage at the Inv terminals
+            Vgrid[i] := ctopolar(ActiveCircuit.Solution.NodeV[NodeRef[i + 1]]); // Voltage at the Inv terminals
             // Compute the actual target (Amps)
 
             if not GFM_Mode then
@@ -2377,7 +2338,7 @@ begin
                                 DynamicEqVals[DynamicEqPair[j * 2]][0] := RatedVDC;
                             11:
                             begin
-                                SolveModulation(ActiveCircuit, i, @PICtrl[i]);
+                                SolveModulation(ActiveCircuit, i, PICtrl[i]);
                                 DynamicEqVals[DynamicEqPair[j * 2]][0] := m[i]
                             end
                         else
@@ -2388,16 +2349,13 @@ begin
                 DynamicEqObj.SolveEq(DynamicEqVals); // solves the differential equation using the given dynamic expression
             end
             else
-                SolveDynamicStep(ActiveCircuit, i, @PICtrl[i]); // Solves dynamic step for inverter (no dynamic expression)
+                SolveDynamicStep(ActiveCircuit, i, PICtrl[i]); // Solves dynamic step for inverter (no dynamic expression)
 
             // Trapezoidal method
-            with DynaVars do
-            begin
-                if DynamicEqObj <> NIL then
-                    dit[i] := DynamicEqVals[DynOut[0]][1];
+            if DynamicEqObj <> NIL then
+                dit[i] := DynamicEqVals[DynOut[0]][1];
 
-                it[i] := itHistory[i] + 0.5 * h * dit[i];
-            end;
+            it[i] := itHistory[i] + 0.5 * ActiveCircuit.Solution.DynaVars.h * dit[i];
         end;
     end;
 end;

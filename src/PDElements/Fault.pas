@@ -491,49 +491,45 @@ var
 begin
     inherited DumpProperties(F, complete);
 
-    with ParentClass do
+    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.Bus1)] + '=' + firstbus);
+    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.Bus2)] + '=' + nextbus);
+
+    FSWriteln(F, Format('~ %s=%d', [ParentClass.PropertyName[ord(TProp.Phases)], Fnphases]));
+    FSWriteln(F, Format('~ %s=%.2f', [ParentClass.PropertyName[ord(TProp.R)], (1.0 / G)]));
+    FSWriteln(F, Format('~ %s=%.1f', [ParentClass.PropertyName[ord(TProp.pctStdDev)], (StdDev * 100.0)]));
+    if Gmatrix <> NIL then
     begin
-        FSWriteln(F, '~ ' + PropertyName[1] + '=' + firstbus);
-        FSWriteln(F, '~ ' + PropertyName[2] + '=' + nextbus);
-
-        FSWriteln(F, Format('~ %s=%d', [PropertyName[3], Fnphases]));
-        FSWriteln(F, Format('~ %s=%.2f', [PropertyName[4], (1.0 / G)]));
-        FSWriteln(F, Format('~ %s=%.1f', [PropertyName[5], (StdDev * 100.0)]));
-        if Gmatrix <> NIL then
+        FSWrite(F, '~ ' + ParentClass.PropertyName[ord(TProp.GMatrix)] + '= (');
+        for i := 1 to Fnphases do
         begin
-            FSWrite(F, '~ ' + PropertyName[6] + '= (');
-            for i := 1 to Fnphases do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, Format('%.3f ', [(Gmatrix^[(i - 1) * Fnphases + j])]));
-                if i <> Fnphases then
-                    FSWrite(F, '|');
-            end;
-            FSWriteln(F, ')');
+            for j := 1 to i do
+                FSWrite(F, Format('%.3f ', [(Gmatrix[(i - 1) * Fnphases + j])]));
+            if i <> Fnphases then
+                FSWrite(F, '|');
         end;
-        FSWriteln(F, Format('~ %s=%.3f', [PropertyName[7], ON_Time]));
-        if IsTemporary then
-            FSWriteln(F, '~ ' + PropertyName[8] + '= Yes')
-        else
-            FSWriteln(F, '~ ' + PropertyName[8] + '= No');
-        FSWriteln(F, Format('~ %s=%.1f', [PropertyName[9], Minamps]));
+        FSWriteln(F, ')');
+    end;
+    FSWriteln(F, Format('~ %s=%.3f', [ParentClass.PropertyName[ord(TProp.OnTime)], ON_Time]));
+    if IsTemporary then
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.Temporary)] + '= Yes')
+    else
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.Temporary)] + '= No');
+    FSWriteln(F, Format('~ %s=%.1f', [ParentClass.PropertyName[ord(TProp.MinAmps)], Minamps]));
 
-        for i := NumPropsthisClass to NumProperties do
-        begin
-            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
-        end;
+    for i := NumPropsthisClass to ParentClass.NumProperties do
+    begin
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+    end;
 
-        if Complete then
-        begin
-            FSWriteln(F, Format('// SpecType=%d', [SpecType]));
-        end;
+    if Complete then
+    begin
+        FSWriteln(F, Format('// SpecType=%d', [SpecType]));
     end;
 end;
 
 function PresentTimeInSec(DSS: TDSSContext): Double;
 begin
-    with DSS.ActiveCircuit.Solution do
-        Result := Dynavars.t + DynaVars.intHour * 3600.0;
+    Result := DSS.ActiveCircuit.Solution.Dynavars.t + DSS.ActiveCircuit.Solution.DynaVars.intHour * 3600.0;
 end;
 
 procedure TFaultObj.CheckStatus(ControlMode: Integer);

@@ -1,11 +1,9 @@
 unit LineConstants;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 // Manages the geometry data and calculates the impedance matrices for an overhead line
 
@@ -125,7 +123,7 @@ type
 
     end;
 
-const
+const //TODO: precision
     e0: Double = 8.854e-12;  // dielectric constant  F/m
     mu0: Double = 12.56637e-7; // hy/m
     Twopi: Double = 6.283185307;
@@ -144,12 +142,12 @@ const
     C1_j1: Complex = (re: 1.0; im: 1.0);
     b1: Double = 1.0 / (3.0 * sqrt(2.0));
     b2: Double = 1.0 / 16.0;
-    b3: Double = {b1}(1.0 / (3.0 * sqrt(2.0))) / 3.0 / 5.0;
-    b4: Double = {b2}(1.0 / 16.0) / 4.0 / 6.0;
-    d2: Double = {b2}(1.0 / 16.0) * pi / 4.0;
-    d4: Double = {b4}((1.0 / 16.0) / 4.0 / 6.0) * pi / 4.0;
+    b3: Double = (1.0 / (3.0 * sqrt(2.0))) / 3.0 / 5.0; // b1...
+    b4: Double = (1.0 / 16.0) / 4.0 / 6.0; // b2...
+    d2: Double = (1.0 / 16.0) * pi / 4.0; // b2...
+    d4: Double = ((1.0 / 16.0) / 4.0 / 6.0) * pi / 4.0; // b4...
     c2: Double = 1.3659315;
-    c4: Double = {c2}(1.3659315) + 1.0 / 4.0 + 1.0 / 6.0;
+    c4: Double = (1.3659315) + 1.0 / 4.0 + 1.0 / 6.0; // c2...
 
 
 procedure TLineConstants.Calc(f: Double; EarthModel: Integer);

@@ -213,32 +213,29 @@ procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer);
 var
     i, istart, istop: Integer;
 begin
-    with Obj do
+    istart := 1;
+    istop := obj.FNConds;
+    if obj.FPhaseChoice[obj.ActiveCond] = Unknown then
+        obj.ChangeLineConstantsType(Overhead)
+    else if obj.FPhaseChoice[obj.ActiveCond] <> Overhead then
+        // these are buried neutral wires 
+        // (only when the phase conductors not overhead)
+        istart := obj.FNPhases + 1;
+
+    // Validate number of elements
+    if (istop - istart + 1) <> ValueCount then
     begin
-        istart := 1;
-        istop := FNConds;
-        if FPhaseChoice[ActiveCond] = Unknown then
-            ChangeLineConstantsType(Overhead)
-        else if FPhaseChoice[ActiveCond] <> Overhead then
-            // these are buried neutral wires 
-            // (only when the phase conductors not overhead)
-            istart := FNPhases + 1;
-
-        // Validate number of elements
-        if (istop - istart + 1) <> ValueCount then
-        begin
-            DoSimpleMsg('%s: Unexpected number (%d) of objects; expected %d objects.', 
-                [FullName, ValueCount, (istop - istart + 1)], 18102);
-            Exit;
-        end;
-
-        for i := istart to istop do
-        begin
-            FWireData[i] := TConductorDataObj(Value^);
-            Inc(Value);
-        end;
-        FActiveCond := istop;
+        obj.DoSimpleMsg('%s: Unexpected number (%d) of objects; expected %d objects.', 
+            [obj.FullName, ValueCount, (istop - istart + 1)], 18102);
+        Exit;
     end;
+
+    for i := istart to istop do
+    begin
+        obj.FWireData[i] := TConductorDataObj(Value^);
+        Inc(Value);
+    end;
+    obj.FActiveCond := istop;
 end;
 
 procedure TLineGeometry.DefineProperties;
@@ -748,36 +745,35 @@ begin
 
     while iProp > 0 do
     begin
-        with ParentClass do
-            case iProp of
-                ord(TProp.cond), ord(TProp.spacing), ord(TProp.wires):
-                    if not wroteConds then
-                    begin   // if cond=, spacing, or wires were ever used write out arrays ...
-                        for i := 1 to Fnconds do
-                        begin
-                            if FWireData[i] = NIL then
-                                continue; // shouldn't happen in normal conditions
-                            if FWireData[i].ParentClass = DSS.TSDataClass then
-                                strPhaseChoice := 'tscable'
-                            else if FWireData[i].ParentClass = DSS.CNDataClass then
-                                strPhaseChoice := 'cncable'
-                            else
-                                strPhaseChoice := 'wire';
-                            FSWriteln(F, Format('~ Cond=%d %s=%s X=%.7g h=%.7g units=%s',
-                                [i, strPhaseChoice, FWireData[i].Name, FX[i], FY[i], LineUnitsStr(FUnits[i])]));
-                        end;
-                        wroteConds := True;
+        case iProp of
+            ord(TProp.cond), ord(TProp.spacing), ord(TProp.wires):
+                if not wroteConds then
+                begin   // if cond=, spacing, or wires were ever used write out arrays ...
+                    for i := 1 to Fnconds do
+                    begin
+                        if FWireData[i] = NIL then
+                            continue; // shouldn't happen in normal conditions
+                        if FWireData[i].ParentClass = DSS.TSDataClass then
+                            strPhaseChoice := 'tscable'
+                        else if FWireData[i].ParentClass = DSS.CNDataClass then
+                            strPhaseChoice := 'cncable'
+                        else
+                            strPhaseChoice := 'wire';
+                        FSWriteln(F, Format('~ Cond=%d %s=%s X=%.7g h=%.7g units=%s',
+                            [i, strPhaseChoice, FWireData[i].Name, FX[i], FY[i], LineUnitsStr(FUnits[i])]));
                     end;
-                ord(TProp.reduce):
-                    if FReduce then
-                        FSWriteln(F, '~ Reduce=Yes');
-                ord(TProp.wire), ord(TProp.x), ord(TProp.h), ord(TProp.units),
-                ord(TProp.cncable), ord(TProp.tscable):
-                    ; // Ignore these properties;
-            else
-                FSWriteln(F, Format('~ %s=%s', [PropertyName[iProp], CheckForBlanks(PropertyValue[iProp])]));
-            end;
-            iProp := GetNextPropertySet(iProp);
+                    wroteConds := True;
+                end;
+            ord(TProp.reduce):
+                if FReduce then
+                    FSWriteln(F, '~ Reduce=Yes');
+            ord(TProp.wire), ord(TProp.x), ord(TProp.h), ord(TProp.units),
+            ord(TProp.cncable), ord(TProp.tscable):
+                ; // Ignore these properties;
+        else
+            FSWriteln(F, Format('~ %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(PropertyValue[iProp])]));
+        end;
+        iProp := GetNextPropertySet(iProp);
     end;
 end;
 
@@ -864,6 +860,8 @@ var
     LineGeomErrMsg: String;
     cnd: TCNDataObj;
     tsd: TTSDataObj;
+    cnconsts: TCNLineConstants;
+    tsconsts: TTSLineConstants;
 begin
     for i := 1 to FNconds do
     begin
@@ -876,33 +874,29 @@ begin
         FLineData.Rac[i, FWireData[i].ResUnits] := FWireData[i].Rac;
         if (FWireData[i] is TCNDataObj) then
         begin
-            with (FLineData as TCNLineConstants) do
-            begin
-                cnd := (FWireData[i] as TCNDataObj);
-                EpsR[i] := cnd.EpsR;
-                InsLayer[i, cnd.RadiusUnits] := cnd.InsLayer;
-                DiaIns[i, cnd.RadiusUnits] := cnd.DiaIns;
-                DiaCable[i, cnd.RadiusUnits] := cnd.DiaCable;
-                kStrand[i] := cnd.NStrand;
-                DiaStrand[i, cnd.RadiusUnits] := cnd.DiaStrand;
-                GmrStrand[i, cnd.GMRUnits] := cnd.GmrStrand;
-                RStrand[i, cnd.ResUnits] := cnd.RStrand;
-            end;
+            cnconsts := (FLineData as TCNLineConstants);
+            cnd := (FWireData[i] as TCNDataObj);
+            cnconsts.EpsR[i] := cnd.EpsR;
+            cnconsts.InsLayer[i, cnd.RadiusUnits] := cnd.InsLayer;
+            cnconsts.DiaIns[i, cnd.RadiusUnits] := cnd.DiaIns;
+            cnconsts.DiaCable[i, cnd.RadiusUnits] := cnd.DiaCable;
+            cnconsts.kStrand[i] := cnd.NStrand;
+            cnconsts.DiaStrand[i, cnd.RadiusUnits] := cnd.DiaStrand;
+            cnconsts.GmrStrand[i, cnd.GMRUnits] := cnd.GmrStrand;
+            cnconsts.RStrand[i, cnd.ResUnits] := cnd.RStrand;
         end
         else
         if (FWireData[i] is TTSDataObj) then
         begin
-            with (FLineData as TTSLineConstants) do
-            begin
-                tsd := (FWireData[i] as TTSDataObj);
-                EpsR[i] := tsd.EpsR;
-                InsLayer[i, tsd.RadiusUnits] := tsd.InsLayer;
-                DiaIns[i, tsd.RadiusUnits] := tsd.DiaIns;
-                DiaCable[i, tsd.RadiusUnits] := tsd.DiaCable;
-                DiaShield[i, tsd.RadiusUnits] := tsd.DiaShield;
-                TapeLayer[i, tsd.RadiusUnits] := tsd.TapeLayer;
-                TapeLap[i] := tsd.TapeLap;
-            end;
+            tsconsts := (FLineData as TTSLineConstants);
+            tsd := (FWireData[i] as TTSDataObj);
+            tsconsts.EpsR[i] := tsd.EpsR;
+            tsconsts.InsLayer[i, tsd.RadiusUnits] := tsd.InsLayer;
+            tsconsts.DiaIns[i, tsd.RadiusUnits] := tsd.DiaIns;
+            tsconsts.DiaCable[i, tsd.RadiusUnits] := tsd.DiaCable;
+            tsconsts.DiaShield[i, tsd.RadiusUnits] := tsd.DiaShield;
+            tsconsts.TapeLayer[i, tsd.RadiusUnits] := tsd.TapeLayer;
+            tsconsts.TapeLap[i] := tsd.TapeLap;
         end;
     end;
 

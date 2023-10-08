@@ -14,6 +14,7 @@ type
     PComplex = UComplex.PComplex;
     pComplexArray = ^ComplexArray;
     ComplexArray = array [1..100] of Complex;
+    ArrayOfComplex = Array of Complex;
 
     polar = record
         mag, ang: Double;
@@ -56,7 +57,7 @@ end;
 
 function ATAN2(x, iy: Double): Double;
 const
-    PI = 3.14159265359; { 180 DEGREES } // TODO: remove for 0.13 -- only used for RPN calc and DynamicExp
+    PI = 3.14159265359; // 180 DEGREES  // TODO: remove for 0.13 -- only used for RPN calc and DynamicExp
 begin
     if (x < 0.0) and (iy >= 0) then
         Result := arctan(iy / x) + PI

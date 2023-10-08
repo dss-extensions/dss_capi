@@ -226,6 +226,7 @@ uses
     MathUtil,
     Utilities,
     DSSHelper,
+    Solution,
     DSSObjectHelper,
     TypInfo;
 
@@ -359,18 +360,17 @@ end;
 
 procedure SetNcondsForConnection(Obj: TObj);
 begin
-    with Obj do
-        case Connection of
-            0:
-                NConds := Fnphases;  // Neutral is not connected for induction machine
-            1:
-                case Fnphases of        // Delta connection
-                    1, 2:
-                        NConds := Fnphases + 1; // L-L and Open-delta
-                else
-                    NConds := Fnphases;    // no neutral for this connection
-                end;
-        end;
+    case obj.Connection of
+        0:
+            obj.NConds := obj.Fnphases;  // Neutral is not connected for induction machine
+        1:
+            case obj.Fnphases of        // Delta connection
+                1, 2:
+                    obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
+            else
+                obj.NConds := obj.Fnphases;    // no neutral for this connection
+            end;
+    end;
 end;
 
 procedure TIndMach012Obj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
@@ -402,13 +402,13 @@ begin
 end;
 
 function TIndMach012.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
 begin
-    with TObj(ptr) do
-    begin
-        RecalcElementData;
-        YPrimInvalid := TRUE;
-        Exclude(Flags, Flg.EditionActive);
-    end;
+    obj := TObj(ptr);
+    obj.RecalcElementData();
+    obj.YPrimInvalid := TRUE;
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -572,36 +572,33 @@ procedure TIndMach012Obj.Integrate;
 var
     h2: Double;
 begin
-    with ActiveCircuit.Solution.Dynavars do
-    begin
-        if IterationFlag = 0 then
-        begin  // on predictor step
-            E1n := E1;            // update old values
-            dE1dtn := dE1dt;
-            E2n := E2;
-            dE2dtn := dE2dt;
-        end;
-
-        // Derivative of E
-        // dEdt = -jw0SE' - (E' - j(X-X')I')/T0'
-        dE1dt := cmplx(0.0, -MachineData.w0 * S1) * E1 - (E1 - cmplx(0.0, Xopen - Xp) * Is1) / T0p;
-        dE2dt := cmplx(0.0, -MachineData.w0 * S2) * E2 - (E2 - cmplx(0.0, Xopen - Xp) * Is2) / T0p;
-
-        // Trapezoidal Integration
-        h2 := h * 0.5;
-        E1 := E1n + (dE1dt + dE1dtn) * h2;
-        E2 := E2n + (dE2dt + dE2dtn) * h2;
+    if ActiveCircuit.Solution.Dynavars.IterationFlag = 0 then
+    begin  // on predictor step
+        E1n := E1;            // update old values
+        dE1dtn := dE1dt;
+        E2n := E2;
+        dE2dtn := dE2dt;
     end;
+
+    // Derivative of E
+    // dEdt = -jw0SE' - (E' - j(X-X')I')/T0'
+    dE1dt := cmplx(0.0, -MachineData.w0 * S1) * E1 - (E1 - cmplx(0.0, Xopen - Xp) * Is1) / T0p;
+    dE2dt := cmplx(0.0, -MachineData.w0 * S2) * E2 - (E2 - cmplx(0.0, Xopen - Xp) * Is2) / T0p;
+
+    // Trapezoidal Integration
+    h2 := ActiveCircuit.Solution.Dynavars.h * 0.5;
+    E1 := E1n + (dE1dt + dE1dtn) * h2;
+    E2 := E2n + (dE2dt + dE2dtn) * h2;
 end;
 
 procedure TIndMach012Obj.CalcDynamic(var V012, I012: TSymCompArray);
 begin
-      {In dynamics mode, slip is allowed to vary}
+    // In dynamics mode, slip is allowed to vary
     InDynamics := TRUE;
     V1 := V012[1];   // Save for variable calcs
     V2 := V012[2];
     
-    {Gets slip from shaft speed}
+    // Gets slip from shaft speed
     with MachineData do
         set_LocalSlip((-Speed) / w0);
     Get_DynamicModelCurrent;
@@ -627,7 +624,7 @@ begin
         FirstIteration := FALSE;
     end;
 
-      {If Fixed slip option set, then use the value set by the user}
+    // If Fixed slip option set, then use the value set by the user
     if not FixedSlip then
     begin
         P_Error := MachineData.PnominalperPhase - (V1 * cong(Is1)).re;
@@ -675,76 +672,72 @@ var
     V012,
     I012: TSymCompArray;
     Vabc: array[1..3] of Complex;
+    NodeV: pNodeVArray;
 begin
     YPrimInvalid := TRUE;  // Force rebuild of YPrims
 
-    with MachineData do
-    begin
-     {Compute nominal Positive sequence voltage behind transient reactance}
-
-        if MachineON then
-            with ActiveCircuit.Solution do
-            begin
-                Yeq := Cinv(Zsp);
-
-                ComputeIterminal;
-
-                case Fnphases of
-
-                    1:
-                    begin
-                        E1 := NodeV[NodeRef[1]] - NodeV[NodeRef[2]] - ITerminal[1] * Zsp;
-                    end;
-
-                    3:
-                    begin
-                        // Calculate E1 based on Pos Seq only
-                        Phase2SymComp(ITerminal, pComplexArray(@I012));   // terminal currents
-
-                        // Voltage behind Zsp  (transient reactance), volts
-                        for i := 1 to FNphases do
-                            Vabc[i] := NodeV[NodeRef[i]];   // Wye Voltage
-                        Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
-                        E1 := V012[1] - I012[1] * Zsp;    // Pos sequence
-                    end;
-                else
-                    DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Motors. %s has %d phases.', [FullName, Fnphases], 5672);
-                    DSS.SolutionAbort := TRUE;
-                end;
-
-                InitModel(V012, I012); // E2, etc
-
-                // Shaft variables
-                Theta := Cang(E1);
-                dTheta := 0.0;
-                w0 := Twopi * ActiveCircuit.Solution.Frequency;
-                // recalc Mmass and D in case the frequency has changed
-                with MachineData do
-                begin
-                    Mmass := 2.0 * Hmass * kVArating * 1000.0 / (w0);   // M = W-sec
-                    D := Dpu * kVArating * 1000.0 / (w0);
-                end;
-                Pshaft := Power[1].re; // Initialize Pshaft to present power consumption of motor
-
-                Speed := -S1 * w0;    // relative to synch speed
-                dSpeed := 0.0;
-
-                if DebugTrace then     // Put in a separator record
-                begin
-                    FSWriteln(TraceFile);
-                    FSWriteln(TraceFile, '*************** Entering Dynamics Mode ***********************');
-                    FSWriteln(TraceFile);
-                    FSFlush(Tracefile);
-                end;
-
-            end
-        else
+    if not MachineON then
+        with MachineData do
         begin
             Theta := 0.0;
             dTheta := 0.0;
             w0 := 0;
             Speed := 0.0;
             dSpeed := 0.0;
+            Exit;
+        end;
+
+    NodeV := ActiveCircuit.Solution.NodeV;
+    with MachineData do
+    begin
+        // Compute nominal Positive sequence voltage behind transient reactance
+        Yeq := Cinv(Zsp);
+
+        ComputeIterminal();
+
+        case Fnphases of
+
+            1:
+            begin
+                E1 := NodeV[NodeRef[1]] - NodeV[NodeRef[2]] - ITerminal[1] * Zsp;
+            end;
+
+            3:
+            begin
+                // Calculate E1 based on Pos Seq only
+                Phase2SymComp(ITerminal, pComplexArray(@I012));   // terminal currents
+
+                // Voltage behind Zsp  (transient reactance), volts
+                for i := 1 to FNphases do
+                    Vabc[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];   // Wye Voltage
+                Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
+                E1 := V012[1] - I012[1] * Zsp;    // Pos sequence
+            end;
+        else
+            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Motors. %s has %d phases.', [FullName, Fnphases], 5672);
+            DSS.SolutionAbort := TRUE;
+        end;
+
+        InitModel(V012, I012); // E2, etc
+
+        // Shaft variables
+        Theta := Cang(E1);
+        dTheta := 0.0;
+        w0 := Twopi * ActiveCircuit.Solution.Frequency;
+        // recalc Mmass and D in case the frequency has changed
+        Mmass := 2.0 * Hmass * kVArating * 1000.0 / (w0);   // M = W-sec
+        D := Dpu * kVArating * 1000.0 / (w0);
+        Pshaft := Power[1].re; // Initialize Pshaft to present power consumption of motor
+
+        Speed := -S1 * w0;    // relative to synch speed
+        dSpeed := 0.0;
+
+        if DebugTrace then     // Put in a separator record
+        begin
+            FSWriteln(TraceFile);
+            FSWriteln(TraceFile, '*************** Entering Dynamics Mode ***********************');
+            FSWriteln(TraceFile);
+            FSFlush(Tracefile);
         end;
     end;
 end;
@@ -759,81 +752,79 @@ begin
     FYprimFreq := ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;  // ratio to adjust reactances for present solution frequency
 
-    with ActiveCircuit.solution do
-        if IsDynamicModel or IsHarmonicModel then
-        // for Dynamics and Harmonics modes use constant equivalent Y
-        begin
-            if MachineON then
-                Y := Yeq   // L-N value computed in initialization routines
-            else
-                Y := EPSILON;
+    if ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel then
+    // for Dynamics and Harmonics modes use constant equivalent Y
+    begin
+        if MachineON then
+            Y := Yeq   // L-N value computed in initialization routines
+        else
+            Y := EPSILON;
 
-            if Connection = 1 then
-                Y := Y / 3.0; // Convert to delta impedance
-            Y.im := Y.im / FreqMultiplier;  // adjust for frequency
-            Yij := -Y;
-            for i := 1 to Fnphases do
-            begin
-                case Connection of
-                    0:
+        if Connection = 1 then
+            Y := Y / 3.0; // Convert to delta impedance
+        Y.im := Y.im / FreqMultiplier;  // adjust for frequency
+        Yij := -Y;
+        for i := 1 to Fnphases do
+        begin
+            case Connection of
+                0:
+                begin
+                    Ymatrix[i, i] := Y;  // sets the element
+                end;
+                1:
+                begin   // Delta connection
+                    Yadder := Y * 1.000001;  // to prevent floating delta
+                    Ymatrix[i, i] := Y + Yadder;   // add a little bit to diagonal //TODO: check
+                    Ymatrix.AddElement(i, i, Y);  // put it in again
+                    for j := 1 to i - 1 do
                     begin
-                        Ymatrix[i, i] := Y;  // sets the element
-                    end;
-                    1:
-                    begin   {Delta connection}
-                        Yadder := Y * 1.000001;  // to prevent floating delta
-                        Ymatrix[i, i] := Y + Yadder;   // add a little bit to diagonal //TODO: check
-                        Ymatrix.AddElement(i, i, Y);  // put it in again
-                        for j := 1 to i - 1 do
-                        begin
-                            Ymatrix[i, j] := Yij;
-                            Ymatrix[j, i] := Yij;
-                        end;
+                        Ymatrix[i, j] := Yij;
+                        Ymatrix[j, i] := Yij;
                     end;
                 end;
             end;
-        end
-        else
-        begin
-    //  Typical code for a regular power flow  model
-    //  Borrowed from Generator object
+        end;
+        Exit;
+    end;
 
-       {Yeq is typically expected as the equivalent line-neutral admittance}
+//  Typical code for a regular power flow  model
+//  Borrowed from Generator object
 
-            Y := Yeq;  //     Yeq is L-N quantity
+    // Yeq is typically expected as the equivalent line-neutral admittance
 
-       // ****** Need to modify the base admittance for real harmonics calcs
-            Y.im := Y.im / FreqMultiplier;
+    Y := Yeq;  //     Yeq is L-N quantity
 
-            case Connection of
+    // ****** Need to modify the base admittance for real harmonics calcs
+    Y.im := Y.im / FreqMultiplier;
 
-                0:
-                    begin // WYE
-                        for i := 1 to Fnphases do
-                        begin
-                            YMatrix[i, i] := Y;
-                        end;
-                    end;
+    case Connection of
 
-                1:
-                    begin  // Delta  or L-L
-                        Y := Y / 3.0; // Convert to delta impedance
-                        Yij := -Y;
-                        for i := 1 to Fnphases do
-                        begin
-                            j := i + 1;
-                            if j > Fnconds then
-                                j := 1;  // wrap around for closed connections
-                            YMatrix.AddElement(i, i, Y);
-                            YMatrix.AddElement(j, j, Y);
-                            YMatrix.AddElemSym(i, j, Yij);
-                        end;
-                    end;
+        0:
+            begin // WYE
+                for i := 1 to Fnphases do
+                begin
+                    YMatrix[i, i] := Y;
+                end;
             end;
-        end;  {ELSE IF Solution.mode}
+
+        1:
+            begin  // Delta  or L-L
+                Y := Y / 3.0; // Convert to delta impedance
+                Yij := -Y;
+                for i := 1 to Fnphases do
+                begin
+                    j := i + 1;
+                    if j > Fnconds then
+                        j := 1;  // wrap around for closed connections
+                    YMatrix.AddElement(i, i, Y);
+                    YMatrix.AddElement(j, j, Y);
+                    YMatrix.AddElemSym(i, j, Yij);
+                end;
+            end;
+    end;
 end;
 
-{--- Notes Andres: Added according to IndMach012.dll model }
+// --- Notes Andres: Added according to IndMach012.dll model 
 function TIndMach012Obj.Compute_dSdP: Double;
 begin
 // dSdP based on rated slip and rated voltage
@@ -854,21 +845,20 @@ var
     i: Integer;
 
 begin
-{
-  There are three Yprim matrices that could be computed:
+// There are three Yprim matrices that could be computed:
+//
+//    YPrim_Series:  Used for zero-load solutions to initialize the first guess
+//    YPrim_Shunt:   Equivalent Y in shunt with power system
+//                   For PC elements, this is typically the main YPrim
+//    YPrim:         Generally the sum of the other two; the total YPrim
 
-     YPrim_Series:  Used for zero-load solutions to initialize the first guess
-     YPrim_Shunt:   Equivalent Y in shunt with power system
-                    For PC elements, this is typically the main YPrim
-     YPrim:         Generally the sum of the other two; the total YPrim
-}
 
      // Typical PC Elements build only shunt Yprim
-     // Also, build a dummy Yprim Series so that CalcVoltagebases does not fail
+     // Also, build a dummy Yprim Series so that CalcVoltageBases does not fail
 
      // First clear present value; redefine if necessary
      // Note: Complex matrix (TcMatrix -- see uCmatrix.pas) is used for this
-    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) {YPrimInvalid} then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) then // YPrimInvalid
     begin
         if YPrim_Shunt <> NIL then
             YPrim_Shunt.Free;
@@ -908,7 +898,7 @@ end;
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 
 procedure TIndMach012Obj.DoIndMach012Model;
-{Compute total terminal Current }
+// Compute total terminal Current 
 var
     i: Integer;
 begin
@@ -938,7 +928,7 @@ begin
         begin
             CalcDynamic(V012, I012);
         end;
-    else  {All other modes are power flow modes}
+    else  // All other modes are power flow modes
     begin
         CalcPflow(V012, I012);
     end;
@@ -949,19 +939,19 @@ begin
 end;
 
 procedure TIndMach012Obj.DoDynamicMode;
-{ This is an example taken from Generator illustrating how a PC element might
-  handle Dynamics mode with a Thevenin equivalent
+//  This is an example taken from Generator illustrating how a PC element might
+//  handle Dynamics mode with a Thevenin equivalent
+//
+//  Also illustrates the computation of symmetrical component values
 
-  Also illustrates the computation of symmetrical component values
-}
-{Compute Total Current and add into InjTemp}
+// Compute Total Current and add into InjTemp
 var
     i: Integer;
 begin
    // Start off by getting the current in the admittance branch of the model
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
 
-   {Inj = -Itotal (in) - Yprim*Vtemp}
+   // Inj = -Itotal (in) - Yprim*Vtemp
 
     CalcModel(Vterminal, Iterminal);
 
@@ -971,18 +961,16 @@ begin
 end;
 
 procedure TIndMach012Obj.DoHarmonicMode;
-{
-  Example taken from Generator illustrating how a PC element might handle
-  current calcs for Harmonics mode
+//  Example taken from Generator illustrating how a PC element might handle
+//  current calcs for Harmonics mode
+//
+//  Note: Generator objects assume a Thevenin model (voltage behind and impedance)
+//        while Load objects assume the Spectrum applies to a Norton model injection current
 
-  Note: Generator objects assume a Thevenin model (voltage behind and impedance)
-        while Load objects assume the Spectrum applies to a Norton model injection current
-}
+// Compute Injection Current Only when in harmonics mode
 
-{Compute Injection Current Only when in harmonics mode}
-
-{Assumes spectrum is a voltage source behind subtransient reactance and YPrim has been built}
-{Vd is the fundamental frequency voltage behind Xd" for phase 1}
+// Assumes spectrum is a voltage source behind subtransient reactance and YPrim has been built
+// Vd is the fundamental frequency voltage behind Xd" for phase 1
 var
     i: Integer;
     E: Complex;
@@ -994,51 +982,45 @@ begin
    // Set the VTerminal array
     ComputeVterminal;
 
-    with ActiveCircuit.Solution do
-    begin
-        GenHarmonic := Frequency / BaseFrequency; // harmonic based on the fundamental for this object
-        // get the spectrum multiplier and multiply by the V thev (or Norton current for load objects)
-      // ???  E := SpectrumObj.GetMult(GenHarmonic) * VThevHarm; // Get base harmonic magnitude
-      // ???  RotatePhasorRad(E, GenHarmonic, ThetaHarm);  // Time shift by fundamental frequency phase shift
+    GenHarmonic := ActiveCircuit.Solution.Frequency / BaseFrequency; // harmonic based on the fundamental for this object
+    // get the spectrum multiplier and multiply by the V thev (or Norton current for load objects)
+    // ???  E := SpectrumObj.GetMult(GenHarmonic) * VThevHarm; // Get base harmonic magnitude
+    // ???  RotatePhasorRad(E, GenHarmonic, ThetaHarm);  // Time shift by fundamental frequency phase shift
 
-        // Put the values in a temp complex buffer
-        for i := 1 to Fnphases do
-        begin
-            pBuffer[i] := E;
-            if i < Fnphases then
-                RotatePhasorDeg(E, GenHarmonic, -120.0);  // Assume 3-phase IndMach012
-        end;
+    // Put the values in a temp complex buffer
+    for i := 1 to Fnphases do
+    begin
+        pBuffer[i] := E;
+        if i < Fnphases then
+            RotatePhasorDeg(E, GenHarmonic, -120.0);  // Assume 3-phase IndMach012
     end;
 
-   {Handle Wye Connection}
+    // Handle Wye Connection
     if Connection = 0 then
         pBuffer[Fnconds] := Vterminal[Fnconds];  // assume no neutral injection voltage
 
-   // In this case the injection currents are simply Yprim(frequency) times the voltage buffer
-   // Refer to Load.Pas for load-type objects
-   {Inj currents = Yprim (E) }
+    // In this case the injection currents are simply Yprim(frequency) times the voltage buffer
+    // Refer to Load.Pas for load-type objects
+    // Inj currents = Yprim (E)
     YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
 end;
 
 procedure TIndMach012Obj.CalcIndMach012ModelContribution;
-// Main dispatcher for computing PC Element currnts
+// Main dispatcher for computing PC Element currents
+//
 
 // Calculates IndMach012 current and adds it properly into the injcurrent array
 // routines may also compute ITerminal  (ITerminalUpdated flag)
 begin
     IterminalUpdated := FALSE;
-    with ActiveCircuit, ActiveCircuit.Solution do
-    begin
-        if IsDynamicModel then
-            DoDynamicMode
-        else
-        if IsHarmonicModel and (Frequency <> Fundamental) then
-            DoHarmonicMode
-        else
-            DoIndMach012Model;
-
-    end; {WITH}
-   {When this is done, ITerminal is up to date}
+    if ActiveCircuit.Solution.IsDynamicModel then
+        DoDynamicMode()
+    else
+    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
+        DoHarmonicMode()
+    else
+        DoIndMach012Model();
+   // When this is done, ITerminal is up to date
 end;
 
 procedure TIndMach012Obj.GetTerminalCurrents(Curr: pComplexArray);
@@ -1047,41 +1029,35 @@ procedure TIndMach012Obj.GetTerminalCurrents(Curr: pComplexArray);
 // Note that it only does something if the solution count has changed.
 // Otherwise, Iterminal array already contains the currents
 begin
-    with ActiveCircuit.Solution do
-    begin
-        if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
-        begin     // recalc the contribution
-          // You will likely want some logic like this
-            if not IndMach012SwitchOpen then
-                CalcIndMach012ModelContribution;  // Adds totals in Iterminal as a side effect
-        end;
-        inherited GetTerminalCurrents(Curr); // add in inherited contribution
+    if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+    begin     // recalc the contribution
+        // You will likely want some logic like this
+        if not IndMach012SwitchOpen then
+            CalcIndMach012ModelContribution();  // Adds totals in Iterminal as a side effect
     end;
+    inherited GetTerminalCurrents(Curr); // add in inherited contribution
 end;
 
 function TIndMach012Obj.InjCurrents: Integer;
 // Required function for managing computing of InjCurrents
 begin
-    with ActiveCircuit.Solution do
-    begin
-      // Generators and Loads use logic like this:
-        if LoadsNeedUpdating then
-            SetNominalPower; // Set the nominal kW, etc for the type of solution being done
+    // Generators and Loads use logic like this:
+    if ActiveCircuit.Solution.LoadsNeedUpdating then
+        SetNominalPower(); // Set the nominal kW, etc for the type of solution being done
 
-        // call the main function for doing calculation
-        // Difference between currents in YPrim and total terminal current
-        if IndMach012SwitchOpen then
-            // If the element is open, just zero the array and return
-            ZeroInjCurrent
-        else
-            // otherwise, go to a routine that manages the calculation        
-            CalcIndMach012ModelContribution;
+    // call the main function for doing calculation
+    // Difference between currents in YPrim and total terminal current
+    if IndMach012SwitchOpen then
+        // If the element is open, just zero the array and return
+        ZeroInjCurrent()
+    else
+        // otherwise, go to a routine that manages the calculation
+        CalcIndMach012ModelContribution();
 
-      // If (DebugTrace) Then WriteTraceRecord;
+    // If (DebugTrace) Then WriteTraceRecord;
 
-       // Add into System Injection Current Array
-        Result := inherited InjCurrents;
-    end;
+    // Add into System Injection Current Array
+    Result := inherited InjCurrents;
 end;
 
 procedure TIndMach012Obj.SetNominalPower;
@@ -1089,99 +1065,95 @@ procedure TIndMach012Obj.SetNominalPower;
 var
     Factor: Double;
     MachineOn_Saved: Boolean;
+    dblHour: Double;
 begin
     MachineOn_Saved := MachineON;
     ShapeFactor := CDOUBLEONE;
+    dblHour := ActiveCircuit.Solution.DynaVars.dblHour;
     // Check to make sure the generation is ON
-    with ActiveCircuit, ActiveCircuit.Solution do
+    if not (ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel) then // Leave machine in whatever state it was prior to entering Dynamic mode
     begin
-        if not (IsDynamicModel or IsHarmonicModel) then     // Leave machine in whatever state it was prior to entering Dynamic mode
-        begin
-            MachineON := TRUE;   // Init to on then check if it should be off
+        MachineON := TRUE;   // Init to on then check if it should be off
+    end;
+
+    if not MachineON then
+    begin
+        // If Machine is OFF enter as tiny resistive load (.0001 pu) so we don't get divide by zero in matrix
+        MachineData.Pnominalperphase := -0.1 * kWBase / Fnphases;
+        // Pnominalperphase   := 0.0;
+        MachineData.Qnominalperphase := 0.0;   // This really doesn't matter
+    end
+    else
+    begin    // Generator is on, compute it's nominal watts and vars
+        case ActiveCircuit.Solution.Mode of
+            TSolveMode.SNAPSHOT:
+                Factor := 1.0;
+            TSolveMode.DAILYMODE:
+            begin
+                Factor := 1.0;
+                CalcDailyMult(dblHour) // Daily dispatch curve
+            end;
+            TSolveMode.YEARLYMODE:
+            begin
+                Factor := 1.0;
+                CalcYearlyMult(dblHour);
+            end;
+            TSolveMode.DUTYCYCLE:
+            begin
+                Factor := 1.0;
+                CalcDutyMult(dblHour);
+            end;
+            TSolveMode.GENERALTIME,   // General sequential time simulation
+            TSolveMode.DYNAMICMODE:
+            begin
+                Factor := 1.0;
+                            // This mode allows use of one class of load shape
+                case ActiveCircuit.ActiveLoadShapeClass of
+                    USEDAILY:
+                        CalcDailyMult(dblHour);
+                    USEYEARLY:
+                        CalcYearlyMult(dblHour);
+                    USEDUTY:
+                        CalcDutyMult(dblHour);
+                else
+                    ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
+                end;
+            end;
+            TSolveMode.MONTECARLO1,
+            TSolveMode.MONTEFAULT,
+            TSolveMode.FAULTSTUDY:
+                Factor := 1.0;
+            TSolveMode.MONTECARLO2,
+            TSolveMode.MONTECARLO3,
+            TSolveMode.LOADDURATION1,
+            TSolveMode.LOADDURATION2:
+            begin
+                Factor := 1.0;
+                CalcDailyMult(dblHour);
+            end;
+            TSolveMode.PEAKDAY:
+            begin
+                Factor := 1.0;
+                CalcDailyMult(dblHour);
+            end;
+            TSolveMode.AUTOADDFLAG:
+                Factor := 1.0;
+        else
+            Factor := 1.0
         end;
 
-        if not MachineON then
+        if not (ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel) then //******
         begin
-         // If Machine is OFF enter as tiny resistive load (.0001 pu) so we don't get divide by zero in matrix
-            MachineData.Pnominalperphase := -0.1 * kWBase / Fnphases;
-          // Pnominalperphase   := 0.0;
-            MachineData.Qnominalperphase := 0.0;   // This really doesn't matter
-        end
-        else
-        begin    // Generator is on, compute it's nominal watts and vars
-            with Solution do
+            if ShapeIsActual then
+                MachineData.Pnominalperphase := 1000.0 * ShapeFactor.re / Fnphases
+            else
+                MachineData.Pnominalperphase := 1000.0 * kWBase * Factor * ShapeFactor.re / Fnphases;
 
-                case Mode of
-                    TSolveMode.SNAPSHOT:
-                        Factor := 1.0;
-                    TSolveMode.DAILYMODE:
-                    begin
-                        Factor := 1.0;
-                        CalcDailyMult(DynaVars.dblHour) // Daily dispatch curve
-                    end;
-                    TSolveMode.YEARLYMODE:
-                    begin
-                        Factor := 1.0;
-                        CalcYearlyMult(DynaVars.dblHour);
-                    end;
-                    TSolveMode.DUTYCYCLE:
-                    begin
-                        Factor := 1.0;
-                        CalcDutyMult(DynaVars.dblHour);
-                    end;
-                    TSolveMode.GENERALTIME,   // General sequential time simulation
-                    TSolveMode.DYNAMICMODE:
-                    begin
-                        Factor := 1.0;
-                                   // This mode allows use of one class of load shape
-                        case ActiveCircuit.ActiveLoadShapeClass of
-                            USEDAILY:
-                                CalcDailyMult(DynaVars.dblHour);
-                            USEYEARLY:
-                                CalcYearlyMult(DynaVars.dblHour);
-                            USEDUTY:
-                                CalcDutyMult(DynaVars.dblHour);
-                        else
-                            ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
-                        end;
-                    end;
-                    TSolveMode.MONTECARLO1,
-                    TSolveMode.MONTEFAULT,
-                    TSolveMode.FAULTSTUDY:
-                        Factor := 1.0;
-                    TSolveMode.MONTECARLO2,
-                    TSolveMode.MONTECARLO3,
-                    TSolveMode.LOADDURATION1,
-                    TSolveMode.LOADDURATION2:
-                    begin
-                        Factor := 1.0;
-                        CalcDailyMult(DynaVars.dblHour);
-                    end;
-                    TSolveMode.PEAKDAY:
-                    begin
-                        Factor := 1.0;
-                        CalcDailyMult(DynaVars.dblHour);
-                    end;
-                    TSolveMode.AUTOADDFLAG:
-                        Factor := 1.0;
-                else
-                    Factor := 1.0
-                end;
+            // cannot dispatch vars in induction machine
+            // you get what you get
 
-            if not (IsDynamicModel or IsHarmonicModel) then         //******
-            begin
-                if ShapeIsActual then
-                    MachineData.Pnominalperphase := 1000.0 * ShapeFactor.re / Fnphases
-                else
-                    MachineData.Pnominalperphase := 1000.0 * kWBase * Factor * ShapeFactor.re / Fnphases;
-
-                // cannot dispatch vars in induction machine
-                // you get what you get
-
-            end;
-        end; {ELSE GenON}
-
-    end;  {With ActiveCircuit}
+        end;
+    end; // ELSE GenON
 
    // If machine state changes, force re-calc of Y matrix
     if MachineON <> MachineOn_Saved then
@@ -1212,7 +1184,7 @@ end;
 
 procedure TIndMach012Obj.CalcYearlyMult(Hr: Double);
 begin
-{Yearly curve is assumed to be hourly only}
+// Yearly curve is assumed to be hourly only
     if YearlyShapeObj <> NIL then
     begin
         ShapeFactor := YearlyShapeObj.GetMultAtHour(Hr);
@@ -1224,58 +1196,49 @@ begin
 end;
 
 procedure TIndMach012Obj.InitHarmonics;
-{Procedure to initialize for Harmonics solution}
+// Procedure to initialize for Harmonics solution
 begin
     YPrimInvalid := TRUE;  // Force rebuild of YPrims
 end;
 
 procedure TIndMach012Obj.IntegrateStates;
-{
-  This is a virtual function. You do not need to write this routine
-  if you are not integrating state variables in dynamics mode.
-}
-
+// This is a virtual function. You do not need to write this routine
+// if you are not integrating state variables in dynamics mode.
+//
 // Integrate state variables for Dynamics analysis
 // Example from Generator
-
+//
 // Illustrates use of debug tracing
-
+//
 // Present technique is a predictor-corrector trapezoidal rule
 
 var
     TracePower: Complex;
-
-
 begin
-   // Compute Derivatives and then integrate
+    // Compute Derivatives and then integrate
+    ComputeIterminal();
 
-    ComputeIterminal;
-
-    with ActiveCircuit.Solution, MachineData do
+    with MachineData do
     begin
-        with DynaVars do
-            if (IterationFlag = 0) then
-            begin {First iteration of new time step}
-                ThetaHistory := Theta + 0.5 * h * dTheta;
-                SpeedHistory := Speed + 0.5 * h * dSpeed;
-            end;
+        if (ActiveCircuit.Solution.DynaVars.IterationFlag = 0) then
+        begin // First iteration of new time step
+            ThetaHistory := Theta + 0.5 * ActiveCircuit.Solution.DynaVars.h * dTheta;
+            SpeedHistory := Speed + 0.5 * ActiveCircuit.Solution.DynaVars.h * dSpeed;
+        end;
 
-      // Compute shaft dynamics
+        // Compute shaft dynamics
         TracePower := TerminalPowerIn(Vterminal, Iterminal, FnPhases); // in watts
         dSpeed := (TracePower.re - Pshaft - abs(D * Speed)) / Mmass;
         dTheta := Speed;
 
-     // Trapezoidal method
-        with DynaVars do
-        begin
-            Speed := SpeedHistory + 0.5 * h * dSpeed;
-            Theta := ThetaHistory + 0.5 * h * dTheta;
-        end;
+        // Trapezoidal method
+        Speed := SpeedHistory + 0.5 * ActiveCircuit.Solution.DynaVars.h * dSpeed;
+        Theta := ThetaHistory + 0.5 * ActiveCircuit.Solution.DynaVars.h * dTheta;
 
         if DebugTrace then
-            WriteTraceRecord;
+            WriteTraceRecord();
 
-        Integrate;
+        Integrate();
 
     end;
 end;
@@ -1308,25 +1271,21 @@ begin
 end;
 
 function TIndMach012Obj.NumVariables: Integer;
-{
-  Return the number of state variables
-
-  This is a virtual function. You do not need to write this routine
-  if you are not defining state variables.
-  Note: it is not necessary to define any state variables
-}
+// Return the number of state variables
+//
+// This is a virtual function. You do not need to write this routine
+// if you are not defining state variables.
+// Note: it is not necessary to define any state variables
 begin
     Result := NumIndMach012Variables;
 end;
 
 
 function TIndMach012Obj.VariableName(i: Integer): String;
-{
-  Returns the i-th state variable in a string
-
-  This is a virtual function. You do not need to write this routine
-  if you are not defining state variables.
-}
+// Returns the i-th state variable in a string
+//
+// This is a virtual function. You do not need to write this routine
+// if you are not defining state variables.
 begin
     Result := 'ERROR';
     if i < 1 then
@@ -1456,12 +1415,10 @@ begin
 end;
 
 procedure TIndMach012Obj.GetAllVariables(var States: ArrayOfDouble);
-{
-  Return all state variables in double array (allocated by calling function)
-
-  This is a virtual function. You do not need to write this routine
-  if you are not defining state variables.
-}
+// Return all state variables in double array (allocated by calling function)
+//
+// This is a virtual function. You do not need to write this routine
+// if you are not defining state variables.
 var
     i: Integer;
 begin
@@ -1522,8 +1479,7 @@ end;
 
 procedure TIndMach012Obj.WriteTraceRecord;
 begin
-    with ActiveCircuit.Solution do
-        FSWrite(TraceFile, Format('%-.6g, %d, %-.6g, ', [Dynavars.dblHour * 3600.0, Iteration, S1]));
+    FSWrite(TraceFile, Format('%-.6g, %d, %-.6g, ', [ActiveCircuit.Solution.Dynavars.dblHour * 3600.0, ActiveCircuit.Solution.Iteration, S1]));
 
     FSWrite(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(Is1), Cabs(Is2)]));
     FSWrite(TraceFile, Format('%-.6g, %-.6g, %-.6g, %-.6g, ', [Cabs(E1), Cabs(dE1dt), Cabs(E2), Cabs(dE2dt)]));

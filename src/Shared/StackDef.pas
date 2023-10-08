@@ -1,11 +1,9 @@
 unit StackDef;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -73,7 +71,7 @@ end;
 constructor TPstack.Create(initSize: Integer);
 begin
     inherited Create(InitSize);
-    Items := AllocMem(SizeOf(Items^[1]) * MaxItems);
+    Items := AllocMem(SizeOf(Items[1]) * MaxItems);
 end;
 
 destructor TPstack.Destroy;
@@ -88,16 +86,16 @@ begin
     if NumItems > MaxItems then
     begin
         Inc(MaxItems, Increment);
-        Reallocmem(Items, SizeOf(Items^[1]) * MaxItems);
+        Reallocmem(Items, SizeOf(Items[1]) * MaxItems);
     end;
-    Items^[NumItems] := p;
+    Items[NumItems] := p;
 end;
 
 function TPstack.Pop: Pointer;
 begin
     if NumItems > 0 then
     begin
-        Result := Items^[NumItems];
+        Result := Items[NumItems];
         Dec(NumItems);
     end
     else

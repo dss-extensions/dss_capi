@@ -1,11 +1,9 @@
 unit NamedObject;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2009-2022, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2009-2022, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 

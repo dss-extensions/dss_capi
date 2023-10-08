@@ -48,8 +48,8 @@ type
         function Get_InvDynValue(varIdx, NumPhases: Integer): Double;
         function Get_InvDynName(varIdx: Integer): String;
         procedure Set_InvDynValue(varIdx: Integer; value: Double);
-        procedure SolveDynamicStep(Circuit: TDSSCircuit; i: Integer; PICtrl: PPICtrl);
-        procedure SolveModulation(Circuit: TDSSCircuit; i: Integer; PICtrl: PPICtrl);
+        procedure SolveDynamicStep(Circuit: TDSSCircuit; i: Integer; PICtrl: TPICtrl);
+        procedure SolveModulation(Circuit: TDSSCircuit; i: Integer; PICtrl: TPICtrl);
         procedure FixPhaseAngle(idx: Integer);
         procedure CalcGFMYprim(NPhases: Integer; YMatrix: PCMatrix);
         procedure CalcGFMVoltage(NPhases: Integer; x: pComplexArray);
@@ -165,59 +165,53 @@ begin
 end;
 
   // Solves the derivative term of the differential equation to be integrated
-procedure TInvDynamicVars.SolveDynamicStep(Circuit: TDSSCircuit; i: Integer; PICtrl: PPICtrl);
+procedure TInvDynamicVars.SolveDynamicStep(Circuit: TDSSCircuit; i: Integer; PICtrl: TPICtrl);
 begin
-    with Circuit.Solution do
-    begin
-        SolveModulation(Circuit, i, PICtrl);
-        if SafeMode then
-            dit[i] := 0
-        else
-            dit[i] := ((m[i] * RatedVDC) - (RS * it[i]) - Vgrid[i].mag) / LS;  // Solves derivative
-    end;
+    SolveModulation(Circuit, i, PICtrl);
+    if SafeMode then
+        dit[i] := 0
+    else
+        dit[i] := ((m[i] * RatedVDC) - (RS * it[i]) - Vgrid[i].mag) / LS;  // Solves derivative
 end;
 
   // Calculates and stores the averaged modulation factor for controlling the inverter output
-procedure TInvDynamicVars.SolveModulation(Circuit: TDSSCircuit; i: Integer; PICtrl: PPICtrl);
+procedure TInvDynamicVars.SolveModulation(Circuit: TDSSCircuit; i: Integer; PICtrl: TPICtrl);
 var
     DCycle,
     iDelta,
     iErrorPct,
     iError: Double;
 begin
-    with Circuit.Solution do
-    begin
-        if (DynaVars.IterationFlag = 0) then
-            Exit;
+    if (Circuit.Solution.DynaVars.IterationFlag = 0) then
+        Exit;
 
-        // duty cycle at time h
-        iError := (ISP - it[i]); // Only recalculated on the second iter
-        iErrorPct := iError / ISP;
-        if Abs(iErrorPct) > CtrlTol then
+    // duty cycle at time h
+    iError := (ISP - it[i]); // Only recalculated on the second iter
+    iErrorPct := iError / ISP;
+    if Abs(iErrorPct) > CtrlTol then
+    begin
+        iDelta := PICtrl.SolvePI(IError);
+        DCycle := m[i] + iDelta;
+        if (Vgrid[i].mag > MinVS) or (MinVS = 0) then
         begin
-            iDelta := PICtrl^.SolvePI(IError);
-            DCycle := m[i] + iDelta;
-            if (Vgrid[i].mag > MinVS) or (MinVS = 0) then
+            if SafeMode or SfModePhase[i] then
             begin
-                if SafeMode or SfModePhase[i] then
-                begin
-                    //Coming back from safe operation, need to boost duty cycle
-                    m[i] := ((RS * it[i]) + Vgrid[i].mag) / RatedVDC;
-                    SafeMode := FALSE;
-                    SfModePhase[i] := FALSE;
-                end
-                else
-                if (DCycle <= 1) and (DCycle > 0) then
-                    m[i] := DCycle;
+                //Coming back from safe operation, need to boost duty cycle
+                m[i] := ((RS * it[i]) + Vgrid[i].mag) / RatedVDC;
+                SafeMode := FALSE;
+                SfModePhase[i] := FALSE;
             end
             else
-            begin
-                m[i] := 0;
-                it[i] := 0;
-                itHistory[i] := 0;
-                SafeMode := TRUE;
-                SfModePhase[i] := TRUE;
-            end;
+            if (DCycle <= 1) and (DCycle > 0) then
+                m[i] := DCycle;
+        end
+        else
+        begin
+            m[i] := 0;
+            it[i] := 0;
+            itHistory[i] := 0;
+            SafeMode := TRUE;
+            SfModePhase[i] := TRUE;
         end;
     end;
 end;
@@ -303,7 +297,7 @@ var
 begin
     refAngle := 0;
     for i := 1 to NPhases do
-        x^[i] := pdegtocomplex(BaseV, (360.0 + refAngle - ((i - 1) * 360.0) / NPhases));
+        x[i] := pdegtocomplex(BaseV, (360.0 + refAngle - ((i - 1) * 360.0) / NPhases));
 end;
 
 // Initializes all the local vectors using the number of phases given by the caller

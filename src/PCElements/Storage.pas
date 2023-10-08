@@ -251,7 +251,7 @@ type
         function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
         Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
 
-        procedure ResetRegistersAll;
+        procedure ResetRegistersAll();
         procedure SampleAll();
         procedure UpdateAll();
 
@@ -442,6 +442,7 @@ implementation
 uses
     BufStream,
     Circuit,
+    Solution,
     Sysutils,
     Command,
     Math,
@@ -732,32 +733,28 @@ begin
     Result := Obj;
 end;
 
-procedure SetNcondsForConnection(Obj: TObj);
+procedure SetNcondsForConnection(obj: TObj);
 begin
-    with Obj do
-    begin
-        case Connection of
-            0:
-                NConds := Fnphases + 1;
-            1:
-                case Fnphases of
-                    1, 2:
-                        NConds := Fnphases + 1; // L-L and Open-delta
-                else
-                    NConds := Fnphases;
-                end;
-        end;
+    case obj.Connection of
+        0:
+            obj.NConds := obj.Fnphases + 1;
+        1:
+            case obj.Fnphases of
+                1, 2:
+                    obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
+            else
+                obj.NConds := obj.Fnphases;
+            end;
     end;
 end;
 
 procedure TStorage.UpdateAll();
 var
-    i: Integer;
+    obj: TStorageObj;
 begin
-    for i := 1 to ElementList.Count do
-        with TStorageObj(ElementList.Get(i)) do
-            if Enabled then
-                UpdateStorage();
+    for obj in ElementList do
+        if obj.Enabled then
+            obj.UpdateStorage();
 end;
 
 procedure TStorageObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
@@ -890,13 +887,13 @@ begin
 end;
 
 function TStorage.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
 begin
-    with TObj(ptr) do
-    begin
-        RecalcElementData;
-        YPrimInvalid := TRUE;
-        Exclude(Flags, Flg.EditionActive);
-    end;
+    obj := TObj(ptr);
+    obj.RecalcElementData();
+    obj.YPrimInvalid := TRUE;
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -1000,26 +997,23 @@ begin
     CurrentLimited := Other.CurrentLimited;
 end;
 
-procedure TStorage.ResetRegistersAll;  // Force all EnergyMeters in the circuit to reset
+procedure TStorage.ResetRegistersAll();  // Force all EnergyMeters in the circuit to reset
 var
-    idx: Integer;
+    elem: TStorageObj;
 begin
-    idx := First;
-    while idx > 0 do
+    for elem in self do
     begin
-        TStorageObj(GetActiveObj).ResetRegisters;
-        idx := Next;
+        elem.ResetRegisters();
     end;
 end;
 
 procedure TStorage.SampleAll();  // Force all Storage elements in the circuit to take a sample
 var
-    i: Integer;
+    elem: TStorageObj;
 begin
-    for i := 1 to ElementList.Count do
-        with TStorageObj(ElementList.Get(i)) do
-            if Enabled then
-                TakeSample();
+    for elem in ElementList do
+        if elem.Enabled then
+            elem.TakeSample();
 end;
 
 constructor TStorageObj.Create(ParClass: TDSSClass; const SourceName: String);
@@ -1259,107 +1253,108 @@ begin
 end;
 
 procedure TStorageObj.SetNominalDEROutput();
+var
+    solution: TSolutionObj;
 begin
+    solution := ActiveCircuit.Solution;
     ShapeFactor := CDOUBLEONE;  // init here; changed by curve routine
     // Check to make sure the Storage element is ON
-    with ActiveCircuit, ActiveCircuit.Solution do
+
+    if not (solution.IsDynamicModel or solution.IsHarmonicModel) then     // Leave Storage element in whatever state it was prior to entering Dynamic mode
     begin
-        if not (IsDynamicModel or IsHarmonicModel) then     // Leave Storage element in whatever state it was prior to entering Dynamic mode
-        begin
-            // Check dispatch to see what state the Storage element should be in
-            case DispatchMode of
+        // Check dispatch to see what state the Storage element should be in
+        case DispatchMode of
 
-                STORE_EXTERNALMODE: ;  // Do nothing
-                STORE_LOADMODE:
-                    CheckStateTriggerLevel(GeneratorDispatchReference);
-                STORE_PRICEMODE:
-                    CheckStateTriggerLevel(PriceSignal);
+            STORE_EXTERNALMODE: ;  // Do nothing
+            STORE_LOADMODE:
+                CheckStateTriggerLevel(ActiveCircuit.GeneratorDispatchReference);
+            STORE_PRICEMODE:
+                CheckStateTriggerLevel(ActiveCircuit.PriceSignal);
 
-            else // dispatch off element's loadshapes, If any
-                with Solution do
-                    case Mode of
-                        TSolveMode.SNAPSHOT: ; // Just solve for the present kW, kvar  // Don't check for state change
-                        TSolveMode.DAILYMODE:
-                            CalcDailyMult(DynaVars.dblHour); // Daily dispatch curve
-                        TSolveMode.YEARLYMODE:
-                            CalcYearlyMult(DynaVars.dblHour);
-                        // MONTECARLO1,
-                        // MONTEFAULT,
-                        // FAULTSTUDY,
-                        // DYNAMICMODE:   ; // do nothing for these modes
-                        TSolveMode.GENERALTIME:
-                        begin
-                                // This mode allows use of one class of load shape
-                            case ActiveCircuit.ActiveLoadShapeClass of
-                                USEDAILY:
-                                    CalcDailyMult(DynaVars.dblHour);
-                                USEYEARLY:
-                                    CalcYearlyMult(DynaVars.dblHour);
-                                USEDUTY:
-                                    CalcDutyMult(DynaVars.dblHour);
-                            else
-                                ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
-                            end;
-                        end;
-                            // Assume Daily curve, If any, for the following
-                        TSolveMode.MONTECARLO2,
-                        TSolveMode.MONTECARLO3,
-                        TSolveMode.LOADDURATION1,
-                        TSolveMode.LOADDURATION2:
-                            CalcDailyMult(DynaVars.dblHour);
-                        TSolveMode.PEAKDAY:
-                            CalcDailyMult(DynaVars.dblHour);
+        else // dispatch off element's loadshapes, If any
 
-                        TSolveMode.DUTYCYCLE:
-                            CalcDutyMult(DynaVars.dblHour);
-                // AUTOADDFLAG:  ; 
+            case solution.Mode of
+                TSolveMode.SNAPSHOT: ; // Just solve for the present kW, kvar  // Don't check for state change
+                TSolveMode.DAILYMODE:
+                    CalcDailyMult(solution.DynaVars.dblHour); // Daily dispatch curve
+                TSolveMode.YEARLYMODE:
+                    CalcYearlyMult(solution.DynaVars.dblHour);
+                // MONTECARLO1,
+                // MONTEFAULT,
+                // FAULTSTUDY,
+                // DYNAMICMODE:   ; // do nothing for these modes
+                TSolveMode.GENERALTIME:
+                begin
+                        // This mode allows use of one class of load shape
+                    case ActiveCircuit.ActiveLoadShapeClass of
+                        USEDAILY:
+                            CalcDailyMult(solution.DynaVars.dblHour);
+                        USEYEARLY:
+                            CalcYearlyMult(solution.DynaVars.dblHour);
+                        USEDUTY:
+                            CalcDutyMult(solution.DynaVars.dblHour);
+                    else
+                        ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
                     end;
+                end;
+                    // Assume Daily curve, If any, for the following
+                TSolveMode.MONTECARLO2,
+                TSolveMode.MONTECARLO3,
+                TSolveMode.LOADDURATION1,
+                TSolveMode.LOADDURATION2:
+                    CalcDailyMult(solution.DynaVars.dblHour);
+                TSolveMode.PEAKDAY:
+                    CalcDailyMult(solution.DynaVars.dblHour);
 
+                TSolveMode.DUTYCYCLE:
+                    CalcDutyMult(solution.DynaVars.dblHour);
+                // AUTOADDFLAG:  ; 
             end;
 
-            ComputekWkvar;
+        end;
 
-            // Pnominalperphase is net at the terminal.  If supplying idling losses, when discharging,
-            // the Storage supplies the idling losses. When charging, the idling losses are subtracting from the amount
-            // entering the Storage element.
+        ComputekWkvar();
 
-            with StorageVars do
-            begin
-                Pnominalperphase := 1000.0 * kW_out / Fnphases;
-                Qnominalperphase := 1000.0 * kvar_out / Fnphases;
-            end;
+        // Pnominalperphase is net at the terminal.  If supplying idling losses, when discharging,
+        // the Storage supplies the idling losses. When charging, the idling losses are subtracting from the amount
+        // entering the Storage element.
+
+        with StorageVars do
+        begin
+            Pnominalperphase := 1000.0 * kW_out / Fnphases;
+            Qnominalperphase := 1000.0 * kvar_out / Fnphases;
+        end;
 
 
-            case VoltageModel of
-            //****  Fix this when user model gets connected in
-                3: // Yeq := Cinv(cmplx(0.0, -StoreVARs.Xd))  ;  // Gets negated in CalcYPrim
+        case VoltageModel of
+        //****  Fix this when user model gets connected in
+            3: // Yeq := Cinv(cmplx(0.0, -StoreVARs.Xd))  ;  // Gets negated in CalcYPrim
+        else
+            // Yeq no longer used for anything other than this calculation of YEQ_Min, YEQ_Max and
+            // constant Z power flow model
+            Yeq := Cmplx(Pnominalperphase, -Qnominalperphase) / Sqr(Vbase);   // Vbase must be L-N for 3-phase
+            if (Vminpu <> 0.0) then
+                YEQ_Min := Yeq / sqr(Vminpu)  // at 95% voltage
             else
-                // Yeq no longer used for anything other than this calculation of YEQ_Min, YEQ_Max and
-                // constant Z power flow model
-                Yeq := Cmplx(Pnominalperphase, -Qnominalperphase) / Sqr(Vbase);   // Vbase must be L-N for 3-phase
-                if (Vminpu <> 0.0) then
-                    YEQ_Min := Yeq / sqr(Vminpu)  // at 95% voltage
-                else
-                    YEQ_Min := Yeq; // Always a constant Z model
+                YEQ_Min := Yeq; // Always a constant Z model
 
-                if (Vmaxpu <> 0.0) then
-                    YEQ_Max := Yeq / Sqr(Vmaxpu)   // at 105% voltage
-                else
-                    YEQ_Max := Yeq;
-            end;
-            // Like Model 7 generator, max current is based on amount of current to get out requested power at min voltage
-            with StorageVars do
-            begin
-                PhaseCurrentLimit := Cmplx(Pnominalperphase, Qnominalperphase) / VBaseMin;
-                MaxDynPhaseCurrent := Cabs(PhaseCurrentLimit);
-            end;
+            if (Vmaxpu <> 0.0) then
+                YEQ_Max := Yeq / Sqr(Vmaxpu)   // at 105% voltage
+            else
+                YEQ_Max := Yeq;
+        end;
+        // Like Model 7 generator, max current is based on amount of current to get out requested power at min voltage
+        with StorageVars do
+        begin
+            PhaseCurrentLimit := Cmplx(Pnominalperphase, Qnominalperphase) / VBaseMin;
+            MaxDynPhaseCurrent := Cabs(PhaseCurrentLimit);
+        end;
 
-            // When we leave here, all the Yeq's are in L-N values
+        // When we leave here, all the Yeq's are in L-N values
 
-        end;  // If  NOT (IsDynamicModel or IsHarmonicModel)
-    end; // With ActiveCircuit
+    end;  // If  NOT (IsDynamicModel or IsHarmonicModel)
 
-   // If Storage element state changes, force re-calc of Y matrix
+    // If Storage element state changes, force re-calc of Y matrix
     if StateChanged then
     begin
         YprimInvalid := TRUE;
@@ -1719,94 +1714,91 @@ begin
     FYprimFreq := ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
     
-    with ActiveCircuit.Solution do
+    if ActiveCircuit.Solution.IsHarmonicModel then // IsDynamicModel or
     begin
-        if IsHarmonicModel then // IsDynamicModel or
-        begin
-            // Yeq is computed from %R and %X -- inverse of Rthev + j Xthev
-            Y := Yeq;
+        // Yeq is computed from %R and %X -- inverse of Rthev + j Xthev
+        Y := Yeq;
 
-            if Connection = 1 then
-                Y := Y / 3.0; // Convert to delta impedance
-            Y.im := Y.im / FreqMultiplier;
-            Yij := -Y;
-            for i := 1 to Fnphases do
-            begin
-                case Connection of
-                    0:
+        if Connection = 1 then
+            Y := Y / 3.0; // Convert to delta impedance
+        Y.im := Y.im / FreqMultiplier;
+        Yij := -Y;
+        for i := 1 to Fnphases do
+        begin
+            case Connection of
+                0:
+                begin
+                    Ymatrix[i, i] := Y;
+                    Ymatrix.AddElement(Fnconds, Fnconds, Y);
+                    Ymatrix[i, Fnconds] := Yij;
+                    Ymatrix[Fnconds, i] := Yij;
+                end;
+                1:
+                begin   // Delta connection
+                    Ymatrix[i, i] := Y;
+                    Ymatrix.AddElement(i, i, Y);  // put it in again
+                    for j := 1 to i - 1 do
                     begin
-                        Ymatrix[i, i] := Y;
-                        Ymatrix.AddElement(Fnconds, Fnconds, Y);
-                        Ymatrix[i, Fnconds] := Yij;
-                        Ymatrix[Fnconds, i] := Yij;
-                    end;
-                    1:
-                    begin   // Delta connection
-                        Ymatrix[i, i] := Y;
-                        Ymatrix.AddElement(i, i, Y);  // put it in again
-                        for j := 1 to i - 1 do
-                        begin
-                            Ymatrix[i, j] := Yij;
-                            Ymatrix[j, i] := Yij;
-                        end;
+                        Ymatrix[i, j] := Yij;
+                        Ymatrix[j, i] := Yij;
                     end;
                 end;
             end;
-            Exit;
         end;
+        Exit;
+    end;
 
-        //  Regular power flow Storage element model
-        // Yeq is always expected as the equivalent line-neutral admittance
-        case Fstate of
-            STORE_CHARGING:
-                Y := YeqDischarge;
-            STORE_IDLING:
-                Y := 0.0;
-            STORE_DISCHARGING:
-                if not GFM_mode then
-                    Y := -YeqDischarge
-                else
-                with dynVars, StorageVars do
+    //  Regular power flow Storage element model
+    // Yeq is always expected as the equivalent line-neutral admittance
+    case Fstate of
+        STORE_CHARGING:
+            Y := YeqDischarge;
+        STORE_IDLING:
+            Y := 0.0;
+        STORE_DISCHARGING:
+            if not GFM_mode then
+                Y := -YeqDischarge
+            else
+            with dynVars, StorageVars do
+            begin
+                RatedkVLL := PresentkV;
+                Discharging := (StorageState = STORE_DISCHARGING);
+                mKVARating := FkVArating;
+                CalcGFMYprim(NPhases, @YMatrix);
+            end;
+    end;
+    //---DEBUG--- WriteDLLDebugFile(Format('t=%.8g, Change To State=%s, Y=%.8g +j %.8g',[ActiveCircuit.Solution.dblHour, StateToStr, Y.re, Y.im]));
+    // ****** Need to modify the base admittance for real harmonics calcs
+    Y.im := Y.im / FreqMultiplier;
+    if GFM_mode then
+        Exit;
+
+    case Connection of
+        0:
+            begin // WYE
+                Yij := -Y;
+                for i := 1 to Fnphases do
                 begin
-                    RatedkVLL := PresentkV;
-                    Discharging := (StorageState = STORE_DISCHARGING);
-                    mKVARating := FkVArating;
-                    CalcGFMYprim(NPhases, @YMatrix);
+                    YMatrix[i, i] := Y;
+                    YMatrix.AddElement(Fnconds, Fnconds, Y);
+                    YMatrix[i, Fnconds] := Yij;
+                    YMatrix[Fnconds, i] := Yij;
                 end;
-        end;
-        //---DEBUG--- WriteDLLDebugFile(Format('t=%.8g, Change To State=%s, Y=%.8g +j %.8g',[ActiveCircuit.Solution.dblHour, StateToStr, Y.re, Y.im]));
-        // ****** Need to modify the base admittance for real harmonics calcs
-        Y.im := Y.im / FreqMultiplier;
-        if GFM_mode then
-            Exit;
-
-        case Connection of
-            0:
-                begin // WYE
-                    Yij := -Y;
-                    for i := 1 to Fnphases do
-                    begin
-                        YMatrix[i, i] := Y;
-                        YMatrix.AddElement(Fnconds, Fnconds, Y);
-                        YMatrix[i, Fnconds] := Yij;
-                        YMatrix[Fnconds, i] := Yij;
-                    end;
+            end;
+        1:
+            begin  // Delta  or L-L
+                Y := Y / 3.0; // Convert to delta impedance
+                Yij := -Y;
+                for i := 1 to Fnphases do
+                begin
+                    j := i + 1;
+                    if j > Fnconds then
+                        j := 1;  // wrap around for closed connections
+                    YMatrix.AddElement(i, i, Y);
+                    YMatrix.AddElement(j, j, Y);
+                    YMatrix.AddElemSym(i, j, Yij);
                 end;
-            1:
-                begin  // Delta  or L-L
-                    Y := Y / 3.0; // Convert to delta impedance
-                    Yij := -Y;
-                    for i := 1 to Fnphases do
-                    begin
-                        j := i + 1;
-                        if j > Fnconds then
-                            j := 1;  // wrap around for closed connections
-                        YMatrix.AddElement(i, i, Y);
-                        YMatrix.AddElement(j, j, Y);
-                        YMatrix.AddElemSym(i, j, Yij);
-                    end;
-                end;
-        end;
+            end;
     end;
 end;
 
@@ -1878,11 +1870,10 @@ begin
                                // Check to see If it is time to turn the charge cycle on If it is not already on.
                     if not (Fstate = STORE_CHARGING) then
                         if ChargeTime > 0.0 then
-                            with ActiveCircuit.Solution do
-                            begin
-                                if abs(NormalizeToTOD(DynaVars.intHour, DynaVARs.t) - ChargeTime) < DynaVARs.h / 3600.0 then
-                                    Fstate := STORE_CHARGING;
-                            end;
+                        begin
+                            if abs(NormalizeToTOD(ActiveCircuit.Solution.DynaVars.intHour, ActiveCircuit.Solution.DynaVARs.t) - ChargeTime) < ActiveCircuit.Solution.DynaVARs.h / 3600.0 then
+                                Fstate := STORE_CHARGING;
+                        end;
                 end;
             end;
         end;
@@ -1937,42 +1928,41 @@ var
     i: Integer;
     sout: String;
 begin
+    if DSS.InShowResults then
+        Exit;
     try
-        if (not DSS.InshowResults) then
+        WriteStr(sout, Format('%-.g, %d, %-.g, ',
+            [ActiveCircuit.Solution.DynaVars.dblHour,
+            ActiveCircuit.Solution.Iteration,
+            ActiveCircuit.LoadMultiplier]),
+            DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)), ', ',
+            DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.Solution.LoadModel), ', ',
+            VoltageModel: 0, ', ',
+            (Qnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
+            (Pnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
+            s, ', ');
+        FSWrite(TraceFile, sout);
+        
+        for i := 1 to nphases do
         begin
-            WriteStr(sout, Format('%-.g, %d, %-.g, ',
-                [ActiveCircuit.Solution.DynaVars.dblHour,
-                ActiveCircuit.Solution.Iteration,
-                ActiveCircuit.LoadMultiplier]),
-                DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)), ', ',
-                DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.Solution.LoadModel), ', ',
-                VoltageModel: 0, ', ',
-                (Qnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
-                (Pnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
-                s, ', ');
+            WriteStr(sout, (Cabs(InjCurrent[i])): 8: 1, ', ');
             FSWrite(TraceFile, sout);
-            
-            for i := 1 to nphases do
-            begin
-                WriteStr(sout, (Cabs(InjCurrent[i])): 8: 1, ', ');
-                FSWrite(TraceFile, sout);
-            end;
-            for i := 1 to nphases do
-            begin
-                WriteStr(sout, (Cabs(ITerminal[i])): 8: 1, ', ');
-                FSWrite(TraceFile, sout);
-            end;
-            for i := 1 to nphases do
-            begin
-                WriteStr(sout, (Cabs(Vterminal[i])): 8: 1, ', ');
-                FSWrite(TraceFile, sout);
-            end;
-            for i := 1 to NumVariables() do
-                FSWrite(TraceFile, Format('%-.g, ', [Variable[i]]));
-
-            FSWriteln(TRacefile);
-            FSFlush(TraceFile);
         end;
+        for i := 1 to nphases do
+        begin
+            WriteStr(sout, (Cabs(ITerminal[i])): 8: 1, ', ');
+            FSWrite(TraceFile, sout);
+        end;
+        for i := 1 to nphases do
+        begin
+            WriteStr(sout, (Cabs(Vterminal[i])): 8: 1, ', ');
+            FSWrite(TraceFile, sout);
+        end;
+        for i := 1 to NumVariables() do
+            FSWrite(TraceFile, Format('%-.g, ', [Variable[i]]));
+
+        FSWriteln(Tracefile);
+        FSFlush(TraceFile);
     except
         On E: Exception do
         begin
@@ -2049,16 +2039,11 @@ begin
                     if Cabs(Curr) * SQRT3 > MaxDynPhaseCurrent then
                         Curr := cong(PhaseCurrentLimit / (VLL / VMagLN)); // Note VmagLN has sqrt3 factor in it
             end;
-
         end;
-
-        //---DEBUG--- WriteDLLDebugFile(Format('        Phase=%d, Pnom=%.8g +j %.8g', [i, Pnominalperphase, Qnominalperphase ]));
-
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         set_ITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
-    //---DEBUG--- WriteDLLDebugFile(Format('        Icomp=%s ', [CmplxArrayToString(InjCurrent, Yprim.Order) ]));
 end;
 
 procedure TStorageObj.DoConstantZStorageObj();
@@ -2106,11 +2091,9 @@ begin
     begin
         UserModel.FCalc(Vterminal, Iterminal);
         set_ITerminalUpdated(TRUE);
-        with ActiveCircuit.Solution do
-        begin          // Negate currents from user model for power flow Storage element model
-            for i := 1 to FnConds do
-                InjCurrent[i] -= Iterminal[i];
-        end;
+        // Negate currents from user model for power flow Storage element model
+        for i := 1 to FnConds do
+            InjCurrent[i] -= Iterminal[i];
     end
     else
     begin
@@ -2187,7 +2170,6 @@ end;
 procedure TStorageObj.DoGFM_Mode();
 // Implements the grid forming inverter control routine for the storage device
 var
-    i: Integer;
     W: Double;
     ZSys: Double;
 begin
@@ -2212,12 +2194,11 @@ var
     i: Integer;
 begin
     // do user written dynamics model
-    with ActiveCircuit.Solution do
-    begin  // Just pass node voltages to ground and let dynamic model take care of it
-        for i := 1 to FNconds do
-            VTerminal^[i] := NodeV[NodeRef[i]];
-        StorageVars.w_grid := TwoPi * Frequency;
-    end;
+    
+    // Just pass node voltages to ground and let dynamic model take care of it
+    for i := 1 to FNconds do
+        VTerminal[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
+    StorageVars.w_grid := TwoPi * ActiveCircuit.Solution.Frequency;
 
     DynaModel.FCalc(Vterminal, pComplexArray(@DESSCurr));
 
@@ -2246,21 +2227,18 @@ begin
     pBuffer := @TStorage(ParentClass).cBuffer;
     ComputeVterminal();
 
-    with ActiveCircuit.Solution do
-    begin
-        StorageHarmonic := Frequency / StorageFundamental;
-        if SpectrumObj <> NIL then
-            E := SpectrumObj.GetMult(StorageHarmonic) * StorageVars.VThevHarm // Get base harmonic magnitude
-        else
-            E := 0;
+    StorageHarmonic := ActiveCircuit.Solution.Frequency / StorageFundamental;
+    if SpectrumObj <> NIL then
+        E := SpectrumObj.GetMult(StorageHarmonic) * StorageVars.VThevHarm // Get base harmonic magnitude
+    else
+        E := 0;
 
-        RotatePhasorRad(E, StorageHarmonic, StorageVars.ThetaHarm);  // Time shift by fundamental frequency phase shift
-        for i := 1 to Fnphases do
-        begin
-            pBuffer[i] := E;
-            if i < Fnphases then
-                RotatePhasorDeg(E, StorageHarmonic, -120.0);  // Assume 3-phase Storage element
-        end;
+    RotatePhasorRad(E, StorageHarmonic, StorageVars.ThetaHarm);  // Time shift by fundamental frequency phase shift
+    for i := 1 to Fnphases do
+    begin
+        pBuffer[i] := E;
+        if i < Fnphases then
+            RotatePhasorDeg(E, StorageHarmonic, -120.0);  // Assume 3-phase Storage element
     end;
 
     // Handle Wye Connection
@@ -2279,20 +2257,18 @@ begin
     case Connection of
         0:
         begin
-            with ActiveCircuit.Solution do
-                for i := 1 to Fnphases do
-                    Vterminal[i] := VDiff(NodeRef[i], NodeRef[Fnconds]);
+            for i := 1 to Fnphases do
+                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[Fnconds]);
         end;
         1:
         begin
-            with ActiveCircuit.Solution do
-                for i := 1 to Fnphases do
-                begin
-                    j := i + 1;
-                    if j > Fnconds then
-                        j := 1;
-                    Vterminal[i] := VDiff(NodeRef[i], NodeRef[j]);
-                end;
+            for i := 1 to Fnphases do
+            begin
+                j := i + 1;
+                if j > Fnconds then
+                    j := 1;
+                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[j]);
+            end;
         end;
     end;
 
@@ -2304,37 +2280,34 @@ procedure TStorageObj.CalcStorageModelContribution();
 // routines may also compute ITerminal  (ITerminalUpdated flag)
 begin
     set_ITerminalUpdated(FALSE);
-    with ActiveCircuit, ActiveCircuit.Solution do
+    if ActiveCircuit.Solution.IsDynamicModel then
     begin
-        if IsDynamicModel then
-        begin
-            DoDynamicMode();
-            Exit;
-        end;
+        DoDynamicMode();
+        Exit;
+    end;
 
-        if IsHarmonicModel and (Frequency <> Fundamental) then
-        begin
-            DoHarmonicMode();
-            Exit;
-        end;
-        
-        if GFM_Mode then
-        begin
-            DoGFM_Mode();
-            Exit;
-        end;
+    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
+    begin
+        DoHarmonicMode();
+        Exit;
+    end;
+    
+    if GFM_Mode then
+    begin
+        DoGFM_Mode();
+        Exit;
+    end;
 
-        //  compute currents and put into InjTemp array;
-        case VoltageModel of
-            1:
-                DoConstantPQStorageObj();
-            2:
-                DoConstantZStorageObj();
-            3:
-                DoUserModel();
-        else
-            DoConstantPQStorageObj(); // for now, until we implement the other models.
-        end;
+    //  compute currents and put into InjTemp array;
+    case VoltageModel of
+        1:
+            DoConstantPQStorageObj();
+        2:
+            DoConstantZStorageObj();
+        3:
+            DoUserModel();
+    else
+        DoConstantPQStorageObj(); // for now, until we implement the other models.
     end;
     // When this is Done, ITerminal is up to date
 end;
@@ -2352,15 +2325,12 @@ end;
 procedure TStorageObj.GetTerminalCurrents(Curr: pComplexArray);
 // Compute total Currents
 begin
-    with ActiveCircuit.Solution do
-    begin
-        if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
-        begin     // recalc the contribution
-            if not StorageObjSwitchOpen then
-                CalcStorageModelContribution();  // Adds totals in Iterminal as a side effect
-        end;
-        inherited GetTerminalCurrents(Curr);
+    if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+    begin     // recalc the contribution
+        if not StorageObjSwitchOpen then
+            CalcStorageModelContribution();  // Adds totals in Iterminal as a side effect
     end;
+    inherited GetTerminalCurrents(Curr);
 
     if (DebugTrace) then
         WriteTraceRecord('TotalCurrent');
@@ -2368,19 +2338,16 @@ end;
 
 function TStorageObj.InjCurrents(): Integer;
 begin
-    with ActiveCircuit.Solution do
-    begin
-        if LoadsNeedUpdating then
-            SetNominalDEROutput(); // Set the nominal kW, etc for the type of solution being Done
+    if ActiveCircuit.Solution.LoadsNeedUpdating then
+        SetNominalDEROutput(); // Set the nominal kW, etc for the type of solution being Done
 
-        CalcInjCurrentArray(); // Difference between currents in YPrim and total terminal current
+    CalcInjCurrentArray(); // Difference between currents in YPrim and total terminal current
 
-        if (DebugTrace) then
-            WriteTraceRecord('Injection');
+    if (DebugTrace) then
+        WriteTraceRecord('Injection');
 
-         // Add into System Injection Current Array
-        Result := inherited InjCurrents();
-    end;
+        // Add into System Injection Current Array
+    Result := inherited InjCurrents();
 end;
 
 function TStorageObj.CheckOLInverter(): Boolean;
@@ -2439,42 +2406,43 @@ var
     S: Complex;
     Smag: Double;
     HourValue: Double;
+    IntervalHrs: Double;
 begin
     // Compute energy in Storage element branch
-    if Enabled then
-    begin
-        // Only tabulate discharge hours
-        if FSTate = STORE_DISCHARGING then
-        begin
-            S := cmplx(Get_PresentkW, Get_Presentkvar);
-            Smag := Cabs(S);
-            HourValue := 1.0;
-        end
-        else
-        begin
-            S := 0;
-            Smag := 0.0;
-            HourValue := 0.0;
-        end;
+    if not Enabled then
+        Exit;
 
-        if (FState = STORE_DISCHARGING) or ActiveCircuit.TrapezoidalIntegration then
-            // Make sure we always integrate for Trapezoidal case
-            // Don't need to for Gen Off and normal integration
-            with ActiveCircuit.Solution do
-            begin
-                if ActiveCircuit.PositiveSequence then
-                begin
-                    S := S * 3;
-                    Smag := 3.0 * Smag;
-                end;
-                Integrate(Reg_kWh, S.re, IntervalHrs);   // Accumulate the power
-                Integrate(Reg_kvarh, S.im, IntervalHrs);
-                SetDragHandRegister(Reg_MaxkW, abs(S.re));
-                SetDragHandRegister(Reg_MaxkVA, Smag);
-                Integrate(Reg_Hours, HourValue, IntervalHrs);  // Accumulate Hours in operation
-                Integrate(Reg_Price, S.re * ActiveCircuit.PriceSignal * 0.001, IntervalHrs);  // Accumulate Hours in operation
-                FirstSampleAfterReset := FALSE;
-            end;
+    // Only tabulate discharge hours
+    if FSTate = STORE_DISCHARGING then
+    begin
+        S := cmplx(Get_PresentkW, Get_Presentkvar);
+        Smag := Cabs(S);
+        HourValue := 1.0;
+    end
+    else
+    begin
+        S := 0;
+        Smag := 0.0;
+        HourValue := 0.0;
+    end;
+
+    if (FState = STORE_DISCHARGING) or ActiveCircuit.TrapezoidalIntegration then
+    begin
+        // Make sure we always integrate for Trapezoidal case
+        // Don't need to for Gen Off and normal integration
+        if ActiveCircuit.PositiveSequence then
+        begin
+            S := S * 3;
+            Smag := 3.0 * Smag;
+        end;
+        IntervalHrs := ActiveCircuit.Solution.IntervalHrs;
+        Integrate(Reg_kWh, S.re, IntervalHrs);   // Accumulate the power
+        Integrate(Reg_kvarh, S.im, IntervalHrs);
+        SetDragHandRegister(Reg_MaxkW, abs(S.re));
+        SetDragHandRegister(Reg_MaxkVA, Smag);
+        Integrate(Reg_Hours, HourValue, IntervalHrs);  // Accumulate Hours in operation
+        Integrate(Reg_Price, S.re * ActiveCircuit.PriceSignal * 0.001, IntervalHrs);  // Accumulate Hours in operation
+        FirstSampleAfterReset := FALSE;
     end;
 end;
 
@@ -2503,7 +2471,9 @@ procedure TStorageObj.UpdateStorage();
 // Update Storage levels
 var
     UpdateSt: Boolean;
+    IntervalHrs: Double;
 begin
+    IntervalHrs := ActiveCircuit.Solution.IntervalHrs;
     with StorageVars do
     begin
         kWhBeforeUpdate := kWhStored;   // keep this for reporting change in Storage as a variable
@@ -2512,63 +2482,61 @@ begin
         if ActiveCircuit.solution.IsDynamicModel and IsUserModel then
             Exit;
 
-        with ActiveCircuit.Solution do
-            case FState of
-                STORE_DISCHARGING:
-                begin
-                    UpdateSt := TRUE;
-                    if GFM_Mode then
-                        UpdateSt := CheckIfDelivering();
+        case FState of
+            STORE_DISCHARGING:
+            begin
+                UpdateSt := TRUE;
+                if GFM_Mode then
+                    UpdateSt := CheckIfDelivering();
 
-                    if UpdateSt then
-                        kWhStored := kWhStored - (DCkW + kWIdlingLosses) / DischargeEff * IntervalHrs
-                    else
+                if UpdateSt then
+                    kWhStored := kWhStored - (DCkW + kWIdlingLosses) / DischargeEff * IntervalHrs
+                else
+                begin
+                    // We are absorbing power, let's recharge if needed
+                    kWhStored := kWhStored + (DCkW + kWIdlingLosses) / DischargeEff * IntervalHrs;
+                    if kWhStored > kWhRating then
+                        kWhStored := kWhRating;
+                end;
+                // check if we have enough energy to deliver
+                if kWhStored < kWhReserve then
+                begin
+                    kWhStored := kWhReserve;
+                    Fstate := STORE_IDLING;  // It's empty Turn it off
+                    StateChanged := TRUE;
+                    GFM_Mode := FALSE;
+                end;
+            end;
+
+            STORE_CHARGING:
+            begin
+                if (abs(DCkW) - kWIdlingLosses) >= 0 then // 99.9 % of the cases will fall here
+                begin
+                    kWhStored := kWhStored + (abs(DCkW) - kWIdlingLosses) * ChargeEff * IntervalHrs;
+                    if kWhStored > kWhRating then
                     begin
-                        // We are absorbing power, let's recharge if needed
-                        kWhStored := kWhStored + (DCkW + kWIdlingLosses) / DischargeEff * IntervalHrs;
-                        if kWhStored > kWhRating then
-                            kWhStored := kWhRating;
+                        kWhStored := kWhRating;
+                        Fstate := STORE_IDLING;  // It's full Turn it off
+                        StateChanged := TRUE;
+                        GFM_Mode := FALSE;
                     end;
-                    // check if we have enough energy to deliver
+                end
+                else   // Exceptional cases when the idling losses are higher than the DCkW such that the net effect is that the
+                                // the ideal Storage will discharge
+                begin
+                    kWhStored := kWhStored + (abs(DCkW) - kWIdlingLosses) / DischargeEff * IntervalHrs;
                     if kWhStored < kWhReserve then
                     begin
                         kWhStored := kWhReserve;
                         Fstate := STORE_IDLING;  // It's empty Turn it off
                         StateChanged := TRUE;
-                        GFM_Mode := FALSE;
                     end;
                 end;
 
-                STORE_CHARGING:
-                begin
-                    if (abs(DCkW) - kWIdlingLosses) >= 0 then // 99.9 % of the cases will fall here
-                    begin
-                        kWhStored := kWhStored + (abs(DCkW) - kWIdlingLosses) * ChargeEff * IntervalHrs;
-                        if kWhStored > kWhRating then
-                        begin
-                            kWhStored := kWhRating;
-                            Fstate := STORE_IDLING;  // It's full Turn it off
-                            StateChanged := TRUE;
-                            GFM_Mode := FALSE;
-                        end;
-                    end
-                    else   // Exceptional cases when the idling losses are higher than the DCkW such that the net effect is that the
-                                 // the ideal Storage will discharge
-                    begin
-                        kWhStored := kWhStored + (abs(DCkW) - kWIdlingLosses) / DischargeEff * IntervalHrs;
-                        if kWhStored < kWhReserve then
-                        begin
-                            kWhStored := kWhReserve;
-                            Fstate := STORE_IDLING;  // It's empty Turn it off
-                            StateChanged := TRUE;
-                        end;
-                    end;
-
-                end;
-
-                STORE_IDLING: ;
             end;
 
+            STORE_IDLING: ;
+        end;
     end;
 
     // the update is done at the end of a time step so have to force
@@ -2740,17 +2708,16 @@ begin
 
     ComputeIterminal();  // Get present value of current
 
-    with ActiveCircuit.solution do
-        case Connection of
-            0:
-            begin // wye - neutral is explicit
-                Va := NodeV[NodeRef[1]] - NodeV[NodeRef[Fnconds]];
-            end;
-            1:
-            begin  // delta -- assume neutral is at zero
-                Va := NodeV[NodeRef[1]];
-            end;
+    case Connection of
+        0:
+        begin // wye - neutral is explicit
+            Va := ActiveCircuit.Solution.NodeV[NodeRef[1]] - ActiveCircuit.Solution.NodeV[NodeRef[Fnconds]];
         end;
+        1:
+        begin  // delta -- assume neutral is at zero
+            Va := ActiveCircuit.Solution.NodeV[NodeRef[1]];
+        end;
+    end;
 
     E := Va - Iterminal[1] * cmplx(StorageVars.Rthev, StorageVars.Xthev);
     StorageVars.Vthevharm := Cabs(E);   // establish base mag and angle
@@ -2805,7 +2772,7 @@ begin
         Exit;
 
     // Compute nominal Positive sequence voltage behind equivalent filter impedance
-    with ActiveCircuit.Solution, StorageVars, dynVars do
+    with StorageVars, dynVars do
     begin
         NumPhases := Fnphases;     // set Publicdata vars
         NumConductors := Fnconds;
@@ -2838,7 +2805,7 @@ begin
         LS := ZThev.im / (2 * PI * DSS.DefaultBaseFreq);
         for i := 0 to (NPhases - 1) do
         begin
-            Vgrid[i] := ctopolar(NodeV[NodeRef[i + 1]]);
+            Vgrid[i] := ctopolar(ActiveCircuit.Solution.NodeV[NodeRef[i + 1]]);
             dit[i] := 0;
             it[i] := 0;
             m[i] := ((RS * it[i]) + Vgrid[i].mag) / RatedVDC; // Duty factor in terms of actual voltage
@@ -2863,7 +2830,9 @@ var
     IMaxPhase, OFFVal: Double;
     IPresent: Double; // present amps per phase
     curr: Array of Complex; // For storing the present currents when using current limiter
+    NodeV: pNodeVarray;
 begin
+    NodeV := ActiveCircuit.Solution.NodeV;
     // Compute Derivatives and Then integrate
     ComputeIterminal();
 
@@ -2873,7 +2842,7 @@ begin
         Exit;
     end;
     
-    with ActiveCircuit.Solution, StorageVars, dynVars do
+    with StorageVars, dynVars do
     begin
         ComputePresentkW();
         IMaxPhase := (kW_out / BasekV) / NumPhases;
@@ -2881,9 +2850,8 @@ begin
         begin
             if FState = STORE_DISCHARGING then
             begin
-                with DynaVars do
-                    if (IterationFlag = 0) then //First iteration of new time step
-                        itHistory[i] := it[i] + 0.5 * h * dit[i];
+                if (ActiveCircuit.Solution.DynaVars.IterationFlag = 0) then //First iteration of new time step
+                    itHistory[i] := it[i] + 0.5 * ActiveCircuit.Solution.DynaVars.h * dit[i];
                 Vgrid[i] := ctopolar(NodeV[NodeRef[i + 1]]); // Voltage at the Inv terminals
                 if not GFM_Mode then
                 begin
@@ -2952,7 +2920,7 @@ begin
                                     DynamicEqVals[DynamicEqPair[j * 2]][0] := RatedVDC;
                                 11:
                                 begin
-                                    SolveModulation(ActiveCircuit, i, @PICtrl[i]);
+                                    SolveModulation(ActiveCircuit, i, PICtrl[i]);
                                     DynamicEqVals[DynamicEqPair[j * 2]][0] := m[i]
                                 end
                             else
@@ -2963,15 +2931,12 @@ begin
                     DynamicEqObj.SolveEq(DynamicEqVals); // solves the differential equation using the given dynamic expression
                 end
                 else
-                    SolveDynamicStep(ActiveCircuit, i, @PICtrl[i]); // Solves dynamic step for inverter
+                    SolveDynamicStep(ActiveCircuit, i, PICtrl[i]); // Solves dynamic step for inverter
 
                 // Trapezoidal method
-                with DynaVars do
-                begin
-                    if DynamicEqObj <> NIL then
-                        dit[i] := DynamicEqVals[DynOut[0]][1];
-                    it[i] := itHistory[i] + 0.5 * h * dit[i];
-                end;
+                if DynamicEqObj <> NIL then
+                    dit[i] := DynamicEqVals[DynOut[0]][1];
+                it[i] := itHistory[i] + 0.5 * ActiveCircuit.Solution.DynaVars.h * dit[i];
             end
             else
             begin
@@ -2984,16 +2949,13 @@ begin
         end;
     end;
 
-    with ActiveCircuit.Solution, StorageVars do
+    // Write Dynamics Trace Record
+    if DebugTrace then
     begin
-        // Write Dynamics Trace Record
-        if DebugTrace then
-        begin
-            FSWrite(TraceFile, Format('t=%-.5g ', [Dynavars.t]));
-            FSWrite(TraceFile, Format(' Flag=%d ', [Dynavars.Iterationflag]));
-            FSWriteln(TraceFile);
-            FSFlush(TraceFile);
-        end;
+        FSWrite(TraceFile, Format('t=%-.5g ', [ActiveCircuit.Solution.Dynavars.t]));
+        FSWrite(TraceFile, Format(' Flag=%d ', [ActiveCircuit.Solution.Dynavars.Iterationflag]));
+        FSWriteln(TraceFile);
+        FSFlush(TraceFile);
     end;
 end;
 

@@ -199,8 +199,7 @@ end;
 
 function XscSize(obj: TObj): Integer;
 begin
-    with obj do
-        Result := (NumWindings - 1) * NumWindings div 2;
+    Result := (obj.NumWindings - 1) * obj.NumWindings div 2;
 end;
 
 procedure TXfmrCode.DefineProperties;
@@ -470,25 +469,25 @@ end;
 function TXfmrCode.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
 var
     i: Integer;
+    obj: TObj;
 begin
-    with TObj(ptr) do
+    obj := TObj(ptr);
+
+    if Flg.NeedsRecalc in obj.Flags then
     begin
-        if Flg.NeedsRecalc in Flags then
-        begin
-            Exclude(Flags, Flg.NeedsRecalc);
-            if NumWindings <= 3 then
-                for i := 1 to (NumWindings - 1) * NumWindings div 2 do
-                    case i of
-                        1:
-                            XSC[1] := XHL;
-                        2:
-                            XSC[2] := XHT;
-                        3:
-                            XSC[3] := XLT;
-                    end;
-        end;
-        Exclude(Flags, Flg.EditionActive);
+        Exclude(obj.Flags, Flg.NeedsRecalc);
+        if obj.NumWindings <= 3 then
+            for i := 1 to (obj.NumWindings - 1) * obj.NumWindings div 2 do
+                case i of
+                    1:
+                        obj.XSC[1] := obj.XHL;
+                    2:
+                        obj.XSC[2] := obj.XHT;
+                    3:
+                        obj.XSC[3] := obj.XLT;
+                end;
     end;
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -657,11 +656,8 @@ begin
     for i := 28 to NumPropsThisClass do
         FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
 
-    with ParentClass do
-    begin
-        for i := NumPropsthisClass + 1 to NumProperties do
-            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
-    end;
+    for i := NumPropsthisClass + 1 to ParentClass.NumProperties do
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
 end;
 
 end.

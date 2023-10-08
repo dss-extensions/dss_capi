@@ -262,13 +262,13 @@ begin
 end;
 
 function TIsource.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
 begin
-    with TObj(ptr) do
-    begin
-        RecalcElementData;
-        YPrimInvalid := TRUE;
-        Exclude(Flags, Flg.EditionActive);
-    end;
+    obj := TObj(ptr);
+    obj.RecalcElementData();
+    obj.YPrimInvalid := TRUE;
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -371,58 +371,60 @@ function TIsourceObj.GetBaseCurr: Complex;
 var
     SrcHarmonic: Double;
     NAmps: Double;
+    mode: TSolveMode;
+    dblHour: Double;
 begin
     try
-        with ActiveCircuit.Solution do
-            // Get first Phase Current
-            if IsHarmonicModel then
+        mode := ActiveCircuit.Solution.Mode;
+        dblHour := ActiveCircuit.Solution.DynaVars.dblHour;
+        // Get first Phase Current
+        if ActiveCircuit.Solution.IsHarmonicModel then
+        begin
+            SrcHarmonic := ActiveCircuit.Solution.Frequency / SrcFrequency;
+            Result := SpectrumObj.GetMult(SrcHarmonic) * Amps;  // Base current for this harmonic
+            RotatePhasorDeg(Result, SrcHarmonic, Angle);
+            Exit;
+        end;
+
+        case mode of
+            // Uses same logic as LOAD
+            TSolveMode.DAILYMODE:
             begin
-                SrcHarmonic := Frequency / SrcFrequency;
-                Result := SpectrumObj.GetMult(SrcHarmonic) * Amps;  // Base current for this harmonic
-                RotatePhasorDeg(Result, SrcHarmonic, Angle);
-            end
-            else
-            begin
-                case Mode of
-                    // Uses same logic as LOAD
-                    TSolveMode.DAILYMODE:
-                    begin
-                        CalcDailyMult(DynaVars.dblHour);
-                    end;
-                    TSolveMode.YEARLYMODE:
-                    begin
-                        CalcYearlyMult(DynaVars.dblHour);
-                    end;
-                    TSolveMode.DUTYCYCLE:
-                    begin
-                        CalcDutyMult(DynaVars.dblHour);
-                    end;
-                    TSolveMode.DYNAMICMODE:
-                    begin
-                        // This mode allows use of one class of load shape in DYNAMIC mode
-                        case ActiveCircuit.ActiveLoadShapeClass of
-                            USEDAILY:
-                                CalcDailyMult(DynaVars.dblHour);
-                            USEYEARLY:
-                                CalcYearlyMult(DynaVars.dblHour);
-                            USEDUTY:
-                                CalcDutyMult(DynaVars.dblHour);
-                        else
-                            ShapeFactor := 1.0;     // default to 1 + j0 if not known
-                        end;
-                    end;
-                end;
-                NAmps := Amps;
-                if (Mode = TSolveMode.DAILYMODE) or     // If a loadshape mode simulation
-                    (Mode = TSolveMode.YEARLYMODE) or
-                    (Mode = TSolveMode.DUTYCYCLE) or 
-                    (Mode = TSolveMode.DYNAMICMODE) then
-                    NAmps := Amps * ShapeFactor.re;
-                if abs(Frequency - SrcFrequency) < EPSILON2 then
-                    Result := pdegtocomplex(NAmps, Angle)
-                else
-                    Result := 0;
+                CalcDailyMult(dblHour);
             end;
+            TSolveMode.YEARLYMODE:
+            begin
+                CalcYearlyMult(dblHour);
+            end;
+            TSolveMode.DUTYCYCLE:
+            begin
+                CalcDutyMult(dblHour);
+            end;
+            TSolveMode.DYNAMICMODE:
+            begin
+                // This mode allows use of one class of load shape in DYNAMIC mode
+                case ActiveCircuit.ActiveLoadShapeClass of
+                    USEDAILY:
+                        CalcDailyMult(dblHour);
+                    USEYEARLY:
+                        CalcYearlyMult(dblHour);
+                    USEDUTY:
+                        CalcDutyMult(dblHour);
+                else
+                    ShapeFactor := 1.0;     // default to 1 + j0 if not known
+                end;
+            end;
+        end;
+        NAmps := Amps;
+        if (mode = TSolveMode.DAILYMODE) or     // If a loadshape mode simulation
+            (mode = TSolveMode.YEARLYMODE) or
+            (mode = TSolveMode.DUTYCYCLE) or 
+            (mode = TSolveMode.DYNAMICMODE) then
+            NAmps := Amps * ShapeFactor.re;
+        if abs(ActiveCircuit.Solution.Frequency - SrcFrequency) < EPSILON2 then
+            Result := pdegtocomplex(NAmps, Angle)
+        else
+            Result := 0;
 
     except
         DoSimpleMsg('Error computing current for "%s". Check specification. Aborting.', [FullName], 334);
@@ -449,7 +451,7 @@ begin
         GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
         // Add Together  with yprim currents
         for i := 1 to Yorder do
-            Curr[i] := -ComplexBuffer^[i];
+            Curr[i] := -ComplexBuffer[i];
 
     except
         On E: Exception do
@@ -464,36 +466,33 @@ var
     i: Integer;
     BaseCurr: complex;
 begin
-    with ActiveCircuit.solution do
+    BaseCurr := GetBaseCurr();   // this func applies spectrum if needed
+
+    for i := 1 to Fnphases do
     begin
-        BaseCurr := GetBaseCurr;   // this func applies spectrum if needed
-
-        for i := 1 to Fnphases do
+        Curr[i] := BaseCurr;
+        Curr[i + FnPhases] := -BaseCurr;  // 2nd Terminal
+        if (i < Fnphases) then
         begin
-            Curr[i] := BaseCurr;
-            Curr[i + FnPhases] := -BaseCurr;  // 2nd Terminal
-            if (i < Fnphases) then
-            begin
-                if IsHarmonicModel then
+            if ActiveCircuit.Solution.IsHarmonicModel then
 
-                    case ScanType of
-                        1:
-                            RotatePhasorDeg(BaseCurr, 1.0, -FphaseShift); // maintain positive sequence for isource
-                        0: ;  // Do not rotate for zero sequence
-                    else
-                        RotatePhasorDeg(BaseCurr, Harmonic, -FphaseShift) // rotate by frequency
-                        // Harmonic 1 will be pos; 2 is neg; 3 is zero, and so on.
-                    end
-
+                case ScanType of
+                    1:
+                        RotatePhasorDeg(BaseCurr, 1.0, -FphaseShift); // maintain positive sequence for isource
+                    0: ;  // Do not rotate for zero sequence
                 else
-                    case SequenceType of
-                        -1:
-                            RotatePhasorDeg(BaseCurr, 1.0, FphaseShift); // Neg seq
-                        0: ;  // Do not rotate for zero sequence
-                    else
-                        RotatePhasorDeg(BaseCurr, 1.0, -FphaseShift); // Maintain pos seq
-                    end;
-            end;
+                    RotatePhasorDeg(BaseCurr, ActiveCircuit.Solution.Harmonic, -FphaseShift) // rotate by frequency
+                    // Harmonic 1 will be pos; 2 is neg; 3 is zero, and so on.
+                end
+
+            else
+                case SequenceType of
+                    -1:
+                        RotatePhasorDeg(BaseCurr, 1.0, FphaseShift); // Neg seq
+                    0: ;  // Do not rotate for zero sequence
+                else
+                    RotatePhasorDeg(BaseCurr, 1.0, -FphaseShift); // Maintain pos seq
+                end;
         end;
     end;
 end;

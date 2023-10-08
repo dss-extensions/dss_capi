@@ -425,7 +425,7 @@ begin
         end
         else
         begin
-            {Search through the entire circuit for enabled generators and add them to the list}
+            // Search through the entire circuit for enabled generators and add them to the list
             for i := 1 to ParentClass.ElementCount do
             begin
                 pESPVLControl := ParentClass.ElementList.Get(i);
@@ -456,5 +456,6 @@ begin
   // inherited;
 end;
 
-finalization    TypeEnum.Free;
+finalization
+    TypeEnum.Free;
 end.

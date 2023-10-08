@@ -476,20 +476,19 @@ begin
     Result := Obj;
 end;
 
-procedure SetNcondsForConnection(Obj: TObj);
+procedure SetNcondsForConnection(obj: TObj);
 begin
-    with Obj do
-        case Connection of
-            TLoadConnection.Wye:
-                NConds := Fnphases + 1;
-            TLoadConnection.Delta:
-                case Fnphases of
-                    1, 2:
-                        NConds := Fnphases + 1; // L-L and Open-delta
-                else
-                    NConds := Fnphases;
-                end;
-        end;
+    case obj.Connection of
+        TLoadConnection.Wye:
+            obj.NConds := obj.Fnphases + 1;
+        TLoadConnection.Delta:
+            case obj.Fnphases of
+                1, 2:
+                    obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
+            else
+                obj.NConds := obj.Fnphases;
+            end;
+    end;
 end;
 
 procedure TLoadObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
@@ -523,7 +522,7 @@ begin
         begin
             if Idx = ord(TProp.phases) then
             begin
-                Reallocmem(FPhaseCurr, SizeOf(FPhaseCurr^[1]) * FNphases);
+                Reallocmem(FPhaseCurr, SizeOf(FPhaseCurr[1]) * FNphases);
                 SetNCondsForConnection(self);  // Force Reallocation of terminal info
             end;
 
@@ -598,31 +597,25 @@ begin
         // Sets the kW and kvar properties to match the peak kW demand from the Loadshape
         ord(TProp.Yearly):
         begin
-            if Assigned(YearlyShapeObj) then
-                with YearlyShapeObj do
-                    if UseActual then
-                    begin
-                        kWref := kWBase;
-                        kVARref := kVARbase;
-                        SetkWkvar(MaxP, MaxQ);
-                    end;
+            if (YearlyShapeObj <> NIL) and YearlyShapeObj.UseActual then
+            begin
+                kWref := kWBase;
+                kVARref := kVARbase;
+                SetkWkvar(YearlyShapeObj.MaxP, YearlyShapeObj.MaxQ);
+            end;
         end;
         ord(TProp.daily):
         begin
-            if Assigned(DailyShapeObj) then
-                with DailyShapeObj do
-                    if UseActual then
-                        SetkWkvar(MaxP, MaxQ);
+            if (DailyShapeObj <> NIL) and DailyShapeObj.UseActual then
+                SetkWkvar(DailyShapeObj.MaxP, DailyShapeObj.MaxQ);
             // If Yearly load shape is not yet defined, make it the same as Daily
             if YearlyShapeObj = NIL then
                 YearlyShapeObj := DailyShapeObj;
         end;
         ord(TProp.duty):
         begin
-            if Assigned(DutyShapeObj) then
-                with DutyShapeObj do
-                    if UseActual then
-                        SetkWkvar(MaxP, MaxQ);
+            if (DutyShapeObj <> NIL) and DutyShapeObj.UseActual then
+                SetkWkvar(DutyShapeObj.MaxP, DutyShapeObj.MaxQ);
         end;
         ord(TProp.kwh):
         begin
@@ -654,7 +647,7 @@ begin
             PFSpecified := FALSE;
             kVARref := kVARbase;
         end;// kW, kvar
-        {*** see set_xfkva, etc           21, 22: LoadSpectype := 3;  // XFKVA*AllocationFactor, PF  }
+        // *** see set_xfkva, etc           21, 22: LoadSpectype := 3;  // XFKVA*AllocationFactor, PF  
         ord(TProp.xfkVA):
         begin
             LoadSpecType := TLoadSpec.ConnectedkVA_PF;
@@ -697,7 +690,7 @@ begin
                 PrpSequence[ord(TLoadProp.xfkVA)] := 0;
             end;
         end;
-        {*** see set_kwh, etc           28..30: LoadSpecType := 4;  // kWh, days, cfactor, PF }
+        // *** see set_kwh, etc           28..30: LoadSpecType := 4;  // kWh, days, cfactor, PF 
         ord(TProp.ZIPV):
             ZIPVset := True;
     end;
@@ -705,13 +698,13 @@ begin
 end;
 
 function TLoad.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
 begin
-    with TObj(ptr) do
-    begin
-        RecalcElementData;
-        YPrimInvalid := TRUE;
-        Exclude(Flags, Flg.EditionActive);
-    end;
+    obj := TObj(ptr);
+    obj.RecalcElementData();
+    obj.YPrimInvalid := TRUE;
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -768,7 +761,7 @@ begin
     RelWeighting := Other.RelWeighting;
 
     Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
-    Reallocmem(FPhaseCurr, SizeOf(FPhaseCurr^[1]) * FNphases);
+    Reallocmem(FPhaseCurr, SizeOf(FPhaseCurr[1]) * FNphases);
 
     ZIPVset := Other.ZIPVset;
     if ZIPVset then
@@ -806,7 +799,7 @@ begin
     GrowthShapeObj := NIL;  // IF grwothshapeobj = nil THEN the load alway stays nominal * global multipliers
     CVRShapeObj := NIL;
     Connection := TLoadConnection.Wye;    // Wye (star)
-    FLoadModel := TLoadModel.ConstPQ;  // changed from 2 RCD {easiest to solve}
+    FLoadModel := TLoadModel.ConstPQ;  // changed from 2 RCD // easiest to solve
     LoadClass := 1;
     NumCustomers := 1;
     LastYear := 0;
@@ -862,7 +855,7 @@ begin
     ZIPVset := False;
 
     Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
-    Reallocmem(FPhaseCurr, SizeOf(FPhaseCurr^[1]) * FNphases);
+    Reallocmem(FPhaseCurr, SizeOf(FPhaseCurr[1]) * FNphases);
     RecalcElementData;
 end;
 
@@ -941,7 +934,7 @@ begin
     // CVR curve is assumed to be used in a yearly simulation
     if CVRShapeObj <> NIL then
     begin
-        CVRFactor := CVRShapeObj.GetMultAtHour(Hr);    {Complex}
+        CVRFactor := CVRShapeObj.GetMultAtHour(Hr);    // Complex
         CVRWattFactor := CVRFactor.re;
         CVRvarFactor := CVRFactor.im;
     end;
@@ -995,89 +988,94 @@ end;
 procedure TLoadObj.SetNominalLoad;
 var
     Factor: Double;
+    dblHour: Double;
+    year: Integer;
 begin
+    dblHour := ActiveCircuit.Solution.DynaVars.dblHour;
+    year := ActiveCircuit.Solution.Year;
     ShapeFactor := CDOUBLEONE;
     ShapeIsActual := FALSE;
-    with ActiveCircuit.Solution do
-        if status = TLoadStatus.Fixed then
-        begin
-            Factor := GrowthFactor(Year);   // For fixed loads, consider only growth factor
-        end
-        else
-            case Mode of
-                TSolveMode.SNAPSHOT,
-                TSolveMode.HARMONICMODE:
-                    if status = TLoadStatus.Exempt then
-                        Factor := GrowthFactor(Year)
-                    else
-                        Factor := ActiveCircuit.LoadMultiplier * GrowthFactor(Year);
-                TSolveMode.DAILYMODE:
-                begin
-                    Factor := GrowthFactor(Year);
-                    if status <> TLoadStatus.Exempt then
-                        Factor := Factor * ActiveCircuit.LoadMultiplier;
-                    CalcDailyMult(DynaVars.dblHour);
-                end;
-                TSolveMode.YEARLYMODE:
-                begin
+    if status = TLoadStatus.Fixed then
+    begin
+        Factor := GrowthFactor(Year);   // For fixed loads, consider only growth factor
+    end
+    else
+    begin
+        case ActiveCircuit.Solution.Mode of
+            TSolveMode.SNAPSHOT,
+            TSolveMode.HARMONICMODE:
+                if status = TLoadStatus.Exempt then
+                    Factor := GrowthFactor(Year)
+                else
                     Factor := ActiveCircuit.LoadMultiplier * GrowthFactor(Year);
-                    CalcYearlyMult(DynaVars.dblHour);
-                    if FLoadModel = TLoadModel.CVR then
-                        CalcCVRMult(DynaVars.dblHour);
-                end;
-                TSolveMode.DUTYCYCLE:
-                begin
-                    Factor := GrowthFactor(Year);
-                    if status <> TLoadStatus.Exempt then
-                        Factor := Factor * ActiveCircuit.LoadMultiplier;
-                    CalcDutyMult(DynaVars.dblHour);
-                end;
-                TSolveMode.GENERALTIME,
-                TSolveMode.DYNAMICMODE:
-                begin
-                    Factor := GrowthFactor(Year);
-                    if status <> TLoadStatus.Exempt then
-                        Factor := Factor * ActiveCircuit.LoadMultiplier;
-                    // This mode allows use of one class of load shape
-                    case ActiveCircuit.ActiveLoadShapeClass of
-                        USEDAILY:
-                            CalcDailyMult(DynaVars.dblHour);
-                        USEYEARLY:
-                            CalcYearlyMult(DynaVars.dblHour);
-                        USEDUTY:
-                            CalcDutyMult(DynaVars.dblHour);
-                    else
-                        ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
-                    end;
-                end;
-                TSolveMode.MONTECARLO1:
-                begin
-                    Randomize(RandomType);
-                    Factor := RandomMult * GrowthFactor(Year);
-                    if status <> TLoadStatus.Exempt then
-                        Factor := Factor * ActiveCircuit.LoadMultiplier;
-                end;
-
-                TSolveMode.MONTECARLO2,
-                TSolveMode.MONTECARLO3,
-                TSolveMode.LOADDURATION1,
-                TSolveMode.LOADDURATION2:
-                begin
-                    Factor := GrowthFactor(Year);
-                    CalcDailyMult(DynaVars.dblHour);
-                    if status <> TLoadStatus.Exempt then
-                        Factor := Factor * ActiveCircuit.LoadMultiplier;
-                end;
-                TSolveMode.PEAKDAY:
-                begin
-                    Factor := GrowthFactor(Year);
-                    CalcDailyMult(DynaVars.dblHour);
-                end;
-                TSolveMode.AUTOADDFLAG:
-                    Factor := GrowthFactor(Year);  // Loadmult = 1.0 by default
-            else
-                Factor := GrowthFactor(Year)    // defaults to Base kW * growth
+            TSolveMode.DAILYMODE:
+            begin
+                Factor := GrowthFactor(Year);
+                if status <> TLoadStatus.Exempt then
+                    Factor := Factor * ActiveCircuit.LoadMultiplier;
+                CalcDailyMult(dblHour);
             end;
+            TSolveMode.YEARLYMODE:
+            begin
+                Factor := ActiveCircuit.LoadMultiplier * GrowthFactor(Year);
+                CalcYearlyMult(dblHour);
+                if FLoadModel = TLoadModel.CVR then
+                    CalcCVRMult(dblHour);
+            end;
+            TSolveMode.DUTYCYCLE:
+            begin
+                Factor := GrowthFactor(Year);
+                if status <> TLoadStatus.Exempt then
+                    Factor := Factor * ActiveCircuit.LoadMultiplier;
+                CalcDutyMult(dblHour);
+            end;
+            TSolveMode.GENERALTIME,
+            TSolveMode.DYNAMICMODE:
+            begin
+                Factor := GrowthFactor(Year);
+                if status <> TLoadStatus.Exempt then
+                    Factor := Factor * ActiveCircuit.LoadMultiplier;
+                // This mode allows use of one class of load shape
+                case ActiveCircuit.ActiveLoadShapeClass of
+                    USEDAILY:
+                        CalcDailyMult(dblHour);
+                    USEYEARLY:
+                        CalcYearlyMult(dblHour);
+                    USEDUTY:
+                        CalcDutyMult(dblHour);
+                else
+                    ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
+                end;
+            end;
+            TSolveMode.MONTECARLO1:
+            begin
+                Randomize(ActiveCircuit.Solution.RandomType);
+                Factor := RandomMult * GrowthFactor(Year);
+                if status <> TLoadStatus.Exempt then
+                    Factor := Factor * ActiveCircuit.LoadMultiplier;
+            end;
+
+            TSolveMode.MONTECARLO2,
+            TSolveMode.MONTECARLO3,
+            TSolveMode.LOADDURATION1,
+            TSolveMode.LOADDURATION2:
+            begin
+                Factor := GrowthFactor(Year);
+                CalcDailyMult(dblHour);
+                if status <> TLoadStatus.Exempt then
+                    Factor := Factor * ActiveCircuit.LoadMultiplier;
+            end;
+            TSolveMode.PEAKDAY:
+            begin
+                Factor := GrowthFactor(Year);
+                CalcDailyMult(dblHour);
+            end;
+            TSolveMode.AUTOADDFLAG:
+                Factor := GrowthFactor(Year);  // Loadmult = 1.0 by default
+        else
+            Factor := GrowthFactor(Year)    // defaults to Base kW * growth
+        end;
+    end;
 
     if ShapeIsActual then
     begin
@@ -1199,44 +1197,43 @@ begin
     FYprimFreq := ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
-    with ActiveCircuit.Solution do
-        if IsHarmonicModel and (Frequency <> ActiveCircuit.Fundamental) then
-        begin     // Harmonic Mode  and other than fundamental frequency
-            if ActiveCircuit.NeglectLoadY then
-            begin
-                // Just a small value so things don't die and we get the actual injection current out the terminal
-                Y := Epsilon
-            end
-            else // compute equivalent Y assuming some of the load is series R-L and the rest is parallel R-L
-            begin
-                // Parallel R-L part of the Load model for harmonics mode
-                // Based in equivalent Y at 100% voltage
-                Y := Yeq * (1.0 - puSeriesRL);
-                Y.im := Y.im / FreqMultiplier;  {Correct reactive part for frequency}
-
-                // Series-connected R-L part
-                if puSeriesRL <> 0.0 then
-                begin
-                    if FpuXharm > 0.0 then
-                    begin   // compute Zseries from special harmonic reactance for representing motors.
-                            // the series branch is assumed to represent the motor
-                        XseriesOhms := SQR(kVLoadBase) * 1000.0 / (kVABase * puSeriesRL) * FpuXharm;
-                        Zseries := cmplx(XseriesOhms / FXRharmRatio, XSeriesOhms);
-                    end
-                    else    // Compute Zseries from nominal load value
-                        Zseries := Cinv(Yeq * puSeriesRL);
-
-                    Zseries.im := Zseries.im * FreqMultiplier;  // Correct reactive part for frequency
-                    Y := Cinv(ZSeries) + Y; // convert to admittance and add into Y
-                end;
-
-            end;
+    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
+    begin // Harmonic Mode  and other than fundamental frequency
+        if ActiveCircuit.NeglectLoadY then
+        begin
+            // Just a small value so things don't die and we get the actual injection current out the terminal
+            Y := Epsilon
         end
-        else
-        begin   // not Harmonic mode
-            Y := Yeq;
+        else // compute equivalent Y assuming some of the load is series R-L and the rest is parallel R-L
+        begin
+            // Parallel R-L part of the Load model for harmonics mode
+            // Based in equivalent Y at 100% voltage
+            Y := Yeq * (1.0 - puSeriesRL);
             Y.im := Y.im / FreqMultiplier;  // Correct reactive part for frequency
+
+            // Series-connected R-L part
+            if puSeriesRL <> 0.0 then
+            begin
+                if FpuXharm > 0.0 then
+                begin   // compute Zseries from special harmonic reactance for representing motors.
+                        // the series branch is assumed to represent the motor
+                    XseriesOhms := SQR(kVLoadBase) * 1000.0 / (kVABase * puSeriesRL) * FpuXharm;
+                    Zseries := cmplx(XseriesOhms / FXRharmRatio, XSeriesOhms);
+                end
+                else    // Compute Zseries from nominal load value
+                    Zseries := Cinv(Yeq * puSeriesRL);
+
+                Zseries.im := Zseries.im * FreqMultiplier;  // Correct reactive part for frequency
+                Y := Cinv(ZSeries) + Y; // convert to admittance and add into Y
+            end;
+
         end;
+    end
+    else
+    begin   // not Harmonic mode
+        Y := Yeq;
+        Y.im := Y.im / FreqMultiplier;  // Correct reactive part for frequency
+    end;
 
 
     Yij := -Y;
@@ -1377,7 +1374,7 @@ begin
             Curr := cong(Cmplx(WNominal, varNominal) / V);  // Above 95%, constant PQ
 
         // Save this value in case the Load value is different than the terminal value (see InitHarmonics)
-        FPhaseCurr^[i] := Curr;
+        FPhaseCurr[i] := Curr;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1401,7 +1398,7 @@ begin
         Curr := Yeq * Vterminal[i];
 
         // Save this value in case the Load value is different than the terminal value (see InitHarmonics)
-        FPhaseCurr^[i] := Curr;
+        FPhaseCurr[i] := Curr;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1441,7 +1438,7 @@ begin
         end;
 
         // Save this value in case the Load value is different than the terminal value (see InitHarmonics)
-        FPhaseCurr^[i] := Curr;
+        FPhaseCurr[i] := Curr;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1480,7 +1477,7 @@ begin
             Curr := cong(Cmplx(WNominal, varNominal) / ((V / Vmag) * Vbase));
 
         // Save this value in case the Load value is different than the terminal value (see InitHarmonics)
-        FPhaseCurr^[i] := Curr;
+        FPhaseCurr[i] := Curr;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1626,7 +1623,7 @@ begin
         end;
 
         // Save this value in case the Load value is different than the terminal value (see InitHarmonics)
-        FPhaseCurr^[i] := Curr;
+        FPhaseCurr[i] := Curr;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1702,7 +1699,7 @@ begin
             end;
 
             // Save this value in case the Load value is different than the terminal value (see InitHarmonics)
-            FPhaseCurr^[i] := Curr;
+            FPhaseCurr[i] := Curr;
 
             StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
             IterminalUpdated := TRUE;
@@ -1749,7 +1746,7 @@ begin
         end;
 
         // Save this value in case the Load value is different than the terminal value (see InitHarmonics)
-        FPhaseCurr^[i] := Curr;
+        FPhaseCurr[i] := Curr;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1788,7 +1785,7 @@ begin
         end;
 
         // Save this value in case the Load value is different than the terminal value (see InitHarmonics)
-        FPhaseCurr^[i] := Curr;
+        FPhaseCurr[i] := Curr;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1806,23 +1803,20 @@ var
 
 begin
     // Don't calc Vterminal here because it could be undefined!
-    ZeroInjCurrent;
-    ZeroIterminal;
-    with ActiveCircuit.Solution do
-    begin
-        LoadHarmonic := Frequency / LoadFundamental;    // Loadfundamental = frequency of solution when Harmonic mode entered
-        Mult := SpectrumObj.GetMult(LoadHarmonic);
-        for i := 1 to FNphases do
-        begin
-            Curr := Mult * HarmMag^[i]; // Get base harmonic magnitude
-            RotatePhasorDeg(Curr, LoadHarmonic, HarmAng^[i]);   // Time shift by fundamental
-            // don't need to save Curr here like we do in Power Flow modes
-            StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into InjCurrent array taking into account connection
-            StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-            // NOTE: This is the value of ITerminal a Monitor will capture in Harmonics mode .. it captures the harmonic injection
-            IterminalUpdated := TRUE;
-        end;
+    ZeroInjCurrent();
+    ZeroIterminal();
 
+    LoadHarmonic := ActiveCircuit.Solution.Frequency / LoadFundamental; // Loadfundamental = frequency of solution when Harmonic mode entered
+    Mult := SpectrumObj.GetMult(LoadHarmonic);
+    for i := 1 to FNphases do
+    begin
+        Curr := Mult * HarmMag[i]; // Get base harmonic magnitude
+        RotatePhasorDeg(Curr, LoadHarmonic, HarmAng[i]);   // Time shift by fundamental
+        // don't need to save Curr here like we do in Power Flow modes
+        StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into InjCurrent array taking into account connection
+        StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
+        // NOTE: This is the value of ITerminal a Monitor will capture in Harmonics mode .. it captures the harmonic injection
+        IterminalUpdated := TRUE;
     end;
 end;
 
@@ -1835,21 +1829,19 @@ begin
 
         TLoadConnection.Wye:
         begin
-            with ActiveCircuit.Solution do
-                for i := 1 to Fnphases do
-                    Vterminal[i] := VDiff(NodeRef[i], NodeRef[Fnconds]);
+            for i := 1 to Fnphases do
+                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[Fnconds]);
         end;
 
         TLoadConnection.Delta:
         begin
-            with ActiveCircuit.Solution do
-                for i := 1 to Fnphases do
-                begin
-                    j := i + 1;
-                    if j > Fnconds then
-                        j := 1;
-                    Vterminal[i] := VDiff(NodeRef[i], NodeRef[j]);
-                end;
+            for i := 1 to Fnphases do
+            begin
+                j := i + 1;
+                if j > Fnconds then
+                    j := 1;
+                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[j]);
+            end;
         end;
 
     end;
@@ -1863,34 +1855,33 @@ procedure TLoadObj.CalcLoadModelContribution;
 // Need to implement DynamicMode sometime ...
 begin
     IterminalUpdated := FALSE;
-    with ActiveCircuit, ActiveCircuit.Solution do
+    // IF IsDynamicModel THEN  DoDynamicMode ELSE
+    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
     begin
-          {IF      IsDynamicModel THEN  DoDynamicMode
-          ELSE} if IsHarmonicModel and (Frequency <> Fundamental) then
-            DoHarmonicMode
-        else
-           //  compute total Load currents and Add into InjCurrent array;
-            case FLoadModel of
+        DoHarmonicMode();
+        Exit;
+    end;
 
-                TLoadModel.ConstPQ:
-                    DoConstantPQLoad; // normal load-flow type load
-                TLoadModel.ConstZ:
-                    DoConstantZLoad;
-                TLoadModel.Motor:
-                    DoMotorTypeLoad;  // Constant P, Quadratic Q;
-                TLoadModel.CVR:
-                    DoCVRModel;       // mixed motor/resistive load   with CVR factors
-                TLoadModel.ConstI:
-                    DoConstantILoad;
-                TLoadModel.ConstPFixedQ:
-                    DoFixedQ;         // Fixed Q
-                TLoadModel.ConstPFixedX:
-                    DoFixedQZ;        // Fixed, constant Z Q
-                TLoadModel.ZIPV:
-                    DoZIPVModel;
-            else
-                DoConstantZLoad;     // FOR now, until we implement the other models.
-            end;
+    //  compute total Load currents and Add into InjCurrent array;
+    case FLoadModel of
+        TLoadModel.ConstPQ:
+            DoConstantPQLoad(); // normal load-flow type load
+        TLoadModel.ConstZ:
+            DoConstantZLoad();
+        TLoadModel.Motor:
+            DoMotorTypeLoad(); // Constant P, Quadratic Q;
+        TLoadModel.CVR:
+            DoCVRModel(); // mixed motor/resistive load   with CVR factors
+        TLoadModel.ConstI:
+            DoConstantILoad();
+        TLoadModel.ConstPFixedQ:
+            DoFixedQ(); // Fixed Q
+        TLoadModel.ConstPFixedX:
+            DoFixedQZ(); // Fixed, constant Z Q
+        TLoadModel.ZIPV:
+            DoZIPVModel();
+    else
+        DoConstantZLoad(); // FOR now, until we implement the other models.
     end;
 end;
 
@@ -1903,80 +1894,75 @@ begin
     if (not DSS_CAPI_LOADS_TERMINAL_CHECK) OR AllConductorsClosed() then
     begin
         // Now Get Injection Currents
-        CalcLoadModelContribution
-    end
-    else
-    begin
-        /// THIS MAY NOT WORK !!! WATCH FOR BAD RESULTS
-        // some terminals not closed  use admittance model FOR injection
-        if OpenLoadSolutionCount <> ActiveCircuit.Solution.SolutionCount then
-        begin
-            // Rebuild the Yprimopencond IF a new solution because values may have changed.
-
-            // only reallocate when necessary
-            if YPrimOpenCond = NIL then
-                YPrimOpenCond := TcMatrix.CreateMatrix(Yorder)
-            else
-                YPrimOpenCond.Clear;
-            if YPrimOpenCond.Order <> Yorder then
-            begin
-                YPrimOpenCond.Free;
-                YPrimOpenCond := TcMatrix.CreateMatrix(Yorder);
-            end;
-            CalcYPrimMatrix(YPrimOpenCond);
-
-            // Now Account FOR the Open Conductors
-            // For any conductor that is open, zero out row and column
-            k := 0;
-            for i := 1 to Fnterms do
-            begin
-                for j := 1 to Fnconds do
-                begin
-                    if not Terminals[i - 1].ConductorsClosed[j - 1] then
-                    begin
-                        YPrimOpenCond.ZeroRow(j + k);
-                        YPrimOpenCond.ZeroCol(j + k);
-                        YPrimOpenCond[j + k, j + k] := 1.0e-12;  // In case node gets isolated
-                    end;
-                end;
-                k := k + Fnconds;
-            end;
-            OpenLoadSolutionCount := ActiveCircuit.Solution.SolutionCount;
-
-        end;
-
-        ComputeVTerminal;
-        YPrimOpenCond.MVmult(ComplexBuffer, Vterminal);
-        for i := 1 to Yorder do
-            ComplexBuffer[i] := -ComplexBuffer[i];
+        CalcLoadModelContribution();
+        Exit;
     end;
+
+    /// THIS MAY NOT WORK !!! WATCH FOR BAD RESULTS
+    // some terminals not closed  use admittance model FOR injection
+    if OpenLoadSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+    begin
+        // Rebuild the Yprimopencond IF a new solution because values may have changed.
+
+        // only reallocate when necessary
+        if YPrimOpenCond = NIL then
+            YPrimOpenCond := TcMatrix.CreateMatrix(Yorder)
+        else
+            YPrimOpenCond.Clear();
+        if YPrimOpenCond.Order <> Yorder then
+        begin
+            YPrimOpenCond.Free;
+            YPrimOpenCond := TcMatrix.CreateMatrix(Yorder);
+        end;
+        CalcYPrimMatrix(YPrimOpenCond);
+
+        // Now Account FOR the Open Conductors
+        // For any conductor that is open, zero out row and column
+        k := 0;
+        for i := 1 to Fnterms do
+        begin
+            for j := 1 to Fnconds do
+            begin
+                if not Terminals[i - 1].ConductorsClosed[j - 1] then
+                begin
+                    YPrimOpenCond.ZeroRow(j + k);
+                    YPrimOpenCond.ZeroCol(j + k);
+                    YPrimOpenCond[j + k, j + k] := 1.0e-12;  // In case node gets isolated
+                end;
+            end;
+            k := k + Fnconds;
+        end;
+        OpenLoadSolutionCount := ActiveCircuit.Solution.SolutionCount;
+
+    end;
+
+    ComputeVTerminal();
+    YPrimOpenCond.MVmult(ComplexBuffer, Vterminal);
+    for i := 1 to Yorder do
+        ComplexBuffer[i] := -ComplexBuffer[i];
 end;
 
 procedure TLoadObj.GetTerminalCurrents(Curr: pComplexArray);
 // Always return total terminal currents in the Curr array
 begin
-    with ActiveCircuit.Solution do
-    begin
-        if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
-        begin     // recalc the contribution
-            CalcLoadModelContribution;  // Adds totals in Iterminal as a side effect
-        end;
-        inherited GetTerminalCurrents(Curr);
+    if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+    begin     // recalc the contribution
+        CalcLoadModelContribution();  // Adds totals in Iterminal as a side effect
     end;
+    inherited GetTerminalCurrents(Curr);
 end;
 
 function TLoadObj.InjCurrents: Integer;
 // Get the injection currents and add them directly into the Currents array
 begin
     Result := 0;
-    if Enabled then
-        with ActiveCircuit.Solution do
-        begin
-            if LoadsNeedUpdating then
-                SetNominalLoad; // Set the nominal kW, etc. for the type of solution being done
-            CalcInjCurrentArray;
-            Result := inherited Injcurrents;  // Add into Global Currents Array
-        end;
+    if not Enabled then
+        Exit;
+
+    if ActiveCircuit.Solution.LoadsNeedUpdating then
+        SetNominalLoad(); // Set the nominal kW, etc. for the type of solution being done
+    CalcInjCurrentArray();
+    Result := inherited Injcurrents();  // Add into Global Currents Array
 end;
 
 function TLoadObj.InterpolateY95_YLow(const Vmag: Double): Complex;
@@ -2009,7 +1995,7 @@ begin
         Exit;
     end;
 
-     {ELSE Check Voltages}
+     // ELSE Check Voltages
     if LoadSolutionCount <> ActiveCircuit.Solution.SolutionCount then
         CalcVTerminalPhase;
 
@@ -2152,7 +2138,7 @@ end;
 
 procedure TLoadObj.ComputeAllocatedLoad;
 begin
-{Fixed loads defined by kW, kvar or kW, pf are ignored}
+// Fixed loads defined by kW, kvar or kW, pf are ignored
 
     case LoadSpecType of
 
@@ -2183,8 +2169,8 @@ var
     i: Integer;
 begin
     // Make Sure there's enuff memory
-    ReallocMem(HarmMag, Sizeof(HarmMag^[1]) * FNphases);
-    ReallocMem(HarmAng, Sizeof(HarmAng^[1]) * FNphases);
+    ReallocMem(HarmMag, Sizeof(HarmMag[1]) * FNphases);
+    ReallocMem(HarmAng, Sizeof(HarmAng[1]) * FNphases);
 
      // Currents := AllocMem(Sizeof(Currents[1])*Yorder);   // to hold currents
 
@@ -2195,8 +2181,8 @@ begin
      
     for i := 1 to Fnphases do
     begin
-        HarmMag^[i] := Cabs(FPhaseCurr^[i]);
-        HarmAng^[i] := Cdang(FPhaseCurr^[i]);
+        HarmMag[i] := Cabs(FPhaseCurr[i]);
+        HarmAng[i] := Cdang(FPhaseCurr[i]);
     end;
 
      // ReallocMem(Currents, 0);  // get rid of temp space

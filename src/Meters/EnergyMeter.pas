@@ -167,6 +167,7 @@ type
         SumBranchFltRates: Double;
     end;
 
+    PFeederSection = ^TFeederSection;
     pFeederSections = ^FeederSectionArray;
     FeederSectionArray = array[0..100] of TFeederSection;   // Dummy dimension
     //  --------- Feeder Section Definition -----------
@@ -297,9 +298,9 @@ type
         procedure SampleAll; OVERRIDE;   // Force all meters in active circuit to sample
         procedure SaveAll; OVERRIDE;
 
-        procedure AppendAllDIFiles;
-        procedure OpenAllDIFiles;
-        procedure CloseAllDIFiles;
+        procedure AppendAllDIFiles();
+        procedure OpenAllDIFiles();
+        procedure CloseAllDIFiles();
 
         property SaveDemandInterval: Boolean READ FSaveDemandInterval WRITE Set_SaveDemandInterval;
         property DI_Verbose: Boolean READ FDI_Verbose WRITE Set_DI_Verbose;
@@ -357,7 +358,7 @@ type
         function AddToVoltBaseList(BusRef: Integer): Integer;
         function MakeDIFileName: String;
         function MakeVPhaseReportFileName: String;
-        procedure AssignVoltBaseRegisterNames;
+        procedure AssignVoltBaseRegisterNames();
 
         procedure TotalupDownstreamCustomers();
 
@@ -454,6 +455,7 @@ uses
     DSSClassDefs,
     DSSGlobals,
     Bus,
+    Solution,
     Sysutils,
     MathUtil,
     UCMatrix,
@@ -737,13 +739,13 @@ begin
 end;
 
 function TEnergyMeter.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
 begin
-    with TObj(ptr) do
-    begin
-        if flg.NeedsRecalc in Flags then
-            RecalcElementData;   // When some basic data have changed
-        Exclude(Flags, Flg.EditionActive);
-    end;
+    obj := TObj(ptr);
+    if flg.NeedsRecalc in obj.Flags then
+        obj.RecalcElementData();   // When some basic data have changed
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -794,57 +796,50 @@ var
     PCElem: TPCElement;
     i: Integer;
 begin
-    with ActiveCircuit do
+    if ActiveCircuit.Energymeters.Count = 0 then
+        Exit;  // Do not do anything
+
+    // initialize the Checked Flag FOR all circuit Elements
+    for pCktElement in ActiveCircuit.CktElements do
     begin
-        if Energymeters.Count = 0 then
-            Exit;  // Do not do anything
-
-        // initialize the Checked Flag FOR all circuit Elements
-        for pCktElement in CktElements do
-        begin
-            with pCktElement do
-            begin
-                Exclude(Flags, Flg.Checked);
-                Include(Flags, Flg.IsIsolated);
-                for i := 1 to NTerms do
-                    TerminalsChecked[i - 1] := FALSE;
-            end;
-        end;
-
-        // Clear some things that will be set by the Meter Zone
-        for PDElem in PDElements do
-        begin
-            PDElem.MeterObj := NIL;
-            PDElem.SensorObj := NIL;
-            PDElem.ParentPDElement := NIL;
-        end;
-
-        for PCElem in PCElements do
-        begin
-            PCElem.MeterObj := NIL;
-            PCElem.SensorObj := NIL;
-        end;
-
-        // Set up the bus adjacency lists for faster searches to build meter zone lists.
-        BuildActiveBusAdjacencyLists(ActiveCircuit, BusAdjPD, BusAdjPC);
-
-        // Set Hasmeter flag for all cktelements
-        SetHasMeterFlag;
-        DSS.SensorClass.SetHasSensorFlag;  // Set all Sensor branch flags, too.
-
-        // initialize the Checked Flag for all Buses
-        for i := 1 to NumBuses do
-            Buses[i].BusChecked := FALSE;
-
-        for i := 1 to EnergyMeters.Count do
-        begin
-            mtr := EnergyMeters.Get(i);
-            //if Mtr.Enabled then
-            mtr.MakeMeterZoneLists;
-        end;
-
-        FreeAndNilBusAdjacencyLists(BusAdjPD, BusAdjPC);
+        Exclude(pCktElement.Flags, Flg.Checked);
+        Include(pCktElement.Flags, Flg.IsIsolated);
+        for i := 1 to pCktElement.NTerms do
+            pCktElement.TerminalsChecked[i - 1] := FALSE;
     end;
+
+    // Clear some things that will be set by the Meter Zone
+    for PDElem in ActiveCircuit.PDElements do
+    begin
+        PDElem.MeterObj := NIL;
+        PDElem.SensorObj := NIL;
+        PDElem.ParentPDElement := NIL;
+    end;
+
+    for PCElem in ActiveCircuit.PCElements do
+    begin
+        PCElem.MeterObj := NIL;
+        PCElem.SensorObj := NIL;
+    end;
+
+    // Set up the bus adjacency lists for faster searches to build meter zone lists.
+    BuildActiveBusAdjacencyLists(ActiveCircuit, BusAdjPD, BusAdjPC);
+
+    // Set Hasmeter flag for all cktelements
+    SetHasMeterFlag;
+    DSS.SensorClass.SetHasSensorFlag;  // Set all Sensor branch flags, too.
+
+    // initialize the Checked Flag for all Buses
+    for i := 1 to ActiveCircuit.NumBuses do
+        ActiveCircuit.Buses[i].BusChecked := FALSE;
+
+    for mtr in ActiveCircuit.EnergyMeters do
+    begin
+        //if Mtr.Enabled then
+        mtr.MakeMeterZoneLists;
+    end;
+
+    FreeAndNilBusAdjacencyLists(BusAdjPD, BusAdjPC);
 end;
 
 procedure TEnergyMeter.ResetAll;  // Force all EnergyMeters in the circuit to reset
@@ -912,8 +907,7 @@ begin
     if FSaveDemandInterval then
     begin  
         // Write Totals Demand interval file
-        with DSS.ActiveCircuit.Solution do
-            WriteintoMem(TDI_MHandle, DynaVars.dblHour);
+        WriteintoMem(TDI_MHandle, DSS.ActiveCircuit.Solution.DynaVars.dblHour);
         for i := 1 to NumEMRegisters do
             WriteintoMem(TDI_MHandle, DI_RegisterTotals[i]);
         WriteintoMemStr(TDI_MHandle, Char(10));
@@ -997,11 +991,11 @@ begin
     VBaseCount := 0;
     MaxVBaseCount := (NumEMRegisters - Reg_VBaseStart) div 5;
     ReallocMem(VBaseList, MaxVBaseCount * SizeOf(VBaseList[1]));
-    ReallocMem(VBaseTotalLosses, MaxVBaseCount * SizeOf(VBaseTotalLosses^[1]));
-    ReallocMem(VBaseLineLosses, MaxVBaseCount * SizeOf(VBaseLineLosses^[1]));
+    ReallocMem(VBaseTotalLosses, MaxVBaseCount * SizeOf(VBaseTotalLosses[1]));
+    ReallocMem(VBaseLineLosses, MaxVBaseCount * SizeOf(VBaseLineLosses[1]));
     ReallocMem(VBaseLoadLosses, MaxVBaseCount * SizeOf(VBaseLoadLosses[1]));
     ReallocMem(VBaseNoLoadLosses, MaxVBaseCount * SizeOf(VBaseNoLoadLosses[1]));
-    ReallocMem(VBaseLoad, MaxVBaseCount * SizeOf(VBaseLoad^[1]));
+    ReallocMem(VBaseLoad, MaxVBaseCount * SizeOf(VBaseLoad[1]));
 
     //  Init pointers to Nil before allocating
     VphaseMax := NIL;
@@ -1027,16 +1021,14 @@ begin
 
     DI_Append := FALSE;
     PHV_Append := FALSE;
-    with DSS.EnergyMeterClass do
-    begin
-        OV_Append := FALSE;
-        VR_Append := FALSE;
-        SDI_Append := FALSE;
-        TDI_Append := FALSE;
-        SM_Append := FALSE;
-        EMT_Append := FALSE;
-        FM_Append := FALSE;
-    end;
+    DSS.EnergyMeterClass.OV_Append := FALSE;
+    DSS.EnergyMeterClass.VR_Append := FALSE;
+    DSS.EnergyMeterClass.SDI_Append := FALSE;
+    DSS.EnergyMeterClass.TDI_Append := FALSE;
+    DSS.EnergyMeterClass.SM_Append := FALSE;
+    DSS.EnergyMeterClass.EMT_Append := FALSE;
+    DSS.EnergyMeterClass.FM_Append := FALSE;
+
      // Set Register names  that correspond to the register quantities
     RegisterNames[1] := 'kWh';
     RegisterNames[2] := 'kvarh';
@@ -1077,14 +1069,14 @@ begin
     for i := Reg_VBaseStart + 1 to NumEMRegisters do
         RegisterNames[i] := '';
 
-    ResetRegisters;
+    ResetRegisters();
     for i := 1 to NumEMRegisters do
         TotalsMask[i] := 1.0;
 
     AllocateSensorArrays;
 
     for i := 1 to Fnphases do
-        SensorCurrent^[i] := 400.0;
+        SensorCurrent[i] := 400.0;
 
     FeederSections := NIL;
     ActiveSection := 0;
@@ -1338,10 +1330,14 @@ var
 
     puV: Double;
     Delta_hrs_local: Double;
+    buses: PBusArray;
+    NodeV: pNodeVarray;
 begin
     if not CheckBranchList(545) then
         Exit;
 
+    NodeV := ActiveCircuit.Solution.NodeV;
+    buses := DSS.ActiveCircuit.Buses;
     // Compute energy in branch  to which meter is connected
 
      //----MeteredElement.ActiveTerminalIdx := MeteredTerminal;  // needed for Excess kVA calcs
@@ -1370,11 +1366,11 @@ begin
      // Init all voltage base loss accumulators
     for i := 1 to MaxVBaseCount do
     begin
-        VBaseTotalLosses^[i] := 0.0;
-        VBaseLineLosses^[i] := 0.0;
+        VBaseTotalLosses[i] := 0.0;
+        VBaseLineLosses[i] := 0.0;
         VBaseLoadLosses[i] := 0.0;
         VBaseNoLoadLosses[i] := 0.0;
-        VBaseLoad^[i] := 0.0;
+        VBaseLoad[i] := 0.0;
     end;
 
      // Phase Voltage arrays
@@ -1384,14 +1380,14 @@ begin
             begin
                 for j := 1 to 3 do
                 begin
-                    VphaseMax^[jiIndex(j, i)] := 0.0;
-                    VphaseMin^[jiIndex(j, i)] := 9999.0;
-                    VphaseAccum^[jiIndex(j, i)] := 0.0;
-                    VphaseAccumCount^[jiIndex(j, i)] := 0;   // Keep track of counts for average
+                    VphaseMax[jiIndex(j, i)] := 0.0;
+                    VphaseMin[jiIndex(j, i)] := 9999.0;
+                    VphaseAccum[jiIndex(j, i)] := 0.0;
+                    VphaseAccumCount[jiIndex(j, i)] := 0;   // Keep track of counts for average
                 end;
             end;
 
-    CktElem := BranchList.First;
+    CktElem := BranchList.First();
     MaxExcesskWNorm := 0.0;
     MaxExcesskWEmerg := 0.0;
 
@@ -1411,13 +1407,10 @@ begin
         while CktElem <> NIL do
         begin       // loop thru all ckt elements on zone
 
-            with CktElem do
-            begin
-                ActiveTerminalIdx := BranchList.Presentbranch.FromTerminal;
-                // Invoking this property sets the Overload_UE flag in the PD Element
-                EEN := Abs(ExcesskVANorm[ActiveTerminalIdx].re);
-                UE := Abs(ExcesskVAEmerg[ActiveTerminalIdx].re);
-            end;
+            CktElem.ActiveTerminalIdx := BranchList.Presentbranch.FromTerminal;
+            // Invoking this property sets the Overload_UE flag in the PD Element
+            EEN := Abs(CktElem.ExcesskVANorm[CktElem.ActiveTerminalIdx].re);
+            UE := Abs(CktElem.ExcesskVAEmerg[CktElem.ActiveTerminalIdx].re);
 
             // For radial circuits just keep the maximum overload; for mesh, add 'em up
             if (ZoneIsRadial) then
@@ -1465,7 +1458,7 @@ begin
                 PCElem := BranchList.NextObject
             end;
 
-            CktElem := BranchList.GoForward;
+            CktElem := BranchList.GoForward();
         end;
 
 
@@ -1481,7 +1474,7 @@ begin
     //--------------------------------------------------------------------------
     //--------       Cycle Through Zone Accumulating Load and Losses    --------
     //--------------------------------------------------------------------------
-    CktElem := BranchList.First;
+    CktElem := BranchList.First();
     while (CktElem <> NIL) do
     begin
         PCElem := Branchlist.FirstObject;
@@ -1496,7 +1489,7 @@ begin
                         if FVbaseLosses then
                             with BranchList.PresentBranch do
                                 if VoltBaseIndex > 0 then
-                                    VBaseLoad^[VoltBaseIndex] := VBaseLoad^[VoltBaseIndex] + load_kw;
+                                    VBaseLoad[VoltBaseIndex] := VBaseLoad[VoltBaseIndex] + load_kw;
                     end;
                 GEN_ELEMENT:
                 begin
@@ -1555,9 +1548,9 @@ begin
                 with BranchList.PresentBranch do
                     if VoltBaseIndex > 0 then
                     begin
-                        VBaseTotalLosses^[VoltBaseIndex] := VBaseTotalLosses^[VoltBaseIndex] + S_TotalLosses.re;
+                        VBaseTotalLosses[VoltBaseIndex] := VBaseTotalLosses[VoltBaseIndex] + S_TotalLosses.re;
                         if IsLineElement(CktElem) then
-                            VBaseLineLosses^[VoltBaseIndex] := VBaseLineLosses^[VoltBaseIndex] + S_TotalLosses.re
+                            VBaseLineLosses[VoltBaseIndex] := VBaseLineLosses[VoltBaseIndex] + S_TotalLosses.re
                         else
                         if IsTransformerElement(CktElem) then
                         begin
@@ -1569,37 +1562,35 @@ begin
             // Compute min, max, and average pu voltages for 1st 3 phases  (nodes designated 1, 2, or 3)
             if FPhaseVoltageReport then
                 with BranchList.PresentBranch do
-                    if VoltBaseIndex > 0 then
-                        with ActiveCircuit do
-                            if Buses[FromBusReference].kVBase > 0.0 then
+                    if (VoltBaseIndex > 0) and (buses[FromBusReference].kVBase > 0.0) then
+                    begin
+                        for i := 1 to buses[FromBusReference].NumNodesThisBus do
+                        begin
+                            j := buses[FromBusReference].GetNum(i);
+                            if (j <= 0) or (j > 3) then
+                                continue;
+
+                            puV := Cabs(NodeV[buses[FromBusReference].RefNo[i]]) / buses[FromBusReference].kVBase;
+                            idx := jiIndex(j, VoltBaseIndex);
+                            if puV > VphaseMax[idx] then
                             begin
-                                for i := 1 to Buses[FromBusReference].NumNodesThisBus do
-                                begin
-                                    j := Buses[FromBusReference].GetNum(i);
-                                    if (j > 0) and (j < 4) then
-                                    begin
-                                        puV := Cabs(Solution.NodeV[Buses[FromBusReference].RefNo[i]]) / Buses[FromBusReference].kVBase;
-                                        idx := jiIndex(j, VoltBaseIndex);
-                                        if puV > VphaseMax^[idx] then
-                                        begin
-                                            VphaseMax^[jiIndex(j, VoltBaseIndex)] := puV;
-                                            // VmaxBus := FromBusReference;
-                                        end;
-
-                                        if puV < VphaseMin^[idx] then
-                                        begin
-                                            VphaseMin^[jiIndex(j, VoltBaseIndex)] := puV;
-                                            // VminBus := FromBusReference;
-                                        end;
-
-                                        DblInc(VphaseAccum^[jiIndex(j, VoltBaseIndex)], puV);
-                                        Inc(VphaseAccumCount^[jiIndex(j, VoltBaseIndex)]);   // Keep track of counts for average
-                                    end;
-                                end;
+                                VphaseMax[jiIndex(j, VoltBaseIndex)] := puV;
+                                // VmaxBus := FromBusReference;
                             end;
+
+                            if puV < VphaseMin[idx] then
+                            begin
+                                VphaseMin[jiIndex(j, VoltBaseIndex)] := puV;
+                                // VminBus := FromBusReference;
+                            end;
+
+                            VphaseAccum[jiIndex(j, VoltBaseIndex)] += puV;
+                            Inc(VphaseAccumCount[jiIndex(j, VoltBaseIndex)]);   // Keep track of counts for average
+                        end;
+                    end;
         end; // If FLosses
 
-        CktElem := BranchList.GoForward;
+        CktElem := BranchList.GoForward();
     end;
 
     Delta_hrs_local := DSS.EnergyMeterClass.Delta_Hrs;
@@ -1623,11 +1614,11 @@ begin
     Integrate(Reg_TransformerLosseskWh, TotalTransformerLosses.re, Delta_hrs_local);
     for i := 1 to MaxVBaseCount do
     begin
-        Integrate(Reg_VbaseStart + i, VBaseTotalLosses^[i], Delta_hrs_local);
-        Integrate(Reg_VbaseStart + 1 * MaxVBaseCount + i, VBaseLineLosses^[i], Delta_hrs_local);
+        Integrate(Reg_VbaseStart + i, VBaseTotalLosses[i], Delta_hrs_local);
+        Integrate(Reg_VbaseStart + 1 * MaxVBaseCount + i, VBaseLineLosses[i], Delta_hrs_local);
         Integrate(Reg_VbaseStart + 2 * MaxVBaseCount + i, VBaseLoadLosses[i], Delta_hrs_local);
         Integrate(Reg_VbaseStart + 3 * MaxVBaseCount + i, VBaseNoLoadLosses[i], Delta_hrs_local);
-        Integrate(Reg_VbaseStart + 4 * MaxVBaseCount + i, VBaseLoad^[i], Delta_hrs_local);
+        Integrate(Reg_VbaseStart + 4 * MaxVBaseCount + i, VBaseLoad[i], Delta_hrs_local);
     end;
 
 
@@ -1701,16 +1692,16 @@ var
     i: Integer;
     //, Accumulator
     // PresentNode: TCktTreeNode;
-    CktElem: TPDElement;
+    pde: TPDElement;
 begin
     if not CheckBranchList(529) then
         Exit;
 
     // Init totals and checked flag
-    for CktElem in SequenceList do
+    for pde in SequenceList do
     begin
-        Exclude(CktElem.Flags, Flg.Checked);
-        CktElem.BranchTotalCustomers := 0;
+        Exclude(pde.Flags, Flg.Checked);
+        pde.BranchTotalCustomers := 0;
     end;
 
     // This algorithm could be made more efficient with a Sequence list
@@ -1720,19 +1711,19 @@ begin
     //   {Busref := } Branchlist.ZoneEndsList.Get(i, PresentNode);
     //   If PresentNode <> Nil Then
     //   Begin
-    //      CktElem     := PresentNode.CktObject;
-    //      if Not CktElem.Checked  then    // don't do a zone end element more than once
+    //      pde := PresentNode.CktObject;
+    //      if Not pde.Checked  then    // don't do a zone end element more than once
     //      Begin
-    //        CktElem.Checked := TRUE;
-    //        Accumulator := CktElem.NumCustomers;
+    //        pde.Checked := TRUE;
+    //        Accumulator := pde.NumCustomers;
     //        Repeat  // Trace back to the source
-    //            Inc(CktElem.TotalCustomers, Accumulator);
-    //            PresentNode := PresentNode.ParentBranch;
+    //            Inc(pde.TotalCustomers, Accumulator);
+    //            PresentNode := PresentNode.ParentBranch();
     //            If PresentNode=Nil Then Break;
-    //            CktElem     := PresentNode.CktObject;
-    //            If not CktElem.Checked Then Begin   // avoid double counting
-    //               Inc(Accumulator, CktElem.NumCustomers);
-    //               CktElem.Checked := TRUE;
+    //            pde := PresentNode.CktObject;
+    //            If not pde.Checked Then Begin   // avoid double counting
+    //               Inc(Accumulator, pde.NumCustomers);
+    //               pde.Checked := TRUE;
     //            End;
     //        Until FALSE;
     //      End;
@@ -1743,19 +1734,18 @@ begin
     // sum numcustomers branch by branch
     for i := SequenceList.Count downto 1 do
     begin
-        CktElem := SequenceList.Get(i);
-        if not (Flg.Checked in CktElem.Flags) then    // Avoid double counting
-            with CktElem do
-            begin
-                Include(Flags, Flg.Checked);
-                Inc(BranchTotalCustomers, BranchNumCustomers);
-                if ParentPDElement <> NIL then
-                    //TODO: check
-                    if (Flg.HasOCPDevice in Flags) and AssumeRestoration and (Flg.HasAutoOCPDevice in Flags) then
-                        Inc(ParentPDElement.BranchTotalCustomers, 0)
-                    else
-                        Inc(ParentPDElement.BranchTotalCustomers, BranchTotalCustomers);
-            end;
+        pde := SequenceList.Get(i);
+        if (Flg.Checked in pde.Flags) then    // Avoid double counting
+            continue;
+
+        Include(pde.Flags, Flg.Checked);
+        Inc(pde.BranchTotalCustomers, pde.BranchNumCustomers);
+        if pde.ParentPDElement <> NIL then
+            //TODO: check
+            if (Flg.HasOCPDevice in pde.Flags) and AssumeRestoration and (Flg.HasAutoOCPDevice in pde.Flags) then
+                Inc(pde.ParentPDElement.BranchTotalCustomers, 0)
+            else
+                Inc(pde.ParentPDElement.BranchTotalCustomers, pde.BranchTotalCustomers);
     end;
 end;
 
@@ -1767,20 +1757,16 @@ var
     CktElem: TDSSCktElement;
 begin
     // Initialize all to FALSE
-    with ActiveCircuit do
+    for CktElem in ActiveCircuit.PDElements do
     begin
-        for CktElem in PDElements do
-        begin
-            Exclude(CktElem.Flags, Flg.HasEnergyMeter);
-        end;
+        Exclude(CktElem.Flags, Flg.HasEnergyMeter);
     end;
 
     for i := 1 to DSS.ActiveCircuit.EnergyMeters.Count do
     begin
         ThisMeter := DSS.ActiveCircuit.EnergyMeters.Get(i);
-        with ThisMeter do
-            if Enabled and (MeteredElement <> NIL) then
-                Include(MeteredElement.Flags, Flg.HasEnergyMeter);
+        if ThisMeter.Enabled and (ThisMeter.MeteredElement <> NIL) then
+            Include(ThisMeter.MeteredElement.Flags, Flg.HasEnergyMeter);
     end;
 end;
 
@@ -1801,7 +1787,9 @@ var
     PCElementType: Cardinal;
     BusAdjPC: TAdjArray;
     BusAdjPD: TAdjArray;
+    buses: PBusArray;
 begin
+    buses := ActiveCircuit.Buses;
     ZoneListCounter := 0;
     VBasecount := 0; // Build the voltage base list over in case a base added or deleted
     for j := 1 to MaxVBaseCount do
@@ -1833,18 +1821,16 @@ begin
     // SensorObj property is passed down to the Load objects for LoadAllocation and State Estimation
   
     if MeteredElement is TPDElement then
-        with TPDElement(MeteredElement) do
-        begin
-            SensorObj := Self;
-            MeterObj := Self;
-        end
+    begin
+        TPDElement(MeteredElement).SensorObj := Self;
+        TPDElement(MeteredElement).MeterObj := Self;
+    end
     else
     if MeteredElement is TPCElement then
-        with TPCElement(MeteredElement) do
-        begin
-            SensorObj := Self;
-            MeterObj := Self;
-        end;
+    begin
+        TPCElement(MeteredElement).SensorObj := Self;
+        TPCElement(MeteredElement).MeterObj := Self;
+    end;
 
 
     MeteredElement.TerminalsChecked[MeteredTerminal - 1] := TRUE;
@@ -1852,7 +1838,7 @@ begin
     begin
         // This bus is the head of the feeder or zone; do not mark as radial bus
         FromBusReference := MeteredElement.Terminals[MeteredTerminal - 1].BusRef;
-        DSS.ActiveCircuit.Buses[FromBusReference].DistFromMeter := 0.0;
+        buses[FromBusReference].DistFromMeter := 0.0;
         VoltBaseIndex := AddToVoltBaseList(FromBusReference);
         FromTerminal := MeteredTerminal;
         if MeteredElement is TPDElement then
@@ -1860,11 +1846,8 @@ begin
     end;
 
     // Check off this element so we don't use it  again
-    with MeteredElement do
-    begin
-        Include(Flags, Flg.Checked);
-        Exclude(Flags, Flg.IsIsolated);
-    end;
+    Include(MeteredElement.Flags, Flg.Checked);
+    Exclude(MeteredElement.Flags, Flg.IsIsolated);
 
     // Make SequenceList for use in reliability calcs or anything that
     // needs to run through the tree quickly in a radial sequence
@@ -1899,144 +1882,140 @@ begin
 
         for iTerm := 1 to ActiveBranch.Nterms do
         begin
-            if not ActiveBranch.TerminalsChecked[iTerm - 1] then
-                with ActiveCircuit do
-                begin
-                    // Now find all loads and generators connected to the bus on this end of branch
-                    // attach them as generic objects to cktTree node.
-                    TestBusNum := ActiveBranch.Terminals[iTerm - 1].BusRef;
-                    with BranchList.PresentBranch do
-                    begin
-                        ToBusReference := TestBusNum;   // Add this as a "to" bus reference
-                        if isLineElement(ActiveBranch)   // Convert to consistent units (km)
-                        then
-                            Buses[TestBusNum].DistFromMeter := Buses[FromBusReference].DistFromMeter + TLineObj(ActiveBranch).Len * ConvertLineUnits(TLineObj(ActiveBranch).LengthUnits, UNITS_KM)
-                        else
-                            Buses[TestBusNum].DistFromMeter := Buses[FromBusReference].DistFromMeter;
-                    end;
+            if ActiveBranch.TerminalsChecked[iTerm - 1] then
+                continue;
 
-                    adjLst := BusAdjPC[TestBusNum];
-                    for iPC := 0 to adjLst.Count - 1 do
+            // Now find all loads and generators connected to the bus on this end of branch
+            // attach them as generic objects to cktTree node.
+            TestBusNum := ActiveBranch.Terminals[iTerm - 1].BusRef;
+            with BranchList.PresentBranch do
+            begin
+                ToBusReference := TestBusNum;   // Add this as a "to" bus reference
+                if isLineElement(ActiveBranch)   // Convert to consistent units (km)
+                then
+                    buses[TestBusNum].DistFromMeter := buses[FromBusReference].DistFromMeter + TLineObj(ActiveBranch).Len * ConvertLineUnits(TLineObj(ActiveBranch).LengthUnits, UNITS_KM)
+                else
+                    buses[TestBusNum].DistFromMeter := buses[FromBusReference].DistFromMeter;
+            end;
+
+            adjLst := BusAdjPC[TestBusNum];
+            for iPC := 0 to adjLst.Count - 1 do
+            begin
+                pPCelem := adjLst[iPC];
+                //  IF pPCelem.Enabled Then Begin   only enabled elements in the search list
+                if not (Flg.Checked in pPCelem.Flags) then
+                begin
+                    ; // skip ones we already checked
+                    BranchList.PresentBranch.IsDangling := FALSE;   // Something is connected here
+                    // Is this a load or a generator or a Capacitor or reactor??
+                    PCElementType := (pPCelem.DSSObjType and CLASSMASK);
+                    if (PCElementType = LOAD_ELEMENT) or (PCElementType = GEN_ELEMENT) or (PCElementType = PVSYSTEM_ELEMENT) or (PCElementType = STORAGE_ELEMENT) or (PCElementType = CAP_ELEMENT)  // Capacitor and Reactor put on the PC list if IsShunt=TRUE
+                        or (PCElementType = REACTOR_ELEMENT) then
                     begin
-                        pPCelem := adjLst[iPC];
-                        //  IF pPCelem.Enabled Then Begin   only enabled elements in the search list
-                        if not (Flg.Checked in pPCelem.Flags) then
+                        BranchList.AddNewObject(pPCelem); // This adds element to the Shunt list in CktTree
+                        Include(pPCelem.Flags, Flg.Checked);    // So we don't pick this element up again
+                        Exclude(pPCelem.Flags, Flg.IsIsolated);
+                        pPCelem.ActiveTerminalIdx := 1;
+                        // Totalize Number of Customers if Load Type
+                        if (pPCelem is TLoadObj) then
                         begin
-                            ; // skip ones we already checked
-                            BranchList.PresentBranch.IsDangling := FALSE;   // Something is connected here
-                            // Is this a load or a generator or a Capacitor or reactor??
-                            PCElementType := (pPCelem.DSSObjType and CLASSMASK);
-                            if (PCElementType = LOAD_ELEMENT) or (PCElementType = GEN_ELEMENT) or (PCElementType = PVSYSTEM_ELEMENT) or (PCElementType = STORAGE_ELEMENT) or (PCElementType = CAP_ELEMENT)  // Capacitor and Reactor put on the PC list if IsShunt=TRUE
-                                or (PCElementType = REACTOR_ELEMENT) then
-                            begin
-                                BranchList.AddNewObject(pPCelem); // This adds element to the Shunt list in CktTree
-                                Include(pPCelem.Flags, Flg.Checked);    // So we don't pick this element up again
-                                Exclude(pPCelem.Flags, Flg.IsIsolated);
-                                pPCelem.ActiveTerminalIdx := 1;
-                                // Totalize Number of Customers if Load Type
-                                if (pPCelem is TLoadObj) then
+                            pLoad := pPCelem as TLoadObj;
+                            Inc(TPDElement(ActiveBranch).BranchNumCustomers, pLoad.NumCustomers);
+                            LoadList.Add(pPCElem);  // Add to list of loads in this zone.)
+                        end;
+                        // If object does not have a sensor attached, it acquires the sensor of its parent branch
+                        if not (Flg.HasSensorObj in pPCelem.Flags) then
+                            pPCelem.SensorObj := TPDElement(ActiveBranch).SensorObj;
+                        pPCelem.MeterObj := Self;
+                    end;
+                end;
+            end;
+
+            // Now find all branches connected to this bus that we haven't found already
+            // Do not include in this zone if branch has open terminals or has another meter
+
+            if DefinedZoneList.Count = 0 then
+            begin  // Search tree for connected branches (default)
+                IsFeederEnd := TRUE;
+                adjLst := BusAdjPD[TestBusNum];
+                for iPD := 0 to adjLst.Count - 1 do
+                begin
+                    TestElement := adjLst[iPD];  // Only enabled objects are in this list
+                    // **** See ResetMeterZonesAll
+                    if not (TestElement = ActiveBranch) then  // Skip self
+                        if not (Flg.HasEnergyMeter in TestElement.Flags) then
+                        begin  // Stop at other meters  so zones don't interfere
+                            for j := 1 to TestElement.Nterms do
+                            begin     // Check each terminal
+                                if TestBusNum = TestElement.Terminals[j - 1].BusRef then
                                 begin
-                                    pLoad := pPCelem as TLoadObj;
-                                    Inc(TPDElement(ActiveBranch).BranchNumCustomers, pLoad.NumCustomers);
-                                    LoadList.Add(pPCElem);  // Add to list of loads in this zone.)
-                                end;
-                                // If object does not have a sensor attached, it acquires the sensor of its parent branch
-                                if not (Flg.HasSensorObj in pPCelem.Flags) then
-                                    pPCelem.SensorObj := TPDElement(ActiveBranch).SensorObj;
-                                pPCelem.MeterObj := Self;
-                            end;
+                                    BranchList.PresentBranch.IsDangling := FALSE; // We found something it was connected to
+                                    // Check for loops and parallel branches and mark them
+                                    if (Flg.Checked in TestElement.Flags) then // This branch is on some meter's list already
+                                        with BranchList.PresentBranch do
+                                        begin
+                                            IsLoopedHere := TRUE; // It's a loop
+                                            LoopLineObj := TestElement;
+                                            if IsLineElement(ActiveBranch) and IsLineElement(TestElement) then
+                                                if CheckParallel(ActiveBranch, TestElement) then
+                                                    IsParallel := TRUE; // It's paralleled with another line
+                                        end
+                                    else
+                                    begin  // push TestElement onto stack and set properties
+                                        IsFeederEnd := FALSE;  // for interpolation
+                                        BranchList.AddNewChild(TestElement, TestBusNum, j);  // Add new child to the branchlist
+                                        TestElement.TerminalsChecked[j - 1] := TRUE;
+                                        TestElement.FromTerminal := j;
+                                        Include(TestElement.Flags, Flg.Checked);
+                                        Exclude(TestElement.Flags, Flg.IsIsolated);
+                                        // Branch inherits sensor of upline branch if it doesn't have its own
+                                        if not (Flg.HasSensorObj in TestElement.Flags) then
+                                            TestElement.SensorObj := TPDElement(ActiveBranch).SensorObj;
+                                        TestElement.MeterObj := Self;   // Set meterobj to this meter
+                                        TestElement.ParentPDElement := TPDElement(ActiveBranch);  // record the parent so we can easily back up for reconductoring, etc.
+                                        Break;
+                                    end;
+                                end; // IF TestBusNum
+                            end;  // FOR terminals
+                        end; // ELSE
+                end; // FOR iPD
+
+                if IsFeederEnd then
+                    BranchList.ZoneEndsList.Add(BranchList.PresentBranch, TestBusNum);
+                    // This is an end of the feeder and testbusnum is the end bus
+            end
+            else
+            begin   // Zone is manually specified; Just add next element in list as a child
+                Inc(ZoneListCounter);
+                while ZoneListCounter <= DefinedZoneList.Count do
+                begin
+                    if ActiveCircuit.SetElementActive(DefinedZoneList[ZoneListCounter - 1]) = 0 then
+                        Inc(ZoneListCounter) // Not Found. Let's search for another
+                    else
+                    begin
+                        TestElement := ActiveCircuit.ActiveCktElement as TPDElement;
+                        if not TestElement.Enabled then
+                            Inc(ZoneListCounter)  // Lets ignore disabled devices
+                        else
+                        begin
+                            if (TestElement.DSSObjType and BaseClassMask) <> PD_ELEMENT then
+                                Inc(ZoneListCounter)  // Lets ignore non-PD elements
+                            else
+                                BranchList.AddNewChild(TestElement, 0, 0); // add it as a child to the previous element
+                            Break;                                         // Can't do reductions if manually spec'd
                         end;
                     end;
-
-                    // Now find all branches connected to this bus that we haven't found already
-                    // Do not include in this zone if branch has open terminals or has another meter
-
-                    if DefinedZoneList.Count = 0 then
-                    begin  // Search tree for connected branches (default)
-                        IsFeederEnd := TRUE;
-                        adjLst := BusAdjPD[TestBusNum];
-                        for iPD := 0 to adjLst.Count - 1 do
-                        begin
-                            TestElement := adjLst[iPD];  // Only enabled objects are in this list
-                            // **** See ResetMeterZonesAll
-                            if not (TestElement = ActiveBranch) then  // Skip self
-                                if not (Flg.HasEnergyMeter in TestElement.Flags) then
-                                begin  // Stop at other meters  so zones don't interfere
-                                    for j := 1 to TestElement.Nterms do
-                                    begin     // Check each terminal
-                                        if TestBusNum = TestElement.Terminals[j - 1].BusRef then
-                                        begin
-                                            BranchList.PresentBranch.IsDangling := FALSE; // We found something it was connected to
-                                            // Check for loops and parallel branches and mark them
-                                            if (Flg.Checked in TestElement.Flags) then // This branch is on some meter's list already
-                                                with BranchList.PresentBranch do
-                                                begin
-                                                    IsLoopedHere := TRUE; // It's a loop
-                                                    LoopLineObj := TestElement;
-                                                    if IsLineElement(ActiveBranch) and IsLineElement(TestElement) then
-                                                        if CheckParallel(ActiveBranch, TestElement) then
-                                                            IsParallel := TRUE; // It's paralleled with another line
-                                                end
-                                            else
-                                            begin  // push TestElement onto stack and set properties
-                                                IsFeederEnd := FALSE;  // for interpolation
-                                                BranchList.AddNewChild(TestElement, TestBusNum, j);  // Add new child to the branchlist
-                                                with TestElement do
-                                                begin
-                                                    TerminalsChecked[j - 1] := TRUE;
-                                                    FromTerminal := j;
-                                                    Include(Flags, Flg.Checked);
-                                                    Exclude(Flags, Flg.IsIsolated);
-                                                    // Branch inherits sensor of upline branch if it doesn't have its own
-                                                    if not (Flg.HasSensorObj in Flags) then
-                                                        SensorObj := TPDElement(ActiveBranch).SensorObj;
-                                                    MeterObj := Self;   // Set meterobj to this meter
-                                                    ParentPDElement := TPDElement(ActiveBranch);  // record the parent so we can easily back up for reconductoring, etc.
-                                                end;
-                                                Break;
-                                            end;
-                                        end; // IF TestBusNum
-                                    end;  // FOR terminals
-                                end; // ELSE
-                        end; // FOR iPD
-
-                        if IsFeederEnd then
-                            BranchList.ZoneEndsList.Add(BranchList.PresentBranch, TestBusNum);
-                            // This is an end of the feeder and testbusnum is the end bus
-                    end
-                    else
-                    begin   // Zone is manually specified; Just add next element in list as a child
-                        Inc(ZoneListCounter);
-                        while ZoneListCounter <= DefinedZoneList.Count do
-                        begin
-                            if SetElementActive(DefinedZoneList[ZoneListCounter - 1]) = 0 then
-                                Inc(ZoneListCounter) // Not Found. Let's search for another
-                            else
-                            begin
-                                TestElement := ActiveCktElement as TPDElement;
-                                if not TestElement.Enabled then
-                                    Inc(ZoneListCounter)  // Lets ignore disabled devices
-                                else
-                                begin
-                                    if (TestElement.DSSObjType and BaseClassMask) <> PD_ELEMENT then
-                                        Inc(ZoneListCounter)  // Lets ignore non-PD elements
-                                    else
-                                        BranchList.AddNewChild(TestElement, 0, 0); // add it as a child to the previous element
-                                    Break;                                         // Can't do reductions if manually spec'd
-                                end;
-                            end;
-                        end; // while
-                    end;
-                end;  // WITH Active Circuit
+                end; // while
+            end;
         end;  // FOR iTerm
 
-        ActiveBranch := BranchList.GoForward;   // Sets PresentBranch
+        ActiveBranch := BranchList.GoForward();   // Sets PresentBranch
         // ****************  END MAIN LOOP *****************************
     end;
 
     TotalupDownstreamCustomers();
 
-    AssignVoltBaseRegisterNames;
+    AssignVoltBaseRegisterNames();
 end;
 
 procedure TEnergyMeterObj.GetCurrents(Curr: pComplexArray);  //Get present value of terminal Curr FOR reports
@@ -2072,31 +2051,31 @@ begin
 
     try
         FSWriteln(F, 'Level, Branch, Bus1, Bus2, Distance');
-        if BranchList <> NIL then
+        if BranchList = NIL then
+            Exit;
+
+        PDElem := BranchList.First();
+        while PDElem <> NIL do
         begin
-            PDElem := BranchList.First;
-            while PDElem <> NIL do
-                with ActiveCircuit do
-                begin
-                    FSWriteln(F, Format('%d, %s.%s, %s, %s, %10.4f',
-                        [BranchList.Level, PDelem.ParentClass.Name, PDelem.Name,
-                        PDelem.FirstBus, PDelem.NextBus,
-                        // BusList.NameOfIndex(BranchList.PresentBranch.ToBusReference),
-                        Buses[BranchList.PresentBranch.ToBusReference].DistFromMeter]));
-                    BranchList.PresentBranch.ResetToBusList;
-                    LoadElem := Branchlist.FirstObject;
-                    while LoadElem <> NIL do
-                    begin
-                        FSWrite(F, '-1, ');
-                        FSWriteln(F, Format('%s.%s, %s', [LoadElem.ParentClass.Name, LoadElem.Name, LoadElem.Firstbus{ActiveCircuit.BusList.NameOfIndex(BranchList.PresentBranch.ToBusReference)}]));
-                        LoadElem := BranchList.NextObject
-                    end;
-                    PDElem := BranchList.GoForward;
-                end;
+            FSWriteln(F, Format('%d, %s.%s, %s, %s, %10.4f', [
+                BranchList.Level, PDelem.ParentClass.Name, PDelem.Name,
+                PDelem.FirstBus, PDelem.NextBus,
+                // BusList.NameOfIndex(BranchList.PresentBranch.ToBusReference),
+                ActiveCircuit.Buses[BranchList.PresentBranch.ToBusReference].DistFromMeter
+            ]));
+            BranchList.PresentBranch.ResetToBusList;
+            LoadElem := Branchlist.FirstObject;
+            while LoadElem <> NIL do
+            begin
+                FSWrite(F, '-1, ');
+                FSWriteln(F, Format('%s.%s, %s', [LoadElem.ParentClass.Name, LoadElem.Name, LoadElem.Firstbus]));
+                LoadElem := BranchList.NextObject();
+            end;
+            PDElem := BranchList.GoForward();
         end;
 
     finally
-        FreeAndNil(F);
+        F.Free();
     end;
 end;
 
@@ -2108,9 +2087,8 @@ var
 begin
     inherited DumpProperties(F, complete);
 
-    with ParentClass do
-        for i := 1 to NumProperties do
-            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
+    for i := 1 to ParentClass.NumProperties do
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
 
     if complete then
     begin
@@ -2124,7 +2102,7 @@ begin
         FSWriteln(F, 'Branch List:');
         if BranchList <> NIL then
         begin
-            PDElem := BranchList.First;
+            PDElem := BranchList.First();
             while PDElem <> NIL do
             begin
                 FSWriteln(F, 'Circuit Element = ', PDelem.Name);
@@ -2134,7 +2112,7 @@ begin
                     FSWriteln(F, '   Shunt Element = ' + LoadElem.FullName);
                     LoadElem := BranchList.NextObject
                 end;
-                PDElem := BranchList.GoForward;
+                PDElem := BranchList.GoForward();
             end;
         end;
     end;
@@ -2144,27 +2122,26 @@ function TEnergyMeterObj.AddToVoltBaseList(BusRef: Integer): Integer;
 // Add to VoltBase list if not already there and return index
 var
     i: Integer;
+    bus: TDSSBus;
 begin
-    with DSS.ActiveCircuit.Buses[BusRef] do
+    bus := ActiveCircuit.Buses[BusRef];
+    for i := 1 to VBaseCount do
     begin
-        for i := 1 to VBaseCount do
-        begin
-            if abs(1.0 - kVBase / VBaseList[i]) < 0.01 then
-            begin    // < 1% difference
-                Result := i;
-                Exit;
-            end;
+        if abs(1.0 - bus.kVBase / VBaseList[i]) < 0.01 then
+        begin    // < 1% difference
+            Result := i;
+            Exit;
         end;
-
-        if (kvBase > 0.0) and (VBaseCount < MaxVBaseCount) then
-        begin
-            Inc(VBaseCount);
-            VBaseList[VBasecount] := {ActiveCircuit.Buses[BusRef].}kVBase;
-            result := VBaseCount;
-        end
-        else
-            Result := 0;
     end;
+
+    if (bus.kVBase > 0.0) and (VBaseCount < MaxVBaseCount) then
+    begin
+        Inc(VBaseCount);
+        VBaseList[VBasecount] := bus.kVBase;
+        result := VBaseCount;
+    end
+    else
+        Result := 0;
 end;
 
 procedure TEnergyMeterObj.AllocateLoad;
@@ -2190,7 +2167,7 @@ begin
     // are simply voltage and current measuring points.  A Sensor may be attached to a line or transformer
     // or it may be connected directly to a load.
 
-    CktElem := BranchList.First;
+    CktElem := BranchList.First();
     while CktElem <> NIL do
     begin
         LoadElem := Branchlist.FirstObject;
@@ -2200,23 +2177,21 @@ begin
                 case LoadElem.NPhases of
                     // For Single phase loads, allocate based on phase factor, else average factor
                     1:
-                        with LoadElem do
-                        begin
-                            ConnectedPhase := DSS.ActiveCircuit.MapNodeToBus[NodeRef[1]].NodeNum;
-                            if (ConnectedPhase > 0) and (ConnectedPhase < 4)   // Restrict to phases 1..3
-                            then
-                                if SensorObj.NPhases = 1 then
-                                    Set_AllocationFactor(FAllocationFactor * SensorObj.PhsAllocationFactor^[1])
-                                else
-                                    Set_AllocationFactor(FAllocationFactor * SensorObj.PhsAllocationFactor^[ConnectedPhase]);
-                        end;
+                    begin
+                        ConnectedPhase := DSS.ActiveCircuit.MapNodeToBus[LoadElem.NodeRef[1]].NodeNum;
+                        if (ConnectedPhase > 0) and (ConnectedPhase < 4)   // Restrict to phases 1..3
+                        then
+                            if LoadElem.SensorObj.NPhases = 1 then
+                                LoadElem.Set_AllocationFactor(LoadElem.FAllocationFactor * LoadElem.SensorObj.PhsAllocationFactor[1])
+                            else
+                                LoadElem.Set_AllocationFactor(LoadElem.FAllocationFactor * LoadElem.SensorObj.PhsAllocationFactor[ConnectedPhase]);
+                    end;
                 else
-                    with LoadElem do
-                        Set_AllocationFactor(FAllocationFactor * SensorObj.AvgAllocFactor);
+                    LoadElem.Set_AllocationFactor(LoadElem.FAllocationFactor * LoadElem.SensorObj.AvgAllocFactor);
                 end;
             LoadElem := BranchList.NextObject // Next load at this bus
         end;
-        CktElem := BranchList.GoForward; // Go on down the tree
+        CktElem := BranchList.GoForward(); // Go on down the tree
     end;
 end;
 
@@ -2238,48 +2213,44 @@ var
     Load_EEN,
     Load_UE: Double;
 begin
-    with pLoad do
-    begin
-       //----ActiveTerminalIdx := 1;
-        S_Load := pLoad.Power[1] * 0.001;   // Get Power in Terminal 1
-        kW_Load := S_Load.re;
-        Result := kw_Load;
+    //----ActiveTerminalIdx := 1;
+    S_Load := pLoad.Power[1] * 0.001;   // Get Power in Terminal 1
+    kW_Load := S_Load.re;
+    Result := kw_Load;
 
-        // Accumulate load in zone
-        TotalZonekw := TotalZonekW + kW_Load;
-        TotalZonekvar := TotalZonekvar + S_Load.im;
+    // Accumulate load in zone
+    TotalZonekw := TotalZonekW + kW_Load;
+    TotalZonekvar := TotalZonekvar + S_Load.im;
 
-        // always integrate even if the value is 0.0
-        // otherwise the Integrate function is not correct
-       
-        // Invoking the ExceedsNormal and Unserved Properties causes the factors to be computed
-        if ExcessFlag then
-        begin   // Return Excess load as EEN/UE
-            if (ExceedsNormal) then
-                Load_EEN := kW_Load * EEN_Factor
-            else
-                Load_EEN := 0.0;
-            if (Unserved) then
-                Load_UE := kW_Load * UE_Factor
-            else
-                Load_UE := 0.0;
-        end
+    // always integrate even if the value is 0.0
+    // otherwise the Integrate function is not correct
+    
+    // Invoking the ExceedsNormal and Unserved Properties causes the factors to be computed
+    if ExcessFlag then
+    begin   // Return Excess load as EEN/UE
+        if (pLoad.ExceedsNormal) then
+            Load_EEN := kW_Load * pLoad.EEN_Factor
         else
-        begin    // Return TOTAL load as EEN/UE
-            if (ExceedsNormal) then
-                Load_EEN := kW_Load
-            else
-                Load_EEN := 0.0;
-            if (Unserved) then
-                Load_UE := kW_Load
-            else
-                Load_UE := 0.0;
-        end;
-
-        TotalLoad_EEN := TotalLoad_EEN + Load_EEN;
-        TotalLoad_UE := TotalLoad_UE + Load_UE;
-
+            Load_EEN := 0.0;
+        if (pLoad.Unserved) then
+            Load_UE := kW_Load * pLoad.UE_Factor
+        else
+            Load_UE := 0.0;
+    end
+    else
+    begin    // Return TOTAL load as EEN/UE
+        if (pLoad.ExceedsNormal) then
+            Load_EEN := kW_Load
+        else
+            Load_EEN := 0.0;
+        if (pLoad.Unserved) then
+            Load_UE := kW_Load
+        else
+            Load_UE := 0.0;
     end;
+
+    TotalLoad_EEN := TotalLoad_EEN + Load_EEN;
+    TotalLoad_UE := TotalLoad_UE + Load_UE;
 end;
 
 
@@ -2333,109 +2304,107 @@ var
     Linecount: Integer;
     PresentNode, StartNode: TCktTreeNode;
     CktElem: TDSSCktElement;
-
+    buses: PBusArray;
 begin
     if not CheckBranchList(529) then
         Exit;
 
-    with ActiveCircuit do
+    buses := ActiveCircuit.Buses;
+
+    for i := 1 to Branchlist.ZoneEndsList.NumEnds do
     begin
-        for i := 1 to Branchlist.ZoneEndsList.NumEnds do
+        Busref := Branchlist.ZoneEndsList.Get(i, PresentNode);
+
+        FirstCoordRef := BusRef;
+        SecondCoordRef := FirstCoordRef;  // so compiler won't issue stupid warning
+        // Find a bus with a coordinate
+        if not buses[BusRef].CoordDefined then
         begin
-            Busref := Branchlist.ZoneEndsList.Get(i, PresentNode);
-
-            FirstCoordRef := BusRef;
-            SecondCoordRef := FirstCoordRef;  // so compiler won't issue stupid warning
-            // Find a bus with a coordinate
-            if not Buses[BusRef].CoordDefined then
+            while not buses[PresentNode.FromBusReference].CoordDefined do
             begin
-                while not Buses[PresentNode.FromBusReference].CoordDefined do
-                begin
-                    PresentNode := PresentNode.ParentBranch;
-                    if PresentNode = NIL then
-                        Break;
-                end;
-                if PresentNode <> NIL then
-                    FirstCoordRef := PresentNode.FromBusReference;
+                PresentNode := PresentNode.ParentBranch();
+                if PresentNode = NIL then
+                    Break;
             end;
+            if PresentNode <> NIL then
+                FirstCoordRef := PresentNode.FromBusReference;
+        end;
 
-            while PresentNode <> NIL do
-            begin
-                // Back up until we find another Coord defined
-                LineCount := 0; // number of line segments in this segment
-                StartNode := PresentNode;
-                CktElem := PresentNode.CktObject;
-                if FirstCoordRef <> PresentNode.FromBusReference then
-                begin 
-                    // Handle special case for end branch
-                    if Buses[PresentNode.FromBusReference].CoordDefined then
-                        FirstCoordRef := PresentNode.FromBusReference
-                    else
-                        Inc(LineCount);
-                end;
-
-                repeat
-                    Include(CktElem.Flags, Flg.Checked);
-                    PresentNode := PresentNode.ParentBranch;
-                    if PresentNode = NIL then
-                        Break;
-                    CktElem := PresentNode.CktObject;
-                    SecondCoordRef := PresentNode.FromBusReference;
+        while PresentNode <> NIL do
+        begin
+            // Back up until we find another Coord defined
+            LineCount := 0; // number of line segments in this segment
+            StartNode := PresentNode;
+            CktElem := PresentNode.CktObject;
+            if FirstCoordRef <> PresentNode.FromBusReference then
+            begin 
+                // Handle special case for end branch
+                if buses[PresentNode.FromBusReference].CoordDefined then
+                    FirstCoordRef := PresentNode.FromBusReference
+                else
                     Inc(LineCount);
-                until Buses[SecondCoordRef].CoordDefined or (Flg.Checked in CktElem.Flags);
-
-                if (PresentNode <> NIL) and (LineCount > 1) then
-                    if Buses[SecondCoordRef].CoordDefined then
-                    begin
-                        CalcBusCoordinates(StartNode, FirstCoordRef, SecondCoordRef, LineCount);
-                    end
-                    else
-                        Break; // While - went as far as we could go this way
-
-                FirstCoordRef := SecondCoordRef;
             end;
-        end; // For
-    end; // With
+
+            repeat
+                Include(CktElem.Flags, Flg.Checked);
+                PresentNode := PresentNode.ParentBranch();
+                if PresentNode = NIL then
+                    Break;
+                CktElem := PresentNode.CktObject;
+                SecondCoordRef := PresentNode.FromBusReference;
+                Inc(LineCount);
+            until buses[SecondCoordRef].CoordDefined or (Flg.Checked in CktElem.Flags);
+
+            if (PresentNode <> NIL) and (LineCount > 1) then
+                if buses[SecondCoordRef].CoordDefined then
+                begin
+                    CalcBusCoordinates(StartNode, FirstCoordRef, SecondCoordRef, LineCount);
+                end
+                else
+                    Break; // While - went as far as we could go this way
+
+            FirstCoordRef := SecondCoordRef;
+        end;
+    end; // For
 end;
 
 procedure TEnergyMeterObj.CalcBusCoordinates(StartBranch: TCktTreeNode;
     FirstCoordRef, SecondCoordref, LineCount: Integer);
 var
     X, Y, Xinc, Yinc: Double;
+    buses: PBusArray;
 begin
     if LineCount = 1 then
         Exit;  // Nothing to do!
 
-    with ActiveCircuit do
+    buses := ActiveCircuit.Buses;
+
+    Xinc := (buses[FirstCoordref].X - buses[SecondCoordRef].X) / LineCount;
+    Yinc := (buses[FirstCoordref].Y - buses[SecondCoordRef].Y) / LineCount;
+
+    X := buses[FirstCoordref].X;
+    Y := buses[FirstCoordref].Y;
+
+    // Either start with the "to" end of StartNode or the "from" end;
+    if FirstCoordRef <> StartBranch.FromBusReference then
+    begin  // Start with "to" end
+        X := X - Xinc;
+        Y := Y - Yinc;
+        buses[StartBranch.FromBusReference].X := X;
+        buses[StartBranch.FromBusReference].Y := Y;
+        buses[StartBranch.FromBusReference].CoordDefined := TRUE;
+        Dec(LineCount);
+    end;
+
+    while LineCount > 1 do
     begin
-        Xinc := (Buses[FirstCoordref].X - Buses[SecondCoordRef].X) / LineCount;
-        Yinc := (Buses[FirstCoordref].Y - Buses[SecondCoordRef].Y) / LineCount;
-
-        X := Buses[FirstCoordref].X;
-        Y := Buses[FirstCoordref].Y;
-
-        // Either start with the "to" end of StartNode or the "from" end;
-        if FirstCoordRef <> StartBranch.FromBusReference then
-        begin  // Start with "to" end
-            X := X - Xinc;
-            Y := Y - Yinc;
-            Buses[StartBranch.FromBusReference].X := X;
-            Buses[StartBranch.FromBusReference].Y := Y;
-            Buses[StartBranch.FromBusReference].CoordDefined := TRUE;
-            Dec(LineCount);
-        end;
-
-        while LineCount > 1 do
-        begin
-            X := X - Xinc;
-            Y := Y - Yinc;
-            StartBranch := StartBranch.ParentBranch; // back up the tree
-            Buses[StartBranch.FromBusReference].X := X;
-            Buses[StartBranch.FromBusReference].Y := Y;
-            Buses[StartBranch.FromBusReference].CoordDefined := TRUE;
-            Dec(LineCount);
-        end;
-
+        X := X - Xinc;
+        Y := Y - Yinc;
+        StartBranch := StartBranch.ParentBranch(); // back up the tree
+        buses[StartBranch.FromBusReference].X := X;
+        buses[StartBranch.FromBusReference].Y := Y;
+        buses[StartBranch.FromBusReference].CoordDefined := TRUE;
+        Dec(LineCount);
     end;
 end;
 
@@ -2447,6 +2416,7 @@ var
     pBus: TDSSBus;
     dblNcusts: Double;
     dblkW: Double;
+    load: TLoadObj;
 begin
     if not Assigned(SequenceList) then
     begin
@@ -2461,11 +2431,9 @@ begin
     // Backward sweep calculating failure rates
     for idx := SequenceList.Count downto 1 do
     begin
-        with TPDElement(SequenceList.Get(idx)) do
-        begin
-            CalcFltRate;    // Calc failure rate for this element
-            AccumFltRate;
-        end;
+        PD_Elem := TPDElement(SequenceList.Get(idx));
+        PD_Elem.CalcFltRate();    // Calc failure rate for this element
+        PD_Elem.AccumFltRate();
     end;
 
     // Forward sweep to get number of interruptions
@@ -2485,27 +2453,25 @@ begin
 
     if SectionCount = 0 then
     begin // Error - no OCP devices
-        DoSimpleMsg
-        (_('Error: No Overcurrent Protection device (Relay, Recloser, or Fuse) defined. Aborting Reliability calc.'),
-            52902);
+        DoSimpleMsg(_('Error: No Overcurrent Protection device (Relay, Recloser, or Fuse) defined. Aborting Reliability calc.'), 52902);
         Exit;
     end;
 
     // Now have number of sections  so allocate FeederSections array
     ReallocMem(FeederSections, SizeOf(FeederSections[1]) * (SectionCount + 1));
     for idx := 0 to SectionCount do
-        with FeederSections[idx] do      // Initialize all Section data
-        begin
-            OCPDeviceType := 0; // 1=Fuse; 2=Recloser; 3=Relay
-            AverageRepairTime := 0.0;
-            SumFltRatesXRepairHrs := 0.0;
-            SumBranchFltRates := 0.0;
-            NCustomers := 0;
-            TotalCustomers := 0;
-            SectFaultRate := 0.0;
-            NBranches := 0;
-            SeqIndex := 0;
-        end;
+    begin
+        pSection := @FeederSections[idx]; // Initialize all Section data
+        pSection^.OCPDeviceType := 0; // 1=Fuse; 2=Recloser; 3=Relay
+        pSection^.AverageRepairTime := 0.0;
+        pSection^.SumFltRatesXRepairHrs := 0.0;
+        pSection^.SumBranchFltRates := 0.0;
+        pSection^.NCustomers := 0;
+        pSection^.TotalCustomers := 0;
+        pSection^.SectFaultRate := 0.0;
+        pSection^.NBranches := 0;
+        pSection^.SeqIndex := 0;
+    end;
 
     // Now do Backward sweep calculating N*Fault rates
     for idx := SequenceList.Count downto 1 do
@@ -2521,8 +2487,8 @@ begin
         Inc(pSection.NCustomers, PD_Elem.BranchNumCustomers); // Sum up num Customers on this Section
         Inc(pSection.NBranches, 1); // Sum up num branches on this Section
         pBus := DSS.ActiveCircuit.Buses[PD_Elem.Terminals[PD_Elem.ToTerminal - 1].BusRef];
-        DblInc(pSection.SumBranchFltRates, pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate);
-        DblInc(pSection.SumFltRatesXRepairHrs, (pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate * PD_Elem.HrsToRepair));
+        pSection.SumBranchFltRates += pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate;
+        pSection.SumFltRatesXRepairHrs += (pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate * PD_Elem.HrsToRepair);
         if Flg.HasOCPDevice in PD_Elem.Flags then
         begin  // set Section properties
             pSection.OCPDeviceType := GetOCPDeviceType(PD_Elem);
@@ -2535,41 +2501,40 @@ begin
         if idx = SequenceList.Count then
             WriteDLLDebugFile
             ('Meter, SectionID, BranchName, FaultRate, AccumulatedBrFltRate, BranchFltRate, RepairHrs, NCustomers, Num_Interrupt');
-        with FeederSections[PD_Elem.BranchSectionID] do
-            WriteDLLDebugFile
-            (Format('%s.%s, %d, %s.%s, %.11g, %.11g, %.11g, %.11g, %d, %.11g ',
-                [ParentClass.Name, Name, PD_Elem.BranchSectionID,
-                PD_Elem.ParentClass.Name, PD_Elem.Name, PD_Elem.FaultRate,
-                PD_Elem.AccumulatedBrFltRate, PD_Elem.BranchFltRate,
-                PD_Elem.HrsToRepair, PD_Elem.BranchNumCustomers,
-                pBus.Bus_Num_Interrupt]));
+        
+        WriteDLLDebugFile
+        (Format('%s.%s, %d, %s.%s, %.11g, %.11g, %.11g, %.11g, %d, %.11g ',
+            [ParentClass.Name, Name, PD_Elem.BranchSectionID,
+            PD_Elem.ParentClass.Name, PD_Elem.Name, PD_Elem.FaultRate,
+            PD_Elem.AccumulatedBrFltRate, PD_Elem.BranchFltRate,
+            PD_Elem.HrsToRepair, PD_Elem.BranchNumCustomers,
+            pBus.Bus_Num_Interrupt]));
 {$ENDIF}
 
     end;
 
     // Compute Avg Interruption duration of each Section  except 0 Section
     for idx := 1 to SectionCount do
-        with FeederSections[idx] do
-            AverageRepairTime := SumFltRatesXRepairHrs / SumBranchFltRates;
+        FeederSections[idx].AverageRepairTime := FeederSections[idx].SumFltRatesXRepairHrs / FeederSections[idx].SumBranchFltRates;
 
     // Set Bus_int_Duration
-    with ActiveCircuit do
-        for idx := 1 to NumBuses do
-        begin
-            pBus := Buses[idx];
-            if pBus.BusSectionID > 0 then
-                pBus.Bus_Int_Duration := Source_IntDuration + FeederSections^
-                    [pBus.BusSectionID].AverageRepairTime;
-        end;
+    for idx := 1 to ActiveCircuit.NumBuses do
+    begin
+        pBus := ActiveCircuit.Buses[idx];
+        if pBus.BusSectionID > 0 then
+            pBus.Bus_Int_Duration := Source_IntDuration + FeederSections[pBus.BusSectionID].AverageRepairTime;
+    end;
 
 {$IFDEF DEBUG}
     WriteDLLDebugFile
     ('Meter, SectionID, NBranches, NCustomers, AvgRepairHrs, AvgRepairMins, FailureRate*RepairtimeHrs, SumFailureRates');
     for idx := 0 to SectionCount do
-        with FeederSections[idx] do
-            WriteDLLDebugFile(Format('%s.%s, %d, %d, %d, %.11g, %.11g, %.11g, %.11g ',
-                [ParentClass.Name, Name, idx, NBranches, NCustomers, AverageRepairTime,
-                AverageRepairTime * 60.0, SumFltRatesXRepairHrs, SumBranchFltRates]));
+    begin
+        psection := @FeederSections[idx];
+        WriteDLLDebugFile(Format('%s.%s, %d, %d, %d, %.11g, %.11g, %.11g, %.11g ',
+            [ParentClass.Name, Name, idx, psection^.NBranches, psection^.NCustomers, psection^.AverageRepairTime,
+            psection^.AverageRepairTime * 60.0, psection^.SumFltRatesXRepairHrs, psection^.SumBranchFltRates]));
+    end;
 {$ENDIF}
 
     // Compute SAIFI based on numcustomers and load kW
@@ -2583,33 +2548,26 @@ begin
     CustInterrupts := 0.0;
 
     // Use LoadList for SAIFI calculation
-    with ActiveCircuit do
+    for load in LoadList do
+    // Compute CustInterrupts based on interrupts at each load
     begin
-        for idx := 1 to LoadList.Count do  // all loads in meter zone
-        begin
-            // Compute CustInterrupts based on interrupts at each load
-            with TLoadObj(LoadList.Get(idx)) do
-            begin
-                pBus := Buses[Terminals[0].BusRef]; // pointer to Load's bus
-                CustInterrupts := CustInterrupts + (NumCustomers * RelWeighting * pBus.Bus_Num_Interrupt);
-                SAIFIkW := SAIFIkW + kWBase * RelWeighting * pBus.Bus_Num_Interrupt;
-                DblInc(dblNcusts, NumCustomers * RelWeighting);
-                // total up weighted numcustomers
-                DblInc(dblkW, kWBase * RelWeighting); // total up weighted kW
-                // Set BusCustDurations for Branch reliability export
-                pBus.BusCustDurations := (pBus.BusTotalNumCustomers + NumCustomers) *
-                    RelWeighting * pBus.Bus_Int_Duration * pBus.Bus_Num_Interrupt;
-            end;
-        end;
+        pBus := ActiveCircuit.Buses[load.Terminals[0].BusRef]; // pointer to Load's bus
+        CustInterrupts := CustInterrupts + (load.NumCustomers * load.RelWeighting * pBus.Bus_Num_Interrupt);
+        SAIFIkW := SAIFIkW + load.kWBase * load.RelWeighting * pBus.Bus_Num_Interrupt;
+        dblNcusts += load.NumCustomers * load.RelWeighting;
+        // total up weighted numcustomers
+        dblkW += load.kWBase * load.RelWeighting; // total up weighted kW
+        // Set BusCustDurations for Branch reliability export
+        pBus.BusCustDurations := (pBus.BusTotalNumCustomers + load.NumCustomers) *
+            load.RelWeighting * pBus.Bus_Int_Duration * pBus.Bus_Num_Interrupt;
     end;
 
     // Compute SAIDI from Sections list
     SAIDI := 0.0;
     for idx := 1 to SectionCount do // ignore idx=0
-        with FeederSections[idx] do
-        begin
-            SAIDI := SAIDI + SectFaultRate * AverageRepairTime * TotalCustomers;
-        end;
+    begin
+        SAIDI += FeederSections[idx].SectFaultRate * FeederSections[idx].AverageRepairTime * FeederSections[idx].TotalCustomers;
+    end;
 
     if dblNcusts > 0.0 then
     begin
@@ -2721,99 +2679,93 @@ begin
         end;
     end;
 
-    cktElem := BranchList.First;
-    with ActiveCircuit do
-        while cktElem <> NIL do
+    cktElem := BranchList.First();
+    while cktElem <> NIL do
+    begin
+        if not cktElem.Enabled then
         begin
-            if CktElem.Enabled then
+            cktElem := BranchList.GoForward();
+            continue;
+        end;
+
+        if (CktElem.DSSObjType and Classmask) = XFMR_ELEMENT then
+        begin
+            Inc(NXfmrs);
+            WriteDSSObject(cktElem, FXfmrs, 'New');     // sets HasBeenSaved := TRUE
+            if Flg.HasControl in cktElem.Flags then
             begin
-                ActiveCktElement := cktElem;
-
-                if (CktElem.DSSObjType and Classmask) = XFMR_ELEMENT then
+                for pControlElem in cktElem.ControlElementList do
                 begin
-                    Inc(NXfmrs);
-                    WriteActiveDSSObject(DSS, FXfmrs, 'New');     // sets HasBeenSaved := TRUE
-                    if Flg.HasControl in cktElem.Flags then
+                    WriteDSSObject(pControlElem, FXfmrs, 'New');  //  regulator control ...Also, relays, switch controls
+                end;
+            end;
+        end
+        else
+        begin  
+            // Mostly LINE elements
+            Inc(NBranches);
+            WriteDSSObject(cktElem, FBranches, 'New');     // sets HasBeenSaved := TRUE
+            if Flg.HasControl in cktElem.Flags then
+            begin
+                for pControlElem in cktElem.ControlElementList do
+                begin
+                    WriteDSSObject(pControlElem, FBranches, 'New');  //  regulator control ...Also, relays, switch controls
+                end;
+            end;
+        end;
+
+
+        shuntElement := Branchlist.FirstObject;
+        while shuntElement <> NIL do
+        begin
+            if (shuntElement.DSSObjType and Classmask) = LOAD_ELEMENT then
+            begin
+                LoadElement := TLoadObj(shuntElement);
+                if LoadElement.HasBeenAllocated then
+                begin
+                    // Manually set the allocation factor so it shows up
+                    LoadElement.PropertySideEffects(ord(TLoadProp.allocationfactor), 0);
+                    LoadElement.SetAsNextSeq(ord(TLoadProp.allocationfactor));
+                end;
+                Inc(NLoads);
+                WriteDSSObject(shuntElement, FLoads, 'New');
+            end
+            else
+            if (shuntElement.DSSObjType and Classmask) = GEN_ELEMENT then
+            begin
+                Inc(NGens);
+                WriteDSSObject(shuntElement, FGens, 'New');
+                if Flg.HasControl in shuntElement.Flags then
+                begin
+                    for pControlElem in shuntElement.ControlElementList do
                     begin
-                        for pControlElem in cktElem.ControlElementList do
-                        begin
-                            ActiveCktElement := pControlElem;
-                            WriteActiveDSSObject(DSS, FXfmrs, 'New');  //  regulator control ...Also, relays, switch controls
-                        end;
-                    end;
-                end
-                else
-                begin  
-                    // Mostly LINE elements
-                    Inc(NBranches);
-                    WriteActiveDSSObject(DSS, FBranches, 'New');     // sets HasBeenSaved := TRUE
-                    if Flg.HasControl in cktElem.Flags then
-                    begin
-                        for pControlElem in cktElem.ControlElementList do
-                        begin
-                            ActiveCktElement := pControlElem;
-                            WriteActiveDSSObject(DSS, FBranches, 'New');  //  regulator control ...Also, relays, switch controls
-                        end;
+                        WriteDSSObject(pControlElem, FGens, 'New');
                     end;
                 end;
-
-
-                shuntElement := Branchlist.FirstObject;
-                while shuntElement <> NIL do
+            end
+            else
+            if (shuntElement.DSSObjType and Classmask) = CAP_ELEMENT then
+            begin
+                Inc(NCaps);
+                WriteDSSObject(shuntElement, FCaps, 'New');
+                if Flg.HasControl in shuntElement.Flags then
                 begin
-                    ActiveCktElement := shuntElement;
-                    if (shuntElement.DSSObjType and Classmask) = LOAD_ELEMENT then
+                    for pControlElem in shuntElement.ControlElementList do
                     begin
-                        LoadElement := TLoadObj(shuntElement);
-                        if LoadElement.HasBeenAllocated then
-                        begin
-                            // Manually set the allocation factor so it shows up
-                            LoadElement.PropertySideEffects(ord(TLoadProp.allocationfactor), 0);
-                            LoadElement.SetAsNextSeq(ord(TLoadProp.allocationfactor));
-                        end;
-                        ActiveCktElement := shuntElement; // reset in case Edit mangles it
-                        Inc(NLoads);
-                        WriteActiveDSSObject(DSS, FLoads, 'New');
-                    end
-                    else
-                    if (shuntElement.DSSObjType and Classmask) = GEN_ELEMENT then
-                    begin
-                        Inc(NGens);
-                        WriteActiveDSSObject(DSS, FGens, 'New');
-                        if Flg.HasControl in shuntElement.Flags then
-                        begin
-                            for pControlElem in shuntElement.ControlElementList do
-                            begin
-                                ActiveCktElement := pControlElem;
-                                WriteActiveDSSObject(DSS, FGens, 'New');
-                            end;
-                        end;
-                    end
-                    else
-                    if (shuntElement.DSSObjType and Classmask) = CAP_ELEMENT then
-                    begin
-                        Inc(NCaps);
-                        WriteActiveDSSObject(DSS, FCaps, 'New');
-                        if Flg.HasControl in shuntElement.Flags then
-                        begin
-                            for pControlElem in shuntElement.ControlElementList do
-                            begin
-                                ActiveCktElement := pControlElem;
-                                WriteActiveDSSObject(DSS, FCaps, 'New');
-                            end;
-                        end;
-                    end
-                    else
-                    begin
-                        Inc(NShunts);
-                        WriteActiveDSSObject(DSS, Fshunts, 'New');
+                        WriteDSSObject(pControlElem, FCaps, 'New');
                     end;
-                    shuntElement := BranchList.NextObject
                 end;
-            end; // if enabled
+            end
+            else
+            begin
+                Inc(NShunts);
+                WriteDSSObject(shuntElement, Fshunts, 'New');
+            end;
+            shuntElement := BranchList.NextObject
+        end;
 
-            cktElem := BranchList.GoForward;
-        end; // WHILE
+        cktElem := BranchList.GoForward();
+    end; // WHILE
 
     FreeAndNil(FBranches);
     FreeAndNil(FXfmrs);
@@ -2872,25 +2824,22 @@ begin
     if BranchList = NIL then
         Exit;
 
-    with ActiveCircuit do
+    cktElem := BranchList.First();
+    while cktElem <> NIL do
     begin
-        cktElem := BranchList.First;
-        while cktElem <> NIL do
+        if CktElem.Enabled Then
         begin
-            if CktElem.Enabled Then
+            ActiveCircuit.ActiveCktElement := cktElem;
+            shuntElement := Branchlist.FirstObject;
+            while shuntElement <> NIL do
             begin
-                ActiveCktElement := cktElem;
-                shuntElement := Branchlist.FirstObject;
-                while shuntElement <> NIL do
-                begin
-                    ActiveCktElement := shuntElement;
-                    SetLength(ZonePCE, length(ZonePCE) + 1);
-                    ZonePCE[high(ZonePCE)] := shuntElement.FullName;
-                    shuntElement := BranchList.NextObject;
-                end;
+                ActiveCircuit.ActiveCktElement := shuntElement;
+                SetLength(ZonePCE, length(ZonePCE) + 1);
+                ZonePCE[high(ZonePCE)] := shuntElement.FullName;
+                shuntElement := BranchList.NextObject;
             end;
-            cktElem := BranchList.GoForward;
         end;
+        cktElem := BranchList.GoForward();
     end;
 
     if (Length(ZonePCE) = 0) and (not allowEmpty) then
@@ -2930,13 +2879,10 @@ begin
     end;
 
     // Write Registers to Totals File
-    with DSS.EnergyMeterClass do
-    begin
-        WriteintoMemStr(EMT_MHandle, '"' + Self.Name + '"');
-        for i := 1 to NumEMregisters do
-            WriteintoMem(EMT_MHandle, Registers[i]);
-        WriteintoMemStr(EMT_MHandle, Char(10));
-    end;
+    WriteintoMemStr(DSS.EnergyMeterClass.EMT_MHandle, '"' + Self.Name + '"');
+    for i := 1 to NumEMregisters do
+        WriteintoMem(DSS.EnergyMeterClass.EMT_MHandle, Registers[i]);
+    WriteintoMemStr(DSS.EnergyMeterClass.EMT_MHandle, Char(10));
 end;
 
 procedure TEnergyMeterObj.OpenDemandIntervalFile;
@@ -3003,39 +2949,36 @@ var
 begin
     if DSS.EnergyMeterClass.DI_Verbose and This_Meter_DIFileIsOpen then
     begin
-        with DSS.ActiveCircuit.Solution do
-            WriteintoMem(DI_MHandle, DynaVars.dblHour);
+        WriteintoMem(DI_MHandle, DSS.ActiveCircuit.Solution.DynaVars.dblHour);
         for i := 1 to NumEMRegisters do
             WriteintoMem(DI_MHandle, Derivatives[i]);
         WriteIntoMemStr(DI_MHandle, Char(10));
     end;
 
     // Add to Class demand interval registers
-    with DSS.EnergyMeterClass do
-        for i := 1 to NumEMRegisters do
-            DI_RegisterTotals[i] := DI_RegisterTotals[i] + Derivatives[i] * TotalsMask[i];
+    for i := 1 to NumEMRegisters do
+        DSS.EnergyMeterClass.DI_RegisterTotals[i] += Derivatives[i] * TotalsMask[i];
 
 
     // Phase Voltage Report, if requested
     if VPhaseReportFileIsOpen then
     begin
-        with DSS.ActiveCircuit.Solution do
-            WriteintoMem(PHV_MHandle, DynaVars.dblHour);
+        WriteintoMem(PHV_MHandle, DSS.ActiveCircuit.Solution.DynaVars.dblHour);
         for i := 1 to MaxVBaseCount do
             if VBaseList[i] > 0.0 then
             begin
                 for j := 1 to 3 do
-                    WriteintoMem(PHV_MHandle, 0.001 * VPhaseMax^[jiIndex(j, i)]);
+                    WriteintoMem(PHV_MHandle, 0.001 * VPhaseMax[jiIndex(j, i)]);
                 for j := 1 to 3 do
-                    WriteintoMem(PHV_MHandle, 0.001 * VPhaseMin^[jiIndex(j, i)]);
+                    WriteintoMem(PHV_MHandle, 0.001 * VPhaseMin[jiIndex(j, i)]);
                 for j := 1 to 3 do
-                    WriteintoMem(PHV_MHandle, 0.001 * MyCount_Avg(VPhaseAccum^[jiIndex(j, i)], VPhaseAccumCount^[jiIndex(j, i)]));
+                    WriteintoMem(PHV_MHandle, 0.001 * MyCount_Avg(VPhaseAccum[jiIndex(j, i)], VPhaseAccumCount[jiIndex(j, i)]));
             end;
         WriteintoMemStr(PHV_MHandle, Char(10));
     end;
 end;
 
-procedure TEnergyMeter.CloseAllDIFiles;
+procedure TEnergyMeter.CloseAllDIFiles();
 var
     mtr: TEnergyMeterObj;
 begin
@@ -3107,7 +3050,7 @@ begin
     end;
 end;
 
-procedure TEnergyMeterObj.AssignVoltBaseRegisterNames;
+procedure TEnergyMeterObj.AssignVoltBaseRegisterNames();
 var
     i, ireg: Integer;
     vbase: Double;
@@ -3145,7 +3088,7 @@ begin
     end;
 end;
 
-procedure TEnergyMeter.AppendAllDIFiles;
+procedure TEnergyMeter.AppendAllDIFiles();
 var
     mtr: TEnergyMeterObj;
     Filenm: String;
@@ -3180,7 +3123,7 @@ begin
     end;
 end;
 
-function TEnergyMeterObj.MakeDIFileName: String;
+function TEnergyMeterObj.MakeDIFileName(): String;
 begin
     Result := DSS.EnergyMeterClass.DI_Dir + PathDelim + Self.Name + DSS._Name + '.csv';
 end;
@@ -3284,13 +3227,13 @@ begin
                         if j = 0 then
                         begin
                             k := strtoint(ClassName);
-                            dVector[k] := dBuffer^[i];
+                            dVector[k] := dBuffer[i];
                             break
                         end
                         else
                         begin
                             k := strtoint(ClassName.Substring(0, j - 1));
-                            dVector[k] := dBuffer^[i];
+                            dVector[k] := dBuffer[i];
                             ClassName := ClassName.Substring(j);
                         end;
                     end;
@@ -3298,11 +3241,10 @@ begin
                 else
                 begin
                     for i := 1 to 3 do
-                        dVector[i] := dBuffer^[i];
+                        dVector[i] := dBuffer[i];
                 end;
 
-                with DSS.ActiveCircuit.Solution do
-                    WriteintoMem(OV_MHandle, DynaVars.dblHour);
+                WriteintoMem(OV_MHandle, DSS.ActiveCircuit.Solution.DynaVars.dblHour);
                 WriteintoMemStr(OV_MHandle, ', ' + EncloseQuotes(PDelem.FullName));
                 WriteintoMem(OV_MHandle, PDElem.NormAmps);
                 WriteintoMem(OV_MHandle, pdelem.EmergAmps);
@@ -3314,8 +3256,7 @@ begin
                     WriteintoMem(OV_MHandle, Cmax / PDElem.Emergamps * 100.0)
                 else
                     WriteintoMem(OV_MHandle, 0.0);
-                with ActiveCircuit do // Find bus of first terminal
-                    WriteintoMem(OV_MHandle, Buses[MapNodeToBus[PDElem.NodeRef[1]].BusRef].kVBase);
+                WriteintoMem(OV_MHandle, ActiveCircuit.Buses[ActiveCircuit.MapNodeToBus[PDElem.NodeRef[1]].BusRef].kVBase);
                 // Adds the currents in Amps per phase at the end of the report
                 for i := 1 to 3 do
                     WriteintoMem(OV_MHandle, dVector[i]);
@@ -3345,8 +3286,8 @@ begin
         if TDI_MHandle <> NIL then
             TDI_MHandle.Free;
         TDI_MHandle := Create_Meter_Space('Time');
-        mtr := DSS.ActiveCircuit.EnergyMeters.First;  // just get the first one
-        if Assigned(mtr) then
+        mtr := DSS.ActiveCircuit.EnergyMeters.First();  // just get the first one
+        if mtr <> NIL then
         begin
             for i := 1 to NumEMRegisters do
             begin
@@ -3419,30 +3360,24 @@ end;
 constructor TSystemMeter.Create(EnergyMeterClass: TEnergyMeter);
 begin
     DSS := EnergyMeterClass.DSS;
-    Clear;
+    Clear();
     This_Meter_DIFileIsOpen := FALSE;
-    with EnergyMeterClass do
-    begin
-        SDI_MHandle := NIL;
-        TDI_MHandle := NIL;
-        VR_MHandle := NIL;
-        OV_MHandle := NIL;
-    end;
+    EnergyMeterClass.SDI_MHandle := NIL;
+    EnergyMeterClass.TDI_MHandle := NIL;
+    EnergyMeterClass.VR_MHandle := NIL;
+    EnergyMeterClass.OV_MHandle := NIL;
 end;
 
 destructor TSystemMeter.Destroy;
 begin
-    with DSS.EnergyMeterClass do
-    begin
-        if SDI_MHandle <> NIL then
-            FreeAndNil(SDI_MHandle);
-        if TDI_MHandle <> NIL then
-            FreeAndNil(TDI_MHandle);
-        if VR_MHandle <> NIL then
-            FreeAndNil(VR_MHandle);
-        if OV_MHandle <> NIL then
-            FreeAndNil(OV_MHandle);
-    end;
+    if DSS.EnergyMeterClass.SDI_MHandle <> NIL then
+        FreeAndNil(DSS.EnergyMeterClass.SDI_MHandle);
+    if DSS.EnergyMeterClass.TDI_MHandle <> NIL then
+        FreeAndNil(DSS.EnergyMeterClass.TDI_MHandle);
+    if DSS.EnergyMeterClass.VR_MHandle <> NIL then
+        FreeAndNil(DSS.EnergyMeterClass.VR_MHandle);
+    if DSS.EnergyMeterClass.OV_MHandle <> NIL then
+        FreeAndNil(DSS.EnergyMeterClass.OV_MHandle);
     inherited;
 end;
 
@@ -3462,18 +3397,18 @@ begin
 end;
 
 procedure TSystemMeter.OpenDemandIntervalFile;
+var
+    cls: TEnergyMeter;
 begin
     try
-        with DSS.EnergyMeterClass do
-        begin
-            if This_Meter_DIFileIsOpen then
-                SDI_MHandle.Free;
-            This_Meter_DIFileIsOpen := TRUE;
-            if SDI_MHandle <> NIL then
-                SDI_MHandle.free;
-            SDI_MHandle := Create_Meter_Space('"Hour", ');
-            WriteintoMemStr(SDI_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
-        end;
+        cls := DSS.EnergyMeterClass;
+        if This_Meter_DIFileIsOpen then
+            cls.SDI_MHandle.Free;
+        This_Meter_DIFileIsOpen := TRUE;
+        if cls.SDI_MHandle <> NIL then
+            cls.SDI_MHandle.free;
+        cls.SDI_MHandle := Create_Meter_Space('"Hour", ');
+        WriteintoMemStr(cls.SDI_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
     except
         On E: Exception do
             DoSimpleMsg(DSS, 'Error opening demand interval file "DI_SystemMeter%s.csv" for writing.', [DSS._Name, CRLF + E.Message], 541);
@@ -3482,13 +3417,14 @@ end;
 
 procedure TSystemMeter.Reset;
 begin
-    Clear;
+    Clear();
    // removed - open in solution If EnergyMeterClass.SaveDemandInterval Then OpenDemandIntervalFile;
 end;
 
 procedure TSystemMeter.Save;
 var
     CSVName, Folder: String;
+    cls: TEnergyMeter;
 begin
     try
         CSVName := 'SystemMeter' + DSS._Name + '.csv';
@@ -3509,19 +3445,19 @@ begin
         end
     end;
 
-    with DSS.EnergyMeterClass do
-        try
-            if SM_MHandle <> NIL then
-                FreeAndNil(SM_MHandle);
-            SM_MHandle := Create_Meter_Space('Year, ');
-            WriteintoMemStr(SM_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
-            WriteintoMemStr(SM_MHandle, inttostr(DSS.ActiveCircuit.Solution.Year));
-            WriteRegisters();
-            WriteintoMemStr(SM_MHandle, Char(10));
+    cls := DSS.EnergyMeterClass;
+    try
+        if cls.SM_MHandle <> NIL then
+            FreeAndNil(cls.SM_MHandle);
+        cls.SM_MHandle := Create_Meter_Space('Year, ');
+        WriteintoMemStr(cls.SM_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
+        WriteintoMemStr(cls.SM_MHandle, inttostr(DSS.ActiveCircuit.Solution.Year));
+        WriteRegisters();
+        WriteintoMemStr(cls.SM_MHandle, Char(10));
 
-        finally
-            CloseMHandler(DSS, SM_MHandle, Folder + CSVName, SM_Append);
-        end;
+    finally
+        CloseMHandler(DSS, cls.SM_MHandle, Folder + CSVName, cls.SM_Append);
+    end;
 end;
 
 procedure TSystemMeter.TakeSample;
@@ -3558,7 +3494,7 @@ begin
     if EMT_MHandle <> NIL then
         EMT_MHandle.Free;
     EMT_MHandle := Create_Meter_Space('Name');
-    mtr := DSS.ActiveCircuit.EnergyMeters.First;
+    mtr := DSS.ActiveCircuit.EnergyMeters.First();
     if Assigned(mtr) then
         for i := 1 to NumEMRegisters do
             WriteintoMemStr(EMT_MHandle, ', "' + mtr.RegisterNames[i] + '"');
@@ -3566,34 +3502,33 @@ begin
 end;
 
 procedure TSystemMeter.WriteDemandIntervalData;
+var
+    SDI_MHandle: TBytesStream;
 begin
-    with DSS.EnergyMeterClass do
-    begin
-        with DSS.ActiveCircuit.Solution do
-            WriteintoMem(SDI_MHandle, DynaVars.dblHour);
-        WriteintoMem(SDI_MHandle, cPower.re);
-        WriteintoMem(SDI_MHandle, cPower.im);
-        WriteintoMem(SDI_MHandle, peakkW);
-        WriteintoMem(SDI_MHandle, peakkVA);
-        WriteintoMem(SDI_MHandle, cLosses.re);
-        WriteintoMem(SDI_MHandle, cLosses.im);
-        WriteintoMem(SDI_MHandle, PeakLosseskW);
-        WriteintoMemStr(SDI_MHandle, Char(10));
-    end;
+    SDI_MHandle := DSS.EnergyMeterClass.SDI_MHandle;
+    WriteintoMem(SDI_MHandle, DSS.ActiveCircuit.Solution.DynaVars.dblHour);
+    WriteintoMem(SDI_MHandle, cPower.re);
+    WriteintoMem(SDI_MHandle, cPower.im);
+    WriteintoMem(SDI_MHandle, peakkW);
+    WriteintoMem(SDI_MHandle, peakkVA);
+    WriteintoMem(SDI_MHandle, cLosses.re);
+    WriteintoMem(SDI_MHandle, cLosses.im);
+    WriteintoMem(SDI_MHandle, PeakLosseskW);
+    WriteintoMemStr(SDI_MHandle, Char(10));
 end;
 
 procedure TSystemMeter.WriteRegisters();
+var
+    SM_MHandle: TBytesStream;
 begin
-    with DSS.EnergyMeterClass do
-    begin
-        WriteintoMem(SM_MHandle, kWh);
-        WriteintoMem(SM_MHandle, kvarh);
-        WriteintoMem(SM_MHandle, peakkW);
-        WriteintoMem(SM_MHandle, peakkVA);
-        WriteintoMem(SM_MHandle, Losseskwh);
-        WriteintoMem(SM_MHandle, Losseskvarh);
-        WriteintoMem(SM_MHandle, PeakLosseskW);
-    end;
+    SM_MHandle := DSS.EnergyMeterClass.SM_MHandle;
+    WriteintoMem(SM_MHandle, kWh);
+    WriteintoMem(SM_MHandle, kvarh);
+    WriteintoMem(SM_MHandle, peakkW);
+    WriteintoMem(SM_MHandle, peakkVA);
+    WriteintoMem(SM_MHandle, Losseskwh);
+    WriteintoMem(SM_MHandle, Losseskvarh);
+    WriteintoMem(SM_MHandle, PeakLosseskW);
 end;
 
 procedure TEnergyMeter.Set_DI_Verbose(const Value: Boolean);
@@ -3620,16 +3555,15 @@ begin
     for mtr in DSS.ActiveCircuit.EnergyMeters do
     begin
         if mtr.enabled then
-            with Mtr do
-                for i := 1 to NumEMRegisters do
-                    Regsum[i] := Regsum[i] + Registers[i] * TotalsMask[i];
+            for i := 1 to NumEMRegisters do
+                Regsum[i] := Regsum[i] + mtr.Registers[i] * mtr.TotalsMask[i];
     end;
 
     try     // Writes the file
         if FM_MHandle <> NIL then
             FM_MHandle.Free;
         FM_MHandle := Create_Meter_Space('Year');
-        mtr := DSS.ActiveCircuit.EnergyMeters.First;
+        mtr := DSS.ActiveCircuit.EnergyMeters.First();
         if assigned(mtr) then
             for i := 1 to NumEMRegisters do
                 WriteintoMemStr(FM_MHandle, ', "' + mtr.RegisterNames[i] + '"'); //Write(F,', "', mtr.RegisterNames[i],'"');
@@ -3657,134 +3591,133 @@ var
     MinBus: Integer;
     MaxBus: Integer;
     BusCounted: Boolean;
+    bus: TDSSBus;
+    NodeV: pNodeVarray;
 begin
-    // For any bus with a defined voltage base, test for > Vmax or < Vmin
+    NodeV := ActiveCircuit.Solution.NodeV;
+ 
+   // For any bus with a defined voltage base, test for > Vmax or < Vmin
 
     OverCount := 0;
     UnderCount := 0;
     MinBus := 0;
     MaxBus := 0;
-
-    with ActiveCircuit do
+    OverVmax := ActiveCircuit.NormalMinVolts;
+    UnderVmin := ActiveCircuit.NormalMaxVolts;
+    for i := 1 to ActiveCircuit.NumBuses do
     begin
-        OverVmax := NormalMinVolts;
-        UnderVmin := NormalMaxVolts;
-        for i := 1 to NumBuses do
-            with Buses[i] do
+        bus := ActiveCircuit.Buses[i];
+        BusCounted := FALSE;
+        if bus.kVBase <= 1.0 then // Primary Nodes first
+            continue;
+
+        for j := 1 to bus.NumNodesThisBus do
+        begin
+            Vmagpu := Cabs(NodeV[bus.RefNo[j]]) / bus.kVBase * 0.001;
+            if Vmagpu <= 0.1 then
+                // ignore neutral buses
+                continue;
+
+            if Vmagpu < underVmin then
             begin
-                BusCounted := FALSE;
-                if kVBase > 1.0 then          // Primary Nodes first
-                begin
-                    for j := 1 to NumNodesThisBus do
-                    begin
-                        Vmagpu := Cabs(Solution.NodeV[RefNo[j]]) / kvbase * 0.001;
-                        if Vmagpu > 0.1 then
-                        begin // ignore neutral buses
-                            if Vmagpu < underVmin then
-                            begin
-                                UnderVmin := Vmagpu;
-                                MinBus := i;
-                            end;
+                UnderVmin := Vmagpu;
+                MinBus := i;
+            end;
 
-                            if Vmagpu > OverVMax then
-                            begin
-                                OverVMax := Vmagpu;
-                                MaxBus := i;
-                            end;
-
-                            if (Vmagpu < NormalMinVolts) then
-                            begin
-                                if not BusCounted then
-                                begin     // Don't count more than once
-                                    Inc(UnderCount);
-                                    BusCounted := TRUE;
-                                end;
-                            end
-                            else
-                            if (Vmagpu > NormalMaxVolts) then
-                            begin
-                                if not BusCounted then
-                                begin
-                                    Inc(OverCount);
-                                    BusCounted := TRUE;
-                                end;
-                            end;
-                        end;
-                    end;
-                end;
-            end; // For i
-
-        with Solution do
-            WriteintoMem(VR_MHandle, DynaVars.dblHour);
-        WriteintoMemStr(VR_MHandle, ', ' + inttostr(UnderCount));
-        WriteintoMem(VR_MHandle, UnderVmin);
-        WriteintoMemStr(VR_MHandle, ', ' + inttostr(OverCount));
-        WriteintoMem(VR_MHandle, OverVmax);
-        WriteintoMemStr(VR_MHandle, ', ' + BusList.NameOfIndex(minbus));
-        WriteintoMemStr(VR_MHandle, ', ' + BusList.NameOfIndex(maxbus));
-
-        // Klugy but it works
-        // now repeat for buses under 1 kV
-        OverCount := 0;
-        UnderCount := 0;
-        MinBus := 0;
-        MaxBus := 0;
-
-        OverVmax := NormalMinVolts;
-        UnderVmin := NormalMaxVolts;
-        for i := 1 to NumBuses do
-            with Buses[i] do
+            if Vmagpu > OverVMax then
             begin
-                BusCounted := FALSE;
-                if (kVBase > 0.0) and (kVBase <= 1.0) then
-                begin
-                    for j := 1 to NumNodesThisBus do
-                    begin
-                        Vmagpu := Cabs(Solution.NodeV[RefNo[j]]) / kvbase * 0.001;
-                        if Vmagpu > 0.1 then
-                        begin // ignore neutral buses
-                            if Vmagpu < underVmin then
-                            begin
-                                UnderVmin := Vmagpu;
-                                MinBus := i;
-                            end;
+                OverVMax := Vmagpu;
+                MaxBus := i;
+            end;
 
-                            if Vmagpu > OverVMax then
-                            begin
-                                OverVMax := Vmagpu;
-                                MaxBus := i;
-                            end;
-
-                            if (Vmagpu < NormalMinVolts) then
-                            begin
-                                if not BusCounted then
-                                begin     // Don't count more than once
-                                    Inc(UnderCount);
-                                    BusCounted := TRUE;
-                                end;
-                            end
-                            else
-                            if (Vmagpu > NormalMaxVolts) then
-                            begin
-                                if not BusCounted then
-                                begin
-                                    Inc(OverCount);
-                                    BusCounted := TRUE;
-                                end;
-                            end;
-                        end;
-                    end;
+            if (Vmagpu < ActiveCircuit.NormalMinVolts) then
+            begin
+                if not BusCounted then
+                begin     // Don't count more than once
+                    Inc(UnderCount);
+                    BusCounted := TRUE;
                 end;
-            end; // For i
-
-        WriteintoMemStr(VR_MHandle, ', ' + inttostr(UnderCount));
-        WriteintoMem(VR_MHandle, UnderVmin);
-        WriteintoMemStr(VR_MHandle, ', ' + inttostr(OverCount));
-        WriteintoMem(VR_MHandle, OverVmax);
-        WriteintoMemStr(VR_MHandle, ', ' + BusList.NameOfIndex(minbus));
-        WriteintoMemStr(VR_MHandle, ', ' + BusList.NameOfIndex(maxbus));
-        WriteintoMemStr(VR_MHandle, Char(10));
+            end
+            else
+            if (Vmagpu > ActiveCircuit.NormalMaxVolts) then
+            begin
+                if not BusCounted then
+                begin
+                    Inc(OverCount);
+                    BusCounted := TRUE;
+                end;
+            end;
+        end;
     end;
+
+    WriteintoMem(VR_MHandle, ActiveCircuit.Solution.DynaVars.dblHour);
+    WriteintoMemStr(VR_MHandle, ', ' + inttostr(UnderCount));
+    WriteintoMem(VR_MHandle, UnderVmin);
+    WriteintoMemStr(VR_MHandle, ', ' + inttostr(OverCount));
+    WriteintoMem(VR_MHandle, OverVmax);
+    WriteintoMemStr(VR_MHandle, ', ' + ActiveCircuit.BusList.NameOfIndex(minbus));
+    WriteintoMemStr(VR_MHandle, ', ' + ActiveCircuit.BusList.NameOfIndex(maxbus));
+
+    // Klugy but it works
+    // now repeat for buses under 1 kV
+    OverCount := 0;
+    UnderCount := 0;
+    MinBus := 0;
+    MaxBus := 0;
+    OverVmax := ActiveCircuit.NormalMinVolts;
+    UnderVmin := ActiveCircuit.NormalMaxVolts;
+    for i := 1 to ActiveCircuit.NumBuses do
+    begin
+        bus := ActiveCircuit.Buses[i];
+        BusCounted := FALSE;
+        if not ((bus.kVBase > 0.0) and (bus.kVBase <= 1.0)) then
+            continue;
+
+        for j := 1 to bus.NumNodesThisBus do
+        begin
+            Vmagpu := Cabs(NodeV[bus.RefNo[j]]) / bus.kVBase * 0.001;
+            if Vmagpu <= 0.1 then // ignore neutral buses
+                continue;
+
+            if Vmagpu < underVmin then
+            begin
+                UnderVmin := Vmagpu;
+                MinBus := i;
+            end;
+
+            if Vmagpu > OverVMax then
+            begin
+                OverVMax := Vmagpu;
+                MaxBus := i;
+            end;
+
+            if (Vmagpu < ActiveCircuit.NormalMinVolts) then
+            begin
+                if not BusCounted then
+                begin     // Don't count more than once
+                    Inc(UnderCount);
+                    BusCounted := TRUE;
+                end;
+            end
+            else
+            if (Vmagpu > ActiveCircuit.NormalMaxVolts) then
+            begin
+                if not BusCounted then
+                begin
+                    Inc(OverCount);
+                    BusCounted := TRUE;
+                end;
+            end;
+        end;
+    end;
+
+    WriteintoMemStr(VR_MHandle, ', ' + inttostr(UnderCount));
+    WriteintoMem(VR_MHandle, UnderVmin);
+    WriteintoMemStr(VR_MHandle, ', ' + inttostr(OverCount));
+    WriteintoMem(VR_MHandle, OverVmax);
+    WriteintoMemStr(VR_MHandle, ', ' + ActiveCircuit.BusList.NameOfIndex(minbus));
+    WriteintoMemStr(VR_MHandle, ', ' + ActiveCircuit.BusList.NameOfIndex(maxbus));
+    WriteintoMemStr(VR_MHandle, Char(10));
 end;
 
 procedure TEnergyMeter.OpenAllDIFiles;

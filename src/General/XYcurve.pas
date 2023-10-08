@@ -199,22 +199,19 @@ procedure SetPoints(obj: TObj; Values: PDouble; ValueCount: Integer);
 var
     i: Integer;
 begin
-    with obj do
+    // Allow possible Resetting (to a lower value) of num points when specifying temperatures not Hours
+    obj.FNumPoints := ValueCount div 2;
+    ReAllocmem(obj.YValues, Sizeof(Double) * obj.FNumPoints);
+    ReAllocmem(obj.XValues, Sizeof(Double) * obj.FNumPoints);
+    for i := 1 to obj.FNumPoints do
     begin
-        // Allow possible Resetting (to a lower value) of num points when specifying temperatures not Hours
-        FNumPoints := ValueCount div 2;
-        ReAllocmem(YValues, Sizeof(Double) * FNumPoints);
-        ReAllocmem(XValues, Sizeof(Double) * FNumPoints);
-        for i := 1 to FNumPoints do
-        begin
-            XValues[i] := Values^;
-            Inc(Values);
-            YValues[i] := Values^;
-            Inc(Values);
-        end;
-        X := Xvalues[1];
-        Y := Yvalues[1];
+        obj.XValues[i] := Values^;
+        Inc(Values);
+        obj.YValues[i] := Values^;
+        Inc(Values);
     end;
+    obj.X := obj.Xvalues[1];
+    obj.Y := obj.Yvalues[1];
 end;
 
 procedure GetPoints(obj: TObj; var ResultPtr: PDouble; ResultCount: PAPISize);
@@ -222,17 +219,16 @@ var
     i: Integer;
     Result: PDoubleArray0;
 begin
-    with Obj do
-        if (XValues <> NIL) and (YValues <> NIL) then
+    if (obj.XValues <> NIL) and (obj.YValues <> NIL) then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, obj.FNumPoints * 2);
+        for i := 1 to obj.FNumPoints do
         begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, FNumPoints * 2);
-            for i := 1 to FNumPoints do
-            begin
-                Result[2 * (i - 1)] := XValues[i];
-                Result[2 * (i - 1) + 1] := YValues[i];
-            end;
-            Exit;
+            Result[2 * (i - 1)] := obj.XValues[i];
+            Result[2 * (i - 1) + 1] := obj.YValues[i];
         end;
+        Exit;
+    end;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
     Result[0] := 0;
     Result[1] := 0;

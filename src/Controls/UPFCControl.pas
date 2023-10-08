@@ -1,18 +1,12 @@
 unit UPFCControl;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 //  A UPFCControl is a control element that is connected to a terminal of another
 //  circuit element and sends dispatch kW signals to a set of generators it controls
-//
-//  A UPFCControl is defined by a New command:
-//
-//  New UPFCControl.Name=myname Element=devclass.name terminal=[ 1|2|...] CapacitorList = (gen1  gen2 ...)
 
 interface
 

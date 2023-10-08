@@ -119,13 +119,13 @@ type
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
 
-       {Properties to interpret input to the sensor}
+       // Properties to interpret input to the sensor
 
         // property Action: String WRITE Set_Action;
         property WLSCurrentError: Double READ Get_WLSCurrentError;
         property WLSVoltageError: Double READ Get_WLSVoltageError;
 
-        property BaseKV: Double READ kvbase;
+        property BaseKV: Double READ kVBase;
         property DeltaDirection: Integer READ FDeltaDirection;
        // the following two properties actually give write access, since they are pointers
         property SensorP: pDoubleArray READ SensorKW;
@@ -146,7 +146,9 @@ uses
     ucmatrix,
     showresults,
     mathUtil,
-    DSSPointerList, {TOPExport,} Dynamics,
+    DSSPointerList,
+    // TOPExport,
+    Dynamics,
     DSSHelper,
     DSSObjectHelper,
     TypInfo;
@@ -317,13 +319,13 @@ begin
 end;
 
 function TSensor.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
 begin
-    with TObj(ptr) do
-    begin
-        if Flg.NeedsRecalc in Flags then
-            RecalcElementData;
-        Exclude(Flags, Flg.EditionActive);
-    end;
+    obj := TObj(ptr);
+    if Flg.NeedsRecalc in obj.Flags then
+        obj.RecalcElementData();
+    Exclude(obj.Flags, Flg.EditionActive);
 end;
 
 procedure TSensor.ResetAll; // Force all Sensors in the circuit to reset
@@ -360,30 +362,25 @@ var
     CktElem: TDSSCktElement;
 begin
     // Initialize all to FALSE
-    with ActiveCircuit do
+    for CktElem in ActiveCircuit.PDElements do
     begin
-        for CktElem in PDElements do
-        begin
-            Exclude(CktElem.Flags, Flg.HasSensorObj);
-        end;
-        for CktElem in PCElements  do
-        begin
-            Exclude(CktElem.Flags, Flg.HasSensorObj);
-        end;
+        Exclude(CktElem.Flags, Flg.HasSensorObj);
+    end;
+    for CktElem in ActiveCircuit.PCElements do
+    begin
+        Exclude(CktElem.Flags, Flg.HasSensorObj);
     end;
 
-    for i := 1 to ActiveCircuit.Sensors.Count do
+    for ThisSensor in ActiveCircuit.Sensors do
     begin
-        ThisSensor := ActiveCircuit.Sensors.Get(i);
-        with ThisSensor do
-            if MeteredElement <> NIL then
-            begin
-                Include(MeteredElement.Flags, Flg.HasSensorObj);
-                if MeteredElement is TPCElement then
-                    TPCElement(MeteredElement).SensorObj := ThisSensor
-                else
-                    TPDElement(MeteredElement).SensorObj := ThisSensor;
-            end;
+        if ThisSensor.MeteredElement <> NIL then
+        begin
+            Include(ThisSensor.MeteredElement.Flags, Flg.HasSensorObj);
+            if ThisSensor.MeteredElement is TPCElement then
+                TPCElement(ThisSensor.MeteredElement).SensorObj := ThisSensor
+            else
+                TPDElement(ThisSensor.MeteredElement).SensorObj := ThisSensor;
+        end;
     end;
 end;
 
@@ -516,7 +513,7 @@ begin
 end;
 
 procedure TSensorObj.ResetIt;
-{What does it mean to reset a sensor?}
+// What does it mean to reset a sensor?
 begin
     ClearSensor;
 end;
@@ -553,10 +550,10 @@ begin
     case Fconn of
         1:
             for i := 1 to Fnphases do
-                CalculatedVoltage^[i] := VTerminal^[i] - VTerminal^[RotatePhases(i)];
+                CalculatedVoltage[i] := VTerminal[i] - VTerminal[RotatePhases(i)];
     else
         for i := 1 to Fnphases do
-            CalculatedVoltage^[i] := VTerminal^[i];
+            CalculatedVoltage[i] := VTerminal[i];
     end;
     // NOTE: CalculatedVoltage is complex
 end;
@@ -584,15 +581,15 @@ begin
         begin
             for i := 1 to FNPhases do
             begin
-                kVA := Cabs(Cmplx(SensorkW^[i], Sensorkvar^[i]));
-                SensorCurrent^[i] := kVA * 1000.0 / Vbase;
+                kVA := Cabs(Cmplx(SensorkW[i], Sensorkvar[i]));
+                SensorCurrent[i] := kVA * 1000.0 / Vbase;
             end;
         end
         else
         begin    // No Q just use P
             for i := 1 to FNPhases do
             begin
-                SensorCurrent^[i] := SensorkW^[i] * 1000.0 / Vbase;
+                SensorCurrent[i] := SensorkW[i] * 1000.0 / Vbase;
             end;
         end;
         Ispecified := TRUE;    // Overrides current specification
@@ -614,15 +611,15 @@ begin
         begin
             for i := 1 to FNPhases do
             begin
-                kVA := Cabs(Cmplx(SensorkW^[i], Sensorkvar^[i]));
-                SensorCurrent^[i] := kVA * 1000.0 / Vbase;
+                kVA := Cabs(Cmplx(SensorkW[i], Sensorkvar[i]));
+                SensorCurrent[i] := kVA * 1000.0 / Vbase;
             end;
         end
         else
         begin    // No Q just use P
             for i := 1 to FNPhases do
             begin
-                SensorCurrent^[i] := SensorkW^[i] * 1000.0 / Vbase;
+                SensorCurrent[i] := SensorkW[i] * 1000.0 / Vbase;
             end;
         end;
         Ispecified := TRUE;    // Overrides current specification
@@ -631,7 +628,7 @@ begin
     if Ispecified then
     begin
         for i := 1 to FnPhases do
-            Result := Result + SQR(CalculatedCurrent^[i].re) + SQR(CalculatedCurrent^[i].im) - SQR(SensorCurrent^[i]);
+            Result := Result + SQR(CalculatedCurrent[i].re) + SQR(CalculatedCurrent[i].im) - SQR(SensorCurrent[i]);
     end;
 
     Result := Result * Weight;
@@ -646,15 +643,15 @@ begin
     if Vspecified then
     begin
         for i := 1 to FnPhases do
-            Result := Result + SQR(CalculatedVoltage^[i].re) + SQR(CalculatedVoltage^[i].im) - SQR(SensorVoltage^[i]);
+            Result := Result + SQR(CalculatedVoltage[i].re) + SQR(CalculatedVoltage[i].im) - SQR(SensorVoltage[i]);
     end;
     Result := Result * Weight;
 end;
 
 procedure TSensorObj.AllocateSensorObjArrays;
 begin
-    ReAllocMem(SensorkW, Sizeof(SensorkW^[1]) * Fnphases);
-    ReAllocMem(Sensorkvar, Sizeof(Sensorkvar^[1]) * Fnphases);
+    ReAllocMem(SensorkW, Sizeof(SensorkW[1]) * Fnphases);
+    ReAllocMem(Sensorkvar, Sizeof(Sensorkvar[1]) * Fnphases);
     AllocateSensorArrays;
 end;
 
@@ -664,10 +661,10 @@ var
 begin
     for i := 1 to FnPhases do
     begin
-        SensorCurrent^[i] := 0.0;
-        SensorVoltage^[i] := 0.0;
-        SensorkW^[i] := 0.0;
-        Sensorkvar^[i] := 0.0;
+        SensorCurrent[i] := 0.0;
+        SensorVoltage[i] := 0.0;
+        SensorkW[i] := 0.0;
+        Sensorkvar[i] := 0.0;
     end;
 end;
 

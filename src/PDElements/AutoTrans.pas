@@ -222,9 +222,9 @@ type
 
         NormMaxHkVA: Double;
         EmergMaxHkVA: Double;
-        ThermalTimeConst: Double;  {hr}
+        ThermalTimeConst: Double;  // hr
         n_thermal: Double;
-        m_thermal: Double;  {Exponents}
+        m_thermal: Double;  // Exponents
         FLrise: Double;
         HSrise: Double;
 
@@ -333,37 +333,32 @@ end;
 
 function XscSize(obj: TObj): Integer;
 begin
-    with obj do
-        Result := (NumWindings - 1) * NumWindings div 2;
+    Result := (obj.NumWindings - 1) * obj.NumWindings div 2;
 end;
 
-function GetWindingCurrentsResult(Obj: TObj): String;
+function GetWindingCurrentsResult(obj: TObj): String;
 // Returns string mag, angle
 var
     WindingCurrents: pComplexArray;
     i, j, k: Integer;
 begin
-    with Obj do
+    WindingCurrents := AllocMem(Sizeof(Complex) * 2 * obj.FNPhases * obj.NumWindings);
+
+    obj.GetAllWindingCurrents(WindingCurrents);
+
+    Result := '';
+    k := 0;
+    for  i := 1 to obj.Fnphases do
     begin
-        WindingCurrents := AllocMem(Sizeof(Complex) * 2 * FNPhases * NumWindings);
-
-        GetAllWindingCurrents(WindingCurrents);
-
-        Result := '';
-        k := 0;
-        for  i := 1 to Fnphases do
+        for j := 1 to obj.NumWindings do
         begin
-            for j := 1 to NumWindings do
-            begin
-                k := k + 1;
-                Result := Result + Format('%.7g, (%.5g), ', [Cabs(WindingCurrents^[k]), Cdang(WindingCurrents^[k])]);
-                k := k + 1;
-            // Skip currents from other end of the winding
-            end;
+            k := k + 1;
+            Result := Result + Format('%.7g, (%.5g), ', [Cabs(WindingCurrents[k]), Cdang(WindingCurrents[k])]);
+            k := k + 1;
+        // Skip currents from other end of the winding
         end;
-
-        Reallocmem(WindingCurrents, 0);  // throw away temp array
     end;
+    Reallocmem(WindingCurrents, 0);  // throw away temp array
 end;
 
 procedure TAutoTrans.DefineProperties;
@@ -636,9 +631,9 @@ begin
                 Winding[i].Init(i);
 
             // array of short circuit measurements between pairs of windings
-            ReAllocmem(puXSC, SizeOF(puXSC^[1]) * NewWdgSize);
+            ReAllocmem(puXSC, SizeOF(puXSC[1]) * NewWdgSize);
             for i := OldWdgSize + 1 to NewWdgSize do
-                puXSC^[i] := 0.30;
+                puXSC[i] := 0.30;
             Reallocmem(TermRef, SizeOf(TermRef[1]) * 2 * NumWindings * Fnphases);
 
             // Reallocate impedance matrices
@@ -797,7 +792,7 @@ begin
     puXXT := Other.puXXT;
 
     for i := 1 to (NumWindings * (NumWindings - 1) div 2) do
-        puXSC^[i] := Other.puXSC^[i];
+        puXSC[i] := Other.puXSC[i];
 
     ZB.CopyFrom(Other.ZB);
     Y_1Volt.CopyFrom(Other.Y_1Volt);
@@ -973,11 +968,11 @@ begin
             for i := 1 to (NumWindings * (NumWindings - 1) div 2) do
                 case i of
                     1:
-                        puXSC^[1] := puXHX;
+                        puXSC[1] := puXHX;
                     2:
-                        puXSC^[2] := puXHT;
+                        puXSC[2] := puXHT;
                     3:
-                        puXSC^[3] := puXXT;
+                        puXSC[3] := puXXT;
                 else
                 end;
         XHXChanged := FALSE;
@@ -1010,10 +1005,10 @@ begin
                 end;
             end;
 
-   {Base rating of Winding 1 }
+    // Base rating of Winding 1 
     VABase := Winding[1].kVA * 1000.0;
 
-   // Set Rdc parameters for each winding.
+    // Set Rdc parameters for each winding.
     for i := 1 to NumWindings do
         with Winding[i] do
         begin
@@ -1029,7 +1024,7 @@ begin
     for i := 1 to NumWindings do
         Winding[i].ComputeAntiFloatAdder(ppm_FloatFactor, VABase / FNPhases);
 
-   { Normal and Emergency terminal current Rating for UE check}
+    // Normal and Emergency terminal current Rating for UE check
     Vfactor := 1.0;  // ensure initialization
     case Winding[1].connection of
         TAutoTransConnection.Wye:
@@ -1047,7 +1042,7 @@ begin
             VFactor := Winding[1].VBase * 0.001;   // Series Winding
     end;
 
-     {Divide per phase kVA by voltage to neutral}
+    // Divide per phase kVA by voltage to neutral
     NormAmps := NormMaxHkVA / Fnphases / Vfactor;
     EmergAmps := EmergMaxHkVA / Fnphases / Vfactor;
 
@@ -1159,7 +1154,7 @@ procedure TAutoTransObj.CalcYPrim;
 var
     FreqMultiplier: Double;
 begin
-    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) {YPrimInvalid} then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) then // YPrimInvalid
     begin
          // Reallocate YPrim if something has invalidated old allocation
         if YPrim_Series <> NIL then
@@ -1249,7 +1244,7 @@ begin
     // FSWriteln(F, Format('~ X23=%.3f', [puXXT * 100.0]));
     FSWrite(F, '~ Xscmatrix= "');
     for i := 1 to (NumWindings - 1) * NumWindings div 2 do
-        FSWrite(F, Format('%.2f ', [puXSC^[i] * 100.0]));
+        FSWrite(F, Format('%.2f ', [puXSC[i] * 100.0]));
     FSWriteln(F, '"');
     FSWriteln(F, Format('~ NormMAxHkVA=%.0f', [NormMAxHkVA]));
     FSWriteln(F, Format('~ EmergMAxHkVA=%.0f', [EmergMAxHkVA]));
@@ -1264,11 +1259,8 @@ begin
     for i := 28 to NumPropsThisClass do
         FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
 
-    with ParentClass do
-    begin
-        for i := NumPropsthisClass + 1 to NumProperties do
-            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
-    end;
+    for i := NumPropsthisClass + 1 to ParentClass.NumProperties do
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
 
     if Complete then
     begin
@@ -1398,7 +1390,7 @@ begin
     if (i > 0) and (i <= NumWindings) then
         with Winding[i] do
         begin
-           {Range Checking}
+           // Range Checking
             TempVal := Value;
             if (TempVal < MinTap) then
                 TempVal := MinTap
@@ -1407,7 +1399,7 @@ begin
                 TempVal := MaxTap;
 
             if TempVal <> puTap then
-            begin    {Only if there's been a change}
+            begin    // Only if there's been a change
                 puTap := TempVal;
                 YPrimInvalid := TRUE;  // this property triggers setting SystemYChanged=true
                 RecalcElementData;
@@ -1437,7 +1429,7 @@ var
 begin
     imax := (NumWindings - 1) * NumWindings div 2;
     if (i > 0) and (i <= imax) then
-        Result := puXSC^[i]
+        Result := puXSC[i]
     else
         Result := 0.0;
 end;
@@ -1503,14 +1495,13 @@ begin
         Iterm := Allocmem(SizeOf(Complex) * 2 * NumWindings);
         ITerm_NL := Allocmem(SizeOf(Complex) * 2 * NumWindings);
 
-     {Load up Vterminal - already allocated for all cktelements}
-        with ActiveCircuit.Solution do
-            if Assigned(NodeV) then
-                for i := 1 to Yorder do
-                    Vterminal[i] := NodeV[NodeRef[i]]
-            else
-                for i := 1 to Yorder do
-                    Vterminal[i] := 0;
+        // Load up Vterminal - already allocated for all cktelements
+        if ActiveCircuit.Solution.NodeV <> NIL then
+            for i := 1 to Yorder do
+                Vterminal[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]]
+        else
+            for i := 1 to Yorder do
+                Vterminal[i] := 0;
 
 
         k := 0;
@@ -1522,21 +1513,21 @@ begin
                 case Winding[iWind].Connection of
                     TAutoTransConnection.Wye:
                     begin   // Wye  (Common winding usually)
-                        VTerm^[i] := Vterminal[iphase + (iWind - 1) * FNconds];
-                        VTerm^[i + 1] := Vterminal[iphase + (iWind - 1) * FNconds + FNphases];
+                        VTerm[i] := Vterminal[iphase + (iWind - 1) * FNconds];
+                        VTerm[i + 1] := Vterminal[iphase + (iWind - 1) * FNconds + FNphases];
                     end;
                     TAutoTransConnection.Delta:
                     begin   // Delta
                         jphase := RotatePhases(iphase);      // Get next phase in sequence
-                        VTerm^[i] := Vterminal[iphase + (iWind - 1) * FNconds];
-                        VTerm^[i + 1] := Vterminal[jphase + (iWind - 1) * FNconds];
+                        VTerm[i] := Vterminal[iphase + (iWind - 1) * FNconds];
+                        VTerm[i + 1] := Vterminal[jphase + (iWind - 1) * FNconds];
                     end;
                     TAutoTransConnection.Series:
                     begin    // Series Winding
-                        VTerm^[i] := Vterminal[iphase + (iWind - 1) * FNconds];
-                        VTerm^[i + 1] := Vterminal[iphase + Fnphases];
+                        VTerm[i] := Vterminal[iphase + (iWind - 1) * FNconds];
+                        VTerm[i + 1] := Vterminal[iphase + Fnphases];
                     end;
-                end; {CASE}
+                end; // CASE
 
             end;
             Y_Term.MVmult(ITerm, VTerm);  // ITerm = Y_Term Vterm
@@ -1545,7 +1536,7 @@ begin
             for i := 1 to 2 * NumWindings do
             begin
                 k := k + 1;
-                CurrBuffer^[k] := ITerm^[i] + ITerm_NL^[i];
+                CurrBuffer[k] := ITerm[i] + ITerm_NL[i];
             end;
         end;
 
@@ -1578,9 +1569,8 @@ begin
         end;
 
         // Load up VTerminal - already allocated for all cktelements
-        with ActiveCircuit.Solution do
-            for i := 1 to Yorder do
-                Vterminal[i] := NodeV[NodeRef[i]];
+        for i := 1 to Yorder do
+            Vterminal[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
 
 
         k := (iWind - 1) * FNconds;    // Offset for winding
@@ -1644,7 +1634,7 @@ begin
     // No Load Losses are sum of all powers coming into YPrim_Shunt from each terminal
     NoLoadLosses := 0;
     for i := 1 to Yorder do
-        NoLoadLosses += VTerminal^[i] * cong(cTempIterminal^[i]);
+        NoLoadLosses += VTerminal[i] * cong(cTempIterminal[i]);
 
     LoadLosses := TotalLosses - NoLoadLosses;
 
@@ -1841,11 +1831,11 @@ begin
 
         // Construct ZBMatrix;
         ZB.Clear;
-        ZBase := 1.0 / (VABase / Fnphases); // base ohms on 1.0 volt basis, as in Dommel (6.46) for Zct or puXSC^[3]
+        ZBase := 1.0 / (VABase / Fnphases); // base ohms on 1.0 volt basis, as in Dommel (6.46) for Zct or puXSC[3]
 
         // Adjust specified XSC by SQR(1 + Vcommon/Vseries)
-        ZCorrected := ZBase * SQR(1.0 + Winding[2].vbase / Winding[1].Vbase); // Correction factor for Series, as in Dommel (6.45) for Zsc or puXSC^[1]
-        // since the losses are correct as they are, mimic Dommel (6.50) for Zst or puXSC^[2], without disturbing Zbase or Zcorrected
+        ZCorrected := ZBase * SQR(1.0 + Winding[2].vbase / Winding[1].Vbase); // Correction factor for Series, as in Dommel (6.45) for Zsc or puXSC[1]
+        // since the losses are correct as they are, mimic Dommel (6.50) for Zst or puXSC[2], without disturbing Zbase or Zcorrected
         // Dommel: Xst = Xhl*Vh*Vl/(Vh-Vl)^2 + Xht*Vh/(Vh-Vl) - Xlt*Vl/(Vh-Vl)
         //             = Xhl*(Vs+Vc)*Vc/Vs^2 + Xht*(Vs+Vc)/Vs - Xlt*Vc/Vs
         if NumWindings > 2 then
@@ -1860,12 +1850,12 @@ begin
         for i := 1 to Numwindings - 1 do
         begin
             if i = 1 then
-                ZB[i, i] := Cmplx(Rmult * (Winding[1].Rpu + Winding[i + 1].Rpu), Freqmult * puXSC^[i]) * ZCorrected
+                ZB[i, i] := Cmplx(Rmult * (Winding[1].Rpu + Winding[i + 1].Rpu), Freqmult * puXSC[i]) * ZCorrected
             else
             if i = 2 then
                 ZB[i, i] := Cmplx(Rmult * (Winding[1].Rpu + Winding[i + 1].Rpu), Freqmult * puXst) * Zbase
             else
-                ZB[i, i] := Cmplx(Rmult * (Winding[1].Rpu + Winding[i + 1].Rpu), Freqmult * puXSC^[i]) * Zbase;
+                ZB[i, i] := Cmplx(Rmult * (Winding[1].Rpu + Winding[i + 1].Rpu), Freqmult * puXSC[i]) * Zbase;
         end;
 
         // Off diagonals
@@ -1877,7 +1867,7 @@ begin
                 ZB[i, j] := (
                         ZB[i, i]
                         + ZB[j, j]
-                        - Cmplx(Rmult * (Winding[i + 1].Rpu + Winding[j + 1].Rpu), Freqmult * puXSC^[k]) * ZBase
+                        - Cmplx(Rmult * (Winding[i + 1].Rpu + Winding[j + 1].Rpu), Freqmult * puXSC[k]) * ZBase
                 ) * 0.5;
                 ZB[j, i] := ZB[i, j];
                 Inc(k);

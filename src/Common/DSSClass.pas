@@ -335,9 +335,6 @@ type
      private
 
         procedure Set_Active(value:Integer);
-        function Get_ElementCount: Integer;
-        function Get_First: Integer;
-        function Get_Next: Integer;
 
         procedure ResynchElementNameList;
 
@@ -406,7 +403,7 @@ type
         function NewObject(const ObjName: String; Activate: Boolean = True):Pointer; Virtual; overload;
         function NewObject(const ObjName: String; Activate: Boolean; out Idx: Integer):Pointer; overload; // for compatibility, when the index is required
 
-        Function SetActive(const ObjName:String):Boolean;
+        Function SetActive(const ObjName: String): Boolean;
         Function GetActiveObj:Pointer; // Get address of active obj of this class
         Function Find(const ObjName:String; const ChangeActive: Boolean=True): Pointer; virtual;  // Find an obj of this class by name
 
@@ -414,9 +411,9 @@ type
         function GetPropertyHelp(idx: Integer): String;
 
         Property Active:Integer read ActiveElement write Set_Active;
-        Property ElementCount:Integer read Get_ElementCount;
-        Property First:Integer read Get_First;
-        Property Next:Integer read Get_Next;
+        function ElementCount(): Integer;
+        function First(): Integer;
+        function Next(): Integer;
         Property Name:String read Class_Name;
 
         function GetEnumerator: TDSSObjectEnumerator;
@@ -730,7 +727,9 @@ USES
     uCMatrix,
     Dynamics,
     BufStream,
-    Solution;
+    Solution,
+    Circuit,
+    CAPI_Utils;
 
 type
     TProp = TDSSObjectProp;
@@ -1050,6 +1049,10 @@ destructor TDSSContext.Destroy;
 // var
 //     i: Integer;
 begin
+    DSS_Dispose_PByte(GR_DataPtr_PByte);
+    DSS_Dispose_PDouble(GR_DataPtr_PDouble);
+    DSS_Dispose_PInteger(GR_DataPtr_PInteger);
+    DSS_Dispose_PPAnsiChar(GR_DataPtr_PPAnsiChar, GR_Counts_PPAnsiChar[1]);
     if unzipper <> NIL then
         unzipper.Free;
 
@@ -1290,7 +1293,7 @@ end;
 
 Procedure TDSSClass.Set_Active(value:Integer);
 BEGIN
-    If (Value > 0) and (Value<= ElementList.Count) THEN
+    If (Value > 0) and (Value <= ElementList.Count) THEN
     Begin
         ActiveElement := Value;
         DSS.ActiveDSSObject := ElementList.Get(ActiveElement);
@@ -1357,7 +1360,7 @@ begin
 
     // Previous Edit loop
     ParamPointer := 0;
-    ParamName := Parser.NextParam;
+    ParamName := Parser.NextParam();
     Param := Parser.StrValue;
     while Length(Param) > 0 do
     begin
@@ -1384,7 +1387,7 @@ begin
                 end;
             end;
 
-            ParamName := Parser.NextParam;
+            ParamName := Parser.NextParam();
             Param := Parser.StrValue;
             continue;
         end;
@@ -1400,7 +1403,7 @@ begin
                 Exit;
             end;
 
-            ParamName := Parser.NextParam;
+            ParamName := Parser.NextParam();
             Param := Parser.StrValue;
             continue;
         end;
@@ -1411,7 +1414,7 @@ begin
 //            GetObjPropertyValue(Obj, ParamPointer, tmp);
 //            WriteLn(TDSSObject(Obj).FullName, '.', PropertyName[ParamPointer], ' = ', tmp);
 
-        ParamName := Parser.NextParam;
+        ParamName := Parser.NextParam();
         Param := Parser.StrValue;
     end;
 
@@ -1444,7 +1447,7 @@ begin
     If ElementNamesOutOfSynch Then ResynchElementNameList;
     idx := ElementNameList.Find(ObjName);
     
-    if idx>0 then
+    if idx > 0 then
     begin
         ActiveElement := idx;
         DSS.ActiveDSSObject := ElementList.get(idx);
@@ -1633,18 +1636,18 @@ begin
     end;
 End;
 
-function TDSSClass.Get_ElementCount: Integer;
+function TDSSClass.ElementCount(): Integer;
 begin
     Result := ElementList.Count;
 end;
 
-function TDSSClass.Get_First: Integer;
+function TDSSClass.First(): Integer;
 begin
     IF ElementList.Count=0   THEN Result := 0
 
     ELSE Begin
         ActiveElement := 1;
-        DSS.ActiveDSSObject := ElementList.First;
+        DSS.ActiveDSSObject := ElementList.First();
         // Make sure Active Ckt Element agrees if is a ckt element
         // So COM interface will work
         if DSS.ActiveDSSObject is TDSSCktElement then
@@ -1653,14 +1656,14 @@ begin
     End;
 end;
 
-function TDSSClass.Get_Next: Integer;
+function TDSSClass.Next(): Integer;
 begin
     Inc(ActiveElement);
     IF ActiveElement > ElementList.Count THEN 
         Result := 0
     ELSE 
     Begin
-        DSS.ActiveDSSObject := ElementList.Next;
+        DSS.ActiveDSSObject := ElementList.Next();
         // Make sure Active Ckt Element agrees if is a ckt element
         // So COM interface will work
         if DSS.ActiveDSSObject is TDSSCktElement then
@@ -2189,9 +2192,8 @@ begin
     if Length(TargetClasses) = 0 then
     begin
         SetLength(TargetClasses, Length(TargetClassNames));
-        with DSS do
-            for i := 0 to High(TargetClassNames) do
-                TargetClasses[i] := DSSClassList.Get(ClassNames.Find(TargetClassNames[i]));
+        for i := 0 to High(TargetClassNames) do
+            TargetClasses[i] := DSS.DSSClassList.Get(DSS.ClassNames.Find(TargetClassNames[i]));
     end;
 
     for i := 0 to High(TargetClasses) do

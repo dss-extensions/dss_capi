@@ -1,12 +1,10 @@
 
 unit Utilities;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -18,16 +16,8 @@ uses
     UcMatrix,
     DSSClass,
     Classes,
-    Dynamics;
-
-type
-{$SCOPEDENUMS ON}
-    TLSFileType = (
-        PlainText = 0,
-        Float64 = 1,
-        Float32 = 2
-    );
-{$SCOPEDENUMS OFF}
+    Dynamics,
+    DSSObject;
 
 const
     sCRLF: String = sLineBreak;
@@ -80,14 +70,11 @@ function InterpretTimeStepSize(DSS: TDSSContext; const s: String): Double;
 function InterpretColorName(DSS: TDSSContext; const s: String): Integer;
 function ConstructElemName(DSS: TDSSContext; const Param: String): String;
 
-function GetDSSArray_Real(n: Integer; dbls: pDoubleArray; scale: Double = 1.0): String;
-function GetDSSArray_Single(n: Integer; sngs: pSingleArray): String;
-function GetDSSArray_Integer(n: Integer; ints: pIntegerArray): String;
+function GetDSSArray(n: Integer; dbls: pDoubleArray; scale: Double = 1.0): String; overload;
+function GetDSSArray(n: Integer; sngs: pSingleArray): String; overload;
+function GetDSSArray(n: Integer; ints: pIntegerArray): String; overload;
 function GetOCPDeviceType(pElem: TDSSCktElement): Integer;
 function GetOCPDeviceTypeString(icode: Integer): String;
-// Addition to deal with Memory mapped data
-function InterpretDblArrayMMF(DSS: TDSSContext; mmPtr: pByte; FileType: TLSFileType; Column, INDEX, DataSize: Integer): double;
- 
 
 // misc functions
 function DoExecutiveCommand(DSS: TDSSContext; const s: String): Integer;
@@ -107,16 +94,14 @@ function DoResetControls(DSS: TDSSContext): Integer;
 procedure DoResetKeepList(DSS: TDSSContext);
 function GetNodeNum(DSS: TDSSContext; NodeRef: Integer): Integer;
 function MaxdblArrayValue(npts: Integer; dbls: pDoubleArray): Double;
-function iMaxAbsdblArrayValue(npts: Integer; dbls: pDoubleArray): Integer;
-function iMaxAbssngArrayValue(npts: Integer; sngs: pSingleArray): Integer;
 function QuadSolver(const a, b, c: Double): Double; // returns largest of two answers
 
 
 // Save Function Helper
 function WriteClassFile(DSS: TDSSContext; const DSS_Class: TDSSClass; FileName: String; IsCktElement: Boolean): Boolean;
 function WriteVsourceClassFile(DSS: TDSSContext; const DSS_Class: TDSSClass; IsCktElement: Boolean): Boolean;
-procedure WriteActiveDSSObject(DSS: TDSSContext; F: TFileStream; const NeworEdit: String);
-function checkforblanks(const S: String): String;
+procedure WriteDSSObject(obj: TDSSObject; F: TFileStream; const NeworEdit: String);
+function CheckForBlanks(const S: String): String;
 function RewriteAlignedFile(DSS: TDSSContext; const Filename: String): Boolean;
 
 // Event Log
@@ -134,7 +119,6 @@ procedure ConvertComplexArrayToPowerandPF(const Buffer: pComplexArray; N: Intege
 function Residual(p: Pointer; Nph: Integer): Complex;
 function ResidualPolar(p: Pointer; Nph: Integer): Complex;
 function Powerfactor(const S: Complex): Double;
-procedure CmulArray(pc: pcomplexarray; Multiplier: Double; size: Integer);  // Multiply a complex array times a double
 
 // Support for going in and out of Dynamics Mode and Harmonics Mode
 procedure CalcInitialMachineStates(DSS: TDSSContext);
@@ -198,9 +182,10 @@ uses
     ExecCommands,
     ExecOptions,
     Solution,
-    DSSObject,
     math,
     ParserDel,
+    Circuit,
+    Bus,
     Capacitor,
     Reactor,
     Generator,
@@ -550,7 +535,7 @@ var
 
 begin
     DSS.AuxParser.CmdString := S;
-    ParmName := DSS.AuxParser.NextParam;
+    ParmName := DSS.AuxParser.NextParam();
     Param := DSS.AuxParser.StrValue;
     Result := MaxValues; // Default Return Value;
 
@@ -576,7 +561,7 @@ begin
         CSVHeader := FALSE;
 
         // Look for other options  (may be in either order)
-        ParmName := DSS.AuxParser.NextParam;
+        ParmName := DSS.AuxParser.NextParam();
         Param := DSS.AuxParser.StrValue;
         while Length(Param) > 0 do
         begin
@@ -584,7 +569,7 @@ begin
                 CSVColumn := DSS.AuxParser.IntValue;
             if CompareTextShortest(ParmName, 'header') = 0 then
                 CSVHeader := InterpretYesNo(param);
-            ParmName := DSS.AuxParser.NextParam;
+            ParmName := DSS.AuxParser.NextParam();
             Param := DSS.AuxParser.StrValue;
         end;
 
@@ -602,7 +587,7 @@ begin
                         FSReadln(F, InputLIne);
                         DSS.AuxParser.CmdString := InputLine;
                         for iskip := 1 to CSVColumn do
-                            ParmName := DSS.AuxParser.NextParam;
+                            ParmName := DSS.AuxParser.NextParam();
                         ResultArray[i] := DSS.AuxParser.dblValue;
                     end
                     else
@@ -668,88 +653,10 @@ begin
         for i := 1 to MaxValues do
         begin
             ResultArray[i] := DSS.AuxParser.DblValue;    // Fills array with zeros if we run out of numbers
-            DSS.AuxParser.NextParam;
+            DSS.AuxParser.NextParam();
         end;
     end;
 end;
-
-function InterpretDblArrayMMF(DSS: TDSSContext; mmPtr: pByte; FileType: TLSFileType; Column, INDEX, DataSize: Integer): double;
-//  Gets the value for the value at INDEX within the file mapped (mmPtr)
-//  Considers the flags FileType, Column for locating the data within the file
-//  FileType :
-//    0 - normal file (ANSI char)
-//    1 - dblfile
-//    2 - sngfile
-var
-   DBLByteArray: array[0..7] of byte;
-   SGLByteArray: array[0..3] of byte;
-   // InputLIne, 
-   content: String;
-   byteValue : Byte;
-   OffSet, i, j : Integer;
-Begin
-    Result := 1.0; // Default Return Value;
-    OffSet := (INDEX - 1) * DataSize;
-
-    if FileType = TLSFileType.PlainText then  // Normal file (CSV, txt, ASCII based file)
-    begin
-        content := '';
-        byteValue := 0;
-        i := OffSet;
-        if mmPtr[i] = $0A then 
-            inc(i); // in case we are at the end of the previous line
-            
-        j := 0;
-        while byteValue <> $0A do
-        begin
-            byteValue := mmPtr[i];
-            // Concatenates avoiding special chars (EOL)
-            if (byteValue >= 46) and (byteValue < 58) then 
-                content := content + AnsiChar(byteValue);
-
-            if byteValue = 44 then // a comma char was found
-            begin               // If we are at the column, exit, otherwise, keep looking
-                inc(j);         // discarding the previous number (not needed anyway)
-                if j = Column then 
-                    break
-                else 
-                    content := '';
-            end;
-            inc(i);
-        end;
-        try
-            // checks if the extraction was OK, othwerwise, forces the default value
-            if content = '' then 
-                content := '1.0';
-            Result := strtofloat(content);
-        except
-            on E:Exception Do
-            begin
-                DoSimpleMsg(DSS, 'Error reading %d-th numeric array value. Error is:', [i, E.message], 785);
-                Result := i - 1;
-            end;
-        end;
-        Exit;
-    end;
-
-    if (FileType = TLSFileType.Float64) then // DBL files
-    begin
-        // load the list from a file of doubles (no checking done on type of data)
-        for i := 0 to (DataSize - 1) do 
-            DBLByteArray[i] :=  mmPtr[i + OffSet]; // Load data into the temporary buffer
-        Result := double(DBLByteArray); // returns the number (double)
-        Exit;
-    end;
-
-    if (FileType = TLSFileType.Float32) then // SGL files
-    begin
-        // load the list from a file of doubles (no checking done on type of data)
-        for i := 0 to (DataSize - 1) do 
-            SGLByteArray[i] := mmPtr[i + OffSet]; // Load data into the temporary buffer
-        Result := single(SGLByteArray); // returns the number formatted as double
-        Exit;
-    end;
-End;
 
 function InterpretIntArray(DSS: TDSSContext; const s: String; MaxValues: Integer; ResultArray: pIntegerArray): Integer;
 //  Get numeric values from an array specified either as a list on numbers or a text file spec.
@@ -763,7 +670,7 @@ var
     line: String;
 begin
     DSS.AuxParser.CmdString := S;
-    ParmName := DSS.AuxParser.NextParam;
+    ParmName := DSS.AuxParser.NextParam();
     Param := DSS.AuxParser.StrValue;
     Result := Maxvalues;  // Default return value
 
@@ -801,7 +708,7 @@ begin
         for i := 1 to MaxValues do
         begin
             ResultArray[i] := DSS.AuxParser.IntValue;    // Fills array with zeros if we run out of numbers
-            DSS.AuxParser.NextParam;
+            DSS.AuxParser.NextParam();
         end;
     end;
 end;
@@ -858,7 +765,7 @@ begin
         ResultList.Clear();
 
     DSS.AuxParser.CmdString := S;
-    ParmName := DSS.AuxParser.NextParam;
+    ParmName := DSS.AuxParser.NextParam();
     Param := DSS.AuxParser.StrValue;
 
     // Syntax can be either a list of string values or a file specification:  File= ...
@@ -871,7 +778,7 @@ begin
             begin
                 FSReadln(F, Param);
                 DSS.AuxParser.CmdString := Param;
-                ParmName := DSS.AuxParser.NextParam;
+                ParmName := DSS.AuxParser.NextParam();
                 NextParam := DSS.AuxParser.StrValue;
                 if Length(NextParam) > 0 then
                 begin // Ignore Blank Lines in File
@@ -898,7 +805,7 @@ begin
             else
                 ResultList.Add(Param);
 
-            ParmName := DSS.AuxParser.NextParam;
+            ParmName := DSS.AuxParser.NextParam();
             Param := DSS.AuxParser.StrValue;
         end;
     end;
@@ -934,10 +841,10 @@ begin
     DSS.AuxParser.cmdString := S;
     Count := 0;
     repeat
-        DSS.AuxParser.NextParam;
+        DSS.AuxParser.NextParam();
         Param := DSS.AuxParser.StrValue;
         if Length(Param) > 0 then
-            Inc(Count);
+            Inc(count);
     until Length(Param) = 0;
 
     // reallocate iarray  to new size
@@ -947,7 +854,7 @@ begin
     DSS.AuxParser.cmdString := S;
     for i := 1 to Count do
     begin
-        DSS.AuxParser.NextParam;
+        DSS.AuxParser.NextParam();
         iarray[i] := DSS.AuxParser.IntValue;
     end;
 end;
@@ -1528,22 +1435,22 @@ var
     ClassName: String;
 begin
     Result := TRUE;
-    if DSS_Class.ElementCount = 0 then
+    if DSS_Class.ElementCount() = 0 then
         Exit;
     try
         ClassName := DSS_Class.Name;
         F := TBufferedFileStream.Create(DSS.CurrentDSSDir + ClassName + '.dss', fmCreate);
         DSS.SavedFileList.Add(DSS.CurrentDSSDir + ClassName + '.dss');
-        DSS_Class.First;   // Sets DSS.ActiveDSSObject
-        WriteActiveDSSObject(DSS, F, 'Edit'); // Write First Vsource out as an Edit
-        while DSS_Class.Next > 0 do
+        DSS_Class.First();   // Sets DSS.ActiveDSSObject
+        WriteDSSObject(DSS.ActiveDSSObject, F, 'Edit'); // Write First Vsource out as an Edit
+        while DSS_Class.Next() > 0 do
         begin
             // Skip Cktelements that have been checked before and written out by
             // something else
             if Flg.HasBeenSaved in TDSSCktElement(DSS.ActiveDSSObject).Flags then
                 Continue;
             // Skip disabled circuit elements; write all general DSS objects
-            WriteActiveDSSObject(DSS, F, 'New');    // sets HasBeenSaved := TRUE
+            WriteDSSObject(DSS.ActiveDSSObject, F, 'New');    // sets HasBeenSaved := TRUE
         end;
         DSS_Class.Saved := TRUE;
 
@@ -1563,10 +1470,12 @@ var
     ClassName: String;
     Nrecords: Integer;
     ParClass: TDssClass;
+    obj: TDSSObject;
+    elem: TDSSCktElement;
 begin
     Result := TRUE;
 
-    if DSS_Class.ElementCount = 0 then
+    if DSS_Class.ElementCount() = 0 then
         Exit;
 
     try
@@ -1577,23 +1486,24 @@ begin
 
         Nrecords := 0;
 
-        DSS_Class.First;   // Sets ActiveDSSObject
-        repeat
+        for obj in DSS_Class do
+        begin
             // Skip Cktelements that have been checked before and written out by
             // something else
             if IsCktElement then
-                with TDSSCktElement(DSS.ActiveDSSObject) do
-                    if (Flg.HasBeenSaved in Flags) or (not Enabled) then
-                        Continue;
-
-            ParClass :=  DSS.ActiveDSSObject.ParentClass;
-            if AnsiLowerCase(ParClass.Name) = 'loadshape' then
-                if not TLoadShapeObj(DSS.ActiveDSSObject).Enabled then
+            begin
+                elem := TDSSCktElement(obj);
+                if (Flg.HasBeenSaved in elem.Flags) or (not elem.Enabled) then
                     continue;
-            WriteActiveDSSObject(DSS, F, 'New');  // sets HasBeenSaved := TRUE
+            end;
+            ParClass := obj.ParentClass;
+            if AnsiLowerCase(ParClass.Name) = 'loadshape' then
+                if not TLoadShapeObj(obj).Enabled then
+                    continue;
+            WriteDSSObject(obj, F, 'New');  // sets HasBeenSaved := TRUE
             Inc(Nrecords); // count the actual records
 
-        until DSS_Class.Next = 0;
+        end;
 
         FreeAndNil(F);
 
@@ -1615,7 +1525,7 @@ begin
     FreeAndNil(F);
 end;
 
-function checkforblanks(const S: String): String;
+function CheckForBlanks(const S: String): String;
 // Checks for blanks in the name and puts quotes around it
 begin
     Result := s;
@@ -1624,20 +1534,20 @@ begin
             Result := '"' + S + '"';
 end;
 
-procedure WriteActiveDSSObject(DSS: TDSSContext; F: TFileStream; const NeworEdit: String);
+procedure WriteDSSObject(obj: TDSSObject; F: TFileStream; const NeworEdit: String);
 begin
-    //  FSWrite(F, NeworEdit, ' "', DSS.ActiveDSSObject.FullName,'"');
-    FSWrite(F, Format('%s "%s"', [NeworEdit, DSS.ActiveDSSObject.FullName]));
+    //  FSWrite(F, NeworEdit, ' "', obj.FullName,'"');
+    FSWrite(F, Format('%s "%s"', [NeworEdit, obj.FullName]));
 
-    DSS.ActiveDSSObject.SaveWrite(F);
+    obj.SaveWrite(F);
 
     // Handle disabled circuit elements;   Modified to allow applets to save disabled elements 12-28-06
-    if (DSS.ActiveDSSObject.DSSObjType and ClassMask) <> DSS_Object then
-        if not TDSSCktElement(DSS.ActiveDSSObject).Enabled then
+    if (obj.DSSObjType and ClassMask) <> DSS_Object then
+        if not TDSSCktElement(obj).Enabled then
             FSWrite(F, ' ENABLED=NO');
     FSWriteln(F); // Terminate line
 
-    Include(DSS.ActiveDSSObject.Flags, Flg.HasBeenSaved);
+    Include(obj.Flags, Flg.HasBeenSaved);
 end;
 
 procedure DoResetKeepList(DSS: TDSSContext);
@@ -2114,7 +2024,7 @@ begin
     end;
 end;
 
-function GetDSSArray_Real(n: Integer; dbls: pDoubleArray; scale: Double): String;
+function GetDSSArray(n: Integer; dbls: pDoubleArray; scale: Double): String;
 var
     i: Integer;
 begin
@@ -2139,7 +2049,7 @@ begin
     Result := Result + ']';
 end;
 
-function GetDSSArray_Single(n: Integer; sngs: pSingleArray): String;
+function GetDSSArray(n: Integer; sngs: pSingleArray): String;
 var
     i: Integer;
     tmp: Double;
@@ -2158,7 +2068,7 @@ begin
     Result := Result + ']';
 end;
 
-function GetDSSArray_Integer(n: Integer; ints: pIntegerArray): String;
+function GetDSSArray(n: Integer; ints: pIntegerArray): String;
 var
     i: Integer;
 begin
@@ -2171,14 +2081,6 @@ begin
     for i := 1 to n do
         Result := Result + Format(' %-.d', [ints[i]]);
     Result := Result + ']';
-end;
-
-procedure CmulArray(pc: pcomplexarray; Multiplier: Double; size: Integer);  // Multiply a complex array times a double
-var
-    i: Integer;
-begin
-    for i := 1 to size do
-        pc[i] := pc[i] * Multiplier;
 end;
 
 function GetMaxCktElementSize(DSS: TDSSContext): Integer;
@@ -2372,26 +2274,6 @@ begin
     Result := dbls[1];
     for i := 2 to npts do
         Result := max(Result, dbls[i]);
-end;
-
-function iMaxAbsdblArrayValue(npts: Integer; dbls: pDoubleArray): Integer;
-// Returns index of max array value  in abs value
-var
-    i: Integer;
-    MaxValue: Double;
-begin
-    Result := 0;
-    if npts = 0 then
-        exit;
-
-    Result := 1;
-    MaxValue := abs(dbls[1]);
-    for i := 2 to npts do
-        if abs(dbls[i]) > Maxvalue then
-        begin
-            Maxvalue := abs(dbls[i]);
-            Result := i;   // save index
-        end;
 end;
 
 function iMaxAbssngArrayValue(npts: Integer; sngs: pSingleArray): Integer;
@@ -2990,14 +2872,11 @@ begin
                 Inc(i);
                 FSReadln(F, s); // read entire line and parse with AuxParser
                 // AuxParser allows commas or white space
-                with DSS.AuxParser do
-                begin
-                    CmdString := s;
-                    NextParam;
-                    pA[i] := DblValue;
-                    NextParam;
-                    pB[i] := DblValue;
-                end;
+                DSS.AuxParser.CmdString := s;
+                DSS.AuxParser.NextParam();
+                pA[i] := DSS.AuxParser.DblValue;
+                DSS.AuxParser.NextParam();
+                pB[i] := DSS.AuxParser.DblValue;
             end;
         end
         else
@@ -3007,12 +2886,9 @@ begin
                 Inc(i);
                 FSReadln(F, s); // read entire line and parse with AuxParser
                 // AuxParser allows commas or white space
-                with DSS.AuxParser do
-                begin
-                    CmdString := s;
-                    NextParam;
-                    pB[i] := DblValue;
-                end;
+                DSS.AuxParser.CmdString := s;
+                DSS.AuxParser.NextParam();
+                pB[i] := DSS.AuxParser.DblValue;
             end;
         end;
 

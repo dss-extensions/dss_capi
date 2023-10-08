@@ -1,6 +1,6 @@
 unit ControlProxy;
 
-{Moved from CAPI_CtrlQueue.pas to avoid global variables}
+// Moved from CAPI_CtrlQueue.pas to avoid global variables
 
 interface
 
@@ -39,11 +39,8 @@ var
     Action: pAction;
 begin
     Action := Allocmem(SizeOf(TAction));
-    with Action^ do
-    begin         // Capture the Action
-        ActionCode := Code;
-        DeviceHandle := ProxyHdl;
-    end;
+    Action^.ActionCode := Code;
+    Action^.DeviceHandle := ProxyHdl;
     ActionList.Add(Action);
 end;
 

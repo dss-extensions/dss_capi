@@ -81,6 +81,7 @@ type
         function GetMult(const h: Double): Complex;
 
         procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure ReadCSVFile(const FileName: String);
     end;
 
 implementation
@@ -214,20 +215,19 @@ end;
 function TSpectrum.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
 var
     iZeroPoint: Integer;  // for error trapping
+    obj: TObj;
 begin
-    with TObj(ptr) do
+    obj := TObj(ptr);
+    if (obj.HarmArray <> NIL) then   // Check this after HarmArray is allocated  2/20/2018
     begin
-        if (HarmArray <> NIL) then   // Check this after HarmArray is allocated  2/20/2018
-        begin
-            if HarmArrayHasaZero(iZeroPoint) then
-                DoSimpleMsg('Error: Zero frequency detected in %s, point %d. Not allowed', [FullName, iZeroPoint], 65001)
+        if obj.HarmArrayHasaZero(iZeroPoint) then
+            DoSimpleMsg('Error: Zero frequency detected in %s, point %d. Not allowed', [obj.FullName, iZeroPoint], 65001)
 
-            else
-            if (HarmArray <> NIL) and (puMagArray <> NIL) and (AngleArray <> NIL) then
-                SetMultArray;
-        end;
-        Exclude(Flags, Flg.EditionActive);
+        else
+        if (obj.HarmArray <> NIL) and (obj.puMagArray <> NIL) and (obj.AngleArray <> NIL) then
+            obj.SetMultArray();
     end;
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -275,53 +275,52 @@ begin
     inherited destroy;
 end;
 
-procedure DoCSVFile(Obj: TObj; const FileName: String);
+procedure TSpectrumObj.ReadCSVFile(const FileName: String);
 var
     F: TStream = nil;
     i: Integer;
     s: String;
 begin
-    with Obj do
-    begin
-        try
-            F := DSS.GetROFileStream(FileName);
-        except
-            DoSimpleMsg('Error Opening CSV File: "%s"', [FileName], 653);
-            FreeAndNil(F);
+    try
+        F := DSS.GetROFileStream(FileName);
+    except
+        DoSimpleMsg('Error Opening CSV File: "%s"', [FileName], 653);
+        FreeAndNil(F);
+        Exit;
+    end;
+
+    try
+        ReAllocmem(HarmArray, Sizeof(HarmArray[1]) * NumHarm);
+        ReAllocmem(puMagArray, Sizeof(puMagArray[1]) * NumHarm);
+        ReAllocmem(AngleArray, Sizeof(AngleArray[1]) * NumHarm);
+        i := 0;
+        while ((F.Position + 1) < F.Size) and (i < NumHarm) do
+        begin
+            Inc(i);
+            FSReadln(F, S);  // Use Auxparser, which allows for formats
+            DSS.AuxParser.CmdString := S;
+            DSS.AuxParser.NextParam();
+            HarmArray[i] := DSS.AuxParser.DblValue;
+            DSS.AuxParser.NextParam();
+            puMagArray[i] := DSS.AuxParser.DblValue * 0.01;
+            DSS.AuxParser.NextParam();
+            AngleArray[i] := DSS.AuxParser.DblValue;
+        end;
+        F.Free();
+        NumHarm := i;   // reset number of points
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg('Error Processing CSV File: "%s". %s', [FileName, E.Message], 654);
+            F.Free();
             Exit;
         end;
-
-        try
-            ReAllocmem(HarmArray, Sizeof(HarmArray[1]) * NumHarm);
-            ReAllocmem(puMagArray, Sizeof(puMagArray[1]) * NumHarm);
-            ReAllocmem(AngleArray, Sizeof(AngleArray[1]) * NumHarm);
-            i := 0;
-            while ((F.Position + 1) < F.Size) and (i < NumHarm) do
-            begin
-                Inc(i);
-                FSReadln(F, S);  // Use Auxparser, which allows for formats
-                with DSS.AuxParser do
-                begin
-                    CmdString := S;
-                    NextParam;
-                    HarmArray[i] := DblValue;
-                    NextParam;
-                    puMagArray[i] := DblValue * 0.01;
-                    NextParam;
-                    AngleArray[i] := DblValue;
-                end;
-            end;
-            F.Free();
-            NumHarm := i;   // reset number of points
-        except
-            On E: Exception do
-            begin
-                DoSimpleMsg('Error Processing CSV File: "%s". %s', [FileName, E.Message], 654);
-                F.Free();
-                Exit;
-            end;
-        end;
     end;
+end;
+
+procedure DoCSVFile(Obj: TObj; const FileName: String);
+begin
+    obj.ReadCSVFile(FileName);
 end;
 
 procedure TSpectrumObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
@@ -330,9 +329,8 @@ var
 begin
     inherited DumpProperties(F, Complete);
 
-    with ParentClass do
-        for i := 1 to NumProperties do
-            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
+    for i := 1 to ParentClass.NumProperties do
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
 
     if Complete then
     begin

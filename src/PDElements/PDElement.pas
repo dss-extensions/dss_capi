@@ -1,11 +1,9 @@
 unit PDElement;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -51,7 +49,7 @@ type
 
         ParentPDElement: TPDElement;
 
-        MeterObj,                     {Upline energymeter}
+        MeterObj,                     // Upline energymeter
         SensorObj: TMeterElement; // Upline Sensor for this element  for allocation and estimation
 
         Overload_UE,
@@ -98,34 +96,31 @@ var
     FromBus: TDSSBus;
     ToBus: TDSSBus;
 begin
-    with ActiveCircuit do
-    begin
-        if FromTerminal = 2 then
-            Toterminal := 1
-        else
-            ToTerminal := 2;
+    if FromTerminal = 2 then
+        Toterminal := 1
+    else
+        ToTerminal := 2;
 
-        // Get fault Rate for TO bus and add it to this section failure rate
-        ToBus := Buses[Terminals[ToTerminal - 1].BusRef];
-        AccumulatedBrFltRate := ToBus.BusFltRate + BranchFltRate;
-        FromBus := Buses[Terminals[FromTerminal - 1].BusRef];
-        FromBus.BusTotalNumCustomers := FromBus.BusTotalNumCustomers + BranchTotalCustomers;
+    // Get fault Rate for TO bus and add it to this section failure rate
+    ToBus := ActiveCircuit.Buses[Terminals[ToTerminal - 1].BusRef];
+    AccumulatedBrFltRate := ToBus.BusFltRate + BranchFltRate;
+    FromBus := ActiveCircuit.Buses[Terminals[FromTerminal - 1].BusRef];
+    FromBus.BusTotalNumCustomers := FromBus.BusTotalNumCustomers + BranchTotalCustomers;
 
-        AccumulatedMilesDownStream := ToBus.BusTotalMiles + MilesThisLine;
-        FromBus.BusTotalMiles += AccumulatedMilesDownStream;
+    AccumulatedMilesDownStream := ToBus.BusTotalMiles + MilesThisLine;
+    FromBus.BusTotalMiles += AccumulatedMilesDownStream;
 
-        // Compute accumulated to FROM Bus; if a fault interrupter, assume it isolates all downline faults
-        if not (Flg.HasOcpDevice in Flags) then
-            // accumlate it to FROM bus
-            FromBus.BusFltRate += AccumulatedBrFltRate;
-    end;
+    // Compute accumulated to FROM Bus; if a fault interrupter, assume it isolates all downline faults
+    if not (Flg.HasOcpDevice in Flags) then
+        // accumlate it to FROM bus
+        FromBus.BusFltRate += AccumulatedBrFltRate;
 end;
 
-procedure TPDElement.CalcFltRate;   {Virtual function  -- LINE is different, for one}
+procedure TPDElement.CalcFltRate;   // Virtual function  -- LINE is different, for one
 
 begin
-      {Default base algorithm for radial fault rate calculation}
-      {May be overridden by specific device class behavior}
+    // Default base algorithm for radial fault rate calculation
+    // May be overridden by specific device class behavior
 
     BranchFltRate := Faultrate * pctperm * 0.01;
 end;
@@ -135,8 +130,7 @@ var
     FromBus: TDSSBus;
 begin
     FromBus := ActiveCircuit.Buses[Terminals[FromTerminal - 1].BusRef];
-    with FromBus do
-        BusCustInterrupts += Bus_Num_Interrupt * BranchTotalCustomers;
+    FromBus.BusCustInterrupts += FromBus.Bus_Num_Interrupt * BranchTotalCustomers;
 end;
 
 procedure TPDElement.CalcNum_Int(var SectionCount: Integer; AssumeRestoration: Boolean);
@@ -146,42 +140,39 @@ var
     ToBus: TDSSBus;
 
 begin
-    with ActiveCircuit do
+    if FromTerminal = 2 then
+        ToTerminal := 1
+    else
+        ToTerminal := 2;
+    ToBus := ActiveCircuit.Buses[Terminals[ToTerminal - 1].BusRef];
+    FromBus := ActiveCircuit.Buses[Terminals[FromTerminal - 1].BusRef];
+
+    // If no interrupting device then the downline bus will have the same num of interruptions
+    ToBus.Bus_Num_Interrupt := FromBus.Bus_Num_Interrupt;
+
+    // If Interrupting device (on FROM side)then downline bus will have
+    // additional interruptions  ---- including for fused lateral
+    // If assuming restoration and the device is an automatic device, the To bus will be
+    // interrupted only for  faults on the main section, not including fused sections.
+    if Flg.HasOCPDevice in Flags then
     begin
-        if FromTerminal = 2 then
-            ToTerminal := 1
+        if AssumeRestoration and (Flg.HasAutoOCPDevice in Flags) then
+            // To Bus will be interrupted only for faults on this section
+            // AccumulatedBrFltRate does not include Branches down fro
+            // Branches with OCP devics
+            ToBus.Bus_Num_Interrupt := AccumulatedBrFltRate
         else
-            ToTerminal := 2;
-        ToBus := Buses[Terminals[ToTerminal - 1].BusRef];
-        FromBus := Buses[Terminals[FromTerminal - 1].BusRef];
+            ToBus.Bus_Num_Interrupt += AccumulatedBrFltRate;
 
-        // If no interrupting device then the downline bus will have the same num of interruptions
-        ToBus.Bus_Num_Interrupt := FromBus.Bus_Num_Interrupt;
+        // If there is an OCP device on this PDElement, this is the
+        // beginning of a new section.
+        inc(SectionCount);
+        ToBus.BusSectionID := SectionCount; // Assign it to the new section
+    end
+    else
+        ToBus.BusSectionID := FromBus.BusSectionID;   // else it's in the same section
 
-        // If Interrupting device (on FROM side)then downline bus will have
-        // additional interruptions  ---- including for fused lateral
-        // If assuming restoration and the device is an automatic device, the To bus will be
-        // interrupted only for  faults on the main section, not including fused sections.
-        if Flg.HasOCPDevice in Flags then
-        begin
-            if AssumeRestoration and (Flg.HasAutoOCPDevice in Flags) then
-                // To Bus will be interrupted only for faults on this section
-                // AccumulatedBrFltRate does not include Branches down fro
-                // Branches with OCP devics
-                ToBus.Bus_Num_Interrupt := AccumulatedBrFltRate
-            else
-                ToBus.Bus_Num_Interrupt += AccumulatedBrFltRate;
-
-            // If there is an OCP device on this PDElement, this is the
-            // beginning of a new section.
-            inc(SectionCount);
-            ToBus.BusSectionID := SectionCount; // Assign it to the new section
-        end
-        else
-            ToBus.BusSectionID := FromBus.BusSectionID;   // else it's in the same section
-
-        BranchSectionID := ToBus.BusSectionID;
-    end;
+    BranchSectionID := ToBus.BusSectionID;
 end;
 
 constructor TPDElement.Create(ParClass: TDSSClass);
@@ -219,9 +210,8 @@ begin
 
         if Enabled then
         begin
-            with ActiveCircuit.Solution do
-                for i := 1 to Yorder do
-                    Vterminal[i] := NodeV[NodeRef[i]];
+            for i := 1 to Yorder do
+                Vterminal[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
 
             YPrim.MVMult(Curr, Vterminal);
         end

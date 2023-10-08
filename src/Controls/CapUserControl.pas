@@ -1,19 +1,16 @@
 unit CapUserControl;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
-    Interface to user-written CapControl DLL
-}
-{
-  ----------------------------------------------------------
-  Copyright (c) 2012, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// Interface to user-written CapControl DLL
+
+// ----------------------------------------------------------
+// Copyright (c) 2012, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -35,7 +32,7 @@ TYPE
          FuncError:Boolean;
 
 
-         {These functions should only be called by the object itself}
+         // These functions should only be called by the object itself
          FNew:          Function( Var CallBacks:TDSSCallBacks): Integer;  Stdcall;// Make a new instance
          FDelete:       Procedure(var x:Integer); Stdcall;  // deletes specified instance
          FSelect:       Function (var x:Integer):Integer; Stdcall;    // Select active instance
@@ -121,7 +118,7 @@ begin
         If FID <> 0 Then
          Begin
               Result := True;
-              Select;    {Automatically select if true}
+              Select;    // Automatically select if true
          End
         Else Result := False;
 end;
@@ -145,7 +142,7 @@ end;
 procedure TCapUserControl.Set_Name(const Value:String);
 
 begin
-    {If Model already points to something, then free it}
+    // If Model already points to something, then free it
 
         IF FHandle <> 0 Then
         Begin
@@ -158,7 +155,7 @@ begin
              FreeLibrary(FHandle);
         End;
 
-        {If Value is blank or zero-length, bail out.}
+        // If Value is blank or zero-length, bail out.
         If (Length(Value)=0) or (Length(TrimLeft(Value))=0) Then Exit;
         If comparetext(value, 'none')=0 Then Exit;
 

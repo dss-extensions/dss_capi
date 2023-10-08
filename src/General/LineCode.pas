@@ -361,19 +361,19 @@ begin
 end;
 
 function TLineCode.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
 begin
-    with TObj(ptr) do
+    obj := TObj(ptr);
+    if obj.SymComponentsModel then
+        obj.CalcMatricesFromZ1Z0();
+    if Flg.NeedsRecalc in obj.Flags then
     begin
-        if SymComponentsModel then
-            CalcMatricesFromZ1Z0;
-        if Flg.NeedsRecalc in Flags then
-        begin
-            Exclude(Flags, Flg.NeedsRecalc);
-            Zinv.Copyfrom(Z);
-            Zinv.Invert;
-        end;
-        Exclude(Flags, Flg.EditionActive);
+        Exclude(obj.Flags, Flg.NeedsRecalc);
+        obj.Zinv.Copyfrom(obj.Z);
+        obj.Zinv.Invert();
     end;
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -536,62 +536,61 @@ var
 begin
     inherited DumpProperties(F, Complete);
 
-    with ParentClass do
+    //TODO: remove magic numbers
+
+    FSWriteln(F, Format('~ %s=%d', [ParentClass.PropertyName[1], FNphases]));
+    FSWriteln(F, Format('~ %s=%.5f', [ParentClass.PropertyName[2], R1]));
+    FSWriteln(F, Format('~ %s=%.5f', [ParentClass.PropertyName[3], X1]));
+    FSWriteln(F, Format('~ %s=%.5f', [ParentClass.PropertyName[4], R0]));
+    FSWriteln(F, Format('~ %s=%.5f', [ParentClass.PropertyName[5], X0]));
+    FSWriteln(F, Format('~ %s=%.5f', [ParentClass.PropertyName[6], C1 * 1.0e9]));
+    FSWriteln(F, Format('~ %s=%.5f', [ParentClass.PropertyName[7], C0 * 1.0e9]));
+    FSWriteln(F, Format('~ %s=%s',   [ParentClass.PropertyName[8], PropertyValue[8]]));
+    FSWrite(F, '~ ' + ParentClass.PropertyName[9] + '=' + '"');
+    for i := 1 to FNPhases do
     begin
-        FSWriteln(F, Format('~ %s=%d', [PropertyName[1], FNphases]));
-        FSWriteln(F, Format('~ %s=%.5f', [PropertyName[2], R1]));
-        FSWriteln(F, Format('~ %s=%.5f', [PropertyName[3], X1]));
-        FSWriteln(F, Format('~ %s=%.5f', [PropertyName[4], R0]));
-        FSWriteln(F, Format('~ %s=%.5f', [PropertyName[5], X0]));
-        FSWriteln(F, Format('~ %s=%.5f', [PropertyName[6], C1 * 1.0e9]));
-        FSWriteln(F, Format('~ %s=%.5f', [PropertyName[7], C0 * 1.0e9]));
-        FSWriteln(F, Format('~ %s=%s',   [PropertyName[8], PropertyValue[8]]));
-        FSWrite(F, '~ ' + PropertyName[9] + '=' + '"');
-        for i := 1 to FNPhases do
+        for j := 1 to FNphases do
         begin
-            for j := 1 to FNphases do
-            begin
-                FSWrite(F, Format('%.8f ', [Z[i, j].re]));
-            end;
-            FSWrite(F, '|');
+            FSWrite(F, Format('%.8f ', [Z[i, j].re]));
         end;
-        FSWriteln(F, '"');
-        FSWrite(F, '~ ' + PropertyName[10] + '=' + '"');
-        for i := 1 to FNPhases do
-        begin
-            for j := 1 to FNphases do
-            begin
-                FSWrite(F, Format('%.8f ', [Z[i, j].im]));
-            end;
-            FSWrite(F, '|');
-        end;
-        FSWriteln(F, '"');
-        FSWrite(F, '~ ' + PropertyName[11] + '=' + '"');
-        for i := 1 to FNPhases do
-        begin
-            for j := 1 to FNphases do
-            begin
-                FSWrite(F, Format('%.8f ', [(Yc[i, j].im / TwoPi / BaseFrequency * 1.0E9)]));
-            end;
-            FSWrite(F, '|');
-        end;
-        FSWriteln(F, '"');
-
-
-        for i := 12 to 21 do
-        begin
-            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
-        end;
-
-        FSWriteln(F, Format('~ %s=%d', [PropertyName[22], FNeutralConductor]));
-        FSWriteln(F, Format('~ %s=%d', [PropertyName[25], NumAmpRatings]));
-        TempStr := '[';
-        for  k := 1 to NumAmpRatings do
-            TempStr := TempStr + floattoStrf(AmpRatings[k - 1], ffGeneral, 8, 4) + ',';
-        TempStr := TempStr + ']';
-        FSWriteln(F, Format('~ %s=%s', [PropertyName[26], TempStr]));
-        FSWriteln(F, Format('~ %s=%s', [PropertyName[27], PropertyValue[27]]));
+        FSWrite(F, '|');
     end;
+    FSWriteln(F, '"');
+    FSWrite(F, '~ ' + ParentClass.PropertyName[10] + '=' + '"');
+    for i := 1 to FNPhases do
+    begin
+        for j := 1 to FNphases do
+        begin
+            FSWrite(F, Format('%.8f ', [Z[i, j].im]));
+        end;
+        FSWrite(F, '|');
+    end;
+    FSWriteln(F, '"');
+    FSWrite(F, '~ ' + ParentClass.PropertyName[11] + '=' + '"');
+    for i := 1 to FNPhases do
+    begin
+        for j := 1 to FNphases do
+        begin
+            FSWrite(F, Format('%.8f ', [(Yc[i, j].im / TwoPi / BaseFrequency * 1.0E9)]));
+        end;
+        FSWrite(F, '|');
+    end;
+    FSWriteln(F, '"');
+
+
+    for i := 12 to 21 do
+    begin
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+    end;
+
+    FSWriteln(F, Format('~ %s=%d', [ParentClass.PropertyName[22], FNeutralConductor]));
+    FSWriteln(F, Format('~ %s=%d', [ParentClass.PropertyName[25], NumAmpRatings]));
+    TempStr := '[';
+    for  k := 1 to NumAmpRatings do
+        TempStr := TempStr + floattoStrf(AmpRatings[k - 1], ffGeneral, 8, 4) + ',';
+    TempStr := TempStr + ']';
+    FSWriteln(F, Format('~ %s=%s', [ParentClass.PropertyName[26], TempStr]));
+    FSWriteln(F, Format('~ %s=%s', [ParentClass.PropertyName[27], PropertyValue[27]]));
 end;
 
 procedure TLineCodeObj.DoKronReduction;

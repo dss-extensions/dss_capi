@@ -175,7 +175,7 @@ var
         if errCode <> 0 then
         begin
             PropParser.CmdString := '(' + Value + ')';
-            PropParser.NextParam;
+            PropParser.NextParam();
             Result := PropParser.DblValue;
         end;
     end;
@@ -185,7 +185,7 @@ var
         if errCode <> 0 then
         begin
             PropParser.CmdString := '(' + Value + ')';
-            PropParser.NextParam;
+            PropParser.NextParam();
             Result := PropParser.IntValue;
         end;
     end;
@@ -193,9 +193,9 @@ var
     // moved from Utilities -- previously InterpretComplex
     begin
         PropParser.CmdString := S;
-        PropParser.NextParam;
+        PropParser.NextParam();
         Result.re := PropParser.dblvalue;
-        PropParser.NextParam;
+        PropParser.NextParam();
         Result.im := PropParser.dblvalue;
     end;
 begin
@@ -427,7 +427,7 @@ begin
             // Loop for no more than the expected number of items;  Ignore omitted values
             for i := 1 to intVal do
             begin
-                PropParser.NextParam; // ignore any parameter name  not expecting any
+                PropParser.NextParam(); // ignore any parameter name  not expecting any
                 DataStr := PropParser.StrValue;
                 if Length(DataStr) > 0 then
                     TDSSCktElement(obj).SetBus(i, DataStr);
@@ -465,7 +465,7 @@ begin
             PropParser.CmdString := Value;  // Load up Parser
             for i := 1 to maxSize do
             begin
-                PropParser.NextParam; // ignore any parameter name  not expecting any
+                PropParser.NextParam(); // ignore any parameter name  not expecting any
                 DataStr := PropParser.StrValue;
 
                 if Length(DataStr) > 0 then
@@ -493,7 +493,7 @@ begin
             // Loop for no more than the expected number of items;  Ignore omitted values
             for i := 1 to intVal do
             begin
-                PropParser.NextParam; // ignore any parameter name  not expecting any
+                PropParser.NextParam(); // ignore any parameter name  not expecting any
                 DataStr := PropParser.StrValue;
 
                 if Length(DataStr) > 0 then
@@ -689,7 +689,7 @@ begin
             // Loop for no more than the expected number of items;  Ignore omitted values
             for i := 1 to intVal do
             begin
-                PropParser.NextParam; // ignore any parameter name  not expecting any
+                PropParser.NextParam(); // ignore any parameter name  not expecting any
                 DataStr := PropParser.StrValue;
 
                 if Length(DataStr) > 0 then
@@ -778,7 +778,7 @@ begin
             if TPropertyFlag.WriteByFunction in flags then
             begin
                 SetLength(objs, 0);
-                PropParser.NextParam;
+                PropParser.NextParam();
                 if cls <> NIL then
                 begin
                     while Length(PropParser.StrValue) > 0 do
@@ -798,7 +798,7 @@ begin
                         end;
                         SetLength(objs, Length(objs) + 1);
                         objs[High(objs)] := otherObj;
-                        PropParser.NextParam;
+                        PropParser.NextParam();
                     end;
                 end
                 else
@@ -821,7 +821,7 @@ begin
                         end;
                         SetLength(objs, Length(objs) + 1);
                         objs[High(objs)] := otherObj;
-                        PropParser.NextParam;
+                        PropParser.NextParam();
                     end;
                 end;
                 TWriteObjRefsPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, PPointer(@objs[0]), Length(objs));
@@ -858,7 +858,7 @@ begin
             i := 0;
             for i := 1 to intVal do
             begin
-                PropParser.NextParam;
+                PropParser.NextParam();
                 if Length(PropParser.StrValue) = 0 then
                     break;
 
@@ -1506,7 +1506,7 @@ begin
                     end;
                     doublePtr := NIL;
                     TDoublesPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, doublePtr, @ValueCount[0]);
-                    PropStr := GetDSSArray_Real(
+                    PropStr := GetDSSArray(
                         ValueCount[0],
                         pDoubleArray(doublePtr),
                         PropertyScale[Index]
@@ -1515,14 +1515,14 @@ begin
                     Exit;
                 end;
 
-                PropStr := GetDSSArray_Real(
+                PropStr := GetDSSArray(
                     Norder, 
                     pDoubleArray(PPDouble(PByte(obj) + PropertyOffset[Index])^),
                     PropertyScale[Index]
                 );
             end;
             TPropertyType.DoubleFArrayProperty:
-                PropStr := GetDSSArray_Real(
+                PropStr := GetDSSArray(
                     PropertyOffset2[Index], 
                     pDoubleArray(PDouble(PByte(obj) + PropertyOffset[Index])),
                     PropertyScale[Index]
@@ -1680,7 +1680,7 @@ begin
             end;
 
             TPropertyType.IntegerArrayProperty:
-                PropStr := GetDSSArray_Integer(
+                PropStr := GetDSSArray(
                     PInteger(PByte(obj) + PropertyOffset2[Index])^, 
                     pIntegerArray(PPInteger(PByte(obj) + PropertyOffset[Index])^)
                 );

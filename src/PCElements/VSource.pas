@@ -458,7 +458,7 @@ begin
 
     case Idx of
         ord(TProp.basekv):
-            ZBase := SQR(kvBase) / BaseMVA;
+            ZBase := SQR(kVBase) / BaseMVA;
         ord(TProp.puZ1):
         begin
             Z1Specified := TRUE;
@@ -469,19 +469,19 @@ begin
         ord(TProp.puZ2):
             puZ2Specified := TRUE;
         ord(TProp.baseMVA):
-            ZBase := SQR(kvBase) / BaseMVA;
+            ZBase := SQR(kVBase) / BaseMVA;
     end;
     inherited PropertySideEffects(Idx, previousIntVal);
 end;
 
 function TVsource.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
 begin
-    with TObj(ptr) do
-    begin
-        RecalcElementData;
-        YPrimInvalid := TRUE;
-        Exclude(Flags, Flg.EditionActive);
-    end;
+    obj := TObj(ptr);
+    obj.RecalcElementData();
+    obj.YPrimInvalid := TRUE;
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -581,7 +581,7 @@ begin
     PerUnit := 1.0;  // per unit voltage, not impedance
     kVBase := 115.0;
     BaseMVA := 100.0;
-    ZBase := SQR(kvBase) / BaseMVA;
+    ZBase := SQR(kVBase) / BaseMVA;
 
     SrcFrequency := BaseFrequency;
     Angle := 0.0;
@@ -652,8 +652,8 @@ begin
     case ZSpecType of
         1:
         begin  // MVAsc
-            X1 := Sqr(KvBase) / MVAsc3 / Sqrt(1.0 + 1.0 / Sqr(X1R1));
-            //  Xs   := Sqr(KvBase) / MVAsc1/Sqrt(1.0 + 1.0/Sqr(X0R0)); // Approx
+            X1 := Sqr(kVBase) / MVAsc3 / Sqrt(1.0 + 1.0 / Sqr(X1R1));
+            //  Xs   := Sqr(kVBase) / MVAsc1/Sqrt(1.0 + 1.0/Sqr(X0R0)); // Approx
             R1 := X1 / X1R1;
             R2 := R1;  // default Z2 = Z1
             X2 := X1;
@@ -676,7 +676,7 @@ begin
         begin  // Isc
             MVAsc3 := SQRT3 * kVBase * Isc3 / 1000.0;
             MVAsc1 := Factor * kVBase * Isc1 / 1000.0;
-            X1 := Sqr(KvBase) / MVAsc3 / Sqrt(1.0 + 1.0 / Sqr(X1R1));
+            X1 := Sqr(kVBase) / MVAsc3 / Sqrt(1.0 + 1.0 / Sqr(X1R1));
             R1 := X1 / X1R1;
             R2 := R1;  // default Z2 = Z1
             X2 := X1;
@@ -825,7 +825,7 @@ var
     FreqMultiplier: Double;
 begin
     // Build only YPrim Series
-    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) {YPrimInvalid} then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) then // YPrimInvalid
     begin
         if YPrim_Series <> NIL then
             YPrim_Series.Free;
@@ -840,46 +840,45 @@ begin
         YPrim.Clear;
     end;
 
-    with ActiveCircuit.Solution do
+    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FreqMultiplier := FYprimFreq / BaseFrequency;
+
+    // **** Quasi Ideal Source for fundamental power flow****
+
+    if ((FreqMultiplier - 1.0) < Epsilon) and IsQuasiIdeal and (not ActiveCircuit.Solution.IsHarmonicModel) then
     begin
-        FYprimFreq := Frequency;
-        FreqMultiplier := FYprimFreq / BaseFrequency;
+        // Ideal Source approximation -- impedance matrix is diagonal matrix only
+        Zinv.Clear;
+        Value := puZIdeal * Zbase;  // convert to ohms
+        for i := 1 to Fnphases do
+            Zinv[i, i] := value;
+    end
 
-       // **** Quasi Ideal Source for fundamental power flow****
+    else
 
-        if ((FreqMultiplier - 1.0) < Epsilon) and IsQuasiIdeal and (not IsHarmonicModel) then
+    begin
+        // **** Normal Thevenin Source ****
+        // Put in Series RL Adjusted for frequency -- Use actual values
+        for i := 1 to Fnphases do
         begin
-            // Ideal Source approximation -- impedance matrix is diagonal matrix only
-            Zinv.Clear;
-            Value := puZIdeal * Zbase;  // convert to ohms
-            for i := 1 to Fnphases do
-                Zinv[i, i] := value;
-        end
-
-        else
-
-            // **** Normal Thevenin Source ****
-            // Put in Series RL Adjusted for frequency -- Use actual values
-            for i := 1 to Fnphases do
+            for j := 1 to Fnphases do
             begin
-                for j := 1 to Fnphases do
-                begin
-                    Value := Z[i, j];
-                    Value.im := Value.im * FreqMultiplier; // Modify from base freq
-                    Zinv[i, j] := value;
-                end;
+                Value := Z[i, j];
+                Value.im := Value.im * FreqMultiplier; // Modify from base freq
+                Zinv[i, j] := value;
             end;
+        end;
     end;
 
 
-    Zinv.Invert;  // Invert in place
+    Zinv.Invert();  // Invert in place
 
     if Zinv.InvertError > 0 then
     begin // If error, put in Large series conductance
         DoErrorMsg('TVsourceObj.CalcYPrim', 
             Format(_('Matrix Inversion Error for Vsource "%s"'), [Name]),
             _('Invalid impedance specified. Replaced with small resistance.'), 325);
-        Zinv.Clear;
+        Zinv.Clear();
         for i := 1 to Fnphases do
             Zinv[i, i] := 1.0 / EPSILON;
     end;
@@ -912,113 +911,112 @@ var
     i: Integer;
     Vharm: Complex;
     SrcHarmonic: Double;
+    mode: TSolveMode;
+    dblHour: Double;
 begin
     try
+        mode := ActiveCircuit.Solution.Mode;
+        dblHour := ActiveCircuit.Solution.DynaVars.dblHour;
         // This formulation will theoretically handle voltage sources of
         // any number of phases assuming they are
         // equally displaced in time.
-        with ActiveCircuit.Solution do
-        begin
-            ShapeIsActual := FALSE;
+        ShapeIsActual := FALSE;
 
-            // Modify magnitude based on a LOADSHAPE if assigned
-            case Mode of
-                // Uses same logic as LOAD
-                TSolveMode.DAILYMODE:
-                begin
-                    CalcDailyMult(DynaVars.dblHour); // set Shapefactor.re = Pmult(t) or PerUnit
-                end;
-                TSolveMode.YEARLYMODE:
-                begin
-                    CalcYearlyMult(DynaVars.dblHour);
-                end;
-                TSolveMode.DUTYCYCLE:
-                begin
-                    CalcDutyMult(DynaVars.dblHour);
-                end;
-                TSolveMode.DYNAMICMODE:
-                begin
-                    // This mode allows use of one class of load shape in DYNAMIC mode
-                    // Sets Shapefactor.re = pmult(t) or PerUnit value
-                    case ActiveCircuit.ActiveLoadShapeClass of
-                        USEDAILY:
-                            CalcDailyMult(DynaVars.dblHour);
-                        USEYEARLY:
-                            CalcYearlyMult(DynaVars.dblHour);
-                        USEDUTY:
-                            CalcDutyMult(DynaVars.dblHour);
-                    else
-                        ShapeFactor := PerUnit; // default to PerUnit + j0 if not known
-                    end;
-                end;
-            end;
-
-            if (Mode = TSolveMode.DAILYMODE) or  // If a loadshape mode simulation
-                (Mode = TSolveMode.YEARLYMODE) or
-                (Mode = TSolveMode.DUTYCYCLE) or
-                (Mode = TSolveMode.DYNAMICMODE) then
-            begin  // Loadshape cases
-                if ShapeIsActual then
-                    Vmag := 1000.0 * ShapeFactor.re  // assumes actual L-N voltage or voltage across source
-                else
-                    // is pu value
-                    case Fnphases of
-                        1:
-                            Vmag := kVBase * ShapeFactor.re * 1000.0;
-                    else
-                        Vmag := kVBase * ShapeFactor.re * 1000.0 / 2.0 / Sin((180.0 / Fnphases) * PI / 180.0);
-                    end;
-            end
-            else  // Normal Case
-                case Fnphases of
-                    1:
-                        Vmag := kVBase * PerUnit * 1000.0;
-                else
-                    Vmag := kVBase * PerUnit * 1000.0 / 2.0 / Sin((180.0 / Fnphases) * PI / 180.0);
-                end;
-
-            if IsHarmonicModel then
+        // Modify magnitude based on a LOADSHAPE if assigned
+        case Mode of
+            // Uses same logic as LOAD
+            TSolveMode.DAILYMODE:
             begin
-                SrcHarmonic := Frequency / SrcFrequency;
-                Vharm := SpectrumObj.GetMult(SrcHarmonic) * Vmag;  // Base voltage for this harmonic
-                RotatePhasorDeg(Vharm, SrcHarmonic, Angle);  // Rotate for phase 1 shift
-                for i := 1 to Fnphases do
-                begin
-                    Vterminal[i] := Vharm;
-                    VTerminal^[i + Fnphases] := 0;
-                    if (i < Fnphases) then
-                    begin
-                        case ScanType of
-                            1:
-                                RotatePhasorDeg(Vharm, 1.0, -360.0 / Fnphases); // maintain pos seq
-                            0: ;  // Do nothing for Zero Sequence; All the same
-                        else
-                            RotatePhasorDeg(Vharm, SrcHarmonic, -360.0 / Fnphases); // normal rotation
-                        end;
-                    end;
+                CalcDailyMult(dblHour); // set Shapefactor.re = Pmult(t) or PerUnit
+            end;
+            TSolveMode.YEARLYMODE:
+            begin
+                CalcYearlyMult(dblHour);
+            end;
+            TSolveMode.DUTYCYCLE:
+            begin
+                CalcDutyMult(dblHour);
+            end;
+            TSolveMode.DYNAMICMODE:
+            begin
+                // This mode allows use of one class of load shape in DYNAMIC mode
+                // Sets Shapefactor.re = pmult(t) or PerUnit value
+                case ActiveCircuit.ActiveLoadShapeClass of
+                    USEDAILY:
+                        CalcDailyMult(dblHour);
+                    USEYEARLY:
+                        CalcYearlyMult(dblHour);
+                    USEDUTY:
+                        CalcDutyMult(dblHour);
+                else
+                    ShapeFactor := PerUnit; // default to PerUnit + j0 if not known
                 end;
+            end;
+        end;
 
-            end
+        if (Mode = TSolveMode.DAILYMODE) or  // If a loadshape mode simulation
+            (Mode = TSolveMode.YEARLYMODE) or
+            (Mode = TSolveMode.DUTYCYCLE) or
+            (Mode = TSolveMode.DYNAMICMODE) then
+        begin  // Loadshape cases
+            if ShapeIsActual then
+                Vmag := 1000.0 * ShapeFactor.re  // assumes actual L-N voltage or voltage across source
             else
-            begin  // non-harmonic modes
-                if abs(Frequency - SrcFrequency) > EPSILON2 then
-                    Vmag := 0.0;  // Solution Frequency and Source Frequency don't match!
-                // NOTE: RE-uses VTerminal space
-                for i := 1 to Fnphases do
-                begin
-                    case Sequencetype of
-                        -1:
-                            Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle + (i - 1) * 360.0 / Fnphases));  // neg seq
-                        0:
-                            Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle));   // all the same for zero sequence
-                    else
-                        Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle - (i - 1) * 360.0 / Fnphases));
-                    end;
-                    VTerminal^[i + Fnphases] := 0;    // See comments in GetInjCurrents
-                end;
-
+            begin
+                // is pu value
+                if Fnphases = 1 then
+                    Vmag := kVBase * ShapeFactor.re * 1000.0
+                else
+                    Vmag := kVBase * ShapeFactor.re * 1000.0 / 2.0 / Sin((180.0 / Fnphases) * PI / 180.0);
+            end;
+        end
+        else  // Normal Case
+            case Fnphases of
+                1:
+                    Vmag := kVBase * PerUnit * 1000.0;
+            else
+                Vmag := kVBase * PerUnit * 1000.0 / 2.0 / Sin((180.0 / Fnphases) * PI / 180.0);
             end;
 
+        if ActiveCircuit.Solution.IsHarmonicModel then
+        begin
+            SrcHarmonic := ActiveCircuit.Solution.Frequency / SrcFrequency;
+            Vharm := SpectrumObj.GetMult(SrcHarmonic) * Vmag;  // Base voltage for this harmonic
+            RotatePhasorDeg(Vharm, SrcHarmonic, Angle);  // Rotate for phase 1 shift
+            for i := 1 to Fnphases do
+            begin
+                Vterminal[i] := Vharm;
+                VTerminal[i + Fnphases] := 0;
+                if (i < Fnphases) then
+                begin
+                    case ScanType of
+                        1:
+                            RotatePhasorDeg(Vharm, 1.0, -360.0 / Fnphases); // maintain pos seq
+                        0: ;  // Do nothing for Zero Sequence; All the same
+                    else
+                        RotatePhasorDeg(Vharm, SrcHarmonic, -360.0 / Fnphases); // normal rotation
+                    end;
+                end;
+            end;
+
+        end
+        else
+        begin  // non-harmonic modes
+            if abs(ActiveCircuit.Solution.Frequency - SrcFrequency) > EPSILON2 then
+                Vmag := 0.0;  // Solution Frequency and Source Frequency don't match!
+            // NOTE: RE-uses VTerminal space
+            for i := 1 to Fnphases do
+            begin
+                case Sequencetype of
+                    -1:
+                        Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle + (i - 1) * 360.0 / Fnphases));  // neg seq
+                    0:
+                        Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle));   // all the same for zero sequence
+                else
+                    Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle - (i - 1) * 360.0 / Fnphases));
+                end;
+                VTerminal[i + Fnphases] := 0;    // See comments in GetInjCurrents
+            end;
 
         end;
 
@@ -1041,18 +1039,14 @@ var
     i: Integer;
 begin
     try
-        with ActiveCircuit.Solution do
-        begin
-            for i := 1 to Yorder do
-                Vterminal[i] := NodeV[NodeRef[i]];
+        for i := 1 to Yorder do
+            Vterminal[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
 
-            YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
-
-            GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
-            // Add together with yprim currents
-            for i := 1 to Yorder do
-                Curr[i] := Curr[i] - ComplexBuffer^[i];
-        end;
+        YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
+        GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
+        // Add together with yprim currents
+        for i := 1 to Yorder do
+            Curr[i] := Curr[i] - ComplexBuffer[i];
     except
         On E: Exception do
             DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [Name]), E.Message,
@@ -1081,11 +1075,10 @@ var
 begin
     inherited DumpProperties(F, Complete);
 
-    with ParentClass do
-        for i := 1 to NumProperties do
-        begin
-            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
-        end;
+    for i := 1 to ParentClass.NumProperties do
+    begin
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+    end;
 
     if Complete then
     begin
@@ -1145,7 +1138,7 @@ var
 begin
     R1new := R1;
     X1new := X1;
-    kVnew := kVbase / SQRT3;
+    kVnew := kVBase / SQRT3;
     BeginEdit(True);
     SetInteger(ord(TProp.Phases), 1);
     SetDouble(ord(TProp.basekv), kVnew);

@@ -1,11 +1,9 @@
 unit CktTree;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -26,16 +24,8 @@ type
         NumToBuses, ToBusPtr: Integer;
         ToBusList: pIntegerArray;
 
-        function Get_FirstChild: TCktTreeNode; inline;
-        function Get_NextChild: TCktTreeNode; inline;
-        function Get_Parent: TCktTreeNode; inline;
-        procedure Set_AddChild(const Value: TCktTreeNode); inline;
-        function Get_NumChildren: Integer; inline;
-        function Get_NumObjects: Integer; inline;
         function Get_ToBusReference: Integer; inline;
         procedure Set_ToBusReference(const Value: Integer); inline;
-        function Get_FirstObject: Pointer; inline;
-        function Get_NextObject: Pointer; inline;
 
     PROTECTED
         ChildAdded: Boolean;
@@ -54,17 +44,17 @@ type
         constructor Create(const pParent: TCktTreeNode; const pSelfObj: Pointer);
         destructor Destroy; OVERRIDE;
 
-        procedure ResetToBusList;
-        property AddChildBranch: TCktTreeNode WRITE Set_AddChild;
+        procedure ResetToBusList();
+        procedure AddChildBranch(const Value: TCktTreeNode);
         procedure AddShuntObject(Value: Pointer);
-        property FirstChildBranch: TCktTreeNode READ Get_FirstChild;
-        property NextChildBranch: TCktTreeNode READ Get_NextChild;
-        property FirstShuntObject: Pointer READ Get_FirstObject;
-        property NextShuntObject: Pointer READ Get_NextObject;
+        function FirstShuntObject(): Pointer; inline;
+        function NextShuntObject(): Pointer; inline;
+        function FirstChildBranch(): TCktTreeNode; inline;
+        function NextChildBranch(): TCktTreeNode; inline;
 
-        property ParentBranch: TCktTreeNode READ Get_Parent;
-        property NumChildBranches: Integer READ Get_NumChildren;  // Number of children at present node
-        property NumShuntObjects: Integer READ Get_NumObjects; // Number of objects at present node
+        function ParentBranch(): TCktTreeNode;
+        function NumChildBranches(): Integer;  // Number of children at present node
+        function NumShuntObjects(): Integer; // Number of objects at present node
         property ToBusReference: Integer READ Get_ToBusReference WRITE Set_ToBusReference;
     end;
 
@@ -91,17 +81,8 @@ type
 
         ForwardStack: TPstack;
 
-        function Get_Forward: Pointer;
-        function Get_Backward: Pointer;
-        function Get_First: Pointer;
-        function Get_Parent: Pointer;
-        function Get_FirstObject: Pointer;
-        function Get_NextObject: Pointer;
-        function Get_Active: Pointer;
-        function Get_Level: Integer;
-
-        procedure Set_Active(p: Pointer);  // Set present node to this value
-        procedure PushAllChildren;
+        // procedure Set_Active(p: Pointer);  // Set present node to this value
+        procedure PushAllChildren();
     PUBLIC
         PresentBranch: TCktTreeNode;
         ZoneEndsList: TZoneEndsList;
@@ -109,21 +90,21 @@ type
         constructor Create;
         destructor Destroy; OVERRIDE;
 
-        procedure StartHere;   // Start Forward Search at the present location
+        procedure StartHere();   // Start Forward Search at the present location
                               // can also use active
         procedure AddNewChild(Value: Pointer; BusRef, TerminalNo: Integer);
         procedure Add(Value: Pointer); // Adds Child and makes it present -- previously "New"
        //Property NewChild  :Pointer Write Set_NewChild; // Adds child to present, but doesn't change present
         
         procedure AddNewObject(Value: Pointer); // Adds a pointer to an object to be associated with the current node
-        property First: Pointer READ Get_First;  // Returns pointer to first cktobject
-        property Parent: Pointer READ Get_Parent;
-        property FirstObject: Pointer READ Get_FirstObject;
-        property NextObject: Pointer READ Get_NextObject;
-        property GoForward: Pointer READ Get_Forward;
-        property GoBackward: Pointer READ Get_Backward;
-        property Active: Pointer READ Get_Active WRITE Set_Active;
-        property Level: Integer READ Get_Level;  {Get lexical level of present node}
+        function First(): Pointer;  // Returns pointer to first cktobject
+        function Parent(): Pointer;
+        function FirstObject(): Pointer;
+        function NextObject(): Pointer;
+        function GoForward(): Pointer;
+        function GoBackward(): Pointer;
+        function Active(): Pointer;
+        function Level(): Integer;  // Get lexical level of present node
     end;
 
    // build a tree of connected elements beginning at StartElement
@@ -140,6 +121,7 @@ uses
     PCElement,
     DSSGlobals,
     Utilities,
+    DSSClassDefs,
     DSSClass,
     DSSHelper;
 
@@ -172,10 +154,10 @@ var
     pChild, pNext: Pointer;
     TempNode: TCktTreeNode;
 begin
-    pChild := FChildBranches.First;
+    pChild := FChildBranches.First();
     while pChild <> NIL do
     begin
-        pNext := FChildBranches.Next;
+        pNext := FChildBranches.Next();
         TempNode := TcktTreeNode(pChild);
         TempNode.Free;
         pChild := pNext;
@@ -186,7 +168,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TcktTreeNode.Set_AddChild(const Value: TCktTreeNode);
+procedure TcktTreeNode.AddChildBranch(const Value: TCktTreeNode);
 begin
     FChildBranches.Add(Value);
     ChildAdded := TRUE;
@@ -197,17 +179,17 @@ begin
     FShuntObjects.Add(Value);
 end;
 
-function TcktTreeNode.Get_FirstChild: TCktTreeNode;
+function TcktTreeNode.FirstChildBranch(): TCktTreeNode;
 begin
-    Result := FChildBranches.First;
+    Result := FChildBranches.First();
 end;
 
-function TcktTreeNode.Get_NextChild: TCktTreeNode;
+function TcktTreeNode.NextChildBranch(): TCktTreeNode;
 begin
-    Result := FChildBranches.Next;
+    Result := FChildBranches.Next();
 end;
 
-function TcktTreeNode.Get_Parent: TCktTreeNode;
+function TcktTreeNode.ParentBranch(): TCktTreeNode;
 begin
     Result := FParentBranch;
 end;
@@ -245,18 +227,13 @@ begin
     if PresentBranch = NIL then
     begin
         Add(Value);
-    end
-    else
-    begin
-        TempNode := TcktTreeNode.Create(PresentBranch, Value);
-        with TempNode do
-        begin
-            FromBusReference := BusRef;
-            FromTerminal := TerminalNo;
-        end;
-
-        PresentBranch.AddChildBranch := TempNode;
+        Exit;
     end;
+
+    TempNode := TcktTreeNode.Create(PresentBranch, Value);
+    TempNode.FromBusReference := BusRef;
+    TempNode.FromTerminal := TerminalNo;
+    PresentBranch.AddChildBranch(TempNode);
 end;
 
 procedure TcktTree.AddNewObject(Value: Pointer);
@@ -267,7 +244,7 @@ begin
     end;
 end;
 
-procedure TcktTree.PushAllChildren;
+procedure TcktTree.PushAllChildren();
 var
     pChild: Pointer;
 begin
@@ -275,16 +252,16 @@ begin
         Exit;
 
     // Push all children of present node onto stack
-    pChild := PresentBranch.FirstChildBranch;
+    pChild := PresentBranch.FirstChildBranch();
     while pChild <> NIL do
     begin
         ForwardStack.Push(pChild);
-        pChild := PresentBranch.NextChildBranch;
+        pChild := PresentBranch.NextChildBranch();
     end;
     PresentBranch.ChildAdded := FALSE;
 end;
 
-function TcktTree.Get_Forward: Pointer;
+function TcktTree.GoForward(): Pointer;
 begin
     // MoveForward from Present node
 
@@ -305,7 +282,7 @@ begin
         Result := NIL;
 end;
 
-function TcktTree.Get_Backward: Pointer;
+function TcktTree.GoBackward(): Pointer;
 begin
     if PresentBranch = NIL then
     begin
@@ -313,7 +290,7 @@ begin
         Exit;
     end;
     // Move Backwardfrom Present node and reset forward stack
-    PresentBranch := PresentBranch.ParentBranch;
+    PresentBranch := PresentBranch.ParentBranch();
     ForwardStack.Clear;
     if PresentBranch <> NIL then
         Result := PresentBranch.CktObject
@@ -321,7 +298,7 @@ begin
         Result := NIL;
 end;
 
-function TcktTree.Get_Parent: Pointer;
+function TcktTree.Parent(): Pointer;
 begin
     if PresentBranch = NIL then
     begin
@@ -335,7 +312,7 @@ begin
         Result := NIL;
 end;
 
-function TcktTree.Get_First: Pointer;
+function TcktTree.First(): Pointer;
 begin
     // go to beginning and reset forward stack
     PresentBranch := FirstNode;
@@ -347,7 +324,7 @@ begin
         Result := NIL;
 end;
 
-function TcktTree.Get_FirstObject: Pointer;
+function TcktTree.FirstObject(): Pointer;
 begin
     if PresentBranch <> NIL then
         Result := PresentBranch.FShuntObjects.First
@@ -355,7 +332,7 @@ begin
         Result := NIL;
 end;
 
-function TcktTree.Get_NextObject: Pointer;
+function TcktTree.NextObject(): Pointer;
 begin
     if PresentBranch <> NIL then
         Result := PresentBranch.FShuntObjects.Next
@@ -363,7 +340,7 @@ begin
         Result := NIL;
 end;
 
-function TcktTree.Get_Active: Pointer;
+function TcktTree.Active(): Pointer;
 begin
     if PresentBranch <> NIL then
         Result := PresentBranch.CktObject
@@ -371,29 +348,29 @@ begin
         Result := NIL;
 end;
 
-procedure TcktTree.Set_Active(p: Pointer);
-var
-    Temp: Pointer;
-begin
-    Temp := Get_First;
-    while Temp <> NIL do
-    begin
-        if PresentBranch.CktObject = p then
-            Break;
-        Temp := Get_Forward;
-    end;
+// procedure TcktTree.Set_Active(p: Pointer);
+// var
+//     Temp: Pointer;
+// begin
+//     Temp := First();
+//     while Temp <> NIL do
+//     begin
+//         if PresentBranch.CktObject = p then
+//             Break;
+//         Temp := GoForward();
+//     end;
 
-    ForwardStack.Clear;
-end;
+//     ForwardStack.Clear;
+// end;
 
-procedure TcktTree.StartHere;
+procedure TcktTree.StartHere();
 begin
     ForwardStack.Clear;
     if PresentBranch <> NIL then
         ForwardStack.Push(PresentBranch);
 end;
 
-function TcktTree.Get_Level: Integer;
+function TcktTree.Level(): Integer;
 
 begin
     if PresentBranch <> NIL then
@@ -403,12 +380,12 @@ begin
 end;
 
 
-function TCktTreeNode.Get_NumChildren: Integer;
+function TCktTreeNode.NumChildBranches(): Integer;
 begin
     Result := FChildBranches.Count;
 end;
 
-function TCktTreeNode.Get_NumObjects: Integer;
+function TCktTreeNode.NumShuntObjects(): Integer;
 begin
     Result := FShuntObjects.Count;
 end;
@@ -419,7 +396,7 @@ begin
     Inc(NumEnds);
     EndnodeList.Add(Node);
     Reallocmem(EndBuses, Sizeof(EndBuses) * NumEnds);
-    EndBuses^[NumEnds] := EndBusRef;
+    EndBuses[NumEnds] := EndBusRef;
 end;
 
 constructor TZoneEndsList.Create;
@@ -439,15 +416,15 @@ end;
 function TZoneEndsList.Get(i: Integer; var Node: TCktTreeNode): Integer;
 begin
     Node := EndnodeList.Get(i);
-    Result := EndBuses^[i];
+    Result := EndBuses[i];
 end;
 
 function TCktTreeNode.Get_ToBusReference: Integer;
-{Sequentially access the To Bus list if more than one with each invocation of the property}
+// Sequentially access the To Bus list if more than one with each invocation of the property
 begin
     if NumToBuses = 1 then
     begin
-        Result := ToBusList^[1];  // Always return the first
+        Result := ToBusList[1];  // Always return the first
     end
     else
     begin
@@ -458,15 +435,15 @@ begin
             ToBusPtr := 0;  // Ready for next sequence of access
         end
         else
-            Result := ToBusList^[ToBusPtr];
+            Result := ToBusList[ToBusPtr];
     end;
 end;
 
 procedure TCktTreeNode.Set_ToBusReference(const Value: Integer);
 begin
     Inc(NumToBuses);
-    Reallocmem(ToBusList, Sizeof(ToBusList^[1]) * NumToBuses);
-    TobusList^[NumToBuses] := Value;
+    Reallocmem(ToBusList, Sizeof(ToBusList[1]) * NumToBuses);
+    TobusList[NumToBuses] := Value;
 end;
 
 procedure TCktTreeNode.ResetToBusList;
@@ -474,14 +451,14 @@ begin
     ToBusPtr := 0;
 end;
 
-function TCktTreeNode.Get_FirstObject: Pointer;
+function TCktTreeNode.FirstShuntObject(): Pointer;
 begin
-    Result := FShuntObjects.First;
+    Result := FShuntObjects.First();
 end;
 
-function TCktTreeNode.Get_NextObject: Pointer;
+function TCktTreeNode.NextShuntObject(): Pointer;
 begin
-    Result := FShuntObjects.Next;
+    Result := FShuntObjects.Next();
 end;
 
 ////////////////////////////////////////////////////////////////////////
@@ -495,27 +472,24 @@ procedure GetSourcesConnectedToBus(Ckt: TDSSCircuit; BusNum: Integer; BranchList
 var
     psrc: TPCElement;      // Sources are special PC elements
 begin
-    with Ckt do
+    for psrc in Ckt.Sources do
     begin
-        for psrc in Sources do
-        begin
-            if not psrc.Enabled then
-                continue;
+        if not psrc.Enabled then
+            continue;
 
-            if Analyze or (not (Flg.Checked in psrc.Flags)) then
-            begin
-                if (psrc.Terminals[0].BusRef = BusNum) then
-                begin  // ?Connected to this bus ?
-                    if Analyze then
-                    begin
-                        Exclude(psrc.Flags, Flg.IsIsolated);
-                        BranchList.PresentBranch.IsDangling := FALSE;
-                    end;
-                    if not (Flg.Checked in psrc.Flags) then
-                    begin
-                        BranchList.AddNewObject(psrc);
-                        Include(psrc.Flags, Flg.Checked);
-                    end;
+        if Analyze or (not (Flg.Checked in psrc.Flags)) then
+        begin
+            if (psrc.Terminals[0].BusRef = BusNum) then
+            begin  // ?Connected to this bus ?
+                if Analyze then
+                begin
+                    Exclude(psrc.Flags, Flg.IsIsolated);
+                    BranchList.PresentBranch.IsDangling := FALSE;
+                end;
+                if not (Flg.Checked in psrc.Flags) then
+                begin
+                    BranchList.AddNewObject(psrc);
+                    Include(psrc.Flags, Flg.Checked);
                 end;
             end;
         end;
@@ -543,6 +517,36 @@ begin
                 Include(p.Flags, Flg.Checked);
             end;
         end;
+    end;
+end;
+function IsShuntElement(const Elem: TDSSCktElement): Boolean;
+begin
+    if ((Elem.DSSObjType and CLASSMASK) = CAP_ELEMENT) or ((Elem.DSSObjType and CLASSMASK) = REACTOR_ELEMENT) then
+        Result := TPDElement(Elem).IsShunt
+    else
+        Result := FALSE;
+end;
+
+
+function AllTerminalsClosed(ThisElement: TDSSCktElement): Boolean;
+// check all conductors of this element to see IF it is closed.
+// Make sure at least one phase on each terminal is closed.
+var
+    i, j: Integer;
+begin
+    Result := FALSE;
+    for i := 1 to ThisElement.Nterms do
+    begin
+        Result := FALSE;
+        ThisElement.ActiveTerminalIdx := i;
+        for j := 1 to ThisElement.NPhases do
+            if ThisElement.Closed[j] then
+            begin
+                Result := TRUE;
+                Break;
+            end;
+        if not Result then
+            Exit;  // didn't find a closed phase on this terminal
     end;
 end;
 
@@ -666,7 +670,7 @@ begin
                 end;
             end;
         end;
-        TestBranch := BranchList.GoForward;
+        TestBranch := BranchList.GoForward();
     end;
     Result := BranchList;
 end;

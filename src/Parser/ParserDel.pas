@@ -1,10 +1,8 @@
 unit ParserDel;
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 interface
 
 uses
@@ -64,7 +62,6 @@ type
         function MakeString: String;
         function MakeInteger: Integer;
         function MakeDouble: Double;
-        function GetNextParam: String;
         procedure SkipWhiteSpace(const LineBuffer: String; var LinePos: Integer);
         function IsWhiteSpace(ch: Char): Boolean;
         function IsDelimiter(const LineBuffer: String; var LinePos: Integer): Boolean;
@@ -82,10 +79,10 @@ type
         property StrValue: String READ MakeString;
         property Token: String READ TokenBuffer WRITE TokenBuffer;
         property Remainder: String READ Get_Remainder;
-        property NextParam: String READ GetNextParam;
+        function NextParam(): String;
         function ParseAsBusName(Param: String; var NumNodes: Integer; NodeArray: pIntegerArray): String;//TODO: make it a separate function
-        function ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray): Integer;
-        function ParseAsVector(var VectorBuffer: ArrayOfDouble): Integer;
+        function ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray; DoRound: Boolean=False): Integer;
+        function ParseAsVector(var VectorBuffer: ArrayOfDouble; DoRound: Boolean=False): Integer;
 
         // TODO: remove, not used in the main code, only in the COM API, kinda useless for most common programming languages
         function ParseAsMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
@@ -110,7 +107,8 @@ implementation
 uses
     DSSClass,
     DSSHelper,
-    DSSGlobals;
+    DSSGlobals,
+    Math;
 
 const
     Commentchar = '!';
@@ -134,77 +132,76 @@ begin
 
     // Check for RPN command.
     S := AnsiLowerCase(TokenBuffer);
-    with RPN do
-        if CompareStr(S, '+') = 0 then
-            Add
-        else
-        if CompareStr(S, '-') = 0 then
-            Subtract
-        else
-        if CompareStr(S, '*') = 0 then
-            multiply
-        else
-        if CompareStr(S, '/') = 0 then
-            Divide
-        else
-        if CompareStr(S, 'sqrt') = 0 then
-            Sqrt
-        else
-        if CompareStr(S, 'sqr') = 0 then
-            Square
-        else
-        if CompareStr(S, '^') = 0 then
-            YToTheXPower
-        else
-        if CompareStr(S, 'sin') = 0 then
-            SinDeg
-        else
-        if CompareStr(S, 'cos') = 0 then
-            CosDeg
-        else
-        if CompareStr(S, 'tan') = 0 then
-            TanDeg
-        else
-        if CompareStr(S, 'asin') = 0 then
-            aSinDeg
-        else
-        if CompareStr(S, 'acos') = 0 then
-            aCosDeg
-        else
-        if CompareStr(S, 'atan') = 0 then
-            aTanDeg
-        else
-        if CompareStr(S, 'atan2') = 0 then
-            aTan2Deg
-        else
-        if CompareStr(S, 'swap') = 0 then
-            SwapXY
-        else
-        if CompareStr(S, 'rollup') = 0 then
-            RollUp
-        else
-        if CompareStr(S, 'rolldn') = 0 then
-            RollDn
-        else
-        if CompareStr(S, 'ln') = 0 then
-            Natlog
-        else
-        if CompareStr(S, 'pi') = 0 then
-            EnterPi
-        else
-        if CompareStr(S, 'log10') = 0 then
-            TenLog
-        else
-        if CompareStr(S, 'exp') = 0 then
-            etothex
-        else
-        if CompareStr(S, 'inv') = 0 then
-            inv
-        else
-        begin
-            raise EParserProblem.Create('Invalid inline math entry: "' + TokenBuffer + '"');
-            // Result := 1;  // error -- REMOVED: never reached
-        end;
+    if CompareStr(S, '+') = 0 then
+        RPN.Add()
+    else
+    if CompareStr(S, '-') = 0 then
+        RPN.Subtract()
+    else
+    if CompareStr(S, '*') = 0 then
+        RPN.Multiply()
+    else
+    if CompareStr(S, '/') = 0 then
+        RPN.Divide()
+    else
+    if CompareStr(S, 'sqrt') = 0 then
+        RPN.Sqrt()
+    else
+    if CompareStr(S, 'sqr') = 0 then
+        RPN.Square()
+    else
+    if CompareStr(S, '^') = 0 then
+        RPN.YToTheXPower()
+    else
+    if CompareStr(S, 'sin') = 0 then
+        RPN.SinDeg()
+    else
+    if CompareStr(S, 'cos') = 0 then
+        RPN.CosDeg()
+    else
+    if CompareStr(S, 'tan') = 0 then
+        RPN.TanDeg()
+    else
+    if CompareStr(S, 'asin') = 0 then
+        RPN.aSinDeg()
+    else
+    if CompareStr(S, 'acos') = 0 then
+        RPN.aCosDeg()
+    else
+    if CompareStr(S, 'atan') = 0 then
+        RPN.aTanDeg()
+    else
+    if CompareStr(S, 'atan2') = 0 then
+        RPN.aTan2Deg()
+    else
+    if CompareStr(S, 'swap') = 0 then
+        RPN.SwapXY()
+    else
+    if CompareStr(S, 'rollup') = 0 then
+        RPN.RollUp()
+    else
+    if CompareStr(S, 'rolldn') = 0 then
+        RPN.RollDn()
+    else
+    if CompareStr(S, 'ln') = 0 then
+        RPN.Natlog()
+    else
+    if CompareStr(S, 'pi') = 0 then
+        RPN.EnterPi()
+    else
+    if CompareStr(S, 'log10') = 0 then
+        RPN.TenLog()
+    else
+    if CompareStr(S, 'exp') = 0 then
+        RPN.etothex()
+    else
+    if CompareStr(S, 'inv') = 0 then
+        RPN.inv()
+    else
+    begin
+        raise EParserProblem.Create('Invalid inline math entry: "' + TokenBuffer + '"');
+        // Result := 1;  // error -- REMOVED: never reached
+    end;
 end;
 
 function StriptoDotPos(Dotpos: Integer; var S: String): String;
@@ -442,7 +439,7 @@ begin
     end;
 end;
 
-function TDSSParser.GetNextParam: String;
+function TDSSParser.NextParam(): String;
 begin
     if FPosition <= Length(CmdBuffer) then
     begin
@@ -478,7 +475,7 @@ var
 begin
     TokenBuffer := Param;
     if FAutoIncrement then
-        GetNextParam;
+        NextParam();
     NumNodes := 0;
     DotPos := Pos('.', TokenBuffer);
     if DotPos = 0 then
@@ -513,24 +510,24 @@ begin
     end;
 end;
 
-function TDSSParser.ParseAsVector(var VectorBuffer: ArrayOfDouble): Integer;
+function TDSSParser.ParseAsVector(var VectorBuffer: ArrayOfDouble; DoRound: Boolean): Integer;
 begin
-    Result := ParseAsVector(Length(VectorBuffer), pDoubleArray(@VectorBuffer[0]));
+    Result := ParseAsVector(Length(VectorBuffer), pDoubleArray(@VectorBuffer[0]), DoRound);
 end;
 
-function TDSSParser.ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray): Integer;
+function TDSSParser.ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray; DoRound: Boolean): Integer;
 var
     ParseBufferPos, NumElements, i: Integer;
     ParseBuffer, DelimSave: String;
 begin
     if FAutoIncrement then
-        GetNextParam;
+        NextParam();
 
     NumElements := 0;
     Result := 0;  // return 0 if none found or error occurred
     try
         for i := 1 to ExpectedSize do
-            VectorBuffer^[i] := 0.0;
+            VectorBuffer[i] := 0.0;
 
         // now Get Vector values
         ParseBuffer := TokenBuffer + ' ';
@@ -546,7 +543,7 @@ begin
         begin
             inc(NumElements);
             if NumElements <= ExpectedSize then
-                VectorBuffer^[NumElements] := MakeDouble;
+                VectorBuffer[NumElements] := MakeDouble;
             //TODO: warn about extra elements
             if LastDelimiter = MatrixRowTerminator then
                 BREAK;
@@ -563,6 +560,9 @@ begin
 
     DelimChars := DelimSave;   //restore to original delimiters
     TokenBuffer := copy(ParseBuffer, ParseBufferPos, Length(ParseBuffer));  // prepare for next trip
+    if DoRound then
+        for i := 1 to Math.Min(NumElements, ExpectedSize) do
+            VectorBuffer[i] := Round(VectorBuffer[i]);
 end;
 
 function TDSSParser.ParseAsMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
@@ -572,11 +572,11 @@ var
 begin
     Result := 0;
     if FAutoIncrement then
-        GetNextParam;
+        NextParam();
 
     RowBuf := Allocmem(Sizeof(Double) * ExpectedOrder);
     for i := 1 to (ExpectedOrder * ExpectedOrder) do
-        MatrixBuffer^[i] := 0.0;
+        MatrixBuffer[i] := 0.0;
 
     try
         for i := 1 to ExpectedOrder do
@@ -593,7 +593,7 @@ begin
             k := i;
             for j := 1 to ElementsFound do
             begin
-                MatrixBuffer^[k] := RowBuf^[j];
+                MatrixBuffer[k] := RowBuf[j];
                 Inc(k, ExpectedOrder);
             end;
         end;
@@ -617,7 +617,7 @@ var
 begin
     Result := 0;
     if FAutoIncrement then
-        GetNextParam;
+        NextParam();
 
     RowBuf := Allocmem(Sizeof(Double) * ExpectedOrder);
     maxpos := ExpectedOrder * ExpectedOrder - 1;
@@ -638,7 +638,7 @@ begin
                     Exit;
                 end;
 
-                MatrixBuffer^[subpos * Stride + 1] := RowBuf^[j + 1] * Scale;
+                MatrixBuffer[subpos * Stride + 1] := RowBuf[j + 1] * Scale;
 
                 if i = j then
                     continue;
@@ -649,7 +649,7 @@ begin
                     DoSimpleMsg(TDSSContext(DSSCtx), _('Matrix Buffer in ParseAsSymMatrix too small. Check your input data, especially dimensions and number of phases.'), 65534);
                     Exit;
                 end;
-                MatrixBuffer^[subpos * Stride + 1] := RowBuf^[j + 1] * Scale;
+                MatrixBuffer[subpos * Stride + 1] := RowBuf[j + 1] * Scale;
             end;
         end;
         Result := ExpectedOrder;
@@ -661,7 +661,7 @@ end;
 function TDSSParser.MakeString: String;
 begin
     if FAutoIncrement then
-        GetNextParam;
+        NextParam();
 
     Result := TokenBuffer;
 end;
@@ -674,7 +674,7 @@ var
 begin
     ConvertError := FALSE;
     if FAutoIncrement then
-        GetNextParam;
+        NextParam();
 
     if Length(TokenBuffer) = 0 then
     begin
@@ -711,7 +711,7 @@ var
     Code: Integer;
 begin
     if FAutoIncrement then
-        GetNextParam;
+        NextParam();
     ConvertError := FALSE;
     if Length(TokenBuffer) = 0 then
         Result := 0.0
@@ -806,7 +806,7 @@ var
 begin
     // First, check to see if the varname already exists
     // if so, just change the value
-    idx := Varnames.Find(Varname);
+    idx := VarNames.Find(Varname);
 
     if idx = 0 then
     begin
@@ -814,7 +814,7 @@ begin
         if idx > StringArraySize then
         begin
             // resize String array
-            ReallocStr(VarValues, Sizeof(VarValues^[1]) * StringArraySize, Sizeof(VarValues^[1]) * (StringArraySize + FsizeIncrement));
+            ReallocStr(VarValues, Sizeof(VarValues[1]) * StringArraySize, Sizeof(VarValues[1]) * (StringArraySize + FsizeIncrement));
             inc(StringArraySize, FsizeIncrement);
         end;
     end;
@@ -825,7 +825,7 @@ begin
     else
         VarDefinition := VarValue;
 
-    VarValues^[idx] := VarDefinition;
+    VarValues[idx] := VarDefinition;
     NumVariables := VarNames.Count;
     Result := idx;
 end;
@@ -839,21 +839,21 @@ begin
 
      // Intrinsic Variables go here...
     ActiveVariable := VarNames.Add('@lastfile');
-    VarValues^[ActiveVariable] := 'null';  // null value
+    VarValues[ActiveVariable] := 'null';  // null value
     ActiveVariable := VarNames.Add('@lastexportfile');
-    VarValues^[ActiveVariable] := 'null';  // null value
+    VarValues[ActiveVariable] := 'null';  // null value
     ActiveVariable := VarNames.Add('@lastshowfile');
-    VarValues^[ActiveVariable] := 'null';  // null value
+    VarValues[ActiveVariable] := 'null';  // null value
     ActiveVariable := VarNames.Add('@lastplotfile');
-    VarValues^[ActiveVariable] := 'null';  // null value
+    VarValues[ActiveVariable] := 'null';  // null value
     ActiveVariable := VarNames.Add('@lastredirectfile');
-    VarValues^[ActiveVariable] := 'null';  // null value
+    VarValues[ActiveVariable] := 'null';  // null value
     ActiveVariable := VarNames.Add('@lastcompilefile');
-    VarValues^[ActiveVariable] := 'null';  // null value
+    VarValues[ActiveVariable] := 'null';  // null value
     ActiveVariable := VarNames.Add('@result');
-    VarValues^[ActiveVariable] := 'null';  // null value
+    VarValues[ActiveVariable] := 'null';  // null value
 
-    NumVariables := Varnames.Count;
+    NumVariables := VarNames.Count;
 end;
 
 destructor TParserVar.Destroy;
@@ -867,7 +867,7 @@ end;
 function TParserVar.get_value: String;
 begin
     if ActiveVariable > 0 then
-        Result := VarValues^[ActiveVariable]
+        Result := VarValues[ActiveVariable]
     else
         Result := '';
 end;
@@ -883,7 +883,7 @@ function TParserVar.Get_VarString(Idx: Cardinal): String;
 
 begin
     if (idx > 0) and (idx <= NumVariables) then
-        Result := Format('%s. %s', [Varnames.NameOfIndex(idx), TestEmpty(VarValues^[idx])])
+        Result := Format('%s. %s', [VarNames.NameOfIndex(idx), TestEmpty(VarValues[idx])])
     else
         Result := 'Variable index out of range';
 end;
@@ -897,7 +897,7 @@ end;
 procedure TParserVar.set_value(const Value: String);
 begin
     if (ActiveVariable > 0) and (ActiveVariable <= NumVariables) then
-        VarValues^[ActiveVariable] := Value;
+        VarValues[ActiveVariable] := Value;
 end;
 
 procedure TDSSParser.SetVars(vars: TParserVar);

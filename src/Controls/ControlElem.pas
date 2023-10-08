@@ -1,11 +1,9 @@
 unit ControlElem;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -34,7 +32,7 @@ type
     TControlElem = class(TDSSCktElement)
 
     PRIVATE
-        procedure RemoveSelfFromControlelementList(CktElem: TDSSCktElement);
+        procedure RemoveSelfFromControlElementList(cktElem: TDSSCktElement);
     PUBLIC
         FControlledElement: TDSSCktElement;
         FMonitoredElement: TDSSCktElement;
@@ -109,27 +107,22 @@ begin
     DoSimpleMsg('Programming Error:  Reached base class for DoPendingAction.' + CRLF + 'Device: ' + FullName, 460);
 end;
 
-procedure TControlElem.RemoveSelfFromControlElementList(CktElem: TDSSCktElement);
-{Remove this control from the controlelementlist of the designated element}
+procedure TControlElem.RemoveSelfFromControlElementList(cktElem: TDSSCktElement);
+// Remove this control from the controlelementlist of the designated element
 var
     ptr: TControlElem;
     TempList: TDSSPointerList;
-    i: Integer;
 
 begin
-    with CktElem do
+    // Make a new copy of the control element list
+    TempList := TDSSPointerList.Create(1);
+    for ptr in CktElem.ControlElementList do
     begin
-         // Make a new copy of the control element list
-        TempList := TDSSPointerList.Create(1);
-        for i := 1 to ControlElementList.Count do
-        begin
-            ptr := ControlElementList.Get(i);
-            if ptr <> Self then
-                TempList.Add(ptr);  // skip Self in copying list
-        end;
-        ControlElementList.Free;
-        ControlElementList := TempList;
+        if ptr <> Self then
+            TempList.Add(ptr);  // skip Self in copying list
     end;
+    CktElem.ControlElementList.Free;
+    CktElem.ControlElementList := TempList;
 end;
 
 procedure TControlElem.Reset;
@@ -139,7 +132,7 @@ end;
 
 procedure TControlElem.Sample;
 begin
-  // virtual function - should be overridden
+    // virtual function - should be overridden
     DoSimpleMsg('Programming Error:  Reached base class for Sample.' + CRLF + 'Device: ' + FullName, 462);
 end;
 
@@ -147,21 +140,19 @@ procedure TControlElem.Set_ControlledElement(const Value: TDSSCktElement);
 begin
     try
       // Check for reassignment of Controlled element and remove from list
-        if Assigned(FControlledElement) then
-            with FControlledElement do
-            begin
-                if ControlElementList.Count = 1 then
-                    Exclude(Flags, Flg.HasControl);
-                RemoveSelfFromControlElementList(FControlledElement);
-            end;
+        if FControlledElement <> NIL then
+        begin
+            if FControlledElement.ControlElementList.Count = 1 then
+                Exclude(FControlledElement.Flags, Flg.HasControl);
+            RemoveSelfFromControlElementList(FControlledElement);
+        end;
     finally
         FControlledElement := Value;
-        if Assigned(FControlledElement) then
-            with FControlledElement do
-            begin
-                Include(Flags, Flg.HasControl);
-                ControlElementList.Add(Self);
-            end;
+        if FControlledElement <> NIL then
+        begin
+            Include(FControlledElement.Flags, Flg.HasControl);
+            FControlledElement.ControlElementList.Add(Self);
+        end;
     end;
 end;
 

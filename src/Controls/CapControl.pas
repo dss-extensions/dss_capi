@@ -417,7 +417,7 @@ begin
     case Idx of
         ord(TProp.Capacitor):
             if ControlledElement <> NIL then
-                ControlVars.CapacitorName := 'capacitor.' + ControlledElement.Name;
+                ControlVars.CapacitorName := ControlledElement.FullName;
         ord(TProp.VBus):
         begin
             ControlVars.VOverrideBusName := AnsiLowerCase(ControlVars.VOverrideBusName);
@@ -742,7 +742,7 @@ begin
                             ControlledCapacitor.SubtractStep;
 
                             if ShowEventLog then
-                                AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Opened**');
+                                AppendtoEventLog(ControlledElement.FullName, '**Opened**');
                             PresentState := CTRL_OPEN;
                             LastOpenTime := ActiveCircuit.Solution.DynaVars.t + 3600.0 * ActiveCircuit.Solution.DynaVars.intHour;
                         end;
@@ -755,11 +755,11 @@ begin
                             PresentState := CTRL_OPEN;
                             ControlledElement.Closed[0] := FALSE;   // Open all phases of active terminal
                             if ShowEventLog then
-                                AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Opened**');
+                                AppendtoEventLog(ControlledElement.FullName, '**Opened**');
                         end
                         else
                         if ShowEventLog then
-                            AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Step Down**');
+                            AppendtoEventLog(ControlledElement.FullName, '**Step Down**');
                     end;
                 end;
             CTRL_CLOSE:
@@ -768,7 +768,7 @@ begin
                 begin
                     ControlledElement.Closed[0] := TRUE;    // Close all phases of active terminal
                     if ShowEventLog then
-                        AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Closed**');
+                        AppendtoEventLog(ControlledElement.FullName, '**Closed**');
                     PresentState := CTRL_CLOSE;
                     ControlledCapacitor.AddStep;
                 end
@@ -776,7 +776,7 @@ begin
                 begin
                     if ControlledCapacitor.AddStep then
                         if ShowEventLog then
-                            AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Step Up**');
+                            AppendtoEventLog(ControlledElement.FullName, '**Step Up**');
                 end;
             end;
         else
@@ -895,7 +895,7 @@ begin
                             ShouldSwitch := TRUE;
                             VoverrideEvent := TRUE;
                             if ShowEventLog then
-                                AppendtoEventLog('Capacitor.' + ControlledElement.Name, Format('Low Voltage Override: %.8g V', [Vtest]));
+                                AppendtoEventLog(ControlledElement.FullName, Format('Low Voltage Override: %.8g V', [Vtest]));
                         end;
                     CTRL_CLOSE:
                         if Vtest > Vmax then
@@ -904,7 +904,7 @@ begin
                             ShouldSwitch := TRUE;
                             VoverrideEvent := TRUE;
                             if ShowEventLog then
-                                AppendtoEventLog('Capacitor.' + ControlledElement.Name, Format('High Voltage Override: %.8g V', [Vtest]));
+                                AppendtoEventLog(ControlledElement.FullName, Format('High Voltage Override: %.8g V', [Vtest]));
                         end;
                 end;
             end;
@@ -1181,7 +1181,7 @@ begin
             ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange, 0, Self);
             Armed := TRUE;
             if ShowEventLog then
-                AppendtoEventLog('Capacitor.' + ControlledElement.Name, Format('**Armed**, Delay= %.5g sec', [TimeDelay]));
+                AppendtoEventLog(ControlledElement.FullName, Format('**Armed**, Delay= %.5g sec', [TimeDelay]));
         end;
 
         if Armed and (PendingChange = CTRL_NONE) then
@@ -1189,7 +1189,7 @@ begin
             ActiveCircuit.ControlQueue.Delete(ControlActionHandle);
             Armed := FALSE;
             if ShowEventLog then
-                AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Reset**');
+                AppendtoEventLog(ControlledElement.FullName, '**Reset**');
         end;
     end;  // With
 end;

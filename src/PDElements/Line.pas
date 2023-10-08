@@ -177,6 +177,7 @@ type
         procedure UpdateControlElements(NewLine, OldLine: TLineObj);
 
         procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure SetWires(Value: TDSSObjectPtr; ValueCount: Integer);
 
         // Public for the COM Interface
         procedure FetchLineCode();
@@ -738,68 +739,70 @@ begin
     Result := True;
 end;
 
-procedure SetWires(Obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer);
+procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer);
+begin
+    obj.SetWires(Value, ValueCount);
+end;
+
+procedure TLineObj.SetWires(Value: TDSSObjectPtr; ValueCount: Integer);
 var
     RatingsInc: Boolean;
     NewNumRat, i, istart: Integer;
     NewRatings: array of Double = NIL;
 begin
-    with Obj do
+    // Previously in "FetchWireList"
+    if not assigned(LineSpacingObj) then
     begin
-        // Previously in "FetchWireList"
-        if not assigned(LineSpacingObj) then
-        begin
-            DoSimpleMsg('You must assign the LineSpacing before the Wires Property ("%s").', [FullName], 18102);
-            Exit;
-        end;
-
-        if FPhaseChoice = Unknown then
-        begin // it's an overhead line
-            KillLineCodeSpecified();
-            KillGeometrySpecified;
-            istart := 1;
-            FPhaseChoice := Overhead;
-        end
-        else
-        begin // adding bare neutrals to an underground line - TODO what about repeat invocation?
-            istart := LineSpacingObj.NPhases + 1;
-        end;
-
-        NewNumRat := 1;
-        RatingsInc := FALSE; // So far we don't know if there are seasonal ratings
-
-        // Validate number of elements
-        if (LineSpacingObj.NWires - istart + 1) <> ValueCount then
-        begin
-            DoSimpleMsg('%s: Unexpected number (%d) of wires; expected %d objects.', 
-                [FullName, ValueCount, (LineSpacingObj.NWires - istart + 1)], 18102);
-            Exit;
-        end;
-
-        for i := istart to LineSpacingObj.NWires do
-        begin
-            LineWireData[i] := TConductorDataObj(Value^);
-            if LineWireData[i].NumAmpRatings > NewNumRat then
-            begin
-                NewNumRat := LineWireData[i].NumAmpRatings;
-                NewRatings := Copy(LineWireData[i].AmpRatings, 0, NewNumRat);
-                RatingsInc := TRUE; // Yes, there are seasonal ratings
-            end;
-            NormAmps := LineWireData[i].NormAmps;
-            EmergAmps := LineWireData[i].EmergAmps;
-            Inc(Value);
-        end;
-
-        if RatingsInc then
-        begin
-            NumAmpRatings := NewNumRat;
-            AmpRatings := NewRatings;
-        end;
-
-        SetAsNextSeq(ord(TProp.Ratings));
-        SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
-        SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
+        DoSimpleMsg('You must assign the LineSpacing before the Wires Property ("%s").', [FullName], 18102);
+        Exit;
     end;
+
+    if FPhaseChoice = Unknown then
+    begin // it's an overhead line
+        KillLineCodeSpecified();
+        KillGeometrySpecified;
+        istart := 1;
+        FPhaseChoice := Overhead;
+    end
+    else
+    begin // adding bare neutrals to an underground line - TODO what about repeat invocation?
+        istart := LineSpacingObj.NPhases + 1;
+    end;
+
+    NewNumRat := 1;
+    RatingsInc := FALSE; // So far we don't know if there are seasonal ratings
+
+    // Validate number of elements
+    if (LineSpacingObj.NWires - istart + 1) <> ValueCount then
+    begin
+        DoSimpleMsg('%s: Unexpected number (%d) of wires; expected %d objects.', 
+            [FullName, ValueCount, (LineSpacingObj.NWires - istart + 1)], 18102);
+        Exit;
+    end;
+
+    for i := istart to LineSpacingObj.NWires do
+    begin
+        LineWireData[i] := TConductorDataObj(Value^);
+        if LineWireData[i].NumAmpRatings > NewNumRat then
+        begin
+            NewNumRat := LineWireData[i].NumAmpRatings;
+            NewRatings := Copy(LineWireData[i].AmpRatings, 0, NewNumRat);
+            RatingsInc := TRUE; // Yes, there are seasonal ratings
+        end;
+        NormAmps := LineWireData[i].NormAmps;
+        EmergAmps := LineWireData[i].EmergAmps;
+        Inc(Value);
+    end;
+
+    if RatingsInc then
+    begin
+        NumAmpRatings := NewNumRat;
+        AmpRatings := NewRatings;
+    end;
+
+    SetAsNextSeq(ord(TProp.Ratings));
+    SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
+    SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
 end;
 
 // A Line Defaults to 3-phases and some typical symmetrical component data
@@ -893,7 +896,7 @@ begin
     Kxg := Xg / ln(658.5 * sqrt(rho / BaseFrequency));
     FCapSpecified := FALSE;
 
-     {Basefrequency := 60.0;}  // set in base class
+    // Basefrequency := 60.0; // set in base class
     Normamps := 400.0;
     EmergAmps := 600.0;
     PctPerm := 20.0;
@@ -1304,94 +1307,91 @@ var
 begin
     inherited DumpProperties(F, Complete);
 
-    with ParentClass do
+    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.Bus1)] + '=' + firstbus);
+    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.Bus2)] + '=' + nextbus);
+
+    if LineCodeObj <> NIL then
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.LineCode)] + '=' + LineCodeObj.Name)
+    else
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.LineCode)] + '=' + '');
+
+    FSWriteln(F, Format('~ %s=%g', [ParentClass.PropertyName[ord(TProp.Length)], len]));
+    FSWriteln(F, Format('~ %s=%d', [ParentClass.PropertyName[ord(TProp.Phases)], Fnphases]));
+    if SymComponentsModel then
+        rslt := Format('%-.7g', [R1 / FUnitsConvert])
+    else
+        rslt := '----';
+    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.R1)] + '=' + Rslt);
+    if SymComponentsModel then
+        rslt := Format('%-.7g', [X1 / FUnitsConvert])
+    else
+        rslt := '----';
+    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.X1)] + '=' + Rslt);
+    if SymComponentsModel then
+        rslt := Format('%-.7g', [R0 / FUnitsConvert])
+    else
+        rslt := '----';
+    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.R0)] + '=' + Rslt);
+    if SymComponentsModel then
+        rslt := Format('%-.7g', [X0 / FUnitsConvert])
+    else
+        rslt := '----';
+    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.X0)] + '=' + Rslt);
+    if SymComponentsModel then
+        rslt := Format('%-.7g', [C1 * 1.0e9 / FUnitsConvert])
+    else
+        rslt := '----';
+    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.C1)] + '=' + Rslt);
+    if SymComponentsModel then
+        rslt := Format('%-.7g', [C0 * 1.0e9 / FUnitsConvert])
+    else
+        rslt := '----';
+    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.C0)] + '=' + Rslt);
+
+    // If GeometrySpecified Or SpacingSpecified then length is embedded in Z and Yc    4-9-2020
+    if (LineGeometryObj <> NIL) or SpacingSpecified then
+        LengthMult := Len
+    else
+        LengthMult := 1.0;
+
+    FSWrite(F, '~ ' + ParentClass.PropertyName[ord(TProp.RMatrix)] + '=' + '"');
+    for i := 1 to Fnphases do
     begin
-        FSWriteln(F, '~ ' + PropertyName[1] + '=' + firstbus);
-        FSWriteln(F, '~ ' + PropertyName[2] + '=' + nextbus);
-
-        if LineCodeObj <> NIL then
-            FSWriteln(F, '~ ' + PropertyName[3] + '=' + LineCodeObj.Name)
-        else
-            FSWriteln(F, '~ ' + PropertyName[3] + '=' + '');
-
-        FSWriteln(F, Format('~ %s=%g', [PropertyName[4], len]));
-        FSWriteln(F, Format('~ %s=%d', [PropertyName[5], Fnphases]));
-        if SymComponentsModel then
-            rslt := Format('%-.7g', [R1 / FUnitsConvert])
-        else
-            rslt := '----';
-        FSWriteln(F, '~ ' + PropertyName[6] + '=' + Rslt);
-        if SymComponentsModel then
-            rslt := Format('%-.7g', [X1 / FUnitsConvert])
-        else
-            rslt := '----';
-        FSWriteln(F, '~ ' + PropertyName[7] + '=' + Rslt);
-        if SymComponentsModel then
-            rslt := Format('%-.7g', [R0 / FUnitsConvert])
-        else
-            rslt := '----';
-        FSWriteln(F, '~ ' + PropertyName[8] + '=' + Rslt);
-        if SymComponentsModel then
-            rslt := Format('%-.7g', [X0 / FUnitsConvert])
-        else
-            rslt := '----';
-        FSWriteln(F, '~ ' + PropertyName[9] + '=' + Rslt);
-        if SymComponentsModel then
-            rslt := Format('%-.7g', [C1 * 1.0e9 / FUnitsConvert])
-        else
-            rslt := '----';
-        FSWriteln(F, '~ ' + PropertyName[10] + '=' + Rslt);
-        if SymComponentsModel then
-            rslt := Format('%-.7g', [C0 * 1.0e9 / FUnitsConvert])
-        else
-            rslt := '----';
-        FSWriteln(F, '~ ' + PropertyName[11] + '=' + Rslt);
-
-        // If GeometrySpecified Or SpacingSpecified then length is embedded in Z and Yc    4-9-2020
-        if (LineGeometryObj <> NIL) or SpacingSpecified then
-            LengthMult := Len
-        else
-            LengthMult := 1.0;
-
-        FSWrite(F, '~ ' + PropertyName[12] + '=' + '"');
-        for i := 1 to Fnphases do
+        for j := 1 to Fnphases do
         begin
-            for j := 1 to Fnphases do
-            begin
-                FSWrite(F, Format('%.9f ', [(Z[i, j].re / LengthMult / FunitsConvert)]));
-            end;
-            FSWrite(F, '|');
+            FSWrite(F, Format('%.9f ', [(Z[i, j].re / LengthMult / FunitsConvert)]));
         end;
-        FSWriteln(F, '"');
-        FSWrite(F, '~ ' + PropertyName[13] + '=' + '"');
-        for i := 1 to Fnphases do
+        FSWrite(F, '|');
+    end;
+    FSWriteln(F, '"');
+    FSWrite(F, '~ ' + ParentClass.PropertyName[ord(TProp.XMatrix)] + '=' + '"');
+    for i := 1 to Fnphases do
+    begin
+        for j := 1 to Fnphases do
         begin
-            for j := 1 to Fnphases do
-            begin
-                FSWrite(F, Format('%.9f ', [(Z[i, j].im / LengthMult / FunitsConvert)]));
-            end;
-            FSWrite(F, '|');
+            FSWrite(F, Format('%.9f ', [(Z[i, j].im / LengthMult / FunitsConvert)]));
         end;
-        FSWriteln(F, '"');
-        FSWrite(F, '~ ' + PropertyName[14] + '=' + '"');
-        for i := 1 to Fnphases do
+        FSWrite(F, '|');
+    end;
+    FSWriteln(F, '"');
+    FSWrite(F, '~ ' + ParentClass.PropertyName[ord(TProp.CMatrix)] + '=' + '"');
+    for i := 1 to Fnphases do
+    begin
+        for j := 1 to Fnphases do
         begin
-            for j := 1 to Fnphases do
-            begin
-                FSWrite(F, Format('%.3f ', [(Yc[i, j].im / TwoPi / BaseFrequency / LengthMult / FunitsConvert * 1.0E9)]));
-            end;
-            FSWrite(F, '|');
+            FSWrite(F, Format('%.3f ', [(Yc[i, j].im / TwoPi / BaseFrequency / LengthMult / FunitsConvert * 1.0E9)]));
         end;
-        FSWriteln(F, '"');
+        FSWrite(F, '|');
+    end;
+    FSWriteln(F, '"');
 
-        FSWrite(F, '~ ' + PropertyName[15] + '=');
-        FSWriteln(F, StrTOrF(IsSwitch));
+    FSWrite(F, '~ ' + ParentClass.PropertyName[ord(TProp.Switch)] + '=');
+    FSWriteln(F, StrYOrN(IsSwitch));
 
-        // Dump the rest by default
-        for i := 16 to NumProperties do
-        begin
-            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
-        end;
+    // Dump the rest by default
+    for i := ord(TProp.Rg) to ParentClass.NumProperties do
+    begin
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
     end;
 end;
 
@@ -1709,7 +1709,7 @@ begin
 
             // Z <= (Z1 + Z2 )/TotalLen   to get equiv ohms per unit length
             for i := 1 to Order1 * Order1 do
-                Values1[i] := (Values1[i] * LenSelf + Values2^[i] * LenOther) / TotalLen;
+                Values1[i] := (Values1[i] * LenSelf + Values2[i] * LenOther) / TotalLen;
 
             // Merge Yc matrices
             Values1 := Yc.GetValuesArrayPtr(Order1);
@@ -1937,7 +1937,7 @@ end;
 procedure TLineObj.ClearYPrim;
 begin
     // Line Object needs both Series and Shunt YPrims built
-    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) {YPrimInvalid} then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) then // YPrimInvalid
     begin // Reallocate YPrim if something has invalidated old allocation
         if YPrim_Series <> NIL then
             YPrim_Series.Free;

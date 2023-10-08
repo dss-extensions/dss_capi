@@ -236,6 +236,7 @@ uses
     Storage,
     DSSHelper,
     DSSObjectHelper,
+    Solution,
     TypInfo;
 
 type
@@ -361,13 +362,13 @@ begin
 end;
 
 function TDSSMonitor.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
 begin
-    with TObj(ptr) do
-    begin
-        if (NumChanges + recalc) > 0 then
-            RecalcElementData;
-        Exclude(Flags, Flg.EditionActive);
-    end;
+    obj := TObj(ptr);
+    if (NumChanges + obj.recalc) > 0 then
+        obj.RecalcElementData();
+    Exclude(obj.Flags, Flg.EditionActive);
     Result := True;
 end;
 
@@ -476,7 +477,7 @@ begin
     Mode := 0;  // Standard Mode: V & I, complex values
 
     BufferSize := 1024;       // Makes a 4K buffer
-    MonBuffer := AllocMem(Sizeof(MonBuffer^[1]) * BufferSize);
+    MonBuffer := AllocMem(Sizeof(MonBuffer[1]) * BufferSize);
     BufPtr := 0;
 
     MeteredElement := TDSSCktElement(ActiveCircuit.CktElements.Get(1)); // Default to first circuit element (source)
@@ -520,7 +521,7 @@ procedure ConvertBlanks(var s: String);
 var
     BlankPos: Integer;
 begin
-     { Convert spaces to Underscores }
+    //  Convert spaces to Underscores 
     BlankPos := Pos(' ', S);
     while BlankPos > 0 do
     begin
@@ -587,7 +588,7 @@ begin
             // This value will be used to set the NodeRef array (see TakeSample)
             Setbus(1, MeteredElement.GetBus(MeteredTerminal));
             // Make a name for the Buffer File
-            BufferFile := {ActiveCircuit.CurrentDirectory + }
+            BufferFile := // ActiveCircuit.CurrentDirectory + 
                 DSS.CircuitName_ + 'Mon_' + Name + '.mon';
 
             // Allocate Buffers
@@ -599,7 +600,7 @@ begin
                 end;
                 4:
                 begin
-                    ReallocMem(FlickerBuffer, Sizeof(FlickerBuffer^[1]) * Nphases);
+                    ReallocMem(FlickerBuffer, Sizeof(FlickerBuffer[1]) * Nphases);
                 end;
                 5:
                 begin
@@ -670,7 +671,7 @@ begin
             end;
             4:
             begin
-                ReallocMem(FlickerBuffer, Sizeof(FlickerBuffer^[1]) * Nphases);
+                ReallocMem(FlickerBuffer, Sizeof(FlickerBuffer[1]) * Nphases);
             end;
             5:
             begin
@@ -831,7 +832,7 @@ begin
                             end;
                     end;
             end;
-            11: {All terminal voltages and currents  *****}
+            11: // All terminal voltages and currents  *****
             begin 
                 Recordsize := 2 * 2 * MeteredElement.Yorder;  // V and I
 
@@ -851,13 +852,10 @@ begin
                         Header.Add('Deg');
                     end;
             end;
-            12: {All terminal voltages LL and currents  *****}
+            12: // All terminal voltages LL and currents  *****
             begin 
-                with MeteredElement do
-                begin
-                    Recordsize := 2 * ((NPhases * NTerms) + Yorder);  // V and I
-                    SetLength(PhaseLoc, NPhases + 1);
-                end;
+                Recordsize := 2 * ((MeteredElement.NPhases * MeteredElement.NTerms) + MeteredElement.Yorder);  // V and I
+                SetLength(PhaseLoc, MeteredElement.NPhases + 1);
 
                 // Creates the map of phase combinations (LL)
                 for j := 1 to MeteredElement.NPhases do
@@ -1096,16 +1094,13 @@ begin
         // Write ID so we know it is a DSS Monitor file and which version in case we
         // change it down the road
 
-        with MonitorStream do
-        begin
-            Write(FileSignature, Sizeof(FileSignature));
-            Write(FileVersion, Sizeof(FileVersion));
-            Write(RecordSize, Sizeof(RecordSize));
-            Write(Mode, Sizeof(Mode));
-            // adds the empty dummy record to avoid
-            // killing apps relying on this space
-            Write(EMPTY_LEGACY_HEADER, Sizeof(TLegacyMonitorStrBuffer)); 
-        end;
+        MonitorStream.Write(FileSignature, Sizeof(FileSignature));
+        MonitorStream.Write(FileVersion, Sizeof(FileVersion));
+        MonitorStream.Write(RecordSize, Sizeof(RecordSize));
+        MonitorStream.Write(Mode, Sizeof(Mode));
+        // adds the empty dummy record to avoid
+        // killing apps relying on this space
+        MonitorStream.Write(EMPTY_LEGACY_HEADER, Sizeof(TLegacyMonitorStrBuffer)); 
 
         // So the file now looks like: (update 05-18-2021)
         //   FileSignature (4 bytes)    32-bit Integers
@@ -1160,8 +1155,8 @@ begin
     if not IsFileOpen then
         OpenMonitorStream; // Position to end of stream
 
-     {Write present monitor buffer to monitorstream}
-    MonitorStream.Write(MonBuffer^, SizeOF(MonBuffer^[1]) * BufPtr);
+    // Write present monitor buffer to monitorstream
+    MonitorStream.Write(MonBuffer^, SizeOF(MonBuffer[1]) * BufPtr);
 
     BufPtr := 0; // reset Buffer for next
 end;
@@ -1182,6 +1177,30 @@ begin
     IsProcessed := TRUE;
 end;
 
+function Residual(p: Pointer; Nph: Integer): Complex;
+// Assume p points to complex array
+// compute residual of the number of phases specified and convert to polar
+var
+    pc: pComplexArray;
+    i: Integer;
+begin
+    pc := p;
+    Result := 0;
+    for i := 1 to Nph do
+        Result += pc[i];
+end;
+
+function ResidualPolar(p: Pointer; Nph: Integer): Complex;
+// Assume p points to complex array
+// compute residual of the number of phases specified and convert to polar
+var
+    x: Complex;
+begin
+    x := Residual(p, Nph);
+    Result.re := Cabs(x);
+    Result.im := Cdang(x);
+end;
+
 procedure TMonitorObj.TakeSample;
 var
     dHour: Double;
@@ -1199,8 +1218,9 @@ var
     Sum: Complex;
     CplxLosses: Complex;
     V012, I012: Complex3;
-
-
+    solution: TSolutionObj;
+    cap: TCapacitorObj;
+    storage: TStorageObj;
 begin
     if not (ValidMonitor and Enabled) then
         Exit;
@@ -1212,19 +1232,18 @@ begin
 
     Offset := (MeteredTerminal - 1) * MeteredElement.NConds;
 
-   //Save time unless Harmonics mode and then save Frequency and Harmonic
-    with ActiveCircuit.Solution do
-        if IsHarmonicModel then
-        begin
-            AddDblsToBuffer(pDoubleArray(@Frequency), 1);  // put freq in hour slot as a double
-            AddDblsToBuffer(pDoubleArray(@Harmonic), 1);  // stick harmonic in time slot in buffer
-        end
-        else
-        begin
-            dHour := Hour;      // convert to double
-            AddDblsToBuffer(pDoubleArray(@dHour), 1);  // put hours in buffer as a double
-            AddDblsToBuffer(pDoubleArray(@Sec), 1);  // stick time in sec in buffer
-        end;
+    //Save time unless Harmonics mode and then save Frequency and Harmonic
+    if ActiveCircuit.Solution.IsHarmonicModel then
+    begin
+        AddDblsToBuffer(pDoubleArray(@ActiveCircuit.Solution.Frequency), 1);  // put freq in hour slot as a double
+        AddDblsToBuffer(pDoubleArray(@ActiveCircuit.Solution.Harmonic), 1);  // stick harmonic in time slot in buffer
+    end
+    else
+    begin
+        dHour := Hour;      // convert to double
+        AddDblsToBuffer(pDoubleArray(@dHour), 1);  // put hours in buffer as a double
+        AddDblsToBuffer(pDoubleArray(@Sec), 1);  // stick time in sec in buffer
+    end;
 
     case (Mode and MODEMASK) of
 
@@ -1232,7 +1251,7 @@ begin
         begin
             // MeteredElement.GetCurrents(CurrentBuffer);
             // To save some time, call ComputeITerminal
-            MeteredElement.ComputeIterminal;   // only does calc if needed
+            MeteredElement.ComputeIterminal();   // only does calc if needed
             for i := 1 to MeteredElement.Yorder do
                 CurrentBuffer[i] := MeteredElement.Iterminal[i];
 
@@ -1273,7 +1292,7 @@ begin
             try
                 for i := 1 to Fnphases do
                 begin
-                    FlickerBuffer^[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
+                    FlickerBuffer[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
                 end;
             except
                 On E: Exception do
@@ -1308,27 +1327,24 @@ begin
         6:
         begin     // Monitor Capacitor State
 
-            with TCapacitorObj(MeteredElement) do
+            cap := TCapacitorObj(MeteredElement);
+            for i := 1 to cap.NumSteps do
             begin
-                for i := 1 to NumSteps do
-                begin
-                    AddDblToBuffer(States[i]);
-                end;
+                AddDblToBuffer(cap.States[i]);
             end;
             Exit;  // Done with this mode now.
         end;
         7:
         begin     // Monitor Storage Device state variables
             if ((MeteredElement.DSSObjType and CLASSMASK) = STORAGE_ELEMENT) then
-                with TStorageObj(MeteredElement) do
-                begin
-                    AddDblToBuffer(PresentkW);
-                    AddDblToBuffer(Presentkvar);
-                    AddDblToBuffer(StorageVars.kWhStored);
-                    AddDblToBuffer(((StorageVars.kWhStored) / (StorageVars.kWhRating)) * 100);
-                    AddDblToBuffer(StorageState);
-                end;
-
+            begin
+                storage := TStorageObj(MeteredElement);
+                AddDblToBuffer(storage.PresentkW);
+                AddDblToBuffer(storage.Presentkvar);
+                AddDblToBuffer(storage.StorageVars.kWhStored);
+                AddDblToBuffer(((storage.StorageVars.kWhStored) / (storage.StorageVars.kWhRating)) * 100);
+                AddDblToBuffer(storage.StorageState);
+            end;
             Exit;  // Done with this mode now.
         end;
 
@@ -1409,71 +1425,68 @@ begin
         end;
         
         11: 
-        begin    {Get all terminal voltages and currents of this device}
-            {Get All node voltages at all terminals}
+        begin    // Get all terminal voltages and currents of this device
+            // Get All node voltages at all terminals
             MeteredElement.ComputeVterminal();
             For i := 1 to MeteredElement.Yorder do 
                 VoltageBuffer[i] := MeteredElement.Vterminal[i];
 
             ConvertComplexArrayToPolar( VoltageBuffer, MeteredElement.Yorder);
-            {Put Terminal Voltages into Monitor}
+            // Put Terminal Voltages into Monitor
             AddDblsToBuffer(pDoubleArray(@VoltageBuffer[1].re), 2 * MeteredElement.Yorder);
 
-            {Get all terminsl currents}
+            // Get all terminsl currents
             MeteredElement.ComputeIterminal();   // only does calc if needed
             for i := 1 to MeteredElement.Yorder do 
                 CurrentBuffer[i] := MeteredElement.Iterminal[i];
 
             ConvertComplexArrayToPolar( CurrentBuffer, MeteredElement.Yorder);
-            {Put Terminal currents into Monitor}
+            // Put Terminal currents into Monitor
             AddDblsToBuffer(pDoubleArray(@CurrentBuffer[1].re), 2 * MeteredElement.Yorder);
             Exit;
         end;
         12: 
         begin // Get all terminal voltages LL and currents of this device - 05192021
-            with MeteredElement do
+            // Get All node voltages at all terminals
+            MeteredElement.ComputeVterminal();
+
+            for k := 1 to MeteredElement.NTerms do // Adds each term separately
             begin
-                // Get All node voltages at all terminals
-                ComputeVterminal();
+                BuffInit := 1 + MeteredElement.NPhases * (k - 1);
+                BuffEnd := NPhases * k;
+                for i := BuffInit to BuffEnd do
+                    VoltageBuffer[i - (BuffInit - 1)] := MeteredElement.Vterminal[i];
 
-                for k := 1 to NTerms do // Adds each term separately
-                begin
-                    BuffInit := 1 + NPhases * (k - 1);
-                    BuffEnd := NPhases * k;
-                    for i := BuffInit to BuffEnd do
-                        VoltageBuffer[i - (BuffInit - 1)] := Vterminal[i];
+                if MeteredElement.NPhases = MeteredElement.NConds then
+                    myRefIdx := MeteredElement.NPhases + 1
+                else
+                    myRefIdx := MeteredElement.NConds;
 
-                    if NPhases = NConds then
-                        myRefIdx := NPhases + 1
-                    else
-                        myRefIdx := NConds;
-
-                    //Brings the first phase to the last place for calculations
-                    VoltageBuffer[myRefIdx] := VoltageBuffer[1];
-                    
-                    // Calculates the LL voltages
-                    for i := 1 to NPhases do
-                        VoltageBuffer[i] := VoltageBuffer[i] - VoltageBuffer[i + 1];
-                    
-                    ConvertComplexArrayToPolar(VoltageBuffer, Yorder);
-                    
-                    // Put Terminal Voltages into Monitor
-                    AddDblsToBuffer(pDoubleArray(@VoltageBuffer[1].re), 2 * NPhases);
-                end;
-
-                // Get all terminsl currents
-                ComputeIterminal();   // only does calc if needed
+                //Brings the first phase to the last place for calculations
+                VoltageBuffer[myRefIdx] := VoltageBuffer[1];
                 
-                for i := 1 to Yorder do 
-                    CurrentBuffer[i] := Iterminal[i];
+                // Calculates the LL voltages
+                for i := 1 to MeteredElement.NPhases do
+                    VoltageBuffer[i] := VoltageBuffer[i] - VoltageBuffer[i + 1];
                 
-                ConvertComplexArrayToPolar(CurrentBuffer, Yorder);
+                ConvertComplexArrayToPolar(VoltageBuffer, MeteredElement.Yorder);
                 
-                // Put Terminal currents into Monitor
-                AddDblsToBuffer(pDoubleArray(@CurrentBuffer[1].re), 2 * Yorder);
-                
-                Exit;
+                // Put Terminal Voltages into Monitor
+                AddDblsToBuffer(pDoubleArray(@VoltageBuffer[1].re), 2 * MeteredElement.NPhases);
             end;
+
+            // Get all terminsl currents
+            MeteredElement.ComputeIterminal();   // only does calc if needed
+            
+            for i := 1 to Yorder do 
+                CurrentBuffer[i] := MeteredElement.Iterminal[i];
+            
+            ConvertComplexArrayToPolar(CurrentBuffer, MeteredElement.Yorder);
+            
+            // Put Terminal currents into Monitor
+            AddDblsToBuffer(pDoubleArray(@CurrentBuffer[1].re), 2 * MeteredElement.Yorder);
+            
+            Exit;
         end
     else
         Exit  // Ignore invalid mask
@@ -1526,7 +1539,10 @@ begin
         begin     // Convert Voltage Buffer to power kW, kvar or Mag/Angle
             CalckPowers(VoltageBuffer, VoltageBuffer, PComplexArray(@CurrentBuffer[Offset + 1]), NumVI);
             if (IsSequence or ActiveCircuit.PositiveSequence) then
-                CmulArray(VoltageBuffer, 3.0, NumVI); // convert to total power
+            begin
+                for i := 1 to NumVI do
+                    VoltageBuffer[i] *= 3.0; // convert to total power
+            end;
             if Ppolar then
                 ConvertComplexArrayToPolar(VoltageBuffer, NumVI);
             IsPower := TRUE;
@@ -1544,13 +1560,13 @@ begin
         32:
         begin // Save Magnitudes only
             for i := 1 to NumVI do
-                AddDblToBuffer(VoltageBuffer[i].re {Cabs(VoltageBuffer[i])});
+                AddDblToBuffer(VoltageBuffer[i].re); // Cabs(VoltageBuffer[i])
             if IncludeResidual then
                 AddDblToBuffer(ResidualVolt.re);
             if not IsPower then
             begin
                 for i := 1 to NumVI do
-                    AddDblToBuffer(CurrentBuffer[Offset + i].re {Cabs(CurrentBuffer[Offset+i])});
+                    AddDblToBuffer(CurrentBuffer[Offset + i].re); // Cabs(CurrentBuffer[Offset+i])
                 if IncludeResidual then
                     AddDblToBuffer(ResidualCurr.re);
             end;
@@ -1617,7 +1633,7 @@ begin
     else
         case Mode of
             4:
-                AddDblsToBuffer(pDoubleArray(@FlickerBuffer^[1].re), Fnphases * 2);
+                AddDblsToBuffer(pDoubleArray(@FlickerBuffer[1].re), Fnphases * 2);
             5:
                 AddDblsToBuffer(pDoubleArray(@SolutionBuffer[1]), NumSolutionVars);
         else
@@ -1643,7 +1659,7 @@ var
 
 begin
     for i := 1 to Ndoubles do
-        AddDblToBuffer(Dbl^[i]);
+        AddDblToBuffer(Dbl[i]);
 end;
 
 procedure TMonitorObj.AddDblToBuffer(const Dbl: Double);
@@ -1654,7 +1670,7 @@ begin
     if BufPtr = BufferSize then
         Save;
     Inc(BufPtr);
-    MonBuffer^[BufPtr] := Dbl;
+    MonBuffer[BufPtr] := Dbl;
 end;
 
 procedure TMonitorObj.DoFlickerCalculations;
@@ -1679,16 +1695,13 @@ var
     busref: Integer;
 begin
     N := SampleCount;
-    with MonitorStream do
-    begin
-        Seek(0, soFromBeginning);  // Start at the beginning of the Stream
-        Read(Fsignature, Sizeof(Fsignature));
-        Read(Fversion, Sizeof(Fversion));
-        Read(RecordSize, Sizeof(RecordSize));
-        Read(Mode, Sizeof(Mode));
-        Seek(SizeOf(TLegacyMonitorStrBuffer), soFromCurrent);
-        bStart := Position;
-    end;
+    MonitorStream.Seek(0, soFromBeginning);  // Start at the beginning of the Stream
+    MonitorStream.Read(Fsignature, Sizeof(Fsignature));
+    MonitorStream.Read(Fversion, Sizeof(Fversion));
+    MonitorStream.Read(RecordSize, Sizeof(RecordSize));
+    MonitorStream.Read(Mode, Sizeof(Mode));
+    MonitorStream.Seek(SizeOf(TLegacyMonitorStrBuffer), soFromCurrent);
+    bStart := MonitorStream.Position;
     RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
     try
     // read rms voltages out of the monitor stream into arrays
@@ -1699,19 +1712,16 @@ begin
         i := 1;
         while not (MonitorStream.Position >= MonitorStream.Size) do
         begin
-            with MonitorStream do
-            begin
-                Read(hr, SizeOf(hr));
-                Read(s, SizeOf(s));
-                Read(SngBuffer, RecordBytes);
-                data[0][i] := s + 3600.0 * hr;
-                for p := 1 to FnPhases do
-                    data[p][i] := SngBuffer[2 * p - 1];
-                i := i + 1;
-            end;
+            MonitorStream.Read(hr, SizeOf(hr));
+            MonitorStream.Read(s, SizeOf(s));
+            MonitorStream.Read(SngBuffer, RecordBytes);
+            data[0][i] := s + 3600.0 * hr;
+            for p := 1 to FnPhases do
+                data[p][i] := SngBuffer[2 * p - 1];
+            i := i + 1;
         end;
 
-    // calculate the flicker level and pst
+        // calculate the flicker level and pst
         Npst := 1 + Trunc(data[0][N] / 600.0); // pst updates every 10 minutes or 600 seconds
         for p := 0 to FnPhases - 1 do
         begin
@@ -1721,29 +1731,26 @@ begin
             FlickerMeter(N, BaseFrequency, Vbase, data[0], data[p + 1], pst[p]);
         end;
 
-    // stuff the flicker level and pst back into the monitor stream
-        with MonitorStream do
+        // stuff the flicker level and pst back into the monitor stream
+        MonitorStream.Position := bStart;
+        tpst := 0.0;
+        ipst := 0;
+        defaultpst := 0;
+        for i := 1 to N do
         begin
-            Position := bStart;
-            tpst := 0.0;
-            ipst := 0;
-            defaultpst := 0;
-            for i := 1 to N do
+            if (data[0][i] - tpst) >= 600.0 then
             begin
-                if (data[0][i] - tpst) >= 600.0 then
-                begin
-                    inc(ipst);
-                    tpst := data[0][i];
-                end;
-                Position := Position + 2 * SizeOf(hr); // don't alter the time
-                for p := 1 to FnPhases do
-                begin
-                    Write(data[p][i], sizeof(data[p][i]));
-                    if (ipst > 0) and (ipst <= Npst) then
-                        Write(pst[p - 1][ipst], sizeof(pst[p - 1][ipst]))
-                    else
-                        Write(defaultpst, sizeof(defaultpst))
-                end;
+                inc(ipst);
+                tpst := data[0][i];
+            end;
+            MonitorStream.Position := MonitorStream.Position + 2 * SizeOf(hr); // don't alter the time
+            for p := 1 to FnPhases do
+            begin
+                MonitorStream.Write(data[p][i], sizeof(data[p][i]));
+                if (ipst > 0) and (ipst <= Npst) then
+                    MonitorStream.Write(pst[p - 1][ipst], sizeof(pst[p - 1][ipst]))
+                else
+                    MonitorStream.Write(defaultpst, sizeof(defaultpst))
             end;
         end;
     finally
@@ -1810,15 +1817,12 @@ begin
         end;
     end;
 
-    with MonitorStream do
-    begin
-        Seek(0, soFromBeginning);  // Start at the beginning of the Stream
-        Read(Fsignature, Sizeof(Fsignature));
-        Read(Fversion, Sizeof(Fversion));
-        Read(RecordSize, Sizeof(RecordSize));
-        Read(Mode, Sizeof(Mode));
-        Seek(SizeOf(TLegacyMonitorStrBuffer), soFromCurrent);
-    end;
+    MonitorStream.Seek(0, soFromBeginning);  // Start at the beginning of the Stream
+    MonitorStream.Read(Fsignature, Sizeof(Fsignature));
+    MonitorStream.Read(Fversion, Sizeof(Fversion));
+    MonitorStream.Read(RecordSize, Sizeof(RecordSize));
+    MonitorStream.Read(Mode, Sizeof(Mode));
+    MonitorStream.Seek(SizeOf(TLegacyMonitorStrBuffer), soFromCurrent);
 
 {$IFDEF DSS_CAPI_PM}
     if not PMParent.ConcatenateReports or (PMParent = DSS) then
@@ -1830,12 +1834,9 @@ begin
         try
             while not (MonitorStream.Position >= MonitorStream.Size) do
             begin
-                with MonitorStream do
-                begin
-                    Read(hr, SizeOF(hr));
-                    Read(s, SizeOf(s));
-                    Nread := Read(sngBuffer, RecordBytes);
-                end;
+                MonitorStream.Read(hr, SizeOF(hr));
+                MonitorStream.Read(s, SizeOf(s));
+                Nread := MonitorStream.Read(sngBuffer, RecordBytes);
                 if Nread < RecordBytes then
                     Break;
                 
@@ -1889,11 +1890,10 @@ var
 begin
     inherited DumpProperties(F, Complete);
 
-    with ParentClass do
-        for i := 1 to NumProperties do
-        begin
-            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
-        end;
+    for i := 1 to ParentClass.NumProperties do
+    begin
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+    end;
 
 
     if Complete then
@@ -1909,7 +1909,7 @@ begin
         k := 0;
         for i := 1 to BufPtr do
         begin
-            WriteStr(sout, MonBuffer^[i]: 0: 1, ', ');
+            WriteStr(sout, MonBuffer[i]: 0: 1, ', ');
             FSWrite(F, sout);
             Inc(k);
             if k = (2 + Fnconds * 4) then
