@@ -5,6 +5,9 @@
     <PathDelim Value="\"/>
     <General>
       <Flags>
+        <MainUnitHasCreateFormStatements Value="False"/>
+        <MainUnitHasTitleStatement Value="False"/>
+        <MainUnitHasScaledStatement Value="False"/>
         <CompatibilityMode Value="True"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
@@ -28,9 +31,9 @@
     </PublishOptions>
     <RunParams>
       <local>
-        <HostApplicationFilename Value="C:\src\OpenDSS\Version8\Source\CMD\test\opendsscmd.exe"/>
+        <HostApplicationFilename Value="\Users\tom\src\OpenDSS\Source\CMD\test\opendsscmd"/>
         <CommandLineParams Value="dlc.dss"/>
-        <WorkingDirectory Value="C:\src\OpenDSS\Version8\Source\CMD\test"/>
+        <WorkingDirectory Value="\Users\tom\src\OpenDSS\Source\CMD\test"/>
       </local>
       <environment>
         <UserOverrides Count="6">
@@ -46,9 +49,9 @@
       <Modes Count="1">
         <Mode0 Name="default">
           <local>
-            <HostApplicationFilename Value="C:\src\OpenDSS\Version8\Source\CMD\test\opendsscmd.exe"/>
+            <HostApplicationFilename Value="\Users\tom\src\OpenDSS\Source\CMD\test\opendsscmd"/>
             <CommandLineParams Value="dlc.dss"/>
-            <WorkingDirectory Value="C:\src\OpenDSS\Version8\Source\CMD\test"/>
+            <WorkingDirectory Value="\Users\tom\src\OpenDSS\Source\CMD\test"/>
           </local>
           <environment>
             <UserOverrides Count="6">
@@ -63,7 +66,7 @@
         </Mode0>
       </Modes>
     </RunParams>
-    <Units Count="129">
+    <Units Count="135">
       <Unit0>
         <Filename Value="opendsscmd.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -585,6 +588,30 @@
         <Filename Value="..\TCP_IP\TCP_IP.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit128>
+      <Unit129>
+        <Filename Value="..\General\DynamicExp.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit129>
+      <Unit130>
+        <Filename Value="..\Controls\GenController.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit130>
+      <Unit131>
+        <Filename Value="..\PCElements\WindGen.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit131>
+      <Unit132>
+        <Filename Value="..\PCElements\WindGenUserModel.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit132>
+      <Unit133>
+        <Filename Value="..\PCElements\WindGenVars.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit133>
+      <Unit134>
+        <Filename Value="..\Shared\InvDynamics.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit134>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -595,7 +622,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="..\Shared;..\Common;..\PDElements;..\Controls;..\General;..\Plot;..\Meters;..\PCElements;..\Executive;..\Parser;$(ProjOutDir)"/>
-      <Libraries Value="\lib\x86_64-linux-gnu;..\..\..\..\KLUSolve\Lib;lib"/>
+      <Libraries Value="..\..\..\KLUSolve\Lib;..\..\..\linenoise-ng\build"/>
       <OtherUnitFiles Value="..\Shared;..\Common;..\PDElements;..\Controls;..\General;..\Meters;..\PCElements;..\Executive;..\Parser"/>
       <UnitOutputDirectory Value="units\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
@@ -605,7 +632,14 @@
       </SyntaxOptions>
     </Parsing>
     <CodeGeneration>
-      <TargetCPU Value="x86_64"/>
+      <Checks>
+        <IOChecks Value="True"/>
+        <RangeChecks Value="True"/>
+        <OverflowChecks Value="True"/>
+        <StackChecks Value="True"/>
+      </Checks>
+      <VerifyObjMethodCallValidity Value="True"/>
+      <TargetCPU Value="aarch64"/>
       <Optimizations>
         <OptimizationLevel Value="0"/>
       </Optimizations>
@@ -613,9 +647,9 @@
     <Linking>
       <Debugging>
         <DebugInfoType Value="dsDwarf2Set"/>
+        <TrashVariables Value="True"/>
       </Debugging>
       <Options>
-        <PassLinkerOptions Value="True"/>
         <LinkerOptions Value="-lc -lm -lgcc_s -lstdc++ -lpthread"/>
       </Options>
     </Linking>
@@ -627,7 +661,18 @@
       <ConfigFile>
         <ConfigFilePath Value="linuxopts.cfg"/>
       </ConfigFile>
-      <CustomOptions Value="-dBorland -dVer150 -dDelphi7 -dCompiler6_Up -dPUREPASCAL"/>
+      <CustomOptions Value="-WM11.0
+-vm5025,5027,5029,9001,6058
+-dCPUX64
+-dFPC_HELICS
+-godwarfcpp"/>
+      <OtherDefines Count="2">
+        <Define0 Value="CPUX64"/>
+        <Define1 Value="FPC_HELICS"/>
+      </OtherDefines>
+      <ExecuteAfter>
+        <Command Value="install_name_tool -add_rpath @loader_path\. test\opendsscmd"/>
+      </ExecuteAfter>
     </Other>
   </CompilerOptions>
   <Debugging>
