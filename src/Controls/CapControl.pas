@@ -169,7 +169,6 @@ type
         ctrlSignalShape: TLoadShapeObj;        
 
         function Get_Capacitor: TCapacitorObj;
-        function NormalizeToTOD(h: Integer; sec: Double): Double;
         procedure Set_PendingChange(const Value: EControlAction);
         function Get_PendingChange: EControlAction;
         procedure GetControlVoltage(var ControlVoltage: Double);
@@ -1042,7 +1041,7 @@ begin
                     end;
                 TIMECONTROL:
                 begin
-                    NormalizedTime := NormalizeToTOD(ActiveCircuit.Solution.DynaVars.intHour, ActiveCircuit.Solution.DynaVars.t);
+                    NormalizedTime := ActiveCircuit.Solution.TimeOfDay(true);
                     case PresentState of
                         CTRL_OPEN:
                             if OFF_Value > ON_Value then
@@ -1207,24 +1206,6 @@ end;
 function TCapControlObj.Get_PendingChange: EControlAction;
 begin
     Result := ControlVars.FPendingChange;
-end;
-
-function TCapControlObj.NormalizeToTOD(h: Integer; sec: Double): Double;
-// Normalize time to a floating point number representing time of day if Hour > 24
-// Resulting time should be 0:00+ to 24:00 inclusive.
-var
-    HourOfDay: Integer;
-begin
-    if h > 24 then
-        HourOfDay := (h - ((h - 1) div 24) * 24)  // creates numbers 1..24
-    else
-        HourOfDay := h;
-
-    Result := HourOfDay + sec / 3600.0;
-
-   // If the TOD is at least slightly greater than 24:00 wrap around to 0:00
-    if Result - 24.0 > Epsilon then
-        Result := Result - 24.0;   // Wrap around
 end;
 
 procedure TCapControlObj.Reset;

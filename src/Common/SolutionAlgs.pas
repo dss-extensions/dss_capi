@@ -1008,6 +1008,8 @@ begin
                 AddFrequency(FreqList, NumFreq, MaxFreq, pSpectrum.HarmArray[j] * ckt.Fundamental);
         end;
     end;
+
+    SetLength(FreqList, NumFreq);
 end;
 
 function TSolutionAlgs.SolveHarmonic: Integer;

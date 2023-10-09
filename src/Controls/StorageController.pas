@@ -212,7 +212,6 @@ type
         procedure DoScheduleMode();
         procedure DoPeakShaveModeLow();
         procedure PushTimeOntoControlQueue(Code: Integer);
-        function NormalizeToTOD(h: Integer; sec: Double): Double;
         procedure GetControlPower(var ControlPower: Complex);
         procedure GetControlCurrent(var ControlCurrent: Double);
         function Get_FleetkW: Double;
@@ -873,7 +872,7 @@ begin
         if not (FleetState = STORE_DISCHARGING) then
         begin
             ChargingAllowed := TRUE;
-            TDiff := NormalizeToTOD(ActiveCircuit.Solution.DynaVars.intHour, ActiveCircuit.Solution.DynaVars.t) - DisChargeTriggerTime;
+            TDiff := ActiveCircuit.Solution.TimeOfDay() - DisChargeTriggerTime;
             if abs(TDiff) < ActiveCircuit.Solution.DynaVars.h / 7200.0 then
             begin
                 // Time is within 1 time step of the trigger time
@@ -890,7 +889,7 @@ begin
         end
         else
         begin    // fleet is already discharging
-            TDiff := NormalizeToTOD(ActiveCircuit.Solution.DynaVars.intHour, ActiveCircuit.Solution.DynaVars.t) - DisChargeTriggerTime;
+            TDiff := ActiveCircuit.Solution.TimeOfDay() - DisChargeTriggerTime;
             if TDiff < UpRampTime then
             begin
                 pctDischargeRate := min(pctkWRate, max(pctKWRate * Tdiff / UpRampTime, 0.0));
@@ -964,7 +963,7 @@ begin
             if (DisChargeTriggerTime > 0.0) then
             begin
                 // turn on if time within 1/2 time step
-                if abs(NormalizeToTOD(ActiveCircuit.Solution.DynaVars.intHour, ActiveCircuit.Solution.DynaVars.t) - DisChargeTriggerTime) < ActiveCircuit.Solution.DynaVars.h / 7200.0 then
+                if abs(ActiveCircuit.Solution.TimeOfDay() - DisChargeTriggerTime) < ActiveCircuit.Solution.DynaVars.h / 7200.0 then
                 begin
                     SetFleetDesiredState(STORE_DISCHARGING);
                     if not (FleetState = STORE_DISCHARGING) and (RemainingkWh > ReservekWh) then
@@ -989,7 +988,7 @@ begin
         begin
             if ChargeTriggerTime > 0.0 then
             begin
-                if abs(NormalizeToTOD(ActiveCircuit.Solution.DynaVars.intHour, ActiveCircuit.Solution.DynaVars.t) - ChargeTriggerTime) < ActiveCircuit.Solution.DynaVars.h / 7200.0 then
+                if abs(ActiveCircuit.Solution.TimeOfDay() - ChargeTriggerTime) < ActiveCircuit.Solution.DynaVars.h / 7200.0 then
                 begin
                     SetFleetDesiredState(STORE_CHARGING);
                     if not (FleetState = STORE_CHARGING) and (RemainingkWh < TotalRatingkWh) then
@@ -1010,26 +1009,6 @@ begin
         end; //Charge mode
     end;
 end;
-
-function TStorageControllerObj.NormalizeToTOD(h: Integer; sec: Double): Double;
-// Normalize time to a floating point number representing time of day If Hour > 24
-// time should be 0 to 23.999999....
-var
-    HourOfDay: Integer;
-
-begin
-    if h > 23 then
-        HourOfDay := (h - (h div 24) * 24)
-    else
-        HourOfDay := h;
-
-    Result := HourOfDay + sec / 3600.0;
-
-    if Result >= 24.0 then
-        Result := Result - 24.0;   // Wrap around
-
-end;
-
 
 procedure TStorageControllerObj.PushTimeOntoControlQueue(Code: Integer);
 // Push present time onto control queue to force re solve at new dispatch value

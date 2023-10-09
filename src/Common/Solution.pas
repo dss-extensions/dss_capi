@@ -314,6 +314,7 @@ type
         procedure AddSeriesCap2IncMatrix; // Adds capacitors in series to the Incidence matrix arrays
         procedure AddSeriesReac2IncMatrix; // Adds Reactors in series to the Incidence matrix arrays
 
+        function TimeOfDay(useEpsilon: Boolean = false): Double;
     end;
 
 implementation
@@ -2891,4 +2892,48 @@ begin
     end;
 end;
 {$ENDIF}
+
+function TSolutionObj.TimeOfDay(useEpsilon: Boolean): Double;
+// Normalize time to a floating point number representing time of day if Hour > 24
+// Resulting time should be 0:00+ to 24:00 inclusive.
+var
+    h: Integer; 
+    sec: Double;
+    HourOfDay: Integer;
+begin
+    h := DynaVars.intHour;
+    sec := DynaVars.t;
+
+    if useEpsilon then
+    begin
+        // If the TOD is at least slightly greater than 24:00 wrap around to 0:00
+        //
+        // **NOTE (DSS-Extensions)**: the original versions in TStorage/TStorageController
+        // did not include epsilon, hence the option; without the setting the option
+        // to false, the event logs can be slight different and could mislead users
+        // when comparing results.
+        // Otherwise, looks like this whole function could be rewritten as...
+        //     ((DynaVars.intHour + DynaVars.t / 3600.0) MOD 24.0)
+        if h > 24 then
+            HourOfDay := (h - ((h - 1) div 24) * 24)  // creates numbers 1..24
+        else
+            HourOfDay := h;
+
+        Result := HourOfDay + sec / 3600.0;
+        if Result - 24.0 > Epsilon then
+            Result := Result - 24.0;   // Wrap around
+
+        Exit;
+    end;
+
+    if h > 23 then
+        HourOfDay := (h - (h div 24) * 24)
+    else
+        HourOfDay := h;
+
+    Result := HourOfDay + sec / 3600.0;
+    if Result > 24.0 then
+        Result := Result - 24.0; // Wrap around
+end;
+
 end.

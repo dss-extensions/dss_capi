@@ -317,7 +317,6 @@ type
         procedure CheckStateTriggerLevel(Level: Double);
         function CheckIfDelivering(): Boolean;
         procedure UpdateStorage();    // Update Storage elements based on present kW and IntervalHrs variable
-        function NormalizeToTOD(h: Integer; sec: Double): Double;
 
         function Get_PresentkW: Double;
         function Get_PresentkV: Double;
@@ -1822,23 +1821,6 @@ begin
     end;
 end;
 
-function TStorageObj.NormalizeToTOD(h: Integer; sec: Double): Double;
-// Normalize time to a floating point number representing time of day If Hour > 24
-// time should be 0 to 24.
-var
-    HourOfDay: Integer;
-begin
-    if h > 23 then
-        HourOfDay := (h - (h div 24) * 24)
-    else
-        HourOfDay := h;
-
-    Result := HourOfDay + sec / 3600.0;
-
-    if Result > 24.0 then
-        Result := Result - 24.0;   // Wrap around
-end;
-
 procedure TStorageObj.CheckStateTriggerLevel(Level: Double);
 // This is where we set the state of the Storage element
 var
@@ -1891,7 +1873,7 @@ begin
                     if not (Fstate = STORE_CHARGING) then
                         if ChargeTime > 0.0 then
                         begin
-                            if abs(NormalizeToTOD(ActiveCircuit.Solution.DynaVars.intHour, ActiveCircuit.Solution.DynaVARs.t) - ChargeTime) < ActiveCircuit.Solution.DynaVARs.h / 3600.0 then
+                            if abs(ActiveCircuit.Solution.TimeOfDay() - ChargeTime) < ActiveCircuit.Solution.DynaVARs.h / 3600.0 then
                                 Fstate := STORE_CHARGING;
                         end;
                 end;
