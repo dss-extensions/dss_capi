@@ -146,7 +146,7 @@ begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumGenRegisters);
     for k := 0 to NumGenRegisters - 1 do
     begin
-        Result[k] := DSS_CopyStringAsPChar(GeneratorCls.RegisterNames[k + 1]);
+        Result[k] := DSS_CopyStringAsPChar(GeneratorCls.RegisterNames[k]);
     end;
 end;
 
@@ -380,13 +380,10 @@ begin
     if not _activeObj(DSSPrime, pGen) then
         Exit;
 
-    with pGen do
-    begin
-        GenModel := Value;
-         // Handle side effect
-        if GenModel = 3 then
-            DSSPrime.ActiveCircuit.Solution.SolutionInitialized := FALSE;
-    end;
+    pGen.GenModel := Value;
+        // Handle side effect
+    if pGen.GenModel = 3 then
+        DSSPrime.ActiveCircuit.Solution.SolutionInitialized := FALSE;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_kVArated(): Double; CDECL;

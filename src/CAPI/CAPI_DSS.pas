@@ -65,7 +65,6 @@ uses
     Exechelper,
     sysUtils,
     Executive,
-    CmdForms,
     DSSHelper,
     Classes,
     MathUtil;
@@ -91,9 +90,8 @@ begin
 {$ENDIF}
 
     NoFormsAllowed := not Value;
-    if NoFormsAllowed then
-        CloseDownForms;  // DSSForms
-
+    // if NoFormsAllowed then
+    //     DSSPrime.CloseDownForms;  // DSSForms -- TODO: reimplement
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_AllowEditor(): TAPIBoolean; CDECL;
@@ -114,9 +112,9 @@ end;
 procedure DSS_ClearAll(); CDECL;
 begin
 {$IFDEF DSS_CAPI_PM}
-    DSSPrime.DSSExecutive.DoClearAllCmd;
+    DSSPrime.DSSExecutive.ClearAll();
 {$ELSE}
-    DSSPrime.DSSExecutive.DoClearCmd;
+    DSSPrime.DSSExecutive.Clear();
 {$ENDIF}
 end;
 //------------------------------------------------------------------------------
@@ -193,7 +191,7 @@ end;
 //------------------------------------------------------------------------------
 procedure DSS_Reset(); CDECL;
 begin
-     {Put any code here necessary to reset for specific systems};
+     // Put any code here necessary to reset for specific systems;
  // revert to original -- DSSExecutive.Free;
 end;
 //------------------------------------------------------------------------------
@@ -255,18 +253,17 @@ procedure DSS_Set_EnableArrayDimensions(Value: TAPIBoolean); CDECL;
 begin
     DSS_EXTENSIONS_ARRAY_DIMS := Value;
     if not Value then
-        with DSSPrime do
-        begin
-            // Clean-up any previous values to avoid issues in the consumers
-            GR_Counts_PPAnsiChar[2] := 0;
-            GR_Counts_PPAnsiChar[3] := 0;
-            GR_Counts_PDouble[2] := 0;
-            GR_Counts_PDouble[3] := 0;
-            GR_Counts_PInteger[2] := 0;
-            GR_Counts_PInteger[3] := 0;
-            GR_Counts_PByte[2] := 0;
-            GR_Counts_PByte[3] := 0;
-        end;
+    begin
+        // Clean-up any previous values to avoid issues in the consumers
+        DSSPrime.GR_Counts_PPAnsiChar[2] := 0;
+        DSSPrime.GR_Counts_PPAnsiChar[3] := 0;
+        DSSPrime.GR_Counts_PDouble[2] := 0;
+        DSSPrime.GR_Counts_PDouble[3] := 0;
+        DSSPrime.GR_Counts_PInteger[2] := 0;
+        DSSPrime.GR_Counts_PInteger[3] := 0;
+        DSSPrime.GR_Counts_PByte[2] := 0;
+        DSSPrime.GR_Counts_PByte[3] := 0;
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure DSS_RegisterPlotCallback(cb: dss_callback_plot_t); CDECL;

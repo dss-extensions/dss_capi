@@ -34,8 +34,6 @@ uses
     Utilities,
     DSSHelper;
     
-{Define class for proxy control object}
-
 procedure CtrlQueue_ClearQueue(); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
@@ -84,10 +82,29 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_Show(); CDECL;
+var
+    fileName: String;
+    F: TStream = NIL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    DSSPrime.ActiveCircuit.ControlQueue.ShowQueue(DSSPrime.OutputDirectory + 'COMProxy_ControlQueue.csv');
+    fileName := DSSPrime.OutputDirectory + 'COMProxy_ControlQueue.csv';
+    try
+        F := DSSPrime.GetOutputStreamEx(fileName);
+        DSSPrime.ActiveCircuit.ControlQueue.WriteQueue(F);
+    except
+        on E: Exception do
+        begin
+            FreeAndNil(F);
+            DoErrorMsg(DSSPrime, 
+                Format(_('Error opening "%s" for writing.'), [fileName]), 
+                E.Message, 
+                _('Disk protected or other file error'), 710);
+            Exit;
+        end;
+    end;
+    F.Free();
+    FireOffEditor(DSSPrime, fileName);
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_ClearActions(); CDECL;
@@ -110,9 +127,8 @@ procedure CtrlQueue_Set_Action(Param1: Integer); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    with DSSPrime.ControlProxyObj do
-        if Param1 < ActionList.Count then
-            DSSPrime.ActiveAction := ActionList.Items[Param1 - 1];
+    if Param1 < DSSPrime.ControlProxyObj.ActionList.Count then
+        DSSPrime.ActiveAction := DSSPrime.ControlProxyObj.ActionList.Items[Param1 - 1];
 end;
 //------------------------------------------------------------------------------
 function CtrlQueue_Get_QueueSize(): Integer; CDECL;

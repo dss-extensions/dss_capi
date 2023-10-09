@@ -1,11 +1,9 @@
 unit DSSClassDefs;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -19,7 +17,7 @@ const
     BASECLASSMASK: Cardinal = $00000007;
     CLASSMASK: Cardinal = $FFFFFFF8;
 
-      {Basic element types}
+    // Basic element types
     NON_PCPD_ELEM = 1;  // A circuit Element we don't want enumerated in PD and PC Elements
     PD_ELEMENT = 2;
     PC_ELEMENT = 3;
@@ -27,7 +25,7 @@ const
     METER_ELEMENT = 5;
     HIDDEN_ELEMENT = 6;
 
-      {Specific element Types}
+    // Specific element Types
     MON_ELEMENT = 1 * 8;
     DSS_OBJECT = 2 * 8;   // Just a general DSS object, accessible to all circuits
     SOURCE = 3 * 8;

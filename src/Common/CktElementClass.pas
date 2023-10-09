@@ -1,16 +1,16 @@
 unit CktElementClass;
 
-{
-    ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
 uses
-    DSSClass;
+    DSSClass,
+    DSSObject,
+    ArrayDef;
 
 type
 {$SCOPEDENUMS ON}
@@ -38,6 +38,8 @@ type
         destructor Destroy; OVERRIDE;
         function BeginEdit(ptr: Pointer; SetActive_: Boolean=True): Pointer; override;
         function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
+        function GetRegisterNames(obj: TDSSObject): ArrayOfString; virtual;
+        function GetRegisterValues(obj: TDSSObject): pDoubleArray; virtual;
     end;
 
 implementation
@@ -115,7 +117,7 @@ var
     Obj: TObj;
 begin
     Obj := TObj(ptr);
-    Exclude(Obj.Flags, Flg.EditionActive);
+    Exclude(Obj.Flags, Flg.EditingActive);
 
     // This is the default action, many classes do more.
     TObj(ptr).RecalcElementData();
@@ -125,6 +127,16 @@ end;
 destructor TCktElementClass.Destroy;
 begin
     inherited Destroy;
+end;
+
+function TCktElementClass.GetRegisterNames(obj: TDSSObject): ArrayOfString;
+begin
+    Result := NIL;
+end;
+
+function TCktElementClass.GetRegisterValues(obj: TDSSObject): pDoubleArray;
+begin
+    Result := NIL;
 end;
 
 end.

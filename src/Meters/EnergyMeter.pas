@@ -41,6 +41,7 @@ interface
 
 uses
     DSSClass,
+    DSSObject,
     MeterClass,
     MeterElement,
     CktElement,
@@ -277,8 +278,8 @@ type
 
         DI_RegisterTotals: TRegisterArray;
         DI_Dir: String;
-        FDI_Totals: TFileStream;
-        FMeterTotals: TFileStream;
+        FDI_Totals: TStream;
+        FMeterTotals: TStream;
 
         SystemMeter: TSystemMeter;
         Do_OverloadReport: Boolean;
@@ -301,6 +302,8 @@ type
         procedure AppendAllDIFiles();
         procedure OpenAllDIFiles();
         procedure CloseAllDIFiles();
+        function GetRegisterNames(obj: TDSSObject): ArrayOfString; override;
+        function GetRegisterValues(obj: TDSSObject): pDoubleArray; override;
 
         property SaveDemandInterval: Boolean READ FSaveDemandInterval WRITE Set_SaveDemandInterval;
         property DI_Verbose: Boolean READ FDI_Verbose WRITE Set_DI_Verbose;
@@ -389,7 +392,7 @@ type
         DI_MHandle: TBytesStream;
         PHV_MHandle: TBytesStream;
 
-        RegisterNames: array[1..NumEMregisters] of String;
+        RegisterNames: ArrayOfString;
 
         BranchList: TCktTree;      // Pointers to all circuit elements in meter's zone
         SequenceList: TDSSPointerList;  // Pointers to branches in sequence from meter to ends
@@ -444,7 +447,7 @@ type
 
         procedure CalcReliabilityIndices();
 
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
     end;
 
@@ -745,7 +748,7 @@ begin
     obj := TObj(ptr);
     if flg.NeedsRecalc in obj.Flags then
         obj.RecalcElementData();   // When some basic data have changed
-    Exclude(obj.Flags, Flg.EditionActive);
+    Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
 
@@ -1029,45 +1032,46 @@ begin
     DSS.EnergyMeterClass.EMT_Append := FALSE;
     DSS.EnergyMeterClass.FM_Append := FALSE;
 
-     // Set Register names  that correspond to the register quantities
-    RegisterNames[1] := 'kWh';
-    RegisterNames[2] := 'kvarh';
-    RegisterNames[3] := 'Max kW';
-    RegisterNames[4] := 'Max kVA';
-    RegisterNames[5] := 'Zone kWh';
-    RegisterNames[6] := 'Zone kvarh';
-    RegisterNames[7] := 'Zone Max kW';
-    RegisterNames[8] := 'Zone Max kVA';
-    RegisterNames[9] := 'Overload kWh Normal';
-    RegisterNames[10] := 'Overload kWh Emerg';
-    RegisterNames[11] := 'Load EEN';
-    RegisterNames[12] := 'Load UE';
-    RegisterNames[13] := 'Zone Losses kWh';
-    RegisterNames[14] := 'Zone Losses kvarh';
-    RegisterNames[15] := 'Zone Max kW Losses';
-    RegisterNames[16] := 'Zone Max kvar Losses';
-    RegisterNames[17] := 'Load Losses kWh';
-    RegisterNames[18] := 'Load Losses kvarh';
-    RegisterNames[19] := 'No Load Losses kWh';
-    RegisterNames[20] := 'No Load Losses kvarh';
-    RegisterNames[21] := 'Max kW Load Losses';
-    RegisterNames[22] := 'Max kW No Load Losses';
-    RegisterNames[23] := 'Line Losses';
-    RegisterNames[24] := 'Transformer Losses';
+    // Set Register names  that correspond to the register quantities
+    RegisterNames := ArrayOfString.Create(
+        'kWh',
+        'kvarh',
+        'Max kW',
+        'Max kVA',
+        'Zone kWh',
+        'Zone kvarh',
+        'Zone Max kW',
+        'Zone Max kVA',
+        'Overload kWh Normal',
+        'Overload kWh Emerg',
+        'Load EEN',
+        'Load UE',
+        'Zone Losses kWh',
+        'Zone Losses kvarh',
+        'Zone Max kW Losses',
+        'Zone Max kvar Losses',
+        'Load Losses kWh',
+        'Load Losses kvarh',
+        'No Load Losses kWh',
+        'No Load Losses kvarh',
+        'Max kW Load Losses',
+        'Max kW No Load Losses',
+        'Line Losses',
+        'Transformer Losses',
 
-    RegisterNames[25] := 'Line Mode Line Losses';
-    RegisterNames[26] := 'Zero Mode Line Losses';
+        'Line Mode Line Losses',
+        'Zero Mode Line Losses',
 
-    RegisterNames[27] := '3-phase Line Losses';
-    RegisterNames[28] := '1- and 2-phase Line Losses';
+        '3-phase Line Losses',
+        '1- and 2-phase Line Losses',
 
-    RegisterNames[29] := 'Gen kWh';
-    RegisterNames[30] := 'Gen kvarh';
-    RegisterNames[31] := 'Gen Max kW';
-    RegisterNames[32] := 'Gen Max kVA';
+        'Gen kWh',
+        'Gen kvarh',
+        'Gen Max kW',
+        'Gen Max kVA'
+    );
+    SetLength(RegisterNames, NumEMRegisters);
     // Registers for capturing losses by base voltage, names assigned later
-    for i := Reg_VBaseStart + 1 to NumEMRegisters do
-        RegisterNames[i] := '';
 
     ResetRegisters();
     for i := 1 to NumEMRegisters do
@@ -1088,8 +1092,6 @@ begin
 end;
 
 destructor TEnergyMeterObj.Destroy;
-var
-    i: Integer;
 begin
     if Assigned(VBaseList) then
         Reallocmem(VBaseList, 0);
@@ -1113,8 +1115,6 @@ begin
     if Assigned(VPhaseAccumCount) then
         ReallocMem(VPhaseAccumCount, 0);
 
-    for i := 1 to NumEMRegisters do
-        RegisterNames[i] := '';
     if Assigned(BranchList) then
         BranchList.Free;
     if Assigned(SequenceList) then
@@ -1232,13 +1232,13 @@ end;
 procedure TEnergyMeterObj.SaveRegisters;
 var
     CSVName: String;
-    F: TFileStream = nil;
+    F: TStream = nil;
     i: Integer;
     sout: String;
 begin
     try
         CSVName := 'MTR_' + Name + '.csv';
-        F := TBufferedFileStream.Create(DSS.OutputDirectory + CSVName, fmCreate);
+        F := DSS.GetOutputStreamEx(DSS.OutputDirectory + CSVName, fmCreate);
         DSS.GlobalResult := CSVName;
         SetLastResultFile(DSS, CSVName);
 
@@ -1257,7 +1257,7 @@ begin
         FSWriteLn(F, sout);
         for i := 1 to NumEMregisters do
         begin
-            WriteStr(sout, '"', RegisterNames[i], '",', Registers[i]: 0: 0);
+            WriteStr(sout, '"', RegisterNames[i - 1], '",', Registers[i]: 0: 0);
             FSWriteLn(F, sout);
         end;
     finally
@@ -2029,13 +2029,13 @@ end;
 procedure TEnergyMeterObj.ZoneDump;
 var
     CSVName: String;
-    F: TFileStream = nil;
+    F: TStream = nil;
     pdelem: TPDelement;
     LoadElem: TDSSCktElement;
 begin
     try
         CSVName := 'Zone_' + Name + '.csv';
-        F := TBufferedFileStream.Create(DSS.OutputDirectory + CSVName, fmCreate);
+        F := DSS.GetOutputStreamEx(DSS.OutputDirectory + CSVName, fmCreate);
 
         DSS.GlobalResult := CSVName;
         SetLastResultFile(DSS, CSVName);
@@ -2079,7 +2079,7 @@ begin
     end;
 end;
 
-procedure TEnergyMeterObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TEnergyMeterObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 var
     i: Integer;
     pdelem: TPDelement;
@@ -2095,7 +2095,7 @@ begin
         FSWriteln(F, 'Registers');
         for i := 1 to NumEMregisters do
         begin
-            FSWriteln(F, Format('"%s" = %.0g', [RegisterNames[i], Registers[i]]));
+            FSWriteln(F, Format('"%s" = %.0g', [RegisterNames[i - 1], Registers[i]]));
         end;
         FSWriteln(F);
 
@@ -2587,7 +2587,7 @@ var
     cktElem, shuntElement: TDSSCktElement;
     LoadElement: TLoadObj;
     pControlElem: TDSSCktElement;
-    FBranches, FShunts, FLoads, FGens, FCaps, FXfmrs: TFileStream;
+    FBranches, FShunts, FLoads, FGens, FCaps, FXfmrs: TStream;
     NBranches, NShunts, Nloads, NGens, NCaps, NXfmrs: Integer;
     dirname: String;
 begin
@@ -2608,7 +2608,7 @@ begin
     // Open some files:
 
     try
-        FBranches := TBufferedFileStream.Create(DSS.CurrentDSSDir + 'Branches.dss', fmCreate);     // Both lines and transformers
+        FBranches := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'Branches.dss', fmCreate);     // Both lines and transformers
         NBranches := 0;
     except
         On E: Exception do
@@ -2620,7 +2620,7 @@ begin
     end;
 
     try
-        FXfmrs := TBufferedFileStream.Create(DSS.CurrentDSSDir + 'Transformers.dss', fmCreate);     // Both lines and transformers
+        FXfmrs := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'Transformers.dss', fmCreate);     // Both lines and transformers
         NXfmrs := 0;
     except
         On E: Exception do
@@ -2632,7 +2632,7 @@ begin
     end;
 
     try
-        FShunts := TBufferedFileStream.Create(DSS.CurrentDSSDir + 'Shunts.dss', fmCreate);
+        FShunts := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'Shunts.dss', fmCreate);
         NShunts := 0;
     except
         On E: Exception do
@@ -2644,7 +2644,7 @@ begin
     end;
 
     try
-        FLoads := TBufferedFileStream.Create(DSS.CurrentDSSDir + 'Loads.dss', fmCreate);
+        FLoads := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'Loads.dss', fmCreate);
         Nloads := 0;
     except
         On E: Exception do
@@ -2656,7 +2656,7 @@ begin
     end;
 
     try
-        FGens := TBufferedFileStream.Create(DSS.CurrentDSSDir + 'Generators.dss', fmCreate);
+        FGens := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'Generators.dss', fmCreate);
         NGens := 0;
     except
         On E: Exception do
@@ -2668,7 +2668,7 @@ begin
     end;
 
     try
-        FCaps := TBufferedFileStream.Create(DSS.CurrentDSSDir + 'Capacitors.dss', fmCreate);
+        FCaps := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'Capacitors.dss', fmCreate);
         Ncaps := 0;
     except
         On E: Exception do
@@ -2889,6 +2889,7 @@ procedure TEnergyMeterObj.OpenDemandIntervalFile;
 var
     i, j: Integer;
     vbase: Double;
+    regName: String;
 begin
     try
         if This_Meter_DIFileIsOpen then
@@ -2900,8 +2901,8 @@ begin
             if DI_MHandle <> NIL then
                 DI_MHandle.free;
             DI_MHandle := Create_Meter_Space('"Hour"');
-            for i := 1 to NumEMRegisters do
-                WriteintoMemStr(DI_MHandle, ', "' + RegisterNames[i] + '"');
+            for regName in RegisterNames do
+                WriteintoMemStr(DI_MHandle, ', "' + regName + '"');
             WriteintoMemStr(DI_MHandle, Char(10));
 
             // Phase Voltage Report, if requested
@@ -2976,6 +2977,26 @@ begin
             end;
         WriteintoMemStr(PHV_MHandle, Char(10));
     end;
+end;
+
+function TEnergyMeter.GetRegisterNames(obj: TDSSObject): ArrayOfString;
+begin
+    if not (obj is TEnergyMeterObj) then
+    begin
+        Result := NIL;
+        Exit;
+    end;
+    Result := TEnergyMeterObj(obj).RegisterNames;
+end;
+
+function TEnergyMeter.GetRegisterValues(obj: TDSSObject): pDoubleArray;
+begin
+    if not (obj is TEnergyMeterObj) then
+    begin
+        Result := NIL;
+        Exit;
+    end;
+    Result := pDoubleArray(@TEnergyMeterObj(obj).Registers[1]);
 end;
 
 procedure TEnergyMeter.CloseAllDIFiles();
@@ -3061,29 +3082,29 @@ begin
         if VBaseList[i] > 0.0 then
         begin
             vbase := VBaseList[i] * SQRT3;
-            RegisterNames[i + Reg_VBaseStart] := Format('%.3g kV Losses', [vbase]);
-            RegisterNames[i + 1 * MaxVBaseCount + Reg_VBaseStart] := Format('%.3g kV Line Loss', [vbase]);
-            RegisterNames[i + 2 * MaxVBaseCount + Reg_VBaseStart] := Format('%.3g kV Load Loss', [vbase]);
-            RegisterNames[i + 3 * MaxVBaseCount + Reg_VBaseStart] := Format('%.3g kV No Load Loss', [vbase]);
-            RegisterNames[i + 4 * MaxVBaseCount + Reg_VBaseStart] := Format('%.3g kV Load Energy', [vbase])
+            RegisterNames[i + Reg_VBaseStart - 1] := Format('%.3g kV Losses', [vbase]);
+            RegisterNames[i + 1 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('%.3g kV Line Loss', [vbase]);
+            RegisterNames[i + 2 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('%.3g kV Load Loss', [vbase]);
+            RegisterNames[i + 3 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('%.3g kV No Load Loss', [vbase]);
+            RegisterNames[i + 4 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('%.3g kV Load Energy', [vbase])
         end
         else
         begin
-            RegisterNames[i + Reg_VBaseStart] := Format('Aux%d', [ireg]);
+            RegisterNames[i + Reg_VBaseStart - 1] := Format('Aux%d', [ireg]);
             Inc(ireg);
-            RegisterNames[i + 1 * MaxVBaseCount + Reg_VBaseStart] := Format('Aux%d', [ireg]);
+            RegisterNames[i + 1 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('Aux%d', [ireg]);
             Inc(ireg);
-            RegisterNames[i + 2 * MaxVBaseCount + Reg_VBaseStart] := Format('Aux%d', [ireg]);
+            RegisterNames[i + 2 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('Aux%d', [ireg]);
             Inc(ireg);
-            RegisterNames[i + 3 * MaxVBaseCount + Reg_VBaseStart] := Format('Aux%d', [ireg]);
+            RegisterNames[i + 3 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('Aux%d', [ireg]);
             Inc(ireg);
-            RegisterNames[i + 4 * MaxVBaseCount + Reg_VBaseStart] := Format('Aux%d', [ireg]);
+            RegisterNames[i + 4 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('Aux%d', [ireg]);
             Inc(ireg);
         end;
     end;
     for i := 1 + Reg_VBaseStart + 5 * MaxVBaseCount to NumEMRegisters do
     begin
-        RegisterNames[i] := Format('Aux%d', [ireg]);
+        RegisterNames[i - 1] := Format('Aux%d', [ireg]);
         Inc(ireg);
     end;
 end;
@@ -3278,9 +3299,8 @@ end;
 
 procedure TEnergyMeter.CreateFDI_Totals;
 var
-    i: Integer;
     mtr: TEnergyMeterObj;
-
+    regName: String;
 begin
     try
         if TDI_MHandle <> NIL then
@@ -3289,9 +3309,9 @@ begin
         mtr := DSS.ActiveCircuit.EnergyMeters.First();  // just get the first one
         if mtr <> NIL then
         begin
-            for i := 1 to NumEMRegisters do
+            for regName in mtr.RegisterNames do
             begin
-                WriteintoMemStr(TDI_MHandle, ', "' + mtr.RegisterNames[i] + '"');
+                WriteintoMemStr(TDI_MHandle, ', "' + regName + '"');
             end;
         end;
         WriteintoMemStr(TDI_MHandle, Char(10));
@@ -3488,16 +3508,16 @@ end;
 
 procedure TEnergyMeter.CreateMeterTotals;
 var
-    i: Integer;
     mtr: TEnergyMeterObj;
+    regName: String;
 begin
     if EMT_MHandle <> NIL then
         EMT_MHandle.Free;
     EMT_MHandle := Create_Meter_Space('Name');
     mtr := DSS.ActiveCircuit.EnergyMeters.First();
     if Assigned(mtr) then
-        for i := 1 to NumEMRegisters do
-            WriteintoMemStr(EMT_MHandle, ', "' + mtr.RegisterNames[i] + '"');
+        for regName in mtr.RegisterNames do
+            WriteintoMemStr(EMT_MHandle, ', "' + regName + '"');
     WriteintoMemStr(EMT_MHandle, Char(10));
 end;
 
@@ -3547,6 +3567,7 @@ var
     mtr: TEnergyMeterObj;
     Regsum: TRegisterArray;
     i: Integer;
+    regName: String;
 begin
     // Sum up all registers of all meters and write to Totals.csv
     for i := 1 to NumEMRegisters do
@@ -3565,8 +3586,8 @@ begin
         FM_MHandle := Create_Meter_Space('Year');
         mtr := DSS.ActiveCircuit.EnergyMeters.First();
         if assigned(mtr) then
-            for i := 1 to NumEMRegisters do
-                WriteintoMemStr(FM_MHandle, ', "' + mtr.RegisterNames[i] + '"'); //Write(F,', "', mtr.RegisterNames[i],'"');
+            for regName in mtr.RegisterNames do
+                WriteintoMemStr(FM_MHandle, ', "' + regName + '"'); //Write(F,', "', regName,'"');
         WriteintoMemStr(FM_MHandle, Char(10));
 
         WriteintoMemStr(FM_MHandle, inttostr(ActiveCircuit.Solution.Year));

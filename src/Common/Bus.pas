@@ -1,11 +1,9 @@
 unit Bus;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -73,6 +71,7 @@ type
         property Zsc1: Complex READ Get_Zsc1;
         property Zsc0: Complex READ Get_Zsc0;
 
+        property Name: String READ LName WRITE LName; // Reuse LocalName/LName
     end;
 
     // Bus Collection
@@ -85,6 +84,7 @@ type
     end;
     PNodeBusArray = ^TNodeBusArray;
     TNodeBusArray = array[1..2] of TNodeBus;
+    PNodeBus = ^TNodeBus;
 
 implementation
 
@@ -145,6 +145,8 @@ begin
 end;
 
 function TDSSBus.Add(Circuit: TNamedObject; NodeNum: SmallInt): Integer;
+var
+    circ: TDSSCircuit;
 begin
     if NodeNum = 0 then
         Result := 0
@@ -157,12 +159,10 @@ begin
             AddANode;
             Nodes[FNumNodesThisBus] := NodeNum;
 
-            with TDSSCircuit(Circuit) do
-            begin
-                INC(NumNodes);  // Global node number for circuit
-                RefNo[FNumNodesThisBus] := NumNodes;
-                Result := NumNodes;  // Return global node number
-            end;
+            circ := TDSSCircuit(Circuit);
+            Inc(circ.NumNodes);  // Global node number for circuit
+            RefNo[FNumNodesThisBus] := circ.NumNodes;
+            Result := circ.NumNodes;  // Return global node number
         end;
     end;
 end;

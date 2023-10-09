@@ -19,6 +19,8 @@ uses
     CAPI_Constants,
     DSSClass,
     DSSGlobals,
+    DSSObject,
+    DSSObjectHelper,
     Executive,
     SysUtils,
     DSSHelper;
@@ -51,9 +53,8 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveDSSObject.ParentClass do
-        if not IsPropIndexInvalid(DSSPrime, 33006) then
-            Result := DSS_GetAsPAnsiChar(DSSPrime, GetPropertyHelp(DSSPrime.FPropIndex));
+    if not IsPropIndexInvalid(DSSPrime, 33006) then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSObject.ParentClass.GetPropertyHelp(DSSPrime.FPropIndex));
 end;
 //------------------------------------------------------------------------------
 function DSSProperty_Get_Name(): PAnsiChar; CDECL;
@@ -95,17 +96,19 @@ begin
     if IsPropIndexInvalid(DSSPrime, 33004) then
         Exit;
         
-    with DSSPrime.ActiveDSSObject do
-        Result := DSS_GetAsPAnsiChar(DSSPrime, PropertyValue[DSSPrime.FPropIndex]);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSObject.PropertyValue[DSSPrime.FPropIndex]);
 end;
 
 //------------------------------------------------------------------------------
 procedure DSSProperty_Set_Val(const Value: PAnsiChar); CDECL;
+var
+    obj: TDSSObject;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
 
-    if DSSPrime.ActiveDSSObject = NIL then
+    obj := DSSPrime.ActiveDSSObject;
+    if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
@@ -116,9 +119,7 @@ begin
     
     if IsPropIndexInvalid(DSSPrime, 33001) then
         Exit;
-
-    with DSSPrime.ActiveDSSObject do
-        DSSPrime.DSSExecutive.Command := 'Edit ' + FullName + ' ' + ParentClass.PropertyName[DSSPrime.FPropIndex] + '=' + (Value);
+    obj.ParsePropertyValue(DSSPrime.FPropIndex, Value);
 end;
 //------------------------------------------------------------------------------
 procedure DSSProperty_Set_Index(const Value: Integer); CDECL;

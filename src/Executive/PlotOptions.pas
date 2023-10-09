@@ -145,7 +145,7 @@ begin
     ThreePhLineStyle := 1;
     SinglePhLineStyle := 1;
     DaisyBusList := TStringList.Create;
-    PhasesToPlot := PROFILE3PH;
+    PhasesToPlot := ord(TPlotPhases.ThreePhase);
     ProfileScale := 'pukm';
 end;
 
@@ -402,24 +402,24 @@ begin
                     SinglePhLineStyle := Parser.IntValue;
                 21:
                 begin  // Parse off phase(s) to plot
-                    PhasesToPlot := PROFILE3PH; // the default
+                    PhasesToPlot := ord(TPlotPhases.ThreePhase); // the default
                     if CompareTextShortest(Param, 'default') = 0 then
-                        PhasesToPlot := PROFILE3PH
+                        PhasesToPlot := ord(TPlotPhases.ThreePhase)
                     else
                     if CompareTextShortest(Param, 'all') = 0 then
-                        PhasesToPlot := PROFILEALL
+                        PhasesToPlot := ord(TPlotPhases.All)
                     else
                     if CompareTextShortest(Param, 'primary') = 0 then
-                        PhasesToPlot := PROFILEALLPRI
+                        PhasesToPlot := ord(TPlotPhases.Primary)
                     else
                     if CompareTextShortest(Param, 'll3ph') = 0 then
-                        PhasesToPlot := PROFILELL
+                        PhasesToPlot := ord(TPlotPhases.LL3Ph)
                     else
                     if CompareTextShortest(Param, 'llall') = 0 then
-                        PhasesToPlot := PROFILELLALL
+                        PhasesToPlot := ord(TPlotPhases.LLAll)
                     else
                     if CompareTextShortest(Param, 'llprimary') = 0 then
-                        PhasesToPlot := PROFILELLPRI
+                        PhasesToPlot := ord(TPlotPhases.LLPrimary)
                     else
                     if Length(Param) = 1 then
                         PhasesToPlot := Parser.IntValue;

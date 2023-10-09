@@ -21,34 +21,44 @@ uses
     SysUtils,
     solution,
     CktElement,
+    Bus,
     DSSClass,
     DSSHelper;
 
 procedure DSSimComs_BusVoltagepu(var ResultPtr: PDouble; ResultCount: PAPISize; Index: PtrUInt); CDECL;
 var
     Result: PDoubleArray0;
-    i, j: Integer;
+    j: Integer;
     Volts, BaseFactor: Double;
+    bus: TDSSBus;
 begin
     if InvalidCircuit(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    with DSSPrime.ActiveCircuit do
+    
+    if (not ((Index > 0) and (Index <= DSSPrime.ActiveCircuit.NumBuses))) or (DSSPrime.ActiveCircuit.Buses = NIL) then
     begin
-        i := Index;
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Buses[i].NumNodesThisBus);
-        if Buses[i].kVBase > 0.0 then
-            BaseFactor := 1000.0 * Buses[i].kVBase
-        else
-            BaseFactor := 1.0;
-        for j := 1 to Buses[i].NumNodesThisBus do
+        if DSS_CAPI_EXT_ERRORS then
         begin
-            Volts := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV[Buses[i].GetRef(j)]);
-            Result[j - 1] := Volts / BaseFactor;
+            DoSimpleMsg(DSSPrime, _('Invalid bus index.'), 8989);
         end;
-    end
+        DefaultResult(ResultPtr, ResultCount);
+        Exit;
+    end;
+
+    bus := DSSPrime.ActiveCircuit.Buses[Index];
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, bus.NumNodesThisBus);
+    if bus.kVBase > 0.0 then
+        BaseFactor := 1000.0 * bus.kVBase
+    else
+        BaseFactor := 1.0;
+    for j := 1 to bus.NumNodesThisBus do
+    begin
+        Volts := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV[bus.GetRef(j)]);
+        Result[j - 1] := Volts / BaseFactor;
+    end;
 end;
 
 procedure DSSimComs_BusVoltagepu_GR(Index: PtrUInt); CDECL;
@@ -61,27 +71,35 @@ end;
 procedure DSSimComs_BusVoltage(var ResultPtr: PDouble; ResultCount: PAPISize; Index: PtrUInt); CDECL;
 var
     Result: PDoubleArray0;
-    i, j, k: Integer;
+    j, k: Integer;
     Volts: Complex;
+    bus: TDSSBus;
 begin
     if InvalidCircuit(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-        
-    with DSSPrime.ActiveCircuit do
+    
+    if (not ((Index > 0) and (Index <= DSSPrime.ActiveCircuit.NumBuses))) or (DSSPrime.ActiveCircuit.Buses = NIL) then
     begin
-        i := Index;
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Buses[i].NumNodesThisBus);
-        for j := 1 to Buses[i].NumNodesThisBus do
+        if DSS_CAPI_EXT_ERRORS then
         begin
-            Volts := DSSPrime.ActiveCircuit.Solution.NodeV[Buses[i].GetRef(j)];
-            k := (j - 1) * 2;
-            Result[k] := Volts.re;
-            Result[k + 1] := Volts.im;
+            DoSimpleMsg(DSSPrime, _('Invalid bus index.'), 8989);
         end;
-    end
+        DefaultResult(ResultPtr, ResultCount);
+        Exit;
+    end;
+
+    bus := DSSPrime.ActiveCircuit.Buses[Index];
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * bus.NumNodesThisBus);
+    for j := 1 to bus.NumNodesThisBus do
+    begin
+        Volts := DSSPrime.ActiveCircuit.Solution.NodeV[bus.GetRef(j)];
+        k := (j - 1) * 2;
+        Result[k] := Volts.re;
+        Result[k + 1] := Volts.im;
+    end;
 end;
 
 procedure DSSimComs_BusVoltage_GR(Index: PtrUInt); CDECL;

@@ -1,12 +1,8 @@
 unit Command;
-
- {
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
-
+//  ----------------------------------------------------------
+//  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+//  All rights reserved.
+//  ----------------------------------------------------------
 interface
 
 uses
@@ -16,67 +12,73 @@ type
     TCommandList = class(TObject)
     PRIVATE
         CommandList: TCommandHashListType;
-        function Get_NumCommands: Integer;
+        abbrevCommandList: TCommandHashListType;
     PUBLIC
-        AbbrevAllowed: Boolean;
+        Abbrev: Boolean;
 
-        constructor Create(Commands: array of String; AllowAbbrev: Boolean = True);
+        constructor Create(Commands: array of String);
         destructor Destroy; OVERRIDE;
-        procedure AddCommand(const cmd: String);
-        function Getcommand(const Cmd: String): Integer;
+        function GetCommand(const Cmd: String): Integer;
         function Get(i: Integer): String;
-        property NumCommands: Integer READ Get_NumCommands;
+        function Count: Integer;
     end;
-
 
 implementation
 
-constructor TCommandList.Create(Commands: array of String; AllowAbbrev: Boolean = True);
+constructor TCommandList.Create(Commands: array of String);
 var
-    i: Integer;
+    i, j: Integer;
+    abbrevStr: String;
 begin
     inherited Create;
     CommandList := TCommandHashListType.Create(High(Commands) + 1);
+    abbrevCommandList := TCommandHashListType.Create(High(Commands) + 1);
+    Abbrev := True;
+
+    // Fill the HashList
+    for i := 0 to High(Commands) do
+    begin
+        CommandList.Add(Commands[i]);
+        abbrevCommandList.Add(Commands[i]);
+    end;
 
     for i := 0 to High(Commands) do
     begin
-      // Fill the HashList
-        CommandList.Add(Commands[i]);
+        for j := 1 to (Length(Commands[i]) - 1) do
+        begin
+            abbrevStr := Copy(Commands[i], 1, j);
+            if abbrevCommandList.Find(abbrevStr) = 0 then
+            begin
+                abbrevCommandList.Add(abbrevStr, i + 1);
+            end;
+        end;
     end;
-
-    AbbrevAllowed := AllowAbbrev;
 end;
 
 destructor TCommandList.Destroy;
-
 begin
     CommandList.Free;
+    abbrevCommandList.Free;
     inherited Destroy;
 end;
 
-procedure TCommandList.AddCommand(const cmd: String);
+function TCommandList.GetCommand(const Cmd: String): Integer;
 begin
-    CommandList.Add(Cmd);
+    //TODO: benchmark if checking the smaller CommandList first
+    // is faster in general, or just using abbrevCommandList, 
+    // always, is faster.
+    if not abbrev then
+        Result := CommandList.Find(Cmd)
+    else
+        Result := abbrevCommandList.Find(Cmd);
 end;
-
-function TCommandList.Getcommand(const Cmd: String): Integer;
-
-begin
-    Result := CommandList.Find(Cmd);
-    // If no match found on whole command, check for abbrev
-    // This routine will generally be faster if one enters the whole command
-    if Result = 0 then
-        if AbbrevAllowed then
-            Result := CommandList.FindAbbrev(Cmd);
-end;
-
 
 function TCommandList.Get(i: Integer): String;
 begin
     Result := CommandList.NameOfIndex(i);
 end;
 
-function TCommandList.Get_NumCommands: Integer;
+function TCommandList.Count: Integer;
 begin
     Result := CommandList.Count;
 end;

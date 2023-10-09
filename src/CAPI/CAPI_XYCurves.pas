@@ -76,7 +76,7 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
     
-    Result := DSSPrime.XYCurveClass.ElementCount;
+    Result := DSSPrime.XYCurveClass.ElementCount();
 end;
 //------------------------------------------------------------------------------
 function XYCurves_Get_First(): Integer; CDECL;
@@ -85,7 +85,7 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
         
-    Result := DSSPrime.XYCurveClass.First;
+    Result := DSSPrime.XYCurveClass.First();
 end;
 //------------------------------------------------------------------------------
 function XYCurves_Get_Name(): PAnsiChar; CDECL;
@@ -105,7 +105,7 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
     
-    Result := DSSPrime.XYCurveClass.Next;
+    Result := DSSPrime.XYCurveClass.Next();
 end;
 //------------------------------------------------------------------------------
 procedure XYCurves_Set_Name(const Value: PAnsiChar); CDECL;

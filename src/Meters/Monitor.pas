@@ -209,7 +209,7 @@ type
         procedure TranslateToCSV(Show: Boolean);
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
        //Property  MonitorFileName:String read BufferFile;
 
         property CSVFileName: String READ Get_FileName;
@@ -223,8 +223,7 @@ uses
     DSSGlobals,
     Circuit,
     CktElement,
-    Transformer,
-    AutoTrans,
+    ControlledTransformer,
     PCElement,
     Sysutils,
     ucmatrix,
@@ -368,7 +367,7 @@ begin
     obj := TObj(ptr);
     if (NumChanges + obj.recalc) > 0 then
         obj.RecalcElementData();
-    Exclude(obj.Flags, Flg.EditionActive);
+    Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
 
@@ -531,6 +530,8 @@ begin
 end;
 
 procedure TMonitorObj.RecalcElementData;
+var
+    tr: TControlledTransformerObj;
 begin
     ValidMonitor := FALSE;
     if MeteredElement <> NIL then
@@ -608,22 +609,14 @@ begin
                 end;
                 8:
                 begin
-                    if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
-                        with TAutoTransObj(MeteredElement) do
-                            NumTransformerCurrents := 2 * NumWindings * nphases
-                    else
-                        with TTransfObj(MeteredElement) do
-                            NumTransformerCurrents := 2 * NumWindings * nphases;
+                    tr := TControlledTransformerObj(MeteredElement);
+                    NumTransformerCurrents := 2 * tr.NumWindings * tr.nphases;
                     ReallocMem(WdgCurrentsBuffer, Sizeof(Complex) * NumTransformerCurrents);
                 end;
                 10:
                 begin
-                    if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
-                        with TAutoTransObj(MeteredElement) do
-                            NumWindingVoltages := NumWindings * nphases
-                    else
-                        with TTransfObj(MeteredElement) do
-                            NumWindingVoltages := NumWindings * nphases;
+                    tr := TControlledTransformerObj(MeteredElement);
+                    NumWindingVoltages := tr.NumWindings * tr.nphases;
                     ReallocMem(WdgVoltagesBuffer, Sizeof(Complex) * NumWindingVoltages);   // total all phases, all windings
                     ReallocMem(PhsVoltagesBuffer, Sizeof(Complex) * nphases);
                 end;
@@ -704,6 +697,7 @@ var
     IsPosSeq: Boolean;
     IsPower: Boolean;
     NumVI: Integer;
+    tr: TControlledTransformerObj;
 begin
     try
         MonitorStream.Clear;
@@ -778,27 +772,13 @@ begin
             end;
             8:
             begin   // All winding Currents
-                if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
-                    with TAutoTransObj(MeteredElement) do
+                tr := TControlledTransformerObj(MeteredElement);
+                RecordSize := NumTransformerCurrents;     // Transformer Winding Currents
+                for i := 1 to tr.Nphases do
+                    for j := 1 to tr.NumWindings do
                     begin
-                        RecordSize := NumTransformerCurrents;     // Transformer Winding Currents
-                        for i := 1 to Nphases do
-                            for j := 1 to NumWindings do
-                            begin
-                                Header.Add(Format('P%dW%d', [i, j]));
-                                Header.Add('Deg');
-                            end;
-                    end
-                else
-                    with TTransfObj(MeteredElement) do
-                    begin
-                        RecordSize := NumTransformerCurrents;     // Transformer Winding Currents
-                        for i := 1 to Nphases do
-                            for j := 1 to NumWindings do
-                            begin
-                                Header.Add(Format('P%dW%d', [i, j]));
-                                Header.Add('Deg');
-                            end;
+                        Header.Add(Format('P%dW%d', [i, j]));
+                        Header.Add('Deg');
                     end;
             end;
             9:
@@ -809,27 +789,13 @@ begin
             end;
             10:
             begin // All Winding Voltages
-                if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
-                    with TAutoTransObj(MeteredElement) do
+                tr := TControlledTransformerObj(MeteredElement);
+                RecordSize := 2 * tr.NumWindings * tr.Nphases;     // Transformer Winding woltages
+                for i := 1 to tr.Nphases do
+                    for j := 1 to tr.NumWindings do
                     begin
-                        RecordSize := 2 * NumWindings * Nphases;     // Transformer Winding woltages
-                        for i := 1 to Nphases do
-                            for j := 1 to NumWindings do
-                            begin
-                                Header.Add(Format('P%dW%d', [i, j]));
-                                Header.Add('Deg');
-                            end;
-                    end
-                else
-                    with TTransfObj(MeteredElement) do
-                    begin
-                        RecordSize := 2 * NumWindings * Nphases;     // Transformer Winding woltages
-                        for i := 1 to Nphases do
-                            for j := 1 to NumWindings do
-                            begin
-                                Header.Add(Format('P%dW%d', [i, j]));
-                                Header.Add('Deg');
-                            end;
+                        Header.Add(Format('P%dW%d', [i, j]));
+                        Header.Add('Deg');
                     end;
             end;
             11: // All terminal voltages and currents  *****
@@ -1221,6 +1187,7 @@ var
     solution: TSolutionObj;
     cap: TCapacitorObj;
     storage: TStorageObj;
+    tr: TControlledTransformerObj;
 begin
     if not (ValidMonitor and Enabled) then
         Exit;
@@ -1270,12 +1237,7 @@ begin
 
         2:
         begin     // Monitor Transformer Tap Position
-            if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
-                with TAutoTransObj(MeteredElement) do
-                    AddDblToBuffer(PresentTap[MeteredTerminal])
-            else
-                with TTransfObj(MeteredElement) do
-                    AddDblToBuffer(PresentTap[MeteredTerminal]);
+            AddDblToBuffer(TControlledTransformerObj(MeteredElement).PresentTap[MeteredTerminal]);
 
             Exit;  // Done with this mode now.
         end;
@@ -1302,25 +1264,23 @@ begin
 
         5:
         begin
-            (* Capture Solution Variables *)
-            with ActiveCircuit.Solution do
-            begin
-                SolutionBuffer[1] := Iteration;
-                SolutionBuffer[2] := ControlIteration;
-                SolutionBuffer[3] := MaxIterations;
-                SolutionBuffer[4] := MaxControlIterations;
-                if ConvergedFlag then
-                    SolutionBuffer[5] := 1
-                else
-                    SolutionBuffer[5] := 0;
-                SolutionBuffer[6] := IntervalHrs;
-                SolutionBuffer[7] := SolutionCount;
-                SolutionBuffer[8] := Ord(Mode);
-                SolutionBuffer[9] := Frequency;
-                SolutionBuffer[10] := Year;
-                SolutionBuffer[11] := Time_Solve;
-                SolutionBuffer[12] := Time_Step;
-            end;
+            // Capture Solution Variables
+            solution := ActiveCircuit.Solution;
+            SolutionBuffer[1] := solution.Iteration;
+            SolutionBuffer[2] := solution.ControlIteration;
+            SolutionBuffer[3] := solution.MaxIterations;
+            SolutionBuffer[4] := solution.MaxControlIterations;
+            if solution.ConvergedFlag then
+                SolutionBuffer[5] := 1
+            else
+                SolutionBuffer[5] := 0;
+            SolutionBuffer[6] := solution.IntervalHrs;
+            SolutionBuffer[7] := solution.SolutionCount;
+            SolutionBuffer[8] := Ord(solution.Mode);
+            SolutionBuffer[9] := solution.Frequency;
+            SolutionBuffer[10] := solution.Year;
+            SolutionBuffer[11] := solution.Solve_Time_Elapsed;
+            SolutionBuffer[12] := solution.Step_Time_Elapsed;
 
         end;
 
@@ -1351,35 +1311,18 @@ begin
         8:
         begin   // Winding Currents
               // Get all currents in each end of each winding
-            if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
-                with TAutoTransObj(MeteredElement) do
-                begin
-                    GetAllWindingCurrents(WdgCurrentsBuffer);
-                    ConvertComplexArrayToPolar(WdgCurrentsBuffer, NumTransformerCurrents);
-                  // Put every other Current into buffer
-                  // Current magnitude is same in each end
-                    k := 1;
-                    for i := 1 to Nphases * NumWindings do
-                    begin
-                        AddDblsToBuffer(pDoubleArray(@WdgCurrentsBuffer^[k].re), 2);  // Add Mag, Angle
-                        k := k + 2;
-                    end;
-                end
-            else
-                with TTransfobj(MeteredElement) do
-                begin
-                    GetAllWindingCurrents(WdgCurrentsBuffer);
-                    ConvertComplexArrayToPolar(WdgCurrentsBuffer, NumTransformerCurrents);
-                // Put every other Current into buffer
-                  // Current magnitude is same in each end
-                    k := 1;
-                    for i := 1 to Nphases * NumWindings do
-                    begin
-                        AddDblsToBuffer(pDoubleArray(@WdgCurrentsBuffer^[k].re), 2);  // Add Mag, Angle
-                        k := k + 2;
-                    end;
-               // AddDblsToBuffer(@WdgCurrentsBuffer^[1].re, NumTransformerCurrents);
-                end;
+            tr := TControlledTransformerObj(MeteredElement);
+            tr.GetAllWindingCurrents(WdgCurrentsBuffer);
+            ConvertComplexArrayToPolar(WdgCurrentsBuffer, NumTransformerCurrents);
+            // Put every other Current into buffer
+            // Current magnitude is same in each end
+            k := 1;
+            for i := 1 to tr.Nphases * tr.NumWindings do
+            begin
+                AddDblsToBuffer(pDoubleArray(@WdgCurrentsBuffer[k].re), 2);  // Add Mag, Angle
+                k := k + 2;
+            end;
+            // AddDblsToBuffer(@WdgCurrentsBuffer[1].re, NumTransformerCurrents);
             Exit;
         end;
 
@@ -1393,34 +1336,17 @@ begin
 
         10:
         begin   // Winding Voltages
-              // Get all Voltages across each winding and put into buffer
-            if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
-                with TAutoTransObj(MeteredElement) do
-                begin
-                    for i := 1 to NumWindings do
-                    begin
-                        GetAutoWindingVoltages(i, PhsVoltagesBuffer);
-                        for j := 1 to nphases do
-                            WdgVoltagesBuffer^[i + (j - 1) * NumWindings] := PhsVoltagesBuffer^[j];
-                    end;
-                    ConvertComplexArrayToPolar(WdgVoltagesBuffer, NumWindingVoltages);
-                  {Put winding Voltages into Monitor}
-                    AddDblsToBuffer(pDoubleArray(@WdgVoltagesBuffer^[1].re), 2 * NumWindingVoltages);  // Add Mag, Angle each winding
-                end
-
-            else
-                with TTransfobj(MeteredElement) do
-                begin
-                    for i := 1 to NumWindings do
-                    begin
-                        GetWindingVoltages(i, PhsVoltagesBuffer);
-                        for j := 1 to nphases do
-                            WdgVoltagesBuffer^[i + (j - 1) * NumWindings] := PhsVoltagesBuffer^[j];
-                    end;
-                    ConvertComplexArrayToPolar(WdgVoltagesBuffer, NumWindingVoltages);
-                  {Put winding Voltages into Monitor}
-                    AddDblsToBuffer(pDoubleArray(@WdgVoltagesBuffer^[1].re), 2 * NumWindingVoltages);  // Add Mag, Angle each winding
-                end;
+            // Get all Voltages across each winding and put into buffer
+            tr := TControlledTransformerObj(MeteredElement);
+            for i := 1 to tr.NumWindings do
+            begin
+                tr.GetWindingVoltages(i, PhsVoltagesBuffer);
+                for j := 1 to tr.nphases do
+                    WdgVoltagesBuffer[i + (j - 1) * tr.NumWindings] := PhsVoltagesBuffer[j];
+            end;
+            ConvertComplexArrayToPolar(WdgVoltagesBuffer, NumWindingVoltages);
+            // Put winding Voltages into Monitor
+            AddDblsToBuffer(pDoubleArray(@WdgVoltagesBuffer[1].re), 2 * NumWindingVoltages);  // Add Mag, Angle each winding
             Exit;
         end;
         
@@ -1764,7 +1690,7 @@ end;
 procedure TMonitorObj.TranslateToCSV(Show: Boolean);
 var
     CSVName: String;
-    F: TFileStream = nil;
+    F: TStream = nil;
     FSignature: Integer;
     Fversion: Integer;
     hr: Single;
@@ -1797,12 +1723,12 @@ begin
 
         if PMParent.ConcatenateReports and (PMParent <> DSS) then
         begin
-            F := TBufferedFileStream.Create(CSVName, fmOpenReadWrite);
+            F := PMParent.GetOutputStreamEx(CSVName, fmOpenReadWrite);
             F.Seek(0, soFromEnd);
         end
         else
 {$ENDIF}
-            F := TBufferedFileStream.Create(CSVName, fmCreate);
+            F := DSS.GetOutputStreamEx(CSVName, fmCreate);
 
     except
         On E: Exception do
@@ -1882,7 +1808,7 @@ begin
         Curr[i] := 0;
 end;
 
-procedure TMonitorObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TMonitorObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 
 var
     i, k: Integer;

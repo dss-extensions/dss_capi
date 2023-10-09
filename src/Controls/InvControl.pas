@@ -566,10 +566,10 @@ begin
     PropertyOffset[ord(TProp.deltaP_Factor)] := ptruint(@obj.FdeltaP_factor);
     PropertyOffset[ord(TProp.ActivePChangeTolerance)] := ptruint(@obj.FActivePChangeTolerance);
     PropertyOffset[ord(TProp.Vsetpoint)] := ptruint(@obj.Fv_setpoint);
-    
+
     PropertyOffset[ord(TProp.LPFTau)] := ptruint(@obj.LPFTau);
     PropertyFlags[ord(TProp.LPFTau)] := [TPropertyFlag.Units_s];
-    
+
     PropertyOffset[ord(TProp.RiseFallLimit)] := ptruint(@obj.FRiseFallLimit);
 
     // advanced doubles
@@ -2367,7 +2367,7 @@ begin
         // Search through the entire circuit for enabled PVSystem and Storage objects and add them to the list
 
         // Adding PVSystem elements
-        for i := 1 to PVSysClass.ElementCount do
+        for i := 1 to PVSysClass.ElementCount() do
         begin
             PVSys := PVSysClass.ElementList.Get(i);
             if PVSys.Enabled then
@@ -2375,7 +2375,7 @@ begin
             DERNameList.Add(PVSys.FullName);
         end;
         // Adding Storage elements
-        for i := 1 to StorageClass.ElementCount do
+        for i := 1 to StorageClass.ElementCount() do
         begin
             Storage := StorageClass.ElementList.Get(i);
             if Storage.Enabled then

@@ -71,7 +71,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.LineSpacingClass.ElementCount;
+    Result := DSSPrime.LineSpacingClass.ElementCount();
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_First(): Integer; CDECL;
@@ -79,7 +79,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.LineSpacingClass.First;
+    Result := DSSPrime.LineSpacingClass.First();
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_Next(): Integer; CDECL;
@@ -87,7 +87,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.LineSpacingClass.Next;
+    Result := DSSPrime.LineSpacingClass.Next();
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_Name(): PAnsiChar; CDECL;
@@ -189,19 +189,16 @@ begin
     if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
 
-    with pLineSpacing do
+    if pLineSpacing.NWires <> ValueCount then
     begin
-        if NWires <> ValueCount then
-        begin
-            DoSimpleMsg(
-                'The number of values provided (%d) does not match the number of wires (%d).', 
-                [ValueCount, NWires],
-            183);
-            Exit;
-        end;
-        Move(ValuePtr^, FY[1], ValueCount * SizeOf(Double));
-        DataChanged := TRUE;
+        DoSimpleMsg(DSSPrime,
+            'The number of values provided (%d) does not match the number of wires (%d).', 
+            [ValueCount, pLineSpacing.NWires],
+        183);
+        Exit;
     end;
+    Move(ValuePtr^, pLineSpacing.FY[1], ValueCount * SizeOf(Double));
+    pLineSpacing.DataChanged := TRUE;
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -214,11 +211,8 @@ begin
         Exit;
     end;
     
-    with pLineSpacing do
-    begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NWires);
-        Move(FY[1], ResultPtr^, ResultCount^ * SizeOf(Double));
-    end;
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pLineSpacing.NWires);
+    Move(pLineSpacing.FY[1], ResultPtr^, ResultCount^ * SizeOf(Double));
 end;
 
 procedure LineSpacings_Get_Ycoords_GR(); CDECL;
@@ -235,19 +229,16 @@ begin
     if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
 
-    with pLineSpacing do
+    if pLineSpacing.NWires <> ValueCount then
     begin
-        if NWires <> ValueCount then
-        begin
-            DoSimpleMsg(
-                'The number of values provided (%d) does not match the number of wires (%d).', 
-                [ValueCount, NWires],
-            183);
-            Exit;
-        end;
-        Move(ValuePtr^, FX[1], ValueCount * SizeOf(Double));
-        DataChanged := TRUE;
+        DoSimpleMsg(DSSPrime,
+            'The number of values provided (%d) does not match the number of wires (%d).', 
+            [ValueCount, pLineSpacing.NWires],
+        183);
+        Exit;
     end;
+    Move(ValuePtr^, pLineSpacing.FX[1], ValueCount * SizeOf(Double));
+    pLineSpacing.DataChanged := TRUE;
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Get_Xcoords(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -260,11 +251,8 @@ begin
         Exit;
     end;
 
-    with pLineSpacing do
-    begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NWires);
-        Move(FX[1], ResultPtr^, ResultCount^ * SizeOf(Double));
-    end;
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pLineSpacing.NWires);
+    Move(pLineSpacing.FX[1], ResultPtr^, ResultCount^ * SizeOf(Double));
 end;
 
 procedure LineSpacings_Get_Xcoords_GR(); CDECL;

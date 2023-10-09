@@ -445,7 +445,7 @@ begin
         FSWriteln(F, 'Element, Terminal,  I1, %Normal, %Emergency, I2, %I2/I1, I0, %I0/I1, Iresidual, %NEMA');
 
         // Allocate cBuffer big enough for largest circuit element
-        Getmem(cbuffer, SizeOf(Complex) * GetMaxCktElementSize(DSS));
+        Getmem(cbuffer, SizeOf(Complex) * DSS.ActiveCircuit.GetMaxCktElementSize());
 
 
         //Sources First
@@ -624,7 +624,7 @@ begin
     try
         F := TBufferedFileStream.Create(FileNm, fmCreate);
 
-        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize(DSS));
+        Getmem(cBuffer, sizeof(cBuffer^[1]) * DSS.ActiveCircuit.GetMaxCktElementSize());
 
         {Calculate the width of the file}
         MaxCond := 1;
@@ -1335,7 +1335,7 @@ begin
         F := TBufferedFileStream.Create(FileNm, fmCreate);
         Separator := ', ';
 
-        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize(DSS));
+        Getmem(cBuffer, sizeof(cBuffer^[1]) * DSS.ActiveCircuit.GetMaxCktElementSize());
 
         case Opt of
             1:
@@ -1771,11 +1771,12 @@ end;
 procedure WriteMultipleMeterFiles(DSS: TDSSContext);
 var
     F: TFileStream = nil;
-    i, j: Integer;
+    j: Integer;
     pElem: TEnergyMeterObj;
     MeterClass: TEnergyMeter;
     FileNm,
     Separator: String;
+    regName: String;
 begin
     MeterClass := TEnergyMeter(GetDSSClassPtr(DSS, 'Energymeter'));
     if MeterClass = NIL then
@@ -1795,8 +1796,8 @@ begin
                     F := TBufferedFileStream.Create(FileNm, fmCreate);
                 {Write New Header}
                     FSWrite(F, 'Year, LDCurve, Hour, Meter');
-                    for i := 1 to NumEMRegisters do
-                        FSWrite(F, Separator, '"' + pelem.RegisterNames[i] + '"');
+                    for regName in pelem.RegisterNames do
+                        FSWrite(F, Separator, '"' + regName + '"');
                     FSWriteln(F);
                     FreeAndNil(F);
                 end;
@@ -1804,7 +1805,7 @@ begin
                 F := TBufferedFileStream.Create(FileNm, fmOpenReadWrite);
                 F.Seek(0, soEnd);
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.Year), Separator);
-                FSWrite(F, DSS.ActiveCircuit.LoadDurCurve, Separator);
+                FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.DynaVars.intHour), Separator);
                 FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                 for j := 1 to NumEMRegisters do
@@ -1824,11 +1825,12 @@ end;
 procedure WriteSingleMeterFile(DSS: TDSSContext; const FileNm: String);
 var
     F: TFileStream = nil;
-    i, j: Integer;
+    j: Integer;
     pElem: TEnergyMeterObj;
     TestStr,
     Separator: String;
     RewriteFile: Boolean;
+    regName: String;
 begin
     Separator := ', ';
 
@@ -1866,8 +1868,8 @@ begin
             // Write New Header
             pElem := DSS.ActiveCircuit.energyMeters.First;
             FSWrite(F, 'Year, LDCurve, Hour, Meter');
-            for i := 1 to NumEMRegisters do
-                FSWrite(F, Separator, '"' + pElem.RegisterNames[i] + '"');
+            for regName in pelem.RegisterNames do
+                FSWrite(F, Separator, '"' + regName + '"');
             FSWriteln(F);
         end
         else
@@ -1884,7 +1886,7 @@ begin
             if pElem.Enabled then
             begin
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.Year), Separator);
-                FSWrite(F, DSS.ActiveCircuit.LoadDurCurve, Separator);
+                FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.DynaVars.intHour), Separator);
                 FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                 for j := 1 to NumEMRegisters do
@@ -1925,12 +1927,12 @@ procedure WriteMultipleGenMeterFiles(DSS: TDSSContext);
 
 var
     F: TFileStream = nil;
-    i, j: Integer;
+    j: Integer;
     pElem: TGeneratorObj;
     GeneratorClass: TGenerator;
     FileNm,
     Separator: String;
-
+    regName: String;
 begin
     GeneratorClass := DSS.GeneratorClass;
     if GeneratorClass = NIL then
@@ -1950,8 +1952,8 @@ begin
                     F := TBufferedFileStream.Create(FileNm, fmCreate);
                 {Write New Header}
                     FSWrite(F, 'Year, LDCurve, Hour, Generator');
-                    for i := 1 to NumGenRegisters do
-                        FSWrite(F, Separator, '"' + GeneratorClass.RegisterNames[i] + '"');
+                    for regName in GeneratorClass.RegisterNames do
+                        FSWrite(F, Separator, '"' + regName + '"');
                     FSWriteln(F);
                     FreeAndNil(F);
                 end;
@@ -1961,7 +1963,7 @@ begin
                 with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                     for j := 1 to NumGenRegisters do
@@ -1984,12 +1986,12 @@ procedure WriteSingleGenMeterFile(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
-    i, j: Integer;
+    j: Integer;
     pElem: TGeneratorObj;
     GeneratorClass: TGenerator;
     Separator, TestStr: String;
     ReWriteFile: Boolean;
-
+    regName: String;
 begin
 
     GeneratorClass := DSS.GeneratorClass;
@@ -2030,8 +2032,9 @@ begin
             F := TBufferedFileStream.Create(FileNm, fmCreate); 
             // Write New Header
             FSWrite(F, 'Year, LDCurve, Hour, Generator');
-            for i := 1 to NumGenRegisters do
-                FSWrite(F, Separator, '"' + GeneratorClass.RegisterNames[i] + '"');
+            for regName in GeneratorClass.RegisterNames do
+                FSWrite(F, Separator, '"' + regName + '"');
+                
             FSWriteln(F);
         end
         else
@@ -2049,7 +2052,7 @@ begin
                 with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                     for j := 1 to NumGenRegisters do
@@ -2073,11 +2076,11 @@ end;
 procedure WriteMultiplePVSystemMeterFiles(DSS: TDSSContext);
 var
     F: TFileStream = nil;
-    i, j: Integer;
+    j: Integer;
     pElem: TPVSystemObj;
     FileNm,
     Separator: String;
-
+    regName: String;
 begin
     if DSS.PVSystemClass = NIL then
         Exit;  // oops somewhere!!
@@ -2096,8 +2099,9 @@ begin
                     F := TBufferedFileStream.Create(FileNm, fmCreate);
                     // Write New Header
                     FSWrite(F, 'Year, LDCurve, Hour, PVSystem');
-                    for i := 1 to NumPVSystemRegisters do
-                        FSWrite(F, Separator, '"' + DSS.PVSystemClass.RegisterNames[i] + '"');
+                    for regName in DSS.PVSystemClass.RegisterNames do
+                        FSWrite(F, Separator, '"' + regName + '"');
+
                     FSWriteln(F);
                     FreeAndNil(F);
                 end;
@@ -2107,7 +2111,7 @@ begin
                 with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                     for j := 1 to NumPVSystemRegisters do
@@ -2129,11 +2133,11 @@ end;
 procedure WriteSinglePVSystemMeterFile(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
-    i, j: Integer;
+    j: Integer;
     pElem: TPVSystemObj;
     Separator, TestStr: String;
     ReWriteFile: Boolean;
-
+    regName: String;
 begin
 
     if DSS.PVSystemClass = NIL then
@@ -2172,8 +2176,9 @@ begin
             F := TBufferedFileStream.Create(FileNm, fmCreate); 
             // Write New Header
             FSWrite(F, 'Year, LDCurve, Hour, PVSystem');
-            for i := 1 to NumGenRegisters do
-                FSWrite(F, Separator, '"' + DSS.PVSystemClass.RegisterNames[i] + '"');
+            for regName in DSS.PVSystemClass.RegisterNames do
+                FSWrite(F, Separator, '"' + regName + '"');
+
             FSWriteln(F);
         end
         else
@@ -2191,7 +2196,7 @@ begin
                 with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                     for j := 1 to NumPVSystemRegisters do
@@ -2216,11 +2221,11 @@ end;
 procedure WriteMultipleStorageMeterFiles(DSS: TDSSContext);
 var
     F: TFileStream = nil;
-    i, j: Integer;
+    j: Integer;
     pElem: TStorageObj;
     FileNm,
     Separator: String;
-
+    regName: String;
 begin
     if DSS.StorageClass = NIL then
         Exit;  // oops somewhere!!
@@ -2239,8 +2244,9 @@ begin
                     F := TBufferedFileStream.Create(FileNm, fmCreate);
                     // Write New Header
                     FSWrite(F, 'Year, LDCurve, Hour, Storage');
-                    for i := 1 to NumStorageRegisters do
-                        FSWrite(F, Separator, '"' + DSS.StorageClass.RegisterNames[i] + '"');
+                    for regName in DSS.StorageClass.RegisterNames do
+                        FSWrite(F, Separator, '"' + regName + '"');
+
                     FSWriteln(F);
                     FreeAndNil(F);
                 end;
@@ -2250,7 +2256,7 @@ begin
                 with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                     for j := 1 to NumStorageRegisters do
@@ -2272,10 +2278,11 @@ end;
 procedure WriteSingleStorageMeterFile(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
-    i, j: Integer;
+    j: Integer;
     pElem: TStorageObj;
     Separator, TestStr: String;
     ReWriteFile: Boolean;
+    regName: String;
 begin
 
     if DSS.StorageClass = NIL then
@@ -2314,8 +2321,8 @@ begin
             F := TBufferedFileStream.Create(FileNm, fmCreate);
             // Write New Header
             FSWrite(F, 'Year, LDCurve, Hour, Storage');
-            for i := 1 to NumStorageRegisters do
-                FSWrite(F, Separator, '"' + DSS.StorageClass.RegisterNames[i] + '"');
+            for regName in DSS.StorageClass.RegisterNames  do
+                FSWrite(F, Separator, '"' + regName + '"');
             FSWriteln(F);
         end
         else
@@ -2333,7 +2340,7 @@ begin
                 with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                     for j := 1 to NumStorageRegisters do
@@ -2452,7 +2459,7 @@ begin
     try
         F := TBufferedFileStream.Create(FileNm, fmCreate);
 
-        Getmem(cBuffer, sizeof(Complex) * GetMaxCktElementSize(DSS));
+        Getmem(cBuffer, sizeof(Complex) * DSS.ActiveCircuit.GetMaxCktElementSize());
 
         FSWriteln(F, 'Name, Imax, %normal, %emergency, kW, kvar, NumCustomers, TotalCustomers, NumPhases, kVBase');
 
@@ -2503,7 +2510,7 @@ begin
         F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         // Allocate cBuffer big enough for largest circuit element
-        Getmem(cbuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize(DSS));
+        Getmem(cbuffer, sizeof(cBuffer^[1]) * DSS.ActiveCircuit.GetMaxCktElementSize());
 
         // Sequence Currents
         FSWriteln(F, 'Element, Terminal,  I1, AmpsOver, kVAOver, %Normal, %Emergency, I2, %I2/I1, I0, %I0/I1');
@@ -3113,7 +3120,7 @@ begin
 
         // New graph created before this routine is entered
         case phasesToPlot of
-            PROFILELL, PROFILELLALL, PROFILELLPRI:
+            ord(TPlotPhases.LL3Ph), ord(TPlotPhases.LLAll), ord(TPlotPhases.LLPrimary):
                 S := 'L-L Voltage Profile';
         else
             S := 'L-N Voltage Profile';
@@ -3138,7 +3145,7 @@ begin
                         if (Bus1.kVBase > 0.0) and (Bus2.kVBase > 0.0) then
                             case PhasesToPlot of
                                 // 3ph only
-                                PROFILE3PH:
+                                ord(TPlotPhases.ThreePhase):
                                     if (PresentCktElement.NPhases >= 3) and (Bus1.kVBase > 1.0) then
                                         for iphs := 1 to 3 do
                                         begin
@@ -3148,7 +3155,7 @@ begin
                                                 iphs, 2, 0, 0, 0, NodeMarkerCode, NodeMarkerWidth);
                                         end;
                                 // Plot all phases present (between 1 and 3)
-                                PROFILEALL:
+                                ord(TPlotPhases.All):
                                 begin
                                     for iphs := 1 to 3 do
                                         if (Bus1.FindIdx(Iphs) > 0) and (Bus2.FindIdx(Iphs) > 0) then
@@ -3164,7 +3171,7 @@ begin
                                         end;
                                 end;
                                 // Plot all phases present (between 1 and 3) for Primary only
-                                PROFILEALLPRI:
+                                ord(TPlotPhases.Primary):
                                 begin
                                     if Bus1.kVBase > 1.0 then
                                         for iphs := 1 to 3 do
@@ -3180,7 +3187,7 @@ begin
                                                     iphs, 2, Linetype, 0, 0, NodeMarkerCode, NodeMarkerWidth);
                                             end;
                                 end;
-                                PROFILELL:
+                                ord(TPlotPhases.LL3Ph):
                                 begin
                                     if (PresentCktElement.NPhases >= 3) then
                                         for iphs := 1 to 3 do
@@ -3205,7 +3212,7 @@ begin
                                             end;
                                         end;
                                 end;
-                                PROFILELLALL:
+                                ord(TPlotPhases.LLAll):
                                 begin
                                     for iphs := 1 to 3 do
                                     begin
@@ -3229,7 +3236,7 @@ begin
                                         end;
                                     end;
                                 end;
-                                PROFILELLPRI:
+                                ord(TPlotPhases.LLPrimary):
                                 begin
                                     if Bus1.kVBase > 1.0 then
                                         for iphs := 1 to 3 do
@@ -3719,13 +3726,6 @@ begin
     end;
 end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-function TapPosition(const Transformer: TTransfObj; iWind: Integer): Integer;
-// Assumes 0  is 1.0 per unit tap
-begin
-    with Transformer do
-        Result := Round((PresentTap[iWind] - (Maxtap[iWind] + Mintap[iWind]) / 2.0) / TapIncrement[iWind]);
-end;
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ExportTaps(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
@@ -3751,7 +3751,7 @@ begin
                         MinTap[iWind], 
                         MaxTap[iWind], 
                         TapIncrement[iWind], 
-                        TapPosition(pReg.Transformer, iWind),
+                        TapPosition(iWind),
                         iWind,
                         StrUtils.IfThen(pReg.InReverseMode, 'Reverse', 'Forward'),
                         BoolToStr(pReg.InCogenMode, TRUE)
@@ -3856,6 +3856,19 @@ begin
     end;
 end;
 
+function getOCPDeviceTypeString(icode: Integer): String;
+begin
+    case iCode of
+        1:
+            Result := 'FUSE';
+        2:
+            Result := 'RECLOSER';
+        3:
+            Result := 'RELAY';
+    else
+        Result := 'Unknown';
+    end;
+end;
 
 procedure ExportSections(DSS: TDSSContext; FileNM: String; pMeter: TEnergyMeterObj);
 var
@@ -3878,7 +3891,7 @@ begin
                     begin
                         DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
                         FSWriteln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
-                            [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
+                            [Name, i, SeqIndex, getOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
                             EncloseQuotes(DSS.ActiveCircuit.ActiveCktElement.FullName)]));
                     end;
             end
@@ -3895,7 +3908,7 @@ begin
                         begin
                             DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
                             FSWriteln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
-                                [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
+                                [Name, i, SeqIndex, getOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
                                 EncloseQuotes(DSS.ActiveCircuit.ActiveCktElement.FullName)]));
                         end;
                 end;

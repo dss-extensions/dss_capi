@@ -42,7 +42,7 @@ type
         procedure ComputeIterminal; OVERRIDE;
         function InjCurrents: Integer; OVERRIDE;
         procedure CalcYPrimContribution(Curr: pComplexArray); INLINE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
         procedure set_ITerminalUpdated(const Value: Boolean);
 
         // For Harmonics Mode
@@ -216,7 +216,7 @@ begin
     end;
 end;
 
-procedure TPCElement.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TPCElement.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 var
     i: Integer;
 begin

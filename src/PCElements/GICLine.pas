@@ -131,7 +131,7 @@ type
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
     end;
 
 implementation
@@ -210,16 +210,16 @@ begin
     PropertyFlags[ord(TProp.Volts)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_V];
 
     PropertyOffset[ord(TProp.Angle)] := ptruint(@obj.Angle);
-    
+
     PropertyOffset[ord(TProp.R)] := ptruint(@obj.R);
     PropertyFlags[ord(TProp.R)] := [TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm];
 
     PropertyOffset[ord(TProp.X)] := ptruint(@obj.X);
     PropertyFlags[ord(TProp.X)] := [TPropertyFlag.Units_ohm];
-    
+
     PropertyOffset[ord(TProp.C)] := ptruint(@obj.C);
     PropertyFlags[ord(TProp.C)] := [TPropertyFlag.Units_uF];
-    
+
     PropertyOffset[ord(TProp.Lat1)] := ptruint(@obj.Lat1);
     PropertyFlags[ord(TProp.Lat1)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_deg];
 
@@ -231,7 +231,7 @@ begin
 
     PropertyOffset[ord(TProp.Lon2)] := ptruint(@obj.Lon2);
     PropertyFlags[ord(TProp.Lon2)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_deg];
-    
+
     PropertyOffset[ord(TProp.frequency)] := ptruint(@obj.SrcFrequency);
     PropertyFlags[ord(TProp.frequency)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
 
@@ -305,7 +305,7 @@ begin
     obj := TObj(ptr);
     obj.RecalcElementData();
     obj.YPrimInvalid := TRUE;
-    Exclude(obj.Flags, Flg.EditionActive);
+    Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
 
@@ -624,7 +624,7 @@ begin
     ITerminalUpdated := FALSE;
 end;
 
-procedure TGICLineObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TGICLineObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 var
     i, j: Integer;
     c: Complex;

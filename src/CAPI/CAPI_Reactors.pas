@@ -69,6 +69,7 @@ uses
     DSSGlobals,
     DSSClass,
     DSSHelper,
+    DSSObjectHelper,
     Executive,
     Reactor,
     SysUtils,
@@ -335,41 +336,13 @@ begin
     pReactor.PropertySideEffects(ord(TReactorProp.Parallel), prevVal);
 end;
 //------------------------------------------------------------------------------
-procedure _ReactorSetbus1(pReactor: TReactorObj; const s: String);
-var
-    s2: String;
-    i, dotpos: Integer;
-   // Special handling for Bus 1
-   // Set Bus2 = Bus1.0.0.0
-begin
-    with pReactor do
-    begin
-        SetBus(1, S);
-     // Default Bus2 to zero node of Bus1 if not already defined. (Wye Grounded connection)
-        if ((not Bus2Defined) and (Nterms > 1)) then
-        begin
-         // Strip node designations from S
-            dotpos := Pos('.', S);
-            if dotpos > 0 then
-                S2 := Copy(S, 1, dotpos - 1)
-            else
-                S2 := Copy(S, 1, Length(S));  // copy up to Dot
-            for i := 1 to Fnphases do
-                S2 := S2 + '.0';
-            SetBus(2, S2);
-            IsShunt := TRUE;
-        end;
-    end;
-end;
-//------------------------------------------------------------------------------
 procedure Reactors_Set_Bus1(const Value: PAnsiChar); CDECL;
 var
     pReactor: TReactorObj;
 begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    _ReactorSetbus1(pReactor, Value);
-    pReactor.PropertySideEffects(ord(TReactorProp.bus1));
+    pReactor.SetString(ord(TReactorProp.bus1), Value);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Bus2(const Value: PAnsiChar); CDECL;

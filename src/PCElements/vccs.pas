@@ -235,7 +235,7 @@ begin
     PropertyFlags[ord(TProp.vrated)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_V];
 
     PropertyOffset[ord(TProp.ppct)] := ptruint(@obj.Ppct);
-    
+
     PropertyOffset[ord(TProp.fsample)] := ptruint(@obj.FsampleFreq);
     PropertyFlags[ord(TProp.fsample)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
 
@@ -275,7 +275,7 @@ begin
     obj := TObj(ptr);
     obj.RecalcElementData();
     obj.YPrimInvalid := TRUE;
-    Exclude(obj.Flags, Flg.EditionActive);
+    Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
 

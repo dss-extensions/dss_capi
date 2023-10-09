@@ -1,8 +1,6 @@
 unit CAPI_Constants;
 
-{
-    Constants extracted from OpenDSSEngine_TLB.pas
-}
+// Constants extracted from OpenDSSEngine_TLB.pas
 
 interface
 

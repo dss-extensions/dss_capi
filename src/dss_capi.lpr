@@ -6,34 +6,34 @@ library dss_capi;
 {$IFDEF WINDOWS}
 {$APPTYPE CONSOLE}
 {$ENDIF}
-{ ----------------------------------------------------------
-  Copyright (c) 2008-2014, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
+//   ----------------------------------------------------------
+//   Copyright (c) 2008-2014, Electric Power Research Institute, Inc.
+//   All rights reserved.
+//   ----------------------------------------------------------
+// 
+//   Redistribution and use in source and binary forms, with or without modification,
+//   are permitted provided that the following conditions are met:
+// *	Redistributions of source code must retain the above copyright notice,
+//    this list of conditions and the following disclaimer.
+// *	Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+// *	Neither the name of the Electric Power Research Institute, Inc.,
+//   nor the names of its contributors may be used to endorse or promote products
+//   derived from this software without specific prior written permission.
+// 
+//   THIS SOFTWARE IS PROVIDED BY Electric Power Research Institute, Inc., "AS IS"
+//   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+//   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+//   ARE DISCLAIMED. IN NO EVENT SHALL Electric Power Research Institute, Inc.,
+//   BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//   SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+//   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+//   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+//   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//   POSSIBILITY OF SUCH DAMAGE.
 
-  Redistribution and use in source and binary forms, with or without modification,
-  are permitted provided that the following conditions are met:
-*	Redistributions of source code must retain the above copyright notice,
-   this list of conditions and the following disclaimer.
-*	Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-*	Neither the name of the Electric Power Research Institute, Inc.,
-  nor the names of its contributors may be used to endorse or promote products
-  derived from this software without specific prior written permission.
-
-  THIS SOFTWARE IS PROVIDED BY Electric Power Research Institute, Inc., "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL Electric Power Research Institute, Inc.,
-  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  POSSIBILITY OF SUCH DAMAGE.
-}
 
 // Although barely anything remains, the initial version of this file based on work
 // Copyright (c) 2016 Battelle Memorial Institute
@@ -97,13 +97,13 @@ uses
     CktElement in 'src/Common/CktElement.pas',
     CktElementClass in 'src/Common/CktElementClass.pas',
     CktTree in 'src/Shared/CktTree.pas',
-    CmdForms in 'src/Common/CmdForms.pas',
     Command in 'src/Shared/Command.pas',
     CNData in 'src/General/CNData.pas',
     CNLineConstants in 'src/General/CNLineConstants.pas',
     ConductorData in 'src/General/ConductorData.pas',
     ControlClass in 'src/Controls/ControlClass.pas',
     ControlElem in 'src/Controls/ControlElem.pas',
+    ControlledTransformer in 'src/PDElements/ControlledTransformer.pas',
     ControlQueue in 'src/Common/ControlQueue.pas',
     DSSCallBackRoutines in 'src/Common/DSSCallBackRoutines.pas',
     DSSClass in 'src/Common/DSSClass.pas',
@@ -547,9 +547,9 @@ exports
     DSSElement_ToJSON, // API Extension
     DSSimComs_BusVoltagepu,
     DSSimComs_BusVoltage,
-    { DSSMain_Get_ActiveCircuit, }
-    { DSSMain_Get_NumCircuits, }
-    { DSSMain_Set_ActiveCircuit, }
+    // DSSMain_Get_ActiveCircuit,
+    // DSSMain_Get_NumCircuits,
+    // DSSMain_Set_ActiveCircuit,
     DSSProgress_Close,
     DSSProgress_Set_Caption,
     DSSProgress_Set_PctProgress,

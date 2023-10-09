@@ -134,6 +134,16 @@ begin
     Result := DSS.ActiveCircuit;
 end;
 
+
+function constructElemName(DSS: TDSSContext; const Param: String): String;
+// Construct an element name, sustituting @var values if any
+var
+    FClassName, FObjName: String;
+begin
+    ParseObjectClassandName(DSS, AnsiLowerCase(param), FClassName, FObjName);  // insert @var test
+    result := Format('%s.%s', [FClassName, FObjName]);
+end;
+
 function TDSSClassHelper.ParseObjPropertyValue(Obj: Pointer; Index: Integer; const Value: String; out prevInt: Integer): Boolean;
 // This handles most of the parsing and passes the processed values to 
 // the specific functions (e.g. SetObjInteger) if possible, to reduce code duplication.
@@ -736,7 +746,7 @@ begin
             end
             else
             begin
-                ElemName := ConstructElemName(DSS, AnsiLowerCase(Value));  // substitute @var value if any
+                ElemName := constructElemName(DSS, AnsiLowerCase(Value));  // substitute @var value if any
                 intVal := GetCktElementIndex(DSS, ElemName);
                 otherObj := NIL;
                 if intVal > 0 then
@@ -805,7 +815,7 @@ begin
                 begin
                     while Length(PropParser.StrValue) > 0 do
                     begin
-                        ElemName := ConstructElemName(DSS, AnsiLowerCase(PropParser.StrValue));
+                        ElemName := constructElemName(DSS, AnsiLowerCase(PropParser.StrValue));
                         intVal := GetCktElementIndex(DSS, ElemName);
                         otherObj := NIL;
                         if intVal > 0 then
@@ -893,46 +903,49 @@ begin
         Result := FloatToStr(v);
 end;
 
-function GetDSSArray_Integer_JSON(n: Integer; ints: pIntegerArray; step: Integer = 4): TJSONData;
+function GetDSSArray_JSON(n: Integer; ints: pIntegerArray; step: Integer = 4): TJSONData; overload;
 var
     i: Integer;
+    resArray: TJSONArray;
 begin
     if ints = NIL then
     begin
         Result := TJSONNull.Create();
         Exit;
     end;
-    Result := TJSONArray.Create([]);
-    with Result as TJSONArray do
-        for i := 0 to n-1 do
-            Add(PInteger(PByte(ints) + i * step)^);
+    resArray := TJSONArray.Create([]);
+    for i := 0 to n-1 do
+        resArray.Add(PInteger(PByte(ints) + i * step)^);
+
+    Result := resArray;
 end;
 
-function GetDSSArray_Real_JSON(n: Integer; dbls: pDoubleArray; scale: Double; step: Integer = 8): TJSONData;
+function GetDSSArray_JSON(n: Integer; dbls: pDoubleArray; scale: Double; step: Integer = 8): TJSONData; overload;
 var
     i: Integer;
+    resArray: TJSONArray;
 begin
     if dbls = NIL then
     begin
         Result := TJSONNull.Create();
         Exit;
     end;
-    Result := TJSONArray.Create([]);
-    with Result as TJSONArray do
-        if scale = 1 then
+    resArray := TJSONArray.Create([]);
+    if scale = 1 then
+    begin
+        for i := 0 to n-1 do
         begin
-            for i := 0 to n-1 do
-            begin
-                Add(PDouble(PByte(dbls) + i * step)^);
-            end
+            resArray.Add(PDouble(PByte(dbls) + i * step)^);
         end
-        else
+    end
+    else
+    begin
+        for i := 0 to n-1 do
         begin
-            for i := 0 to n-1 do
-            begin
-                Add(PDouble(PByte(dbls) + i * step)^ / scale);
-            end;
+            resArray.Add(PDouble(PByte(dbls) + i * step)^ / scale);
         end;
+    end;
+    Result := resArray;
 end;
 
 function TDSSClassHelper.GetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; var val: TJSONData; preferArray: Boolean): Boolean;
@@ -950,6 +963,7 @@ var
     darray: PDoubleArray;
     mat: TCMatrix;
     ValueCount: Array[0..3] of TAPISize;
+    valArray: TJSONArray;
     ptype: TPropertyType;
     jsonArray: TJSONArray = NIL;
 begin
@@ -1001,7 +1015,7 @@ begin
                     );
                     step := PropertyStructArrayStep;
                 end;
-                val := GetDSSArray_Real_JSON(Norder, darray, PropertyScale[Index], step);
+                val := GetDSSArray_JSON(Norder, darray, PropertyScale[Index], step);
                 Exit;
             end;
 
@@ -1027,7 +1041,7 @@ begin
                 else
                     Norder := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
 
-                val := GetDSSArray_Integer_JSON(
+                val := GetDSSArray_JSON(
                     Norder, 
                     pIntegerArray(
                         PPByte(PByte(obj) + PropertyStructArrayOffset)^ + // Pointer to the pointer array
@@ -1156,7 +1170,7 @@ begin
                 end;
                 doublePtr := NIL;
                 TDoublesPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, doublePtr, @ValueCount[0]);
-                val := GetDSSArray_Real_JSON(
+                val := GetDSSArray_JSON(
                     ValueCount[0],
                     pDoubleArray(doublePtr),
                     PropertyScale[Index]
@@ -1165,7 +1179,7 @@ begin
                 Exit;
             end;
 
-            val := GetDSSArray_Real_JSON(
+            val := GetDSSArray_JSON(
                 Norder, 
                 pDoubleArray(PPDouble(PByte(obj) + PropertyOffset[Index])^),
                 PropertyScale[Index]
@@ -1174,7 +1188,7 @@ begin
         end;
         TPropertyType.DoubleFArrayProperty:
         begin
-            val := GetDSSArray_Real_JSON(
+            val := GetDSSArray_JSON(
                 PropertyOffset2[Index], 
                 pDoubleArray(PDouble(PByte(obj) + PropertyOffset[Index])),
                 PropertyScale[Index]
@@ -1186,12 +1200,12 @@ begin
             scale := PropertyScale[Index];
             Norder := PInteger(PByte(obj) + PropertyOffset2[Index])^;
             darray := PDoubleArray(PByte(obj) + PropertyOffset[Index]);
-            val := TJSONArray.Create([]);
-            with val as TJSONArray do
-                if (darray <> NIL) and (Norder > 0) then
-                    for i := 1 to Norder do
-                        for j := 1 to i do
-                            Add(darray[(i - 1) * Norder + j] / scale);
+            valArray := TJSONArray.Create([]);
+            val := valArray;
+            if (darray <> NIL) and (Norder > 0) then
+                for i := 1 to Norder do
+                    for j := 1 to i do
+                        valArray.Add(darray[(i - 1) * Norder + j] / scale);
             Exit;
         end;
         TPropertyType.ComplexPartSymMatrixProperty:
@@ -1208,21 +1222,21 @@ begin
                 Exit;
             end;
 
-            val := TJSONArray.Create([]);
+            valArray := TJSONArray.Create([]);
+            val := valArray;
 
-            with val as TJSONArray do
-                if TPropertyFlag.ImagPart in PropertyFlags[Index] then
-                    for i := 1 to mat.order do
-                    begin
-                        for j := 1 to i do
-                            Add(mat[i, j].im / scale);
-                    end
-                else
-                    for i := 1 to mat.order do
-                    begin
-                        for j := 1 to i do
-                            Add(mat[i, j].re / scale);
-                    end;
+            if TPropertyFlag.ImagPart in PropertyFlags[Index] then
+                for i := 1 to mat.order do
+                begin
+                    for j := 1 to i do
+                        valArray.Add(mat[i, j].im / scale);
+                end
+            else
+                for i := 1 to mat.order do
+                begin
+                    for j := 1 to i do
+                        valArray.Add(mat[i, j].re / scale);
+                end;
 
             Exit;
         end;
@@ -1231,7 +1245,8 @@ begin
             // Number of items
             intVal := PInteger(PByte(obj) + PropertyOffset2[Index])^;
 
-            val := TJSONArray.Create([]);
+            valArray := TJSONArray.Create([]);
+            val := valArray;
             if intVal <= 0 then
                 Exit;
 
@@ -1242,14 +1257,12 @@ begin
             );
 
             scale := PropertyScale[Index];
-            
-            
-            with val as TJSONArray do
-                for i := 1 to intVal do
-                begin
-                    Add(doublePtr^ / scale);
-                    doublePtr := PDouble(ptruint(doublePtr) + PropertyStructArrayStep);
-                end;
+
+            for i := 1 to intVal do
+            begin
+                valArray.Add(doublePtr^ / scale);
+                doublePtr := PDouble(ptruint(doublePtr) + PropertyStructArrayStep);
+            end;
             Exit;
         end;
 
@@ -1258,13 +1271,13 @@ begin
             // Number of items
             intVal := PInteger(PByte(obj) + PropertyOffset[Index])^;
 
-            val := TJSONArray.Create([]);
+            valArray := TJSONArray.Create([]);
+            val := valArray;
             if intVal <= 0 then
                 Exit;
 
-            with val as TJSONArray do
-                for i := 1 to intVal do
-                    Add(TDSSCktElement(obj).GetBus(i));
+            for i := 1 to intVal do
+                valArray.Add(TDSSCktElement(obj).GetBus(i));
 
             Exit;
         end;
@@ -1275,30 +1288,29 @@ begin
             else
                 intVal := PropertyOffset3[Index];
 
-            val := TJSONArray.Create([]);
+            valArray := TJSONArray.Create([]);
+            val := valArray;
             if intVal <= 0 then
                 Exit;
 
             integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
 
-            with val as TJSONArray do
-                if (joptions and Integer(DSSJsonOptions.EnumAsInt)) = 0 then
+            if (joptions and Integer(DSSJsonOptions.EnumAsInt)) = 0 then
+            begin
+                for i := 1 to intVal do
                 begin
-                    for i := 1 to intVal do
-                    begin
-                        Add(TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalToString(integerPtr^));
-                        Inc(integerPtr);
-                    end;
-                end
-                else
-                begin
-                    for i := 1 to intVal do
-                    begin
-                        Add(integerPtr^);
-                        Inc(integerPtr);
-                    end;
+                    valArray.Add(TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalToString(integerPtr^));
+                    Inc(integerPtr);
                 end;
-
+            end
+            else
+            begin
+                for i := 1 to intVal do
+                begin
+                    valArray.Add(integerPtr^);
+                    Inc(integerPtr);
+                end;
+            end;
             Exit;
         end;
         TPropertyType.MappedStringEnumArrayOnStructArrayProperty:
@@ -1306,7 +1318,8 @@ begin
             // Number of items
             intVal := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
 
-            val := TJSONArray.Create([]);
+            valArray := TJSONArray.Create([]);
+            val := valArray;
             if intVal <= 0 then
                 Exit;
 
@@ -1316,29 +1329,28 @@ begin
                 PropertyOffset[Index]
             );
 
-            with val as TJSONArray do
-                if joptions and Integer(DSSJsonOptions.EnumAsInt) = 0 then
+            if joptions and Integer(DSSJsonOptions.EnumAsInt) = 0 then
+            begin
+                for i := 1 to intVal do
                 begin
-                    for i := 1 to intVal do
-                    begin
-                        Add(TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalToString(integerPtr^));
-                        integerPtr := PInteger(ptruint(integerPtr) + PropertyStructArrayStep);
-                    end;
-                end
-                else
-                begin
-                    for i := 1 to intVal do
-                    begin
-                        Add(integerPtr^);
-                        integerPtr := PInteger(ptruint(integerPtr) + PropertyStructArrayStep);
-                    end;
+                    valArray.Add(TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalToString(integerPtr^));
+                    integerPtr := PInteger(ptruint(integerPtr) + PropertyStructArrayStep);
                 end;
+            end
+            else
+            begin
+                for i := 1 to intVal do
+                begin
+                    valArray.Add(integerPtr^);
+                    integerPtr := PInteger(ptruint(integerPtr) + PropertyStructArrayStep);
+                end;
+            end;
             Exit;
         end;
 
         TPropertyType.IntegerArrayProperty:
         begin
-            val := GetDSSArray_Integer_JSON(
+            val := GetDSSArray_JSON(
                 PInteger(PByte(obj) + PropertyOffset2[Index])^, 
                 pIntegerArray(PPInteger(PByte(obj) + PropertyOffset[Index])^)
             );
@@ -1351,10 +1363,10 @@ begin
             else
                 stringList := PStringList(PByte(obj) + PropertyOffset[Index])^;
 
-            val := TJSONArray.Create([]);
-            with val as TJSONArray do
-                for i := 0 to stringList.Count - 1 do
-                    Add(stringList.Strings[i]);
+            valArray := TJSONArray.Create([]);
+            val := valArray;
+            for i := 0 to stringList.Count - 1 do
+                valArray.Add(stringList.Strings[i]);
 
             if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
                 stringList.Free();
@@ -2256,7 +2268,7 @@ var
     prevInt: Integer;
     singleEdit: Boolean;
 begin
-    singleEdit := not (Flg.EditionActive in Flags);
+    singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
     Result := True; // TODO
@@ -2271,7 +2283,7 @@ function TDSSObjectHelper.SetDouble(Index: Integer; Value: Double): Boolean;
 var
     singleEdit: Boolean;
 begin
-    singleEdit := not (Flg.EditionActive in Flags);
+    singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
     Result := True; // TODO
@@ -2286,7 +2298,7 @@ function TDSSObjectHelper.SetString(Index: Integer; Value: String): Boolean;
 var
     singleEdit: Boolean;
 begin
-    singleEdit := not (Flg.EditionActive in Flags);
+    singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
     Result := True; // TODO
@@ -2302,7 +2314,7 @@ var
     prevInt: Integer;
     singleEdit: Boolean;
 begin
-    singleEdit := not (Flg.EditionActive in Flags);
+    singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
     Result := True; // TODO
@@ -2317,7 +2329,7 @@ function TDSSObjectHelper.SetObject(Index: Integer; Value: TDSSObject): Boolean;
 var
     singleEdit: Boolean;
 begin
-    singleEdit := not (Flg.EditionActive in Flags);
+    singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
     Result := True; // TODO
@@ -2337,7 +2349,7 @@ function TDSSObjectHelper.SetObjects(Index: Integer; Value: TDSSObjectPtr; Value
 var
     singleEdit: Boolean;
 begin
-    singleEdit := not (Flg.EditionActive in Flags);
+    singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
     Result := True; // TODO
@@ -2357,7 +2369,7 @@ function TDSSObjectHelper.SetIntegers(Index: Integer; Value: PInteger; ValueCoun
 var
     singleEdit: Boolean;
 begin
-    singleEdit := not (Flg.EditionActive in Flags);
+    singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
     Result := True;//TODO
@@ -2377,7 +2389,7 @@ function TDSSObjectHelper.SetDoubles(Index: Integer; Value: PDouble; ValueCount:
 var
     singleEdit: Boolean;
 begin
-    singleEdit := not (Flg.EditionActive in Flags);
+    singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
     Result := True;//TODO
@@ -2395,7 +2407,7 @@ var
 var
     singleEdit: Boolean;
 begin
-    singleEdit := not (Flg.EditionActive in Flags);
+    singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
     Result := True;//TODO
@@ -2414,7 +2426,7 @@ function TDSSObjectHelper.SetStrings(Index: Integer; Value: PPAnsiChar; ValueCou
 var
     singleEdit: Boolean;
 begin
-    singleEdit := not (Flg.EditionActive in Flags);
+    singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
     Result := True;//TODO
@@ -2947,7 +2959,7 @@ begin
                 begin
                     for i := 1 to ValueCount do
                     begin
-                        ElemName := ConstructElemName(DSS, AnsiLowerCase(Value^));
+                        ElemName := constructElemName(DSS, AnsiLowerCase(Value^));
                         intVal := GetCktElementIndex(DSS, ElemName);
                         otherObj := NIL;
                         if intVal > 0 then

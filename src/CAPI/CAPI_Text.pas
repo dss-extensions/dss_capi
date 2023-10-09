@@ -27,13 +27,13 @@ uses
 //------------------------------------------------------------------------------
 function Text_Get_Command(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.DSSExecutive.Command);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.LastCmdLine);
 end;
 //------------------------------------------------------------------------------
 procedure Text_Set_Command(const Value: PAnsiChar); CDECL;
 begin
     DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
-    DSSPrime.DSSExecutive.Command := Value;  // Convert to String
+    DSSPrime.DSSExecutive.ParseCommand(Value);  // Convert to String
 end;
 //------------------------------------------------------------------------------
 procedure Text_CommandBlock(const Value: PAnsiChar); CDECL;
@@ -55,7 +55,7 @@ begin
     p := Value;
     for i := 1 to ValueCount do
     begin
-        DSSPrime.DSSExecutive.Set_Command(p^, i);  // Convert to String
+        DSSPrime.DSSExecutive.ParseCommand(p^, i);  // Convert to String
         inc(p);
         if DSSPrime.ErrorNumber <> 0 then
         begin

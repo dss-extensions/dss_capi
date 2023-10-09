@@ -143,8 +143,8 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
         procedure MakeLike(OtherPtr: Pointer); override;
         
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
-        procedure SaveWrite(F: TFileStream); OVERRIDE;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure SaveWrite(F: TStream); OVERRIDE;
 
         // called from a Line object that has its own Spacing and Wires input
         // automatically sets reduce=y if the spacing has more wires than phases
@@ -605,7 +605,7 @@ begin
     inherited destroy;
 end;
 
-procedure TLineGeometryObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TLineGeometryObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 var
     i, j: Integer;
 begin
@@ -728,7 +728,7 @@ begin
         Result := FLineData.ZMatrix[F, Lngth, Units, DSS.ActiveEarthModel];
 end;
 
-procedure TLineGeometryObj.SaveWrite(F: TFileStream);
+procedure TLineGeometryObj.SaveWrite(F: TStream);
 // Override standard SaveWrite
 // Linegeometry structure not conducive to standard means of saving
 var

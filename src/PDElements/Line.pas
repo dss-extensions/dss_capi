@@ -176,7 +176,7 @@ type
         function MergeWith(var Other: TLineObj; Series: Boolean): Boolean;
         procedure UpdateControlElements(NewLine, OldLine: TLineObj);
 
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
         procedure SetWires(Value: TDSSObjectPtr; ValueCount: Integer);
 
         // Public for the COM Interface
@@ -286,7 +286,7 @@ begin
         Result := Result * obj.FUnitsConvert
 end;
 
-procedure SetWires(Obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer); forward;
+procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer); forward;
 
 procedure TLine.DefineProperties;
 var 
@@ -735,7 +735,7 @@ function TLine.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
 begin
     // We need to override this one since Line doesn't call ReCalcData in 
     // the original codebase
-    Exclude(TDSSObject(ptr).Flags, Flg.EditionActive);
+    Exclude(TDSSObject(ptr).Flags, Flg.EditingActive);
     Result := True;
 end;
 
@@ -1299,7 +1299,7 @@ begin
     YprimInvalid := FALSE;
 end;
 
-procedure TLineObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TLineObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 var
     i, j: Integer;
     rslt: String;

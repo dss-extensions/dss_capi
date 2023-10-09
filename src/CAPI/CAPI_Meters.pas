@@ -118,9 +118,18 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure InvalidActiveSection(DSS: TDSSContext); inline;
+function InvalidActiveSection(DSS: TDSSContext; pMeterObj: TEnergyMeterObj; out psection: PFeederSection): Boolean;
 begin
-    DoSimpleMsg(DSS, _('Invalid active section. Has SetActiveSection been called?'), 5055);
+    Result := false;
+    if (pMeterObj.ActiveSection <= 0) or (pMeterObj.ActiveSection > pMeterObj.SectionCount) then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+            DoSimpleMsg(DSS, _('Invalid active section. Has SetActiveSection been called?'), 5055);
+        Result := true;
+        psection :=  nil;
+        Exit;
+    end;
+    psection := @pMeterObj.FeederSections[pMeterObj.ActiveSection];
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -180,7 +189,7 @@ begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumEMRegisters);
     for k := 0 to NumEMRegisters - 1 do
     begin
-        Result[k] := DSS_CopyStringAsPChar(pMeterObj.RegisterNames[k + 1]);
+        Result[k] := DSS_CopyStringAsPChar(pMeterObj.RegisterNames[k]);
     end;
 end;
 
@@ -272,12 +281,9 @@ begin
         Exit;
     end;
     
-    with DSSPrime.ActiveCircuit do
-    begin
-        TotalizeMeters();
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NumEMRegisters);
-        Move(RegisterTotals[1], ResultPtr^, ResultCount^ * SizeOf(Double));
-    end
+    DSSPrime.ActiveCircuit.TotalizeMeters();
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NumEMRegisters);
+    Move(DSSPrime.ActiveCircuit.RegisterTotals[1], ResultPtr^, ResultCount^ * SizeOf(Double));
 end;
 
 procedure Meters_Get_Totals_GR(); CDECL;
@@ -574,13 +580,13 @@ begin
         Exit;
         
     DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, BranchCount);
-    pElem := pMeterObj.BranchList.First;
+    pElem := pMeterObj.BranchList.First();
     k := 0;
     while pElem <> NIL do
     begin
         Result[k] := DSS_CopyStringAsPChar(pElem.FullName);
         inc(k);
-        pElem := pMeterObj.BranchList.GoForward;
+        pElem := pMeterObj.BranchList.GoForward();
     end;
 end;
 
@@ -603,11 +609,11 @@ begin
     if pMeterObj.BranchList = NIL then
         Exit;
 
-    pElem := pMeterObj.BranchList.First;
+    pElem := pMeterObj.BranchList.First();
     while pElem <> NIL do
     begin
         Inc(Result);
-        pElem := pMeterObj.BranchList.GoForward;
+        pElem := pMeterObj.BranchList.GoForward();
     end;
 end;
 //------------------------------------------------------------------------------
@@ -641,13 +647,10 @@ begin
     if not _activeObj(DSSPrime, pMeterObj, True) then
         Exit;
 
-    with pMeterObj do
-    begin
-        if (Value > 0) and (Value <= SequenceList.Count) then
-            DSSPrime.ActiveCircuit.ActiveCktElement := SequenceList.Get(Value)
-        else
-            DoSimpleMsg('Invalid index for SequenceList: %d. List size is %d.', [Value, SequenceList.Count], 500501);
-    end;
+    if (Value > 0) and (Value <= pMeterObj.SequenceList.Count) then
+        DSSPrime.ActiveCircuit.ActiveCktElement := pMeterObj.SequenceList.Get(Value)
+    else if DSS_CAPI_EXT_ERRORS then
+        DoSimpleMsg(DSSPrime, 'Invalid index for SequenceList: %d. List size is %d.', [Value, pMeterObj.SequenceList.Count], 500501);
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SAIFIKW(): Double; CDECL;
@@ -693,18 +696,14 @@ begin
     if not _activeObj(DSSPrime, pMeterObj, True) then
         Exit;
 
-    with DSSPrime.ActiveCircuit do
-    begin
-        if Buses = NIL then 
-            Exit;
-    
-        PD_Element := pMeterObj.SequenceList.Get(1);
-        if PD_Element = NIL then
-            Exit;
-            
-        with PD_Element do
-            Result := Buses[Terminals[FromTerminal - 1].BusRef].BusTotalNumCustomers;
-    end;
+    if DSSPrime.ActiveCircuit.Buses = NIL then 
+        Exit;
+
+    PD_Element := pMeterObj.SequenceList.Get(1);
+    if PD_Element = NIL then
+        Exit;
+        
+    Result := DSSPrime.ActiveCircuit.Buses[PD_Element.Terminals[PD_Element.FromTerminal - 1].BusRef].BusTotalNumCustomers;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SAIDI(): Double; CDECL;
@@ -756,137 +755,113 @@ end;
 function Meters_Get_AvgRepairTime(): Double; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
+    psection: PFeederSection;
 begin
     Result := 0.0;
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
 
-    with pMeterObj do
-    begin
-        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections[ActiveSection].AverageRepairTime
-        else
-            InvalidActiveSection(DSSPrime);
-    end;
+    if InvalidActiveSection(DSSPrime, pMeterObj, psection) then
+        Exit;
+    Result := psection^.AverageRepairTime
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_FaultRateXRepairHrs(): Double; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
+    psection: PFeederSection;
 begin
     Result := 0.0;
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
 
-    with pMeterObj do
-    begin
-        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections[ActiveSection].SumFltRatesXRepairHrs
-        else
-            InvalidActiveSection(DSSPrime);
-    end;
+    if InvalidActiveSection(DSSPrime, pMeterObj, psection) then
+        Exit;
+    Result := psection^.SumFltRatesXRepairHrs
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_NumSectionBranches(): Integer; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
+    psection: PFeederSection;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
 
-    with pMeterObj do
-    begin
-        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections[ActiveSection].NBranches
-        else
-            InvalidActiveSection(DSSPrime);
-    end;
+    if InvalidActiveSection(DSSPrime, pMeterObj, psection) then
+        Exit;
+    Result := psection^.NBranches
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_NumSectionCustomers(): Integer; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
+    psection: PFeederSection;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
         
-    with pMeterObj do
-    begin
-        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections[ActiveSection].NCustomers
-        else
-            InvalidActiveSection(DSSPrime);
-    end;
+    if InvalidActiveSection(DSSPrime, pMeterObj, psection) then
+        Exit;
+    Result := psection^.NCustomers
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_OCPDeviceType(): Integer; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
+    psection: PFeederSection;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
     
-    with pMeterObj do
-    begin
-        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections[ActiveSection].OCPDeviceType
-        else
-            InvalidActiveSection(DSSPrime);
-    end;
+    if InvalidActiveSection(DSSPrime, pMeterObj, psection) then
+        Exit;
+    Result := psection^.OCPDeviceType
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SumBranchFltRates(): Double; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
+    psection: PFeederSection;
 begin
     Result := 0.0;
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
     
-    with pMeterObj do
-    begin
-        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections[ActiveSection].SumBranchFltRates
-        else
-            InvalidActiveSection(DSSPrime);
-    end;
+    if InvalidActiveSection(DSSPrime, pMeterObj, psection) then
+        Exit;
+    Result := psection^.SumBranchFltRates
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SectSeqIdx(): Integer; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
+    psection: PFeederSection;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
 
-    with pMeterObj do
-    begin
-        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections[ActiveSection].SeqIndex
-        else
-            InvalidActiveSection(DSSPrime);
-    end;
+    if InvalidActiveSection(DSSPrime, pMeterObj, psection) then
+        Exit;
+    Result := psection^.SeqIndex
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SectTotalCust(): Integer; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
+    psection: PFeederSection;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
 
-    with pMeterObj do
-    begin
-        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections[ActiveSection].TotalCustomers
-        else
-            InvalidActiveSection(DSSPrime);
-    end;
+    if InvalidActiveSection(DSSPrime, pMeterObj, psection) then
+        Exit;
+    Result := psection^.TotalCustomers
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_idx(): Integer; CDECL;

@@ -173,7 +173,7 @@ end;
 
 function TDSSPointerEnumerator.MoveNext(): Boolean;
 begin
-    currentPtr := lst.Next;
+    currentPtr := lst.Next();
     Result := currentPtr <> NIL;
 end;
 

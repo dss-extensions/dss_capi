@@ -312,6 +312,68 @@ begin
 
 end;
 
+function interpretTimeStepSize(DSS: TDSSContext; const s: String): Double;
+// Return stepsize in seconds
+var
+    Code: Integer;
+    ch: Char;
+    s2: String;
+
+begin
+    // Try to convert and see if we get an error
+    val(s, Result, Code);
+    if Code = 0 then
+        Exit;  // Only a number was specified, so must be seconds
+
+    // Error occurred so must have a units specifier
+    ch := s[Length(s)];  // get last character
+    s2 := copy(s, 1, Length(s) - 1);
+    Val(S2, Result, Code);
+    if Code > 0 then
+    begin   // check for error
+        Result := DSS.ActiveCircuit.solution.DynaVars.h; // Don't change it
+        DoSimpleMsg(DSS, 'Error in specification of StepSize: %s', [s], 99933);
+        Exit;
+    end;
+    case ch of
+        'h':
+            Result := Result * 3600.0;
+        'm':
+            Result := Result * 60.0;
+        's': ; // Do nothing
+    else
+        Result := DSS.ActiveCircuit.solution.DynaVars.h; // Don't change it
+        DoSimpleMsg(DSS, 'Error in specification of StepSize: "%s". Units can only be h, m, or s (single char only)', [s], 99934);
+    end;
+end;
+
+procedure parseIntArray(DSS: TDSSContext; var iarray: ArrayOfInteger; const s: String);
+var
+    param: String;
+    i, count: Integer;
+begin
+    // Parse the line once to get the count of tokens on string, S
+    DSS.AuxParser.cmdString := S;
+    count := 0;
+    repeat
+        DSS.AuxParser.NextParam();
+        Param := DSS.AuxParser.StrValue;
+        if Length(Param) > 0 then
+            Inc(count);
+    until Length(Param) = 0;
+
+    // reallocate iarray  to new size
+    SetLength(iarray, count);
+
+    // Parse again for real
+    DSS.AuxParser.cmdString := S;
+    for i := 0 to count - 1 do
+    begin
+        DSS.AuxParser.NextParam();
+        iarray[i] := DSS.AuxParser.IntValue;
+    end;
+end;
+
 function DoSetCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext; SolveOption: Integer): Integer;
 // Set DSS Options
 // Solve Command is re-routed here first to set options beFORe solving
@@ -372,7 +434,7 @@ begin
             7, 18:
                 with DSS.ActiveCircuit do
                 begin
-                    Solution.DynaVars.h := InterpretTimeStepSize(DSS, Param);
+                    Solution.DynaVars.h := interpretTimeStepSize(DSS, Param);
                     Solution.IntervalHrs := Solution.DynaVars.h/3600.0;
                 end;
             ord(Opt.Mode):
@@ -417,7 +479,6 @@ begin
             27:
                 with DSS.ActiveCircuit do
                 begin
-                    LoadDurCurve := Param;
                     LoadDurCurveObj := DSS.LoadShapeClass.Find(Param);
                     if LoadDurCurveObj = NIL then
                         DoSimpleMsg(DSS, _('Load-Duration Curve not found.'), 131);
@@ -445,9 +506,9 @@ begin
             36:
                 DSS.ActiveCircuit.LossWeight := DSS.Parser.DblValue;
             37:
-                ParseIntArray(DSS, DSS.ActiveCircuit.UERegs, DSS.ActiveCircuit.NumUEregs, Param);
+                parseIntArray(DSS, DSS.ActiveCircuit.UERegs, Param);
             38:
-                ParseIntArray(DSS, DSS.ActiveCircuit.LossRegs, DSS.ActiveCircuit.NumLossregs, Param);
+                parseIntArray(DSS, DSS.ActiveCircuit.LossRegs, Param);
             39:
                 DSS.DSSExecutive.DoLegalVoltageBases;
             40:
@@ -487,7 +548,6 @@ begin
             51:
                 with DSS.ActiveCircuit do
                 begin
-                    PriceCurve := Param;
                     PriceCurveObj := DSS.PriceShapeClass.Find(Param);
                     if PriceCurveObj = NIL then
                         DoSimpleMsg(DSS, 'Priceshape.%s not found.', [param], 132);
@@ -621,7 +681,7 @@ begin
             105:
                 DSS.ActiveCircuit.RelayMarkerSize := DSS.Parser.IntValue;
             107:
-                DSS.ActiveCircuit.Solution.Total_Time := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.Solution.Total_Time_Elapsed := DSS.Parser.DblValue;
             109:
                 DSS.ActiveCircuit.Solution.SampleTheMeters := InterpretYesNo(Param);
             110:
@@ -798,7 +858,7 @@ begin
                 26:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.DefaultDailyShapeObj.StdDev * 100.0);
                 27:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.LoadDurCurve);
+                    AppendGlobalResult(DSS, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name));
                 28:
                     AppendGlobalResult(DSS, (DSS.ActiveCircuit.DefaultGrowthRate - 1.0) * 100.0);
                 29:
@@ -823,9 +883,9 @@ begin
                 36:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.LossWeight);
                 37:
-                    AppendGlobalResult(DSS, IntArrayToString(DSS.ActiveCircuit.UERegs, DSS.ActiveCircuit.NumUEregs));
+                    AppendGlobalResult(DSS, IntArrayToString(DSS.ActiveCircuit.UERegs));
                 38:
-                    AppendGlobalResult(DSS, IntArrayToString(DSS.ActiveCircuit.LossRegs, DSS.ActiveCircuit.NumLossRegs));
+                    AppendGlobalResult(DSS, IntArrayToString(DSS.ActiveCircuit.LossRegs));
                 39:
                     with DSS.ActiveCircuit do
                     begin
@@ -860,7 +920,7 @@ begin
                 50:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.PriceSignal);
                 51:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.PriceCurve);
+                    AppendGlobalResult(DSS, StrUtils.IfThen(DSS.ActiveCircuit.PriceCurveObj = NIL, '', DSS.ActiveCircuit.PriceCurveObj.Name));
                 52:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.ActiveCktElement.ActiveTerminalIdx);
                 53:
@@ -871,8 +931,8 @@ begin
                             AppendGlobalResult(DSS, 'ALL')
                         else
                         begin
-                            for i := 1 to HarmonicListSize do
-                                AppendGlobalResult(DSS, HarmonicList^[i]);
+                            for i := 0 to High(HarmonicList) do
+                                AppendGlobalResult(DSS, HarmonicList[i]);
                         end;
                 55:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.MaxControlIterations);
@@ -980,11 +1040,11 @@ begin
                 105:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.RelayMarkerSize);
                 106:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.Time_Solve);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.Solve_Time_Elapsed);
                 107:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.Total_Time);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.Total_Time_Elapsed);
                 108:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.Time_Step);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.Step_Time_Elapsed);
                 109:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.SampleTheMeters);
                 110:
@@ -1017,10 +1077,11 @@ begin
                 ord(Opt.CPU):
                     AppendGlobalResult(DSS, Format('%d', [PMParent.ActiveChild.CPU]));
                 ord(Opt.ActorProgress):
-{$IFNDEF FPC}
-                    ScriptEd.UpdateProgressSummary
-{$ENDIF}
-                    ;
+                begin
+                    if (@DSS.DSSMessageCallback) <> NIL then
+                        DSS.DSSMessageCallback(DSS, NIL, ord(DSSMessageType.ProgressSummary), 0, 0);
+                    // ScriptEd.UpdateProgressSummary
+                end;
                 ord(Opt.Parallel):
                     AppendGlobalResult(DSS, PMParent.parallel_enabled);
                 ord(Opt.ConcatenateReports):

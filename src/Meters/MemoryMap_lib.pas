@@ -80,7 +80,7 @@ end;
 //******************************************************************************
 procedure CloseMHandler(DSS: TDSSContext; var Mem_Space: TBytesStream; const Dest_Path: String; AppendFile: Boolean);
 var
-    F: TFileStream = nil;
+    F: TStream = nil;
     buffer: Uint8;
     idx: Integer;
     MWrite, Fhead: Boolean;
@@ -92,12 +92,12 @@ begin
     try
         if AppendFile then
         begin
-            F := TBufferedFileStream.Create(Dest_path, fmOpenReadWrite);
+            F := DSS.GetOutputStreamEx(Dest_path, fmOpenReadWrite);
             F.Seek(0, soEnd);
         end
         else
         begin
-            F := TBufferedFileStream.Create(Dest_path, fmCreate);
+            F := DSS.GetOutputStreamEx(Dest_path, fmCreate);
         end;
     except
         On E: Exception do

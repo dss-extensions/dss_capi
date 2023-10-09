@@ -325,7 +325,7 @@ begin
     obj := TObj(ptr);
     if Flg.NeedsRecalc in obj.Flags then
         obj.RecalcElementData();
-    Exclude(obj.Flags, Flg.EditionActive);
+    Exclude(obj.Flags, Flg.EditingActive);
 end;
 
 procedure TSensor.ResetAll; // Force all Sensors in the circuit to reset

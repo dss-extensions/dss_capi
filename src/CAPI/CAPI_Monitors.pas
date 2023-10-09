@@ -307,7 +307,7 @@ begin
 
     pMon.MonitorStream.Seek(256 + 4 * 4, soFromBeginning); // Skip header
 
-    if (Index < 1) or (Index > pMon.RecordSize {NumChannels}) then
+    if (Index < 1) or (Index > pMon.RecordSize) then // NumChannels
     begin
         DoSimpleMsg(DSSPrime,
             'Monitors.Channel: invalid channel index (%d), monitor "%s" has %d channels.',
@@ -346,6 +346,7 @@ var
     freq: Single;
     s: Single;
     AllocSize: Integer;
+    MonitorStream: TMemoryStream;
 begin
     DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(DSSPrime, pMon) then
@@ -354,7 +355,9 @@ begin
         Exit;
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pMon.SampleCount);
-    pMon.MonitorStream.Seek(256 + 4 * 4, soFromBeginning); // Skip header
+    MonitorStream := pMon.MonitorStream;
+ 
+    MonitorStream.Seek(256 + 4 * 4, soFromBeginning); // Skip header
     FirstCol := pMon.Header.Strings[0];
     // check first col to see if it is "Freq" for harmonics solution
     if SysUtils.CompareText(FirstCol, 'freq') = 0 then
@@ -364,12 +367,9 @@ begin
         k := 0;
         for i := 1 to pMon.SampleCount do
         begin
-            with pMon.MonitorStream do
-            begin
-                Read(freq, SizeOf(freq));  // frequency
-                Read(s, SizeOf(s));   // harmonic
-                Read(sngBuffer[1], AllocSize);  // read rest of record
-            end;
+            MonitorStream.Read(freq, SizeOf(freq));  // frequency
+            MonitorStream.Read(s, SizeOf(s));   // harmonic
+            MonitorStream.Read(sngBuffer[1], AllocSize);  // read rest of record
             Result[k] := freq;
             inc(k);
         end;
@@ -377,7 +377,7 @@ begin
     end
     else
     begin   // Not harmonic solution, so return nil array
-        pMon.MonitorStream.Seek(0, soFromEnd); // leave stream at end
+        MonitorStream.Seek(0, soFromEnd); // leave stream at end
     end;
 end;
 
@@ -399,6 +399,7 @@ var
     hr: Single;
     s: Single;
     AllocSize: Integer;
+    MonitorStream: TMemoryStream;
 begin
     DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(DSSPrime, pMon) then
@@ -406,7 +407,8 @@ begin
     if pMon.SampleCount <= 0 then
         Exit;
 
-    pMon.MonitorStream.Seek(256 + 4 * 4, soFromBeginning); // Skip header
+    MonitorStream := pMon.MonitorStream;
+    MonitorStream.Seek(256 + 4 * 4, soFromBeginning); // Skip header
     FirstCol := pMon.Header.Strings[0];
 
     // check first col to see if it is "Hour"
@@ -418,12 +420,9 @@ begin
         k := 0;
         for i := 1 to pMon.SampleCount do
         begin
-            with pMon.MonitorStream do
-            begin
-                Read(hr, SizeOf(hr));  // Hour
-                Read(s, SizeOf(s));   // Seconds past the hour
-                Read(sngBuffer[1], AllocSize);  // read rest of record
-            end;
+            MonitorStream.Read(hr, SizeOf(hr));  // Hour
+            MonitorStream.Read(s, SizeOf(s));   // Seconds past the hour
+            MonitorStream.Read(sngBuffer[1], AllocSize);  // read rest of record
             Result[k] := hr + s / 3600.0;
             inc(k);
         end;
@@ -431,7 +430,7 @@ begin
     end
     else
     begin   // Not time solution, so return nil array
-        pMon.MonitorStream.Seek(0, soFromEnd); // leave stream at end
+        MonitorStream.Seek(0, soFromEnd); // leave stream at end
     end;
 end;
 
@@ -471,14 +470,11 @@ begin
     ListSize := pMon.RecordSize;
     DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, ListSize);
 
-    with DSSPrime.ActiveCircuit do
+    k := 0;
+    while k < ListSize do
     begin
-        k := 0;
-        while k < ListSize do
-        begin
-            Result[k] := DSS_CopyStringAsPChar(pMon.Header.Strings[k + 2]);
-            Inc(k);
-        end;
+        Result[k] := DSS_CopyStringAsPChar(pMon.Header.Strings[k + 2]);
+        Inc(k);
     end;
 end;
 

@@ -331,10 +331,10 @@ begin
     PropertyOffset[ord(TProp.MaxSlip)] := ptruint(@obj.MaxSlip);
     PropertyOffset[ord(TProp.H)] := ptruint(@obj.MachineData.Hmass);
     PropertyOffset[ord(TProp.D)] := ptruint(@obj.MachineData.D);
-    
+
     PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.MachineData.kVArating);
     PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.required];
-    
+
     PropertyOffset[ord(TProp.kV)] := ptruint(@obj.MachineData.kVGeneratorBase);
     PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
@@ -408,7 +408,7 @@ begin
     obj := TObj(ptr);
     obj.RecalcElementData();
     obj.YPrimInvalid := TRUE;
-    Exclude(obj.Flags, Flg.EditionActive);
+    Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
 

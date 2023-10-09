@@ -68,7 +68,7 @@ type
         function IsEmpty: Boolean;
         procedure Delete(Hdl: Integer);  // Delete queue item by handle
 
-        procedure ShowQueue(const Filenm: String);
+        procedure WriteQueue(F: TStream); // was ShowQueue
 
         property TraceLog: Boolean READ DebugTrace WRITE Set_Trace;
         property QueueSize: Integer READ Get_QueueSize;
@@ -480,30 +480,24 @@ begin
     end;
 end;
 
-procedure TControlQueue.ShowQueue(const Filenm: String);
+procedure TControlQueue.WriteQueue(F: TStream);
 var
-    F: TFileStream = nil;
     i: Integer;
     pAction: pActionRecord;
 
 begin
-    try
-        F := TBufferedFileStream.Create(FileNm, fmCreate);
-        FSWriteln(F, 'Handle, Hour, Sec, ActionCode, ProxyDevRef, Device');
+    FSWriteln(F, 'Handle, Hour, Sec, ActionCode, ProxyDevRef, Device');
 
-        for i := 0 to ActionList.Count - 1 do
+    for i := 0 to ActionList.Count - 1 do
+    begin
+        pAction := ActionList.Items[i];
+        if pAction <> NIL then
         begin
-            pAction := ActionList.Items[i];
-            if pAction <> NIL then
-                with Paction^ do
-                begin
-                    FSWriteln(F, Format('%d, %d, %-.g, %d, %d, %s ',
-                        [ActionHandle, ActionTime.Hour, ActionTime.sec, ActionCode, ProxyHandle, ControlElement.Name]));
-                end;
+            FSWriteln(F, Format('%d, %d, %-.g, %d, %d, %s ', [
+                Paction^.ActionHandle, Paction^.ActionTime.Hour, Paction^.ActionTime.sec, 
+                Paction^.ActionCode, Paction^.ProxyHandle, Paction^.ControlElement.Name
+            ]));
         end;
-    finally
-        FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
     end;
 end;
 

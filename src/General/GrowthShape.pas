@@ -190,7 +190,7 @@ begin
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;
 
-    CommandList.AbbrevAllowed := FALSE; //TODO: why only this class?
+    CommandList.Abbrev := FALSE; //TODO: why only this class?
 end;
 
 function TGrowthShape.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -225,7 +225,7 @@ end;
 function TGrowthShape.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
 begin
     TObj(ptr).ReCalcYearMult;
-    Exclude(TObj(ptr).Flags, Flg.EditionActive);
+    Exclude(TObj(ptr).Flags, Flg.EditingActive);
     Result := True;
 end;
 

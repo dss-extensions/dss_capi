@@ -257,7 +257,7 @@ begin
     begin
         // Search through the entire circuit for enabled UPFCs and add them to the list
 
-        for i := 1 to clsUPFC.ElementCount do
+        for i := 1 to clsUPFC.ElementCount() do
         begin
             obj := clsUPFC.ElementList.Get(i);
          

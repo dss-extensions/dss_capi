@@ -1918,7 +1918,7 @@ begin
         // Search through the entire circuit for enabled Storage Elements and add them to the list
         FStorageNameList.Clear;
         FleetPointerList.Clear;
-        for i := 1 to DSS.StorageClass.ElementCount do
+        for i := 1 to DSS.StorageClass.ElementCount() do
         begin
             StorageObj := DSS.StorageClass.ElementList.Get(i);
             // Look for a storage element not already assigned

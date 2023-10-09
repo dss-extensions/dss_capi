@@ -87,12 +87,12 @@ begin
     if not ActiveTree(DSSPrime, topo) then
         Exit;
 
-    PDElem := topo.First;
+    PDElem := topo.First();
     while Assigned(PDElem) do
     begin
         if topo.PresentBranch.IsLoopedHere then
             Inc(Result);
-        PDElem := topo.GoForward;
+        PDElem := topo.GoForward();
     end;
     Result := Result div 2;
 end;
@@ -170,7 +170,7 @@ begin
     k := -1;  // because we always increment by 2!
     PDElem := NIL;
     if ActiveTree(DSSPrime, topo) then
-        PDElem := topo.First;
+        PDElem := topo.First();
 
     while Assigned(PDElem) do
     begin
@@ -196,7 +196,7 @@ begin
                 Result[k] := pdLoop.FullName;
             end;
         end;
-        PDElem := topo.GoForward;
+        PDElem := topo.GoForward();
     end;
     
     if k = -1 then
@@ -230,11 +230,11 @@ begin
     if not ActiveTree(DSSPrime, topo) then
         Exit;
 
-    if assigned(topo.GoBackward) then
-    begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := topo.PresentBranch.CktObject;
-        Result := 1;
-    end;
+    if topo.GoBackward() = NIL then
+        Exit;
+
+    DSSPrime.ActiveCircuit.ActiveCktElement := topo.PresentBranch.CktObject;
+    Result := 1;
 end;
 //------------------------------------------------------------------------------
 function Topology_Get_BranchName(): PAnsiChar; CDECL;
@@ -346,7 +346,7 @@ begin
     if ActiveTree(DSSPrime, topo) then
     begin
         elem := DSSPrime.ActiveCircuit.ActiveCktElement;
-        pdElem := topo.First;
+        pdElem := topo.First();
         while Assigned(pdElem) do
         begin
             if (AnsiCompareText(pdElem.FullName, S) = 0) then
@@ -355,7 +355,7 @@ begin
                 Found := TRUE;
                 Break;
             end;
-            pdElem := topo.GoForward;
+            pdElem := topo.GoForward();
         end;
     end;
     if not Found then
@@ -437,7 +437,7 @@ begin
     if not ActiveTreeNode(DSSPrime, node) then
         Exit;
 
-    elm := node.NextShuntObject;
+    elm := node.NextShuntObject();
     if assigned(elm) then
     begin
         DSSPrime.ActiveCircuit.ActiveCktElement := elm;
@@ -494,7 +494,7 @@ begin
     elem := NIL;
     S := Value;  // Convert to Pascal String
     elem := DSSPrime.ActiveCircuit.ActiveCktElement;
-    pdElem := topo.First;
+    pdElem := topo.First();
     while Assigned(pdElem) and (not found) do
     begin
         B := pdElem.FirstBus;
@@ -508,7 +508,7 @@ begin
             end;
             B := pdElem.NextBus;
         end;
-        pdElem := topo.GoForward;
+        pdElem := topo.GoForward();
     end;
     if not Found then
     begin

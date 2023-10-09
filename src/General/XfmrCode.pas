@@ -156,7 +156,7 @@ type
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
         procedure MakeLike(OtherPtr: Pointer); override;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
     end;
 
 implementation
@@ -341,13 +341,13 @@ begin
 
     PropertyOffset[ord(TProp.pctloadloss)] := ptruint(@obj.pctLoadLoss);
     PropertyOffset[ord(TProp.pctnoloadloss)] := ptruint(@obj.pctNoLoadLoss);
-    
+
     PropertyOffset[ord(TProp.normhkVA)] := ptruint(@obj.NormMaxHkVA);
     PropertyFlags[ord(TProp.normhkVA)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_kVA];
-    
+
     PropertyOffset[ord(TProp.emerghkVA)] := ptruint(@obj.EmergMaxHkVA);
     PropertyFlags[ord(TProp.emerghkVA)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_kVA];
-    
+
     PropertyOffset[ord(TProp.pctimag)] := ptruint(@obj.pctImag);
 
     // double arrays via struct array
@@ -487,7 +487,7 @@ begin
                         obj.XSC[3] := obj.XLT;
                 end;
     end;
-    Exclude(obj.Flags, Flg.EditionActive);
+    Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
 
@@ -600,7 +600,7 @@ begin
         Winding[i] := obj.Winding[i];
 end;
 
-procedure TXfmrCodeObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TXfmrCodeObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 var
     i: Integer;
 begin

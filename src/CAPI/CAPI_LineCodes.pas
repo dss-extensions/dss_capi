@@ -87,7 +87,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.LineCodeClass.ElementCount;
+    Result := DSSPrime.LineCodeClass.ElementCount();
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_First(): Integer; CDECL;
@@ -95,7 +95,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.LineCodeClass.First;
+    Result := DSSPrime.LineCodeClass.First();
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_Next(): Integer; CDECL;
@@ -103,7 +103,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.LineCodeClass.Next;
+    Result := DSSPrime.LineCodeClass.Next();
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_Name(): PAnsiChar; CDECL;
@@ -158,13 +158,10 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    with pLineCode do
-    begin
-        if Value < dssLineUnitsMaxnum then
-            SetInteger(ord(TLineCodeProp.Units), Value)
-        else
-            DoSimpleMsg(_('Invalid line units integer. Please enter a value within range.'), 183);
-    end;
+    if Value < dssLineUnitsMaxnum then
+        pLineCode.SetInteger(ord(TLineCodeProp.Units), Value)
+    else
+        DoSimpleMsg(DSSPrime,  _('Invalid line units integer. Please enter a value within range.'), 183);
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_Phases(): Integer; CDECL;
@@ -320,6 +317,7 @@ var
     i, j, k: Integer;
     pLineCode: TLineCodeObj;
     Factor: Double;
+    nph: Integer;
 begin
     if not _activeObj(DSSPrime, pLineCode) then
     begin
@@ -327,18 +325,16 @@ begin
         Exit;
     end;
 
-    with pLineCode do
-    begin
-        Factor := (TwoPi * BaseFrequency * 1.0e-9);
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, FNphases * FNphases, FNphases, FNphases);
-        k := 0;
-        for i := 1 to FNPhases do
-            for j := 1 to FNphases do
-            begin
-                Result[k] := YC[i, j].im / Factor;
-                Inc(k);
-            end;
-    end;
+    nph := pLineCode.FNPhases;
+    Factor := (TwoPi * pLineCode.BaseFrequency * 1.0e-9);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, nph * nph, nph, nph);
+    k := 0;
+    for i := 1 to nph do
+        for j := 1 to nph do
+        begin
+            Result[k] := pLineCode.YC[i, j].im / Factor;
+            Inc(k);
+        end;
 end;
 
 procedure LineCodes_Get_Cmatrix_GR(); CDECL;
@@ -353,7 +349,7 @@ var
     Result: PDoubleArray0;
     i, j, k: Integer;
     pLineCode: TLineCodeObj;
-
+    nph: Integer;
 begin
     if not _activeObj(DSSPrime, pLineCode) then
     begin
@@ -361,17 +357,15 @@ begin
         Exit;
     end;
 
-    with pLineCode do
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, FNphases * FNphases, FNphases, FNphases);
-        k := 0;
-        for i := 1 to FNPhases do
-            for j := 1 to FNphases do
-            begin
-                Result[k] := Z[i, j].re;
-                Inc(k);
-            end;
-    end;
+    nph := pLineCode.FNPhases;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, nph * nph, nph, nph);
+    k := 0;
+    for i := 1 to nph do
+        for j := 1 to nph do
+        begin
+            Result[k] := pLineCode.Z[i, j].re;
+            Inc(k);
+        end;
 end;
 
 procedure LineCodes_Get_Rmatrix_GR(); CDECL;
@@ -386,7 +380,7 @@ var
     Result: PDoubleArray0;
     i, j, k: Integer;
     pLineCode: TLineCodeObj;
-
+    nph: Integer;
 begin
     if not _activeObj(DSSPrime, pLineCode) then
     begin
@@ -394,17 +388,15 @@ begin
         Exit;
     end;
 
-    with pLineCode do
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, FNphases * FNphases, FNphases, FNphases);
-        k := 0;
-        for i := 1 to FNPhases do
-            for j := 1 to FNphases do
-            begin
-                Result[k] := Z[i, j].im;
-                Inc(k);
-            end;
-    end;
+    nph := pLineCode.FNPhases;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, nph * nph, nph, nph);
+    k := 0;
+    for i := 1 to nph do
+        for j := 1 to nph do
+        begin
+            Result[k] := pLineCode.Z[i, j].im;
+            Inc(k);
+        end;
 end;
 
 procedure LineCodes_Get_Xmatrix_GR(); CDECL;
@@ -420,32 +412,31 @@ var
     i, j, k: Integer;
     Factor: Double;
     pLineCode: TLineCodeObj;
+    nph: Integer;
 begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     Value := PDoubleArray0(ValuePtr);
 
-    with pLineCode do
+    nph := pLineCode.FNPhases;
+    if (nph * nph) <> ValueCount then
     begin
-        if (FNPhases * FNPhases) <> ValueCount then
-        begin
-            DoSimpleMsg(
-                'The number of values provided (%d) does not match the expected (%d).', 
-                [ValueCount, FNPhases * FNPhases],
-            183);
-            Exit;
-        end;
-    
-        Factor := TwoPi * BaseFrequency * 1.0e-9;
-        k := 0;
-        for i := 1 to FNPhases do
-            for j := 1 to FNphases do
-            begin
-                Yc[i, j] := Cmplx(0.0, Value[k] * Factor);
-                Inc(k);
-            end;
+        DoSimpleMsg(DSSPrime,
+            'The number of values provided (%d) does not match the expected (%d).', 
+            [ValueCount, nph * nph],
+        183);
+        Exit;
     end;
+
+    Factor := TwoPi * pLineCode.BaseFrequency * 1.0e-9;
+    k := 0;
+    for i := 1 to nph do
+        for j := 1 to nph do
+        begin
+            pLineCode.Yc[i, j] := Cmplx(0.0, Value[k] * Factor);
+            Inc(k);
+        end;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_Rmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -454,33 +445,32 @@ var
     i, j, k: Integer;
     pLineCode: TLineCodeObj;
     Ztemp: complex;
-
+    nph: Integer;
 begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     Value := PDoubleArray0(ValuePtr);
 
-    with pLineCode do
+    nph := pLineCode.FNPhases;
+    if (nph * nph) <> ValueCount then
     begin
-        if (FNPhases * FNPhases) <> ValueCount then
+        DoSimpleMsg(DSSPrime,
+            'The number of values provided (%d) does not match the expected (%d).', 
+            [ValueCount, nph * nph],
+        183);
+        Exit;
+    end;
+
+    k := 0;
+    for i := 1 to nph do
+        for j := 1 to nph do
         begin
-            DoSimpleMsg(
-                'The number of values provided (%d) does not match the expected (%d).', 
-                [ValueCount, FNPhases * FNPhases],
-            183);
-            Exit;
+            ZTemp := pLineCode.Z[i, j];
+            pLineCode.Z[i, j] := Cmplx(Value[k], ZTemp.im);
+            Inc(k);
         end;
 
-        k := 0;
-        for i := 1 to FNPhases do
-            for j := 1 to FNphases do
-            begin
-                ZTemp := Z[i, j];
-                Z[i, j] := Cmplx(Value[k], ZTemp.im);
-                Inc(k);
-            end;
-    end;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_Xmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -489,33 +479,30 @@ var
     i, j, k: Integer;
     pLineCode: TLineCodeObj;
     Ztemp: complex;
-
+    nph: Integer;
 begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     Value := PDoubleArray0(ValuePtr);
-
-    with pLineCode do
+    nph := pLineCode.FNPhases;
+    if (nph * nph) <> ValueCount then
     begin
-        if (FNPhases * FNPhases) <> ValueCount then
-        begin
-            DoSimpleMsg(
-                'The number of values provided (%d) does not match the expected (%d).', 
-                [ValueCount, FNPhases * FNPhases],
-            183);
-            Exit;
-        end;
-    
-        k := 0;
-        for i := 1 to FNPhases do
-            for j := 1 to FNphases do
-            begin
-                ZTemp := Z[i, j];
-                Z[i, j] := Cmplx(ZTemp.re, Value[k]);
-                Inc(k);
-            end;
+        DoSimpleMsg(DSSPrime,
+            'The number of values provided (%d) does not match the expected (%d).', 
+            [ValueCount, nph * nph],
+        183);
+        Exit;
     end;
+
+    k := 0;
+    for i := 1 to nph do
+        for j := 1 to nph do
+        begin
+            ZTemp := pLineCode.Z[i, j];
+            pLineCode.Z[i, j] := Cmplx(ZTemp.re, Value[k]);
+            Inc(k);
+        end;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_NormAmps(): Double; CDECL;

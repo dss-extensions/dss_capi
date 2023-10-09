@@ -27,6 +27,22 @@ USES
 
 type
 {$SCOPEDENUMS ON}
+    DSSMessageType = (
+        Error = -1,
+        General = 0,
+        Info = 1,
+        Help = 2,
+        Progress = 3,
+        ProgressCaption = 4,
+        ProgressFormCaption = 5,
+        ProgressPercent = 6,
+        FireOffEditor = 7,
+        ProgressSummary = 8,
+        ReportOutput = 9,
+        ShowOutput = 10,
+        ShowTreeView = 11
+    );
+
     TDSSCompatFlags = (
         NoSolverFloatChecks = 1,
         BadPrecision = 2,
@@ -44,7 +60,7 @@ type
     );
 
     TDSSObjectFlag = (
-        EditionActive, 
+        EditingActive, 
         HasBeenSaved, // originally from TDSSObject
 
         // Originally from TDSSCktElement
@@ -233,6 +249,10 @@ type
         DeprecatedAndRemoved
         // OtherProperty
     );
+{$PUSH}
+{$Z4} // keep enums as int32 values
+    TPlotPhases = (LLPrimary = -6, LLAll = -5, LL3Ph = -4, Primary = -3, All = -2, ThreePhase = -1);
+{$POP}
 {$SCOPEDENUMS OFF}
 
     PropertyTypeArray = Array[1..100] of TPropertyType;
@@ -275,6 +295,7 @@ type
         DefaultValue: Integer;
         UseFirstFound, AllowLonger, TryExactFirst: Boolean;
         Hybrid: Boolean;
+        HybridMin: Integer;
 
         constructor Create(
             EnumName: String; 
@@ -309,23 +330,13 @@ type
     TDSSContext = class;
 
     dss_callback_plot_t = function (DSS: TDSSContext; jsonParams: PChar): Integer; CDECL;
-    dss_callback_message_t = function (DSS: TDSSContext; messageStr: PChar; messageType: Integer): Integer; CDECL;
+    dss_callback_message_t = function (DSS: TDSSContext; messageStr: PChar; messageType: Integer; messageSize: int64; messageSubType: Integer = 0): Integer; CDECL;
     dss_callback_solution_t = procedure (DSS: TDSSContext); CDECL;
     dss_callbacks_solution_t = Array of dss_callback_solution_t;
 
     // Base for all collection classes
     TDSSClass = class;
 
-    TDSSObjectEnumerator = class
-    private
-        dsscls: TDSSClass;
-        function Get_Current(): Pointer;
-    public
-        constructor Create(acls: TDSSClass); 
-        function MoveNext(): Boolean;
-        property Current: Pointer READ Get_Current;
-    end;
-    
     TSpecSet = Array of Integer;
     TSpecSets = Array of TSpecSet;
 
@@ -416,7 +427,7 @@ type
         function Next(): Integer;
         Property Name:String read Class_Name;
 
-        function GetEnumerator: TDSSObjectEnumerator;
+        function GetEnumerator: TDSSPointerEnumerator;
         procedure SetPropertyNameStyle(style: TDSSPropertyNameStyle);
     protected
         // DSSContext convenience functions
@@ -676,9 +687,9 @@ type
         ActiveAction: pAction; // CAPI_CtrlQueue.pas
         
         Enums: TObjectList;
-        UnitsEnum, ScanTypeEnum, SequenceEnum, ConnectionEnum, LeadLagEnum, CoreTypeEnum,
-        LineTypeEnum, EarthModelEnum, DefaultLoadModelEnum, RandomModeEnum, ControlModeEnum, InvControlModeEnum,
-        SolveModeEnum, SolveAlgEnum, CktModelEnum, AddTypeEnum, LoadShapeClassEnum, MonPhaseEnum: TDSSENum;
+        UnitsEnum, ScanTypeEnum, SequenceEnum, ConnectionEnum, LeadLagEnum, CoreTypeEnum, ReductionStrategyEnum,
+        LineTypeEnum, EarthModelEnum, DefaultLoadModelEnum, RandomModeEnum, ControlModeEnum, VisualizeQuantityEnum, InvControlModeEnum,
+        SolveModeEnum, SolveAlgEnum, CktModelEnum, AddTypeEnum, LoadShapeClassEnum, MonPhaseEnum, ProfilePhasesEnum: TDSSENum;
 
         // ZIP file state
         unzipper: TObject;
@@ -690,7 +701,9 @@ type
         function CurrentDSSDir(): String;
         procedure SetCurrentDSSDir(dir: String);
         property SolutionAbort: Boolean READ get_SolutionAbort WRITE set_SolutionAbort;
-        function GetROFileStream(fn: String): TStream;
+        function GetInputStreamEx(fn: String): TStream;
+        function GetOutputStreamEx(fn: String; mode: Integer=fmCreate or fmOpenWrite): TStream; // This one raises an exception on error
+        function GetOutputStreamNoEx(fn: String; mode: Integer=fmCreate or fmOpenWrite): TStream; // This one maps the exception/error to the Error API
         procedure NewDSSClass(Value: Pointer);
 
         // For the DSSEvents interface
@@ -699,7 +712,20 @@ type
         procedure Fire_StepControls();
 
         procedure SetPropertyNameStyle(style: TDSSPropertyNameStyle);
-    End;
+        // Moved from Utilities.pas
+        procedure ClearErrorLog();
+        procedure ClearEventLog();
+        procedure LogThisEvent(const EventName: String);
+
+        procedure InfoMessageDlg(const Msg: String);
+        function MessageDlg(const Msg: String; err: Boolean): Integer;
+        procedure WriteLnCB(s: String; mtype: DSSMessageType);
+        procedure InitProgressForm();
+        procedure ShowPctProgress(Count: Integer);
+        procedure ProgressCaption(const S: String);
+        procedure ProgressFormCaption(const S: String);
+        procedure ProgressHide;        
+    end;
 
 VAR
     DSSPrime: TDSSContext;
@@ -745,7 +771,116 @@ var
     PropInfo: Pointer = NIL;
     PropInfoLegacy: Pointer = NIL;
 
-function TDSSContext.GetROFileStream(fn: String): TStream;
+procedure TDSSContext.InfoMessageDlg(const Msg: String);
+begin
+    if NoFormsAllowed then
+        Exit;
+
+    WriteLnCB(Msg, DSSMessageType.Info);
+end;
+
+function TDSSContext.MessageDlg(const Msg: String; err: Boolean): Integer;
+begin
+    result := 0;
+
+    if DSS_CAPI_EARLY_ABORT then
+        // If the result is handled outside and this is not and error message,
+        // we can let the caller decide if the error should halt or not
+        result := -1; 
+
+    if NoFormsAllowed then
+    begin
+        if err then
+        begin
+            // If this is an error message, We need to pass the message somehow. 
+            // Decided to use the error interface here and, if early abort is on,
+            // set the global Redirect_Abort.
+            DoSimpleMsg(self, Msg, 65535);
+            if DSS_CAPI_EARLY_ABORT then
+                Redirect_Abort := True;
+        end;
+
+        Exit;
+    end;
+
+    if (@DSSMessageCallback) <> NIL then
+    begin
+        if err then
+            DSSMessageCallback(self, PChar(Msg), ord(DSSMessageType.Error), Length(Msg) + 1)
+        else
+            DSSMessageCallback(self, PChar(Msg), ord(DSSMessageType.General), Length(Msg) + 1);
+        
+        Exit;
+    end;
+
+    if err then
+        write('** Error: ');
+    writeln(Msg);
+end;
+procedure TDSSContext.WriteLnCB(s: String; mtype: DSSMessageType);
+begin
+    if (@DSSMessageCallback) <> NIL then
+        DSSMessageCallback(self, PChar(s), ord(mtype), 0, Length(s) + 1)
+    else
+        WriteLn(s);
+end;
+
+procedure TDSSContext.InitProgressForm();
+begin
+    if (@DSSMessageCallback) = NIL then
+        Exit;
+    DSSMessageCallback(self, PChar('0'), ord(DSSMessageType.ProgressPercent), 0, 2);
+end;
+
+procedure TDSSContext.ShowPctProgress(Count: Integer);
+var
+    msg: String;
+begin
+    if (@DSSMessageCallback) = NIL then
+        Exit;
+
+    msg := IntToStr(Count);
+    DSSMessageCallback(self, PChar(msg), ord(DSSMessageType.ProgressPercent), 0, Length(msg) + 1);
+end;
+
+procedure TDSSContext.ProgressCaption(const S: String);
+begin
+    if NoFormsAllowed then
+        Exit;
+    
+    if (@DSSMessageCallback) <> NIL then
+    begin
+        DSSMessageCallback(self, PChar(S), ord(DSSMessageType.ProgressCaption), Length(S) + 1);
+        Exit;
+    end;
+    Writeln('Progress: ', S);
+end;
+
+procedure TDSSContext.ProgressFormCaption(const S: String);
+begin
+    if NoFormsAllowed then
+        Exit;
+
+    if (@DSSMessageCallback) <> NIL then
+    begin
+        DSSMessageCallback(self, PChar(S), ord(DSSMessageType.ProgressFormCaption), Length(S) + 1);
+        Exit;
+    end;
+    Writeln('Progress: ', S);
+end;
+
+procedure TDSSContext.ProgressHide();
+begin
+    if NoFormsAllowed then
+        Exit;
+
+    if (@DSSMessageCallback) = NIL then
+        Exit;
+    
+    DSSMessageCallback(self, PChar('-1'), ord(DSSMessageType.ProgressPercent), 3);
+end;
+
+function TDSSContext.GetInputStreamEx(fn: String): TStream;
 begin
     if DSSExecutive.InZip then
     begin
@@ -754,6 +889,27 @@ begin
     end;
     fn := AdjustInputFilePath(self, fn);
     Result := TBufferedFileStream.Create(fn, fmOpenRead or fmShareDenyWrite);
+end;
+
+function TDSSContext.GetOutputStreamEx(fn: String; mode: Integer): TStream;
+begin
+    Result := TBufferedFileStream.Create(fn, mode);
+end;
+
+function TDSSContext.GetOutputStreamNoEx(fn: String; mode: Integer): TStream;
+begin
+    try
+        Result := GetOutputStreamEx(fn, mode);
+    except
+        on E: Exception do
+        begin
+            DoErrorMsg(self, 
+                Format(_('Error opening "%s" for writing.'), [fn]), 
+                E.Message, 
+                _('Disk protected or other file error'), 710);
+            FreeAndNil(Result);
+        end;
+    end;
 end;
 
 function TDSSContext.GetPrime(): TDSSContext;
@@ -785,9 +941,22 @@ begin
 end;
 
 constructor TDSSContext.Create(_Parent: TDSSContext; _IsPrime: Boolean);
+var
+    i: Integer;
 begin
     inherited Create;
 
+    GR_DataPtr_PPAnsiChar := NIL;
+    GR_DataPtr_PDouble := NIL;
+    GR_DataPtr_PInteger := NIL;
+    GR_DataPtr_PByte := NIL;
+    for i := 0 to 3 do
+    begin
+        GR_Counts_PPAnsiChar[i] := 0;
+        GR_Counts_PDouble[i] := 0;
+        GR_Counts_PInteger[i] := 0;
+        GR_Counts_PByte[i] := 0;
+    end;
     Parent := _Parent;
     IsPrime := _IsPrime;
     if IsPrime and (DSSMessages = NIL) then
@@ -808,6 +977,18 @@ begin
     Enums := TObjectList.Create();
 
     // Populate enum info
+    VisualizeQuantityEnum := TDSSEnum.Create('Visualize: quantity', True, 1, 1, 
+        ['Currents', 'Voltages', 'Powers'],
+        [1, 2, 3]
+    );
+    Enums.Add(VisualizeQuantityEnum);
+
+    ReductionStrategyEnum := TDSSEnum.Create('Reduction Strategy', True, 1, 2,
+        ['Default', 'ShortLines', 'MergeParallel', 'BreakLoop', 'Dangling', 'Switches', 'Laterals'],
+        [ord(rsDefault), ord(rsShortlines), ord(rsMergeParallel), ord(rsBreakLoop), ord(rsDangling), ord(rsSwitches), ord(rsLaterals)]
+    );
+    ReductionStrategyEnum.DefaultValue := ord(rsDefault);
+    Enums.Add(ReductionStrategyEnum);
     EarthModelEnum := TDSSEnum.Create('Earth Model', True, 1, 1,
         ['Carson', 'FullCarson', 'Deri'], [1, 2, 3]);
     EarthModelEnum.DefaultValue := 1;
@@ -924,6 +1105,14 @@ begin
     MonPhaseEnum.Hybrid := True;
     Enums.Add(MonPhaseEnum);
 
+    ProfilePhasesEnum := TDSSEnum.Create('Plot: Profile Phases', True, 1, 3,
+        ['Default', 'All', 'Primary', 'LL3Ph', 'LLAll', 'LLPrimary'],
+        [ord(TPlotPhases.ThreePhase), ord(TPlotPhases.All), ord(TPlotPhases.Primary), ord(TPlotPhases.LL3Ph), ord(TPlotPhases.LLAll), ord(TPlotPhases.LLPrimary)]
+    );
+    ProfilePhasesEnum.DefaultValue := ord(TPlotPhases.ThreePhase);
+    ProfilePhasesEnum.Hybrid := True;
+    ProfilePhasesEnum.HybridMin := 0;
+    Enums.Add(ProfilePhasesEnum);
     // GR (global result) counters: Initialize to zero
     FillByte(GR_Counts_PPAnsiChar, sizeof(TAPISize) * 2, 0);
     FillByte(GR_Counts_PDouble, sizeof(TAPISize) * 2, 0);
@@ -1038,7 +1227,7 @@ begin
     FControlProxyObj := TControlProxyObj.Create(self);
     
     DSSExecutive := TExecutive.Create(self);
-    DSSExecutive.CreateDefaultDSSItems;
+    DSSExecutive.CreateDefaultDSSItems();
     
     CIMExporter := TCIMExporter.Create(self);
 
@@ -1180,8 +1369,34 @@ begin
     PropNameStyle := style;
 end;
 
-Constructor TDSSClass.Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
-BEGIN
+procedure TDSSContext.ClearErrorLog();
+begin
+    try
+        ErrorStrings.Clear;
+    except
+        On E: Exception do
+            DoSimpleMsg(self, 'Exception clearing error log: %s, @ErrorStrings=%p', [E.Message, @ErrorStrings], 71511);
+    end;
+end;
+
+procedure TDSSContext.ClearEventLog();
+begin
+    try
+        EventStrings.Clear;
+    except
+        On E: Exception do
+            DoSimpleMsg(self, 'Exception clearing event log: %s, @EventStrings=%p', [E.Message, @EventStrings], 7151);
+    end;
+end;
+
+procedure TDSSContext.LogThisEvent(const EventName: String);
+begin
+    EventStrings.Add(Format('Hour=%d, Sec=%-.8g, Iteration=%d, ControlIter=%d, Event=%s',
+        [ActiveCircuit.Solution.DynaVars.intHour, ActiveCircuit.Solution.Dynavars.t, ActiveCircuit.Solution.iteration, ActiveCircuit.Solution.ControlIteration, EventName]));
+end;
+
+constructor TDSSClass.Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
+begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
@@ -1323,19 +1538,19 @@ begin
         DSS.ActiveDSSObject := Obj;
     end;
 
-    if (Obj <> NIL) and (Flg.EditionActive in Obj.Flags) then
+    if (Obj <> NIL) and (Flg.EditingActive in Obj.Flags) then
     begin
         //TODO: refine the logic to throw the error
         DosimpleMsg('%s: Object already being edited!', [Obj.FullName], 37737);
         Exit;
     end;
     if (Obj <> NIL) then
-        Include(Obj.Flags, Flg.EditionActive);
+        Include(Obj.Flags, Flg.EditingActive);
 end;
 
 function TDSSClass.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
 begin
-    Exclude(TDSSObject(ptr).Flags, Flg.EditionActive);
+    Exclude(TDSSObject(ptr).Flags, Flg.EditingActive);
     Result := True;
 end;
 
@@ -1348,7 +1563,7 @@ var
 begin
     Result := 0;
 
-    // Get the target object and initialize the edition
+    // Get the target object and initialize the editing process
     Obj := TDSSObject(BeginEdit(NIL, True));
 
     if Obj = NIL then
@@ -1426,9 +1641,6 @@ function TDSSClass.AddObjectToList(Obj:Pointer; Activate: Boolean): Integer;
 begin
     ElementList.Add(Obj); // Stuff it in this collection's element list
     ElementNameList.Add(TDSSObject(Obj).Name);
-{$IFNDEF DSS_CAPI_HASHLIST}
-    If Cardinal(ElementList.Count) > 2 * ElementNameList.InitialAllocation Then ReallocateElementNameList;
-{$ENDIF}
     if Activate then
     begin
         ActiveElement := ElementList.Count;
@@ -1578,7 +1790,7 @@ begin
 
     ActiveProperty := ActiveProperty + NumPropsThisClass;
 
-    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties), True);
+    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
 
     for i := 1 to NumProperties do
     begin
@@ -1860,6 +2072,7 @@ begin
     UseFirstFound := False;
     TryExactFirst := False;
     Hybrid := False;
+    HybridMin := 1;
 
     MinOrdinal := 9999999;
     MaxOrdinal := -9999999;
@@ -1922,6 +2135,7 @@ begin
     UseFirstFound := False;
     TryExactFirst := False;
     Hybrid := False;
+    HybridMin := 1;
 
     MinOrdinal := 9999999;
     MaxOrdinal := -9999999;
@@ -2017,7 +2231,7 @@ function TDSSEnum.IsOrdinalValid(Value: Integer): Boolean;
 var 
     i: Integer;
 begin
-    if Hybrid and (Value > 0) then
+    if Hybrid and (Value >= HybridMin) then
     begin
         Result := True;
         Exit;
@@ -2063,7 +2277,7 @@ begin
             if errCode <> 0 then
                 raise EParserProblem.Create(Format('Integer number conversion error for string: "%s"', [Value]));
 
-            Result := Max(1, Result);
+            Result := Max(HybridMin, Result);
             Exit;
         end;
         
@@ -2129,7 +2343,7 @@ begin
         if errCode <> 0 then
             raise EParserProblem.Create(Format('Integer number conversion error for string: "%s"', [Value]));
 
-        Result := Max(1, Result);
+        Result := Max(HybridMin, Result);
         Exit;
     end;
 
@@ -2139,25 +2353,9 @@ begin
     Result := DefaultValue;    
 end;
 
-function TDSSClass.GetEnumerator(): TDSSObjectEnumerator;
+function TDSSClass.GetEnumerator(): TDSSPointerEnumerator;
 begin
-    Result := TDSSObjectEnumerator.Create(self);
-end;
-
-function TDSSObjectEnumerator.Get_Current(): Pointer;
-begin
-    Result := dsscls.GetActiveObj();
-end;
-
-function TDSSObjectEnumerator.MoveNext(): Boolean;
-begin
-    Result := dsscls.Next <> 0;
-end;
-
-constructor TDSSObjectEnumerator.Create(acls: TDSSClass);
-begin
-    dsscls := acls;
-    dsscls.ActiveElement := 0;
+    Result := self.ElementList.GetEnumerator();
 end;
 
 constructor TProxyClass.Create(dssContext: TDSSContext; Targets: Array Of String);

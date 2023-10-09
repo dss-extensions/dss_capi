@@ -12,6 +12,7 @@ uses
     Classes,
     StoreUserModel,
     DSSClass,
+    DSSObject,
     InvBasedPCE,
     ucmatrix,
     UComplex, DSSUcomplex,
@@ -243,7 +244,7 @@ type
 
         procedure DefineProperties; override;
     PUBLIC
-        RegisterNames: array[1..NumStorageRegisters] of String;
+        RegisterNames: ArrayOfString;
 
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -255,6 +256,8 @@ type
         procedure SampleAll();
         procedure UpdateAll();
 
+        function GetRegisterNames(obj: TDSSObject): ArrayOfString; override;
+        function GetRegisterValues(obj: TDSSObject): pDoubleArray; override;
     end;
 
     TStorageObj = class(TInvBasedPCE)
@@ -482,12 +485,14 @@ begin
     inherited Create(dssContext, Storage_ELEMENT, 'Storage');
 
      // Set Register names
-    RegisterNames[1] := 'kWh';
-    RegisterNames[2] := 'kvarh';
-    RegisterNames[3] := 'Max kW';
-    RegisterNames[4] := 'Max kVA';
-    RegisterNames[5] := 'Hours';
-    RegisterNames[6] := 'Price($)';
+    RegisterNames := ArrayOfString.Create(
+        'kWh',
+        'kvarh',
+        'Max kW',
+        'Max kVA',
+        'Hours',
+        'Price($)'
+    );
 end;
 
 destructor TStorage.Destroy;
@@ -660,29 +665,29 @@ begin
     PropertyOffset[ord(TProp.pctCutout)] := ptruint(@obj.FpctCutOut);
     PropertyOffset[ord(TProp.Vminpu)] := ptruint(@obj.VMinPu);
     PropertyOffset[ord(TProp.Vmaxpu)] := ptruint(@obj.VMaxPu);
-    
+
     PropertyOffset[ord(TProp.kWrated)] := ptruint(@obj.StorageVars.kWrating);
     PropertyFlags[ord(TProp.kWrated)] := [TPropertyFlag.Units_kW];
-    
+
     PropertyOffset[ord(TProp.kWhrated)] := ptruint(@obj.StorageVars.kWhrating);
     PropertyFlags[ord(TProp.kWhrated)] := [TPropertyFlag.Units_kWh];
-    
+
     PropertyOffset[ord(TProp.kWhstored)] := ptruint(@obj.StorageVars.kWhstored);
     PropertyFlags[ord(TProp.kWhstored)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.NonNegative, TPropertyFlag.Units_kWh];
 
     PropertyOffset[ord(TProp.pctreserve)] := ptruint(@obj.pctReserve);
     PropertyOffset[ord(TProp.pctPminNoVars)] := ptruint(@obj.FpctPminNoVars);
     PropertyOffset[ord(TProp.pctPminkvarMax)] := ptruint(@obj.FpctPminkvarLimit);
-    
+
     PropertyOffset[ord(TProp.TimeChargeTrig)] := ptruint(@obj.ChargeTime);
     PropertyFlags[ord(TProp.TimeChargeTrig)] := [TPropertyFlag.Units_ToD_hour];
-    
+
     PropertyOffset[ord(TProp.pf)] := ptruint(@obj.PFnominal);
     PropertyFlags[ord(TProp.pf)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.StorageVars.FkVArating);
     PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.Units_kVA];
-    
+
     PropertyOffset[ord(TProp.kV)] := ptruint(@obj.StorageVars.kVStorageBase);
     PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
@@ -712,7 +717,7 @@ begin
     PropertyScale[ord(TProp.PITol)] := 1.0 / 100.0;
 
     PropertyOffset[ord(TProp.SafeVoltage)] := ptruint(@obj.dynVars.SMThreshold);
-    
+
     PropertyOffset[ord(TProp.AmpLimit)] := ptruint(@obj.dynVars.ILimit);
     PropertyFlags[ord(TProp.AmpLimit)] := [TPropertyFlag.NoDefault];
 
@@ -893,7 +898,7 @@ begin
     obj := TObj(ptr);
     obj.RecalcElementData();
     obj.YPrimInvalid := TRUE;
-    Exclude(obj.Flags, Flg.EditionActive);
+    Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
 
@@ -995,6 +1000,21 @@ begin
     IsUserModel := Other.IsUserModel;
     ForceBalanced := Other.ForceBalanced;
     CurrentLimited := Other.CurrentLimited;
+end;
+
+function TStorage.GetRegisterNames(obj: TDSSObject): ArrayOfString;
+begin
+    Result := RegisterNames;
+end;
+
+function TStorage.GetRegisterValues(obj: TDSSObject): pDoubleArray;
+begin
+    if not (obj is TStorageObj) then
+    begin
+        Result := NIL;
+        Exit;
+    end;
+    Result := pDoubleArray(@TStorageObj(obj).Registers[1]);
 end;
 
 procedure TStorage.ResetRegistersAll();  // Force all EnergyMeters in the circuit to reset

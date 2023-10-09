@@ -1,11 +1,9 @@
 unit ExportCIMXML;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2009-2022, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2009-2022, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 // Write a CIM XML file using RDF Schema for the Common Distribution
 // Power System Model, IEC 61968-13.
@@ -99,7 +97,7 @@ type
     public
         procedure StartUuidList(size: Integer);
         procedure FreeUuidList;
-        procedure WriteHashedUUIDs(F: TFileStream);
+        procedure WriteHashedUUIDs(F: TStream);
         procedure AddHashedUUID(key: String; UuidVal: String);
         procedure DefaultCircuitUUIDs(var fdrID: TUuid; var subID: TUuid; var rgnID: TUuid; var subGeoID: TUuid);
         procedure ExportCDPSM(FileNm: String;
@@ -126,13 +124,13 @@ type
         OpLimitHash: THashList;
         OpLimitList: array of TCIMOpLimitObject;
         // the Combined XML can be broken into six separate profiles
-        F_FUN: TFileStream;
-        F_EP: TFileStream;
-        F_SSH: TFileStream;
-        F_CAT: TFileStream;
-        F_GEO: TFileStream;
-        F_TOPO: TFileStream;
-        F_DYN: TFileStream;
+        F_FUN: TStream;
+        F_EP: TStream;
+        F_SSH: TStream;
+        F_CAT: TStream;
+        F_GEO: TStream;
+        F_TOPO: TStream;
+        F_DYN: TStream;
         roots: array[ProfileChoice] of String;
         ids: array[ProfileChoice] of TUuid;
     public
@@ -176,7 +174,7 @@ type
         pPlateName: TNamedObject;
         pSetName: TNamedObject;
         pDERNames: TStringList;
-        pMonBuses: TStringList;
+        pMonBuses: TStringList; //TODO: This is bad, rewrite...
         Signals: array of TRemoteSignalObject;
 
         bNameplateSet: Boolean;
@@ -235,8 +233,7 @@ uses
     Recloser,
     XYCurve,
     DSSObject,
-    DSSHelper,
-    CmdForms;
+    DSSHelper;
 
 const
 //  CIM_NS = 'http://iec.ch/TC57/2012/CIM-schema-cim17';
@@ -246,7 +243,7 @@ const
 type
     TCIMExporterHelper = class helper for TCIMExporter
     private
-        procedure StartCIMFile(var F: TFileStream; FileNm: String; prf: ProfileChoice);
+        procedure StartCIMFile(var F: TStream; FileNm: String; prf: ProfileChoice);
         procedure StartOpLimitList(size: Integer);
         procedure StartBankList(size: Integer);
         procedure StartECPList(size: Integer);
@@ -357,7 +354,7 @@ end;
 
 procedure TECPObject.AddConnection(pObj: TNamedObject);
 var
-    ref, size: Integer;
+    size: Integer;
 begin
     size := High(connections) + 1;
     if nconn > size then 
@@ -1286,7 +1283,7 @@ begin
     subGeoID := GetDevUuid(SubGeoRgn, 'SubGeoRgn', 1);
 end;
 
-procedure TCIMExporter.WriteHashedUUIDs(F: TFileStream);
+procedure TCIMExporter.WriteHashedUUIDs(F: TStream);
 var
     i: Integer;
 begin
@@ -1714,12 +1711,9 @@ begin
         exit;
     pPhase := TNamedObject.Create('dummy');
     s := PhaseString(pCap, 1);
-    with pCap do
-    begin
-        bph := 0.001 * Totalkvar / NomKV / NomKV / NumSteps / NPhases;
-        if (Connection = TCapacitorConnection.Delta) then
-            s := DeltaPhaseString(pCap);
-    end;
+    bph := 0.001 * pCap.Totalkvar / pCap.NomKV / pCap.NomKV / pCap.NumSteps / pCap.NPhases;
+    if (pCap.Connection = TCapacitorConnection.Delta) then
+        s := DeltaPhaseString(pCap);
     for i := 1 to length(s) do
     begin
         phs := s[i];
@@ -2239,101 +2233,84 @@ procedure TCIMExporterHelper.WriteCableData(pCab: TCableDataObj);
 var
     v1: Double;
 begin
-    with pCab do
-    begin
-        v1 := To_Meters(RadiusUnits);
-        BooleanNode(CatPrf, 'WireInfo.insulated', TRUE);
-        DoubleNode(CatPrf, 'WireInfo.insulationThickness', v1 * pCab.InsLayer);
-        ConductorInsulationEnum(CatPrf, 'crosslinkedPolyethylene'); // TODO -  code EpsR
-        CableOuterJacketEnum(CatPrf, 'none');
-        CableConstructionEnum(CatPrf, 'stranded');
-        BooleanNode(CatPrf, 'CableInfo.isStrandFill', FALSE); // we don't really know this
-        DoubleNode(CatPrf, 'CableInfo.diameterOverCore',
-            v1 * (pCab.DiaIns - 2.0 * pCab.InsLayer));
-        DoubleNode(CatPrf, 'CableInfo.diameterOverInsulation', v1 * pCab.DiaIns);
-        DoubleNode(CatPrf, 'CableInfo.diameterOverJacket', v1 * pCab.DiaCable);
-        DoubleNode(CatPrf, 'CableInfo.nominalTemperature', 90.0);  // we don't really know this
-        DoubleNode(CatPrf, 'CableInfo.relativePermittivity', pCab.EpsR);
-    end;
+    v1 := To_Meters(pCab.RadiusUnits);
+    BooleanNode(CatPrf, 'WireInfo.insulated', TRUE);
+    DoubleNode(CatPrf, 'WireInfo.insulationThickness', v1 * pCab.InsLayer);
+    ConductorInsulationEnum(CatPrf, 'crosslinkedPolyethylene'); // TODO -  code EpsR
+    CableOuterJacketEnum(CatPrf, 'none');
+    CableConstructionEnum(CatPrf, 'stranded');
+    BooleanNode(CatPrf, 'CableInfo.isStrandFill', FALSE); // we don't really know this
+    DoubleNode(CatPrf, 'CableInfo.diameterOverCore', v1 * (pCab.DiaIns - 2.0 * pCab.InsLayer));
+    DoubleNode(CatPrf, 'CableInfo.diameterOverInsulation', v1 * pCab.DiaIns);
+    DoubleNode(CatPrf, 'CableInfo.diameterOverJacket', v1 * pCab.DiaCable);
+    DoubleNode(CatPrf, 'CableInfo.nominalTemperature', 90.0);  // we don't really know this
+    DoubleNode(CatPrf, 'CableInfo.relativePermittivity', pCab.EpsR);
 end;
 
 procedure TCIMExporterHelper.WriteTapeData(pCab: TTSDataObj);
 var
     v1: Double;
 begin
-    with pCab do
-    begin
-        v1 := To_Meters(RadiusUnits);
-        DoubleNode(CatPrf, 'CableInfo.diameterOverScreen',
-            v1 * (pCab.DiaShield - 2.0 * pCab.TapeLayer));
-        DoubleNode(CatPrf, 'TapeShieldCableInfo.tapeLap', pCab.TapeLap);
-        DoubleNode(CatPrf, 'TapeShieldCableInfo.tapeThickness', v1 * pCab.TapeLayer);
-        CableShieldMaterialEnum(CatPrf, 'copper');
-        BooleanNode(CatPrf, 'CableInfo.sheathAsNeutral', TRUE);
-    end;
+    v1 := To_Meters(pCab.RadiusUnits);
+    DoubleNode(CatPrf, 'CableInfo.diameterOverScreen', v1 * (pCab.DiaShield - 2.0 * pCab.TapeLayer));
+    DoubleNode(CatPrf, 'TapeShieldCableInfo.tapeLap', pCab.TapeLap);
+    DoubleNode(CatPrf, 'TapeShieldCableInfo.tapeThickness', v1 * pCab.TapeLayer);
+    CableShieldMaterialEnum(CatPrf, 'copper');
+    BooleanNode(CatPrf, 'CableInfo.sheathAsNeutral', TRUE);
 end;
 
 procedure TCIMExporterHelper.WriteConcData(pCab: TCNDataObj);
 var
     v1: Double;
 begin
-    with pCab do
-    begin
-        v1 := To_Meters(RadiusUnits);
-        DoubleNode(CatPrf, 'CableInfo.diameterOverScreen',
-            v1 * (pCab.DiaCable - 2.0 * pCab.DiaStrand));
-        DoubleNode(CatPrf, 'ConcentricNeutralCableInfo.diameterOverNeutral',
-            v1 * pCab.DiaCable);
-        DoubleNode(CatPrf, 'ConcentricNeutralCableInfo.neutralStrandRadius',
-            v1 * 0.5 * pCab.DiaStrand);
-        DoubleNode(CatPrf, 'ConcentricNeutralCableInfo.neutralStrandGmr',
-            v1 * pCab.GmrStrand);
-        v1 := To_per_Meter(ResUnits);
-        DoubleNode(CatPrf, 'ConcentricNeutralCableInfo.neutralStrandRDC20',
-            v1 * pCab.RStrand);
-        IntegerNode(CatPrf, 'ConcentricNeutralCableInfo.neutralStrandCount', pCab.NStrand);
-        BooleanNode(CatPrf, 'CableInfo.sheathAsNeutral', FALSE);
-    end;
+    v1 := To_Meters(pCab.RadiusUnits);
+    DoubleNode(CatPrf, 'CableInfo.diameterOverScreen', v1 * (pCab.DiaCable - 2.0 * pCab.DiaStrand));
+    DoubleNode(CatPrf, 'ConcentricNeutralCableInfo.diameterOverNeutral', v1 * pCab.DiaCable);
+    DoubleNode(CatPrf, 'ConcentricNeutralCableInfo.neutralStrandRadius', v1 * 0.5 * pCab.DiaStrand);
+    DoubleNode(CatPrf, 'ConcentricNeutralCableInfo.neutralStrandGmr', v1 * pCab.GmrStrand);
+    v1 := To_per_Meter(pCab.ResUnits);
+    DoubleNode(CatPrf, 'ConcentricNeutralCableInfo.neutralStrandRDC20', v1 * pCab.RStrand);
+    IntegerNode(CatPrf, 'ConcentricNeutralCableInfo.neutralStrandCount', pCab.NStrand);
+    BooleanNode(CatPrf, 'CableInfo.sheathAsNeutral', FALSE);
 end;
 
 procedure TCIMExporterHelper.WriteWireData(pWire: TConductorDataObj);
 var
     v1: Double;
+    name: String;
 begin
-    with pWire do
-    begin
-        if DisplayName <> '' then
-            StringNode(CatPrf, 'WireInfo.sizeDescription', DisplayName)
-        else
-            StringNode(CatPrf, 'WireInfo.sizeDescription', DSSClassName + '_' + Name);
+    name := pWire.Name;
+    if pWire.DisplayName <> '' then
+        StringNode(CatPrf, 'WireInfo.sizeDescription', pWire.DisplayName)
+    else
+        StringNode(CatPrf, 'WireInfo.sizeDescription', pWire.DSSClassName + '_' + pWire.Name);
 
-        if CompareText(LeftStr(name, 2), 'AA') = 0 then
-            ConductorMaterialEnum(CatPrf, 'aluminum')
-        else
-        if CompareText(LeftStr(name, 4), 'ACSR') = 0 then
-            ConductorMaterialEnum(CatPrf, 'acsr')
-        else
-        if CompareText(LeftStr(name, 2), 'CU') = 0 then
-            ConductorMaterialEnum(CatPrf, 'copper')
-        else
-        if CompareText(LeftStr(name, 3), 'EHS') = 0 then
-            ConductorMaterialEnum(CatPrf, 'steel')
-        else
-            ConductorMaterialEnum(CatPrf, 'other');
-        v1 := To_Meters(GMRUnits);
-        DoubleNode(CatPrf, 'WireInfo.gmr', GMR * v1);
-        v1 := To_Meters(RadiusUnits);
-        DoubleNode(CatPrf, 'WireInfo.radius', Radius * v1);
-        v1 := To_per_Meter(ResUnits);
-        DoubleNode(CatPrf, 'WireInfo.rDC20', Rdc * v1);
-        DoubleNode(CatPrf, 'WireInfo.rAC25', Rac * v1);
-        DoubleNode(CatPrf, 'WireInfo.rAC50', Rac * v1);
-        DoubleNode(CatPrf, 'WireInfo.rAC75', Rac * v1);
-        DoubleNode(CatPrf, 'WireInfo.ratedCurrent', Max(NormAmps, 0.0));
-        IntegerNode(CatPrf, 'WireInfo.strandCount', 0);
-        IntegerNode(CatPrf, 'WireInfo.coreStrandCount', 0);
-        DoubleNode(CatPrf, 'WireInfo.coreRadius', 0.0);
-    end;
+    if CompareText(LeftStr(name, 2), 'AA') = 0 then
+        ConductorMaterialEnum(CatPrf, 'aluminum')
+    else
+    if CompareText(LeftStr(name, 4), 'ACSR') = 0 then
+        ConductorMaterialEnum(CatPrf, 'acsr')
+    else
+    if CompareText(LeftStr(name, 2), 'CU') = 0 then
+        ConductorMaterialEnum(CatPrf, 'copper')
+    else
+    if CompareText(LeftStr(name, 3), 'EHS') = 0 then
+        ConductorMaterialEnum(CatPrf, 'steel')
+    else
+        ConductorMaterialEnum(CatPrf, 'other');
+    v1 := To_Meters(pWire.GMRUnits);
+    DoubleNode(CatPrf, 'WireInfo.gmr', pWire.GMR * v1);
+    v1 := To_Meters(pWire.RadiusUnits);
+    DoubleNode(CatPrf, 'WireInfo.radius', pWire.Radius * v1);
+    v1 := To_per_Meter(pWire.ResUnits);
+    DoubleNode(CatPrf, 'WireInfo.rDC20', pWire.Rdc * v1);
+    DoubleNode(CatPrf, 'WireInfo.rAC25', pWire.Rac * v1);
+    DoubleNode(CatPrf, 'WireInfo.rAC50', pWire.Rac * v1);
+    DoubleNode(CatPrf, 'WireInfo.rAC75', pWire.Rac * v1);
+    DoubleNode(CatPrf, 'WireInfo.ratedCurrent', Max(pWire.NormAmps, 0.0));
+    IntegerNode(CatPrf, 'WireInfo.strandCount', 0);
+    IntegerNode(CatPrf, 'WireInfo.coreStrandCount', 0);
+    DoubleNode(CatPrf, 'WireInfo.coreRadius', 0.0);
 end;
 
 ///////// begin helper class for exporting IEEE 1547 model parameters /////////////
@@ -2398,11 +2375,12 @@ end;
 
 procedure TIEEE1547Controller.FindSignalTerminals;
 var
-    i, j, k, dotpos: Integer;
+    i, j, k, dotpos, busIdx: Integer;
     bus, phase: String;
     elements: Array of String;
     found: Boolean;
     pElem: TDSSCktElement;
+    ckt: TDSSCircuit;
 begin
     if pMonBuses.Count < 1 then
     begin
@@ -2437,43 +2415,49 @@ begin
         end;
 
         found := FALSE;
-        with ex.ActiveCircuit do
+        ckt := ex.ActiveCircuit;
+        busIdx := ckt.BusList.Find(Signals[i].busName);
+        if busIdx <= 0 then
+            continue;
+
+        elements := ckt.getPDEatBus(busIdx);
+        for j := Low(elements) to High(elements) do
         begin
-            elements := getPDEatBus(Signals[i].busName);
+            if found then
+                break;
+            if ckt.SetElementActive(elements[j]) > 0 then
+            begin
+                pElem := ckt.ActiveCktElement;
+                for k := 1 to pElem.NTerms do
+                begin
+                    if CheckSignalMatch(Signals[i], pElem, k) then
+                    begin
+                        found := TRUE;
+                        break;
+                    end;
+                end;
+            end;
+        end;
+        if not found then
+        begin
+            busIdx := ckt.BusList.Find(bus);
+            if busIdx <= 0 then
+                continue;
+
+            elements := ckt.getPCEatBus(busIdx);
             for j := Low(elements) to High(elements) do
             begin
                 if found then
                     break;
-                if SetElementActive(elements[j]) > 0 then
+                if ckt.SetElementActive(elements[j]) > 0 then
                 begin
-                    pElem := ActiveCktElement;
+                    pElem := ckt.ActiveCktElement;
                     for k := 1 to pElem.NTerms do
                     begin
                         if CheckSignalMatch(Signals[i], pElem, k) then
                         begin
                             found := TRUE;
                             break;
-                        end;
-                    end;
-                end;
-            end;
-            if not found then
-            begin
-                elements := getPCEatBus(bus);
-                for j := Low(elements) to High(elements) do
-                begin
-                    if found then
-                        break;
-                    if SetElementActive(elements[j]) > 0 then
-                    begin
-                        pElem := ActiveCktElement;
-                        for k := 1 to pElem.NTerms do
-                        begin
-                            if CheckSignalMatch(Signals[i], pElem, k) then
-                            begin
-                                found := TRUE;
-                                break;
-                            end;
                         end;
                     end;
                 end;
@@ -2784,21 +2768,21 @@ begin
             WV_curveP1load := WV_curveP2load + 0.1;
     end;
 
-{* copied from InvControl!!
-    // Modes
-    NONE_MODE = 0;
-    VOLTVAR   = 1;
-    VOLTWATT  = 2;
-    DRC       = 3;
-    WATTPF    = 4;
-    WATTVAR   = 5;
-    AVR       = 6;
+// copied from InvControl!!
+//    // Modes
+//    NONE_MODE = 0;
+//    VOLTVAR   = 1;
+//    VOLTWATT  = 2;
+//    DRC       = 3;
+//    WATTPF    = 4;
+//    WATTVAR   = 5;
+//    AVR       = 6;
+//
+//    // Combi Modes
+//    NONE_COMBMODE = 0;
+//    VV_VW         = 1;
+//    VV_DRC        = 2;
 
-    // Combi Modes
-    NONE_COMBMODE = 0;
-    VV_VW         = 1;
-    VV_DRC        = 2;
-*}
     mode := Ord(pInv.ControlMode); // TODO: use enum values
     combi := Ord(pInv.CombiMode); //TODO: use enum values
     if combi = 1 then
@@ -3042,169 +3026,168 @@ var
     i: Integer;
     pPV: TPVSystemObj;
     pBat: TStorageObj;
+    ckt: TDSSCircuit;
 begin
-    with ex do
+    ckt := ex.ActiveCircuit;
+
+    FindSignalTerminals();
+    ex.StartInstance(prf, 'DERIEEEType1', pInvName);
+    ex.BooleanNode(prf, 'DynamicsFunctionBlock.enabled', TRUE);
+    ex.BooleanNode(prf, 'DERIEEEType1.phaseToGroundApplicable', True); // seems to be the only OpenDSS option
+    ex.BooleanNode(prf, 'DERIEEEType1.phaseToNeutralApplicable', False);
+    ex.BooleanNode(prf, 'DERIEEEType1.phaseToPhaseApplicable', False);
+
+    if pDERNames.Count < 1 then
     begin
-        FindSignalTerminals;
-        StartInstance(prf, 'DERIEEEType1', pInvName);
-        BooleanNode(prf, 'DynamicsFunctionBlock.enabled', TRUE);
-        BooleanNode(prf, 'DERIEEEType1.phaseToGroundApplicable', True); // seems to be the only OpenDSS option
-        BooleanNode(prf, 'DERIEEEType1.phaseToNeutralApplicable', False);
-        BooleanNode(prf, 'DERIEEEType1.phaseToPhaseApplicable', False);
-        with ex.ActiveCircuit do
+        for pBat in ckt.StorageElements do
         begin
-            if pDERNames.Count < 1 then
+            if pBat.Enabled then
             begin
-                for pBat in StorageElements do
-                begin
-                    if pBat.Enabled then
-                    begin
-                        RefNode(prf, 'DERDynamics.PowerElectronicsConnection', pBat);
-                        SetStorageNameplate(pBat);
-                    end;
-                end;
-                for pPV in PVSystems do
-                begin
-                    if pPV.Enabled then
-                    begin
-                        RefNode(prf, 'DERDynamics.PowerElectronicsConnection', pPV);
-                        SetPhotovoltaicNameplate(pPV);
-                    end;
-                end;
-            end
-            else
-            begin
-                for i := 1 to pDERNames.Count do
-                begin
-                    ActiveCircuit.SetElementActive(pDERNames.Strings[i - 1]);
-                    RefNode(prf, 'DERDynamics.PowerElectronicsConnection', ActiveCktElement);
-                    SetElementNameplate(ActiveCktElement);
-                end;
+                ex.RefNode(prf, 'DERDynamics.PowerElectronicsConnection', pBat);
+                SetStorageNameplate(pBat);
             end;
         end;
-        for i := Low(Signals) to High(Signals) do
-            RefNode(prf, 'DERDynamics.RemoteInputSignal', Signals[i]);
-        EndInstance(prf, 'DERIEEEType1');
-
-        for i := Low(Signals) to High(Signals) do
+        for pPV in ckt.PVSystems do
         begin
-            StartInstance(prf, 'RemoteInputSignal', Signals[i]);
-            RemoteInputSignalEnum(prf, 'remoteBusVoltageAmplitude');
-            UuidNode(prf, 'RemoteInputSignal.Terminal', GetTermUuid(Signals[i].pElem, Signals[i].trm));
-            EndInstance(prf, 'RemoteInputSignal');
+            if pPV.Enabled then
+            begin
+                ex.RefNode(prf, 'DERDynamics.PowerElectronicsConnection', pPV);
+                SetPhotovoltaicNameplate(pPV);
+            end;
         end;
-
-        pPlateName.LocalName := pInvName.LocalName;
-        pPlateName.UUID := GetDevUuid(I1547NameplateData, pInvName.LocalName, 1);
-        StartInstance(prf, 'DERNameplateData', pPlateName);
-        RefNode(prf, 'DERNameplateData.DERIEEEType1', pInvName);
-        NormalOpCatEnum(prf, ND_normalOPcatKind);
-        BooleanNode(prf, 'DERNameplateData.supportsConstPFmode', True);
-        BooleanNode(prf, 'DERNameplateData.supportsConstQmode', True);
-        BooleanNode(prf, 'DERNameplateData.supportsQVmode', True);
-        if ND_normalOPcatKind = 'catB' then
+    end
+    else
+    begin
+        for i := 1 to pDERNames.Count do
         begin
-            BooleanNode(prf, 'DERNameplateData.supportsPVmode', True);
-            BooleanNode(prf, 'DERNameplateData.supportsQPmode', True);
-        end 
-        else 
-        begin
-            BooleanNode(prf, 'DERNameplateData.supportsPVmode', False);
-            BooleanNode(prf, 'DERNameplateData.supportsQPmode', False);
+            ckt.SetElementActive(pDERNames.Strings[i - 1]);
+            ex.RefNode(prf, 'DERDynamics.PowerElectronicsConnection', ckt.ActiveCktElement);
+            SetElementNameplate(ckt.ActiveCktElement);
         end;
-        BooleanNode(prf, 'DERNameplateData.supportsPFmode', False); // no frequency response in GridAPPS-D
-        DoubleNode(prf, 'DERNameplateData.acVmax', ND_acVmax);
-        DoubleNode(prf, 'DERNameplateData.acVmin', ND_acVmin);
-        EndInstance(prf, 'DERNameplateData');
+    end;
 
-        pSetName.LocalName := pInvName.LocalName;
-        pSetName.UUID := GetDevUuid(I1547NameplateDataApplied, pSetName.LocalName, 1);
-        StartInstance(prf, 'DERNameplateDataApplied', pSetName);
-        RefNode(prf, 'DERNameplateDataApplied.DERNameplateData', pPlateName);
-        DoubleNode(prf, 'DERNameplateDataApplied.pMax', AD_pMax);
-        DoubleNode(prf, 'DERNameplateDataApplied.pMaxOverPF', AD_pMaxOverPF);
-        DoubleNode(prf, 'DERNameplateDataApplied.overPF', AD_overPF);
-        DoubleNode(prf, 'DERNameplateDataApplied.pMaxUnderPF', AD_pMaxUnderPF);
-        DoubleNode(prf, 'DERNameplateDataApplied.underPF', AD_underPF);
-        DoubleNode(prf, 'DERNameplateDataApplied.sMax', AD_sMax);
-        DoubleNode(prf, 'DERNameplateDataApplied.qMaxInj', AD_qMaxInj);
-        DoubleNode(prf, 'DERNameplateDataApplied.qMaxAbs', AD_qMaxAbs);
-        DoubleNode(prf, 'DERNameplateDataApplied.pMaxCharge', AD_pMaxCharge);
-        DoubleNode(prf, 'DERNameplateDataApplied.apparentPowerChargeMax', AD_apparentPowerChargeMax);
-        DoubleNode(prf, 'DERNameplateDataApplied.acVnom', AD_acVnom);
-        EndInstance(prf, 'DERNameplateDataApplied');
+    for i := Low(Signals) to High(Signals) do
+        ex.RefNode(prf, 'DERDynamics.RemoteInputSignal', Signals[i]);
+    ex.EndInstance(prf, 'DERIEEEType1');
 
-        pSetName.UUID := GetDevUuid(I1547VoltVar, pSetName.LocalName, 1);
-        StartInstance(prf, 'VoltVarSettings', pSetName);
-        RefNode(prf, 'VoltVarSettings.DERIEEEType1', pInvName);
-        BooleanNode(prf, 'VoltVarSettings.enabled', VV_enabled);
-        BooleanNode(prf, 'VoltVarSettings.vRefAutoModeEnabled', VV_vRefAutoModeEnabled);
-        DoubleNode(prf, 'VoltVarSettings.vRef', VV_vRef);
-        DoubleNode(prf, 'VoltVarSettings.vRefOlrt', VV_vRefOlrt);
-        DoubleNode(prf, 'VoltVarSettings.curveV1', VV_curveV1);
-        DoubleNode(prf, 'VoltVarSettings.curveV2', VV_curveV2);
-        DoubleNode(prf, 'VoltVarSettings.curveV3', VV_curveV3);
-        DoubleNode(prf, 'VoltVarSettings.curveV4', VV_curveV4);
-        DoubleNode(prf, 'VoltVarSettings.curveQ1', VV_curveQ1);
-        DoubleNode(prf, 'VoltVarSettings.curveQ2', VV_curveQ2);
-        DoubleNode(prf, 'VoltVarSettings.curveQ3', VV_curveQ3);
-        DoubleNode(prf, 'VoltVarSettings.curveQ4', VV_curveQ4);
-        DoubleNode(prf, 'VoltVarSettings.olrt', VV_olrt);
-        EndInstance(prf, 'VoltVarSettings');
+    for i := Low(Signals) to High(Signals) do
+    begin
+        ex.StartInstance(prf, 'RemoteInputSignal', Signals[i]);
+        ex.RemoteInputSignalEnum(prf, 'remoteBusVoltageAmplitude');
+        ex.UuidNode(prf, 'RemoteInputSignal.Terminal', ex.GetTermUuid(Signals[i].pElem, Signals[i].trm));
+        ex.EndInstance(prf, 'RemoteInputSignal');
+    end;
 
-        pSetName.UUID := GetDevUuid(I1547WattVar, pSetName.LocalName, 1);
-        StartInstance(prf, 'WattVarSettings', pSetName);
-        RefNode(prf, 'WattVarSettings.DERIEEEType1', pInvName);
-        BooleanNode(prf, 'WattVarSettings.enabled', WV_enabled);
-        DoubleNode(prf, 'WattVarSettings.curveP1gen', WV_curveP1gen);
-        DoubleNode(prf, 'WattVarSettings.curveP2gen', WV_curveP2gen);
-        DoubleNode(prf, 'WattVarSettings.curveP3gen', WV_curveP3gen);
-        DoubleNode(prf, 'WattVarSettings.curveQ1gen', WV_curveQ1gen);
-        DoubleNode(prf, 'WattVarSettings.curveQ2gen', WV_curveQ2gen);
-        DoubleNode(prf, 'WattVarSettings.curveQ3gen', WV_curveQ3gen);
-        DoubleNode(prf, 'WattVarSettings.curveP1load', WV_curveP1load);
-        DoubleNode(prf, 'WattVarSettings.curveP2load', WV_curveP2load);
-        DoubleNode(prf, 'WattVarSettings.curveP3load', WV_curveP3load);
-        DoubleNode(prf, 'WattVarSettings.curveQ1load', WV_curveQ1load);
-        DoubleNode(prf, 'WattVarSettings.curveQ2load', WV_curveQ2load);
-        DoubleNode(prf, 'WattVarSettings.curveQ3load', WV_curveQ3load);
-        EndInstance(prf, 'WattVarSettings');
+    pPlateName.LocalName := pInvName.LocalName;
+    pPlateName.UUID := ex.GetDevUuid(I1547NameplateData, pInvName.LocalName, 1);
+    ex.StartInstance(prf, 'DERNameplateData', pPlateName);
+    ex.RefNode(prf, 'DERNameplateData.DERIEEEType1', pInvName);
+    ex.NormalOpCatEnum(prf, ND_normalOPcatKind);
+    ex.BooleanNode(prf, 'DERNameplateData.supportsConstPFmode', True);
+    ex.BooleanNode(prf, 'DERNameplateData.supportsConstQmode', True);
+    ex.BooleanNode(prf, 'DERNameplateData.supportsQVmode', True);
+    if ND_normalOPcatKind = 'catB' then
+    begin
+        ex.BooleanNode(prf, 'DERNameplateData.supportsPVmode', True);
+        ex.BooleanNode(prf, 'DERNameplateData.supportsQPmode', True);
+    end 
+    else 
+    begin
+        ex.BooleanNode(prf, 'DERNameplateData.supportsPVmode', False);
+        ex.BooleanNode(prf, 'DERNameplateData.supportsQPmode', False);
+    end;
+    ex.BooleanNode(prf, 'DERNameplateData.supportsPFmode', False); // no frequency response in GridAPPS-D
+    ex.DoubleNode(prf, 'DERNameplateData.acVmax', ND_acVmax);
+    ex.DoubleNode(prf, 'DERNameplateData.acVmin', ND_acVmin);
+    ex.EndInstance(prf, 'DERNameplateData');
 
-        pSetName.UUID := GetDevUuid(I1547ConstPF, pSetName.LocalName, 1);
-        StartInstance(prf, 'ConstantPowerFactorSettings', pSetName);
-        RefNode(prf, 'ConstantPowerFactorSettings.DERIEEEType1', pInvName);
-        BooleanNode(prf, 'ConstantPowerFactorSettings.enabled', PF_enabled);
-        PowerFactorExcitationEnum(prf, PF_constPFexcitationKind);
-        DoubleNode(prf, 'ConstantPowerFactorSettings.powerFactor', PF_powerFactor);
-        EndInstance(prf, 'ConstantPowerFactorSettings');
+    pSetName.LocalName := pInvName.LocalName;
+    pSetName.UUID := ex.GetDevUuid(I1547NameplateDataApplied, pSetName.LocalName, 1);
+    ex.StartInstance(prf, 'DERNameplateDataApplied', pSetName);
+    ex.RefNode(prf, 'DERNameplateDataApplied.DERNameplateData', pPlateName);
+    ex.DoubleNode(prf, 'DERNameplateDataApplied.pMax', AD_pMax);
+    ex.DoubleNode(prf, 'DERNameplateDataApplied.pMaxOverPF', AD_pMaxOverPF);
+    ex.DoubleNode(prf, 'DERNameplateDataApplied.overPF', AD_overPF);
+    ex.DoubleNode(prf, 'DERNameplateDataApplied.pMaxUnderPF', AD_pMaxUnderPF);
+    ex.DoubleNode(prf, 'DERNameplateDataApplied.underPF', AD_underPF);
+    ex.DoubleNode(prf, 'DERNameplateDataApplied.sMax', AD_sMax);
+    ex.DoubleNode(prf, 'DERNameplateDataApplied.qMaxInj', AD_qMaxInj);
+    ex.DoubleNode(prf, 'DERNameplateDataApplied.qMaxAbs', AD_qMaxAbs);
+    ex.DoubleNode(prf, 'DERNameplateDataApplied.pMaxCharge', AD_pMaxCharge);
+    ex.DoubleNode(prf, 'DERNameplateDataApplied.apparentPowerChargeMax', AD_apparentPowerChargeMax);
+    ex.DoubleNode(prf, 'DERNameplateDataApplied.acVnom', AD_acVnom);
+    ex.EndInstance(prf, 'DERNameplateDataApplied');
 
-        pSetName.UUID := GetDevUuid(I1547ConstQ, pSetName.LocalName, 1);
-        StartInstance(prf, 'ConstantReactivePowerSettings', pSetName);
-        RefNode(prf, 'ConstantReactivePowerSettings.DERIEEEType1', pInvName);
-        BooleanNode(prf, 'ConstantReactivePowerSettings.enabled', Q_enabled);
-        DoubleNode(prf, 'ConstantReactivePowerSettings.reactivePower', Q_reactivePower);
-        EndInstance(prf, 'ConstantReactivePowerSettings');
+    pSetName.UUID := ex.GetDevUuid(I1547VoltVar, pSetName.LocalName, 1);
+    ex.StartInstance(prf, 'VoltVarSettings', pSetName);
+    ex.RefNode(prf, 'VoltVarSettings.DERIEEEType1', pInvName);
+    ex.BooleanNode(prf, 'VoltVarSettings.enabled', VV_enabled);
+    ex.BooleanNode(prf, 'VoltVarSettings.vRefAutoModeEnabled', VV_vRefAutoModeEnabled);
+    ex.DoubleNode(prf, 'VoltVarSettings.vRef', VV_vRef);
+    ex.DoubleNode(prf, 'VoltVarSettings.vRefOlrt', VV_vRefOlrt);
+    ex.DoubleNode(prf, 'VoltVarSettings.curveV1', VV_curveV1);
+    ex.DoubleNode(prf, 'VoltVarSettings.curveV2', VV_curveV2);
+    ex.DoubleNode(prf, 'VoltVarSettings.curveV3', VV_curveV3);
+    ex.DoubleNode(prf, 'VoltVarSettings.curveV4', VV_curveV4);
+    ex.DoubleNode(prf, 'VoltVarSettings.curveQ1', VV_curveQ1);
+    ex.DoubleNode(prf, 'VoltVarSettings.curveQ2', VV_curveQ2);
+    ex.DoubleNode(prf, 'VoltVarSettings.curveQ3', VV_curveQ3);
+    ex.DoubleNode(prf, 'VoltVarSettings.curveQ4', VV_curveQ4);
+    ex.DoubleNode(prf, 'VoltVarSettings.olrt', VV_olrt);
+    ex.EndInstance(prf, 'VoltVarSettings');
 
-        pSetName.UUID := GetDevUuid(I1547VoltWatt, pSetName.LocalName, 1);
-        StartInstance(prf, 'VoltWattSettings', pSetName);
-        RefNode(prf, 'VoltWattSettings.DERIEEEType1', pInvName);
-        BooleanNode(prf, 'VoltWattSettings.enabled', VW_enabled);
-        DoubleNode(prf, 'VoltWattSettings.curveV1', VW_curveV1);
-        DoubleNode(prf, 'VoltWattSettings.curveV2', VW_curveV2);
-        DoubleNode(prf, 'VoltWattSettings.curveP1', VW_curveP1);
-        DoubleNode(prf, 'VoltWattSettings.curveP2gen', VW_curveP2gen);
-        DoubleNode(prf, 'VoltWattSettings.curveP2load', VW_curveP2load);
-        DoubleNode(prf, 'VoltWattSettings.olrt', VW_olrt);
-        EndInstance(prf, 'VoltWattSettings');
-    end; // with ex
+    pSetName.UUID := ex.GetDevUuid(I1547WattVar, pSetName.LocalName, 1);
+    ex.StartInstance(prf, 'WattVarSettings', pSetName);
+    ex.RefNode(prf, 'WattVarSettings.DERIEEEType1', pInvName);
+    ex.BooleanNode(prf, 'WattVarSettings.enabled', WV_enabled);
+    ex.DoubleNode(prf, 'WattVarSettings.curveP1gen', WV_curveP1gen);
+    ex.DoubleNode(prf, 'WattVarSettings.curveP2gen', WV_curveP2gen);
+    ex.DoubleNode(prf, 'WattVarSettings.curveP3gen', WV_curveP3gen);
+    ex.DoubleNode(prf, 'WattVarSettings.curveQ1gen', WV_curveQ1gen);
+    ex.DoubleNode(prf, 'WattVarSettings.curveQ2gen', WV_curveQ2gen);
+    ex.DoubleNode(prf, 'WattVarSettings.curveQ3gen', WV_curveQ3gen);
+    ex.DoubleNode(prf, 'WattVarSettings.curveP1load', WV_curveP1load);
+    ex.DoubleNode(prf, 'WattVarSettings.curveP2load', WV_curveP2load);
+    ex.DoubleNode(prf, 'WattVarSettings.curveP3load', WV_curveP3load);
+    ex.DoubleNode(prf, 'WattVarSettings.curveQ1load', WV_curveQ1load);
+    ex.DoubleNode(prf, 'WattVarSettings.curveQ2load', WV_curveQ2load);
+    ex.DoubleNode(prf, 'WattVarSettings.curveQ3load', WV_curveQ3load);
+    ex.EndInstance(prf, 'WattVarSettings');
+
+    pSetName.UUID := ex.GetDevUuid(I1547ConstPF, pSetName.LocalName, 1);
+    ex.StartInstance(prf, 'ConstantPowerFactorSettings', pSetName);
+    ex.RefNode(prf, 'ConstantPowerFactorSettings.DERIEEEType1', pInvName);
+    ex.BooleanNode(prf, 'ConstantPowerFactorSettings.enabled', PF_enabled);
+    ex.PowerFactorExcitationEnum(prf, PF_constPFexcitationKind);
+    ex.DoubleNode(prf, 'ConstantPowerFactorSettings.powerFactor', PF_powerFactor);
+    ex.EndInstance(prf, 'ConstantPowerFactorSettings');
+
+    pSetName.UUID := ex.GetDevUuid(I1547ConstQ, pSetName.LocalName, 1);
+    ex.StartInstance(prf, 'ConstantReactivePowerSettings', pSetName);
+    ex.RefNode(prf, 'ConstantReactivePowerSettings.DERIEEEType1', pInvName);
+    ex.BooleanNode(prf, 'ConstantReactivePowerSettings.enabled', Q_enabled);
+    ex.DoubleNode(prf, 'ConstantReactivePowerSettings.reactivePower', Q_reactivePower);
+    ex.EndInstance(prf, 'ConstantReactivePowerSettings');
+
+    pSetName.UUID := ex.GetDevUuid(I1547VoltWatt, pSetName.LocalName, 1);
+    ex.StartInstance(prf, 'VoltWattSettings', pSetName);
+    ex.RefNode(prf, 'VoltWattSettings.DERIEEEType1', pInvName);
+    ex.BooleanNode(prf, 'VoltWattSettings.enabled', VW_enabled);
+    ex.DoubleNode(prf, 'VoltWattSettings.curveV1', VW_curveV1);
+    ex.DoubleNode(prf, 'VoltWattSettings.curveV2', VW_curveV2);
+    ex.DoubleNode(prf, 'VoltWattSettings.curveP1', VW_curveP1);
+    ex.DoubleNode(prf, 'VoltWattSettings.curveP2gen', VW_curveP2gen);
+    ex.DoubleNode(prf, 'VoltWattSettings.curveP2load', VW_curveP2load);
+    ex.DoubleNode(prf, 'VoltWattSettings.olrt', VW_olrt);
+    ex.EndInstance(prf, 'VoltWattSettings');
 end;
 
 ///////// end helper class for exporting IEEE 1547 model parameters /////////////
 
 
-procedure TCIMExporterHelper.StartCIMFile(var F: TFileStream; FileNm: String; prf: ProfileChoice);
+procedure TCIMExporterHelper.StartCIMFile(var F: TStream; FileNm: String; prf: ProfileChoice);
 begin
-    F := TBufferedFileStream.Create(FileNm, fmCreate);
+    F := DSS.GetOutputStreamEx(FileNm, fmCreate);
     FSWriteln(F, '<?xml version="1.0" encoding="utf-8"?>');
     FSWriteln(F, '<!-- un-comment this line to enable validation');
     FSWriteln(F, '-->');
@@ -3303,6 +3286,8 @@ var
   // for CIM Locations
     geoUUID: TUuid;
     crsUUID: TUuid;
+    src: TDSSCktElement;
+    tr: TTransfObj;
 begin
     try
         clsLnCd := DSS.DSSClassList.Get(DSS.ClassNames.Find('linecode'));
@@ -3316,7 +3301,7 @@ begin
         pName2 := TNamedObject.Create('Temp2');
         if not assigned(UuidList) then
         begin  // this may have been done already from the uuids command
-            i1 := clsXfCd.ElementCount * 6; // 3 wdg info, 3 sctest
+            i1 := clsXfCd.ElementCount() * 6; // 3 wdg info, 3 sctest
             i2 := ActiveCircuit.Transformers.Count * 11; // bank, info, 3 wdg, 3 wdg info, 3sctest
             StartUuidList(i1 + i2);
         end;
@@ -3324,7 +3309,7 @@ begin
         StartECPList(ActiveCircuit.Loads.Count + ActiveCircuit.Generators.Count + ActiveCircuit.StorageElements.Count + ActiveCircuit.PVSystems.Count);        
         StartOpLimitList(ActiveCircuit.Lines.Count + ActiveCircuit.Transformers.Count + ActiveCircuit.AutoTransformers.Count);
 
-        DSSInfoMessageDlg(FileNm + '<=' + ActiveCircuit.Name + '<-' + Substation + '<-' + SubGeographicRegion + '<-' + GeographicRegion);
+        DSS.InfoMessageDlg(FileNm + '<=' + ActiveCircuit.Name + '<-' + Substation + '<-' + SubGeographicRegion + '<-' + GeographicRegion);
 
         FD_Create(Combined, FileNm);
 
@@ -3424,97 +3409,94 @@ begin
         OpLimitDirectionEnum(FunPrf, 'low');
         EndInstance(FunPrf, 'OperationalLimitType');
 
-        with ActiveCircuit do
-        begin
       // build the lists of base voltages and operational voltage limits
-            for i := 0 to High(LegalVoltageBases) do
+        for i := 0 to High(ActiveCircuit.LegalVoltageBases) do
+        begin
+            s := GetBaseVName(ActiveCircuit.LegalVoltageBases[i]);
+            pName1.LocalName := s;
+            pName1.UUID := GetBaseVUuid(ActiveCircuit.LegalVoltageBases[i]);
+            StartInstance(FunPrf, 'BaseVoltage', pName1);
+            DoubleNode(FunPrf, 'BaseVoltage.nominalVoltage', 1000.0 * ActiveCircuit.LegalVoltageBases[i]);
+            EndInstance(FunPrf, 'BaseVoltage');
+
+            pName1.LocalName := GetOpLimVName(ActiveCircuit.LegalVoltageBases[i]);
+            pName1.UUID := GetOpLimVUuid(ActiveCircuit.LegalVoltageBases[i]);
+            StartInstance(FunPrf, 'OperationalLimitSet', pName1);
+            EndInstance(FunPrf, 'OperationalLimitSet');
+
+            pName2.LocalName := pName1.LocalName + '_RangeAHi';
+            pName2.UUID := GetDevUuid(OpLimAHi, s, 1);
+            StartInstance(FunPrf, 'VoltageLimit', pName2);
+            RefNode(FunPrf, 'OperationalLimit.OperationalLimitSet', pName1);
+            RefNode(FunPrf, 'OperationalLimit.OperationalLimitType', pRangeAHiLimit);
+            DoubleNode(FunPrf, 'VoltageLimit.value', 1.05 * 1000.0 * ActiveCircuit.LegalVoltageBases[i]);
+            EndInstance(FunPrf, 'VoltageLimit');
+
+            pName2.LocalName := pName1.LocalName + '_RangeALo';
+            pName2.UUID := GetDevUuid(OpLimALo, s, 1);
+            StartInstance(FunPrf, 'VoltageLimit', pName2);
+            RefNode(FunPrf, 'OperationalLimit.OperationalLimitSet', pName1);
+            RefNode(FunPrf, 'OperationalLimit.OperationalLimitType', pRangeALoLimit);
+            DoubleNode(FunPrf, 'VoltageLimit.value', 0.95 * 1000.0 * ActiveCircuit.LegalVoltageBases[i]);
+            EndInstance(FunPrf, 'VoltageLimit');
+
+            pName2.LocalName := pName1.LocalName + '_RangeBHi';
+            pName2.UUID := GetDevUuid(OpLimBHi, s, 1);
+            StartInstance(FunPrf, 'VoltageLimit', pName2);
+            RefNode(FunPrf, 'OperationalLimit.OperationalLimitSet', pName1);
+            RefNode(FunPrf, 'OperationalLimit.OperationalLimitType', pRangeBHiLimit);
+            DoubleNode(FunPrf, 'VoltageLimit.value', 1.0583333 * 1000.0 * ActiveCircuit.LegalVoltageBases[i]);
+            EndInstance(FunPrf, 'VoltageLimit');
+
+            pName2.LocalName := pName1.LocalName + '_RangeBLo';
+            pName2.UUID := GetDevUuid(OpLimBLo, s, 1);
+            StartInstance(FunPrf, 'VoltageLimit', pName2);
+            RefNode(FunPrf, 'OperationalLimit.OperationalLimitSet', pName1);
+            RefNode(FunPrf, 'OperationalLimit.OperationalLimitType', pRangeBLoLimit);
+            DoubleNode(FunPrf, 'VoltageLimit.value', 0.9166667 * 1000.0 * ActiveCircuit.LegalVoltageBases[i]);
+            EndInstance(FunPrf, 'VoltageLimit');
+        end;
+
+        for i := 1 to ActiveCircuit.NumBuses do
+        begin
+            ActiveCircuit.Buses[i].localName := ActiveCircuit.BusList.NameOfIndex(i);
+        end;
+
+        // each bus corresponds to a topo node (TODO, do we need topo nodes anymore?) and connectivity node
+        for i := 1 to ActiveCircuit.NumBuses do
+        begin
+            geoUUID := GetDevUuid(Topo, ActiveCircuit.Buses[i].localName, 1);
+            StartFreeInstance(TopoPrf, 'TopologicalNode', geoUUID);
+            StringNode(TopoPrf, 'IdentifiedObject.mRID', UUIDToCIMString(geoUUID));
+            StringNode(TopoPrf, 'IdentifiedObject.name', ActiveCircuit.Buses[i].localName);
+            UuidNode(TopoPrf, 'TopologicalNode.TopologicalIsland', pIsland.UUID);
+            EndInstance(TopoPrf, 'TopologicalNode');
+
+            StartFreeInstance(TopoPrf, 'ConnectivityNode', ActiveCircuit.Buses[i].UUID);
+            StringNode(TopoPrf, 'IdentifiedObject.mRID', UUIDToCIMString(ActiveCircuit.Buses[i].UUID));
+            StringNode(TopoPrf, 'IdentifiedObject.name', ActiveCircuit.Buses[i].localName);
+            UuidNode(TopoPrf, 'ConnectivityNode.TopologicalNode', geoUUID);
+            UuidNode(TopoPrf, 'ConnectivityNode.OperationalLimitSet', GetOpLimVUuid(sqrt(3.0) * ActiveCircuit.Buses[i].kVBase));
+            FD.WriteCimLn(TopoPrf, Format('  <cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="urn:uuid:%s"/>',
+                [ActiveCircuit.CIM_ID]));
+            EndInstance(TopoPrf, 'ConnectivityNode');
+        end;
+
+        // find the swing bus ==> first voltage source
+        for pVsrc in ActiveCircuit.Sources do // pIsrc are in the same list
+        begin
+            if pVsrc.ClassNameIs('TVSourceObj') then
             begin
-                s := GetBaseVName(LegalVoltageBases[i]);
-                pName1.LocalName := s;
-                pName1.UUID := GetBaseVUuid(LegalVoltageBases[i]);
-                StartInstance(FunPrf, 'BaseVoltage', pName1);
-                DoubleNode(FunPrf, 'BaseVoltage.nominalVoltage', 1000.0 * LegalVoltageBases[i]);
-                EndInstance(FunPrf, 'BaseVoltage');
+                if not pVsrc.Enabled then
+                    continue;
 
-                pName1.LocalName := GetOpLimVName(LegalVoltageBases[i]);
-                pName1.UUID := GetOpLimVUuid(LegalVoltageBases[i]);
-                StartInstance(FunPrf, 'OperationalLimitSet', pName1);
-                EndInstance(FunPrf, 'OperationalLimitSet');
-
-                pName2.LocalName := pName1.LocalName + '_RangeAHi';
-                pName2.UUID := GetDevUuid(OpLimAHi, s, 1);
-                StartInstance(FunPrf, 'VoltageLimit', pName2);
-                RefNode(FunPrf, 'OperationalLimit.OperationalLimitSet', pName1);
-                RefNode(FunPrf, 'OperationalLimit.OperationalLimitType', pRangeAHiLimit);
-                DoubleNode(FunPrf, 'VoltageLimit.value', 1.05 * 1000.0 * LegalVoltageBases[i]);
-                EndInstance(FunPrf, 'VoltageLimit');
-
-                pName2.LocalName := pName1.LocalName + '_RangeALo';
-                pName2.UUID := GetDevUuid(OpLimALo, s, 1);
-                StartInstance(FunPrf, 'VoltageLimit', pName2);
-                RefNode(FunPrf, 'OperationalLimit.OperationalLimitSet', pName1);
-                RefNode(FunPrf, 'OperationalLimit.OperationalLimitType', pRangeALoLimit);
-                DoubleNode(FunPrf, 'VoltageLimit.value', 0.95 * 1000.0 * LegalVoltageBases[i]);
-                EndInstance(FunPrf, 'VoltageLimit');
-
-                pName2.LocalName := pName1.LocalName + '_RangeBHi';
-                pName2.UUID := GetDevUuid(OpLimBHi, s, 1);
-                StartInstance(FunPrf, 'VoltageLimit', pName2);
-                RefNode(FunPrf, 'OperationalLimit.OperationalLimitSet', pName1);
-                RefNode(FunPrf, 'OperationalLimit.OperationalLimitType', pRangeBHiLimit);
-                DoubleNode(FunPrf, 'VoltageLimit.value', 1.0583333 * 1000.0 * LegalVoltageBases[i]);
-                EndInstance(FunPrf, 'VoltageLimit');
-
-                pName2.LocalName := pName1.LocalName + '_RangeBLo';
-                pName2.UUID := GetDevUuid(OpLimBLo, s, 1);
-                StartInstance(FunPrf, 'VoltageLimit', pName2);
-                RefNode(FunPrf, 'OperationalLimit.OperationalLimitSet', pName1);
-                RefNode(FunPrf, 'OperationalLimit.OperationalLimitType', pRangeBLoLimit);
-                DoubleNode(FunPrf, 'VoltageLimit.value', 0.9166667 * 1000.0 * LegalVoltageBases[i]);
-                EndInstance(FunPrf, 'VoltageLimit');
-            end;
-
-            for i := 1 to NumBuses do
-            begin
-                Buses[i].localName := BusList.NameOfIndex(i);
-            end;
-
-            // each bus corresponds to a topo node (TODO, do we need topo nodes anymore?) and connectivity node
-            for i := 1 to NumBuses do
-            begin
-                geoUUID := GetDevUuid(Topo, Buses[i].localName, 1);
-                StartFreeInstance(TopoPrf, 'TopologicalNode', geoUUID);
-                StringNode(TopoPrf, 'IdentifiedObject.mRID', UUIDToCIMString(geoUUID));
-                StringNode(TopoPrf, 'IdentifiedObject.name', Buses[i].localName);
-                UuidNode(TopoPrf, 'TopologicalNode.TopologicalIsland', pIsland.UUID);
-                EndInstance(TopoPrf, 'TopologicalNode');
-
-                StartFreeInstance(TopoPrf, 'ConnectivityNode', Buses[i].UUID);
-                StringNode(TopoPrf, 'IdentifiedObject.mRID', UUIDToCIMString(Buses[i].UUID));
-                StringNode(TopoPrf, 'IdentifiedObject.name', Buses[i].localName);
-                UuidNode(TopoPrf, 'ConnectivityNode.TopologicalNode', geoUUID);
-                UuidNode(TopoPrf, 'ConnectivityNode.OperationalLimitSet', GetOpLimVUuid(sqrt(3.0) * ActiveCircuit.Buses[i].kVBase));
-                FD.WriteCimLn(TopoPrf, Format('  <cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="urn:uuid:%s"/>',
-                    [ActiveCircuit.CIM_ID]));
-                EndInstance(TopoPrf, 'ConnectivityNode');
-            end;
-
-            // find the swing bus ==> first voltage source
-            for pVsrc in ActiveCircuit.Sources do // pIsrc are in the same list
-            begin
-                if pVsrc.ClassNameIs('TVSourceObj') then
-                begin
-                    if not pVsrc.Enabled then
-                        continue;
-
-                    i := pVsrc.Terminals[0].BusRef;
-                    geoUUID := GetDevUuid(Topo, Buses[i].localName, 1);
-                    pSwing.UUID := geoUUID;
-                    StartInstance(TopoPrf, 'TopologicalIsland', pIsland);
-                    RefNode(TopoPrf, 'TopologicalIsland.AngleRefTopologicalNode', pSwing);
-                    EndInstance(TopoPrf, 'TopologicalIsland');
-                    break;
-                end;
+                i := pVsrc.Terminals[0].BusRef;
+                geoUUID := GetDevUuid(Topo, ActiveCircuit.Buses[i].localName, 1);
+                pSwing.UUID := geoUUID;
+                StartInstance(TopoPrf, 'TopologicalIsland', pIsland);
+                RefNode(TopoPrf, 'TopologicalIsland.AngleRefTopologicalNode', pSwing);
+                EndInstance(TopoPrf, 'TopologicalIsland');
+                break;
             end;
         end;
 
@@ -3550,8 +3532,7 @@ begin
             geoUUID := GetDevUuid(SolarLoc, pPV.localName, 1);
             UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
             DoubleNode(EpPrf, 'PowerElectronicsUnit.maxP', pPV.Pmpp * 1000.0);
-            with pPV do
-                DoubleNode(EpPrf, 'PowerElectronicsUnit.minP', (min (FPctCutIn, FPctCutOut) * kVARating / 100.0) * 1000.0);
+            DoubleNode(EpPrf, 'PowerElectronicsUnit.minP', (min(pPV.FPctCutIn, pPV.FPctCutOut) * pPV.kVARating / 100.0) * 1000.0);
             EndInstance(FunPrf, 'PhotovoltaicUnit');
             StartInstance(FunPrf, 'PowerElectronicsConnection', pPV);
             CircuitNode(FunPrf, ActiveCircuit);
@@ -3630,75 +3611,74 @@ begin
             AddStorageECP(pBat);
         end;
 
-        with ActiveCircuit do
+        if (ActiveCircuit.InvControls.Count > 0) or (ActiveCircuit.ExpControls.Count > 0) then
         begin
-            if (InvControls.Count > 0) or (ExpControls.Count > 0) then
+            pI1547 := TIEEE1547Controller.Create(self);
+            for pInv in ActiveCircuit.InvControls do
             begin
-                pI1547 := TIEEE1547Controller.Create(self);
-                for pInv in InvControls do
+                if pInv.Enabled then
                 begin
-                    if pInv.Enabled then
-                    begin
-                        pI1547.PullFromInvControl(pInv);
-                        pI1547.WriteCIM(DynPrf);
-                    end;
+                    pI1547.PullFromInvControl(pInv);
+                    pI1547.WriteCIM(DynPrf);
                 end;
-                for pExp in ExpControls do
-                begin
-                    if pExp.Enabled then
-                    begin
-                        pI1547.PullFromExpControl(pExp);
-                        pI1547.WriteCIM(DynPrf);
-                    end;
-                end;
-                pI1547.Free;
             end;
+            for pExp in ActiveCircuit.ExpControls do
+            begin
+                if pExp.Enabled then
+                begin
+                    pI1547.PullFromExpControl(pExp);
+                    pI1547.WriteCIM(DynPrf);
+                end;
+            end;
+            pI1547.Free;
         end;
 
-        for pVsrc in ActiveCircuit.Sources do // pIsrc are in the same list
+        for src in ActiveCircuit.Sources do // pIsrc are in the same list
         begin
-            if pVsrc.ClassNameIs('TVSourceObj') then
-                if pVsrc.Enabled then
-                    with pVsrc do
-                    begin
-                        Zs := Z.AvgDiagonal;
-                        Zm := Z.AvgOffDiagonal;
-                        Rs := Zs.re;
-                        Rm := Zm.re;
-                        Xs := Zs.im;
-                        Xm := Zm.im;
-                        v1 := pVsrc.NPhases;
-                        if v1 > 1.0 then
-                        begin
-                            R1 := Rs - Rm;
-                            X1 := Xs - Xm;
-                            R0 := Rs + (v1 - 1.0) * Rm;
-                            X0 := Xs + (v1 - 1.0) * Xm;
-                        end
-                        else
-                        begin
-                            R1 := Rs;
-                            X1 := Xs;
-                            R0 := Rs;
-                            X0 := Xs;
-                        end;
+            if not src.ClassNameIs('TVSourceObj') then
+                continue;
 
-                        StartInstance(FunPrf, 'EnergySource', pVsrc);
-                        CircuitNode(FunPrf, ActiveCircuit);
-                        VbaseNode(FunPrf, pVsrc);
-                        DoubleNode(EpPrf, 'EnergySource.nominalVoltage', 1000 * kVbase);
-                        DoubleNode(SshPrf, 'EnergySource.voltageMagnitude', 1000 * kVbase * PerUnit);
-                        DoubleNode(SshPrf, 'EnergySource.voltageAngle', TwoPi * Angle / 360.0);
-                        DoubleNode(EpPrf, 'EnergySource.r', R1);
-                        DoubleNode(EpPrf, 'EnergySource.x', X1);
-                        DoubleNode(EpPrf, 'EnergySource.r0', R0);
-                        DoubleNode(EpPrf, 'EnergySource.x0', X0);
-                        geoUUID := GetDevUuid(SrcLoc, pVsrc.LocalName, 1);
-                        UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
-                        EndInstance(FunPrf, 'EnergySource');
+            pVsrc := TVSourceObj(src);
+            if not pVsrc.Enabled then
+                continue;
+
+            Zs := pVsrc.Z.AvgDiagonal;
+            Zm := pVsrc.Z.AvgOffDiagonal;
+            Rs := Zs.re;
+            Rm := Zm.re;
+            Xs := Zs.im;
+            Xm := Zm.im;
+            v1 := pVsrc.NPhases;
+            if v1 > 1.0 then
+            begin
+                R1 := Rs - Rm;
+                X1 := Xs - Xm;
+                R0 := Rs + (v1 - 1.0) * Rm;
+                X0 := Xs + (v1 - 1.0) * Xm;
+            end
+            else
+            begin
+                R1 := Rs;
+                X1 := Xs;
+                R0 := Rs;
+                X0 := Xs;
+            end;
+
+            StartInstance(FunPrf, 'EnergySource', pVsrc);
+            CircuitNode(FunPrf, ActiveCircuit);
+            VbaseNode(FunPrf, pVsrc);
+            DoubleNode(EpPrf, 'EnergySource.nominalVoltage', 1000 * pVsrc.kVBase);
+            DoubleNode(SshPrf, 'EnergySource.voltageMagnitude', 1000 * pVsrc.kVBase * pVsrc.PerUnit);
+            DoubleNode(SshPrf, 'EnergySource.voltageAngle', TwoPi * pVsrc.Angle / 360.0);
+            DoubleNode(EpPrf, 'EnergySource.r', R1);
+            DoubleNode(EpPrf, 'EnergySource.x', X1);
+            DoubleNode(EpPrf, 'EnergySource.r0', R0);
+            DoubleNode(EpPrf, 'EnergySource.x0', X0);
+            geoUUID := GetDevUuid(SrcLoc, pVsrc.LocalName, 1);
+            UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
+            EndInstance(FunPrf, 'EnergySource');
 //          AttachPhases (F, pVsrc, 1, 'EnergySource');
-                        WriteTerminals(pVsrc, geoUUID, crsUUID);
-                    end;
+            WriteTerminals(pVsrc, geoUUID, crsUUID);
         end;
 
         for pCap in ActiveCircuit.ShuntCapacitors do
@@ -3709,101 +3689,95 @@ begin
             StartInstance(FunPrf, 'LinearShuntCompensator', pCap);
             CircuitNode(FunPrf, ActiveCircuit);
             VbaseNode(FunPrf, pCap);
-            with pCap do
+            val := 0.001 * pCap.Totalkvar / pCap.NomKV / pCap.NomKV / pCap.NumSteps;
+            DoubleNode(EpPrf, 'ShuntCompensator.nomU', 1000.0 * pCap.NomKV);
+            DoubleNode(EpPrf, 'LinearShuntCompensator.bPerSection', val);
+            DoubleNode(EpPrf, 'LinearShuntCompensator.gPerSection', 0.0);
+
+            if pCap.Connection = TCapacitorConnection.Wye then
             begin
-                val := 0.001 * Totalkvar / NomKV / NomKV / NumSteps;
-                DoubleNode(EpPrf, 'ShuntCompensator.nomU', 1000.0 * NomKV);
-                DoubleNode(EpPrf, 'LinearShuntCompensator.bPerSection', val);
-                DoubleNode(EpPrf, 'LinearShuntCompensator.gPerSection', 0.0);
-
-                if Connection = TCapacitorConnection.Wye then
-                begin
-                    ShuntConnectionKindNode(FunPrf, 'ShuntCompensator', 'Y');
-                    BooleanNode(FunPrf, 'ShuntCompensator.grounded', TRUE);  // TODO - check bus 2
-                    DoubleNode(EpPrf, 'LinearShuntCompensator.b0PerSection', val);
-                end
-                else
-                begin
-                    ShuntConnectionKindNode(FunPrf, 'ShuntCompensator', 'D');
-                    BooleanNode(FunPrf, 'LinearShuntCompensator.grounded', FALSE);
-                    DoubleNode(EpPrf, 'LinearShuntCompensator.b0PerSection', 0.0);
-                end;
-                DoubleNode(EpPrf, 'LinearShuntCompensator.g0PerSection', 0.0);
-                IntegerNode(EpPrf, 'ShuntCompensator.normalSections', NumSteps);
-                IntegerNode(EpPrf, 'ShuntCompensator.maximumSections', NumSteps);
-
-                val := 0.0;
-                for pCapC in ActiveCircuit.CapControls do
-                begin
-                    if pCapC.This_Capacitor = pCap then 
-                        val := pCapC.OnDelayVal;
-                end;
-                DoubleNode(EpPrf, 'ShuntCompensator.aVRDelay', val);
-
-                val := 0;
-                for i := 1 to NumSteps do
-                    if States[i] > 0 then
-                        val := val + 1.0;
-                DoubleNode(SshPrf, 'ShuntCompensator.sections', val);
-                geoUUID := GetDevUuid(CapLoc, pCap.localName, 1);
-                UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
-                EndInstance(FunPrf, 'LinearShuntCompensator');
-                AttachCapPhases(pCap, geoUUID, val);
-                WriteTerminals(pCap, geoUUID, crsUUID, pCap.NormAmps, pCap.EmergAmps);
+                ShuntConnectionKindNode(FunPrf, 'ShuntCompensator', 'Y');
+                BooleanNode(FunPrf, 'ShuntCompensator.grounded', TRUE);  // TODO - check bus 2
+                DoubleNode(EpPrf, 'LinearShuntCompensator.b0PerSection', val);
+            end
+            else
+            begin
+                ShuntConnectionKindNode(FunPrf, 'ShuntCompensator', 'D');
+                BooleanNode(FunPrf, 'LinearShuntCompensator.grounded', FALSE);
+                DoubleNode(EpPrf, 'LinearShuntCompensator.b0PerSection', 0.0);
             end;
+            DoubleNode(EpPrf, 'LinearShuntCompensator.g0PerSection', 0.0);
+            IntegerNode(EpPrf, 'ShuntCompensator.normalSections', pCap.NumSteps);
+            IntegerNode(EpPrf, 'ShuntCompensator.maximumSections', pCap.NumSteps);
+
+            val := 0.0;
+            for pCapC in ActiveCircuit.CapControls do
+            begin
+                if pCapC.This_Capacitor = pCap then 
+                    val := pCapC.OnDelayVal;
+            end;
+            DoubleNode(EpPrf, 'ShuntCompensator.aVRDelay', val);
+
+            val := 0;
+            for i := 1 to pCap.NumSteps do
+                if pCap.States[i] > 0 then
+                    val := val + 1.0;
+            DoubleNode(SshPrf, 'ShuntCompensator.sections', val);
+            geoUUID := GetDevUuid(CapLoc, pCap.localName, 1);
+            UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
+            EndInstance(FunPrf, 'LinearShuntCompensator');
+            AttachCapPhases(pCap, geoUUID, val);
+            WriteTerminals(pCap, geoUUID, crsUUID, pCap.NormAmps, pCap.EmergAmps);
         end;
 
         for pCapC in ActiveCircuit.CapControls do
         begin
-            with pCapC do
+            StartInstance(FunPrf, 'RegulatingControl', pCapC);
+            UuidNode(GeoPrf, 'PowerSystemResource.Location', GetDevUuid(CapLoc, pCapC.This_Capacitor.Name, 1));
+            RefNode(FunPrf, 'RegulatingControl.RegulatingCondEq', pCapC.This_Capacitor);
+            i1 := GetCktElementIndex(DSS, StrUtils.IfThen(pCapC.MonitoredElement <> NIL, pCapC.MonitoredElement.FullName, '')); // Global function
+            UuidNode(FunPrf, 'RegulatingControl.Terminal', GetTermUuid(DSS.ActiveCircuit.CktElements.Get(i1), pCapC.ElementTerminal));
+            s := FirstPhaseString(DSS.ActiveCircuit.CktElements.Get(i1), 1);
+            if pCapC.PTPhase > 0 then
+                MonitoredPhaseNode(FunPrf, Char(Ord(s[1]) + pCapC.PTPhase - 1))
+            else
+                MonitoredPhaseNode(FunPrf, Char(Ord(s[1]))); // TODO - average, min and max unsupported in CIM
+            val := 1.0;
+            if pCapC.CapControlType = PFCONTROL then
             begin
-                StartInstance(FunPrf, 'RegulatingControl', pCapC);
-                UuidNode(GeoPrf, 'PowerSystemResource.Location', GetDevUuid(CapLoc, This_Capacitor.Name, 1));
-                RefNode(FunPrf, 'RegulatingControl.RegulatingCondEq', This_Capacitor);
-                i1 := GetCktElementIndex(DSS, StrUtils.IfThen(MonitoredElement <> NIL, MonitoredElement.FullName, '')); // Global function
-                UuidNode(FunPrf, 'RegulatingControl.Terminal', GetTermUuid(DSS.ActiveCircuit.CktElements.Get(i1), ElementTerminal));
-                s := FirstPhaseString(DSS.ActiveCircuit.CktElements.Get(i1), 1);
-                if PTPhase > 0 then
-                    MonitoredPhaseNode(FunPrf, Char(Ord(s[1]) + PTPhase - 1))
-                else
-                    MonitoredPhaseNode(FunPrf, Char(Ord(s[1]))); // TODO - average, min and max unsupported in CIM
-                val := 1.0;
-                if CapControlType = PFCONTROL then
-                begin
-                    v1 := PfOnValue;
-                    v2 := PfOffValue
-                end
-                else
-                begin
-                    v1 := OnValue;
-                    v2 := OffValue;
-                    if CapControlType = KVARCONTROL then
-                        val := 1000.0;
-                    if CapControlType = CURRENTCONTROL then
-                        val := CTRatioVal;
-                    if CapControlType = VOLTAGECONTROL then
-                        val := PTRatioVal
-                end;
-                case CapControlType of
-                    CURRENTCONTROL:
-                        RegulatingControlEnum(EpPrf, 'currentFlow');
-                    VOLTAGECONTROL:
-                        RegulatingControlEnum(EpPrf, 'voltage');
-                    KVARCONTROL:
-                        RegulatingControlEnum(EpPrf, 'reactivePower');
-                    TIMECONTROL:
-                        RegulatingControlEnum(EpPrf, 'timeScheduled');
-                    PFCONTROL:
-                        RegulatingControlEnum(EpPrf, 'powerFactor');
-                    USERCONTROL:
-                        RegulatingControlEnum(EpPrf, 'userDefined'); // i.e. unsupported in CIM
-                end;
-                BooleanNode(EpPrf, 'RegulatingControl.discrete', TRUE);
-                BooleanNode(EpPrf, 'RegulatingControl.enabled', Enabled);
-                DoubleNode(EpPrf, 'RegulatingControl.targetValue', val * 0.5 * (v1 + v2));
-                DoubleNode(EpPrf, 'RegulatingControl.targetDeadband', val * (v2 - v1));
-                EndInstance(FunPrf, 'RegulatingControl');
+                v1 := pCapC.PfOnValue;
+                v2 := pCapC.PfOffValue
+            end
+            else
+            begin
+                v1 := pCapC.OnValue;
+                v2 := pCapC.OffValue;
+                if pCapC.CapControlType = KVARCONTROL then
+                    val := 1000.0;
+                if pCapC.CapControlType = CURRENTCONTROL then
+                    val := pCapC.CTRatioVal;
+                if pCapC.CapControlType = VOLTAGECONTROL then
+                    val := pCapC.PTRatioVal
             end;
+            case pCapC.CapControlType of
+                CURRENTCONTROL:
+                    RegulatingControlEnum(EpPrf, 'currentFlow');
+                VOLTAGECONTROL:
+                    RegulatingControlEnum(EpPrf, 'voltage');
+                KVARCONTROL:
+                    RegulatingControlEnum(EpPrf, 'reactivePower');
+                TIMECONTROL:
+                    RegulatingControlEnum(EpPrf, 'timeScheduled');
+                PFCONTROL:
+                    RegulatingControlEnum(EpPrf, 'powerFactor');
+                USERCONTROL:
+                    RegulatingControlEnum(EpPrf, 'userDefined'); // i.e. unsupported in CIM
+            end;
+            BooleanNode(EpPrf, 'RegulatingControl.discrete', TRUE);
+            BooleanNode(EpPrf, 'RegulatingControl.enabled', pCapC.Enabled);
+            DoubleNode(EpPrf, 'RegulatingControl.targetValue', val * 0.5 * (v1 + v2));
+            DoubleNode(EpPrf, 'RegulatingControl.targetDeadband', val * (v2 - v1));
+            EndInstance(FunPrf, 'RegulatingControl');
         end;
 
         // size the auxiliary winding, mesh, and core lists for transformer export
@@ -4225,13 +4199,18 @@ begin
         begin
             with pReg do
             begin
-                v1 := Transformer.BaseVoltage[TrWinding] / PTRatio;
+                if not (pReg.ControlledElement is TTransfObj) then
+                    continue; //TODO: skipping AutoTrans for now...
+
+                tr := (pReg.ControlledElement as TTransfObj);
+
+                v1 := tr.BaseVoltage[TrWinding] / PTRatio;
                 pName2.LocalName := pReg.LocalName + '_Ctrl';
                 pName2.UUID := GetDevUuid(TapCtrl, pReg.LocalName, 1);
                 StartInstance(FunPrf, 'TapChangerControl', pName2);
                 RegulatingControlEnum(FunPrf, 'voltage');
-                UuidNode(FunPrf, 'RegulatingControl.Terminal', GetTermUuid(Transformer, TrWinding));
-                MonitoredPhaseNode(FunPrf, FirstPhaseString(Transformer, TrWinding));
+                UuidNode(FunPrf, 'RegulatingControl.Terminal', GetTermUuid(tr, TrWinding));
+                MonitoredPhaseNode(FunPrf, FirstPhaseString(tr, TrWinding));
                 BooleanNode(FunPrf, 'RegulatingControl.enabled', pReg.Enabled);
                 BooleanNode(EpPrf, 'RegulatingControl.discrete', TRUE);
                 DoubleNode(EpPrf, 'RegulatingControl.targetValue', Vreg);
@@ -4262,12 +4241,12 @@ begin
                 DoubleNode(EpPrf, 'TapChangerControl.minLimitVoltage', MinTap * v1);                
                 
                 UuidNode(GeoPrf, 'PowerSystemResource.Location',
-                    GetDevUuid(XfLoc, Transformer.Name, 1));
+                    GetDevUuid(XfLoc, tr.Name, 1));
                 EndInstance(FunPrf, 'TapChangerControl');
 
                 StartInstance(FunPrf, 'RatioTapChanger', pReg);
                 UuidNode(FunPrf, 'RatioTapChanger.TransformerEnd',
-                    GetDevUuid(Wdg, Transformer.Name, TrWinding));
+                    GetDevUuid(Wdg, tr.Name, TrWinding));
                 UuidNode(FunPrf, 'TapChanger.TapChangerControl', pName2.UUID);
                 DoubleNode(EpPrf, 'RatioTapChanger.stepVoltageIncrement', 100.0 * TapIncrement);
                 TransformerControlEnum(FunPrf, 'volt');
@@ -4285,7 +4264,7 @@ begin
                 DoubleNode(EpPrf, 'TapChanger.ctRatio', CTRating / 0.2);
                 DoubleNode(EpPrf, 'TapChanger.ctRating', CTRating);
                 UuidNode(GeoPrf, 'PowerSystemResource.Location',
-                    GetDevUuid(XfLoc, Transformer.Name, 1));
+                    GetDevUuid(XfLoc, tr.Name, 1));
                 EndInstance(FunPrf, 'RatioTapChanger');
             end;
         end;
@@ -4471,103 +4450,97 @@ begin
             if not pLoad.Enabled then
                 continue;
 
-            with pLoad do
-            begin
-                StartInstance(FunPrf, 'EnergyConsumer', pLoad);
-                CircuitNode(FunPrf, ActiveCircuit);
-                VbaseNode(FunPrf, pLoad);
-                case FLoadModel of
-                    TLoadModel.ConstPQ:
-                        UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id1_ConstkVA);
-                    TLoadModel.ConstZ:
-                        UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id2_ConstZ);
-                    TLoadModel.Motor:
-                        UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id3_ConstPQuadQ);
-                    TLoadModel.CVR:
-                        UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id4_LinPQuadQ);
-                    TLoadModel.ConstI:
-                        UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id5_ConstI);
-                    TLoadModel.ConstPFixedQ:
-                        UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id6_ConstPConstQ);
-                    TLoadModel.ConstPFixedX:
-                        UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id7_ConstPConstX);
-                end;
-                DoubleNode(SshPrf, 'EnergyConsumer.p', 1000.0 * kWBase);
-                DoubleNode(SshPrf, 'EnergyConsumer.q', 1000.0 * kvarBase);
-                IntegerNode(FunPrf, 'EnergyConsumer.customerCount', NumCustomers);
-                if Connection = TLoadConnection.Wye then
-                begin
-                    ShuntConnectionKindNode(FunPrf, 'EnergyConsumer', 'Y');
-                    BooleanNode(FunPrf, 'EnergyConsumer.grounded', TRUE);  // TODO - check bus 2
-                end
-                else
-                begin
-                    ShuntConnectionKindNode(FunPrf, 'EnergyConsumer', 'D');
-                    BooleanNode(FunPrf, 'EnergyConsumer.grounded', FALSE);
-                end;
-                geoUUID := GetDevUuid(LoadLoc, pLoad.Name, 1);
-                UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
-                EndInstance(FunPrf, 'EnergyConsumer');
-                AttachLoadPhases(pLoad, geoUUID);
-                WriteTerminals(pLoad, geoUUID, crsUUID);
-                AddLoadECP(pLoad);
+            StartInstance(FunPrf, 'EnergyConsumer', pLoad);
+            CircuitNode(FunPrf, ActiveCircuit);
+            VbaseNode(FunPrf, pLoad);
+            case pLoad.FLoadModel of
+                TLoadModel.ConstPQ:
+                    UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id1_ConstkVA);
+                TLoadModel.ConstZ:
+                    UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id2_ConstZ);
+                TLoadModel.Motor:
+                    UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id3_ConstPQuadQ);
+                TLoadModel.CVR:
+                    UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id4_LinPQuadQ);
+                TLoadModel.ConstI:
+                    UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id5_ConstI);
+                TLoadModel.ConstPFixedQ:
+                    UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id6_ConstPConstQ);
+                TLoadModel.ConstPFixedX:
+                    UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id7_ConstPConstX);
             end;
+            DoubleNode(SshPrf, 'EnergyConsumer.p', 1000.0 * pLoad.kWBase);
+            DoubleNode(SshPrf, 'EnergyConsumer.q', 1000.0 * pLoad.kvarBase);
+            IntegerNode(FunPrf, 'EnergyConsumer.customerCount', pLoad.NumCustomers);
+            if pLoad.Connection = TLoadConnection.Wye then
+            begin
+                ShuntConnectionKindNode(FunPrf, 'EnergyConsumer', 'Y');
+                BooleanNode(FunPrf, 'EnergyConsumer.grounded', TRUE);  // TODO - check bus 2
+            end
+            else
+            begin
+                ShuntConnectionKindNode(FunPrf, 'EnergyConsumer', 'D');
+                BooleanNode(FunPrf, 'EnergyConsumer.grounded', FALSE);
+            end;
+            geoUUID := GetDevUuid(LoadLoc, pLoad.Name, 1);
+            UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
+            EndInstance(FunPrf, 'EnergyConsumer');
+            AttachLoadPhases(pLoad, geoUUID);
+            WriteTerminals(pLoad, geoUUID, crsUUID);
+            AddLoadECP(pLoad);
         end;
 
         for pLnCd in clsLnCd.ElementList do
         begin
-            with pLnCd do
-            begin
-                if pLnCd.Units = UNITS_NONE then
-                begin // we need the real units for CIM
-                    for pLine in ActiveCircuit.Lines do
+            if pLnCd.Units = UNITS_NONE then
+            begin // we need the real units for CIM
+                for pLine in ActiveCircuit.Lines do
+                begin
+                    if pLine.Enabled then
                     begin
-                        if pLine.Enabled then
+                        if (pLine.LineCodeObj <> NIL) and (pLine.LineCodeObj.Name = pLnCd.LocalName) then
                         begin
-                            if (pLine.LineCodeObj <> NIL) and (pLine.LineCodeObj.Name = pLnCd.LocalName) then
-                            begin
-                                pLnCd.Units := pLine.UserLengthUnits;
-                                // writeln ('Setting Units on ' + pLnCd.LocalName + ' to ' + LineUnitsStr(pLnCd.Units));
-                                break;
-                            end;
+                            pLnCd.Units := pLine.UserLengthUnits;
+                            // writeln ('Setting Units on ' + pLnCd.LocalName + ' to ' + LineUnitsStr(pLnCd.Units));
+                            break;
                         end;
                     end;
                 end;
-                v1 := To_per_Meter(pLnCd.Units); // TODO: warn if still UNITS_NONE
-                if SymComponentsModel and (NumPhases = 3) then
+            end;
+            v1 := To_per_Meter(pLnCd.Units); // TODO: warn if still UNITS_NONE
+            if pLnCd.SymComponentsModel and (pLnCd.NumPhases = 3) then
+            begin
+                v2 := 1.0e-9 * TwoPi * pLnCd.BaseFrequency; // convert nF to mhos
+                StartInstance(EpPrf, 'PerLengthSequenceImpedance', pLnCd);
+                DoubleNode(EpPrf, 'PerLengthSequenceImpedance.r', pLnCd.R1 * v1);
+                DoubleNode(EpPrf, 'PerLengthSequenceImpedance.x', pLnCd.X1 * v1);
+                DoubleNode(EpPrf, 'PerLengthSequenceImpedance.bch', pLnCd.C1 * v1 * v2);
+                DoubleNode(EpPrf, 'PerLengthSequenceImpedance.gch', 0.0);
+                DoubleNode(EpPrf, 'PerLengthSequenceImpedance.r0', pLnCd.R0 * v1);
+                DoubleNode(EpPrf, 'PerLengthSequenceImpedance.x0', pLnCd.X0 * v1);
+                DoubleNode(EpPrf, 'PerLengthSequenceImpedance.b0ch', pLnCd.C0 * v1 * v2);
+                DoubleNode(EpPrf, 'PerLengthSequenceImpedance.g0ch', 0.0);
+                EndInstance(EpPrf, 'PerLengthSequenceImpedance')
+            end
+            else
+            begin
+                StartInstance(EpPrf, 'PerLengthPhaseImpedance', pLnCd);
+                IntegerNode(EpPrf, 'PerLengthPhaseImpedance.conductorCount', pLnCd.FNPhases);
+                EndInstance(EpPrf, 'PerLengthPhaseImpedance');
+                seq := 1;
+                for i := 1 to pLnCd.FNPhases do
                 begin
-                    v2 := 1.0e-9 * TwoPi * BaseFrequency; // convert nF to mhos
-                    StartInstance(EpPrf, 'PerLengthSequenceImpedance', pLnCd);
-                    DoubleNode(EpPrf, 'PerLengthSequenceImpedance.r', R1 * v1);
-                    DoubleNode(EpPrf, 'PerLengthSequenceImpedance.x', X1 * v1);
-                    DoubleNode(EpPrf, 'PerLengthSequenceImpedance.bch', C1 * v1 * v2);
-                    DoubleNode(EpPrf, 'PerLengthSequenceImpedance.gch', 0.0);
-                    DoubleNode(EpPrf, 'PerLengthSequenceImpedance.r0', R0 * v1);
-                    DoubleNode(EpPrf, 'PerLengthSequenceImpedance.x0', X0 * v1);
-                    DoubleNode(EpPrf, 'PerLengthSequenceImpedance.b0ch', C0 * v1 * v2);
-                    DoubleNode(EpPrf, 'PerLengthSequenceImpedance.g0ch', 0.0);
-                    EndInstance(EpPrf, 'PerLengthSequenceImpedance')
-                end
-                else
-                begin
-                    StartInstance(EpPrf, 'PerLengthPhaseImpedance', pLnCd);
-                    IntegerNode(EpPrf, 'PerLengthPhaseImpedance.conductorCount', FNPhases);
-                    EndInstance(EpPrf, 'PerLengthPhaseImpedance');
-                    seq := 1;
-                    for i := 1 to FNPhases do
+                    for j := 1 to i do
                     begin
-                        for j := 1 to i do
-                        begin
-                            StartFreeInstance(EpPrf, 'PhaseImpedanceData', GetDevUuid(ZData, pLnCd.LocalName, seq));
-                            RefNode(EpPrf, 'PhaseImpedanceData.PhaseImpedance', pLnCd);
-                            IntegerNode(EpPrf, 'PhaseImpedanceData.row', i);
-                            IntegerNode(EpPrf, 'PhaseImpedanceData.column', j);
-                            DoubleNode(EpPrf, 'PhaseImpedanceData.r', Z[i, j].re * v1);
-                            DoubleNode(EpPrf, 'PhaseImpedanceData.x', Z[i, j].im * v1);
-                            DoubleNode(EpPrf, 'PhaseImpedanceData.b', YC[i, j].im * v1);
-                            EndInstance(EpPrf, 'PhaseImpedanceData');
-                            inc(seq)
-                        end;
+                        StartFreeInstance(EpPrf, 'PhaseImpedanceData', GetDevUuid(ZData, pLnCd.LocalName, seq));
+                        RefNode(EpPrf, 'PhaseImpedanceData.PhaseImpedance', pLnCd);
+                        IntegerNode(EpPrf, 'PhaseImpedanceData.row', i);
+                        IntegerNode(EpPrf, 'PhaseImpedanceData.column', j);
+                        DoubleNode(EpPrf, 'PhaseImpedanceData.r', pLnCd.Z[i, j].re * v1);
+                        DoubleNode(EpPrf, 'PhaseImpedanceData.x', pLnCd.Z[i, j].im * v1);
+                        DoubleNode(EpPrf, 'PhaseImpedanceData.b', pLnCd.YC[i, j].im * v1);
+                        EndInstance(EpPrf, 'PhaseImpedanceData');
+                        inc(seq)
                     end;
                 end;
             end;
@@ -4601,59 +4574,53 @@ begin
 
         for pGeom in clsGeom.ElementList do
         begin
-            with pGeom do
-            begin
-                StartInstance(CatPrf, 'WireSpacingInfo', pGeom);
-                ConductorUsageEnum(CatPrf, 'distribution');
-                IntegerNode(CatPrf, 'WireSpacingInfo.phaseWireCount', 1);
-                DoubleNode(CatPrf, 'WireSpacingInfo.phaseWireSpacing', 0.0);
-                if PhaseChoice[1] = Overhead then   // decide this off the first conductor
-                    BooleanNode(CatPrf, 'WireSpacingInfo.isCable', FALSE)
-                else
-                    BooleanNode(CatPrf, 'WireSpacingInfo.isCable', TRUE);
-                EndInstance(CatPrf, 'WireSpacingInfo');
+            StartInstance(CatPrf, 'WireSpacingInfo', pGeom);
+            ConductorUsageEnum(CatPrf, 'distribution');
+            IntegerNode(CatPrf, 'WireSpacingInfo.phaseWireCount', 1);
+            DoubleNode(CatPrf, 'WireSpacingInfo.phaseWireSpacing', 0.0);
+            if pGeom.PhaseChoice[1] = Overhead then   // decide this off the first conductor
+                BooleanNode(CatPrf, 'WireSpacingInfo.isCable', FALSE)
+            else
+                BooleanNode(CatPrf, 'WireSpacingInfo.isCable', TRUE);
+            EndInstance(CatPrf, 'WireSpacingInfo');
 
-                for i := 1 to NWires do
-                begin
-                    pName1.LocalName := 'WP_' + pGeom.Name + '_' + IntToStr(i);
-                    pName1.UUID := GetDevUuid(WirePos, pName1.LocalName, 1);  // 1 for pGeom
-                    StartInstance(CatPrf, 'WirePosition', pName1);
-                    RefNode(CatPrf, 'WirePosition.WireSpacingInfo', pGeom);
-                    IntegerNode(CatPrf, 'WirePosition.sequenceNumber', i);
-                    v1 := To_Meters(Units[i]);
-                    DoubleNode(CatPrf, 'WirePosition.xCoord', Xcoord[i] * v1);
-                    DoubleNode(CatPrf, 'WirePosition.yCoord', Ycoord[i] * v1);
-                    EndInstance(CatPrf, 'WirePosition')
-                end;
+            for i := 1 to pGeom.NWires do
+            begin
+                pName1.LocalName := 'WP_' + pGeom.Name + '_' + IntToStr(i);
+                pName1.UUID := GetDevUuid(WirePos, pName1.LocalName, 1);  // 1 for pGeom
+                StartInstance(CatPrf, 'WirePosition', pName1);
+                RefNode(CatPrf, 'WirePosition.WireSpacingInfo', pGeom);
+                IntegerNode(CatPrf, 'WirePosition.sequenceNumber', i);
+                v1 := To_Meters(pGeom.Units[i]);
+                DoubleNode(CatPrf, 'WirePosition.xCoord', pGeom.Xcoord[i] * v1);
+                DoubleNode(CatPrf, 'WirePosition.yCoord', pGeom.Ycoord[i] * v1);
+                EndInstance(CatPrf, 'WirePosition')
             end;
         end;
 
         for pSpac in clsSpac.ElementList do
         begin
-            with pSpac do
-            begin
-                v1 := To_Meters(Units);
-                StartInstance(CatPrf, 'WireSpacingInfo', pSpac);
-                ConductorUsageEnum(CatPrf, 'distribution');
-                IntegerNode(CatPrf, 'WireSpacingInfo.phaseWireCount', 1);
-                DoubleNode(CatPrf, 'WireSpacingInfo.phaseWireSpacing', 0.0);
-                if pSpac.Ycoord[1] > 0.0 then
-                    BooleanNode(CatPrf, 'WireSpacingInfo.isCable', FALSE)
-                else
-                    BooleanNode(CatPrf, 'WireSpacingInfo.isCable', TRUE);
-                EndInstance(CatPrf, 'WireSpacingInfo');
+            v1 := To_Meters(pSpac.Units);
+            StartInstance(CatPrf, 'WireSpacingInfo', pSpac);
+            ConductorUsageEnum(CatPrf, 'distribution');
+            IntegerNode(CatPrf, 'WireSpacingInfo.phaseWireCount', 1);
+            DoubleNode(CatPrf, 'WireSpacingInfo.phaseWireSpacing', 0.0);
+            if pSpac.Ycoord[1] > 0.0 then
+                BooleanNode(CatPrf, 'WireSpacingInfo.isCable', FALSE)
+            else
+                BooleanNode(CatPrf, 'WireSpacingInfo.isCable', TRUE);
+            EndInstance(CatPrf, 'WireSpacingInfo');
 
-                for i := 1 to NWires do
-                begin
-                    pName1.LocalName := 'WP_' + pSpac.Name + '_' + IntToStr(i);
-                    pName1.UUID := GetDevUuid(WirePos, pName1.LocalName, 2); // 2 for pSpac
-                    StartInstance(CatPrf, 'WirePosition', pName1);
-                    RefNode(CatPrf, 'WirePosition.WireSpacingInfo', pSpac);
-                    IntegerNode(CatPrf, 'WirePosition.sequenceNumber', i);
-                    DoubleNode(CatPrf, 'WirePosition.xCoord', Xcoord[i] * v1);
-                    DoubleNode(CatPrf, 'WirePosition.yCoord', Ycoord[i] * v1);
-                    EndInstance(CatPrf, 'WirePosition')
-                end;
+            for i := 1 to pSpac.NWires do
+            begin
+                pName1.LocalName := 'WP_' + pSpac.Name + '_' + IntToStr(i);
+                pName1.UUID := GetDevUuid(WirePos, pName1.LocalName, 2); // 2 for pSpac
+                StartInstance(CatPrf, 'WirePosition', pName1);
+                RefNode(CatPrf, 'WirePosition.WireSpacingInfo', pSpac);
+                IntegerNode(CatPrf, 'WirePosition.sequenceNumber', i);
+                DoubleNode(CatPrf, 'WirePosition.xCoord', pSpac.Xcoord[i] * v1);
+                DoubleNode(CatPrf, 'WirePosition.yCoord', pSpac.Ycoord[i] * v1);
+                EndInstance(CatPrf, 'WirePosition')
             end;
         end;
 
@@ -4741,6 +4708,17 @@ end;
 constructor TCIMExporter.Create(dssContext: TDSSContext);
 begin
     DSS := dssContext;
+    F_FUN := NIL;
+    F_EP := NIL;
+    F_SSH := NIL;
+    F_CAT := NIL;
+    F_GEO := NIL;
+    F_TOPO := NIL;
+    F_DYN := NIL;
+    UuidHash := NIL;
+    BankHash := NIL;
+    ECPHash := NIL;
+    OpLimitHash := NIL;
 end;
 
 destructor TCIMExporter.Destroy;

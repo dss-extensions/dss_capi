@@ -16,39 +16,38 @@ implementation
 uses
     CAPI_Constants,
     DSSGlobals,
-    DSSClass,
-    CmdForms;
+    DSSClass;
 
 procedure DSSProgress_Close(); CDECL;
 begin
     if NoFormsAllowed then
         Exit;
-    ProgressHide;
+    DSSPrime.ProgressHide;
 end;
 //------------------------------------------------------------------------------
 procedure DSSProgress_Set_Caption(const Value: PAnsiChar); CDECL;
 begin
     if NoFormsAllowed then
         Exit;
-    InitProgressForm;
-    ProgressCaption(Value);
+    DSSPrime.InitProgressForm;
+    DSSPrime.ProgressCaption(Value);
 end;
 //------------------------------------------------------------------------------
 procedure DSSProgress_Set_PctProgress(Value: Integer); CDECL;
 begin
     if NoFormsAllowed then
         Exit;
-    InitProgressForm;
-    ShowPctProgress(Value);
+    DSSPrime.InitProgressForm;
+    DSSPrime.ShowPctProgress(Value);
 end;
 //------------------------------------------------------------------------------
 procedure DSSProgress_Show(); CDECL;
 begin
     if NoFormsAllowed then
         Exit;
-    InitProgressForm;
-    ProgressFormCaption(' ');
-    ShowPctProgress(0);
+    DSSPrime.InitProgressForm;
+    DSSPrime.ProgressFormCaption(' ');
+    DSSPrime.ShowPctProgress(0);
 
 end;
 //------------------------------------------------------------------------------

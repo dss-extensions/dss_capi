@@ -119,6 +119,7 @@ uses
     Solution,
     SolutionAlgs,
     ExecOptions,
+    Sparse_Math,
     Dynamics,
     DSSClass,
     DSSHelper;
@@ -231,11 +232,8 @@ procedure Solution_Set_Hour(Value: Integer); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    with DSSPrime.ActiveCircuit.Solution do
-    begin
-        DynaVars.intHour := Value;
-        Update_dblHour;
-    end;
+    DSSPrime.ActiveCircuit.Solution.DynaVars.intHour := Value;
+    DSSPrime.ActiveCircuit.Solution.Update_dblHour();
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_LoadMult(Value: Double); CDECL;
@@ -281,11 +279,8 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
 
-    with DSSPrime.ActiveCircuit.Solution do
-    begin
-        DynaVars.t := Value;
-        Update_dblHour;
-    end;
+    DSSPrime.ActiveCircuit.Solution.DynaVars.t := Value;
+    DSSPrime.ActiveCircuit.Solution.Update_dblHour();
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_StepSize(Value: Double); CDECL;
@@ -337,11 +332,8 @@ procedure Solution_Set_LoadModel(Value: Integer); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    with DSSPrime.ActiveCircuit.Solution do
-    begin
-        LoadModel := Value;
-        DefaultLoadModel := LoadModel;
-    end;
+    DSSPrime.ActiveCircuit.Solution.LoadModel := Value;
+    DSSPrime.ActiveCircuit.Solution.DefaultLoadModel := DSSPrime.ActiveCircuit.Solution.LoadModel;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_LDCurve(): PAnsiChar; CDECL;
@@ -349,20 +341,22 @@ begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.LoadDurCurve)
+    if DSSPrime.ActiveCircuit.LoadDurCurveObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.LoadDurCurveObj.Name)
+    else
+        Result := DSS_GetAsPAnsiChar(DSSPrime, '');
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_LDCurve(const Value: PAnsiChar); CDECL;
+var
+    sValue: String;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    with DSSPrime.ActiveCircuit do
-    begin
-        LoadDurCurve := Value;
-        LoadDurCurveObj := DSSPrime.LoadShapeClass.Find(LoadDurCurve);
-        if LoadDurCurveObj = NIL then
-            DoSimpleMsg(DSSPrime, _('Load-Duration Curve not found.'), 5001);
-    end;
+    sValue := Value;
+    DSSPrime.ActiveCircuit.LoadDurCurveObj := DSSPrime.LoadShapeClass.Find(sValue);
+    if DSSPrime.ActiveCircuit.LoadDurCurveObj = NIL then
+        DoSimpleMsg(DSSPrime, 'Load-Duration Curve "%s" not found.', [sValue], 5001);
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_pctGrowth(): Double; CDECL;
@@ -370,22 +364,15 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    with DSSPrime.ActiveCircuit do
-    begin
-        Result := (DefaultGrowthRate - 1.0) * 100.0;
-        Exit;
-    end;
+    Result := (DSSPrime.ActiveCircuit.DefaultGrowthRate - 1.0) * 100.0;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_pctGrowth(Value: Double); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    with DSSPrime.ActiveCircuit do
-    begin
-        DefaultGrowthRate := 1.0 + Value / 100.0;
-        DefaultGrowthFactor := IntPower(DefaultGrowthRate, (Solution.Year - 1));
-    end;
+    DSSPrime.ActiveCircuit.DefaultGrowthRate := 1.0 + Value / 100.0;
+    DSSPrime.ActiveCircuit.DefaultGrowthFactor := IntPower(DSSPrime.ActiveCircuit.DefaultGrowthRate, (DSSPrime.ActiveCircuit.Solution.Year - 1));
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_AddType(): Integer; CDECL;
@@ -475,11 +462,8 @@ procedure Solution_Set_ControlMode(Value: Integer); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    with DSSPrime.ActiveCircuit.Solution do
-    begin
-        ControlMode := Value;
-        DefaultControlMode := ControlMode;
-    end;
+    DSSPrime.ActiveCircuit.Solution.ControlMode := Value;
+    DSSPrime.ActiveCircuit.Solution.DefaultControlMode := DSSPrime.ActiveCircuit.Solution.ControlMode;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_GenMult(): Double; CDECL;
@@ -575,12 +559,9 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
 
-    with DSSPrime.ActiveCircuit.Solution do
-    begin
-        DynaVars.intHour := Trunc(Value);
-        DynaVars.dblHour := Value;
-        Dynavars.t := (Value - DynaVars.intHour) * 3600.0;
-    end;
+    DSSPrime.ActiveCircuit.Solution.DynaVars.intHour := Trunc(Value);
+    DSSPrime.ActiveCircuit.Solution.DynaVars.dblHour := Value;
+    DSSPrime.ActiveCircuit.Solution.Dynavars.t := (Value - DSSPrime.ActiveCircuit.Solution.DynaVars.intHour) * 3600.0;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_StepsizeHr(Value: Double); CDECL;
@@ -649,7 +630,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Solution_SolveNoControl(); CDECL;
-{Solves without checking controls}
+// Solves without checking controls
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
@@ -664,15 +645,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Solution_SolvePlusControl(); CDECL;
-{One Pass Through the solution and then dispatches controls}
+// One Pass Through the solution and then dispatches controls
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    with DSSPrime.ActiveCircuit.Solution do
-    begin
-        SolveCircuit;
-        CheckControls;
-    end;
+    DSSPrime.ActiveCircuit.Solution.SolveCircuit();
+    DSSPrime.ActiveCircuit.Solution.CheckControls();
 end;
 //------------------------------------------------------------------------------
 procedure Solution_SolveSnap(); CDECL;
@@ -690,7 +668,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Solution_InitSnap(); CDECL;
-{Initi some things that are done at the beginning of a snapshot solve}
+// Initi some things that are done at the beginning of a snapshot solve
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
@@ -706,15 +684,13 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Solution_BuildYMatrix(BuildOption, AllocateVI: Integer); CDECL;
-{
-  Build Options
-    1 = Series elements only
-    2 = Whole Y matrix
-
-  AllocateVI
-    TRUE:  Reallocate VI
-    FALSE: Do not Reallocate VI; leave as is
-}
+// Build Options
+//   1 = Series elements only
+//   2 = Whole Y matrix
+//
+// AllocateVI
+//   TRUE:  Reallocate VI
+//   FALSE: Do not Reallocate VI; leave as is
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
@@ -744,7 +720,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Converged(Value: TAPIBoolean); CDECL;
-{Set the flag directly to force its setting}
+// Set the flag directly to force its setting
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
@@ -795,13 +771,10 @@ procedure Solution_FinishTimeStep(); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
-    begin
-        DSSPrime.MonitorClass.SampleAll();  // Make all monitors take a sample
-        EndOfTimeStepCleanup();
-        Increment_time();
-//               DefaultHourMult := DefaultDailyShapeObj.getmult(TDynamicsrec.dblHour);
-    end;
+    DSSPrime.MonitorClass.SampleAll();  // Make all monitors take a sample
+    DSSPrime.ActiveCircuit.Solution.EndOfTimeStepCleanup();
+    DSSPrime.ActiveCircuit.Solution.IncrementTime();
+    // DefaultHourMult := DefaultDailyShapeObj.getmult(TDynamicsrec.dblHour);
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Process_Time(): Double; CDECL;
@@ -809,7 +782,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.ActiveCircuit.Solution.Time_Solve;
+    Result := DSSPrime.ActiveCircuit.Solution.Solve_Time_Elapsed;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Total_Time(): Double; CDECL;
@@ -817,14 +790,14 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.ActiveCircuit.Solution.Total_Time;
+    Result := DSSPrime.ActiveCircuit.Solution.Total_Time_Elapsed;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Total_Time(Value: Double); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    DSSPrime.ActiveCircuit.Solution.Total_Time := Value;
+    DSSPrime.ActiveCircuit.Solution.Total_Time_Elapsed := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Time_of_Step(): Double; CDECL;
@@ -832,7 +805,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.ActiveCircuit.Solution.Time_Step;
+    Result := DSSPrime.ActiveCircuit.Solution.Step_Time_Elapsed;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_IntervalHrs(): Double; CDECL;
@@ -891,26 +864,25 @@ var
     Counter,
     IMIdx,
     ArrSize: Integer;
+    Laplacian: Tsparse_matrix;
 begin
     if (not InvalidCircuit(DSSPrime)) and (DSSPrime.ActiveCircuit.Solution.Laplacian <> NIL) then
     begin
-        with DSSPrime.ActiveCircuit.Solution do
+        Laplacian := DSSPrime.ActiveCircuit.Solution.Laplacian;
+        ArrSize := Laplacian.NZero * 3;
+        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, ArrSize + 1); //TODO: remove the +1
+        Counter := 0;
+        IMIdx := 0;
+        while IMIdx < ArrSize do
         begin
-            ArrSize := Laplacian.NZero * 3;
-            Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, ArrSize + 1); //TODO: remove the +1
-            Counter := 0;
-            IMIdx := 0;
-            while IMIdx < ArrSize do
+            for i := 0 to 2 do
             begin
-                for i := 0 to 2 do
-                begin
-                    Result[IMIdx] := Laplacian.data[Counter][i];
-                    inc(IMIdx)
-                end;
-                inc(Counter)
+                Result[IMIdx] := Laplacian.data[Counter][i];
+                inc(IMIdx)
             end;
-            Exit;
+            inc(Counter)
         end;
+        Exit;
     end;
     DefaultResult(ResultPtr, ResultCount);
 end;
@@ -929,26 +901,25 @@ var
     Counter,
     IMIdx,
     ArrSize: Integer;
+    IncMat: Tsparse_matrix;
 begin
     if (not InvalidCircuit(DSSPrime)) and (DSSPrime.ActiveCircuit.Solution.IncMat <> NIL) then
     begin
-        with DSSPrime.ActiveCircuit.Solution do
+        IncMat := DSSPrime.ActiveCircuit.Solution.IncMat;
+        ArrSize := IncMat.NZero * 3;
+        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, ArrSize + 1); // TODO: remove +1? Left for compatibility with the official version
+        Counter := 0;
+        IMIdx := 0;
+        while IMIdx < ArrSize do
         begin
-            ArrSize := IncMat.NZero * 3;
-            Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, ArrSize + 1); // TODO: remove +1? Left for compatibility with the official version
-            Counter := 0;
-            IMIdx := 0;
-            while IMIdx < ArrSize do
+            for i := 0 to 2 do
             begin
-                for i := 0 to 2 do
-                begin
-                    Result[IMIdx] := IncMat.data[Counter][i];
-                    inc(IMIdx)
-                end;
-                inc(Counter)
+                Result[IMIdx] := IncMat.data[Counter][i];
+                inc(IMIdx)
             end;
-            Exit;
+            inc(Counter)
         end;
+        Exit;
     end;
     DefaultResult(ResultPtr, ResultCount);
 end;
@@ -968,12 +939,8 @@ begin
         Exit;
     end;
         
-    with DSSPrime.ActiveCircuit.Solution do
-    begin
-        DSS_RecreateArray_PInteger(ResultPtr, ResultCount, length(Inc_Mat_Levels));
-        Move(Inc_Mat_levels[0], ResultPtr^, length(Inc_Mat_Levels) * SizeOf(Integer));
-        Exit;
-    end;
+    DSS_RecreateArray_PInteger(ResultPtr, ResultCount, length(DSSPrime.ActiveCircuit.Solution.Inc_Mat_Levels));
+    Move(DSSPrime.ActiveCircuit.Solution.Inc_Mat_levels[0], ResultPtr^, ResultCount^ * SizeOf(Integer));
 end;
 
 procedure Solution_Get_BusLevels_GR(); CDECL;
@@ -994,14 +961,11 @@ begin
         DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
-    with DSSPrime.ActiveCircuit.Solution do
+    ArrSize := length(DSSPrime.ActiveCircuit.Solution.Inc_Mat_Rows);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, ArrSize);
+    for IMIdx := 0 to (ArrSize - 1) do
     begin
-        ArrSize := length(Inc_Mat_Rows);
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, ArrSize);
-        for IMIdx := 0 to (ArrSize - 1) do
-        begin
-            Result[IMIdx] := DSS_CopyStringAsPChar(Inc_Mat_Rows[IMIdx]);
-        end;
+        Result[IMIdx] := DSS_CopyStringAsPChar(DSSPrime.ActiveCircuit.Solution.Inc_Mat_Rows[IMIdx]);
     end;
 end;
 
@@ -1022,30 +986,27 @@ begin
     DefaultResult(ResultPtr, ResultCount, '');
     if InvalidCircuit(DSSPrime) then
         Exit;
-    with DSSPrime.ActiveCircuit.Solution, DSSPrime.ActiveCircuit do
+    if DSSPrime.IncMat_Ordered then
     begin
-        if DSSPrime.IncMat_Ordered then
+        if DSSPrime.ActiveCircuit.Solution.Inc_Mat_Cols = NIL then
+            Exit;
+            
+        ArrSize := length(DSSPrime.ActiveCircuit.Solution.Inc_Mat_Cols);
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, ArrSize);
+        for IMIdx := 0 to (ArrSize - 1) do
         begin
-            if Inc_Mat_Cols = NIL then
-                Exit;
-                
-            ArrSize := length(Inc_Mat_Cols);
-            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, ArrSize);
-            for IMIdx := 0 to (ArrSize - 1) do
-            begin
-                Result[IMIdx] := DSS_CopyStringAsPChar(Inc_Mat_Cols[IMIdx]);
-            end;
-        end
-        else
-        begin
-            if NumBuses = 0 then
-                Exit;
+            Result[IMIdx] := DSS_CopyStringAsPChar(DSSPrime.ActiveCircuit.Solution.Inc_Mat_Cols[IMIdx]);
+        end;
+    end
+    else
+    begin
+        if DSSPrime.ActiveCircuit.NumBuses = 0 then
+            Exit;
 
-            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumBuses);
-            for i := 0 to NumBuses - 1 do
-            begin
-                Result[i] := DSS_CopyStringAsPChar(BusList.NameOfIndex(i + 1));
-            end;
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.NumBuses);
+        for i := 0 to DSSPrime.ActiveCircuit.NumBuses - 1 do
+        begin
+            Result[i] := DSS_CopyStringAsPChar(DSSPrime.ActiveCircuit.BusList.NameOfIndex(i + 1));
         end;
     end;
 end;

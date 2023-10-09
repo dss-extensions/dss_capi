@@ -73,7 +73,7 @@ function DSS_Executive_Get_OptionValue(i: Integer): PAnsiChar; CDECL;
 begin
     if (i >= 1) and (i <= NumExecOptions) then
     begin
-        DSSPrime.DSSExecutive.Command := 'get ' + DSSPrime.DSSExecutive.ExecOption[i - 1];
+        DSSPrime.DSSExecutive.ParseCommand('get ' + DSSPrime.DSSExecutive.ExecOption[i - 1]);
         Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.GlobalResult);
     end
     else

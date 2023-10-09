@@ -169,7 +169,7 @@ type
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
     end;
 
 implementation
@@ -314,7 +314,7 @@ begin
 
     PropertyOffset[ord(TProp.pu)] := ptruint(@obj.PerUnit);
     PropertyOffset[ord(TProp.angle)] := ptruint(@obj.Angle);
-    
+
     PropertyOffset[ord(TProp.frequency)] := ptruint(@obj.SrcFrequency);
     PropertyFlags[ord(TProp.frequency)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
 
@@ -326,7 +326,7 @@ begin
 
     PropertyOffset[ord(TProp.x1r1)] := ptruint(@obj.X1R1);
     PropertyOffset[ord(TProp.x0r0)] := ptruint(@obj.X0R0);
-    
+
     PropertyOffset[ord(TProp.Isc3)] := ptruint(@obj.Isc3);
     PropertyFlags[ord(TProp.Isc3)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_A, TPropertyFlag.NoDefault];
 
@@ -481,7 +481,7 @@ begin
     obj := TObj(ptr);
     obj.RecalcElementData();
     obj.YPrimInvalid := TRUE;
-    Exclude(obj.Flags, Flg.EditionActive);
+    Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
 
@@ -1068,7 +1068,7 @@ begin
     ITerminalUpdated := FALSE;
 end;
 
-procedure TVsourceObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TVsourceObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 var
     i, j: Integer;
     c: Complex;
@@ -1148,5 +1148,6 @@ begin
     inherited;
 end;
 
-finalization    ModelEnum.Free;
+finalization
+    ModelEnum.Free;
 end.

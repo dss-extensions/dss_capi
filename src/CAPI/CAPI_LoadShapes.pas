@@ -58,7 +58,7 @@ uses
     Loadshape,
     DSSGlobals,
     DSSPointerList,
-    ExecHelper,
+    // ExecHelper,
     SysUtils,
     Math,
     DSSClass,
@@ -115,7 +115,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.LoadshapeClass.First;
+    Result := DSSPrime.LoadshapeClass.First();
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_Next(): Integer; CDECL;
@@ -123,7 +123,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.LoadshapeClass.Next;
+    Result := DSSPrime.LoadshapeClass.Next();
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -225,25 +225,21 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with elem do
+    if elem.ExternalMemory then
     begin
-        if elem.ExternalMemory then
-        begin
-            DoSimpleMsg(_('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61101);
-            Exit;
-        end;
-    
-        // Only accept the new data when the number of points match
-        if ValueCount <> NumPoints then
-        begin
-            DoSimpleMsg('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints], 61100);
-            Exit;
-        end;
-        ReallocMem(sP, 0);
-        UseFloat64();
-        ReallocMem(dP, Sizeof(Double) * ValueCount);
-        Move(ValuePtr[0], dP[0], ValueCount * SizeOf(Double));
+        DoSimpleMsg(DSSPrime, _('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61101);
+        Exit;
     end;
+    // Only accept the new data when the number of points match
+    if ValueCount <> elem.NumPoints then
+    begin
+        DoSimpleMsg(DSSPrime, 'The number of values (%d) does not match the current Npts (%d)!', [ValueCount, elem.NumPoints], 61100);
+        Exit;
+    end;
+    ReallocMem(elem.sP, 0);
+    elem.UseFloat64();
+    ReallocMem(elem.dP, Sizeof(Double) * ValueCount);
+    Move(ValuePtr[0], elem.dP[0], ValueCount * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_Qmult(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -253,25 +249,22 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with elem do
+    if elem.ExternalMemory then
     begin
-        if ExternalMemory then
-        begin
-            DoSimpleMsg(_('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61101);
-            Exit;
-        end;
-        
-        // Only accept the new data when the number of points match
-        if ValueCount <> NumPoints then
-        begin
-            DoSimpleMsg('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints], 61101);
-            Exit;
-        end;
-        ReallocMem(sQ, 0);
-        UseFloat64;
-        ReallocMem(dQ, Sizeof(Double) * ValueCount);
-        Move(ValuePtr[0], dQ[0], ValueCount * SizeOf(Double));
+        DoSimpleMsg(DSSPrime, _('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61101);
+        Exit;
     end;
+    
+    // Only accept the new data when the number of points match
+    if ValueCount <> elem.NumPoints then
+    begin
+        DoSimpleMsg(DSSPrime, 'The number of values (%d) does not match the current Npts (%d)!', [ValueCount, elem.NumPoints], 61101);
+        Exit;
+    end;
+    ReallocMem(elem.sQ, 0);
+    elem.UseFloat64();
+    ReallocMem(elem.dQ, Sizeof(Double) * ValueCount);
+    Move(ValuePtr[0], elem.dQ[0], ValueCount * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Normalize(); CDECL;
@@ -314,25 +307,22 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with elem do
+    if elem.ExternalMemory then
     begin
-        if elem.ExternalMemory then
-        begin
-            DoSimpleMsg(_('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61101);
-            Exit;
-        end;
-        
-        // Only accept the new data when the number of points match
-        if ValueCount <> NumPoints then
-        begin
-            DoSimpleMsg('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints], 61102);
-            Exit;
-        end;
-        ReallocMem(sH, 0);
-        UseFloat64;
-        ReallocMem(dH, Sizeof(Double) * ValueCount);        
-        Move(ValuePtr[0], dH[0], ValueCount * SizeOf(Double));
+        DoSimpleMsg(DSSPrime, _('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61101);
+        Exit;
     end;
+    
+    // Only accept the new data when the number of points match
+    if ValueCount <> elem.NumPoints then
+    begin
+        DoSimpleMsg(DSSPrime, 'The number of values (%d) does not match the current Npts (%d)!', [ValueCount, elem.NumPoints], 61102);
+        Exit;
+    end;
+    ReallocMem(elem.sH, 0);
+    elem.UseFloat64();
+    ReallocMem(elem.dH, Sizeof(Double) * ValueCount);        
+    Move(ValuePtr[0], elem.dH[0], ValueCount * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_HrInterval(): Double; CDECL;

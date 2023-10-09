@@ -143,7 +143,7 @@ type
         procedure MakeLike(OtherPtr: Pointer); override;
         
         procedure CalcMatricesFromZ1Z0;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
         procedure Set_NumPhases(Value: Integer);
         property NumPhases: Integer read FNPhases write Set_NumPhases;
@@ -275,7 +275,7 @@ begin
     PropertyOffset[ord(TProp.faultrate)] := ptruint(@obj.FaultRate);
     PropertyOffset[ord(TProp.pctperm)] := ptruint(@obj.PctPerm);
     PropertyOffset[ord(TProp.repair)] := ptruint(@obj.HrsToRepair);
-    
+
     PropertyOffset[ord(TProp.Rg)] := ptruint(@obj.Rg);
     PropertyFlags[ord(TProp.Rg)] := [TPropertyFlag.Units_ohm_per_length];
     PropertyOffset[ord(TProp.Xg)] := ptruint(@obj.Xg);
@@ -373,7 +373,7 @@ begin
         obj.Zinv.Copyfrom(obj.Z);
         obj.Zinv.Invert();
     end;
-    Exclude(obj.Flags, Flg.EditionActive);
+    Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
 
@@ -528,7 +528,7 @@ begin
     Zinv.Invert();
 end;
 
-procedure TLineCodeObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TLineCodeObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 var
     k,
     i, j: Integer;

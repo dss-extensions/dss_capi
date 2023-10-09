@@ -1,10 +1,8 @@
 unit DSSGlobals;
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -97,43 +95,35 @@ CONST
     SERIES = 1;
     SHUNT  = 2;
     
-    {Control Modes}
+    // Control Modes
     CONTROLSOFF = -1;
     EVENTDRIVEN =  1;
     TIMEDRIVEN  =  2;
     MULTIRATE   =  3;
     CTRLSTATIC  =  0;
     
-    {Randomization Constants}
+    // Randomization Constants
     GAUSSIAN  = 1;
     UNIFORM   = 2;
     LOGNORMAL = 3;
     
-    {Autoadd Constants}
+    // Autoadd Constants
     GENADD = 1;
     CAPADD = 2;
     
-    {ERRORS}
+    // ERRORS
     SOLUTION_ABORT = 99;
     
-    {For General Sequential Time Simulations}
+    // For General Sequential Time Simulations
     USEDAILY  = 0;
     USEYEARLY = 1;
     USEDUTY   = 2;
     USENONE   =-1;
     
-    {Earth Model}
+    // Earth Model
     SIMPLECARSON  = 1;
     FULLCARSON    = 2;
     DERI          = 3;
-    
-    {Profile Plot Constants}
-    PROFILE3PH = 9999; // some big number > likely no. of phases
-    PROFILEALL = 9998;
-    PROFILEALLPRI = 9997;
-    PROFILELLALL = 9996;
-    PROFILELLPRI = 9995;
-    PROFILELL    = 9994;
     
     ProgramName = 'dss-extensions';
     MaxCircuits = 2; //TODO: remove limit? or completely remove the concept of a separate circuit, i.e., make it so a DSSContext always contains one circuit
@@ -219,8 +209,7 @@ USES
      {$ENDIF}
      SysUtils,
      CAPI_Metadata,
-     CmdForms,
-     {$IFDEF DSS_CAPI_PM}
+      {$IFDEF DSS_CAPI_PM}
      syncobjs,
      {$ENDIF}
      Solution,
@@ -262,10 +251,10 @@ begin
     begin
         if DSS.In_Redirect then
         begin
-            DSSMessageDlg(Msg, FALSE);
+            DSS.MessageDlg(Msg, FALSE);
         end
         else
-            DSSMessageDlg(Msg, TRUE);
+            DSS.MessageDlg(Msg, TRUE);
     end;
     if DSS_CAPI_EARLY_ABORT then
         DSS.Redirect_Abort := True;
@@ -294,10 +283,10 @@ Begin
     begin
         if DSS.In_Redirect then
         begin
-            RetVal := DSSMessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]), FALSE);
+            RetVal := DSS.MessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]), FALSE);
         end
         else
-            DSSInfoMessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]));
+            DSS.InfoMessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]));
     end;
     if DSS_CAPI_EARLY_ABORT then
         DSS.Redirect_Abort := True;
@@ -313,129 +302,124 @@ begin
 end;
 
 function SetObject(DSS: TDSSContext; const param :string): Boolean;
-
-{Set object active by name}
-
-VAR
-   dotpos :Integer;
-   ObjName, ObjClass :String;
-
-Begin
+// Set object active by name
+var
+   dotpos: Integer;
+   ObjName, ObjClass: String;
+begin
     Result := true;
-      ObjClass := '';
-      // Split off Obj class and name
-      dotpos := Pos('.', Param);
-      if dotpos = 0 then
-         ObjName := Copy(Param, 1, Length(Param))  // assume it is all name; class defaults
-      else
-      begin
-           ObjClass := Copy(Param, 1, dotpos-1);
-           ObjName  := Copy(Param, dotpos+1, Length(Param));
-      end;
+    ObjClass := '';
+    // Split off Obj class and name
+    dotpos := Pos('.', Param);
+    if dotpos = 0 then
+    begin
+        ObjName := Copy(Param, 1, Length(Param));  // assume it is all name; class defaults
+    end
+    else
+    begin
+        ObjClass := Copy(Param, 1, dotpos-1);
+        ObjName  := Copy(Param, dotpos+1, Length(Param));
+    end;
 
-      IF Length(ObjClass) > 0 THEN SetObjectClass(DSS, ObjClass);
+    if Length(ObjClass) > 0 then
+        SetObjectClass(DSS, ObjClass);
 
-      DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
-      IF DSS.ActiveDSSClass <> Nil THEN
-      Begin
-        IF Not DSS.ActiveDSSClass.SetActive(Objname) THEN
-        Begin // scroll through list of objects untill a match
-          DoSimpleMsg(DSS, Format(_('Error! Object "%s" not found.'), [ObjName]) + CRLF + DSS.Parser.CmdString, 904);
-          Result := false;
-        End
-        ELSE
-        With DSS.ActiveCircuit Do
-        Begin
-           CASE DSS.ActiveDSSObject.DSSObjType OF
-                DSS_OBJECT: ;  // do nothing for general DSS object
+    DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
 
-           ELSE Begin   // for circuit types, set ActiveCircuit Element, too
-                 ActiveCktElement := DSS.ActiveDSSClass.GetActiveObj;
-                End;
-           End;
-        End;
-      End
-      ELSE
+    if DSS.ActiveDSSClass = NIL then
     begin
         DoSimpleMsg(DSS, _('Error! Active object type/class is not set.'), 905);
         Result := false;
+        Exit;
     end;
+
+    if not DSS.ActiveDSSClass.SetActive(Objname) then
+    begin // scroll through list of objects untill a match
+        DoSimpleMsg(DSS, Format(_('Error! Object "%s" not found.'), [ObjName]) + CRLF + DSS.Parser.CmdString, 904);
+        Result := false;
+        Exit;
+    end;
+
+    if DSS.ActiveDSSObject.DSSObjType <> DSS_OBJECT then
+    begin
+        // for circuit types, set ActiveCircuit Element, too
+        DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveDSSClass.GetActiveObj;
+    end;
+    // else do nothing for general DSS object
 end;
 
-FUNCTION SetActiveBus(DSS: TDSSContext; const BusName:String):Integer;
+function SetActiveBus(DSS: TDSSContext; const BusName: String): Integer;
 begin
    // Now find the bus and set active
    Result := 0;
 
-   WITH DSS.ActiveCircuit Do
-     Begin
-        If BusList.Count = 0 Then Exit;   // Buslist not yet built
-        ActiveBusIndex := BusList.Find(BusName);
-        IF   ActiveBusIndex=0 Then
-          Begin
-            Result := 1;
-            AppendGlobalResult(DSS, Format(_('SetActiveBus: Bus "%s" notfound'), [BusName]));
-          End;
-     End;
+    If DSS.ActiveCircuit.BusList.Count = 0 then
+        Exit;   // Buslist not yet built
+
+    DSS.ActiveCircuit.ActiveBusIndex := DSS.ActiveCircuit.BusList.Find(BusName);
+    if DSS.ActiveCircuit.ActiveBusIndex = 0 then
+    begin
+        Result := 1;
+        AppendGlobalResult(DSS, Format(_('SetActiveBus: Bus "%s" notfound'), [BusName]));
+    end;
 end;
 
 procedure ClearAllCircuits_SingleContext(DSS: TDSSContext);
+var
+    circuit: TDSSCircuit;
 Begin
-    DSS.ActiveCircuit := DSS.Circuits.First;
-    while DSS.ActiveCircuit <> nil do
+    for circuit in DSS.Circuits do    
     begin
-        DSS.ActiveCircuit.Free;
-        DSS.ActiveCircuit := DSS.Circuits.Next;
+        circuit.Free;
     end;
     DSS.Circuits.Free;
     DSS.Circuits := TDSSPointerList.Create(2);   // Make a new list of circuits
     DSS.NumCircuits := 0;
+    DSS.ActiveCircuit := NIL;
 
     // Revert on key global flags to Original States
-    DSS.DefaultEarthModel     := DERI;
-    DSS.LogQueries            := FALSE;
+    DSS.DefaultEarthModel := DERI;
+    DSS.LogQueries := false;
     DSS.MaxAllocationIterations := 2;
 End;
 {$IFDEF DSS_CAPI_PM}
 procedure ClearAllCircuits_AllContexts(DSS: TDSSContext);
 var
-    i : integer;
     PMParent: TDSSContext;
+    circuit: TDSSCircuit;
+    ctx: TDSSContext;
 begin
     PMParent := DSS.GetPrime();
     
-    for i := 0 to High(PMParent.Children) do
-        with PMParent.Children[i] do
+    for ctx in PMParent.Children do
+    begin
+        // In case the actor hasn't been destroyed
+        if ctx.ActorThread <> nil then
         begin
-            // In case the actor hasn't been destroyed
-            if ActorThread <> nil then
-            begin
-                SolutionAbort := True;
-                ActorThread.Send_Message(TActorMessage.EXIT_ACTOR);
-                ActorThread.WaitFor();
-                ActorThread.Free;
-                ActorThread := nil;
-            end;
-
-            ActiveCircuit := Circuits.First;
-            while ActiveCircuit <> nil do
-            begin
-                ActiveCircuit.Free;
-                ActiveCircuit := Circuits.Next;
-            end;
-            ActiveCircuit := Circuits.First;
-            NumCircuits := 0;
-            Circuits.Free;
-            Circuits := TDSSPointerList.Create(2);   // Make a new list of circuits
-            
-            //TODO: check why v8 does this:
-            // FreeAndNil(Parser);
-            
-            // Revert on key global flags to Original States
-            DefaultEarthModel := DERI;
-            LogQueries := FALSE;
-            MaxAllocationIterations := 2;
+            ctx.SolutionAbort := True;
+            ctx.ActorThread.Send_Message(TActorMessage.EXIT_ACTOR);
+            ctx.ActorThread.WaitFor();
+            ctx.ActorThread.Free;
+            ctx.ActorThread := nil;
         end;
+
+        for circuit in ctx.Circuits do
+        begin
+            circuit.Free;
+        end;
+        ctx.ActiveCircuit := NIL;
+        ctx.NumCircuits := 0;
+        ctx.Circuits.Free;
+        ctx.Circuits := TDSSPointerList.Create(2);   // Make a new list of circuits
+        
+        //TODO: check why v8 does this:
+        // FreeAndNil(Parser);
+        
+        // Revert on key global flags to Original States
+        ctx.DefaultEarthModel := DERI;
+        ctx.LogQueries := FALSE;
+        ctx.MaxAllocationIterations := 2;
+    end;
         
     PMParent.ActiveChild := PMParent;
     PMParent.ActiveChildIndex := 0;
@@ -456,7 +440,7 @@ Begin
         // Create a default Circuit
         DSS.SolutionAbort := False;
         // Voltage source named "source" connected to SourceBus
-        DSS.DSSExecutive.Command := 'New object=vsource.source Bus1=SourceBus ' + S;  // Load up the parser as if it were read in
+        DSS.DSSExecutive.ParseCommand('New object=vsource.source Bus1=SourceBus ' + S);  // Load up the parser as if it were read in
     End
     Else
     Begin
@@ -594,7 +578,7 @@ End;
 
 
 PROCEDURE WriteQueryLogfile(DSS: TDSSContext; Const Prop, S:String);
-{Log file is written after a query command if LogQueries is true.}
+// Log file is written after a query command if LogQueries is true.
 Begin
     TRY
         DSS.QueryLogFileName :=  DSS.OutputDirectory + 'QueryLog.csv';
@@ -664,7 +648,7 @@ begin
     DSS := MainDSS.ActiveChild;
 
     Ref_Ckt := MainDSS.LastFileCompiled;
-    DSS.Parser.NextParam;
+    DSS.Parser.NextParam();
     NumClones := DSS.Parser.IntValue;
     PMParent.Parallel_enabled := False;
     if ((PMParent.NumOfActors + NumClones) <= CPU_Cores) and (NumClones > 0) then
@@ -673,7 +657,7 @@ begin
         begin
             New_Actor_Slot(PMParent);
             ChDSS := PMParent.ActiveChild;
-            ChDSS.DSSExecutive.Command := 'compile "' + Ref_Ckt + '"';
+            ChDSS.DSSExecutive.ParseCommand('compile "' + Ref_Ckt + '"');
             if ChDSS.ActiveCircuit = NIL then
             begin
                 DoSimpleMsg(DSS, 'Could not compile the script "%s"', [Ref_Ckt], 7008);

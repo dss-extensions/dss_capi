@@ -148,7 +148,7 @@ begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumStorageRegisters);
     for k := 0 to NumStorageRegisters - 1 do
     begin
-        Result[k] := DSS_CopyStringAsPChar(DSSPrime.StorageClass.RegisterNames[k + 1]);
+        Result[k] := DSS_CopyStringAsPChar(DSSPrime.StorageClass.RegisterNames[k]);
     end;
 end;
 //------------------------------------------------------------------------------

@@ -79,6 +79,7 @@ uses
     Utilities,
     Bus,
     CktElement,
+    Solution,
     Ucmatrix,
     DSSClass,
     DSSHelper;
@@ -115,25 +116,26 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_Name(): PAnsiChar; CDECL;
+var
+    pBus: TDSSBus;
 begin
     Result := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
 
-    with DSSPrime.ActiveCircuit do
-        if (ActiveBusIndex > 0) and (ActiveBusIndex <= NumBuses) then
-            Result := DSS_GetAsPAnsiChar(DSSPrime, BusList.NameOfIndex(ActiveBusIndex));
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pBus.Name);
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_NumNodes(): Integer; CDECL;
+var
+    pBus: TDSSBus;
 begin
     Result := 0;
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
 
-    with DSSPrime.ActiveCircuit do
-        if (ActiveBusIndex > 0) and (ActiveBusIndex <= NumBuses) then
-            Result := DSSPrime.ActiveCircuit.Buses[DSSPrime.ActiveCircuit.ActiveBusIndex].NumNodesThisBus;
+    
+    Result := pBus.NumNodesThisBus;
 end;
 //------------------------------------------------------------------------------
 procedure Bus_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -152,34 +154,32 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit do
+    Nvalues := pBus.NumNodesThisBus;
+    if Nvalues > 3 then
+        Nvalues := 3;
+
+    // Assume nodes 1, 2, and 3 are the 3 phases
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 3);
+    if Nvalues <> 3 then
     begin
-        Nvalues := pBus.NumNodesThisBus;
-        if Nvalues > 3 then
-            Nvalues := 3;
+        for i := 1 to 3 do
+            Result[i - 1] := -1.0;  // Signify seq voltages n/A for less then 3 phases
+        Exit;
+    end;
 
-        // Assume nodes 1, 2, and 3 are the 3 phases
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 3);
-        if Nvalues <> 3 then
-            for i := 1 to 3 do
-                Result[i - 1] := -1.0  // Signify seq voltages n/A for less then 3 phases
-        else
-        begin
-            iV := 0;
-            for i := 1 to 3 do
-            begin
-                Vph[i] := Solution.NodeV[pBus.Find(i)];
-            end;
+    iV := 0;
+    for i := 1 to 3 do
+    begin
+        Vph[i] := DSSPrime.ActiveCircuit.Solution.NodeV[pBus.Find(i)];
+    end;
 
-            Phase2SymComp(@Vph, @V012);   // Compute Symmetrical components
+    Phase2SymComp(@Vph, @V012);   // Compute Symmetrical components
 
-            for i := 1 to 3 do  // Stuff it in the result
-            begin
-                Result[iV] := Cabs(V012[i]);
-                Inc(iV);
-            end;
-        end;
-    end
+    for i := 1 to 3 do  // Stuff it in the result
+    begin
+        Result[iV] := Cabs(V012[i]);
+        Inc(iV);
+    end;
 end;
 
 procedure Bus_Get_SeqVoltages_GR(); CDECL;
@@ -203,8 +203,6 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit do
-    begin
         Nvalues := pBus.NumNodesThisBus;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
         iV := 0;
@@ -217,13 +215,12 @@ begin
                 inc(jj)
             until NodeIdx > 0;
 
-            Volts := Solution.NodeV[pBus.GetRef(NodeIdx)];
+        Volts := DSSPrime.ActiveCircuit.Solution.NodeV[pBus.GetRef(NodeIdx)];
             Result[iV] := Volts.re;
             Inc(iV);
             Result[iV] := Volts.im;
             Inc(iV);
         end;
-    end
 end;
 
 procedure Bus_Get_Voltages_GR(); CDECL;
@@ -246,9 +243,7 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit, pBus do
-    begin
-        Nvalues := NumNodesThisBus;
+    Nvalues := pBus.NumNodesThisBus;
         Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, NValues);
         iV := 0;
         jj := 1;
@@ -256,14 +251,13 @@ begin
         begin
             // this code so nodes come out in order from smallest to larges
             repeat
-                NodeIdx := FindIdx(jj);  // Get the index of the Node that matches jj
+            NodeIdx := pBus.FindIdx(jj);  // Get the index of the Node that matches jj
                 inc(jj)
             until NodeIdx > 0;
             Result[iV] := pBus.GetNum(NodeIdx);
             Inc(iV);
         end;
     end;
-end;
 
 procedure Bus_Get_Nodes_GR(); CDECL;
 // Same as Bus_Get_Nodes but uses global result (GR) pointers
@@ -286,8 +280,6 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit do
-    begin
         if pBus.BusCurrent <> NIL then
         begin
             NValues := pBus.NumNodesThisBus;
@@ -304,7 +296,6 @@ begin
         end
         else
             DefaultResult(ResultPtr, ResultCount);
-    end
 end;
 
 procedure Bus_Get_Isc_GR(); CDECL;
@@ -321,24 +312,22 @@ var
     Voc: Complex;
     i, iV, NValues: Integer;
 
+    pBus: TDSSBus;
 begin
-    if (InvalidCircuit(DSSPrime)) or
-        (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
+    if not _activeObj(DSSPrime, pBus) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit do
+    if pBus.VBus <> NIL then
     begin
-        if Buses[ActiveBusIndex].VBus <> NIL then
-        begin
-            NValues := Buses[ActiveBusIndex].NumNodesThisBus;
+        NValues := pBus.NumNodesThisBus;
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
             iV := 0;
             for i := 1 to NValues do
             begin
-                Voc := Buses[ActiveBusIndex].VBus[i];
+            Voc := pBus.VBus[i];
                 Result[iV] := Voc.Re;
                 Inc(iV);
                 Result[iV] := Voc.Im;
@@ -347,7 +336,6 @@ begin
         end
         else
             DefaultResult(ResultPtr, ResultCount);
-    end
 end;
 
 procedure Bus_Get_Voc_GR(); CDECL;
@@ -358,14 +346,14 @@ end;
 
 //------------------------------------------------------------------------------
 function Bus_Get_kVBase(): Double; CDECL;
+var
+    pBus: TDSSBus;
 begin
     Result := 0.0;
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
 
-    with DSSPrime.ActiveCircuit do
-        if (ActiveBusIndex > 0) and (ActiveBusIndex <= NumBuses) then
-            Result := DSSPrime.ActiveCircuit.Buses[DSSPrime.ActiveCircuit.ActiveBusIndex].kVBase;
+    Result := pBus.kVBase;
 end;
 //------------------------------------------------------------------------------
 procedure Bus_Get_puVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -383,32 +371,29 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit, pBus do
-    begin
-        Nvalues := NumNodesThisBus;
+    Nvalues := pBus.NumNodesThisBus;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
         iV := 0;
         jj := 1;
-        if kVBase > 0.0 then
-            BaseFactor := 1000.0 * kVBase
+    if pBus.kVBase > 0.0 then
+        BaseFactor := 1000.0 * pBus.kVBase
         else
             BaseFactor := 1.0;
         for i := 1 to NValues do
         begin
             // this code so nodes come out in order from smallest to larges
             repeat
-                NodeIdx := FindIdx(jj);  // Get the index of the Node that matches jj
+            NodeIdx := pBus.FindIdx(jj);  // Get the index of the Node that matches jj
                 inc(jj)
             until NodeIdx > 0;
 
-            Volts := Solution.NodeV[GetRef(NodeIdx)];
+        Volts := DSSPrime.ActiveCircuit.Solution.NodeV[pBus.GetRef(NodeIdx)];
             Result[iV] := Volts.re / BaseFactor;
             Inc(iV);
             Result[iV] := Volts.im / BaseFactor;
             Inc(iV);
         end;
     end;
-end;
 
 procedure Bus_Get_puVoltages_GR(); CDECL;
 // Same as Bus_Get_puVoltages but uses global result (GR) pointers
@@ -429,13 +414,10 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit do
-    begin
         Z := pBus.Zsc0;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
         Result[0] := Z.Re;
         Result[1] := Z.Im;
-    end
 end;
 
 procedure Bus_Get_Zsc0_GR(); CDECL;
@@ -457,13 +439,10 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit do
-    begin
         Z := pBus.Zsc1;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
         Result[0] := Z.Re;
         Result[1] := Z.Im;
-    end
 end;
 
 procedure Bus_Get_Zsc1_GR(); CDECL;
@@ -485,14 +464,13 @@ begin
         Exit;
 
     try
-        with DSSPrime.ActiveCircuit do
-        begin
             if Assigned(pBus.Zsc) then
             begin
                 Nelements := pBus.Zsc.Order;
                 Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Nelements * Nelements, Nelements, Nelements);
                 iV := 0;
                 for i := 1 to Nelements do
+            begin
                     for j := 1 to Nelements do
                     begin
                         Z := pBus.Zsc[i, j];
@@ -501,8 +479,8 @@ begin
                         Result[iV] := Z.Im;
                         Inc(iV);
                     end;
-            end
-        end
+            end;
+        end;
     except
         On E: Exception do
             DoSimpleMsg(DSSPrime, 'ZscMatrix Error: %s', [E.message], 5016);
@@ -537,13 +515,13 @@ begin
         Exit;
 
     try
-        with DSSPrime.ActiveCircuit do
             if Assigned(pBus.Ysc) then
             begin
                 Nelements := pBus.Ysc.Order;
                 Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Nelements * Nelements, Nelements, Nelements);
                 iV := 0;
                 for i := 1 to Nelements do
+            begin
                     for j := 1 to Nelements do
                     begin
                         Y1 := pBus.Ysc[i, j];
@@ -552,6 +530,7 @@ begin
                         Result[iV] := Y1.Im;
                         Inc(iV);
                     end;
+            end;
             end
     except
         On E: Exception do
@@ -567,48 +546,46 @@ end;
 
 //------------------------------------------------------------------------------
 function Bus_Get_Coorddefined(): TAPIBoolean; CDECL;
+var
+    pBus: TDSSBus;
 begin
     Result := FALSE;
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
-    with DSSPrime.ActiveCircuit do
-        if (ActiveBusIndex > 0) and (ActiveBusIndex <= NumBuses) then
-            if (Buses[DSSPrime.ActiveCircuit.ActiveBusIndex].CoordDefined) then
+    if pBus.CoordDefined then
                 Result := TRUE;
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_x(): Double; CDECL;
+var
+    pBus: TDSSBus;
 begin
     Result := 0.0;
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
-    with DSSPrime.ActiveCircuit do
-        if (ActiveBusIndex > 0) and (ActiveBusIndex <= NumBuses) then
-            if (Buses[DSSPrime.ActiveCircuit.ActiveBusIndex].CoordDefined) then
-                Result := Buses[DSSPrime.ActiveCircuit.ActiveBusIndex].x;
+    if pBus.CoordDefined then
+        Result := pBus.x;
 end;
 //------------------------------------------------------------------------------
 procedure Bus_Set_x(Value: Double); CDECL;
+var
+    pBus: TDSSBus;
 begin
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
-    with DSSPrime.ActiveCircuit do
-        if (ActiveBusIndex > 0) and (ActiveBusIndex <= NumBuses) then
-        begin
-            Buses[DSSPrime.ActiveCircuit.ActiveBusIndex].CoordDefined := TRUE;
-            Buses[DSSPrime.ActiveCircuit.ActiveBusIndex].x := Value;
-        end;
+    pBus.CoordDefined := TRUE;
+    pBus.x := Value;
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_y(): Double; CDECL;
+var
+    pBus: TDSSBus;
 begin
     Result := 0.0;
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
-    with DSSPrime.ActiveCircuit do
-        if (ActiveBusIndex > 0) and (ActiveBusIndex <= NumBuses) then
-            if (Buses[DSSPrime.ActiveCircuit.ActiveBusIndex].CoordDefined) then
-                Result := Buses[DSSPrime.ActiveCircuit.ActiveBusIndex].y;
+    if pBus.CoordDefined then
+        Result := pBus.y;
 end;
 //------------------------------------------------------------------------------
 procedure Bus_Set_y(Value: Double); CDECL;
@@ -632,14 +609,14 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Bus_GetUniqueNodeNumber(StartNumber: Integer): Integer; CDECL;
+var
+    pBus: TDSSBus;
 begin
     Result := 0;
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
 
-    with DSSPrime.ActiveCircuit do
-        if ActiveBusIndex > 0 then
-            Result := Utilities.GetUniqueNodeNumber(DSSPrime, BusList.NameOfIndex(ActiveBusIndex), StartNumber);
+    Result := DSSPrime.ActiveCircuit.GetUniqueNodeNumber(pBus.Name, StartNumber);
 end;
 //------------------------------------------------------------------------------
 procedure Bus_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -658,8 +635,6 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit do
-    begin
         Nvalues := pBus.NumNodesThisBus;
         if Nvalues > 3 then
             Nvalues := 3;
@@ -673,7 +648,7 @@ begin
         begin
             iV := 0;
             for i := 1 to 3 do
-                Vph[i] := Solution.NodeV[pBus.Find(i)];
+            Vph[i] := DSSPrime.ActiveCircuit.Solution.NodeV[pBus.Find(i)];
 
             Phase2SymComp(@Vph, @V012);   // Compute Symmetrical components
 
@@ -685,7 +660,6 @@ begin
                 Inc(iV);
             end;
         end;
-    end
 end;
 
 procedure Bus_Get_CplxSeqVoltages_GR(); CDECL;
@@ -768,6 +742,7 @@ var
     Volts: Complex;
     pBus: TDSSBus;
     BaseFactor: Double;
+    NodeV: pNodeVArray;
 begin
     if not _activeObj(DSSPrime, pBus) then
     begin
@@ -775,8 +750,7 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit do
-    begin
+    NodeV := DSSPrime.ActiveCircuit.Solution.NodeV;
         Nvalues := pBus.NumNodesThisBus;
         if Nvalues > 3 then
             Nvalues := 3;
@@ -826,7 +800,6 @@ begin
                     Exit;
                 end;
 //------------------------------------------------------------------------------------------------
-                with Solution do
                     Volts := NodeV[pBus.GetRef(NodeIdxi)] - NodeV[pBus.GetRef(NodeIdxj)];
                 Result[iV] := Volts.re / BaseFactor;
                 Inc(iV);
@@ -842,7 +815,6 @@ begin
             Result[0] := -99999.0;
             Result[1] := 0.0;
         end;
-    end
 end;
 
 procedure Bus_Get_puVLL_GR(); CDECL;
@@ -858,6 +830,7 @@ var
     Nvalues, i, iV, NodeIdxi, NodeIdxj, jj, k: Integer;
     Volts: Complex;
     pBus: TDSSBus;
+    NodeV: pNodeVArray;
 begin
     if not _activeObj(DSSPrime, pBus) then
     begin
@@ -865,8 +838,7 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit do
-    begin
+    NodeV := DSSPrime.ActiveCircuit.Solution.NodeV;
         Nvalues := pBus.NumNodesThisBus;
         if Nvalues > 3 then
             Nvalues := 3;
@@ -911,7 +883,6 @@ begin
                     Exit;
                 end;
 //------------------------------------------------------------------------------------------------
-                with Solution do
                     Volts := NodeV[pBus.GetRef(NodeIdxi)] - NodeV[pBus.GetRef(NodeIdxj)];
                 Result[iV] := Volts.re;
                 Inc(iV);
@@ -926,7 +897,6 @@ begin
             Result[0] := -99999.0;
             Result[1] := 0.0;
         end;
-    end
 end;
 
 procedure Bus_Get_VLL_GR(); CDECL;
@@ -951,8 +921,6 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit do
-    begin
         Nvalues := pBus.NumNodesThisBus;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
         iV := 0;
@@ -971,13 +939,12 @@ begin
                 inc(jj)
             until NodeIdx > 0;
 
-            Volts := ctopolardeg(Solution.NodeV[pBus.GetRef(NodeIdx)]);
+        Volts := ctopolardeg(DSSPrime.ActiveCircuit.Solution.NodeV[pBus.GetRef(NodeIdx)]);
             Result[iV] := Volts.mag / BaseFactor;
             Inc(iV);
             Result[iV] := Volts.ang;
             Inc(iV);
         end;
-    end
 end;
 
 procedure Bus_Get_puVmagAngle_GR(); CDECL;
@@ -1001,8 +968,6 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit do
-    begin
         Nvalues := pBus.NumNodesThisBus;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
         iV := 0;
@@ -1015,13 +980,12 @@ begin
                 inc(jj)
             until NodeIdx > 0;
 
-            Volts := ctopolardeg(Solution.NodeV[pBus.GetRef(NodeIdx)]);
+        Volts := ctopolardeg(DSSPrime.ActiveCircuit.Solution.NodeV[pBus.GetRef(NodeIdx)]);
             Result[iV] := Volts.mag;
             Inc(iV);
             Result[iV] := Volts.ang;
             Inc(iV);
         end;
-    end
 end;
 
 procedure Bus_Get_VMagAngle_GR(); CDECL;
@@ -1058,27 +1022,23 @@ begin
     Result := -1;   // Signifies Error
     if InvalidCircuit(DSSPrime) then
         Exit;
-    with DSSPrime.ActiveCircuit do
+    BusIndex := DSSPrime.ActiveCircuit.ActiveBusIndex + 1;
+    if (BusIndex > 0) and (BusIndex <= DSSPrime.ActiveCircuit.Numbuses) then
     begin
-        BusIndex := ActiveBusIndex + 1;
-        if (BusIndex > 0) and (BusIndex <= Numbuses) then
-        begin
-            ActiveBusIndex := BusIndex;
+        DSSPrime.ActiveCircuit.ActiveBusIndex := BusIndex;
             Result := 0;
         end;
     end;
-end;
 //------------------------------------------------------------------------------
 function CheckBusReference(cktElem: TDSSCktElement; BusReference: Integer; var TerminalIndex: Integer): Boolean;
-{Check all terminals of cktelement to see if bus connected to busreference}
+// Check all terminals of cktelement to see if bus connected to busreference
 var
     i: Integer;
 begin
     Result := FALSE;
-    with cktElem do
-        for i := 1 to NTerms do
+    for i := 1 to cktElem.NTerms do
         begin
-            if Terminals[i - 1].BusRef = BusReference then
+        if cktElem.Terminals[i - 1].BusRef = BusReference then
             begin
                 TerminalIndex := i;
                 Result := TRUE;
@@ -1088,7 +1048,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Bus_Get_LineList(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-{ Returns list of LINE elements connected to this bus}
+// Returns list of LINE elements connected to this bus
 var
     BusReference, j, k, LineCount: Integer;
     pElem: TDSSCktElement;
@@ -1101,17 +1061,13 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit do
-    begin
-        BusReference := ActiveBusIndex;
-        { Count number of Lines connected to this bus }
+    BusReference := DSSPrime.ActiveCircuit.ActiveBusIndex;
+    // Count number of Lines connected to this bus
         LineCount := 0;
-        pElem := TDSSCktElement(Lines.First);
-        while Assigned(pElem) do
+    for pElem in DSSPrime.ActiveCircuit.Lines do
         begin
             if CheckBusReference(pElem, BusReference, j) then
                 Inc(LineCount);
-            pElem := TDSSCktElement(Lines.Next);
         end;
 
         if LineCount <= 0 then
@@ -1123,17 +1079,14 @@ begin
         //TODO: save list of elements to avoid a second loop through them all?
 
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, LineCount);
-        pElem := TDSSCktElement(Lines.First);
         k := 0;
-        while Assigned(pElem) do
+    for pElem in DSSPrime.ActiveCircuit.Lines do
         begin
             if CheckBusReference(pElem, BusReference, j) then
             begin
                 Result[k] := DSS_CopyStringAsPChar('LINE.' + pElem.name);
                 Inc(k);
             end;
-            pElem := TDSSCktElement(Lines.Next);
-        end;
     end;
 end;
 
@@ -1158,12 +1111,10 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit do
-    begin
-        BusReference := ActiveBusIndex;
+    BusReference := DSSPrime.ActiveCircuit.ActiveBusIndex;
         // Count number of LOAD elements connected to this bus
         LoadCount := 0;
-        for pElem in Loads do
+    for pElem in DSSPrime.ActiveCircuit.Loads do
         begin
             if CheckBusReference(pElem, BusReference, j) then
                 Inc(LoadCount);
@@ -1179,7 +1130,7 @@ begin
 
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, LoadCount);
         k := 0;
-        for pElem in Loads do
+    for pElem in DSSPrime.ActiveCircuit.Loads do
         begin
             if CheckBusReference(pElem, BusReference, j) then
             begin
@@ -1188,7 +1139,6 @@ begin
             end;
         end;
     end;
-end;
 
 procedure Bus_Get_LoadList_GR(); CDECL;
 // Same as Bus_Get_LoadList but uses global result (GR) pointers
@@ -1241,7 +1191,7 @@ end;
 procedure Bus_Get_AllPCEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     i: Integer;
-    myPCEList: Array of String;
+    pces: Array of String;
     Result: PPAnsiCharArray0;
 begin
     if not _hasActiveBus(DSSPrime) then
@@ -1249,16 +1199,16 @@ begin
         DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
         Exit;
     end;
-    myPCEList := DSSPrime.ActiveCircuit.getPCEatBus(DSSPrime.ActiveCircuit.ActiveBusIndex, False);
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(myPCEList));
-    for i := 0 to High(myPCEList) do
-        Result[i] := DSS_CopyStringAsPChar(myPCEList[i]);
+    pces := DSSPrime.ActiveCircuit.getPCEatBus(DSSPrime.ActiveCircuit.ActiveBusIndex, False);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(pces));
+    for i := 0 to High(pces) do
+        Result[i] := DSS_CopyStringAsPChar(pces[i]);
 end;
 //------------------------------------------------------------------------------
 procedure Bus_Get_AllPDEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
   i: Integer;
-  myPDEList: Array of String;
+  pdes: Array of String;
   Result: PPAnsiCharArray0;
 begin
     if not _hasActiveBus(DSSPrime) then
@@ -1266,10 +1216,10 @@ begin
         DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
         Exit;
     end;
-    myPDEList := DSSPrime.ActiveCircuit.getPDEatBus(DSSPrime.ActiveCircuit.ActiveBusIndex, False);
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(myPDEList));
-    for i := 0 to High(myPDEList) do
-        Result[i] := DSS_CopyStringAsPChar(myPDEList[i]);
+    pdes := DSSPrime.ActiveCircuit.getPDEatBus(DSSPrime.ActiveCircuit.ActiveBusIndex, False);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(pdes));
+    for i := 0 to High(pdes) do
+        Result[i] := DSS_CopyStringAsPChar(pdes[i]);
 end;
 //------------------------------------------------------------------------------
 end.

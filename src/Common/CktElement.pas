@@ -1,11 +1,9 @@
 unit CktElement;
 
-{
-   ----------------------------------------------------------
-  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -29,7 +27,6 @@ type
         FBusNames: pStringArray; // Bus + Nodes (a.1.2.3.0)
         FActiveTerminal: Int8;
         FYPrimInvalid: Boolean;
-        FHandle: Integer;
 
         procedure Set_Freq(Value: Double);  // set freq and recompute YPrim.
 
@@ -38,8 +35,6 @@ type
         procedure Set_ActiveTerminal(value: Int8);
         function Get_ConductorClosed(Index: Integer): Boolean; inline;
         procedure Set_YprimInvalid(const Value: Boolean);
-        function Get_FirstBus: String;
-        function Get_NextBus: String;
         function Get_Losses: Complex;   // Get total losses for property...
         function Get_Power(idxTerm: Integer): Complex;    // Get total complex power in active terminal
         function Get_MaxPower(idxTerm: Integer): Complex;    // Get equivalent total complex power in active terminal based on phase with max current
@@ -70,8 +65,8 @@ type
         procedure Set_Enabled(Value: Boolean); VIRTUAL;
         procedure Set_ConductorClosed(Index: Integer; Value: Boolean); VIRTUAL;
         procedure Set_NTerms(Value: Int8);
-        procedure Set_Handle(Value: Integer);
     PUBLIC
+        Handle: Integer;
 
         // Total Noderef array for element
         NodeRef: pIntegerArray;  // Need fast access to this
@@ -98,6 +93,8 @@ type
         constructor Create(ParClass: TDSSClass);
         destructor Destroy; OVERRIDE;
         procedure MakeLike(OtherObj: Pointer); override;
+        function FirstBus(): String;
+        function NextBus(): String;
 
         function AllConductorsClosed(): Boolean;
         function GetYPrim(var Ymatrix: TCmatrix; Opt: Integer): Integer; VIRTUAL;  //returns values of array
@@ -106,7 +103,8 @@ type
         procedure ComputeIterminal; VIRTUAL;   // Computes Iterminal for this device
         procedure ComputeVterminal;
         procedure ZeroITerminal; inline;
-        procedure GetCurrents(Curr: pComplexArray); VIRTUAL; ABSTRACT; //Get present value of terminal Curr for reports
+        procedure GetCurrents(Curr: pComplexArray); VIRTUAL; OVERLOAD; ABSTRACT; //Get present value of terminal Curr for reports
+        procedure GetCurrents(Curr: ArrayOfComplex); VIRTUAL; OVERLOAD; //Get present value of terminal Curr for reports
         function InjCurrents: Integer; VIRTUAL; // Applies to PC Elements Puts straight into Solution Array
 
         function GetBus(i: Integer): String;  // Get bus name by index
@@ -123,17 +121,14 @@ type
         procedure GetLosses(var TotalLosses, LoadLosses, NoLoadLosses: Complex); VIRTUAL;
         procedure GetSeqLosses(var PosSeqLosses, NegSeqLosses, ZeroModeLosses: complex); VIRTUAL;
 
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
-        property Handle: Integer READ FHandle WRITE Set_Handle;
         property Enabled: Boolean READ FEnabled WRITE Set_Enabled;
         property YPrimInvalid: Boolean READ FYPrimInvalid WRITE set_YprimInvalid;
         property YPrimFreq: Double READ FYprimFreq WRITE Set_Freq;
         property NTerms: Int8 READ Fnterms WRITE Set_NTerms;
         property NConds: Int8 READ Fnconds WRITE Set_Nconds;
         property NPhases: Integer READ Fnphases;
-        property FirstBus: String READ Get_FirstBus;
-        property NextBus: String READ Get_NextBus;    // null string if no more values
         property Losses: Complex READ Get_Losses;
         property Power[idxTerm: Integer]: Complex READ Get_Power;  // Total power in active terminal
         property MaxPower[idxTerm: Integer]: Complex READ Get_MaxPower;  // Total power in active terminal
@@ -185,7 +180,7 @@ begin
     PublicDataStruct := NIL;   // pointer to fixed struct of data to be shared
     PublicDataSize := 0;
 
-    FHandle := -1;
+    Handle := -1;
     BusIndex := 0;
     FNterms := 0;
     Fnconds := 0;
@@ -231,7 +226,7 @@ begin
     if assigned(ControlElementList) then
         ControlElementList.Free;
 
-    {Dispose YPrims}
+    // Dispose YPrims
     if (Yprim <> NIL) AND (Yprim <> Yprim_Shunt) AND (Yprim <> Yprim_Series) then
         Yprim.Free;
     if Yprim_Series <> NIL then
@@ -262,11 +257,6 @@ begin
         FActiveTerminal := Value - 1;
         ActiveTerminal := @Terminals[FActiveTerminal];
     end;
-end;
-
-procedure TDSSCktElement.Set_Handle(value: Integer);
-begin
-    FHandle := value;
 end;
 
 function TDSSCktElement.Get_ConductorClosed(Index: Integer): Boolean; inline;
@@ -484,7 +474,7 @@ begin
     ReallocMem(ComplexBuffer, Yorder * SizeOf(ComplexBuffer[1]));
 end;
 
-function TDSSCktElement.Get_FirstBus: String;
+function TDSSCktElement.FirstBus(): String;
 begin
     if FNterms > 0 then
     begin
@@ -495,7 +485,7 @@ begin
         Result := '';
 end;
 
-function TDSSCktElement.Get_NextBus: String;
+function TDSSCktElement.NextBus(): String;
 begin
     Result := '';
     if FNterms > 0 then
@@ -569,8 +559,7 @@ begin
         Exit;
         
     for i := 1 to Fnphases do
-        with Iterminal[i] do
-            Result := Max(Result, SQR(re) + SQR(im));
+        Result := Max(Result, SQR(Iterminal[i].re) + SQR(Iterminal[i].im));
             
     Result := Sqrt(Result);  // just do the sqrt once and save a little time
 end;
@@ -586,24 +575,23 @@ end;
 function TDSSCktElement.Get_Power(idxTerm: Integer): Complex;    // Get total complex power in active terminal
 var
     i, k, n: Integer;
+    NodeV: pNodeVarray;
 begin
     Result := 0;
     ActiveTerminalIdx := idxTerm;
     if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
-    ComputeIterminal;
+    ComputeIterminal();
 
     // Method: Sum complex power going into phase conductors of active terminal
-    with ActiveCircuit.Solution do
+    NodeV := ActiveCircuit.Solution.NodeV;
+    k := (idxTerm - 1) * Fnconds;
+    for i := 1 to Fnconds do     // 11-7-08 Changed from Fnphases - was not accounting for all conductors
     begin
-        k := (idxTerm - 1) * Fnconds;
-        for i := 1 to Fnconds do     // 11-7-08 Changed from Fnphases - was not accounting for all conductors
-        begin
-            n := ActiveTerminal^.TermNodeRef[i - 1]; // don't bother for grounded node
-            if n > 0 then
-                Result += NodeV[n] * cong(Iterminal[k + i]);
-        end;
+        n := ActiveTerminal^.TermNodeRef[i - 1]; // don't bother for grounded node
+        if n > 0 then
+            Result += NodeV[n] * cong(Iterminal[k + i]);
     end;
     // If this is a positive sequence circuit, then we need to multiply by 3 to get the 3-phase power
     if ActiveCircuit.PositiveSequence then
@@ -615,16 +603,18 @@ function TDSSCktElement.Get_Losses: Complex;
 // Returns complex losses (watts, vars)
 var
     i, j, k, n: Integer;
+    NodeV: pNodeVarray;
 begin
     Result := 0;
     if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
-    ComputeIterminal;
+    ComputeIterminal();
 
     // Method: Sum complex power going into all conductors of all terminals
     // Special for AutoTransformer - sum based on NPhases rather then Yorder
 
+    NodeV := ActiveCircuit.Solution.NodeV;
     if (CLASSMASK and self.DSSObjType) = AUTOTRANS_ELEMENT then
     begin
         k := 0;
@@ -637,7 +627,7 @@ begin
                 if n <= 0 then
                     continue;
 
-                Result += ActiveCircuit.Solution.NodeV[n] * cong(Iterminal[k]);
+                Result += NodeV[n] * cong(Iterminal[k]);
             end;
             Inc(k, Nphases)
         end;
@@ -650,7 +640,7 @@ begin
             if n <= 0 then
                 continue;
 
-            Result += ActiveCircuit.Solution.NodeV[n] * cong(Iterminal[k]);
+            Result += NodeV[n] * cong(Iterminal[k]);
         end;
     end;
 
@@ -669,13 +659,14 @@ var
     MaxCurr,
     CurrMag: Double;
     MaxPhase: Integer;
+    NodeV: pNodeVarray;
 begin
     ActiveTerminalIdx := idxTerm;   // set active Terminal
     Result := 0;
     if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
-    ComputeIterminal;
+    ComputeIterminal();
 
     // Method: Checks what's the phase with maximum current
     // retunrs the voltage for that phase
@@ -693,16 +684,15 @@ begin
         end;
     end;
 
+    NodeV := ActiveCircuit.Solution.NodeV;
     ClassIdx := DSSObjType and CLASSMASK;              // gets the parent class descriptor (int)
     nref := ActiveTerminal^.TermNodeRef[MaxPhase - 1]; // reference to the phase voltage with the max current
     nrefN := ActiveTerminal^.TermNodeRef[Fnconds - 1];  // reference to the ground terminal (GND or other phase)
-    with ActiveCircuit.Solution do     // Get power into max phase of active terminal
-    begin
-        if not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
-            volts := NodeV[nref]
-        else
-            volts := NodeV[nref] - NodeV[nrefN];
-    end;
+    // Get power into max phase of active terminal
+    if not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
+        volts := NodeV[nref]
+    else
+        volts := NodeV[nref] - NodeV[nrefN];
     Result := volts;
 end;
 
@@ -728,13 +718,14 @@ var
     MaxCurr,
     CurrMag: Double;
     MaxPhase: Integer;
+    NodeV: pNodeVarray;
 begin
     ActiveTerminalIdx := idxTerm;   // set active Terminal
     Result := 0;
     if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
-    ComputeIterminal;
+    ComputeIterminal();
 
     // Method: Get power in the phase with max current of active terminal
     // Multiply by Nphases and return
@@ -752,24 +743,20 @@ begin
         end;
     end;
 
+    NodeV := ActiveCircuit.Solution.NodeV;
     ClassIdx := DSSObjType and CLASSMASK;              // gets the parent class descriptor (int)
     nref := ActiveTerminal^.TermNodeRef[MaxPhase - 1]; // reference to the phase voltage with the max current
     nrefN := ActiveTerminal^.TermNodeRef[Fnconds - 1];  // reference to the ground terminal (GND or other phase)
-    with ActiveCircuit.Solution do     // Get power into max phase of active terminal
-    begin
-        if not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
-            volts := NodeV[nref]
-        else
-            volts := NodeV[nref] - NodeV[nrefN];
-        Result := volts * cong(Iterminal[k + MaxPhase]);
-    end;
+    
+    // Get power into max phase of active terminal
+    if not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
+        volts := NodeV[nref]
+    else
+        volts := NodeV[nref] - NodeV[nrefN];
+    Result := volts * cong(Iterminal[k + MaxPhase]);
 
     // Compute equivalent total power of all phases assuming equal to max power in all phases
-    with Result do
-    begin
-        re := re * Fnphases;  // let compiler handle type coercion
-        im := im * Fnphases;
-    end;
+    Result := Result * Fnphases;
 
     // If this is a positive sequence circuit (Fnphases=1),
     // then we need to multiply by 3 to get the 3-phase power
@@ -865,6 +852,7 @@ procedure TDSSCktElement.GetPhasePower(PowerBuffer: pComplexArray);
 // neutral conductors are ignored by this routine
 var
     i, n: Integer;
+    NodeV: pNodeVarray;
 begin
     if (not FEnabled) or (NodeRef = NIL) then
     begin
@@ -872,20 +860,20 @@ begin
         Exit;
     end;
     
-    ComputeIterminal;
+    ComputeIterminal();
 
-    with ActiveCircuit.Solution do
-        for i := 1 to Yorder do
+    NodeV := ActiveCircuit.Solution.NodeV;
+    for i := 1 to Yorder do
+    begin
+        n := NodeRef[i]; // increment through terminals
+        if n > 0 then
         begin
-            n := NodeRef[i]; // increment through terminals
-            if n > 0 then
-            begin
-                if ActiveCircuit.PositiveSequence then
-                    PowerBuffer[i] := NodeV[n] * cong(Iterminal[i]) * 3.0
-                else
-                    PowerBuffer[i] := NodeV[n] * cong(Iterminal[i]);
-            end;
+            if ActiveCircuit.PositiveSequence then
+                PowerBuffer[i] := NodeV[n] * cong(Iterminal[i]) * 3.0
+            else
+                PowerBuffer[i] := NodeV[n] * cong(Iterminal[i]);
         end;
+    end;
 end;
 
 procedure TDSSCktElement.GetPhaseLosses(var Num_Phases: Integer; LossBuffer: pComplexArray);
@@ -895,6 +883,7 @@ procedure TDSSCktElement.GetPhaseLosses(var Num_Phases: Integer; LossBuffer: pCo
 var
     i, j, k, n: Integer;
     cLoss: Complex;
+    NodeV: pNodeVarray;
 begin
     Num_Phases := Fnphases;
 
@@ -904,29 +893,29 @@ begin
         Exit;
     end;
     
-    ComputeIterminal;
+    ComputeIterminal();
 
-    with ActiveCircuit.Solution do
-        for i := 1 to Num_Phases do
+    NodeV := ActiveCircuit.Solution.NodeV;
+    for i := 1 to Num_Phases do
+    begin
+        cLoss := 0;
+        for j := 1 to FNTerms do
         begin
-            cLoss := 0;
-            for j := 1 to FNTerms do
+            k := (j - 1) * FNconds + i;
+            n := NodeRef[k]; // increment through terminals
+            if n > 0 then
             begin
-                k := (j - 1) * FNconds + i;
-                n := NodeRef[k]; // increment through terminals
-                if n > 0 then
-                begin
-                    if ActiveCircuit.PositiveSequence then
-                        cLoss += NodeV[n] * cong(Iterminal[k]) * 3.0
-                    else
-                        cLoss += NodeV[n] * cong(Iterminal[k]);
-                end;
+                if ActiveCircuit.PositiveSequence then
+                    cLoss += NodeV[n] * cong(Iterminal[k]) * 3.0
+                else
+                    cLoss += NodeV[n] * cong(Iterminal[k]);
             end;
-            LossBuffer[i] := cLoss;
         end;
+        LossBuffer[i] := cLoss;
+    end;
 end;
 
-procedure TDSSCktElement.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TDSSCktElement.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 var
     i, j: Integer;
 begin
@@ -1061,14 +1050,15 @@ procedure TDSSCktElement.SumCurrents;
 // Primarily for Newton Iteration
 var
     i: Integer;
+    Currents: pNodeVArray;
 begin
     if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
-    ComputeIterminal;
-    with ActiveCircuit.Solution do
-        for i := 1 to Yorder do
-            Currents[NodeRef[i]] += Iterminal[i];  // Noderef=0 is OK
+    ComputeIterminal();
+    Currents := ActiveCircuit.Solution.Currents;
+    for i := 1 to Yorder do
+        Currents[NodeRef[i]] += Iterminal[i];  // Noderef=0 is OK
 end;
 
 procedure TDSSCktElement.GetTermVoltages(iTerm: Integer; VBuffer: PComplexArray);
@@ -1076,6 +1066,7 @@ procedure TDSSCktElement.GetTermVoltages(iTerm: Integer; VBuffer: PComplexArray)
 // Fill Vbuffer array which must be adequately allocated by calling routine
 var
     ncond, i: Integer;
+    NodeV: pNodeVarray;
 begin
     try
         ncond := NConds;
@@ -1088,9 +1079,9 @@ begin
             Exit;
         end;
 
-        with ActiveCircuit.Solution do
-            for i := 1 to NCond do
-                Vbuffer[i] := NodeV[Terminals[iTerm - 1].TermNodeRef[i - 1]];
+        NodeV := ActiveCircuit.Solution.NodeV;
+        for i := 1 to NCond do
+            Vbuffer[i] := NodeV[Terminals[iTerm - 1].TermNodeRef[i - 1]];
 
     except
         On E: Exception do
@@ -1148,20 +1139,17 @@ var
     nref: PInteger;
     nv0, nv: PDouble;
 begin
-    with ActiveCircuit.solution do
+    vterm := PDouble(VTerminal);
+    nref := PInteger(NodeRef);
+    nv0 := PDouble(ActiveCircuit.solution.NodeV);
+    for i := 1 to Yorder do
     begin
-        vterm := PDouble(VTerminal);
-        nref := PInteger(NodeRef);
-        nv0 := PDouble(NodeV);
-        for i := 1 to Yorder do
-        begin
-            nv := nv0 + 2 * nref^;
-            vterm^ := nv^;
-            (vterm + 1)^ := (nv + 1)^;
-            inc(vterm, 2);
-            inc(nref);
-            // VTerminal[i] := NodeV[NodeRef[i]];
-        end;
+        nv := nv0 + 2 * nref^;
+        vterm^ := nv^;
+        (vterm + 1)^ := (nv + 1)^;
+        inc(vterm, 2);
+        inc(nref);
+        // VTerminal[i] := NodeV[NodeRef[i]];
     end;
 end;
 
@@ -1205,6 +1193,11 @@ begin
                 Result := FALSE;
                 Exit;
             end;
+end;
+
+procedure TDSSCktElement.GetCurrents(Curr: ArrayOfComplex);
+begin
+    GetCurrents(pComplexArray(@Curr[0]));
 end;
 
 end.

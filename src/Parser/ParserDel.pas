@@ -8,7 +8,6 @@ interface
 uses
     Arraydef,
     classes,
-    CmdForms,
     Sysutils,
     RPN,
     HashList;
@@ -502,7 +501,7 @@ begin
             end;
         except
             On E: Exception do
-                DSSMessageDlg('Node Buffer Too Small: ' + E.Message, TRUE);
+                TDSSContext(DSSCtx).MessageDlg('Node Buffer Too Small: ' + E.Message, TRUE);
         end;
 
         DelimChars := DelimSave;   //restore to original delimiters
@@ -555,7 +554,7 @@ begin
 
     except
         On E: Exception do
-            DSSMessageDlg('Vector Buffer in ParseAsVector Probably Too Small: ' + E.Message, TRUE);
+            TDSSContext(DSSCtx).MessageDlg('Vector Buffer in ParseAsVector Probably Too Small: ' + E.Message, TRUE);
     end;
 
     DelimChars := DelimSave;   //restore to original delimiters

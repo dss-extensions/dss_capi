@@ -527,7 +527,7 @@ end;
 
 procedure TTShapeObj.SaveToDblFile;
 var
-    F: TFileStream = nil;
+    F: TStream = nil;
     Fname: String;
 begin
     if not Assigned(TValues) then
@@ -536,8 +536,8 @@ begin
         Exit;
     end;
     try
-        FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s.dbl', [Name]);
-        F := TBufferedFileStream.Create(FName, fmCreate);
+        FName := DSS.OutputDirectory + Format('%s.dbl', [Name]); // CurrentDSSDir
+        F := DSS.GetOutputStreamEx(FName, fmCreate);
         F.WriteBuffer(TValues[1], NumPoints * SizeOf(Double));
         DSS.GlobalResult := 'Temp=[dblfile=' + FName + ']';
     finally
@@ -547,7 +547,7 @@ end;
 
 procedure TTShapeObj.SaveToSngFile;
 var
-    F: TFileStream = nil;
+    F: TStream = nil;
     i: Integer;
     Fname: String;
     Temp: Single;
@@ -558,8 +558,8 @@ begin
         Exit;
     end;
     try
-        FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s.sng', [Name]);
-        F := TBufferedFileStream.Create(FName, fmCreate);
+        FName := DSS.OutputDirectory + Format('%s.sng', [Name]); // CurrentDSSDir
+        F := DSS.GetOutputStreamEx(FName, fmCreate);
         for i := 1 to NumPoints do
         begin
             Temp := TValues[i];

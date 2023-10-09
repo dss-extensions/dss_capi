@@ -369,7 +369,7 @@ begin
     else
     begin
         // Search through the entire circuit for enabled generators and add them to the list
-        for i := 1 to GenClass.ElementCount do
+        for i := 1 to GenClass.ElementCount() do
         begin
             Gen := GenClass.ElementList.Get(i);
             if Gen.Enabled then

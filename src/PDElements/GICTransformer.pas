@@ -99,7 +99,7 @@ type
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
-        procedure WriteVarOutputRecord(F: TFileStream); // Add a record to the ouput file based on present GIC
+        procedure WriteVarOutputRecord(F: TStream); // Add a record to the ouput file based on present GIC
     end;
 
 implementation
@@ -447,7 +447,7 @@ begin
     end;
 end;
 
-procedure TGICTransformerObj.WriteVarOutputRecord(F: TFileStream);
+procedure TGICTransformerObj.WriteVarOutputRecord(F: TStream);
 var
     Curr: Complex;
     MVarMag: Double;

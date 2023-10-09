@@ -204,7 +204,7 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
         procedure MakeLike(OtherPtr: Pointer); override;
         procedure CustomSetRaw(Idx: Integer; Value: String); override;
-        procedure SaveWrite(F: TFileStream); override;
+        procedure SaveWrite(F: TStream); override;
 
         function GetMultAtHour(hr: Double): Complex;  // Get multiplier at specified time
         function Mult(i: Integer): Double;  // get multiplier by index -- used in SolutionAlgs, updates LastValueAccessed
@@ -753,7 +753,7 @@ begin
     if (obj.dP <> NIL) or (obj.sP <> NIL) then
         obj.SetMaxPandQ();
 
-    Exclude(obj.Flags, Flg.EditionActive);
+    Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
 
@@ -874,7 +874,7 @@ begin
     end;
 
     try
-        F := DSS.GetROFileStream(FileName);
+        F := DSS.GetInputStreamEx(FileName);
     except
         DoSimpleMsg('Error opening file: "%s"', [FileName], 613);
         FreeAndNil(F);
@@ -955,7 +955,7 @@ begin
         Exit;
     end;
     try
-        F := DSS.GetROFileStream(FileName);
+        F := DSS.GetInputStreamEx(FileName);
     except
         DoSimpleMsg('Error opening file: "%s"', [FileName], 613);
         FreeAndNil(F);
@@ -1028,7 +1028,7 @@ begin
         Exit;
     end;
     try
-        F := DSS.GetROFileStream(FileName);
+        F := DSS.GetInputStreamEx(FileName);
     except
         DoSimpleMsg('Error opening file: "%s"', [FileName], 615);
         Exit;
@@ -1132,7 +1132,7 @@ begin
         Exit;
     end;
     try
-        F := DSS.GetROFileStream(FileName);
+        F := DSS.GetInputStreamEx(FileName);
     except
         DoSimpleMsg('Error opening file: "%s"', [FileName], 617);
         Exit;
@@ -1809,7 +1809,7 @@ end;
 procedure TLoadShapeObj.SaveToDblFile;
 var
     myDBL: Double;
-    F: TFileStream = nil;
+    F: TStream = nil;
     i: Integer;
     Fname: String;
 begin
@@ -1823,7 +1823,7 @@ begin
 
     try
         FName := DSS.OutputDirectory + Format('%s_P.dbl', [Name]); // CurrentDSSDir
-        F := TBufferedFileStream.Create(FName, fmCreate);
+        F := DSS.GetOutputStreamEx(FName, fmCreate);
         if UseMMF then
         begin
             for i := 1 to NumPoints do
@@ -1846,7 +1846,7 @@ begin
     begin
         try
             FName := DSS.OutputDirectory + Format('%s_Q.dbl', [Name]); // CurrentDSSDir
-            F := TBufferedFileStream.Create(FName, fmCreate);
+            F := DSS.GetOutputStreamEx(FName, fmCreate);
             if UseMMF then
             begin
                 for i := 1 to NumPoints do
@@ -1867,7 +1867,7 @@ end;
 
 procedure TLoadShapeObj.SaveToSngFile;
 var
-    F: TFileStream = nil;
+    F: TStream = nil;
     i: Integer;
     Fname: String;
     Temp: Single;
@@ -1881,7 +1881,7 @@ begin
 
     try
         FName := DSS.OutputDirectory + Format('%s_P.sng', [Name]); // CurrentDSSDir
-        F := TBufferedFileStream.Create(FName, fmCreate);
+        F := DSS.GetOutputStreamEx(FName, fmCreate);
         for i := 1 to NumPoints do
         begin
             if UseMMF then
@@ -1899,7 +1899,7 @@ begin
     begin
         try
             FName := DSS.OutputDirectory + Format('%s_Q.sng', [Name]); // CurrentDSSDir
-            F := TBufferedFileStream.Create(FName, fmCreate);
+            F := DSS.GetOutputStreamEx(FName, fmCreate);
             for i := 1 to NumPoints do
             begin
                 if UseMMF then
@@ -2286,7 +2286,7 @@ begin
         Result.im := Set_Result_im(Result.re);
 end;
 
-procedure TLoadShapeObj.SaveWrite(F: TFileStream);
+procedure TLoadShapeObj.SaveWrite(F: TStream);
 begin
     PrpSequence[ord(TProp.npts)] := -999; // make sure Npts prop is first
     inherited SaveWrite(F);

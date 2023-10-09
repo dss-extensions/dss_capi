@@ -106,7 +106,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.CNDataClass.ElementCount;
+    Result := DSSPrime.CNDataClass.ElementCount();
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_First(): Integer; CDECL;
@@ -114,7 +114,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.CNDataClass.First;
+    Result := DSSPrime.CNDataClass.First();
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_Next(): Integer; CDECL;
@@ -122,7 +122,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.CNDataClass.Next;
+    Result := DSSPrime.CNDataClass.Next();
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_Name(): PAnsiChar; CDECL;

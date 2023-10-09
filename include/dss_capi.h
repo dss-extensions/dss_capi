@@ -160,7 +160,11 @@ extern "C" {
         DSSMessageType_ProgressCaption = 4,
         DSSMessageType_ProgressFormCaption = 5,
         DSSMessageType_ProgressPercent = 6,
-        DSSMessageType_FireOffEditor = 7
+        DSSMessageType_FireOffEditor = 7,
+        DSSMessageType_ProgressSummary = 8,
+        DSSMessageType_ReportOutput = 9,
+        DSSMessageType_ShowOutput = 10,
+        DSSMessageType_ShowTreeView = 11
     };
 
     enum DSSJSONFlags {
@@ -253,7 +257,7 @@ extern "C" {
     EXPERIMENTAL
     */
     typedef int32_t (*dss_callback_plot_t)(void* ctx, char* jsonParams);
-    typedef int32_t (*dss_callback_message_t)(void* ctx, char* messageStr, int32_t messageType);
+    typedef int32_t (*dss_callback_message_t)(void* ctx, char* messageStr, int32_t messageType, int64_t messageSize, int32_t messageSubType);
     typedef void (*dss_callback_solution_t)(void* ctx);
 
     /* Functions start here */

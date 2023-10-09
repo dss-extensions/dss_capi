@@ -470,10 +470,10 @@ begin
     PropertyOffset[ord(TProp.PhaseTrip)] := ptruint(@obj.PhaseTrip);
     PropertyOffset[ord(TProp.GroundTrip)] := ptruint(@obj.GroundTrip);
     PropertyOffset[ord(TProp.PhaseInst)] := ptruint(@obj.PhaseInst);
-    
+
     PropertyOffset[ord(TProp.GroundInst)] := ptruint(@obj.GroundInst);
     PropertyFlags[ord(TProp.GroundInst)] := [TPropertyFlag.Units_A];
-    
+
     PropertyOffset[ord(TProp.Reset)] := ptruint(@obj.ResetTime);
     PropertyFlags[ord(TProp.Reset)] := [TPropertyFlag.Units_s];
 
@@ -482,7 +482,7 @@ begin
     PropertyOffset[ord(TProp.__46pctPickup)] := ptruint(@obj.PctPickup46);
     PropertyOffset[ord(TProp.__46isqt)] := ptruint(@obj.Isqt46);
     PropertyOffset[ord(TProp.__46BaseAmps)] := ptruint(@obj.BaseAmps46);
-    
+
     PropertyOffset[ord(TProp.Delay)] := ptruint(@obj.Delay_Time);
     PropertyFlags[ord(TProp.Delay)] := [TPropertyFlag.DynamicDefault];
 

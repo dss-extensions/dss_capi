@@ -151,7 +151,7 @@ type
 
         procedure RecalcElementData(); OVERRIDE;
         procedure CalcYPrim; OVERRIDE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
     end;
 
 implementation
@@ -907,7 +907,7 @@ begin
     YprimInvalid := FALSE;
 end;
 
-procedure TReactorObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TReactorObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 var
     i, j, k: Integer;
 begin

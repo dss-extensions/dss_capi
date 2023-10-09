@@ -80,7 +80,7 @@ type
 
         function GetMult(const h: Double): Complex;
 
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
         procedure ReadCSVFile(const FileName: String);
     end;
 
@@ -227,7 +227,7 @@ begin
         if (obj.HarmArray <> NIL) and (obj.puMagArray <> NIL) and (obj.AngleArray <> NIL) then
             obj.SetMultArray();
     end;
-    Exclude(obj.Flags, Flg.EditionActive);
+    Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
 
@@ -282,7 +282,7 @@ var
     s: String;
 begin
     try
-        F := DSS.GetROFileStream(FileName);
+        F := DSS.GetInputStreamEx(FileName);
     except
         DoSimpleMsg('Error Opening CSV File: "%s"', [FileName], 653);
         FreeAndNil(F);
@@ -323,7 +323,7 @@ begin
     obj.ReadCSVFile(FileName);
 end;
 
-procedure TSpectrumObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TSpectrumObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 var
     i: Integer;
 begin

@@ -38,7 +38,7 @@ uses
   StrUtils,
   Math;
 
-{ TFileSearchReplace }
+//  TFileSearchReplace 
 
 constructor TFileSearchReplace.Create(const AFileName: string);
 begin
@@ -228,7 +228,7 @@ begin
     Security.bInheritHandle := True;
     Security.lpSecurityDescriptor := nil;
 
-    if CreatePipe({var}readableEndOfPipe, {var}writeableEndOfPipe, @Security, 0) then
+    if CreatePipe(readableEndOfPipe, writeableEndOfPipe, @Security, 0) then
     begin
         Buffer := AllocMem(READ_BUFFER_SIZE+1);
         FillChar(Start, Sizeof(Start), #0);
@@ -253,9 +253,9 @@ begin
         //WARNING: The unicode version of CreateProcess (CreateProcessW) can modify the command-line "DosApp" string.
         //Therefore "DosApp" cannot be a pointer to read-only memory, or an ACCESS_VIOLATION will occur.
         //We can ensure it's not read-only with the RTL function: UniqueString
-        UniqueString({var}DosApp);
+        UniqueString(DosApp);
 
-        if CreateProcess(nil, PChar(DosApp), nil, nil, True, NORMAL_PRIORITY_CLASS, nil, nil, start, {var}ProcessInfo) then
+        if CreateProcess(nil, PChar(DosApp), nil, nil, True, NORMAL_PRIORITY_CLASS, nil, nil, start, ProcessInfo) then
         begin
             //Wait for the application to terminate, as it writes it's output to the pipe.
             //WARNING: If the console app outputs more than 2400 bytes (ReadBuffer),
@@ -267,7 +267,7 @@ begin
             //WARNING: if the console app never writes anything to the StdOutput, then ReadFile will block and never return
             repeat
                 BytesRead := 0;
-                ReadFile(readableEndOfPipe, Buffer[0], READ_BUFFER_SIZE, {var}BytesRead, nil);
+                ReadFile(readableEndOfPipe, Buffer[0], READ_BUFFER_SIZE, BytesRead, nil);
                 Buffer[BytesRead]:= #0;
                 OemToAnsi(Buffer,Buffer);
                 Result := Result + String(Buffer);

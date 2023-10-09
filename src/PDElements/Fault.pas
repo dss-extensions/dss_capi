@@ -109,7 +109,7 @@ type
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
     end;
 
 implementation
@@ -485,7 +485,7 @@ begin
     YprimInvalid := FALSE;
 end;
 
-procedure TFaultObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TFaultObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 var
     i, j: Integer;
 begin

@@ -64,13 +64,13 @@ procedure DefineOptions(var ShowOption: ArrayOfString);
 implementation
 
 uses
+    Classes,
     ShowResults,
     ParserDel,
     Monitor,
     Utilities,
     DSSGlobals,
     sysutils,
-    CmdForms,
     LineUnits,
     DSSHelper,
     TypInfo;
@@ -88,6 +88,7 @@ end;
 
 function DoShowCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Integer;
 var
+    F: TStream = NIL;
     Param, Filname: String;
     ParamPointer: Integer;
     pMon: TMonitorObj;
@@ -183,7 +184,17 @@ begin
             ShowCurrents(DSS, DSS.OutputDirectory + DSS.CircuitName_ + FilName + '.txt', ShowResid, ShowOptionCode);
         end;
         4:
-            DSS.ActiveCircuit.Solution.WriteConvergenceReport(DSS.OutputDirectory + DSS.CircuitName_ + 'Convergence.txt');
+        begin
+            try
+                filname := DSS.OutputDirectory + DSS.CircuitName_ + 'Convergence.txt';
+                F := DSS.GetOutputStreamEx(filname);
+                DSS.ActiveCircuit.Solution.WriteConvergenceReport(F);
+                FreeAndNil(F);
+                FireOffEditor(DSS, filname);
+            finally
+                FreeAndNil(F);
+            end;
+        end;
         5:
         begin
             DSS.Parser.NextParam;   // Look for another param
@@ -389,8 +400,22 @@ begin
             ShowY(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'SystemY.txt');
         end;
         27:
-            if DSS.ActiveCircuit <> NIL then
-                DSS.ActiveCircuit.ControlQueue.ShowQueue(DSS.OutputDirectory + DSS.CircuitName_ + 'ControlQueue.csv');
+        begin
+            if DSS.ActiveCircuit = NIL then
+            begin
+                DSS.InShowResults := FALSE;
+                Exit;
+            end;
+            try
+                filname := DSS.OutputDirectory + DSS.CircuitName_ + 'ControlQueue.csv';
+                F := DSS.GetOutputStreamEx(filname);
+                DSS.ActiveCircuit.ControlQueue.WriteQueue(F);
+                FreeAndNil(F);
+                FireOffEditor(DSS, filname);
+            finally
+                FreeAndNil(F);
+            end;
+        end;
         28:
             ShowTopology(DSS, DSS.OutputDirectory + DSS.CircuitName_);
         29:

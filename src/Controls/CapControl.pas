@@ -243,8 +243,12 @@ begin
         PropInfo := TypeInfo(TProp);
         PropInfoLegacy := TypeInfo(TPropLegacy);
         TypeEnum := TDSSEnum.Create('CapControl: Type', True, 1, 1, 
-            ['Current', 'Voltage', 'kvar', 'Time', 'PowerFactor', 'Follow'{'UserControl'}], 
-            [ord(CURRENTCONTROL), ord(VOLTAGECONTROL), ord(KVARCONTROL), ord(TIMECONTROL), ord(PFCONTROL), ord(FOLLOWCONTROL){, ord(USERCONTROL)}]);
+            ['Current', 'Voltage', 'kvar', 'Time', 'PowerFactor', 'Follow'
+                //, 'UserControl'
+            ], 
+            [ord(CURRENTCONTROL), ord(VOLTAGECONTROL), ord(KVARCONTROL), ord(TIMECONTROL), ord(PFCONTROL), ord(FOLLOWCONTROL)
+                // , ord(USERCONTROL)
+            ]);
     end;
     inherited Create(dssContext, CAP_CONTROL, 'CapControl');
 end;
@@ -327,7 +331,7 @@ begin
     PropertyOffset[ord(TProp.ONsetting)] := ptruint(@obj.ControlVars.ON_Value);
     PropertyOffset[ord(TProp.OFFsetting)] := ptruint(@obj.ControlVars.OFF_Value);
     PropertyOffset[ord(TProp.Delay)] := ptruint(@obj.ControlVars.ONDelay);
-    
+
     PropertyOffset[ord(TProp.Vmax)] := ptruint(@obj.ControlVars.Vmax);
     PropertyFlags[ord(TProp.Vmax)] := [TPropertyFlag.Units_V];
 

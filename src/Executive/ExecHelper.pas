@@ -15,7 +15,8 @@ interface
 
 uses
     Executive,
-    Classes;
+    Classes,
+    DSSClass;
 
 type
     TExecHelper = class helper for TExecutive
@@ -124,7 +125,8 @@ type
 
         procedure GetObjClassAndName(var ObjClass, ObjName: String);
 
-        function AddObject(const ObjType, name: String): Integer;
+        function AddObject(ObjType: String; const Name: String): Integer; overload;
+        function AddObject(ObjCls: TDSSClass; const Name: String): Integer; overload;
         function EditObject(const ObjType, name: String): Integer;
 
         procedure SetActiveCircuit(const cktname: String);
@@ -149,7 +151,6 @@ uses
     DSSGlobals,
     Circuit,
     Monitor, {ShowResults, ExportResults,}
-    DSSClass,
     DSSObject,
     Utilities,
     Solution,
@@ -164,7 +165,6 @@ uses
     mathutil,
     Bus,
     SolutionAlgs,
-    CmdForms,
     ExecCommands,
     Dynamics,
     Capacitor,
@@ -183,7 +183,9 @@ uses
     Ucmatrix,
     BufStream,
     fpjson,
-    DSSHelper;
+    DSSHelper,
+    DSSPointerList,
+    StrUtils;
 
 var
     SaveCommands, DistributeCommands, DI_PlotCommands,
@@ -251,8 +253,8 @@ begin
     if CompareText(ObjClass, 'circuit') = 0 then
     begin
         MakeNewCircuit(DSS, ObjName);  // Make a new circuit
-        ClearEventLog(DSS);      // Start the event log in the current directory
-        ClearErrorLog(DSS);
+        DSS.ClearEventLog();      // Start the event log in the current directory
+        DSS.ClearErrorLog();
     end
     else    // Everything else must be a circuit element or DSS Object
     begin
@@ -570,7 +572,7 @@ begin
 
                         if not InBlockComment then   // process the command line
                             if not DSS.SolutionAbort then
-                                Set_Command(InputLine, LineNum)
+                                ParseCommand(InputLine, LineNum)
                             else
                                 DSS.Redirect_Abort := TRUE;  // Abort file if solution was aborted
 
@@ -604,7 +606,7 @@ begin
 
                         if not InBlockComment then   // process the command line
                             if not DSS.SolutionAbort then
-                                Set_Command(InputLine, LineNum)
+                                ParseCommand(InputLine, LineNum)
                             else
                                 DSS.Redirect_Abort := TRUE;  // Abort file if solution was aborted
 
@@ -854,9 +856,179 @@ begin
 end;
 
 {$ENDIF}
-function TExecHelper.DoHelpCmd: Integer;
+function CompareClassNames(Item1, Item2: Pointer): Integer;
 begin
-    ShowHelpForm(DSS); // DSSForms Unit
+    Result := CompareText(TDSSClass(Item1).name, TDSSClass(Item2).name);
+end;
+
+procedure AddHelpForClasses(DSS: TDSSContext; DSSClassList: TDSSPointerList; BaseClass: Word; bProperties: Boolean);
+var
+    HelpList: TList;
+    pDSSClass: TDSSClass;
+    i, j: Integer;
+    msg: String;
+begin
+    HelpList := TList.Create();
+    for pDSSClass in DSSClassList do
+    begin
+        if (pDSSClass.DSSClassType and BASECLASSMASK) = BaseClass then
+            HelpList.Add(pDSSClass);
+    end;
+    HelpList.Sort(@CompareClassNames);
+
+    if (@DSS.DSSMessageCallback) <> NIL then
+    begin
+        for i := 1 to HelpList.Count do
+        begin
+            pDSSClass := HelpList.Items[i - 1];
+            DSS.DSSMessageCallback(DSS, PChar(pDSSClass.name), ord(DSSMessageType.Help), Length(pDSSClass.name) + 1);
+            if bProperties = TRUE then
+                for j := 1 to pDSSClass.NumProperties do
+                begin
+                    msg := '  ' + pDSSClass.PropertyName[j] + ': ' + pDSSClass.GetPropertyHelp(j);
+                    DSS.DSSMessageCallback(DSS, PChar(msg), ord(DSSMessageType.Help), Length(msg) + 1);
+                end;
+        end;
+    end
+    else
+    begin
+        for i := 1 to HelpList.Count do
+        begin
+            pDSSClass := HelpList.Items[i - 1];
+            DSS.WriteLnCB(pDSSClass.name, DSSMessageType.Help);
+
+            if bProperties = TRUE then
+                for j := 1 to pDSSClass.NumProperties do
+                    DSS.WriteLnCB('  ' + pDSSClass.PropertyName[j] + ': ' + pDSSClass.GetPropertyHelp(j), DSSMessageType.Help);
+        end;
+    end;
+
+    HelpList.Free;
+end;
+
+procedure ShowGeneralHelp(DSS: TDSSContext);
+begin
+    DSS.WriteLnCB(
+        _('For specific help, enter:') + CRLF + 
+        _('  "help command [cmd]" lists all executive commands, or') + CRLF + 
+        _('                       if [cmd] provided, details on that command') + CRLF + 
+        _('  "help option [opt]"  lists all simulator options, or') + CRLF + 
+        _('                       if [opt] provided, details on that option') + CRLF + 
+        _('  "help show [opt]"    lists the options to "show" various outputs, or') + CRLF + 
+        _('                       if [opt] provided, details on that output') + CRLF + 
+        _('  "help export [fmt]"  lists the options to "export" in various formats, or') + CRLF + 
+        _('                       if [fmt] provided, details on that format') + CRLF + 
+        _('  "help class [cls]"   lists the names of all available circuit model classes, or') + CRLF + 
+        _('                       if [cls] provided, details on that class') + CRLF + 
+        _('You may truncate any help topic name, which returns all matching entries'),
+        DSSMessageType.Help
+    );
+end;
+
+procedure ShowAnyHelp(DSS: TDSSContext; cmd: ArrayOfString; const opt: String; const prefix: String);
+const
+    colwidth = 25;
+    numcols = 4;
+var
+    i: Integer;
+    lst: TStringList;
+    msg: String = '';
+begin
+    if Length(opt) < 1 then
+    begin
+        Writeln('if Length(opt) < 1 then');
+        lst := TStringList.Create;
+        for i := 0 to High(cmd) do
+            lst.Add(PadRight(cmd[i], colwidth));
+        lst.Sort;
+        for i := 1 to Length(cmd) do
+            if ((i mod numcols) = 0) then
+            begin
+                msg := msg + lst[i - 1];
+                DSS.WriteLnCB(msg, DSSMessageType.Help);
+                msg := '';
+            end
+            else
+                msg := msg + lst[i - 1] + ' ';
+                
+            if length(msg) > 0 then
+                DSS.WriteLnCB(msg, DSSMessageType.Help);
+
+        lst.Free;
+        Exit;
+    end;
+
+    for i := 0 to High(cmd) do
+    begin
+        if AnsiStartsStr(opt, AnsiLowerCase(cmd[i])) then
+        begin
+            DSS.WriteLnCB(AnsiUpperCase(cmd[i]), DSSMessageType.Help);
+            DSS.WriteLnCB('======================', DSSMessageType.Help);
+            DSS.WriteLnCB(DSSHelp(prefix + '.' + AnsiLowerCase(cmd[i])), DSSMessageType.Help);
+            DSS.WriteLnCB(msg, DSSMessageType.Help);
+        end;
+    end;
+end;
+
+procedure ShowClassHelp(DSS: TDSSContext; DSSClassList: TDSSPointerList; const opt: String);
+var
+    pDSSClass: TDSSClass;
+    i: Integer;
+begin
+    if Length(opt) > 0 then
+    begin
+        for pDSSClass in DSSClassList do
+        begin
+            if AnsiStartsStr(opt, AnsiLowerCase(pDSSClass.name)) then
+            begin
+                DSS.WriteLnCB(AnsiUpperCase(pDSSClass.name), DSSMessageType.Help);
+                DSS.WriteLnCB('======================', DSSMessageType.Help);
+                for i := 1 to pDSSClass.NumProperties do
+                    DSS.WriteLnCB('  ' + pDSSClass.PropertyName[i] + ': ' + pDSSClass.GetPropertyHelp(i), DSSMessageType.Help);
+            end;
+        end;
+        Exit;
+    end;
+
+    DSS.WriteLnCB(_('== Power Delivery Elements =='), DSSMessageType.Help);
+    AddHelpForClasses(DSS, DSSClassList, PD_ELEMENT, FALSE);
+    DSS.WriteLnCB(_('== Power Conversion Elements =='), DSSMessageType.Help);
+    AddHelpForClasses(DSS, DSSClassList, PC_ELEMENT, FALSE);
+    DSS.WriteLnCB(_('== Control Elements =='), DSSMessageType.Help);
+    AddHelpForClasses(DSS, DSSClassList, CTRL_ELEMENT, FALSE);
+    DSS.WriteLnCB(_('== Metering Elements =='), DSSMessageType.Help);
+    AddHelpForClasses(DSS, DSSClassList, METER_ELEMENT, FALSE);
+    DSS.WriteLnCB(_('== Supporting Elements =='), DSSMessageType.Help);
+    AddHelpForClasses(DSS, DSSClassList, 0, FALSE);
+    DSS.WriteLnCB(_('== Other Elements =='), DSSMessageType.Help);
+    AddHelpForClasses(DSS, DSSClassList, NON_PCPD_ELEM, FALSE);
+end;
+
+function TExecHelper.DoHelpCmd: Integer;
+var
+    Param, OptName: String;
+begin
+    DSS.Parser.NextParam;
+    Param := AnsiLowerCase(DSS.Parser.StrValue);
+    DSS.Parser.NextParam;
+    OptName := AnsiLowerCase(DSS.Parser.StrValue);
+    
+    if ANSIStartsStr('com', param) then
+        ShowAnyHelp(DSS, DSS.DSSExecutive.ExecCommand, OptName, 'Command')
+    else
+    if ANSIStartsStr('op', param) then
+        ShowAnyHelp(DSS, DSS.DSSExecutive.ExecOption, OptName, 'Executive')
+    else
+    if ANSIStartsStr('sh', param) then
+        ShowAnyHelp(DSS, DSS.DSSExecutive.ShowOption, OptName, 'ShowOption')
+    else
+    if ANSIStartsStr('e', param) then
+        ShowAnyHelp(DSS, DSS.DSSExecutive.ExportOption, OptName, 'ExportOption')
+    else
+    if ANSIStartsStr('cl', param) then
+        ShowClassHelp(DSS, DSS.DSSClassList, OptName)
+    else
+        ShowGeneralHelp(DSS);
     Result := 0;
 end;
 
@@ -1025,7 +1197,7 @@ function TExecHelper.DoPropertyDump: Integer;
 
 var
     pObject: TDSSObject;
-    F: TFileStream = NIL;
+    F: TStream = NIL;
     SingleObject, Debugdump, IsSolution: Boolean;
     i: Integer;
     FileName: String;
@@ -1053,11 +1225,23 @@ begin
             Exit;
         end;
 
-    // dump bus names hash list
+        // dump bus names hash list
         if CompareText(Param, 'buslist') = 0 then
         begin
             FileName := DSS.OutputDirectory + 'Bus_Hash_List.txt';
-            DSS.ActiveCircuit.BusList.DumpToFile(FileName);
+            try
+                F := DSS.GetOutputStreamEx(FileName);
+                DSS.ActiveCircuit.BusList.DumpToFile(F);
+            except
+            on E: Exception do
+                begin
+                    DoErrorMsg(DSS,
+                        Format(_('DoPropertyDump - opening %s for writing in %s'), [FileName, Getcurrentdir]),
+                        E.Message, _('Disk protected or other file error'), 255);
+                    Exit;
+                end;
+            end;
+            FreeAndNil(F);
 {$IFDEF DSS_CAPI}
             DSS.GlobalResult := FileName;
 {$ENDIF}
@@ -1069,7 +1253,19 @@ begin
         if CompareText(Param, 'devicelist') = 0 then
         begin
             FileName := DSS.OutputDirectory + 'Device_Hash_List.txt';
-            DSS.ActiveCircuit.DeviceList.DumpToFile(FileName);
+            try
+                F := DSS.GetOutputStreamEx(FileName);
+                DSS.ActiveCircuit.DeviceList.DumpToFile(F);
+            except
+                on E: Exception do
+                begin
+                    DoErrorMsg(DSS,
+                        Format(_('DoPropertyDump - opening %s for writing in %s'), [FileName, Getcurrentdir]),
+                        E.Message, _('Disk protected or other file error'), 255);
+                    Exit;
+                end;
+            end;
+            FreeAndNil(F);
 {$IFDEF DSS_CAPI}
             DSS.GlobalResult := FileName;
 {$ENDIF}
@@ -1124,7 +1320,7 @@ begin
     end;
 
     try
-        F := TBufferedFileStream.Create(DSS.OutputDirectory + DSS.CircuitName_ + 'PropertyDump.txt', fmCreate);
+        F := DSS.GetOutputStreamEx(DSS.OutputDirectory + DSS.CircuitName_ + 'PropertyDump.txt');
     except
         On E: Exception do
         begin
@@ -1321,6 +1517,15 @@ begin
     Result := 0;
 end;
 
+procedure doResetKeepList(DSS: TDSSContext);
+var
+    i: Integer;
+begin
+    with DSS.ActiveCircuit do
+        for i := 1 to NumBuses do
+            Buses[i].Keep := FALSE;
+end;
+
 function TExecHelper.DoResetCmd: Integer;
 var
     Param: String;
@@ -1335,9 +1540,9 @@ begin
         DoResetMeters;
         DoResetFaults(DSS);
         DoResetControls(DSS);
-        ClearEventLog(DSS);
-        ClearErrorLog(DSS);
-        DoResetKeepList(DSS);
+        DSS.ClearEventLog();
+        DSS.ClearErrorLog();
+        doResetKeepList(DSS);
     end
     else
         case Param[1] of
@@ -1354,8 +1559,8 @@ begin
                 DoResetControls(DSS);
             'E'{EventLog and ErrorLog}:
             begin
-                ClearEventLog(DSS);
-                ClearErrorLog(DSS);
+                DSS.ClearEventLog();
+                DSS.ClearErrorLog();
             end;
             'K':
                 DoResetKeepList(DSS);
@@ -1598,7 +1803,7 @@ begin
             'H'{Hour}:
                 Inc(DynaVars.intHour);
             'T'{Time}:
-                Increment_time;
+                IncrementTime();
         else
 
         end;
@@ -1608,7 +1813,18 @@ procedure TExecHelper.DoAboutBox;
 begin
     if NoFormsAllowed then
         Exit;
-    ShowAboutBox;
+    DSS.WriteLnCB(
+        'DSS C-API library version' + CRLF +
+        VersionString + CRLF +
+        'An alternative implementation of OpenDSS' + CRLF + 
+        'OpenDSS is EPRI''s Electric Power Distribution System Simulator' + CRLF +
+        'Copyright (c) 2008-2023, Electric Power Research Institute, Inc.' + CRLF +
+        'Copyright (c) 2016-2021, Battelle Memorial Institute' + CRLF +
+        'Copyright (c) 2017-2023, Paulo Meira, DSS-Extensions contributors' + CRLF +
+        'All rights reserved.' + CRLF +
+        'Please check the repository commit history and specific files for detailed credits.', 
+        DSSMessageType.Info
+    );
 end;
 
 function TExecHelper.DoSetVoltageBases: Integer;
@@ -1617,9 +1833,7 @@ begin
     DSS.ActiveCircuit.Solution.SetVoltageBases;
 end;
 
-function TExecHelper.AddObject(const ObjType, Name: String): Integer;
-var
-    Obj: TDSSObject = NIL;
+function TExecHelper.AddObject(ObjType: String; const Name: String): Integer;
 begin
     Result := 0;
 
@@ -1634,11 +1848,34 @@ begin
         Result := 0;
         Exit;
     end;
-
-
+    
     // intrinsic and user Defined models
     // Make a new circuit element
     DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
+    Result := AddObject(DSS.ActiveDSSClass, Name);
+end;
+
+function TExecHelper.AddObject(ObjCls: TDSSClass; const Name: String): Integer;
+var
+    Obj: TDSSObject = NIL;
+begin
+    Result := 0;
+
+    // Search for class IF not already active
+    // IF nothing specified, LastClassReferenced remains
+    // if CompareText(Objtype, DSS.ActiveDSSClass.Name) <> 0 then
+    //     DSS.LastClassReferenced := DSS.ClassNames.Find(ObjType);
+    // if DSS.LastClassReferenced = 0 then
+    // begin
+    //     DoSimpleMsg(DSS, 'New Command: Object Type "%s" not found. %s', [ObjType, CRLF + DSS.Parser.CmdString], 263);
+    //     Result := 0;
+    //     Exit;
+    // end;
+    // DSS.DSSClassList.Get(DSS.LastClassReferenced);
+
+    // intrinsic and user Defined models
+    // Make a new circuit element
+    DSS.ActiveDSSClass := ObjCls;
 
     // Name must be supplied
     if Length(Name) = 0 then
@@ -1692,11 +1929,9 @@ begin
                 Exit;
             end;
         end;
-
     end;
     DSS.ActiveDSSClass.Edit(DSS.Parser);    // Process remaining instructions on the command line
 end;
-
 
 function TExecHelper.EditObject(const ObjType, Name: String): Integer;
 begin
@@ -1775,7 +2010,7 @@ begin
     begin
          // load the list from a file
         try
-            F := DSS.GetROFileStream(Param);
+            F := DSS.GetInputStreamEx(Param);
             while (F.Position + 1) < F.Size do
             begin
                 FSReadln(F, S2);
@@ -1824,7 +2059,7 @@ begin
     begin
          // load the list from a file
         try
-            F := DSS.GetROFileStream(Param);
+            F := DSS.GetInputStreamEx(Param);
             while (F.Position + 1) < F.Size do
             begin         // Fixed 7/8/01 to handle all sorts of bus names
                 FSReadln(F, S2);
@@ -2478,10 +2713,9 @@ begin
             Num := DSS.Parser.ParseAsVector(100, Dummy);
        {Parsing zero-fills the array}
 
-            HarmonicListSize := Num;
-            Reallocmem(HarmonicList, SizeOf(HarmonicList^[1]) * HarmonicListSize);
-            for i := 1 to HarmonicListSize do
-                HarmonicList^[i] := Dummy^[i];
+            SetLength(HarmonicList, Num);
+            for i := 1 to Num do
+                HarmonicList[i - 1] := Dummy[i];
 
             Reallocmem(Dummy, 0);
         end;
@@ -2497,8 +2731,7 @@ begin
     DoSelectCmd;  // Select ActiveObject
     if DSS.ActiveDSSObject <> NIL then
     begin
-        ShowPropEditForm;
-
+        // TODO? ShowPropEditForm;
     end
     else
     begin
@@ -2753,7 +2986,7 @@ begin
             strings := TStringList.Create;
             iLine := 0;
 
-            Fstream := DSS.GetROFileStream(Param);
+            Fstream := DSS.GetInputStreamEx(Param);
             strings.LoadFromStream(Fstream);
             for stringIdx := 0 to (strings.Count - 1) do
             begin
@@ -2933,6 +3166,119 @@ begin
     end;
 end;
 
+function extractComment(const s: String): String;
+begin
+    Result := copy(s, pos('!', s), Length(s));
+end;
+
+function rewriteAlignedFile(DSS: TDSSContext; const Filename: String): Boolean;
+var
+    Fin: TStream = nil;
+    Fout: TFileStream = nil;
+    SaveDelims, Line, Field, AlignedFile: String;
+    FieldLength: pIntegerArray;
+    ArraySize, FieldLen, FieldNum: Integer;
+begin
+    Result := TRUE;
+
+    try
+        Fin := DSS.GetInputStreamEx(FileName);
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg(DSS, 'Error opening file "%s": %s', [Filename, E.message], 719);
+            Result := FALSE;
+            Exit
+        end;
+    end;
+
+    try
+        AlignedFile := ExtractFilePath(FileName) + 'Aligned_' + ExtractFileName(FileName);
+        Fout := TBufferedFileStream.Create(AlignedFile, fmCreate);
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg(DSS, 'Error opening file "%s": %s', [AlignedFile, E.message], 720);
+            FreeAndNil(Fin);
+            Result := FALSE;
+            Exit;
+        end;
+    end;
+
+    SaveDelims := DSS.AuxParser.Delimiters;
+    DSS.AuxParser.Delimiters := ',';
+    ArraySize := 10;
+    FieldLength := Allocmem(Sizeof(Integer) * ArraySize);
+
+    try
+        // Scan once to set field lengths
+        while (Fin.Position + 1) < Fin.Size do
+        begin
+            FSReadln(Fin, line);
+            DSS.AuxParser.CmdString := Line;  // Load the parser
+            FieldNum := 0;
+            repeat
+                DSS.AuxParser.NextParam;
+                Field := DSS.AuxParser.StrValue;
+                FieldLen := Length(Field);
+                if pos(' ', Field) > 0 then
+                    FieldLen := FieldLen + 2;
+                if FieldLen > 0 then
+                begin
+                    Inc(FieldNum);
+                    if FieldNum > ArraySize then
+                    begin
+                        ArraySize := FieldNum;
+                        Reallocmem(FieldLength, Sizeof(FieldLength^[1]) * ArraySize);
+                        FieldLength^[FieldNum] := FieldLen;
+                    end
+                    else
+                    if FieldLen > FieldLength^[Fieldnum] then
+                        FieldLength^[FieldNum] := FieldLen;
+
+                end;
+            until FieldLen = 0;
+
+        end;
+
+        // Now go back and re-read while writing the new file
+        Fin.Seek(0, soBeginning);
+
+        if (Fin.Position + 1) < Fin.Size then
+        begin
+            FSReadln(Fin, Line);
+            DSS.AuxParser.CmdString := Line;  // Load the parser
+            FieldNum := 0;
+            repeat
+                DSS.AuxParser.NextParam;
+                Field := DSS.AuxParser.StrValue;
+                if pos(' ', Field) > 0 then
+                    Field := '"' + Field + '"';  // add quotes if a space in field
+                FieldLen := Length(Field);
+                if FieldLen > 0 then
+                begin
+                    Inc(FieldNum);
+                    FSWrite(Fout, Pad(Field, FieldLength^[FieldNum] + 1));
+                end;
+            until FieldLen = 0;
+
+            if (pos('!', Line) > 0) then
+                FSWrite(Fout, extractComment(Line));
+
+            FSWriteln(Fout);
+        end;
+    finally     // Make sure we do this stuff ...
+        FreeAndNil(Fin);
+        FreeAndNil(Fout);
+
+        Reallocmem(FieldLength, 0);
+        DSS.AuxParser.Delimiters := SaveDelims;
+
+    end;
+
+    DSS.GlobalResult := AlignedFile;
+end;
+
 function TExecHelper.DoAlignFileCmd: Integer;
 {Rewrites designated file, aligning the fields into columns}
 var
@@ -2946,7 +3292,7 @@ begin
 
     if FileExists(Param) then
     begin
-        if not RewriteAlignedFile(DSS, Param) then
+        if not rewriteAlignedFile(DSS, Param) then
             Result := 1;
     end
     else
@@ -3159,6 +3505,257 @@ begin
     DSS.GlobalResult := S;
 end;
 
+
+
+procedure WriteUniformGenerators(DSS: TDSSContext; F: TFileStream; kW, PF: Double; DoGenerators: Boolean);
+// Distribute the generators uniformly amongst the feeder nodes that have loads
+var
+    kWeach: Double;
+    LoadClass: TDSSClass;
+    pLoad: TLoadObj;
+    Count, i: Integer;
+
+begin
+    LoadClass := GetDSSClassPtr(DSS, 'load');
+    Count := LoadClass.ElementList.Count;
+
+    kWEach := kW / Max(1.0, round(Count));
+    if DSS.ActiveCircuit.PositiveSequence then
+        kWEach := kWeach / 3.0;
+
+    for i := 1 to Count do
+    begin
+        pLoad := TLoadObj(LoadClass.ElementList.Get(i));
+        if pLoad.Enabled then
+        begin
+            if DoGenerators then
+                FSWrite(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
+            else
+                FSWrite(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
+            with DSS.ActiveCircuit do
+            begin
+                FSWrite(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
+                FSWrite(F, Format(' kW=%-g', [kWeach]));
+                FSWrite(F, Format(' PF=%-.3g', [PF]));
+            end;
+            FSWrite(F, ' model=1');
+            FSWriteln(F);
+        end;
+    end;
+end;
+
+procedure WriteRandomGenerators(DSS: TDSSContext; F: TFileStream; kW, PF: Double; DoGenerators: Boolean);
+// Distribute Generators randomly to loaded buses
+var
+    kWeach: Double;
+    LoadClass: TDSSClass;
+    pLoad: TLoadObj;
+    Count, i, LoadCount: Integer;
+
+begin
+    LoadClass := GetDSSClassPtr(DSS, 'load');
+    Count := LoadClass.ElementList.Count;
+    // Count enabled loads
+    LoadCount := 0;
+    for i := 1 to Count do
+    begin
+        pLoad := TLoadObj(LoadClass.ElementList.Get(i));
+        if pLoad.Enabled then
+            inc(LoadCount);
+    end;
+
+
+    kWEach := kW / LoadCount;  // median sized generator
+    if DSS.ActiveCircuit.PositiveSequence then
+        kWEach := kWEach / 3.0;
+
+    randomize;
+
+    // Place random sizes on load buses so that total is approximately what was spec'd
+    for i := 1 to Count do
+    begin
+        pLoad := TLoadObj(LoadClass.ElementList.Get(i));
+        if pLoad.Enabled then
+        begin
+            if DoGenerators then
+                FSWrite(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
+            else
+                FSWrite(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
+            with DSS.ActiveCircuit do
+            begin
+                FSWrite(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
+                FSWrite(F, Format(' kW=%-g', [kWeach * random * 2.0]));
+                FSWrite(F, Format(' PF=%-.3g', [PF]));
+            end;
+            FSWrite(F, ' model=1');
+            FSWriteln(F);
+        end;
+    end;
+end;
+
+procedure WriteEveryOtherGenerators(DSS: TDSSContext; F: TFileStream; kW, PF: Double; Skip: Integer; DoGenerators: Boolean);
+// distribute generators on every other load, skipping the number specified
+
+// Distribute the generator Proportional to load
+var
+    kWeach, TotalkW: Double;
+    LoadClass: TDSSClass;
+    pLoad: TLoadObj;
+    Count, i, skipcount: Integer;
+
+begin
+    LoadClass := GetDSSClassPtr(DSS, 'load');
+    Count := LoadClass.ElementList.Count;
+    // Add up the rated load in the enabled loads where gens will be placed
+    TotalkW := 0.0;
+    Skipcount := Skip;
+    for i := 1 to Count do
+    begin
+        pLoad := TLoadObj(LoadClass.ElementList.Get(i));
+        if pLoad.Enabled then
+            // Do not count skipped loads
+            if Skipcount = 0 then
+            begin
+                TotalkW := TotalkW + pLoad.kWBase;  // will be right value if pos seq, too
+                SkipCount := Skip;  // start counter over again
+            end
+            else
+                Dec(SkipCount);
+    end;
+
+    if DSS.ActiveCircuit.PositiveSequence then
+        kWeach := kW / TotalkW / 3.0
+    else
+        kWeach := kW / TotalkW;
+
+    SkipCount := Skip;
+    for i := 1 to Count do
+    begin
+        pLoad := TLoadObj(LoadClass.ElementList.Get(i));
+        if pLoad.Enabled then
+            if SkipCount = 0 then
+            begin
+                if DoGenerators then
+                    FSWrite(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
+                else
+                    FSWrite(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
+                with DSS.ActiveCircuit do
+                begin
+                    FSWrite(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
+                    FSWrite(F, Format(' kW=%-g ', [kWeach * pLoad.kWBase]));
+                    FSWrite(F, Format(' PF=%-.3g', [PF]));
+                end;
+                FSWrite(F, ' model=1');
+                FSWriteln(F);
+                SkipCount := Skip;
+            end
+            else
+                Dec(SkipCount);
+    end;
+end;
+
+procedure WriteProportionalGenerators(DSS: TDSSContext; F: TFileStream; kW, PF: Double; DoGenerators: Boolean);
+// Distribute the generator Proportional to load
+var
+    kWeach,
+    TotalkW: Double;
+    LoadClass: TDSSClass;
+    pLoad: TLoadObj;
+    Count, i: Integer;
+begin
+    LoadClass := GetDSSClassPtr(DSS, 'load');
+    Count := LoadClass.ElementList.Count;
+    // Add up the rated load in the enabled loads
+    TotalkW := 0.0;
+    for i := 1 to Count do
+    begin
+        pLoad := TLoadObj(LoadClass.ElementList.Get(i));
+        if pLoad.Enabled then
+        begin
+            TotalkW := TotalkW + pLoad.kWBase;  // will be right value if pos seq, too
+        end;
+    end;
+
+    if DSS.ActiveCircuit.PositiveSequence then
+        kWeach := kW / TotalkW / 3.0
+    else
+        kWeach := kW / TotalkW;
+
+    for i := 1 to Count do
+    begin
+        pLoad := TLoadObj(LoadClass.ElementList.Get(i));
+        if pLoad.Enabled then
+        begin
+            if DoGenerators then
+                FSWrite(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
+            else
+                FSWrite(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
+            with DSS.ActiveCircuit do
+            begin
+                FSWrite(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
+                FSWrite(F, Format(' kW=%-g', [kWeach * pLoad.kWBase]));
+                FSWrite(F, Format(' PF=%-.3g', [PF]));
+            end;
+            FSWrite(F, ' model=1');
+            FSWriteln(F);
+        end;
+    end;
+end;
+
+procedure makeDistributedGenerators(DSS: TDSSContext; kW, PF: Double; How: String; Skip: Integer; Fname: String; DoGenerators: Boolean);
+var
+    F: TFileStream = nil;
+    WhatStr: String;
+
+begin
+    // Write outputfile and then redirect command parser to it.
+    try
+        if FileExists(Fname) then
+        begin
+            // Since we don't have a warning mechanism, it's better to abort
+            // and let the user remove the existing file first
+            DoSimpleMsg(DSS, 'File "%s" was about to be overwritten. Rename/remove the existing file and try again.', [Fname], 721);
+            Exit;
+        end;
+        F := TBufferedFileStream.Create(Fname, fmCreate);
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg(DSS, 'Error opening "%s" for writing. Aborting.', [Fname], 722);
+            Exit;
+        end;
+    end;
+
+    try
+        if DoGenerators then
+            WhatStr := 'Generators'
+        else
+            WhatStr := 'Loads';
+
+        FSWriteln(F, '! Created with Distribute Command:');
+        FSWriteln(f, Format('! Distribute kW=%-.6g PF=%-.6g How=%s Skip=%d  file=%s  what=%s', [kW, PF, How, Skip, Fname, WhatStr]));
+        FSWriteln(F);
+        // FSWriteln(F, 'Set allowduplicates=yes');
+        if Length(How) = 0 then
+            How := 'P';
+        case AnsiUpperCase(How)[1] of
+            'U':
+                WriteUniformGenerators(DSS, F, kW, PF, DoGenerators);
+            'R':
+                WriteRandomGenerators(DSS, F, kW, PF, DoGenerators);
+            'S':
+                WriteEveryOtherGenerators(DSS, F, kW, PF, Skip, DoGenerators);
+        else
+            WriteProportionalGenerators(DSS, F, kW, PF, DoGenerators);
+        end;
+        DSS.GlobalResult := Fname;
+    finally
+        // FSWriteln(F, 'Set allowduplicates=no');
+        FreeAndNil(F);
+        SetLastResultFile(DSS, Fname);
+    end;
+end;
+
 function TExecHelper.DoDistributeCmd: Integer;
 var
     ParamPointer: Integer;
@@ -3222,8 +3819,7 @@ begin
     if not DoGenerators then
         FilName := 'DistLoads.dss';
 
-    MakeDistributedGenerators(DSS, kW, PF, How, Skip, FilName, DoGenerators);  // in Utilities
-
+    makeDistributedGenerators(DSS, kW, PF, How, Skip, FilName, DoGenerators);  // in Utilities
 end;
 
 function TExecHelper.DoDI_PlotCmd: Integer;
@@ -3629,13 +4225,28 @@ begin
 
      // Let's look to see how well we did
     if not DSS.AutoShowExport then
-        DSS.DSSExecutive.Command := 'Set showexport=yes';
-    DSS.DSSExecutive.Command := 'Export Estimation';
+        DSS.DSSExecutive.ParseCommand('Set showexport=yes');
+    DSS.DSSExecutive.ParseCommand('Export Estimation');
 end;
 
+function isPathBetween(FromLine, ToLine: TPDElement): Boolean;
+var
+    PDElem: TPDelement;
+begin
+    PDElem := FromLine;
+    Result := FALSE;
+    while PDElem <> NIL do
+    begin
+        if PDElem = ToLine then
+        begin
+            Result := TRUE;
+            Exit;
+        end;
+        PDElem := PDElem.ParentPDElement;
+    end;
+end;
 
 function TExecHelper.DoReconductorCmd: Integer;
-
 var
     Param: String;
     ParamName: String;
@@ -3748,9 +4359,9 @@ begin
 
      {Since the lines can be given in either order, Have to check to see which direction they are specified and find the path between them}
     TraceDirection := 0;
-    if IsPathBetween(pLine1, pLine2) then
+    if isPathBetween(pLine1, pLine2) then
         TraceDirection := 1;
-    if IsPathBetween(pLine2, pLine1) then
+    if isPathBetween(pLine2, pLine1) then
         TraceDirection := 2;
 
     if LineCodeSpecified then
@@ -3872,7 +4483,7 @@ begin
         exit;
     end;
     try
-        F := DSS.GetROFileStream(Param);
+        F := DSS.GetInputStreamEx(Param);
         DSS.AuxParser.Delimiters := ',';
         while (F.Position + 1) < F.Size do
         begin
@@ -4175,10 +4786,9 @@ var
     ParamName: String;
     ParamPointer: Integer;
     Npts: Integer;
-    Varray: pDoubleArray;
     CyclesPerSample: Integer;
     Lamp: Integer;
-    PstArray: pDoubleArray;
+    Varray, PstArray: ArrayOfDouble;
     nPst: Integer;
     i: Integer;
     S: String;
@@ -4207,10 +4817,10 @@ begin
             1:
             begin
                 Npts := DSS.Parser.IntValue;
-                Reallocmem(Varray, SizeOf(Varray^[1]) * Npts);
+                SetLength(Varray, Npts);
             end;
             2:
-                Npts := InterpretDblArray(DSS, Param, Npts, Varray);
+                Npts := InterpretDblArray(DSS, Param, Npts, PDoubleArray(@Varray[0]));
             3:
                 CyclesPerSample := Round(DSS.ActiveCircuit.Solution.Frequency * DSS.Parser.dblvalue);
             4:
@@ -4227,19 +4837,15 @@ begin
 
     if Npts > 10 then
     begin
-        nPst := PstRMS(PstArray, Varray, Freq, CyclesPerSample, Npts, Lamp);
+        nPst := PstRMS(PstArray, Varray, Freq, CyclesPerSample, Lamp);
          // put resulting pst array in the result string
         S := '';
         for i := 1 to nPst do
-            S := S + Format('%.8g, ', [PstArray^[i]]);
+            S := S + Format('%.8g, ', [PstArray[i - 1]]);
         DSS.GlobalResult := S;
     end
     else
         DoSimpleMsg(DSS, _('Insuffient number of points for Pst Calculation.'), 28723);
-
-
-    Reallocmem(Varray, 0);   // discard temp arrays
-    Reallocmem(PstArray, 0);
 end;
 
 function TExecHelper.DoLambdaCalcs: Integer;
@@ -4455,15 +5061,15 @@ end;
 initialization
     // Initialize Command lists
 
-    SaveCommands := TCommandList.Create(['class', 'file', 'dir', 'keepdisabled'], TRUE);
+    SaveCommands := TCommandList.Create(['class', 'file', 'dir', 'keepdisabled']);
     DI_PlotCommands := TCommandList.Create(['case', 'year', 'registers', 'peak', 'meter']);
-    DistributeCommands := TCommandList.Create(['kW', 'how', 'skip', 'pf', 'file', 'MW', 'what'], TRUE);
-    ReconductorCommands := TCommandList.Create(['Line1', 'Line2', 'LineCode', 'Geometry', 'EditString', 'Nphases'], TRUE);
-    RephaseCommands := TCommandList.Create(['StartLine', 'PhaseDesignation', 'EditString', 'ScriptFileName', 'StopAtTransformers'], TRUE);
-    AddMarkerCommands := TCommandList.Create(['Bus', 'code', 'color', 'size'], TRUE);
-    SetBusXYCommands := TCommandList.Create(['Bus', 'x', 'y'], TRUE);
-    PstCalcCommands := TCommandList.Create(['Npts', 'Voltages', 'dt', 'Frequency', 'lamp'], TRUE);
-    RemoveCommands := TCommandList.Create(['ElementName', 'KeepLoad', 'Editstring'], TRUE);
+    DistributeCommands := TCommandList.Create(['kW', 'how', 'skip', 'pf', 'file', 'MW', 'what']);
+    ReconductorCommands := TCommandList.Create(['Line1', 'Line2', 'LineCode', 'Geometry', 'EditString', 'Nphases']);
+    RephaseCommands := TCommandList.Create(['StartLine', 'PhaseDesignation', 'EditString', 'ScriptFileName', 'StopAtTransformers']);
+    AddMarkerCommands := TCommandList.Create(['Bus', 'code', 'color', 'size']);
+    SetBusXYCommands := TCommandList.Create(['Bus', 'x', 'y']);
+    PstCalcCommands := TCommandList.Create(['Npts', 'Voltages', 'dt', 'Frequency', 'lamp']);
+    RemoveCommands := TCommandList.Create(['ElementName', 'KeepLoad', 'Editstring']);
 
 finalization
 

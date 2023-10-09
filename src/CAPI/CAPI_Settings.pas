@@ -61,6 +61,7 @@ uses
     Executive,
     DSSClass,
     DSSHelper,
+    HashList,
     SysUtils;
 
 function Settings_Get_AllowDuplicates(): TAPIBoolean; CDECL;
@@ -74,18 +75,17 @@ end;
 function Settings_Get_AutoBusList(): PAnsiChar; CDECL;
 var
     i: Integer;
+    AutoAddBusList: TBusHashListType;
 begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
 
     DSSPrime.GlobalResult := '';
-    with DSSPrime.ActiveCircuit.AutoAddBusList do
-    begin
-        for i := 1 to Count do
-            AppendGlobalResult(DSSPrime, NameOfIndex(i));
-        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.GlobalResult);
-    end
+    AutoAddBusList := DSSPrime.ActiveCircuit.AutoAddBusList;
+    for i := 1 to AutoAddBusList.Count do
+        AppendGlobalResult(DSSPrime, AutoAddBusList.NameOfIndex(i));
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.GlobalResult);
 end;
 //------------------------------------------------------------------------------
 function Settings_Get_CktModel(): Integer; CDECL;
@@ -166,12 +166,7 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
 
-    case Value of
-        dssPositiveSeq:
-            DSSPrime.ActiveCircuit.PositiveSequence := TRUE;
-    else
-        DSSPrime.ActiveCircuit.PositiveSequence := FALSE;
-    end;
+    DSSPrime.ActiveCircuit.PositiveSequence := (Value = dssPositiveSeq);
 end;
 //------------------------------------------------------------------------------
 procedure Settings_Set_EmergVmaxpu(Value: Double); CDECL;
@@ -216,8 +211,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    DSS_RecreateArray_PInteger(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.NumLossRegs);
-    Move(DSSPrime.ActiveCircuit.LossRegs[1], ResultPtr^, DSSPrime.ActiveCircuit.NumLossRegs * SizeOf(Integer));
+    DSS_RecreateArray_PInteger(ResultPtr, ResultCount, Length(DSSPrime.ActiveCircuit.LossRegs));
+    Move(DSSPrime.ActiveCircuit.LossRegs[0], ResultPtr^, Length(DSSPrime.ActiveCircuit.LossRegs) * SizeOf(Integer));
 end;
 
 procedure Settings_Get_LossRegs_GR(); CDECL;
@@ -251,8 +246,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    DSS_RecreateArray_PInteger(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.NumUERegs);
-    Move(DSSPrime.ActiveCircuit.UERegs[1], ResultPtr^, DSSPrime.ActiveCircuit.NumUERegs * SizeOf(Integer));
+    DSS_RecreateArray_PInteger(ResultPtr, ResultCount, Length(DSSPrime.ActiveCircuit.UERegs));
+    Move(DSSPrime.ActiveCircuit.UERegs[0], ResultPtr^, Length(DSSPrime.ActiveCircuit.UERegs) * SizeOf(Integer));
 end;
 
 procedure Settings_Get_UEregs_GR(); CDECL;
@@ -274,9 +269,8 @@ procedure Settings_Set_LossRegs(ValuePtr: PInteger; ValueCount: TAPISize); CDECL
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    ReAllocMem(DSSPrime.ActiveCircuit.LossRegs, Sizeof(Integer) * ValueCount);
-    Move(ValuePtr^, DSSPrime.ActiveCircuit.LossRegs[1], ValueCount * SizeOf(Integer));
-    DSSPrime.ActiveCircuit.NumLossRegs := ValueCount;
+    SetLength(DSSPrime.ActiveCircuit.LossRegs, ValueCount);
+    Move(ValuePtr^, DSSPrime.ActiveCircuit.LossRegs[0], ValueCount * SizeOf(Integer));
 end;
 //------------------------------------------------------------------------------
 procedure Settings_Set_LossWeight(Value: Double); CDECL;
@@ -297,9 +291,8 @@ procedure Settings_Set_UEregs(ValuePtr: PInteger; ValueCount: TAPISize); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    ReAllocMem(DSSPrime.ActiveCircuit.UERegs, Sizeof(Integer) * ValueCount);
-    Move(ValuePtr^, DSSPrime.ActiveCircuit.UERegs[1], ValueCount * SizeOf(Integer));
-    DSSPrime.ActiveCircuit.NumUEregs := ValueCount;
+    SetLength(DSSPrime.ActiveCircuit.UERegs, ValueCount);
+    Move(ValuePtr^, DSSPrime.ActiveCircuit.UERegs[0], ValueCount * SizeOf(Integer));
 end;
 //------------------------------------------------------------------------------
 procedure Settings_Set_UEweight(Value: Double); CDECL;
@@ -325,11 +318,8 @@ begin
         Exit;
     end;
 
-    with DSSPrime.ActiveCircuit do
-    begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Length(LegalVoltageBases));
-        Move(LegalVoltageBases[0], ResultPtr^, Length(LegalVoltageBases) * SizeOf(Double));
-    end
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Length(DSSPrime.ActiveCircuit.LegalVoltageBases));
+    Move(DSSPrime.ActiveCircuit.LegalVoltageBases[0], ResultPtr^, Length(DSSPrime.ActiveCircuit.LegalVoltageBases) * SizeOf(Double));
 end;
 
 procedure Settings_Get_VoltageBases_GR(); CDECL;
@@ -351,11 +341,8 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
         
-    with DSSPrime.ActiveCircuit do
-    begin
-        SetLength(LegalVoltageBases, ValueCount);
-        Move(ValuePtr^, LegalVoltageBases[0], ValueCount * SizeOf(Double));
-    end;
+    SetLength(DSSPrime.ActiveCircuit.LegalVoltageBases, ValueCount);
+    Move(ValuePtr^, DSSPrime.ActiveCircuit.LegalVoltageBases[0], ValueCount * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
 function Settings_Get_PriceCurve(): PAnsiChar; CDECL;
@@ -363,7 +350,10 @@ begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.PriceCurve)
+    if DSSPrime.ActiveCircuit.PriceCurveObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.PriceCurveObj.Name)
+    else
+        Result := DSS_GetAsPAnsiChar(DSSPrime, '');
 end;
 //------------------------------------------------------------------------------
 function Settings_Get_PriceSignal(): Double; CDECL;
@@ -375,16 +365,15 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Settings_Set_PriceCurve(const Value: PAnsiChar); CDECL;
+var
+    sValue: String;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    with DSSPrime.ActiveCircuit do
-    begin
-        PriceCurve := Value;
-        PriceCurveObj := DSSPrime.LoadShapeClass.Find(Pricecurve);
-        if PriceCurveObj = NIL then
-            DoSimpleMsg(DSSPrime, 'Price Curve: "%s" not found.', [PriceCurve], 5006);
-    end;
+    sValue := Value;
+    DSSPrime.ActiveCircuit.PriceCurveObj := DSSPrime.LoadShapeClass.Find(sValue);
+    if DSSPrime.ActiveCircuit.PriceCurveObj = NIL then
+        DoSimpleMsg(DSSPrime, 'Price Curve: "%s" not found.', [sValue], 5006);
 end;
 //------------------------------------------------------------------------------
 procedure Settings_Set_PriceSignal(Value: Double); CDECL;

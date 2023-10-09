@@ -53,8 +53,8 @@ type
         procedure SetAsNextSeq(Index: Integer); inline;
 
         function GetPropertyValue(Index: Integer): String; VIRTUAL;  // Use dssclass.propertyindex to get index by name
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); VIRTUAL;
-        procedure SaveWrite(F: TFileStream); VIRTUAL;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); VIRTUAL;
+        procedure SaveWrite(F: TStream); VIRTUAL;
         procedure CustomSetRaw(Idx: Integer; Value: String); virtual;
         function ParseDynVar(Parser: TDSSParser; variable: String): Boolean; VIRTUAL;
 
@@ -73,6 +73,7 @@ uses
     LoadShape,
     DSSGlobals,
     UComplex, DSSUcomplex,
+    DSSHelper,
     DSSObjectHelper;
 
 
@@ -106,7 +107,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TDSSObject.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TDSSObject.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 var
     i: Integer;
 begin
@@ -141,7 +142,7 @@ begin
     ParentClass.GetObjPropertyValue(self, Index, Result);
 end;
 
-procedure TDSSObject.SaveWrite(F: TFileStream);
+procedure TDSSObject.SaveWrite(F: TStream);
 var
     iprop: Integer;
     str: String;
@@ -220,8 +221,12 @@ begin
 end;
 
 procedure TDSSObject.AppendToEventLog(const opdev: String; const action: String);
+var
+    S: String;
 begin
-    Utilities.AppendtoEventLog(DSS, opdev, action);
+    S := Format('Hour=%d, Sec=%-.5g, ControlIter=%d, Element=%s, Action=%s',
+        [DSS.ActiveCircuit.Solution.DynaVars.intHour, DSS.ActiveCircuit.Solution.Dynavars.t, DSS.ActiveCircuit.Solution.ControlIteration, OpDev, AnsiUpperCase(action)]);
+    DSS.EventStrings.Add(S);
 end;
 
 function TDSSObject.FullName: String;

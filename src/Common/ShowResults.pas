@@ -67,7 +67,6 @@ uses
     RegControl,
     ParserDel,
     CktTree,
-    CmdForms,
     Math,
     Line,
     LineUnits,
@@ -84,6 +83,13 @@ var
 
 const
     TABCHAR: Char = chr(9);
+    paddotsString: String = ' .................................................'; //50 dots
+
+function PadDots(const S: String; Width: Integer): String;
+// Pad out a string with dots to Width characters
+begin
+    Result := Copy(S, 1, Length(S)) + Copy(paddotsString, 1, (Width - Length(S)));
+end;
 
 procedure ShowResultFile(DSS: TDSSContext; FileNm: String);
 begin
@@ -869,7 +875,7 @@ begin
         F := TBufferedFileStream.Create(FileNm, fmCreate);
 
       {Allocate c_Buffer big enough for largest circuit element}
-        Getmem(c_buffer, sizeof(c_Buffer^[1]) * GetMaxCktElementSize(DSS));
+        Getmem(c_buffer, sizeof(c_Buffer^[1]) * DSS.ActiveCircuit.GetMaxCktElementSize());
 
         case ShowOptionCode of
             0:
@@ -1521,7 +1527,7 @@ begin
         F := TBufferedFileStream.Create(FileNm, fmCreate);
 
       {Allocate c_Buffer big enough for largest circuit element}
-        Getmem(c_buffer, sizeof(c_Buffer^[1]) * GetMaxCktElementSize(DSS));
+        Getmem(c_buffer, sizeof(c_Buffer^[1]) * DSS.ActiveCircuit.GetMaxCktElementSize());
 
         case ShowOptionCode of
             0:
@@ -2269,7 +2275,7 @@ begin
 
             pElem := DSS.ActiveCircuit.energyMeters.First;   // write registernames for first meter only
             for i := 1 to NumEMRegisters do
-                FSWriteln(F, 'Reg ' + IntToStr(i) + ' = ', pElem.RegisterNames[i]);
+                FSWriteln(F, 'Reg ' + IntToStr(i) + ' = ', pElem.RegisterNames[i - 1]);
             FSWriteln(F);
 
             pElem := DSS.ActiveCircuit.energyMeters.First;
@@ -2330,7 +2336,7 @@ begin
             GeneratorClass := TGenerator(pElem.ParentClass);
             FSWrite(F, 'Generator          ');
             for i := 1 to NumGenRegisters do
-                FSWrite(F, Pad(GeneratorClass.RegisterNames[i], 11));
+                FSWrite(F, Pad(GeneratorClass.RegisterNames[i - 1], 11));
             FSWriteln(F);
             FSWriteln(F);
             while pElem <> NIL do
@@ -2355,15 +2361,6 @@ begin
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
-end;
-
-function TapPosition(const Transformer: TTransfObj; iWind: Integer): Integer;
-
-{Assumes 0  is 1.0 per unit tap}
-
-begin
-    with Transformer do
-        Result := Round((PresentTap[iWind] - (Maxtap[iWind] + Mintap[iWind]) / 2.0) / TapIncrement[iWind]);
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -2400,7 +2397,7 @@ begin
                         MinTap[iWind], 
                         MaxTap[iWind], 
                         TapIncrement[iWind], 
-                        TapPosition(pReg.Transformer, iWind),
+                        TapPosition(iWind),
                         iWind,
                         StrUtils.IfThen(pReg.InReverseMode, 'Reverse', 'Forward'),
                         BoolToStr(pReg.InCogenMode, TRUE)
@@ -2414,6 +2411,10 @@ begin
         ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
+end;
+
+procedure ShowTreeView(const Fname: String); //TODO
+begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -2530,7 +2531,7 @@ begin
         F := TBufferedFileStream.Create(FileNm, fmCreate);
 
       {Allocate c_Buffer big enough for largest circuit element}
-        Getmem(c_buffer, sizeof(c_Buffer^[1]) * GetMaxCktElementSize(DSS));
+        Getmem(c_buffer, sizeof(c_Buffer^[1]) * DSS.ActiveCircuit.GetMaxCktElementSize());
 
      {Sequence Currents}
         FSWriteln(F);

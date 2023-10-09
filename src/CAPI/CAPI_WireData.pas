@@ -80,7 +80,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.WireDataClass.ElementCount;
+    Result := DSSPrime.WireDataClass.ElementCount();
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_First(): Integer; CDECL;
@@ -88,7 +88,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.WireDataClass.First;
+    Result := DSSPrime.WireDataClass.First();
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_Next(): Integer; CDECL;
@@ -96,7 +96,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.WireDataClass.Next;
+    Result := DSSPrime.WireDataClass.Next();
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_Name(): PAnsiChar; CDECL;

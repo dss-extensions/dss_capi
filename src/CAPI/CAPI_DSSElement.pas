@@ -27,6 +27,7 @@ procedure DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount
 var
     Result: PPAnsiCharArray0;
     k: Integer;
+    cls: TDSSClass;
 begin
     if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveDSSObject = NIL) then
     begin
@@ -34,15 +35,12 @@ begin
         Exit;
     end;
         
-    with DSSPrime.ActiveDSSObject do
-        with ParentClass do
-        begin
-            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumProperties);
-            for k := 1 to NumProperties do
-            begin
-                Result[k - 1] := DSS_CopyStringAsPChar(PropertyName[k]);
-            end;
-        end;
+    cls := DSSPrime.ActiveDSSObject.ParentClass;
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, cls.NumProperties);
+    for k := 1 to cls.NumProperties do
+    begin
+        Result[k - 1] := DSS_CopyStringAsPChar(cls.PropertyName[k]);
+    end;
 end;
 
 procedure DSSElement_Get_AllPropertyNames_GR(); CDECL;
@@ -57,8 +55,7 @@ begin
     Result := NIL;
     if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveDSSObject = NIL) then
         Exit;
-    with DSSPrime.ActiveDSSObject do
-        Result := DSS_GetAsPAnsiChar(DSSPrime, FullName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSObject.FullName);
 end;
 //------------------------------------------------------------------------------
 function DSSElement_Get_NumProperties(): Integer; CDECL;
@@ -67,8 +64,7 @@ begin
     if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveDSSObject = NIL) then
         Exit;
         
-    with DSSPrime.ActiveDSSObject do
-        Result := ParentClass.NumProperties;
+    Result := DSSPrime.ActiveDSSObject.ParentClass.NumProperties;
 end;
 //------------------------------------------------------------------------------
 function DSSElement_ToJSON(Options: Integer): PAnsiChar; CDECL;

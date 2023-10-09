@@ -248,7 +248,7 @@ begin
     PropertyOffset[ord(TProp.GroundTrip)] := ptruint(@obj.GroundTrip);
     PropertyOffset[ord(TProp.PhaseInst)] := ptruint(@obj.PhaseInst);
     PropertyOffset[ord(TProp.GroundInst)] := ptruint(@obj.GroundInst);
-    
+
     PropertyOffset[ord(TProp.Reset)] := ptruint(@obj.Resettime);
     PropertyFlags[ord(TProp.Reset)] := [TPropertyFlag.Units_s];
 

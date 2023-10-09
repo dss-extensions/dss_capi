@@ -448,7 +448,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_kVbase(Value: Double); CDECL;
 begin
-    Set_Parameter(DSSPrime, ord(TSensorProp.kvbase), Value);
+    Set_Parameter(DSSPrime, ord(TSensorProp.kVBase), Value);
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_idx(): Integer; CDECL;

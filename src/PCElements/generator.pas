@@ -68,7 +68,8 @@ uses
     ArrayDef,
     DynEqPCE,
     Dynamics,
-    DynamicExp;
+    DynamicExp,
+    DSSObject;
 
 const
     NumGenRegisters = 6;    // Number of energy meter registers
@@ -218,7 +219,7 @@ type
 
         procedure DefineProperties; override;
     PUBLIC
-        RegisterNames: array[1..NumGenregisters] of String;
+        RegisterNames: ArrayOfString;
 
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -228,6 +229,8 @@ type
 
         procedure ResetRegistersAll;
         procedure SampleAll;
+        function GetRegisterNames(obj: TDSSObject): ArrayOfString; override;
+        function GetRegisterValues(obj: TDSSObject): pDoubleArray; override;
     end;
 
     TGeneratorObj = class(TDynEqPCE)
@@ -462,12 +465,14 @@ begin
     inherited Create(dssContext, GEN_ELEMENT, 'Generator');
     
     // Set Register names
-    RegisterNames[1] := 'kWh';
-    RegisterNames[2] := 'kvarh';
-    RegisterNames[3] := 'Max kW';
-    RegisterNames[4] := 'Max kVA';
-    RegisterNames[5] := 'Hours';
-    RegisterNames[6] := '$';
+    RegisterNames := ArrayOfString.Create(
+        'kWh',
+        'kvarh',
+        'Max kW',
+        'Max kVA',
+        'Hours',
+        '$'
+    );
 end;
 
 destructor TGenerator.Destroy;
@@ -598,12 +603,12 @@ begin
 
     PropertyOffset[ord(TProp.minkvar)] := ptruint(@obj.kvarMin);
     PropertyFlags[ord(TProp.minkvar)] := [TPropertyFlag.DynamicDefault];
-    
+
     PropertyOffset[ord(TProp.pvfactor)] := ptruint(@obj.PVFactor);
     PropertyOffset[ord(TProp.dispvalue)] := ptruint(@obj.DispatchValue);
     PropertyOffset[ord(TProp.Vminpu)] := ptruint(@obj.VMinPu);
     PropertyOffset[ord(TProp.Vmaxpu)] := ptruint(@obj.VMaxPu);
-    
+
     PropertyOffset[ord(TProp.DutyStart)] := ptruint(@obj.DutyStart);
     PropertyFlags[ord(TProp.DutyStart)] := [TPropertyFlag.Units_hour];
 
@@ -613,7 +618,7 @@ begin
 
     PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.GenVars.kVArating);
     PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.DynamicDefault];
-    
+
     PropertyOffset[ord(TProp.Xd)] := ptruint(@obj.GenVars.puXd);
     PropertyOffset[ord(TProp.Xdp)] := ptruint(@obj.GenVars.puXdp);
     PropertyOffset[ord(TProp.Xdpp)] := ptruint(@obj.GenVars.puXdpp);
@@ -798,7 +803,7 @@ begin
     obj:= TObj(ptr);
     obj.RecalcElementData();
     obj.YPrimInvalid := TRUE;
-    Exclude(obj.Flags, Flg.EditionActive);
+    Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
 
@@ -876,6 +881,21 @@ begin
         if pGen.enabled then
             pGen.TakeSample;
     end;
+end;
+
+function TGenerator.GetRegisterNames(obj: TDSSObject): ArrayOfString;
+begin
+    Result := RegisterNames;
+end;
+
+function TGenerator.GetRegisterValues(obj: TDSSObject): pDoubleArray;
+begin
+    if not (obj is TGeneratorObj) then
+    begin
+        Result := NIL;
+        Exit;
+    end;
+    Result := pDoubleArray(@TGeneratorObj(obj).Registers[1]);
 end;
 
 constructor TGeneratorObj.Create(ParClass: TDSSClass; const SourceName: String);
@@ -2804,6 +2824,10 @@ procedure TGeneratorObj.Set_PresentkV(const Value: Double);
 begin
     Genvars.kVGeneratorBase := Value;
     PropertySideEffects(ord(TProp.kV));
+    // if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    // begin
+    //    SetAsNextSeq(ord(TLoadProp.kV));
+    // end;
 end;
 
 procedure TGeneratorObj.Set_PresentkW(const Value: Double);

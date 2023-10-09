@@ -632,7 +632,7 @@ begin
     else
     begin
          // Search through the entire circuit for enabled pvsysten objects and add them to the list
-        for i := 1 to PVSysClass.ElementCount do
+        for i := 1 to PVSysClass.ElementCount() do
         begin
             PVSys := PVSysClass.ElementList.Get(i);
             if PVSys.Enabled then

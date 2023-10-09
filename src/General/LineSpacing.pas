@@ -128,7 +128,7 @@ begin
     // integers
     PropertyType[ord(TProp.nphases)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.nphases)] := ptruint(@obj.Nphases);
-    
+
     PropertyType[ord(TProp.nconds)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.nconds)] := ptruint(@obj.FNconds);
     PropertyFlags[ord(TProp.nconds)] := [TPropertyFlag.SuppressJSON];

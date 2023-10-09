@@ -24,7 +24,8 @@ uses
     UComplex, DSSUcomplex,
     UcMatrix,
     Arraydef,
-    math;
+    math,
+    ControlledTransformer;
 
 type
 {$SCOPEDENUMS ON}
@@ -175,24 +176,24 @@ type
     AutoWindingArray = array[1..3] of TAutoWinding;
     pAutoWindingArray = ^AutoWindingArray;
 
-    TAutoTransObj = class(TPDElement)
+    TAutoTransObj = class(TControlledTransformerObj)
     PRIVATE
 
         DeltaDirection: Integer;
         ppm_FloatFactor: Double; //  parts per million winding float factor
         XRConst: LongBool;
 
-        function Get_PresentTap(i: Integer): Double;
-        procedure Set_PresentTap(i: Integer; const Value: Double);
-        function Get_MinTap(i: Integer): Double;
-        function Get_MaxTap(i: Integer): Double;
-        function Get_TapIncrement(i: Integer): Double;
-        function Get_BaseVoltage(i: Integer): Double;
+        function Get_PresentTap(i: Integer): Double; override;
+        procedure Set_PresentTap(i: Integer; const Value: Double); override;
+        function Get_MinTap(i: Integer): Double; override;
+        function Get_MaxTap(i: Integer): Double; override;
+        function Get_TapIncrement(i: Integer): Double; override;
+        function Get_BaseVoltage(i: Integer): Double; override;
         function Get_BasekVLL(i: Integer): Double;
         // CIM accessors
-        function Get_NumTaps(i: Integer): Integer;
+        function Get_NumTaps(i: Integer): Integer; override;
         function Get_WdgResistance(i: Integer): Double;
-        function Get_WdgConnection(i: Integer): Integer;
+        function Get_WdgConnection(i: Integer): Integer; override;
         function Get_WdgkVA(i: Integer): Double;
         function Get_Xsc(i: Integer): Double;
 
@@ -234,7 +235,6 @@ type
 
         procedure SetTermRef;
     PUBLIC
-        NumWindings: Integer;
         ActiveWinding: Integer;  // public for COM interface
 
         IsSubstation: LongBool;
@@ -264,27 +264,27 @@ type
         // Getcurrents Override for AutoTrans
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present values of terminal
 
-        function RotatePhases(iPhs: Integer): Integer;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
-        procedure SaveWrite(F: TFileStream); OVERRIDE;
-        procedure GetAutoWindingVoltages(iWind: Integer; VBuffer: pComplexArray);
-        procedure GetAllWindingCurrents(CurrBuffer: pComplexArray);
+        function RotatePhases(iPhs: Integer): Integer; override;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure SaveWrite(F: TStream); OVERRIDE;
+        procedure GetWindingVoltages(iWind: Integer; VBuffer: pComplexArray); override; // previously GetAutoWindingVoltages
+        procedure GetAllWindingCurrents(CurrBuffer: pComplexArray); override;
 
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
-        property PresentTap[i: Integer]: Double READ Get_PresentTap WRITE Set_PresentTap;
-        property Mintap[i: Integer]: Double READ Get_MinTap;
-        property Maxtap[i: Integer]: Double READ Get_MaxTap;
-        property TapIncrement[i: Integer]: Double READ Get_TapIncrement;
-        property BaseVoltage[i: Integer]: Double READ Get_BaseVoltage;  // Winding VBase
+        //property PresentTap[i: Integer]: Double READ Get_PresentTap WRITE Set_PresentTap;
+        //property Mintap[i: Integer]: Double READ Get_MinTap;
+        //property Maxtap[i: Integer]: Double READ Get_MaxTap;
+        //property TapIncrement[i: Integer]: Double READ Get_TapIncrement;
+        // property BaseVoltage[i: Integer]: Double READ Get_BaseVoltage;  // Winding VBase
         property BasekVLL[i: Integer]: Double READ Get_BasekVLL;  // Winding VBase
 
         // CIM accessors
-        property NumTaps[i: Integer]: Integer READ Get_NumTaps;
+        // property NumTaps[i: Integer]: Integer READ Get_NumTaps;
         property WdgResistance[i: Integer]: Double READ Get_WdgResistance;
         property WdgkVA[i: Integer]: Double READ Get_WdgkVA;
-        property WdgConnection[i: Integer]: Integer READ Get_WdgConnection;
+        // property WdgConnection[i: Integer]: Integer READ Get_WdgConnection;
         property XscVal[i: Integer]: Double READ Get_Xsc;
     end;
 
@@ -497,13 +497,13 @@ begin
 
     PropertyOffset[ord(TProp.pctloadloss)] := ptruint(@obj.pctLoadLoss);
     PropertyOffset[ord(TProp.pctnoloadloss)] := ptruint(@obj.pctNoLoadLoss);
-    
+
     PropertyOffset[ord(TProp.normhkVA)] := ptruint(@obj.NormMaxHkVA);
     PropertyFlags[ord(TProp.normhkVA)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_kVA];
-    
+
     PropertyOffset[ord(TProp.emerghkVA)] := ptruint(@obj.EmergMaxHkVA);
     PropertyFlags[ord(TProp.emerghkVA)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_kVA];
-    
+
     PropertyOffset[ord(TProp.pctimag)] := ptruint(@obj.pctImag);
 
     // scaled double
@@ -1049,7 +1049,7 @@ begin
     CalcY_Terminal(1.0);   // Calc Y_Terminal at base frequency
 end;
 
-procedure TAutoTransObj.SaveWrite(F: TFileStream);
+procedure TAutoTransObj.SaveWrite(F: TStream);
 // Override standard SaveWrite
 // AutoTrans structure not conducive to standard means of saving
 var
@@ -1197,7 +1197,7 @@ begin
     YprimInvalid := FALSE;
 end;
 
-procedure TAutoTransObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TAutoTransObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 
 var
     i, j: Integer;
@@ -1552,7 +1552,7 @@ begin
     end;
 end;
 
-procedure TAutoTransObj.GeTAutoWindingVoltages(iWind: Integer; VBuffer: pComplexArray);
+procedure TAutoTransObj.GetWindingVoltages(iWind: Integer; VBuffer: pComplexArray);
 //  Voltages across indicated winding
 // Fill Vbuffer array which must be adequately allocated by calling routine
 // Order is Number of Phases

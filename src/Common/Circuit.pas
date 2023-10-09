@@ -1,12 +1,8 @@
 unit Circuit;
-
-{
-   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
-
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 interface
 
 uses
@@ -41,13 +37,15 @@ uses
     ;
 
 type
-    TReductionStrategy = (rsDefault, rsShortlines, {rsTapEnds,} rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches, rsLaterals);
+{$PUSH}
+{$Z4} // keep enums as int32 values
+    TReductionStrategy = (rsDefault, rsShortlines, rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches, rsLaterals);
+    // rsTapEnds,
+{$POP}
 
     // for adding markers to Plot
     TBusMarker = class(TObject)
     // Must be defined before calling circuit plot
-    PRIVATE
-
     PUBLIC
         BusName: String;
         AddMarkerColor: Integer;
@@ -55,7 +53,9 @@ type
         AddMarkerSize: Integer;
 
         constructor Create;
+        procedure Reset();
         destructor Destroy; OVERRIDE;
+        function Clone(): TBusMarker;
     end;
 
     TDSSCircuit = class(TNamedObject)
@@ -77,8 +77,8 @@ type
         Branch_List: TCktTree; // topology from the first source, lazy evaluation
         BusAdjPC, BusAdjPD: TAdjArray; // bus adjacency lists of PD and PC elements
 
-        procedure AddABus;
-        procedure AddANodeBus;
+        procedure AddABus();
+        procedure AddANodeBus();
         function AddBus(const BusName: String; NNodes: Integer): Integer;
         procedure Set_ActiveCktElement(Value: TDSSCktElement);
         procedure Set_BusNameRedefined(Value: Boolean);
@@ -100,6 +100,7 @@ type
 
     PUBLIC
         DSS: TDSSContext;
+        MaxBusNameLength, MaxDeviceNameLength: Integer;
 
         ActiveBusIndex: Integer;
         Fundamental: Double;    // fundamental and default base frequency
@@ -155,10 +156,7 @@ type
         UEWeight,
         LossWeight: Double;
 
-        NumUEregs,
-        NumLossRegs: Integer;
-        Ueregs,
-        LossRegs: pIntegerArray;
+        Ueregs, LossRegs: ArrayOfInteger;
 
         CapacityStart,
         CapacityIncrement: Double;
@@ -166,9 +164,7 @@ type
         TrapezoidalIntegration,
         LogEvents: Boolean;
 
-        LoadDurCurve: String;
         LoadDurCurveObj: TLoadShapeObj;
-        PriceCurve: String;
         PriceCurveObj: TPriceShapeObj;
 
         NumDevices, NumBuses, NumNodes: Integer;
@@ -184,7 +180,7 @@ type
         DuplicatesAllowed: Boolean;
         ZonesLocked: Boolean;
         MeterZonesComputed: Boolean;
-        PositiveSequence: Boolean;  // Model is to be interpreted as Pos seq
+        PositiveSequence: LongBool;  // Model is to be interpreted as Pos seq -- size(LongBool)=size(Integer), so we reuse the parser parts
         NeglectLoadY: Boolean;
         LongLineCorrection: Boolean; // Apply long line correction where feasible (single phase lines, positive sequence models, 3-phase lines with Symmetrical Components Model)
 
@@ -193,7 +189,7 @@ type
         NormalMaxVolts,
         EmergMaxVolts,
         EmergMinVolts: Double;  //per unit voltage restraints for this circuit
-        LegalVoltageBases: Array of Double;
+        LegalVoltageBases: ArrayOfDouble;
 
         // Global circuit multipliers
         GeneratorDispatchReference,
@@ -291,7 +287,7 @@ type
         Ic: TSparse_Complex; //  The complementary Currents vector
         MeTISZones: TStringList; // The list for assigning a zone to a bus after tearing
 
-        procedure AggregateProfiles(mode: String);
+        procedure AggregateProfiles(const UseActual: Boolean);
         procedure Disable_All_DER();
         function Tear_Circuit(): Integer; // Tears the circuit considering the number of Buses of the original Circuit
         function Create_MeTIS_graph(): String; // Generates the graph dscribing the model for MeTiS
@@ -324,9 +320,13 @@ type
         function SetElementActive(const FullObjectName: String): Integer;
         procedure InvalidateAllPCElements;
 
-        procedure DebugDump(var F: TFileStream);
+        procedure DebugDump(F: TStream);
 
-          // Access to topology from the first source
+        // Moved from Utilities.pas
+        function GetMaxCktElementSize(): Integer;
+        function GetUniqueNodeNumber(const sBusName: String; StartNode: Integer): Integer;
+
+        // Access to topology from the first source
         function GetTopology: TCktTree;
         procedure FreeTopology;
         function GetBusAdjacentPDLists: TAdjArray;
@@ -360,7 +360,6 @@ uses
     Transformer,
     Vsource,
     Utilities,
-    CmdForms,
      {$IFDEF MSWINDOWS}
     Windows,
     SHELLAPI,
@@ -378,10 +377,12 @@ constructor TDSSCircuit.Create(dssContext: TDSSContext; const aName: String);
 begin
     inherited Create('Circuit');
 
+    MaxDeviceNameLength := 30;
+    MaxBusNameLength := 12;
     DSS := dssContext;
 
     IsSolved := FALSE;
-    Solution := TSolutionObj.Create(DSS, Name);
+    Solution := TSolutionObj.Create(DSS, self, Name);
 
     LocalName := AnsiLowerCase(aName);
 
@@ -472,21 +473,15 @@ begin
      // Factors for Autoadd stuff
     UEWeight := 1.0;  // Default to weighting UE same as losses
     LossWeight := 1.0;
-    NumUEregs := 1;
-    NumLossRegs := 1;
-    UEregs := NIL;  // set to something so it wont break reallocmem
-    LossRegs := NIL;
-    Reallocmem(UEregs, sizeof(UEregs^[1]) * NumUEregs);
-    Reallocmem(Lossregs, sizeof(Lossregs^[1]) * NumLossregs);
-    UEregs^[1] := 10;   // Overload UE
-    LossRegs^[1] := 13;   // Zone Losses
+    SetLength(UEregs, 1);
+    SetLength(Lossregs, 1);
+    UEregs[0] := 10;   // Overload UE
+    LossRegs[0] := 13;   // Zone Losses
 
     CapacityStart := 0.9;     // for Capacity search
     CapacityIncrement := 0.005;
 
-    LoadDurCurve := '';
     LoadDurCurveObj := NIL;
-    PriceCurve := '';
     PriceCurveObj := NIL;
 
      // Flags
@@ -557,7 +552,7 @@ begin
     ReduceLateralsKeepLoad := TRUE;
 
     // Misc objects
-    AutoAddObj := TAutoAdd.Create(DSS);
+    AutoAddObj.Init(DSS);
 
     Branch_List := NIL;
     BusAdjPC := NIL;
@@ -613,8 +608,6 @@ begin
     Reallocmem(Buses, 0);
     Reallocmem(MapNodeToBus, 0);
     Reallocmem(NodeBuffer, 0);
-    Reallocmem(UEregs, 0);
-    Reallocmem(Lossregs, 0);
 
     DeviceList.Free;
     BusList.Free;
@@ -656,8 +649,6 @@ begin
 
     ClearBusMarkers;
     BusMarkerList.Free;
-
-    AutoAddObj.Free;
 
     FreeTopology;
 
@@ -715,26 +706,23 @@ var
     Current_Idx,                  //  Stores the Index value of the current level
     Current_level: Integer;    //  Stores the current level traced
 begin
-    with solution do
+    Current_level := maxintvalue(Solution.Inc_Mat_Levels);                    //  Init level
+    Current_idx := get_element_idx(Solution.Inc_Mat_Levels, Current_level);  //  Init Index
+    End_flag := TRUE;
+    setlength(New_graph, 0);
+    while End_flag do
     begin
-        Current_level := maxintvalue(Inc_Mat_Levels);                    //  Init level
-        Current_idx := get_element_idx(Inc_Mat_Levels, Current_level);  //  Init Index
-        End_flag := TRUE;
-        setlength(New_graph, 0);
-        while End_flag do
+        //Checks the termination criteria
+        if (Current_level > Solution.Inc_Mat_Levels[Current_idx]) or (Solution.Inc_Mat_Levels[Current_idx] = 0) then
+            End_Flag := FALSE;
+        // Is the current bus part of the new backbone?
+        if Solution.Inc_Mat_Levels[Current_idx] = Current_level then
         begin
-            //Checks the termination criteria
-            if (Current_level > Inc_Mat_Levels[Current_idx]) or (Inc_Mat_Levels[Current_idx] = 0) then
-                End_Flag := FALSE;
-            // Is the current bus part of the new backbone?
-            if Inc_Mat_Levels[Current_idx] = Current_level then
-            begin
-                dec(Current_level);
-                setlength(New_graph, (length(New_graph) + 1));
-                New_graph[High(New_graph)] := Current_idx;
-            end;
-            dec(Current_idx);
+            dec(Current_level);
+            setlength(New_graph, (length(New_graph) + 1));
+            New_graph[High(New_graph)] := Current_idx;
         end;
+        dec(Current_idx);
     end;
 end;
 
@@ -760,23 +748,21 @@ var
 begin
     Curr_level := -1; // Initializing values
     Ref_detected := FALSE;
-    with Solution do
+
+    for idx := 0 to High(Solution.Inc_Mat_Levels) do     // Sweeps the whole graph
     begin
-        for idx := 0 to High(Inc_Mat_Levels) do     // Sweeps the whole graph
+        if Solution.Inc_Mat_Levels[idx] = 0 then
+            Ref_detected := TRUE
+        else
         begin
-            if Inc_Mat_Levels[idx] = 0 then
-                Ref_detected := TRUE
-            else
+            if (Curr_level >= Solution.Inc_Mat_Levels[idx]) or Ref_detected then
             begin
-                if (Curr_level >= Inc_Mat_Levels[idx]) or Ref_detected then
-                begin
-                    Ref_detected := FALSE;
-                    Curr_level := Inc_Mat_Levels[idx] - 1;
-                    Inc_Mat_Levels[idx] := 1;
-                end
-                else
-                    Inc_Mat_Levels[idx] := Inc_Mat_Levels[idx] - Curr_level;
-            end;
+                Ref_detected := FALSE;
+                Curr_level := Solution.Inc_Mat_Levels[idx] - 1;
+                Solution.Inc_Mat_Levels[idx] := 1;
+            end
+            else
+                Solution.Inc_Mat_Levels[idx] -= Curr_level;
         end;
     end;
 end;
@@ -787,64 +773,61 @@ var
     DBLTemp, //  For storing temoprary doubles
     Sys_Size: Double; //  Stores the number of buses contained in the system
     SMEnd: Boolean; //  Terminates the state machine
-    i,
-    State: Integer; // The current state of the state machine
+    i, State: Integer; // The current state of the state machine
     Candidates: array of Integer; // Array for 0 level buses idx
 begin
-    with solution do
+    SMEnd := TRUE;
+    State := 0;
+    Sys_Size := length(Solution.Inc_Mat_Cols);
+    setlength(Buses_Covered, 1);
+    setlength(Path_Idx, 1);
+    Actual_Coverage := -1;
+    while SMEnd do // The state machine starts
     begin
-        SMEnd := TRUE;
-        State := 0;
-        Sys_Size := length(Inc_Mat_Cols);
-        setlength(Buses_Covered, 1);
-        setlength(Path_Idx, 1);
-        Actual_Coverage := -1;
-        while SMEnd do // The state machine starts
-        begin
-            case State of
-                0:
-                begin // Processes the first path
-                    setlength(Candidates, 0);
-                    for i := 0 to (length(Inc_Mat_Levels) - 1) do // Extracts the 0 Level Buses
+        case State of
+            0:
+            begin // Processes the first path
+                setlength(Candidates, 0);
+                for i := 0 to (length(Solution.Inc_Mat_Levels) - 1) do // Extracts the 0 Level Buses
+                begin
+                    if Solution.Inc_Mat_Levels[i] = 0 then
                     begin
-                        if solution.Inc_Mat_Levels[i] = 0 then
-                        begin
-                            setlength(Candidates, length(Candidates) + 1);
-                            Candidates[High(Candidates)] := i;
-                        end;
+                        setlength(Candidates, length(Candidates) + 1);
+                        Candidates[High(Candidates)] := i;
                     end;
-                    setlength(Longest_paths, 0);
-                    Buses_covered[0] := MaxIntValue(Candidates); // Extracts the maximum level covered
-                    Path_Idx[0] := Append2PathsArray(Candidates); // No shifting in the graph
-                    State := 1; // Go to the next state
                 end;
-                1:
-                begin // Extracts a new path from the longest branch to
-                    get_longest_path(); // the backbone (Zeros)
-                    setlength(Path_Idx, (length(Path_Idx) + 1));
-                    Path_Idx[High(Path_Idx)] := Append2PathsArray(New_Graph); // Adds the new candidates
-                    // Estimates the amount of buses covered in this path
-                    setlength(Buses_covered, (length(Buses_covered) + 1));
-                    Buses_covered[High(Buses_covered)] := New_Graph[0] - New_Graph[High(New_Graph)];
-                    // Replaces the latest path with 0 in the Bus levels array
-                    for i := Path_Idx[High(Path_Idx)] to High(Longest_paths) do
-                        Inc_Mat_Levels[Longest_paths[i]] := 0;
-                    Normalize_graph;
-                    // remains in the same state
-                end;
+                setlength(Longest_paths, 0);
+                Buses_covered[0] := MaxIntValue(Candidates); // Extracts the maximum level covered
+                Path_Idx[0] := Append2PathsArray(Candidates); // No shifting in the graph
+                State := 1; // Go to the next state
             end;
-            // Checks the coverage index to stablish if is necessary to keep tracing paths to increase the coverage
-            DBLTemp := 0.0;
-            for i := Low(Buses_covered) to High(Buses_covered) do
-                DBLtemp := DBLTemp + (0.0 + Buses_Covered[i]);
-            DBLtemp := DBLTemp / Sys_Size;
-            // If the New coverage is different from the previous one and is below the expected coverage keep going
-            // The first criteria is to avoid keep working on a path that will not contribute to improve the coverage
-            if (DBLTemp <> Actual_Coverage) and (DBLTemp >= Coverage) then
-                SMEnd := FALSE;
-            Actual_Coverage := DBLTemp;
+            1:
+            begin // Extracts a new path from the longest branch to
+                get_longest_path(); // the backbone (Zeros)
+                setlength(Path_Idx, (length(Path_Idx) + 1));
+                Path_Idx[High(Path_Idx)] := Append2PathsArray(New_Graph); // Adds the new candidates
+                // Estimates the amount of buses covered in this path
+                setlength(Buses_covered, (length(Buses_covered) + 1));
+                Buses_covered[High(Buses_covered)] := New_Graph[0] - New_Graph[High(New_Graph)];
+                // Replaces the latest path with 0 in the Bus levels array
+                for i := Path_Idx[High(Path_Idx)] to High(Longest_paths) do
+                    Solution.Inc_Mat_Levels[Longest_paths[i]] := 0;
+                Normalize_graph();
+                // remains in the same state
+            end;
         end;
+        // Checks the coverage index to stablish if is necessary to keep tracing paths to increase the coverage
+        DBLTemp := 0.0;
+        for i := Low(Buses_covered) to High(Buses_covered) do
+            DBLtemp := DBLTemp + (0.0 + Buses_Covered[i]);
+        DBLtemp := DBLTemp / Sys_Size;
+        // If the New coverage is different from the previous one and is below the expected coverage keep going
+        // The first criteria is to avoid keep working on a path that will not contribute to improve the coverage
+        if (DBLTemp <> Actual_Coverage) and (DBLTemp >= Coverage) then
+            SMEnd := FALSE;
+        Actual_Coverage := DBLTemp;
     end;
+    DSS.GlobalResult := Format(_('%d new paths detected'), [length(DSS.ActiveCircuit.Path_Idx) - 1]);
 end;
 
 // Appends single phase ISources to the each node of bus specified
@@ -856,9 +839,9 @@ var
     text,
     BusName: String;
     pBus: TDSSBus;
-    F: TFileStream = NIL;
+    F: TStream = NIL;
 begin
-    F := TBufferedFileStream.Create(Path, fmOpenReadWrite);
+    F := DSS.GetOutputStreamEx(Path, fmOpenReadWrite);
     F.Seek(0, soEnd);
     SetElementActive(LinkBranch);
     BusName := ActiveCktElement.GetBus(BusNum);
@@ -873,7 +856,7 @@ begin
         text := 'New ISource.' + inttostr(BusNum) + '_' + inttostr(kk) + ' phases=1 bus1=' + BusName + '.' + inttostr(kk) + ' amps=0.000001 angle=0';
         FSWriteLn(F, text);
     end;
-    F.Free;
+    F.Free();
 end;
 
 {$IFDEF UNIX}
@@ -905,7 +888,7 @@ end;
 // header definitions for declaring separate subcircuits in OpenDSS
 procedure TDSSCircuit.Format_SubCircuits(Path: String; NumCkts: Integer; AddISrc: Boolean);
 var
-    myFile: TFileStream = NIL;
+    myFile: TStream = NIL;
     Temp_txt,
     Temp_txt2,
     text: String;
@@ -918,11 +901,11 @@ var
     FS_Idx2: Integer;
 const
     Reference: array[0..5] of String = // To filter the source file
-        ('Redirect EnergyM', 'Redirect Monitor', 'MakeBu', 'Redirect BusVolta', 'Buscoords busco', 'Redirect zone');
+        ('Redirect EnergyM', 'Redirect Monitor', 'MakeBu', 'Redirect BusVolta', 'BusCoords busco', 'Redirect zone');
 
 begin
     // Reads the master file
-    myFile := TBufferedFileStream.Create(Path + PathDelim + 'Master.dss', fmOpenRead or fmShareDenyWrite);
+    myFile := DSS.GetOutputStreamEx(Path + PathDelim + 'Master.dss', fmOpenRead or fmShareDenyWrite);
     setlength(File_Struc, 0);
     FS_Idx := 0;
     while (myFile.Position + 1) < myFile.Size do // Extracts the file content as an array of strings
@@ -936,7 +919,7 @@ begin
     // Creates the copy for the interconnected system
     setlength(Xtra, 0);
 
-    myFile := TBufferedFileStream.Create(Path + PathDelim + 'Master_Interconnected.dss', fmCreate);
+    myFile := DSS.GetOutputStreamEx(Path + PathDelim + 'Master_Interconnected.dss', fmCreate);
     for FS_Idx := 0 to High(File_Struc) do
     begin
         Str_Found := FALSE;
@@ -961,7 +944,7 @@ begin
     FreeAndNil(myFile);
 
     // removes the unnecessary information from the master file (deletes the other zones)
-    myFile := TBufferedFileStream.Create(Path + PathDelim + 'Master.dss', fmCreate);
+    myFile := DSS.GetOutputStreamEx(Path + PathDelim + 'Master.dss', fmCreate);
     for FS_Idx := 0 to High(File_Struc) do
     begin
         Local_Temp := ansipos('Redirect zone', File_Struc[FS_Idx]);
@@ -1004,7 +987,7 @@ begin
     // Creates the master file for each subcircuit
     for FS_Idx := 2 to NumCkts do
     begin
-        myFile := TBufferedFileStream.Create(Path + PathDelim + 'zone_' + inttostr(FS_Idx) + PathDelim + 'Master.dss', fmCreate);
+        myFile := DSS.GetOutputStreamEx(Path + PathDelim + 'zone_' + inttostr(FS_Idx) + PathDelim + 'Master.dss', fmCreate);
         FSWriteLn(myFile, 'Clear');
         FSWriteLn(myFile, 'New Circuit.Zone_' + inttostr(FS_Idx));
         FS_Idx1 := 2;
@@ -1047,9 +1030,9 @@ begin
     for FS_Idx := 1 to NumCkts do
     begin
         if FS_Idx = 1 then
-            myFile := TBufferedFileStream.Create(Path + PathDelim + 'VSource.dss', fmCreate)
+            myFile := DSS.GetOutputStreamEx(Path + PathDelim + 'VSource.dss', fmCreate)
         else
-            myFile := TBufferedFileStream.Create(Path + PathDelim + 'zone_' + inttostr(FS_Idx) + PathDelim + 'VSource.dss', fmCreate);
+            myFile := DSS.GetOutputStreamEx(Path + PathDelim + 'zone_' + inttostr(FS_Idx) + PathDelim + 'VSource.dss', fmCreate);
 
         for FS_Idx2 := 1 to 3 do
         begin
@@ -1086,11 +1069,11 @@ var
     Fileroot: String;
 begin
     // Prepares everything to save the base of the torn circuit on a separate folder
-    Fileroot := DSS.OutputDirectory; {CurrentDSSDir;}
+    Fileroot := DSS.OutputDirectory; // CurrentDSSDir;
     Fileroot := Fileroot + PathDelim + 'Torn_Circuit';
     CreateDir(Fileroot); // Creates the folder for storing the modified circuit
-    DelFilesFromDir(Fileroot); // Removes all the files inside the new directory (if exists)
-    DSS.DssExecutive.Command := 'save circuit Dir="' + Fileroot + '"';
+    DelFilesFromDir(DSS, Fileroot); // Removes all the files inside the new directory (if exists)
+    DSS.DssExecutive.ParseCommand('save circuit Dir="' + Fileroot + '"');
     // This routine extracts and modifies the file content to separate the subsystems as OpenDSS projects indepedently
     Format_SubCircuits(FileRoot, length(Locations), AddISrc);
 end;
@@ -1106,127 +1089,123 @@ var
     myClass,
     myName,
     FileName: String;
-    F: TFileStream = NIL;
+    F: TStream = NIL;
     myPDEList,
     MyGraph: array of String;
     MyIdx: array of Integer;
 begin
-    with solution do
+    // Calculates the incidence matrix and laplacian to generate the graph file to be
+    // send to MeTiS
+    Solution.Calc_Inc_Matrix_Org(); //Calculates the ordered incidence matrix
+    // Initializes the METIS related variables
+    setlength(myPDEList, 1);
+    setlength(myGraph, 1);
+
+    Solution.Laplacian := Solution.IncMat.Transpose(); // Transposes the Incidence Matrix
+    Solution.Laplacian := Solution.Laplacian.multiply(Solution.IncMat); // Laplacian Matrix calculated
+    // Filters the incidence matrix to remove duplicated branches (parallel)
+    for i := 0 to High(Solution.Inc_Mat_Cols) do
     begin
-        // Calculates the incidence matrix and laplacian to generate the graph file to be
-        // send to MeTiS
-        Calc_Inc_Matrix_Org; //Calculates the ordered incidence matrix
-        // Initializes the METIS related variables
-        setlength(myPDEList, 1);
-        setlength(myGraph, 1);
-
-        Laplacian := IncMat.Transpose(); // Transposes the Incidence Matrix
-        Laplacian := Laplacian.multiply(IncMat); // Laplacian Matrix calculated
-        // Filters the incidence matrix to remove duplicated branches (parallel)
-        for i := 0 to High(Inc_Mat_Cols) do
+        setlength(myIdx, 1);
+        MyName := Solution.Inc_Mat_Cols[i];
+        // first, get the name of all PDE conencted to this Bus
+        for jj := 0 to (IncMat.NZero - 1) do
         begin
-            setlength(myIdx, 1);
-            MyName := Inc_Mat_Cols[i];
-            // first, get the name of all PDE conencted to this Bus
-            for jj := 0 to (IncMat.NZero - 1) do
+            if Solution.IncMat.data[jj][1] = i then
             begin
-                if IncMat.data[jj][1] = i then
+                // Check if this is not a parallel branch
+                exists := FALSE;
+                if length(myIdx) > 1 then // Only if it's not the first time
                 begin
-                    // Check if this is not a parallel branch
-                    exists := FALSE;
-                    if length(myIdx) > 1 then // Only if it's not the first time
+                    for k := 0 to (length(myIdx) - 2) div 2 do
                     begin
-                        for k := 0 to (length(myIdx) - 2) div 2 do
+                        // Checks for the other terminal
+                        if jj < High(Solution.IncMat.data) then
                         begin
-                            // Checks for the other terminal
-                            if jj < High(IncMat.data) then
-                            begin
-                                if IncMat.data[jj + 1][0] = IncMat.data[jj][0] then
-                                    myIntVar := IncMat.data[jj + 1][1]
-                                else
-                                    myIntVar := IncMat.data[jj - 1][1];
-                            end
+                            if Solution.IncMat.data[jj + 1][0] = Solution.IncMat.data[jj][0] then
+                                myIntVar := Solution.IncMat.data[jj + 1][1]
                             else
-                                myIntVar := IncMat.data[jj - 1][1];
+                                myIntVar := Solution.IncMat.data[jj - 1][1];
+                        end
+                        else
+                            myIntVar := Solution.IncMat.data[jj - 1][1];
 
-                            if myIdx[k * 2] = myIntVar then
-                            begin
-                                exists := TRUE;
-                                break;
-                            end;
+                        if myIdx[k * 2] = myIntVar then
+                        begin
+                            exists := TRUE;
+                            break;
                         end;
                     end;
-
-                    if not exists then
-                    begin
-                        // Stores the name of the PDE
-                        myName := Inc_Mat_Rows[IncMat.data[jj][0]];
-                        myPDEList[High(myPDEList)] := myName;
-                        setlength(myPDEList, length(myPDEList) + 1);
-                        // Checks for the other terminal
-                        if jj < High(IncMat.data) then
-                        begin
-                            if IncMat.data[jj + 1][0] = IncMat.data[jj][0] then
-                                myIdx[High(myIdx)] := IncMat.data[jj + 1][1]
-                            else
-                                myIdx[High(myIdx)] := IncMat.data[jj - 1][1];
-                        end
-                        else
-                            myIdx[High(myIdx)] := IncMat.data[jj - 1][1];
-
-                        setlength(myIdx, length(myIdx) + 1);
-                        // Now, get the number of Phases
-                        myIntVar := ansipos('.', myName);
-                        myClass := myName.Substring(0, (myIntVar - 1));
-                        // if transformer, the weigth is the lowest
-                        if myClass <> 'Transformer' then
-                        begin
-                            DSS.ActiveCircuit.SetElementActive(MyName);
-                            myIntVar := DSS.ActiveCircuit.ActiveCktElement.NPhases;
-                        end
-                        else
-                            myIntVar := 1;
-
-                        myIdx[High(myIdx)] := myIntVar;
-                        setlength(myIdx, length(myIdx) + 1);
-                    end;
                 end;
-            end;
-            setlength(myIdx, length(myIdx) - 1);
-            myName := '';
-            for jj := 0 to High(myIdx) do
-                myName := myName + inttostr(myIdx[jj]) + ' ';
-            myGraph[High(myGraph)] := myName;
-            setlength(myGraph, length(myGraph) + 1);
 
-        end;
-        setlength(myGraph, length(myGraph) - 1);
-        setlength(myPDEList, length(myPDEList) - 1);
-
-        // Generates the graph file
-        // First, get the number of branches in the model excluding parallel branches
-        jj := 0;
-        for i := 0 to High(Inc_Mat_Rows) do
-        begin
-            // check if it's on the list
-            for k := 0 to High(myPDEList) do
-            begin
-                if AnsiLowerCase(Inc_Mat_Rows[i]) = AnsiLowerCase(myPDEList[k]) then
+                if not exists then
                 begin
-                    inc(jj);
-                    break;
+                    // Stores the name of the PDE
+                    myName := Solution.Inc_Mat_Rows[Solution.IncMat.data[jj][0]];
+                    myPDEList[High(myPDEList)] := myName;
+                    setlength(myPDEList, length(myPDEList) + 1);
+                    // Checks for the other terminal
+                    if jj < High(Solution.IncMat.data) then
+                    begin
+                        if Solution.IncMat.data[jj + 1][0] = Solution.IncMat.data[jj][0] then
+                            myIdx[High(myIdx)] := Solution.IncMat.data[jj + 1][1]
+                        else
+                            myIdx[High(myIdx)] := Solution.IncMat.data[jj - 1][1];
+                    end
+                    else
+                        myIdx[High(myIdx)] := Solution.IncMat.data[jj - 1][1];
+
+                    setlength(myIdx, length(myIdx) + 1);
+                    // Now, get the number of Phases
+                    myIntVar := ansipos('.', myName);
+                    myClass := myName.Substring(0, (myIntVar - 1));
+                    // if transformer, the weigth is the lowest
+                    if myClass <> 'Transformer' then
+                    begin
+                        DSS.ActiveCircuit.SetElementActive(MyName);
+                        myIntVar := DSS.ActiveCircuit.ActiveCktElement.NPhases;
+                    end
+                    else
+                        myIntVar := 1;
+
+                    myIdx[High(myIdx)] := myIntVar;
+                    setlength(myIdx, length(myIdx) + 1);
                 end;
             end;
         end;
-
-        FileName := DSS.OutputDirectory + DSS.CircuitName_ + '.graph';
-        F := TBufferedFileStream.Create(FileName, fmCreate);
-        FSWriteln(F, inttostr(length(Inc_Mat_Cols)) + ' ' + inttostr(jj) + ' 1'); // it should be the rank of the incidence matrix
-        for i := 1 to High(myGraph) do
-            FSWriteln(F, myGraph[i]);
-        F.Free();
+        setlength(myIdx, length(myIdx) - 1);
+        myName := '';
+        for jj := 0 to High(myIdx) do
+            myName := myName + inttostr(myIdx[jj]) + ' ';
+        myGraph[High(myGraph)] := myName;
+        setlength(myGraph, length(myGraph) + 1);
 
     end;
+    setlength(myGraph, length(myGraph) - 1);
+    setlength(myPDEList, length(myPDEList) - 1);
+
+    // Generates the graph file
+    // First, get the number of branches in the model excluding parallel branches
+    jj := 0;
+    for i := 0 to High(Solution.Inc_Mat_Rows) do
+    begin
+        // check if it's on the list
+        for k := 0 to High(myPDEList) do
+        begin
+            if AnsiLowerCase(Solution.Inc_Mat_Rows[i]) = AnsiLowerCase(myPDEList[k]) then
+            begin
+                inc(jj);
+                break;
+            end;
+        end;
+    end;
+
+    FileName := DSS.OutputDirectory + DSS.CircuitName_ + '.graph';
+    F := DSS.GetOutputStreamEx(FileName, fmCreate);
+    FSWriteln(F, inttostr(length(Solution.Inc_Mat_Cols)) + ' ' + inttostr(jj) + ' 1'); // it should be the rank of the incidence matrix
+    for i := 1 to High(myGraph) do
+        FSWriteln(F, myGraph[i]);
+    F.Free();
 
     Result := FileName;
 end;
@@ -1243,91 +1222,87 @@ var
     Flag: Boolean;
 begin
     Num_pieces := Num_SubCkts;
-    with solution do
-    begin
 {$IFNDEF UNIX}
 //    if Num_pieces <= 8 then MeTISCmd   :=  'kmetis.exe'  // For less than 8 zones use pMeTIS
 //    else MeTISCmd   :=  'kmetis.exe';                    // For more than 8 zonez use k-Way (kMeTIS)
-    // In the past we use to use pmetis and kmetis, however, in our latest update we realized kmetis is enough
-    // update 09-24-2020 by Davis Montenegro
-        MeTISCmd := 'kmetis.exe';
+// In the past we use to use pmetis and kmetis, however, in our latest update we realized kmetis is enough
+// update 09-24-2020 by Davis Montenegro
+    MeTISCmd := 'kmetis.exe';
 {$ELSE}
-        MeTISCmd := 'kmetis';
+    MeTISCmd := 'kmetis';
 {$ENDIF}
-        if fileexists(Pchar(FileName + '.part.' + inttostr(Num_pieces))) then // Checks if the file exists before
-            deletefile(Pchar(FileName + '.part.' + inttostr(Num_pieces)));
-        repeat
-            Process.RunCommand(DSSDirectory + MeTISCmd, [Filename, inttostr(Num_pieces)], TextCmd); // Executes MeTIS
-            Flag := ANSIContainsText(TextCmd, 'I detected an error');
-            if Flag then // The # of edges was wrong, use the one proposed by MeTIS
-            begin
-                TextCmd := GetNumEdges(TextCmd); // Gest the # of edges proposed by MeTIS
-                jj := length(inttostr(length(Inc_Mat_Cols))) + 2;// Caculates the index for replacing the number in the Graph File
-                // Replaces the old data with the new at the file header
-                Replacer := TFileSearchReplace.Create(FileName);
-                try
-                    Replacer.Replace(inttostr(length(Inc_Mat_Cols)) + ' ' + inttostr(length(Inc_Mat_Cols) - 1),
-                        inttostr(length(Inc_Mat_Cols)) + ' ' + TextCmd, [rfIgnoreCase]);
-                finally
-                    Replacer.Free;
-                end;
-            end;
-        until not flag;
-
-        // Verifies if there was no error executing MeTIS and the zones file was created
-        if (TextCmd <> '**Error**') and fileexists(Pchar(FileName + '.part.' + inttostr(Num_pieces))) then
+    if fileexists(Pchar(FileName + '.part.' + inttostr(Num_pieces))) then // Checks if the file exists before
+        deletefile(Pchar(FileName + '.part.' + inttostr(Num_pieces)));
+    repeat
+        Process.ParseCommand(DSSDirectory + MeTISCmd, [Filename, inttostr(Num_pieces)], TextCmd); // Executes MeTIS
+        Flag := ANSIContainsText(TextCmd, 'I detected an error');
+        if Flag then // The # of edges was wrong, use the one proposed by MeTIS
         begin
-            MeTISZones := TStringList.Create; // Opens the file containing the tearing results
-            MeTISZones.LoadFromFile(FileName + '.part.' + inttostr(Num_pieces));
-            TextCmd := MeTISZones.Strings[1];
-            MeTISZones.Delete(0);
-            MetisZones.Insert(0, TextCmd);
-            setlength(Locations, 1);
-            setlength(BusZones, 1);
-            for i := 0 to (MeTISZones.Count - 1) do
+            TextCmd := GetNumEdges(TextCmd); // Gest the # of edges proposed by MeTIS
+            jj := length(inttostr(length(Solution.Inc_Mat_Cols))) + 2;// Caculates the index for replacing the number in the Graph File
+            // Replaces the old data with the new at the file header
+            Replacer := TFileSearchReplace.Create(FileName);
+            try
+                Replacer.Replace(inttostr(length(Solution.Inc_Mat_Cols)) + ' ' + inttostr(length(Solution.Inc_Mat_Cols) - 1),
+                    inttostr(length(Solution.Inc_Mat_Cols)) + ' ' + TextCmd, [rfIgnoreCase]);
+            finally
+                Replacer.Free;
+            end;
+        end;
+    until not flag;
+
+    // Verifies if there was no error executing MeTIS and the zones file was created
+    if (TextCmd <> '**Error**') and fileexists(Pchar(FileName + '.part.' + inttostr(Num_pieces))) then
+    begin
+        MeTISZones := TStringList.Create; // Opens the file containing the tearing results
+        MeTISZones.LoadFromFile(FileName + '.part.' + inttostr(Num_pieces));
+        TextCmd := MeTISZones.Strings[1];
+        MeTISZones.Delete(0);
+        MetisZones.Insert(0, TextCmd);
+        setlength(Locations, 1);
+        setlength(BusZones, 1);
+        for i := 0 to (MeTISZones.Count - 1) do
+        begin
+            if i = 0 then
             begin
-                if i = 0 then
+                Locations[i] := 0;
+                BusZones[i] := MeTISZones[i];
+            end
+            else
+            begin
+                if MeTISZones[i] <> BusZones[high(BusZones)] then // Moving to another zone in the file
                 begin
-                    Locations[i] := 0;
-                    BusZones[i] := MeTISZones[i];
-                end
-                else
-                begin
-                    if MeTISZones[i] <> BusZones[high(BusZones)] then // Moving to another zone in the file
+                    j := 0;
+                    if i < (MeTISZones.Count - 1) then // If not lower means the zone is only 1 bus
+                        j := Integer(MeTISZones[i] = MeTISZones[i + 1]);
+                    if j = 1 then // Varifies that the zone is big enough
                     begin
-                        j := 0;
-                        if i < (MeTISZones.Count - 1) then // If not lower means the zone is only 1 bus
-                            j := Integer(MeTISZones[i] = MeTISZones[i + 1]);
-                        if j = 1 then // Varifies that the zone is big enough
+                        j := 0; // Verifies that this zone hasn't been counted before
+                        for jj := 0 to High(BusZones) do
                         begin
-                            j := 0; // Verifies that this zone hasn't been counted before
-                            for jj := 0 to High(BusZones) do
+                            if MeTISZones[i] = BusZones[jj] then
                             begin
-                                if MeTISZones[i] = BusZones[jj] then
-                                begin
-                                    inc(j);
-                                    Break;
-                                end;
+                                inc(j);
+                                Break;
                             end;
-                            if j = 0 then // Is not in the list, add the new location
-                            begin
-                                setlength(Locations, Length(Locations) + 1);
-                                setlength(BusZones, Length(BusZones) + 1);
-                                Locations[High(Locations)] := i;
-                                BusZones[High(BusZones)] := MeTISZones[i];
-                            end;
+                        end;
+                        if j = 0 then // Is not in the list, add the new location
+                        begin
+                            setlength(Locations, Length(Locations) + 1);
+                            setlength(BusZones, Length(BusZones) + 1);
+                            Locations[High(Locations)] := i;
+                            BusZones[High(BusZones)] := MeTISZones[i];
                         end;
                     end;
                 end;
             end;
-
         end;
-        for j := 0 to High(Locations) do
-            inc(Locations[j]); //Adjust the location coords
 
     end;
-    Result := TextCmd
+    for j := 0 to High(Locations) do
+        inc(Locations[j]); //Adjust the location coords
 
+    Result := TextCmd
 end;
 
 // Disables all DER present in the model
@@ -1347,21 +1322,21 @@ begin
         DevClassIndex := DSS.ClassNames.Find(myDERList[myDERIdx]);
         DSS.LastClassReferenced := DevClassIndex;
         DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
-        if DSS.ActiveDSSClass.ElementCount > 0 then
+        if DSS.ActiveDSSClass.ElementCount() > 0 then
         begin
-            myIdx := DSS.ActiveDSSClass.First;
+            myIdx := DSS.ActiveDSSClass.First();
             repeat
                 ActiveCktElement.Enabled := FALSE;
-                myIdx := DSS.ActiveDSSClass.Next;
+                myIdx := DSS.ActiveDSSClass.Next();
             until (myIdx <= 0);
         end;
     end;
 end;
 
 // Aggregates profiles using the number of zones defined by the user
-procedure TDSSCircuit.AggregateProfiles(mode: String);
+procedure TDSSCircuit.AggregateProfiles(const UseActual: Boolean);
 var
-    F: TFileStream = NIL;
+    F: TStream = NIL;
     FileRoot,
     myPCE,
     TextCmd,
@@ -1384,23 +1359,15 @@ var
     mykvarShape,
     myLoadShape: array of Double;
     PFSpecified,
-    UseActual: Boolean;
     qmult: Double;
     lsobj: TLoadShapeObj;
 begin
-    UseActual := FALSE;
-    if AnsiLowerCase(mode) = 'actual' then
-        UseActual := TRUE;
-
     myFileName := Create_MeTIS_Graph();
     TextCmd := Create_MeTIS_Zones(myFileName);
     // Gets the link branches from the MeTIS estimation
-    with solution do
-    begin
-        setlength(Link_Branches, High(Locations));
-        for i := 1 to High(Locations) do
-            Link_Branches[i - 1] := Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])];
-    end;
+    setlength(Link_Branches, High(Locations));
+    for i := 1 to High(Locations) do
+        Link_Branches[i - 1] := Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])];
     // Disables DER if any
     // Disable_All_DER();
     // Disables Monitors and EnergyMeters if any
@@ -1415,11 +1382,11 @@ begin
 
     // Add monitors and Energy Meters at link branches
     // Creates and EnergyMeter at the feeder head
-    pLine := Lines.First;
-    DSS.DSSExecutive.Command := 'New EnergyMeter.myEMZoneFH element=' + CheckForBlanks(pLine.FullName) + ' terminal=1';
+    pLine := Lines.First();
+    DSS.DSSExecutive.ParseCommand('New EnergyMeter.myEMZoneFH element=' + CheckForBlanks(pLine.FullName) + ' terminal=1');
     for i := 0 to High(Link_Branches) do
     begin
-        DSS.DSSExecutive.Command := 'New EnergyMeter.myEMZone' + InttoStr(i) + ' element=' + Link_Branches[i] + ' terminal=1';
+        DSS.DSSExecutive.ParseCommand('New EnergyMeter.myEMZone' + InttoStr(i) + ' element=' + Link_Branches[i] + ' terminal=1');
     end;
     // Gets the max number of iterations to configure the simulation using the existing loadshapes
     j := 0;
@@ -1440,10 +1407,10 @@ begin
     solution.Solve();
 
     // Creates the folder for storign the results
-    Fileroot := DSS.OutputDirectory; {CurrentDSSDir;}
+    Fileroot := DSS.OutputDirectory; // CurrentDSSDir;
     Fileroot := Fileroot + 'Aggregated_model';
     CreateDir(Fileroot); // Creates the folder for storing the modified circuit
-    DelFilesFromDir(Fileroot); // Removes all the files inside the new directory (if exists)
+    DelFilesFromDir(DSS, Fileroot); // Removes all the files inside the new directory (if exists)
     // Now starts aggregating the loadshapes per zone
     setlength(myLoadShapes, 1);
     for EMeter in EnergyMeters do
@@ -1529,9 +1496,9 @@ begin
                 end;
 
                 // Saves the profile on disk
-                myLoadShapes[High(myLoadShapes)] := DSS.OutputDirectory {CurrentDSSDir} + 'loadShape_' + EMeter.Name + '.csv';
+                myLoadShapes[High(myLoadShapes)] := DSS.OutputDirectory + 'loadShape_' + EMeter.Name + '.csv'; // CurrentDSSDir
 
-                F := TBufferedFileStream.Create(myLoadShapes[High(myLoadShapes)], fmCreate);
+                F := DSS.GetOutputStreamEx(myLoadShapes[High(myLoadShapes)], fmCreate);
                 for j := 0 to High(myLoadShape) do
                     FSWriteln(F, floattostr(myLoadShape[j]) + ',' + floattostr(mykvarShape[j]));
 
@@ -1558,11 +1525,11 @@ begin
         TextCmd := 'New LoadShape.myShape_' + inttostr(j) + ' npts=' +
             floattostr(length(myLoadShape)) + ' interval=1 mult=(file=' + myLoadShapes[j] + ' col=1, header=No)' +
             'Qmult=(file=' + myLoadShapes[j] + ' col=2, header=No)' + TextCmd;
-        DSS.DSSExecutive.Command := TextCmd;
+        DSS.DSSExecutive.ParseCommand(TextCmd);
     end;
     // Assigns the new loadshapes to all the loads in the zone
     // also, disables the energy meters created and restores the originals
-    //  DSS.DSSExecutive.Command :=  'solve snap';
+    //  DSS.DSSExecutive.ParseCommand('solve snap');
     k := 0;
     for EMeter in EnergyMeters.Count do
     begin
@@ -1581,7 +1548,7 @@ begin
                         SetElementActive(EMeter.ZonePCE[j]);
                         mykW := TLoadObj(DSS.ActiveDSSObject).kWref;
                         mykvar := TLoadObj(DSS.ActiveDSSObject).kVARref;
-                        DSS.DSSExecutive.Command := EMeter.ZonePCE[j] + '.yearly=myShape_' + inttostr(k);
+                        DSS.DSSExecutive.ParseCommand(EMeter.ZonePCE[j] + '.yearly=myShape_' + inttostr(k));
                         SetElementActive(EMeter.ZonePCE[j]);
                         // Restores the nominal values for saving the file
                         TLoadObj(DSS.ActiveDSSObject).kWBase := mykW;
@@ -1600,7 +1567,7 @@ begin
     end;
 
     // saves the new model
-    DSS.DssExecutive.Command := 'save circuit Dir="' + Fileroot + '"';
+    DSS.DssExecutive.ParseCommand('save circuit Dir="' + Fileroot + '"');
 end;
 
 // This routine tears the circuit into many pieces as CPUs are
@@ -1622,118 +1589,111 @@ var
     Term_volts: array of Double; // To verify the connection of the branch
 begin
     Num_pieces := Num_SubCkts;
-    with solution do
+    FileName := Create_METIS_Graph();
+    TextCmd := Create_METIS_Zones(FileName);
+
+    // Verifies if there was no error executing MeTIS and the zones file was created
+    if (TextCmd <> '**Error**') and fileexists(Pchar(FileName + '.part.' + inttostr(Num_pieces))) then
     begin
-        FileName := Create_METIS_Graph();
-        TextCmd := Create_METIS_Zones(FileName);
-
-        // Verifies if there was no error executing MeTIS and the zones file was created
-        if (TextCmd <> '**Error**') and fileexists(Pchar(FileName + '.part.' + inttostr(Num_pieces))) then
+        // ***********The directory is ready for storing the new circuit****************
+        for EMeter in EnergyMeters do
         begin
-            // ***********The directory is ready for storing the new circuit****************
-            for EMeter in EnergyMeters do
+            EMeter.Enabled := FALSE;
+        end;
+        // ************ Creates the meters at the tearing locations  ********************
+        Result := 1; // Resets the result variable (Return)
+        setlength(PConn_Voltages, length(Locations) * 6); //  Sets the memory space for storing the voltage at the point of conn
+        setlength(Link_branches, length(Locations)); //  Sets the memory space for storing the link branches names
+        setlength(PConn_Names, length(Locations)); //  Sets the memory space for storing the Bus names
+        DSS.SolutionAbort := FALSE;
+        j := 0;
+        for i := 0 to High(Locations) do
+        begin
+            if Locations[i] > 0 then
             begin
-                EMeter.Enabled := FALSE;
-            end;
-            // ************ Creates the meters at the tearing locations  ********************
-            Result := 1; // Resets the result variable (Return)
-            setlength(PConn_Voltages, length(Locations) * 6); //  Sets the memory space for storing the voltage at the point of conn
-            setlength(Link_branches, length(Locations)); //  Sets the memory space for storing the link branches names
-            setlength(PConn_Names, length(Locations)); //  Sets the memory space for storing the Bus names
-            DSS.SolutionAbort := FALSE;
-            j := 0;
-            for i := 0 to High(Locations) do
-            begin
-                if Locations[i] > 0 then
+                inc(Result);
+                // Gets the name of the PDE for placing the EnergyMeter
+                PDElement := Solution.Inc_Mat_Rows[Solution.get_IncMatrix_Row(Locations[i])];
+                Link_Branches[i] := PDElement;
+                dbg := Solution.get_IncMatrix_Col(Locations[i]); // Temporary stores the given location
+                // Checks the branch orientation across the feeder by substracting the voltages around the branch
+                // Start with Bus 1
+                setlength(Term_volts, 2);
+                for dbg := 0 to 1 do
                 begin
-                    inc(Result);
-                    // Gets the name of the PDE for placing the EnergyMeter
-                    with solution do
-                    begin
-                        PDElement := Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])];
-                        Link_Branches[i] := PDElement;
-                        dbg := get_IncMatrix_Col(Locations[i]); // Temporary stores the given location
-                        // Checks the branch orientation across the feeder by substracting the voltages around the branch
-                        // Start with Bus 1
-                        setlength(Term_volts, 2);
-                        for dbg := 0 to 1 do
-                        begin
-                            BusName := Inc_Mat_Cols[Active_Cols[dbg]];
-                            SetActiveBus(DSS, BusName); // Activates the Bus
-                            pBus := Buses[ActiveBusIndex];
-                            jj := 1;
-                            // this code so nodes come out in order from smallest to larges
-                            repeat
-                                NodeIdx := pBus.FindIdx(jj); // Get the index of the Node that matches jj
-                                inc(jj)
-                            until NodeIdx > 0;
-                            Volts := ctopolardeg(Solution.NodeV[pBus.RefNo[NodeIdx]]);  // referenced to pBus
-                            Term_volts[dbg] := Volts.mag;
-                        end;
+                    BusName := Solution.Inc_Mat_Cols[Active_Cols[dbg]];
+                    SetActiveBus(DSS, BusName); // Activates the Bus
+                    pBus := Buses[ActiveBusIndex];
+                    jj := 1;
+                    // this code so nodes come out in order from smallest to larges
+                    repeat
+                        NodeIdx := pBus.FindIdx(jj); // Get the index of the Node that matches jj
+                        inc(jj)
+                    until NodeIdx > 0;
+                    Volts := ctopolardeg(Solution.NodeV[pBus.RefNo[NodeIdx]]);  // referenced to pBus
+                    Term_volts[dbg] := Volts.mag;
+                end;
 
-                        // Determines the best place to connect the EnergyMeter
-                        Term_volts[0] := Term_volts[0] - Term_volts[1];
-                        if Term_volts[0] >= 0 then
-                            jj := 0
-                        else
-                            jj := 1;
-                        BusName := Inc_Mat_Cols[Active_Cols[jj]];
-                        Terminal := 'terminal=' + inttostr(jj + 1);
-
-                        PConn_Names[i] := BusName;
-                        SetActiveBus(DSS, BusName);           // Activates the Bus
-                        pBus := Buses[ActiveBusIndex];
-
-                        for jj := 1 to 3 do
-                        begin
-                            // this code so nodes come out in order from smallest to larges
-                            NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
-
-                            Volts := ctopolardeg(Solution.NodeV[pBus.RefNo[NodeIdx]]);  // referenced to pBus
-                            PConn_Voltages[j] := (Volts.mag / 1000);
-                            inc(j);
-                            PConn_Voltages[j] := Volts.ang;
-                            inc(j);
-                        end;
-
-                    end;
-                    // Generates the OpenDSS Command;
-                    DSS.DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
-                end
+                // Determines the best place to connect the EnergyMeter
+                Term_volts[0] := Term_volts[0] - Term_volts[1];
+                if Term_volts[0] >= 0 then
+                    jj := 0
                 else
-                begin
-                    if Locations[i] = 0 then    // The reference bus (Actor 1)
-                    begin
-                        BusName := Inc_Mat_Cols[0];
-                        PConn_Names[i] := BusName;
-                        SetActiveBus(DSS, BusName);           // Activates the Bus
-                        pBus := Buses[ActiveBusIndex];
-                        // Stores the voltages for the Reference bus first
-                        for jj := 1 to 3 do
-                        begin
-                            // this code so nodes come out in order from smallest to larges
-                            NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
+                    jj := 1;
+                BusName := Solution.Inc_Mat_Cols[Active_Cols[jj]];
+                Terminal := 'terminal=' + inttostr(jj + 1);
 
-                            Volts := ctopolardeg(Solution.NodeV[pBus.GetRef(NodeIdx)]);  // referenced to pBus
-                            PConn_Voltages[j] := (Volts.mag / 1000);
-                            inc(j);
-                            PConn_Voltages[j] := Volts.ang;
-                            inc(j);
-                        end;
+                PConn_Names[i] := BusName;
+                SetActiveBus(DSS, BusName);           // Activates the Bus
+                pBus := Buses[ActiveBusIndex];
+
+                for jj := 1 to 3 do
+                begin
+                    // this code so nodes come out in order from smallest to larges
+                    NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
+
+                    Volts := ctopolardeg(Solution.NodeV[pBus.RefNo[NodeIdx]]);  // referenced to pBus
+                    PConn_Voltages[j] := (Volts.mag / 1000);
+                    inc(j);
+                    PConn_Voltages[j] := Volts.ang;
+                    inc(j);
+                end;
+                // Generates the OpenDSS Command;
+                DSS.DssExecutive.ParseCommand('New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C');
+            end
+            else
+            begin
+                if Locations[i] = 0 then    // The reference bus (Actor 1)
+                begin
+                    BusName := Solution.Inc_Mat_Cols[0];
+                    PConn_Names[i] := BusName;
+                    SetActiveBus(DSS, BusName);           // Activates the Bus
+                    pBus := Buses[ActiveBusIndex];
+                    // Stores the voltages for the Reference bus first
+                    for jj := 1 to 3 do
+                    begin
+                        // this code so nodes come out in order from smallest to larges
+                        NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
+
+                        Volts := ctopolardeg(Solution.NodeV[pBus.GetRef(NodeIdx)]);  // referenced to pBus
+                        PConn_Voltages[j] := (Volts.mag / 1000);
+                        inc(j);
+                        PConn_Voltages[j] := Volts.ang;
+                        inc(j);
                     end;
                 end;
             end;
-        end
-        else
-        begin
-            if (TextCmd = '**Error**') then
-                DoErrorMsg(DSS, 'Tear_Circuit', 'MeTIS cannot start.',
-                    'The MeTIS program (pmetis.exe/kmetis.exe) cannot be executed/found.', 7006)
-            else
-                DoErrorMsg(DSS, 'Tear_Circuit', 'The graph file is incorrect.',
-                    'MeTIS cannot process the graph file because is incorrect' +
-                    '(The number of edges is incorrect).', 7007);
         end;
+    end
+    else
+    begin
+        if (TextCmd = '**Error**') then
+            DoErrorMsg(DSS, 'Tear_Circuit', 'MeTIS cannot start.',
+                'The MeTIS program (pmetis.exe/kmetis.exe) cannot be executed/found.', 7006)
+        else
+            DoErrorMsg(DSS, 'Tear_Circuit', 'The graph file is incorrect.',
+                'MeTIS cannot process the graph file because is incorrect' +
+                '(The number of edges is incorrect).', 7007);
     end;
 end;
 
@@ -1753,79 +1713,77 @@ end;
 function TDSSCircuit.getPDEatBus(BusName: String; useNone: Boolean; busIdx: Integer): ArrayOfString;
 var
     Dss_Class: TDSSClass;
-    j, i, n, nbus, t: Integer;
+    i, n, nbus, t: Integer;
     myBus: array[0..1] of String;
     nodes: Array of Integer = NIL;
     found: Boolean;
+    elem: TDSSCktElement;
 begin
     SetLength(Result, 0);
     BusName := AnsiLowerCase(BusName);
-    if busIdx = 0 then
+    if busIdx <= 0 then
         busIdx := BusList.Find(BusName);
 
-    if busIdx <> 0 then
-    begin
-        SetLength(nodes, Buses[busIdx].NumNodesThisBus);
-        for i := 1 to Buses[busIdx].NumNodesThisBus do
-            nodes[i - 1] := Buses[busIdx].GetRef(i);
-    end;
+    if busIdx <= 0 then
+        Exit;
 
-    for i := 1 to DSS.DSSClassList.Count do
+    SetLength(nodes, Buses[busIdx].NumNodesThisBus);
+    for i := 1 to Buses[busIdx].NumNodesThisBus do
+        nodes[i - 1] := Buses[busIdx].GetRef(i);
+
+    for Dss_Class in DSS.DSSClassList do
     begin
-        Dss_Class := DSS.DSSClassList.Get(i);
-        if (DSS_Class is TCktElementClass) then
+        if not (DSS_Class is TCktElementClass) then
+            continue;
+
+        // Checks if it is a PCE class
+        if not (DSS_Class.ClassType.InheritsFrom(TPDClass)) then
+            continue;
+
+        // If it is, checks all the elements to verify if one or more are
+        // connected to the bus given
+        for elem in DSS_Class do
         begin
-            // Checks if it is a PCE class
-            if not (DSS_Class.ClassType.InheritsFrom(TPDClass)) then
-                continue;
-
-            // If it is, checks all the elements to verify if one or more are
-            // connected to the bus given
-            DSS_Class.First;
-            for j := 1 to DSS_Class.ElementCount do
+            if (nodes <> NIL) and (elem.Terminals <> NIL) and (elem.Terminals[0].TermNodeRef <> NIL) then
             begin
-                if (nodes <> NIL) and (ActiveCktElement.Terminals <> NIL) and (ActiveCktElement.Terminals[0].TermNodeRef <> NIL) then
+                // Fast path
+                found := False;
+                for t := 0 to Min(High(elem.Terminals), 2) do
                 begin
-                    // Fast path
-                    found := False;
-                    for t := 0 to Min(High(ActiveCktElement.Terminals), 2) do
+                    for n := 0 to High(elem.Terminals[t].TermNodeRef) do
                     begin
-                        for n := 0 to High(ActiveCktElement.Terminals[t].TermNodeRef) do
+                        for nbus in nodes do
                         begin
-                            for nbus := 0 to High(nodes) do
-                            begin
-                                found := (ActiveCktElement.Terminals[t].TermNodeRef[n] = nodes[nbus]);
-                                if not found then
-                                    continue;
+                            found := (elem.Terminals[t].TermNodeRef[n] = nbus);
+                            if not found then
+                                continue;
 
-                                myBus[0] := AnsiLowerCase(StripExtension(ActiveCktElement.GetBus(1)));
-                                myBus[1] := AnsiLowerCase(StripExtension(ActiveCktElement.GetBus(2)));
-                                if (myBus[0] <> myBus[1]) then
-                                begin
-                                    SetLength(Result, length(Result) + 1);
-                                    Result[High(Result)] := ActiveCktElement.FullName;
-                                end;
-                                break;
+                            myBus[0] := AnsiLowerCase(StripExtension(elem.GetBus(1)));
+                            myBus[1] := AnsiLowerCase(StripExtension(elem.GetBus(2)));
+                            if (myBus[0] <> myBus[1]) then
+                            begin
+                                SetLength(Result, length(Result) + 1);
+                                Result[High(Result)] := elem.FullName;
                             end;
-                            if found then
-                                break;
+                            break;
                         end;
                         if found then
                             break;
                     end;
-                end
-                else
-                begin
-                    // Original code as fallback
-                    myBus[0] := AnsiLowerCase(StripExtension(ActiveCktElement.GetBus(1)));
-                    myBus[1] := AnsiLowerCase(StripExtension(ActiveCktElement.GetBus(2)));
-                    if ((myBus[0] = BusName) or (myBus[1] = BusName)) and (myBus[0] <> myBus[1]) then
-                    begin
-                        SetLength(Result, length(Result) + 1);
-                        Result[High(Result)] := ActiveCktElement.FullName;
-                    end;
+                    if found then
+                        break;
                 end;
-                DSS_Class.Next;
+            end
+            else
+            begin
+                // Original code as fallback
+                myBus[0] := AnsiLowerCase(StripExtension(elem.GetBus(1)));
+                myBus[1] := AnsiLowerCase(StripExtension(elem.GetBus(2)));
+                if ((myBus[0] = BusName) or (myBus[1] = BusName)) and (myBus[0] <> myBus[1]) then
+                begin
+                    SetLength(Result, length(Result) + 1);
+                    Result[High(Result)] := elem.FullName;
+                end;
             end;
         end;
     end;
@@ -1840,23 +1798,24 @@ end;
 function TDSSCircuit.getPCEatBus(BusName: String; useNone: Boolean; busIdx: Integer): ArrayOfString;
 var
     Dss_Class: TDSSClass;
-    j, i, n, nbus: Integer;
+    i, n, nbus: Integer;
     myBus: String;
     nodes: Array of Integer = NIL;
     found: Boolean;
+    elem: TDSSCktElement;
 begin
     SetLength(Result, 0);
     BusName := AnsiLowerCase(BusName);
 
-    if busIdx = 0 then
+    if busIdx <= 0 then
         busIdx := BusList.Find(BusName);
 
-    if busIdx <> 0 then
-    begin
-        SetLength(nodes, Buses[busIdx].NumNodesThisBus);
-        for i := 1 to Buses[busIdx].NumNodesThisBus do
-            nodes[i - 1] := Buses[busIdx].GetRef(i);
-    end;
+    if busIdx <= 0 then
+        Exit;
+
+    SetLength(nodes, Buses[busIdx].NumNodesThisBus);
+    for i := 1 to Buses[busIdx].NumNodesThisBus do
+        nodes[i - 1] := Buses[busIdx].GetRef(i);
 
     for i := 1 to DSS.DSSClassList.Count do
     begin
@@ -1865,28 +1824,27 @@ begin
             continue;
 
         // Checks if it is a PCE class
-        if not (DSS_Class.ClassType.InheritsFrom(TPCClass) or (DSS_Class.Name = 'Capacitor') or (DSS_Class.Name = 'Reactor')) then
+        if not (DSS_Class.ClassType.InheritsFrom(TPCClass) or (DSS_Class = DSS.CapacitorClass) or (DSS_Class = DSS.ReactorClass)) then
             continue;
 
         // If it is, checks all the elements to verify if one or more are
         // connected to the bus given
-        DSS_Class.First;
-        for j := 1 to DSS_Class.ElementCount do
+        for elem in DSS_Class do
         begin
-            if (nodes <> NIL) and (ActiveCktElement.Terminals <> NIL) and (ActiveCktElement.Terminals[0].TermNodeRef <> NIL) then
+            if (nodes <> NIL) and (elem.Terminals <> NIL) and (elem.Terminals[0].TermNodeRef <> NIL) then
             begin
                 // Fast path
                 found := False;
-                for n := 0 to High(ActiveCktElement.Terminals[0].TermNodeRef) do
+                for n := 0 to High(elem.Terminals[0].TermNodeRef) do
                 begin
-                    for nbus := 0 to High(nodes) do
+                    for nbus in nodes do
                     begin
-                        found := (ActiveCktElement.Terminals[0].TermNodeRef[n] = nodes[nbus]);
+                        found := (elem.Terminals[0].TermNodeRef[n] = nbus);
                         if not found then
                             continue;
 
                         SetLength(Result, length(Result) + 1);
-                        Result[High(Result)] := ActiveCktElement.FullName;
+                        Result[High(Result)] := elem.FullName;
                         break;
                     end;
                     if found then
@@ -1896,14 +1854,13 @@ begin
             else
             begin
                 // Original code as fallback
-                myBus := AnsiLowerCase(StripExtension(ActiveCktElement.GetBus(1)));
+                myBus := AnsiLowerCase(StripExtension(elem.GetBus(1)));
                 if myBus = BusName then
                 begin
                     SetLength(Result, length(Result) + 1);
-                    Result[High(Result)] := ActiveCktElement.FullName;
+                    Result[High(Result)] := elem.FullName;
                 end;
             end;
-            DSS_Class.Next;
         end;
     end;
     if (length(Result) = 0) and useNone then
@@ -1947,61 +1904,58 @@ var
     NNodes, NP, Ncond, i, j, iTerm, RetVal: Integer;
     NodesOK: Boolean;
 begin
-    with element do
+    np := element.NPhases;
+    Ncond := element.NConds;
+
+    CurrentBus := element.FirstBus();     // use parser functions to decode
+    for iTerm := 1 to element.Nterms do
     begin
-        np := NPhases;
-        Ncond := NConds;
+        NodesOK := TRUE;
+        // Assume normal phase rotation  for default
+        for i := 1 to np do
+            NodeBuffer[i] := i; // set up buffer with defaults
 
-        CurrentBus := FirstBus;     // use parser functions to decode
-        for iTerm := 1 to Nterms do
+        // Default all other conductors to a ground connection
+        // If user wants them ungrounded, must be specified explicitly!
+        for i := np + 1 to NCond do
+            NodeBuffer[i] := 0;
+
+        // Parser will override bus connection if any specified
+        BusName := DSS.Parser.ParseAsBusName(CurrentBus, NNodes, NodeBuffer);
+
+        // Check for error in node specification
+        for j := 1 to NNodes do
         begin
-            NodesOK := TRUE;
-           // Assume normal phase rotation  for default
-            for i := 1 to np do
-                NodeBuffer[i] := i; // set up buffer with defaults
- 
-            // Default all other conductors to a ground connection
-            // If user wants them ungrounded, must be specified explicitly!
-            for i := np + 1 to NCond do
-                NodeBuffer[i] := 0;
-
-            // Parser will override bus connection if any specified
-            BusName := DSS.Parser.ParseAsBusName(CurrentBus, NNodes, NodeBuffer);
-
-            // Check for error in node specification
-            for j := 1 to NNodes do
+            if NodeBuffer[j] < 0 then
             begin
-                if NodeBuffer[j] < 0 then
+                retval := DSS.MessageDlg('Error in Node specification for Element: "' + element.FullName + '"' + CRLF +
+                    'Bus Spec: "' + DSS.Parser.Token + '"', FALSE);
+                NodesOK := FALSE;
+                if retval = -1 then
                 begin
-                    retval := DSSMessageDlg('Error in Node specification for Element: "' + ParentClass.Name + '.' + Name + '"' + CRLF +
-                        'Bus Spec: "' + DSS.Parser.Token + '"', FALSE);
-                    NodesOK := FALSE;
-                    if retval = -1 then
-                    begin
-                        AbortBusProcess := TRUE;
-                        AppendGlobalresult(DSS, 'Aborted bus process.');
-                        Exit
-                    end;
-                    Break;
+                    AbortBusProcess := TRUE;
+                    AppendGlobalresult(DSS, 'Aborted bus process.');
+                    Exit
                 end;
+                Break;
             end;
-
-            // Node -Terminal Connnections
-            // Caution: Magic -- AddBus replaces values in nodeBuffer to correspond
-            // with global node reference number.
-            if NodesOK then
-            begin
-                ActiveTerminalIdx := iTerm;
-                ActiveTerminal.BusRef := AddBus(BusName, Ncond);
-                SetNodeRef(iTerm, NodeBuffer);  // for active circuit
-            end;
-            CurrentBus := NextBus;
         end;
+
+        // Node -Terminal Connnections
+        // Caution: Magic -- AddBus replaces values in nodeBuffer to correspond
+        // with global node reference number.
+        if NodesOK then
+        begin
+            element.ActiveTerminalIdx := iTerm;
+            element.ActiveTerminal.BusRef := AddBus(BusName, Ncond);
+            element.SetNodeRef(iTerm, NodeBuffer);  // for active circuit
+        end;
+        CurrentBus := element.NextBus();
     end;
 end;
 
 
-procedure TDSSCircuit.AddABus;
+procedure TDSSCircuit.AddABus();
 begin
     //TODO: check if other growth rates are better from large systems
     if NumBuses > MaxBuses then
@@ -2021,9 +1975,9 @@ begin
 end;
 
 function TDSSCircuit.AddBus(const BusName: String; NNodes: Integer): Integer;
-
 var
     NodeRef, i: Integer;
+    bus: TDSSBus;
 begin
     // Trap error in bus name
     if Length(BusName) = 0 then
@@ -2039,27 +1993,27 @@ begin
     Result := BusList.Find(BusName);
     if Result = 0 then
     begin
-        Result := BusList.Add(BusName);    // Result is index of bus
+        Result := BusList.Add(BusName); // Result is index of bus
         Inc(NumBuses);
-        AddABus;   // Allocates more memory if necessary
-        Buses[NumBuses] := TDSSBus.Create(DSS);
+        AddABus();   // Allocates more memory if necessary
+        bus := TDSSBus.Create(DSS);
+        bus.Name := BusName;
+        Buses[NumBuses] := bus;
     end;
 
     // Define nodes belonging to the bus
     // Replace Nodebuffer values with global reference number
-    with Buses[Result] do
+    bus := Buses[Result];
+    for i := 1 to NNodes do
     begin
-        for i := 1 to NNodes do
-        begin
-            NodeRef := Add(self, NodeBuffer[i]);
-            if NodeRef = NumNodes then
-            begin  // This was a new node so Add a NodeToBus element ????
-                AddANodeBus;   // Allocates more memory if necessary
-                MapNodeToBus[NumNodes].BusRef := Result;
-                MapNodeToBus[NumNodes].NodeNum := NodeBuffer[i]
-            end;
-            NodeBuffer[i] := NodeRef;  //  Swap out in preparation to setnoderef call
+        NodeRef := bus.Add(self, NodeBuffer[i]);
+        if NodeRef = NumNodes then
+        begin  // This was a new node so Add a NodeToBus element ????
+            AddANodeBus(); // Allocates more memory if necessary
+            MapNodeToBus[NumNodes].BusRef := Result;
+            MapNodeToBus[NumNodes].NodeNum := NodeBuffer[i]
         end;
+        NodeBuffer[i] := NodeRef;  //  Swap out in preparation to setnoderef call
     end;
 end;
 
@@ -2081,10 +2035,7 @@ begin
     DevCls := DSS.DSSClassList.At(DevClassIndex);
 
     if DevName = '' then
-    begin
-        DSS.CmdResult := Result;
         Exit;
-    end;
 
     if not DuplicatesAllowed then
     begin
@@ -2113,7 +2064,6 @@ begin
             Devindex := Devicelist.FindNext;   // Could be duplicates
         end;
     end;
-    DSS.CmdResult := Result;
 end;
 
 procedure TDSSCircuit.Set_ActiveCktElement(Value: TDSSCktElement);
@@ -2209,11 +2159,11 @@ begin
     if not MeterZonesComputed or not ZonesLocked then
     begin
         if LogEvents then
-            LogThisEvent(DSS, 'Resetting Meter Zones');
+            DSS.LogThisEvent('Resetting Meter Zones');
         DSS.EnergyMeterClass.ResetMeterZonesAll;
         MeterZonesComputed := TRUE;
         if LogEvents then
-            LogThisEvent(DSS, 'Done Resetting Meter Zones');
+            DSS.LogThisEvent('Done Resetting Meter Zones');
     end;
     FreeTopology;
 end;
@@ -2237,36 +2187,37 @@ end;
 procedure TDSSCircuit.RestoreBusInfo;
 var
     i, j, idx, jdx: Integer;
-    pBus: TDSSBus;
+    bus, savedBus: TDSSBus;
 begin
     // Restore  kV bases, other values to buses still in the list
     for i := 1 to SavedNumBuses do
     begin
         idx := BusList.Find(SavedBusNames[i]);
-        if idx <> 0 then
-            with Buses[idx] do
-            begin
-                pBus := SavedBuses[i];
-                kvBase := pBus.kVBase;
-                x := pBus.x;
-                Y := pBus.y;
-                CoordDefined := pBus.CoordDefined;
-                Keep := pBus.Keep;
-                // Restore Voltages in new bus def that existed in old bus def
-                if assigned(pBus.VBus) then
-                begin
-                    for j := 1 to pBus.NumNodesThisBus do
-                    begin
-                        jdx := FindIdx(pBus.GetNum(j));  // Find index in new bus for j-th node  in old bus
-                        if jdx > 0 then
-                            VBus[jdx] := pBus.VBus[j];
-                    end;
-                end;
-            end;
         SavedBusNames[i] := ''; // De-allocate string
+        if idx = 0 then
+            continue;
+
+        bus := Buses[idx];
+        savedBus := SavedBuses[i];
+
+        bus.kVBase := savedBus.kVBase;
+        bus.x := savedBus.x;
+        bus.y := savedBus.y;
+        bus.CoordDefined := savedBus.CoordDefined;
+        bus.Keep := savedBus.Keep;
+        // Restore Voltages in new bus def that existed in old bus def
+        if savedBus.VBus <> NIL then
+        begin
+            for j := 1 to savedBus.NumNodesThisBus do
+            begin
+                jdx := bus.FindIdx(savedBus.GetNum(j));  // Find index in new bus for j-th node  in old bus
+                if jdx > 0 then
+                    bus.VBus[jdx] := savedBus.VBus[j];
+            end;
+        end;
     end;
 
-    if Assigned(SavedBuses) then
+    if SavedBuses <> NIL then
         for i := 1 to SavedNumBuses do
             SavedBuses[i].Free;  // gets rid of old bus voltages, too
 
@@ -2282,7 +2233,7 @@ var
     element: TDSSCktElement;
 begin
     if LogEvents then
-        LogThisEvent(DSS, 'Reprocessing Bus Definitions');
+        DSS.LogThisEvent('Reprocessing Bus Definitions');
 
     AbortBusProcess := FALSE;
     SaveBusInfo;  // So we don't have to keep re-doing this
@@ -2343,7 +2294,7 @@ begin
     end;
 end;
 
-procedure TDSSCircuit.DebugDump(var F: TFileStream);
+procedure TDSSCircuit.DebugDump(F: TStream);
 var
     i, j: Integer;
     sout: String;
@@ -2385,6 +2336,7 @@ var
 begin
     for p in PCElements do
     begin
+        // if pcelem.Enabled then -- TODO: check -- the version in Utilities.pas had this `if`
         p.YprimInvalid := TRUE;
     end;
 
@@ -2398,7 +2350,7 @@ begin
             ADMITTANCE:
                 InvalidateAllPCElements
         else
-            {nada}
+            // nada
         end;
 
     FLoadMultiplier := Value;
@@ -2411,30 +2363,20 @@ var
     i: Integer;
 begin
     for i := 1 to NumEMRegisters do
-        RegisterTotals[i] := 0.;
+        RegisterTotals[i] := 0;
 
     for pEM in EnergyMeters do
-        with PEM do
-        begin
-            for i := 1 to NumEMRegisters do
-                RegisterTotals[i] := RegisterTotals[i] + Registers[i] * TotalsMask[i];
-        end;
+        for i := 1 to NumEMRegisters do
+            RegisterTotals[i] += pEM.Registers[i] * pEM.TotalsMask[i];
+        
 end;
 
 function TDSSCircuit.ComputeCapacity: Boolean;
 var
     CapacityFound: Boolean;
 
-    function SumSelectedRegisters(const mtrRegisters: TRegisterArray; Regs: pIntegerArray; count: Integer): Double;
-    var
-        i: Integer;
-    begin
-        Result := 0.0;
-        for i := 1 to count do
-        begin
-            Result := Result + mtrRegisters[regs[i]];
-        end;
-    end;
+    sumRegs: Double;
+    reg: Integer;
 
 begin
     Result := FALSE;
@@ -2444,7 +2386,7 @@ begin
         Exit;
     end;
 
-    if (NumUeRegs = 0) then
+    if Length(UeRegs) = 0 then
     begin
         DoSimpleMsg(DSS, _('Cannot compute system capacity with no UE resisters defined.  Use SET UEREGS=(...) command.'), 431);
         Exit;
@@ -2455,13 +2397,17 @@ begin
     CapacityFound := FALSE;
 
     repeat
-        DSS.EnergyMeterClass.ResetAll;
-        Solution.Solve;
-        DSS.EnergyMeterClass.SampleAll;
-        TotalizeMeters;
+        DSS.EnergyMeterClass.ResetAll();
+        Solution.Solve();
+        DSS.EnergyMeterClass.SampleAll();
+        TotalizeMeters();
 
         // Check for non-zero in UEregs
-        if SumSelectedRegisters(RegisterTotals, UEregs, NumUEregs) <> 0.0 then
+        sumRegs := 0.0;
+        for reg in UEregs do
+            sumRegs += RegisterTotals[reg];
+
+        if sumRegs <> 0.0 then
             CapacityFound := TRUE;
         // LoadMultiplier is a property ...
         if not CapacityFound then
@@ -2630,23 +2576,19 @@ end;
 
 function TDSSCircuit.SaveDSSObjects: Boolean;
 var
-
-    Dss_Class: TDSSClass;
-    i: Integer;
-
+    cls: TDSSClass;
 begin
     Result := FALSE;
 
     // Write Files for all populated DSS Classes  Except Solution Class
-    for i := 1 to DSS.DSSClassList.Count do
+    for cls in DSS.DSSClassList do
     begin
-        Dss_Class := DSS.DSSClassList.Get(i);
-        if Dss_Class.Saved then
+        if cls.Saved then
             Continue;   // Cycle to next
         //use default filename=classname
-        if not WriteClassFile(DSS, Dss_Class, '', (DSS_Class is TCktElementClass)) then
+        if not WriteClassFile(DSS, cls, '', (cls is TCktElementClass)) then
             Exit;  // bail on error
-        DSS_Class.Saved := TRUE;
+        cls.Saved := TRUE;
     end;
 
     Result := TRUE;
@@ -2654,13 +2596,13 @@ end;
 
 function TDSSCircuit.SaveVoltageBases: Boolean;
 var
-    F: TFileStream = NIL;
+    F: TStream = NIL;
     VBases: String;
 begin
     Result := FALSE;
     try
-        F := TBufferedFileStream.Create(DSS.CurrentDSSDir + 'BusVoltageBases.dss', fmCreate);
-        DSS.DssExecutive.Command := 'get voltagebases';
+        F := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'BusVoltageBases.dss', fmCreate);
+        DSS.DssExecutive.ParseCommand('get voltagebases');
         VBases := DSS.GlobalResult;
         FSWriteln(F, 'Set VoltageBases=' + VBases);
 {$IFDEF DSS_CAPI_NOCOMPATFLAGS}
@@ -2683,12 +2625,12 @@ end;
 
 function TDSSCircuit.SaveMasterFile: Boolean;
 var
-    F: TFileStream = NIL;
+    F: TStream = NIL;
     i: Integer;
 begin
     Result := FALSE;
     try
-        F := TBufferedFileStream.Create(DSS.CurrentDSSDir + 'Master.dss', fmCreate);
+        F := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'Master.dss', fmCreate);
         FSWriteln(F, 'Clear');
         FSWriteln(F, 'Set DefaultBaseFreq=', FloatToStr(DSS.DefaultBaseFreq));
         FSWriteln(F, 'New Circuit.' + Name);
@@ -2768,12 +2710,12 @@ end;
 
 function TDSSCircuit.SaveBusCoords: Boolean;
 var
-    F: TFileStream = NIL;
+    F: TStream = NIL;
     i: Integer;
 begin
     Result := FALSE;
     try
-        F := TBufferedFileStream.Create(DSS.CurrentDSSDir + 'BusCoords.dss', fmCreate);
+        F := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'BusCoords.dss', fmCreate);
 
         for i := 1 to NumBuses do
         begin
@@ -2802,7 +2744,7 @@ var
 begin
     // Reallocate the device list to improve the performance of searches
     if LogEvents then
-        LogThisEvent(DSS, _('Reallocating Device List'));
+        DSS.LogThisEvent(_('Reallocating Device List'));
     TempList := THashList.Create(2 * NumDevices);
 
     for i := 1 to DeviceList.Count do
@@ -2878,10 +2820,37 @@ begin
         TBusMarker(BusMarkerList.Items[i]).Free;
     BusMarkerList.Clear;
 end;
+function TDSSCircuit.GetMaxCktElementSize(): Integer;
+var
+    elem: TDSSCktElement;
+begin
+    Result := 0;
+    for elem in CktElements do
+        Result := max(result, elem.Yorder);
+end;
+
+function TDSSCircuit.GetUniqueNodeNumber(const sBusName: String; StartNode: Integer): Integer;
+// To help avoid collisions of neutral numbers, this function returns a node number that is not being used,
+// Starting at the StartNode value
+var
+    iBusidx: Integer;
+begin
+    Result := StartNode;
+    iBusidx := Buslist.Find(sBusName);
+    if iBusidx > 0 then
+        while Buses[iBusidx].FindIdx(Result) <> 0 do
+            Inc(Result);
+    Buses[iBusidx].Add(self, result);  // add it to the list so next call will be unique
+end;
 
 constructor TBusMarker.Create;
 begin
     inherited;
+    Reset();
+end;
+
+procedure TBusMarker.Reset();
+begin
     BusName := '';
     AddMarkerColor := clBlack;
     AddMarkerCode := 4;
@@ -2892,6 +2861,15 @@ destructor TBusMarker.Destroy;
 begin
     BusName := '';
     inherited;
+end;
+
+function TBusMarker.Clone(): TBusMarker;
+begin
+    Result := TBusMarker.Create();
+    Result.BusName := BusName;
+    Result.AddMarkerColor := AddMarkerColor;
+    Result.AddMarkerCode := AddMarkerCode;
+    Result.AddMarkerSize := AddMarkerSize;
 end;
 
 end.

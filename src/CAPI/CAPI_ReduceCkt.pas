@@ -122,7 +122,7 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
 
-    DSSPrime.DSSExecutive.Command := 'Save Circuit Dir=' + CktName;
+    DSSPrime.DSSExecutive.ParseCommand('Save Circuit Dir=' + CktName);
    // Master file name is returned in DSSText.Result
 end;
 //------------------------------------------------------------------------------

@@ -13,8 +13,7 @@ uses
     DSSClassDefs,
     EnergyMeter,
     SolutionAlgs,
-    Line,
-    CmdForms;
+    Line;
 
 function Solve_Diakoptics(DSS: TDSSContext): Integer;
 function ADiakoptics_Tearing(DSS: TDSSContext; AddISrc: Boolean): Integer;
@@ -454,9 +453,9 @@ begin
         Num_Ckts := Tear_Circuit();
         Prev_mode := Dynavars.SolutionMode;
         Dynavars.SolutionMode := TSolveMode.SNAPSHOT;
-        DSS.DSSExecutive.Command := 'set controlmode=off';
+        DSS.DSSExecutive.ParseCommand('set controlmode=off');
         Ymatrix.BuildYMatrix(DSS, WHOLEMATRIX, FALSE);
-        // DoSolveCmd();
+        // DSS.ActiveCircuit.Solution.Solve();
         if not DSS.SolutionAbort then
         begin
             Save_SubCircuits(AddISrc);
@@ -484,7 +483,7 @@ var
     ErrorCode,
     DIdx,
     Diak_Actors: Integer;
-    Dir, Proj_Dir,
+    Dir,
     prog_Str,
     ErrorStr,
     FileRoot: String;
@@ -543,13 +542,12 @@ begin
                 // Clears everything to create the actors and compile the subsystems
                 DSS.Parallel_enabled := FALSE;
                 DSS.DSSExecutive.ClearAll;
-                Fileroot := DSS.OutputDirectory {CurrentDSSDir};    //  Gets the current directory
+                Fileroot := DSS.OutputDirectory; // Gets the current directory // CurrentDSSDir
                 DSS.SolutionAbort := FALSE;
 
                 // Compiles the interconnected Circuit for further calculations on actor 1
-                Proj_Dir := 'compile "' + Fileroot + 'Torn_Circuit' + PathDelim + 'Master_interconnected.dss"';
-                DSS.DssExecutive.Command := Proj_Dir;
-                DSS.DssExecutive.Command := 'set controlmode=Off';
+                DSS.DssExecutive.ParseCommand('compile "' + Fileroot + 'Torn_Circuit' + PathDelim + 'Master_interconnected.dss"');
+                DSS.DssExecutive.ParseCommand('set controlmode=Off');
                 // Disables the Energymeters for the zones
                 with DSS.ActiveCircuit, Solution do
                 begin
@@ -561,7 +559,7 @@ begin
                     end;
                 end;
                 Ymatrix.BuildYMatrix(DSS, WHOLEMATRIX, FALSE);
-                DSS.DSSExecutive.DoSolveCmd();
+                DSS.ActiveCircuit.Solution.Solve();
 
                 // Creates the other actors
                 for DIdx := 2 to Diak_Actors do
@@ -574,13 +572,12 @@ begin
                     else
                         Dir := 'zone_' + inttostr(DIdx - 1) + PathDelim;
 
-                    Proj_Dir := 'compile "' + Fileroot + PathDelim + 'Torn_Circuit' + PathDelim + Dir + 'Master.dss"';
-                    ChDSS.DssExecutive.Command := Proj_Dir;
+                    ChDSS.DssExecutive.ParseCommand('compile "' + Fileroot + PathDelim + 'Torn_Circuit' + PathDelim + Dir + 'Master.dss"');
                     if DIdx > 2 then
-                        ChDSS.DssExecutive.Command := Links[DIdx - 2] + '.enabled=False';
+                        ChDSS.DssExecutive.ParseCommand(Links[DIdx - 2] + '.enabled=False');
 
-                    ChDSS.DssExecutive.Command := 'set controlmode=Off';
-                    ChDSS.DssExecutive.DoSolveCmd();
+                    ChDSS.DssExecutive.ParseCommand('set controlmode=Off');
+                    ChDSS.ActiveCircuit.Solution.Solve();
                     if ChDSS.SolutionAbort then
                     begin
                         ErrorCode := 1;

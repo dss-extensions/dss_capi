@@ -18,7 +18,8 @@ uses
     UcMatrix,
     Arraydef,
     DSSObject,
-    math;
+    math,
+    ControlledTransformer;
 
 type
 {$SCOPEDENUMS ON}
@@ -185,22 +186,22 @@ type
     WindingArray = array[1..3] of TWinding;
     pWindingArray = ^WindingArray;
 
-    TTransfObj = class(TPDElement)
+    TTransfObj = class(TControlledTransformerObj)
     PUBLIC
         DeltaDirection: Integer;
         XRConst: LongBool;
 
-        function Get_PresentTap(i: Integer): Double;
-        procedure Set_PresentTap(i: Integer; const Value: Double);
-        function Get_MinTap(i: Integer): Double;
-        function Get_MaxTap(i: Integer): Double;
-        function Get_TapIncrement(i: Integer): Double;
-        function Get_BaseVoltage(i: Integer): Double;
+        function Get_PresentTap(i: Integer): Double; override; 
+        procedure Set_PresentTap(i: Integer; const Value: Double); override;
+        function Get_MinTap(i: Integer): Double; override;
+        function Get_MaxTap(i: Integer): Double; override;
+        function Get_TapIncrement(i: Integer): Double; override;
+        function Get_BaseVoltage(i: Integer): Double; override;
         function Get_BasekVLL(i: Integer): Double;
         // CIM accessors
-        function Get_NumTaps(i: Integer): Integer;
+        function Get_NumTaps(i: Integer): Integer; override;
         function Get_WdgResistance(i: Integer): Double;
-        function Get_WdgConnection(i: Integer): Integer;
+        function Get_WdgConnection(i: Integer): Integer; override;
         function Get_WdgkVA(i: Integer): Double;
         function Get_Xsc(i: Integer): Double;
         function Get_WdgRneutral(i: Integer): Double;
@@ -237,7 +238,6 @@ type
 
         procedure SetTermRef;
     PUBLIC
-        NumWindings: Integer;
         ActiveWinding: Integer;  // public for COM interface
 
         IsSubstation: LongBool;
@@ -274,25 +274,25 @@ type
         // GetLosses override for Transformer
         procedure GetLosses(var TotalLosses, LoadLosses, NoLoadLosses: Complex); OVERRIDE;
 
-        function RotatePhases(iPhs: Integer): Integer;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
-        procedure SaveWrite(F: TFileStream); OVERRIDE;
-        procedure GetWindingVoltages(iWind: Integer; VBuffer: pComplexArray);
-        procedure GetAllWindingCurrents(CurrBuffer: pComplexArray);  // All Winding currents in complex array
+        function RotatePhases(iPhs: Integer): Integer; override;
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure SaveWrite(F: TStream); OVERRIDE;
+        procedure GetWindingVoltages(iWind: Integer; VBuffer: pComplexArray); override;
+        procedure GetAllWindingCurrents(CurrBuffer: pComplexArray); override; // All Winding currents in complex array
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
         // TODO: remove most of these
-        property PresentTap[i: Integer]: Double READ Get_PresentTap WRITE Set_PresentTap;
-        property Mintap[i: Integer]: Double READ Get_MinTap;
-        property Maxtap[i: Integer]: Double READ Get_MaxTap;
-        property TapIncrement[i: Integer]: Double READ Get_TapIncrement;
-        property BaseVoltage[i: Integer]: Double READ Get_BaseVoltage;  // Winding VBase
+        //property PresentTap[i: Integer]: Double READ Get_PresentTap WRITE Set_PresentTap;
+        //property Mintap[i: Integer]: Double READ Get_MinTap;
+        //property Maxtap[i: Integer]: Double READ Get_MaxTap;
+        //property TapIncrement[i: Integer]: Double READ Get_TapIncrement;
+        // property BaseVoltage[i: Integer]: Double READ Get_BaseVoltage;  // Winding VBase
         property BasekVLL[i: Integer]: Double READ Get_BasekVLL;  // Winding VBase
-        property NumTaps[i: Integer]: Integer READ Get_NumTaps;
+        // property NumTaps[i: Integer]: Integer READ Get_NumTaps;
         property WdgResistance[i: Integer]: Double READ Get_WdgResistance;
         property WdgkVA[i: Integer]: Double READ Get_WdgkVA;
-        property WdgConnection[i: Integer]: Integer READ Get_WdgConnection;
+        // property WdgConnection[i: Integer]: Integer READ Get_WdgConnection;
         property WdgRneutral[i: Integer]: Double READ Get_WdgRneutral;
         property WdgXneutral[i: Integer]: Double READ Get_WdgXneutral;
         property XscVal[i: Integer]: Double READ Get_Xsc;
@@ -339,37 +339,33 @@ end;
 
 function XscSize(obj: TObj): Integer;
 begin
-    with obj do
-        Result := (NumWindings - 1) * NumWindings div 2;
+    Result := (obj.NumWindings - 1) * obj.NumWindings div 2;
 end;
 
-function GetWindingCurrentsResult(Obj: TObj): String;
+function GetWindingCurrentsResult(obj: TObj): String;
 // Returns string mag, angle
 var
     WindingCurrents: pComplexArray;
     i, j, k: Integer;
 begin
-    with Obj do
+    WindingCurrents := AllocMem(Sizeof(Complex) * 2 * obj.FNPhases * obj.NumWindings);
+
+    obj.GetAllWindingCurrents(WindingCurrents);
+
+    Result := '';
+    k := 0;
+    for  i := 1 to obj.Fnphases do
     begin
-        WindingCurrents := AllocMem(Sizeof(Complex) * 2 * FNPhases * NumWindings);
-
-        GetAllWindingCurrents(WindingCurrents);
-
-        Result := '';
-        k := 0;
-        for  i := 1 to Fnphases do
+        for j := 1 to obj.NumWindings do
         begin
-            for j := 1 to NumWindings do
-            begin
-                k := k + 1;
-                Result := Result + Format('%.7g, (%.5g), ', [Cabs(WindingCurrents[k]), Cdang(WindingCurrents[k])]);
-                k := k + 1;
-                // Skip currents from other end of the winding
-            end;
+            k := k + 1;
+            Result := Result + Format('%.7g, (%.5g), ', [Cabs(WindingCurrents[k]), Cdang(WindingCurrents[k])]);
+            k := k + 1;
+            // Skip currents from other end of the winding
         end;
-
-        Reallocmem(WindingCurrents, 0);  // throw away temp array
     end;
+
+    Reallocmem(WindingCurrents, 0);  // throw away temp array
 end;
 
 procedure TTransf.DefineProperties;
@@ -1020,7 +1016,7 @@ begin
     CalcY_Terminal(1.0);   // Calc Y_Terminal at base frequency
 end;
 
-procedure TTransfObj.SaveWrite(F: TFileStream);
+procedure TTransfObj.SaveWrite(F: TStream);
 // Override standard SaveWrite
 // Transformer structure not conducive to standard means of saving
 var
@@ -1144,7 +1140,7 @@ begin
     YprimInvalid := FALSE;
 end;
 
-procedure TTransfObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TTransfObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 var
     i, j: Integer;
     ZBtemp: Tcmatrix;

@@ -15,8 +15,7 @@ uses
 // note: the scaling factor being used has been corrected.  It is scaling the output of Block 4 to
 // 1.0 for the values given in Table 1 and Table 2. The last table in the std should be used for checking Pst
 
-// Note: allocates result array of doubles!!!
-function PstRMS(var PstResult: pDoubleArray; pVoltages: pdoubleArray; Freqbase: Double; NcyclesperSample, Npts, Lamp: Integer): Integer;
+function PstRMS(var PstResult: ArrayOfDouble; pVoltages: ArrayOfDouble; Freqbase: Double; NcyclesperSample, Lamp: Integer): Integer;
 // returns number of Pst elements computed  in PstResult array
 // That is the number of 10-minute intervals
 // will automatically clean up and reallocate PstStruct when this function is called
@@ -333,7 +332,7 @@ begin
     Y[5] := V6;
 end;
 
-function _Pst(var PstResult: pDoubleArray; Varray: pDoubleArray; Npts: Integer): Integer;
+function _Pst(var PstResult: ArrayOfDouble; Varray: ArrayOfDouble): Integer;
 
 var
     PstInterval: Integer;
@@ -379,13 +378,11 @@ begin
 
     Tstep := 1.0 / (16.0 * Fbase);    // time step for each cycle, fixed to 16 samples/cycle
 
-    Pst_Time_Max := Npts * DeltaT; // - 6.0 ;  //use the entire data set sent to calculate the flicker
+    Pst_Time_Max := Length(Varray) * DeltaT; // - 6.0 ;  //use the entire data set sent to calculate the flicker
     Pst_Time := Min(600.0, Pst_Time_Max);
     NumPstIntervals := Max(1, Trunc(Pst_Time_Max / Pst_Time)); // At least one interval
 
-    if Assigned(PstResult) then
-        Reallocmem(PstResult, 0);
-    PstResult := Allocmem(Sizeof(PstResult^[1]) * NumPstIntervals);  // allocate result array
+    SetLength(PstResult, NumPstIntervals); // allocate result array
 
     Set_Filter_Coefficients(input_type);
 
@@ -396,7 +393,7 @@ begin
     SamplesPerDeltaT := DeltaT / Tstep;
 
     max_flicker := 0.0;
-    FirstSample := Varray^[1];
+    FirstSample := Varray[0];
     rms_input := FirstSample;
     RMS_sample := FirstSample;
 
@@ -412,15 +409,15 @@ begin
 
     Vindex := 1;
     PstInterval := 0;
-    for iPst := 1 to npts do
+    for iPst := 1 to Length(Varray) do
     begin
-        RMS_sample := Varray^[Vindex];
+        RMS_sample := Varray[Vindex - 1];
         // The following loop holds the rms input samples constant over the RMS period
         for SynthesizedSamples := 1 to round(SamplesPerDeltaT) do
         begin
             Get_Pinst;    // Computes what gets through filter (X10[0] )
 
-            {////////////// This starts the Pst calculations //////////////}
+            // ////////////// This starts the Pst calculations //////////////
             if (time >= PST_Start_Time) then
             begin
                 Pst_Timer := Pst_Timer + Tstep;
@@ -433,7 +430,7 @@ begin
                 begin
                     inc(PstInterval);
                     if PstInterval <= NumPstIntervals then
-                        PstResult^[PstInterval] := CalcPst;
+                        PstResult[PstInterval - 1] := CalcPst;
                     Pst_Timer := 0.0;
                     ZeroOutBins;   // Zero Bins0 and Bins1 out for next time
                 end;
@@ -452,9 +449,9 @@ end;
 
 // Function call for executing PST calculator using RMS data
 
-function PstRMS(var PstResult: pDoubleArray; pVoltages: pdoubleArray; Freqbase: Double; NcyclesperSample, Npts, Lamp: Integer): Integer;
-      // returns number of Pst elements computed
-      // will automatically clean up PstStruct when it is reallocated; Init to nil
+function PstRMS(var PstResult: ArrayOfDouble; pVoltages: ArrayOfDouble; Freqbase: Double; NcyclesperSample, Lamp: Integer): Integer;
+// returns number of Pst elements computed
+// will automatically clean up PstStruct when it is reallocated; Init to nil
 
 begin
     Fbase := Freqbase;
@@ -473,7 +470,7 @@ begin
     end;
     DeltaT := NcyclesperSample / Fbase;
 
-    Result := _Pst(PstResult, pVoltages, Npts);
+    Result := _Pst(PstResult, pVoltages);
 end;
 
 /////////////////////////////////////////////////////////

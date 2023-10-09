@@ -165,6 +165,7 @@ procedure DefineCommands(var ExecCommand: ArrayOfString);
 implementation
 
 uses
+    Classes,
     DSSGlobals,
     ExecHelper,
     Executive,
@@ -174,7 +175,6 @@ uses
     ExportOptions,
     ParserDel,
     LoadShape,
-    CmdForms,
     sysutils,
     Utilities,
     SolutionAlgs,
@@ -213,6 +213,9 @@ end;
 
 procedure ProcessCommand({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext; const CmdLine: String; LineNum: Integer);
 var
+    F: TStream = NIL;
+    fileName: String;
+
     CommandList: TCommandList;
     ParamPointer: Integer;
     ParamName: String;
@@ -576,7 +579,17 @@ begin
             ord(Cmd._DoControlActions):
                 DSS.ActiveCircuit.Solution.DoControlActions;
             ord(Cmd._ShowControlQueue):
-                DSS.ActiveCircuit.ControlQueue.ShowQueue(DSS.OutputDirectory + DSS.CircuitName_ + 'ControlQueue.csv');
+            begin
+                try
+                    fileName := DSS.OutputDirectory + DSS.CircuitName_ + 'ControlQueue.csv';
+                    F := DSS.GetOutputStreamEx(fileName);
+                    DSS.ActiveCircuit.ControlQueue.WriteQueue(F);
+                    FreeAndNil(F);
+                    FireOffEditor(DSS, fileName);
+                finally
+                    FreeAndNil(F);
+                end;
+            end;
             ord(Cmd._SolveDirect):
                 DSS.ActiveCircuit.Solution.SolveDirect;
             ord(Cmd._SolvePFlow):

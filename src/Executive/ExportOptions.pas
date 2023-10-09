@@ -180,7 +180,7 @@ begin
     MVAOpt := 0;
     UEonlyOpt := FALSE;
     TripletOpt := FALSE;
-    PhasesToPlot := PROFILE3PH;  // init this to get rid of compiler warning
+    PhasesToPlot := ord(TPlotPhases.ThreePhase);  // init this to get rid of compiler warning
     pMeter := NIL;
     Substation := DSS.ActiveCircuit.Name + '_Substation';
     SubGeographicRegion := DSS.ActiveCircuit.Name + '_SubRegion';
@@ -262,24 +262,24 @@ begin
         begin {Get phases to plot}
             ParamName := DSS.Parser.NextParam;
             Parm2 := DSS.Parser.StrValue;
-            PhasesToPlot := PROFILE3PH; // the default
+            PhasesToPlot := ord(TPlotPhases.ThreePhase); // the default
             if CompareTextShortest(Parm2, 'default') = 0 then
-                PhasesToPlot := PROFILE3PH
+                PhasesToPlot := ord(TPlotPhases.ThreePhase)
             else
             if CompareTextShortest(Parm2, 'all') = 0 then
-                PhasesToPlot := PROFILEALL
+                PhasesToPlot := ord(TPlotPhases.All)
             else
             if CompareTextShortest(Parm2, 'primary') = 0 then
-                PhasesToPlot := PROFILEALLPRI
+                PhasesToPlot := ord(TPlotPhases.Primary)
             else
             if CompareTextShortest(Parm2, 'll3ph') = 0 then
-                PhasesToPlot := PROFILELL
+                PhasesToPlot := ord(TPlotPhases.LL3Ph)
             else
             if CompareTextShortest(Parm2, 'llall') = 0 then
-                PhasesToPlot := PROFILELLALL
+                PhasesToPlot := ord(TPlotPhases.LLAll)
             else
             if CompareTextShortest(Parm2, 'llprimary') = 0 then
-                PhasesToPlot := PROFILELLPRI
+                PhasesToPlot := ord(TPlotPhases.LLPrimary)
             else
             if Length(Parm2) = 1 then
                 PhasesToPlot := DSS.Parser.IntValue;

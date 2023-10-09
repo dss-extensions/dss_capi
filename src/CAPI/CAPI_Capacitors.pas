@@ -329,9 +329,8 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with elem do
-        for i := 1 to NumSteps do
-            States[i] := 0;   // open all steps
+    for i := 1 to elem.NumSteps do
+        elem.States[i] := 0;   // open all steps
 end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Close(); CDECL;
@@ -342,14 +341,11 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     
-    with elem do
-    begin
-        //TODO: why is this changing ActiveTerminal directly?
-        ActiveTerminal := @Terminals[0];  // make sure terminal 1 is closed
-        Closed[0] := TRUE;    // closes all phases
-        for i := 1 to NumSteps do
-            States[i] := 1;
-    end;
+    //TODO: why is this changing ActiveTerminal directly?
+    elem.ActiveTerminal := @elem.Terminals[0];  // make sure terminal 1 is closed
+    elem.Closed[0] := TRUE;    // closes all phases
+    for i := 1 to elem.NumSteps do
+        elem.States[i] := 1;
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_idx(): Integer; CDECL;

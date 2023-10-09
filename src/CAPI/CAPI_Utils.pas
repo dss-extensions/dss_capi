@@ -655,20 +655,17 @@ var
     i: Integer;
 begin
     if DSS = NIL then DSS := DSSPrime;
-    with DSS do
-    begin
-        DSS_Dispose_PByte(GR_DataPtr_PByte);
-        DSS_Dispose_PDouble(GR_DataPtr_PDouble);
-        DSS_Dispose_PInteger(GR_DataPtr_PInteger);
-        DSS_Dispose_PPAnsiChar(GR_DataPtr_PPAnsiChar, GR_Counts_PPAnsiChar[1]);
+    DSS_Dispose_PByte(DSS.GR_DataPtr_PByte);
+    DSS_Dispose_PDouble(DSS.GR_DataPtr_PDouble);
+    DSS_Dispose_PInteger(DSS.GR_DataPtr_PInteger);
+    DSS_Dispose_PPAnsiChar(DSS.GR_DataPtr_PPAnsiChar, DSS.GR_Counts_PPAnsiChar[1]);
 
-        for i := 0 to 3 do
-        begin
-            GR_Counts_PPAnsiChar[i] := 0;
-            GR_Counts_PDouble[i] := 0;
-            GR_Counts_PInteger[i] := 0;
-            GR_Counts_PByte[i] := 0;
-        end;
+    for i := 0 to 3 do
+    begin
+        DSS.GR_Counts_PPAnsiChar[i] := 0;
+        DSS.GR_Counts_PDouble[i] := 0;
+        DSS.GR_Counts_PInteger[i] := 0;
+        DSS.GR_Counts_PByte[i] := 0;
     end;
 end;
 //------------------------------------------------------------------------------

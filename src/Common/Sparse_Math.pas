@@ -1,12 +1,12 @@
-{*******************************************************************************
-  Electric Power Resarch Insitute EPRI 2018
-
- Library created to handle sparse matrix linear algebra ops, the arguments need
- to be sparse and provided in compressed coordiante format
- Created by Davis Montenegro for EPRI 08/01/2018
- based on the code provided by Sudarshan Khasnis in Java at
- https://www.geeksforgeeks.org/operations-sparse-matrices/
-*******************************************************************************}
+// *******************************************************************************
+//   Electric Power Resarch Insitute EPRI 2018
+// 
+//  Library created to handle sparse matrix linear algebra ops, the arguments need
+//  to be sparse and provided in compressed coordiante format
+//  Created by Davis Montenegro for EPRI 08/01/2018
+//  based on the code provided by Sudarshan Khasnis in Java at
+//  https://www.geeksforgeeks.org/operations-sparse-matrices/
+// *******************************************************************************
 
 unit Sparse_Math;
 
@@ -102,7 +102,7 @@ begin
     begin
         rlen := 0;                            // First, verify if the cols are the same
         for idx := 0 to high(acols^) do
-            if (acols^[idx] - bcols^[idx]) <> 0 then
+            if (acols[idx] - bcols[idx]) <> 0 then
                 inc(rlen);
         if rlen = 0 then
             Result := TRUE;
@@ -457,7 +457,7 @@ begin
     begin
         rlen := 0;                            // First, verify if the cols are the same
         for idx := 0 to high(acols^) do
-            if (acols^[idx] - bcols^[idx]) <> 0 then
+            if (acols[idx] - bcols[idx]) <> 0 then
                 inc(rlen);
         if rlen = 0 then
             Result := TRUE;

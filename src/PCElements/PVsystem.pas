@@ -12,6 +12,7 @@ uses
     Classes,
     PVsystemUserModel,
     DSSClass,
+    DSSObject,
     InvBasedPCE,
     ucmatrix,
     UComplex, DSSUcomplex,
@@ -191,7 +192,7 @@ type
 
         procedure DefineProperties; override;
     PUBLIC
-        RegisterNames: array[1..NumPVSystemRegisters] of String;
+        RegisterNames: ArrayOfString;
 
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -202,6 +203,8 @@ type
         procedure ResetRegistersAll();
         procedure SampleAll();
         procedure UpdateAll;
+        function GetRegisterNames(obj: TDSSObject): ArrayOfString; override;
+        function GetRegisterValues(obj: TDSSObject): pDoubleArray; override;
     end;
 
     TPVsystemObj = class(TInvBasedPCE)
@@ -380,12 +383,14 @@ begin
     inherited Create(dssContext, PVSYSTEM_ELEMENT, 'PVSystem');
 
     // Set Register names
-    RegisterNames[1] := 'kWh';
-    RegisterNames[2] := 'kvarh';
-    RegisterNames[3] := 'Max kW';
-    RegisterNames[4] := 'Max kVA';
-    RegisterNames[5] := 'Hours';
-    RegisterNames[6] := 'Price($)';
+    RegisterNames := ArrayOfString.Create(
+        'kWh',
+        'kvarh',
+        'Max kW',
+        'Max kVA',
+        'Hours',
+        'Price($)'
+    );
 end;
 
 destructor TPVsystem.Destroy;
@@ -510,14 +515,14 @@ begin
 
     PropertyType[ord(TProp.cls)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.cls)] := ptruint(@obj.FClass);
-    
+
     PropertyType[ord(TProp.model)] := TPropertyType.MappedIntEnumProperty;
     PropertyOffset[ord(TProp.model)] := ptruint(@obj.VoltageModel);
     PropertyOffset2[ord(TProp.model)] := PtrInt(PVSystemModelEnum);
 
     // double properties
     PropertyOffset[ord(TProp.irradiance)] := ptruint(@obj.PVSystemVars.FIrradiance);
-    
+
     PropertyOffset[ord(TProp.pf)] := ptruint(@obj.PFnominal);
     PropertyFlags[ord(TProp.pf)] := [TPropertyFlag.RequiredInSpecSet];
 
@@ -530,7 +535,7 @@ begin
     PropertyOffset[ord(TProp.Vminpu)] := ptruint(@obj.VMinPu);
     PropertyOffset[ord(TProp.Vmaxpu)] := ptruint(@obj.VMaxPu);
     PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.PVSystemVars.FkVArating);
-    
+
     PropertyOffset[ord(TProp.DutyStart)] := ptruint(@obj.DutyStart);
     PropertyFlags[ord(TProp.DutyStart)] := [TPropertyFlag.NonNegative, TPropertyFlag.Units_hour];
 
@@ -568,7 +573,7 @@ begin
     PropertyScale[ord(TProp.PITol)] := 1.0 / 100.0;
 
     PropertyOffset[ord(TProp.SafeVoltage)] := ptruint(@obj.dynVars.SMThreshold);
-    
+
     PropertyOffset[ord(TProp.AmpLimit)] := ptruint(@obj.dynVars.ILimit);
     PropertyFlags[ord(TProp.AmpLimit)] := [TPropertyFlag.NoDefault];
 
@@ -732,7 +737,7 @@ begin
     obj := TObj(ptr);
     obj.RecalcElementData();
     obj.YPrimInvalid := TRUE;
-    Exclude(obj.Flags, Flg.EditionActive);
+    Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
 
@@ -806,6 +811,21 @@ begin
 
     ForceBalanced := Other.ForceBalanced;
     CurrentLimited := Other.CurrentLimited;
+end;
+
+function TPVsystem.GetRegisterNames(obj: TDSSObject): ArrayOfString;
+begin
+    Result := RegisterNames;
+end;
+
+function TPVsystem.GetRegisterValues(obj: TDSSObject): pDoubleArray;
+begin
+    if not (obj is TPVsystemObj) then
+    begin
+        Result := NIL;
+        Exit;
+    end;
+    Result := pDoubleArray(@TPVsystemObj(obj).Registers[1]);
 end;
 
 procedure TPVsystem.ResetRegistersAll();  // Force all EnergyMeters in the circuit to reset

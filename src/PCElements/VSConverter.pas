@@ -192,7 +192,7 @@ begin
     PropertyOffset[ord(TProp.kVac)] := ptruint(@obj.FkVac);
     PropertyOffset[ord(TProp.kVdc)] := ptruint(@obj.FkVdc);
     PropertyOffset[ord(TProp.kW)] := ptruint(@obj.FkW);
-    
+
     PropertyOffset[ord(TProp.Rac)] := ptruint(@obj.FRac);
     PropertyFlags[ord(TProp.Rac)] := [TPropertyFlag.Units_ohm];
 

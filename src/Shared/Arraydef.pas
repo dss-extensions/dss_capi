@@ -57,6 +57,9 @@ type
     ArrayOfInteger = Array of Integer;
     ArrayOfString = Array of String;
     ArrayOfPointer = Array of Pointer;
+    PArrayOfDouble = ^ArrayOfDouble;
+    PArrayOfInteger = ^ArrayOfInteger;
+    PArrayOfString = ^ArrayOfString;
 
 function AllocStringArray(Size: Integer): pStringArray;
 procedure FreeStringArray(var pS: pStringArray; Size: Integer);

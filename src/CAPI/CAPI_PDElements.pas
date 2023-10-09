@@ -65,6 +65,7 @@ uses
     SysUtils,
     DSSPointerList,
     Bus,
+    Solution,
     XYCurve,
     UComplex, DSSUcomplex,
     ArrayDef,
@@ -82,28 +83,25 @@ begin
     if InvalidCircuit(DSS) then
         Exit;
     
-    with DSS.ActiveCircuit do
+    if DSS.ActiveCircuit.ActiveCktElement = NIL then 
     begin
-        if ActiveCktElement = NIL then 
+        if DSS_CAPI_EXT_ERRORS then
         begin
-            if DSS_CAPI_EXT_ERRORS then
-            begin
-                DoSimpleMsg(DSS, _('No active PD Element found! Activate one and retry.'), 8989);
-            end;
-            Exit;
+            DoSimpleMsg(DSS, _('No active PD Element found! Activate one and retry.'), 8989);
         end;
-
-        if not (ActiveCktElement is TPDElement) then
-        begin
-            if DSS_CAPI_EXT_ERRORS then
-            begin
-                DoSimpleMsg(DSS, _('No active PD Element found! Activate one and retry.'), 8989);
-            end;
-            Exit;
-        end;
-        
-        obj := ActiveCktElement as TPDElement;
+        Exit;
     end;
+
+    if not (DSS.ActiveCircuit.ActiveCktElement is TPDElement) then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg(DSS, _('No active PD Element found! Activate one and retry.'), 8989);
+        end;
+        Exit;
+    end;
+        
+    obj := DSS.ActiveCircuit.ActiveCktElement as TPDElement;
     Result := True;
 end;
 //------------------------------------------------------------------------------
@@ -118,12 +116,12 @@ end;
 //------------------------------------------------------------------------------
 function PDElements_Get_FaultRate(): Double; CDECL;
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
     Result := 0.0;
-    if not _activeObj(DSSPrime, ActivePDElement) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := ActivePDElement.Faultrate;
+    Result := elem.Faultrate;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_First(): Integer; CDECL;
@@ -145,187 +143,180 @@ end;
 //------------------------------------------------------------------------------
 function PDElements_Get_IsShunt(): TAPIBoolean; CDECL;
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
     Result := FALSE;
-    if not _activeObj(DSSPrime, ActivePDElement) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := ActivePDElement.IsShunt;
+    Result := elem.IsShunt;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_pctPermanent(): Double; CDECL;
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
     Result := 0.0;
-    if not _activeObj(DSSPrime, ActivePDElement) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := ActivePDElement.PctPerm;
+    Result := elem.PctPerm;
 end;
 //------------------------------------------------------------------------------
 procedure PDElements_Set_FaultRate(Value: Double); CDECL;
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
-    if not _activeObj(DSSPrime, ActivePDElement) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    ActivePDElement.FaultRate := Value;
+    elem.FaultRate := Value;
 end;
 //------------------------------------------------------------------------------
 procedure PDElements_Set_pctPermanent(Value: Double); CDECL;
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
-    if not _activeObj(DSSPrime, ActivePDElement) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    ActivePDElement.PctPerm := Value;
+    elem.PctPerm := Value;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_Name(): PAnsiChar; CDECL;
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
     Result := NIL;   // return null if not a PD element
-    if not _activeObj(DSSPrime, ActivePDElement) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, ActivePDElement.FullName);  // full name
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.FullName);  // full name
 end;
 
 //------------------------------------------------------------------------------
 procedure PDElements_Set_Name(const Value: PAnsiChar); CDECL; //TODO: rewrite to use a hashmap?
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
     TestString: String;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
         
-    with DSSPrime.ActiveCircuit do
+    TestString := Value;
+    // Search through list of PD Elements until we find this one
+    for elem in DSSPrime.ActiveCircuit.PDElements do
     begin
-        TestString := Value;
-        // Search through list of PD Elements until we find this one
-        ActivePDElement := PDElements.First;
-        while Assigned(ActivePDElement) do
-            with ActivePDelement do
-            begin
-                if (AnsiCompareText(TestString, FullName) = 0) then
-                begin
-                    ActiveCktElement := ActivePDElement;
-                    Break;
-                end;
-                ActivePDElement := PDElements.Next;
-            end;
+        if (AnsiCompareText(TestString, elem.FullName) = 0) then
+        begin
+            DSSPrime.ActiveCircuit.ActiveCktElement := elem;
+            break;
+        end;
     end;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_AccumulatedL(): Double; CDECL;
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
     Result := 0.0;
-    if not _activeObj(DSSPrime, ActivePDElement) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := ActivePDElement.AccumulatedBrFltRate;
+    Result := elem.AccumulatedBrFltRate;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_Lambda(): Double; CDECL;
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
     Result := 0.0;
-    if not _activeObj(DSSPrime, ActivePDElement) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := ActivePDElement.BranchFltRate;
+    Result := elem.BranchFltRate;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_Numcustomers(): Integer; CDECL;
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, ActivePDElement) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := ActivePDElement.BranchNumCustomers;
+    Result := elem.BranchNumCustomers;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_ParentPDElement(): Integer; CDECL;
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, ActivePDElement) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    if ActivePDElement.ParentPDElement <> NIL then    // leaves ActiveCktElement as is
+    if elem.ParentPDElement <> NIL then    // leaves ActiveCktElement as is
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := ActivePDElement.ParentPDElement;
+        DSSPrime.ActiveCircuit.ActiveCktElement := elem.ParentPDElement;
         Result := DSSPrime.ActiveCircuit.ActivecktElement.ClassIndex;
     end;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_RepairTime(): Double; CDECL;
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
     Result := 0.0;
-    if not _activeObj(DSSPrime, ActivePDElement) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := ActivePDElement.HrsToRepair;
+    Result := elem.HrsToRepair;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_Totalcustomers(): Integer; CDECL;
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
         
-    with DSSPrime.ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            Result := ActivePDElement.BranchTotalCustomers;
-        end;
+    if DSSPrime.ActiveCircuit.ActiveCktElement is TPDElement then
+    begin
+        elem := DSSPrime.ActiveCircuit.ActiveCktelement as TPDElement;
+        Result := elem.BranchTotalCustomers;
+    end;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_FromTerminal(): Integer; CDECL;
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, ActivePDElement) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := ActivePDElement.FromTerminal;
+    Result := elem.FromTerminal;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_TotalMiles(): Double; CDECL;
 // Total miles of line from here on down to the end of the feeder
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
     Result := 0.0;
-    if not _activeObj(DSSPrime, ActivePDElement) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := ActivePDElement.AccumulatedMilesDownStream;
+    Result := elem.AccumulatedMilesDownStream;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_SectionID(): Integer; CDECL;
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, ActivePDElement) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := ActivePDElement.BranchSectionID;
+    Result := elem.BranchSectionID;
 end;
 //------------------------------------------------------------------------------
 procedure PDElements_Set_RepairTime(Value: Double); CDECL;
 var
-    ActivePDElement: TPDElement;
+    elem: TPDElement;
 begin
-    if not _activeObj(DSSPrime, ActivePDElement) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    ActivePDElement.HrsToRepair := Value;
+    elem.HrsToRepair := Value;
 end;
 //------------------------------------------------------------------------------
 procedure PDElements_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -471,7 +462,7 @@ begin
                     DSS.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
             end;
 
-            maxSize := GetMaxCktElementSize(DSS);
+            maxSize := DSS.ActiveCircuit.GetMaxCktElementSize();
             Getmem(cBuffer, sizeof(Complex) * maxSize);
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pList.Count); // real
             for pElem in pList do 
@@ -648,51 +639,47 @@ begin
     // Get the actual values
     i012v := AllocMem(SizeOf(Complex) * 3 * NTermsTotal);
     i012 := i012v; // this is a running pointer
-    maxSize := GetMaxCktElementSize(DSS);
+    maxSize := DSS.ActiveCircuit.GetMaxCktElementSize();
     cBuffer := AllocMem(SizeOf(Complex) * maxSize);
     for pElem in pList do
     begin
-        with pElem do
-        begin
-            if pElem.Enabled then
-                GetCurrents(cBuffer)
-            else
-                FillByte(cBuffer^, SizeOf(Complex) * maxSize, 0);
-            
-            // _CalcSeqCurrents(pElem, i012);
-            if NPhases <> 3 then
+        if pElem.Enabled then
+            pElem.GetCurrents(cBuffer)
+        else
+            FillByte(cBuffer^, SizeOf(Complex) * maxSize, 0);
+
+        // _CalcSeqCurrents(pElem, i012);
+        if pElem.NPhases = 3 then
+        begin    // for 3-phase elements
+            for j := 1 to pElem.NTerms do
             begin
-                {Handle non-3 phase elements}
-                if (Nphases = 1) and DSS.ActiveCircuit.PositiveSequence then
-                begin
-                    {Populate only phase 1 quantities in Pos seq}
-                    Inc(i012);
-                    for j := 1 to NTerms do
-                    begin
-                        k := (j - 1) * NConds;
-                        i012^ := cBuffer[1 + k];
-                        Inc(i012, 3);  // inc to pos seq of next terminal
-                    end;
-                    Dec(i012);
-                end
-                // if neither 3-phase or pos seq model, just put in -1.0 for each element
-                else
-                begin
-                    for i := 1 to 3 * NTerms do
-                    begin
-                        i012^ := -1;  // Signify n/A
-                        Inc(i012);
-                    end;
-                end;
-            end
-            else
-            begin    // for 3-phase elements
-                for j := 1 to NTerms do
-                begin
-                    k := (j - 1) * NConds;
-                    Phase2SymComp(pComplexArray(@cBuffer[1 + k]), pComplexArray(i012));
-                    Inc(i012, 3);
-                end;
+                k := (j - 1) * pElem.NConds;
+                Phase2SymComp(pComplexArray(@cBuffer[1 + k]), pComplexArray(i012));
+                Inc(i012, 3);
+            end;
+            continue;
+        end;
+
+        // Handle non-3 phase elements
+        if (pElem.Nphases = 1) and DSS.ActiveCircuit.PositiveSequence then
+        begin
+            // Populate only phase 1 quantities in Pos seq
+            i012 += 1;
+            for j := 1 to pElem.NTerms do
+            begin
+                k := (j - 1) * pElem.NConds;
+                i012^ := cBuffer[1 + k];
+                Inc(i012, 3);  // inc to pos seq of next terminal
+            end;
+            Dec(i012);
+        end
+        // if neither 3-phase or pos seq model, just put in -1.0 for each element
+        else
+        begin
+            for i := 1 to 3 * pElem.NTerms do
+            begin
+                i012^ := -1;  // Signify n/A
+                Inc(i012);
             end;
         end;
     end;
@@ -704,7 +691,7 @@ begin
         for i := 0 to NTermsTotal * 3 - 1 do
         begin
             Result[i] := Cabs(i012^);
-            Inc(i012);
+            i012 += 1;
         end;
     end
     else
@@ -811,12 +798,14 @@ var
     VPh, V012: Complex3;
     IPh, I012: Complex3;
     S: Complex;
+    NodeV: pNodeVarray;
 begin
     if (MissingSolution(DSSPrime)) or (DSSPrime.ActiveCircuit.PDElements.Count <= 0) then 
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
+    NodeV := DSSPrime.ActiveCircuit.Solution.NodeV;
     pList := DSSPrime.ActiveCircuit.PDElements;
     idx_before := pList.ActiveIndex;
 
@@ -841,74 +830,70 @@ begin
     iCount := 0;
     for pElem in pList do
     begin
-        with DSSPrime.ActiveCircuit, pElem do
-        begin
 //            if not pElem.Enabled then  
 //            begin
 //                continue;
 //            end;
-            
-            if NPhases <> 3 then
+        if pElem.NPhases <> 3 then
+        begin
+            if (pElem.Nphases = 1) and DSSPrime.ActiveCircuit.PositiveSequence then
             begin
-                if (Nphases = 1) and PositiveSequence then
-                begin
-                    if pElem.Enabled then  
-                        GetCurrents(cBuffer)
-                    else
-                        FillByte(cBuffer^, SizeOf(Complex) * MaxNValues, 0);
-
-                    Inc(iCount, 2);  // Start with kW1
-                    {Put only phase 1 quantities in Pos seq}
-                    for j := 1 to NTerms do
-                    begin
-                        k := (j - 1) * NConds;
-                        n := NodeRef[k + 1];
-                        Vph[1] := Solution.NodeV[n];  // Get voltage at node
-                        S := Vph[1] * cong(cBuffer[k + 1]);   // Compute power per phase
-                        Result[icount] := S.re * 0.003; // 3-phase kW conversion
-                        Result[icount + 1] := S.im * 0.003; // 3-phase kvar conversion
-                        Inc(icount, 6);
-                    end;
-                    Dec(iCount, 2);
-                end
+                if pElem.Enabled then  
+                    pElem.GetCurrents(cBuffer)
                 else
+                    FillByte(cBuffer^, SizeOf(Complex) * MaxNValues, 0);
+
+                Inc(iCount, 2);  // Start with kW1
+                // Put only phase 1 quantities in Pos seq
+                for j := 1 to pElem.NTerms do
                 begin
-                    for i := 0 to 2 * 3 * NTerms - 1 do
-                        Result[iCount + i] := -1.0;  // Signify n/A
-                        
-                    Inc(iCount, 6 * NTerms);
+                    k := (j - 1) * pElem.NConds;
+                    n := pElem.NodeRef[k + 1];
+                    Vph[1] := NodeV[n];  // Get voltage at node
+                    S := Vph[1] * cong(cBuffer[k + 1]);   // Compute power per phase
+                    Result[icount] := S.re * 0.003; // 3-phase kW conversion
+                    Result[icount + 1] := S.im * 0.003; // 3-phase kvar conversion
+                    Inc(icount, 6);
                 end;
+                Dec(iCount, 2);
             end
             else
             begin
-                if pElem.Enabled then  
-                    GetCurrents(cBuffer)
-                else
-                    FillByte(cBuffer^, SizeOf(Complex) * MaxNValues, 0);
-            
-                for j := 1 to NTerms do
+                for i := 0 to 2 * 3 * pElem.NTerms - 1 do
+                    Result[iCount + i] := -1.0;  // Signify n/A
+                    
+                Inc(iCount, 6 * pElem.NTerms);
+            end;
+        end
+        else
+        begin
+            if pElem.Enabled then  
+                pElem.GetCurrents(cBuffer)
+            else
+                FillByte(cBuffer^, SizeOf(Complex) * MaxNValues, 0);
+        
+            for j := 1 to pElem.NTerms do
+            begin
+                k := (j - 1) * pElem.NConds;
+                for i := 1 to 3 do
+                    Vph[i] := NodeV[pElem.NodeRef[i + k]];
+                for i := 1 to 3 do
+                    Iph[i] := cBuffer[k + i];
+
+                Phase2SymComp(@Iph, @I012);
+                Phase2SymComp(@Vph, @V012);
+
+                for i := 1 to 3 do
                 begin
-                    k := (j - 1) * NConds;
-                    for i := 1 to 3 do
-                        Vph[i] := Solution.NodeV[NodeRef[i + k]];
-                    for i := 1 to 3 do
-                        Iph[i] := cBuffer[k + i];
-
-                    Phase2SymComp(@Iph, @I012);
-                    Phase2SymComp(@Vph, @V012);
-
-                    for i := 1 to 3 do
-                    begin
-                        S := V012[i] * cong(I012[i]);
-                        Result[icount] := S.re * 0.003; // 3-phase kW conversion
-                        Result[icount + 1] := S.im * 0.003; // 3-phase kW conversion
-                        Inc(icount, 2);
-                    end;
+                    S := V012[i] * cong(I012[i]);
+                    Result[icount] := S.re * 0.003; // 3-phase kW conversion
+                    Result[icount + 1] := S.im * 0.003; // 3-phase kW conversion
+                    Inc(icount, 2);
                 end;
             end;
-            Inc(CResultPtr, 3 * pElem.NTerms);
-            
         end;
+        Inc(CResultPtr, 3 * pElem.NTerms);
+        
     end;
     ReAllocMem(cBuffer, 0);
 
@@ -944,12 +929,10 @@ begin
     
     idx_before := pList.ActiveIndex;
     numEnabled := pList.Count;
-//    pElem := pList.First;
-//    while pElem <> NIL do
+//    for pElem in pList do
 //    begin
 //        if pElem.Enabled then 
 //            Inc(numEnabled);
-//        pElem := pList.Next;
 //    end;
     DSS_RecreateArray_PInteger(ResultPtr, ResultCount, numEnabled);
     pval := ResultPtr;

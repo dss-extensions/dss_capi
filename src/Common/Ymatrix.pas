@@ -1,11 +1,9 @@
 unit Ymatrix;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 
 interface
@@ -14,6 +12,7 @@ uses
     UComplex, DSSUcomplex,
     ucMatrix,
     SysUtils,
+    Circuit,
     DSSClass;
 
 
@@ -28,15 +27,13 @@ type
 
 procedure BuildYMatrix(DSS: TDSSContext; BuildOption: Integer; AllocateVI: Boolean);
 procedure ResetSparseMatrix(var hY: NativeUint; size: Integer);
-procedure InitializeNodeVbase(DSS: TDSSContext);
-
-function CheckYMatrixforZeroes(DSS: TDSSContext): String;
+procedure InitializeNodeVbase(ckt: TDSSCircuit);
+function CheckYMatrixforZeroes(ckt: TDSSCircuit): String;
 
 implementation
 
 uses
     DSSGlobals,
-    Circuit,
     CktElement,
     Utilities,
     KLUSolve,
@@ -44,7 +41,8 @@ uses
     DSSClassDefs,
     GUtil,
     GSet,
-    DSSHelper;
+    DSSHelper,
+    Bus;
 
 
 type 
@@ -53,66 +51,52 @@ type
     TNodeLess = TLess<Integer>;
     TNodeSet = TSet<Integer, TNodeLess>;
 
-//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ReCalcAllYPrims(Ckt: TDSSCircuit);
 
 var
     pElem: TDSSCktElement;
 
 begin
-    with Ckt do
+    if Ckt.LogEvents then
+        Ckt.DSS.LogThisEvent(_('Recalc All Yprims'));
+    for pElem in Ckt.CktElements do
     begin
-        if LogEvents then
-            LogThisEvent(Ckt.DSS, _('Recalc All Yprims'));
-        for pElem in CktElements do
-        begin
-            pElem.CalcYPrim;
-        end;
+        pElem.CalcYPrim();
     end;
 end;
 
-//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ReCalcInvalidYPrims(Ckt: TDSSCircuit);
-{Recalc YPrims only for those circuit elements that have had changes since last solution}
+// Recalc YPrims only for those circuit elements that have had changes since last solution
 var
     pElem: TDSSCktElement;
-
 begin
-    with Ckt do
-    begin
-        if LogEvents then
-            LogThisEvent(Ckt.DSS, _('Recalc Invalid Yprims'));
+    if Ckt.LogEvents then
+        Ckt.DSS.LogThisEvent(_('Recalc Invalid Yprims'));
 
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
-        for pElem in IncrCktElements do
+    for pElem in Ckt.IncrCktElements do
+    begin
+        if pElem.YprimInvalid then
         begin
-            with pElem do
-                if YprimInvalid then
-                begin
-                    CalcYPrim;
-                end;
+            pElem.CalcYPrim();
         end;
+    end;
 {$ENDIF}
-        for pElem in CktElements do
+    for pElem in Ckt.CktElements do
+    begin
+        if pElem.YprimInvalid then // or ((DSSObjType and CLASSMASK) = LOAD_ELEMENT)
         begin
-            with pElem do
-                if YprimInvalid {or ((DSSObjType and CLASSMASK) = LOAD_ELEMENT)} then
-                begin
-                    CalcYPrim;
-                end;
+            pElem.CalcYPrim();
         end;
     end;
 end;
 
 
-//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ResetSparseMatrix(var hY: NativeUint; size: Integer);
-
-
 begin
     if hY <> 0 then
     begin
-        if DeleteSparseSet(hY) < 1  {Get rid of existing one beFore making a new one} then
+        if DeleteSparseSet(hY) < 1 then // Get rid of existing one before making a new one
             raise EEsolv32Problem.Create(_('Error Deleting System Y Matrix in ResetSparseMatrix. Problem with Sparse matrix solver.'));
 
         hY := 0;
@@ -127,27 +111,20 @@ begin
 end;
 
 
-procedure InitializeNodeVbase(DSS: TDSSContext);
+procedure InitializeNodeVbase(ckt: TDSSCircuit);
 var
     i: Integer;
-
 begin
-    if DSS.ActiveCircuit.Solution.NodeVbase = NIL then
+    if ckt.Solution.NodeVbase = NIL then
     begin
-        DoSimpleMsg(DSS, _('General error: internal NodeVbase is NIL. Please check your input data and retry.'), 11002);
-        DSS.SolutionAbort := True;
+        DoSimpleMsg(ckt.DSS, _('General error: internal NodeVbase is NIL. Please check your input data and retry.'), 11002);
+        ckt.DSS.SolutionAbort := True;
         Exit;
     end;
 
-    with DSS.ActiveCircuit, Solution do
-    begin
-        for i := 1 to NumNodes do
-            with MapNodeToBus[i] do
-            begin
-                NodeVbase^[i] := Buses[BusRef].kvbase * 1000.0;
-            end;
-        VoltageBaseChanged := FALSE;
-    end;
+    for i := 1 to ckt.NumNodes do
+        ckt.Solution.NodeVbase[i] := ckt.Buses[ckt.MapNodeToBus[i].BusRef].kVBase * 1000.0;
+    ckt.Solution.VoltageBaseChanged := FALSE;
 end;
 
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
@@ -170,53 +147,52 @@ begin
     abortIncremental := False;
 
     // Incremental Y update, only valid for BuildOption = WHOLEMATRIX.
-    for pElem in Ckt.IncrCktElements do with pElem do
+    for pElem in Ckt.IncrCktElements do
     begin
-        if (Enabled and (Yprim = NIL)) then
+        if (pElem.Enabled and (pElem.Yprim = NIL)) then
         begin
             abortIncremental := True;
             break;
         end;
 
-        if (Enabled and (Yprim <> NIL)) then
-        begin
-            if IncrYprim <> NIL then
-            begin
-                IncrYprim.Free;
-                IncrYprim := NIL;
-            end;
-            
-            IncrYprim := TCmatrix.CreateMatrix(Yprim.order);
-            IncrYprim.CopyFrom(Yprim);
-            IncrYprim.Negate;
-            
-            CalcYPrim;
-            
+        if (not pElem.Enabled) or (pElem.Yprim = NIL) then
+            continue;
 
-            if (Yprim = NIL) or (IncrYprim.order <> Yprim.order) then
+        if IncrYprim <> NIL then
+        begin
+            IncrYprim.Free;
+            IncrYprim := NIL;
+        end;
+        
+        IncrYprim := TCmatrix.CreateMatrix(pElem.Yprim.order);
+        IncrYprim.CopyFrom(pElem.Yprim);
+        IncrYprim.Negate;
+        
+        pElem.CalcYPrim();
+        
+        if (pElem.Yprim = NIL) or (IncrYprim.order <> pElem.Yprim.order) then
+        begin
+            abortIncremental := True;
+            break;
+        end;
+        
+        IncrYprim.AddFrom(pElem.YPrim);
+        for i := 1 to pElem.Yprim.order do
+        begin
+            inode := pElem.NodeRef[i];
+            if inode = 0 then continue;
+            for j := 1 to pElem.Yprim.order do
             begin
-                abortIncremental := True;
-                break;
-            end;
-            
-            IncrYprim.AddFrom(YPrim);
-            for i := 1 to Yprim.order do
-            begin
-                inode := NodeRef[i];
-                if inode = 0 then continue;
-                for j := 1 to Yprim.order do
+                jnode := pElem.NodeRef[j];
+                if jnode = 0 then continue;
+                
+                val := IncrYprim[i, j];
+                if (val.re <> 0) or (val.im <> 0) then
                 begin
-                    jnode := NodeRef[j];
-                    if jnode = 0 then continue;
-                    
-                    val := IncrYprim[i, j];
-                    if (val.re <> 0) or (val.im <> 0) then
-                    begin
-                        changedNodes.Insert(inode);
-                        changedNodes.Insert(jnode);
-                        // Encode the coordinates as a 64-bit integer
-                        changedElements.Insert((QWord(inode) shl 32) or QWord(jnode));
-                    end;
+                    changedNodes.Insert(inode);
+                    changedNodes.Insert(jnode);
+                    // Encode the coordinates as a 64-bit integer
+                    changedElements.Insert((QWord(inode) shl 32) or QWord(jnode));
                 end;
             end;
         end;
@@ -240,33 +216,33 @@ begin
                 abortIncremental := True;
                 break;
             end;
-        until not coordIt.Next;
+        until not coordIt.Next();
     end;
 
-    for pElem in Ckt.CktElements do with pElem do
+    for pElem in Ckt.CktElements do
     begin
         if abortIncremental then break;
 
-        if (not Enabled) or (Yprim = NIL) then
+        if (not pElem.Enabled) or (pElem.Yprim = NIL) then
             continue;
 
-        for i := 1 to Yprim.order do
+        for i := 1 to pElem.Yprim.order do
         begin
-            inode := NodeRef[i];
+            inode := pElem.NodeRef[i];
             if inode = 0 then continue;
             if changedNodes.Find(inode) = NIL then
                 // nothing changed for node "inode", we can skip it completely
                 continue;
 
-            for j := 1 to Yprim.order do
+            for j := 1 to pElem.Yprim.order do
             begin
-                jnode := NodeRef[j];
+                jnode := pElem.NodeRef[j];
                 if jnode = 0 then continue;
 
                 if (changedElements.Find((QWord(inode) shl 32) or (QWord(jnode))) = nil) then
                     continue;
 
-                val := Yprim[i, j];
+                val := pElem.Yprim[i, j];
                 if (val.re = 0) and (val.im = 0) then continue;
 
                 if IncrementMatrixElement(Ckt.Solution.hYsystem, inode, jnode, val.re, val.im) = 0 then
@@ -304,7 +280,7 @@ end;
 
 procedure BuildYMatrix(DSS: TDSSContext; BuildOption: Integer; AllocateVI: Boolean);
 
-{Builds designated Y matrix for system and allocates solution arrays}
+// Builds designated Y matrix for system and allocates solution arrays
 
 var
     YMatrixsize: Integer;
@@ -323,7 +299,7 @@ begin
     with DSS.ActiveCircuit, Solution do
     begin
         if PreserveNodeVoltages then
-            UpdateVBus; // Update voltage values stored with Bus object
+            UpdateVBus(); // Update voltage values stored with Bus object
 
      // the following re counts the number of buses and resets meter zones and feeders
      // If radial but systemNodeMap not set then init for radial got skipped due to script sequence
@@ -388,13 +364,13 @@ begin
                 WHOLEMATRIX:
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
                     if Incremental then
-                        LogThisEvent(DSS, _('Building Whole Y Matrix -- using incremental method'))
+                        DSS.LogThisEvent(_('Building Whole Y Matrix -- using incremental method'))
                     else
 {$ENDIF}
-                        LogThisEvent(DSS, _('Building Whole Y Matrix'));
+                        DSS.LogThisEvent(_('Building Whole Y Matrix'));
 
                 SERIESONLY:
-                    LogThisEvent(DSS, _('Building Series Y Matrix'));
+                    DSS.LogThisEvent(_('Building Series Y Matrix'));
             end;
           // Add in Yprims for all devices
           
@@ -406,20 +382,20 @@ begin
             // Full method, handles all elements
             for pElem in CktElements do
             begin
-                with pElem do
-                    if (Enabled) then
-                    begin          // Add stuff only if enabled
-                        case BuildOption of
-                            WHOLEMATRIX:
-                                CmatArray := GetYPrimValues(ALL_YPRIM);
-                            SERIESONLY:
-                                CmatArray := GetYPrimValues(SERIES)
-                        end;
-               // new function adding primitive Y matrix to KLU system Y matrix
-                        if CMatArray <> NIL then
-                            if AddPrimitiveMatrix(hY, Yorder, PLongWord(@NodeRef[1]), @CMatArray[1]) < 1 then
-                                raise EEsolv32Problem.Create(_('Node index out of range adding to System Y Matrix'))
-                    end;   // If Enabled
+                if not pElem.Enabled then
+                    continue;
+
+                // Add stuff only if enabled
+                case BuildOption of
+                    WHOLEMATRIX:
+                        CmatArray := pElem.GetYPrimValues(ALL_YPRIM);
+                    SERIESONLY:
+                        CmatArray := pElem.GetYPrimValues(SERIES)
+                end;
+                // new function adding primitive Y matrix to KLU system Y matrix
+                if CMatArray <> NIL then
+                    if AddPrimitiveMatrix(hY, pElem.Yorder, PLongWord(@pElem.NodeRef[1]), @CMatArray[1]) < 1 then
+                        raise EEsolv32Problem.Create(_('Node index out of range adding to System Y Matrix'))
             end;
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
         end // if not Incremental
@@ -434,25 +410,25 @@ begin
         if AllocateVI then
         begin
             if LogEvents then
-                LogThisEvent(DSS, _('Reallocating Solution Arrays'));
+                DSS.LogThisEvent(_('Reallocating Solution Arrays'));
             ReAllocMem(NodeV, SizeOf(NodeV[1]) * (NumNodes + 1)); // Allocate System Voltage array - allow for zero element
             NodeV[0] := 0;
-            ReAllocMem(Currents, SizeOf(Currents[1]) * (NumNodes + 1)); // Allocate System current array
-            ReAllocMem(AuxCurrents, SizeOf(AuxCurrents^[1]) * (NumNodes + 1)); // Allocate System current array
+            ReAllocMem(Currents, SizeOf(Complex) * (NumNodes + 1)); // Allocate System current array
+            ReAllocMem(AuxCurrents, SizeOf(Complex) * (NumNodes + 1)); // Allocate System current array
             if (VMagSaved <> NIL) then
                 ReallocMem(VMagSaved, 0);
             if (ErrorSaved <> NIL) then
                 ReallocMem(ErrorSaved, 0);
             if (NodeVBase <> NIL) then
                 ReallocMem(NodeVBase, 0);
-            VMagSaved := AllocMem(Sizeof(VMagSaved^[1]) * NumNodes);  // zero fill
-            ErrorSaved := AllocMem(Sizeof(ErrorSaved^[1]) * NumNodes);  // zero fill
-            NodeVBase := AllocMem(Sizeof(NodeVBase^[1]) * NumNodes);  // zero fill
-            InitializeNodeVbase(DSS);
+            VMagSaved := AllocMem(Sizeof(Double) * NumNodes);  // zero fill
+            ErrorSaved := AllocMem(Sizeof(Double) * NumNodes);  // zero fill
+            NodeVBase := AllocMem(Sizeof(Double) * NumNodes);  // zero fill
+            InitializeNodeVbase(DSS.ActiveCircuit);
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
             // A-Diakoptics vectors memory allocation
-            ReAllocMem(Node_dV, SizeOf(Node_dV^[1]) * (NumNodes + 1)); // Allocate the partial solution voltage
-            ReAllocMem(Ic_Local, SizeOf(Ic_Local^[1]) * (NumNodes + 1)); // Allocate the Complementary currents
+            ReAllocMem(Node_dV, SizeOf(Node_dV[1]) * (NumNodes + 1)); // Allocate the partial solution voltage
+            ReAllocMem(Ic_Local, SizeOf(Ic_Local[1]) * (NumNodes + 1)); // Allocate the Complementary currents
 {$ENDIF}
         end;
 
@@ -475,7 +451,7 @@ begin
 end;
 
 // leave the call to GetMatrixElement, but add more diagnostics
-function CheckYMatrixforZeroes(DSS: TDSSContext): String;
+function CheckYMatrixforZeroes(ckt: TDSSCircuit): String;
 
 var
     i: Longword;
@@ -484,53 +460,49 @@ var
     sCol: Longword;
     nIslands, iCount, iFirst, p: Longword;
     Cliques: array of Longword;
+    nodeInfo: TNodeBus;
 begin
     Result := '';
-    with DSS.ActiveCircuit do
+    hY := ckt.Solution.hY;
+    for i := 1 to ckt.NumNodes do
     begin
-        hY := Solution.hY;
-        for i := 1 to Numnodes do
+        GetMatrixElement(hY, i, i, @c);
+        if Cabs(C) = 0.0 then
         begin
-            GetMatrixElement(hY, i, i, @c);
-            if Cabs(C) = 0.0 then
-                with MapNodeToBus[i] do
-                begin
-                    Result := Result + Format(_('%sZero diagonal for bus %s, node %d'), [CRLF, BusList.NameOfIndex(Busref), NodeNum]);
-                end;
+            nodeInfo := ckt.MapNodeToBus[i];
+            Result := Result + Format(_('%sZero diagonal for bus %s, node %d'), [CRLF, ckt.BusList.NameOfIndex(nodeInfo.BusRef), nodeInfo.NodeNum]);
         end;
+    end;
 
     // new diagnostics
-        GetSingularCol(hY, @sCol); // returns a 1-based node number
-        if sCol > 0 then
-            with MapNodeToBus[sCol] do
-            begin
-                Result := Result + Format(_('%sMatrix singularity at bus %s, node %d'), [CRLF, BusList.NameOfIndex(Busref), sCol]);
-            end;
+    GetSingularCol(hY, @sCol); // returns a 1-based node number
+    if sCol > 0 then
+    begin
+        nodeInfo := ckt.MapNodeToBus[sCol];
+        Result := Result + Format(_('%sMatrix singularity at bus %s, node %d'), [CRLF, ckt.BusList.NameOfIndex(nodeInfo.BusRef), sCol]);
+    end;
 
-        SetLength(Cliques, NumNodes);
-        nIslands := FindIslands(hY, NumNodes, @Cliques[0]);
-        if nIslands > 1 then
+    SetLength(Cliques, ckt.NumNodes);
+    nIslands := FindIslands(hY, ckt.NumNodes, @Cliques[0]);
+    if nIslands <= 0 then
+        Exit;
+
+    Result := Result + Format(_('%sFound %d electrical islands:'), [CRLF, nIslands]);
+    for i := 1 to nIslands do
+    begin
+        iCount := 0;
+        iFirst := 0;
+        for p := 0 to ckt.NumNodes - 1 do
         begin
-            Result := Result + Format(_('%sFound %d electrical islands:'), [CRLF, nIslands]);
-            for i := 1 to nIslands do
+            if Cliques[p] = i then
             begin
-                iCount := 0;
-                iFirst := 0;
-                for p := 0 to NumNodes - 1 do
-                begin
-                    if Cliques[p] = i then
-                    begin
-                        Inc(iCount, 1);
-                        if iFirst = 0 then
-                            iFirst := p + 1;
-                    end;
-                end;
-                with MapNodeToBus[iFirst] do
-                begin
-                    Result := Result + CRLF + Format(_('  #%d has %d nodes, including bus %s (node %d)'), [i, iCount, BusList.NameOfIndex(Busref), iFirst]);
-                end;
+                Inc(iCount, 1);
+                if iFirst = 0 then
+                    iFirst := p + 1;
             end;
         end;
+        nodeInfo := ckt.MapNodeToBus[iFirst];
+        Result := Result + CRLF + Format(_('  #%d has %d nodes, including bus %s (node %d)'), [i, iCount, ckt.BusList.NameOfIndex(nodeInfo.BusRef), iFirst]);
     end;
 end;
 

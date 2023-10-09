@@ -119,7 +119,7 @@ begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumPVSystemRegisters);
     for k := 0 to NumPVSystemRegisters - 1 do
     begin
-        Result[k] := DSS_CopyStringAsPChar(DSSPrime.PVSystemClass.RegisterNames[k + 1]);
+        Result[k] := DSS_CopyStringAsPChar(DSSPrime.PVSystemClass.RegisterNames[k]);
     end;
 end;
 

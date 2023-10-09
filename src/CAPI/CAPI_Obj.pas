@@ -1389,8 +1389,8 @@ var
 
 begin
     if DSS = NIL then DSS := DSSPrime;
-    DSS.DSSExecutive.Command := 'clear';
-    DSS.DSSExecutive.Command := 'new circuit.defaults';
+    DSS.DSSExecutive.ParseCommand('clear');
+    DSS.DSSExecutive.ParseCommand('new circuit.defaults');
 
     Result := NIL;
     globalDefs := TJSONObject.Create();
@@ -1697,13 +1697,13 @@ begin
         Exit;
 
     prev := List.ActiveIndex;
-    p := List.First;
+    p := List.First();
     while p <> NIL do
     begin
         if List.Active = Obj then
             Exit;
 
-        p := List.Next;
+        p := List.Next();
     end;
 
     // Restore previous position if not found
@@ -2637,7 +2637,7 @@ begin
             Batch_Multiply:
                 for i := 1 to batchSize do
                 begin
-                    singleEdit := not (Flg.EditionActive in batch^.Flags);
+                    singleEdit := not (Flg.EditingActive in batch^.Flags);
                     if singleEdit then
                         cls.BeginEdit(batch^, False);
 
@@ -2654,7 +2654,7 @@ begin
             Batch_Increment:
                 for i := 1 to batchSize do
                 begin
-                    singleEdit := not (Flg.EditionActive in batch^.Flags);
+                    singleEdit := not (Flg.EditingActive in batch^.Flags);
                     if singleEdit then
                         cls.BeginEdit(batch^, False);
 
@@ -2671,7 +2671,7 @@ begin
         else
             for i := 1 to batchSize do
             begin
-                singleEdit := not (Flg.EditionActive in batch^.Flags);
+                singleEdit := not (Flg.EditingActive in batch^.Flags);
                 if singleEdit then
                     cls.BeginEdit(batch^, False);
 
@@ -2898,7 +2898,7 @@ begin
     begin
         for i := 1 to batchSize do
         begin
-            singleEdit := not (Flg.EditionActive in batch^.Flags);
+            singleEdit := not (Flg.EditingActive in batch^.Flags);
             if singleEdit then
                 cls.BeginEdit(batch^, False);
 
@@ -2955,7 +2955,7 @@ begin
     begin
         for i := 1 to batchSize do
         begin
-            singleEdit := not (Flg.EditionActive in batch^.Flags);
+            singleEdit := not (Flg.EditingActive in batch^.Flags);
             if singleEdit then
                 cls.BeginEdit(batch^, False);
 

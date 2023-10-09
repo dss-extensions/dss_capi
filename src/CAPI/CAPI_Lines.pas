@@ -122,7 +122,7 @@ begin
         if CktElem is TLineObj then
             obj := CktElem as TLineObj;
             
-        if obj = NIL {((CktElem.DssObjtype and CLASSMASK) <> LINE_ELEMENT)} then
+        if obj = NIL then // ((CktElem.DssObjtype and CLASSMASK) <> LINE_ELEMENT) 
         begin
             DoSimpleMsg(DSS, 'Line Type Expected, but another found. DSS Class=%s, Element Name="%s"', 
                 [CktElem.DSSClassName, CktElem.Name], 5007);
@@ -390,28 +390,27 @@ var
     i, j, k: Integer;
     Factor: Double;
     elem: TLineObj;
+    nph: Integer;
 begin
     if not _activeObj(DSSPrime, elem) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    with elem do
-    begin
-        Factor := TwoPi * BaseFrequency * 1.0e-9 * UnitsConvert;  // corrected 2.9.2018 RCD
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Nphases * Nphases, Nphases, Nphases);
-        k := 0;
-        for i := 1 to NPhases do
-            for j := 1 to Nphases do
-            begin
-                if (LineGeometryObj <> NIL) Or SpacingSpecified then  
-                    Result[k] := Yc[i, j].im / Factor / Len
-                else 
-                    Result[k] := Yc[i, j].im / Factor;
+    nph := elem.Nphases;
+    Factor := TwoPi * elem.BaseFrequency * 1.0e-9 * elem.UnitsConvert;  // corrected 2.9.2018 RCD
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, nph * nph, nph, nph);
+    k := 0;
+    for i := 1 to nph do
+        for j := 1 to nph do
+        begin
+            if (elem.LineGeometryObj <> NIL) or elem.SpacingSpecified then  
+                Result[k] := elem.Yc[i, j].im / Factor / elem.Len
+            else 
+                Result[k] := elem.Yc[i, j].im / Factor;
 
-                Inc(k);
-            end;
-    end;
+            Inc(k);
+        end;
 end;
 
 procedure Lines_Get_Cmatrix_GR(); CDECL;
@@ -436,27 +435,26 @@ var
     Result: PDoubleArray0;
     i, j, k: Integer;
     elem: TLineObj;
+    nph: Integer;
 begin
     if not _activeObj(DSSPrime, elem) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    with elem do
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Nphases * Nphases, Nphases, Nphases);
-        k := 0;
-        for i := 1 to NPhases do
-            for j := 1 to Nphases do
-            begin
-                if (LineGeometryObj <> NIL) Or SpacingSpecified then
-                    Result[k] := Z[i, j].Re / Len
-                else 
-                    Result[k] := Z[i, j].Re / UnitsConvert;
+    nph := elem.Nphases;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, nph * nph, nph, nph);
+    k := 0;
+    for i := 1 to nph do
+        for j := 1 to nph do
+        begin
+            if (elem.LineGeometryObj <> NIL) Or elem.SpacingSpecified then
+                Result[k] := elem.Z[i, j].Re / elem.Len
+            else 
+                Result[k] := elem.Z[i, j].Re / elem.UnitsConvert;
 
-                Inc(k);
-            end;
-    end;
+            Inc(k);
+        end;
 end;
 
 procedure Lines_Get_Rmatrix_GR(); CDECL;
@@ -481,27 +479,26 @@ var
     Result: PDoubleArray0;
     i, j, k: Integer;
     elem: TLineObj;
+    nph: Integer;
 begin
     if not _activeObj(DSSPrime, elem) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    with elem do
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Nphases * Nphases, Nphases, Nphases);
-        k := 0;
-        for i := 1 to NPhases do
-            for j := 1 to Nphases do
-            begin
-                if (LineGeometryObj <> NIL) Or SpacingSpecified then
-                    Result[k] := Z[i, j].im / Len
-                else
-                    Result[k] := Z[i, j].im / UnitsConvert;
+    nph := elem.Nphases;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, nph * nph, nph, nph);
+    k := 0;
+    for i := 1 to nph do
+        for j := 1 to nph do
+        begin
+            if (elem.LineGeometryObj <> NIL) Or elem.SpacingSpecified then
+                Result[k] := elem.Z[i, j].im / elem.Len
+            else
+                Result[k] := elem.Z[i, j].im / elem.UnitsConvert;
 
-                Inc(k);
-            end;
-    end;
+            Inc(k);
+        end;
 end;
 
 procedure Lines_Get_Xmatrix_GR(); CDECL;
@@ -516,12 +513,9 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    with elem do
-    begin
-        C0 := Value * 1.0e-9 * UnitsConvert;
-        SymComponentsChanged := TRUE;
-        YprimInvalid := TRUE;
-    end;
+    elem.C0 := Value * 1.0e-9 * elem.UnitsConvert;
+    elem.SymComponentsChanged := TRUE;
+    elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_C1(Value: Double); CDECL;
@@ -530,12 +524,9 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    with elem do
-    begin
-        C1 := Value * 1.0e-9 * UnitsConvert;
-        SymComponentsChanged := TRUE;
-        YprimInvalid := TRUE;
-    end;
+    elem.C1 := Value * 1.0e-9 * elem.UnitsConvert;
+    elem.SymComponentsChanged := TRUE;
+    elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Cmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -544,31 +535,31 @@ var
     i, j, k: Integer;
     Factor: Double;
     elem: TLineObj;
+    nph: Integer;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     Value := PDoubleArray0(ValuePtr);
-    with elem do
+    nph := elem.Nphases;
+
+    if (nph * nph) <> ValueCount then
     begin
-        if (NPhases * NPhases) <> ValueCount then
-        begin
-            DoSimpleMsg(
-                'The number of values provided (%d) does not match the expected (%d).', 
-                [ValueCount, NPhases * NPhases],
-            183);
-            Exit;
-        end;
-    
-        Factor := TwoPi * BaseFrequency * 1.0e-9;
-        k := (0);
-        for i := 1 to NPhases do
-            for j := 1 to Nphases do
-            begin
-                Yc[i, j] := Cmplx(0.0, Value[k] * Factor);
-                Inc(k);
-            end;
-        YprimInvalid := TRUE;
+        DoSimpleMsg(DSSPrime,
+            'The number of values provided (%d) does not match the expected (%d).', 
+            [ValueCount, nph * nph],
+        183);
+        Exit;
     end;
+
+    Factor := TwoPi * elem.BaseFrequency * 1.0e-9;
+    k := 0;
+    for i := 1 to nph do
+        for j := 1 to nph do
+        begin
+            elem.Yc[i, j] := Cmplx(0.0, Value[k] * Factor);
+            Inc(k);
+        end;
+    elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_R0(Value: Double); CDECL;
@@ -577,12 +568,9 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    with elem do
-    begin
-        R0 := Value * UnitsConvert;
-        SymComponentsChanged := TRUE;
-        YprimInvalid := TRUE;
-    end;
+    elem.R0 := Value * elem.UnitsConvert;
+    elem.SymComponentsChanged := TRUE;
+    elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Rmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -591,31 +579,30 @@ var
     i, j, k: Integer;
     Ztemp: complex;
     elem: TLineObj;
+    nph: Integer;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     Value := PDoubleArray0(ValuePtr);
-    with elem do
+    nph := elem.Nphases;
+    if (nph * nph) <> ValueCount then
     begin
-        if (NPhases * NPhases) <> ValueCount then
-        begin
-            DoSimpleMsg(
-                'The number of values provided (%d) does not match the expected (%d).', 
-                [ValueCount, NPhases * NPhases],
-            183);
-            Exit;
-        end;
-    
-        k := 0;
-        for i := 1 to NPhases do
-            for j := 1 to Nphases do
-            begin
-                ZTemp := Z[i, j];
-                Z[i, j] := Cmplx(Value[k], ZTemp.im);
-                Inc(k);
-            end;
-        YprimInvalid := TRUE;
+        DoSimpleMsg(DSSPrime,
+            'The number of values provided (%d) does not match the expected (%d).', 
+            [ValueCount, nph * nph],
+        183);
+        Exit;
     end;
+
+    k := 0;
+    for i := 1 to nph do
+        for j := 1 to nph do
+        begin
+            ZTemp := elem.Z[i, j];
+            elem.Z[i, j] := Cmplx(Value[k], ZTemp.im);
+            Inc(k);
+        end;
+    elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_X0(Value: Double); CDECL;
@@ -624,12 +611,9 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    with elem do
-    begin
-        X0 := Value * UnitsConvert;
-        SymComponentsChanged := TRUE;
-        YprimInvalid := TRUE;
-    end;
+    elem.X0 := Value * elem.UnitsConvert;
+    elem.SymComponentsChanged := TRUE;
+    elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Xmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -638,31 +622,32 @@ var
     i, j, k: Integer;
     Ztemp: complex;
     elem: TLineObj;
+    nph: Integer;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     Value := PDoubleArray0(ValuePtr);
     
-    with elem do
+    nph := elem.Nphases;
+    if (nph * nph) <> ValueCount then
     begin
-        if (NPhases * NPhases) <> ValueCount then
+        DoSimpleMsg(DSSPrime,
+            'The number of values provided (%d) does not match the expected (%d).', 
+            [ValueCount, nph * nph],
+        183);
+        Exit;
+    end;
+
+    k := 0;
+    for i := 1 to nph do
+        for j := 1 to nph do
         begin
-            DoSimpleMsg('The number of values provided (%d) does not match the expected (%d).', 
-                [ValueCount, NPhases * NPhases],
-            183);
-            Exit;
+            ZTemp := elem.Z[i, j];
+            elem.Z[i, j] := Cmplx(Ztemp.re, Value[k]);
+            Inc(k);
         end;
 
-        k := 0;
-        for i := 1 to NPhases do
-            for j := 1 to Nphases do
-            begin
-                ZTemp := Z[i, j];
-                Z[i, j] := Cmplx(Ztemp.re, Value[k]);
-                Inc(k);
-            end;
-        YprimInvalid := TRUE;
-    end;
+    elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_EmergAmps(): Double; CDECL;
@@ -794,18 +779,15 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    with elem do
-    begin
-        cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
-        if cValues = NIL then
-        begin   // check for unassigned array
-            DefaultResult(ResultPtr, ResultCount);
-            Exit;  // Get outta here
-        end;
-        
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Yorder * Yorder, Yorder, Yorder);
-        Move(cValues[1], ResultPtr[0], 2 * Yorder * Yorder * SizeOf(Double));
-    end
+    cValues := elem.GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
+    if cValues = NIL then
+    begin   // check for unassigned array
+        DefaultResult(ResultPtr, ResultCount);
+        Exit;  // Get outta here
+    end;
+    
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * elem.Yorder * elem.Yorder, elem.Yorder, elem.Yorder);
+    Move(cValues[1], ResultPtr[0], ResultCount^ * SizeOf(Double));
 end;
 
 procedure Lines_Get_Yprim_GR(); CDECL;
@@ -848,8 +830,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Parent(): Integer; CDECL;
-{ Sets the Active Line to the immediately upline Line obj, if any}
-{ Returns line index  or 0 if it fails or no more lines}
+//  Sets the Active Line to the immediately upline Line obj, if any
+//  Returns line index  or 0 if it fails or no more lines
 var
     pLine: TLineObj;
 begin
@@ -913,16 +895,13 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    with elem do
+    if (Value >= dssLineUnitsNone) and (Value < dssLineUnitsMaxnum) then
     begin
-        if (Value >= dssLineUnitsNone) and (Value < dssLineUnitsMaxnum) then
-        begin
-            ParsePropertyValue(ord(TLineProp.units), LineUnitsStr(Value));
-            YprimInvalid := TRUE;
-        end
-        else
-            DoSimpleMsg(_('Invalid line units code. Please enter a value within range.'), 183);
-    end;
+        elem.ParsePropertyValue(ord(TLineProp.units), LineUnitsStr(Value));
+        elem.YprimInvalid := TRUE;
+    end
+    else
+        DoSimpleMsg(DSSPrime, _('Invalid line units code. Please enter a value within range.'), 183);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_idx(): Integer; CDECL;
@@ -980,29 +959,16 @@ end;
 procedure Lines_Set_IsSwitch(Value: TAPIBoolean); CDECL;
 var
     elem: TLineObj;
+    prev: Integer = 0;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
         
-    with elem do
-    begin
-        IsSwitch := Value;
-        if not Value then Exit;
-        
-        // Side effects from Line.pas
-        SymComponentsChanged := TRUE;
-        YprimInvalid := TRUE;
-        KillGeometrySpecified();
-        KillSpacingSpecified();
-        r1 := 1.0;
-        x1 := 1.0;
-        r0 := 1.0;
-        x0 := 1.0;
-        c1 := 1.1 * 1.0e-9;
-        c0 := 1.0 * 1.0e-9;
-        len := 0.001;
-        ResetLengthUnits;
-    end;
+    if elem.IsSwitch then
+        prev := Integer(True);
+
+    elem.SetInteger(ord(TLineProp.Switch), Integer(Value));
+    elem.PropertySideEffects(ord(TLineProp.Switch), prev);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_IsSwitch(): TAPIBoolean; CDECL;

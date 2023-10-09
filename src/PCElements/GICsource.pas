@@ -236,7 +236,7 @@ begin
     obj := TObj(ptr);
     obj.RecalcElementData(); // Updates Volts
     obj.YPrimInvalid := TRUE;
-    Exclude(obj.Flags, Flg.EditionActive);
+    Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
 

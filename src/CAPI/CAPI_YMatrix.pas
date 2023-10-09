@@ -48,7 +48,7 @@ uses
     SysUtils;
 
 procedure YMatrix_GetCompressedYMatrix(factor: TAPIBoolean; var nBus, nNz: Longword; var ColPtr, RowIdxPtr: pInteger; var cValsPtr: PDouble); CDECL;
-{Returns Pointers to column and row and matrix values}
+// Returns Pointers to column and row and matrix values
 var
     Yhandle: NativeUInt;
     NumNZ, NumBuses: Longword;
@@ -228,7 +228,7 @@ begin
     except
         ON E: EEsolv32Problem do
         begin
-            DoSimpleMsg(DSSPrime, 'From DoPFLOWsolution.SetGeneratordQdV: %s%s', [E.Message, CheckYMatrixforZeroes(DSSPrime)], 7073);
+            DoSimpleMsg(DSSPrime, 'From DoPFLOWsolution.SetGeneratordQdV: %s%s', [E.Message, CheckYMatrixforZeroes(DSSPrime.ActiveCircuit)], 7073);
         end;
     end;
 end;
@@ -243,16 +243,13 @@ end;
 procedure YMatrix_Set_SolverOptions(opts: UInt64); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then Exit;
-    with DSSPrime.ActiveCircuit.Solution do
-    begin
-        SolverOptions := opts;
+    DSSPrime.ActiveCircuit.Solution.SolverOptions := opts;
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
-        if hY <> 0 then
-            KLUSolve.SetOptions(hY, SolverOptions and $FFFFFF);
+    if DSSPrime.ActiveCircuit.Solution.hY <> 0 then
+        KLUSolve.SetOptions(DSSPrime.ActiveCircuit.Solution.hY, DSSPrime.ActiveCircuit.Solution.SolverOptions and $FFFFFF);
 {$ELSE}
-    DoSimpleMsg(_('This version of DSS C-API was not compiled with extended solver options.'), 7074);
+    DoSimpleMsg(DSSPrime, _('This version of DSS C-API was not compiled with extended solver options.'), 7074);
 {$ENDIF}
-    end;
 end;
 
 function YMatrix_Get_SolverOptions(): UInt64; CDECL;

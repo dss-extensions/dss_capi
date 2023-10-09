@@ -1,11 +1,9 @@
 unit Solution;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -89,16 +87,19 @@ type
 
     TNodeVarray = array[0..1000] of Complex;
     pNodeVarray = ^TNodeVarray;
-
 {$IFDEF DSS_CAPI_PM}
-   TSolver = class(TThread)
-        constructor Create(dssContext: TDSSContext; Susp: Boolean; local_CPU: Integer; AEvent: TEvent); OVERLOAD;
+    TSolutionObj = class;
+
+    TSolver = class(TThread)
+        constructor Create(sol: TSolutionObj; Susp: Boolean; local_CPU: Integer; AEvent: TEvent); OVERLOAD;
         procedure Execute; OVERRIDE;
         procedure Doterminate; OVERRIDE;
         destructor Destroy; OVERRIDE;
 
     PROTECTED
         DSS: TDSSContext;
+        cktptr: Pointer; // Using a plain pointer to avoid circular references
+        solution: TSolutionObj;
 
         FMessage: String;
         UINotifier,
@@ -141,10 +142,10 @@ type
         procedure Set_Frequency(const Value: Double);
         procedure Set_Mode(const Value: TSolveMode);
         procedure Set_Year(const Value: Integer);
-        procedure Set_Total_Time(const Value: Double);
 
     PUBLIC
         DSS: TDSSContext;
+        cktptr: Pointer;
         Algorithm: Integer;      // NORMALSOLVE or NEWTONSOLVE
         AuxCurrents: pComplexArray; // For injections like AutoAdd
         ControlActionsDone: Boolean;
@@ -162,8 +163,7 @@ type
         FrequencyChanged: Boolean;  // Flag set to true if something has altered the frequency
         Fyear: Integer;
         Harmonic: Double;
-        HarmonicList: pDoubleArray;
-        HarmonicListSize: Integer;
+        HarmonicList: ArrayOfDouble;
         hYsystem: NativeUint;   // Handle for main (system) Y matrix
         hYseries: NativeUint;   // Handle for series Y matrix
         hY: NativeUint;         // either hYsystem or hYseries
@@ -254,21 +254,21 @@ type
         function VoltInActor1(NodeIdx: Integer): complex; // returns the voltage indicated in NodeIdx in the context of the actor 1
 {$ENDIF}
 
-        constructor Create(dssContext: TDSSContext; const solutionname: String);
+        constructor Create(dssContext: TDSSContext; dssCkt: Pointer; const solutionname: String);
         destructor Destroy; OVERRIDE;
 
-        function Converged: Boolean;
+        function Converged(): Boolean;
         procedure SetGeneratordQdV;
 
-        function SolveZeroLoadSnapShot: Integer;
-        procedure DoPFLOWsolution;
+        procedure SolveZeroLoadSnapShot();
+        procedure DoPFLOWsolution();
 
-        procedure Solve;                // Main Solution dispatch
-        procedure SnapShotInit;
-        function SolveSnap: Integer;    // solve for now once
-        function SolveDirect: Integer;  // solve for now once, direct solution
-        function SolveYDirect: Integer; // Similar to SolveDirect; used for initialization
-        function SolveCircuit: Integer; // SolveSnap sans control iteration
+        procedure Solve();                // Main Solution dispatch
+        procedure SnapShotInit();
+        procedure SolveSnap();    // solve for now once
+        procedure SolveDirect();  // solve for now once, direct solution
+        procedure SolveYDirect(); // Similar to SolveDirect; used for initialization
+        procedure SolveCircuit(); // SolveSnap sans control iteration
         procedure CheckControls;       // Snapshot checks with matrix rebuild
         procedure SampleControlDevices;
         procedure DoControlActions;
@@ -284,20 +284,16 @@ type
 
         function VDiff(i, j: Integer): Complex;  // Difference between two node voltages
 
-        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False);
-        procedure WriteConvergenceReport(const Fname: String);
+        procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False);
+        procedure WriteConvergenceReport(F: TStream);
         procedure Update_dblHour;
-        procedure Increment_time;
+        procedure IncrementTime;
 
         procedure UpdateLoopTime;
 
         property Mode: TSolveMode READ dynavars.SolutionMode WRITE Set_Mode;
         property Frequency: Double READ FFrequency WRITE Set_Frequency;
         property Year: Integer READ FYear WRITE Set_Year;
-        property Time_Solve: Double READ Solve_Time_Elapsed;
-        property Time_TotalSolve: Double READ Total_Solve_Time_Elapsed;
-        property Time_Step: Double READ Step_Time_Elapsed;     // Solve + sample
-        property Total_Time: Double READ Total_Time_Elapsed WRITE Set_Total_Time;
 
         procedure AddInAuxCurrents(SolveType: Integer);
         function SolveSystem(V: pNodeVArray): Integer;
@@ -312,7 +308,6 @@ type
         function get_IncMatrix_Row(Col: Integer): Integer; // Gets the index of the Row connected to the specified Column
         function get_IncMatrix_Col(Row: Integer): Integer; // Gets the index of the Column connected to the specified Row
         function CheckLocationIdx(Idx: Integer): Integer; // Evaluates the area covered by the tearing point to see if there is a better one
-        function get_PDE_Bus1_Location(myPDE: String): Integer; // Gets the index of myPDE -> bus1 within the Inc matrix
 
         procedure AddLines2IncMatrix; // Adds the Lines to the Incidence matrix arrays
         procedure AddXfmr2IncMatrix; // Adds the Xfmrs to the Incidence matrix arrays
@@ -336,7 +331,6 @@ uses
     cpucount, 
     {$ENDIF}
 {$ENDIF}
-    CmdForms,
     PDElement,
     ControlElem,
     Fault,
@@ -353,12 +347,15 @@ uses
     Circuit,
     Utilities,
     KLUSolve,
+    Bus,
     Line,
     InvBasedPCE,
+    PCElement,
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
     Diakoptics,
 {$ENDIF}
-    DSSHelper;
+    DSSHelper,
+    StrUtils;
 
 const
     NumPropsThisClass = 1;
@@ -410,11 +407,12 @@ end;
     {$ENDIF}
 {$ENDIF}
 
-constructor TSolutionObj.Create(dssContext: TDSSContext; const SolutionName: String);
+constructor TSolutionObj.Create(dssContext: TDSSContext; dssCkt: Pointer; const SolutionName: String);
 begin
     inherited Create;
     // Name := AnsiLowerCase(SolutionName);
     DSS := dssContext;
+    cktptr := dssCkt;
 
     SolverOptions := 0;
 
@@ -452,13 +450,12 @@ begin
     SeriesYInvalid := TRUE;
 
     // Define default harmonic list
-    HarmonicListSize := 5;
-    HarmonicList := AllocMem(SizeOf(harmonicList^[1]) * HarmonicListSize);
-    HarmonicList^[1] := 1.0;
-    HarmonicList^[2] := 5.0;
-    HarmonicList^[3] := 7.0;
-    HarmonicList^[4] := 11.0;
-    HarmonicList^[5] := 13.0;
+    SetLength(HarmonicList, 5);
+    HarmonicList[0] := 1.0;
+    HarmonicList[1] := 5.0;
+    HarmonicList[2] := 7.0;
+    HarmonicList[3] := 11.0;
+    HarmonicList[4] := 13.0;
 
     SolutionInitialized := FALSE;
     LoadModel := POWERFLOW;
@@ -522,23 +519,19 @@ begin
     if hYseries <> 0 then
         DeleteSparseSet(hYseries);
 
-    Reallocmem(HarmonicList, 0);
 {$IFDEF DSS_CAPI_PM}    
     // Sends a message to the working actor
-    with DSS do 
+    // DSS.ThreadStatusEvent.SetEvent();
+    if DSS.ActorThread <> NIL then
     begin
-        // ThreadStatusEvent.SetEvent();
-        if ActorThread <> NIL then
-        begin
-            SolutionAbort := True;
-            ActorThread.Send_Message(TActorMessage.EXIT_ACTOR);
-            ActorThread.WaitFor();
-            ActorThread.Free();
-            ActorThread := nil;
-        end;
-        ThreadStatusEvent.Free;
-        ThreadStatusEvent := NIL;
+        DSS.SolutionAbort := True;
+        DSS.ActorThread.Send_Message(TActorMessage.EXIT_ACTOR);
+        DSS.ActorThread.WaitFor();
+        DSS.ActorThread.Free();
+        DSS.ActorThread := nil;
     end;
+    DSS.ThreadStatusEvent.Free;
+    DSS.ThreadStatusEvent := NIL;
 {$ENDIF}
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
     LockNodeV.Free;
@@ -548,21 +541,21 @@ begin
 end;
 
 procedure TSolutionObj.Solve;
-{$IFDEF DSS_CAPI_PM}
 var
+{$IFDEF DSS_CAPI_PM}
     PMParent: TDSSContext;
-begin
-    PMParent := DSS.GetPrime();
-{$ELSE}
-begin
 {$ENDIF}
-    DSS.ActiveCircuit.Issolved := FALSE;
+begin
+{$IFDEF DSS_CAPI_PM}
+    PMParent := DSS.GetPrime();
+{$ENDIF}
+    ckt.Issolved := FALSE;
     DSS.SolutionWasAttempted := TRUE;
 
-    InitProgressForm; // initialize Progress Form;
+    DSS.InitProgressForm(); // initialize Progress Form;
 
     // Check of some special conditions that must be met before executing solutions
-    if DSS.ActiveCircuit.EmergMinVolts >= DSS.ActiveCircuit.NormalMinVolts then
+    if ckt.EmergMinVolts >= ckt.NormalMinVolts then
     begin
         DoSimpleMsg(DSS, _('Error: Emergency Min Voltage Must Be Less Than Normal Min Voltage! Solution Not Executed.'), 480);
         Exit;
@@ -571,19 +564,15 @@ begin
     if DSS.SolutionAbort then
     begin
         DSS.GlobalResult := 'Solution aborted.';
-        DSS.CmdResult := SOLUTION_ABORT;
-        DSS.ErrorNumber := DSS.CmdResult;
+        DSS.ErrorNumber := SOLUTION_ABORT;
         Exit;
     end;
     try
         // Main solution Algorithm dispatcher
-        with DSS.ActiveCircuit do
-        begin
-            if Year = 0 then
-                DefaultGrowthFactor := 1.0    // RCD 8-17-00
-            else
-                DefaultGrowthFactor := IntPower(DefaultGrowthRate, (year - 1));
-        end;
+        if Year = 0 then
+            ckt.DefaultGrowthFactor := 1.0    // RCD 8-17-00
+        else
+            ckt.DefaultGrowthFactor := IntPower(ckt.DefaultGrowthRate, (year - 1));
         DSS.Fire_InitControls();
 
         // CheckFaultStatus;  ???? needed here??
@@ -601,51 +590,51 @@ begin
             {$ENDIF}
             case Dynavars.SolutionMode of
                 TSolveMode.SNAPSHOT:
-                    SolveSnap;
+                    SolveSnap();
                 TSolveMode.YEARLYMODE:
-                    SolveYearly;
+                    SolveYearly();
                 TSolveMode.DAILYMODE:
-                    SolveDaily;
+                    SolveDaily();
                 TSolveMode.DUTYCYCLE:
-                    SolveDuty;
+                    SolveDuty();
                 TSolveMode.DYNAMICMODE:
-                    SolveDynamic;
+                    SolveDynamic();
                 TSolveMode.MONTECARLO1:
-                    SolveMonte1;
+                    SolveMonte1();
                 TSolveMode.MONTECARLO2:
-                    SolveMonte2;
+                    SolveMonte2();
                 TSolveMode.MONTECARLO3:
-                    SolveMonte3;
+                    SolveMonte3();
                 TSolveMode.PEAKDAY:
-                    SolvePeakDay;
+                    SolvePeakDay();
                 TSolveMode.LOADDURATION1:
-                    SolveLD1;
+                    SolveLD1();
                 TSolveMode.LOADDURATION2:
-                    SolveLD2;
+                    SolveLD2();
                 TSolveMode.DIRECT:
-                    SolveDirect;
+                    SolveDirect();
                 TSolveMode.MONTEFAULT:
-                    SolveMonteFault;  // Monte Carlo Fault Cases
+                    SolveMonteFault();  // Monte Carlo Fault Cases
                 TSolveMode.FAULTSTUDY:
-                    SolveFaultStudy;
+                    SolveFaultStudy();
                 TSolveMode.AUTOADDFLAG:
-                    DSS.ActiveCircuit.AutoAddObj.Solve;
+                    ckt.AutoAddObj.Solve();
                 TSolveMode.HARMONICMODE:
-                    SolveHarmonic;
+                    SolveHarmonic();
                 TSolveMode.GENERALTIME:
-                    SolveGeneralTime;
+                    SolveGeneralTime();
                 TSolveMode.HARMONICMODET:
-                    SolveHarmonicT;  //Declares the Hsequential-time harmonics
+                    SolveHarmonicT();  //Declares the Hsequential-time harmonics
             else
                 DoSimpleMsg(DSS, _('Unknown solution mode.'), 481);
             end;
             {$IFDEF WINDOWS}
             QueryPerformanceCounter(GEndTime);
             {$ELSE}
-            GEndTime := GetTickCount64;
+            GEndTime := GetTickCount64();
             {$ENDIF}
             Total_Solve_Time_Elapsed := ((GEndTime - GStartTime) / CPU_Freq) * 1000000;
-            Total_Time_Elapsed := Total_Time_Elapsed + Total_Solve_Time_Elapsed;
+            Total_Time_Elapsed += Total_Solve_Time_Elapsed;
             Exit;
 {$IFDEF DSS_CAPI_PM}
         end;
@@ -655,7 +644,7 @@ begin
             if (DSS.ActorThread <> NIL) and DSS.ActorThread.Terminated then
                 DSS.ActorThread.Free;
 
-            DSS.ActorThread := TSolver.Create(DSS, True, DSS.CPU, DSS.ThreadStatusEvent);
+            DSS.ActorThread := TSolver.Create(self, True, DSS.CPU, DSS.ThreadStatusEvent);
             // DSS.ActorThread.Priority := tpTimeCritical;
             DSS.ActorStatus := TActorStatus.Busy;
             DSS.ActorThread.Start();
@@ -698,7 +687,7 @@ var
 begin
     // base convergence on voltage magnitude
     MaxError := 0.0;
-    for i := 1 to DSS.ActiveCircuit.NumNodes do
+    for i := 1 to ckt.NumNodes do
     begin
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
         if not ADiakoptics or (DSS.Parent = NIL) then
@@ -741,64 +730,59 @@ procedure TSolutionObj.GetSourceInjCurrents;
 var
     pElem: TDSSCktElement;
 begin
-    with DSS.ActiveCircuit do
+    for pElem in ckt.Sources do
     begin
-        for pElem in Sources do
-        begin
-            if pElem.Enabled then
-                pElem.InjCurrents; // uses NodeRef to add current into InjCurr Array;
-        end;
-
-        // Adds GFM PCE as well
-        GetPCInjCurr(TRUE);
+        if pElem.Enabled then
+            pElem.InjCurrents(); // uses NodeRef to add current into InjCurr Array;
     end;
+
+    // Adds GFM PCE as well
+    GetPCInjCurr(TRUE);
 end;
 
 procedure TSolutionObj.SetGeneratorDispRef;
 // Set the global generator dispatch reference
 begin
-    with DSS.ActiveCircuit do
-        case Dynavars.SolutionMode of
-
-            TSolveMode.SNAPSHOT:
-                GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor;
-            TSolveMode.YEARLYMODE:
-                GeneratorDispatchReference := DefaultGrowthFactor * DefaultHourMult.re;
-            TSolveMode.DAILYMODE:
-                GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            TSolveMode.DUTYCYCLE:
-                GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            TSolveMode.GENERALTIME:
-                GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            TSolveMode.DYNAMICMODE:
-                GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor;
-            TSolveMode.HARMONICMODE:
-                GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor;
-            TSolveMode.MONTECARLO1:
-                GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor;
-            TSolveMode.MONTECARLO2:
-                GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            TSolveMode.MONTECARLO3:
-                GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            TSolveMode.PEAKDAY:
-                GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            TSolveMode.LOADDURATION1:
-                GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            TSolveMode.LOADDURATION2:
-                GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            TSolveMode.DIRECT:
-                GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor;
-            TSolveMode.MONTEFAULT:
-                GeneratorDispatchReference := 1.0;  // Monte Carlo Fault Cases solve  at peak load only base case
-            TSolveMode.FAULTSTUDY:
-                GeneratorDispatchReference := 1.0;
-            TSolveMode.AUTOADDFLAG:
-                GeneratorDispatchReference := DefaultGrowthFactor;   // peak load only
-            TSolveMode.HARMONICMODET:
-                GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-        else
-            DoSimpleMsg(DSS, _('Unknown solution mode.'), 483);
-        end;
+    case Dynavars.SolutionMode of
+        TSolveMode.SNAPSHOT:
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor;
+        TSolveMode.YEARLYMODE:
+            ckt.GeneratorDispatchReference := ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+        TSolveMode.DAILYMODE:
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+        TSolveMode.DUTYCYCLE:
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+        TSolveMode.GENERALTIME:
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+        TSolveMode.DYNAMICMODE:
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor;
+        TSolveMode.HARMONICMODE:
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor;
+        TSolveMode.MONTECARLO1:
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor;
+        TSolveMode.MONTECARLO2:
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+        TSolveMode.MONTECARLO3:
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+        TSolveMode.PEAKDAY:
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+        TSolveMode.LOADDURATION1:
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+        TSolveMode.LOADDURATION2:
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+        TSolveMode.DIRECT:
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor;
+        TSolveMode.MONTEFAULT:
+            ckt.GeneratorDispatchReference := 1.0;  // Monte Carlo Fault Cases solve  at peak load only base case
+        TSolveMode.FAULTSTUDY:
+            ckt.GeneratorDispatchReference := 1.0;
+        TSolveMode.AUTOADDFLAG:
+            ckt.GeneratorDispatchReference := ckt.DefaultGrowthFactor;   // peak load only
+        TSolveMode.HARMONICMODET:
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+    else
+        DoSimpleMsg(DSS, _('Unknown solution mode.'), 483);
+    end;
 end;
 
 procedure TSolutionObj.SetGeneratordQdV;
@@ -811,66 +795,62 @@ begin
 
     // Save the generator dispatch level and set on high enough to
     // turn all generators on
-    GenDispSave := DSS.ActiveCircuit.GeneratorDispatchReference;
-    DSS.ActiveCircuit.GeneratorDispatchReference := 1000.0;
+    GenDispSave := ckt.GeneratorDispatchReference;
+    ckt.GeneratorDispatchReference := 1000.0;
 
-    with DSS.ActiveCircuit do
+    for pGen in ckt.Generators do
     begin
-        for pGen in Generators do
+        if not pGen.Enabled then
+            continue;
+
+        // for PV generator models only ...
+        if pGen.genModel = 3 then
         begin
-            if not pGen.Enabled then
-                continue;
+            pGen.InitDQDVCalc();
 
-            // for PV generator models only ...
-            if pGen.genModel = 3 then
-            begin
-                pGen.InitDQDVCalc;
+            // NOTE: The following was commented in https://sourceforge.net/p/electricdss/code/3534/
+            //       The Y matrix element is used since then.
+            //
+            //    // solve at base var setting
+            //     Iteration := 0;
+            //     repeat
+            //         Inc(Iteration);
+            //         ZeroInjCurr;
+            //         GetSourceInjCurrents;
+            //         pGen.InjCurrents;   // get generator currents with nominal vars
+            //         SolveSystem(NodeV);
+            //     until Converged or (Iteration >= Maxiterations);
+            //
+            //     pGen.RememberQV;  // Remember Q and V
+            //     pGen.BumpUpQ;
+            //
+            //    // solve after changing vars
+            //     Iteration := 0;
+            //     repeat
+            //         Inc(Iteration);
+            //         ZeroInjCurr;
+            //         GetSourceInjCurrents;
+            //         pGen.InjCurrents;   // get generator currents with nominal vars
+            //         SolveSystem(NodeV);
+            //     until Converged or (Iteration >= Maxiterations);
 
-                // NOTE: The following was commented in https://sourceforge.net/p/electricdss/code/3534/
-                //       The Y matrix element is used since then.
-                //
-                //    // solve at base var setting
-                //     Iteration := 0;
-                //     repeat
-                //         Inc(Iteration);
-                //         ZeroInjCurr;
-                //         GetSourceInjCurrents;
-                //         pGen.InjCurrents;   // get generator currents with nominal vars
-                //         SolveSystem(NodeV);
-                //     until Converged or (Iteration >= Maxiterations);
-                //
-                //     pGen.RememberQV;  // Remember Q and V
-                //     pGen.BumpUpQ;
-                //
-                //    // solve after changing vars
-                //     Iteration := 0;
-                //     repeat
-                //         Inc(Iteration);
-                //         ZeroInjCurr;
-                //         GetSourceInjCurrents;
-                //         pGen.InjCurrents;   // get generator currents with nominal vars
-                //         SolveSystem(NodeV);
-                //     until Converged or (Iteration >= Maxiterations);
+            pGen.CalcdQdV(); // bssed on remembered Q and V and present values of same
+            pGen.ResetStartPoint();
 
-                pGen.CalcdQdV; // bssed on remembered Q and V and present values of same
-                pGen.ResetStartPoint;
-
-                Did_One := TRUE;
-            end;
+            Did_One := TRUE;
         end;
-
     end;
 
     // Restore generator dispatch reference
-    DSS.ActiveCircuit.GeneratorDispatchReference := GenDispSave;
+    ckt.GeneratorDispatchReference := GenDispSave;
     try
         if Did_One        // Reset Initial Solution
         then
-            SolveZeroLoadSnapShot;
+            SolveZeroLoadSnapShot();
     except
         ON E: EEsolv32Problem do
         begin
-            DoSimpleMsg(DSS, 'From SetGenerator DQDV, SolveZeroLoadSnapShot: %s', [CRLF + E.Message + CheckYMatrixforZeroes(DSS)], 7071);
+            DoSimpleMsg(DSS, 'From SetGenerator DQDV, SolveZeroLoadSnapShot: %s', [CRLF + E.Message + CheckYMatrixforZeroes(ckt)], 7071);
             raise ESolveError.Create('Aborting');
         end;
     end;
@@ -891,44 +871,43 @@ begin
     Iteration := 0;
 
     // **** Main iteration loop ****
-    with DSS.ActiveCircuit do
-        repeat
-            Inc(Iteration);
+    repeat
+        Inc(Iteration);
 
-            if LogEvents then
-                LogThisEvent(DSS, 'Solution Iteration ' + IntToStr(Iteration));
+        if ckt.LogEvents then
+            DSS.LogThisEvent('Solution Iteration ' + IntToStr(Iteration));
 
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
-            if (not ADiakoptics) or (DSS.Parent <> NIL) then // Normal simulation
-            begin // In A-Diakoptics, all other actors do normal solution
+        if (not ADiakoptics) or (DSS.Parent <> NIL) then // Normal simulation
+        begin // In A-Diakoptics, all other actors do normal solution
 {$ENDIF}
-                // Get injcurrents for all PC devices
-                ZeroInjCurr;
-                GetSourceInjCurrents;  // sources
-                GetPCInjCurr;  // Get the injection currents from all the power conversion devices and feeders
+            // Get injcurrents for all PC devices
+            ZeroInjCurr();
+            GetSourceInjCurrents();  // sources
+            GetPCInjCurr();  // Get the injection currents from all the power conversion devices and feeders
 
-                // The above call could change the primitive Y matrix, so have to check
-                if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (DSS.ActiveCircuit.IncrCktElements.Count <> 0){$ENDIF} then
-                begin
-                    BuildYMatrix(DSS, WHOLEMATRIX, FALSE);  // Does not realloc V, I
-                end;
-                if UseAuxCurrents then
-                    AddInAuxCurrents(NORMALSOLVE);
-
-                // Solve for voltages -- Note: NodeV[0] = 0 + j0 always
-                if LogEvents then
-                    LogThisEvent(DSS, 'Solve Sparse Set DoNormalSolution ...');
-                SolveSystem(NodeV);
-                LoadsNeedUpdating := FALSE;
-{$IFDEF DSS_CAPI_ADIAKOPTICS}
-            end
-            else
+            // The above call could change the primitive Y matrix, so have to check
+            if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (ckt.IncrCktElements.Count <> 0){$ENDIF} then
             begin
-                ADiak_PCInj := TRUE;
-                Solve_Diakoptics(DSS); // A-Diakoptics
+                BuildYMatrix(DSS, WHOLEMATRIX, FALSE);  // Does not realloc V, I
             end;
+            if UseAuxCurrents then
+                AddInAuxCurrents(NORMALSOLVE);
+
+            // Solve for voltages -- Note: NodeV[0] = 0 + j0 always
+            if ckt.LogEvents then
+                DSS.LogThisEvent('Solve Sparse Set DoNormalSolution ...');
+            SolveSystem(NodeV);
+            LoadsNeedUpdating := FALSE;
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+        end
+        else
+        begin
+            ADiak_PCInj := TRUE;
+            Solve_Diakoptics(DSS); // A-Diakoptics
+        end;
 {$ENDIF}
-        until (Converged and (Iteration >= MinIterations)) or (Iteration >= MaxIterations);
+    until (Converged and (Iteration >= MinIterations)) or (Iteration >= MaxIterations);
 end;
 
 procedure TSolutionObj.DoNewtonSolution;
@@ -949,46 +928,41 @@ procedure TSolutionObj.DoNewtonSolution;
 var
     i: Integer;
 begin
-    with DSS.ActiveCircuit do
-    begin
-        ReAllocMem(dV, SizeOf(dV[1]) * (NumNodes + 1)); // Make sure this is always big enough
+    ReAllocMem(dV, SizeOf(dV[1]) * (ckt.NumNodes + 1)); // Make sure this is always big enough
 
-        if ControlIteration = 1 then
-            GetPCInjCurr;  // Update the load multipliers for this solution
+    if ControlIteration = 1 then
+        GetPCInjCurr;  // Update the load multipliers for this solution
 
-        Iteration := 0;
-        repeat
-            Inc(Iteration);
-            Inc(SolutionCount);    // SumAllCurrents Uses ITerminal  So must force a recalc
+    Iteration := 0;
+    repeat
+        Inc(Iteration);
+        Inc(SolutionCount);    // SumAllCurrents Uses ITerminal  So must force a recalc
 
-            // Get sum of currents at all nodes for all  devices
-            ZeroInjCurr;
-            SumAllCurrents;
+        // Get sum of currents at all nodes for all  devices
+        ZeroInjCurr();
+        SumAllCurrents();
 
-            // Call to current calc could change YPrim for some devices
-            if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (DSS.ActiveCircuit.IncrCktElements.Count <> 0){$ENDIF} then
-            begin
-                BuildYMatrix(DSS, WHOLEMATRIX, FALSE);   // Does not realloc V, I
-            end;
+        // Call to current calc could change YPrim for some devices
+        if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (ckt.IncrCktElements.Count <> 0){$ENDIF} then
+        begin
+            BuildYMatrix(DSS, WHOLEMATRIX, FALSE);   // Does not realloc V, I
+        end;
 
-            if UseAuxCurrents then
-                AddInAuxCurrents(NEWTONSOLVE);
+        if UseAuxCurrents then
+            AddInAuxCurrents(NEWTONSOLVE);
 
-            // Solve for change in voltages
-            SolveSystem(dV);
+        // Solve for change in voltages
+        SolveSystem(dV);
 
-            LoadsNeedUpdating := FALSE;
+        LoadsNeedUpdating := FALSE;
 
-            // Compute new guess at voltages
-            for i := 1 to NumNodes do     // 0 node is always 0
-                with NodeV[i] do
-                begin
-                    re := re - dV[i].re;
-                    im := im - dV[i].im;
-                end;
+        // Compute new guess at voltages
+        for i := 1 to ckt.NumNodes do     // 0 node is always 0
+        begin
+            NodeV[i] -= dV[i];
+        end;
 
-        until (Converged and (Iteration >= MinIterations)) or (Iteration >= MaxIterations);
-    end;
+    until (Converged and (Iteration >= MinIterations)) or (Iteration >= MaxIterations);
 end;
 
 procedure TSolutionObj.DoPFLOWsolution;
@@ -996,19 +970,19 @@ begin
     Inc(SolutionCount);    //Unique number for this solution
 
     if VoltageBaseChanged then
-        InitializeNodeVbase(DSS); // for convergence test
+        InitializeNodeVbase(ckt); // for convergence test
 
     if not SolutionInitialized then
     begin
-        if DSS.ActiveCircuit.LogEvents then
-            LogThisEvent(DSS, 'Initializing Solution');
+        if ckt.LogEvents then
+            DSS.LogThisEvent('Initializing Solution');
         try
             //SolveZeroLoadSnapShot;
             SolveYDirect;  // 8-14-06 This should give a better answer than zero load snapshot
         except
             ON E: EEsolv32Problem do
             begin
-                DoSimpleMsg(DSS, 'From DoPFLOWsolution.SolveYDirect: %s', [CRLF + E.Message + CheckYMatrixforZeroes(DSS)], 7072);
+                DoSimpleMsg(DSS, 'From DoPFLOWsolution.SolveYDirect: %s', [CRLF + E.Message + CheckYMatrixforZeroes(ckt)], 7072);
                 raise ESolveError.Create('Aborting');
             end;
         end;
@@ -1020,7 +994,7 @@ begin
         except
             ON E: EEsolv32Problem do
             begin
-                DoSimpleMsg(DSS, 'From DoPFLOWsolution.SetGeneratordQdV: %s', [CRLF + E.Message + CheckYMatrixforZeroes(DSS)], 7073);
+                DoSimpleMsg(DSS, 'From DoPFLOWsolution.SetGeneratordQdV: %s', [CRLF + E.Message + CheckYMatrixforZeroes(ckt)], 7073);
                 raise ESolveError.Create('Aborting');
             end;
         end;
@@ -1039,15 +1013,13 @@ begin
             DoNormalSolution;
     end;
 
-    DSS.ActiveCircuit.Issolved := ConvergedFlag;
+    ckt.Issolved := ConvergedFlag;
     LastSolutionWasDirect := FALSE;
 end;
 
-function TSolutionObj.SolveZeroLoadSnapShot: Integer;
+procedure TSolutionObj.SolveZeroLoadSnapShot();
 // Solve without load for initialization purposes;
 begin
-    Result := 0;
-
     if SystemYChanged or SeriesYInvalid then
     begin
         BuildYMatrix(DSS, SERIESONLY, TRUE);   // Side Effect: Allocates V
@@ -1062,14 +1034,39 @@ begin
         raise EEsolv32Problem.Create('Series Y matrix not built yet in SolveZeroLoadSnapshot.');
     hY := hYseries;
 
-    if DSS.ActiveCircuit.LogEvents then
-        LogThisEvent(DSS, 'Solve Sparse Set ZeroLoadSnapshot ...');
+    if ckt.LogEvents then
+        DSS.LogThisEvent('Solve Sparse Set ZeroLoadSnapshot ...');
 
     SolveSystem(NodeV);  // also sets voltages in radial part of the circuit if radial solution
 
     // Reset the main system Y as the solution matrix
     if (hYsystem > 0) and not DSS.SolutionAbort then
         hY := hYsystem;
+end;
+
+function nearestBasekV(DSS: TDSSContext; kV: Double): Double;
+// Find closest base voltage
+var
+    TestkV: Double;
+    i: Integer;
+    Diff,
+    MinDiff: Double;
+begin
+    Result := 0;
+    MinDiff := 1.0E50;  // Big whompin number
+    for i := 0 to High(DSS.ActiveCircuit.LegalVoltageBases) do
+    begin
+        TestkV := DSS.ActiveCircuit.LegalVoltageBases[i];
+        if TestkV = 0 then
+            break;
+
+        Diff := Abs(1.0 - kV / TestkV);     // Get Per unit difference
+        if Diff < MinDiff then
+        begin
+            MinDiff := Diff;
+            Result := TestkV;
+        end;
+    end;
 end;
 
 procedure TSolutionObj.SetVoltageBases;
@@ -1079,34 +1076,32 @@ var
     bZoneCalc, bZoneLock: Boolean;
 begin
     try
-    // don't allow the meter zones to auto-build in this load flow solution, because the
-    // voltage bases are not available yet
+        // don't allow the meter zones to auto-build in this load flow solution, because the
+        // voltage bases are not available yet
 
-        bZoneCalc := DSS.ActiveCircuit.MeterZonesComputed;
-        bZoneLock := DSS.ActiveCircuit.ZonesLocked;
-        DSS.ActiveCircuit.MeterZonesComputed := TRUE;
-        DSS.ActiveCircuit.ZonesLocked := TRUE;
+        bZoneCalc := ckt.MeterZonesComputed;
+        bZoneLock := ckt.ZonesLocked;
+        ckt.MeterZonesComputed := TRUE;
+        ckt.ZonesLocked := TRUE;
 
         SolveZeroLoadSnapShot;
 
-        with DSS.ActiveCircuit do
-            for i := 1 to NumBuses do
-                with Buses[i] do
-                    kVBase := NearestBasekV(DSS, Cabs(NodeV[RefNo[1]]) * 0.001732) / SQRT3;  // l-n base kV
+        for i := 1 to ckt.NumBuses do
+            ckt.Buses[i].kVBase := nearestBasekV(DSS, Cabs(NodeV[ckt.Buses[i].RefNo[1]]) * 0.001732) / SQRT3;  // l-n base kV
 
-        InitializeNodeVbase(DSS);      // for convergence test
+        InitializeNodeVbase(ckt); // for convergence test
 
-        DSS.ActiveCircuit.Issolved := TRUE;
+        ckt.IsSolved := TRUE;
 
-    // now build the meter zones
-        DSS.ActiveCircuit.MeterZonesComputed := bZoneCalc;
-        DSS.ActiveCircuit.ZonesLocked := bZoneLock;
-        DSS.ActiveCircuit.DoResetMeterZones;
+        // now build the meter zones
+        ckt.MeterZonesComputed := bZoneCalc;
+        ckt.ZonesLocked := bZoneLock;
+        ckt.DoResetMeterZones;
 
     except
         ON E: EEsolv32Problem do
         begin
-            DoSimpleMsg(DSS, 'From SetVoltageBases.SolveZeroLoadSnapShot: %s', [CRLF + E.Message + CheckYMatrixforZeroes(DSS)], 7075);
+            DoSimpleMsg(DSS, 'From SetVoltageBases.SolveZeroLoadSnapShot: %s', [CRLF + E.Message + CheckYMatrixforZeroes(ckt)], 7075);
             raise ESolveError.Create('Aborting');
         end;
     end;
@@ -1122,11 +1117,12 @@ begin
 end;
 
 procedure TSolutionObj.CheckControls;
-begin
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
 var
-    i: Integer;
+     i: Integer;
+{$ENDIF}
 begin
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
     if not ADiakoptics or (DSS.Parent <> NIL) then
     begin
 {$ENDIF}
@@ -1134,8 +1130,8 @@ begin
         begin
             if ConvergedFlag then
             begin
-                if DSS.ActiveCircuit.LogEvents then
-                    LogThisEvent(DSS, 'Control Iteration ' + IntToStr(ControlIteration));
+                if ckt.LogEvents then
+                    DSS.LogThisEvent('Control Iteration ' + IntToStr(ControlIteration));
                 Sample_DoControlActions;
                 Check_Fault_Status;
             end
@@ -1143,7 +1139,7 @@ begin
                 ControlActionsDone := TRUE; // Stop solution process if failure to converge
         end;
 
-        if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (DSS.ActiveCircuit.IncrCktElements.Count <> 0){$ENDIF} then
+        if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (ckt.IncrCktElements.Count <> 0){$ENDIF} then
         begin
             BuildYMatrix(DSS, WHOLEMATRIX, FALSE); // Rebuild Y matrix, but V stays same
         end;
@@ -1153,8 +1149,8 @@ begin
     begin
         if ControlIteration < MaxControlIterations then
         begin
-            if DSS.ActiveCircuit.LogEvents then
-                LogThisEvent(DSS, 'Control Iteration ' + IntToStr(ControlIteration));
+            if ckt.LogEvents then
+                DSS.LogThisEvent('Control Iteration ' + IntToStr(ControlIteration));
 
             SendCmd2Actors(DO_CTRL_ACTIONS);
             // Checks if there are pending ctrl actions at the actors
@@ -1166,11 +1162,11 @@ begin
 {$ENDIF}
 end;
 
-function TSolutionObj.SolveSnap: Integer;  // solve for now once
+procedure TSolutionObj.SolveSnap();  // solve for now once
 var
     TotalIterations: Integer;
 begin
-    SnapShotInit;
+    SnapShotInit();
     TotalIterations := 0;
    {$IFDEF MSWINDOWS}
     QueryPerformanceCounter(SolveStartTime);
@@ -1180,12 +1176,12 @@ begin
     repeat
         Inc(ControlIteration);
 
-        Result := SolveCircuit;  // Do circuit solution w/o checking controls
-       {Now Check controls}
+        SolveCircuit();  // Do circuit solution w/o checking controls
+        // Now Check controls
         DSS.Fire_CheckControls();
         CheckControls;
 
-       {For reporting max iterations per control iteration}
+        // For reporting max iterations per control iteration
         if Iteration > MostIterationsDone then
             MostIterationsDone := Iteration;
 
@@ -1199,8 +1195,8 @@ begin
         DSS.SolutionAbort := TRUE;   // this will stop this message in dynamic power flow modes
     end;
 
-    if DSS.ActiveCircuit.LogEvents then
-        LogThisEvent(DSS, 'Solution Done');
+    if ckt.LogEvents then
+        DSS.LogThisEvent('Solution Done');
 
     DSS.Fire_StepControls();
 
@@ -1210,14 +1206,12 @@ begin
     SolveEndTime := GetTickCount64;
     {$ENDIF}
     Solve_Time_Elapsed := ((SolveEndtime - SolveStartTime) / CPU_Freq) * 1000000;
-    Iteration := TotalIterations;  { so that it reports a more interesting number }
+    Iteration := TotalIterations;  //  so that it reports a more interesting number 
 
 end;
 
-function TSolutionObj.SolveDirect: Integer;  // solve for now once, direct solution
+procedure TSolutionObj.SolveDirect();  // solve for now once, direct solution
 begin
-    Result := 0;
-
     LoadsNeedUpdating := TRUE;  // Force possible update of loads and generators
     {$IFDEF MSWINDOWS}
     QueryPerformanceCounter(SolveStartTime);
@@ -1247,7 +1241,7 @@ begin
         if SolveSystem(NodeV) = 1   // Solve with Zero injection current
         then
         begin
-            DSS.ActiveCircuit.IsSolved := TRUE;
+            ckt.IsSolved := TRUE;
             ConvergedFlag := TRUE;
         end;
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
@@ -1257,7 +1251,7 @@ begin
         ADiak_PCInj := FALSE;
         Solve_Diakoptics(DSS); // A-Diakoptics
 
-        DSS.ActiveCircuit.IsSolved := TRUE;
+        ckt.IsSolved := TRUE;
         ConvergedFlag := TRUE;
     end;
 {$ENDIF}
@@ -1272,16 +1266,15 @@ begin
     LastSolutionWasDirect := TRUE;
 end;
 
-function TSolutionObj.SolveCircuit: Integer;
+procedure TSolutionObj.SolveCircuit();
 begin
-    Result := 0;
     if LoadModel = ADMITTANCE then
         try
             SolveDirect     // no sense horsing around when it's all admittance
         except
             ON E: EEsolv32Problem do
             begin
-                DoSimpleMsg(DSS, 'From SolveSnap.SolveDirect: %s', [CRLF + E.Message + CheckYMatrixforZeroes(DSS)], 7075);
+                DoSimpleMsg(DSS, 'From SolveSnap.SolveDirect: %s', [CRLF + E.Message + CheckYMatrixforZeroes(ckt)], 7075);
                 raise ESolveError.Create('Aborting');
             end;
         end
@@ -1306,7 +1299,7 @@ begin
         except
             ON E: EEsolv32Problem do
             begin
-                DoSimpleMsg(DSS, 'From SolveSnap.DoPflowSolution: %s', [CRLF + E.Message + CheckYMatrixforZeroes(DSS)], 7074);
+                DoSimpleMsg(DSS, 'From SolveSnap.DoPflowSolution: %s', [CRLF + E.Message + CheckYMatrixforZeroes(ckt)], 7074);
                 raise ESolveError.Create('Aborting');
             end;
         end
@@ -1324,7 +1317,7 @@ begin
         Exit;
     end;
 
-    for i := 0 to DSS.ActiveCircuit.NumNodes do
+    for i := 0 to ckt.NumNodes do
         Currents[i] := 0;
 end;
 
@@ -1344,36 +1337,33 @@ var
     EndFlag: Boolean;
 begin
     // This rouitne adds the Lines to the incidence matrix vectors
-    with DSS.ActiveCircuit do
+    for elem in ckt.Lines do
     begin
-        for elem in Lines do
-        begin
-            if not elem.Enabled then
-                continue;
+        if not elem.Enabled then
+            continue;
 
-            ActiveIncCell[2] := 1;
-            inc(temp_counter);
-            setlength(Inc_Mat_Rows, temp_counter);
-            Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
-            for TermIdx := 1 to 2 do
+        ActiveIncCell[2] := 1;
+        inc(temp_counter);
+        setlength(Inc_Mat_Rows, temp_counter);
+        Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
+        for TermIdx := 1 to 2 do
+        begin
+            LineBus := elem.GetBus(TermIdx);
+            BusdotIdx := ansipos('.', LineBus);
+            if BusdotIdx <> 0 then
+                LineBus := Copy(LineBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
+            // Evaluates the position of the Bus in the array
+            ActiveIncCell[1] := 1;
+            EndFlag := TRUE;
+            while (ActiveIncCell[1] <= ckt.NumBuses) and (EndFlag) do
             begin
-                LineBus := elem.GetBus(TermIdx);
-                BusdotIdx := ansipos('.', LineBus);
-                if BusdotIdx <> 0 then
-                    LineBus := Copy(LineBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
-                // Evaluates the position of the Bus in the array
-                ActiveIncCell[1] := 1;
-                EndFlag := TRUE;
-                while (ActiveIncCell[1] <= NumBuses) and (EndFlag) do
-                begin
-                    if LineBus = BusList.NameOfIndex(ActiveIncCell[1]) then
-                        EndFlag := FALSE;
-                    ActiveIncCell[1] := ActiveIncCell[1] + 1;
-                end;
-                Upload2IncMatrix;
+                if LineBus = ckt.BusList.NameOfIndex(ActiveIncCell[1]) then
+                    EndFlag := FALSE;
+                ActiveIncCell[1] := ActiveIncCell[1] + 1;
             end;
-            inc(ActiveIncCell[0]);
+            Upload2IncMatrix();
         end;
+        inc(ActiveIncCell[0]);
     end;
 end;
 
@@ -1386,36 +1376,33 @@ var
     EndFlag: Boolean;
 begin
     // This routine adds the Transformers to the incidence matrix vectors
-    with DSS.ActiveCircuit do
+    for elem in ckt.Transformers do
     begin
-        for elem in DSS.ActiveCircuit.Transformers do
+        if not elem.Enabled then
+            continue;
+        
+        ActiveIncCell[2] := 1;
+        inc(temp_counter);
+        setlength(Inc_Mat_Rows, temp_counter);
+        Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
+        for TermIdx := 1 to elem.NumWindings do
         begin
-            if not elem.Enabled then
-                continue;
-            
-            ActiveIncCell[2] := 1;
-            inc(temp_counter);
-            setlength(Inc_Mat_Rows, temp_counter);
-            Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
-            for TermIdx := 1 to elem.NumWindings do
+            LineBus := elem.GetBus(TermIdx);
+            BusdotIdx := ansipos('.', LineBus);
+            if BusdotIdx <> 0 then
+                LineBus := Copy(LineBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
+            // Evaluates the position of the Bus in the array
+            ActiveIncCell[1] := 1;
+            EndFlag := TRUE;
+            while (ActiveIncCell[1] <= ckt.NumBuses) and (EndFlag) do
             begin
-                LineBus := elem.GetBus(TermIdx);
-                BusdotIdx := ansipos('.', LineBus);
-                if BusdotIdx <> 0 then
-                    LineBus := Copy(LineBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
-                // Evaluates the position of the Bus in the array
-                ActiveIncCell[1] := 1;
-                EndFlag := TRUE;
-                while (ActiveIncCell[1] <= NumBuses) and (EndFlag) do
-                begin
-                    if LineBus = BusList.NameOfIndex(ActiveIncCell[1]) then
-                        EndFlag := FALSE;
-                    ActiveIncCell[1] := ActiveIncCell[1] + 1;
-                end;
-                Upload2IncMatrix;
+                if LineBus = ckt.BusList.NameOfIndex(ActiveIncCell[1]) then
+                    EndFlag := FALSE;
+                ActiveIncCell[1] := ActiveIncCell[1] + 1;
             end;
-            inc(ActiveIncCell[0]);
+            Upload2IncMatrix();
         end;
+        inc(ActiveIncCell[0]);
     end;
 end;
 
@@ -1428,84 +1415,74 @@ var
     CapEndFlag: Boolean;
 begin
     // This routine adds the series capacitors to the incidence matrix vectors
-    with DSS.ActiveCircuit do
+    for elem in ckt.ShuntCapacitors do
     begin
-        for elem in ShuntCapacitors  do
-        begin
-            if not (elem.NumTerminals > 1) or not elem.Enabled then
-                continue;
+        if not (elem.NumTerminals > 1) or not elem.Enabled then
+            continue;
 
-            inc(temp_counter);
-            setlength(Inc_Mat_Rows, temp_counter);
-            Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
-            ActiveIncCell[2] := 1;
-            for CapTermIdx := 1 to 2 do
+        inc(temp_counter);
+        setlength(Inc_Mat_Rows, temp_counter);
+        Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
+        ActiveIncCell[2] := 1;
+        for CapTermIdx := 1 to 2 do
+        begin
+            CapBus := elem.GetBus(CapTermIdx);
+            BusdotIdx := ansipos('.', CapBus);
+            if BusdotIdx <> 0 then
+                CapBus := Copy(CapBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
+            // Evaluates the position of the Bus in the array
+            ActiveIncCell[1] := 1;
+            CapEndFlag := TRUE;
+            while (ActiveIncCell[1] <= ckt.NumBuses) and (CapEndFlag) do
             begin
-                CapBus := elem.GetBus(CapTermIdx);
-                BusdotIdx := ansipos('.', CapBus);
-                if BusdotIdx <> 0 then
-                    CapBus := Copy(CapBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
-                // Evaluates the position of the Bus in the array
-                ActiveIncCell[1] := 1;
-                CapEndFlag := TRUE;
-                while (ActiveIncCell[1] <= NumBuses) and (CapEndFlag) do
-                begin
-                    if CapBus = BusList.NameOfIndex(ActiveIncCell[1]) then
-                        CapEndFlag := FALSE;
-                    ActiveIncCell[1] := ActiveIncCell[1] + 1;
-                end;
-                Upload2IncMatrix;
+                if CapBus = ckt.BusList.NameOfIndex(ActiveIncCell[1]) then
+                    CapEndFlag := FALSE;
+                ActiveIncCell[1] := ActiveIncCell[1] + 1;
             end;
-            inc(ActiveIncCell[0]);
+            Upload2IncMatrix();
         end;
+        inc(ActiveIncCell[0]);
     end;
 end;
 
 procedure TSolutionObj.AddSeriesReac2IncMatrix;
 var
     RBus: String;
-    DevClassIndex: Integer;
     TermIdx,
     BusdotIdx: Integer;
     EndFlag: Boolean;
     elem: TDSSCktElement;
 begin
     // This routine adds the series reactors to the incidence matrix vectors
-    with DSS.ActiveCircuit do
+    for elem in DSS.ReactorClass do
     begin
-        DevClassIndex := DSS.ClassNames.Find('reactor');
-        DSS.LastClassReferenced := DevClassIndex;
-        DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
-        for elem in DSS.ActiveDSSClass do
+        RBus := elem.GetBus(2);
+        BusdotIdx := ansipos('.0', RBus);
+        if BusdotIdx = 0 then
         begin
-            RBus := elem.GetBus(2);
-            BusdotIdx := ansipos('.0', RBus);
-            if BusdotIdx = 0 then
+            inc(temp_counter);
+            setlength(Inc_Mat_Rows, temp_counter);
+            Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
+            ActiveIncCell[2] := 1;
+            for TermIdx := 1 to 2 do
             begin
-                inc(temp_counter);
-                setlength(Inc_Mat_Rows, temp_counter);
-                Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
-                ActiveIncCell[2] := 1;
-                for TermIdx := 1 to 2 do
+                RBus := elem.GetBus(TermIdx);
+                BusdotIdx := ansipos('.', RBus);
+                if BusdotIdx <> 0 then
+                    RBus := Copy(RBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
+                // Evaluates the position of the Bus in the array
+                ActiveIncCell[1] := 1;
+                EndFlag := TRUE;
+                while (ActiveIncCell[1] <= ckt.NumBuses) and (EndFlag) do
                 begin
-                    RBus := elem.GetBus(TermIdx);
-                    BusdotIdx := ansipos('.', RBus);
-                    if BusdotIdx <> 0 then
-                        RBus := Copy(RBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
-                    // Evaluates the position of the Bus in the array
-                    ActiveIncCell[1] := 1;
-                    EndFlag := TRUE;
-                    while (ActiveIncCell[1] <= NumBuses) and (EndFlag) do
-                    begin
-                        if RBus = BusList.NameOfIndex(ActiveIncCell[1]) then
-                            EndFlag := FALSE;
-                        ActiveIncCell[1] := ActiveIncCell[1] + 1;
-                    end;
-                    Upload2IncMatrix;
+                    if RBus = ckt.BusList.NameOfIndex(ActiveIncCell[1]) then
+                        EndFlag := FALSE;
+                    ActiveIncCell[1] := ActiveIncCell[1] + 1;
                 end;
+                Upload2IncMatrix();
             end;
-            inc(ActiveIncCell[0]);
         end;
+        inc(ActiveIncCell[0]);
     end;
 end;
 
@@ -1519,41 +1496,17 @@ begin
     else
         IncMat.reset;
 
-    if DSS.ActiveCircuit <> NIL then
-        with DSS.ActiveCircuit do
-        begin
-            temp_counter := 0;
-            ActiveIncCell[0] := 1;           // Activates row 1 of the incidence matrix
-            // Now we proceed to evaluate the link branches
-            AddLines2IncMatrix;      // Includes the Lines
-            AddXfmr2IncMatrix;       // Includes the Xfmrs
-            AddSeriesCap2IncMatrix;  // Includes Series Cap
-            AddSeriesReac2IncMatrix; // Includes Series Reactors
-            DSS.IncMat_Ordered := FALSE;
-        end;
-end;
+    if cktptr = NIL then //TODO: is this even possible?
+        Exit; 
 
-// This function returns the index of bus 1 with the Incidence
-// matrix for the given PDE
-function TSolutionObj.get_PDE_Bus1_Location(myPDE: String): Integer;
-var
-    i,
-    j: Integer;
-    myBUS: String;
-begin
-    with DSS.ActiveCircuit do
-    begin
-        SetElementActive(myPDE);
-        myBUS := ActiveCktElement.GetBus(2);
-        j := ansipos('.', myBus);
-        if j <> 0 then
-            myBUS := copy(myBUS, 0, j - 1);
-        for i := 0 to High(Inc_Mat_Cols) do
-            if Inc_Mat_Cols[i] = myBUS then
-                break;
-        Result := i;
-    end;
-
+    temp_counter := 0;
+    ActiveIncCell[0] := 1;           // Activates row 1 of the incidence matrix
+    // Now we proceed to evaluate the link branches
+    AddLines2IncMatrix;      // Includes the Lines
+    AddXfmr2IncMatrix;       // Includes the Xfmrs
+    AddSeriesCap2IncMatrix;  // Includes Series Cap
+    AddSeriesReac2IncMatrix; // Includes Series Reactors
+    DSS.IncMat_Ordered := FALSE;
 end;
 
 // This function delivers the Row index connected to the Column at the input
@@ -1627,151 +1580,146 @@ var
     nPDE: Integer;                           // PDElements index
 begin
     ZeroLevel := 0;
-    try
-        if DSS.ActiveCircuit <> NIL then
-        begin
-            topo := DSS.ActiveCircuit.GetTopology;
-            nLevels := 0;
-            nPDE := 0;
-            setlength(Inc_Mat_Cols, 0);
-            //Init the sparse matrix
-            if IncMat = NIL then
-                IncMat := Tsparse_matrix.Create
-            else
-                IncMat.reset;
 
-            ActiveIncCell[0] := -1;           // Activates row 1 of the incidence matrix
-            if Assigned(topo) then
+    if ckt = NIL then //TODO: is this even possible?
+        Exit; 
+    
+    topo := ckt.GetTopology;
+    nLevels := 0;
+    nPDE := 0;
+    setlength(Inc_Mat_Cols, 0);
+    //Init the sparse matrix
+    if IncMat = NIL then
+        IncMat := Tsparse_matrix.Create
+    else
+        IncMat.reset;
+
+    ActiveIncCell[0] := -1;           // Activates row 1 of the incidence matrix
+    if Assigned(topo) then
+    begin
+        PDElem := topo.First();
+        while Assigned(PDElem) do
+        begin
+            nLevels := topo.Level;
+            PDE_Name := PDElem.FullName;
+            // Gets the buses to which the PDE is connected
+            ckt.SetElementActive(PDE_Name);
+            SetLength(PDE_Buses, ckt.ActiveCktElement.Nterms);
+            for i := 1 to ckt.ActiveCktElement.Nterms do
             begin
-                PDElem := topo.First;
-                while Assigned(PDElem) do
-                begin
-                    nLevels := topo.Level;
-                    PDE_Name := PDElem.FullName;
-                    // Gets the buses to which the PDE is connected
-                    with DSS.ActiveCircuit do
-                    begin
-                        DSS.ActiveCircuit.SetElementActive(PDE_Name);
-                        SetLength(PDE_Buses, ActiveCktElement.Nterms);
-                        for i := 1 to ActiveCktElement.Nterms do
-                        begin
-                            PDE_Buses[i - 1] := ActiveCktElement.GetBus(i);
-                            BusdotIdx := ansipos('.', PDE_Buses[i - 1]);
-                            if BusdotIdx <> 0 then
-                                PDE_Buses[i - 1] := Copy(PDE_Buses[i - 1], 0, BusdotIdx - 1);  // removes the dot from the Bus Name
-                        end;
-                        if length(Inc_Mat_Cols) = 0 then  //First iteration so the Cols array will be loaded
-                        begin
-                            setlength(Inc_Mat_Cols, 1);
-                            setlength(Inc_Mat_Levels, 1);
-                            Inc_Mat_Cols[0] := PDE_Buses[0];
-                            Inc_Mat_levels[0] := nLevels;
-                        end
-                        else                               //The Cols array is populated with something
-                        begin
-                            inc(nPDE);
-                            setlength(Inc_Mat_Rows, nPDE);
-                            Inc_Mat_Rows[nPDE - 1] := PDE_Name;
-                            for j := 0 to ActiveCktElement.Nterms - 1 do
-                            begin
-                                row := ActiveIncCell[0];                 //Sets the row
-                                BusdotIdx := -1;               // Flag to not create a new variable
-                                for i := 0 to length(Inc_Mat_Cols) - 1 do   // Checks if the bus already exists in the Cols array
-                                    if Inc_Mat_Cols[i] = PDE_Buses[j] then
-                                        BusdotIdx := i;
-                                if BusdotIdx >= 0 then
-                                    col := BusdotIdx   //Sets the Col
-                                else
-                                begin
-                                    setlength(Inc_Mat_Cols, length(Inc_Mat_Cols) + 1);
-                                    setlength(Inc_Mat_levels, length(Inc_Mat_levels) + 1);
-                                    Inc_Mat_Cols[length(Inc_Mat_Cols) - 1] := PDE_Buses[j];
-                                    Inc_Mat_levels[length(Inc_Mat_Cols) - 1] := nLevels;
-                                    col := length(Inc_Mat_Cols) - 1; //Sets the Col
-                                end;
-                                if j = 0 then
-                                    val := 1 //Sets the value
-                                else
-                                    val := -1;
-                                IncMat.insert(row, col, val);
-                            end;
-                        end;
-                    end;
-                    inc(ActiveIncCell[0]);
-                    PDElem := topo.GoForward;
-                end;
+                PDE_Buses[i - 1] := ckt.ActiveCktElement.GetBus(i);
+                BusdotIdx := ansipos('.', PDE_Buses[i - 1]);
+                if BusdotIdx <> 0 then
+                    PDE_Buses[i - 1] := Copy(PDE_Buses[i - 1], 0, BusdotIdx - 1);  // removes the dot from the Bus Name
             end;
-            // Now the levels array needs to be reprocessed to get the 0 level buses,
-            // they are on a continuous path from the feeder head to the feeder end
-            BusdotIdx := MaxIntValue(Inc_Mat_levels);
-            for i := 0 to length(Inc_Mat_levels) do
-                if Inc_Mat_levels[i] = BusdotIdx then
-                    nLevels := i;
-            for j := 1 to BusdotIdx - 1 do
+            if length(Inc_Mat_Cols) = 0 then  //First iteration so the Cols array will be loaded
             begin
-                for i := 0 to nLevels do
-                begin
-                    if Inc_Mat_levels[i] = j then
-                        ZeroLevel := i;
-                end;
-                Inc_Mat_levels[ZeroLevel] := 0;
-            end;
-            // **********Normalize the branches of the level between zero level buses********
-            BusdotIdx := 0;
-            j := 0;
-            ZeroLevel := 0;
-            SetLength(Temp_Array, 0);
-            for i := 0 to high(Inc_Mat_levels) do
+                setlength(Inc_Mat_Cols, 1);
+                setlength(Inc_Mat_Levels, 1);
+                Inc_Mat_Cols[0] := PDE_Buses[0];
+                Inc_Mat_levels[0] := nLevels;
+            end
+            else                               //The Cols array is populated with something
             begin
-                if (Inc_Mat_levels[i] = 0) then
+                inc(nPDE);
+                setlength(Inc_Mat_Rows, nPDE);
+                Inc_Mat_Rows[nPDE - 1] := PDE_Name;
+                for j := 0 to ckt.ActiveCktElement.Nterms - 1 do
                 begin
-                    if length(Temp_Array) > 0 then    // The array subset is large enough for
-                    begin                             //Normalizing it
-                        BusdotIdx := MinIntValue(Temp_Array) - 1;
-                        for j2 := ZeroLevel to (length(Temp_Array) + ZeroLevel - 1) do
-                            Inc_Mat_levels[j2] := Inc_Mat_levels[j2] - BusdotIdx;
-                        SetLength(Temp_Array, 0);
-                    end;
-                    ZeroLevel := i + 1;
-                end
-                else
-                begin
-                    setlength(Temp_Array, (length(Temp_Array) + 1));
-                    Temp_Array[High(Temp_Array)] := Inc_Mat_levels[i];
-                end;
-            end;
-            // ************Verifies if something else was missing at the end*****************
-            if (ZeroLevel < (length(Inc_Mat_levels) - 1)) then
-            begin
-                BusdotIdx := 0;                                                // Counter for defining the level
-                j := 0;                                                // Stores the previous value (shift reg)
-                for j2 := ZeroLevel to High(Inc_Mat_levels) do
-                begin
-                    if Inc_Mat_levels[j2] >= j then
-                        inc(BusdotIdx)
+                    row := ActiveIncCell[0];                 //Sets the row
+                    BusdotIdx := -1;               // Flag to not create a new variable
+                    for i := 0 to length(Inc_Mat_Cols) - 1 do   // Checks if the bus already exists in the Cols array
+                        if Inc_Mat_Cols[i] = PDE_Buses[j] then
+                            BusdotIdx := i;
+                    if BusdotIdx >= 0 then
+                        col := BusdotIdx   //Sets the Col
                     else
                     begin
-                        ActiveIncCell[1] := get_IncMatrix_Row(j2);                //Looks for the Column in the IncMatrix
-                        if ActiveIncCell[1] < 0 then                                //Checks if the col was located (just in case)
-                            BusdotIdx := 1
-                        else
-                        begin
-                            ActiveIncCell[2] := get_IncMatrix_Col(ActiveIncCell[1]);  //Looks for the row in the IncMatrix
-                            if Active_Cols[0] = j2 then
-                                BusdotIdx := Inc_Mat_levels[Active_Cols[1]] + 1
-                            else
-                                BusdotIdx := Inc_Mat_levels[ActiveIncCell[2]] + 1;
-                        end;
+                        setlength(Inc_Mat_Cols, length(Inc_Mat_Cols) + 1);
+                        setlength(Inc_Mat_levels, length(Inc_Mat_levels) + 1);
+                        Inc_Mat_Cols[length(Inc_Mat_Cols) - 1] := PDE_Buses[j];
+                        Inc_Mat_levels[length(Inc_Mat_Cols) - 1] := nLevels;
+                        col := length(Inc_Mat_Cols) - 1; //Sets the Col
                     end;
-                    j := Inc_Mat_levels[j2];
-                    Inc_Mat_levels[j2] := BusdotIdx;
+                    if j = 0 then
+                        val := 1 //Sets the value
+                    else
+                        val := -1;
+                    IncMat.insert(row, col, val);
                 end;
             end;
-            DSS.IncMat_Ordered := TRUE;
+            inc(ActiveIncCell[0]);
+            PDElem := topo.GoForward();
         end;
-    finally
-
     end;
+    // Now the levels array needs to be reprocessed to get the 0 level buses,
+    // they are on a continuous path from the feeder head to the feeder end
+    BusdotIdx := MaxIntValue(Inc_Mat_levels);
+    for i := 0 to length(Inc_Mat_levels) do
+        if Inc_Mat_levels[i] = BusdotIdx then
+            nLevels := i;
+    for j := 1 to BusdotIdx - 1 do
+    begin
+        for i := 0 to nLevels do
+        begin
+            if Inc_Mat_levels[i] = j then
+                ZeroLevel := i;
+        end;
+        Inc_Mat_levels[ZeroLevel] := 0;
+    end;
+    // **********Normalize the branches of the level between zero level buses********
+    BusdotIdx := 0;
+    j := 0;
+    ZeroLevel := 0;
+    SetLength(Temp_Array, 0);
+    for i := 0 to high(Inc_Mat_levels) do
+    begin
+        if (Inc_Mat_levels[i] = 0) then
+        begin
+            if length(Temp_Array) > 0 then // The array subset is large enough for
+            begin //Normalizing it
+                BusdotIdx := MinIntValue(Temp_Array) - 1;
+                for j2 := ZeroLevel to (length(Temp_Array) + ZeroLevel - 1) do
+                    Inc_Mat_levels[j2] := Inc_Mat_levels[j2] - BusdotIdx;
+                SetLength(Temp_Array, 0);
+            end;
+            ZeroLevel := i + 1;
+        end
+        else
+        begin
+            setlength(Temp_Array, (length(Temp_Array) + 1));
+            Temp_Array[High(Temp_Array)] := Inc_Mat_levels[i];
+        end;
+    end;
+    // ************Verifies if something else was missing at the end*****************
+    if (ZeroLevel < (length(Inc_Mat_levels) - 1)) then
+    begin
+        BusdotIdx := 0; // Counter for defining the level
+        j := 0; // Stores the previous value (shift reg)
+        for j2 := ZeroLevel to High(Inc_Mat_levels) do
+        begin
+            if Inc_Mat_levels[j2] >= j then
+                inc(BusdotIdx)
+            else
+            begin
+                ActiveIncCell[1] := get_IncMatrix_Row(j2); //Looks for the Column in the IncMatrix
+                if ActiveIncCell[1] < 0 then //Checks if the col was located (just in case)
+                    BusdotIdx := 1
+                else
+                begin
+                    ActiveIncCell[2] := get_IncMatrix_Col(ActiveIncCell[1]); //Looks for the row in the IncMatrix
+                    if Active_Cols[0] = j2 then
+                        BusdotIdx := Inc_Mat_levels[Active_Cols[1]] + 1
+                    else
+                        BusdotIdx := Inc_Mat_levels[ActiveIncCell[2]] + 1;
+                end;
+            end;
+            j := Inc_Mat_levels[j2];
+            Inc_Mat_levels[j2] := BusdotIdx;
+        end;
+    end;
+
+    DSS.IncMat_Ordered := TRUE;
 end;
 
 // This routine evaluates if the current location is the best or if its
@@ -1790,136 +1738,127 @@ var
     pElem: TDSSCktElement;
     valid, onGFM: Boolean;
 begin
-    with DSS.ActiveCircuit do
+    for pElem in ckt.PCElements do
     begin
-        for pElem in PCElements do
-        begin
-            onGFM := ((pElem is TInvBasedPCE) and (TInvBasedPCE(pElem).GFM_Mode));
-            valid := (not (GFMOnly xor onGFM)) and pElem.Enabled;
-            //TODO: depending on the system size, a dedicated list could be faster/better
-            // e.g. could check the lists from Circuit directly instead of looping through all elements
-            if valid then
-                pElem.InjCurrents(); // uses NodeRef to add current into InjCurr Array;
-        end;
-    end
+        onGFM := ((pElem is TInvBasedPCE) and (TInvBasedPCE(pElem).GFM_Mode));
+        valid := (not (GFMOnly xor onGFM)) and pElem.Enabled;
+        //TODO: depending on the system size, a dedicated list could be faster/better
+        // e.g. could check the lists from Circuit directly instead of looping through all elements
+        if valid then
+            pElem.InjCurrents(); // uses NodeRef to add current into InjCurr Array;
+    end;
 end;
 
-procedure TSolutionObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+procedure TSolutionObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
 var
     i, j: Integer;
 
     // for dumping the matrix in compressed columns
     p: Longword;
-    hY: NativeUInt;
     nBus, nNZ: Longword;
     ColPtr, RowIdx: array of Longword;
     cVals: array of Complex;
+    harm: Double;
 begin
     FSWriteln(F, '! OPTIONS');
 
     // Inherited DumpProperties(F,Complete);
 
-    FSWriteln(F, '! NumNodes = ', IntToStr(DSS.ActiveCircuit.NumNodes));
+    FSWriteln(F, '! NumNodes = ', IntToStr(ckt.NumNodes));
 
-    FSWriteln(F, 'Set Mode=', DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)));
-    FSWriteln(F, 'Set ControlMode=', DSS.ControlModeEnum.OrdinalToString(DSS.ActiveCircuit.Solution.Controlmode));
-    FSWriteln(F, 'Set Random=', DSS.RandomModeEnum.OrdinalToString(DSS.ActiveCircuit.Solution.RandomType));
+    FSWriteln(F, 'Set Mode=', DSS.SolveModeEnum.OrdinalToString(ord(mode)));
+    FSWriteln(F, 'Set ControlMode=', DSS.ControlModeEnum.OrdinalToString(Controlmode));
+    FSWriteln(F, 'Set Random=', DSS.RandomModeEnum.OrdinalToString(RandomType));
     FSWriteln(F, 'Set hour=', IntToStr(DynaVars.intHour));
     FSWriteln(F, 'Set sec=', Format('%-g', [DynaVars.t]));
     FSWriteln(F, 'Set year=', IntToStr(Year));
     FSWriteln(F, 'Set frequency=', Format('%-g', [Frequency]));
     FSWriteln(F, 'Set stepsize=', Format('%-g', [DynaVars.h]));
     FSWriteln(F, 'Set number=', IntToStr(NumberOfTimes));
-    FSWriteln(F, 'Set circuit=', DSS.ActiveCircuit.Name);
+    FSWriteln(F, 'Set circuit=', ckt.Name);
     FSWriteln(F, 'Set editor=', DefaultEditor);
     FSWriteln(F, 'Set tolerance=', Format('%-g', [ConvergenceTolerance]));
     FSWriteln(F, 'Set maxiterations=', IntToStr(MaxIterations));
     FSWriteln(F, 'Set miniterations=', IntToStr(MinIterations));
-    FSWriteln(F, 'Set loadmodel=', DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.solution.LoadModel));
+    FSWriteln(F, 'Set loadmodel=', DSS.DefaultLoadModelEnum.OrdinalToString(LoadModel));
 
-    FSWriteln(F, 'Set loadmult=', Format('%-g', [DSS.ActiveCircuit.LoadMultiplier]));
-    FSWriteln(F, 'Set Normvminpu=', Format('%-g', [DSS.ActiveCircuit.NormalMinVolts]));
-    FSWriteln(F, 'Set Normvmaxpu=', Format('%-g', [DSS.ActiveCircuit.NormalMaxVolts]));
-    FSWriteln(F, 'Set Emergvminpu=', Format('%-g', [DSS.ActiveCircuit.EmergMinVolts]));
-    FSWriteln(F, 'Set Emergvmaxpu=', Format('%-g', [DSS.ActiveCircuit.EmergMaxVolts]));
-    FSWriteln(F, 'Set %mean=', Format('%-.4g', [DSS.ActiveCircuit.DefaultDailyShapeObj.Mean * 100.0]));
-    FSWriteln(F, 'Set %stddev=', Format('%-.4g', [DSS.ActiveCircuit.DefaultDailyShapeObj.StdDev * 100.0]));
-    FSWriteln(F, 'Set LDCurve=', DSS.ActiveCircuit.LoadDurCurve);  // Load Duration Curve
-    FSWriteln(F, 'Set %growth=', Format('%-.4g', [((DSS.ActiveCircuit.DefaultGrowthRate - 1.0) * 100.0)]));  // default growth rate
-    with DSS.ActiveCircuit.AutoAddObj do
-    begin
-        FSWriteln(F, 'Set genkw=', Format('%-g', [GenkW]));
-        FSWriteln(F, 'Set genpf=', Format('%-g', [GenPF]));
-        FSWriteln(F, 'Set capkvar=', Format('%-g', [Capkvar]));
-        FSWrite(F, 'Set addtype=');
-        case Addtype of
-            GENADD:
-                FSWriteln(F, 'generator');
-            CAPADD:
-                FSWriteln(F, 'capacitor');
-        end;
+    FSWriteln(F, 'Set loadmult=', Format('%-g', [ckt.LoadMultiplier]));
+    FSWriteln(F, 'Set Normvminpu=', Format('%-g', [ckt.NormalMinVolts]));
+    FSWriteln(F, 'Set Normvmaxpu=', Format('%-g', [ckt.NormalMaxVolts]));
+    FSWriteln(F, 'Set Emergvminpu=', Format('%-g', [ckt.EmergMinVolts]));
+    FSWriteln(F, 'Set Emergvmaxpu=', Format('%-g', [ckt.EmergMaxVolts]));
+    FSWriteln(F, 'Set %mean=', Format('%-.4g', [ckt.DefaultDailyShapeObj.Mean * 100.0]));
+    FSWriteln(F, 'Set %stddev=', Format('%-.4g', [ckt.DefaultDailyShapeObj.StdDev * 100.0]));
+    FSWriteln(F, 'Set LDCurve=', StrUtils.IfThen(ckt.LoadDurCurveObj <> NIL, ckt.LoadDurCurveObj.Name, ''));  // Load Duration Curve
+    FSWriteln(F, 'Set %growth=', Format('%-.4g', [((ckt.DefaultGrowthRate - 1.0) * 100.0)]));  // default growth rate
+
+    FSWriteln(F, 'Set genkw=', Format('%-g', [ckt.AutoAddObj.GenkW]));
+    FSWriteln(F, 'Set genpf=', Format('%-g', [ckt.AutoAddObj.GenPF]));
+    FSWriteln(F, 'Set capkvar=', Format('%-g', [ckt.AutoAddObj.Capkvar]));
+    FSWrite(F, 'Set addtype=');
+    case ckt.AutoAddObj.Addtype of
+        GENADD:
+            FSWriteln(F, 'generator');
+        CAPADD:
+            FSWriteln(F, 'capacitor');
     end;
     FSWrite(F, 'Set allowduplicates=');
-    FSWriteln(F, StrYorN(DSS.ActiveCircuit.DuplicatesAllowed));
+    FSWriteln(F, StrYorN(ckt.DuplicatesAllowed));
     FSWrite(F, 'Set zonelock=');
-    FSWriteln(F, StrYorN(DSS.ActiveCircuit.ZonesLocked));
-    FSWriteln(F, Format('Set ueweight=%8.2f', [DSS.ActiveCircuit.UEWeight]));
-    FSWriteln(F, Format('Set lossweight=%8.2f', [DSS.ActiveCircuit.LossWeight]));
-    FSWriteln(F, 'Set ueregs=', IntArraytoString(DSS.ActiveCircuit.UEregs, DSS.ActiveCircuit.NumUERegs));
-    FSWriteln(F, 'Set lossregs=', IntArraytoString(DSS.ActiveCircuit.Lossregs, DSS.ActiveCircuit.NumLossRegs));
+    FSWriteln(F, StrYorN(ckt.ZonesLocked));
+    FSWriteln(F, Format('Set ueweight=%8.2f', [ckt.UEWeight]));
+    FSWriteln(F, Format('Set lossweight=%8.2f', [ckt.LossWeight]));
+    FSWriteln(F, 'Set ueregs=', IntArraytoString(ckt.UEregs));
+    FSWriteln(F, 'Set lossregs=', IntArraytoString(ckt.Lossregs));
     FSWrite(F, 'Set voltagebases=(');  //  changes the default voltage base rules
-    with DSS.ActiveCircuit do
-        for i := 0 to High(LegalVoltageBases) do
-        begin
-            FSWrite(F, Format('%10.2f', [LegalVoltageBases[i]]));
-        end;
+    for i := 0 to High(ckt.LegalVoltageBases) do
+    begin
+        FSWrite(F, Format('%10.2f', [ckt.LegalVoltageBases[i]]));
+    end;
     FSWriteln(F, ')');
     FSWriteln(F, 'Set algorithm=' + DSS.SolveAlgEnum.OrdinalToString(Algorithm));
     FSWrite(F, 'Set Trapezoidal=');
-    FSWriteln(F, StrYorN(DSS.ActiveCircuit.TrapezoidalIntegration));
-    FSWriteln(F, 'Set genmult=', Format('%-g', [DSS.ActiveCircuit.GenMultiplier]));
+    FSWriteln(F, StrYorN(ckt.TrapezoidalIntegration));
+    FSWriteln(F, 'Set genmult=', Format('%-g', [ckt.GenMultiplier]));
 
-    FSWriteln(F, 'Set Basefrequency=', Format('%-g', [DSS.ActiveCircuit.Fundamental]));
+    FSWriteln(F, 'Set Basefrequency=', Format('%-g', [ckt.Fundamental]));
 
     FSWrite(F, 'Set harmonics=(');  //  changes the default voltage base rules
     if DoAllHarmonics then
         FSWrite(F, 'ALL')
     else
-        for i := 1 to HarmonicListSize do
-            FSWrite(F, Format('%-g, ', [HarmonicList^[i]]));
+        for harm in HarmonicList do
+            FSWrite(F, Format('%-g, ', [harm]));
     FSWriteln(F, ')');
     FSWriteln(F, 'Set maxcontroliter=', IntToStr(MaxControlIterations));
     FSWriteln(F);
 
     if Complete then
-        with DSS.ActiveCircuit do
-        begin
-            hY := Solution.hY;
+    begin
+        // get the compressed columns out of KLU
+        FactorSparseMatrix(hY); // no extra work if already done
+        GetNNZ(hY, @nNZ);
+        GetSize(hY, @nBus);
+        SetLength(ColPtr, nBus + 1);
+        SetLength(RowIdx, nNZ);
+        SetLength(cVals, nNZ);
+        GetCompressedMatrix(hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
 
-            // get the compressed columns out of KLU
-            FactorSparseMatrix(hY); // no extra work if already done
-            GetNNZ(hY, @nNZ);
-            GetSize(hY, @nBus);
-            SetLength(ColPtr, nBus + 1);
-            SetLength(RowIdx, nNZ);
-            SetLength(cVals, nNZ);
-            GetCompressedMatrix(hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
+        FSWriteln(F, 'System Y Matrix (Lower Triangle by Columns)');
+        FSWriteln(F);
+        FSWriteln(F, '  Row  Col               G               B');
+        FSWriteln(F);
 
-            FSWriteln(F, 'System Y Matrix (Lower Triangle by Columns)');
-            FSWriteln(F);
-            FSWriteln(F, '  Row  Col               G               B');
-            FSWriteln(F);
-
-            // traverse the compressed column format
-            for j := 0 to nBus - 1 do
-            begin /// the zero-based column
-                for p := ColPtr[j] to ColPtr[j + 1] - 1 do
-                begin
-                    i := RowIdx[p];  // the zero-based row
-                    FSWriteln(F, Format('[%4d,%4d] = %12.5g + j%12.5g', [i + 1, j + 1, cVals[p].re, cVals[p].im]));
-                end;
+        // traverse the compressed column format
+        for j := 0 to nBus - 1 do
+        begin /// the zero-based column
+            for p := ColPtr[j] to ColPtr[j + 1] - 1 do
+            begin
+                i := RowIdx[p];  // the zero-based row
+                FSWriteln(F, Format('[%4d,%4d] = %12.5g + j%12.5g', [i + 1, j + 1, cVals[p].re, cVals[p].im]));
             end;
         end;
+    end;
 end;
 
 function TSolutionObj.VDiff(i, j: Integer): Complex;
@@ -1932,55 +1871,41 @@ begin
         Result := NodeV[i] - NodeV[j];  // V1-V2
 end;
 
-procedure TSolutionObj.WriteConvergenceReport(const Fname: String);
+procedure TSolutionObj.WriteConvergenceReport(F: TStream);
 var
     i: Integer;
-    F: TFileStream = nil;
     sout: String;
 begin
-    try
-        F := TBufferedFileStream.Create(Fname, fmCreate);
+    FSWriteln(F);
+    FSWriteln(F, '-------------------');
+    FSWriteln(F, 'Convergence Report:');
+    FSWriteln(F, '-------------------');
+    FSWriteln(F, '"Bus.Node", "Error", "|V|","Vbase"');
+    for i := 1 to ckt.NumNodes do
+    begin
+        WriteStr(sout, 
+            '"', pad((ckt.BusList.NameOfIndex(ckt.MapNodeToBus[i].Busref) + '.' + IntToStr(ckt.MapNodeToBus[i].NodeNum) + '"'), 18),
+            ', ', ErrorSaved[i]: 10: 5,
+            ', ', VmagSaved[i]: 14,
+            ', ', NodeVbase[i]: 14
+        );
+        FSWrite(F, sout);
 
         FSWriteln(F);
-        FSWriteln(F, '-------------------');
-        FSWriteln(F, 'Convergence Report:');
-        FSWriteln(F, '-------------------');
-        FSWriteln(F, '"Bus.Node", "Error", "|V|","Vbase"');
-        with DSS.ActiveCircuit do
-            for i := 1 to NumNodes do
-                with MapNodeToBus[i] do
-                begin
-                    WriteStr(sout, 
-                        '"', pad((BusList.NameOfIndex(Busref) + '.' + IntToStr(NodeNum) + '"'), 18),
-                        ', ', ErrorSaved[i]: 10: 5,
-                        ', ', VmagSaved[i]: 14,
-                        ', ', NodeVbase[i]: 14
-                    );
-                    FSWrite(F, sout);
-                    FSWriteln(F);
-                end;
-
-        FSWriteln(F);
-        WriteStr(sout, 'Max Error = ', MaxError: 10: 5);
-        FSWriteln(F, sout);
-
-    finally
-        FreeAndNil(F);
-        FireOffEditor(DSS, Fname);
-
     end;
+
+    FSWriteln(F);
+    WriteStr(sout, 'Max Error = ', MaxError: 10: 5);
+    FSWriteln(F, sout);
 end;
 
 procedure TSolutionObj.SumAllCurrents;
 var
     pelem: TDSSCktElement;
 begin
-    with DSS.ActiveCircuit do
+    for pelem in ckt.CktElements do
     begin
-        for pelem in CktElements do
-        begin
-            pelem.SumCurrents;   // sum terminal currents into system Currents Array
-        end;
+        pelem.SumCurrents;   // sum terminal currents into system Currents Array
     end;
 end;
 
@@ -1989,34 +1914,30 @@ var
     XHour: Integer;
     XSec: Double;
 begin
-    with DSS.ActiveCircuit do
-    begin
-        case ControlMode of
-
-            CTRLSTATIC:
-            begin  //  execute the nearest set of control actions but leaves time where it is
-                if ControlQueue.IsEmpty then
-                    ControlActionsDone := TRUE
-                else
-                    ControlQueue.DoNearestActions(xHour, XSec); // ignore time advancement
-            end;
-            EVENTDRIVEN:
-            begin  //  execute the nearest set of control actions and advance time to that time
-                 // **** Need to update this to set the "Intervalhrs" variable for EnergyMeters for Event-Driven Simulation ****
-                if not ControlQueue.DoNearestActions(DynaVars.intHour, DynaVars.t) // these arguments are var type
-                then
-                    ControlActionsDone := TRUE;// Advances time to the next event
-            end;
-            TIMEDRIVEN:
-            begin   // Do all actions having an action time <= specified time
-                if not ControlQueue.DoActions(DynaVars.intHour, DynaVars.t) then
-                    ControlActionsDone := TRUE;
-            end;
-            MULTIRATE:
-            begin  //  execute the nearest set of control actions but leaves time where it is
-                if not ControlQueue.DoMultiRate(DynaVars.intHour, DynaVars.t) then
-                    ControlActionsDone := TRUE;
-            end;
+    case ControlMode of
+        CTRLSTATIC:
+        begin  //  execute the nearest set of control actions but leaves time where it is
+            if ckt.ControlQueue.IsEmpty then
+                ControlActionsDone := TRUE
+            else
+                ckt.ControlQueue.DoNearestActions(xHour, XSec); // ignore time advancement
+        end;
+        EVENTDRIVEN:
+        begin  //  execute the nearest set of control actions and advance time to that time
+                // **** Need to update this to set the "Intervalhrs" variable for EnergyMeters for Event-Driven Simulation ****
+            if not ckt.ControlQueue.DoNearestActions(DynaVars.intHour, DynaVars.t) // these arguments are var type
+            then
+                ControlActionsDone := TRUE;// Advances time to the next event
+        end;
+        TIMEDRIVEN:
+        begin   // Do all actions having an action time <= specified time
+            if not ckt.ControlQueue.DoActions(DynaVars.intHour, DynaVars.t) then
+                ControlActionsDone := TRUE;
+        end;
+        MULTIRATE:
+        begin  //  execute the nearest set of control actions but leaves time where it is
+            if not ckt.ControlQueue.DoMultiRate(DynaVars.intHour, DynaVars.t) then
+                ControlActionsDone := TRUE;
         end;
     end;
 end;
@@ -2025,23 +1946,20 @@ procedure TSolutionObj.SampleControlDevices;
 var
     ControlDevice: TControlElem;
 begin
-    with DSS.ActiveCircuit do
-    begin
-        ControlDevice := NIL;
-        try
-            // Sample all controls and set action times in control Queue
-            for ControlDevice in DSSControls do
-            begin
-                if ControlDevice.Enabled then
-                    ControlDevice.Sample;
-            end;
+    ControlDevice := NIL;
+    try
+        // Sample all controls and set action times in control Queue
+        for ControlDevice in ckt.DSSControls do
+        begin
+            if ControlDevice.Enabled then
+                ControlDevice.Sample();
+        end;
 
-        except
-            On E: Exception do
-            begin
-                DoSimpleMsg(DSS, 'Error Sampling Control Device "%s". Error = %s', [ControlDevice.FullName, E.message], 484);
-                raise EControlProblem.Create('Solution aborted.');
-            end;
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg(DSS, 'Error Sampling Control Device "%s". Error = %s', [ControlDevice.FullName, E.message], 484);
+            raise EControlProblem.Create('Solution aborted.');
         end;
     end;
 end;
@@ -2052,11 +1970,11 @@ begin
         ControlActionsDone := TRUE
     else
     begin
-        SampleControlDevices;
-        DoControlActions;
+        SampleControlDevices();
+        DoControlActions();
 
         // This variable lets control devices know the bus list has changed
-        DSS.ActiveCircuit.Control_BusNameRedefined := FALSE;  // Reset until next change
+        ckt.Control_BusNameRedefined := FALSE;  // Reset until next change
     end;
 end;
 
@@ -2065,7 +1983,7 @@ begin
     DynaVars.intHour := 0;
     DynaVars.t := 0.0;
     Update_dblHour;
-    DSS.ActiveCircuit.TrapezoidalIntegration := FALSE;
+    ckt.TrapezoidalIntegration := FALSE;
 
     if not OK_for_Dynamics(Value) then
         Exit;
@@ -2149,19 +2067,19 @@ begin
         TSolveMode.LOADDURATION1:
         begin
             DynaVars.h := 3600.0;
-            DSS.ActiveCircuit.TrapezoidalIntegration := TRUE;
+            ckt.TrapezoidalIntegration := TRUE;
             SampleTheMeters := TRUE;
         end;
         TSolveMode.LOADDURATION2:
         begin
             DynaVars.intHour := 1;
-            DSS.ActiveCircuit.TrapezoidalIntegration := TRUE;
+            ckt.TrapezoidalIntegration := TRUE;
             SampleTheMeters := TRUE;
         end;
         TSolveMode.AUTOADDFLAG:
         begin
             IntervalHrs := 1.0;
-            DSS.ActiveCircuit.AutoAddObj.ModeChanged := TRUE;
+            ckt.AutoAddObj.ModeChanged := TRUE;
         end;
         TSolveMode.HARMONICMODE:
         begin
@@ -2193,22 +2111,29 @@ procedure TSolutionObj.AddInAuxCurrents(SolveType: Integer);
 begin
     // For Now, only AutoAdd Obj uses this
     if Dynavars.SolutionMode = TSolveMode.AUTOADDFLAG then
-        DSS.ActiveCircuit.AutoAddObj.AddCurrents(SolveType);
+        ckt.AutoAddObj.AddCurrents(SolveType);
 end;
 
 procedure TSolutionObj.Check_Fault_Status;
 var
-    pFault: TFaultOBj;
+    pFault: TFaultObj;
 begin
-    with DSS.ActiveCircuit do
+    for pFault in ckt.Faults do
     begin
-        pFault := TFaultObj(Faults.First);
-        while pFault <> NIL do
-        begin
-            pFault.CheckStatus(ControlMode);
-            pFault := TFaultObj(Faults.Next);
-        end;
+        pFault.CheckStatus(ControlMode);
+    end;
+end;
 
+procedure calcInitialMachineStates(DSS: TDSSContext);
+var
+    pcelem: TPCElement;
+begin
+    // Do All PC Elements
+    // If state variables not defined for a PC class, does nothing
+    for pcelem in DSS.ActiveCircuit.PCElements do
+    begin
+        if pcelem.Enabled then
+            pcelem.InitStateVars();
     end;
 end;
 
@@ -2229,13 +2154,13 @@ begin
 
     // When we go in and out of Dynamics mode, we have to do some special things
     if IsDynamicModel and not ValueIsDynamic then
-        InvalidateAllPCELEMENTS(DSS);  // Force Recomp of YPrims when we leave Dynamics mode
+        ckt.InvalidateAllPCELEMENTS();  // Force Recomp of YPrims when we leave Dynamics mode
 
     if not IsDynamicModel and ValueIsDynamic then
     begin   // see if conditions right for going into dynamics
 
-        if DSS.ActiveCircuit.IsSolved then
-            CalcInitialMachineStates(DSS)   // set state variables for machines (loads and generators)
+        if ckt.IsSolved then
+            calcInitialMachineStates(DSS)   // set state variables for machines (loads and generators)
         else
         begin
             // Raise Error Message if not solved
@@ -2255,14 +2180,14 @@ begin
 
     if IsHarmonicModel and not ((Value = TSolveMode.HARMONICMODE) or (Value = TSolveMode.HARMONICMODET)) then
     begin
-        InvalidateAllPCELEMENTS(DSS);  // Force Recomp of YPrims when we leave Harmonics mode
-        Frequency := DSS.ActiveCircuit.Fundamental;   // Resets everything to norm
+        ckt.InvalidateAllPCELEMENTS();  // Force Recomp of YPrims when we leave Harmonics mode
+        Frequency := ckt.Fundamental;   // Resets everything to norm
     end;
 
     if not IsHarmonicModel and ((Value = TSolveMode.HARMONICMODE) or (Value = TSolveMode.HARMONICMODET)) then
     begin   // see if conditions right for going into Harmonics
 
-        if (DSS.ActiveCircuit.IsSolved) and (Frequency = DSS.ActiveCircuit.Fundamental) then
+        if (ckt.IsSolved) and (Frequency = ckt.Fundamental) then
         begin
             if not InitializeForHarmonics(DSS)   // set state variables for machines (loads and generators) and sources
             then
@@ -2291,11 +2216,11 @@ begin
     end;
 
     FFrequency := Value;
-    if DSS.ActiveCircuit <> NIL then
-        Harmonic := FFrequency / DSS.ActiveCircuit.Fundamental;  // Make Sure Harmonic stays in synch
+    if ckt <> NIL then
+        Harmonic := FFrequency / ckt.Fundamental;  // Make Sure Harmonic stays in synch
 end;
 
-procedure TSolutionObj.Increment_time;
+procedure TSolutionObj.IncrementTime;
 begin
     with Dynavars do
     begin
@@ -2314,42 +2239,35 @@ begin
     if DSS.DIFilesAreOpen then
         DSS.EnergyMeterClass.CloseAllDIFiles;
     FYear := Value;
-    DynaVars.intHour := 0;  {Change year, start over}
+    DynaVars.intHour := 0;  // Change year, start over
     Dynavars.t := 0.0;
     Update_dblHour;
     DSS.EnergyMeterClass.ResetAll;  // force any previous year data to complete
 end;
 
-procedure TSolutionObj.Set_Total_Time(const Value: Double);
-begin
-    Total_Time_Elapsed := Value;
-end;
-
 procedure TSolutionObj.SaveVoltages;
 
 var
-    F: TFileStream = nil;
+    F: TStream = nil;
     Volts: Complex;
     i, j: Integer;
     BusName: String;
     sout: String;
 begin
     try
-
         try
-            F := TBufferedFileStream.Create(DSS.OutputDirectory {CurrentDSSDir} + DSS.CircuitName_ + 'SavedVoltages.txt', fmCreate);
+            F := DSS.GetOutputStreamEx(DSS.OutputDirectory + DSS.CircuitName_ + 'SavedVoltages.txt', fmCreate); // CurrentDSSDir
 
-            with DSS.ActiveCircuit do
-                for i := 1 to NumBuses do
+            for i := 1 to ckt.NumBuses do
+            begin
+                BusName := ckt.BusList.NameOfIndex(i);
+                for j := 1 to ckt.Buses[i].NumNodesThisBus do
                 begin
-                    BusName := BusList.NameOfIndex(i);
-                    for j := 1 to Buses[i].NumNodesThisBus do
-                    begin
-                        Volts := NodeV[Buses[i].RefNo[j]];
-                        WriteStr(sout, BusName, ', ', Buses[i].GetNum(j): 0, Format(', %-.7g, %-.7g', [Cabs(Volts), CDang(Volts)]));
-                        FSWriteln(F, sout);
-                    end;
+                    Volts := NodeV[ckt.Buses[i].RefNo[j]];
+                    WriteStr(sout, BusName, ', ', ckt.Buses[i].GetNum(j): 0, Format(', %-.7g, %-.7g', [Cabs(Volts), CDang(Volts)]));
+                    FSWriteln(F, sout);
                 end;
+            end;
 
         except
             On E: Exception do
@@ -2362,7 +2280,7 @@ begin
 
     finally
         FreeAndNil(F);
-        DSS.GlobalResult := DSS.OutputDirectory {CurrentDSSDir} + DSS.CircuitName_ + 'SavedVoltages.txt';
+        DSS.GlobalResult := DSS.OutputDirectory + DSS.CircuitName_ + 'SavedVoltages.txt'; // CurrentDSSDir
 
     end;
 end;
@@ -2381,10 +2299,10 @@ begin
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
         if not ADiakoptics or (DSS.Parent = NIL) then
 {$ENDIF}
-            Result := SolveSparseSet(hY, pComplexArray(@V^[1]), pComplexArray(@Currents[1])) // Solve for present InjCurr
+            Result := SolveSparseSet(hY, pComplexArray(@V[1]), pComplexArray(@Currents[1])) // Solve for present InjCurr
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
         else
-            Result := SolveSparseSet(hY, pComplexArray(@V^[LocalBusIdx[0]]), pComplexArray(@Currents[1]));  // Solve for present InjCurr in Actor 1 context
+            Result := SolveSparseSet(hY, pComplexArray(@V[LocalBusIdx[0]]), pComplexArray(@Currents[1]));  // Solve for present InjCurr in Actor 1 context
 {$ELSE}
         ;
 {$ENDIF}
@@ -2431,31 +2349,34 @@ procedure TSolutionObj.UpdateVBus;
 // Save present solution vector values to buses
 var
     i, j: Integer;
+    pBus: TDSSBus;
 begin
-    with DSS.ActiveCircuit do
-        for i := 1 to NumBuses do
-            with Buses[i] do
-                if Assigned(Vbus) then
-                    for j := 1 to NumNodesThisBus do
-                        VBus[j] := NodeV[RefNo[j]];
+    for i := 1 to ckt.NumBuses do
+    begin
+        pBus := ckt.Buses[i];
+            if pBus.VBus <> NIL then
+                for j := 1 to pBus.NumNodesThisBus do
+                    pBus.VBus[j] := NodeV[pBus.RefNo[j]];
+    end;
 end;
 
 procedure TSolutionObj.RestoreNodeVfromVbus;
 var
     i, j: Integer;
+    pBus: TDSSBus;
 begin
-    with DSS.ActiveCircuit do
-        for i := 1 to NumBuses do
-            with Buses[i] do
-                if Assigned(Vbus) then
-                    for j := 1 to NumNodesThisBus do
-                        NodeV[RefNo[j]] := VBus[j];
+    for i := 1 to ckt.NumBuses do
+    begin
+        pBus := ckt.Buses[i];
+            if pBus.VBus <> NIL then
+                for j := 1 to pBus.NumNodesThisBus do
+                    NodeV[pBus.RefNo[j]] := pBus.VBus[j];
+    end;
 end;
 
-function TSolutionObj.SolveYDirect: Integer;
+procedure TSolutionObj.SolveYDirect();
 // Solves present Y matrix with no injection sources except voltage and current sources 
 begin
-    Result := 0;
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
     if not ADiakoptics or (DSS.Parent <> NIL) then
     begin
@@ -2478,9 +2399,11 @@ end;
 
 {$IFDEF DSS_CAPI_PM}
 // Used to create the OpenDSS Solver thread
-constructor TSolver.Create(dssContext: TDSSContext; Susp: Boolean; local_CPU: Integer; AEvent: TEvent);
+constructor TSolver.Create(sol: TSolutionObj; Susp: Boolean; local_CPU: Integer; AEvent: TEvent);
 begin
-    DSS := dssContext;
+    DSS := sol.DSS;
+    cktptr := DSS.ActiveCircuit;
+    solution := DSS.ActiveCircuit.Solution;
 
     StatusEvent := AEvent;
     FreeOnTerminate := FALSE;
@@ -2540,163 +2463,162 @@ begin
     // See https://gitlab.com/freepascal.org/fpc/source/-/issues/38230 (Exception in system functions on Apple M1)
     SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide,exOverflow, exUnderflow, exPrecision]);
 {$ENDIF}{$ENDIF}
-    with DSS.ActiveCircuit, Solution do
-        while ActorIsActive do
+    while ActorIsActive do
+    begin
+        MessageQueueEvent.WaitFor(INFINITE);
+        DSS.ActorStatus := TActorStatus.Busy;
+        StatusEvent.SetEvent();
+        while True do
         begin
-            MessageQueueEvent.WaitFor(INFINITE);
-            DSS.ActorStatus := TActorStatus.Busy;
-            StatusEvent.SetEvent();
-            while True do
-            begin
-                try
-                    actorMessagesLock.Acquire();
-                    if actorMessages.Count = 0  then
-                        break;
+            try
+                actorMessagesLock.Acquire();
+                if actorMessages.Count = 0  then
+                    break;
 
-                    //TODO: peak and check if last message is EXIT?
-                    MsgType := actorMessages.Dequeue();                    
-                finally
-                    actorMessagesLock.Release();
-                end;
-                MessageQueueEvent.ResetEvent();
-                
-                Processing := TRUE;
-                case MsgType of // Evaluates the incoming message
-                    TActorMessage.SIMULATE: // Simulates the circuit on this actor
-                        try
-                            // Normal solution routine
-                            case Dynavars.SolutionMode of
-                                TSolveMode.SNAPSHOT:
-                                    SolveSnap;
-                                TSolveMode.YEARLYMODE:
-                                    SolveYearly;
-                                TSolveMode.DAILYMODE:
-                                    SolveDaily;
-                                TSolveMode.DUTYCYCLE:
-                                    SolveDuty;
-                                TSolveMode.DYNAMICMODE:
-                                    SolveDynamic;
-                                TSolveMode.MONTECARLO1:
-                                    SolveMonte1;
-                                TSolveMode.MONTECARLO2:
-                                    SolveMonte2;
-                                TSolveMode.MONTECARLO3:
-                                    SolveMonte3;
-                                TSolveMode.PEAKDAY:
-                                    SolvePeakDay;
-                                TSolveMode.LOADDURATION1:
-                                    SolveLD1;
-                                TSolveMode.LOADDURATION2:
-                                    SolveLD2;
-                                TSolveMode.DIRECT:
-                                    SolveDirect;
-                                TSolveMode.MONTEFAULT:
-                                    SolveMonteFault; // Monte Carlo Fault Cases
-                                TSolveMode.FAULTSTUDY:
-                                    SolveFaultStudy;
-                                TSolveMode.AUTOADDFLAG:
-                                    AutoAddObj.Solve;
-                                TSolveMode.HARMONICMODE:
-                                    SolveHarmonic;
-                                TSolveMode.GENERALTIME:
-                                    SolveGeneralTime;
-                                TSolveMode.HARMONICMODET:
-                                    SolveHarmonicT; //Declares the Hsequential-time harmonics
-                            else
-                                DoSimpleMsg(DSS, _('Unknown solution mode.'), 481);
-                            end;
+                //TODO: peak and check if last message is EXIT?
+                MsgType := actorMessages.Dequeue();                    
+            finally
+                actorMessagesLock.Release();
+            end;
+            MessageQueueEvent.ResetEvent();
+            
+            Processing := TRUE;
+            case MsgType of // Evaluates the incoming message
+                TActorMessage.SIMULATE: // Simulates the circuit on this actor
+                    try
+                        // Normal solution routine
+                        case solution.Dynavars.SolutionMode of
+                            TSolveMode.SNAPSHOT:
+                                solution.SolveSnap();
+                            TSolveMode.YEARLYMODE:
+                                solution.SolveYearly();
+                            TSolveMode.DAILYMODE:
+                                solution.SolveDaily();
+                            TSolveMode.DUTYCYCLE:
+                                solution.SolveDuty();
+                            TSolveMode.DYNAMICMODE:
+                                solution.SolveDynamic();
+                            TSolveMode.MONTECARLO1:
+                                solution.SolveMonte1();
+                            TSolveMode.MONTECARLO2:
+                                solution.SolveMonte2();
+                            TSolveMode.MONTECARLO3:
+                                solution.SolveMonte3();
+                            TSolveMode.PEAKDAY:
+                                solution.SolvePeakDay();
+                            TSolveMode.LOADDURATION1:
+                                solution.SolveLD1();
+                            TSolveMode.LOADDURATION2:
+                                solution.SolveLD2();
+                            TSolveMode.DIRECT:
+                                solution.SolveDirect();
+                            TSolveMode.MONTEFAULT:
+                                solution.SolveMonteFault(); // Monte Carlo Fault Cases
+                            TSolveMode.FAULTSTUDY:
+                                solution.SolveFaultStudy();
+                            TSolveMode.AUTOADDFLAG:
+                                solution.ckt.AutoAddObj.Solve();
+                            TSolveMode.HARMONICMODE:
+                                solution.SolveHarmonic();
+                            TSolveMode.GENERALTIME:
+                                solution.SolveGeneralTime();
+                            TSolveMode.HARMONICMODET:
+                                solution.SolveHarmonicT(); //Declares the Hsequential-time harmonics
+                        else
+                            DoSimpleMsg(DSS, _('Unknown solution mode.'), 481);
+                        end;
 
-                            {$IFDEF WINDOWS}
-                            QueryPerformanceCounter(GEndTime);
-                            {$ELSE}
-                            GEndTime := GetTickCount64;
-                            {$ENDIF}
-                            Total_Solve_Time_Elapsed := ((GEndTime - GStartTime) / CPU_Freq) * 1000000;
-                            Total_Time_Elapsed := Total_Time_Elapsed + Total_Solve_Time_Elapsed;
-                            Processing := FALSE;
+                        {$IFDEF WINDOWS}
+                        QueryPerformanceCounter(solution.GEndTime);
+                        {$ELSE}
+                        solution.GEndTime := GetTickCount64();
+                        {$ENDIF}
+                        solution.Total_Solve_Time_Elapsed := ((solution.GEndTime - solution.GStartTime) / CPU_Freq) * 1000000;
+                        solution.Total_Time_Elapsed := solution.Total_Time_Elapsed + solution.Total_Solve_Time_Elapsed;
+                        Processing := FALSE;
+                        FMessage := '1';
+                        // Sends a message to Actor Object (UI) to notify that the actor has finised
+                        // UIEvent.SetEvent;
+                        // if DSS.GetPrime().Parallel_enabled then
+                        //     if not IsDLL then
+                        //         queue(CallCallBack); // Refreshes the GUI if running asynchronously
+                    except
+                        On E: Exception do
+                        begin
                             FMessage := '1';
-                            // Sends a message to Actor Object (UI) to notify that the actor has finised
-                            // UIEvent.SetEvent;
+                            DSS.ActorStatus := TActorStatus.Idle;
+                            StatusEvent.SetEvent();
+                            DSS.SolutionAbort := TRUE;
                             // if DSS.GetPrime().Parallel_enabled then
+                            // begin
                             //     if not IsDLL then
                             //         queue(CallCallBack); // Refreshes the GUI if running asynchronously
-                        except
-                            On E: Exception do
-                            begin
-                                FMessage := '1';
-                                DSS.ActorStatus := TActorStatus.Idle;
-                                StatusEvent.SetEvent();
-                                DSS.SolutionAbort := TRUE;
-                                // if DSS.GetPrime().Parallel_enabled then
-                                // begin
-                                //     if not IsDLL then
-                                //         queue(CallCallBack); // Refreshes the GUI if running asynchronously
-                                // end
-                                // else
-                                    DoSimpleMsg(DSS, 'Error Encountered in Solve: %s', [E.Message], 482);
-                            end;
+                            // end
+                            // else
+                                DoSimpleMsg(DSS, 'Error Encountered in Solve: %s', [E.Message], 482);
                         end;
+                    end;
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
-                    TActorMessage.INIT_ADIAKOPTICS:
-                    begin
-                        if DSS.Parent <> NIL then
-                            Start_Diakoptics; // Initializes the actor for Diakoptics (if needed)
-                        IndexBuses;
-                    end;
-                    TActorMessage.SOLVE_AD1:
-                        SolveAD(True); // Solves the model if the actor has PIE
-                    TActorMessage.SOLVE_AD2:
-                        SolveAD(False); // Complements the solution
-                    TActorMessage.GETCTRLMODE:
-                    begin
-                        // Brings the control mode from actor 1
-                        ControlMode := DSS.Parent.ActiveCircuit.Solution.ControlMode;
-                        DefaultControlMode := ControlMode;
-                        MaxControlIterations := DSS.Parent.ActiveCircuit.Solution.MaxControlIterations;
-                    end;
-{$ENDIF}                        
-                    TActorMessage.ZEROIVECTOR:
-                        ZeroInjCurr;
-                    TActorMessage.GETCURRINJ:
-                        GetSourceInjCurrents;
-                    TActorMessage.CALC_INJ_CURR:
-                        GetPCInjCurr;
-                    TActorMessage.DO_CTRL_ACTIONS:
-                    begin
-                        ControlActionsDone := FALSE;
-                        Sample_DoControlActions;
-                        try
-                            actorMessagesLock.Acquire();
-                            actorMessages.enqueue(TActorMessage.CHECK_FAULT);
-                            actorMessages.enqueue(TActorMessage.CHECKYBUS);
-                        finally
-                            actorMessagesLock.Release();
-                        end;
-                    end;
-                    TActorMessage.CHECK_FAULT:
-                        Check_Fault_Status;
-                    TActorMessage.CHECKYBUS:
-                        if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (IncrCktElements.Count <> 0){$ENDIF} then
-                            BuildYMatrix(DSS, WHOLEMATRIX, FALSE);  // Does not realloc V, I
-                    TActorMessage.EXIT_ACTOR: // Terminates the thread
-                    begin
-                        ActorIsActive := FALSE;
-                        try
-                            actorMessagesLock.Acquire();
-                            actorMessages.Clear();
-                        finally
-                            actorMessagesLock.Release();
-                        end;
-                    end;
-                else 
-                    // I don't know what the message is
-                    DoSimpleMsg(DSS, _('Unknown Message.'), 7010);
+                TActorMessage.INIT_ADIAKOPTICS:
+                begin
+                    if DSS.Parent <> NIL then
+                        Start_Diakoptics(); // Initializes the actor for Diakoptics (if needed)
+                    IndexBuses();
                 end;
+                TActorMessage.SOLVE_AD1:
+                    solution.SolveAD(True); // Solves the model if the actor has PIE
+                TActorMessage.SOLVE_AD2:
+                    solution.SolveAD(False); // Complements the solution
+                TActorMessage.GETCTRLMODE:
+                begin
+                    // Brings the control mode from actor 1
+                    solution.ControlMode := DSS.Parent.ActiveCircuit.Solution.ControlMode;
+                    solution.DefaultControlMode := ControlMode;
+                    solution.MaxControlIterations := DSS.Parent.ActiveCircuit.Solution.MaxControlIterations;
+                end;
+{$ENDIF}                        
+                TActorMessage.ZEROIVECTOR:
+                    solution.ZeroInjCurr();
+                TActorMessage.GETCURRINJ:
+                    solution.GetSourceInjCurrents();
+                TActorMessage.CALC_INJ_CURR:
+                    solution.GetPCInjCurr();
+                TActorMessage.DO_CTRL_ACTIONS:
+                begin
+                    solution.ControlActionsDone := FALSE;
+                    solution.Sample_DoControlActions;
+                    try
+                        actorMessagesLock.Acquire();
+                        actorMessages.enqueue(TActorMessage.CHECK_FAULT);
+                        actorMessages.enqueue(TActorMessage.CHECKYBUS);
+                    finally
+                        actorMessagesLock.Release();
+                    end;
+                end;
+                TActorMessage.CHECK_FAULT:
+                    solution.Check_Fault_Status();
+                TActorMessage.CHECKYBUS:
+                    if solution.SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (solution.ckt.IncrCktElements.Count <> 0){$ENDIF} then
+                        BuildYMatrix(DSS, WHOLEMATRIX, FALSE);  // Does not realloc V, I
+                TActorMessage.EXIT_ACTOR: // Terminates the thread
+                begin
+                    ActorIsActive := FALSE;
+                    try
+                        actorMessagesLock.Acquire();
+                        actorMessages.Clear();
+                    finally
+                        actorMessagesLock.Release();
+                    end;
+                end;
+            else 
+                // I don't know what the message is
+                DoSimpleMsg(DSS, _('Unknown Message.'), 7010);
+            end;
 
-            end; // while actorMessages.Count > 0
-            DSS.ActorStatus := TActorStatus.Idle;
-            StatusEvent.SetEvent();
-        end; // while ActorIsActive
+        end; // while actorMessages.Count > 0
+        DSS.ActorStatus := TActorStatus.Idle;
+        StatusEvent.SetEvent();
+    end; // while ActorIsActive
 end;
 
 procedure TSolver.DoTerminate; // Is the end of the thread
@@ -2732,7 +2654,7 @@ begin
             GetPCInjCurr; // for direct solve
         end;
         // The above call could change the primitive Y matrix, so have to check
-        if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (DSS.ActiveCircuit.IncrCktElements.Count <> 0){$ENDIF} then
+        if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (ckt.IncrCktElements.Count <> 0){$ENDIF} then
             BuildYMatrix(DSS, WHOLEMATRIX, FALSE);  // Does not realloc V, I
 
         if UseAuxCurrents then
@@ -2745,7 +2667,7 @@ begin
     SolveSystem(DSS.Parent.ActiveCircuit.Solution.NodeV);
     LoadsNeedUpdating := FALSE;
     LastSolutionWasDirect := TRUE;
-    DSS.ActiveCircuit.IsSolved := TRUE;
+    ckt.IsSolved := TRUE;
 end;
 
 procedure TSolutionObj.SendCmd2Actors(Msg: Integer);
@@ -2769,35 +2691,32 @@ var
     jj: Integer;
     VSourceObj: TVsourceObj;
     BusName: String;
-    myPDEList: ArrayOfString;
+    pdeList: ArrayOfString;
 begin
-    with DSS.ActiveCircuit, Solution do
+    // Select the main voltage source
+    VSourceObj := DSS.VsourceClass.ElementList.First();
+    // Gets the name of the branch directly connected to the feeder head to remove it
+    // (applies to all actors but actor 2 - first chunk of the system)
+    BusName := VSourceObj.GetBus(1);
+    jj := ansipos('.', BusName);   // removes the dot
+    if (jj > 0) then
+        BusName := BusName.Substring(0, (jj - 1));
+    SetActiveBus(DSS, BusName); // Activates the Bus
+    pdeList := ckt.getPDEatBus(ActiveBusIndex);
+    // Disables the link branch
+    DSS.DssExecutive.ParseCommand(pdeList[0] + '.enabled=False'); //TODO: rewrite
+    // Now disables all the VSources added artificially
+    for VSourceObj in DSS.VsourceClass.ElementList do
     begin
-        // Select the main voltage source
-        VSourceObj := DSS.VsourceClass.ElementList.First;
-        // Gets the name of the branch directly connected to the feeder head to remove it
-        // (applies to all actors but actor 2 - first chunk of the system)
-        BusName := VSourceObj.GetBus(1);
-        jj := ansipos('.', BusName);   // removes the dot
-        if (jj > 0) then
-            BusName := BusName.Substring(0, (jj - 1));
-        SetActiveBus(DSS, BusName);                            // Activates the Bus
-        myPDEList := getPDEatBus(BusList.NameOfIndex(ActiveBusIndex));
-        // Disables the link branch
-        DSS.DssExecutive.Command := myPDEList[0] + '.enabled=False'; //TODO: rewrite
-        // Now disables all the VSources added artificially
-        for VSourceObj in DSS.VsourceClass.ElementList do
-        begin
-            BusName := AnsiLowerCase(VSourceObj.Name);
-            if (BusName = 'source') then
-                VSourceObj.Enabled := FALSE                   // Disables the artificial VSource phase 1
-            else
-            if (BusName = 'vph_2') then
-                VSourceObj.Enabled := FALSE                 // Disables the artificial VSource phase 2
-            else
-            if (BusName = 'vph_3') then
-                VSourceObj.Enabled := FALSE; // Disables the artificial VSource phase 3
-        end;
+        BusName := AnsiLowerCase(VSourceObj.Name);
+        if (BusName = 'source') then
+            VSourceObj.Enabled := FALSE // Disables the artificial VSource phase 1
+        else
+        if (BusName = 'vph_2') then
+            VSourceObj.Enabled := FALSE // Disables the artificial VSource phase 2
+        else
+        if (BusName = 'vph_3') then
+            VSourceObj.Enabled := FALSE; // Disables the artificial VSource phase 3
     end;
 end;
 
@@ -2835,29 +2754,26 @@ var
     idx,
     i: Integer;
     Found: Boolean;
-    myCmplx: Complex;
+    c: Complex;
 
 begin
     Found := FALSE;
-    with DSS.ActiveCircuit, Solution do
+    for i := 0 to (AD_IBus.Count - 1) do
     begin
-        for i := 0 to (AD_IBus.Count - 1) do
+        for idx := 0 to (DSS.Parent.ActiveCircuit.Ic.NZero - 1) do
         begin
-            for idx := 0 to (DSS.Parent.ActiveCircuit.Ic.NZero - 1) do
+            if DSS.Parent.ActiveCircuit.Ic.CData[idx].Row = AD_ISrcIdx.Items[i] then
             begin
-                if DSS.Parent.ActiveCircuit.Ic.CData[idx].Row = AD_ISrcIdx.Items[i] then
-                begin
-                    Found := TRUE;
-                    break;
-                end;
+                Found := TRUE;
+                break;
             end;
-            if Found then
-            begin
-                // Adds the present current with the adjustment
-                myCmplx := DSS.Parent.ActiveCircuit.Ic.CData[idx].Value * (-1.0);
-                Currents[AD_IBus.Items[i]] := myCmplx + Currents[AD_IBus.Items[i]];
-            end;  // Otherwise is just another ISource in the zone
         end;
+        if Found then
+        begin
+            // Adds the present current with the adjustment
+            c := DSS.Parent.ActiveCircuit.Ic.CData[idx].Value * (-1.0);
+            Currents[AD_IBus.Items[i]] := c + Currents[AD_IBus.Items[i]];
+        end;  // Otherwise is just another ISource in the zone
     end;
 end;
 // Checks if the actor has power injection Obj
@@ -2915,74 +2831,63 @@ begin
     setlength(SrcBus, 1);
     if DSS.Parent.ActiveCircuit <> NIL then
     begin
-        with DSS.Parent.ActiveCircuit do
+        for i := 1 to DSS.Parent.ActiveCircuit.NumNodes do
         begin
-            for i := 1 to NumNodes do
-            begin
-                with MapNodeToBus[i] do
-                    SrcBus[high(SrcBus)] := Format('%s.%-d', [AnsiUpperCase(BusList.NameOfIndex(Busref)), NodeNum]);
-                setlength(SrcBus, (length(SrcBus) + 1));
-            end;
+            SrcBus[high(SrcBus)] := Format('%s.%-d', [AnsiUpperCase(BusList.NameOfIndex(DSS.Parent.ActiveCircuit.MapNodeToBus[i].Busref)), DSS.Parent.ActiveCircuit.MapNodeToBus[i].NodeNum]);
+            setlength(SrcBus, (length(SrcBus) + 1));
         end;
     end;
     // rebuilds the Y matrix to relocate the local buses
     BuildYMatrix(DSS, WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
     // Then, get the list of buses in my actor
     setlength(LclBus, 1);
-    if DSS.ActiveCircuit <> NIL then
+    if solution.ckt = NIL then // TODO: is this possible? Previously DSS.ActiveCircuit
+        Exit;
+
+    for i := 1 to ckt.NumNodes do
     begin
-        with DSS.ActiveCircuit do
-        begin
-            for i := 1 to NumNodes do
-            begin
-                with MapNodeToBus[i] do
-                    LclBus[high(LclBus)] := Format('%s.%-d', [AnsiUpperCase(BusList.NameOfIndex(Busref)), NodeNum]);
-                setlength(LclBus, (length(LclBus) + 1));
-            end;
-        end;
+        LclBus[high(LclBus)] := Format('%s.%-d', [AnsiUpperCase(ckt.BusList.NameOfIndex(ckt.MapNodeToBus[i].Busref)), ckt.MapNodeToBus[i].NodeNum]);
+        setlength(LclBus, (length(LclBus) + 1));
     end;
     // Initializes the bus index vector
-    with DSS.ActiveCircuit.solution do
+    Setlength(LocalBusIdx, length(LclBus) - 1);
+    for i := 0 to High(LocalBusIdx) do
     begin
-        Setlength(LocalBusIdx, length(LclBus) - 1);
-        for i := 0 to High(LocalBusIdx) do
-        begin
-            for j := 0 to High(SrcBus) do
-                if LclBus[i] = SrcBus[j] then
-                    break;
-            LocalBusIdx[i] := j + 1;
-        end;
+        for j := 0 to High(SrcBus) do
+            if LclBus[i] = SrcBus[j] then
+                break;
+        LocalBusIdx[i] := j + 1;
+    end;
 
-        // Initializes the list for easy accessing the ADiakoptics Isources
-        if AD_IBus = NIL then
-            AD_IBus := TList<Integer>.Create
-        else
-            AD_IBus.Clear;
-        if AD_ISrcIdx = NIL then
-            AD_ISrcIdx := TList<Integer>.Create
-        else
-            AD_ISrcIdx.Clear;
-        // Locates the ISource used for the local ADiakoptics algorithm
-        for j := 0 to (DSS.Parent.ActiveCircuit.Contours.NZero - 1) do
+    // Initializes the list for easy accessing the ADiakoptics Isources
+    if solution.AD_IBus = NIL then
+        solution.AD_IBus := TList<Integer>.Create
+    else
+        solution.AD_IBus.Clear;
+    if solution.AD_ISrcIdx = NIL then
+        solution.AD_ISrcIdx := TList<Integer>.Create
+    else
+        solution.AD_ISrcIdx.Clear;
+    // Locates the ISource used for the local ADiakoptics algorithm
+    for j := 0 to (DSS.Parent.ActiveCircuit.Contours.NZero - 1) do
+    begin
+        myBus := SrcBus[DSS.Parent.ActiveCircuit.Contours.CData[j].Row];
+        // checks if the bus in in this circuit
+        Found := FALSE;
+        for k := 0 to High(LclBus) do
         begin
-            myBus := SrcBus[DSS.Parent.ActiveCircuit.Contours.CData[j].Row];
-            // checks if the bus in in this circuit
-            Found := FALSE;
-            for k := 0 to High(LclBus) do
+            if LclBus[k] = myBus then
             begin
-                if LclBus[k] = myBus then
-                begin
-                    Found := TRUE;
-                    break;
-                end;
-            end;
-            if Found then     // If found, add it to the indexed list
-            begin
-                AD_IBus.Add(k + 1);
-                AD_ISrcIdx.Add(DSS.Parent.ActiveCircuit.Contours.CData[j].Row);
+                Found := TRUE;
+                break;
             end;
         end;
 
+        if Found then     // If found, add it to the indexed list
+        begin
+            solution.AD_IBus.Add(k + 1);
+            solution.AD_ISrcIdx.Add(DSS.Parent.ActiveCircuit.Contours.CData[j].Row);
+        end;
     end;
 end;
 {$ENDIF}
