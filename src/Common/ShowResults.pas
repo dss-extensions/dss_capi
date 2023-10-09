@@ -1870,7 +1870,8 @@ begin
                 FSWriteln(F);
                 FSWriteln(F, 'ALL-Node Fault Currents');
                 FSWriteln(F);
-                FSWriteln(F, Pad('Bus', MaxBusNameLength), '       Node 1  X/R        Node 2  X/R        Node 3  X/R   ...  (Amps)');
+                WriteStr(sout, Pad('Bus', MaxBusNameLength), 'Node', Pad(' ', 12), 'Amps', Pad(' ', 3), 'X/R ', 'Node', Pad(' ', 12), 'Amps', Pad(' ', 3), 'X/R ', 'Node', Pad(' ', 12), 'Amps', Pad(' ', 3), 'X/R ...');
+                FSWriteln(F, sout);
                 FSWriteln(F);
                 for iBus := 1 to NumBuses do
                     // Bus Norton Equivalent Current, Isc has been previously computed
@@ -1881,18 +1882,20 @@ begin
                         for i := 1 to NumNodesThisBus do
                         begin
                             CurrMag := Cabs(BusCurrent^[i]);
-                            if i > 1 then
-                                FSWrite(F, ' ');
-                            
-                            WriteStr(sout, CurrMag: 10: 0);
+                            if i > 1 then 
+                                FSWrite(F, '    ');
+
+                            WriteStr(sout, GetNum(i));
                             FSWrite(F, sout);
-                            
-                            if Currmag > 0.0 then
+                            WriteStr(sout, CurrMag: 15: 0);
+                            FSWrite(F, sout);
+
+                            if Currmag > 0.0 then 
                             begin
                                 Zbus := VBus[i] / BusCurrent^[i];
                                 WriteStr(sout, ' ', GetXR(Zbus): 5: 1);
                                 FSWrite(F, sout)
-                            end
+                            end 
                             else
                                 FSWrite(F, '   N/A');
                         end;
