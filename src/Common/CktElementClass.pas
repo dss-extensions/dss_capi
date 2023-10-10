@@ -14,6 +14,12 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TCktElementPropLegacy = (
+        INVALID = 0,
+        basefreq = 1, 
+        enabled = 2
+    );
+
     TCktElementProp = (
         INVALID = 0,
         BaseFreq = 1, 
@@ -46,10 +52,12 @@ uses
 type
     TObj = TDSSCktElement;
     TProp = TCktElementProp;
+    TPropLegacy = TCktElementPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var 
     PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;
 
 procedure TCktElementClass.CountPropertiesAndAllocate;
 begin
@@ -60,7 +68,10 @@ end;
 constructor TCktElementClass.Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, DSSClsType, DSSClsName);
     ClassParents.Add('CktElement');
@@ -70,7 +81,7 @@ procedure TCktElementClass.DefineProperties;
 var
     obj: TObj = NIL; // NIL (0) on purpose
 begin
-    PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, False, 'CktElement');
+    PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, PropInfoLegacy, False, 'CktElement');
 
     PropertyOffset_CktElementClass := ActiveProperty;
 

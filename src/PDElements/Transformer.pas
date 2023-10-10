@@ -22,6 +22,68 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TTransfPropLegacy = (
+        INVALID = 0,
+        phases=1,
+        windings=2,
+
+        // Winding Definition
+        wdg=3,
+        bus=4,
+        conn=5,
+        kV=6,
+        kVA=7,
+        tap=8,
+        pctR=9,
+        Rneut=10,
+        Xneut=11,
+
+        // General Data
+        buses=12,
+        conns=13,
+        kVs=14,
+        kVAs=15,
+        taps=16,
+        XHL=17,
+        XHT=18,
+        XLT=19,
+        Xscarray=20,
+
+        thermal=21,
+        n=22,
+        m=23,
+        flrise=24,
+        hsrise=25,
+        pctloadloss=26,
+        pctnoloadloss=27,
+        normhkVA=28,
+        emerghkVA=29,
+        sub=30,
+        MaxTap=31,
+        MinTap=32,
+        NumTaps=33,
+        subname=34,
+        pctimag=35,
+        ppm_antifloat=36,
+
+        pctRs=37,
+
+        bank=38,
+
+        XfmrCode=39,
+
+        XRConst=40,
+        X12=41,
+        X13=42,
+        X23=43,
+        LeadLag=44,
+        WdgCurrents=45,
+        Core=46,
+        RdcOhms=47,
+
+        Seasons=48,
+        Ratings=49
+    );
     TTransfProp = (
         INVALID = 0,
         Phases=1,
@@ -252,15 +314,20 @@ uses
 type
     TObj = TTransfObj;
     TProp = TTransfProp;
+    TPropLegacy = TTransfPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TTransf.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, XFMR_ELEMENT, 'Transformer');
 end;
@@ -311,7 +378,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
         'XfmrCode', //TODO: always apply first

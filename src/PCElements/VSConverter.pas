@@ -20,6 +20,28 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TVSConverterPropLegacy = (
+        INVALID = 0,
+        phases = 1,
+        Bus1 = 2,
+        kVac = 3,
+        kVdc = 4,
+        kW = 5,
+        Ndc = 6,
+        Rac = 7,
+        Xac = 8,
+        m0 = 9,
+        d0 = 10,
+        Mmin = 11,
+        Mmax = 12,
+        Iacmax = 13,
+        Idcmax = 14,
+        Vacref = 15,
+        Pacref = 16,
+        Qacref = 17,
+        Vdcref = 18,
+        VscMode = 19
+    );
     TVSConverterProp = (
         INVALID = 0,
         Phases = 1,
@@ -108,6 +130,7 @@ uses
 type
     TObj = TVSConverterObj;
     TProp = TVSConverterProp;
+    TPropLegacy = TVSConverterPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
     VSC_FIXED = 0;
@@ -116,7 +139,8 @@ const
     VSC_VDCVAC = 3;
     VSC_VDCQAC = 4;
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     ModeEnum: TDSSEnum;
 
 constructor TVSConverter.Create(dssContext: TDSSContext);
@@ -124,6 +148,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         ModeEnum := TDSSEnum.Create('VSConverter: Control Mode', True, 1, 4,
             ['Fixed', 'PacVac', 'PacQac', 'VdcVac', 'VdcQac'], 
             [0, 1, 2, 3, 4]);
@@ -143,7 +168,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // enum properties
     PropertyType[ord(TProp.VscMode)] := TPropertyType.MappedStringEnumProperty;

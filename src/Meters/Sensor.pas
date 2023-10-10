@@ -22,6 +22,22 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TSensorPropLegacy = (
+        INVALID = 0,
+        element = 1,
+        terminal = 2,
+        kvbase = 3,
+        clear = 4,
+        kVs = 5,
+        currents = 6,
+        kWs = 7,
+        kvars = 8,
+        conn = 9,  //  Sensor connection
+        Deltadirection = 10,  //  +/- 1
+        pctError = 11,  //  %Error of sensor
+        Weight = 12  // for WLS calc
+        // action = 13  // unused
+    );
     TSensorProp = (
         INVALID = 0,
         Element = 1,
@@ -138,15 +154,20 @@ uses
 type
     TObj = TSensorObj;
     TProp = TSensorProp;
+    TPropLegacy = TSensorPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TSensor.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, SENSOR_ELEMENT, 'Sensor');
 end;
@@ -175,7 +196,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
         'kWs, kvars',

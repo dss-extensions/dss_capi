@@ -1250,6 +1250,7 @@ exports
     Settings_Set_LoadsTerminalCheck, // API extension
     Settings_Get_IterateDisabled, // API extension
     Settings_Set_IterateDisabled, // API extension
+    Settings_SetPropertyNameStyle, // API extension
     Solution_Get_Frequency,
     Solution_Get_Hour,
     Solution_Get_Iterations,

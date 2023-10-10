@@ -34,6 +34,22 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TXYcurvePropLegacy = (
+        INVALID = 0,
+        npts = 1, // Number of points to expect
+        Points = 2,
+        Yarray = 3, // vector of Y values
+        Xarray = 4, // vector of X values corresponding to Y values
+        csvfile = 5, // Switch input to a csvfile
+        sngfile = 6, // switch input to a binary file of singles
+        dblfile = 7, // switch input to a binary file of singles
+        x = 8,
+        y = 9,
+        Xshift = 10,
+        Yshift = 11,
+        Xscale = 12,
+        Yscale = 13 
+    );
     TXYcurveProp = (
         INVALID = 0,
         NPts = 1, // Number of points to expect
@@ -131,15 +147,20 @@ uses
 type
     TObj = TXYcurveObj;
     TProp = TXYcurveProp;
+    TPropLegacy = TXYcurvePropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TXYcurve.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, DSS_OBJECT, 'XYcurve');
 end;
@@ -223,7 +244,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     PropertyStructArrayCountOffset := ptruint(@obj.FNumPoints);
 

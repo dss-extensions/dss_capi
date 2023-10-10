@@ -24,6 +24,7 @@ type
         DiaIns = 3,
         DiaCable = 4
     );
+    TCableDataPropLegacy = TCableDataProp;
 {$SCOPEDENUMS OFF}
 
     TCableData = class(TConductorData)
@@ -73,15 +74,20 @@ uses
 type
     TObj = TCableDataObj;
     TProp = TCableDataProp;
+    TPropLegacy = TCableDataPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TCableData.Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, DSSClsType or DSS_OBJECT, DSSClsName);
     ClassParents.Add('CableData');
@@ -102,7 +108,7 @@ procedure TCableData.DefineProperties;
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
-    PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, False, 'CableData');
+    PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, PropInfoLegacy, False, 'CableData');
 
     PropertyOffset_CableData := ActiveProperty;
 

@@ -76,6 +76,54 @@ const
 
 type
 {$SCOPEDENUMS ON}
+    TGeneratorPropLegacy = (
+        INVALID = 0,
+        phases,
+        bus1,
+        kv,
+        kW,
+        pf,
+        kvar, // 13
+        model, // 6
+        Vminpu, // 23
+        Vmaxpu, // 24
+        yearly, // 7
+        daily, // 8
+        duty, // 9
+        dispmode, // 10
+        dispvalue, // 11
+        conn, // 12
+        status, // 16
+        cls, // 17
+        Vpu, // 18
+        maxkvar, // 19
+        minkvar, // 20
+        pvfactor, // 21
+        forceon, // 25
+        kVA, // 26
+        MVA, // 27
+        Xd, // 28
+        Xdp, // 29
+        Xdpp, // 30
+        H, // 31
+        D, // 32
+        UserModel, // 33
+        UserData, // 34
+        ShaftModel, // 35
+        ShaftData, // 36
+        DutyStart, // 37
+        debugtrace, // 22
+        Balanced,
+        XRdp,
+        UseFuel,
+        FuelkWh,
+        pctFuel,
+        pctReserve,
+        Refuel,
+
+        DynamicEq, 
+        DynOut
+    );
     TGeneratorProp = (
         INVALID = 0,
         Phases,
@@ -380,6 +428,7 @@ uses
 type
     TObj = TGeneratorObj;
     TProp = TGeneratorProp;
+    TPropLegacy = TGeneratorPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
     // Dispatch modes
@@ -388,6 +437,7 @@ const
     PRICEMODE = 2;
 var
     PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;
     GenStatusEnum, GenDispModeEnum, GenModelEnum: TDSSEnum;
 
 constructor TGenerator.Create(dssContext: TDSSContext);
@@ -395,6 +445,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         GenDispModeEnum := TDSSEnum.Create('Generator: Dispatch Mode', True, 1, 1, 
             ['Default', 'LoadLevel', 'Price'], [0, 1, 2]
         );
@@ -449,7 +500,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     //TODO: SpecSelector := ord(TProp.model);
 

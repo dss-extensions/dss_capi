@@ -23,6 +23,16 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TGenDispatcherPropLegacy = (
+        INVALID = 0,
+        Element = 1,
+        Terminal = 2,
+        kWLimit = 3,
+        kWBand = 4,
+        kvarlimit = 5,
+        GenList = 6,
+        Weights = 7
+     );
     TGenDispatcherProp = (
         INVALID = 0,
         Element = 1,
@@ -91,15 +101,20 @@ uses
 type
     TObj = TGenDispatcherObj;
     TProp = TGenDispatcherProp;
+    TPropLegacy = TGenDispatcherPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TGenDispatcher.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, GEN_CONTROL, 'GenDispatcher');
 end;
@@ -115,7 +130,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // string list
     PropertyType[ord(TProp.GenList)] := TPropertyType.StringListProperty;

@@ -18,6 +18,53 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TXfmrCodePropLegacy = (
+        INVALID = 0,
+    
+        phases = 1,
+        windings = 2,
+
+        // Winding Definition
+        wdg = 3,
+        conn = 4,
+        kV = 5, // FOR 2-and 3- always kVLL ELSE actual winding KV
+        kVA = 6,
+        tap = 7,
+        pctR = 8,
+        Rneut = 9,
+        Xneut = 10,
+
+        // General Data
+        conns = 11,
+        kVs = 12,
+        kVAs = 13,
+        taps = 14,
+        Xhl = 15,
+        Xht = 16,
+        Xlt = 17,
+        Xscarray = 18, // x12 13 14... 23 24.. 34 ..
+        thermal = 19,
+        n = 20,
+        m = 21,
+        flrise = 22,
+        hsrise = 23,
+        pctloadloss = 24,
+        pctnoloadloss = 25,
+        normhkVA = 26,
+        emerghkVA = 27,
+        MaxTap = 28,
+        MinTap = 29,
+        NumTaps = 30,
+        pctimag = 31,
+        ppm_antifloat = 32,
+        pctRs = 33,
+        X12 = 34,
+        X13 = 35,
+        X23 = 36,
+        RdcOhms = 37,
+        Seasons = 38,
+        Ratings = 39
+    );
     TXfmrCodeProp = (
         INVALID = 0,
     
@@ -127,15 +174,20 @@ uses
 type
     TObj = TXfmrCodeObj;
     TProp = TXfmrCodeProp;
+    TPropLegacy = TXfmrCodePropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TXfmrCode.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, DSS_OBJECT, 'XfmrCode');
 end;
@@ -157,7 +209,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
         'X12, X13, X23',

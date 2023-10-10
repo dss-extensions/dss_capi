@@ -171,6 +171,8 @@ VAR
     DSSDirectory: String; // where the current exe resides
     StartupDirectory :String; // Where we started
 
+    PropNameStyle: TDSSPropertyNameStyle = TDSSPropertyNameStyle.Modern;
+
 function VersionString: String;
 procedure DoErrorMsg(DSS: TDSSContext; Const S, Emsg, ProbCause :String; ErrNum:Integer);
 procedure DoSimpleMsg(DSS: TDSSContext; Const S :String; ErrNum:Integer);overload;

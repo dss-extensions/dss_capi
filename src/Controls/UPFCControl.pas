@@ -34,6 +34,7 @@ type
         INVALID = 0,
         UPFCList = 1
     );
+    TUPFCControlPropLegacy = TUPFCControlProp;
 {$SCOPEDENUMS OFF}
 
     TUPFCControl = class(TControlClass)
@@ -88,15 +89,20 @@ uses
 type
     TObj = TUPFCControlObj;
     TProp = TUPFCControlProp;
+    TPropLegacy = TUPFCControlPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TUPFCControl.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, UPFC_CONTROL, 'UPFCControl');
 end;
@@ -112,7 +118,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // string lists
     PropertyType[ord(TProp.UPFCList)] := TPropertyType.StringListProperty;

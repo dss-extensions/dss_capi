@@ -50,6 +50,7 @@ function Settings_Get_LoadsTerminalCheck(): TAPIBoolean; CDECL;
 procedure Settings_Set_LoadsTerminalCheck(Value: TAPIBoolean); CDECL;
 procedure Settings_Set_IterateDisabled(Value: Integer); CDECL;
 function Settings_Get_IterateDisabled(): Integer; CDECL;
+procedure Settings_SetPropertyNameStyle(style: Integer); CDECL;
 
 implementation
 
@@ -411,6 +412,14 @@ end;
 function Settings_Get_IterateDisabled(): Integer; CDECL;
 begin
     Result := DSS_CAPI_ITERATE_DISABLED;
+end;
+//------------------------------------------------------------------------------
+procedure Settings_SetPropertyNameStyle(style: Integer); CDECL;
+begin
+    if (style < Ord(Low(TDSSPropertyNameStyle))) or (style > Ord(High(TDSSPropertyNameStyle))) then
+        style := 0;
+
+    DSSPrime.SetPropertyNameStyle(TDSSPropertyNameStyle(style));
 end;
 //------------------------------------------------------------------------------
 end.

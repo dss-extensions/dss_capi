@@ -24,6 +24,39 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TLinePropLegacy = (
+        INVALID = 0,
+        bus1 = 1,
+        bus2 = 2,
+        linecode = 3,
+        length = 4,
+        phases = 5,
+        r1 = 6,
+        x1 = 7,
+        r0 = 8,
+        x0 = 9,
+        C1 = 10,
+        C0 = 11,
+        rmatrix = 12,
+        xmatrix = 13,
+        cmatrix = 14,
+        Switch = 15,
+        Rg = 16,
+        Xg = 17,
+        rho = 18,
+        geometry = 19,
+        units = 20,
+        spacing = 21,
+        wires = 22,
+        EarthModel = 23,
+        cncables = 24,
+        tscables = 25,
+        B1 = 26,
+        B0 = 27,
+        Seasons = 28,
+        Ratings = 29,
+        LineType = 30
+    );
     TLineProp = (
         INVALID = 0,
         Bus1 = 1,
@@ -181,16 +214,21 @@ uses
 type
     TObj = TLineObj;
     TProp = TLineProp;
+    TPropLegacy = TLinePropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
     CAP_EPSILON: Complex = (re: 0.0; im: 4.2e-8); // 5 kvar of capacitive reactance at 345 kV to avoid open line problem
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TLine.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, LINE_ELEMENT, 'Line');
 end;
@@ -255,7 +293,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
         'LineCode',

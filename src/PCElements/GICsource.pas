@@ -20,6 +20,19 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TGICsourcePropLegacy = (
+        INVALID = 0,
+        Volts = 1,
+        angle = 2,
+        frequency = 3,
+        phases = 4,
+        EN = 5,
+        EE = 6,
+        Lat1 = 7,
+        Lon1 = 8,
+        Lat2 = 9,
+        Lon2 = 10
+    );
     TGICsourceProp = (
         INVALID = 0,
         Volts = 1,
@@ -105,15 +118,20 @@ uses
 type
     TObj = TGICSourceObj;
     TProp = TGICsourceProp;
+    TPropLegacy = TGICsourcePropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TGICsource.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, SOURCE or NON_PCPD_ELEM, 'GICsource');
 end;
@@ -129,7 +147,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
         'Volts, Angle',

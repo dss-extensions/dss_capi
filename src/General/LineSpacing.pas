@@ -17,6 +17,14 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TLineSpacingPropLegacy = (
+        INVALID = 0,
+        nconds = 1,
+        nphases = 2,
+        x = 3,
+        h = 4,
+        units = 5
+    );
     TLineSpacingProp = (
         INVALID = 0,
         NConds = 1,
@@ -81,15 +89,20 @@ uses
 type
     TObj = TLineSpacingObj;
     TProp = TLineSpacingProp;
+    TPropLegacy = TLineSpacingPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TLineSpacing.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, DSS_OBJECT, 'LineSpacing');
 end;
@@ -105,7 +118,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
     
     // enums
     PropertyType[ord(TProp.units)] := TPropertyType.MappedStringEnumProperty;

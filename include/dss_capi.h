@@ -176,6 +176,12 @@ extern "C" {
         DSSJSONFlags_Debug = 0x00000200 //< NOT IMPLEMENTED, avoid using until it's implemented.
     };
 
+    enum DSSPropertyNameStyle {
+        DSSPropertyNameStyle_Modern = 0, //< By default, the modern names are used. The names were reviewed to try to reach a convention across all components.
+        DSSPropertyNameStyle_Lowercase = 1, //< Use all lowercase strings.
+        DSSPropertyNameStyle_Legacy = 2 //< Use the previous capitalization of the property names.
+    };
+
     enum BatchOperation {
         BatchOperation_Set = 0,
         BatchOperation_Multiply = 1,
@@ -5303,6 +5309,36 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t Settings_Get_IterateDisabled(void);
     DSS_CAPI_DLL void Settings_Set_IterateDisabled(int32_t Value);
+
+
+    /*!
+    This function controls the naming convention of the DSS properties.
+
+    Accepted values:
+    
+        - DSSPropertyNameStyle_Modern (0): By default, the modern names are used. The names were reviewed to 
+          try to reach a convention across all components.
+        - DSSPropertyNameStyle_Lowercase (1): Use all lowercase strings.
+        - DSSPropertyNameStyle_Legacy (2): Use the previous capitalization of the property names.
+
+    The legacy alternative is kept for easier backwards compatibility. If you software relies on
+    comparing strings directly, using this is a good alternative.
+
+    The DSS engine is case insensitive, the capitalization of the names do not affect handling of 
+    DSS scripts or most of the related API functions. This setting does affect the property names 
+    returned by the Property API and the output of the "save circuit" command.
+
+    In a future version, there could be other options that allow different and incompatible names.
+    Replacing the percent sign by "pct" and other names not compatible with identifier in common
+    programming languages is under consideration.
+
+    **Affects the current DSS instance immediately, and all DSS instances after a "clear" command.**
+
+    Related enumeration: DSSPropertyNameStyle
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void Settings_SetPropertyNameStyle(int32_t style);
 
     /*! 
     Set the Frequency for next solution

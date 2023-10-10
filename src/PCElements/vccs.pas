@@ -20,6 +20,22 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TVCCSPropLegacy = (
+        INVALID = 0,
+        bus1 = 1,
+        phases = 2,
+        prated = 3,
+        vrated = 4,
+        ppct = 5,
+        bp1 = 6,
+        bp2 = 7,
+        filter = 8,
+        fsample = 9,
+        rmsmode = 10,
+        imaxpu = 11,
+        vrmstau = 12,
+        irmstau = 13
+    );
     TVCCSProp = (
         INVALID = 0,
         Bus1 = 1,
@@ -137,10 +153,12 @@ uses
 type
     TObj = TVCCSObj;
     TProp = TVCCSProp;
+    TPropLegacy = TVCCSPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     ALPHA1, ALPHA2: complex;
 
 // helper functions for ring buffer indexing, 1..len
@@ -161,7 +179,10 @@ end;
 constructor TVCCS.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, VCCS_ELEMENT, 'VCCS');
 end;
@@ -177,7 +198,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, False);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy, False);
 
     // integer properties
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;

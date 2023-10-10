@@ -34,6 +34,21 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TESPVLControlPropLegacy = (
+        INVALID = 0,
+        Element = 1,
+        Terminal = 2,
+        Typ = 3,
+        kWBand = 4,
+        kvarlimit = 5,
+        LocalControlList = 6,
+        LocalControlWeights = 7,
+        PVSystemList = 8,
+        PVSystemWeights = 9, 
+        StorageList = 10,
+        StorageWeights = 11
+        // Forecast = 12 -- Unused
+    );
     TESPVLControlProp = (
         INVALID = 0,
         Element = 1,
@@ -130,17 +145,20 @@ uses
 type
     TObj = TESPVLControlObj;
     TProp = TESPVLControlProp;
+    TPropLegacy = TESPVLControlPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
     TypeEnum: TDSSEnum;
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TESPVLControl.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         TypeEnum := TDSSEnum.Create('ESPVLControl: Type', True, 1, 1, 
             ['SystemController', 'LocalController'], [1, 2]);
     end;
@@ -158,7 +176,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // object references
     PropertyType[ord(TProp.element)] := TPropertyType.DSSObjectReferenceProperty;

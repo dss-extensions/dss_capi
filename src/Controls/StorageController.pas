@@ -41,6 +41,46 @@ const
 
 type
 {$SCOPEDENUMS ON}
+    TStorageControllerPropLegacy = (
+        INVALID = 0,
+        Element = 1,
+        Terminal = 2,
+        MonPhase = 3,
+        kWTarget = 4,
+        kWTargetLow = 5,
+        pctkWBand = 6,
+        kWBand = 7,
+        pctkWBandLow = 8,
+        kWBandLow = 9,
+        ElementList = 10,
+        Weights = 11,
+        ModeDischarge = 12,
+        ModeCharge = 13,
+        TimeDischargeTrigger = 14,
+        TimeChargeTrigger = 15,
+        pctRatekW = 16,
+        pctRateCharge = 17,
+        pctReserve = 18,
+        kWhTotal = 19,
+        kWTotal = 20,
+        kWhActual = 21,
+        kWActual = 22,
+        kWneed = 23,
+        Yearly = 24,
+        Daily = 25,
+        Duty = 26,
+        EventLog = 27,
+        InhibitTime = 28,
+        Tup = 29,
+        TFlat = 30,
+        Tdn = 31,
+        kWThreshold = 32,
+        DispFactor = 33,
+        ResetLevel = 34,
+        Seasons = 35,
+        SeasonTargets = 36,
+        SeasonTargetsLow = 37
+    );
     TStorageControllerProp = (
         INVALID = 0,
         Element = 1,
@@ -220,6 +260,7 @@ uses
 type
     TObj = TStorageControllerObj;
     TProp = TStorageControllerProp;
+    TPropLegacy = TStorageControllerPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 
@@ -239,7 +280,8 @@ const
     RELEASE_INHIBIT = 999;
 
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     ChargeModeEnum, DischargeModeEnum: TDSSEnum;
 
 constructor TStorageController.Create(dssContext: TDSSContext);
@@ -247,6 +289,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         DischargeModeEnum := TDSSEnum.Create('StorageController: Discharge Mode', False, 1, 2, 
             ['Peakshave', 'Follow', 'Support', 'Loadshape', 'Time', 'Schedule', 'I-Peakshave'],
             [MODEPEAKSHAVE, MODEFOLLOW, MODESUPPORT, MODELOADSHAPE, MODETIME, MODESCHEDULE, CURRENTPEAKSHAVE],
@@ -302,7 +345,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // enum properties
     PropertyType[ord(TProp.ModeDischarge)] := TPropertyType.MappedStringEnumProperty;

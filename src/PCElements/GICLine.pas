@@ -39,6 +39,24 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TGICLinePropLegacy = (
+        INVALID = 0,
+        bus1 = 1, 
+        bus2 = 2, 
+        Volts = 3,
+        Angle = 4,
+        frequency = 5,
+        phases = 6,
+        R = 7,
+        X = 8,
+        C = 9,
+        EN = 10,
+        EE = 11,
+        Lat1 = 12,
+        Lon1 = 13,
+        Lat2 = 14,
+        Lon2 = 15
+    );
     TGICLineProp = (
         INVALID = 0,
         Bus1 = 1, 
@@ -134,15 +152,20 @@ uses
 type
     TObj = TGICLineObj;
     TProp = TGICLineProp;
+    TPropLegacy = TGICLinePropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TGICLine.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, GIC_Line, 'GICLine');
 end;
@@ -158,7 +181,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
         'Volts, Angle',

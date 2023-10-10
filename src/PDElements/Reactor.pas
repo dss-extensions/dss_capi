@@ -60,6 +60,28 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TReactorPropLegacy = (
+        INVALID = 0,   
+        bus1 = 1,
+        bus2 = 2,
+        phases = 3,
+        kvar = 4,
+        kv = 5,
+        conn = 6,
+        Rmatrix = 7,
+        Xmatrix = 8,
+        Parallel = 9,
+        R = 10,
+        X = 11,
+        Rp = 12,
+        Z1 = 13,
+        Z2 = 14,
+        Z0 = 15,
+        Z = 16,
+        RCurve = 17,
+        LCurve = 18,
+        LmH = 19
+    );
     TReactorProp = (
         INVALID = 0,   
         Bus1 = 1,
@@ -146,15 +168,20 @@ uses
 type
     TObj = TReactorObj;
     TProp = TReactorProp;
+    TPropLegacy = TReactorPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TReactor.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, REACTOR_ELEMENT, 'Reactor');
 end;
@@ -170,7 +197,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
         'kvar, Rcurve, Lcurve',

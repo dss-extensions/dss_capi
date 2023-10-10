@@ -26,6 +26,20 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TIsourcePropLegacy = (
+        INVALID = 0,
+        bus1 = 1,
+        amps = 2,
+        angle = 3,
+        frequency = 4,
+        phases = 5,
+        scantype = 6,
+        sequence = 7,
+        Yearly = 8,
+        Daily = 9,
+        Duty = 10,
+        Bus2 = 11
+    );
     TIsourceProp = (
         INVALID = 0,
         Bus1 = 1,
@@ -110,15 +124,20 @@ uses
 type
     TObj = TISourceObj;
     TProp = TIsourceProp;
+    TPropLegacy = TIsourcePropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TIsource.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, SOURCE or NON_PCPD_ELEM, 'Isource');
 end;
@@ -134,7 +153,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // integer properties
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;

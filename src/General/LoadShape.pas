@@ -58,6 +58,31 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TLoadShapePropLegacy = (
+        INVALID = 0,
+        npts = 1,     // Number of points to expect
+        interval = 2, // default = 1.0
+        mult = 3,     // vector of power multiplier values
+        hour = 4,     // vector of hour values
+        mean = 5,     // set the mean (otherwise computed)
+        stddev = 6,   // set the std dev (otherwise computed)
+        csvfile = 7,  // Switch input to a csvfile
+        sngfile = 8,  // switch input to a binary file of singles
+        dblfile = 9,  // switch input to a binary file of singles
+        action = 10,  // actions  Normalize
+        qmult = 11,   // Q multiplier
+        UseActual = 12, // Flag to signify to use actual value
+        Pmax = 13,    // MaxP value
+        Qmax = 14,    // MaxQ
+        sinterval = 15, // Interval in seconds
+        minterval = 16, // Interval in minutes
+        Pbase = 17,   // for normalization, use peak if 0
+        Qbase = 18,   // for normalization, use peak if 0
+        Pmult = 19,   // synonym for Mult
+        PQCSVFile = 20, // Redirect to a file with p, q pairs
+        MemoryMapping = 21, // Enable/disable using Memory mapping for this shape
+        Interpolation = 22
+    );
     TLoadShapeProp = (
         INVALID = 0,
         NPts = 1,     // Number of points to expect
@@ -219,6 +244,7 @@ type
 type
     TObj = TLoadShapeObj;
     TProp = TLoadShapeProp;
+    TPropLegacy = TLoadShapePropLegacy;
 
 {$SCOPEDENUMS ON}
 {$PUSH}
@@ -234,7 +260,8 @@ type
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     ActionEnum, InterpEnum: TDSSEnum;
 
 procedure Do2ColCSVFile(Obj: TObj; const FileName: String);forward;
@@ -247,6 +274,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         ActionEnum := TDSSEnum.Create('LoadShape: Action', True, 1, 1, 
             ['Normalize', 'DblSave', 'SngSave'], 
             [ord(TLoadShapeAction.Normalize), ord(TLoadShapeAction.DblSave), ord(TLoadShapeAction.SngSave)]);
@@ -313,7 +341,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     PropertyStructArrayCountOffset := ptruint(@obj.NumPoints);
 

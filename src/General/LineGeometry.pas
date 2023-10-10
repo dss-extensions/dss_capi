@@ -33,6 +33,28 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TLineGeometryPropLegacy = (
+        INVALID = 0,
+        nconds = 1,
+        nphases = 2,
+        cond = 3,
+        wire = 4,
+        x = 5,
+        h = 6,
+        units = 7,
+        normamps = 8,
+        emergamps = 9,
+        reduce = 10,
+        spacing = 11,
+        wires = 12,
+        cncable = 13,
+        tscable = 14,
+        cncables = 15,
+        tscables = 16,
+        Seasons = 17,
+        Ratings = 18,
+        LineType = 19
+    );
     TLineGeometryProp = (
         INVALID = 0,
         NConds = 1,
@@ -164,15 +186,20 @@ uses
 type
     TObj = TLineGeometryObj;
     TProp = TLineGeometryProp;
+    TPropLegacy = TLineGeometryPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TLineGeometry.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, DSS_OBJECT, 'LineGeometry');
 end;
@@ -220,7 +247,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
         'LineSpacing',

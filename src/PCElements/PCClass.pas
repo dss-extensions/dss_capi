@@ -13,6 +13,10 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TPCElementPropLegacy = (
+        INVALID = 0,
+        spectrum = 1
+    );
     TPCElementProp = (
         INVALID = 0,
         Spectrum = 1
@@ -46,15 +50,20 @@ uses
 type
     TObj = TPCElement;
     TProp = TPCElementProp;
+    TPropLegacy = TPCElementPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TPCClass.Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, DSSClsType, DSSClsName);
 
@@ -80,7 +89,7 @@ procedure TPCClass.DefineProperties;
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
-    PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, False, 'PCClass');
+    PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, PropInfoLegacy, False, 'PCClass');
 
     PropertyOffset_PCClass := ActiveProperty;
 

@@ -49,6 +49,22 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TCapacitorPropLegacy = (
+        INVALID = 0,
+        bus1 = 1,
+        bus2 = 2,
+        phases = 3,
+        kvar = 4,
+        kv = 5,
+        conn = 6,
+        cmatrix = 7,
+        cuf = 8,
+        R = 9,
+        XL = 10,
+        Harm = 11,
+        Numsteps = 12,
+        states = 13
+    );
     TCapacitorProp = (
         INVALID = 0,
         Bus1 = 1,
@@ -158,15 +174,20 @@ uses
 type
     TObj = TCapacitorObj;
     TProp = TCapacitorProp;
+    TPropLegacy = TCapacitorPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TCapacitor.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, CAP_ELEMENT, 'Capacitor');
 end;
@@ -182,7 +203,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
         'kvar',

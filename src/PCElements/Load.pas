@@ -67,6 +67,47 @@ type
         kWh_PF = 4
     );
 
+    TLoadPropLegacy = (
+        INVALID = 0,
+        phases = 1,
+        bus1 = 2,
+        kV = 3,
+        kW = 4,
+        pf = 5,
+        model = 6,
+        yearly = 7,
+        daily = 8,
+        duty = 9, 
+        growth = 10, 
+        conn = 11, 
+        kvar = 12, 
+        Rneut = 13, // IF entered -, assume open
+        Xneut = 14, 
+        status = 15, // fixed or variable
+        cls = 16, // integer
+        Vminpu = 17, // Min pu voltage for which model applies
+        Vmaxpu = 18, // Max pu voltage for which model applies
+        Vminnorm = 19, // Min pu voltage normal load
+        Vminemerg = 20, // Min pu voltage emergency rating
+        xfkVA = 21, // Service transformer rated kVA
+        allocationfactor = 22, // allocation factor  for xfkVA
+        kVA = 23, // specify load in kVA and PF
+        pctmean = 24, // per cent default mean
+        pctstddev = 25, // per cent default standard deviation
+        CVRwatts = 26, // Percent watts reduction per 1% reduction in voltage from nominal
+        CVRvars = 27, // Percent vars reduction per 1% reduction in voltage from nominal
+        kwh = 28, // kwh billing
+        kwhdays = 29, // kwh billing period (24-hr days)
+        Cfactor = 30, // multiplier from kWh avg to peak kW
+        CVRcurve = 31, // name of curve to use for yearly CVR simulations
+        NumCust = 32, // Number of customers, this load
+        ZIPV = 33, // array of 7 coefficients
+        pctSeriesRL = 34, // pct of Load that is series R-L
+        RelWeight = 35, // Weighting factor for reliability
+        Vlowpu = 36, // Below this value resort to constant Z model = Yeq
+        puXharm = 37, // pu Reactance for Harmonics, if specifies
+        XRharm = 38 // X/R at fundamental for series R-L model for hamonics
+    );
     TLoadProp = (
         INVALID = 0,
         Phases = 1,
@@ -281,10 +322,12 @@ uses
 type
     TObj = TLoadObj;
     TProp = TLoadProp;
+    TPropLegacy = TLoadPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
     PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;
     LoadStatusEnum, LoadModelEnum: TDSSEnum;
 
 constructor TLoad.Create(dssContext: TDSSContext);
@@ -292,6 +335,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         LoadModelEnum := TDSSEnum.Create('Load: Model', True, 0, 0, [
             'Constant PQ', 'Constant Z', 'Motor (constant P, quadratic Q)', 'CVR (linear P, quadratic Q)', 
             'Constant I', 'Constant P, fixed Q', 'Constant P, fixed X', 'ZIPV'], 
@@ -319,7 +363,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
         'kW, PF',

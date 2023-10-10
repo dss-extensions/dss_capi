@@ -48,6 +48,59 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TRelayPropLegacy = (
+        INVALID = 0,
+        MonitoredObj = 1,
+        MonitoredTerm = 2,
+        SwitchedObj = 3,
+        SwitchedTerm = 4,
+        typ = 5,
+        Phasecurve = 6,
+        Groundcurve = 7,
+        PhaseTrip = 8,
+        GroundTrip = 9,
+        TDPhase = 10, // 28
+        TDGround = 11, // 29
+        PhaseInst = 12, // 10
+        GroundInst = 13, // 11
+        Reset = 14, // 12
+        Shots = 15, // 13
+        RecloseIntervals = 16, // 14
+        Delay = 17, // 24
+        Overvoltcurve = 18, // 15
+        Undervoltcurve = 19, // 16
+        kvbase = 20, // 17
+        __47pctPickup = 21, // 25
+        __46BaseAmps = 22, // 23
+        __46pctPickup = 23, // 21
+        __46isqt = 24, // 22
+        Variable = 25, // 20
+        overtrip = 26,
+        undertrip = 27,
+        Breakertime = 28, // 18
+        action = 29, // 19
+        Z1mag = 30,
+        Z1ang = 31,
+        Z0mag = 32,
+        Z0ang = 33,
+        Mphase = 34,
+        Mground = 35,
+        EventLog = 36,
+        DebugTrace = 37,
+        DistReverse = 38,
+        Normal = 39,
+        State = 40,
+        DOC_TiltAngleLow = 41,
+        DOC_TiltAngleHigh = 42,
+        DOC_TripSettingLow = 43,
+        DOC_TripSettingHigh = 44,
+        DOC_TripSettingMag = 45,
+        DOC_DelayInner = 46,
+        DOC_PhaseCurveInner = 47,
+        DOC_PhaseTripInner = 48,
+        DOC_TDPhaseInner = 49,
+        DOC_P1Blocking
+    );
     TRelayProp = (
         INVALID = 0,
         MonitoredObj = 1,
@@ -263,6 +316,7 @@ uses
 type
     TObj = TRelayObj;
     TProp = TRelayProp;
+    TPropLegacy = TRelayPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 
@@ -278,7 +332,8 @@ const
 
     MIN_DISTANCE_REACTANCE = -1.0e-8; // allow near-bolted faults to be detected
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     ActionEnum, StateEnum: TDSSEnum;
     RelayTypeEnum : TDSSEnum;
 
@@ -287,6 +342,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         RelayTypeEnum := TDSSEnum.Create('Relay: Type', False, 1, 2, 
             ['Current', 'Voltage', 'ReversePower', '46', '47', 'Generic', 'Distance', 'TD21', 'DOC'], 
             [0, 1, 3, 4, 5, 6, 7, 8, 9],
@@ -318,7 +374,7 @@ begin
 
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
     PropertyNameJSON[ord(TProp.__47pctPickup)] := 'F47pctPickup'; // F for "function"
     PropertyNameJSON[ord(TProp.__46BaseAmps)] := 'F46BaseAmps';
     PropertyNameJSON[ord(TProp.__46pctPickup)] := 'F46pctPickup';

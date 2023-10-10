@@ -48,6 +48,15 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TGrowthShapePropLegacy = (
+        INVALID = 0,
+        npts = 1, // Number of points to expect
+        year = 2, // vector of year values
+        mult = 3, // vector of multiplier values corresponding to years
+        csvfile = 4, // Switch input to a csvfile (year, mult)
+        sngfile = 5, // switch input to a binary file of singles  (year, mult)
+        dblfile = 6 // switch input to a binary file of doubles (year, mult)
+    );
     TGrowthShapeProp = (
         INVALID = 0,
         NPts = 1, // Number of points to expect
@@ -104,15 +113,20 @@ uses
 type
     TObj = TGrowthShapeObj;
     TProp = TGrowthShapeProp;
+    TPropLegacy = TGrowthShapePropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TGrowthShape.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, DSS_OBJECT, 'GrowthShape');
 end;
@@ -128,7 +142,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     PropertyStructArrayCountOffset := ptruint(@obj.Npts);
 

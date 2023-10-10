@@ -36,6 +36,13 @@ type
         NoPropertyTracking = 32
     );
 
+    TDSSPropertyNameStyle = (
+        Modern = 0,
+        Lowercase = 1,
+        Legacy = 2
+        // JSONSchema = 3
+    );
+
     TDSSObjectFlag = (
         EditionActive, 
         HasBeenSaved, // originally from TDSSObject
@@ -343,7 +350,7 @@ type
         Procedure CountPropertiesAndAllocate;virtual;
         procedure DefineProperties;virtual;
 
-        procedure PopulatePropertyNames(PropOffset: Integer; NumProps: Integer; EnumInfo: Pointer; ReplacePct: Boolean = True; PropSource: String = '');
+        procedure PopulatePropertyNames(PropOffset: Integer; NumProps: Integer; EnumInfo: Pointer; EnumInfoLegacy: Pointer; ReplacePct: Boolean = True; PropSource: String = '');
      public
         DSS: TDSSContext;
         ClassParents: TStringList;
@@ -352,7 +359,8 @@ type
         NumProperties: Integer;
 
         // TODO: move to array of records
-        PropertyName, PropertyNameLowercase, PropertyNameJSON: pStringArray;
+        PropertyNameModern, PropertyNameLegacy, PropertyNameLowercase, PropertyNameJSON: pStringArray;
+        PropertyName: pStringArray; // Nowadays this is just a reference to one of the other pointers
         PropertyRedundantWith: pIntegerArray;
         PropertyArrayAlternative: pIntegerArray;
         PropertySource: pStringArray;
@@ -411,6 +419,7 @@ type
         Property Name:String read Class_Name;
 
         function GetEnumerator: TDSSObjectEnumerator;
+        procedure SetPropertyNameStyle(style: TDSSPropertyNameStyle);
     protected
         // DSSContext convenience functions
         procedure DoErrorMsg(Const S, Emsg, ProbCause: String; ErrNum: Integer);inline;
@@ -690,6 +699,8 @@ type
         procedure Fire_InitControls();
         procedure Fire_CheckControls();
         procedure Fire_StepControls();
+
+        procedure SetPropertyNameStyle(style: TDSSPropertyNameStyle);
     End;
 
 VAR
@@ -722,6 +733,7 @@ USES
 
 type
     TProp = TDSSObjectProp;
+    TPropLegacy = TDSSObjectPropLegacy;
     PLongBool = ^LongBool;
     PPDouble = ^PDouble;
     PPString= ^PString;
@@ -731,6 +743,7 @@ const
     NumPropsThisClass = Ord(High(TProp));
 var
     PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;
 
 function TDSSContext.GetROFileStream(fn: String): TStream;
 begin
@@ -1152,10 +1165,24 @@ begin
     ClassNames.Add(ActiveDSSClass.Name); // Add to classname list
 end;
 
+procedure TDSSContext.SetPropertyNameStyle(style: TDSSPropertyNameStyle);
+var
+    cls: TDSSClass;
+begin
+    for cls in DSSClassList do
+    begin
+        cls.SetPropertyNameStyle(style);
+    end;
+    PropNameStyle := style;
+end;
+
 Constructor TDSSClass.Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
 BEGIN
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     Inherited Create;
 
@@ -1166,7 +1193,9 @@ BEGIN
     ClassParents.Add('DSSClass');
     DSS := dssContext;
     ElementList := TDSSPointerList.Create(20);  // Init size and increment
+    PropertyNameLegacy := nil;
     PropertyName := nil;
+    PropertyNameModern := nil;
     PropertyNameLowercase := nil;
     PropertyNameJSON := nil;
     PropertyRedundantWith := nil;
@@ -1212,7 +1241,8 @@ begin
     // Get rid of space occupied by strings
     for i := 1 to NumProperties do
     begin
-        PropertyName[i] := '';
+        PropertyNameModern[i] := '';
+        PropertyNameLegacy[i] := '';
         PropertyNameLowercase[i] := '';
         PropertySource[i] := '';
         PropertyNameJSON[i] := '';
@@ -1220,7 +1250,8 @@ begin
 
     Reallocmem(PropertyRedundantWith, 0);
     Reallocmem(PropertyArrayAlternative, 0);
-    Reallocmem(PropertyName, 0);
+    Reallocmem(PropertyNameLegacy, 0);
+    Reallocmem(PropertyNameModern, 0);
     Reallocmem(PropertyNameLowercase, 0);
     Reallocmem(PropertyNameJSON, 0);
     Reallocmem(PropertySource, 0);
@@ -1465,7 +1496,9 @@ var
 begin
     NumProperties := NumProperties + 1;
 
-    PropertyName := Allocmem(SizeOf(String) * NumProperties);
+    PropertyNameLegacy := Allocmem(SizeOf(String) * NumProperties);
+    PropertyNameModern := Allocmem(SizeOf(String) * NumProperties);
+    PropertyName := PropertyNameModern;
     PropertyNameLowercase := Allocmem(SizeOf(String) * NumProperties);
     PropertyNameJSON := Allocmem(SizeOf(String) * NumProperties);
     PropertyRedundantWith := Allocmem(SizeOf(Integer) * NumProperties);
@@ -1509,7 +1542,7 @@ Procedure TDSSClass.DefineProperties;
 var
     i: Integer;
 Begin
-    PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, False, 'DSSClass');
+    PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, PropInfoLegacy, False, 'DSSClass');
 
     PropertyType[ActiveProperty + ord(TProp.Like)] := TPropertyType.MakeLikeProperty;
     PropertyOffset[ActiveProperty + ord(TProp.Like)] := 1; // dummy value
@@ -1580,7 +1613,19 @@ begin
     ElementNamesOutOfSynch := False;
 end;
 
-procedure TDSSClass.PopulatePropertyNames(PropOffset: Integer; NumProps: Integer; EnumInfo: Pointer; ReplacePct: Boolean = True; PropSource: String = '');
+procedure TDSSClass.SetPropertyNameStyle(style: TDSSPropertyNameStyle);
+begin
+    case style of
+        TDSSPropertyNameStyle.Legacy:
+            PropertyName := PropertyNameLegacy;
+        TDSSPropertyNameStyle.Lowercase:
+            PropertyName := PropertyNameLowercase;
+    else
+        PropertyName := PropertyNameModern;
+    end;
+end;
+
+procedure TDSSClass.PopulatePropertyNames(PropOffset: Integer; NumProps: Integer; EnumInfo: Pointer; EnumInfoLegacy: Pointer; ReplacePct: Boolean = True; PropSource: String = '');
 var
     i: Integer;
     propName, propNameJSON: String;
@@ -1606,9 +1651,27 @@ begin
             propName := ReplaceStr(propName, 'pct', '%');
 
         propName := ReplaceStr(propName, '__', '-');
-        PropertyName[PropOffset + i] := propName;
+        PropertyNameModern[PropOffset + i] := propName;
         PropertyNameJSON[PropOffset + i] := propNameJSON;
         PropertySource[PropOffset + i] := PropSource;
+    end;
+    for i := 1 to NumProps do
+    begin
+        propName := GetEnumName(EnumInfoLegacy, i);
+        if AnsiLowerCase(propName) = 'cls' then
+            propName := 'class'
+        else if AnsiLowerCase(propName) = 'typ' then
+            propName := propName + 'e'
+        else if propName = 'vr' then
+            propName := 'var';
+
+        if LeftStr(propName, 2) = '__' then
+            propName := Copy(propName, 3, Length(propName));
+        if ReplacePct then
+            propName := ReplaceStr(propName, 'pct', '%');
+
+        propName := ReplaceStr(propName, '__', '-');
+        PropertyNameLegacy[PropOffset + i] := propName;
     end;
 end;
 

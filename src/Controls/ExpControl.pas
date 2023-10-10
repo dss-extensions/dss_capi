@@ -29,6 +29,23 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TExpControlPropLegacy = (
+        INVALID = 0,
+        PVSystemList = 1,
+        Vreg = 2,
+        Slope = 3,
+        VregTau = 4,
+        Qbias = 5,
+        VregMin = 6,
+        VregMax = 7,
+        QmaxLead = 8,
+        QmaxLag = 9,
+        EventLog = 10,
+        DeltaQ_factor = 11,
+        PreferQ = 12,
+        Tresponse = 13,
+        DERList = 14
+        );
     TExpControlProp = (
         INVALID = 0,
         PVSystemList = 1,
@@ -145,6 +162,7 @@ uses
 type
     TObj = TExpControlObj;
     TProp = TExpControlProp;
+    TPropLegacy = TExpControlPropLegacy;
 
 const
     NumPropsThisClass = Ord(High(TProp));
@@ -153,11 +171,15 @@ const
 
 var
     PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;
 
 constructor TExpControl.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, EXP_CONTROL, 'ExpControl');
 end;
@@ -173,7 +195,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // string lists
     PropertyType[ord(TProp.PVSystemList)] := TPropertyType.StringListProperty;

@@ -33,6 +33,60 @@ const
 
 type
 {$SCOPEDENUMS ON}
+    TPVSystemPropLegacy = (
+        INVALID = 0,
+        phases = 1, 
+        bus1 = 2,
+        kv = 3, // propKV
+        irradiance = 4, // propIrradiance
+        Pmpp = 5, // propPmpp
+        pctPmpp = 6, // proppctPmpp
+        Temperature = 7, // propTemp
+        pf = 8, // propPF
+        conn = 9, // propCONNECTION
+        kvar = 10, // propKVAR
+        kVA = 11, // propKVA
+        pctCutin = 12, // propCutin
+        pctCutout = 13, // propCutout
+        EffCurve = 14, // propInvEffCurve
+        P__TCurve = 15, // propP_T_Curve
+        pctR = 16, // propPCTR
+        pctX = 17, // propPCTX
+        model = 18, // propMODEL
+        Vminpu = 19, // propVMINPU
+        Vmaxpu = 20, // propVMAXPU
+        Balanced = 21, // propBalanced
+        LimitCurrent = 22, // propLimited
+        yearly = 23, // propYEARLY
+        daily = 24, // propDAILY
+        duty = 25, // propDUTY
+        Tyearly = 26, // propTYEARLY
+        Tdaily = 27, // propTDAILY
+        Tduty = 28, // propTDUTY
+        cls = 29, // propCLASS
+        UserModel = 30, // propUSERMODEL
+        UserData = 31, // propUSERDATA
+        debugtrace = 32, // propDEBUGTRACE
+        VarFollowInverter = 33, // propVarFollowInverter
+        DutyStart = 34, // propDutyStart 
+        WattPriority = 35, // propPpriority
+        PFPriority = 36, // propPFpriority
+        pctPminNoVars = 37, // propPminNoVars
+        pctPminkvarMax = 38, // propPminkvarLimit
+        kvarMax = 39, // propkvarLimit
+        kvarMaxAbs = 40, // propkvarLimitneg
+
+        kVDC, // propkVDC,
+        Kp, // propKp
+        PITol, // propCtrlTol
+        SafeVoltage, // propSMT
+        SafeMode, // propSM
+        DynamicEq, // propDynEq
+        DynOut, // propDynOut
+        ControlMode, // propGFM
+        AmpLimit,
+        AmpLimitGain
+    );
     TPVSystemProp = (
         INVALID = 0,
         Phases = 1, 
@@ -302,10 +356,12 @@ uses
 type
     TObj = TPVsystemObj;
     TProp = TPVSystemProp;
+    TPropLegacy = TPVSystemPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
     PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;
     PVSystemModelEnum: TDSSEnum;
 
 
@@ -314,7 +370,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
-
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         PVSystemModelEnum := TDSSEnum.Create('PVSystem: Model', True, 0, 0, [
             'Constant P, PF', 'Constant Y', 'User model'],
             [1, 2, 3],
@@ -358,7 +414,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
     PropertyNameJSON[ord(TProp.P__TCurve)] := 'PTCurve';
 
     SpecSetNames := ArrayOfString.Create(

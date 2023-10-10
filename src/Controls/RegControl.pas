@@ -32,6 +32,41 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TRegControlPropLegacy = (
+        INVALID = 0,
+        transformer = 1,
+        winding = 2,
+        vreg = 3,
+        band = 4,
+        ptratio = 5,
+        CTprim = 6,
+        R = 7,
+        X = 8,
+        bus = 9,
+        delay = 10,
+        reversible = 11,
+        revvreg = 12,
+        revband = 13,
+        revR = 14,
+        revX = 15,
+        tapdelay = 16,
+        debugtrace = 17,
+        maxtapchange = 18,
+        inversetime = 19,
+        tapwinding = 20,
+        vlimit = 21,
+        PTphase = 22,
+        revThreshold = 23,
+        revDelay = 24,
+        revNeutral = 25,
+        EventLog = 26,
+        RemotePTRatio = 27,
+        TapNum = 28,
+        Reset = 29,
+        LDC_Z = 30,
+        rev_Z = 31,
+        Cogen = 32 
+    );
     TRegControlProp = (
         INVALID = 0,
         Transformer = 1,
@@ -201,6 +236,7 @@ uses
 type
     TObj = TRegControlObj;
     TProp = TRegControlProp;
+    TPropLegacy = TRegControlPropLegacy;
 
 const
     NumPropsThisClass = Ord(High(TProp));
@@ -212,7 +248,8 @@ const
     ACTION_TAPCHANGE = 0;
     ACTION_REVERSE = 1;
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     PhaseEnum: TDSSEnum;
 
 constructor TRegControl.Create(dssContext: TDSSContext);
@@ -220,6 +257,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         PhaseEnum := TDSSEnum.Create('RegControl: Phase Selection', True, 2, 2, 
             ['min', 'max'], [-3, -2]);
         PhaseEnum.Hybrid := True;
@@ -259,7 +297,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // enum properties
     PropertyType[ord(TProp.PTphase)] := TPropertyType.MappedStringEnumProperty;

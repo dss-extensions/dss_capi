@@ -35,6 +35,32 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TCapControlPropLegacy = (
+        INVALID = 0,
+        element = 1,
+        terminal = 2,
+        capacitor = 3,
+        typ = 4,
+        PTratio = 5,
+        CTratio = 6,
+        ONsetting = 7,
+        OFFsetting = 8,
+        Delay = 9,
+        VoltOverride = 10,
+        Vmax = 11,
+        Vmin = 12,
+        DelayOFF = 13,
+        DeadTime = 14,
+        CTPhase = 15,
+        PTPhase = 16,
+        VBus = 17,
+        EventLog = 18,
+        UserModel = 19,
+        UserData = 20,
+        pctMinkvar = 21,
+        Reset = 22,
+        ControlSignal
+    );
     TCapControlProp = (
         INVALID = 0,
         Element = 1,
@@ -199,6 +225,7 @@ uses
 type 
     TObj = TCapControlObj;
     TProp = TCapControlProp;
+    TPropLegacy = TCapControlPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
     AVGPHASES = -1;
@@ -206,6 +233,7 @@ const
     MINPHASE = -3;
 var
     PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;
     TypeEnum: TDSSEnum;
 
 constructor TCapControl.Create(dssContext: TDSSContext);
@@ -213,6 +241,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         TypeEnum := TDSSEnum.Create('CapControl: Type', True, 1, 1, 
             ['Current', 'Voltage', 'kvar', 'Time', 'PowerFactor', 'Follow'{'UserControl'}], 
             [ord(CURRENTCONTROL), ord(VOLTAGECONTROL), ord(KVARCONTROL), ord(TIMECONTROL), ord(PFCONTROL), ord(FOLLOWCONTROL){, ord(USERCONTROL)}]);
@@ -238,7 +267,7 @@ var
 begin
     NumProperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, False);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy, False);
 
     // object references
     PropertyType[ord(TProp.capacitor)] := TPropertyType.DSSObjectReferenceProperty;

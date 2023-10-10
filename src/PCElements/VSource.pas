@@ -20,6 +20,40 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TVsourcePropLegacy = (
+        INVALID = 0,
+        bus1 = 1,
+        basekv = 2,
+        pu = 3,
+        angle = 4,
+        frequency = 5,
+        phases = 6,
+        MVAsc3 = 7,
+        MVAsc1 = 8,
+        x1r1 = 9,
+        x0r0 = 10,
+        Isc3 = 11,
+        Isc1 = 12,
+        R1 = 13,
+        X1 = 14,
+        R0 = 15,
+        X0 = 16,
+        ScanType = 17,
+        Sequence = 18,
+        bus2 = 19,
+        Z1 = 20,
+        Z0 = 21,
+        Z2 = 22,
+        puZ1 = 23,
+        puZ0 = 24,
+        puZ2 = 25,
+        baseMVA = 26,
+        Yearly = 27,
+        Daily = 28,
+        Duty = 29,
+        Model = 30,
+        puZideal = 31
+    );
     TVsourceProp = (
         INVALID = 0,
         Bus1 = 1,
@@ -156,10 +190,12 @@ uses
 type
     TObj = TVsourceObj;
     TProp = TVsourceProp;
+    TPropLegacy = TVsourcePropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     ModelEnum: TDSSEnum;
 
 constructor TVsource.Create(dssContext: TDSSContext);
@@ -167,6 +203,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         ModelEnum := TDSSEnum.Create('VSource: Model', True, 1, 1, ['Thevenin', 'Ideal'], [0, Integer(True)]);
     end;
 
@@ -185,7 +222,7 @@ begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
     
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
         'MVAsc3, MVAsc1, x1r1, x0r0',

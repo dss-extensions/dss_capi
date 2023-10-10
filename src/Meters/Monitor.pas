@@ -92,6 +92,16 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TMonitorPropLegacy = (
+        INVALID = 0,
+        element = 1, // TODO: has specific type according to the current mode
+        terminal = 2,
+        mode = 3,
+        action = 4, // buffer=clear|save
+        residual = 5, // buffer=clear|save
+        VIPolar = 6, // V I in mag and angle rather then re and im
+        PPolar = 7 // Power in power PF rather then power and vars
+    );
     TMonitorProp = (
         INVALID = 0,
         Element = 1, // TODO: has specific type according to the current mode
@@ -231,6 +241,7 @@ uses
 type
     TObj = TMonitorObj;
     TProp = TMonitorProp;
+    TPropLegacy = TMonitorPropLegacy;
 {$PUSH}
 {$Z4} // keep enums as int32 values
     TMonitorAction = (
@@ -252,7 +263,8 @@ const
 
 var
     EMPTY_LEGACY_HEADER: TLegacyMonitorStrBuffer;
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     ActionEnum: TDSSEnum;
 
 constructor TDSSMonitor.Create(dssContext: TDSSContext);
@@ -260,6 +272,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         ActionEnum := TDSSEnum.Create('Monitor: Action', True, 1, 1, 
             ['Clear', 'Save', 'Take', 'Process', 'Reset'], 
             [ord(TMonitorAction.Clear), ord(TMonitorAction.Save), ord(TMonitorAction.Take), ord(TMonitorAction.Process), ord(TMonitorAction.Clear)]);
@@ -296,7 +309,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // boolean properties
     PropertyType[ord(TProp.residual)] := TPropertyType.BooleanProperty;

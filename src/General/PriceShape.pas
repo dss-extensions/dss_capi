@@ -45,6 +45,21 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TPriceShapePropLegacy = (
+        INVALID = 0,
+        npts = 1, // Number of points to expect
+        interval = 2, // default = 1.0;
+        price = 3, // vector of price values
+        hour = 4, // vector of hour values
+        mean = 5, // set the mean Price (otherwise computed)
+        stddev = 6, // set the std dev of the Price (otherwise computed)
+        csvfile = 7, // Switch input to a csvfile
+        sngfile = 8, // switch input to a binary file of singles
+        dblfile = 9, // switch input to a binary file of doubles
+        sinterval = 10, // Interval in seconds
+        minterval = 11, // Interval in minutes
+        action = 12
+    );
     TPriceShapeProp = (
         INVALID = 0,
         NPts = 1, // Number of points to expect
@@ -127,6 +142,7 @@ uses
 type
     TObj = TPriceShapeObj;
     TProp = TPriceShapeProp;
+    TPropLegacy = TPriceShapePropLegacy;
 {$PUSH}
 {$Z4} // keep enums as int32 values
     TPriceShapeAction = (
@@ -138,7 +154,8 @@ type
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     ActionEnum: TDSSEnum;
 
 constructor TPriceShape.Create(dssContext: TDSSContext);
@@ -146,6 +163,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         ActionEnum := TDSSEnum.Create('PriceShape: Action', True, 1, 1, 
             ['DblSave', 'SngSave'], 
             [ord(TPriceShapeAction.DblSave), ord(TPriceShapeAction.SngSave)]);
@@ -197,7 +215,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     PropertyStructArrayCountOffset := ptruint(@obj.FNumPoints);
 

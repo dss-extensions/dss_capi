@@ -297,6 +297,8 @@ begin
     DSS.NewDSSClass(DSS.SensorClass);
 
     DSS.NumIntrinsicClasses := DSS.DSSClassList.Count;
+
+    DSS.SetPropertyNameStyle(PropNameStyle);
 end;
 
 procedure DisposeDSSClasses(DSS: TDSSContext);

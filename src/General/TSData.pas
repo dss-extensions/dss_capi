@@ -24,6 +24,7 @@ type
         TapeLayer = 2,
         TapeLap = 3
     );
+    TTSDataPropLegacy = TTSDataProp;
 {$SCOPEDENUMS OFF}
     TTSData = class(TCableData)
     PROTECTED
@@ -64,15 +65,20 @@ uses
 type
     TObj = TTSDataObj;
     TProp = TTSDataProp;
+    TPropLegacy = TTSDataPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TTSData.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, DSS_OBJECT, 'TSData');
 end;
@@ -88,7 +94,7 @@ var
 begin
     NumProperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // double properties (default type)
     PropertyOffset[ActiveProperty + ord(TProp.DiaShield)] := ptruint(@obj.DiaShield);

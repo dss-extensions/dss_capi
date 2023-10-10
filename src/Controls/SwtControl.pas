@@ -30,6 +30,7 @@ type
         State = 7, 
         Reset = 8
     );
+    TSwtControlPropLegacy = TSwtControlProp;
 {$SCOPEDENUMS OFF}
 
     TSwtControl = class(TControlClass)
@@ -82,10 +83,12 @@ uses
 type
     TObj = TSwtControlObj;
     TProp = TSwtControlProp;
+    TPropLegacy = TSwtControlPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     ActionEnum, StateEnum: TDSSEnum;
 
 constructor TSwtControl.Create(dssContext: TDSSContext);
@@ -93,6 +96,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         ActionEnum := TDSSEnum.Create('SwtControl: Action', False, 1, 1, 
             ['close', 'open'], 
             [ord(CTRL_CLOSE), ord(CTRL_OPEN)]);
@@ -139,7 +143,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // enum properties
     PropertyType[ord(TProp.Action)] := TPropertyType.MappedStringEnumProperty;

@@ -22,6 +22,24 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TGICTransformerPropLegacy = (
+        INVALID = 0,
+        BusH=1,
+        BusNH=2,
+        BusX=3,
+        BusNX=4,
+        phases=5,
+        Typ=6,
+        R1=7,
+        R2=8,
+        KVLL1=9,
+        KVLL2=10,
+        MVA=11,
+        VarCurve=12,
+        pctR1=13,
+        pctR2=14,
+        K=15
+    );
     TGICTransformerProp = (
         INVALID = 0,
         BusH=1,
@@ -100,6 +118,7 @@ uses
 type
     TObj = TGICTransformerObj;
     TProp = TGICTransformerProp;
+    TPropLegacy = TGICTransformerPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 
@@ -107,7 +126,8 @@ const
     SPEC_AUTO = 2;
     SPEC_YY = 3;
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     TypeEnum: TDSSEnum;
 
 constructor TGICTransformer.Create(dssContext: TDSSContext);
@@ -115,6 +135,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         TypeEnum := TDSSEnum.Create('GICTransformer: Type', True, 1, 1, ['GSU', 'Auto', 'YY'], [SPEC_GSU, SPEC_AUTO, SPEC_YY]);
     end;
 
@@ -144,7 +165,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
         'R1, R2',

@@ -35,7 +35,31 @@ uses
     Generator;
 
 type
-{$SCOPEDENUMS ON}    
+{$SCOPEDENUMS ON}
+    TIndMach012PropLegacy = (
+        INVALID = 0,
+        phases = 1,
+        bus1 = 2,
+        kv = 3,
+        kW = 4,
+        pf = 5, 
+        conn = 6, 
+        kVA = 7,
+        H = 8,
+        D = 9,
+        puRs = 10,
+        puXs = 11,
+        puRr = 12,
+        puXr = 13,
+        puXm = 14,
+        Slip = 15,
+        MaxSlip = 16,
+        SlipOption = 17,
+        Yearly = 18,
+        Daily = 19,
+        Duty = 20,
+        Debugtrace = 21
+    );
     TIndMach012Prop = (
         INVALID = 0,
         Phases = 1,
@@ -208,11 +232,13 @@ uses
 type
     TObj = TIndMach012Obj;
     TProp = TIndMach012Prop;
+    TPropLegacy = TIndMach012PropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
     NumIndMach012Variables = 22;
 var  
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     SlipOptionEnum : TDSSEnum;
 
 constructor TIndMach012.Create(dssContext: TDSSContext);
@@ -220,6 +246,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         SlipOptionEnum := TDSSEnum.Create('IndMach012: Slip Option', True, 1, 1, 
             ['VariableSlip', 'FixedSlip'], [0, Integer(True)]);
         SlipOptionEnum.DefaultValue := 0;
@@ -249,7 +276,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // integer
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;

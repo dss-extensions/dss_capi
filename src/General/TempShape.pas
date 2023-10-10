@@ -46,6 +46,21 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TTShapePropLegacy = (
+        INVALID = 0,
+        npts = 1, // Number of points to expect
+        interval = 2, // default = 1.0;
+        temp = 3, // vector of temperature values
+        hour = 4, // vector of hour values
+        mean = 5, // set the mean temp (otherwise computed)
+        stddev = 6, // set the std dev of the temp (otherwise computed)
+        csvfile = 7, // Switch input to a csvfile
+        sngfile = 8, // switch input to a binary file of singles
+        dblfile = 9, // switch input to a binary file of singles
+        sinterval = 10, // Interval in seconds
+        minterval = 11, // Interval in minutes
+        action = 12 // Interval in minutes
+    );
     TTShapeProp = (
         INVALID = 0,
         NPts = 1, // Number of points to expect
@@ -131,6 +146,7 @@ uses
 type
     TObj = TTShapeObj;
     TProp = TTShapeProp;
+    TPropLegacy = TTShapePropLegacy;
 {$PUSH}
 {$Z4} // keep enums as int32 values
     TTShapeAction = (
@@ -141,7 +157,8 @@ type
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     ActionEnum: TDSSEnum;
 
 constructor TTShape.Create(dssContext: TDSSContext);
@@ -149,6 +166,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         ActionEnum := TDSSEnum.Create('TShape: Action', True, 1, 1, 
             ['DblSave', 'SngSave'], 
             [ord(TTShapeAction.DblSave), ord(TTShapeAction.SngSave)]);
@@ -197,7 +215,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     PropertyStructArrayCountOffset := ptruint(@obj.FNumPoints);
 

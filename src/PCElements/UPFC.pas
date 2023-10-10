@@ -20,6 +20,26 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TUPFCPropLegacy = (
+        INVALID = 0,
+        bus1,
+        bus2,
+        refkV,
+        PF,
+        Frequency,
+        Phases,
+        Xs,
+        Tol1,
+        Mode,
+        VpqMax,
+        LossCurve,
+        VHLimit,
+        VLLimit,
+        CLimit,
+        refkV2,
+        kvarLimit,
+        Element
+    );
     TUPFCProp = (
         INVALID = 0,
         Bus1,
@@ -150,11 +170,13 @@ uses
 type
     TObj = TUPFCObj;
     TProp = TUPFCProp;
+    TPropLegacy = TUPFCPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
     NumUPFCVariables = 14;
 var
     PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;
     UPFCModeEnum: TDSSEnum;
 
 constructor TUPFC.Create(dssContext: TDSSContext);
@@ -162,6 +184,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         UPFCModeEnum := TDSSEnum.Create('UPFC: Mode', True, 0, 0, [
             'Off', 'Voltage Regulator', 'Phase Angle Regulator', 'Dual Regulator',  'Double Reference (Voltage)', 'Double Reference (Dual)'], 
             [0, 1, 2, 3, 4, 5],
@@ -184,7 +207,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // bus properties
     PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;

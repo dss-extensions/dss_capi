@@ -44,6 +44,75 @@ const
 
 type
 {$SCOPEDENUMS ON}
+    TStoragePropLegacy = (
+        INVALID = 0,
+        phases,
+        bus1,
+        kv, // propKV
+        conn, // propCONNECTION
+        kW, // propKW
+        kvar, // propKVAR
+        pf, // propPF
+        kVA, // propKVA
+        pctCutin, // propCutin
+        pctCutout, // propCutout
+        EffCurve, // propInvEffCurve
+        VarFollowInverter, // propVarFollowInverter
+        kvarMax, // propkvarLimit
+        kvarMaxAbs, // propkvarLimitneg
+        WattPriority, // propPpriority
+        PFPriority, // propPFPriority
+        pctPminNoVars, // propPminNoVars
+        pctPminkvarMax, // propPminkvarLimit
+        kWrated, // propKWRATED
+        pctkWrated, // proppctkWrated
+        kWhrated, // propKWHRATED
+        kWhstored, // propKWHSTORED
+        pctstored, // propPCTSTORED
+        pctreserve, // propPCTRESERVE
+        State, // propSTATE
+        pctDischarge, // propPCTKWOUT
+        pctCharge, // propPCTKWIN
+        pctEffCharge, // propCHARGEEFF
+        pctEffDischarge, // propDISCHARGEEFF
+        pctIdlingkW, // propIDLEKW
+        
+        pctIdlingkvar, //= 31, // propIDLEKVAR was deprecated, reintroduced for v0.12.2; TODO: TO BE REMOVED AGAIN LATER
+        
+        pctR, // propPCTR
+        pctX, // propPCTX
+        model, // propMODEL
+        Vminpu, // propVMINPU
+        Vmaxpu, // propVMAXPU
+        Balanced, // propBalanced
+        LimitCurrent, // propLimited
+        yearly, // propYEARLY
+        daily, // propDAILY
+        duty, // propDUTY
+        DispMode, // propDISPMODE
+        DischargeTrigger, // propDISPOUTTRIG
+        ChargeTrigger, // propDISPINTRIG
+        TimeChargeTrig, // propCHARGETIME
+        cls, // propCLASS
+        DynaDLL, // propDynaDLL
+        DynaData, // propDynaData
+        UserModel, // propUSERMODEL
+        UserData, // propUSERDATA
+        debugtrace, // propDEBUGTRACE
+
+        kVDC, // propkVDC
+        Kp, // propkp
+        PITol, // propCtrlTol
+        SafeVoltage, // propSMT
+        SafeMode, // propSM
+        
+        DynamicEq, // propDynEq
+        DynOut, // propDynOut
+
+        ControlMode, // propGFM
+        AmpLimit,
+        AmpLimitGain
+    );
     TStorageProp = (
         INVALID = 0,
         Phases,
@@ -385,10 +454,12 @@ uses
 type
     TObj = TStorageObj;
     TProp = TStorageProp;
+    TPropLegacy = TStoragePropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     StateEnum, DispatchModeEnum: TDSSEnum;
 
 constructor TStorage.Create(dssContext: TDSSContext);
@@ -396,6 +467,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         StateEnum := TDSSEnum.Create('Storage: State', True, 1, 1, 
             ['Charging', 'Idling', 'Discharging'], 
             [-1, 0, 1]);
@@ -458,7 +530,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
         'kW, PF',

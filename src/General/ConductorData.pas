@@ -26,6 +26,22 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TConductorDataPropLegacy = (
+        INVALID = 0,
+        Rdc = 1,
+        Rac = 2,
+        Runits = 3,
+        GMRac = 4,
+        GMRunits = 5,
+        radius = 6,
+        radunits = 7,
+        normamps = 8,
+        emergamps = 9,
+        diam = 10,
+        Seasons = 11,
+        Ratings = 12,
+        Capradius = 13
+    );
     TConductorDataProp = (
         INVALID = 0,
         RDC = 1,
@@ -109,15 +125,20 @@ uses
 type
     TObj = TConductorDataObj;
     TProp = TConductorDataProp;
+    TPropLegacy = TConductorDataPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TConductorData.Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, DSSClsType or DSS_OBJECT, DSSClsName);
     ClassParents.Add('ConductorData');
@@ -138,7 +159,7 @@ procedure TConductorData.DefineProperties;
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
-    PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, False, 'ConductorData');
+    PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, PropInfoLegacy, False, 'ConductorData');
 
     PropertyOffset_ConductorData := ActiveProperty;
     // enums

@@ -40,6 +40,18 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TFaultPropLegacy = (
+        INVALID = 0,
+        bus1 = 1,
+        bus2 = 2,
+        phases = 3,
+        r = 4,
+        pctstddev = 5,
+        Gmatrix = 6,
+        ONtime = 7,
+        temporary = 8,
+        MinAmps = 9
+    );
     TFaultProp = (
         INVALID = 0,
         Bus1 = 1,
@@ -117,15 +129,20 @@ uses
 type
     TObj = TFaultObj;
     TProp = TFaultProp;
+    TPropLegacy = TFaultPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TFault.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, FAULTOBJECT or NON_PCPD_ELEM, 'Fault');
 end;
@@ -141,7 +158,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
         'r',

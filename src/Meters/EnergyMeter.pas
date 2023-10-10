@@ -96,6 +96,33 @@ const
 
 type
 {$SCOPEDENUMS ON}
+    TEnergyMeterPropLegacy = (
+        INVALID = 0,
+        element = 1,
+        terminal = 2,
+        action = 3,
+        option = 4,
+        kVAnormal = 5,
+        kVAemerg = 6,
+        peakcurrent = 7,
+        Zonelist = 8,
+        LocalOnly = 9,
+        Mask = 10,
+        Losses = 11,
+        LineLosses = 12,
+        XfmrLosses = 13,
+        SeqLosses = 14,
+        __3phaseLosses = 15,
+        VbaseLosses = 16, // segregate losses by voltage base
+        PhaseVoltageReport = 17, // Compute Avg phase voltages in zone
+        Int_Rate = 18,
+        Int_Duration = 19,
+        SAIFI = 20, // Read only
+        SAIFIkW = 21, // Read only
+        SAIDI = 22, // Read only
+        CAIDI = 23, // Read only
+        CustInterrupts = 24 // Read only
+    );
     TEnergyMeterProp = (
         INVALID = 0,
         Element = 1,
@@ -446,6 +473,7 @@ uses
 type
     TObj = TEnergyMeterObj;
     TProp = TEnergyMeterProp;
+    TPropLegacy = TEnergyMeterPropLegacy;
 {$PUSH}
 {$Z4} // keep enums as int32 values
     TEnergyMeterAction = (
@@ -461,7 +489,8 @@ type
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     ActionEnum: TDSSEnum;
 
 function jiIndex(i, j: Integer): Integer; inline;
@@ -474,6 +503,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         ActionEnum := TDSSEnum.Create('EnergyMeter: Action', True, 1, 2, 
             ['Allocate', 'Clear', 'Reduce', 'Save', 'Take', 'ZoneDump'],
             [0, 1, 2, 3, 4, 5]);
@@ -589,7 +619,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
     PropertyNameJSON[ord(TProp.__3PhaseLosses)] := 'ThreePhaseLosses';
 
     PropertyType[ord(TProp.peakcurrent)] := TPropertyType.DoubleVArrayProperty;

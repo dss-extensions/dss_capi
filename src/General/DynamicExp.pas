@@ -27,6 +27,7 @@ type
         Expression = 5,
         Domain = 6
     );
+    TDynamicExpPropLegacy = TDynamicExpProp;
 {$PUSH}
 {$Z4} // keep enums as int32 values
     TDynDomain = (
@@ -94,6 +95,7 @@ uses
 type
     TObj = TDynamicExpObj;
     TProp = TDynamicExpProp;
+    TPropLegacy = TDynamicExpPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
     opCodes: array [0..28] of String = (
@@ -104,6 +106,7 @@ const
     );
 var
     PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;
     DomainEnum: TDSSEnum;
 
 constructor TDynamicExp.Create;
@@ -111,6 +114,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         DomainEnum := TDSSEnum.Create('DynamicExp: Domain', True, 1, 1, 
             ['Time', 'dq'], [Ord(TDynDomain.Time), Ord(TDynDomain.dq)]
         );
@@ -131,7 +135,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // integer properties
     PropertyType[ord(TProp.NVariables)] := TPropertyType.IntegerProperty;

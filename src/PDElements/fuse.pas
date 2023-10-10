@@ -45,6 +45,7 @@ type
         Normal = 9,
         State = 10
     );
+    TFusePropLegacy = TFuseProp;
 {$SCOPEDENUMS OFF}
 
     pStateArray = ^StateArray;
@@ -112,10 +113,12 @@ uses
 type
     TObj = TFuseObj;
     TProp = TFuseProp;
+    TPropLegacy = TFusePropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     ActionEnum, StateEnum: TDSSEnum;
 
 constructor TFuse.Create(dssContext: TDSSContext);
@@ -123,6 +126,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         ActionEnum := TDSSEnum.Create('Fuse: Action', False, 1, 1, 
             ['close', 'open'], [ord(CTRL_CLOSE), ord(CTRL_OPEN)]);
         StateEnum := TDSSEnum.Create('Fuse: State', False, 1, 1, 
@@ -166,7 +170,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // object properties
     PropertyType[ord(TProp.FuseCurve)] := TPropertyType.DSSObjectReferenceProperty;

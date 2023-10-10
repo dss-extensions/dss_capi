@@ -22,6 +22,14 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TSpectrumPropLegacy = (
+        INVALID = 0,
+        NumHarm = 1,
+        harmonic = 2,
+        pctmag = 3,
+        angle = 4,
+        CSVFile = 5
+    );
     TSpectrumProp = (
         INVALID = 0,
         NumHarm = 1,
@@ -89,17 +97,22 @@ uses
 type
     TObj = TSpectrumObj;
     TProp = TSpectrumProp;
+    TPropLegacy = TSpectrumPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 procedure DoCSVFile(Obj: TObj; const FileName: String);forward;
 
 constructor TSpectrum.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, DSS_OBJECT, 'Spectrum');
 end;
@@ -123,7 +136,7 @@ var
 begin
     NumProperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     PropertyStructArrayCountOffset := ptruint(@obj.NumHarm);
 

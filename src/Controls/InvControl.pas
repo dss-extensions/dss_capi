@@ -31,6 +31,46 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TInvControlPropLegacy = (
+        INVALID = 0,
+
+        DERList,
+        Mode,
+        CombiMode,
+        vvc_curve1,
+        hysteresis_offset,
+        voltage_curvex_ref,
+        avgwindowlen,
+
+        voltwatt_curve,
+
+        DbVMin,
+        DbVMax,
+        ArGraLowV,
+        ArGraHiV,
+        DynReacavgwindowlen,
+        deltaQ_Factor,
+        VoltageChangeTolerance,
+        VarChangeTolerance,
+        VoltwattYAxis,
+        RateofChangeMode,
+        LPFTau, // weird double: in the original version, value was not set
+        RiseFallLimit, // weird double: in the original version, value was not set
+        deltaP_Factor,
+        EventLog,
+        RefReactivePower,
+        ActivePChangeTolerance,
+        monVoltageCalc,
+        monBus,
+        MonBusesVbase,
+        voltwattCH_curve,
+        wattpf_curve,
+        wattvar_curve,
+        VV_RefReactivePower, // was deprecated, reintroduced for v0.12.2; TODO: TO BE REMOVED AGAIN LATER
+        PVSystemList, // was 32 -- TODO: TO BE MARKED AS REMOVED
+        Vsetpoint, // was 33
+        ControlModel
+    );
     TInvControlProp = (
         INVALID = 0,
 
@@ -356,6 +396,7 @@ uses
 type
     TObj = TInvControlObj;
     TProp = TInvControlProp;
+    TPropLegacy = TInvControlPropLegacy;
 
 const
     NumPropsThisClass = Ord(High(TProp));
@@ -380,6 +421,7 @@ const
 
 var
     PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;
     ModeEnum, CombiModeEnum, VoltageCurveXRefEnum, VoltWattYAxisEnum, RoCEnum, RefQEnum, ControlModelEnum: TDSSEnum;
 
 constructor TInvControl.Create(dssContext: TDSSContext);
@@ -387,6 +429,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         ModeEnum := TDSSEnum.Create('InvControl: Control Mode', True, 1, 5,
             ['Voltvar', 'VoltWatt', 'DynamicReaccurr', 'WattPF', 'Wattvar', 'AVR', 'GFM'],
             [ord(VOLTVAR), ord(VOLTWATT), ord(DRC), ord(WATTPF), ord(WATTVAR), ord(AVR), ord(GFM)]);
@@ -428,7 +471,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // object references
     PropertyType[ord(TProp.vvc_curve1)] := TPropertyType.DSSObjectReferenceProperty;

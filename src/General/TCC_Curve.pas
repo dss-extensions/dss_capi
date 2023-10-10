@@ -22,6 +22,12 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TTCC_CurvePropLegacy = (
+        INVALID = 0,
+        npts = 1, // Number of points to expect
+        C_array = 2, // vector of multiplier values
+        T_array = 3 // vector of time values , Sec
+    );
     TTCC_CurveProp = (
         INVALID = 0,
         NPts = 1, // Number of points to expect
@@ -80,15 +86,20 @@ uses
 type
     TObj = TTCC_CurveObj;
     TProp = TTCC_CurveProp;
+    TPropLegacy = TTCC_CurvePropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TTCC_Curve.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, DSS_OBJECT, 'TCC_Curve');
 end;
@@ -104,7 +115,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // double arrays
     PropertyType[ord(TProp.C_array)] := TPropertyType.DoubleArrayProperty;

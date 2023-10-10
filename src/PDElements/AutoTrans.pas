@@ -28,6 +28,55 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TAutoTransPropLegacy = (
+        INVALID = 0,
+        phases,
+        windings,
+
+        // Winding Definition
+        wdg,
+        bus,
+        conn,
+        kV,
+        kVA,
+        tap,
+        pctR,
+        Rdcohms,
+        Core,
+
+        // General Data
+        buses,
+        conns,
+        kVs,
+        kVAs,
+        taps,
+        XHX,
+        XHT,
+        XXT,
+        XSCarray,
+        thermal,
+        n,
+        m,
+        flrise,
+        hsrise,
+        pctloadloss,
+        pctnoloadloss,
+        normhkVA,
+        emerghkVA,
+        sub,
+        MaxTap,
+        MinTap,
+        NumTaps,
+        subname,
+        pctimag,
+        ppm_antifloat,
+        pctRs,
+        bank,
+        //XfmrCode, // removed, unused
+        XRConst,
+        LeadLag,
+        WdgCurrents
+    );
     TAutoTransProp = (
         INVALID = 0,
         Phases,
@@ -254,10 +303,12 @@ uses
 type
     TObj = TAutoTransObj;
     TProp = TAutoTransProp;
+    TPropLegacy = TAutoTransPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     AutoTransConnectionEnum: TDSSEnum;
 
 constructor TAutoTrans.Create(dssContext: TDSSContext);
@@ -265,6 +316,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         AutoTransConnectionEnum := TDSSEnum.Create('AutoTrans: Connection', True, 1, 2,
             ['wye', 'delta', 'series', 'y', 'ln', 'll'],
             [0, 1, 2, 0, 0, 1],
@@ -320,7 +372,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
         'XHX, XHT, XXT',

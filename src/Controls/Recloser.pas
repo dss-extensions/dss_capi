@@ -50,6 +50,7 @@ type
         Normal = 23, 
         State = 24
     );
+    TRecloserPropLegacy = TRecloserProp;
 {$SCOPEDENUMS OFF}
 
     TRecloser = class(TControlClass)
@@ -137,10 +138,12 @@ uses
 type
     TObj = TRecloserObj;
     TProp = TRecloserProp;
+    TPropLegacy = TRecloserPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
     ActionEnum, StateEnum: TDSSEnum;
 
 constructor TRecloser.Create(dssContext: TDSSContext);
@@ -148,6 +151,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
         ActionEnum := TDSSEnum.Create('Recloser: Action', False, 1, 1, 
             ['close', 'open', 'trip'], 
             [ord(CTRL_CLOSE), ord(CTRL_OPEN), ord(CTRL_OPEN)]);
@@ -172,7 +176,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // enums
     PropertyType[ord(TProp.Action)] := TPropertyType.MappedStringEnumProperty;

@@ -27,6 +27,36 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TLineCodePropLegacy = (
+        INVALID = 0,
+        nphases = 1,
+        r1 = 2,
+        x1 = 3,
+        r0 = 4,
+        x0 = 5,
+        C1 = 6,
+        C0 = 7,
+        units = 8,
+        rmatrix = 9,
+        xmatrix = 10,
+        cmatrix = 11,
+        baseFreq = 12,
+        normamps = 13,
+        emergamps = 14,
+        faultrate = 15,
+        pctperm = 16,
+        repair = 17,
+        Kron = 18,
+        Rg = 19,
+        Xg = 20,
+        rho = 21,
+        neutral = 22,
+        B1 = 23,
+        B0 = 24,
+        Seasons = 25,
+        Ratings = 26,
+        LineType = 27
+    );
     TLineCodeProp = (
         INVALID = 0,
         NPhases = 1,
@@ -135,15 +165,20 @@ uses
 type
     TObj = TLineCodeObj;
     TProp = TLineCodeProp;
+    TPropLegacy = TLineCodePropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TLineCode.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, DSS_OBJECT, 'LineCode');
 end;
@@ -174,7 +209,7 @@ var
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
-    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, False);
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy, False);
 
     SpecSetNames := ArrayOfString.Create(
         //'Z0, Z1',

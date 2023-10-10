@@ -13,6 +13,14 @@ uses
 
 type
 {$SCOPEDENUMS ON}
+    TPDElementPropLegacy = (
+        INVALID = 0,
+        normamps=1,
+        emergamps=2,
+        faultrate=3,
+        pctperm=4,
+        repair=5
+    );
     TPDElementProp = (
         INVALID = 0,
         NormAmps=1,
@@ -48,15 +56,20 @@ uses
 type
     TObj = TPDElement;
     TProp = TPDElementProp;
+    TPropLegacy = TPDElementPropLegacy;
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;    
 
 constructor TPDClass.Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+    end;
 
     inherited Create(dssContext, DSSClsType, DSSClsName);
     if (DSSClassType and NON_PCPD_ELEM) <> NON_PCPD_ELEM then
@@ -80,7 +93,7 @@ procedure TPDClass.DefineProperties;
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
-    PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, False, 'PDClass');
+    PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, PropInfoLegacy, False, 'PDClass');
 
     PropertyOffset_PDClass := ActiveProperty;
 
