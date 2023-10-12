@@ -451,6 +451,7 @@ var
     propIndex: Integer;
     propOffset: PtrInt;
 begin
+    Result := '';
     propOffset := cls.PropertyOffset2[sizedPropIndex];
     if TPropertyFlag.IndirectCount in cls.PropertyFlags[sizedPropIndex] then
     begin
@@ -523,6 +524,20 @@ begin
     end;
 end;
 
+function indexOfIn(propIndex: Integer; const AltPropertyOrder: ArrayOfInteger): Integer;
+var
+    i: Integer;
+begin
+    Result := -1;
+    for i := 1 to High(AltPropertyOrder) do
+    begin
+        if AltPropertyOrder[i] = propIndex then
+        begin
+            Result := i;
+            Exit;
+        end;
+    end;
+end;
 
 function prepareClassJsonSchema(clsidx: Integer; cls: TDSSClass; enumIds: TClassNamesHashListType): TJSONObject;
 const 
@@ -622,6 +637,8 @@ var
     propName: String;
     propJSON: Array of TJSONObject;
     requiredInSpec: TJSONArray = NIL;
+
+    zorder: Integer;
 begin
     SetLength(propJSON, cls.NumProperties + 1);
 
@@ -634,8 +651,8 @@ begin
         'type', 'string',
         'minLength', 1,
         'maxLength', 255,
-        '$dssZOrder', -1001,
-        '$dssPropertyIndex', -1
+        '$dssPropertyOrder', 0,
+        '$dssPropertyIndex', 0
     ]));
     requiredProps := TJSONArray.Create(['name']);
 
@@ -670,6 +687,7 @@ begin
                 ptype := PropertyType[propIndex];
                 flags := PropertyFlags[propIndex];
             end;
+            zorder := indexOfIn(propIndex, AltPropertyOrder);
 
             units := extractUnits(flags);
 
@@ -1121,18 +1139,18 @@ begin
             if (ptype in [TPropertyType.BooleanActionProperty, TPropertyType.StringEnumActionProperty, TPropertyType.MakeLikeProperty])  then
             begin
                 prop.Add('writeOnly', true);
-                if ptype = TPropertyType.MakeLikeProperty then
-                    prop.Add('$dssZOrder', -1000) // the first after NAME
-                else if TPropertyFlag.Ordering_First in flags then
-                    prop.Add('$dssZOrder', -999) // right after LIKE
-                else
-                    prop.Add('$dssZOrder', 999); // ALWAYS the last ones
-            end
-            else
-            begin
-                if TPropertyFlag.Ordering_First in flags then
-                    prop.Add('$dssZOrder', -999); // right after LIKE
+                // if ptype = TPropertyType.MakeLikeProperty then
+                //     prop.Add('$dssPropertyOrder', -1000) // the first after NAME
+                // else if TPropertyFlag.Ordering_First in flags then
+                //     prop.Add('$dssPropertyOrder', -999) // right after LIKE
+                // else
+                //     prop.Add('$dssPropertyOrder', 999); // ALWAYS the last ones
             end;
+            // else
+            // begin
+            //     if TPropertyFlag.Ordering_First in flags then
+            //         prop.Add('$dssPropertyOrder', -999); // right after LIKE
+            // end;
 
             if readOnly then
             begin
@@ -1159,6 +1177,7 @@ begin
             end;
 
             prop.Add('$dssPropertyIndex', propIndex_);
+            prop.Add('$dssPropertyOrder', zorder); // Use the value already prepared during the class initialization
             if TPropertyFlag.ValueOffset in flags then
                 prop.Add('$dssValueOffset', PropertyValueOffset[propIndex]);
 

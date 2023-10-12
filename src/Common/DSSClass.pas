@@ -359,6 +359,7 @@ type
         NumProperties: Integer;
 
         // TODO: move to array of records
+        AltPropertyOrder: ArrayOfInteger; // Fixed ordered list of property indexes to use for alt. load/save
         PropertyNameModern, PropertyNameLegacy, PropertyNameLowercase, PropertyNameJSON: pStringArray;
         PropertyName: pStringArray; // Nowadays this is just a reference to one of the other pointers
         PropertyRedundantWith: pIntegerArray;
@@ -1538,10 +1539,35 @@ begin
     ActiveProperty := 0;    // initialize for AddPropert
 End;
 
-Procedure TDSSClass.DefineProperties;
+
+function nextByZOrder(zorderVal: Integer; const propZorder: ArrayOfInteger): Integer; 
+// adapted from GetNextPropertySet; simpler than using FGL 
+// or similar structures on these tiny arrays
 var
-    i: Integer;
-Begin
+    i, smallest: Integer;
+begin
+    Smallest := 9999999; // some big number
+    Result := -1;
+    for i := 1 to High(propZorder) do
+    begin
+        if (propZorder[i] > zorderVal) and (propZorder[i] < Smallest) then
+        begin
+            Smallest := propZorder[i];
+            Result := i;
+        end;
+    end;
+end;
+
+procedure TDSSClass.DefineProperties;
+var
+    i, nextZorder, nextIdx, zorder: Integer;
+    propZorder: ArrayOfInteger;
+    ptype: TPropertyType;
+    flags: TPropertyFlags;
+    zorderNextStart: Integer = -999;
+    zorderNextEnd: Integer = 999;
+    skipped: Integer = 0;
+begin
     PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, PropInfoLegacy, False, 'DSSClass');
 
     PropertyType[ActiveProperty + ord(TProp.Like)] := TPropertyType.MakeLikeProperty;
@@ -1554,6 +1580,56 @@ Begin
     for i := 1 to NumProperties do
     begin
         PropertyNameLowercase[i] := AnsiLowerCase(PropertyName[i]);
+    end;
+
+    // Refine property order for loading from and saving to alternative formats
+    SetLength(propZorder, NumProperties + 1); // include name as 0
+    SetLength(AltPropertyOrder, NumProperties + 1);
+    propZorder[0] := -1001;
+    for i := 1 to NumProperties do
+    begin
+        ptype := PropertyType[i];
+        flags := PropertyFlags[i];
+        
+        zorder := i;
+        if ptype = TPropertyType.MakeLikeProperty then
+            zorder := -1000 // the first after NAME
+        else if TPropertyFlag.Ordering_First in flags then
+        begin
+            zorder := zorderNextStart; // right after LIKE
+            zorderNextStart += 1;
+        end
+        else
+        if (ptype in [TPropertyType.BooleanActionProperty, TPropertyType.StringEnumActionProperty])  then
+        begin
+            zorder := zorderNextEnd; // ALWAYS the last ones
+            zorderNextEnd += 1;
+        end;        
+        propZorder[i] := zorder;
+    end;
+    
+    AltPropertyOrder[0] := 0;
+    nextZorder := propZorder[0];
+    for i := 1 to NumProperties do
+        AltPropertyOrder[i] := -1;
+
+    for i := 1 to NumProperties do
+    begin
+        ptype := PropertyType[i];
+        flags := PropertyFlags[i];
+
+        nextIdx := nextByZOrder(nextZorder, propZorder);
+        if (TPropertyFlag.SuppressJSON in flags) or 
+            (TPropertyFlag.AltIndex in flags) or 
+            (TPropertyFlag.IntegerStructIndex in flags) or
+            (TPropertyFlag.Redundant in flags) or
+            (TPropertyType.DeprecatedAndRemoved = ptype) then
+            // Skip redundant/removed
+            skipped += 1
+        else
+            AltPropertyOrder[i - skipped] := nextIdx;
+
+        nextZorder := propZorder[nextIdx];
     end;
 End;
 
