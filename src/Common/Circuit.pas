@@ -371,7 +371,8 @@ uses
     StrUtils,
     Load,
     PVSystem,
-    DSSHelper;
+    DSSHelper,
+    DateUtils;
 
 constructor TDSSCircuit.Create(dssContext: TDSSContext; const aName: String);
 begin
@@ -2631,6 +2632,7 @@ begin
     Result := FALSE;
     try
         F := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'Master.dss', fmCreate);
+        FSWriteln(F, Format('! Last saved by AltDSS/%s on %s',  [VersionString, DateToISO8601(Now())]));
         FSWriteln(F, 'Clear');
         FSWriteln(F, 'Set DefaultBaseFreq=', FloatToStr(DSS.DefaultBaseFreq));
         FSWriteln(F, 'New Circuit.' + Name);
@@ -2638,7 +2640,7 @@ begin
         If PositiveSequence Then 
             FSWriteln(F, 'Set Cktmodel=', DSS.CktModelEnum.OrdinalToString(Integer(PositiveSequence)));
         if DuplicatesAllowed then
-            FSWriteln(F, 'set allowdup=yes');
+            FSWriteln(F, 'set AllowDuplicates=yes');
         If LongLineCorrection Then 
             FSWriteln(F, 'Set LongLineCorrection=True');
         FSWriteln(F);
