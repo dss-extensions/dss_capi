@@ -230,7 +230,7 @@ type
         procedure ResetRegistersAll;
         procedure SampleAll;
         function GetRegisterNames(obj: TDSSObject): ArrayOfString; override;
-        function GetRegisterValues(obj: TDSSObject): pDoubleArray; override;
+        function GetRegisterValues(obj: TDSSObject; var numRegisters: Integer): pDoubleArray; override;
     end;
 
     TGeneratorObj = class(TDynEqPCE)
@@ -888,13 +888,15 @@ begin
     Result := RegisterNames;
 end;
 
-function TGenerator.GetRegisterValues(obj: TDSSObject): pDoubleArray;
+function TGenerator.GetRegisterValues(obj: TDSSObject; var numRegisters: Integer): pDoubleArray;
 begin
     if not (obj is TGeneratorObj) then
     begin
         Result := NIL;
+        numRegisters := 0;
         Exit;
     end;
+    numRegisters := NumGenRegisters;
     Result := pDoubleArray(@TGeneratorObj(obj).Registers[1]);
 end;
 

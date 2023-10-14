@@ -39,7 +39,7 @@ type
         function BeginEdit(ptr: Pointer; SetActive_: Boolean=True): Pointer; override;
         function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
         function GetRegisterNames(obj: TDSSObject): ArrayOfString; virtual;
-        function GetRegisterValues(obj: TDSSObject): pDoubleArray; virtual;
+        function GetRegisterValues(obj: TDSSObject; var numRegisters: Integer): pDoubleArray; virtual;
     end;
 
 implementation
@@ -134,8 +134,9 @@ begin
     Result := NIL;
 end;
 
-function TCktElementClass.GetRegisterValues(obj: TDSSObject): pDoubleArray;
+function TCktElementClass.GetRegisterValues(obj: TDSSObject; var numRegisters: Integer): pDoubleArray;
 begin
+    numRegisters := 0;
     Result := NIL;
 end;
 

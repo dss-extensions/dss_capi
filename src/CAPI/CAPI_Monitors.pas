@@ -60,7 +60,8 @@ uses
     Math,
     DSSClass,
     DSSHelper,
-    DSSObjectHelper;
+    DSSObjectHelper,
+    CAPI_Alt;
 
 type
     SingleArray = array[1..100] of Single;
@@ -338,47 +339,12 @@ end;
 procedure Monitors_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return an array of doubles for frequence for Harmonic solutions
 var
-    Result: PDoubleArray0;
-    k, i: Integer;
-    FirstCol: String;
     pMon: TMonitorObj;
-    SngBuffer: pSingleArray;
-    freq: Single;
-    s: Single;
-    AllocSize: Integer;
-    MonitorStream: TMemoryStream;
 begin
     DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    if pMon.SampleCount <= 0 then
-        Exit;
-
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pMon.SampleCount);
-    MonitorStream := pMon.MonitorStream;
- 
-    MonitorStream.Seek(256 + 4 * 4, soFromBeginning); // Skip header
-    FirstCol := pMon.Header.Strings[0];
-    // check first col to see if it is "Freq" for harmonics solution
-    if SysUtils.CompareText(FirstCol, 'freq') = 0 then
-    begin
-        AllocSize := Sizeof(Single) * pMon.RecordSize;
-        SngBuffer := Allocmem(AllocSize);
-        k := 0;
-        for i := 1 to pMon.SampleCount do
-        begin
-            MonitorStream.Read(freq, SizeOf(freq));  // frequency
-            MonitorStream.Read(s, SizeOf(s));   // harmonic
-            MonitorStream.Read(sngBuffer[1], AllocSize);  // read rest of record
-            Result[k] := freq;
-            inc(k);
-        end;
-        Reallocmem(SngBuffer, 0);  // Dispose of buffer
-    end
-    else
-    begin   // Not harmonic solution, so return nil array
-        MonitorStream.Seek(0, soFromEnd); // leave stream at end
-    end;
+    Alt_Monitor_Get_dblFreq(pMon, ResultPtr, ResultCount);
 end;
 
 procedure Monitors_Get_dblFreq_GR(); CDECL;
@@ -391,47 +357,12 @@ end;
 procedure Monitors_Get_dblHour(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return an array of doubles for time in hours
 var
-    Result: PDoubleArray0;
-    k, i: Integer;
-    FirstCol: String;
     pMon: TMonitorObj;
-    SngBuffer: pSingleArray;
-    hr: Single;
-    s: Single;
-    AllocSize: Integer;
-    MonitorStream: TMemoryStream;
 begin
     DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    if pMon.SampleCount <= 0 then
-        Exit;
-
-    MonitorStream := pMon.MonitorStream;
-    MonitorStream.Seek(256 + 4 * 4, soFromBeginning); // Skip header
-    FirstCol := pMon.Header.Strings[0];
-
-    // check first col to see if it is "Hour"
-    if Sysutils.CompareText(FirstCol, 'hour') = 0 then
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pMon.SampleCount);
-        AllocSize := Sizeof(Single) * pMon.RecordSize;
-        SngBuffer := Allocmem(AllocSize);
-        k := 0;
-        for i := 1 to pMon.SampleCount do
-        begin
-            MonitorStream.Read(hr, SizeOf(hr));  // Hour
-            MonitorStream.Read(s, SizeOf(s));   // Seconds past the hour
-            MonitorStream.Read(sngBuffer[1], AllocSize);  // read rest of record
-            Result[k] := hr + s / 3600.0;
-            inc(k);
-        end;
-        Reallocmem(SngBuffer, 0);  // Dispose of buffer
-    end
-    else
-    begin   // Not time solution, so return nil array
-        MonitorStream.Seek(0, soFromEnd); // leave stream at end
-    end;
+    Alt_Monitor_Get_dblHour(pMon, ResultPtr, ResultCount);
 end;
 
 procedure Monitors_Get_dblHour_GR(); CDECL;

@@ -257,7 +257,7 @@ type
         procedure UpdateAll();
 
         function GetRegisterNames(obj: TDSSObject): ArrayOfString; override;
-        function GetRegisterValues(obj: TDSSObject): pDoubleArray; override;
+        function GetRegisterValues(obj: TDSSObject; var numRegisters: Integer): pDoubleArray; override;
     end;
 
     TStorageObj = class(TInvBasedPCE)
@@ -1006,13 +1006,15 @@ begin
     Result := RegisterNames;
 end;
 
-function TStorage.GetRegisterValues(obj: TDSSObject): pDoubleArray;
+function TStorage.GetRegisterValues(obj: TDSSObject; var numRegisters: Integer): pDoubleArray;
 begin
     if not (obj is TStorageObj) then
     begin
         Result := NIL;
+        numRegisters := 0;
         Exit;
     end;
+    numRegisters := NumStorageRegisters;
     Result := pDoubleArray(@TStorageObj(obj).Registers[1]);
 end;
 

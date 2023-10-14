@@ -76,6 +76,8 @@ procedure Circuit_SetCktElementName(const Value: PAnsiChar); CDECL;
 // Extensions
 procedure Circuit_Get_ElementLosses(var ResultPtr: PDouble; ResultCount: PAPISize; ElementsPtr: PInteger; ElementsCount: TAPISize); CDECL;
 procedure Circuit_Get_ElementLosses_GR(ElementsPtr: PInteger; ElementsCount: TAPISize); CDECL;
+function Circuit_ToJSON(options: Integer): PAnsiChar; CDECL;
+procedure Circuit_FromJSON(circStr: PAnsiChar; options: Integer); CDECL;
 
 implementation
 
@@ -100,7 +102,11 @@ uses
     Solution,
     Bus,
     KLUSolve,
-    DSSHelper;
+    DSSHelper,
+    CAPI_ActiveClass,
+    CAPI_Obj,
+    Circuit,
+    fpjson;
 
 //------------------------------------------------------------------------------
 function Circuit_Get_Name(): PAnsiChar; CDECL;
@@ -1094,5 +1100,40 @@ begin
     Circuit_Get_ElementLosses(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, ElementsPtr, ElementsCount)
 end;
 
+//------------------------------------------------------------------------------
+function Circuit_ToJSON(options: Integer): PAnsiChar; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+
+    Result := Obj_Circuit_ToJSON_(DSSPrime.ActiveCircuit, options);
+end;
+//------------------------------------------------------------------------------
+procedure Circuit_FromJSON(circStr: PAnsiChar; options: Integer); CDECL;
+var
+    genericData: TJSONData = NIL;
+    errorMsg: String = '';
+begin
+    try
+        genericData := GetJSON(circStr);
+        if not (genericData is TJSONObject) then
+        begin
+            errorMsg := 'Invalid JSON type, expected an object for the circuit.';
+        end
+        else
+        begin
+            Obj_Circuit_FromJSON_(DSSPrime, genericData as TJSONObject, options);
+        end;
+    except
+    on E: Exception do
+        errorMsg := E.message;
+    end;
+    if genericData <> NIL then
+        genericData.Free();
+
+    if errorMsg <> '' then
+        DoSimpleMsg(DSSPrime, 'Error converting data from JSON: %s', [errorMsg], 20230919);
+end;
 //------------------------------------------------------------------------------
 end.

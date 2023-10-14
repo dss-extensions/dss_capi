@@ -306,7 +306,7 @@ type
         procedure OpenAllDIFiles();
         procedure CloseAllDIFiles();
         function GetRegisterNames(obj: TDSSObject): ArrayOfString; override;
-        function GetRegisterValues(obj: TDSSObject): pDoubleArray; override;
+        function GetRegisterValues(obj: TDSSObject; var numRegisters: Integer): pDoubleArray; override;
 
         property SaveDemandInterval: Boolean READ FSaveDemandInterval WRITE Set_SaveDemandInterval;
         property DI_Verbose: Boolean READ FDI_Verbose WRITE Set_DI_Verbose;
@@ -418,7 +418,7 @@ type
         Source_IntDuration: Double; // Aver interruption duration of upline circuit
 
         SectionCount: Integer;
-        ActiveSection: Integer;  // For COM interface to index into FeederSections array
+        COM_ActiveSection: Integer;  // For COM interface to index into FeederSections array
         FeederSections: pFeederSections;
         ZonePCE: Array of string;
 
@@ -1086,7 +1086,7 @@ begin
         SensorCurrent[i] := 400.0;
 
     FeederSections := NIL;
-    ActiveSection := 0;
+    COM_ActiveSection := 0;
 
     SetLength(ZonePCE, 1);
     ZonePCE[0] := '';
@@ -2992,13 +2992,15 @@ begin
     Result := TEnergyMeterObj(obj).RegisterNames;
 end;
 
-function TEnergyMeter.GetRegisterValues(obj: TDSSObject): pDoubleArray;
+function TEnergyMeter.GetRegisterValues(obj: TDSSObject; var numRegisters: Integer): pDoubleArray;
 begin
     if not (obj is TEnergyMeterObj) then
     begin
         Result := NIL;
+        numRegisters := 0;
         Exit;
     end;
+    numRegisters := NumEMRegisters;
     Result := pDoubleArray(@TEnergyMeterObj(obj).Registers[1]);
 end;
 

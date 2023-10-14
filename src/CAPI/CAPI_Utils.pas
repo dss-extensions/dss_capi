@@ -8,6 +8,7 @@ uses
     sysutils,
     DSSPointerList,
     DSSClass,
+    DSSObject,
     CAPI_Types;
 
 type
@@ -104,7 +105,8 @@ function Generic_CktElement_Get_First(DSS: TDSSContext; pList: TDSSPointerList):
 function Generic_CktElement_Get_Next(DSS: TDSSContext; pList: TDSSPointerList): Integer; inline;
 
 function InvalidCircuit(DSS: TDSSContext): Boolean; inline;
-function MissingSolution(DSS: TDSSContext): Boolean; inline;
+function MissingSolution(DSS: TDSSContext): Boolean; overload; inline;
+function MissingSolution(elem: TDSSObject): Boolean; overload; inline;
 
 procedure DefaultResult(var ResultPtr: PByte; ResultCount: PAPISize; Value: Byte = 0); overload; inline;
 procedure DefaultResult(var ResultPtr: PInteger; ResultCount: PAPISize; Value: Integer = 0); overload; inline;
@@ -124,7 +126,6 @@ procedure DSS_InitThreads;
 implementation
 
 Uses 
-    DSSObject, 
     DSSGlobals, 
     CktElement,
     Classes,
@@ -266,6 +267,23 @@ begin
         if DSS_CAPI_EXT_ERRORS then
         begin
             DoSimpleMsg(DSS, _('Solution state is not initialized for the active circuit!'), 8899);
+        end;
+        Result := True;
+        Exit;
+    end;
+    Result := False;
+end;
+function MissingSolution(elem: TDSSObject): Boolean; overload; inline;
+begin
+    Result := (elem = NIL) or InvalidCircuit(elem.DSS);
+    if Result then
+        Exit;
+
+    if elem.DSS.ActiveCircuit.Solution.NodeV = NIL then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg(elem.DSS, _('Solution state is not initialized for the active circuit!'), 8899);
         end;
         Result := True;
         Exit;

@@ -62,7 +62,8 @@ uses
     SysUtils,
     Math,
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    CAPI_Alt;
 
 //------------------------------------------------------------------------------
 function _activeObj(DSS: TDSSContext; out obj: TLoadshapeObj): Boolean; inline;
@@ -462,77 +463,7 @@ begin
 	if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    // If the LoadShape owns the memory, dispose the current data and reallocate if necessary
-    if not elem.ExternalMemory then
-    begin
-        ReallocMem(elem.dP, 0);
-        ReallocMem(elem.dQ, 0);
-        ReallocMem(elem.dH, 0);
-        ReallocMem(elem.sP, 0);
-        ReallocMem(elem.sQ, 0);
-        ReallocMem(elem.sH, 0);
-    end;
-    elem.dP := NIL;
-    elem.dQ := NIL;
-    elem.dH := NIL;
-    elem.sP := NIL;
-    elem.sQ := NIL;
-    elem.sH := NIL;
-    
-    elem.ExternalMemory := ExternalMemory;
-    elem.NumPoints := Npts;
-
-    if not ExternalMemory then
-    begin
-        elem.Stride := 1;
-        if not IsFloat32 then
-        begin
-            if PMultPtr <> NIL then
-            begin
-                ReallocMem(elem.dP, Sizeof(Double) * Npts);
-                Move(PMultPtr^, elem.dP[0], Npts * SizeOf(Double));
-            end;
-            if QMultPtr <> NIL then
-            begin
-                ReallocMem(elem.dQ, Sizeof(Double) * Npts);
-                Move(QMultPtr^, elem.dQ[0], Npts * SizeOf(Double));
-            end;
-            if HoursPtr <> NIL then
-            begin
-                ReallocMem(elem.dH, Sizeof(Double) * Npts);
-                Move(HoursPtr^, elem.dH[0], Npts * SizeOf(Double));
-            end;
-            if Assigned(elem.dP) then
-                elem.SetMaxPandQ;
-        end
-        else // if IsFloat32
-        begin
-            if PMultPtr <> NIL then
-            begin
-                ReallocMem(elem.sP, Sizeof(Single) * Npts);
-                Move(PMultPtr^, elem.sP[0], Npts * SizeOf(Single));
-            end;
-            if QMultPtr <> NIL then
-            begin
-                ReallocMem(elem.sQ, Sizeof(Single) * Npts);
-                Move(QMultPtr^, elem.sQ[0], Npts * SizeOf(Single));
-            end;
-            if HoursPtr <> NIL then
-            begin
-                ReallocMem(elem.sH, Sizeof(Single) * Npts);
-                Move(HoursPtr^, elem.sH[0], Npts * SizeOf(Single));
-            end;
-            if Assigned(elem.sP) then
-                elem.SetMaxPandQ;
-        end;
-        Exit;
-    end;
-    
-    // Using externally controlled memory
-    if not IsFloat32 then
-        elem.SetDataPointers(HoursPtr, PMultPtr, QMultPtr, Stride)
-    else
-        elem.SetDataPointersSingle(HoursPtr, PMultPtr, QMultPtr, Stride)
+    Alt_LoadShape_Set_Points(elem, Npts, HoursPtr, PMultPtr, QMultPtr, ExternalMemory, IsFloat32, Stride);
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_UseFloat64(); CDECL;

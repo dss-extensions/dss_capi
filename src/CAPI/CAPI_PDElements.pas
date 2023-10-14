@@ -58,6 +58,7 @@ procedure PDElements_Get_AllNumTerminals_GR(); CDECL;
 implementation
 
 uses
+    CAPI_Alt,
     CAPI_Constants,
     DSSGlobals,
     PDElement,

@@ -942,6 +942,27 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Circuit_SetCktElementName(void* ctx, const char* Value);
     DSS_CAPI_DLL void ctx_Circuit_SetCktElementIndex(void* ctx, int32_t Value);
 
+
+    /*
+    EXPERIMENTAL: Returns the general circuit data, including all DSS objects, as a
+    JSON-encoded string. The data is encoded using the proposed AltDSS Schema, see
+    https://github.com/orgs/dss-extensions/discussions/ for links to docs and to
+    provide feedback for future revisions.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL char* ctx_Circuit_ToJSON(void* ctx, int32_t options);
+
+    /*
+    EXPERIMENTAL: Loads a full circuit from a JSON-encoded string. The data must 
+    be encoded using the proposed AltDSS Schema, see
+    https://github.com/orgs/dss-extensions/discussions/ for links to docs and to
+    provide feedback for future revisions.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void ctx_Circuit_FromJSON(void* ctx, const char *circ, int32_t options);
+
     /*! 
     Array of strings. Get  Bus definitions to which each terminal is connected. 0-based array.
     */
@@ -7047,6 +7068,14 @@ extern "C" {
 
     (API Extension)
     */
+
+
+
+    // Relevant functions from the CktElement and PDElements API, working directly on the elements
+    //TODO: copy comments and adapt
+
+
+
 
 
 #ifdef __cplusplus

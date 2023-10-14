@@ -121,7 +121,7 @@ end;
 function InvalidActiveSection(DSS: TDSSContext; pMeterObj: TEnergyMeterObj; out psection: PFeederSection): Boolean;
 begin
     Result := false;
-    if (pMeterObj.ActiveSection <= 0) or (pMeterObj.ActiveSection > pMeterObj.SectionCount) then
+    if (pMeterObj.COM_ActiveSection <= 0) or (pMeterObj.COM_ActiveSection > pMeterObj.SectionCount) then
     begin
         if DSS_CAPI_EXT_ERRORS then
             DoSimpleMsg(DSS, _('Invalid active section. Has SetActiveSection been called?'), 5055);
@@ -129,7 +129,7 @@ begin
         psection :=  nil;
         Exit;
     end;
-    psection := @pMeterObj.FeederSections[pMeterObj.ActiveSection];
+    psection := @pMeterObj.FeederSections[pMeterObj.COM_ActiveSection];
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -747,9 +747,9 @@ begin
         Exit;
 
     if (SectIdx > 0) and (SectIdx <= pMeterObj.SectionCount) then
-        pMeterObj.ActiveSection := SectIdx
+        pMeterObj.COM_ActiveSection := SectIdx
     else
-        pMeterObj.ActiveSection := 0;
+        pMeterObj.COM_ActiveSection := 0;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_AvgRepairTime(): Double; CDECL;

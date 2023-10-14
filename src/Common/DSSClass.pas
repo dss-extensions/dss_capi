@@ -977,7 +977,7 @@ begin
     Enums := TObjectList.Create();
 
     // Populate enum info
-    VisualizeQuantityEnum := TDSSEnum.Create('Visualize: quantity', True, 1, 1, 
+    VisualizeQuantityEnum := TDSSEnum.Create('Visualize: Quantity', True, 1, 1, 
         ['Currents', 'Voltages', 'Powers'],
         [1, 2, 3]
     );

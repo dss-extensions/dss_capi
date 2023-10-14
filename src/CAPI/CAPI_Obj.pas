@@ -35,7 +35,8 @@ uses
     CAPI_Utils,
     CAPI_Types,
     DSSObject,
-    fpjson;
+    fpjson,
+    Circuit;
 
 //TODO: decise if we want to expose the metadata (property index, name and type) now or later
 
@@ -145,7 +146,9 @@ procedure Batch_SetInt32ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: P
 procedure Batch_SetStringArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PPAnsiChar); CDECL;
 procedure Batch_SetObjectArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: TDSSObjectPtr); CDECL;
 
-
+// JSON functions, internal
+function Obj_Circuit_ToJSON_(ckt: TDSSCircuit; joptions: Integer): PAnsiChar;
+procedure Obj_Circuit_FromJSON_(DSS: TDSSContext; jckt: TJSONObject; joptions: Integer);
 
 implementation
 
@@ -167,7 +170,10 @@ uses
     ArrayDef,
     Math,
     UComplex,
-    Classes;
+    Classes,
+    jsonparser,
+    Bus,
+    DateUtils;
 
 const
     // TODO: enum?
@@ -646,7 +652,7 @@ begin
     localEnums := TJSONObject.Create();
     parents := TJSONArray.Create();
 
-    props.Add('name', TJSONObject.Create([
+    props.Add('Name', TJSONObject.Create([
         'title', 'Name',
         'type', 'string',
         'minLength', 1,
@@ -654,7 +660,7 @@ begin
         '$dssPropertyOrder', 0,
         '$dssPropertyIndex', 0
     ]));
-    requiredProps := TJSONArray.Create(['name']);
+    requiredProps := TJSONArray.Create(['Name']);
 
     with cls do
     begin
@@ -1381,12 +1387,13 @@ end;
 
 function DSS_ExtractJSONSchema(DSS: TDSSContext): PAnsiChar; CDECL;
 var
-    schema: TJSONObject;
+    schema, clsSchema, clsArrayDef: TJSONObject;
     globalDefs: TJSONObject;
+    dssEnum: TDSSEnum;
     enumIds: TClassNamesHashListType;
     circuitProperties: TJSONObject;
     i: Integer;
-
+    cls: TDSSClass;
 begin
     if DSS = NIL then DSS := DSSPrime;
     DSS.DSSExecutive.ParseCommand('clear');
@@ -1482,18 +1489,18 @@ begin
         TJSONObject.Create([
             'type', 'object',
             'properties', TJSONObject.Create([
-                'name', TJSONObject.Create([
+                'Name', TJSONObject.Create([
                     'title', 'Name',
                     'type', 'string',
                     'minLength', 1,
                     'maxLength', 255
                 ]),
-                'x', TJSONObject.Create([
+                'X', TJSONObject.Create([
                     'title', 'X',
                     'type', 'number'
                     // , 'format', 'float64'
                 ]),
-                'y', TJSONObject.Create([
+                'Y', TJSONObject.Create([
                     'title', 'Y',
                     'type', 'number'
                     // , 'format', 'float64'
@@ -1510,8 +1517,8 @@ begin
                     // 'format', 'float64',
                     'exclusiveMinimum', 0
                 ]),
-                'keep', TJSONObject.Create([
-                    'title', 'keep',
+                'Keep', TJSONObject.Create([
+                    'title', 'Keep',
                     'type', 'boolean',
                     'default', false
                 ])
@@ -1529,7 +1536,7 @@ begin
                     'not', TJSONObject.Create(['required', TJSONArray.Create(['kVLN', 'kVLL'])])
                 ])
             ]),
-            'required', TJSONArray.Create(['name'])
+            'required', TJSONArray.Create(['Name'])
         ])
     );
     globalDefs.Add(
@@ -1543,34 +1550,41 @@ begin
     enumIds := TClassNamesHashListType.Create(100);
 
     circuitProperties := TJSONObject.Create([
-        'preCommands', TJSONObject.Create(['type', 'array', 'items', TJSONObject.Create(['type', 'string'])]),
-        'postCommands', TJSONObject.Create(['type', 'array', 'items', TJSONObject.Create(['type', 'string'])]),
+        'Name', TJSONObject.Create(['title', 'Name', 'type', 'string', 'minLength', 1, 'maxLength', 255]),
+        'DefaultBaseFreq', TJSONObject.Create(['title', 'DefaultBaseFreq', 'type', 'float', 'exclusiveMinimum', 0, '$comment', 'Dynamic default.']),
+        'PreCommands', TJSONObject.Create(['type', 'array', 'items', TJSONObject.Create(['type', 'string'])]),
+        'PostCommands', TJSONObject.Create(['type', 'array', 'items', TJSONObject.Create(['type', 'string'])]),
         'Bus', TJSONObject.Create([
             'type', 'array', 
             'items', TJSONObject.Create(['$ref', '#/$defs/Bus']),
             'default', TJSONArray.Create()
-        ]),
-        'circuitVsource', TJSONObject.Create(['$ref', '#/$defs/Vsource'])
+        ])
+        // 'circuitVsource', TJSONObject.Create(['$ref', '#/$defs/Vsource'])
     ]);
 
-    for i := 1 to DSS.Enums.Count do
-        globalDefs.Add(TDSSEnum(DSS.Enums[i - 1]).JSONName, prepareEnumJsonSchema(TDSSEnum(DSS.Enums[i - 1]), enumIds));
+    for dssEnum in DSS.Enums do
+        globalDefs.Add(dssEnum.JSONName, prepareEnumJsonSchema(dssEnum, enumIds));
 
-    for i := 1 to DSS.DSSClassList.Count do
+    for cls in DSS.DSSClassList do
     begin
-        globalDefs.Add(TDSSClass(DSS.DSSClassList.At(i)).Name, prepareClassJsonSchema(i, DSS.DSSClassList.At(i), enumIds));
-        circuitProperties.Add(TDSSClass(DSS.DSSClassList.At(i)).Name, TJSONObject.Create([
+        globalDefs.Add(cls.Name, prepareClassJsonSchema(i, DSS.DSSClassList.At(i), enumIds));
+        clsArrayDef := TJSONObject.Create([
+            'title', cls.Name + 'List',
+            'type', 'array',
+            'items', TJSONObject.Create(['$ref', Format('#/$defs/%s', [cls.Name])])
+        ]);
+        clsSchema := TJSONObject.Create([
             'default', TJSONArray.Create(),
             'oneOf', TJSONArray.Create([
-                TJSONObject.Create([
-                    'title', TDSSClass(DSS.DSSClassList.At(i)).Name + 'List',
-                    'type', 'array',
-                    'items', TJSONObject.Create(['$ref', Format('#/$defs/%s', [TDSSClass(DSS.DSSClassList.At(i)).Name])])
-                ]),
+                clsArrayDef,
                 TJSONObject.Create(['$ref', '#/$defs/JSONFilePath']),
                 TJSONObject.Create(['$ref', '#/$defs/JSONLinesFilePath'])
-            ])
-        ]));
+            ])]);
+        if cls = DSS.VSourceClass then
+        begin
+            clsArrayDef.Add('minLength', 1);
+        end;
+        circuitProperties.Add(cls.Name, clsSchema);
     end;
 
     schema := TJSONObject.Create([
@@ -1581,7 +1595,7 @@ begin
         '$defs', globalDefs,
         'type', 'object',
         'properties', circuitProperties,
-        'required', TJSONArray.Create(['circuitVsource'])
+        'required', TJSONArray.Create(['Vsource'])
     ]);
     Result := DSS_GetAsPAnsiChar(DSS, schema.FormatJSON());
     //Result := DSS_GetAsPAnsiChar(DSS, '-');
@@ -1969,15 +1983,15 @@ begin
         pnames := cls.PropertyNameLowercase;
     end;
 
-    if (joptions and Integer(DSSJSONOptions.SkipDSSClass)) = 0 then
+    if (joptions and Integer(DSSJSONOptions.IncludeDSSClass)) <> 0 then
     begin
         if (joptions and Integer(DSSJSONOptions.LowercaseKeys)) = 0 then
-            Result := TJSONObject.Create(['DSSClass', cls.Name, 'name', obj.Name])
+            Result := TJSONObject.Create(['DSSClass', cls.Name, 'Name', obj.Name])
         else
-            Result := TJSONObject.Create(['dssclass', cls.Name, 'name', obj.Name]);
+            Result := TJSONObject.Create(['dssclass', cls.Name, 'Name', obj.Name]);
     end
     else
-        Result := TJSONObject.Create(['name', obj.Name]);
+        Result := TJSONObject.Create(['Name', obj.Name]);
 
     SetLength(done, cls.NumProperties);
 
@@ -3326,5 +3340,271 @@ begin
 
     Batch_SetObjectArray(batch, batchSize, propIdx, Value);
 end;
+
+//------------------------------------------------------------------------------
+function Obj_Circuit_ToJSON_(ckt: TDSSCircuit; joptions: Integer): PAnsiChar;
+var
+    circ: TJSONObject = NIL;
+    busArray: TJSONArray = NIL;
+    busObj: TJSONObject = NIL;
+    clsArray: TJSONArray = NIL;
+    cmds: TJSONArray = NIL;
+    // vsrc: TVSourceObj = NIL;
+    cls: TDSSClass;
+    obj: TDSSObject;
+    first: Boolean;
+    // vsrccls: TDSSClass;
+    bus: TDSSBus;
+    i: Integer;
+begin
+    Result := NIL;
+    try
+        cmds := TJSONArray.Create();
+        cmds.Add(Format('! Last saved by AltDSS/%s on %s',  [VersionString, DateToISO8601(Now())]));
+        if ckt.PositiveSequence then
+            cmds.Add(Format('Set CktModel=%s', [ckt.DSS.CktModelEnum.OrdinalToString(Integer(ckt.PositiveSequence))]));
+        if ckt.DuplicatesAllowed then
+            cmds.Add('Set AllowDuplicates=True');
+        if ckt.LongLineCorrection then
+            cmds.Add('Set LongLineCorrection=True');
+
+        busArray := TJSONArray.Create();
+        for i := 1 to ckt.NumBuses do
+        begin
+            bus := ckt.Buses[i];
+            busObj := TJSONObject.Create(['Name', bus.Name]);
+            if bus.CoordDefined then
+            begin
+                busObj.Add('X', bus.x);
+                busObj.Add('Y', bus.y);
+            end;
+            if bus.kVBase <> 0 then
+                busObj.Add('', bus.kVBase);
+            if bus.Keep then
+                busObj.Add('Keep', true);
+            busArray.Add(busObj);
+            busObj := NIL;
+        end;
+        circ := TJSONObject.Create([
+            'Name', ckt.Name,
+            'DefaultBaseFreq', ckt.DSS.DefaultBaseFreq,
+            'PreCommands', cmds, 
+            // MakeBusList as a PostCommand is implicit
+            'Bus', busArray
+        ]);
+        cmds := NIL;
+        busArray := NIL;
+
+        // vsrccls := ckt.DSS.VSourceClass;
+        for cls in ckt.DSS.DSSClassList do
+        begin
+            clsArray := TJSONArray.Create();
+            // if cls = vsrccls then
+            // begin
+            //     first := True;
+            //     for obj in cls do
+            //     begin
+            //         if first then
+            //         begin
+            //             vsrc := TSourceObj(obj);
+            //             first := false;
+            //             continue;
+            //         end;
+            //         clsArray.Add(Obj_ToJSONData(obj, joptions));
+            //     end;
+            //     circ.Add('circuitVsource', Obj_ToJSONData(vsrc, joptions));
+            // end;
+            // else
+            // begin
+            for obj in cls do
+            begin
+                clsArray.Add(Obj_ToJSONData(obj, joptions));
+            end;
+            // end;
+            if clsArray.Count <> 0 then
+                circ.Add(cls.Name, clsArray)
+            else
+                clsArray.Free();
+            clsArray := NIL;
+        end;
+
+        Result := DSS_GetAsPAnsiChar(ckt.DSS, circ.FormatJSON());
+    except
+    on E: Exception do
+        DoSimpleMsg(ckt.DSS, 'Error converting data to JSON: %s', [E.message], 20230918);
+    end;
+
+    if cmds <> NIL then
+        cmds.Free();
+    if circ <> NIL then
+        circ.Free();
+    if busArray <> NIL then
+        busArray.Free();
+    if busObj <> NIL then
+        busObj.Free();
+    if clsArray <> NIL then
+        clsArray.Free();
+    // if vsrc <> NIL then
+    //     vsrc.Free();
+end;
+
+function processArrayOrFilePath(DSS: TDSSContext; data: TJSONData): ArrayOfDouble;
+var
+    arr: TJSONArray = NIL;
+    obj: TJSONObject = NIL;
+    i: Integer;
+    col: Integer = 1;
+    header: Boolean = false;
+    fn: TJSONString = NIL;
+begin
+    if data is TJSONArray then
+    begin
+        // Easy path
+        arr := TJSONArray(data);
+        SetLength(Result, arr.Count);
+        for i := 0 to High(Result) do
+            Result[i] := arr.Floats[i];
+        Exit;
+    end;
+    obj := obj as TJSONOBject;
+    if obj = NIL then
+        raise Exception.Create('Array is not correctly specified');
+
+    obj.Find('DblFile', fn);
+    if fn <> NIL then
+    
+    obj.Find('SngFile', fn);
+    if fn <> NIL then
+    
+    
+    obj.Find('CSVFile', fn);
+    if fn = NIL then
+        raise Exception.Create('Array is not correctly specified');
+
+    col := obj.Get('Column', col);
+    header := obj.Get('Header', header);
+
+end;
+
+procedure loadClassFromJSON(DSS: TDSSContext; cls: TDSSClass; jcls: TJSONData; joptions: Integer);
+// 1. Load from array, or
+// 2. Load array from file, then 1, or
+// 3. Incrementally load from JSONLines
+var
+    obj: TJSONObject;
+    data: TJSONData = NIL;
+    arr: TJSONArray;
+    arrItem: TJSONData;
+    jsonFilePath: TJSONString = NIL;
+    jsonLinesFilePath: TJSONString = NIL;
+    F: TStream = NIL;
+    lineNum: Integer;
+    specialFirst: Boolean;
+    line: String;
+
+    procedure loadSingleObj(o: TJSONObject);
+    begin
+        if specialFirst then
+        begin
+            WriteLn('"SPECIAL loading first" ', cls.Name, '.', o.Get('name', 'MISSING_NAME'));
+            specialFirst := false;
+        end;
+
+        WriteLn('"Loading" ', cls.Name, '.', o.Get('name', 'MISSING_NAME'));
+    end;
+begin
+    specialFirst := (cls = DSS.VSourceClass);
+    try
+        if jcls is TJSONObject then
+        begin
+            obj := TJSONObject(jcls);
+            obj.Find('JSONFile', jsonFilePath);
+            obj.Find('JSONLinesFile', jsonLinesFilePath);
+            if jsonFilePath <> NIL then
+            begin
+                F := DSS.GetInputStreamEx(jsonFilePath.Value);
+                data := GetJSON(F);
+                if not (data is TJSONArray) then
+                    raise Exception.Create(Format('JSON/%s: unexpected format in file "%s".', [cls.Name, jsonFilePath.Value]));
+                arr := TJSONArray(data);
+                // continue as if the array as built-in
+            end
+            else
+            if jsonLinesFilePath <> NIL then
+            begin
+                F := DSS.GetInputStreamEx(jsonLinesFilePath.Value);
+                lineNum := 1;
+                while (F.Position + 1) < F.Size do
+                begin
+                    FSReadln(F, line);
+                    data := GetJSON(line);
+                    if not (data is TJSONObject) then
+                        raise Exception.Create(Format('JSON/%s: unexpected format in file "%s", line %d.', [cls.Name, jsonLinesFilePath.Value, lineNum]));
+
+                    loadSingleObj(TJSONObject(data));
+                    FreeAndNil(data);
+                    lineNum += 1;
+                end;
+                Exit;        
+            end;
+        end
+        else
+        if jcls is TJSONArray then
+        begin
+            arr := TJSONArray(jcls);
+        end;
+
+        for lineNum := 0 to arr.Count - 1 do
+        begin
+            arrItem := arr.Items[lineNum];
+            if not (arrItem is TJSONObject) then
+                raise Exception.Create(Format('JSON/%s: unexpected format for object number %d.', [cls.Name, lineNum]));
+            loadSingleObj(TJSONObject(arrItem));
+        end;
+
+    finally
+        FreeAndNil(F);
+        FreeAndNil(data);
+    end;
+end;
+
+procedure Obj_Circuit_FromJSON_(DSS: TDSSContext; jckt: TJSONObject; joptions: Integer);
+var
+    ckt: TDSSCircuit;
+    tmp: TJSONData;
+    cls: TDSSClass;
+    cmds: TJSONArray;
+    i: Integer;
+begin
+    DSS.DSSExecutive.Clear();
+    tmp := jckt.Find('DefaultBaseFreq');
+    if tmp <> NIL then
+        DSS.DefaultBaseFreq := tmp.AsFloat;
+    
+    MakeNewCircuit(DSS, jckt.Get('Name', 'untitled'));
+    tmp := jckt.Find('PreCommands');
+    if (tmp <> NIL) then
+    begin
+        if not (tmp is TJSONArray) then
+            raise Exception.Create('"PreCommands" must be an array of strings, if provided.');
+
+        cmds := tmp as TJSONArray;
+        for i := 0 to cmds.Count - 1 do
+        begin
+            DSSPrime.DSSExecutive.ParseCommand(cmds.Items[i].AsString);
+        end;
+    end;
+
+    for cls in ckt.DSS.DSSClassList do
+    begin
+        tmp := jckt.Find(cls.Name);
+        if tmp = NIL then
+            continue;
+
+        loadClassFromJSON(DSS, cls, tmp,  joptions);
+    end;
+
+end;
+//------------------------------------------------------------------------------
 
 end.

@@ -204,7 +204,7 @@ type
         procedure SampleAll();
         procedure UpdateAll;
         function GetRegisterNames(obj: TDSSObject): ArrayOfString; override;
-        function GetRegisterValues(obj: TDSSObject): pDoubleArray; override;
+        function GetRegisterValues(obj: TDSSObject; var numRegisters: Integer): pDoubleArray; override;
     end;
 
     TPVsystemObj = class(TInvBasedPCE)
@@ -818,13 +818,15 @@ begin
     Result := RegisterNames;
 end;
 
-function TPVsystem.GetRegisterValues(obj: TDSSObject): pDoubleArray;
+function TPVsystem.GetRegisterValues(obj: TDSSObject; var numRegisters: Integer): pDoubleArray;
 begin
     if not (obj is TPVsystemObj) then
     begin
         Result := NIL;
+        numRegisters := 0;
         Exit;
     end;
+    numRegisters := NumPVSystemRegisters;
     Result := pDoubleArray(@TPVsystemObj(obj).Registers[1]);
 end;
 

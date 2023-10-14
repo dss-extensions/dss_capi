@@ -14,14 +14,14 @@ uses
 
 type
 {$SCOPEDENUMS ON}
-    DSSJsonOptions = (
+    DSSJSONOptions = (
         Full = 1 shl 0,
         SkipRedundant = 1 shl 1,
         EnumAsInt = 1 shl 2,
         FullNames = 1 shl 3,
         Pretty = 1 shl 4, 
         ExcludeDisabled = 1 shl 5,
-        SkipDSSClass = 1 shl 6,
+        IncludeDSSClass = 1 shl 6,
         LowercaseKeys = 1 shl 7,
         State = 1 shl 8, //TODO: power flow state, state variables for the given element, if applies
         Debug = 1 shl 9 // TODO
@@ -42,6 +42,7 @@ type
         function ParseObjPropertyValue(Obj: Pointer; Index: Integer; const Value: String; out prevInt: Integer): Boolean;
         function GetObjPropertyValue(obj: Pointer; Index: Integer; out PropStr: String): Boolean;
         function GetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; var val: TJSONData; preferArray: Boolean = False): Boolean;
+        function SetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; val: TJSONData): Boolean;
 
         //TODO: add error as result for the 16 following functions
 
@@ -1090,7 +1091,7 @@ begin
         TPropertyType.MappedStringEnumOnStructArrayProperty,
         TPropertyType.MappedStringEnumProperty:
         begin
-            if ((joptions and Integer(DSSJsonOptions.EnumAsInt) = 0) or (not (ptype in [
+            if ((joptions and Integer(DSSJSONOptions.EnumAsInt) = 0) or (not (ptype in [
                 TPropertyType.MappedStringEnumOnStructArrayProperty, 
                 TPropertyType.MappedStringEnumProperty
             ]))) then
@@ -1134,7 +1135,7 @@ begin
             otherObj := GetObjObject(obj, Index);
             if otherObj = NIL then
                 val := TJSONNull.Create()
-            else if (joptions and Integer(DSSJsonOptions.FullNames)) <> 0 then
+            else if (joptions and Integer(DSSJSONOptions.FullNames)) <> 0 then
             begin
                 val := TJSONString.Create(otherObj.FullName)
             end
@@ -1295,7 +1296,7 @@ begin
 
             integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
 
-            if (joptions and Integer(DSSJsonOptions.EnumAsInt)) = 0 then
+            if (joptions and Integer(DSSJSONOptions.EnumAsInt)) = 0 then
             begin
                 for i := 1 to intVal do
                 begin
@@ -1329,7 +1330,7 @@ begin
                 PropertyOffset[Index]
             );
 
-            if joptions and Integer(DSSJsonOptions.EnumAsInt) = 0 then
+            if joptions and Integer(DSSJSONOptions.EnumAsInt) = 0 then
             begin
                 for i := 1 to intVal do
                 begin
@@ -1404,7 +1405,7 @@ begin
                 Exit;
 
             if (Pointer(PropertyOffset2[Index]) = NIL) or 
-                ((joptions and Integer(DSSJsonOptions.FullNames)) <> 0) or 
+                ((joptions and Integer(DSSJSONOptions.FullNames)) <> 0) or 
                 (TPropertyFlag.FullNameAsJSONArray in PropertyFlags[Index]) then
             begin
                 for i := 1 to count do
@@ -1431,6 +1432,490 @@ begin
     Result := False;
 end;
 
+
+
+function TDSSClassHelper.SetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; val: TJSONData): Boolean;
+// Lots of code reused here from TDSSClassHelper.GetObjPropertyValue below.
+// When ported to C++, we should address this duplication.
+var
+    c: PComplex;
+    otherObj: TDSSObject;
+    otherObjPtr, otherObjPtr0: TDSSObjectPtr;
+    dval, scale: Double;
+    stringList: TStringList;
+    i, j, intVal, Norder, count, step: Integer;
+    doublePtr: PDouble;
+    integerPtr: PInteger;
+    darray: PDoubleArray;
+    mat: TCMatrix;
+    ValueCount: Array[0..3] of TAPISize;
+    valArray: TJSONArray;
+    ptype: TPropertyType;
+    jsonArray: TJSONArray = NIL;
+begin
+    // if preferArray and (PropertyArrayAlternative[Index] <> 0) then
+    // begin
+    //     // This should handle most properties that have redundant element-in-array versions.
+    //     // For the few remaining of types below, we check later in the function:
+    //     // DoubleOnArrayProperty, 
+    //     // DoubleOnStructArrayProperty,
+    //     // IntegerOnStructArrayProperty,
+    //     // DSSObjectReferenceProperty + OnArray flag
+    //     Result := GetObjPropertyJSONValue(obj, PropertyArrayAlternative[Index], joptions, val, True);
+    //     Exit;
+    // end;
+
+    // if not ((Index > 0) and (Index <= NumProperties) and (PropertyOffset[Index] <> -1)) then
+    // begin
+    //     Result := False;
+    //     Exit;
+    // end;
+
+    // Result := True;
+    // ptype := PropertyType[Index];
+    // case ptype of
+    //     TPropertyType.DoubleProperty,
+    //     TPropertyType.DoubleOnArrayProperty,
+    //     TPropertyType.DoubleOnStructArrayProperty:
+    //     begin
+    //         if preferArray and (ptype in [TPropertyType.DoubleOnArrayProperty, TPropertyType.DoubleOnStructArrayProperty]) then
+    //         begin
+    //             if TPropertyFlag.SizeIsFunction in PropertyFlags[Index] then
+    //             begin
+    //                 Norder := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj)
+    //             end
+    //             else
+    //                 Norder := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+
+    //             if ptype = TPropertyType.DoubleOnArrayProperty then
+    //             begin
+    //                 darray := pDoubleArray(PPDouble(PByte(obj) + PropertyOffset[Index])^);
+    //                 step := SizeOf(Double);
+    //             end
+    //             else
+    //             begin
+    //                 // DoubleOnStructArrayProperty
+    //                 darray := pDoubleArray(
+    //                         PPByte(PByte(obj) + PropertyStructArrayOffset)^ + // Pointer to the pointer array
+    //                         PropertyOffset[Index] // base field
+    //                 );
+    //                 step := PropertyStructArrayStep;
+    //             end;
+    //             val := GetDSSArray_JSON(Norder, darray, PropertyScale[Index], step);
+    //             Exit;
+    //         end;
+
+    //         // if (not TPropertyFlag.... in flags) then
+    //         dval := GetObjDouble(obj, Index);
+    //         if IsNaN(dval) or IsInfinite(dval) then
+    //             val := TJSONNull.Create()
+    //         else
+    //             val := TJSONFloatNumber.Create(GetObjDouble(obj, Index));
+    //         // else
+    //         Exit;
+    //     end;
+    //     TPropertyType.IntegerOnStructArrayProperty,
+    //     TPropertyType.MappedIntEnumProperty,
+    //     TPropertyType.IntegerProperty:
+    //     begin        
+    //         if preferArray and (ptype = TPropertyType.IntegerOnStructArrayProperty) then
+    //         begin
+    //             if TPropertyFlag.SizeIsFunction in PropertyFlags[Index] then
+    //             begin
+    //                 Norder := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj)
+    //             end
+    //             else
+    //                 Norder := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+
+    //             val := GetDSSArray_JSON(
+    //                 Norder, 
+    //                 pIntegerArray(
+    //                     PPByte(PByte(obj) + PropertyStructArrayOffset)^ + // Pointer to the pointer array
+    //                     PropertyOffset[Index] // base field
+    //                 ),
+    //                 PropertyStructArrayStep
+    //             );
+    //             Exit;
+    //         end
+    //         else
+    //         begin
+    //             val := TJSONIntegerNumber.Create(GetObjInteger(obj, Index));
+    //         end;
+    //         Exit;
+    //     end;
+    //     TPropertyType.BooleanActionProperty,
+    //     TPropertyType.EnabledProperty,
+    //     TPropertyType.BooleanProperty:
+    //     begin        
+    //         val := TJSONBoolean.Create(GetObjInteger(obj, Index) <> 0);
+    //         Exit;
+    //     end;
+
+    //     TPropertyType.ComplexProperty:
+    //     begin
+    //         c := PComplex(PByte(obj) + PropertyOffset[Index]);
+    //         val := TJSONArray.Create([c.re, c.im]);
+    //         Exit;
+    //     end;
+
+    //     TPropertyType.ComplexPartsProperty:
+    //     begin
+    //         c := PComplex(PByte(obj) + PropertyOffset[Index]);
+    //         val := TJSONArray.Create([PDouble(PByte(obj) + PropertyOffset[Index])^, PDouble(PByte(obj) + PropertyOffset2[Index])^]);
+    //         Exit;
+    //     end;
+
+    //     TPropertyType.BusProperty,
+    //     TPropertyType.BusOnStructArrayProperty,
+    //     TPropertyType.StringSilentROFunctionProperty,
+    //     // TPropertyType.StringOnArrayProperty,
+    //     TPropertyType.StringEnumActionProperty,
+    //     // TPropertyType.StringOnStructArrayProperty,
+    //     TPropertyType.StringProperty,
+    //     TPropertyType.MakeLikeProperty,
+    //     TPropertyType.MappedStringEnumOnStructArrayProperty,
+    //     TPropertyType.MappedStringEnumProperty:
+    //     begin
+    //         if ((joptions and Integer(DSSJSONOptions.EnumAsInt) = 0) or (not (ptype in [
+    //             TPropertyType.MappedStringEnumOnStructArrayProperty, 
+    //             TPropertyType.MappedStringEnumProperty
+    //         ]))) then
+    //         begin
+    //             val := TJSONString.Create(GetObjString(obj, Index));
+    //             Exit;
+    //         end
+    //         else
+    //         begin
+    //             val := TJSONIntegerNumber.Create(GetObjInteger(obj, Index));
+    //             Exit;
+    //         end;
+    //     end;
+    //     TPropertyType.DSSObjectReferenceProperty:
+    //     begin
+    //         if TPropertyFlag.OnArray in PropertyFlags[Index] then
+    //         begin
+    //             Norder := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+    //             otherObjPtr := TDSSObjectPtrPtr(PByte(obj) + PropertyOffset[Index])^;
+    //             jsonArray := TJSONArray.Create();
+    //             val := jsonArray;
+    //             if (TPropertyFlag.FullNameAsArray in PropertyFlags[Index]) then
+    //             begin
+    //                 for i := 1 to Norder do
+    //                 begin
+    //                     jsonArray.Add(otherObjPtr^.FullName);
+    //                     inc(otherObjPtr);
+    //                 end;
+    //             end
+    //             else
+    //             begin
+    //                 for i := 1 to Norder do
+    //                 begin
+    //                     jsonArray.Add(otherObjPtr^.Name);
+    //                     inc(otherObjPtr);
+    //                 end;
+    //             end;
+    //             Exit;
+    //         end;
+
+    //         otherObj := GetObjObject(obj, Index);
+    //         if otherObj = NIL then
+    //             val := TJSONNull.Create()
+    //         else if (joptions and Integer(DSSJSONOptions.FullNames)) <> 0 then
+    //         begin
+    //             val := TJSONString.Create(otherObj.FullName)
+    //         end
+    //         else
+    //             val := TJSONString.Create(GetObjString(obj, Index));
+    //         Exit;
+    //     end;
+    //     TPropertyType.DoubleArrayProperty,
+    //     TPropertyType.DoubleDArrayProperty,
+    //     TPropertyType.DoubleVArrayProperty:
+    //     begin
+    //         if TPropertyFlag.SizeIsFunction in PropertyFlags[Index] then
+    //         begin
+    //             Norder := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj)
+    //         end
+    //         else
+    //             Norder := PInteger(PByte(obj) + PropertyOffset2[Index])^;
+
+    //         if (TPropertyFlag.AllowNone in PropertyFlags[Index]) and (Norder = 0) then
+    //         begin
+    //             val := TJSONNull.Create();
+    //             Exit;
+    //         end;
+
+    //         if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
+    //         begin
+    //             ValueCount[0] := 0;
+    //             ValueCount[1] := 0;
+    //             if DSS_EXTENSIONS_ARRAY_DIMS then
+    //             begin
+    //                 ValueCount[2] := 0;
+    //                 ValueCount[3] := 0;
+    //             end;
+    //             doublePtr := NIL;
+    //             TDoublesPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, doublePtr, @ValueCount[0]);
+    //             val := GetDSSArray_JSON(
+    //                 ValueCount[0],
+    //                 pDoubleArray(doublePtr),
+    //                 PropertyScale[Index]
+    //             );
+    //             DSS_Dispose_PDouble(doublePtr);
+    //             Exit;
+    //         end;
+
+    //         val := GetDSSArray_JSON(
+    //             Norder, 
+    //             pDoubleArray(PPDouble(PByte(obj) + PropertyOffset[Index])^),
+    //             PropertyScale[Index]
+    //         );
+    //         Exit;
+    //     end;
+    //     TPropertyType.DoubleFArrayProperty:
+    //     begin
+    //         val := GetDSSArray_JSON(
+    //             PropertyOffset2[Index], 
+    //             pDoubleArray(PDouble(PByte(obj) + PropertyOffset[Index])),
+    //             PropertyScale[Index]
+    //         );
+    //         Exit;
+    //     end;
+    //     TPropertyType.DoubleSymMatrixProperty:
+    //     begin
+    //         scale := PropertyScale[Index];
+    //         Norder := PInteger(PByte(obj) + PropertyOffset2[Index])^;
+    //         darray := PDoubleArray(PByte(obj) + PropertyOffset[Index]);
+    //         valArray := TJSONArray.Create([]);
+    //         val := valArray;
+    //         if (darray <> NIL) and (Norder > 0) then
+    //             for i := 1 to Norder do
+    //                 for j := 1 to i do
+    //                     valArray.Add(darray[(i - 1) * Norder + j] / scale);
+    //         Exit;
+    //     end;
+    //     TPropertyType.ComplexPartSymMatrixProperty:
+    //     begin
+    //         if TPropertyFlag.ScaledByFunction in PropertyFlags[Index] then
+    //             scale := TPropertyScaleFunction(Pointer(PropertyOffset2[Index]))(obj, True) // True = Getter scale
+    //         else
+    //             scale := PropertyScale[Index];
+
+    //         mat := PCMatrix(Pointer(PByte(obj) + PropertyOffset[Index]))^;
+    //         if mat = NIL then
+    //         begin
+    //             val := TJSONNull.Create();
+    //             Exit;
+    //         end;
+
+    //         valArray := TJSONArray.Create([]);
+    //         val := valArray;
+
+    //         if TPropertyFlag.ImagPart in PropertyFlags[Index] then
+    //             for i := 1 to mat.order do
+    //             begin
+    //                 for j := 1 to i do
+    //                     valArray.Add(mat[i, j].im / scale);
+    //             end
+    //         else
+    //             for i := 1 to mat.order do
+    //             begin
+    //                 for j := 1 to i do
+    //                     valArray.Add(mat[i, j].re / scale);
+    //             end;
+
+    //         Exit;
+    //     end;
+    //     TPropertyType.DoubleArrayOnStructArrayProperty:
+    //     begin
+    //         // Number of items
+    //         intVal := PInteger(PByte(obj) + PropertyOffset2[Index])^;
+
+    //         valArray := TJSONArray.Create([]);
+    //         val := valArray;
+    //         if intVal <= 0 then
+    //             Exit;
+
+    //         // Pointer to the first of the target fields
+    //         doublePtr := PDouble(
+    //             PPByte(PByte(obj) + PropertyStructArrayOffset)^ +
+    //             PropertyOffset[Index]
+    //         );
+
+    //         scale := PropertyScale[Index];
+
+    //         for i := 1 to intVal do
+    //         begin
+    //             valArray.Add(doublePtr^ / scale);
+    //             doublePtr := PDouble(ptruint(doublePtr) + PropertyStructArrayStep);
+    //         end;
+    //         Exit;
+    //     end;
+
+    //     TPropertyType.BusesOnStructArrayProperty:
+    //     begin
+    //         // Number of items
+    //         intVal := PInteger(PByte(obj) + PropertyOffset[Index])^;
+
+    //         valArray := TJSONArray.Create([]);
+    //         val := valArray;
+    //         if intVal <= 0 then
+    //             Exit;
+
+    //         for i := 1 to intVal do
+    //             valArray.Add(TDSSCktElement(obj).GetBus(i));
+
+    //         Exit;
+    //     end;
+    //     TPropertyType.MappedStringEnumArrayProperty:
+    //     begin
+    //         if (TPropertyFlag.SizeIsFunction in PropertyFlags[Index]) then
+    //             intVal := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj)
+    //         else
+    //             intVal := PropertyOffset3[Index];
+
+    //         valArray := TJSONArray.Create([]);
+    //         val := valArray;
+    //         if intVal <= 0 then
+    //             Exit;
+
+    //         integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
+
+    //         if (joptions and Integer(DSSJSONOptions.EnumAsInt)) = 0 then
+    //         begin
+    //             for i := 1 to intVal do
+    //             begin
+    //                 valArray.Add(TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalToString(integerPtr^));
+    //                 Inc(integerPtr);
+    //             end;
+    //         end
+    //         else
+    //         begin
+    //             for i := 1 to intVal do
+    //             begin
+    //                 valArray.Add(integerPtr^);
+    //                 Inc(integerPtr);
+    //             end;
+    //         end;
+    //         Exit;
+    //     end;
+    //     TPropertyType.MappedStringEnumArrayOnStructArrayProperty:
+    //     begin
+    //         // Number of items
+    //         intVal := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+
+    //         valArray := TJSONArray.Create([]);
+    //         val := valArray;
+    //         if intVal <= 0 then
+    //             Exit;
+
+    //         // Pointer to the first of the target fields
+    //         integerPtr := PInteger(
+    //             PPByte(PByte(obj) + PropertyStructArrayOffset)^ +
+    //             PropertyOffset[Index]
+    //         );
+
+    //         if joptions and Integer(DSSJSONOptions.EnumAsInt) = 0 then
+    //         begin
+    //             for i := 1 to intVal do
+    //             begin
+    //                 valArray.Add(TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalToString(integerPtr^));
+    //                 integerPtr := PInteger(ptruint(integerPtr) + PropertyStructArrayStep);
+    //             end;
+    //         end
+    //         else
+    //         begin
+    //             for i := 1 to intVal do
+    //             begin
+    //                 valArray.Add(integerPtr^);
+    //                 integerPtr := PInteger(ptruint(integerPtr) + PropertyStructArrayStep);
+    //             end;
+    //         end;
+    //         Exit;
+    //     end;
+
+    //     TPropertyType.IntegerArrayProperty:
+    //     begin
+    //         val := GetDSSArray_JSON(
+    //             PInteger(PByte(obj) + PropertyOffset2[Index])^, 
+    //             pIntegerArray(PPInteger(PByte(obj) + PropertyOffset[Index])^)
+    //         );
+    //         Exit;
+    //     end;
+    //     TPropertyType.StringListProperty:
+    //     begin
+    //         if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
+    //             stringList := TStringListPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj)
+    //         else
+    //             stringList := PStringList(PByte(obj) + PropertyOffset[Index])^;
+
+    //         valArray := TJSONArray.Create([]);
+    //         val := valArray;
+    //         for i := 0 to stringList.Count - 1 do
+    //             valArray.Add(stringList.Strings[i]);
+
+    //         if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
+    //             stringList.Free();
+
+    //         Exit;
+    //     end;
+    //     TPropertyType.DSSObjectReferenceArrayProperty:
+    //     begin
+    //         if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
+    //         begin
+    //             ValueCount[0] := 0;
+    //             ValueCount[1] := 0;
+    //             if DSS_EXTENSIONS_ARRAY_DIMS then
+    //             begin
+    //                 ValueCount[2] := 0;
+    //                 ValueCount[3] := 0;
+    //             end;
+    //             otherObjPtr0 := NIL;
+    //             TObjRefsPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, PPointer(otherObjPtr0), @ValueCount[0]);
+    //             otherObjPtr := otherObjPtr0;
+    //             count := ValueCount[0];
+    //         end
+    //         else
+    //         begin
+    //             // Number of items
+    //             count := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+    //             // Start of array
+    //             otherObjPtr := TDSSObjectPtrPtr((PtrUint(obj) + PtrUint(PropertyOffset[Index])))^;
+    //         end;
+
+    //         jsonArray := TJSONArray.Create([]);
+    //         val := jsonArray;
+    //         Result := True;
+    //         if count < 1 then
+    //             Exit;
+
+    //         if (Pointer(PropertyOffset2[Index]) = NIL) or 
+    //             ((joptions and Integer(DSSJSONOptions.FullNames)) <> 0) or 
+    //             (TPropertyFlag.FullNameAsJSONArray in PropertyFlags[Index]) then
+    //         begin
+    //             for i := 1 to count do
+    //             begin
+    //                 jsonArray.Add(otherObjPtr^.FullName);
+    //                 Inc(otherObjPtr);
+    //             end;
+    //         end
+    //         else
+    //         begin
+    //             for i := 1 to count do
+    //             begin
+    //                 jsonArray.Add(otherObjPtr^.Name);
+    //                 Inc(otherObjPtr);
+    //             end;
+    //         end;
+
+    //         if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then                
+    //             DSS_Dispose_PPointer(PPointer(otherObjPtr0));
+
+    //         Exit;
+    //     end;
+    // end;
+    // Result := False;
+end;
 
 function TDSSClassHelper.GetObjPropertyValue(obj: Pointer; Index: Integer; out PropStr: String): Boolean;
 var

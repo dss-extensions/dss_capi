@@ -1159,6 +1159,27 @@ extern "C" {
     DSS_CAPI_DLL void Circuit_SetCktElementName(const char* Value);
     DSS_CAPI_DLL void Circuit_SetCktElementIndex(int32_t Value);
 
+
+    /*
+    EXPERIMENTAL: Returns the general circuit data, including all DSS objects, as a
+    JSON-encoded string. The data is encoded using the proposed AltDSS Schema, see
+    https://github.com/orgs/dss-extensions/discussions/ for links to docs and to
+    provide feedback for future revisions.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL char* Circuit_ToJSON(int32_t options);
+
+    /*
+    EXPERIMENTAL: Loads a full circuit from a JSON-encoded string. The data must 
+    be encoded using the proposed AltDSS Schema, see
+    https://github.com/orgs/dss-extensions/discussions/ for links to docs and to
+    provide feedback for future revisions.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void Circuit_FromJSON(const char *circ, int32_t options);
+
     /*! 
     Array of strings. Get  Bus definitions to which each terminal is connected. 0-based array.
     */
@@ -7352,6 +7373,84 @@ extern "C" {
     (API Extension)
     */
     DSS_CAPI_DLL void DSS_SetPropertiesMO(const char* Value);
+
+
+
+    // Relevant functions from the CktElement and PDElements API, working directly on the elements
+    //TODO: copy comments and adapt
+
+    DSS_CAPI_DLL void Alt_CE_Get_BusNames(void* elem, char*** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL int32_t Alt_CE_Get_NumConductors(void* elem);
+    DSS_CAPI_DLL int32_t Alt_CE_Get_NumPhases(void* elem);
+    DSS_CAPI_DLL int32_t Alt_CE_Get_NumTerminals(void* elem);
+    DSS_CAPI_DLL void Alt_CE_Set_BusNames(void* elem, char*** resultPtr, int32_t valueCount);
+    DSS_CAPI_DLL void Alt_CE_Get_Currents(void* elem, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_CE_Get_Voltages(void* elem, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_CE_Get_Losses(void* elem, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_CE_Get_PhaseLosses(void* elem, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_CE_Get_Powers(void* elem, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_CE_Get_SeqCurrents(void* elem, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_CE_Get_SeqPowers(void* elem, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_CE_Get_SeqVoltages(void* elem, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_CE_Close(void* elem, int32_t terminal, int32_t phase);
+    DSS_CAPI_DLL void Alt_CE_Open(void* elem, int32_t terminal, int32_t phase);
+    DSS_CAPI_DLL uint16_t Alt_CE_IsOpen(void* elem, int32_t terminal, int32_t phase);
+    DSS_CAPI_DLL void Alt_CE_Get_Residuals(void* elem, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_CE_Get_Yprim(void* elem, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL int32_t Alt_CE_Get_Handle(void* elem);
+    DSS_CAPI_DLL void* Alt_CE_Get_Controller(void* elem, int32_t idx);
+    DSS_CAPI_DLL char* Alt_CE_Get_ControllerName(void* elem, int32_t idx);
+    DSS_CAPI_DLL uint16_t Alt_CE_Get_HasVoltControl(void* elem);
+    DSS_CAPI_DLL uint16_t Alt_CE_Get_HasSwitchControl(void* elem);
+    DSS_CAPI_DLL void Alt_CE_Get_CplxSeqVoltages(void* elem, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_CE_Get_CplxSeqCurrents(void* elem, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_CE_Get_NodeOrder(void* elem, int32_t** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL uint16_t Alt_CE_Get_HasOCPDevice(void* elem);
+    DSS_CAPI_DLL int32_t Alt_CE_Get_NumControllers(void* elem);
+    DSS_CAPI_DLL int32_t Alt_CE_Get_OCPDevIndex(void* elem);
+    DSS_CAPI_DLL int32_t Alt_CE_Get_OCPDevType(void* elem);
+    DSS_CAPI_DLL void Alt_CE_Get_CurrentsMagAng(void* elem, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_CE_Get_VoltagesMagAng(void* elem, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_CE_Get_TotalPowers(void* elem, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL uint16_t Alt_CE_Get_IsIsolated(void* elem);
+    DSS_CAPI_DLL void Alt_CE_Get_NodeRef(void* elem, int32_t** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL char* Alt_CE_Get_DisplayName(void* pce);
+    DSS_CAPI_DLL char* Alt_CE_Get_GUID(void* elem);
+    DSS_CAPI_DLL void Alt_CE_Set_DisplayName(void* elem, const char* value);
+    DSS_CAPI_DLL double Alt_CE_MaxCurrent(void* elem, int32_t terminalIdx);
+    DSS_CAPI_DLL void Alt_PCE_Get_VariableNames(void* pce, char*** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_PCE_Get_VariableValues(void* pce, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_PCE_Set_VariableValue(void* pce, int32_t varIdx, double value);
+    DSS_CAPI_DLL double Alt_PCE_Get_VariableValue(void* pce, int32_t varIdx);
+    DSS_CAPI_DLL char* Alt_PCE_Get_VariableName(void* pce, int32_t varIdx);
+    DSS_CAPI_DLL void* Alt_PCE_Get_EnergyMeter(void* elem);
+    DSS_CAPI_DLL char* Alt_PCE_Get_EnergyMeterName(void* elem);
+
+    DSS_CAPI_DLL uint16_t Alt_PDE_Get_IsShunt(void* pde);
+    DSS_CAPI_DLL double Alt_PDE_Get_AccumulatedL(void* pde);
+    DSS_CAPI_DLL double Alt_PDE_Get_Lambda(void* pde);
+    DSS_CAPI_DLL int32_t Alt_PDE_Get_NumCustomers(void* pde);
+    DSS_CAPI_DLL void* Alt_PDE_Get_ParentPDElement(void* pde);
+    DSS_CAPI_DLL int32_t Alt_PDE_Get_TotalCustomers(void* pde);
+    DSS_CAPI_DLL int32_t Alt_PDE_Get_FromTerminal(void* pde);
+    DSS_CAPI_DLL double Alt_PDE_Get_TotalMiles(void* pde);
+    DSS_CAPI_DLL int32_t Alt_PDE_Get_SectionID(void* pde);
+    DSS_CAPI_DLL void* Alt_PDE_Get_EnergyMeter(void* elem);
+    DSS_CAPI_DLL char* Alt_PDE_Get_EnergyMeterName(void* elem);
+
+    DSS_CAPI_DLL void Alt_LoadShape_Set_Points(void *objPtr, int32_t Npts, void *HoursPtr, void *PMultPtr, void *QMultPtr, uint16_t ExternalMemory, uint16_t IsFloat32, int32_t Stride);
+    DSS_CAPI_DLL void Alt_LoadShape_UseFloat64(void *objPtr);
+    DSS_CAPI_DLL void Alt_LoadShape_UseFloat32(void *objPtr);
+    DSS_CAPI_DLL void Alt_Monitor_Get_ByteStream(void *pmon, int8_t** resultPtr, int32_t* resultCount);
+    DSS_CAPI_DLL int32_t Alt_Monitor_Get_SampleCount(void *pmon);
+    DSS_CAPI_DLL char* Alt_Monitor_Get_FileName(void *pmon);
+    DSS_CAPI_DLL int32_t Alt_Monitor_Get_NumChannels(void *pmon);
+    DSS_CAPI_DLL int32_t Alt_Monitor_Get_RecordSize(void *pmon);
+    DSS_CAPI_DLL void Alt_Monitor_Show(void *pmon);
+    DSS_CAPI_DLL void Alt_Monitor_Get_Channel(void *pmon, double** resultPtr, int32_t *resultCount, int32_t index);
+    DSS_CAPI_DLL void Alt_Monitor_Get_dblFreq(void *pmon, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_Monitor_Get_dblHour(void *pmon, double** resultPtr, int32_t *resultCount);
+    DSS_CAPI_DLL void Alt_Monitor_Get_Header(void *pmon, char*** resultPtr, int32_t* resultCount);
 
 #ifdef __cplusplus
 } // extern "C"

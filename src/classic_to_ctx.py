@@ -60,7 +60,7 @@ usefns = [
 def skip(fun):
     prefixes = [
         ' DSS_Dispose_', ' DSS_Get_PAnsiChar(', ' Obj_', 'Batch_', ' DSS_ExtractSchema', 'DSS_WaitPascalThread', 
-        'DSS_BeginPascalThread', 'DSS_SetMessagesMO', 'DSS_SetPropertiesMO']
+        'DSS_BeginPascalThread', 'DSS_SetMessagesMO', 'DSS_SetPropertiesMO', 'Alt_']
     for p in prefixes:
         if p in fun:
             return True
@@ -70,6 +70,9 @@ def skip(fun):
 for fn in glob('src/CAPI/*.pas'):
     bn = os.path.basename(fn)
     if bn in ['CAPI_Utils.pas', 'CAPI_Types.pas', 'CAPI_Metadata.pas', 'CAPI_Context.pas', 'CAPI_Obj.pas']:
+        continue
+
+    if bn.startswith('CAPI_Alt_'):
         continue
         
     bnctx = bn.replace('CAPI_', 'CAPICtx_')
