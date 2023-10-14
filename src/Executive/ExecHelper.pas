@@ -1814,7 +1814,7 @@ begin
     if NoFormsAllowed then
         Exit;
     DSS.WriteLnCB(
-        'DSS C-API library version' + CRLF +
+        'AltDSS/DSS C-API library version' + CRLF +
         VersionString + CRLF +
         'An alternative implementation of OpenDSS' + CRLF + 
         'OpenDSS is EPRI''s Electric Power Distribution System Simulator' + CRLF +
