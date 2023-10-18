@@ -170,9 +170,9 @@ BEGIN
     Reallocmem(PropertyHelp,0);
     Reallocmem(PropertyIdxMap,0);
     Reallocmem(RevPropertyIdxMap,0);
-    ElementList.Free;
-    ElementNameList.Free;
-    CommandList.Free;
+    FreeAndNil (ElementList);
+    FreeAndNil (ElementNameList);
+    FreeAndNil (CommandList);
     Inherited Destroy;
 END;
 
