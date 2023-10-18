@@ -242,7 +242,7 @@ begin
     end;
     enumIds.Add(e.Name);
     Result := TJSONObject.Create([
-        'title', e.Name,
+        'name', e.Name,
         'id', Integer(enumIds.Count),
         'names', names,
         'values', values,
@@ -1352,6 +1352,7 @@ begin
 
             prop := TJSONObject.Create([
                 'name', PropertyName[i],
+                'altName', PropertyNameJSON[i],
                 'index', i,
                 'sourceClass', PropertySource[i],
                 'scale', PropertyScale[i],
