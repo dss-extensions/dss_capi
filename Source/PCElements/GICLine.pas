@@ -123,7 +123,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 End;
 
@@ -145,62 +145,62 @@ Begin
      AllocatePropertyArrays;
 
      // Define Property names
-     PropertyName[1] := 'bus1';
-     PropertyName[2] := 'bus2';
-     PropertyName[3] := 'Volts';
-     PropertyName[4] := 'Angle';
-     PropertyName[5] := 'frequency';
-     PropertyName[6] := 'phases';
-     PropertyName[7] := 'R';
-     PropertyName[8] := 'X';
-     PropertyName[9] := 'C';
-  //   PropertyName[10] := 'ScanType';
-  //   PropertyName[11] := 'Sequence';
-     PropertyName[10] := 'EN';
-     PropertyName[11] := 'EE';
-     PropertyName[12] := 'Lat1';
-     PropertyName[13] := 'Lon1';
-     PropertyName[14] := 'Lat2';
-     PropertyName[15] := 'Lon2';
+     PropertyName^[1] := 'bus1';
+     PropertyName^[2] := 'bus2';
+     PropertyName^[3] := 'Volts';
+     PropertyName^[4] := 'Angle';
+     PropertyName^[5] := 'frequency';
+     PropertyName^[6] := 'phases';
+     PropertyName^[7] := 'R';
+     PropertyName^[8] := 'X';
+     PropertyName^[9] := 'C';
+  //   PropertyName^[10] := 'ScanType';
+  //   PropertyName^[11] := 'Sequence';
+     PropertyName^[10] := 'EN';
+     PropertyName^[11] := 'EE';
+     PropertyName^[12] := 'Lat1';
+     PropertyName^[13] := 'Lon1';
+     PropertyName^[14] := 'Lat2';
+     PropertyName^[15] := 'Lon2';
 
      // define Property help values
-     PropertyHelp[1] := 'Name of bus to which the main terminal (1) is connected.'+ CRLF +
+     PropertyHelp^[1] := 'Name of bus to which the main terminal (1) is connected.'+ CRLF +
                         'bus1=busname'+ CRLF +
                         'bus1=busname.1.2.3';
-     PropertyHelp[2] := 'Name of bus to which 2nd terminal is connected.'+ CRLF +
+     PropertyHelp^[2] := 'Name of bus to which 2nd terminal is connected.'+ CRLF +
                         'bus2=busname'+ CRLF +
                         'bus2=busname.1.2.3' + CRLF + CRLF +
                         'No Default; must be specified.';
 
-     PropertyHelp[3] := 'Voltage magnitude, in volts, of the GIC voltage induced across this line. ' +
+     PropertyHelp^[3] := 'Voltage magnitude, in volts, of the GIC voltage induced across this line. ' +
                         'When spedified, voltage source is assumed defined by Voltage and Angle properties. ' + CRLF+CRLF+
                         'Specify this value' + CRLF + CRLF + 'OR' + CRLF + CRLF +
                         'EN, EE, lat1, lon1, lat2, lon2. ' + CRLF + CRLF +
                         'Not both!!  Last one entered will take precedence. ' +
                         'Assumed identical in each phase of the Line object.';
-     PropertyHelp[4] := 'Phase angle in degrees of first phase. Default=0.0.  See Voltage property';
-     PropertyHelp[5] := 'Source frequency.  Defaults to 0.1 Hz.';
-     PropertyHelp[6] := 'Number of phases.  Defaults to 3.';
-     PropertyHelp[7] := 'Resistance of line, ohms of impedance in series with GIC voltage source. ';
-     PropertyHelp[8] := 'Reactance at base frequency, ohms. Default = 0.0. This value is generally not important for GIC studies but may be used if desired.';
-     PropertyHelp[9] := 'Value of line blocking capacitance in microfarads. Default = 0.0, implying that there is no line blocking capacitor.';
- //    PropertyHelp[10] := '{pos | zero* | none} Maintain specified sequence for harmonic solution. Default is ZERO sequence. '+
+     PropertyHelp^[4] := 'Phase angle in degrees of first phase. Default=0.0.  See Voltage property';
+     PropertyHelp^[5] := 'Source frequency.  Defaults to 0.1 Hz.';
+     PropertyHelp^[6] := 'Number of phases.  Defaults to 3.';
+     PropertyHelp^[7] := 'Resistance of line, ohms of impedance in series with GIC voltage source. ';
+     PropertyHelp^[8] := 'Reactance at base frequency, ohms. Default = 0.0. This value is generally not important for GIC studies but may be used if desired.';
+     PropertyHelp^[9] := 'Value of line blocking capacitance in microfarads. Default = 0.0, implying that there is no line blocking capacitor.';
+ //    PropertyHelp^[10] := '{pos | zero* | none} Maintain specified sequence for harmonic solution. Default is ZERO sequence. '+
  //                        'Otherwise, angle between phases rotates with harmonic.';
- //    PropertyHelp[11] := '{pos | neg | zero*} Set the phase angles for the specified symmetrical component sequence for non-harmonic solution modes. '+
+ //    PropertyHelp^[11] := '{pos | neg | zero*} Set the phase angles for the specified symmetrical component sequence for non-harmonic solution modes. '+
  //                        'Default is ZERO sequence. ';
-     PropertyHelp[10] := 'Northward Electric field (V/km). If specified, Voltage and Angle are computed from EN, EE, lat and lon values.';
-     PropertyHelp[11] := 'Eastward Electric field (V/km).  If specified, Voltage and Angle are computed from EN, EE, lat and lon values.';
-     PropertyHelp[12] := 'Latitude of Bus1 (degrees)';
-     PropertyHelp[13] := 'Longitude of Bus1 (degrees)';
-     PropertyHelp[14] := 'Latitude of Bus2 (degrees)';
-     PropertyHelp[15] := 'Longitude of Bus2 (degrees)';
+     PropertyHelp^[10] := 'Northward Electric field (V/km). If specified, Voltage and Angle are computed from EN, EE, lat and lon values.';
+     PropertyHelp^[11] := 'Eastward Electric field (V/km).  If specified, Voltage and Angle are computed from EN, EE, lat and lon values.';
+     PropertyHelp^[12] := 'Latitude of Bus1 (degrees)';
+     PropertyHelp^[13] := 'Longitude of Bus1 (degrees)';
+     PropertyHelp^[14] := 'Latitude of Bus2 (degrees)';
+     PropertyHelp^[15] := 'Longitude of Bus2 (degrees)';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
      // Override help string
-     PropertyHelp[NumPropsThisClass+1] := 'Inherited Property for all PCElements. Name of harmonic spectrum for this source.  Default is "defaultvsource", which is defined when the DSS starts.';
-     PropertyHelp[NumPropsThisClass+2] := 'Inherited Property for all PCElements. Base frequency for specification of reactance value.';
+     PropertyHelp^[NumPropsThisClass+1] := 'Inherited Property for all PCElements. Name of harmonic spectrum for this source.  Default is "defaultvsource", which is defined when the DSS starts.';
+     PropertyHelp^[NumPropsThisClass+2] := 'Inherited Property for all PCElements. Base frequency for specification of reactance value.';
 End;
 
 

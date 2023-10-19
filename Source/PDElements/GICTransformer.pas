@@ -98,7 +98,7 @@ BEGIN
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 END;
 
@@ -137,35 +137,35 @@ Begin
      PropertyName^[15] := 'K';
 
      // define Property help values
-     PropertyHelp[1]  := 'Name of High-side(H) bus. Examples:'+CRLF+
+     PropertyHelp^[1]  := 'Name of High-side(H) bus. Examples:'+CRLF+
                          'BusH=busname'+CRLF+
                          'BusH=busname.1.2.3';
-     PropertyHelp[2]  := 'Name of Neutral bus for H, or first, winding. Defaults to all phases connected '+
+     PropertyHelp^[2]  := 'Name of Neutral bus for H, or first, winding. Defaults to all phases connected '+
                          'to H-side bus, node 0, if not specified and transformer type is either GSU or YY. ' +
                          '(Shunt Wye Connection to ground reference)' +
                          'For Auto, this is automatically set to the X bus.';
-     PropertyHelp[3]  := 'Name of Low-side(X) bus, if type=Auto or YY. ';
-     PropertyHelp[4]  := 'Name of Neutral bus for X, or Second, winding. Defaults to all phases connected '+
+     PropertyHelp^[3]  := 'Name of Low-side(X) bus, if type=Auto or YY. ';
+     PropertyHelp^[4]  := 'Name of Neutral bus for X, or Second, winding. Defaults to all phases connected '+
                          'to X-side bus, node 0, if not specified. (Shunt Wye Connection to ground reference)';
-     PropertyHelp[5]  := 'Number of Phases. Default is 3.';
-     PropertyHelp[6]  := 'Type of transformer: {GSU* | Auto | YY}. Default is GSU.';
-     PropertyHelp[7]  := 'Resistance, each phase, ohms for H winding, (Series winding, if Auto). Default is 0.0001. If ';
-     PropertyHelp[8]  := 'Resistance, each phase, ohms for X winding, (Common winding, if Auto). Default is 0.0001. ';
-     PropertyHelp[9]  := 'Optional. kV LL rating for H winding (winding 1). Default is 500. Required if you are going to export vars for power flow analysis ' +
+     PropertyHelp^[5]  := 'Number of Phases. Default is 3.';
+     PropertyHelp^[6]  := 'Type of transformer: {GSU* | Auto | YY}. Default is GSU.';
+     PropertyHelp^[7]  := 'Resistance, each phase, ohms for H winding, (Series winding, if Auto). Default is 0.0001. If ';
+     PropertyHelp^[8]  := 'Resistance, each phase, ohms for X winding, (Common winding, if Auto). Default is 0.0001. ';
+     PropertyHelp^[9]  := 'Optional. kV LL rating for H winding (winding 1). Default is 500. Required if you are going to export vars for power flow analysis ' +
                          'or enter winding resistances in percent.';
-     PropertyHelp[10] := 'Optional. kV LL rating for X winding (winding 2). Default is 138. Required if you are going to export vars for power flow analysis ' +
+     PropertyHelp^[10] := 'Optional. kV LL rating for X winding (winding 2). Default is 138. Required if you are going to export vars for power flow analysis ' +
                         'or enter winding resistances in percent..';
-     PropertyHelp[11] := 'Optional. MVA Rating assumed Transformer. Default is 100. Used for computing vars due to GIC and ' +
+     PropertyHelp^[11] := 'Optional. MVA Rating assumed Transformer. Default is 100. Used for computing vars due to GIC and ' +
                          'winding resistances if kV and MVA ratings are specified.';
-     PropertyHelp[12] := 'Optional. XYCurve object name. Curve is expected as TOTAL pu vars vs pu GIC amps/phase. Vars are in pu of the MVA property. No Default value. ' +
+     PropertyHelp^[12] := 'Optional. XYCurve object name. Curve is expected as TOTAL pu vars vs pu GIC amps/phase. Vars are in pu of the MVA property. No Default value. ' +
                          'Required only if you are going to export vars for power flow analysis. ' +
                          'See K property.';
 
-     PropertyHelp[13] := 'Optional. Percent Resistance, each phase, for H winding (1), (Series winding, if Auto). Default is 0.2. ' + CRLF + CRLF +
+     PropertyHelp^[13] := 'Optional. Percent Resistance, each phase, for H winding (1), (Series winding, if Auto). Default is 0.2. ' + CRLF + CRLF +
                          'Alternative way to enter R1 value. It is the actual resistances in ohmns that matter. MVA and kV should be specified.';
-     PropertyHelp[14] := 'Optional. Percent Resistance, each phase, for X winding (2), (Common winding, if Auto). Default is 0.2. ' + CRLF + CRLF +
+     PropertyHelp^[14] := 'Optional. Percent Resistance, each phase, for X winding (2), (Common winding, if Auto). Default is 0.2. ' + CRLF + CRLF +
                          'Alternative way to enter R2 value. It is the actual resistances in ohms that matter. MVA and kV should be specified.';
-     PropertyHelp[15] := 'Mvar K factor. Default way to convert GIC Amps in H winding (winding 1) to Mvar. Default is 2.2. ' +
+     PropertyHelp^[15] := 'Mvar K factor. Default way to convert GIC Amps in H winding (winding 1) to Mvar. Default is 2.2. ' +
                          'Commonly-used simple multiplier for estimating Mvar losses for power flow analysis. ' + CRLF+CRLF+
                          'Mvar = K * kvLL * GIC per phase / 1000 '  + CRLF+CRLF+
                          'Mutually exclusive with using the VarCurve property and pu curves.' +

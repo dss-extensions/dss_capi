@@ -151,7 +151,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 End;
 
@@ -172,47 +172,47 @@ Begin
 
      // Define Property names
 
-     PropertyName[1] := 'element';
-     PropertyName[2] := 'terminal';
-     PropertyName[3] := 'capacitor';
-     PropertyName[4] := 'type';
-     PropertyName[5] := 'PTratio';
-     PropertyName[6] := 'CTratio';
-     PropertyName[7] := 'ONsetting';
-     PropertyName[8] := 'OFFsetting';
-     PropertyName[9] := 'Delay';
-     PropertyName[10] := 'VoltOverride';
-     PropertyName[11] := 'Vmax';
-     PropertyName[12] := 'Vmin';
-     PropertyName[13] := 'DelayOFF';
-     PropertyName[14] := 'DeadTime';
-     PropertyName[15] := 'CTPhase';
-     PropertyName[16] := 'PTPhase';
-     PropertyName[17] := 'VBus';
-     PropertyName[18] := 'EventLog';
-     PropertyName[19] := 'UserModel';
-     PropertyName[20] := 'UserData';
-     PropertyName[21] := 'pctMinkvar';
-     PropertyName[22] := 'Reset';
-     PropertyName[23] := 'ControlSignal';
+     PropertyName^[1] := 'element';
+     PropertyName^[2] := 'terminal';
+     PropertyName^[3] := 'capacitor';
+     PropertyName^[4] := 'type';
+     PropertyName^[5] := 'PTratio';
+     PropertyName^[6] := 'CTratio';
+     PropertyName^[7] := 'ONsetting';
+     PropertyName^[8] := 'OFFsetting';
+     PropertyName^[9] := 'Delay';
+     PropertyName^[10] := 'VoltOverride';
+     PropertyName^[11] := 'Vmax';
+     PropertyName^[12] := 'Vmin';
+     PropertyName^[13] := 'DelayOFF';
+     PropertyName^[14] := 'DeadTime';
+     PropertyName^[15] := 'CTPhase';
+     PropertyName^[16] := 'PTPhase';
+     PropertyName^[17] := 'VBus';
+     PropertyName^[18] := 'EventLog';
+     PropertyName^[19] := 'UserModel';
+     PropertyName^[20] := 'UserData';
+     PropertyName^[21] := 'pctMinkvar';
+     PropertyName^[22] := 'Reset';
+     PropertyName^[23] := 'ControlSignal';
 
 
-     PropertyHelp[1] := 'Full object name of the circuit element, typically a line or transformer, '+
+     PropertyHelp^[1] := 'Full object name of the circuit element, typically a line or transformer, '+
                         'to which the capacitor control''s PT and/or CT are connected.' +
                         'There is no default; must be specified.';
-     PropertyHelp[2] := 'Number of the terminal of the circuit element to which the CapControl is connected. '+
+     PropertyHelp^[2] := 'Number of the terminal of the circuit element to which the CapControl is connected. '+
                         '1 or 2, typically.  Default is 1.';
-     PropertyHelp[3] := 'Name of Capacitor element which the CapControl controls. No Default; Must be specified.'+
+     PropertyHelp^[3] := 'Name of Capacitor element which the CapControl controls. No Default; Must be specified.'+
                         'Do not specify the full object name; "Capacitor" is assumed for '  +
                         'the object class.  Example:'+CRLF+CRLF+
                         'Capacitor=cap1';
-     PropertyHelp[4] := '{Current | voltage | kvar | PF | time | Follow } Control type.  Specify the ONsetting and OFFsetting ' +
+     PropertyHelp^[4] := '{Current | voltage | kvar | PF | time | Follow } Control type.  Specify the ONsetting and OFFsetting ' +
                         'appropriately with the type of control. (See help for ONsetting)';
-     PropertyHelp[5] := 'Ratio of the PT that converts the monitored voltage to the control voltage. '+
+     PropertyHelp^[5] := 'Ratio of the PT that converts the monitored voltage to the control voltage. '+
                         'Default is 60.  If the capacitor is Wye, the 1st phase line-to-neutral voltage is monitored.  Else, the line-to-line ' +
                         'voltage (1st - 2nd phase) is monitored.';
-     PropertyHelp[6] := 'Ratio of the CT from line amps to control ampere setting for current and kvar control types. ';
-     PropertyHelp[7] := 'Value at which the control arms to switch the capacitor ON (or ratchet up a step).  ' + CRLF+CRLF +
+     PropertyHelp^[6] := 'Ratio of the CT from line amps to control ampere setting for current and kvar control types. ';
+     PropertyHelp^[7] := 'Value at which the control arms to switch the capacitor ON (or ratchet up a step).  ' + CRLF+CRLF +
                         'Type of Control:'+CRLF+CRLF+
                         'Current: Line Amps / CTratio'+CRLF+
                         'Voltage: Line-Neutral (or Line-Line for delta) Volts / PTratio' +CRLF+
@@ -220,36 +220,36 @@ Begin
                         'PF:      Power Factor, Total power in monitored terminal. Negative for Leading. ' + CRLF +
                         'Time:    Hrs from Midnight as a floating point number (decimal). 7:30am would be entered as 7.5.' + CRLF +
                         'Follow: Follows a loadshape (ControlSignal) to determine when to turn ON /OFF the capacitor. If the value is different than 0 the cap will connect to the grid, otherwise, it will be disconnected.';
-     PropertyHelp[8] := 'Value at which the control arms to switch the capacitor OFF. (See help for ONsetting)' +
+     PropertyHelp^[8] := 'Value at which the control arms to switch the capacitor OFF. (See help for ONsetting)' +
                         'For Time control, is OK to have Off time the next day ( < On time)';
-     PropertyHelp[9] := 'Time delay, in seconds, from when the control is armed before it sends out the switching ' +
+     PropertyHelp^[9] := 'Time delay, in seconds, from when the control is armed before it sends out the switching ' +
                         'command to turn ON.  The control may reset before the action actually occurs. ' +
                         'This is used to determine which capacity control will act first. Default is 15.  You may specify any '+
                          'floating point number to achieve a model of whatever condition is necessary.';
-     PropertyHelp[10] := '{Yes | No}  Default is No.  Switch to indicate whether VOLTAGE OVERRIDE is to be considered. ' +
+     PropertyHelp^[10] := '{Yes | No}  Default is No.  Switch to indicate whether VOLTAGE OVERRIDE is to be considered. ' +
                          'Vmax and Vmin must be set to reasonable values if this property is Yes.';
-     PropertyHelp[11] := 'Maximum voltage, in volts.  If the voltage across the capacitor divided by the PTRATIO is greater ' +
+     PropertyHelp^[11] := 'Maximum voltage, in volts.  If the voltage across the capacitor divided by the PTRATIO is greater ' +
                          'than this voltage, the capacitor will switch OFF regardless of other control settings. ' +
                          'Default is 126 (goes with a PT ratio of 60 for 12.47 kV system).';
-     PropertyHelp[12] := 'Minimum voltage, in volts.  If the voltage across the capacitor divided by the PTRATIO is less ' +
+     PropertyHelp^[12] := 'Minimum voltage, in volts.  If the voltage across the capacitor divided by the PTRATIO is less ' +
                          'than this voltage, the capacitor will switch ON regardless of other control settings. '+
                          'Default is 115 (goes with a PT ratio of 60 for 12.47 kV system).';
-     PropertyHelp[13] := 'Time delay, in seconds, for control to turn OFF when present state is ON. Default is 15.';
-     PropertyHelp[14] := 'Dead time after capacitor is turned OFF before it can be turned back ON. Default is 300 sec.';
-     PropertyHelp[15] := 'Number of the phase being monitored for CURRENT control or one of {AVG | MAX | MIN} for all phases. Default=1. ' +
+     PropertyHelp^[13] := 'Time delay, in seconds, for control to turn OFF when present state is ON. Default is 15.';
+     PropertyHelp^[14] := 'Dead time after capacitor is turned OFF before it can be turned back ON. Default is 300 sec.';
+     PropertyHelp^[15] := 'Number of the phase being monitored for CURRENT control or one of {AVG | MAX | MIN} for all phases. Default=1. ' +
                          'If delta or L-L connection, enter the first or the two phases being monitored [1-2, 2-3, 3-1]. ' +
                          'Must be less than the number of phases. Does not apply to kvar control which uses all phases by default.';
-     PropertyHelp[16] := 'Number of the phase being monitored for VOLTAGE control or one of {AVG | MAX | MIN} for all phases. Default=1. ' +
+     PropertyHelp^[16] := 'Number of the phase being monitored for VOLTAGE control or one of {AVG | MAX | MIN} for all phases. Default=1. ' +
                          'If delta or L-L connection, enter the first or the two phases being monitored [1-2, 2-3, 3-1]. ' +
                          'Must be less than the number of phases. Does not apply to kvar control which uses all phases by default.';
-     PropertyHelp[17] := 'Name of bus to use for voltage override function. Default is bus at monitored terminal. ' +
+     PropertyHelp^[17] := 'Name of bus to use for voltage override function. Default is bus at monitored terminal. ' +
                          'Sometimes it is useful to monitor a bus in another location to emulate various DMS control algorithms.';
-     PropertyHelp[18] :=  '{Yes/True* | No/False} Default is YES for CapControl. Log control actions to Eventlog.';
-     PropertyHelp[19] :=  'Name of DLL containing user-written CapControl model, overriding the default model.  Set to "none" to negate previous setting. ';
-     PropertyHelp[20] :=  'String (in quotes or parentheses if necessary) that gets passed to the user-written CapControl model Edit function for defining the data required for that model. ';
-     PropertyHelp[21] :=  'For PF control option, min percent of total bank kvar at which control will close capacitor switch. Default = 50.';
-     PropertyHelp[22] :=  '{Yes | No} If Yes, forces Reset of this CapControl.' ;
-     PropertyHelp[23] :=  'Is the name of the load shape used for controlling the connection/disconnection of the capacitor to the grid, '+
+     PropertyHelp^[18] :=  '{Yes/True* | No/False} Default is YES for CapControl. Log control actions to Eventlog.';
+     PropertyHelp^[19] :=  'Name of DLL containing user-written CapControl model, overriding the default model.  Set to "none" to negate previous setting. ';
+     PropertyHelp^[20] :=  'String (in quotes or parentheses if necessary) that gets passed to the user-written CapControl model Edit function for defining the data required for that model. ';
+     PropertyHelp^[21] :=  'For PF control option, min percent of total bank kvar at which control will close capacitor switch. Default = 50.';
+     PropertyHelp^[22] :=  '{Yes | No} If Yes, forces Reset of this CapControl.' ;
+     PropertyHelp^[23] :=  'Is the name of the load shape used for controlling the connection/disconnection of the capacitor to the grid, '+
                           'when the load shape is DIFFERENT than ZERO (0) the capacitor will be ON and connected to the grid.' +
                           'Otherwise, if the load shape value is EQUAL to ZERO (0) the capacitor bank will be OFF and disconnected from the grid.';
 

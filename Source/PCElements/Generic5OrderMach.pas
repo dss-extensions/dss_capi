@@ -396,7 +396,7 @@ Begin
 
      // Use the Command processor to manage property names
      // PropertyName is an array of String defined in DefineProperties
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
      Generic5Class := Self;
@@ -438,32 +438,32 @@ Begin
      // statement in the EDIT function
 
 
-     PropertyName[1] := 'phases';
-     PropertyName[2] := 'bus1';
-     PropertyName[3] := 'kv';
-     PropertyName[4] := 'kW';
-     PropertyName[5] := 'pf';
-     PropertyName[6] := 'conn';
-     PropertyName[7] := 'kVA';
-     PropertyName[8] := 'H';
-     PropertyName[9] := 'D';
-     PropertyName[10] := 'P_ref1kW';
-     PropertyName[11] := 'P_ref2kW';
-     PropertyName[12] := 'P_ref3kW';
-     PropertyName[13] := 'V_ref1kVLN';
-     PropertyName[14] := 'V_ref2kVLN';
-     PropertyName[15] := 'V_ref3kVLN';
-     PropertyName[16] := 'MaxSlip';
-     PropertyName[17] := 'SlipOption';
-     PropertyName[18] := 'Yearly';
-     PropertyName[19] := 'Daily';
-     PropertyName[20] := 'Duty';
-     PropertyName[21] := 'Debugtrace';
-     PropertyName[22] := 'P_refkW';
-     PropertyName[25] := 'V_refkVLN';
-     PropertyName[23] := 'Q_refkVAr';
-     PropertyName[24] := 'Cluster_num';
-     PropertyName[26] := 'ctrl_mode';
+     PropertyName^[1] := 'phases';
+     PropertyName^[2] := 'bus1';
+     PropertyName^[3] := 'kv';
+     PropertyName^[4] := 'kW';
+     PropertyName^[5] := 'pf';
+     PropertyName^[6] := 'conn';
+     PropertyName^[7] := 'kVA';
+     PropertyName^[8] := 'H';
+     PropertyName^[9] := 'D';
+     PropertyName^[10] := 'P_ref1kW';
+     PropertyName^[11] := 'P_ref2kW';
+     PropertyName^[12] := 'P_ref3kW';
+     PropertyName^[13] := 'V_ref1kVLN';
+     PropertyName^[14] := 'V_ref2kVLN';
+     PropertyName^[15] := 'V_ref3kVLN';
+     PropertyName^[16] := 'MaxSlip';
+     PropertyName^[17] := 'SlipOption';
+     PropertyName^[18] := 'Yearly';
+     PropertyName^[19] := 'Daily';
+     PropertyName^[20] := 'Duty';
+     PropertyName^[21] := 'Debugtrace';
+     PropertyName^[22] := 'P_refkW';
+     PropertyName^[25] := 'V_refkVLN';
+     PropertyName^[23] := 'Q_refkVAr';
+     PropertyName^[24] := 'Cluster_num';
+     PropertyName^[26] := 'ctrl_mode';
      ///////////////////////////////////////////
      /// contrl mode
      ///    ctrl_mode =0; phases = 3;  // pos avg control---p_ref, V_ref, Q_ref
@@ -471,111 +471,111 @@ Begin
      ///    ctrl_mode =2; phases = 1; bus1 = 452.2;      ---p_ref2, V_ref2, Q_ref2
      ///    ctrl_mode =3; phases = 1; bus1 = 452.3;      ---p_ref3, V_ref3, Q_ref3
      ///    ctrl_mode =4; phases = 3; bus1 = 452.2;      ---p_ref1,2,3, V_ref1,2,3, Q_ref1,2,3
-     PropertyName[27] := 'QV_flag';
-     PropertyName[28] := 'kcd';//Idi control gain
-     PropertyName[29] := 'kcq';//Iqi control gain to delta V
-     PropertyName[30] := 'kqi';//Iqi control gain to delta Q
-     PropertyName[31] := 'Q_ref1kVAr';
-     PropertyName[32] := 'Q_ref2kVAr';
-     PropertyName[33] := 'Q_ref3kVAr';
-     PropertyName[34] := 'PmaxkW'; //
-     PropertyName[35] := 'PminkW';
-     PropertyName[36] := 'PQpriority';
-     PropertyName[37] := 'PmppkW';
-     PropertyName[38] := 'Pfctr1';
-     PropertyName[39] := 'Pfctr2';
-     PropertyName[40] := 'Pfctr3';
-     PropertyName[41] := 'Pfctr4';
-     PropertyName[42] := 'Pfctr5';
-     PropertyName[43] := 'Pfctr6';
-     PropertyName[44] := 'PbiaskW';
-     PropertyName[45] := 'CC_Switch';
-     PropertyName[46] := 'kcq_drp2' ;
-     PropertyName[47] := 'Volt_Trhd' ;
-     PropertyName[48] := 'droop';
+     PropertyName^[27] := 'QV_flag';
+     PropertyName^[28] := 'kcd';//Idi control gain
+     PropertyName^[29] := 'kcq';//Iqi control gain to delta V
+     PropertyName^[30] := 'kqi';//Iqi control gain to delta Q
+     PropertyName^[31] := 'Q_ref1kVAr';
+     PropertyName^[32] := 'Q_ref2kVAr';
+     PropertyName^[33] := 'Q_ref3kVAr';
+     PropertyName^[34] := 'PmaxkW'; //
+     PropertyName^[35] := 'PminkW';
+     PropertyName^[36] := 'PQpriority';
+     PropertyName^[37] := 'PmppkW';
+     PropertyName^[38] := 'Pfctr1';
+     PropertyName^[39] := 'Pfctr2';
+     PropertyName^[40] := 'Pfctr3';
+     PropertyName^[41] := 'Pfctr4';
+     PropertyName^[42] := 'Pfctr5';
+     PropertyName^[43] := 'Pfctr6';
+     PropertyName^[44] := 'PbiaskW';
+     PropertyName^[45] := 'CC_Switch';
+     PropertyName^[46] := 'kcq_drp2' ;
+     PropertyName^[47] := 'Volt_Trhd' ;
+     PropertyName^[48] := 'droop';
 
-     //PropertyName[46] := 'Num_in_Cluster. Num_in_Cluster = 1~33';
+     //PropertyName^[46] := 'Num_in_Cluster. Num_in_Cluster = 1~33';
 
-     PropertyHelp[1] := 'Number of Phases, this Induction Machine.  ';
-     PropertyHelp[2] := 'Bus to which the Induction Machine is connected.  May include specific node specification.';
-     PropertyHelp[3] := 'Nominal rated (1.0 per unit) voltage, kV. For 2- and 3-phase machines, specify phase-phase kV. '+
+     PropertyHelp^[1] := 'Number of Phases, this Induction Machine.  ';
+     PropertyHelp^[2] := 'Bus to which the Induction Machine is connected.  May include specific node specification.';
+     PropertyHelp^[3] := 'Nominal rated (1.0 per unit) voltage, kV. For 2- and 3-phase machines, specify phase-phase kV. '+
                         'Otherwise, specify actual kV across each branch of the machine. '+
                         'If wye (star), specify phase-neutral kV. '+
                         'If delta or phase-phase connected, specify phase-phase kV.';  // line-neutral voltage//  base voltage
-     PropertyHelp[4] := 'Shaft Power, kW, for the Induction Machine. Output limit of a DG';//A positive value denotes power for a //load. ';//+CRLF+
+     PropertyHelp^[4] := 'Shaft Power, kW, for the Induction Machine. Output limit of a DG';//A positive value denotes power for a //load. ';//+CRLF+
                         //'Negative value denotes an induction generator. ';
-     PropertyHelp[5] := '[Read Only] Present power factor for the machine. ';
-     PropertyHelp[6] := 'Connection of stator: Delta or Wye. Default is Delta.';
-     PropertyHelp[7] := 'Rated kVA for the machine.';
-     PropertyHelp[8] := 'Per unit mass constant of the machine.  MW-sec/MVA.  Default is 1.0.';
-     PropertyHelp[9] := 'Damping constant.  Usual range is 0 to 4. Default is 1.0.  Adjust to get damping in Dynamics mode,';
-     PropertyHelp[10] := 'P_ref1kW = 10, goes to P_ref1, unit kW, 1st phase set power';
-     PropertyHelp[11] := 'P_ref2kW = 10, goes to P_ref2, unit kW, 2nd phase set power';
-     PropertyHelp[12] := 'P_ref3kW = 10, goes to P_ref3, unit kW, 3rd phase set power';
-     PropertyHelp[13] := 'V_ref1kVLN = 2.16, 1st phase set V, (Unit kV, L-N value): V mode will work if QV_flag =1(by default) V_ref is set which is prior to Q_ref ';
-     PropertyHelp[14] := 'V_ref2kVLN = 2.16, 2nd phase set V, (Unit kV, L-N value): V mode will work if QV_flag =1(by default) V_ref is set which is prior to Q_ref ';
-     PropertyHelp[15] := 'V_ref3kVLN = 2.16, 3rd phase set V, (Unit kV, L-N value): V mode will work if QV_flag =1(by default) V_ref is set which is prior to Q_ref ';
-     PropertyHelp[16] := 'Max slip value to allow. Default is 0.1. Set this before setting slip.';
-     PropertyHelp[17] := 'Option for slip model. One of {fixedslip | variableslip*  }';
-     PropertyHelp[18] := 'LOADSHAPE object to use for yearly simulations.  Must be previously defined '+
+     PropertyHelp^[5] := '[Read Only] Present power factor for the machine. ';
+     PropertyHelp^[6] := 'Connection of stator: Delta or Wye. Default is Delta.';
+     PropertyHelp^[7] := 'Rated kVA for the machine.';
+     PropertyHelp^[8] := 'Per unit mass constant of the machine.  MW-sec/MVA.  Default is 1.0.';
+     PropertyHelp^[9] := 'Damping constant.  Usual range is 0 to 4. Default is 1.0.  Adjust to get damping in Dynamics mode,';
+     PropertyHelp^[10] := 'P_ref1kW = 10, goes to P_ref1, unit kW, 1st phase set power';
+     PropertyHelp^[11] := 'P_ref2kW = 10, goes to P_ref2, unit kW, 2nd phase set power';
+     PropertyHelp^[12] := 'P_ref3kW = 10, goes to P_ref3, unit kW, 3rd phase set power';
+     PropertyHelp^[13] := 'V_ref1kVLN = 2.16, 1st phase set V, (Unit kV, L-N value): V mode will work if QV_flag =1(by default) V_ref is set which is prior to Q_ref ';
+     PropertyHelp^[14] := 'V_ref2kVLN = 2.16, 2nd phase set V, (Unit kV, L-N value): V mode will work if QV_flag =1(by default) V_ref is set which is prior to Q_ref ';
+     PropertyHelp^[15] := 'V_ref3kVLN = 2.16, 3rd phase set V, (Unit kV, L-N value): V mode will work if QV_flag =1(by default) V_ref is set which is prior to Q_ref ';
+     PropertyHelp^[16] := 'Max slip value to allow. Default is 0.1. Set this before setting slip.';
+     PropertyHelp^[17] := 'Option for slip model. One of {fixedslip | variableslip*  }';
+     PropertyHelp^[18] := 'LOADSHAPE object to use for yearly simulations.  Must be previously defined '+
                         'as a Loadshape object. Is set to the Daily load shape ' +
                         ' when Daily is defined.  The daily load shape is repeated in this case. '+
                         'Set Status=Fixed to ignore Loadshape designation. ' +
                         'Set to NONE to reset to no loadahape. ' +
                         'The default is no variation.';
-     PropertyHelp[19] := 'LOADSHAPE object to use for daily simulations.  Must be previously defined '+
+     PropertyHelp^[19] := 'LOADSHAPE object to use for daily simulations.  Must be previously defined '+
                         'as a Loadshape object of 24 hrs, typically. ' +
                         'Set Status=Fixed to ignore Loadshape designation. ' +
                         'Set to NONE to reset to no loadahape. ' +
                         'Default is no variation (constant) if not defined. ' +
                         'Side effect: Sets Yearly load shape if not already defined.';
-     PropertyHelp[20] := 'LOADSHAPE object to use for duty cycle simulations.  Must be previously defined '+
+     PropertyHelp^[20] := 'LOADSHAPE object to use for duty cycle simulations.  Must be previously defined '+
                         'as a Loadshape object.  Typically would have time intervals less than 1 hr. '+
                         'Designate the number of points to solve using the Set Number=xxxx command. '+
                         'If there are fewer points in the actual shape, the shape is assumed to repeat.'+
                         'Set to NONE to reset to no loadahape. ' +
                         'Set Status=Fixed to ignore Loadshape designation. ' +
                         ' Defaults to Daily curve If not specified.';
-     PropertyHelp[21] := '[Yes | No*] Write DebugTrace file.';
-     PropertyHelp[22] := 'P_refkW = 10, goes to P_ref. Ref P Value (kW). P_ref has prority to kW which is nomimal value. (Incide variable P_ref is W)';
-     PropertyHelp[25] := 'V_refkVLN = 2.16, pos sequence set V. V_ref (Unit kV, L-N value): V mode will work if QV_flag =1(by default) V_ref is set which is prior to Q_ref';
-     PropertyHelp[23] := 'Q_refkVAr=10. Unit Qvar. Ref Q kVAr Value: work only when V_ref is not set';
-     PropertyHelp[24] := 'Cluster_num: has to be coincident with Fmonitor attached. Default value is 0';
+     PropertyHelp^[21] := '[Yes | No*] Write DebugTrace file.';
+     PropertyHelp^[22] := 'P_refkW = 10, goes to P_ref. Ref P Value (kW). P_ref has prority to kW which is nomimal value. (Incide variable P_ref is W)';
+     PropertyHelp^[25] := 'V_refkVLN = 2.16, pos sequence set V. V_ref (Unit kV, L-N value): V mode will work if QV_flag =1(by default) V_ref is set which is prior to Q_ref';
+     PropertyHelp^[23] := 'Q_refkVAr=10. Unit Qvar. Ref Q kVAr Value: work only when V_ref is not set';
+     PropertyHelp^[24] := 'Cluster_num: has to be coincident with Fmonitor attached. Default value is 0';
      { add properties here }
-     PropertyHelp[26] := 'ctrl mode:     /// contrl mode    '+
+     PropertyHelp^[26] := 'ctrl mode:     /// contrl mode    '+
      ' ///    ctrl_mode =0; phases = 3;  // pos avg control---p_ref, V_ref, Q_ref    \n '   + CRLF +
      ' ///    ctrl_mode =1; phases = 1; bus1 = 452.1;      ---p_ref1, V_ref1, Q_ref1 \n'+   CRLF +
     '///    ctrl_mode =2; phases = 1; bus1 = 452.2;      ---p_ref2, V_ref2, Q_ref2 \n'  +   CRLF +
     '///    ctrl_mode =3; phases = 1; bus1 = 452.3;      ---p_ref3, V_ref3, Q_ref3 \n'   +   CRLF +
     '///    ctrl_mode =4; phases = 3; bus1 = 452.2;      ---p_ref1,2,3, V_ref1,2,3, Q_ref1,2,3';
-     PropertyHelp[27] := 'QV_flag : 0-Q_ref mode; 1- V_ref mode';
-     PropertyHelp[28] := 'kcd: Idi control gain';
-     PropertyHelp[29] := 'kcq: Iqi control gain to delta V';
-     PropertyHelp[30] := 'kqi: Iqi control gain to delta Q';
-     PropertyHelp[31] := 'Q_ref1kVAr=10. Unit Qvar. Ref Q kVAr Value: work only when V_ref is not set';
-     PropertyHelp[32] := 'Q_ref2kVAr=10. Unit Qvar. Ref Q kVAr Value: work only when V_ref is not set';
-     PropertyHelp[33] := 'Q_ref3kVAr=10. Unit Qvar. Ref Q kVAr Value: work only when V_ref is not set';
-     PropertyHelp[34] := 'PmaxkW = 100, goes to Pmax, unit kW, set max active power output; Operation limit of active power for DG'+ CRLF +'  Pmax should be less than or equal to kW';
-     PropertyHelp[35] := 'PminkW = 10, goes to Pmin, unit kW; Operation limit of active power for DG';
-     PropertyHelp[36] := 'PQpriority, goes to PQpriority, define how to set Qmax. 0: Q,1: P ';
-     PropertyHelp[37] := 'PmppkW = 100, goes to Pmpp, unit kW, input Pmpp to calculate kW;'+ CRLF +'  kW := (Pmpp + Pbias)*Pfctr1*Pfctr2*Pfctr3*Pfctr4*Pfctr5*Pfctr6;'+ CRLF +'Pbias = 0 by default, Pfctr*=1 by default; These properties will overwrite kW.';
-     PropertyHelp[38] :=  'Pfctr1 = 0.16, see PmppkW';
-     PropertyHelp[39] :=  'Pfctr2 = 1, 1 by default, see PmppkW';
-     PropertyHelp[40] :=  'Pfctr3 = 1, 1 by default, see PmppkW';
-     PropertyHelp[41] :=  'Pfctr4= 1, 1 by default, see PmppkW';
-     PropertyHelp[42] :=  'Pfctr5 =1, 1 by default, see PmppkW';
-     PropertyHelp[43] :=  'Pfctr6 = 1, 1 by default, see PmppkW';
-     PropertyHelp[44] := 'Pbias = -0.1, 0 by default, see PmppkW';
-     PropertyHelp[45] := 'CC_Switch: default value is false.'+CRLF+'CC_Switch = true --cooperate control on'+CRLF+'CC_Switch = false -- cooperate control off';
-     PropertyHelp[46] := 'kcq_drp2. the droop gain: 0.0~0.1';
-     PropertyHelp[47] := 'Volt_Trhd. 0.~0.05. 0 means v has to follow v_ref' ;
-     PropertyHelp[48] := 'droop type: integer: 2- Q = kcq_drp2 * (1-v_dg). others: integral droop with kcq.';
+     PropertyHelp^[27] := 'QV_flag : 0-Q_ref mode; 1- V_ref mode';
+     PropertyHelp^[28] := 'kcd: Idi control gain';
+     PropertyHelp^[29] := 'kcq: Iqi control gain to delta V';
+     PropertyHelp^[30] := 'kqi: Iqi control gain to delta Q';
+     PropertyHelp^[31] := 'Q_ref1kVAr=10. Unit Qvar. Ref Q kVAr Value: work only when V_ref is not set';
+     PropertyHelp^[32] := 'Q_ref2kVAr=10. Unit Qvar. Ref Q kVAr Value: work only when V_ref is not set';
+     PropertyHelp^[33] := 'Q_ref3kVAr=10. Unit Qvar. Ref Q kVAr Value: work only when V_ref is not set';
+     PropertyHelp^[34] := 'PmaxkW = 100, goes to Pmax, unit kW, set max active power output; Operation limit of active power for DG'+ CRLF +'  Pmax should be less than or equal to kW';
+     PropertyHelp^[35] := 'PminkW = 10, goes to Pmin, unit kW; Operation limit of active power for DG';
+     PropertyHelp^[36] := 'PQpriority, goes to PQpriority, define how to set Qmax. 0: Q,1: P ';
+     PropertyHelp^[37] := 'PmppkW = 100, goes to Pmpp, unit kW, input Pmpp to calculate kW;'+ CRLF +'  kW := (Pmpp + Pbias)*Pfctr1*Pfctr2*Pfctr3*Pfctr4*Pfctr5*Pfctr6;'+ CRLF +'Pbias = 0 by default, Pfctr*=1 by default; These properties will overwrite kW.';
+     PropertyHelp^[38] :=  'Pfctr1 = 0.16, see PmppkW';
+     PropertyHelp^[39] :=  'Pfctr2 = 1, 1 by default, see PmppkW';
+     PropertyHelp^[40] :=  'Pfctr3 = 1, 1 by default, see PmppkW';
+     PropertyHelp^[41] :=  'Pfctr4= 1, 1 by default, see PmppkW';
+     PropertyHelp^[42] :=  'Pfctr5 =1, 1 by default, see PmppkW';
+     PropertyHelp^[43] :=  'Pfctr6 = 1, 1 by default, see PmppkW';
+     PropertyHelp^[44] := 'Pbias = -0.1, 0 by default, see PmppkW';
+     PropertyHelp^[45] := 'CC_Switch: default value is false.'+CRLF+'CC_Switch = true --cooperate control on'+CRLF+'CC_Switch = false -- cooperate control off';
+     PropertyHelp^[46] := 'kcq_drp2. the droop gain: 0.0~0.1';
+     PropertyHelp^[47] := 'Volt_Trhd. 0.~0.05. 0 means v has to follow v_ref' ;
+     PropertyHelp^[48] := 'droop type: integer: 2- Q = kcq_drp2 * (1-v_dg). others: integral droop with kcq.';
      // Finally, we have to pick up any properties that were inherited
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
      // You can optionally override default help string of an inherited property, for example
-     PropertyHelp[NumPropsThisClass +1] := 'Name of harmonic voltage or current spectrum for this IndMach012. ' +
+     PropertyHelp^[NumPropsThisClass +1] := 'Name of harmonic voltage or current spectrum for this IndMach012. ' +
                          'Voltage behind Xd" for machine - default. Current injection for inverter. ' +
                          'Default value is "default", which is defined when the DSS starts.';
 
@@ -663,14 +663,14 @@ Begin
          // Update the PropertyValy for this property
          // Actual index is mapped via PropertyIdxMap array for this class
          If  (ParamPointer>0) and (ParamPointer<=NumProperties)
-         Then PropertyValue[PropertyIdxMap[ParamPointer]] := Param
+         Then PropertyValue[PropertyIdxMap^[ParamPointer]] := Param
          ELSE DoSimpleMsg('Unknown parameter "'+ParamName+'" for Generic5 "'+Name+'"', 560);
 
          // --------------- MAIN CASE STATEMENT ----------------------
          If ParamPointer > 0 Then
          // since we used AddProperty function to define properties, have to
          // use PropertyIdxMap to map to the correct Case index
-         CASE PropertyIdxMap[ParamPointer] OF
+         CASE PropertyIdxMap^[ParamPointer] OF
             0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 561);
             1: NPhases    := Parser[ActorID].Intvalue; // num phases
             2:
@@ -750,7 +750,7 @@ Begin
          // This case statment handles any side effects from setting a property
          // (for example, from Generator)
          If ParamPointer > 0 Then
-         CASE PropertyIdxMap[ParamPointer] OF
+         CASE PropertyIdxMap^[ParamPointer] OF
             1: SetNcondsForConnection;  // Force Reallocation of terminal info
             18: Begin
                     YearlyShapeObj := LoadShapeClass[ActorID].Find(YearlyShape);
@@ -849,7 +849,7 @@ Begin
        // Finally initialize all the property value strings to be the same as
        // the copied element
        For i := 1 to ParentClass.NumProperties Do
-           FPropertyValue^[i] := OtherIndMach012.FPropertyValue^[i];
+           FPropertyValue[i] := OtherIndMach012.FPropertyValue[i];
 
        Result := 1;
    End
@@ -3421,7 +3421,7 @@ Begin
     With ParentClass Do
      For i := 1 to NumProperties Do
      Begin
-        idx := PropertyIdxMap[i] ; // Map to get proper index into property value array
+        idx := PropertyIdxMap^[i] ; // Map to get proper index into property value array
         Case idx of
           {Trap any specials here, such as values that are array properties, for example}
            34, 36: Writeln(F,'~ ',PropertyName^[i],'=(',PropertyValue[idx],')')

@@ -164,8 +164,8 @@ VAR
 
 BEGIN
     // Get rid of space occupied by strings
-    For i := 1 to NumProperties DO PropertyName[i] := '';
-    For i := 1 to NumProperties DO PropertyHelp[i] := '';
+    For i := 1 to NumProperties DO PropertyName^[i] := '';
+    For i := 1 to NumProperties DO PropertyHelp^[i] := '';
     Reallocmem(PropertyName,0);
     Reallocmem(PropertyHelp,0);
     Reallocmem(PropertyIdxMap,0);
@@ -290,8 +290,8 @@ BEGIN
 
      Result := 0;  // Default result if not found
      For i := 1 to NumProperties DO BEGIN
-        IF CompareText(Prop, PropertyName[i])=0 THEN BEGIN
-           Result := PropertyIdxMap[i];
+        IF CompareText(Prop, PropertyName^[i])=0 THEN BEGIN
+           Result := PropertyIdxMap^[i];
            Break;
         END;
      END;
@@ -374,10 +374,10 @@ procedure TDSSClass.AddProperty(const PropName:String; CmdMapIndex:Integer; cons
 
 begin
     Inc(ActiveProperty);
-    PropertyName[ActiveProperty] := PropName;
-    PropertyHelp[ActiveProperty] := HelpString;
-    PropertyIdxMap[ActiveProperty] := CmdMapIndex;   // Maps to internal object property index
-    RevPropertyIdxMap[CmdMapIndex] := ActiveProperty;
+    PropertyName^[ActiveProperty] := PropName;
+    PropertyHelp^[ActiveProperty] := HelpString;
+    PropertyIdxMap^[ActiveProperty] := CmdMapIndex;   // Maps to internal object property index
+    RevPropertyIdxMap^[CmdMapIndex] := ActiveProperty;
 end;
 
 procedure TDSSClass.AllocatePropertyArrays;
@@ -389,8 +389,8 @@ begin
      RevPropertyIdxMap := Allocmem(SizeOf(RevPropertyIdxMap^[1])*NumProperties);
      ActiveProperty := 0;    // initialize for AddPropert
      {initialize PropertyIdxMap to take care of legacy items}
-     For i := 1 to NumProperties Do PropertyIDXMap^[i] := i;
-     For i := 1 to NumProperties Do RevPropertyIDXMap^[i] := i;
+     For i := 1 to NumProperties Do PropertyIdxMap^[i] := i;
+     For i := 1 to NumProperties Do RevPropertyIdxMap^[i] := i;
 end;
 
 procedure TDSSClass.ReallocateElementNameList;

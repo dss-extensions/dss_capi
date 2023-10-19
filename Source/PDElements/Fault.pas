@@ -117,7 +117,7 @@ BEGIN
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 END;
 
@@ -151,27 +151,27 @@ Begin
      PropertyName^[9] := 'MinAmps';
 
      // define Property help values
-     PropertyHelp[1] := 'Name of first bus. Examples:'+CRLF+  CRLF+
+     PropertyHelp^[1] := 'Name of first bus. Examples:'+CRLF+  CRLF+
                      'bus1=busname'+CRLF+
                      'bus1=busname.1.2.3'+CRLF+  CRLF+
                      'Bus2 automatically defaults to busname.0,0,0 unless it was previously defined. ';
-     PropertyHelp[2] := 'Name of 2nd bus of the 2-terminal Fault object. Defaults to all phases connected '+
+     PropertyHelp^[2] := 'Name of 2nd bus of the 2-terminal Fault object. Defaults to all phases connected '+
                      'to first bus, node 0, if not specified. (Shunt Wye Connection to ground reference)'+CRLF+  CRLF+
                      'That is, the Fault defaults to a ground fault unless otherwise specified.';
-     PropertyHelp[3] := 'Number of Phases. Default is 1.';
-     PropertyHelp[4] := 'Resistance, each phase, ohms. Default is 0.0001. Assumed to be Mean value if gaussian random mode.'+
+     PropertyHelp^[3] := 'Number of Phases. Default is 1.';
+     PropertyHelp^[4] := 'Resistance, each phase, ohms. Default is 0.0001. Assumed to be Mean value if gaussian random mode.'+
                     'Max value if uniform mode.  A Fault is actually a series resistance '+
                     'that defaults to a wye connection to ground on the second terminal.  You '+
                     'may reconnect the 2nd terminal to achieve whatever connection.  Use '+
                     'the Gmatrix property to specify an arbitrary conductance matrix.';
-     PropertyHelp[5] := 'Percent standard deviation in resistance to assume for Monte Carlo fault (MF) solution mode for GAUSSIAN distribution. Default is 0 (no variation from mean).';
-     PropertyHelp[6] := 'Use this to specify a nodal conductance (G) matrix to represent some arbitrary resistance network. '+
+     PropertyHelp^[5] := 'Percent standard deviation in resistance to assume for Monte Carlo fault (MF) solution mode for GAUSSIAN distribution. Default is 0 (no variation from mean).';
+     PropertyHelp^[6] := 'Use this to specify a nodal conductance (G) matrix to represent some arbitrary resistance network. '+
                     'Specify in lower triangle form as usual for DSS matrices.';
-     PropertyHelp[7] := 'Time (sec) at which the fault is established for time varying simulations. Default is 0.0 ' +
+     PropertyHelp^[7] := 'Time (sec) at which the fault is established for time varying simulations. Default is 0.0 ' +
                         '(on at the beginning of the simulation)';
-     PropertyHelp[8] := '{Yes | No} Default is No.  Designate whether the fault is temporary.  For Time-varying simulations, ' +
+     PropertyHelp^[8] := '{Yes | No} Default is No.  Designate whether the fault is temporary.  For Time-varying simulations, ' +
                         'the fault will be removed if the current through the fault drops below the MINAMPS criteria.';
-     PropertyHelp[9] := 'Minimum amps that can sustain a temporary fault. Default is 5.';
+     PropertyHelp^[9] := 'Minimum amps that can sustain a temporary fault. Default is 5.';
 
 
      ActiveProperty := NumPropsThisClass;

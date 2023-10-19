@@ -67,7 +67,7 @@ BEGIN
 
   DefineProperties;
 
-  CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+  CommandList := TCommandList.Create(PropertyName, NumProperties);
   CommandList.Abbrev := TRUE;
 END;
 
@@ -82,15 +82,15 @@ Begin
   CountProperties;   // Get inherited property count
   AllocatePropertyArrays;
 
-  PropertyName[1] := 'k';
-  PropertyName[2] := 'DiaStrand';
-  PropertyName[3] := 'GmrStrand';
-  PropertyName[4] := 'Rstrand';
+  PropertyName^[1] := 'k';
+  PropertyName^[2] := 'DiaStrand';
+  PropertyName^[3] := 'GmrStrand';
+  PropertyName^[4] := 'Rstrand';
 
-  PropertyHelp[1] := 'Number of concentric neutral strands; default is 2';
-  PropertyHelp[2] := 'Diameter of a concentric neutral strand; same units as core conductor radius; no default.';
-  PropertyHelp[3] := 'Geometric mean radius of a concentric neutral strand; same units as core conductor GMR; defaults to 0.7788 * CN strand radius.';
-  PropertyHelp[4] := 'AC resistance of a concentric neutral strand; same units as core conductor resistance; no default.';
+  PropertyHelp^[1] := 'Number of concentric neutral strands; default is 2';
+  PropertyHelp^[2] := 'Diameter of a concentric neutral strand; same units as core conductor radius; no default.';
+  PropertyHelp^[3] := 'Geometric mean radius of a concentric neutral strand; same units as core conductor GMR; defaults to 0.7788 * CN strand radius.';
+  PropertyHelp^[4] := 'AC resistance of a concentric neutral strand; same units as core conductor resistance; no default.';
 
   ActiveProperty := NumPropsThisClass;
   inherited DefineProperties;  // Add defs of inherited properties to bottom of list

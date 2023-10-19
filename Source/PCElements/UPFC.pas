@@ -150,7 +150,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
      UPFC_class := Self;
 End;
@@ -173,36 +173,36 @@ Begin
      AllocatePropertyArrays;
 
      // Define Property names
-     PropertyName[1] := 'bus1';
-     PropertyName[2] := 'bus2';
-     PropertyName[3] := 'refkv';
-     PropertyName[4] := 'pf';
-     PropertyName[5] := 'frequency';
-     PropertyName[6] := 'phases';
-     PropertyName[7] := 'Xs';
-     PropertyName[8] := 'Tol1';
-     PropertyName[9] := 'Mode';
-     PropertyName[10]:= 'VpqMax';
-     PropertyName[11]:= 'LossCurve';
-     PropertyName[12]:= 'VHLimit';
-     PropertyName[13]:= 'VLLimit';
-     PropertyName[14]:= 'CLimit';
-     PropertyName[15]:= 'refkv2';
-     PropertyName[16]:= 'kvarLimit';
-     PropertyName[17]:= 'Element';
+     PropertyName^[1] := 'bus1';
+     PropertyName^[2] := 'bus2';
+     PropertyName^[3] := 'refkv';
+     PropertyName^[4] := 'pf';
+     PropertyName^[5] := 'frequency';
+     PropertyName^[6] := 'phases';
+     PropertyName^[7] := 'Xs';
+     PropertyName^[8] := 'Tol1';
+     PropertyName^[9] := 'Mode';
+     PropertyName^[10]:= 'VpqMax';
+     PropertyName^[11]:= 'LossCurve';
+     PropertyName^[12]:= 'VHLimit';
+     PropertyName^[13]:= 'VLLimit';
+     PropertyName^[14]:= 'CLimit';
+     PropertyName^[15]:= 'refkv2';
+     PropertyName^[16]:= 'kvarLimit';
+     PropertyName^[17]:= 'Element';
 
      // define Property help values
-     PropertyHelp[1] := 'Name of bus to which the input terminal (1) is connected.'+CRLF+'bus1=busname.1.3'+CRLF+'bus1=busname.1.2.3';                        ;
-     PropertyHelp[2] := 'Name of bus to which the output terminal (2) is connected.'+CRLF+'bus2=busname.1.2'+CRLF+'bus2=busname.1.2.3' ;
-     PropertyHelp[3] := 'Base Voltage expected at the output of the UPFC'+ CRLF+CRLF +
+     PropertyHelp^[1] := 'Name of bus to which the input terminal (1) is connected.'+CRLF+'bus1=busname.1.3'+CRLF+'bus1=busname.1.2.3';                        ;
+     PropertyHelp^[2] := 'Name of bus to which the output terminal (2) is connected.'+CRLF+'bus2=busname.1.2'+CRLF+'bus2=busname.1.2.3' ;
+     PropertyHelp^[3] := 'Base Voltage expected at the output of the UPFC'+ CRLF+CRLF +
                         '"refkv=0.24"';
-     PropertyHelp[4] := 'Power factor target at the input terminal.';
-     PropertyHelp[5] := 'UPFC working frequency.  Defaults to system default base frequency.';
-     PropertyHelp[6] := 'Number of phases.  Defaults to 1 phase (2 terminals, 1 conductor per terminal).';
-     PropertyHelp[7] := 'Reactance of the series transformer of the UPFC, ohms (default=0.7540 ... 2 mH)';
-     PropertyHelp[8] := 'Tolerance in pu for the series PI controller'+CRLF+
+     PropertyHelp^[4] := 'Power factor target at the input terminal.';
+     PropertyHelp^[5] := 'UPFC working frequency.  Defaults to system default base frequency.';
+     PropertyHelp^[6] := 'Number of phases.  Defaults to 1 phase (2 terminals, 1 conductor per terminal).';
+     PropertyHelp^[7] := 'Reactance of the series transformer of the UPFC, ohms (default=0.7540 ... 2 mH)';
+     PropertyHelp^[8] := 'Tolerance in pu for the series PI controller'+CRLF+
                         'Tol1=0.02 is the format used to define 2% tolerance (Default=2%)';
-     PropertyHelp[9] := 'Integer used to define the control mode of the UPFC: '+CRLF+CRLF+'0 = Off, '+CRLF+
+     PropertyHelp^[9] := 'Integer used to define the control mode of the UPFC: '+CRLF+CRLF+'0 = Off, '+CRLF+
                         '1 = Voltage regulator, '+CRLF+'2 = Phase angle regulator, '+CRLF+'3 = Dual mode'+CRLF+
                         '4 = It is a control mode where the user can set two different set points to create a secure GAP,'+
                         ' these references must be defined in the parameters RefkV and RefkV2. The only restriction when '+
@@ -210,21 +210,21 @@ Begin
                         '5 = In this mode the user can define the same GAP using two set points as in control mode 4. The '+
                         'only difference between mode 5 and mode 4 is that in mode 5, the UPFC controller performs dual control'+
                         ' actions just as in control mode 3';
-     PropertyHelp[10]:= 'Maximum voltage (in volts) delivered by the series voltage source (Default = 24 V)';
-     PropertyHelp[11]:= 'Name of the XYCurve for describing the losses behavior as a function of the voltage at the input of the UPFC';
-     PropertyHelp[12]:= 'High limit for the voltage at the input of the UPFC, if the voltage is above this value the UPFC turns off. This value is specified in Volts (default 300 V)';
-     PropertyHelp[13]:= 'low limit for the voltage at the input of the UPFC, if voltage is below this value the UPFC turns off. This value is specified in Volts (default 125 V)';
-     PropertyHelp[14]:= 'Current Limit for the UPFC, if the current passing through the UPFC is higher than this value the UPFC turns off. This value is specified in Amps (Default 265 A)';
-     PropertyHelp[15]:= 'Base Voltage expected at the output of the UPFC for control modes 4 and 5.'+ CRLF+CRLF +
+     PropertyHelp^[10]:= 'Maximum voltage (in volts) delivered by the series voltage source (Default = 24 V)';
+     PropertyHelp^[11]:= 'Name of the XYCurve for describing the losses behavior as a function of the voltage at the input of the UPFC';
+     PropertyHelp^[12]:= 'High limit for the voltage at the input of the UPFC, if the voltage is above this value the UPFC turns off. This value is specified in Volts (default 300 V)';
+     PropertyHelp^[13]:= 'low limit for the voltage at the input of the UPFC, if voltage is below this value the UPFC turns off. This value is specified in Volts (default 125 V)';
+     PropertyHelp^[14]:= 'Current Limit for the UPFC, if the current passing through the UPFC is higher than this value the UPFC turns off. This value is specified in Amps (Default 265 A)';
+     PropertyHelp^[15]:= 'Base Voltage expected at the output of the UPFC for control modes 4 and 5.'+ CRLF+CRLF +
                         'This reference must be lower than refkv, see control modes 4 and 5 for details';
-     PropertyHelp[16]:= 'Maximum amount of reactive power (kvar) that can be absorved by the UPFC (Default = 5)';
-     PropertyHelp[17]:= 'The name of the PD element monitored when operating with reactive power compensation. Normally, it should be the ' +
+     PropertyHelp^[16]:= 'Maximum amount of reactive power (kvar) that can be absorved by the UPFC (Default = 5)';
+     PropertyHelp^[17]:= 'The name of the PD element monitored when operating with reactive power compensation. Normally, it should be the ' +
                         'PD element immediately upstream the UPFC. The element must be defined including the class, e.g. Line.myline.';
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
      // Override help string
-     PropertyHelp[NumPropsThisClass+1] := 'Name of harmonic spectrum for this source.  Default is "defaultUPFC", which is defined when the DSS starts.';
+     PropertyHelp^[NumPropsThisClass+1] := 'Name of harmonic spectrum for this source.  Default is "defaultUPFC", which is defined when the DSS starts.';
 
 End;
 

@@ -149,7 +149,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 End;
 
@@ -170,58 +170,58 @@ Begin
 
 
      // Define Property names
-     PropertyName[1]  := 'npts';     // Number of points to expect
-     PropertyName[2]  := 'interval'; // default = 1.0;
-     PropertyName[3]  := 'price';     // vector of price values
-     PropertyName[4]  := 'hour';     // vector of hour values
-     PropertyName[5]  := 'mean';     // set the mean Price (otherwise computed)
-     PropertyName[6]  := 'stddev';   // set the std dev of the Price (otherwise computed)
-     PropertyName[7]  := 'csvfile';  // Switch input to a csvfile
-     PropertyName[8]  := 'sngfile';  // switch input to a binary file of singles
-     PropertyName[9]  := 'dblfile';    // switch input to a binary file of singles
-     PropertyName[10] := 'sinterval'; // Interval in seconds
-     PropertyName[11] := 'minterval'; // Interval in minutes
-     PropertyName[12] := 'action';    //
+     PropertyName^[1]  := 'npts';     // Number of points to expect
+     PropertyName^[2]  := 'interval'; // default = 1.0;
+     PropertyName^[3]  := 'price';     // vector of price values
+     PropertyName^[4]  := 'hour';     // vector of hour values
+     PropertyName^[5]  := 'mean';     // set the mean Price (otherwise computed)
+     PropertyName^[6]  := 'stddev';   // set the std dev of the Price (otherwise computed)
+     PropertyName^[7]  := 'csvfile';  // Switch input to a csvfile
+     PropertyName^[8]  := 'sngfile';  // switch input to a binary file of singles
+     PropertyName^[9]  := 'dblfile';    // switch input to a binary file of singles
+     PropertyName^[10] := 'sinterval'; // Interval in seconds
+     PropertyName^[11] := 'minterval'; // Interval in minutes
+     PropertyName^[12] := 'action';    //
 
      // define Property help values
 
-     PropertyHelp[1] := 'Max number of points to expect in price shape vectors. This gets reset to the number of Price values ' +
+     PropertyHelp^[1] := 'Max number of points to expect in price shape vectors. This gets reset to the number of Price values ' +
                         'found if less than specified.';     // Number of points to expect
-     PropertyHelp[2] := 'Time interval for fixed interval data, hrs. Default = 1. '+
+     PropertyHelp^[2] := 'Time interval for fixed interval data, hrs. Default = 1. '+
                         'If Interval = 0 then time data (in hours) may be at irregular intervals and time value must be specified using either the Hour property or input files. ' +
                         'Then values are interpolated when Interval=0, but not for fixed interval data.  ' +CRLF+CRLF+
                         'See also "sinterval" and "minterval".'; // default = 1.0;
-     PropertyHelp[3] := 'Array of Price values.  Units should be compatible with the object using the data. ' +
+     PropertyHelp^[3] := 'Array of Price values.  Units should be compatible with the object using the data. ' +
                         'You can also use the syntax: '+CRLF+
                         'Price = (file=filename)     !for text file one value per line'+CRLF+
                         'Price = (dblfile=filename)  !for packed file of doubles'+CRLF+
                         'Price = (sngfile=filename)  !for packed file of singles '+CRLF+CRLF+
                         'Note: this property will reset Npts if the  number of values in the files are fewer.';     // vextor of hour values
-     PropertyHelp[4] := 'Array of hour values. Only necessary to define this property for variable interval data.'+
+     PropertyHelp^[4] := 'Array of hour values. Only necessary to define this property for variable interval data.'+
                         ' If the data are fixed interval, do not use this property. ' +
                         'You can also use the syntax: '+CRLF+
                         'hour = (file=filename)     !for text file one value per line'+CRLF+
                         'hour = (dblfile=filename)  !for packed file of doubles'+CRLF+
                         'hour = (sngfile=filename)  !for packed file of singles ';     // vextor of hour values
-     PropertyHelp[5] := 'Mean of the Price curve values.  This is computed on demand the first time a '+
+     PropertyHelp^[5] := 'Mean of the Price curve values.  This is computed on demand the first time a '+
                         'value is needed.  However, you may set it to another value independently. '+
                         'Used for Monte Carlo load simulations.';     // set the mean (otherwise computed)
-     PropertyHelp[6] := 'Standard deviation of the Prices.  This is computed on demand the first time a '+
+     PropertyHelp^[6] := 'Standard deviation of the Prices.  This is computed on demand the first time a '+
                         'value is needed.  However, you may set it to another value independently.'+
                         'Is overwritten if you subsequently read in a curve' + CRLF + CRLF +
                         'Used for Monte Carlo load simulations.';   // set the std dev (otherwise computed)
-     PropertyHelp[7] := 'Switch input of  Price curve data to a csv file '+
+     PropertyHelp^[7] := 'Switch input of  Price curve data to a csv file '+
                         'containing (hour, Price) points, or simply (Price) values for fixed time interval data, one per line. ' +
                         'NOTE: This action may reset the number of points to a lower value.';   // Switch input to a csvfile
-     PropertyHelp[8] := 'Switch input of  Price curve data to a binary file of singles '+
+     PropertyHelp^[8] := 'Switch input of  Price curve data to a binary file of singles '+
                         'containing (hour, Price) points, or simply (Price) values for fixed time interval data, packed one after another. ' +
                         'NOTE: This action may reset the number of points to a lower value.';  // switch input to a binary file of singles
-     PropertyHelp[9] := 'Switch input of  Price curve data to a binary file of doubles '+
+     PropertyHelp^[9] := 'Switch input of  Price curve data to a binary file of doubles '+
                         'containing (hour, Price) points, or simply (Price) values for fixed time interval data, packed one after another. ' +
                         'NOTE: This action may reset the number of points to a lower value.';   // switch input to a binary file of singles
-     PropertyHelp[10] :='Specify fixed interval in SECONDS. Alternate way to specify Interval property.';
-     PropertyHelp[11] :='Specify fixed interval in MINUTES. Alternate way to specify Interval property.';
-     PropertyHelp[12] :='{DblSave | SngSave} After defining Price curve data... ' +
+     PropertyHelp^[10] :='Specify fixed interval in SECONDS. Alternate way to specify Interval property.';
+     PropertyHelp^[11] :='Specify fixed interval in MINUTES. Alternate way to specify Interval property.';
+     PropertyHelp^[12] :='{DblSave | SngSave} After defining Price curve data... ' +
                         'Setting action=DblSave or SngSave will cause the present "Price" values to be written to ' +
                         'either a packed file of double or single. The filename is the PriceShape name. '; // Action
 

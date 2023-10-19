@@ -11,7 +11,7 @@ unit Command;
 
 interface
 
-Uses Hashlist;
+Uses ArrayDef, Hashlist;
 
 TYPE
    TCommandList = class(TObject)
@@ -22,7 +22,8 @@ TYPE
       protected
 
       public
-        constructor Create(Commands:Array of string);
+        constructor Create(Commands: pStringArray; n:Integer); overload;
+        constructor Create(Commands: Array of String); overload;
         destructor Destroy; override;
         Procedure AddCommand(const cmd:String);
         Function Getcommand(Const Cmd:String):Integer;
@@ -38,13 +39,26 @@ TYPE
 
 implementation
 
-constructor TCommandList.Create(Commands:Array of string);
+uses sysutils;
+
+constructor TCommandList.Create(Commands:pStringArray; n:Integer);
 VAR  i:Integer;
 BEGIN
      Inherited Create;
-     CommandList := THashList.Create(High(Commands) + 1);
+     CommandList := THashList.Create(n);
+     For i := 1 to n DO BEGIN
+         CommandList.Add(Commands^[i]);
+     END;
+     
+     AbbrevAllowed := True;
+END;
+
+constructor TCommandList.Create(Commands:Array of String);
+VAR  i:Integer;
+BEGIN
+     Inherited Create;
+     CommandList := THashList.Create(High(Commands)+1);
      For i := 0 to High(Commands) DO BEGIN
-      // Fill the HashList
          CommandList.Add(Commands[i]);
      END;
      
@@ -54,7 +68,7 @@ END;
 destructor TCommandList.Destroy;
 
 BEGIN
-     CommandList.Free;
+     FreeAndNil (CommandList);
      Inherited Destroy;
 END;
 

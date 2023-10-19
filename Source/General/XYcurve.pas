@@ -148,7 +148,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 End;
 
@@ -169,55 +169,55 @@ Begin
 
 
      // Define Property names
-     PropertyName[1]  := 'npts';     // Number of points to expect
-     PropertyName[2]  := 'Points';
-     PropertyName[3]  := 'Yarray';     // vector of Y values
-     PropertyName[4]  := 'Xarray';     // vector of X values corresponding to Y values
-     PropertyName[5]  := 'csvfile';  // Switch input to a csvfile
-     PropertyName[6]  := 'sngfile';  // switch input to a binary file of singles
-     PropertyName[7]  := 'dblfile';    // switch input to a binary file of singles
-     PropertyName[8]  := 'x';
-     PropertyName[9]  := 'y';
-     PropertyName[10] := 'Xshift';
-     PropertyName[11] := 'Yshift';
-     PropertyName[12] := 'Xscale';
-     PropertyName[13] := 'Yscale';
+     PropertyName^[1]  := 'npts';     // Number of points to expect
+     PropertyName^[2]  := 'Points';
+     PropertyName^[3]  := 'Yarray';     // vector of Y values
+     PropertyName^[4]  := 'Xarray';     // vector of X values corresponding to Y values
+     PropertyName^[5]  := 'csvfile';  // Switch input to a csvfile
+     PropertyName^[6]  := 'sngfile';  // switch input to a binary file of singles
+     PropertyName^[7]  := 'dblfile';    // switch input to a binary file of singles
+     PropertyName^[8]  := 'x';
+     PropertyName^[9]  := 'y';
+     PropertyName^[10] := 'Xshift';
+     PropertyName^[11] := 'Yshift';
+     PropertyName^[12] := 'Xscale';
+     PropertyName^[13] := 'Yscale';
 
      // define Property help values
 
-     PropertyHelp[1] := 'Max number of points to expect in curve. This could get reset to the actual number of points defined ' +
+     PropertyHelp^[1] := 'Max number of points to expect in curve. This could get reset to the actual number of points defined ' +
                         'if less than specified.';     // Number of points to expect
-     PropertyHelp[2] := 'One way to enter the points in a curve. Enter x and y values as one array '+
+     PropertyHelp^[2] := 'One way to enter the points in a curve. Enter x and y values as one array '+
                         'in the order [x1, y1, x2, y2, ...]. For example:'+CRLF+CRLF+
                         'Points=[1,100 2,200 3, 300] '+CRLF+CRLF+
                         'Values separated by commas or white space. Zero fills arrays if insufficient number of values.';
-     PropertyHelp[3] := 'Alternate way to enter Y values. Enter an array of Y values corresponding to the X values.  '+
+     PropertyHelp^[3] := 'Alternate way to enter Y values. Enter an array of Y values corresponding to the X values.  '+
                         'You can also use the syntax: '+CRLF+
                         'Yarray = (file=filename)     !for text file one value per line'+CRLF+
                         'Yarray = (dblfile=filename)  !for packed file of doubles'+CRLF+
                         'Yarray = (sngfile=filename)  !for packed file of singles '+CRLF+CRLF+
                         'Note: this property will reset Npts to a smaller value if the  number of values in the files are fewer.';     // vextor of hour values
-     PropertyHelp[4] := 'Alternate way to enter X values. Enter an array of X values corresponding to the Y values.  '+
+     PropertyHelp^[4] := 'Alternate way to enter X values. Enter an array of X values corresponding to the Y values.  '+
                         'You can also use the syntax: '+CRLF+
                         'Xarray = (file=filename)     !for text file one value per line'+CRLF+
                         'Xarray = (dblfile=filename)  !for packed file of doubles'+CRLF+
                         'Xarray = (sngfile=filename)  !for packed file of singles '+CRLF+CRLF+
                         'Note: this property will reset Npts to a smaller value if the  number of values in the files are fewer.';     // vextor of hour values
-     PropertyHelp[5] := 'Switch input of  X-Y curve data to a CSV file '+
+     PropertyHelp^[5] := 'Switch input of  X-Y curve data to a CSV file '+
                         'containing X, Y points one per line. ' +
                         'NOTE: This action may reset the number of points to a lower value.';   // Switch input to a csvfile
-     PropertyHelp[6] := 'Switch input of  X-Y curve data to a binary file of SINGLES '+
+     PropertyHelp^[6] := 'Switch input of  X-Y curve data to a binary file of SINGLES '+
                         'containing X, Y points packed one after another. ' +
                         'NOTE: This action may reset the number of points to a lower value.';  // switch input to a binary file of singles
-     PropertyHelp[7] := 'Switch input of  X-Y  curve data to a binary file of DOUBLES '+
+     PropertyHelp^[7] := 'Switch input of  X-Y  curve data to a binary file of DOUBLES '+
                         'containing X, Y points packed one after another. ' +
                         'NOTE: This action may reset the number of points to a lower value.';   // switch input to a binary file of singles
-     PropertyHelp[8] := 'Enter a value and then retrieve the interpolated Y value from the Y property. On input shifted then scaled to original curve. Scaled then shifted on output.';
-     PropertyHelp[9] := 'Enter a value and then retrieve the interpolated X value from the X property. On input shifted then scaled to original curve. Scaled then shifted on output.';
-     PropertyHelp[10] := 'Shift X property values (in/out) by this amount of offset. Default = 0. Does not change original definition of arrays.';
-     PropertyHelp[11] := 'Shift Y property values (in/out) by this amount of offset. Default = 0. Does not change original definition of arrays.';
-     PropertyHelp[12] := 'Scale X property values (in/out) by this factor. Default = 1.0. Does not change original definition of arrays.';
-     PropertyHelp[13] := 'Scale Y property values (in/out) by this factor. Default = 1.0. Does not change original definition of arrays.';
+     PropertyHelp^[8] := 'Enter a value and then retrieve the interpolated Y value from the Y property. On input shifted then scaled to original curve. Scaled then shifted on output.';
+     PropertyHelp^[9] := 'Enter a value and then retrieve the interpolated X value from the X property. On input shifted then scaled to original curve. Scaled then shifted on output.';
+     PropertyHelp^[10] := 'Shift X property values (in/out) by this amount of offset. Default = 0. Does not change original definition of arrays.';
+     PropertyHelp^[11] := 'Shift Y property values (in/out) by this amount of offset. Default = 0. Does not change original definition of arrays.';
+     PropertyHelp^[12] := 'Scale X property values (in/out) by this factor. Default = 1.0. Does not change original definition of arrays.';
+     PropertyHelp^[13] := 'Scale Y property values (in/out) by this factor. Default = 1.0. Does not change original definition of arrays.';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -991,11 +991,11 @@ begin
    Begin
       With ParentClass Do
        {Trap npts= and write out array properties instead}
-        CASE RevPropertyIdxMap[iProp] of
+        CASE RevPropertyIdxMap^[iProp] of
             1: {Ignore Npts};
 
         ELSE
-            Write(F,Format(' %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]],CheckForBlanks(PropertyValue[iProp])] ));
+            Write(F,Format(' %s=%s', [PropertyName^[RevPropertyIdxMap^[iProp]],CheckForBlanks(PropertyValue[iProp])] ));
         END;
       iProp := GetNextPropertySet(iProp);
    End;

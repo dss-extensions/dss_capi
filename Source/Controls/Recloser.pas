@@ -171,7 +171,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
      TCC_CurveClass := GetDSSClassPtr('TCC_Curve');
@@ -196,73 +196,73 @@ Begin
 
      // Define Property names
 
-     PropertyName[1]  := 'MonitoredObj';
-     PropertyName[2]  := 'MonitoredTerm';
-     PropertyName[3]  := 'SwitchedObj';
-     PropertyName[4]  := 'SwitchedTerm';
-     PropertyName[5]  := 'NumFast';
-     PropertyName[6]  := 'PhaseFast';
-     PropertyName[7]  := 'PhaseDelayed';
-     PropertyName[8]  := 'GroundFast';
-     PropertyName[9]  := 'GroundDelayed';
-     PropertyName[10] := 'PhaseTrip';
-     PropertyName[11] := 'GroundTrip';
-     PropertyName[12] := 'PhaseInst';
-     PropertyName[13] := 'GroundInst';
-     PropertyName[14] := 'Reset';
-     PropertyName[15] := 'Shots';
-     PropertyName[16] := 'RecloseIntervals';
-     PropertyName[17] := 'Delay';
-     PropertyName[18] := 'Action';
-     PropertyName[19] := 'TDPhFast';
-     PropertyName[20] := 'TDGrFast';
-     PropertyName[21] := 'TDPhDelayed';
-     PropertyName[22] := 'TDGrDelayed';
-     PropertyName[23] := 'Normal';
-     PropertyName[24] := 'State';
+     PropertyName^[1]  := 'MonitoredObj';
+     PropertyName^[2]  := 'MonitoredTerm';
+     PropertyName^[3]  := 'SwitchedObj';
+     PropertyName^[4]  := 'SwitchedTerm';
+     PropertyName^[5]  := 'NumFast';
+     PropertyName^[6]  := 'PhaseFast';
+     PropertyName^[7]  := 'PhaseDelayed';
+     PropertyName^[8]  := 'GroundFast';
+     PropertyName^[9]  := 'GroundDelayed';
+     PropertyName^[10] := 'PhaseTrip';
+     PropertyName^[11] := 'GroundTrip';
+     PropertyName^[12] := 'PhaseInst';
+     PropertyName^[13] := 'GroundInst';
+     PropertyName^[14] := 'Reset';
+     PropertyName^[15] := 'Shots';
+     PropertyName^[16] := 'RecloseIntervals';
+     PropertyName^[17] := 'Delay';
+     PropertyName^[18] := 'Action';
+     PropertyName^[19] := 'TDPhFast';
+     PropertyName^[20] := 'TDGrFast';
+     PropertyName^[21] := 'TDPhDelayed';
+     PropertyName^[22] := 'TDGrDelayed';
+     PropertyName^[23] := 'Normal';
+     PropertyName^[24] := 'State';
 
-     PropertyHelp[1] := 'Full object name of the circuit element, typically a line, transformer, load, or generator, '+
+     PropertyHelp^[1] := 'Full object name of the circuit element, typically a line, transformer, load, or generator, '+
                         'to which the Recloser''s PT and/or CT are connected.' +
                         ' This is the "monitored" element. ' +
                         'There is no default; must be specified.';
-     PropertyHelp[2] := 'Number of the terminal of the circuit element to which the Recloser is connected. '+
+     PropertyHelp^[2] := 'Number of the terminal of the circuit element to which the Recloser is connected. '+
                         '1 or 2, typically.  Default is 1.';
-     PropertyHelp[3] := 'Name of circuit element switch that the Recloser controls. '+
+     PropertyHelp^[3] := 'Name of circuit element switch that the Recloser controls. '+
                         'Specify the full object name.' +
                         'Defaults to the same as the Monitored element. '+
                         'This is the "controlled" element.';
-     PropertyHelp[4] := 'Number of the terminal of the controlled element in which the switch is controlled by the Recloser. '+
+     PropertyHelp^[4] := 'Number of the terminal of the controlled element in which the switch is controlled by the Recloser. '+
                         '1 or 2, typically.  Default is 1.';
-     PropertyHelp[5] := 'Number of Fast (fuse saving) operations.  Default is 1. (See "Shots")';
-     PropertyHelp[6] := 'Name of the TCC Curve object that determines the Phase Fast trip.  Must have been previously defined as a TCC_Curve object.'+
+     PropertyHelp^[5] := 'Number of Fast (fuse saving) operations.  Default is 1. (See "Shots")';
+     PropertyHelp^[6] := 'Name of the TCC Curve object that determines the Phase Fast trip.  Must have been previously defined as a TCC_Curve object.'+
                         ' Default is "A". '+
                         'Multiplying the current values in the curve by the "phasetrip" value gives the actual current.';
-     PropertyHelp[7] := 'Name of the TCC Curve object that determines the Phase Delayed trip.  Must have been previously defined as a TCC_Curve object.'+
+     PropertyHelp^[7] := 'Name of the TCC Curve object that determines the Phase Delayed trip.  Must have been previously defined as a TCC_Curve object.'+
                         ' Default is "D".'+
                         'Multiplying the current values in the curve by the "phasetrip" value gives the actual current.';
-     PropertyHelp[8] := 'Name of the TCC Curve object that determines the Ground Fast trip.  Must have been previously defined as a TCC_Curve object.'+
+     PropertyHelp^[8] := 'Name of the TCC Curve object that determines the Ground Fast trip.  Must have been previously defined as a TCC_Curve object.'+
                         ' Default is none (ignored). '+
                         'Multiplying the current values in the curve by the "groundtrip" value gives the actual current.';
-     PropertyHelp[9] := 'Name of the TCC Curve object that determines the Ground Delayed trip.  Must have been previously defined as a TCC_Curve object.'+
+     PropertyHelp^[9] := 'Name of the TCC Curve object that determines the Ground Delayed trip.  Must have been previously defined as a TCC_Curve object.'+
                         ' Default is none (ignored).'+
                         'Multiplying the current values in the curve by the "groundtrip" value gives the actual current.';
-     PropertyHelp[10] := 'Multiplier or actual phase amps for the phase TCC curve.  Defaults to 1.0.';
-     PropertyHelp[11] := 'Multiplier or actual ground amps (3I0) for the ground TCC curve.  Defaults to 1.0.';
-     PropertyHelp[12] := 'Actual amps for instantaneous phase trip which is assumed to happen in 0.01 sec + Delay Time. Default is 0.0, which signifies no inst trip. ';
-     PropertyHelp[13] := 'Actual amps for instantaneous ground trip which is assumed to happen in 0.01 sec + Delay Time.Default is 0.0, which signifies no inst trip.';
-     PropertyHelp[14] := 'Reset time in sec for Recloser.  Default is 15. ';
-     PropertyHelp[15] := 'Total Number of fast and delayed shots to lockout.  Default is 4. This is one more than the number of reclose intervals.';
-     PropertyHelp[16] := 'Array of reclose intervals.  Default for Recloser is (0.5, 2.0, 2.0) seconds. ' +
+     PropertyHelp^[10] := 'Multiplier or actual phase amps for the phase TCC curve.  Defaults to 1.0.';
+     PropertyHelp^[11] := 'Multiplier or actual ground amps (3I0) for the ground TCC curve.  Defaults to 1.0.';
+     PropertyHelp^[12] := 'Actual amps for instantaneous phase trip which is assumed to happen in 0.01 sec + Delay Time. Default is 0.0, which signifies no inst trip. ';
+     PropertyHelp^[13] := 'Actual amps for instantaneous ground trip which is assumed to happen in 0.01 sec + Delay Time.Default is 0.0, which signifies no inst trip.';
+     PropertyHelp^[14] := 'Reset time in sec for Recloser.  Default is 15. ';
+     PropertyHelp^[15] := 'Total Number of fast and delayed shots to lockout.  Default is 4. This is one more than the number of reclose intervals.';
+     PropertyHelp^[16] := 'Array of reclose intervals.  Default for Recloser is (0.5, 2.0, 2.0) seconds. ' +
                          'A locked out Recloser must be closed manually (action=close).';
-     PropertyHelp[17] := 'Fixed delay time (sec) added to Recloser trip time. Default is 0.0. Used to represent breaker time or any other delay.' ;
-     PropertyHelp[18] := 'DEPRECATED. See "State" property';
-     PropertyHelp[19] := 'Time dial for Phase Fast trip curve. Multiplier on time axis of specified curve. Default=1.0.';
-     PropertyHelp[20] := 'Time dial for Ground Fast trip curve. Multiplier on time axis of specified curve. Default=1.0.';
-     PropertyHelp[21] := 'Time dial for Phase Delayed trip curve. Multiplier on time axis of specified curve. Default=1.0.';
-     PropertyHelp[22] := 'Time dial for Ground Delayed trip curve. Multiplier on time axis of specified curve. Default=1.0.';
-     PropertyHelp[23] := '{Open | Closed} Normal state of the recloser. The recloser reverts to this state for reset, change of mode, etc. '  +
+     PropertyHelp^[17] := 'Fixed delay time (sec) added to Recloser trip time. Default is 0.0. Used to represent breaker time or any other delay.' ;
+     PropertyHelp^[18] := 'DEPRECATED. See "State" property';
+     PropertyHelp^[19] := 'Time dial for Phase Fast trip curve. Multiplier on time axis of specified curve. Default=1.0.';
+     PropertyHelp^[20] := 'Time dial for Ground Fast trip curve. Multiplier on time axis of specified curve. Default=1.0.';
+     PropertyHelp^[21] := 'Time dial for Phase Delayed trip curve. Multiplier on time axis of specified curve. Default=1.0.';
+     PropertyHelp^[22] := 'Time dial for Ground Delayed trip curve. Multiplier on time axis of specified curve. Default=1.0.';
+     PropertyHelp^[23] := '{Open | Closed} Normal state of the recloser. The recloser reverts to this state for reset, change of mode, etc. '  +
                          'Defaults to "State" if not specificallt declared.';
-     PropertyHelp[24] := '{Open | Closed} Actual state of the recloser. Upon setting, immediately forces state of the recloser, overriding the Recloser control. ' +
+     PropertyHelp^[24] := '{Open | Closed} Actual state of the recloser. Upon setting, immediately forces state of the recloser, overriding the Recloser control. ' +
                          'Simulates manual control on recloser. Defaults to Closed. "Open" causes the controlled element to open and lock out. "Closed" causes the ' +
                          'controlled element to close and the recloser to reset to its first operation.';
 

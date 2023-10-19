@@ -131,7 +131,7 @@ BEGIN
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
      LineCodeClass := Self;
@@ -153,92 +153,92 @@ Begin
      AllocatePropertyArrays;
 
 
-     PropertyName[1] := 'nphases';
-     PropertyName[2] := 'r1';
-     PropertyName[3] := 'x1';
-     PropertyName[4] := 'r0';
-     PropertyName[5] := 'x0';
-     PropertyName[6] := 'C1';
-     PropertyName[7] := 'C0';
-     PropertyName[8] := 'units';
-     PropertyName[9] := 'rmatrix';
-     PropertyName[10] := 'xmatrix';
-     PropertyName[11] := 'cmatrix';
-     PropertyName[12] := 'baseFreq';
-     PropertyName[13] := 'normamps';
-     PropertyName[14] := 'emergamps';
-     PropertyName[15] := 'faultrate';
-     PropertyName[16] := 'pctperm';
-     PropertyName[17] := 'repair';
-     PropertyName[18] := 'Kron';
-     PropertyName[19] := 'Rg';
-     PropertyName[20] := 'Xg';
-     PropertyName[21] := 'rho';
-     PropertyName[22] := 'neutral';
-     PropertyName[23] := 'B1';
-     PropertyName[24] := 'B0';
-     PropertyName[25] := 'Seasons';
-     PropertyName[26] := 'Ratings';
-     PropertyName[27] := 'LineType';
+     PropertyName^[1] := 'nphases';
+     PropertyName^[2] := 'r1';
+     PropertyName^[3] := 'x1';
+     PropertyName^[4] := 'r0';
+     PropertyName^[5] := 'x0';
+     PropertyName^[6] := 'C1';
+     PropertyName^[7] := 'C0';
+     PropertyName^[8] := 'units';
+     PropertyName^[9] := 'rmatrix';
+     PropertyName^[10] := 'xmatrix';
+     PropertyName^[11] := 'cmatrix';
+     PropertyName^[12] := 'baseFreq';
+     PropertyName^[13] := 'normamps';
+     PropertyName^[14] := 'emergamps';
+     PropertyName^[15] := 'faultrate';
+     PropertyName^[16] := 'pctperm';
+     PropertyName^[17] := 'repair';
+     PropertyName^[18] := 'Kron';
+     PropertyName^[19] := 'Rg';
+     PropertyName^[20] := 'Xg';
+     PropertyName^[21] := 'rho';
+     PropertyName^[22] := 'neutral';
+     PropertyName^[23] := 'B1';
+     PropertyName^[24] := 'B0';
+     PropertyName^[25] := 'Seasons';
+     PropertyName^[26] := 'Ratings';
+     PropertyName^[27] := 'LineType';
 
 
-     PropertyHelp[1] := 'Number of phases in the line this line code data represents.  Setting this property reinitializes the line code.  Impedance matrix is reset for default symmetrical component.';
-     PropertyHelp[2] := 'Positive-sequence Resistance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
+     PropertyHelp^[1] := 'Number of phases in the line this line code data represents.  Setting this property reinitializes the line code.  Impedance matrix is reset for default symmetrical component.';
+     PropertyHelp^[2] := 'Positive-sequence Resistance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
                         'the program to use the symmetrical component line definition. See also Rmatrix.';
-     PropertyHelp[3] := 'Positive-sequence Reactance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
+     PropertyHelp^[3] := 'Positive-sequence Reactance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
                         'the program to use the symmetrical component line definition. See also Xmatrix';
-     PropertyHelp[4] := 'Zero-sequence Resistance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
+     PropertyHelp^[4] := 'Zero-sequence Resistance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
                         'the program to use the symmetrical component line definition.';
-     PropertyHelp[5] := 'Zero-sequence Reactance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
+     PropertyHelp^[5] := 'Zero-sequence Reactance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
                         'the program to use the symmetrical component line definition.';
-     PropertyHelp[6] := 'Positive-sequence capacitance, nf per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
+     PropertyHelp^[6] := 'Positive-sequence capacitance, nf per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
                         'the program to use the symmetrical component line definition. See also Cmatrix and B1.';
-     PropertyHelp[7] := 'Zero-sequence capacitance, nf per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
+     PropertyHelp^[7] := 'Zero-sequence capacitance, nf per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
                         'the program to use the symmetrical component line definition. See also B0.';
-     PropertyHelp[8] := 'One of (ohms per ...) {none|mi|km|kft|m|me|ft|in|cm}.  Default is none; assumes units agree with length units' +
+     PropertyHelp^[8] := 'One of (ohms per ...) {none|mi|km|kft|m|me|ft|in|cm}.  Default is none; assumes units agree with length units' +
                     'given in Line object';
-     PropertyHelp[9] := 'Resistance matrix, lower triangle, ohms per unit length. Order of the matrix is the number of phases. '+
+     PropertyHelp^[9] := 'Resistance matrix, lower triangle, ohms per unit length. Order of the matrix is the number of phases. '+
                      'May be used to specify the impedance of any line configuration.  For balanced line models, you may '+
                      'use the standard symmetrical component data definition instead.';
-     PropertyHelp[10] := 'Reactance matrix, lower triangle, ohms per unit length. Order of the matrix is the number of phases. '+
+     PropertyHelp^[10] := 'Reactance matrix, lower triangle, ohms per unit length. Order of the matrix is the number of phases. '+
                      'May be used to specify the impedance of any line configuration.  For balanced line models, you may '+
                      'use the standard symmetrical component data definition instead.';
-     PropertyHelp[11] := 'Nodal Capacitance matrix, lower triangle, nf per unit length.Order of the matrix is the number of phases. '+
+     PropertyHelp^[11] := 'Nodal Capacitance matrix, lower triangle, nf per unit length.Order of the matrix is the number of phases. '+
                      'May be used to specify the shunt capacitance of any line configuration.  For balanced line models, you may '+
                      'use the standard symmetrical component data definition instead.';
-     PropertyHelp[12] := 'Frequency at which impedances are specified.';
-     PropertyHelp[13] := 'Normal ampere limit on line.  This is the so-called Planning Limit. It may also be '+
+     PropertyHelp^[12] := 'Frequency at which impedances are specified.';
+     PropertyHelp^[13] := 'Normal ampere limit on line.  This is the so-called Planning Limit. It may also be '+
                      'the value above which load will have to be dropped in a contingency.  Usually about '+
                      '75% - 80% of the emergency (one-hour) rating.';
-     PropertyHelp[14] := 'Emergency ampere limit on line (usually one-hour rating).';
-     PropertyHelp[15] := 'Number of faults per unit length per year.';
-     PropertyHelp[16] := 'Percentage of the faults that become permanent.';
-     PropertyHelp[17] := 'Hours to repair.';
-     PropertyHelp[18] := 'Kron = Y/N. Default=N.  Perform Kron reduction on the impedance matrix after it is formed, reducing order by 1. ' +
+     PropertyHelp^[14] := 'Emergency ampere limit on line (usually one-hour rating).';
+     PropertyHelp^[15] := 'Number of faults per unit length per year.';
+     PropertyHelp^[16] := 'Percentage of the faults that become permanent.';
+     PropertyHelp^[17] := 'Hours to repair.';
+     PropertyHelp^[18] := 'Kron = Y/N. Default=N.  Perform Kron reduction on the impedance matrix after it is formed, reducing order by 1. ' +
                          'Eliminates the conductor designated by the "Neutral=" property. ' +
                          'Do this after the R, X, and C matrices are defined. Ignored for symmetrical components. ' +
                          'May be issued more than once to eliminate more than one conductor by resetting the Neutral property after the previous ' +
                          'invoking of this property. Generally, you do not want to do a Kron reduction on the matrix if you intend to solve at a ' +
                          'frequency other than the base frequency and exploit the Rg and Xg values.';
-     PropertyHelp[19] := 'Carson earth return resistance per unit length used to compute impedance values at base frequency.  For making better frequency adjustments. ' +
+     PropertyHelp^[19] := 'Carson earth return resistance per unit length used to compute impedance values at base frequency.  For making better frequency adjustments. ' +
                          'Default is 0.01805 = 60 Hz value in ohms per kft (matches default line impedances). ' +
                          'This value is required for harmonic solutions if you wish to adjust the earth return impedances for frequency. ' +
                          'If not, set both Rg and Xg = 0.';
-     PropertyHelp[20] := 'Carson earth return reactance per unit length used to compute impedance values at base frequency.  For making better frequency adjustments. ' +
+     PropertyHelp^[20] := 'Carson earth return reactance per unit length used to compute impedance values at base frequency.  For making better frequency adjustments. ' +
                          'Default value is 0.155081 = 60 Hz value in ohms per kft (matches default line impedances). ' +
                          'This value is required for harmonic solutions if you wish to adjust the earth return impedances for frequency. ' +
                          'If not, set both Rg and Xg = 0.';
-     PropertyHelp[21] := 'Default=100 meter ohms.  Earth resitivity used to compute earth correction factor.';
-     PropertyHelp[22] := 'Designates which conductor is the "neutral" conductor that will be eliminated by Kron reduction. ' +
+     PropertyHelp^[21] := 'Default=100 meter ohms.  Earth resitivity used to compute earth correction factor.';
+     PropertyHelp^[22] := 'Designates which conductor is the "neutral" conductor that will be eliminated by Kron reduction. ' +
                          'Default is the last conductor (nphases value). After Kron reduction is set to 0. Subsequent issuing of Kron=Yes ' +
                          'will not do anything until this property is set to a legal value. Applies only to LineCodes defined by R, X, and C matrix.';
 
-     PropertyHelp[23] := 'Alternate way to specify C1. MicroS per unit length' ;
-     PropertyHelp[24] := 'Alternate way to specify C0. MicroS per unit length' ;
-     PropertyHelp[25] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
-     PropertyHelp[26] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
+     PropertyHelp^[23] := 'Alternate way to specify C1. MicroS per unit length' ;
+     PropertyHelp^[24] := 'Alternate way to specify C0. MicroS per unit length' ;
+     PropertyHelp^[25] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
+     PropertyHelp^[26] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
                          CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
-     PropertyHelp[27] := 'Code designating the type of line. ' +  CRLF +
+     PropertyHelp^[27] := 'Code designating the type of line. ' +  CRLF +
                          'One of: OH, UG, UG_TS, UG_CN, SWT_LDBRK, SWT_FUSE, SWT_SECT, SWT_REC, SWT_DISC, SWT_BRK, SWT_ELBOW, BUSBAR' + CRLF +  CRLF +
                          'OpenDSS currently does not use this internally. For whatever purpose the user defines. Default is OH.' ;
 

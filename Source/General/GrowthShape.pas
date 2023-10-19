@@ -116,7 +116,7 @@ BEGIN
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := False;
      
 END;
@@ -141,27 +141,27 @@ Begin
 
      // Define Property names
 
-     PropertyName[1] := 'npts';     // Number of points to expect
-     PropertyName[2] := 'year';     // vextor of year values
-     PropertyName[3] := 'mult';     // vector of multiplier values corresponding to years
-     PropertyName[4] := 'csvfile';   // Switch input to a csvfile                 (year, mult)
-     PropertyName[5] := 'sngfile';  // switch input to a binary file of singles  (year, mult)
-     PropertyName[6] := 'dblfile';   // switch input to a binary file of doubles (year, mult)
+     PropertyName^[1] := 'npts';     // Number of points to expect
+     PropertyName^[2] := 'year';     // vextor of year values
+     PropertyName^[3] := 'mult';     // vector of multiplier values corresponding to years
+     PropertyName^[4] := 'csvfile';   // Switch input to a csvfile                 (year, mult)
+     PropertyName^[5] := 'sngfile';  // switch input to a binary file of singles  (year, mult)
+     PropertyName^[6] := 'dblfile';   // switch input to a binary file of doubles (year, mult)
 
-     PropertyHelp[1] := 'Number of points to expect in subsequent vector.';
-     PropertyHelp[2] := 'Array of year values, or a text file spec, corresponding to the multipliers. '+
+     PropertyHelp^[1] := 'Number of points to expect in subsequent vector.';
+     PropertyHelp^[2] := 'Array of year values, or a text file spec, corresponding to the multipliers. '+
                     'Enter only those years where the growth changes. '+
                     'May be any integer sequence -- just so it is consistent. See help on Mult.';
-     PropertyHelp[3] := 'Array of growth multiplier values, or a text file spec, corresponding to the year values. '+
+     PropertyHelp^[3] := 'Array of growth multiplier values, or a text file spec, corresponding to the year values. '+
                     'Enter the multiplier by which you would multiply the previous year''s load to get the present year''s.'+
                     CRLF+CRLF+'Examples:'+CRLF+CRLF+
                     '  Year = [1, 2, 5]   Mult=[1.05, 1.025, 1.02].'+CRLF+
                     '  Year= (File=years.txt) Mult= (file=mults.txt).'+ CRLF+CRLF+
                     'Text files contain one value per line.';
-     PropertyHelp[4] := 'Switch input of growth curve data to a csv file containing (year, mult) points, one per line.';
-     PropertyHelp[5] := 'Switch input of growth curve data to a binary file of singles '+
+     PropertyHelp^[4] := 'Switch input of growth curve data to a csv file containing (year, mult) points, one per line.';
+     PropertyHelp^[5] := 'Switch input of growth curve data to a binary file of singles '+
                         'containing (year, mult) points, packed one after another.';
-     PropertyHelp[6] := 'Switch input of growth curve data to a binary file of doubles '+
+     PropertyHelp^[6] := 'Switch input of growth curve data to a binary file of doubles '+
                         'containing (year, mult) points, packed one after another.';
 
 

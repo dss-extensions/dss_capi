@@ -256,7 +256,7 @@ Begin
      DefineProperties;
 
      {Make space for AutoTrans property list}
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;     {Allow property list abbreviations}
 
      AutoTransClass := Self;
@@ -280,138 +280,138 @@ Begin
 
 { Define Property names  }
 
-     PropertyName[1] := 'phases';
-     PropertyName[2] := 'windings';
+     PropertyName^[1] := 'phases';
+     PropertyName^[2] := 'windings';
 
    // Winding Definition
-     PropertyName[3] := 'wdg';
-     PropertyName[4] := 'bus';
-     PropertyName[5] := 'conn';
-     PropertyName[6] := 'kV'; // FOR 2-and 3- phase always kVLL ELSE actual winding KV
-     PropertyName[7] := 'kVA';
-     PropertyName[8] := 'tap';
-     PropertyName[9] := '%R';
-     PropertyName[10] := 'Rdcohms';
-     PropertyName[11] := 'Core';
+     PropertyName^[3] := 'wdg';
+     PropertyName^[4] := 'bus';
+     PropertyName^[5] := 'conn';
+     PropertyName^[6] := 'kV'; // FOR 2-and 3- phase always kVLL ELSE actual winding KV
+     PropertyName^[7] := 'kVA';
+     PropertyName^[8] := 'tap';
+     PropertyName^[9] := '%R';
+     PropertyName^[10] := 'Rdcohms';
+     PropertyName^[11] := 'Core';
 
    // General Data
-     PropertyName[12] := 'buses';
-     PropertyName[13] := 'conns';
-     PropertyName[14] := 'kVs';
-     PropertyName[15] := 'kVAs';
-     PropertyName[16] := 'taps';
-     PropertyName[17] := 'XHX';
-     PropertyName[18] := 'XHT';
-     PropertyName[19] := 'XXT';
-     PropertyName[20] := 'XSCarray';  // x12 13 14... 23 24.. 34 ..
-     PropertyName[21] := 'thermal';
-     PropertyName[22] := 'n';
-     PropertyName[23] := 'm';
-     PropertyName[24] := 'flrise';
-     PropertyName[25] := 'hsrise';
-     PropertyName[26] := '%loadloss';
-     PropertyName[27] := '%noloadloss';
-     PropertyName[28] := 'normhkVA';
-     PropertyName[29] := 'emerghkVA';
-     PropertyName[30] := 'sub';  // =y/n
-     PropertyName[31] := 'MaxTap';
-     PropertyName[32] := 'MinTap';
-     PropertyName[33] := 'NumTaps';
-     PropertyName[34] := 'subname';
-     PropertyName[35] := '%imag';
-     PropertyName[36] := 'ppm_antifloat';
-     PropertyName[37] := '%Rs';
+     PropertyName^[12] := 'buses';
+     PropertyName^[13] := 'conns';
+     PropertyName^[14] := 'kVs';
+     PropertyName^[15] := 'kVAs';
+     PropertyName^[16] := 'taps';
+     PropertyName^[17] := 'XHX';
+     PropertyName^[18] := 'XHT';
+     PropertyName^[19] := 'XXT';
+     PropertyName^[20] := 'XSCarray';  // x12 13 14... 23 24.. 34 ..
+     PropertyName^[21] := 'thermal';
+     PropertyName^[22] := 'n';
+     PropertyName^[23] := 'm';
+     PropertyName^[24] := 'flrise';
+     PropertyName^[25] := 'hsrise';
+     PropertyName^[26] := '%loadloss';
+     PropertyName^[27] := '%noloadloss';
+     PropertyName^[28] := 'normhkVA';
+     PropertyName^[29] := 'emerghkVA';
+     PropertyName^[30] := 'sub';  // =y/n
+     PropertyName^[31] := 'MaxTap';
+     PropertyName^[32] := 'MinTap';
+     PropertyName^[33] := 'NumTaps';
+     PropertyName^[34] := 'subname';
+     PropertyName^[35] := '%imag';
+     PropertyName^[36] := 'ppm_antifloat';
+     PropertyName^[37] := '%Rs';
 
-     PropertyName[38] := 'bank';
-     PropertyName[39] := 'XfmrCode';
-     PropertyName[40] := 'XRConst';
-     PropertyName[41] := 'LeadLag';
-     PropertyName[42] := 'WdgCurrents';
+     PropertyName^[38] := 'bank';
+     PropertyName^[39] := 'XfmrCode';
+     PropertyName^[40] := 'XRConst';
+     PropertyName^[41] := 'LeadLag';
+     PropertyName^[42] := 'WdgCurrents';
 
 
      // define Property help values
-     PropertyHelp[1] := 'Number of phases this AutoTrans. Default is 3.';
-     PropertyHelp[2] := 'Number of windings, this AutoTranss. (Also is the number of terminals) '+
+     PropertyHelp^[1] := 'Number of phases this AutoTrans. Default is 3.';
+     PropertyHelp^[2] := 'Number of windings, this AutoTranss. (Also is the number of terminals) '+
                         'Default is 2. This property triggers memory allocation for the AutoTrans and will cause other properties to revert to default values.';
    // Winding Definition
-     PropertyHelp[3] := 'Set this = to the number of the winding you wish to define.  Then set '+
+     PropertyHelp^[3] := 'Set this = to the number of the winding you wish to define.  Then set '+
                         'the values for this winding.  Winding 1 is always the Series winding. ' +
                         'Winding 2 is always Common winding (wye connected). ' +
                         'Repeat for each winding.  Alternatively, use '+
                         'the array collections (buses, kVAs, etc.) to define the windings.  Note: '+
                         'reactances are BETWEEN pairs of windings; they are not the property of a single winding.';
-     PropertyHelp[4] := 'Bus connection spec for this winding.';
-     PropertyHelp[5] := 'Connection of this winding {Series, wye*, Delta, LN, LL }. Default is "wye" with the neutral solidly grounded. ' + CRLF +
+     PropertyHelp^[4] := 'Bus connection spec for this winding.';
+     PropertyHelp^[5] := 'Connection of this winding {Series, wye*, Delta, LN, LL }. Default is "wye" with the neutral solidly grounded. ' + CRLF +
                         'For AutoTrans, Winding 1 is always Series and Winding 2 (the Common winding) is always Wye. ' + CRLF +
                         'If only 2 windings, no need to specify connections.';
-     PropertyHelp[6] := 'For 2-or 3-phase, enter phase-phase kV rating.  Otherwise, kV rating of the actual winding. '+
+     PropertyHelp^[6] := 'For 2-or 3-phase, enter phase-phase kV rating.  Otherwise, kV rating of the actual winding. '+
                         'Specify H terminal kV rating for Series winding.';
-     PropertyHelp[7] := 'Base kVA rating of the winding. Side effect: forces change of max normal and emerg kVA ratings.' +
+     PropertyHelp^[7] := 'Base kVA rating of the winding. Side effect: forces change of max normal and emerg kVA ratings.' +
                         'If 2-winding AutoTrans, forces other winding to same value. ' +
                         'When winding 1 is defined, all other windings are defaulted to the same rating ' +
                         'and the first two winding resistances are defaulted to the %loadloss value.';
-     PropertyHelp[8] := 'Per unit tap that this winding is on.';
-     PropertyHelp[9] := 'Percent ac resistance this winding.  This value is for the power flow model.'+
+     PropertyHelp^[8] := 'Per unit tap that this winding is on.';
+     PropertyHelp^[9] := 'Percent ac resistance this winding.  This value is for the power flow model.'+
                         'Is derived from the full load losses in the transformer test report.';
-     PropertyHelp[10] := 'Winding dc resistance in OHMS. Specify this for GIC analysis. From transformer test report (divide by number of phases). ' +
+     PropertyHelp^[10] := 'Winding dc resistance in OHMS. Specify this for GIC analysis. From transformer test report (divide by number of phases). ' +
                          'Defaults to 85% of %R property (the ac value that includes stray losses).';
-     PropertyHelp[11] := '{Shell*|5-leg|3-Leg|1-phase|core-1-phase|4-leg} Core Type. Used for GIC analysis in auxiliary programs. Not used inside OpenDSS.';
+     PropertyHelp^[11] := '{Shell*|5-leg|3-Leg|1-phase|core-1-phase|4-leg} Core Type. Used for GIC analysis in auxiliary programs. Not used inside OpenDSS.';
 
    // General Data
-     PropertyHelp[12] := 'Use this to specify all the bus connections at once using an array. Example:'+CRLF+CRLF+
+     PropertyHelp^[12] := 'Use this to specify all the bus connections at once using an array. Example:'+CRLF+CRLF+
                          'New AutoTrans.T1 buses=[Hbus, Xbus]';
-     PropertyHelp[13] := 'Use this to specify all the Winding connections at once using an array. Example:'+CRLF+CRLF+
+     PropertyHelp^[13] := 'Use this to specify all the Winding connections at once using an array. Example:'+CRLF+CRLF+
                          'New AutoTrans.T1 buses=[Hbus, Xbus] '+
                          '~ conns=(series, wye)';
-     PropertyHelp[14] := 'Use this to specify the kV ratings of all windings at once using an array. Example:'+CRLF+CRLF+
+     PropertyHelp^[14] := 'Use this to specify the kV ratings of all windings at once using an array. Example:'+CRLF+CRLF+
                          'New AutoTrans.T1 buses=[Hbus, Xbus] '+CRLF+
                          '~ conns=(series, wye)'+CRLF+
                          '~ kvs=(115, 12.47)'+CRLF+CRLF+
                          'See kV= property for voltage rules.';
-     PropertyHelp[15] := 'Use this to specify the kVA ratings of all windings at once using an array.';
-     PropertyHelp[16] := 'Use this to specify the p.u. tap of all windings at once using an array.';
-     PropertyHelp[17] := 'Use this to specify the percent reactance, H-L (winding 1 to winding 2).  Use '+
+     PropertyHelp^[15] := 'Use this to specify the kVA ratings of all windings at once using an array.';
+     PropertyHelp^[16] := 'Use this to specify the p.u. tap of all windings at once using an array.';
+     PropertyHelp^[17] := 'Use this to specify the percent reactance, H-L (winding 1 to winding 2).  Use '+
                          'for 2- or 3-winding AutoTranss. On the kVA base of winding 1(H-X). ';
-     PropertyHelp[18] := 'Use this to specify the percent reactance, H-T (winding 1 to winding 3).  Use '+
+     PropertyHelp^[18] := 'Use this to specify the percent reactance, H-T (winding 1 to winding 3).  Use '+
                          'for 3-winding AutoTranss only. On the kVA base of winding 1(H-X). ';
-     PropertyHelp[19] := 'Use this to specify the percent reactance, L-T (winding 2 to winding 3).  Use '+
+     PropertyHelp^[19] := 'Use this to specify the percent reactance, L-T (winding 2 to winding 3).  Use '+
                          'for 3-winding AutoTranss only. On the kVA base of winding 1(H-X).  ';
-     PropertyHelp[20] := 'Use this to specify the percent reactance between all pairs of windings as an array. '+
+     PropertyHelp^[20] := 'Use this to specify the percent reactance between all pairs of windings as an array. '+
                          'All values are on the kVA base of winding 1.  The order of the values is as follows:'+CRLF+CRLF+
                          '(x12 13 14... 23 24.. 34 ..)  '+CRLF+CRLF+
                          'There will be n(n-1)/2 values, where n=number of windings.';
-     PropertyHelp[21] := 'Thermal time constant of the AutoTrans in hours.  Typically about 2.';
-     PropertyHelp[22] := 'n Exponent for thermal properties in IEEE C57.  Typically 0.8.';
-     PropertyHelp[23] := 'm Exponent for thermal properties in IEEE C57.  Typically 0.9 - 1.0';
-     PropertyHelp[24] := 'Temperature rise, deg C, for full load.  Default is 65.';
-     PropertyHelp[25] := 'Hot spot temperature rise, deg C.  Default is 15.';
-     PropertyHelp[26] := 'Percent load loss at full load. The %R of the High and Low windings (1 and 2) are adjusted to agree at rated kVA loading.';
-     PropertyHelp[27] := 'Percent no load losses at rated excitatation voltage. Default is 0. Converts to a resistance in parallel with the magnetizing impedance in each winding.';
-     PropertyHelp[28] := 'Normal maximum kVA rating of H winding (winding 1+2).  Usually 100% - 110% of'+
+     PropertyHelp^[21] := 'Thermal time constant of the AutoTrans in hours.  Typically about 2.';
+     PropertyHelp^[22] := 'n Exponent for thermal properties in IEEE C57.  Typically 0.8.';
+     PropertyHelp^[23] := 'm Exponent for thermal properties in IEEE C57.  Typically 0.9 - 1.0';
+     PropertyHelp^[24] := 'Temperature rise, deg C, for full load.  Default is 65.';
+     PropertyHelp^[25] := 'Hot spot temperature rise, deg C.  Default is 15.';
+     PropertyHelp^[26] := 'Percent load loss at full load. The %R of the High and Low windings (1 and 2) are adjusted to agree at rated kVA loading.';
+     PropertyHelp^[27] := 'Percent no load losses at rated excitatation voltage. Default is 0. Converts to a resistance in parallel with the magnetizing impedance in each winding.';
+     PropertyHelp^[28] := 'Normal maximum kVA rating of H winding (winding 1+2).  Usually 100% - 110% of'+
                          'maximum nameplate rating, depending on load shape. Defaults to 110% of kVA rating of Winding 1.';
-     PropertyHelp[29] := 'Emergency (contingency)  kVA rating of H winding (winding 1+2).  Usually 140% - 150% of'+
+     PropertyHelp^[29] := 'Emergency (contingency)  kVA rating of H winding (winding 1+2).  Usually 140% - 150% of'+
                          'maximum nameplate rating, depending on load shape. Defaults to 150% of kVA rating of Winding 1.';
-     PropertyHelp[30] := '={Yes|No}  Designates whether this AutoTrans is to be considered a substation.'+
+     PropertyHelp^[30] := '={Yes|No}  Designates whether this AutoTrans is to be considered a substation.'+
                          'Default is No.';  // =y/n
 
-     PropertyHelp[31] := 'Max per unit tap for the active winding.  Default is 1.10';
-     PropertyHelp[32] := 'Min per unit tap for the active winding.  Default is 0.90';
-     PropertyHelp[33] := 'Total number of taps between min and max tap.  Default is 32 (16 raise and 16 lower taps about the neutral position). The neutral position is not counted.';
-     PropertyHelp[34] := 'Substation Name. Optional. Default is null. If specified, printed on plots';
-     PropertyHelp[35] := 'Percent magnetizing current. Default=0.0. Magnetizing branch is in parallel with windings in each phase. Also, see "ppm_antifloat".';
-     PropertyHelp[36] := 'Default=1 ppm.  Parts per million of AutoTrans winding VA rating connected to ground to protect against accidentally floating a winding without a reference. ' +
+     PropertyHelp^[31] := 'Max per unit tap for the active winding.  Default is 1.10';
+     PropertyHelp^[32] := 'Min per unit tap for the active winding.  Default is 0.90';
+     PropertyHelp^[33] := 'Total number of taps between min and max tap.  Default is 32 (16 raise and 16 lower taps about the neutral position). The neutral position is not counted.';
+     PropertyHelp^[34] := 'Substation Name. Optional. Default is null. If specified, printed on plots';
+     PropertyHelp^[35] := 'Percent magnetizing current. Default=0.0. Magnetizing branch is in parallel with windings in each phase. Also, see "ppm_antifloat".';
+     PropertyHelp^[36] := 'Default=1 ppm.  Parts per million of AutoTrans winding VA rating connected to ground to protect against accidentally floating a winding without a reference. ' +
                          'If positive then the effect is adding a very large reactance to ground.  If negative, then a capacitor.';
-     PropertyHelp[37] := 'Use this property to specify all the winding ac %resistances using an array. Example:'+CRLF+CRLF+
+     PropertyHelp^[37] := 'Use this property to specify all the winding ac %resistances using an array. Example:'+CRLF+CRLF+
                          'New AutoTrans.T1 buses=[Hibus, lowbus] ' +
                          '~ %Rs=(0.2  0.3)';
-     PropertyHelp[38] := 'Name of the bank this transformer is part of, for CIM, MultiSpeak, and other interfaces.';
-     PropertyHelp[39] := 'Name of a library entry for transformer properties. The named XfmrCode must already be defined.';
+     PropertyHelp^[38] := 'Name of the bank this transformer is part of, for CIM, MultiSpeak, and other interfaces.';
+     PropertyHelp^[39] := 'Name of a library entry for transformer properties. The named XfmrCode must already be defined.';
 
-     PropertyHelp[40] := '={Yes|No} Default is NO. Signifies whether or not the X/R is assumed contant for harmonic studies.';
-     PropertyHelp[41] := '{Lead | Lag (default) | ANSI (default) | Euro } Designation in mixed Delta-wye connections the '+
+     PropertyHelp^[40] := '={Yes|No} Default is NO. Signifies whether or not the X/R is assumed contant for harmonic studies.';
+     PropertyHelp^[41] := '{Lead | Lag (default) | ANSI (default) | Euro } Designation in mixed Delta-wye connections the '+
                          'relationship between HV to LV winding. Default is ANSI 30 deg lag, e.g., Dy1 of Yd1 vector group. ' +
                          'To get typical European Dy11 connection, specify either "lead" or "Euro"';
-     PropertyHelp[42] := '(Read only) Makes winding currents available via return on query (? AutoTrans.TX.WdgCurrents). ' +
+     PropertyHelp^[42] := '(Read only) Makes winding currents available via return on query (? AutoTrans.TX.WdgCurrents). ' +
                          'Order: Phase 1, Wdg 1, Wdg 2, ..., Phase 2 ...';
 
      ActiveProperty := NumPropsThisClass;
@@ -1149,7 +1149,7 @@ begin
    Begin
       With ParentClass Do
        {Trap wdg= and write out array properties instead}
-        CASE RevPropertyIdxMap[iProp] of
+        CASE RevPropertyIdxMap^[iProp] of
             3:  Begin   // if WDG= was ever used write out arrays ...
                  For i := 12 to 16 Do
                    Write(F, Format(' %s=%s', [PropertyName^[i], GetPropertyValue(i) ]));
@@ -1160,7 +1160,7 @@ begin
 
         ELSE
         If Length(PropertyValue[iProp])>0 Then
-          Write(F,Format(' %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]],CheckForBlanks(PropertyValue[iProp])] ));
+          Write(F,Format(' %s=%s', [PropertyName^[RevPropertyIdxMap^[iProp]],CheckForBlanks(PropertyValue[iProp])] ));
         END;
       iProp := GetNextPropertySet(iProp);
    End;

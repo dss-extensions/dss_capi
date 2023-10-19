@@ -91,7 +91,7 @@ BEGIN
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 END;
 
@@ -110,122 +110,122 @@ Begin
      CountProperties;   // Get inherited property count
      AllocatePropertyArrays;
 
-     PropertyName[1] := 'phases';
-     PropertyName[2] := 'windings';
+     PropertyName^[1] := 'phases';
+     PropertyName^[2] := 'windings';
 
    // Winding Definition
-     PropertyName[3] := 'wdg';
-     PropertyName[4] := 'conn';
-     PropertyName[5] := 'kV'; // FOR 2-and 3- always kVLL ELSE actual winding KV
-     PropertyName[6] := 'kVA';
-     PropertyName[7] := 'tap';
-     PropertyName[8] := '%R';
-     PropertyName[9] := 'Rneut';
-     PropertyName[10] := 'Xneut';
+     PropertyName^[3] := 'wdg';
+     PropertyName^[4] := 'conn';
+     PropertyName^[5] := 'kV'; // FOR 2-and 3- always kVLL ELSE actual winding KV
+     PropertyName^[6] := 'kVA';
+     PropertyName^[7] := 'tap';
+     PropertyName^[8] := '%R';
+     PropertyName^[9] := 'Rneut';
+     PropertyName^[10] := 'Xneut';
 
    // General Data
-     PropertyName[11] := 'conns';
-     PropertyName[12] := 'kVs';
-     PropertyName[13] := 'kVAs';
-     PropertyName[14] := 'taps';
-     PropertyName[15] := 'Xhl';
-     PropertyName[16] := 'Xht';
-     PropertyName[17] := 'Xlt';
-     PropertyName[18] := 'Xscarray';  // x12 13 14... 23 24.. 34 ..
-     PropertyName[19] := 'thermal';
-     PropertyName[20] := 'n';
-     PropertyName[21] := 'm';
-     PropertyName[22] := 'flrise';
-     PropertyName[23] := 'hsrise';
-     PropertyName[24] := '%loadloss';
-     PropertyName[25] := '%noloadloss';
-     PropertyName[26] := 'normhkVA';
-     PropertyName[27] := 'emerghkVA';
-     PropertyName[28] := 'MaxTap';
-     PropertyName[29] := 'MinTap';
-     PropertyName[30] := 'NumTaps';
-     PropertyName[31] := '%imag';
-     PropertyName[32] := 'ppm_antifloat';
-     PropertyName[33] := '%Rs';
-     PropertyName[34] := 'X12';
-     PropertyName[35] := 'X13';
-     PropertyName[36] := 'X23';
-     PropertyName[37] := 'RdcOhms';
-     PropertyName[38] := 'Seasons';
-     PropertyName[39] := 'Ratings';
+     PropertyName^[11] := 'conns';
+     PropertyName^[12] := 'kVs';
+     PropertyName^[13] := 'kVAs';
+     PropertyName^[14] := 'taps';
+     PropertyName^[15] := 'Xhl';
+     PropertyName^[16] := 'Xht';
+     PropertyName^[17] := 'Xlt';
+     PropertyName^[18] := 'Xscarray';  // x12 13 14... 23 24.. 34 ..
+     PropertyName^[19] := 'thermal';
+     PropertyName^[20] := 'n';
+     PropertyName^[21] := 'm';
+     PropertyName^[22] := 'flrise';
+     PropertyName^[23] := 'hsrise';
+     PropertyName^[24] := '%loadloss';
+     PropertyName^[25] := '%noloadloss';
+     PropertyName^[26] := 'normhkVA';
+     PropertyName^[27] := 'emerghkVA';
+     PropertyName^[28] := 'MaxTap';
+     PropertyName^[29] := 'MinTap';
+     PropertyName^[30] := 'NumTaps';
+     PropertyName^[31] := '%imag';
+     PropertyName^[32] := 'ppm_antifloat';
+     PropertyName^[33] := '%Rs';
+     PropertyName^[34] := 'X12';
+     PropertyName^[35] := 'X13';
+     PropertyName^[36] := 'X23';
+     PropertyName^[37] := 'RdcOhms';
+     PropertyName^[38] := 'Seasons';
+     PropertyName^[39] := 'Ratings';
 
      // define Property help values
-     PropertyHelp[1] := 'Number of phases this transformer. Default is 3.';
-     PropertyHelp[2] := 'Number of windings, this transformers. (Also is the number of terminals) '+
+     PropertyHelp^[1] := 'Number of phases this transformer. Default is 3.';
+     PropertyHelp^[2] := 'Number of windings, this transformers. (Also is the number of terminals) '+
                     'Default is 2. This property triggers memory allocation for the Transformer and will cause other properties to revert to default values.';
    // Winding Definition
-     PropertyHelp[3] := 'Set this = to the number of the winding you wish to define.  Then set '+
+     PropertyHelp^[3] := 'Set this = to the number of the winding you wish to define.  Then set '+
                     'the values for this winding.  Repeat for each winding.  Alternatively, use '+
                     'the array collections (buses, kvas, etc.) to define the windings.  Note: '+
                     'reactances are BETWEEN pairs of windings; they are not the property of a single winding.';
-     PropertyHelp[4] := 'Connection of this winding. Default is "wye" with the neutral solidly grounded.';
-     PropertyHelp[5] := 'For 2-or 3-phase, enter phase-phase kV rating.  Otherwise, kV rating of the actual winding';
-     PropertyHelp[6] := 'Base kVA rating of the winding. Side effect: forces change of max normal and emerg kva ratings.' +
+     PropertyHelp^[4] := 'Connection of this winding. Default is "wye" with the neutral solidly grounded.';
+     PropertyHelp^[5] := 'For 2-or 3-phase, enter phase-phase kV rating.  Otherwise, kV rating of the actual winding';
+     PropertyHelp^[6] := 'Base kVA rating of the winding. Side effect: forces change of max normal and emerg kva ratings.' +
                         'If 2-winding transformer, forces other winding to same value. ' +
                         'When winding 1 is defined, all other windings are defaulted to the same rating ' +
                         'and the first two winding resistances are defaulted to the %loadloss value.';
-     PropertyHelp[7] := 'Per unit tap that this winding is normally on.';
-     PropertyHelp[8] := 'Percent resistance this winding.  (half of total for a 2-winding).';
-     PropertyHelp[9] := 'Default = -1. Neutral resistance of wye (star)-connected winding in actual ohms.' +
+     PropertyHelp^[7] := 'Per unit tap that this winding is normally on.';
+     PropertyHelp^[8] := 'Percent resistance this winding.  (half of total for a 2-winding).';
+     PropertyHelp^[9] := 'Default = -1. Neutral resistance of wye (star)-connected winding in actual ohms.' +
                          'If entered as a negative value, the neutral is assumed to be open, or floating.';
-     PropertyHelp[10] := 'Neutral reactance of wye(star)-connected winding in actual ohms.  May be + or -.';
+     PropertyHelp^[10] := 'Neutral reactance of wye(star)-connected winding in actual ohms.  May be + or -.';
 
    // General Data
-     PropertyHelp[11] := 'Use this to specify all the Winding connections at once using an array. Example:'+CRLF+CRLF+
+     PropertyHelp^[11] := 'Use this to specify all the Winding connections at once using an array. Example:'+CRLF+CRLF+
                          'New Transformer.T1 buses="Hibus, lowbus" '+
                          '~ conns=(delta, wye)';
-     PropertyHelp[12] := 'Use this to specify the kV ratings of all windings at once using an array. Example:'+CRLF+CRLF+
+     PropertyHelp^[12] := 'Use this to specify the kV ratings of all windings at once using an array. Example:'+CRLF+CRLF+
                          'New Transformer.T1 buses="Hibus, lowbus" '+CRLF+
                          '~ conns=(delta, wye)'+CRLF+
                          '~ kvs=(115, 12.47)'+CRLF+CRLF+
                          'See kV= property for voltage rules.';
-     PropertyHelp[13] := 'Use this to specify the kVA ratings of all windings at once using an array.';
-     PropertyHelp[14] := 'Use this to specify the normal p.u. tap of all windings at once using an array.';
-     PropertyHelp[15] := 'Use this to specify the percent reactance, H-L (winding 1 to winding 2).  Use '+
+     PropertyHelp^[13] := 'Use this to specify the kVA ratings of all windings at once using an array.';
+     PropertyHelp^[14] := 'Use this to specify the normal p.u. tap of all windings at once using an array.';
+     PropertyHelp^[15] := 'Use this to specify the percent reactance, H-L (winding 1 to winding 2).  Use '+
                          'for 2- or 3-winding transformers. On the kva base of winding 1.';
-     PropertyHelp[16] := 'Use this to specify the percent reactance, H-T (winding 1 to winding 3).  Use '+
+     PropertyHelp^[16] := 'Use this to specify the percent reactance, H-T (winding 1 to winding 3).  Use '+
                          'for 3-winding transformers only. On the kVA base of winding 1.';
-     PropertyHelp[17] := 'Use this to specify the percent reactance, L-T (winding 2 to winding 3).  Use '+
+     PropertyHelp^[17] := 'Use this to specify the percent reactance, L-T (winding 2 to winding 3).  Use '+
                          'for 3-winding transformers only. On the kVA base of winding 1.';
-     PropertyHelp[18] := 'Use this to specify the percent reactance between all pairs of windings as an array. '+
+     PropertyHelp^[18] := 'Use this to specify the percent reactance between all pairs of windings as an array. '+
                          'All values are on the kVA base of winding 1.  The order of the values is as follows:'+CRLF+CRLF+
                          '(x12 13 14... 23 24.. 34 ..)  '+CRLF+CRLF+
                          'There will be n(n-1)/2 values, where n=number of windings.';
-     PropertyHelp[19] := 'Thermal time constant of the transformer in hours.  Typically about 2.';
-     PropertyHelp[20] := 'n Exponent for thermal properties in IEEE C57.  Typically 0.8.';
-     PropertyHelp[21] := 'm Exponent for thermal properties in IEEE C57.  Typically 0.9 - 1.0';
-     PropertyHelp[22] := 'Temperature rise, deg C, for full load.  Default is 65.';
-     PropertyHelp[23] := 'Hot spot temperature rise, deg C.  Default is 15.';
-     PropertyHelp[24] := 'Percent load loss at full load. The %R of the High and Low windings (1 and 2) are adjusted to agree at rated kVA loading.';
-     PropertyHelp[25] := 'Percent no load losses at rated excitatation voltage. Default is 0. Converts to a resistance in parallel with the magnetizing impedance in each winding.';
-     PropertyHelp[26] := 'Normal maximum kVA rating of H winding (winding 1).  Usually 100% - 110% of'+
+     PropertyHelp^[19] := 'Thermal time constant of the transformer in hours.  Typically about 2.';
+     PropertyHelp^[20] := 'n Exponent for thermal properties in IEEE C57.  Typically 0.8.';
+     PropertyHelp^[21] := 'm Exponent for thermal properties in IEEE C57.  Typically 0.9 - 1.0';
+     PropertyHelp^[22] := 'Temperature rise, deg C, for full load.  Default is 65.';
+     PropertyHelp^[23] := 'Hot spot temperature rise, deg C.  Default is 15.';
+     PropertyHelp^[24] := 'Percent load loss at full load. The %R of the High and Low windings (1 and 2) are adjusted to agree at rated kVA loading.';
+     PropertyHelp^[25] := 'Percent no load losses at rated excitatation voltage. Default is 0. Converts to a resistance in parallel with the magnetizing impedance in each winding.';
+     PropertyHelp^[26] := 'Normal maximum kVA rating of H winding (winding 1).  Usually 100% - 110% of'+
                          'maximum nameplate rating, depending on load shape. Defaults to 110% of kVA rating of Winding 1.';
-     PropertyHelp[27] := 'Emergency (contingency)  kVA rating of H winding (winding 1).  Usually 140% - 150% of'+
+     PropertyHelp^[27] := 'Emergency (contingency)  kVA rating of H winding (winding 1).  Usually 140% - 150% of'+
                          'maximum nameplate rating, depending on load shape. Defaults to 150% of kVA rating of Winding 1.';
-     PropertyHelp[28] := 'Max per unit tap for the active winding.  Default is 1.10';
-     PropertyHelp[29] := 'Min per unit tap for the active winding.  Default is 0.90';
-     PropertyHelp[30] := 'Total number of taps between min and max tap.  Default is 32.';
-     PropertyHelp[31] := 'Percent magnetizing current. Default=0.0. Magnetizing branch is in parallel with windings in each phase. Also, see "ppm_antifloat".';
-     PropertyHelp[32] := 'Default=1 ppm.  Parts per million of transformer winding VA rating connected to ground to protect against accidentally floating a winding without a reference. ' +
+     PropertyHelp^[28] := 'Max per unit tap for the active winding.  Default is 1.10';
+     PropertyHelp^[29] := 'Min per unit tap for the active winding.  Default is 0.90';
+     PropertyHelp^[30] := 'Total number of taps between min and max tap.  Default is 32.';
+     PropertyHelp^[31] := 'Percent magnetizing current. Default=0.0. Magnetizing branch is in parallel with windings in each phase. Also, see "ppm_antifloat".';
+     PropertyHelp^[32] := 'Default=1 ppm.  Parts per million of transformer winding VA rating connected to ground to protect against accidentally floating a winding without a reference. ' +
                          'If positive then the effect is adding a very large reactance to ground.  If negative, then a capacitor.';
-     PropertyHelp[33] := 'Use this property to specify all the winding %resistances using an array. Example:'+CRLF+CRLF+
+     PropertyHelp^[33] := 'Use this property to specify all the winding %resistances using an array. Example:'+CRLF+CRLF+
                          'New Transformer.T1 buses="Hibus, lowbus" '+
                          '~ %Rs=(0.2  0.3)';
-     PropertyHelp[34] := 'Alternative to XHL for specifying the percent reactance from winding 1 to winding 2.  Use '+
+     PropertyHelp^[34] := 'Alternative to XHL for specifying the percent reactance from winding 1 to winding 2.  Use '+
                          'for 2- or 3-winding transformers. Percent on the kVA base of winding 1. ';
-     PropertyHelp[35] := 'Alternative to XHT for specifying the percent reactance from winding 1 to winding 3.  Use '+
+     PropertyHelp^[35] := 'Alternative to XHT for specifying the percent reactance from winding 1 to winding 3.  Use '+
                          'for 3-winding transformers only. Percent on the kVA base of winding 1. ';
-     PropertyHelp[36] := 'Alternative to XLT for specifying the percent reactance from winding 2 to winding 3.Use '+
+     PropertyHelp^[36] := 'Alternative to XLT for specifying the percent reactance from winding 2 to winding 3.Use '+
                          'for 3-winding transformers only. Percent on the kVA base of winding 1.  ';
-     PropertyHelp[37] := 'Winding dc resistance in OHMS. Useful for GIC analysis. From transformer test report. ' +
+     PropertyHelp^[37] := 'Winding dc resistance in OHMS. Useful for GIC analysis. From transformer test report. ' +
                          'Defaults to 85% of %R property';
-     PropertyHelp[38] := 'Defines the number of ratings to be defined for the transfomer, to be used only when defining seasonal ratings using the "Ratings" property.';
-     PropertyHelp[39] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
+     PropertyHelp^[38] := 'Defines the number of ratings to be defined for the transfomer, to be used only when defining seasonal ratings using the "Ratings" property.';
+     PropertyHelp^[39] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
                          CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in transformers.';
 
      ActiveProperty := NumPropsThisClass;

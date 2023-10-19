@@ -180,7 +180,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
 End;
@@ -203,125 +203,125 @@ Begin
 
 
      // Define Property names
-     PropertyName[1] := 'bus1';
-     PropertyName[2] := 'bus2';
-     PropertyName[3] := 'linecode';
-     PropertyName[4] := 'length';
-     PropertyName[5] := 'phases';
-     PropertyName[6] := 'r1';
-     PropertyName[7] := 'x1';
-     PropertyName[8] := 'r0';
-     PropertyName[9] := 'x0';
-     PropertyName[10] := 'C1';
-     PropertyName[11] := 'C0';
-     PropertyName[12] := 'rmatrix';
-     PropertyName[13] := 'xmatrix';
-     PropertyName[14] := 'cmatrix';
-     PropertyName[15] := 'Switch';
-     PropertyName[16] := 'Rg';
-     PropertyName[17] := 'Xg';
-     PropertyName[18] := 'rho';
-     PropertyName[19] := 'geometry';
-     PropertyName[20] := 'units';
-     PropertyName[21] := 'spacing';
-     PropertyName[22] := 'wires';
-     PropertyName[23] := 'EarthModel';
-     PropertyName[24] := 'cncables';
-     PropertyName[25] := 'tscables';
-     PropertyName[26] := 'B1';
-     PropertyName[27] := 'B0';
-     PropertyName[28] := 'Seasons';
-     PropertyName[29] := 'Ratings';
-     PropertyName[30] := 'LineType';
+     PropertyName^[1] := 'bus1';
+     PropertyName^[2] := 'bus2';
+     PropertyName^[3] := 'linecode';
+     PropertyName^[4] := 'length';
+     PropertyName^[5] := 'phases';
+     PropertyName^[6] := 'r1';
+     PropertyName^[7] := 'x1';
+     PropertyName^[8] := 'r0';
+     PropertyName^[9] := 'x0';
+     PropertyName^[10] := 'C1';
+     PropertyName^[11] := 'C0';
+     PropertyName^[12] := 'rmatrix';
+     PropertyName^[13] := 'xmatrix';
+     PropertyName^[14] := 'cmatrix';
+     PropertyName^[15] := 'Switch';
+     PropertyName^[16] := 'Rg';
+     PropertyName^[17] := 'Xg';
+     PropertyName^[18] := 'rho';
+     PropertyName^[19] := 'geometry';
+     PropertyName^[20] := 'units';
+     PropertyName^[21] := 'spacing';
+     PropertyName^[22] := 'wires';
+     PropertyName^[23] := 'EarthModel';
+     PropertyName^[24] := 'cncables';
+     PropertyName^[25] := 'tscables';
+     PropertyName^[26] := 'B1';
+     PropertyName^[27] := 'B0';
+     PropertyName^[28] := 'Seasons';
+     PropertyName^[29] := 'Ratings';
+     PropertyName^[30] := 'LineType';
 
      // define Property help values
 
-     PropertyHelp[1] := 'Name of bus to which first terminal is connected.'+ CRLF+
+     PropertyHelp^[1] := 'Name of bus to which first terminal is connected.'+ CRLF+
                     'Example:'+CRLF+
                     'bus1=busname   (assumes all terminals connected in normal phase order)'+CRLF+
                     'bus1=busname.3.1.2.0 (specify terminal to node connections explicitly)';
-     PropertyHelp[2] := 'Name of bus to which 2nd terminal is connected.';
-     PropertyHelp[3] := 'Name of linecode object describing line impedances.'+CRLF+
+     PropertyHelp^[2] := 'Name of bus to which 2nd terminal is connected.';
+     PropertyHelp^[3] := 'Name of linecode object describing line impedances.'+CRLF+
                     'If you use a line code, you do not need to specify the impedances here. '+
                     'The line code must have been PREVIOUSLY defined. ' +
                     'The values specified last will prevail over those specified earlier (left-to-right ' +
                     'sequence of properties).  You can subsequently change the number of phases if symmetrical component quantities are specified.' +
                     'If no line code or impedance data are specified, the line object '+
                     'defaults to 336 MCM ACSR on 4 ft spacing.';
-     PropertyHelp[4] := 'Length of line. Default is 1.0. If units do not match the impedance data, specify "units" property. ';
-     PropertyHelp[5] := 'Number of phases, this line.';
-     PropertyHelp[6] := 'Positive-sequence Resistance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
+     PropertyHelp^[4] := 'Length of line. Default is 1.0. If units do not match the impedance data, specify "units" property. ';
+     PropertyHelp^[5] := 'Number of phases, this line.';
+     PropertyHelp^[6] := 'Positive-sequence Resistance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
                         'the program to use the symmetrical component line definition. See also Rmatrix.';
-     PropertyHelp[7] := 'Positive-sequence Reactance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
+     PropertyHelp^[7] := 'Positive-sequence Reactance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
                         'the program to use the symmetrical component line definition.  See also Xmatrix';
-     PropertyHelp[8] := 'Zero-sequence Resistance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
+     PropertyHelp^[8] := 'Zero-sequence Resistance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
                         'the program to use the symmetrical component line definition.';
-     PropertyHelp[9] := 'Zero-sequence Reactance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
+     PropertyHelp^[9] := 'Zero-sequence Reactance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
                         'the program to use the symmetrical component line definition.';
-     PropertyHelp[10] := 'Positive-sequence capacitance, nf per unit length.  Setting any of R1, R0, X1, X0, C1, C0 forces ' +
+     PropertyHelp^[10] := 'Positive-sequence capacitance, nf per unit length.  Setting any of R1, R0, X1, X0, C1, C0 forces ' +
                         'the program to use the symmetrical component line definition. See also Cmatrix and B1.';
-     PropertyHelp[11] := 'Zero-sequence capacitance, nf per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
+     PropertyHelp^[11] := 'Zero-sequence capacitance, nf per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
                         'the program to use the symmetrical component line definition.See also B0.';
-     PropertyHelp[12] := 'Resistance matrix, lower triangle, ohms per unit length. Order of the matrix is the number of phases. '+
+     PropertyHelp^[12] := 'Resistance matrix, lower triangle, ohms per unit length. Order of the matrix is the number of phases. '+
                         'May be used to specify the impedance of any line configuration. Using any of Rmatrix, Xmatrix, Cmatrix ' +
                         'forces program to use the matrix values for line impedance definition. For balanced line models, you may '+
                         'use the standard symmetrical component data definition instead.';
-     PropertyHelp[13] := 'Reactance matrix, lower triangle, ohms per unit length. Order of the matrix is the number of phases. '+
+     PropertyHelp^[13] := 'Reactance matrix, lower triangle, ohms per unit length. Order of the matrix is the number of phases. '+
                      'May be used to specify the impedance of any line configuration. Using any of Rmatrix, Xmatrix, Cmatrix ' +
                      'forces program to use the matrix values for line impedance definition.  For balanced line models, you may '+
                      'use the standard symmetrical component data definition instead.';
-     PropertyHelp[14] := 'Nodal Capacitance matrix, lower triangle, nf per unit length.Order of the matrix is the number of phases. '+
+     PropertyHelp^[14] := 'Nodal Capacitance matrix, lower triangle, nf per unit length.Order of the matrix is the number of phases. '+
                      'May be used to specify the shunt capacitance of any line configuration. Using any of Rmatrix, Xmatrix, Cmatrix ' +
                      'forces program to use the matrix values for line impedance definition.  For balanced line models, you may '+
                      'use the standard symmetrical component data definition instead.';
-     PropertyHelp[15] := '{y/n | T/F}  Default= no/false.  Designates this line as a switch for graphics and algorithmic purposes. ' +CRLF+
+     PropertyHelp^[15] := '{y/n | T/F}  Default= no/false.  Designates this line as a switch for graphics and algorithmic purposes. ' +CRLF+
                          'SIDE EFFECT: Sets r1 = 1.0; x1 = 1.0; r0 = 1.0; x0 = 1.0; c1 = 1.1 ; c0 = 1.0;  length = 0.001; You must reset if you want something different.';
-     PropertyHelp[16] := 'Carson earth return resistance per unit length used to compute impedance values at base frequency. ' +
+     PropertyHelp^[16] := 'Carson earth return resistance per unit length used to compute impedance values at base frequency. ' +
                          'Default is 0.01805 = 60 Hz value in ohms per kft (matches default line impedances). ' +
                          'This value is required for harmonic solutions if you wish to adjust the earth return impedances for frequency. ' +
                          'If not, set both Rg and Xg = 0.';
-     PropertyHelp[17] := 'Carson earth return reactance per unit length used to compute impedance values at base frequency.  For making better frequency adjustments. ' +
+     PropertyHelp^[17] := 'Carson earth return reactance per unit length used to compute impedance values at base frequency.  For making better frequency adjustments. ' +
                          'Default is 0.155081 = 60 Hz value in ohms per kft (matches default line impedances). ' +
                          'This value is required for harmonic solutions if you wish to adjust the earth return impedances for frequency. ' +
                          'If not, set both Rg and Xg = 0.';
-     PropertyHelp[18] := 'Default=100 meter ohms.  Earth resitivity used to compute earth correction factor. Overrides Line geometry definition if specified.';
-     PropertyHelp[19] := 'Geometry code for LineGeometry Object. Supercedes any previous definition of line impedance. ' +
+     PropertyHelp^[18] := 'Default=100 meter ohms.  Earth resitivity used to compute earth correction factor. Overrides Line geometry definition if specified.';
+     PropertyHelp^[19] := 'Geometry code for LineGeometry Object. Supercedes any previous definition of line impedance. ' +
                          'Line constants are computed for each frequency change or rho change. CAUTION: may alter number of phases. '+
                          'You cannot subsequently change the number of phases unless you change how the line impedance is defined.';
-     PropertyHelp[20] := 'Length Units = {none | mi|kft|km|m|Ft|in|cm } Default is None - assumes length units match impedance units.';
-     PropertyHelp[21] := 'Reference to a LineSpacing for use in a line constants calculation.' + CRLF +
+     PropertyHelp^[20] := 'Length Units = {none | mi|kft|km|m|Ft|in|cm } Default is None - assumes length units match impedance units.';
+     PropertyHelp^[21] := 'Reference to a LineSpacing for use in a line constants calculation.' + CRLF +
                           'Must be used in conjunction with the Wires property.' + CRLF +
                           'Specify this before the wires property.';
-     PropertyHelp[22] := 'Array of WireData names for use in an overhead line constants calculation.' + CRLF +
+     PropertyHelp^[22] := 'Array of WireData names for use in an overhead line constants calculation.' + CRLF +
                           'Must be used in conjunction with the Spacing property.' + CRLF +
                           'Specify the Spacing first, and "ncond" wires.' + CRLF +
                           'May also be used to specify bare neutrals with cables, using "ncond-nphase" wires.';
-     PropertyHelp[23] := 'One of {Carson | FullCarson | Deri}. Default is the global value established with the Set EarthModel command. ' +
+     PropertyHelp^[23] := 'One of {Carson | FullCarson | Deri}. Default is the global value established with the Set EarthModel command. ' +
                          'See the Options Help on EarthModel option. This is used to override the global value for this line. This ' +
                          'option applies only when the "geometry" property is used.';
-     PropertyHelp[24] := 'Array of CNData names for use in a cable constants calculation.' + CRLF +
+     PropertyHelp^[24] := 'Array of CNData names for use in a cable constants calculation.' + CRLF +
                           'Must be used in conjunction with the Spacing property.' + CRLF +
                           'Specify the Spacing first, using "nphases" cncables.' + CRLF +
                           'You may later specify "nconds-nphases" wires for separate neutrals';
-     PropertyHelp[25] := 'Array of TSData names for use in a cable constants calculation.' + CRLF +
+     PropertyHelp^[25] := 'Array of TSData names for use in a cable constants calculation.' + CRLF +
                           'Must be used in conjunction with the Spacing property.' + CRLF +
                           'Specify the Spacing first, using "nphases" tscables.' + CRLF +
                           'You may later specify "nconds-nphases" wires for separate neutrals';
-     PropertyHelp[26] := 'Alternate way to specify C1. MicroS per unit length' ;
-     PropertyHelp[27] := 'Alternate way to specify C0. MicroS per unit length' ;
-     PropertyHelp[28] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
-     PropertyHelp[29] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
+     PropertyHelp^[26] := 'Alternate way to specify C1. MicroS per unit length' ;
+     PropertyHelp^[27] := 'Alternate way to specify C0. MicroS per unit length' ;
+     PropertyHelp^[28] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
+     PropertyHelp^[29] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
                          CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
-     PropertyHelp[30] := 'Code designating the type of line. ' +  CRLF +
+     PropertyHelp^[30] := 'Code designating the type of line. ' +  CRLF +
                          'One of: OH, UG, UG_TS, UG_CN, SWT_LDBRK, SWT_FUSE, SWT_SECT, SWT_REC, SWT_DISC, SWT_BRK, SWT_ELBOW, BUSBAR' + CRLF +  CRLF +
                          'OpenDSS currently does not use this internally. For whatever purpose the user defines. Default is OH.' ;
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
-     PropertyHelp[NumPropsThisClass + 3] := 'Failure rate PER UNIT LENGTH per year. Length must be same units as LENGTH property. Default is 0.1 fault per unit length per year.' ;
-     PropertyHelp[NumPropsThisClass + 4] := PropertyHelp[NumPropsThisClass + 4] + ' Default is 20.';
-     PropertyHelp[NumPropsThisClass + 5] := PropertyHelp[NumPropsThisClass + 5] + ' Default is 3 hr.';
+     PropertyHelp^[NumPropsThisClass + 3] := 'Failure rate PER UNIT LENGTH per year. Length must be same units as LENGTH property. Default is 0.1 fault per unit length per year.' ;
+     PropertyHelp^[NumPropsThisClass + 4] := PropertyHelp^[NumPropsThisClass + 4] + ' Default is 20.';
+     PropertyHelp^[NumPropsThisClass + 5] := PropertyHelp^[NumPropsThisClass + 5] + ' Default is 3 hr.';
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -745,7 +745,7 @@ Begin
 
        ClassMakeLike(OtherLine);  // Take care of inherited class properties
 
-       For i := 1 to ParentClass.NumProperties Do FPropertyValue^[i] := OtherLine.FPropertyValue^[i];
+       For i := 1 to ParentClass.NumProperties Do FPropertyValue[i] := OtherLine.FPropertyValue[i];
        Result := 1;
    End
    ELSE  DoSimpleMsg('Error in Line MakeLike: "' + LineName + '" Not Found.', 182);

@@ -119,7 +119,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
      IsourceClass[ActiveActor] := Self;
@@ -145,49 +145,49 @@ Begin
 
 
      // Define Property names
-     PropertyName[1] := 'bus1';
-     PropertyName[2] := 'amps';
-     PropertyName[3] := 'angle';
-     PropertyName[4] := 'frequency';
-     PropertyName[5] := 'phases';
-     PropertyName[6] := 'scantype';
-     PropertyName[7] := 'sequence';
-     PropertyName[8] := 'Yearly';
-     PropertyName[9] := 'Daily';
-     PropertyName[10] := 'Duty';
-     PropertyName[11] := 'Bus2';
+     PropertyName^[1] := 'bus1';
+     PropertyName^[2] := 'amps';
+     PropertyName^[3] := 'angle';
+     PropertyName^[4] := 'frequency';
+     PropertyName^[5] := 'phases';
+     PropertyName^[6] := 'scantype';
+     PropertyName^[7] := 'sequence';
+     PropertyName^[8] := 'Yearly';
+     PropertyName^[9] := 'Daily';
+     PropertyName^[10] := 'Duty';
+     PropertyName^[11] := 'Bus2';
 
      // define Property help values
-     PropertyHelp[1] := 'Name of bus to which source is connected.'+CRLF+'bus1=busname'+CRLF+'bus1=busname.1.2.3';
-     PropertyHelp[2] := 'Magnitude of current source, each phase, in Amps.';
-     PropertyHelp[3] := 'Phase angle in degrees of first phase: e.g.,Angle=10.3.'+CRLF+
+     PropertyHelp^[1] := 'Name of bus to which source is connected.'+CRLF+'bus1=busname'+CRLF+'bus1=busname.1.2.3';
+     PropertyHelp^[2] := 'Magnitude of current source, each phase, in Amps.';
+     PropertyHelp^[3] := 'Phase angle in degrees of first phase: e.g.,Angle=10.3.'+CRLF+
                         'Phase shift between phases is assumed 120 degrees when '+
                         'number of phases <= 3';
-     PropertyHelp[4] := 'Source frequency.  Defaults to  circuit fundamental frequency.';
-     PropertyHelp[5] := 'Number of phases.  Defaults to 3. For 3 or less, phase shift is 120 degrees.';
-     PropertyHelp[6] := '{pos*| zero | none} Maintain specified sequence for harmonic solution. Default is positive sequence. '+
+     PropertyHelp^[4] := 'Source frequency.  Defaults to  circuit fundamental frequency.';
+     PropertyHelp^[5] := 'Number of phases.  Defaults to 3. For 3 or less, phase shift is 120 degrees.';
+     PropertyHelp^[6] := '{pos*| zero | none} Maintain specified sequence for harmonic solution. Default is positive sequence. '+
                         'Otherwise, angle between phases rotates with harmonic.';
-     PropertyHelp[7] := '{pos*| neg | zero} Set the phase angles for the specified symmetrical component sequence for non-harmonic solution modes. '+
+     PropertyHelp^[7] := '{pos*| neg | zero} Set the phase angles for the specified symmetrical component sequence for non-harmonic solution modes. '+
                         'Default is positive sequence. ';
-     PropertyHelp[8]  := 'LOADSHAPE object to use for the per-unit current for YEARLY-mode simulations. Set the Mult property of the LOADSHAPE ' +
+     PropertyHelp^[8]  := 'LOADSHAPE object to use for the per-unit current for YEARLY-mode simulations. Set the Mult property of the LOADSHAPE ' +
                           'to the pu curve. Qmult is not used. If UseActual=Yes then the Mult curve should be actual Amp.' + CRLF+CRLF+
                           'Must be previously defined as a LOADSHAPE object. '+  CRLF+CRLF+
                           'Is set to the Daily load shape when Daily is defined.  The daily load shape is repeated in this case. '+
                           'Set to NONE to reset to no loadahape for Yearly mode. ' +
                           'The default is no variation.';
-     PropertyHelp[9]  := 'LOADSHAPE object to use for the per-unit current for DAILY-mode simulations. Set the Mult property of the LOADSHAPE ' +
+     PropertyHelp^[9]  := 'LOADSHAPE object to use for the per-unit current for DAILY-mode simulations. Set the Mult property of the LOADSHAPE ' +
                           'to the pu curve. Qmult is not used. If UseActual=Yes then the Mult curve should be actual A.' + CRLF+CRLF+
                           'Must be previously defined as a LOADSHAPE object. '+  CRLF+CRLF+
                           'Sets Yearly curve if it is not already defined.   '+
                           'Set to NONE to reset to no loadahape for Yearly mode. ' +
                           'The default is no variation.';
-     PropertyHelp[10]  := 'LOADSHAPE object to use for the per-unit current for DUTYCYCLE-mode simulations. Set the Mult property of the LOADSHAPE ' +
+     PropertyHelp^[10]  := 'LOADSHAPE object to use for the per-unit current for DUTYCYCLE-mode simulations. Set the Mult property of the LOADSHAPE ' +
                           'to the pu curve. Qmult is not used. If UseActual=Yes then the Mult curve should be actual A.' + CRLF+CRLF+
                           'Must be previously defined as a LOADSHAPE object. '+  CRLF+CRLF+
                           'Defaults to Daily load shape when Daily is defined.   '+
                           'Set to NONE to reset to no loadahape for Yearly mode. ' +
                           'The default is no variation.';
-      PropertyHelp[11] := 'Name of bus to which 2nd terminal is connected.'+CRLF+'bus2=busname'+CRLF+'bus2=busname.1.2.3' +
+      PropertyHelp^[11] := 'Name of bus to which 2nd terminal is connected.'+CRLF+'bus2=busname'+CRLF+'bus2=busname.1.2.3' +
                           CRLF + CRLF +
                           'Default is Bus1.0.0.0 (grounded-wye connection)';
 
@@ -196,7 +196,7 @@ Begin
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
      // Override help string
-     PropertyHelp[NumPropsThisClass+1] := 'Harmonic spectrum assumed for this source.  Default is "default".';
+     PropertyHelp^[NumPropsThisClass+1] := 'Harmonic spectrum assumed for this source.  Default is "default".';
 
 End;
 

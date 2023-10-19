@@ -298,7 +298,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 End;
 
@@ -319,39 +319,39 @@ Begin
 
      // Define Property names
 
-     PropertyName[1] := 'element';
-     PropertyName[2] := 'terminal';
-     PropertyName[3] := 'mode';
-     PropertyName[4] := 'action';  // buffer=clear|save
-     PropertyName[5] := 'residual';  // buffer=clear|save
-     PropertyName[6] := 'VIPolar';  // V I in mag and angle rather then re and im
-     PropertyName[7] := 'PPolar';  // Power in power PF rather then power and vars
-     PropertyName[8] := 'P_trans_ref';
-     PropertyName[9] := 'V_Sensor';
-     PropertyName[10] := 'P_Sensor';
-     PropertyName[11] := 'Node_num';
-     PropertyName[12] := 'Cluster_num';
-     PropertyName[13] := 'Total_Clusters';
-     PropertyName[14] := 'Nodes';
-     PropertyName[15] := 'CommVector';
-     PropertyName[16] := 'ElemTableLine';
-     PropertyName[17] := 'P_Mode';  //real power control mode
-     PropertyName[18] := 'CommDelayVector';
-     PropertyName[19] := 'T_intvl_smpl';  //real power control mode
-     PropertyName[20] := 'MaxLocalMem';
-     PropertyName[21] := 'Volt_limits_pu';// set limits for this cluster {0,1.05, 0.95}
-     PropertyName[22] := 'b_Curt_Ctrl';// set P curtailment on/off
-     PropertyName[23] := 'up_dly';// delay time to communicate to upper level
-     PropertyName[24] := 'virtual_ld_node';// delay time to communicate to upper level
-     PropertyName[25] := 'EGen';//equivalent generator: Egen = {kVA, M, D, Tau, K_i}
-     PropertyName[26] := 'attack_defense'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
-     PropertyName[27] := 'Comm_hide'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
-     PropertyName[28] := 'Comm_node_hide'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
+     PropertyName^[1] := 'element';
+     PropertyName^[2] := 'terminal';
+     PropertyName^[3] := 'mode';
+     PropertyName^[4] := 'action';  // buffer=clear|save
+     PropertyName^[5] := 'residual';  // buffer=clear|save
+     PropertyName^[6] := 'VIPolar';  // V I in mag and angle rather then re and im
+     PropertyName^[7] := 'PPolar';  // Power in power PF rather then power and vars
+     PropertyName^[8] := 'P_trans_ref';
+     PropertyName^[9] := 'V_Sensor';
+     PropertyName^[10] := 'P_Sensor';
+     PropertyName^[11] := 'Node_num';
+     PropertyName^[12] := 'Cluster_num';
+     PropertyName^[13] := 'Total_Clusters';
+     PropertyName^[14] := 'Nodes';
+     PropertyName^[15] := 'CommVector';
+     PropertyName^[16] := 'ElemTableLine';
+     PropertyName^[17] := 'P_Mode';  //real power control mode
+     PropertyName^[18] := 'CommDelayVector';
+     PropertyName^[19] := 'T_intvl_smpl';  //real power control mode
+     PropertyName^[20] := 'MaxLocalMem';
+     PropertyName^[21] := 'Volt_limits_pu';// set limits for this cluster {0,1.05, 0.95}
+     PropertyName^[22] := 'b_Curt_Ctrl';// set P curtailment on/off
+     PropertyName^[23] := 'up_dly';// delay time to communicate to upper level
+     PropertyName^[24] := 'virtual_ld_node';// delay time to communicate to upper level
+     PropertyName^[25] := 'EGen';//equivalent generator: Egen = {kVA, M, D, Tau, K_i}
+     PropertyName^[26] := 'attack_defense'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
+     PropertyName^[27] := 'Comm_hide'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
+     PropertyName^[28] := 'Comm_node_hide'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
 
-     PropertyHelp[1] := 'Name (Full Object name) of element to which the monitor is connected.';
-     PropertyHelp[2] := 'Number of the terminal of the circuit element to which the monitor is connected. '+
+     PropertyHelp^[1] := 'Name (Full Object name) of element to which the monitor is connected.';
+     PropertyHelp^[2] := 'Number of the terminal of the circuit element to which the monitor is connected. '+
                     '1 or 2, typically. For monitoring states, attach monitor to terminal 1.';
-     PropertyHelp[3] := 'Bitmask integer designating the values the monitor is to capture: '+CRLF+
+     PropertyHelp^[3] := 'Bitmask integer designating the values the monitor is to capture: '+CRLF+
                     '0 = Voltages and currents' + CRLF+
                     '1 = Powers'+CRLF+
                     '2 = Tap Position (Transformers only)'+CRLF+
@@ -369,64 +369,64 @@ Begin
                     'Mix adder to obtain desired results. For example:' + CRLF+
                     'Mode=112 will save positive sequence voltage and current magnitudes only' + CRLF+
                     'Mode=48 will save all sequence voltages and currents, but magnitude only.';
-     PropertyHelp[4] := '{Clear | Save | Take | Process}' + CRLF +
+     PropertyHelp^[4] := '{Clear | Save | Take | Process}' + CRLF +
                         '(C)lears or (S)aves current buffer.' + CRLF +
                         '(T)ake action takes a sample.'+ CRLF +
                         '(P)rocesses the data taken so far (e.g. Pst for mode 4).' + CRLF + CRLF +
                         'Note that monitors are automatically reset (cleared) when the Set Mode= command is issued. '+
                         'Otherwise, the user must explicitly reset all monitors (reset monitors command) or individual ' +
                         'monitors with the Clear action.';
-     PropertyHelp[5] := '{Yes/True | No/False} Default = No.  Include Residual cbannel (sum of all phases) for voltage and current. ' +
+     PropertyHelp^[5] := '{Yes/True | No/False} Default = No.  Include Residual cbannel (sum of all phases) for voltage and current. ' +
                         'Does not apply to sequence quantity modes or power modes.';
-     PropertyHelp[6] := '{Yes/True | No/False} Default = YES. Report voltage and current in polar form (Mag/Angle). (default)  Otherwise, it will be real and imaginary.';
-     PropertyHelp[7] := '{Yes/True | No/False} Default = YES. Report power in Apparent power, S, in polar form (Mag/Angle).(default)  Otherwise, is P and Q';
-     PropertyHelp[8] := 'P_trans_ref: P ref value for metered element(unit kW)';
-     PropertyHelp[9] := 'V_Sensor'+ CRLF+
+     PropertyHelp^[6] := '{Yes/True | No/False} Default = YES. Report voltage and current in polar form (Mag/Angle). (default)  Otherwise, it will be real and imaginary.';
+     PropertyHelp^[7] := '{Yes/True | No/False} Default = YES. Report power in Apparent power, S, in polar form (Mag/Angle).(default)  Otherwise, is P and Q';
+     PropertyHelp^[8] := 'P_trans_ref: P ref value for metered element(unit kW)';
+     PropertyHelp^[9] := 'V_Sensor'+ CRLF+
                          'Enable voltage sensor';
-     PropertyHelp[10] := 'P_Sensor'+ CRLF+
+     PropertyHelp^[10] := 'P_Sensor'+ CRLF+
                          'Enable power sensor';
-     PropertyHelp[11] := 'Node_num' + CRLF+
+     PropertyHelp^[11] := 'Node_num' + CRLF+
                           'Assign a node number within a cluster';
-     PropertyHelp[12] := 'Cluster_num';
-     PropertyHelp[13] := 'Total_Clusters.' + CRLF+
+     PropertyHelp^[12] := 'Cluster_num';
+     PropertyHelp^[13] := 'Total_Clusters.' + CRLF+
                           'Define the total number of groups in a circuit' + CRLF+
                           'Just use for the first defined FMonitor';
-     PropertyHelp[14] := 'Nodes connected to this FMonitor. Example:(Nodes=33)';
-     PropertyHelp[15] := 'CommVector of this FMonitor. ' + CRLF+
+     PropertyHelp^[14] := 'Nodes connected to this FMonitor. Example:(Nodes=33)';
+     PropertyHelp^[15] := 'CommVector of this FMonitor. ' + CRLF+
                           'The first entry of this vector is the number of '+ CRLF+
                           'Example:(CommVector={2,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0})'+ CRLF+
                           'The example show node #2 can communicate to node #1,#2,#3';
-     PropertyHelp[16] := 'ElemTableLine of the each node within this cluster. ' + CRLF+
+     PropertyHelp^[16] := 'ElemTableLine of the each node within this cluster. ' + CRLF+
                          'The first entry of this vector is the number of node within cluster '+ CRLF+
                          'The second entry of this vector is element name '+ CRLF+
                          'The third entry of this vector is terminal number '+ CRLF+
                          'The fourth entry of this vector is voltage sensor '+ CRLF+
                          'Example:(ElemTable={2,Line.1,1,1})'+ CRLF+
                          'The example show node #2 Element';
-     PropertyHelp[17] :=  '0 = real Power controlled by each p_ref on each DG' + CRLF+
+     PropertyHelp^[17] :=  '0 = real Power controlled by each p_ref on each DG' + CRLF+
                           '1 = real Power on MeteredElem controlled by DGs according to P_trans_ref'+CRLF+
                           '2 = Not defined'+CRLF+
                           '3 = Not defined'  ;
 
-     PropertyHelp[18] :=  'CommDelayVector of this FMonitor. ' + CRLF+
+     PropertyHelp^[18] :=  'CommDelayVector of this FMonitor. ' + CRLF+
                           'The first entry of this vector is the number of the node.'+ CRLF+
                           'Example:(CommVector={2,t1,0,t2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0})'+ CRLF+
                           'The example show node #2 can communicate to node #1 and #3 with time delay t1 and t2 seperately';
-     PropertyHelp[19] :=  'T_intvl_smpl: '+ CRLF+
+     PropertyHelp^[19] :=  'T_intvl_smpl: '+ CRLF+
                           'The imformation of each agent will be sampled at each T_comm time. Unit is second.'
                           + CRLF+'T_intvl_smpl is also the minimal communication time between neighbor nodes.'
                           + CRLF+'If T_intvl_smpl=0.0, no delay for the communication is enabled in the simulation.';
-     PropertyHelp[20] := 'MaxLocalMem: the max number of local memory siza. No larger than 99';
-     PropertyHelp[21] := 'Volt_limits_pu: exmaple "Volt_limits_pu={a0,a1, a2}"'
+     PropertyHelp^[20] := 'MaxLocalMem: the max number of local memory siza. No larger than 99';
+     PropertyHelp^[21] := 'Volt_limits_pu: exmaple "Volt_limits_pu={a0,a1, a2}"'
                           + CRLF+'a0: the phase number, 0 means pos. seq; a1: upper voltage limit of this cluster, usually 1.05;'
                           + CRLF+'a2: upper voltage limit of this cluster, usually 0.95';// set limits for this cluster {0,1.05, 0.95}
-     PropertyHelp[22] := 'b_Curt_Ctrl:set P curtailment on/off;'// set P curtailment on/off
+     PropertyHelp^[22] := 'b_Curt_Ctrl:set P curtailment on/off;'// set P curtailment on/off
                           + CRLF+ 'b_Curt_Ctrl=True: P curtailment will be implemented according to the system voltage (default);'
                           + CRLF+ 'b_Curt_Ctrl=False: P curtailment will not be implemented.';
-     PropertyHelp[23] := 'up_dly: delay time to upper level. For example: "up_dly := 0.05"'
+     PropertyHelp^[23] := 'up_dly: delay time to upper level. For example: "up_dly := 0.05"'
                          + CRLF+ 'It can be used to simulate the time delay between clusters';
-     PropertyName[24] := 'virtual_ld_node: which node talks to upper level. virtual_ld_node=1';
-     PropertyHelp[25] := ' EGen = {kVA_fm, M_fm, D_fm, Tau_fm, Ki_fm,init_time}'
+     PropertyName^[24] := 'virtual_ld_node: which node talks to upper level. virtual_ld_node=1';
+     PropertyHelp^[25] := ' EGen = {kVA_fm, M_fm, D_fm, Tau_fm, Ki_fm,init_time}'
                           + CRLF+'where equations are:'
                           + CRLF+'(1):delta''''=omega'
                           + CRLF+'(1):M_fm * omega''''=puPm - puPe - D_fm*omega'
@@ -434,15 +434,15 @@ Begin
                           + CRLF+'puPm = Pm / kVA_fm, puPe = Pe/ kVAM_fm;'
                           + CRLF+'everything is zero within init_time(default value is 0.5s);'
                           + CRLF+'k_dltP is the coordinator for PV control input: u_i = k_dltP * pu_DltP + omg_fm.';
-     PropertyHelp[26] := 'Define attack and defense:  attack_defense = {atk , dfs , atk_time , atk_node_num  , d_atk0  , beta_dfs, D_beta, D_p }.'
+     PropertyHelp^[26] := 'Define attack and defense:  attack_defense = {atk , dfs , atk_time , atk_node_num  , d_atk0  , beta_dfs, D_beta, D_p }.'
                           + CRLF+'attack_defense has to be defined after ''''nodes''.'
                           + CRLF+'Example: attack_defense = { true , false , 0.5 , 1 , 0.1 , 5, 1 , 1}.'
                           + CRLF+'Example: (1) under attack); (2) defense is off; (3) attack starts at 0.5s; (4) attack is on node 1;'
                           + CRLF+'(5) initial value of attack: d_0 = 0.1; (6) beta = 5;'
                           + CRLF+'(7) D_bata is used as a multiplier on \phi;'
                           + CRLF+'(8) D_p is used as the attack on gradient contol: D_p = 1, which is normal; D_p=-1, gradient control work on the oppesite.';
-     PropertyHelp[27] := 'Comm_hide={...}. It is defined like CommVector.'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
-     PropertyHelp[28] := 'Comm_node_hide={...}. It is defined like CommVector.'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
+     PropertyHelp^[27] := 'Comm_hide={...}. It is defined like CommVector.'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
+     PropertyHelp^[28] := 'Comm_node_hide={...}. It is defined like CommVector.'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list

@@ -99,7 +99,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
      GenControllerClass := Self;
@@ -123,24 +123,24 @@ Begin
 
      // Define Property names
 
-     PropertyName[1] := 'Element';
-     PropertyName[2] := 'Terminal';
-     PropertyName[3] := 'kWLimit';
-     PropertyName[4] := 'kWBand';
-     PropertyName[5] := 'kvarlimit';
-     PropertyName[6] := 'GenList';
-     PropertyName[7] := 'Weights';
+     PropertyName^[1] := 'Element';
+     PropertyName^[2] := 'Terminal';
+     PropertyName^[3] := 'kWLimit';
+     PropertyName^[4] := 'kWBand';
+     PropertyName^[5] := 'kvarlimit';
+     PropertyName^[6] := 'GenList';
+     PropertyName^[7] := 'Weights';
 
-     PropertyHelp[1] := 'Full object name of the Generator element '+
+     PropertyHelp^[1] := 'Full object name of the Generator element '+
                         'that the control is monitoring. There is no default; must be specified and must exist.';
-     PropertyHelp[2] := 'Number of the terminal of the Generator element to which the GenControl control is connected. '+
+     PropertyHelp^[2] := 'Number of the terminal of the Generator element to which the GenControl control is connected. '+
                         '1 or 2, typically.  Default is 1. Make sure you have the direction on the power matching the sign of kWLimit.';
-     PropertyHelp[3] := 'kW Limit for the monitored element. The generators are dispatched to hold the power in band.';
-     PropertyHelp[4] := 'Bandwidth (kW) of the dead band around the target limit.' +
+     PropertyHelp^[3] := 'kW Limit for the monitored element. The generators are dispatched to hold the power in band.';
+     PropertyHelp^[4] := 'Bandwidth (kW) of the dead band around the target limit.' +
                         'No dispatch changes are attempted if the power in the monitored terminal stays within this band.';
-     PropertyHelp[5] := 'Max kvar to be delivered through the element.  Uses same dead band as kW.';
-     PropertyHelp[6] := 'Array list of generators to be dispatched.  If not specified, all generators in the circuit are assumed dispatchable.';
-     PropertyHelp[7] := 'Array of proportional weights corresponding to each generator in the GenList.' +
+     PropertyHelp^[5] := 'Max kvar to be delivered through the element.  Uses same dead band as kW.';
+     PropertyHelp^[6] := 'Array list of generators to be dispatched.  If not specified, all generators in the circuit are assumed dispatchable.';
+     PropertyHelp^[7] := 'Array of proportional weights corresponding to each generator in the GenList.' +
                         ' The needed kW to get back to center band is dispatched to each generator according to these weights. ' +
                         'Default is to set all weights to 1.0.';
 

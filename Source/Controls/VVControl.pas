@@ -134,7 +134,7 @@ Begin
 
   DefineProperties;
 
-  CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+  CommandList := TCommandList.Create(PropertyName, NumProperties);
   CommandList.Abbrev := TRUE;
   XY_CurveClass := GetDSSClassPtr('XYCurve');
 
@@ -156,66 +156,66 @@ Begin
   AllocatePropertyArrays;
 
   // Define Property names
-  PropertyName[1] := 'Element';
-  PropertyName[2] := 'Terminal';
-  PropertyName[3] := 'vvc_Vmaxpu';
-  PropertyName[4] := 'vvc_Vminpu';
-  PropertyName[5] := 'kva_rating';
-  PropertyName[6] := 'kW_rating';
-  PropertyName[7] := 'kvar_full_output';
-  PropertyName[8] := 'pf';
-  PropertyName[9] := 'delay';
-  PropertyName[10] := 'delayoff';
-  PropertyName[11] := 'kW_ramp_rate';
-  PropertyName[12] := 'kvar_ramp_rate';
-  PropertyName[13] := 'kW_limit';
-  PropertyName[14] := 'kvar_limit';
-  PropertyName[15] := 'GenList';
-  PropertyName[16] := 'Weights';
-  PropertyName[17] := 'NumPts';
-  PropertyName[18] := 'VVC_curve';
-  PropertyName[19] := 'deltaQ_factor';
+  PropertyName^[1] := 'Element';
+  PropertyName^[2] := 'Terminal';
+  PropertyName^[3] := 'vvc_Vmaxpu';
+  PropertyName^[4] := 'vvc_Vminpu';
+  PropertyName^[5] := 'kva_rating';
+  PropertyName^[6] := 'kW_rating';
+  PropertyName^[7] := 'kvar_full_output';
+  PropertyName^[8] := 'pf';
+  PropertyName^[9] := 'delay';
+  PropertyName^[10] := 'delayoff';
+  PropertyName^[11] := 'kW_ramp_rate';
+  PropertyName^[12] := 'kvar_ramp_rate';
+  PropertyName^[13] := 'kW_limit';
+  PropertyName^[14] := 'kvar_limit';
+  PropertyName^[15] := 'GenList';
+  PropertyName^[16] := 'Weights';
+  PropertyName^[17] := 'NumPts';
+  PropertyName^[18] := 'VVC_curve';
+  PropertyName^[19] := 'deltaQ_factor';
 
-  PropertyHelp[1] :=
+  PropertyHelp^[1] :=
     'Full object name of the circuit element, typically a line or transformer, ' + 'which the control is monitoring. There is no default; must be specified.';
-  PropertyHelp[2] :=
+  PropertyHelp^[2] :=
     'Number of the terminal of the circuit element to which the VVCControl control is connected. ' + '1 or 2, typically.  Default is 1. Make sure you have the direction on the power matching the sign of kWLimit.';
-  PropertyHelp[3] :=
+  PropertyHelp^[3] :=
     'Default = 0.90.  Minimum per unit voltage for which the vvccurve volts property is assumed to apply. '
     + 'Below this value, the var output is zero (i.e., the unit will not operate).';
-  PropertyHelp[4] :=
+  PropertyHelp^[4] :=
     'Default = 1.10.  Maximum per unit voltage for which the vvccurve volts property is assumed to apply. '
     + 'Above this value, the var output is zero (i.e., the unit will not operate).';
-  PropertyHelp[5] :=
+  PropertyHelp^[5] :=
     'Default = 1.2 times the kW_rating of the unit.  Maximum steady-state apparent power output.';
-  PropertyHelp[6] :=
+  PropertyHelp^[6] :=
     'Default = 4.0.  Maximum steady-state active power output of the unit under control.';
-  PropertyHelp[7] :=
+  PropertyHelp^[7] :=
     'Max kvar to be delivered through the element.  Corresponds to the +/- 1.0 per-unit var value in the volt/var curve.';
-  PropertyHelp[8] :=
+  PropertyHelp^[8] :=
     'Displacement power factor set-point of the inverter (modeled as a generator).  PF set-point will not cause delivered kvar to exceed the maximum kvar limit.';
-  PropertyHelp[9] :=
+  PropertyHelp^[9] :=
     'Delay in seconds for switching ON the inverter (modeled as a generator). Default is 0.0 s';
-  PropertyHelp[10] :=
+  PropertyHelp^[10] :=
     'Delay in seconds for switching OFF the inverter (modeled as a generator). Default is 0.0 s';
-  PropertyHelp[11] :=
+  PropertyHelp^[11] :=
     'Ramp rate in kW per second for turning ON and OFF the inverter.  Ramps the kW from 0 or other full to kW_rating over x seconds. Default is -1 denoting immediate switch ON/OFF, after optional delay';
-  PropertyHelp[12] :=
+  PropertyHelp^[12] :=
     'Ramp rate in kvar per second for turning ON and OFF the inverter.  Ramps the kW from 0 or other full to kvar_limit over x seconds. Default is -1 denoting immediate switch ON/OFF, after optional delay';
 
-  PropertyHelp[13] :=
+  PropertyHelp^[13] :=
     'kW Limit for the monitored element. The generators are dispatched to hold the active power to attempt to achieve this value.';
-  PropertyHelp[14] :=
+  PropertyHelp^[14] :=
     'kvar Limit for the monitored element. The generators are dispatched to hold the reactive power to attempt to achieve this value.';
-  PropertyHelp[15] :=
+  PropertyHelp^[15] :=
     'Array list of generators to be dispatched.  If not specified, all generators in the circuit are assumed dispatchable.';
-  PropertyHelp[16] :=
+  PropertyHelp^[16] :=
     'Array of proportional weights corresponding to each generator in the GenList. The needed kW to get back to center band is dispatched to each generator according to these weights. Default is to set all weights to 1.0.';
-  PropertyHelp[17] :=
+  PropertyHelp^[17] :=
     'Number of points expected to be in the volt curve or the var curve (XYcurve object).';
-  PropertyHelp[18] :=
+  PropertyHelp^[18] :=
     'Name of the volt-var curve that has been previously defined using the XYcurve object.';
-  PropertyHelp[19] :=
+  PropertyHelp^[19] :=
     'The maximum change in per-unit from the prior var output to the var output indicated by the volt-var curve (XYcurve object).';
 
   ActiveProperty := NumPropsThisClass;

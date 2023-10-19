@@ -101,7 +101,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
 End;
@@ -124,38 +124,38 @@ Begin
      AllocatePropertyArrays;
 
      // Define Property names
-     PropertyName[1] := 'terminals';
-     PropertyName[2] := 'buses';
-     PropertyName[3] := 'basekv';
-     PropertyName[4] := 'pu';
-     PropertyName[5] := 'angle';
-     PropertyName[6] := 'frequency';
-     PropertyName[7] := 'phases';
-     PropertyName[8] := 'R1';
-     PropertyName[9] := 'X1';
-     PropertyName[10] := 'R0';
-     PropertyName[11] := 'X0';
+     PropertyName^[1] := 'terminals';
+     PropertyName^[2] := 'buses';
+     PropertyName^[3] := 'basekv';
+     PropertyName^[4] := 'pu';
+     PropertyName^[5] := 'angle';
+     PropertyName^[6] := 'frequency';
+     PropertyName^[7] := 'phases';
+     PropertyName^[8] := 'R1';
+     PropertyName^[9] := 'X1';
+     PropertyName^[10] := 'R0';
+     PropertyName^[11] := 'X0';
 
      // define Property help values
-     PropertyHelp[1] := 'Number of terminals.  Default =1. Set this BEFORE defining matrices.';
-     PropertyHelp[2] := 'Array of Bus Names to which equivalent source is connected.'+CRLF+'buses=(b1 b2 b3)';
-     PropertyHelp[3] := 'Base Source kV, usually L-L unless you are making a positive-sequence model'+
+     PropertyHelp^[1] := 'Number of terminals.  Default =1. Set this BEFORE defining matrices.';
+     PropertyHelp^[2] := 'Array of Bus Names to which equivalent source is connected.'+CRLF+'buses=(b1 b2 b3)';
+     PropertyHelp^[3] := 'Base Source kV, usually L-L unless you are making a positive-sequence model'+
                     'in which case, it will be L-N.';
-     PropertyHelp[4] := 'Per unit of the base voltage that the source is actually operating at.'+ CRLF +
+     PropertyHelp^[4] := 'Per unit of the base voltage that the source is actually operating at.'+ CRLF +
                      '"pu=1.05"';
-     PropertyHelp[5] := 'Phase angle in degrees of first phase: e.g.,Angle=10.3';
-     PropertyHelp[6] := 'Source frequency.  Defaults to  60 Hz.';
-     PropertyHelp[7] := 'Number of phases.  Defaults to 3.';
-     PropertyHelp[8] := 'Positive-sequence resistance matrix, lower triangle.';
-     PropertyHelp[9] := 'Positive-sequence reactance matrix, lower triangle.';
-     PropertyHelp[10] := 'Zero-sequence resistance matrix, lower triangle.';
-     PropertyHelp[11] := 'Zero-sequence reactance matrix, lower triangle.';
+     PropertyHelp^[5] := 'Phase angle in degrees of first phase: e.g.,Angle=10.3';
+     PropertyHelp^[6] := 'Source frequency.  Defaults to  60 Hz.';
+     PropertyHelp^[7] := 'Number of phases.  Defaults to 3.';
+     PropertyHelp^[8] := 'Positive-sequence resistance matrix, lower triangle.';
+     PropertyHelp^[9] := 'Positive-sequence reactance matrix, lower triangle.';
+     PropertyHelp^[10] := 'Zero-sequence resistance matrix, lower triangle.';
+     PropertyHelp^[11] := 'Zero-sequence reactance matrix, lower triangle.';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
      // Override help string
-     PropertyHelp[NumPropsThisClass+1] := 'Name of harmonic spectrum for this source.  Default is "defaultvsource", which is defined when the DSS starts.';
+     PropertyHelp^[NumPropsThisClass+1] := 'Name of harmonic spectrum for this source.  Default is "defaultvsource", which is defined when the DSS starts.';
 
 End;
 
@@ -604,17 +604,17 @@ procedure TEquivalentObj.InitPropertyValues(ArrayOffset: Integer);
 begin
 {
 
-    PropertyName[1] := 'terminals';
-     PropertyName[2] := 'buses';
-     PropertyName[3] := 'basekv';
-     PropertyName[4] := 'pu';
-     PropertyName[5] := 'angle';
-     PropertyName[6] := 'frequency';
-     PropertyName[7] := 'phases';
-     PropertyName[8] := 'R1';
-     PropertyName[9] := 'X1';
-     PropertyName[10] := 'R0';
-     PropertyName[11] := 'X0';
+    PropertyName^[1] := 'terminals';
+     PropertyName^[2] := 'buses';
+     PropertyName^[3] := 'basekv';
+     PropertyName^[4] := 'pu';
+     PropertyName^[5] := 'angle';
+     PropertyName^[6] := 'frequency';
+     PropertyName^[7] := 'phases';
+     PropertyName^[8] := 'R1';
+     PropertyName^[9] := 'X1';
+     PropertyName^[10] := 'R0';
+     PropertyName^[11] := 'X0';
 }
      {PropertyValue Allocated in DSSObject.Create}
      PropertyValue[1]  := '1';

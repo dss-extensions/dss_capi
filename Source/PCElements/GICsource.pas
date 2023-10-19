@@ -104,7 +104,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
      GICsourceClass := Self;
@@ -130,40 +130,40 @@ Begin
 
 
      // Define Property names
-     PropertyName[1]  := 'Volts';
-     PropertyName[2]  := 'angle';
-     PropertyName[3]  := 'frequency';
-     PropertyName[4]  := 'phases';
-     PropertyName[5]  := 'EN';
-     PropertyName[6]  := 'EE';
-     PropertyName[7]  := 'Lat1';
-     PropertyName[8]  := 'Lon1';
-     PropertyName[9]  := 'Lat2';
-     PropertyName[10] := 'Lon2';
+     PropertyName^[1]  := 'Volts';
+     PropertyName^[2]  := 'angle';
+     PropertyName^[3]  := 'frequency';
+     PropertyName^[4]  := 'phases';
+     PropertyName^[5]  := 'EN';
+     PropertyName^[6]  := 'EE';
+     PropertyName^[7]  := 'Lat1';
+     PropertyName^[8]  := 'Lon1';
+     PropertyName^[9]  := 'Lat2';
+     PropertyName^[10] := 'Lon2';
 
      // define Property help values
-     PropertyHelp[1] := 'Voltage magnitude, in volts, of the GIC voltage induced across the associated line. ' +
+     PropertyHelp^[1] := 'Voltage magnitude, in volts, of the GIC voltage induced across the associated line. ' +
                         'When specified, induced voltage is assumed defined by Voltage and Angle properties. ' + CRLF+CRLF+
                         'Specify this value' + CRLF + CRLF + 'OR' + CRLF + CRLF +
                         'EN, EE, lat1, lon1, lat2, lon2. ' + CRLF + CRLF +
                         'Not both!!  Last one entered will take precedence. ' +
                         'Assumed identical in each phase of the Line object.';
-     PropertyHelp[2] := 'Phase angle in degrees of first phase. Default=0.0.  See Voltage property';
-     PropertyHelp[3] := 'Source frequency.  Defaults to  0.1 Hz. So GICSource=0 at power frequency.';
-     PropertyHelp[4] := 'Number of phases.  Defaults to 3. All three phases are assumed in phase (zero sequence)';
-     PropertyHelp[5] := 'Northward Electric field (V/km). If specified, Voltage and Angle are computed from EN, EE, lat and lon values.';
-     PropertyHelp[6] := 'Eastward Electric field (V/km).  If specified, Voltage and Angle are computed from EN, EE, lat and lon values.';
-     PropertyHelp[7] := 'Latitude of Bus1 of the line(degrees)';
-     PropertyHelp[8] := 'Longitude of Bus1 of the line (degrees)';
-     PropertyHelp[9] := 'Latitude of Bus2 of the line (degrees)';
-     PropertyHelp[10] := 'Longitude of Bus2 of the line (degrees)';
+     PropertyHelp^[2] := 'Phase angle in degrees of first phase. Default=0.0.  See Voltage property';
+     PropertyHelp^[3] := 'Source frequency.  Defaults to  0.1 Hz. So GICSource=0 at power frequency.';
+     PropertyHelp^[4] := 'Number of phases.  Defaults to 3. All three phases are assumed in phase (zero sequence)';
+     PropertyHelp^[5] := 'Northward Electric field (V/km). If specified, Voltage and Angle are computed from EN, EE, lat and lon values.';
+     PropertyHelp^[6] := 'Eastward Electric field (V/km).  If specified, Voltage and Angle are computed from EN, EE, lat and lon values.';
+     PropertyHelp^[7] := 'Latitude of Bus1 of the line(degrees)';
+     PropertyHelp^[8] := 'Longitude of Bus1 of the line (degrees)';
+     PropertyHelp^[9] := 'Latitude of Bus2 of the line (degrees)';
+     PropertyHelp^[10] := 'Longitude of Bus2 of the line (degrees)';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
      // Override help string
-     PropertyHelp[NumPropsThisClass+1] := 'Not used.';
-     PropertyHelp[NumPropsThisClass+2] := 'Not used.';
+     PropertyHelp^[NumPropsThisClass+1] := 'Not used.';
+     PropertyHelp^[NumPropsThisClass+2] := 'Not used.';
 
 End;
 

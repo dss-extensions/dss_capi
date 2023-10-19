@@ -138,7 +138,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
      XY_CurveClass := GetDSSClassPtr('XYCurve');
 
@@ -159,40 +159,40 @@ Begin
      AllocatePropertyArrays;
 
      // Define Property names
-     PropertyName[1] := 'bus1';
-     PropertyName[2] := 'phases';
-     PropertyName[3] := 'prated';
-     PropertyName[4] := 'vrated';
-     PropertyName[5] := 'ppct';
-     PropertyName[6] := 'bp1';
-     PropertyName[7] := 'bp2';
-     PropertyName[8] := 'filter';
-     PropertyName[9] := 'fsample';
-     PropertyName[10] := 'rmsmode';
-     PropertyName[11] := 'imaxpu';
-     PropertyName[12] := 'vrmstau';
-     PropertyName[13] := 'irmstau';
+     PropertyName^[1] := 'bus1';
+     PropertyName^[2] := 'phases';
+     PropertyName^[3] := 'prated';
+     PropertyName^[4] := 'vrated';
+     PropertyName^[5] := 'ppct';
+     PropertyName^[6] := 'bp1';
+     PropertyName^[7] := 'bp2';
+     PropertyName^[8] := 'filter';
+     PropertyName^[9] := 'fsample';
+     PropertyName^[10] := 'rmsmode';
+     PropertyName^[11] := 'imaxpu';
+     PropertyName^[12] := 'vrmstau';
+     PropertyName^[13] := 'irmstau';
 
      // define Property help values
-     PropertyHelp[1] := 'Name of bus to which source is connected.'+CRLF+'bus1=busname'+CRLF+'bus1=busname.1.2.3';
-     PropertyHelp[2] := 'Number of phases.  Defaults to 1.';
-     PropertyHelp[3] := 'Total rated power, in Watts.';
-     PropertyHelp[4] := 'Rated line-to-line voltage, in Volts';
-     PropertyHelp[5] := 'Steady-state operating output, in percent of rated.';
-     PropertyHelp[6] := 'XYCurve defining the input piece-wise linear block.';
-     PropertyHelp[7] := 'XYCurve defining the output piece-wise linear block.';
-     PropertyHelp[8] := 'XYCurve defining the digital filter coefficients (x numerator, y denominator).';
-     PropertyHelp[9] := 'Sample frequency [Hz} for the digital filter.';
-     PropertyHelp[10]:= 'True if only Hz is used to represent a phase-locked loop (PLL), ignoring the BP1, BP2 and time-domain transformations. Default is no.';
-     PropertyHelp[11]:= 'Maximum output current in per-unit of rated; defaults to 1.1';
-     PropertyHelp[12]:= 'Time constant in sensing Vrms for the PLL; defaults to 0.0015';
-     PropertyHelp[13]:= 'Time constant in producing Irms from the PLL; defaults to 0.0015';
+     PropertyHelp^[1] := 'Name of bus to which source is connected.'+CRLF+'bus1=busname'+CRLF+'bus1=busname.1.2.3';
+     PropertyHelp^[2] := 'Number of phases.  Defaults to 1.';
+     PropertyHelp^[3] := 'Total rated power, in Watts.';
+     PropertyHelp^[4] := 'Rated line-to-line voltage, in Volts';
+     PropertyHelp^[5] := 'Steady-state operating output, in percent of rated.';
+     PropertyHelp^[6] := 'XYCurve defining the input piece-wise linear block.';
+     PropertyHelp^[7] := 'XYCurve defining the output piece-wise linear block.';
+     PropertyHelp^[8] := 'XYCurve defining the digital filter coefficients (x numerator, y denominator).';
+     PropertyHelp^[9] := 'Sample frequency [Hz} for the digital filter.';
+     PropertyHelp^[10]:= 'True if only Hz is used to represent a phase-locked loop (PLL), ignoring the BP1, BP2 and time-domain transformations. Default is no.';
+     PropertyHelp^[11]:= 'Maximum output current in per-unit of rated; defaults to 1.1';
+     PropertyHelp^[12]:= 'Time constant in sensing Vrms for the PLL; defaults to 0.0015';
+     PropertyHelp^[13]:= 'Time constant in producing Irms from the PLL; defaults to 0.0015';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
      // Override help string
-     PropertyHelp[NumPropsThisClass+1] := 'Harmonic spectrum assumed for this source.  Default is "default".';
+     PropertyHelp^[NumPropsThisClass+1] := 'Harmonic spectrum assumed for this source.  Default is "default".';
 End;
 
 Function TVCCS.NewObject(const ObjName:String):Integer;

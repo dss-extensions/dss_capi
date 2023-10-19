@@ -244,7 +244,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 End;
 
@@ -265,18 +265,18 @@ Begin
 
      // Define Property names
 
-     PropertyName[1] := 'element';
-     PropertyName[2] := 'terminal';
-     PropertyName[3] := 'mode';
-     PropertyName[4] := 'action';  // buffer=clear|save
-     PropertyName[5] := 'residual';  // buffer=clear|save
-     PropertyName[6] := 'VIPolar';  // V I in mag and angle rather then re and im
-     PropertyName[7] := 'PPolar';  // Power in power PF rather then power and vars
+     PropertyName^[1] := 'element';
+     PropertyName^[2] := 'terminal';
+     PropertyName^[3] := 'mode';
+     PropertyName^[4] := 'action';  // buffer=clear|save
+     PropertyName^[5] := 'residual';  // buffer=clear|save
+     PropertyName^[6] := 'VIPolar';  // V I in mag and angle rather then re and im
+     PropertyName^[7] := 'PPolar';  // Power in power PF rather then power and vars
 
-     PropertyHelp[1] := 'Name (Full Object name) of element to which the monitor is connected.';
-     PropertyHelp[2] := 'Number of the terminal of the circuit element to which the monitor is connected. '+
+     PropertyHelp^[1] := 'Name (Full Object name) of element to which the monitor is connected.';
+     PropertyHelp^[2] := 'Number of the terminal of the circuit element to which the monitor is connected. '+
                     '1 or 2, typically. For monitoring states, attach monitor to terminal 1.';
-     PropertyHelp[3] := 'Bitmask integer designating the values the monitor is to capture: '+CRLF+
+     PropertyHelp^[3] := 'Bitmask integer designating the values the monitor is to capture: '+CRLF+
                     '0 = Voltages and currents at designated terminal' + CRLF+
                     '1 = Powers at designated terminal'+CRLF+
                     '2 = Tap Position (Transformer Device only)'+CRLF+
@@ -301,17 +301,17 @@ Begin
                     'Mix adder to obtain desired results. For example:' + CRLF+
                     'Mode=112 will save positive sequence voltage and current magnitudes only' + CRLF+
                     'Mode=48 will save all sequence voltages and currents, but magnitude only.';
-     PropertyHelp[4] := '{Clear | Save | Take | Process}' + CRLF +
+     PropertyHelp^[4] := '{Clear | Save | Take | Process}' + CRLF +
                         '(C)lears or (S)aves current buffer.' + CRLF +
                         '(T)ake action takes a sample.'+ CRLF +
                         '(P)rocesses the data taken so far (e.g. Pst for mode 4).' + CRLF + CRLF +
                         'Note that monitors are automatically reset (cleared) when the Set Mode= command is issued. '+
                         'Otherwise, the user must explicitly reset all monitors (reset monitors command) or individual ' +
                         'monitors with the Clear action.';
-     PropertyHelp[5] := '{Yes/True | No/False} Default = No.  Include Residual cbannel (sum of all phases) for voltage and current. ' +
+     PropertyHelp^[5] := '{Yes/True | No/False} Default = No.  Include Residual cbannel (sum of all phases) for voltage and current. ' +
                         'Does not apply to sequence quantity modes or power modes.';
-     PropertyHelp[6] := '{Yes/True | No/False} Default = YES. Report voltage and current in polar form (Mag/Angle). (default)  Otherwise, it will be real and imaginary.';
-     PropertyHelp[7] := '{Yes/True | No/False} Default = YES. Report power in Apparent power, S, in polar form (Mag/Angle).(default)  Otherwise, is P and Q';
+     PropertyHelp^[6] := '{Yes/True | No/False} Default = YES. Report voltage and current in polar form (Mag/Angle). (default)  Otherwise, it will be real and imaginary.';
+     PropertyHelp^[7] := '{Yes/True | No/False} Default = YES. Report power in Apparent power, S, in polar form (Mag/Angle).(default)  Otherwise, is P and Q';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
