@@ -280,7 +280,7 @@ Begin
 
      DefineProperties;
 
-     CommandList        := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList        := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 End;
 
@@ -301,93 +301,93 @@ Begin
 
      // Define Property names
 
-     PropertyName[propELEMENT]                := 'Element';
-     PropertyName[propTERMINAL]               := 'Terminal';
-     PropertyName[propMONPHASE]               := 'MonPhase';
-     PropertyName[propKWTARGET]               := 'kWTarget';
-     PropertyName[propKWTARGETLOW]            := 'kWTargetLow';
-     PropertyName[propPCTKWBAND]              := '%kWBand';
-     PropertyName[propKWBAND]                 := 'kWBand';
-     PropertyName[propPCTKWBANDLOW]           := '%kWBandLow';
-     PropertyName[propKWBANDLOW]              := 'kWBandLow';
-//     PropertyName[propPFTARGET]               := 'PFTarget';
-//     PropertyName[propPFBAND]                 := 'PFBand';
-     PropertyName[propELEMENTLIST]            := 'ElementList';
-     PropertyName[propWEIGHTS]                := 'Weights';
-     PropertyName[propMODEDISCHARGE]          := 'ModeDischarge';
-     PropertyName[propMODECHARGE]             := 'ModeCharge';
-     PropertyName[propTIMEDISCHARGETRIGGER]   := 'TimeDischargeTrigger';
-     PropertyName[propTIMECHARGETRIGGER]      := 'TimeChargeTrigger';
-     PropertyName[propRATEKW]                 := '%RatekW';
-//     PropertyName[propRATEKVAR]               := '%Ratekvar';
-     PropertyName[propRATECHARGE]             := '%RateCharge';
-     PropertyName[propRESERVE]                := '%Reserve';
-     PropertyName[propKWHTOTAL]               := 'kWhTotal';
-     PropertyName[propKWTOTAL]                := 'kWTotal';
-     PropertyName[propKWHACTUAL]              := 'kWhActual';
-     PropertyName[propKWACTUAL]               := 'kWActual';
-     PropertyName[propKWNEED]                 := 'kWneed';
-//     PropertyName[propPARTICIPATION]          := '%Participation';
-     PropertyName[propYEARLY]                 := 'Yearly';
-     PropertyName[propDAILY]                  := 'Daily';
-     PropertyName[propDUTY]                   := 'Duty';
-     PropertyName[propEVENTLOG]               := 'EventLog';
-//     PropertyName[propVARDISPATCH]            := 'VarDispatch';
-     PropertyName[propINHIBITTIME]            := 'InhibitTime';
-     PropertyName[propTUPRAMP]                := 'Tup';
-     PropertyName[propTFLAT]                  := 'TFlat';
-     PropertyName[propTDNRAMP]                := 'Tdn';
-     PropertyName[propKWTHRESHOLD]            := 'kWThreshold';
-     PropertyName[propDispFactor]             := 'DispFactor';
-     PropertyName[propRESETLEVEL]             := 'ResetLevel';
-     PropertyName[propSEASONS]                := 'Seasons';
-     PropertyName[propSEASONTARGETS]          := 'SeasonTargets';
-     PropertyName[propSEASONTARGETSLOW]       := 'SeasonTargetsLow';
+     PropertyName^[propELEMENT]                := 'Element';
+     PropertyName^[propTERMINAL]               := 'Terminal';
+     PropertyName^[propMONPHASE]               := 'MonPhase';
+     PropertyName^[propKWTARGET]               := 'kWTarget';
+     PropertyName^[propKWTARGETLOW]            := 'kWTargetLow';
+     PropertyName^[propPCTKWBAND]              := '%kWBand';
+     PropertyName^[propKWBAND]                 := 'kWBand';
+     PropertyName^[propPCTKWBANDLOW]           := '%kWBandLow';
+     PropertyName^[propKWBANDLOW]              := 'kWBandLow';
+//     PropertyName^[propPFTARGET]               := 'PFTarget';
+//     PropertyName^[propPFBAND]                 := 'PFBand';
+     PropertyName^[propELEMENTLIST]            := 'ElementList';
+     PropertyName^[propWEIGHTS]                := 'Weights';
+     PropertyName^[propMODEDISCHARGE]          := 'ModeDischarge';
+     PropertyName^[propMODECHARGE]             := 'ModeCharge';
+     PropertyName^[propTIMEDISCHARGETRIGGER]   := 'TimeDischargeTrigger';
+     PropertyName^[propTIMECHARGETRIGGER]      := 'TimeChargeTrigger';
+     PropertyName^[propRATEKW]                 := '%RatekW';
+//     PropertyName^[propRATEKVAR]               := '%Ratekvar';
+     PropertyName^[propRATECHARGE]             := '%RateCharge';
+     PropertyName^[propRESERVE]                := '%Reserve';
+     PropertyName^[propKWHTOTAL]               := 'kWhTotal';
+     PropertyName^[propKWTOTAL]                := 'kWTotal';
+     PropertyName^[propKWHACTUAL]              := 'kWhActual';
+     PropertyName^[propKWACTUAL]               := 'kWActual';
+     PropertyName^[propKWNEED]                 := 'kWneed';
+//     PropertyName^[propPARTICIPATION]          := '%Participation';
+     PropertyName^[propYEARLY]                 := 'Yearly';
+     PropertyName^[propDAILY]                  := 'Daily';
+     PropertyName^[propDUTY]                   := 'Duty';
+     PropertyName^[propEVENTLOG]               := 'EventLog';
+//     PropertyName^[propVARDISPATCH]            := 'VarDispatch';
+     PropertyName^[propINHIBITTIME]            := 'InhibitTime';
+     PropertyName^[propTUPRAMP]                := 'Tup';
+     PropertyName^[propTFLAT]                  := 'TFlat';
+     PropertyName^[propTDNRAMP]                := 'Tdn';
+     PropertyName^[propKWTHRESHOLD]            := 'kWThreshold';
+     PropertyName^[propDispFactor]             := 'DispFactor';
+     PropertyName^[propRESETLEVEL]             := 'ResetLevel';
+     PropertyName^[propSEASONS]                := 'Seasons';
+     PropertyName^[propSEASONTARGETS]          := 'SeasonTargets';
+     PropertyName^[propSEASONTARGETSLOW]       := 'SeasonTargetsLow';
 
-    PropertyHelp[propELEMENT]             :=
+    PropertyHelp^[propELEMENT]             :=
       'Full object name of the circuit element, typically a line or transformer, '+
       'which the control is monitoring. There is no default; Must be specified.' +
       'In "Local" control mode, is the name of the load that will be managed by the storage device, which should be installed at the same bus.';
-    PropertyHelp[propTERMINAL]            :=
+    PropertyHelp^[propTERMINAL]            :=
       'Number of the terminal of the circuit element to which the StorageController control is connected. '+
       '1 or 2, typically.  Default is 1. Make sure to select the proper direction on the power for the respective dispatch mode.';
-    PropertyHelp[propMONPHASE]            :=
+    PropertyHelp^[propMONPHASE]            :=
       'Number of the phase being monitored or one of {AVG | MAX | MIN} for all phases. Default=MAX. ' +
       'Must be less than the number of phases. Used in PeakShave, Follow, Support and I-PeakShave discharging modes ' +
       'and in PeakShaveLow, I-PeakShaveLow charging modes. For modes based on active power measurements, the value ' +
       'used by the control is the monitored one multiplied by the number of phases of the monitored element.';
-    PropertyHelp[propKWTARGET]            :=
+    PropertyHelp^[propKWTARGET]            :=
       'kW/kamps target for Discharging. The Storage element fleet is dispatched to try to hold the power/current in band '+
       'at least until the Storage is depleted. The selection of power or current depends on the Discharge mode (PeakShave->kW, I-PeakShave->kamps).';
-    PropertyHelp[propKWTARGETLOW]         :=
+    PropertyHelp^[propKWTARGETLOW]         :=
       'kW/kamps target for Charging. The Storage element fleet is dispatched to try to hold the power/current in band '+
       'at least until the Storage is fully charged. The selection of power or current depends on the charge mode (PeakShavelow->kW, I-PeakShavelow->kamps).';
-    PropertyHelp[propPCTKWBAND]              :=
+    PropertyHelp^[propPCTKWBAND]              :=
       'Bandwidth (% of Target kW/kamps) of the dead band around the kW/kamps target value. Default is 2% (+/-1%).' +
       'No dispatch changes are attempted if the power in the monitored terminal stays within this band.';
-    PropertyHelp[propKWBAND]              :=
+    PropertyHelp^[propKWBAND]              :=
       'Alternative way of specifying the bandwidth. (kW/kamps) of the dead band around the kW/kamps target value. Default is 2% of kWTarget (+/-1%).' +
       'No dispatch changes are attempted if the power in the monitored terminal stays within this band.';
-    PropertyHelp[propPCTKWBANDLOW]           :=
+    PropertyHelp^[propPCTKWBANDLOW]           :=
       'Bandwidth (% of kWTargetLow) of the dead band around the kW/kamps low target value. Default is 2% (+/-1%).' +
       'No charging is attempted if the power in the monitored terminal stays within this band.';
-    PropertyHelp[propKWBANDLOW]           :=
+    PropertyHelp^[propKWBANDLOW]           :=
       'Alternative way of specifying the bandwidth. (kW/kamps) of the dead band around the kW/kamps low target value. Default is 2% of kWTargetLow (+/-1%).' +
       'No charging is attempted if the power in the monitored terminal stays within this band.';
-//    PropertyHelp[propPFTARGET]          :=
+//    PropertyHelp^[propPFTARGET]          :=
 //      'Power Factor target for dispatching the reactive power. Default is 0.96. The reactive power of the storage element fleet is dispatched to try to hold the power factor in band. '+
 //      'It is assumed that the storage element inverter can produce kvar up to its kVA limit regardless of storage level.';
-//    PropertyHelp[propPFBAND]            :=
+//    PropertyHelp^[propPFBAND]            :=
 //      'Bandwidth of the Target power factor of the monitored element. of the dead band around the kvar target value. Default is 0.04 (+/- 0.02).' +
 //      'No dispatch changes of the kvar are attempted If the power factor of the monitored terminal stays within this band.';
-    PropertyHelp[propELEMENTLIST]         :=
+    PropertyHelp^[propELEMENTLIST]         :=
       'Array list of Storage elements to be controlled.  If not specified, all Storage elements in the circuit not presently dispatched by another controller ' +
       'are assumed dispatched by this controller.';
-    PropertyHelp[propWEIGHTS]             := 
+    PropertyHelp^[propWEIGHTS]             := 
      'Array of proportional weights corresponding to each Storage element in the ElementList. ' +
      'The needed kW or kvar to get back to center band is dispatched to each Storage element according to these weights. ' +
      'Default is to set all weights to 1.0.';
-    PropertyHelp[propMODEDISCHARGE]       :=
+    PropertyHelp^[propMODEDISCHARGE]       :=
      '{PeakShave* | Follow | Support | Loadshape | Time | Schedule | I-PeakShave } Mode of operation for the DISCHARGE FUNCTION of this controller. ' +
      CRLF+CRLF+'In PeakShave mode (Default), the control attempts to discharge Storage to keep power in the monitored element below the kWTarget. ' +
      CRLF+CRLF+'In Follow mode, the control is triggered by time and resets the kWTarget value to the present monitored element power. ' +
@@ -400,7 +400,7 @@ Begin
      'The schedule start time is set by TimeDischargeTrigger and the rate of discharge for the flat part is determined by %RatekW.' +
      CRLF+CRLF+'In I-PeakShave mode, the control attempts to discharge Storage to keep current in the monitored element below the target given in k-amps ' +
      '(thousands of amps), when this control mode is active, the property kWTarget will be expressed in k-amps. ';
-    PropertyHelp[propMODECHARGE]          :=
+    PropertyHelp^[propMODECHARGE]          :=
      '{Loadshape | Time* | PeakShaveLow | I-PeakShaveLow} Mode of operation for the CHARGE FUNCTION of this controller. ' +
       CRLF+CRLF+'In Loadshape mode, both charging and discharging precisely follows the per unit loadshape. ' +
      'Storage is charged when the loadshape value is negative. ' +
@@ -410,74 +410,74 @@ Begin
       CRLF+CRLF+'In I-PeakShaveLow mode, the charging operation will charge the Storage fleet when the current (Amps) at a' +
      'monitored element is below a specified amps target (kWTarget_low). The Storage will charge as much power as necessary to keep the amps within the deadband around kWTarget_low. ' +
      'When this control mode is active, the property kWTarget_low will be expressed in k-amps and all the other parameters will be adjusted to match the amps (current) control criteria.';
-    PropertyHelp[propTIMEDISCHARGETRIGGER]:=
+    PropertyHelp^[propTIMEDISCHARGETRIGGER]:=
      'Default time of day (hr) for initiating Discharging of the fleet. During Follow or Time mode discharging is triggered at a fixed time ' +
      'each day at this hour. If Follow mode, Storage will be discharged to attempt to hold the load at or below the power level at the time of triggering. ' +
      'In Time mode, the discharge is based on the %RatekW property value. ' +
      'Set this to a negative value to ignore. Default is 12.0 for Follow mode; otherwise it is -1 (ignored). ';
-    PropertyHelp[propTIMECHARGETRIGGER]   :=
+    PropertyHelp^[propTIMECHARGETRIGGER]   :=
      'Default time of day (hr) for initiating charging in Time control mode. Set this to a negative value to ignore. Default is 2.0.  (0200).' +
      'When this value is >0 the Storage fleet is set to charging at this time regardless of other control criteria to make sure Storage is ' +
      'topped off for the next discharge cycle.';
-    PropertyHelp[propRATEKW]              :=
+    PropertyHelp^[propRATEKW]              :=
       'Sets the kW discharge rate in % of rated capacity for each element of the fleet. Applies to TIME control mode, SCHEDULE mode, or anytime discharging is triggered ' +
       'by time.';
-//    PropertyHelp[propRATEKVAR]            :=
+//    PropertyHelp^[propRATEKVAR]            :=
 //      'Sets the kvar discharge rate in % of rated capacity for each element of the fleet. Applies to TIME control mode or anytime discharging is triggered ' +
 //      'by time.' ;
-    PropertyHelp[propRATECHARGE]          :=
+    PropertyHelp^[propRATECHARGE]          :=
       'Sets the kW charging rate in % of rated capacity for each element of the fleet. Applies to TIME control mode and anytime charging mode is ' +
       'entered due to a time trigger.';
-    PropertyHelp[propRESERVE]             :=
+    PropertyHelp^[propRESERVE]             :=
        'Use this property to change the % reserve for each Storage element under control of this controller. This might be used, for example, to ' +
        'allow deeper discharges of Storage or in case of emergency operation to use the remainder of the Storage element.';
-    PropertyHelp[propKWHTOTAL]            :=
+    PropertyHelp^[propKWHTOTAL]            :=
       '(Read only). Total rated kWh energy Storage capacity of Storage elements controlled by this controller.';
-    PropertyHelp[propKWTOTAL]             :=
+    PropertyHelp^[propKWTOTAL]             :=
       '(Read only). Total rated kW power capacity of Storage elements controlled by this controller.';
-    PropertyHelp[propKWHACTUAL]            :=
+    PropertyHelp^[propKWHACTUAL]            :=
       '(Read only). Actual kWh stored of all controlled Storage elements. ';
-    PropertyHelp[propKWACTUAL]            :=
+    PropertyHelp^[propKWACTUAL]            :=
       '(Read only). Actual kW output of all controlled Storage elements. ';
-    PropertyHelp[propKWNEED]              :=
+    PropertyHelp^[propKWNEED]              :=
       '(Read only). KW needed to meet target.';
-//    PropertyHelp[propPARTICIPATION]       :=
+//    PropertyHelp^[propPARTICIPATION]       :=
 //      'Participation factor, %. Default = 100.';
-    PropertyHelp[propYEARLY]              :=
+    PropertyHelp^[propYEARLY]              :=
       'Dispatch loadshape object, If any, for Yearly solution Mode.';
-    PropertyHelp[propDAILY]               :=
+    PropertyHelp^[propDAILY]               :=
       'Dispatch loadshape object, If any, for Daily solution mode.';
-    PropertyHelp[propDUTY]                :=
+    PropertyHelp^[propDUTY]                :=
       'Dispatch loadshape object, If any, for Dutycycle solution mode.';
-    PropertyHelp[propEVENTLOG]            :=
+    PropertyHelp^[propEVENTLOG]            :=
       '{Yes/True | No/False} Default is No. Log control actions to Eventlog.';
-//    PropertyHelp[propVARDISPATCH]         :=
+//    PropertyHelp^[propVARDISPATCH]         :=
 //      '{Yes/True | No/False} Default is No. Flag to indicate whether or not to disatch vars as well as watts.';
-    PropertyHelp[propINHIBITTIME]         :=
+    PropertyHelp^[propINHIBITTIME]         :=
       'Hours (integer) to inhibit Discharging after going into Charge mode. Default is 5.';
-     PropertyHelp[propTUPRAMP]            := 'Duration, hrs, of upramp part for SCHEDULE mode. Default is 0.25.';
-     PropertyHelp[propTFLAT]              := 'Duration, hrs, of flat part for SCHEDULE mode. Default is 2.0.';
-     PropertyHelp[propTDNRAMP]            := 'Duration, hrs, of downramp part for SCHEDULE mode. Default is 0.25.';
-     PropertyHelp[propKWTHRESHOLD]        := 'Threshold, kW, for Follow mode. kW has to be above this value for the Storage element ' +
+     PropertyHelp^[propTUPRAMP]            := 'Duration, hrs, of upramp part for SCHEDULE mode. Default is 0.25.';
+     PropertyHelp^[propTFLAT]              := 'Duration, hrs, of flat part for SCHEDULE mode. Default is 2.0.';
+     PropertyHelp^[propTDNRAMP]            := 'Duration, hrs, of downramp part for SCHEDULE mode. Default is 0.25.';
+     PropertyHelp^[propKWTHRESHOLD]        := 'Threshold, kW, for Follow mode. kW has to be above this value for the Storage element ' +
                                       'to be dispatched on. Defaults to 75% of the kWTarget value. Must reset this property after ' +
                                       'setting kWTarget if you want a different value.';
-     PropertyHelp[propDispFactor]         := 'Defaults to 1 (disabled). Set to any value between 0 and 1 to enable this parameter.'
+     PropertyHelp^[propDispFactor]         := 'Defaults to 1 (disabled). Set to any value between 0 and 1 to enable this parameter.'
       + CRLF + CRLF + 'Use this parameter to reduce the amount of power requested by the controller in each control iteration. ' +
       'It can be useful when maximum control iterations are exceeded due to numerical instability such as ' +
       'fleet being set to charging and idling in subsequent control iterations (check the Eventlog). ';
-     PropertyHelp[propRESETLEVEL]         := 'The level of charge required for allowing the storage to discharge again after reaching ' +
+     PropertyHelp^[propRESETLEVEL]         := 'The level of charge required for allowing the storage to discharge again after reaching ' +
                                       'the reserve storage level. After reaching this level, the storage control  will not allow ' +
                                       'the storage device to discharge, forcing the storage to charge. Once the storage reaches this' +
                                       'level, the storage will be able to discharge again. This value is a number between 0.2 and 1';
-     PropertyHelp[propSEASONS]            := 'With this property the user can' +
+     PropertyHelp^[propSEASONS]            := 'With this property the user can' +
                                         ' specify the number of targets to be used by the controller using the list given at "SeasonTargets"/' +
                                         '"SeasonTargetsLow", which can be used to dynamically adjust the storage controller during a QSTS' +
                                         ' simulation. The default value is 1. This property needs to be defined before defining SeasonTargets/SeasonTargetsLow.';
-     PropertyHelp[propSEASONTARGETS]      := 'An array of doubles specifying the targets to be used during a QSTS simulation. These targets will take effect' +
+     PropertyHelp^[propSEASONTARGETS]      := 'An array of doubles specifying the targets to be used during a QSTS simulation. These targets will take effect' +
                                         ' only if SeasonRating=true. The number of targets cannot exceed the number of seasons defined at the SeasonSignal.' +
                                         'The difference between the targets defined at SeasonTargets and SeasonTargetsLow is that SeasonTargets' +
                                         ' applies to discharging modes, while SeasonTargetsLow applies to charging modes.';
-     PropertyHelp[propSEASONTARGETSLOW]   := 'An array of doubles specifying the targets to be used during a QSTS simulation. These targets will take effect' +
+     PropertyHelp^[propSEASONTARGETSLOW]   := 'An array of doubles specifying the targets to be used during a QSTS simulation. These targets will take effect' +
                                         ' only if SeasonRating=true. The number of targets cannot exceed the number of seasons defined at the SeasonSignal.' +
                                         'The difference between the targets defined at SeasonTargets and SeasonTargetsLow is that SeasonTargets' +
                                         ' applies to discharging modes, while SeasonTargetsLow applies to charging modes.';

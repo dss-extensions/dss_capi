@@ -550,7 +550,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 End;
 
@@ -791,7 +791,7 @@ Begin
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
      // Override default help string
-     PropertyHelp[NumPropsThisClass +1] := 'Name of harmonic voltage or current spectrum for this Storage element. ' +
+     PropertyHelp^[NumPropsThisClass +1] := 'Name of harmonic voltage or current spectrum for this Storage element. ' +
                          'Current injection is assumed for inverter. ' +
                          'Default value is "default", which is defined when the DSS starts.';
 
@@ -934,7 +934,7 @@ Begin
          ELSE ParamPointer := CommandList.GetCommand(ParamName);  // Look up the name in the list for this class
 
          If  (ParamPointer>0) and (ParamPointer<=NumProperties)
-         Then PropertyValue[PropertyIdxMap[ParamPointer]] := Param   // Update the string value of the property
+         Then PropertyValue[PropertyIdxMap^[ParamPointer]] := Param   // Update the string value of the property
          ELSE
          Begin
             // first, checks if there is a dynamic eq assigned, then
@@ -945,7 +945,7 @@ Begin
          End;
          If ParamPointer > 0 Then
          Begin
-             iCase := PropertyIdxMap[ParamPointer];
+             iCase := PropertyIdxMap^[ParamPointer];
              CASE iCASE OF
                 0               : DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 561);
                 1               : NPhases            := Parser[ActorID].Intvalue;
@@ -1214,7 +1214,7 @@ Begin
          ClassMakeLike(OtherStorageObj);
 
          For i := 1 to ParentClass.NumProperties Do
-             FPropertyValue^[i] := OtherStorageObj.FPropertyValue^[i];
+             FPropertyValue[i] := OtherStorageObj.FPropertyValue[i];
 
          Result := 1;
      End
@@ -3384,7 +3384,7 @@ Begin
       With ParentClass Do
        For i := 1 to NumProperties Do
        Begin
-            idx := PropertyIdxMap[i] ;
+            idx := PropertyIdxMap^[i] ;
             Case idx of
                 propUSERDATA: Writeln(F,'~ ',PropertyName^[i],'=(',PropertyValue[idx],')');
                 propDynaData: Writeln(F,'~ ',PropertyName^[i],'=(',PropertyValue[idx],')');

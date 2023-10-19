@@ -92,7 +92,7 @@ BEGIN
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 END;
 
@@ -112,18 +112,18 @@ Begin
      AllocatePropertyArrays;
 
 
-     PropertyName[1]  := 'nconds';
-     PropertyName[2]  := 'nphases';
-     PropertyName[3]  := 'x';
-     PropertyName[4]  := 'h';
-     PropertyName[5]  := 'units';
+     PropertyName^[1]  := 'nconds';
+     PropertyName^[2]  := 'nphases';
+     PropertyName^[3]  := 'x';
+     PropertyName^[4]  := 'h';
+     PropertyName^[5]  := 'units';
 
 
-     PropertyHelp[1] := 'Number of wires in this geometry. Default is 3. Triggers memory allocations. Define first!';
-     PropertyHelp[2] := 'Number of retained phase conductors. If less than the number of wires, list the retained phase coordinates first.';
-     PropertyHelp[3] := 'Array of wire X coordinates.';
-     PropertyHelp[4] := 'Array of wire Heights.';
-     PropertyHelp[5] := 'Units for x and h: {mi|kft|km|m|Ft|in|cm } Initial default is "ft", but defaults to last unit defined';
+     PropertyHelp^[1] := 'Number of wires in this geometry. Default is 3. Triggers memory allocations. Define first!';
+     PropertyHelp^[2] := 'Number of retained phase conductors. If less than the number of wires, list the retained phase coordinates first.';
+     PropertyHelp^[3] := 'Array of wire X coordinates.';
+     PropertyHelp^[4] := 'Array of wire Heights.';
+     PropertyHelp^[5] := 'Units for x and h: {mi|kft|km|m|Ft|in|cm } Initial default is "ft", but defaults to last unit defined';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list

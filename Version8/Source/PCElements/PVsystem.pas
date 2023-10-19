@@ -409,7 +409,7 @@ constructor TPVsystem.Create;  // Creates superstructure for all PVSystem elemen
     RegisterNames[5]  := 'Hours';
     RegisterNames[6]  := 'Price($)';
     DefineProperties;
-    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList := TCommandList.Create(PropertyName, NumProperties);
     CommandList.Abbrev := TRUE;
   end;
 destructor TPVsystem.Destroy;
@@ -606,7 +606,7 @@ PROCEDURE TPVsystem.DefineProperties;
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
     // Override default help string
-    PropertyHelp[NumPropsThisClass +1] := 'Name of harmonic voltage or current spectrum for this PVSystem element. ' +
+    PropertyHelp^[NumPropsThisClass +1] := 'Name of harmonic voltage or current spectrum for this PVSystem element. ' +
                        'A harmonic voltage source is assumed for the inverter. ' +
                        'Default value is "default", which is defined when the DSS starts.';
   end;
@@ -696,7 +696,7 @@ FUNCTION TPVsystem.Edit(ActorID : Integer):Integer;
           If  (Length(ParamName) = 0) Then Inc(ParamPointer)       // If it is not a named property, assume the next property
           ELSE ParamPointer := CommandList.GetCommand(ParamName);  // Look up the name in the list for this class
           If  (ParamPointer>0) and (ParamPointer<=NumProperties)
-          Then PropertyValue[PropertyIdxMap[ParamPointer]] := Param   // Update the string value of the property
+          Then PropertyValue[PropertyIdxMap^[ParamPointer]] := Param   // Update the string value of the property
           ELSE
           Begin
             // first, checks if there is a dynamic eq assigned, then
@@ -707,7 +707,7 @@ FUNCTION TPVsystem.Edit(ActorID : Integer):Integer;
           End;
           If (ParamPointer > 0) then
             Begin
-              iCase := PropertyIdxMap[ParamPointer];
+              iCase := PropertyIdxMap^[ParamPointer];
               CASE iCASE OF
                 0                 : DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 561);
                 1                 : Begin
@@ -911,7 +911,7 @@ FUNCTION TPVsystem.MakeLike(Const OtherPVSystemObjName:String):Integer;
             CurrentLimited                  := OtherPVSystemObj.CurrentLimited;
             ClassMakeLike(OtherPVSystemObj);
             For i := 1 to ParentClass.NumProperties Do
-              FPropertyValue^[i] := OtherPVSystemObj.FPropertyValue^[i];
+              FPropertyValue[i] := OtherPVSystemObj.FPropertyValue[i];
             Result := 1;
           End;
       end
@@ -2283,7 +2283,7 @@ PROCEDURE TPVsystemObj.DumpProperties(VAR F:TextFile; Complete:Boolean);
       begin                              // HERE
         For i := 1 to NumProperties Do
           Begin
-            idx := PropertyIdxMap[i] ;
+            idx := PropertyIdxMap^[i] ;
             Case idx of
               propUSERDATA: Writeln(F,'~ ',PropertyName^[i],'=(',PropertyValue[idx],')')
               Else

@@ -34,7 +34,7 @@ begin
       If (ActiveCircuit[ActiveActor]<> Nil)
       THEN  With ActiveDSSObject[ActiveActor] Do
         If FPropIndex <= ParentClass.NumProperties Then
-              Result := pAnsiChar(AnsiString(PropertyValue[ParentClass.PropertyIdxMap[FPropIndex]]));
+              Result := pAnsiChar(AnsiString(PropertyValue[ParentClass.PropertyIdxMap^[FPropIndex]]));
     end;
     3: begin                                           // DSSProperties.Value - Write
        If (ActiveCircuit[ActiveActor]<> Nil)

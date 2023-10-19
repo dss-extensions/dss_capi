@@ -144,7 +144,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 End;
 
@@ -168,40 +168,40 @@ Begin
 
      // Define Property names
 
-     PropertyName[1] := 'element';
-     PropertyName[2] := 'terminal';
-     PropertyName[3] := 'kvbase';
-     PropertyName[4] := 'clear';
-     PropertyName[5] := 'kVs';
-     PropertyName[6] := 'currents';
-     PropertyName[7] := 'kWs';
-     PropertyName[8] := 'kvars';
-     PropertyName[9] := 'conn';  //  Sensor connection
-     PropertyName[10] := 'Deltadirection';  //  +/- 1
-     PropertyName[11] := '%Error';  //  %Error of sensor
-     PropertyName[12] := 'Weight';  // for WLS calc
-     PropertyName[13] := 'action';
+     PropertyName^[1] := 'element';
+     PropertyName^[2] := 'terminal';
+     PropertyName^[3] := 'kvbase';
+     PropertyName^[4] := 'clear';
+     PropertyName^[5] := 'kVs';
+     PropertyName^[6] := 'currents';
+     PropertyName^[7] := 'kWs';
+     PropertyName^[8] := 'kvars';
+     PropertyName^[9] := 'conn';  //  Sensor connection
+     PropertyName^[10] := 'Deltadirection';  //  +/- 1
+     PropertyName^[11] := '%Error';  //  %Error of sensor
+     PropertyName^[12] := 'Weight';  // for WLS calc
+     PropertyName^[13] := 'action';
 
-     PropertyHelp[1] := 'Name (Full Object name) of element to which the Sensor is connected.';
-     PropertyHelp[2] := 'Number of the terminal of the circuit element to which the Sensor is connected. '+
+     PropertyHelp^[1] := 'Name (Full Object name) of element to which the Sensor is connected.';
+     PropertyHelp^[2] := 'Number of the terminal of the circuit element to which the Sensor is connected. '+
                         '1 or 2, typically. Default is 1.';
-     PropertyHelp[3] := 'Voltage base for the sensor, in kV. If connected to a 2- or 3-phase terminal, ' + CRLF +
+     PropertyHelp^[3] := 'Voltage base for the sensor, in kV. If connected to a 2- or 3-phase terminal, ' + CRLF +
                         'specify L-L voltage. For 1-phase devices specify L-N or actual 1-phase voltage. '+
                         'Like many other DSS devices, default is 12.47kV.';
-     PropertyHelp[4] := '{ Yes | No }. Clear=Yes clears sensor values. Should be issued before putting in a new set of measurements.';
-     PropertyHelp[5] := 'Array of Voltages (kV) measured by the voltage sensor. For Delta-connected ' +
+     PropertyHelp^[4] := '{ Yes | No }. Clear=Yes clears sensor values. Should be issued before putting in a new set of measurements.';
+     PropertyHelp^[5] := 'Array of Voltages (kV) measured by the voltage sensor. For Delta-connected ' +
                         'sensors, Line-Line voltages are expected. For Wye, Line-Neutral are expected.';
-     PropertyHelp[6] := 'Array of Currents (amps) measured by the current sensor. Specify this or power quantities; not both.';
-     PropertyHelp[7] := 'Array of Active power (kW) measurements at the sensor. Is converted into Currents along with q=[...]'+CRLF+
+     PropertyHelp^[6] := 'Array of Currents (amps) measured by the current sensor. Specify this or power quantities; not both.';
+     PropertyHelp^[7] := 'Array of Active power (kW) measurements at the sensor. Is converted into Currents along with q=[...]'+CRLF+
                         'Will override any currents=[...] specification.';
-     PropertyHelp[8] := 'Array of Reactive power (kvar) measurements at the sensor. Is converted into Currents along with p=[...]';
-     PropertyHelp[9] := 'Voltage sensor Connection: { wye | delta | LN | LL }.  Default is wye. Applies to voltage measurement only. '+CRLF+
+     PropertyHelp^[8] := 'Array of Reactive power (kvar) measurements at the sensor. Is converted into Currents along with p=[...]';
+     PropertyHelp^[9] := 'Voltage sensor Connection: { wye | delta | LN | LL }.  Default is wye. Applies to voltage measurement only. '+CRLF+
                         'Currents are always assumed to be line currents.' + CRLF +
                         'If wye or LN, voltage is assumed measured line-neutral; otherwise, line-line.';
-     PropertyHelp[10] :='{1 or -1}  Default is 1:  1-2, 2-3, 3-1.  For reverse rotation, enter -1. Any positive or negative entry will suffice.';
-     PropertyHelp[11] :='Assumed percent error in the measurement. Default is 1.';
-     PropertyHelp[12] :='Weighting factor: Default is 1.';
-     PropertyHelp[13] :='NOT IMPLEMENTED.Action options: '+CRLF+'SQERROR: Show square error of the present value of the monitored terminal  '+CRLF+
+     PropertyHelp^[10] :='{1 or -1}  Default is 1:  1-2, 2-3, 3-1.  For reverse rotation, enter -1. Any positive or negative entry will suffice.';
+     PropertyHelp^[11] :='Assumed percent error in the measurement. Default is 1.';
+     PropertyHelp^[12] :='Weighting factor: Default is 1.';
+     PropertyHelp^[13] :='NOT IMPLEMENTED.Action options: '+CRLF+'SQERROR: Show square error of the present value of the monitored terminal  '+CRLF+
                         'quantity vs the sensor value. Actual values - convert to per unit in calling program.  '+CRLF+
                         'Value reported in result window/result variable.';
 

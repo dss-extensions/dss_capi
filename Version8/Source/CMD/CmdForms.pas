@@ -171,7 +171,7 @@ begin
     pDSSClass := HelpList.Items[i-1];
     writeln (pDSSClass.name);
     if bProperties=true then for j := 1 to pDSSClass.NumProperties do
-      writeln ('  ', pDSSClass.PropertyName[j], ': ', pDSSClass.PropertyHelp^[j]);
+      writeln ('  ', pDSSClass.PropertyName^[j], ': ', pDSSClass.PropertyHelp^[j]);
   end;
   HelpList.Free;
 end;
@@ -240,7 +240,7 @@ begin
         writeln (UpperCase (pDSSClass.name));
         writeln ('======================');
         for i := 1 to pDSSClass.NumProperties do
-          writeln ('  ', pDSSClass.PropertyName[i], ': ', pDSSClass.PropertyHelp^[i]);
+          writeln ('  ', pDSSClass.PropertyName^[i], ': ', pDSSClass.PropertyHelp^[i]);
       end;
       idx := ActiveDSSClass[ActiveActor].Next;
       pDSSClass := DSSClassList[ActiveActor].Next;

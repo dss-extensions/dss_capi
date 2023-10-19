@@ -143,7 +143,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
      VsourceClass[ActiveActor] := Self;
@@ -167,124 +167,124 @@ Begin
      AllocatePropertyArrays;
 
      // Define Property names
-     PropertyName[1] := 'bus1';
-     PropertyName[2] := 'basekv';
-     PropertyName[3] := 'pu';
-     PropertyName[4] := 'angle';
-     PropertyName[5] := 'frequency';
-     PropertyName[6] := 'phases';
-     PropertyName[7] := 'MVAsc3';
-     PropertyName[8] := 'MVAsc1';
-     PropertyName[9] := 'x1r1';
-     PropertyName[10] := 'x0r0';
-     PropertyName[11] := 'Isc3';
-     PropertyName[12] := 'Isc1';
-     PropertyName[13] := 'R1';
-     PropertyName[14] := 'X1';
-     PropertyName[15] := 'R0';
-     PropertyName[16] := 'X0';
-     PropertyName[17] := 'ScanType';
-     PropertyName[18] := 'Sequence';
-     PropertyName[19] := 'bus2';
-     PropertyName[20] := 'Z1';
-     PropertyName[21] := 'Z0';
-     PropertyName[22] := 'Z2';
-     PropertyName[23] := 'puZ1';
-     PropertyName[24] := 'puZ0';
-     PropertyName[25] := 'puZ2';
-     PropertyName[26] := 'baseMVA';
-     PropertyName[27] := 'Yearly';
-     PropertyName[28] := 'Daily';
-     PropertyName[29] := 'Duty';
-     PropertyName[30] := 'Model';
-     PropertyName[31] := 'puZideal';
+     PropertyName^[1] := 'bus1';
+     PropertyName^[2] := 'basekv';
+     PropertyName^[3] := 'pu';
+     PropertyName^[4] := 'angle';
+     PropertyName^[5] := 'frequency';
+     PropertyName^[6] := 'phases';
+     PropertyName^[7] := 'MVAsc3';
+     PropertyName^[8] := 'MVAsc1';
+     PropertyName^[9] := 'x1r1';
+     PropertyName^[10] := 'x0r0';
+     PropertyName^[11] := 'Isc3';
+     PropertyName^[12] := 'Isc1';
+     PropertyName^[13] := 'R1';
+     PropertyName^[14] := 'X1';
+     PropertyName^[15] := 'R0';
+     PropertyName^[16] := 'X0';
+     PropertyName^[17] := 'ScanType';
+     PropertyName^[18] := 'Sequence';
+     PropertyName^[19] := 'bus2';
+     PropertyName^[20] := 'Z1';
+     PropertyName^[21] := 'Z0';
+     PropertyName^[22] := 'Z2';
+     PropertyName^[23] := 'puZ1';
+     PropertyName^[24] := 'puZ0';
+     PropertyName^[25] := 'puZ2';
+     PropertyName^[26] := 'baseMVA';
+     PropertyName^[27] := 'Yearly';
+     PropertyName^[28] := 'Daily';
+     PropertyName^[29] := 'Duty';
+     PropertyName^[30] := 'Model';
+     PropertyName^[31] := 'puZideal';
 
 
      // define Property help values
-     PropertyHelp[1] := 'Name of bus to which the main terminal (1) is connected.'+CRLF+'bus1=busname'+CRLF+'bus1=busname.1.2.3' +CRLF+CRLF+
+     PropertyHelp^[1] := 'Name of bus to which the main terminal (1) is connected.'+CRLF+'bus1=busname'+CRLF+'bus1=busname.1.2.3' +CRLF+CRLF+
                         'The VSOURCE object is a two-terminal voltage source (thevenin equivalent). ' +
                         'Bus2 defaults to Bus1 with all phases connected to ground (node 0) unless previously specified. This is a Yg connection. ' +
                         'If you want something different, define the Bus2 property ezplicitly.';
-     PropertyHelp[2] := 'Base Source kV, usually phase-phase (L-L) unless you are making a positive-sequence model or 1-phase model'+
+     PropertyHelp^[2] := 'Base Source kV, usually phase-phase (L-L) unless you are making a positive-sequence model or 1-phase model'+
                         'in which case, it will be phase-neutral (L-N) kV.';
-     PropertyHelp[3] := 'Per unit of the base voltage that the source is actually operating at.'+ CRLF +
+     PropertyHelp^[3] := 'Per unit of the base voltage that the source is actually operating at.'+ CRLF +
                         '"pu=1.05"';
-     PropertyHelp[4] := 'Phase angle in degrees of first phase: e.g.,Angle=10.3';
-     PropertyHelp[5] := 'Source frequency.  Defaults to system default base frequency.';
-     PropertyHelp[6] := 'Number of phases.  Defaults to 3.';
-     PropertyHelp[7] := 'MVA Short circuit, 3-phase fault. Default = 2000. ' +
+     PropertyHelp^[4] := 'Phase angle in degrees of first phase: e.g.,Angle=10.3';
+     PropertyHelp^[5] := 'Source frequency.  Defaults to system default base frequency.';
+     PropertyHelp^[6] := 'Number of phases.  Defaults to 3.';
+     PropertyHelp^[7] := 'MVA Short circuit, 3-phase fault. Default = 2000. ' +
                         'Z1 is determined by squaring the base kv and dividing by this value. '+
                         'For single-phase source, this value is not used.';
-     PropertyHelp[8] := 'MVA Short Circuit, 1-phase fault. Default = 2100. ' +
+     PropertyHelp^[8] := 'MVA Short Circuit, 1-phase fault. Default = 2100. ' +
                         'The "single-phase impedance", Zs, is determined by squaring the base kV and dividing by this value. '+
                         'Then Z0 is determined by Z0 = 3Zs - 2Z1.  For 1-phase sources, Zs is used directly. ' +
                         'Use X0R0 to define X/R ratio for 1-phase source.';
-     PropertyHelp[9] := 'Positive-sequence  X/R ratio. Default = 4.';
-     PropertyHelp[10] := 'Zero-sequence X/R ratio.Default = 3.';
-     PropertyHelp[11] := 'Alternate method of defining the source impedance. ' + CRLF +
+     PropertyHelp^[9] := 'Positive-sequence  X/R ratio. Default = 4.';
+     PropertyHelp^[10] := 'Zero-sequence X/R ratio.Default = 3.';
+     PropertyHelp^[11] := 'Alternate method of defining the source impedance. ' + CRLF +
                          '3-phase short circuit current, amps.  Default is 10000.';
-     PropertyHelp[12] := 'Alternate method of defining the source impedance. ' + CRLF +
+     PropertyHelp^[12] := 'Alternate method of defining the source impedance. ' + CRLF +
                          'single-phase short circuit current, amps.  Default is 10500.';
-     PropertyHelp[13] := 'Alternate method of defining the source impedance. ' + CRLF +
+     PropertyHelp^[13] := 'Alternate method of defining the source impedance. ' + CRLF +
                          'Positive-sequence resistance, ohms.  Default is 1.65.';
-     PropertyHelp[14] := 'Alternate method of defining the source impedance. ' + CRLF +
+     PropertyHelp^[14] := 'Alternate method of defining the source impedance. ' + CRLF +
                          'Positive-sequence reactance, ohms.  Default is 6.6.';
-     PropertyHelp[15] := 'Alternate method of defining the source impedance. ' + CRLF +
+     PropertyHelp^[15] := 'Alternate method of defining the source impedance. ' + CRLF +
                          'Zero-sequence resistance, ohms.  Default is 1.9.';
-     PropertyHelp[16] := 'Alternate method of defining the source impedance. ' + CRLF +
+     PropertyHelp^[16] := 'Alternate method of defining the source impedance. ' + CRLF +
                          'Zero-sequence reactance, ohms.  Default is 5.7.';
-     PropertyHelp[17] := '{pos*| zero | none} Maintain specified sequence for harmonic solution. Default is positive sequence. '+
+     PropertyHelp^[17] := '{pos*| zero | none} Maintain specified sequence for harmonic solution. Default is positive sequence. '+
                          'Otherwise, angle between phases rotates with harmonic.';
-     PropertyHelp[18] := '{pos*| neg | zero} Set the phase angles for the specified symmetrical component sequence for non-harmonic solution modes. '+
+     PropertyHelp^[18] := '{pos*| neg | zero} Set the phase angles for the specified symmetrical component sequence for non-harmonic solution modes. '+
                          'Default is positive sequence. ';
-     PropertyHelp[19] := 'Name of bus to which 2nd terminal is connected.'+CRLF+'bus2=busname'+CRLF+'bus2=busname.1.2.3' +
+     PropertyHelp^[19] := 'Name of bus to which 2nd terminal is connected.'+CRLF+'bus2=busname'+CRLF+'bus2=busname.1.2.3' +
                         CRLF + CRLF +
                         'Default is Bus1.0.0.0 (grounded wye connection)';
-     PropertyHelp[20]  := 'Positive-sequence equivalent source impedance, ohms, as a 2-element array representing a complex number. Example: '+CRLF+CRLF+
+     PropertyHelp^[20]  := 'Positive-sequence equivalent source impedance, ohms, as a 2-element array representing a complex number. Example: '+CRLF+CRLF+
                           'Z1=[1, 2]  ! represents 1 + j2 '+CRLF+CRLF+
                           'If defined, Z1, Z2, and Z0 are used to define the impedance matrix of the VSOURCE. ' +
                           'Z1 MUST BE DEFINED TO USE THIS OPTION FOR DEFINING THE MATRIX.'+CRLF+CRLF+
                           'Side Effect: Sets Z2 and Z0 to same values unless they were previously defined.';
-     PropertyHelp[21]  := 'Zero-sequence equivalent source impedance, ohms, as a 2-element array representing a complex number. Example: '+CRLF+CRLF+
+     PropertyHelp^[21]  := 'Zero-sequence equivalent source impedance, ohms, as a 2-element array representing a complex number. Example: '+CRLF+CRLF+
                           'Z0=[3, 4]  ! represents 3 + j4 '+CRLF+CRLF+
                           'Used to define the impedance matrix of the VSOURCE if Z1 is also specified. '+CRLF+CRLF+
                           'Note: Z0 defaults to Z1 if it is not specifically defined. ';
-     PropertyHelp[22]  := 'Negative-sequence equivalent source impedance, ohms, as a 2-element array representing a complex number. Example: '+CRLF+CRLF+
+     PropertyHelp^[22]  := 'Negative-sequence equivalent source impedance, ohms, as a 2-element array representing a complex number. Example: '+CRLF+CRLF+
                           'Z2=[1, 2]  ! represents 1 + j2 ' +CRLF+CRLF+
                           'Used to define the impedance matrix of the VSOURCE if Z1 is also specified. '+CRLF+CRLF+
                           'Note: Z2 defaults to Z1 if it is not specifically defined. If Z2 is not equal to Z1, the impedance matrix is asymmetrical.';
-     PropertyHelp[23]  := '2-element array: e.g., [1  2]. An alternate way to specify Z1. See Z1 property. Per-unit positive-sequence impedance on base of Vsource BasekV and BaseMVA.';
-     PropertyHelp[24]  := '2-element array: e.g., [1  2]. An alternate way to specify Z0. See Z0 property. Per-unit zero-sequence impedance on base of Vsource BasekV and BaseMVA.';
-     PropertyHelp[25]  := '2-element array: e.g., [1  2]. An alternate way to specify Z2. See Z2 property. Per-unit negative-sequence impedance on base of Vsource BasekV and BaseMVA.';
-     PropertyHelp[26]  := 'Default value is 100. Base used to convert values specifiied with puZ1, puZ0, and puZ2 properties to ohms on kV base specified by BasekV property.';
-     PropertyHelp[27]  := 'LOADSHAPE object to use for the per-unit voltage for YEARLY-mode simulations. Set the Mult property of the LOADSHAPE ' +
+     PropertyHelp^[23]  := '2-element array: e.g., [1  2]. An alternate way to specify Z1. See Z1 property. Per-unit positive-sequence impedance on base of Vsource BasekV and BaseMVA.';
+     PropertyHelp^[24]  := '2-element array: e.g., [1  2]. An alternate way to specify Z0. See Z0 property. Per-unit zero-sequence impedance on base of Vsource BasekV and BaseMVA.';
+     PropertyHelp^[25]  := '2-element array: e.g., [1  2]. An alternate way to specify Z2. See Z2 property. Per-unit negative-sequence impedance on base of Vsource BasekV and BaseMVA.';
+     PropertyHelp^[26]  := 'Default value is 100. Base used to convert values specifiied with puZ1, puZ0, and puZ2 properties to ohms on kV base specified by BasekV property.';
+     PropertyHelp^[27]  := 'LOADSHAPE object to use for the per-unit voltage for YEARLY-mode simulations. Set the Mult property of the LOADSHAPE ' +
                           'to the pu curve. Qmult is not used. If UseActual=Yes then the Mult curve should be actual L-N kV.' + CRLF+CRLF+
                           'Must be previously defined as a LOADSHAPE object. '+  CRLF+CRLF+
                           'Is set to the Daily load shape when Daily is defined.  The daily load shape is repeated in this case. '+
                           'Set to NONE to reset to no loadahape for Yearly mode. ' +
                           'The default is no variation.';
-     PropertyHelp[28]  := 'LOADSHAPE object to use for the per-unit voltage for DAILY-mode simulations. Set the Mult property of the LOADSHAPE ' +
+     PropertyHelp^[28]  := 'LOADSHAPE object to use for the per-unit voltage for DAILY-mode simulations. Set the Mult property of the LOADSHAPE ' +
                           'to the pu curve. Qmult is not used. If UseActual=Yes then the Mult curve should be actual L-N kV.' + CRLF+CRLF+
                           'Must be previously defined as a LOADSHAPE object. '+  CRLF+CRLF+
                           'Sets Yearly curve if it is not already defined.   '+
                           'Set to NONE to reset to no loadahape for Yearly mode. ' +
                           'The default is no variation.';
-     PropertyHelp[29]  := 'LOADSHAPE object to use for the per-unit voltage for DUTYCYCLE-mode simulations. Set the Mult property of the LOADSHAPE ' +
+     PropertyHelp^[29]  := 'LOADSHAPE object to use for the per-unit voltage for DUTYCYCLE-mode simulations. Set the Mult property of the LOADSHAPE ' +
                           'to the pu curve. Qmult is not used. If UseActual=Yes then the Mult curve should be actual L-N kV.' + CRLF+CRLF+
                           'Must be previously defined as a LOADSHAPE object. '+  CRLF+CRLF+
                           'Defaults to Daily load shape when Daily is defined.   '+
                           'Set to NONE to reset to no loadahape for Yearly mode. ' +
                           'The default is no variation.';
-     PropertyHelp[30]  := '{Thevenin* | Ideal}  Specifies whether the Vsource is to be considered a Thevenin short circuit model or a quasi-ideal voltage source. If Thevenin, the Vsource uses the impedances defined for all calculations. ' +
+     PropertyHelp^[30]  := '{Thevenin* | Ideal}  Specifies whether the Vsource is to be considered a Thevenin short circuit model or a quasi-ideal voltage source. If Thevenin, the Vsource uses the impedances defined for all calculations. ' +
                           'If "Ideal", the model uses a small impedance on the diagonal of the impedance matrix for the fundamental base frequency power flow only. Then switches to actual Thevenin model for other frequencies. ';
-     PropertyHelp[31]  := '2-element array: e.g., [1  2]. The pu impedance to use for the quasi-ideal voltage source model. Should be a very small impedances. Default is [1e-6, 0.001]. Per-unit impedance on base of Vsource BasekV and BaseMVA. ' +
+     PropertyHelp^[31]  := '2-element array: e.g., [1  2]. The pu impedance to use for the quasi-ideal voltage source model. Should be a very small impedances. Default is [1e-6, 0.001]. Per-unit impedance on base of Vsource BasekV and BaseMVA. ' +
                           'If too small, solution may not work. Be sure to check the voltage values and powers.';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
      // Override help string
-     PropertyHelp[NumPropsThisClass+1] := 'Name of harmonic spectrum for this source.  Default is "defaultvsource", which is defined when the DSS starts.';
+     PropertyHelp^[NumPropsThisClass+1] := 'Name of harmonic spectrum for this source.  Default is "defaultvsource", which is defined when the DSS starts.';
 
 End;
 

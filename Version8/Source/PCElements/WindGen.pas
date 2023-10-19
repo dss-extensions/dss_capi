@@ -276,7 +276,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
      WinGenClass := Self;
@@ -300,33 +300,33 @@ Begin
      AllocatePropertyArrays;   {see DSSClass}
 
      // Define Property names
-     PropertyName[1] := 'phases';
-     PropertyHelp[1] := 'Number of Phases, this WindGen.  Power is evenly divided among phases.';
+     PropertyName^[1] := 'phases';
+     PropertyHelp^[1] := 'Number of Phases, this WindGen.  Power is evenly divided among phases.';
 
-     PropertyName[2] := 'bus1';
-     PropertyHelp[2] := 'Bus to which the WindGen is connected.  May include specific node specification.';
+     PropertyName^[2] := 'bus1';
+     PropertyHelp^[2] := 'Bus to which the WindGen is connected.  May include specific node specification.';
 
-     PropertyName[3] := 'kv';
-     PropertyHelp[3] := 'Nominal rated (1.0 per unit) voltage, kV, for WindGen. For 2- and 3-phase WindGens, specify phase-phase kV. '+
+     PropertyName^[3] := 'kv';
+     PropertyHelp^[3] := 'Nominal rated (1.0 per unit) voltage, kV, for WindGen. For 2- and 3-phase WindGens, specify phase-phase kV. '+
                     'Otherwise, for phases=1 or phases>3, specify actual kV across each branch of the WindGen. '+
                     'If wye (star), specify phase-neutral kV. '+
                     'If delta or phase-phase connected, specify phase-phase kV.';
 
-     PropertyName[4] := 'kW';
-     PropertyHelp[4] := 'Total base kW for the WindGen.  A positive value denotes power coming OUT of the element, '+CRLF+
+     PropertyName^[4] := 'kW';
+     PropertyHelp^[4] := 'Total base kW for the WindGen.  A positive value denotes power coming OUT of the element, '+CRLF+
                     'which is the opposite of a load. This value is modified depending on the dispatch mode. ' +
                     'Unaffected by the global load multiplier and growth curves. ' +
                     'If you want there to be more generation, you must add more WindGens or change this value.';
 
-     PropertyName[5] := 'PF';
-     PropertyHelp[5] := 'WindGen power factor. Default is 0.80. Enter negative for leading powerfactor '+
+     PropertyName^[5] := 'PF';
+     PropertyHelp^[5] := 'WindGen power factor. Default is 0.80. Enter negative for leading powerfactor '+
                     '(when kW and kvar have opposite signs.)'+CRLF+
                     'A positive power factor for a WindGen signifies that the WindGen produces vars ' + CRLF +
                     'as is typical for a synchronous WindGen.  Induction machines would be ' +CRLF+
                     'generally specified with a negative power factor.';
 
-     PropertyName[6] := 'model';
-     PropertyHelp[6] := 'Integer code for the model to use for generation variation with voltage. '+
+     PropertyName^[6] := 'model';
+     PropertyHelp^[6] := 'Integer code for the model to use for generation variation with voltage. '+
                     'Valid values are:' +CRLF+CRLF+
                     '1:WindGen injects a constant kW at specified power factor.'+CRLF+
                     '2:WindGen is modeled as a constant admittance.'  +CRLF+
@@ -336,132 +336,132 @@ Begin
                     '6:Compute load injection from User-written Model.(see usage of Xd, Xdp)';
 
 
-     PropertyName[7] := 'yearly';
-     PropertyHelp[7] := 'Dispatch shape to use for yearly-mode simulations.  Must be previously defined '+
+     PropertyName^[7] := 'yearly';
+     PropertyHelp^[7] := 'Dispatch shape to use for yearly-mode simulations.  Must be previously defined '+
                     'as a Loadshape object. If this is not specified, a constant value is assumed (no variation). '+
                     'Set to NONE to reset to no loadahape. ' +
                     'Nominally for 8760 simulations.  If there are fewer points in the designated shape than '+
                     'the number of points in the solution, the curve is repeated.';
 
-     PropertyName[8] := 'daily';
-     PropertyHelp[8] := 'Dispatch shape to use for daily-mode simulations.  Must be previously defined '+
+     PropertyName^[8] := 'daily';
+     PropertyHelp^[8] := 'Dispatch shape to use for daily-mode simulations.  Must be previously defined '+
                     'as a Loadshape object of 24 hrs, typically.' +
                     'Set to NONE to reset to no loadahape. ' ; // daily dispatch (hourly)
 
-     PropertyName[9] := 'duty';
-     PropertyHelp[9] := 'Load shape to use for duty cycle dispatch simulations such as for wind or solar generation. ' +
+     PropertyName^[9] := 'duty';
+     PropertyHelp^[9] := 'Load shape to use for duty cycle dispatch simulations such as for wind or solar generation. ' +
                     'Must be previously defined as a Loadshape object. '+
                     'Typically would have time intervals less than 1 hr -- perhaps, in seconds. '+
                     'Set to NONE to reset to no loadahape. ' +
                     'Designate the number of points to solve using the Set Number=xxxx command. '+
                     'If there are fewer points in the actual shape, the shape is assumed to repeat.';  // as for wind generation
 
-      PropertyName[10] := ' ';
-      PropertyHelp[10] := ' '; // = 0 | >0
+      PropertyName^[10] := ' ';
+      PropertyHelp^[10] := ' '; // = 0 | >0
 
-      PropertyName[11] := ' ';
-      PropertyHelp[11] := ' ';  // = 0 | >0
+      PropertyName^[11] := ' ';
+      PropertyHelp^[11] := ' ';  // = 0 | >0
 
-      PropertyName[12] := 'conn';
-      PropertyHelp[12] := '={wye|LN|delta|LL}.  Default is wye.';
+      PropertyName^[12] := 'conn';
+      PropertyHelp^[12] := '={wye|LN|delta|LL}.  Default is wye.';
 
-      PropertyName[13] := 'kvar';
-      PropertyHelp[13] := 'Specify the base kvar.  Alternative to specifying the power factor.  Side effect: '+
+      PropertyName^[13] := 'kvar';
+      PropertyHelp^[13] := 'Specify the base kvar.  Alternative to specifying the power factor.  Side effect: '+
                           ' the power factor value is altered to agree based on present value of kW.';
 
-      PropertyName[16] := 'status';
-      PropertyHelp[16] := '={Fixed | Variable*}.  If Fixed, then dispatch multipliers do not apply. '+
+      PropertyName^[16] := 'status';
+      PropertyHelp^[16] := '={Fixed | Variable*}.  If Fixed, then dispatch multipliers do not apply. '+
                          'The WindGen is always at full power when it is ON. '+
                          ' Default is Variable  (follows curves or windspeed).';  // fixed or variable
 
-      PropertyName[17] := 'class';
-      PropertyHelp[17] := 'An arbitrary integer number representing the class of WindGen so that WindGen values may '+
+      PropertyName^[17] := 'class';
+      PropertyHelp^[17] := 'An arbitrary integer number representing the class of WindGen so that WindGen values may '+
                           'be segregated by class.'; // integer
 
-      PropertyName[18] := 'Vpu';
-      PropertyHelp[18] := 'Per Unit voltage set point for Model = 3  (Regulated voltage model).  Default is 1.0 pu. '; // per unit set point voltage for power flow model
+      PropertyName^[18] := 'Vpu';
+      PropertyHelp^[18] := 'Per Unit voltage set point for Model = 3  (Regulated voltage model).  Default is 1.0 pu. '; // per unit set point voltage for power flow model
 
-      PropertyName[19] := 'maxkvar';
-      PropertyHelp[19] := 'Maximum kvar limit for Model = 3.  Defaults to twice the specified load kvar.  '+
+      PropertyName^[19] := 'maxkvar';
+      PropertyHelp^[19] := 'Maximum kvar limit for Model = 3.  Defaults to twice the specified load kvar.  '+
                           'Always reset this if you change PF or kvar properties.';
 
-      PropertyName[20] := 'minkvar';
-      PropertyHelp[20] := 'Minimum kvar limit for Model = 3. Enter a negative number if WindGen can absorb vars.'+
+      PropertyName^[20] := 'minkvar';
+      PropertyHelp^[20] := 'Minimum kvar limit for Model = 3. Enter a negative number if WindGen can absorb vars.'+
                           ' Defaults to negative of Maxkvar.  Always reset this if you change PF or kvar properties.';
 
-      PropertyName[21] := 'pvfactor';
-      PropertyHelp[21] := 'Deceleration factor for P-V WindGen model (Model=3).  Default is 0.1. ' +
+      PropertyName^[21] := 'pvfactor';
+      PropertyHelp^[21] := 'Deceleration factor for P-V WindGen model (Model=3).  Default is 0.1. ' +
                           'If the circuit converges easily, you may want to use a higher number such as 1.0. ' +
                           'Use a lower number if solution diverges. Use Debugtrace=yes to create a file that will ' +
                           'trace the convergence of a WindGen model.';
 
-      PropertyName[22] := 'debugtrace';
-      PropertyHelp[22] := '{Yes | No }  Default is no.  Turn this on to capture the progress of the WindGen model ' +
+      PropertyName^[22] := 'debugtrace';
+      PropertyHelp^[22] := '{Yes | No }  Default is no.  Turn this on to capture the progress of the WindGen model ' +
                           'for each iteration.  Creates a separate file for each WindGen named "GEN_name.CSV".' ;
 
-      PropertyName[23] := 'Vminpu';
-      PropertyHelp[23] := 'Default = 0.90.  Minimum per unit voltage for which the Model is assumed to apply. ' +
+      PropertyName^[23] := 'Vminpu';
+      PropertyHelp^[23] := 'Default = 0.90.  Minimum per unit voltage for which the Model is assumed to apply. ' +
                           'Below this value, the Windgen model reverts to a constant impedance model. For model 7, the current is ' +
                           'limited to the value computed for constant power at Vminpu.';
 
-      PropertyName[24] := 'Vmaxpu';
-      PropertyHelp[24] := 'Default = 1.10.  Maximum per unit voltage for which the Model is assumed to apply. ' +
+      PropertyName^[24] := 'Vmaxpu';
+      PropertyHelp^[24] := 'Default = 1.10.  Maximum per unit voltage for which the Model is assumed to apply. ' +
                           'Above this value, the Windgen model reverts to a constant impedance model.';
 
-      PropertyName[25] := 'forceon';
-      PropertyHelp[25] := '{Yes | No}  Forces WindGen ON despite requirements of other dispatch modes. ' +
+      PropertyName^[25] := 'forceon';
+      PropertyHelp^[25] := '{Yes | No}  Forces WindGen ON despite requirements of other dispatch modes. ' +
                          'Stays ON until this property is set to NO, or an internal algorithm cancels the forced ON state.';
 
-      PropertyName[26] := 'kVA';
-      PropertyHelp[26] := 'kVA rating of electrical machine. Defaults to 1.2* kW if not specified. Applied to machine or inverter definition for Dynamics mode solutions. ';
+      PropertyName^[26] := 'kVA';
+      PropertyHelp^[26] := 'kVA rating of electrical machine. Defaults to 1.2* kW if not specified. Applied to machine or inverter definition for Dynamics mode solutions. ';
 
-      PropertyName[27] := 'MVA';
-      PropertyHelp[27] := 'MVA rating of electrical machine.  Alternative to using kVA=.';
+      PropertyName^[27] := 'MVA';
+      PropertyHelp^[27] := 'MVA rating of electrical machine.  Alternative to using kVA=.';
 
-      PropertyName[28] := 'Xd';
-      PropertyHelp[28] := 'Per unit synchronous reactance of machine. Presently used only for Thevinen impedance for power flow calcs of user models (model=6). ' +
+      PropertyName^[28] := 'Xd';
+      PropertyHelp^[28] := 'Per unit synchronous reactance of machine. Presently used only for Thevinen impedance for power flow calcs of user models (model=6). ' +
                              'Typically use a value 0.4 to 1.0. Default is 1.0';
 
-      PropertyName[29] := 'Xdp';
-      PropertyHelp[29] := 'Per unit transient reactance of the machine.  Used for Dynamics mode and Fault studies.  Default is 0.27.' +
+      PropertyName^[29] := 'Xdp';
+      PropertyHelp^[29] := 'Per unit transient reactance of the machine.  Used for Dynamics mode and Fault studies.  Default is 0.27.' +
                               'For user models, this value is used for the Thevinen/Norton impedance for Dynamics Mode.';
 
-      PropertyName[30] := 'Xdpp';
-      PropertyHelp[30] := 'Per unit subtransient reactance of the machine.  Used for Harmonics. Default is 0.20.';
+      PropertyName^[30] := 'Xdpp';
+      PropertyHelp^[30] := 'Per unit subtransient reactance of the machine.  Used for Harmonics. Default is 0.20.';
 
-      PropertyName[31] := 'H';
-      PropertyHelp[31] := 'Per unit mass constant of the machine.  MW-sec/MVA.  Default is 1.0.';
+      PropertyName^[31] := 'H';
+      PropertyHelp^[31] := 'Per unit mass constant of the machine.  MW-sec/MVA.  Default is 1.0.';
 
-      PropertyName[32] := 'D';
-      PropertyHelp[32] := 'Damping constant.  Usual range is 0 to 4. Default is 1.0.  Adjust to get damping';
+      PropertyName^[32] := 'D';
+      PropertyHelp^[32] := 'Damping constant.  Usual range is 0 to 4. Default is 1.0.  Adjust to get damping';
 
-      PropertyName[33] := 'UserModel';
-      PropertyHelp[33] := 'Name of DLL containing user-written model, which computes the terminal currents for Dynamics studies, ' +
+      PropertyName^[33] := 'UserModel';
+      PropertyHelp^[33] := 'Name of DLL containing user-written model, which computes the terminal currents for Dynamics studies, ' +
                                   'overriding the default model.  Set to "none" to negate previous setting.';
-      PropertyName[34] := 'UserData';
-      PropertyHelp[34] := 'String (in quotes or parentheses) that gets passed to user-written model for defining the data required for that model.';
+      PropertyName^[34] := 'UserData';
+      PropertyHelp^[34] := 'String (in quotes or parentheses) that gets passed to user-written model for defining the data required for that model.';
 
-      PropertyName[35] := 'ShaftModel';
-      PropertyHelp[35] := 'Name of user-written DLL containing a Shaft model, which models the prime mover and determines the power on the shaft for Dynamics studies. '+
+      PropertyName^[35] := 'ShaftModel';
+      PropertyHelp^[35] := 'Name of user-written DLL containing a Shaft model, which models the prime mover and determines the power on the shaft for Dynamics studies. '+
                                     'Models additional mass elements other than the single-mass model in the DSS default model. Set to "none" to negate previous setting.';
-      PropertyName[36] := 'ShaftData';
-      PropertyHelp[36] := 'String (in quotes or parentheses) that gets passed to user-written shaft dynamic model for defining the data for that model.';
+      PropertyName^[36] := 'ShaftData';
+      PropertyHelp^[36] := 'String (in quotes or parentheses) that gets passed to user-written shaft dynamic model for defining the data for that model.';
 
-      PropertyName[37] := 'DutyStart';
-      PropertyHelp[37] := 'Starting time offset [hours] into the duty cycle shape for this WindGen, defaults to 0';
+      PropertyName^[37] := 'DutyStart';
+      PropertyHelp^[37] := 'Starting time offset [hours] into the duty cycle shape for this WindGen, defaults to 0';
 
-      PropertyName[38] := 'Balanced';
-      PropertyHelp[38] := '{Yes | No*} Default is No.  For Model=7, force balanced current only for 3-phase WindGens. Force zero- and negative-sequence to zero.';
+      PropertyName^[38] := 'Balanced';
+      PropertyHelp^[38] := '{Yes | No*} Default is No.  For Model=7, force balanced current only for 3-phase WindGens. Force zero- and negative-sequence to zero.';
 
-      PropertyName[39] := 'XRdp';
-      PropertyHelp[39] := 'Default is 20. X/R ratio for Xdp property for FaultStudy and Dynamic modes.';
+      PropertyName^[39] := 'XRdp';
+      PropertyHelp^[39] := 'Default is 20. X/R ratio for Xdp property for FaultStudy and Dynamic modes.';
 
-      PropertyName[40] := 'DynamicEq';
-      PropertyHelp[40] := 'The name of the dynamic equation (DinamicExp) that will be used for defining the dynamic behavior of the generator. ' +
+      PropertyName^[40] := 'DynamicEq';
+      PropertyHelp^[40] := 'The name of the dynamic equation (DinamicExp) that will be used for defining the dynamic behavior of the generator. ' +
                                  'if not defined, the generator dynamics will follow the built-in dynamic equation.';
 
-      PropertyName[41] := 'DynOut';
-      PropertyHelp[41] := 'The name of the variables within the Dynamic equation that will be used to govern the generator dynamics.' +
+      PropertyName^[41] := 'DynOut';
+      PropertyHelp^[41] := 'The name of the variables within the Dynamic equation that will be used to govern the generator dynamics.' +
                                  'This generator model requires 2 outputs from the dynamic equation: ' + CRLF + CRLF +
                                  '1. Shaft speed (velocity) relative to synchronous speed.' + CRLF +
                                  '2. Shaft, or power, angle (relative to synchronous reference frame).' + CRLF + CRLF +
@@ -474,7 +474,7 @@ Begin
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
      // Override default help string
-     PropertyHelp[NumPropsThisClass +1] := 'Name of harmonic voltage or current spectrum for this WindGen. ' +
+     PropertyHelp^[NumPropsThisClass +1] := 'Name of harmonic voltage or current spectrum for this WindGen. ' +
                          'Voltage behind Xd" for machine - default. Current injection for inverter. ' +
                          'Default value is "default", which is defined when the DSS starts.';
 
@@ -596,7 +596,7 @@ Begin
          ELSE ParamPointer := CommandList.GetCommand(ParamName);
 
          If  (ParamPointer>0) and (ParamPointer<=NumProperties)
-         Then PropertyValue[PropertyIdxMap[ParamPointer]] := Param
+         Then PropertyValue[PropertyIdxMap^[ParamPointer]] := Param
          ELSE
          Begin
            // first, checks if there is a dynamic eq assigned, then
@@ -607,7 +607,7 @@ Begin
          End;
 
          If ParamPointer > 0 Then
-         CASE PropertyIdxMap[ParamPointer] OF
+         CASE PropertyIdxMap^[ParamPointer] OF
             0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 561);
             1: NPhases              :=  Parser[ActorID].Intvalue; // num phases
             2: SetBus(1, param);
@@ -658,7 +658,7 @@ Begin
          End;
 
          If ParamPointer > 0 Then
-         CASE PropertyIdxMap[ParamPointer] OF
+         CASE PropertyIdxMap^[ParamPointer] OF
             1: SetNcondsForConnection;  // Force Reallocation of terminal info
 
             // keep kvar nominal up to date with kW and PF
@@ -788,7 +788,7 @@ Begin
        ClassMakeLike(OtherWindGen);
 
        For i := 1 to ParentClass.NumProperties Do
-           FPropertyValue^[i] := OtherWindGen.FPropertyValue^[i];
+           FPropertyValue[i] := OtherWindGen.FPropertyValue[i];
 
        Result := 1;
    End
@@ -2388,7 +2388,7 @@ Begin
     With ParentClass Do
      For i := 1 to NumProperties Do
      Begin
-        idx := PropertyIdxMap[i] ;
+        idx := PropertyIdxMap^[i] ;
         Case idx of
            34, 36: Writeln(F,'~ ',PropertyName^[i],'=(',PropertyValue[idx],')');
            44 : Writeln(F,'~ ',PropertyName^[i],'=False')  // This one has no variable associated, not needed

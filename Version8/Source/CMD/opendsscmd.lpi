@@ -20,7 +20,10 @@
     </i18n>
     <VersionInfo>
       <UseVersionInfo Value="True"/>
-      <MajorVersionNr Value="8"/>
+      <MajorVersionNr Value="9"/>
+      <MinorVersionNr Value="7"/>
+      <RevisionNr Value="1"/>
+      <BuildNr Value="1"/>
       <Attributes pvaDebug="True" pvaPreRelease="True"/>
     </VersionInfo>
     <BuildModes Count="1">
@@ -32,7 +35,7 @@
     <RunParams>
       <local>
         <HostApplicationFilename Value="\Users\tom\src\OpenDSS\Source\CMD\test\opendsscmd"/>
-        <CommandLineParams Value="dlc.dss"/>
+        <CommandLineParams Value="cim_test.dss"/>
         <WorkingDirectory Value="\Users\tom\src\OpenDSS\Source\CMD\test"/>
       </local>
       <environment>
@@ -50,7 +53,7 @@
         <Mode0 Name="default">
           <local>
             <HostApplicationFilename Value="\Users\tom\src\OpenDSS\Source\CMD\test\opendsscmd"/>
-            <CommandLineParams Value="dlc.dss"/>
+            <CommandLineParams Value="cim_test.dss"/>
             <WorkingDirectory Value="\Users\tom\src\OpenDSS\Source\CMD\test"/>
           </local>
           <environment>
@@ -316,6 +319,7 @@
       <Unit61>
         <Filename Value="..\PCElements\PVsystem.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="PVSystem"/>
       </Unit61>
       <Unit62>
         <Filename Value="..\PCElements\PVSystemUserModel.pas"/>
@@ -632,13 +636,6 @@
       </SyntaxOptions>
     </Parsing>
     <CodeGeneration>
-      <Checks>
-        <IOChecks Value="True"/>
-        <RangeChecks Value="True"/>
-        <OverflowChecks Value="True"/>
-        <StackChecks Value="True"/>
-      </Checks>
-      <VerifyObjMethodCallValidity Value="True"/>
       <TargetCPU Value="aarch64"/>
       <Optimizations>
         <OptimizationLevel Value="0"/>
@@ -646,7 +643,7 @@
     </CodeGeneration>
     <Linking>
       <Debugging>
-        <DebugInfoType Value="dsDwarf2Set"/>
+        <DebugInfoType Value="dsDwarf3"/>
         <TrashVariables Value="True"/>
       </Debugging>
       <Options>

@@ -74,7 +74,7 @@ BEGIN
    DSSObjType := 0;
    PropSeqCount := 0;
    ParentClass := ParClass;
-   FPropertyValue := Allocmem(SizeOf(FPropertyValue^[1])*ParentClass.NumProperties);
+   FPropertyValue := Allocmem(SizeOf(FPropertyValue[1])*ParentClass.NumProperties);
 
    // init'd to zero when allocated
    PrpSequence := Allocmem(SizeOf(PrpSequence^[1])*ParentClass.NumProperties);
@@ -89,7 +89,7 @@ Var i:Integer;
 
 BEGIN
   if Assigned (FPropertyValue) then begin
-    For i := 1 to ParentClass.NumProperties DO FPropertyValue^[i] := '';
+    For i := 1 to ParentClass.NumProperties DO FPropertyValue[i] := '';
     Reallocmem(FPropertyValue,0);
   end;
   Reallocmem(PrpSequence,0);
@@ -111,7 +111,7 @@ end;
 
 function TDSSObject.GetPropertyValue(Index: Integer): String;
 begin
-     Result := FPropertyValue^[Index];  // Default Behavior   for all DSS Objects
+     Result := FPropertyValue[Index];  // Default Behavior   for all DSS Objects
 end;
 
 function TDSSObject.Get_PropertyValue(Index: Integer): String;
@@ -156,7 +156,7 @@ begin
       str:= trim(PropertyValue[iProp]);
       if Comparetext(str, '----')=0 then str:=''; // set to ignore this property
       if Length(str)>0 then  Begin
-          With ParentClass Do Write(F,' ', PropertyName^[RevPropertyIdxMap[iProp]]);
+          With ParentClass Do Write(F,' ', PropertyName^[RevPropertyIdxMap^[iProp]]);
           Write(F, '=', CheckForBlanks(str));
       End;
       if LShpFlag then
@@ -213,7 +213,7 @@ end;
 procedure TDSSObject.Set_PropertyValue(Index: Integer;
   const Value: String);
 begin
-    FPropertyValue^[Index] := Value;
+    FPropertyValue[Index] := Value;
 
     // Keep track of the order in which this property was accessed for Save Command
     Inc(PropSeqCount);

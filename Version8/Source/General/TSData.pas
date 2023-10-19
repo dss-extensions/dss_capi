@@ -65,7 +65,7 @@ BEGIN
 
   DefineProperties;
 
-  CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+  CommandList := TCommandList.Create(PropertyName, NumProperties);
   CommandList.Abbrev := TRUE;
 END;
 
@@ -80,13 +80,13 @@ Begin
   CountProperties;   // Get inherited property count
   AllocatePropertyArrays;
 
-  PropertyName[1] := 'DiaShield';
-  PropertyName[2] := 'TapeLayer';
-  PropertyName[3] := 'TapeLap';
+  PropertyName^[1] := 'DiaShield';
+  PropertyName^[2] := 'TapeLayer';
+  PropertyName^[3] := 'TapeLap';
 
-  PropertyHelp[1] := 'Diameter over tape shield; same units as radius; no default.';
-  PropertyHelp[2] := 'Tape shield thickness; same units as radius; no default.';
-  PropertyHelp[3] := 'Tape Lap in percent; default 20.0';
+  PropertyHelp^[1] := 'Diameter over tape shield; same units as radius; no default.';
+  PropertyHelp^[2] := 'Tape shield thickness; same units as radius; no default.';
+  PropertyHelp^[3] := 'Tape Lap in percent; default 20.0';
 
   ActiveProperty := NumPropsThisClass;
   inherited DefineProperties;  // Add defs of inherited properties to bottom of list

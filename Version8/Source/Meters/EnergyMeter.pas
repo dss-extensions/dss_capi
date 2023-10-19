@@ -445,7 +445,7 @@ Begin
      
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
 //{$IFDEF MSWINDOWS}
@@ -504,10 +504,10 @@ Begin
 
 {     PropertyName^[11] := 'Feeder';  **** removed - not used}
 
-     PropertyHelp[1] := 'Name (Full Object name) of element to which the monitor is connected.';
-     PropertyHelp[2] := 'Number of the terminal of the circuit element to which the monitor is connected. '+
+     PropertyHelp^[1] := 'Name (Full Object name) of element to which the monitor is connected.';
+     PropertyHelp^[2] := 'Number of the terminal of the circuit element to which the monitor is connected. '+
                     '1 or 2, typically.';
-     PropertyHelp[3] := '{Clear (reset) | Save | Take | Zonedump | Allocate | Reduce} ' + CRLF + CRLF +
+     PropertyHelp^[3] := '{Clear (reset) | Save | Take | Zonedump | Allocate | Reduce} ' + CRLF + CRLF +
                     '(A)llocate = Allocate loads on the meter zone to match PeakCurrent.' + CRLF +
                     '(C)lear = reset all registers to zero' + CRLF +
                     '(R)educe = reduces zone by merging lines (see Set Keeplist & ReduceOption)' + CRLF +
@@ -516,7 +516,7 @@ Begin
                     '(T)ake = Takes a sample at present solution' + CRLF +
                     '(Z)onedump = Dump names of elements in meter zone to a file' + CRLF +
                     '   File name is "Zone_metername.CSV".';
-      PropertyHelp[4] := 'Enter a string ARRAY of any combination of the following. Options processed left-to-right:' + CRLF + CRLF +
+      PropertyHelp^[4] := 'Enter a string ARRAY of any combination of the following. Options processed left-to-right:' + CRLF + CRLF +
                     '(E)xcess : (default) UE/EEN is estimate of energy over capacity ' + CRLF +
                     '(T)otal : UE/EEN is total energy after capacity exceeded'+ CRLF +
                     '(R)adial : (default) Treats zone as a radial circuit'+ CRLF +
@@ -524,42 +524,42 @@ Begin
                     '(C)ombined : (default) Load UE/EEN computed from combination of overload and undervoltage.'+ CRLF +
                     '(V)oltage : Load UE/EEN computed based on voltage only.'+CRLF+CRLF+
                     'Example: option=(E, R)';
-      PropertyHelp[5] := 'Upper limit on kVA load in the zone, Normal configuration. Default is 0.0 (ignored). ' +
+      PropertyHelp^[5] := 'Upper limit on kVA load in the zone, Normal configuration. Default is 0.0 (ignored). ' +
                          'Overrides limits on individual lines for overload EEN. ' +
                          'With "LocalOnly=Yes" option, uses only load in metered branch.';
-      PropertyHelp[6] := 'Upper limit on kVA load in the zone, Emergency configuration. Default is 0.0 (ignored). ' +
+      PropertyHelp^[6] := 'Upper limit on kVA load in the zone, Emergency configuration. Default is 0.0 (ignored). ' +
                          'Overrides limits on individual lines for overload UE. ' +
                          'With "LocalOnly=Yes" option, uses only load in metered branch.';
-      PropertyHelp[7] := 'ARRAY of current magnitudes representing the peak currents measured at this location ' +
+      PropertyHelp^[7] := 'ARRAY of current magnitudes representing the peak currents measured at this location ' +
                          'for the load allocation function.  Default is (400, 400, 400). Enter one current for each phase';
-      PropertyHelp[8] := 'ARRAY of full element names for this meter''s zone.  Default is for meter to find it''s own zone. ' +
+      PropertyHelp^[8] := 'ARRAY of full element names for this meter''s zone.  Default is for meter to find it''s own zone. ' +
                          'If specified, DSS uses this list instead.  Can access the names in a single-column text file.  Examples: ' + crlf + crlf+
                          'zonelist=[line.L1, transformer.T1, Line.L3] ' + CRLF +
                          'zonelist=(file=branchlist.txt)';
-      PropertyHelp[9] := '{Yes | No}  Default is NO.  If Yes, meter considers only the monitored element ' +
+      PropertyHelp^[9] := '{Yes | No}  Default is NO.  If Yes, meter considers only the monitored element ' +
                          'for EEN and UE calcs.  Uses whole zone for losses.';
-      PropertyHelp[10]:= 'Mask for adding registers whenever all meters are totalized.  Array of floating point numbers ' +
+      PropertyHelp^[10]:= 'Mask for adding registers whenever all meters are totalized.  Array of floating point numbers ' +
                          'representing the multiplier to be used for summing each register from this meter. ' +
                          'Default = (1, 1, 1, 1, ... ).  You only have to enter as many as are changed (positional). ' +
                          'Useful when two meters monitor same energy, etc.';
-      PropertyHelp[11]:= '{Yes | No}  Default is YES. Compute Zone losses. If NO, then no losses at all are computed.';
-      PropertyHelp[12]:= '{Yes | No}  Default is YES. Compute Line losses. If NO, then none of the losses are computed.';
-      PropertyHelp[13]:= '{Yes | No}  Default is YES. Compute Transformer losses. If NO, transformers are ignored in loss calculations.';
-      PropertyHelp[14]:= '{Yes | No}  Default is YES. Compute Sequence losses in lines and segregate by line mode losses and zero mode losses.';
-      PropertyHelp[15]:= '{Yes | No}  Default is YES. Compute Line losses and segregate by 3-phase and other (1- and 2-phase) line losses. ';
-      PropertyHelp[16]:= '{Yes | No}  Default is YES. Compute losses and segregate by voltage base. If NO, then voltage-based tabulation is not reported.';
-      PropertyHelp[17]:= '{Yes | No}  Default is NO.  Report min, max, and average phase voltages for the zone and tabulate by voltage base. ' +
+      PropertyHelp^[11]:= '{Yes | No}  Default is YES. Compute Zone losses. If NO, then no losses at all are computed.';
+      PropertyHelp^[12]:= '{Yes | No}  Default is YES. Compute Line losses. If NO, then none of the losses are computed.';
+      PropertyHelp^[13]:= '{Yes | No}  Default is YES. Compute Transformer losses. If NO, transformers are ignored in loss calculations.';
+      PropertyHelp^[14]:= '{Yes | No}  Default is YES. Compute Sequence losses in lines and segregate by line mode losses and zero mode losses.';
+      PropertyHelp^[15]:= '{Yes | No}  Default is YES. Compute Line losses and segregate by 3-phase and other (1- and 2-phase) line losses. ';
+      PropertyHelp^[16]:= '{Yes | No}  Default is YES. Compute losses and segregate by voltage base. If NO, then voltage-based tabulation is not reported.';
+      PropertyHelp^[17]:= '{Yes | No}  Default is NO.  Report min, max, and average phase voltages for the zone and tabulate by voltage base. ' +
                          'Demand Intervals must be turned on (Set Demand=true) and voltage bases must be defined for this property to take effect. '+
                          'Result is in a separate report file.';
-      PropertyHelp[18]:= 'Average number of annual interruptions for head of the meter zone (source side of zone or feeder).';
-      PropertyHelp[19]:= 'Average annual duration, in hr, of interruptions for head of the meter zone (source side of zone or feeder).';
-      PropertyHelp[20]:= '(Read only) Makes SAIFI result available via return on query (? energymeter.myMeter.SAIFI.';
-      PropertyHelp[21]:= '(Read only) Makes SAIFIkW result available via return on query (? energymeter.myMeter.SAIFIkW.';
-      PropertyHelp[22]:= '(Read only) Makes SAIDI result available via return on query (? energymeter.myMeter.SAIDI.';
-      PropertyHelp[23]:= '(Read only) Makes CAIDI result available via return on query (? energymeter.myMeter.CAIDI.';
-      PropertyHelp[24]:= '(Read only) Makes Total Customer Interrupts value result available via return on query (? energymeter.myMeter.CustInterrupts.';
+      PropertyHelp^[18]:= 'Average number of annual interruptions for head of the meter zone (source side of zone or feeder).';
+      PropertyHelp^[19]:= 'Average annual duration, in hr, of interruptions for head of the meter zone (source side of zone or feeder).';
+      PropertyHelp^[20]:= '(Read only) Makes SAIFI result available via return on query (? energymeter.myMeter.SAIFI.';
+      PropertyHelp^[21]:= '(Read only) Makes SAIFIkW result available via return on query (? energymeter.myMeter.SAIFIkW.';
+      PropertyHelp^[22]:= '(Read only) Makes SAIDI result available via return on query (? energymeter.myMeter.SAIDI.';
+      PropertyHelp^[23]:= '(Read only) Makes CAIDI result available via return on query (? energymeter.myMeter.CAIDI.';
+      PropertyHelp^[24]:= '(Read only) Makes Total Customer Interrupts value result available via return on query (? energymeter.myMeter.CustInterrupts.';
 (**** Not used in present version
-      PropertyHelp[11]:= '{Yes/True | No/False}  Default is NO. If set to Yes, a Feeder object is created corresponding to ' +
+      PropertyHelp^[11]:= '{Yes/True | No/False}  Default is NO. If set to Yes, a Feeder object is created corresponding to ' +
                          'the energymeter.  Feeder is enabled if Radial=Yes; diabled if Radial=No.  Feeder is ' +
                          'synched automatically with the meter zone.  Do not create feeders for zones in meshed transmission systems.';
 *****)

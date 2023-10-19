@@ -341,7 +341,7 @@ Begin
 
      // Use the Command processor to manage property names
      // PropertyName is an array of String defined in DefineProperties
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
      IndMach012Class := Self;
@@ -383,69 +383,69 @@ Begin
      // statement in the EDIT function
 
 
-     PropertyName[1] := 'phases';
-     PropertyName[2] := 'bus1';
-     PropertyName[3] := 'kv';
-     PropertyName[4] := 'kW';
-     PropertyName[5] := 'pf';
-     PropertyName[6] := 'conn';
-     PropertyName[7] := 'kVA';
-     PropertyName[8] := 'H';
-     PropertyName[9] := 'D';
-     PropertyName[10] := 'puRs';
-     PropertyName[11] := 'puXs';
-     PropertyName[12] := 'puRr';
-     PropertyName[13] := 'puXr';
-     PropertyName[14] := 'puXm';
-     PropertyName[15] := 'Slip';
-     PropertyName[16] := 'MaxSlip';
-     PropertyName[17] := 'SlipOption';
-     PropertyName[18] := 'Yearly';
-     PropertyName[19] := 'Daily';
-     PropertyName[20] := 'Duty';
-     PropertyName[21] := 'Debugtrace';
+     PropertyName^[1] := 'phases';
+     PropertyName^[2] := 'bus1';
+     PropertyName^[3] := 'kv';
+     PropertyName^[4] := 'kW';
+     PropertyName^[5] := 'pf';
+     PropertyName^[6] := 'conn';
+     PropertyName^[7] := 'kVA';
+     PropertyName^[8] := 'H';
+     PropertyName^[9] := 'D';
+     PropertyName^[10] := 'puRs';
+     PropertyName^[11] := 'puXs';
+     PropertyName^[12] := 'puRr';
+     PropertyName^[13] := 'puXr';
+     PropertyName^[14] := 'puXm';
+     PropertyName^[15] := 'Slip';
+     PropertyName^[16] := 'MaxSlip';
+     PropertyName^[17] := 'SlipOption';
+     PropertyName^[18] := 'Yearly';
+     PropertyName^[19] := 'Daily';
+     PropertyName^[20] := 'Duty';
+     PropertyName^[21] := 'Debugtrace';
 
-     PropertyHelp[1] := 'Number of Phases, this Induction Machine.  ';
-     PropertyHelp[2] := 'Bus to which the Induction Machine is connected.  May include specific node specification.';
-     PropertyHelp[3] := 'Nominal rated (1.0 per unit) voltage, kV. For 2- and 3-phase machines, specify phase-phase kV. '+
+     PropertyHelp^[1] := 'Number of Phases, this Induction Machine.  ';
+     PropertyHelp^[2] := 'Bus to which the Induction Machine is connected.  May include specific node specification.';
+     PropertyHelp^[3] := 'Nominal rated (1.0 per unit) voltage, kV. For 2- and 3-phase machines, specify phase-phase kV. '+
                         'Otherwise, specify actual kV across each branch of the machine. '+
                         'If wye (star), specify phase-neutral kV. '+
                         'If delta or phase-phase connected, specify phase-phase kV.';  // line-neutral voltage//  base voltage
-     PropertyHelp[4] := 'Shaft Power, kW, for the Induction Machine.  A positive value denotes power for a load. '+CRLF+
+     PropertyHelp^[4] := 'Shaft Power, kW, for the Induction Machine.  A positive value denotes power for a load. '+CRLF+
                         'Negative value denotes an induction generator. ';
-     PropertyHelp[5] := '[Read Only] Present power factor for the machine. ';
-     PropertyHelp[6] := 'Connection of stator: Delta or Wye. Default is Delta.';
-     PropertyHelp[7] := 'Rated kVA for the machine.';
-     PropertyHelp[8] := 'Per unit mass constant of the machine.  MW-sec/MVA.  Default is 1.0.';
-     PropertyHelp[9] := 'Damping constant.  Usual range is 0 to 4. Default is 1.0.  Adjust to get damping in Dynamics mode,';
-     PropertyHelp[10] := 'Per unit stator resistance. Default is 0.0053.';
-     PropertyHelp[11] := 'Per unit stator leakage reactance. Default is 0.106.';
-     PropertyHelp[12] := 'Per unit rotor  resistance. Default is 0.007.';
-     PropertyHelp[13] := 'Per unit rotor leakage reactance. Default is 0.12.';
-     PropertyHelp[14] := 'Per unit magnetizing reactance.Default is 4.0.';
-     PropertyHelp[15] := 'Initial slip value. Default is 0.007';
-     PropertyHelp[16] := 'Max slip value to allow. Default is 0.1. Set this before setting slip.';
-     PropertyHelp[17] := 'Option for slip model. One of {fixedslip | variableslip*  }';
-     PropertyHelp[18] := 'LOADSHAPE object to use for yearly simulations.  Must be previously defined '+
+     PropertyHelp^[5] := '[Read Only] Present power factor for the machine. ';
+     PropertyHelp^[6] := 'Connection of stator: Delta or Wye. Default is Delta.';
+     PropertyHelp^[7] := 'Rated kVA for the machine.';
+     PropertyHelp^[8] := 'Per unit mass constant of the machine.  MW-sec/MVA.  Default is 1.0.';
+     PropertyHelp^[9] := 'Damping constant.  Usual range is 0 to 4. Default is 1.0.  Adjust to get damping in Dynamics mode,';
+     PropertyHelp^[10] := 'Per unit stator resistance. Default is 0.0053.';
+     PropertyHelp^[11] := 'Per unit stator leakage reactance. Default is 0.106.';
+     PropertyHelp^[12] := 'Per unit rotor  resistance. Default is 0.007.';
+     PropertyHelp^[13] := 'Per unit rotor leakage reactance. Default is 0.12.';
+     PropertyHelp^[14] := 'Per unit magnetizing reactance.Default is 4.0.';
+     PropertyHelp^[15] := 'Initial slip value. Default is 0.007';
+     PropertyHelp^[16] := 'Max slip value to allow. Default is 0.1. Set this before setting slip.';
+     PropertyHelp^[17] := 'Option for slip model. One of {fixedslip | variableslip*  }';
+     PropertyHelp^[18] := 'LOADSHAPE object to use for yearly simulations.  Must be previously defined '+
                         'as a Loadshape object. Is set to the Daily load shape ' +
                         ' when Daily is defined.  The daily load shape is repeated in this case. '+
                         'Set Status=Fixed to ignore Loadshape designation. ' +
                         'Set to NONE to reset to no loadahape. ' +
                         'The default is no variation.';
-     PropertyHelp[19] := 'LOADSHAPE object to use for daily simulations.  Must be previously defined '+
+     PropertyHelp^[19] := 'LOADSHAPE object to use for daily simulations.  Must be previously defined '+
                         'as a Loadshape object of 24 hrs, typically. ' +
                         'Set Status=Fixed to ignore Loadshape designation. ' +
                         'Set to NONE to reset to no loadahape. ' +
                         'Default is no variation (constant) if not defined. ' +
                         'Side effect: Sets Yearly load shape if not already defined.';
-     PropertyHelp[20] := 'LOADSHAPE object to use for duty cycle simulations.  Must be previously defined '+
+     PropertyHelp^[20] := 'LOADSHAPE object to use for duty cycle simulations.  Must be previously defined '+
                         'as a Loadshape object.  Typically would have time intervals less than 1 hr. '+
                         'Designate the number of points to solve using the Set Number=xxxx command. '+
                         'If there are fewer points in the actual shape, the shape is assumed to repeat.'+
                         'Set to NONE to reset to no loadahape. ' +
                         'Set Status=Fixed to ignore Loadshape designation. ' +
                         ' Defaults to Daily curve If not specified.';
-     PropertyHelp[21] := '[Yes | No*] Write DebugTrace file.';
+     PropertyHelp^[21] := '[Yes | No*] Write DebugTrace file.';
 
 
      { add properties here }
@@ -455,7 +455,7 @@ Begin
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
      // You can optionally override default help string of an inherited property, for example
-     PropertyHelp[NumPropsThisClass +1] := 'Name of harmonic voltage or current spectrum for this IndMach012. ' +
+     PropertyHelp^[NumPropsThisClass +1] := 'Name of harmonic voltage or current spectrum for this IndMach012. ' +
                          'Voltage behind Xd" for machine - default. Current injection for inverter. ' +
                          'Default value is "default", which is defined when the DSS starts.';
 
@@ -544,14 +544,14 @@ Begin
          // Update the PropertyValy for this property
          // Actual index is mapped via PropertyIdxMap array for this class
          If  (ParamPointer>0) and (ParamPointer<=NumProperties)
-         Then PropertyValue[PropertyIdxMap[ParamPointer]] := Param
+         Then PropertyValue[PropertyIdxMap^[ParamPointer]] := Param
          ELSE DoSimpleMsg('Unknown parameter "'+ParamName+'" for IndMach012 "'+Name+'"', 560);
 
          // --------------- MAIN CASE STATEMENT ----------------------
          If ParamPointer > 0 Then
          // since we used AddProperty function to define properties, have to
          // use PropertyIdxMap to map to the correct Case index
-         CASE PropertyIdxMap[ParamPointer] OF
+         CASE PropertyIdxMap^[ParamPointer] OF
             0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 561);
             1: NPhases    := Parser[ActorID].Intvalue; // num phases
             2: SetBus(1, param);
@@ -584,7 +584,7 @@ Begin
          // This case statment handles any side effects from setting a property
          // (for example, from Generator)
          If ParamPointer > 0 Then
-         CASE PropertyIdxMap[ParamPointer] OF
+         CASE PropertyIdxMap^[ParamPointer] OF
             1: SetNcondsForConnection;  // Force Reallocation of terminal info
             18: Begin
                     YearlyShapeObj := LoadShapeClass[ActorID].Find(YearlyShape);
@@ -669,7 +669,7 @@ Begin
        // the copied element
        For i := 1 to ParentClass.NumProperties Do
           // Skip read only properties
-          If i<>5 then FPropertyValue^[i] := OtherIndMach012.FPropertyValue^[i];
+          If i<>5 then FPropertyValue[i] := OtherIndMach012.FPropertyValue[i];
 
        Result := 1;
    End
@@ -1664,7 +1664,7 @@ Begin
     With ParentClass Do
      For i := 1 to NumProperties Do
      Begin
-        idx := PropertyIdxMap[i] ; // Map to get proper index into property value array
+        idx := PropertyIdxMap^[i] ; // Map to get proper index into property value array
         Case idx of
           {Trap any specials here, such as values that are array properties, for example}
            34, 36: Writeln(F,'~ ',PropertyName^[i],'=(',PropertyValue[idx],')')

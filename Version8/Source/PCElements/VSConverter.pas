@@ -88,7 +88,7 @@ begin
   DSSClassType := VS_CONVERTER + PC_ELEMENT;
   ActiveElement := 0;
   DefineProperties;
-  CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+  CommandList := TCommandList.Create(PropertyName, NumProperties);
   CommandList.Abbrev := TRUE;
 end;
 
@@ -123,31 +123,31 @@ begin
   PropertyName^[18] := 'Vdcref';
   PropertyName^[19] := 'VscMode';
 
-  PropertyHelp[1]  := 'Number of AC plus DC conductors. Default is 4. AC phases numbered before DC conductors.';
-  PropertyHelp[2]  := 'Name of converter bus, containing both AC and DC conductors. Bus2 is always ground.';
-  PropertyHelp[3]  := 'Nominal AC line-neutral voltage in kV. Must be specified > 0.';
-  PropertyHelp[4]  := 'Nominal DC voltage in kV. Must be specified > 0.';
-  PropertyHelp[5]  := 'Nominal converter power in kW. Must be specified > 0.';
-  PropertyHelp[6]  := 'Number of DC conductors. Default is 1. DC conductors numbered after AC phases.';
-  PropertyHelp[7]  := 'AC resistance (ohms) for the converter transformer, plus any series reactors. Default is 0.' + CRLF +
+  PropertyHelp^[1]  := 'Number of AC plus DC conductors. Default is 4. AC phases numbered before DC conductors.';
+  PropertyHelp^[2]  := 'Name of converter bus, containing both AC and DC conductors. Bus2 is always ground.';
+  PropertyHelp^[3]  := 'Nominal AC line-neutral voltage in kV. Must be specified > 0.';
+  PropertyHelp^[4]  := 'Nominal DC voltage in kV. Must be specified > 0.';
+  PropertyHelp^[5]  := 'Nominal converter power in kW. Must be specified > 0.';
+  PropertyHelp^[6]  := 'Number of DC conductors. Default is 1. DC conductors numbered after AC phases.';
+  PropertyHelp^[7]  := 'AC resistance (ohms) for the converter transformer, plus any series reactors. Default is 0.' + CRLF +
                       'Must be 0 for Vac control mode.';
-  PropertyHelp[8]  := 'AC reactance (ohms) for the converter transformer, plus any series reactors. Default is 0.' + CRLF +
+  PropertyHelp^[8]  := 'AC reactance (ohms) for the converter transformer, plus any series reactors. Default is 0.' + CRLF +
                       'Must be 0 for Vac control mode. Must be >0 for PacVac, PacQac or VacVdc control mode.';
-  PropertyHelp[9]  := 'Fixed or initial value of the modulation index. Default is 0.5.';
-  PropertyHelp[10]  := 'Fixed or initial value of the power angle in degrees. Default is 0.';
-  PropertyHelp[11]  := 'Minimum value of modulation index. Default is 0.1.';
-  PropertyHelp[12]  := 'Maximum value of modulation index. Default is 0.9.';
-  PropertyHelp[13] := 'Maximum value of AC line current, per-unit of nominal. Default is 2.';
-  PropertyHelp[14] := 'Maximum value of DC current, per-unit of nominal. Default is 2.';
-  PropertyHelp[15] := 'Reference AC line-to-neutral voltage, RMS Volts. Default is 0.' + CRLF +
+  PropertyHelp^[9]  := 'Fixed or initial value of the modulation index. Default is 0.5.';
+  PropertyHelp^[10]  := 'Fixed or initial value of the power angle in degrees. Default is 0.';
+  PropertyHelp^[11]  := 'Minimum value of modulation index. Default is 0.1.';
+  PropertyHelp^[12]  := 'Maximum value of modulation index. Default is 0.9.';
+  PropertyHelp^[13] := 'Maximum value of AC line current, per-unit of nominal. Default is 2.';
+  PropertyHelp^[14] := 'Maximum value of DC current, per-unit of nominal. Default is 2.';
+  PropertyHelp^[15] := 'Reference AC line-to-neutral voltage, RMS Volts. Default is 0.' + CRLF +
                       'Applies to PacVac and VdcVac control modes, influencing m.';
-  PropertyHelp[16] := 'Reference total AC real power, Watts. Default is 0.' + CRLF +
+  PropertyHelp^[16] := 'Reference total AC real power, Watts. Default is 0.' + CRLF +
                       'Applies to PacVac and PacQac control modes, influencing d.';
-  PropertyHelp[17] := 'Reference total AC reactive power, Vars. Default is 0.' + CRLF +
+  PropertyHelp^[17] := 'Reference total AC reactive power, Vars. Default is 0.' + CRLF +
                       'Applies to PacQac and VdcQac control modes, influencing m.';
-  PropertyHelp[18] := 'Reference DC voltage, Volts. Default is 0.' + CRLF +
+  PropertyHelp^[18] := 'Reference DC voltage, Volts. Default is 0.' + CRLF +
                       'Applies to VdcVac control mode, influencing d.';
-  PropertyHelp[19] := 'Control Mode (Fixed|PacVac|PacQac|VdcVac|VdcQac). Default is Fixed.';
+  PropertyHelp^[19] := 'Control Mode (Fixed|PacVac|PacQac|VdcVac|VdcQac). Default is Fixed.';
 
   ActiveProperty := NumPropsThisClass;
   inherited DefineProperties;

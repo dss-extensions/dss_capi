@@ -147,7 +147,7 @@ BEGIN
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
 END;
@@ -168,63 +168,63 @@ Begin
      AllocatePropertyArrays;
 
 
-     PropertyName[1]  := 'nconds';
-     PropertyName[2]  := 'nphases';
-     PropertyName[3]  := 'cond';
-     PropertyName[4]  := 'wire';
-     PropertyName[5]  := 'x';
-     PropertyName[6]  := 'h';
-     PropertyName[7]  := 'units';
-     PropertyName[8]  := 'normamps';
-     PropertyName[9]  := 'emergamps';
-     PropertyName[10] := 'reduce';
-     PropertyName[11] := 'spacing';
-     PropertyName[12] := 'wires';
-     PropertyName[13] := 'cncable';
-     PropertyName[14] := 'tscable';
-     PropertyName[15] := 'cncables';
-     PropertyName[16] := 'tscables';
-     PropertyName[17] := 'Seasons';
-     PropertyName[18] := 'Ratings';
-     PropertyName[19] := 'LineType';
+     PropertyName^[1]  := 'nconds';
+     PropertyName^[2]  := 'nphases';
+     PropertyName^[3]  := 'cond';
+     PropertyName^[4]  := 'wire';
+     PropertyName^[5]  := 'x';
+     PropertyName^[6]  := 'h';
+     PropertyName^[7]  := 'units';
+     PropertyName^[8]  := 'normamps';
+     PropertyName^[9]  := 'emergamps';
+     PropertyName^[10] := 'reduce';
+     PropertyName^[11] := 'spacing';
+     PropertyName^[12] := 'wires';
+     PropertyName^[13] := 'cncable';
+     PropertyName^[14] := 'tscable';
+     PropertyName^[15] := 'cncables';
+     PropertyName^[16] := 'tscables';
+     PropertyName^[17] := 'Seasons';
+     PropertyName^[18] := 'Ratings';
+     PropertyName^[19] := 'LineType';
 
-     PropertyHelp[1] := 'Number of conductors in this geometry. Default is 3. Triggers memory allocations. Define first!';
-     PropertyHelp[2] := 'Number of phases. Default =3; All other conductors are considered neutrals and might be reduced out.';
-     PropertyHelp[3] := 'Set this = number of the conductor you wish to define. Default is 1.';
-     PropertyHelp[4] := 'Code from WireData. MUST BE PREVIOUSLY DEFINED. no default.' + CRLF +
+     PropertyHelp^[1] := 'Number of conductors in this geometry. Default is 3. Triggers memory allocations. Define first!';
+     PropertyHelp^[2] := 'Number of phases. Default =3; All other conductors are considered neutrals and might be reduced out.';
+     PropertyHelp^[3] := 'Set this = number of the conductor you wish to define. Default is 1.';
+     PropertyHelp^[4] := 'Code from WireData. MUST BE PREVIOUSLY DEFINED. no default.' + CRLF +
                         'Specifies use of Overhead Line parameter calculation,' + CRLF +
                         'Unless Tape Shield cable previously assigned to phases, and this wire is a neutral.';
-     PropertyHelp[5] := 'x coordinate.';
-     PropertyHelp[6] := 'Height of conductor.';
-     PropertyHelp[7] := 'Units for x and h: {mi|kft|km|m|Ft|in|cm } Initial default is "ft", but defaults to last unit defined';
-     PropertyHelp[8] := 'Normal ampacity, amperes for the line. Defaults to first conductor if not specified.';
-     PropertyHelp[9] := 'Emergency ampacity, amperes. Defaults to first conductor if not specified.';
-     PropertyHelp[10] := '{Yes | No} Default = no. Reduce to Nphases (Kron Reduction). Reduce out neutrals.';
-     PropertyHelp[11] := 'Reference to a LineSpacing for use in a line constants calculation.' + CRLF +
+     PropertyHelp^[5] := 'x coordinate.';
+     PropertyHelp^[6] := 'Height of conductor.';
+     PropertyHelp^[7] := 'Units for x and h: {mi|kft|km|m|Ft|in|cm } Initial default is "ft", but defaults to last unit defined';
+     PropertyHelp^[8] := 'Normal ampacity, amperes for the line. Defaults to first conductor if not specified.';
+     PropertyHelp^[9] := 'Emergency ampacity, amperes. Defaults to first conductor if not specified.';
+     PropertyHelp^[10] := '{Yes | No} Default = no. Reduce to Nphases (Kron Reduction). Reduce out neutrals.';
+     PropertyHelp^[11] := 'Reference to a LineSpacing for use in a line constants calculation.' + CRLF +
                           'Alternative to x, h, and units. MUST BE PREVIOUSLY DEFINED.' + CRLF +
                           'Must match "nconds" as previously defined for this geometry.' + CRLF +
                           'Must be used in conjunction with the Wires property.';
-     PropertyHelp[12] := 'Array of WireData names for use in a line constants calculation.' + CRLF +
+     PropertyHelp^[12] := 'Array of WireData names for use in a line constants calculation.' + CRLF +
                           'Alternative to individual wire inputs. ALL MUST BE PREVIOUSLY DEFINED.' + CRLF +
                           'Must match "nconds" as previously defined for this geometry,' + CRLF +
                           'unless TSData or CNData were previously assigned to phases, and these wires are neutrals.' + CRLF +
                           'Must be used in conjunction with the Spacing property.';
-     PropertyHelp[13] := 'Code from CNData. MUST BE PREVIOUSLY DEFINED. no default.' + CRLF +
+     PropertyHelp^[13] := 'Code from CNData. MUST BE PREVIOUSLY DEFINED. no default.' + CRLF +
                          'Specifies use of Concentric Neutral cable parameter calculation.';
-     PropertyHelp[14] := 'Code from TSData. MUST BE PREVIOUSLY DEFINED. no default.' + CRLF +
+     PropertyHelp^[14] := 'Code from TSData. MUST BE PREVIOUSLY DEFINED. no default.' + CRLF +
                          'Specifies use of Tape Shield cable parameter calculation.';
-     PropertyHelp[15] := 'Array of CNData names for cable parameter calculation.' + CRLF +
+     PropertyHelp^[15] := 'Array of CNData names for cable parameter calculation.' + CRLF +
                          'All must be previously defined, and match "nphases" for this geometry.' + CRLF +
                          'You can later define "nconds-nphases" wires for bare neutral conductors.';
-     PropertyHelp[16] := 'Array of TSData names for cable parameter calculation.' + CRLF +
+     PropertyHelp^[16] := 'Array of TSData names for cable parameter calculation.' + CRLF +
                          'All must be previously defined, and match "nphases" for this geometry.' + CRLF +
                          'You can later define "nconds-nphases" wires for bare neutral conductors.';
-     PropertyHelp[17] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the ' +
+     PropertyHelp^[17] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the ' +
                          '"Ratings" property. Defaults to first conductor if not specified.' ;
-     PropertyHelp[18] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
+     PropertyHelp^[18] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
                          CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.' +
                          'Defaults to first conductor if not specified.';
-     PropertyHelp[19] := 'Code designating the type of line. ' +  CRLF +
+     PropertyHelp^[19] := 'Code designating the type of line. ' +  CRLF +
                          'One of: OH, UG, UG_TS, UG_CN, SWT_LDBRK, SWT_FUSE, SWT_SECT, SWT_REC, SWT_DISC, SWT_BRK, SWT_ELBOW, BUSBAR' + CRLF +  CRLF +
                          'OpenDSS currently does not use this internally. For whatever purpose the user defines. Default is OH.' ;
 
@@ -724,7 +724,7 @@ begin
    Begin
       With ParentClass Do
 
-        CASE RevPropertyIdxMap[iProp] of
+        CASE RevPropertyIdxMap^[iProp] of
             3,11,12:  Begin   // if cond=, spacing, or wires were ever used write out arrays ...
                    For i := 1 to Fnconds Do
                    Begin
@@ -753,7 +753,7 @@ begin
                 End;
             19: Writeln(F, '~ LineType=%.4g' + LineTypeList.Get(FLineType));
         ELSE
-          Writeln(F,Format('~ %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]],CheckForBlanks(PropertyValue[iProp])] ));
+          Writeln(F,Format('~ %s=%s', [PropertyName^[RevPropertyIdxMap^[iProp]],CheckForBlanks(PropertyValue[iProp])] ));
         END;
       iProp := GetNextPropertySet(iProp);
    End;

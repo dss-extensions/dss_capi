@@ -96,7 +96,7 @@ BEGIN
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
 
@@ -120,15 +120,15 @@ Begin
 
 
      // Define Property names
-     PropertyName[1] := 'npts';     // Number of points to expect
-     PropertyName[2] := 'C_array';     // vector of multiplier values
-     PropertyName[3] := 'T_array';     // vextor of time values , Sec
+     PropertyName^[1] := 'npts';     // Number of points to expect
+     PropertyName^[2] := 'C_array';     // vector of multiplier values
+     PropertyName^[3] := 'T_array';     // vextor of time values , Sec
 
      // define Property help values
 
-     PropertyHelp[1] := 'Number of points to expect in time-current arrays.';     // Number of points to expect
-     PropertyHelp[2] := 'Array of current (or voltage) values corresponding to time values (see help on T_Array).';     // vector of multiplier values
-     PropertyHelp[3] := 'Array of time values in sec. Typical array syntax: ' +CRLF+
+     PropertyHelp^[1] := 'Number of points to expect in time-current arrays.';     // Number of points to expect
+     PropertyHelp^[2] := 'Array of current (or voltage) values corresponding to time values (see help on T_Array).';     // vector of multiplier values
+     PropertyHelp^[3] := 'Array of time values in sec. Typical array syntax: ' +CRLF+
                         't_array = (1, 2, 3, 4, ...)' + CRLF+CRLF+
                         'Can also substitute a file designation: ' +CRLF+
                         't_array =  (file=filename)'+CRLF+CRLF+

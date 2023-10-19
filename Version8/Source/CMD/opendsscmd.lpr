@@ -1,10 +1,5 @@
 program opendsscmd;
 
-{$IFDEF Darwin}
-{$linkframework CoreFoundation}
-{$linkframework Carbon}
-{$ENDIF}
-
 { ----------------------------------------------------------
   Copyright (c) 2008-2023, Electric Power Research Institute, Inc.
   All rights reserved.
@@ -409,23 +404,23 @@ begin
   writeln('      If not provided, accepts user commands at the >> prompt.');
   writeln(' -h displays this message and exits');
   writeln(' -f stop_time [filename] starts in FNCS co-simulation mode');
-	writeln('      Stop_time is the co-simulation stopping time in seconds;');
-	writeln('        may also append a single character d(ay), h(our) or m(inute) for units');
-	writeln('      If filename is provided, that will be compiled before starting FNCS');
+  writeln('      Stop_time is the co-simulation stopping time in seconds;');
+  writeln('        may also append a single character d(ay), h(our) or m(inute) for units');
+  writeln('      If filename is provided, that will be compiled before starting FNCS');
   writeln('      This option requires FNCS installation and opendss.yaml file');
-	writeln('      Run with Envar FNCS_LOG_LEVEL=WARNING (default), INFO or DEBUG* to generate more logging output,');
-	writeln('        DEBUG1 for FNCS command echo, outside the time step loop,');
-	writeln('        DEBUG2 for FNCS command echo, inside the time step loop,');
-	writeln('        DEBUG3 for FNCS topic map echo.');
+  writeln('      Run with Envar FNCS_LOG_LEVEL=WARNING (default), INFO or DEBUG* to generate more logging output,');
+  writeln('        DEBUG1 for FNCS command echo, outside the time step loop,');
+  writeln('        DEBUG2 for FNCS command echo, inside the time step loop,');
+  writeln('        DEBUG3 for FNCS topic map echo.');
   writeln(' -l stop_time [filename] starts in HELICS co-simulation mode');
-	writeln('      Stop_time is the co-simulation stopping time in seconds;');
-	writeln('        may also append a single character d(ay), h(our) or m(inute) for units');
-	writeln('      If filename is provided, that will be compiled before starting HELICS');
+  writeln('      Stop_time is the co-simulation stopping time in seconds;');
+  writeln('        may also append a single character d(ay), h(our) or m(inute) for units');
+  writeln('      If filename is provided, that will be compiled before starting HELICS');
   writeln('      This option requires HELICS installation and opendss.json file');
-	writeln('      Run with Envar HELICS_LOG_LEVEL=WARNING (default), INFO or DEBUG* to generate more logging output,');
-	writeln('        DEBUG1 for HELICS command echo, outside the time step loop,');
-	writeln('        DEBUG2 for HELICS command echo, inside the time step loop,');
-	writeln('        DEBUG3 for HELICS topic map echo.');
+  writeln('      Run with Envar HELICS_LOG_LEVEL=WARNING (default), INFO or DEBUG* to generate more logging output,');
+  writeln('        DEBUG1 for HELICS command echo, outside the time step loop,');
+  writeln('        DEBUG2 for HELICS command echo, inside the time step loop,');
+  writeln('        DEBUG3 for HELICS topic map echo.');
   writeln(' -v displays the version and exits');
 end;
 
@@ -433,6 +428,8 @@ var
   Application: TMyApplication;
 
 // {$R *.res}
+
+{$R *.res}
 
 begin
   Application:=TMyApplication.Create(nil);

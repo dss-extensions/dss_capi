@@ -108,7 +108,7 @@ implementation
 
        DefineProperties;
 
-       CommandList        := TCommandList.Create(Slice(PropertyName^, NumProperties));
+       CommandList        := TCommandList.Create(PropertyName, NumProperties);
        CommandList.Abbrev := TRUE;
 
        DynamicExpClass    := Self;
@@ -130,20 +130,20 @@ implementation
        AllocatePropertyArrays;
 
 
-       PropertyName[1] := 'nvariables';
-       PropertyName[2] := 'varnames';
-       PropertyName[3] := 'var';
-       PropertyName[4] := 'varidx';
-       PropertyName[5] := 'expression';
-       PropertyName[6] := 'Domain';
+       PropertyName^[1] := 'nvariables';
+       PropertyName^[2] := 'varnames';
+       PropertyName^[3] := 'var';
+       PropertyName^[4] := 'varidx';
+       PropertyName^[5] := 'expression';
+       PropertyName^[6] := 'Domain';
 
-       PropertyHelp[1] := '(Int) Number of state variables to be considered in the differential equation.';
-       PropertyHelp[2] := '([String]) Array of strings with the names of the state variables.';
-       PropertyHelp[3] := '(String) Activates the state variable using the given name.';
-       PropertyHelp[4] := '(Int) read-only, returns the index of the active state variable.';
-       PropertyHelp[5] := 'It is the differential expression using OpenDSS RPN syntax. The expression must be contained within brackets in case of having multiple equations, for example:' + CRLF + CRLF +
+       PropertyHelp^[1] := '(Int) Number of state variables to be considered in the differential equation.';
+       PropertyHelp^[2] := '([String]) Array of strings with the names of the state variables.';
+       PropertyHelp^[3] := '(String) Activates the state variable using the given name.';
+       PropertyHelp^[4] := '(Int) read-only, returns the index of the active state variable.';
+       PropertyHelp^[5] := 'It is the differential expression using OpenDSS RPN syntax. The expression must be contained within brackets in case of having multiple equations, for example:' + CRLF + CRLF +
                           'expression = "[w dt = 1 M / (P_m D*w - P_e -) *]"';
-       PropertyHelp[6] := 'It is the domain for which the equation is defined, it can be one of [time*, dq]. By deafult, dynamic epxressions are defined in the time domain.';
+       PropertyHelp^[6] := 'It is the domain for which the equation is defined, it can be one of [time*, dq]. By deafult, dynamic epxressions are defined in the time domain.';
 
        ActiveProperty := NumPropsThisClass;
        inherited DefineProperties;  // Add defs of inherited properties to bottom of list

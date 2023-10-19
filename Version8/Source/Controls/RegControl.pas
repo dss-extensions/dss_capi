@@ -224,7 +224,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
      setlength(LastChange,CPU_Cores+1);
@@ -250,98 +250,98 @@ Begin
 
      // Define Property names
 
-     PropertyName[1] := 'transformer';
-     PropertyName[2] := 'winding';
-     PropertyName[3] := 'vreg';
-     PropertyName[4] := 'band';
-     PropertyName[5] := 'ptratio';
-     PropertyName[6] := 'CTprim';
-     PropertyName[7] := 'R';
-     PropertyName[8] := 'X';
-     PropertyName[9] := 'bus';
-     PropertyName[10] := 'delay';
-     PropertyName[11] := 'reversible';
-     PropertyName[12] := 'revvreg';
-     PropertyName[13] := 'revband';
-     PropertyName[14] := 'revR';
-     PropertyName[15] := 'revX';
-     PropertyName[16] := 'tapdelay';
-     PropertyName[17] := 'debugtrace';
-     PropertyName[18] := 'maxtapchange';
-     PropertyName[19] := 'inversetime';
-     PropertyName[20] := 'tapwinding';
-     PropertyName[21] := 'vlimit';
-     PropertyName[22] := 'PTphase';
-     PropertyName[23] := 'revThreshold';
-     PropertyName[24] := 'revDelay';
-     PropertyName[25] := 'revNeutral';
-     PropertyName[26] := 'EventLog';
-     PropertyName[27] := 'RemotePTRatio';
-     PropertyName[28] := 'TapNum';
-     PropertyName[29] := 'Reset';
-     PropertyName[30] := 'LDC_Z';
-     PropertyName[31] := 'rev_Z';
-     PropertyName[32] := 'Cogen';
+     PropertyName^[1] := 'transformer';
+     PropertyName^[2] := 'winding';
+     PropertyName^[3] := 'vreg';
+     PropertyName^[4] := 'band';
+     PropertyName^[5] := 'ptratio';
+     PropertyName^[6] := 'CTprim';
+     PropertyName^[7] := 'R';
+     PropertyName^[8] := 'X';
+     PropertyName^[9] := 'bus';
+     PropertyName^[10] := 'delay';
+     PropertyName^[11] := 'reversible';
+     PropertyName^[12] := 'revvreg';
+     PropertyName^[13] := 'revband';
+     PropertyName^[14] := 'revR';
+     PropertyName^[15] := 'revX';
+     PropertyName^[16] := 'tapdelay';
+     PropertyName^[17] := 'debugtrace';
+     PropertyName^[18] := 'maxtapchange';
+     PropertyName^[19] := 'inversetime';
+     PropertyName^[20] := 'tapwinding';
+     PropertyName^[21] := 'vlimit';
+     PropertyName^[22] := 'PTphase';
+     PropertyName^[23] := 'revThreshold';
+     PropertyName^[24] := 'revDelay';
+     PropertyName^[25] := 'revNeutral';
+     PropertyName^[26] := 'EventLog';
+     PropertyName^[27] := 'RemotePTRatio';
+     PropertyName^[28] := 'TapNum';
+     PropertyName^[29] := 'Reset';
+     PropertyName^[30] := 'LDC_Z';
+     PropertyName^[31] := 'rev_Z';
+     PropertyName^[32] := 'Cogen';
 
-     PropertyHelp[1] := 'Name of Transformer or AutoTrans element to which the RegControl is connected. '+
+     PropertyHelp^[1] := 'Name of Transformer or AutoTrans element to which the RegControl is connected. '+
                         'Do not specify the full object name; "Transformer" or "AutoTrans" is assumed for '  +
                         'the object class.  Example:'+CRLF+CRLF+
                         'Transformer=Xfmr1';
-     PropertyHelp[2] := 'Number of the winding of the transformer element that the RegControl is monitoring. '+
+     PropertyHelp^[2] := 'Number of the winding of the transformer element that the RegControl is monitoring. '+
                         '1 or 2, typically.  Side Effect: Sets TAPWINDING property to the same winding.';
-     PropertyHelp[3] := 'Voltage regulator setting, in VOLTS, for the winding being controlled.  Multiplying this '+
+     PropertyHelp^[3] := 'Voltage regulator setting, in VOLTS, for the winding being controlled.  Multiplying this '+
                         'value times the ptratio should yield the voltage across the WINDING of the controlled transformer.' +
                         ' Default is 120.0';
-     PropertyHelp[4] := 'Bandwidth in VOLTS for the controlled bus (see help for ptratio property).  Default is 3.0';
-     PropertyHelp[5] := 'Ratio of the PT that converts the controlled winding voltage to the regulator control voltage. '+
+     PropertyHelp^[4] := 'Bandwidth in VOLTS for the controlled bus (see help for ptratio property).  Default is 3.0';
+     PropertyHelp^[5] := 'Ratio of the PT that converts the controlled winding voltage to the regulator control voltage. '+
                         'Default is 60.  If the winding is Wye, the line-to-neutral voltage is used.  Else, the line-to-line ' +
                         'voltage is used. SIDE EFFECT: Also sets RemotePTRatio property.';
-     PropertyHelp[6] := 'Rating, in Amperes, of the primary CT rating for which the line amps convert to control rated amps.'+
+     PropertyHelp^[6] := 'Rating, in Amperes, of the primary CT rating for which the line amps convert to control rated amps.'+
                         'The typical default secondary ampere rating is 0.2 Amps (check with manufacturer specs). ' +
                         'Current at which the LDC voltages match the R and X settings.';
-     PropertyHelp[7] := 'R setting on the line drop compensator in the regulator, expressed in VOLTS.';
-     PropertyHelp[8] := 'X setting on the line drop compensator in the regulator, expressed in VOLTS.';
-     PropertyHelp[9] := 'Name of a bus (busname.nodename) in the system to use as the controlled bus instead of the bus to which the '+
+     PropertyHelp^[7] := 'R setting on the line drop compensator in the regulator, expressed in VOLTS.';
+     PropertyHelp^[8] := 'X setting on the line drop compensator in the regulator, expressed in VOLTS.';
+     PropertyHelp^[9] := 'Name of a bus (busname.nodename) in the system to use as the controlled bus instead of the bus to which the '+
                         'transformer winding is connected or the R and X line drop compensator settings.  Do not specify this '+
                         'value if you wish to use the line drop compensator settings.  Default is null string. Assumes the base voltage for this '+
                         'bus is the same as the transformer winding base specified above. ' +
                         'Note: This bus (1-phase) WILL BE CREATED by the regulator control upon SOLVE if not defined by some other device. ' +
                         'You can specify the node of the bus you wish to sample (defaults to 1). ' +
                         'If specified, the RegControl is redefined as a 1-phase device since only one voltage is used.' ;
-     PropertyHelp[10] := 'Time delay, in seconds, from when the voltage goes out of band to when the tap changing begins. ' +
+     PropertyHelp^[10] := 'Time delay, in seconds, from when the voltage goes out of band to when the tap changing begins. ' +
                          'This is used to determine which regulator control will act first. Default is 15.  You may specify any '+
                          'floating point number to achieve a model of whatever condition is necessary.';
-     PropertyHelp[11] := '{Yes |No*} Indicates whether or not the regulator can be switched to regulate in the reverse direction. Default is No.' +
+     PropertyHelp^[11] := '{Yes |No*} Indicates whether or not the regulator can be switched to regulate in the reverse direction. Default is No.' +
                          'Typically applies only to line regulators and not to LTC on a substation transformer.';
-     PropertyHelp[12] := 'Voltage setting in volts for operation in the reverse direction.';
-     PropertyHelp[13] := 'Bandwidth for operating in the reverse direction.';
-     PropertyHelp[14] := 'R line drop compensator setting for reverse direction.';
-     PropertyHelp[15] := 'X line drop compensator setting for reverse direction.';
-     PropertyHelp[16] := 'Delay in sec between tap changes. Default is 2. This is how long it takes between changes ' +
+     PropertyHelp^[12] := 'Voltage setting in volts for operation in the reverse direction.';
+     PropertyHelp^[13] := 'Bandwidth for operating in the reverse direction.';
+     PropertyHelp^[14] := 'R line drop compensator setting for reverse direction.';
+     PropertyHelp^[15] := 'X line drop compensator setting for reverse direction.';
+     PropertyHelp^[16] := 'Delay in sec between tap changes. Default is 2. This is how long it takes between changes ' +
                          'after the first change.';
-     PropertyHelp[17] := '{Yes | No* }  Default is no.  Turn this on to capture the progress of the regulator model ' +
+     PropertyHelp^[17] := '{Yes | No* }  Default is no.  Turn this on to capture the progress of the regulator model ' +
                          'for each control iteration.  Creates a separate file for each RegControl named "REG_name.CSV".' ;
-     PropertyHelp[18] := 'Maximum allowable tap change per control iteration in STATIC control mode.  Default is 16. ' + CRLF+ CRLF +
+     PropertyHelp^[18] := 'Maximum allowable tap change per control iteration in STATIC control mode.  Default is 16. ' + CRLF+ CRLF +
                          'Set this to 1 to better approximate actual control action. ' + CRLF + CRLF +
                          'Set this to 0 to fix the tap in the current position.';
-     PropertyHelp[19] := '{Yes | No* } Default is no.  The time delay is adjusted inversely proportional to the amount the voltage is outside the band down to 10%.';
-     PropertyHelp[20] := 'Winding containing the actual taps, if different than the WINDING property. Defaults to the same winding as specified by the WINDING property.';
-     PropertyHelp[21] := 'Voltage Limit for bus to which regulated winding is connected (e.g. first customer). Default is 0.0. ' +
+     PropertyHelp^[19] := '{Yes | No* } Default is no.  The time delay is adjusted inversely proportional to the amount the voltage is outside the band down to 10%.';
+     PropertyHelp^[20] := 'Winding containing the actual taps, if different than the WINDING property. Defaults to the same winding as specified by the WINDING property.';
+     PropertyHelp^[21] := 'Voltage Limit for bus to which regulated winding is connected (e.g. first customer). Default is 0.0. ' +
                          'Set to a value greater then zero to activate this function.';
-     PropertyHelp[22] := 'For multi-phase transformers, the number of the phase being monitored or one of { MAX | MIN} for all phases. Default=1. ' +
+     PropertyHelp^[22] := 'For multi-phase transformers, the number of the phase being monitored or one of { MAX | MIN} for all phases. Default=1. ' +
                          'Must be less than or equal to the number of phases. Ignored for regulated bus.';
-     PropertyHelp[23] := 'kW reverse power threshold for reversing the direction of the regulator. Default is 100.0 kw.';
-     PropertyHelp[24] := 'Time Delay in seconds (s) for executing the reversing action once the threshold for reversing has been exceeded. Default is 60 s.';
-     PropertyHelp[25] := '{Yes | No*} Default is no. Set this to Yes if you want the regulator to go to neutral in the reverse direction or in cogen operation.';
-     PropertyHelp[26] := '{Yes/True* | No/False} Default is YES for regulator control. Log control actions to Eventlog.';
-     PropertyHelp[27] := 'When regulating a bus (the Bus= property is set), the PT ratio required to convert actual voltage at the remote bus to control voltage. ' +
+     PropertyHelp^[23] := 'kW reverse power threshold for reversing the direction of the regulator. Default is 100.0 kw.';
+     PropertyHelp^[24] := 'Time Delay in seconds (s) for executing the reversing action once the threshold for reversing has been exceeded. Default is 60 s.';
+     PropertyHelp^[25] := '{Yes | No*} Default is no. Set this to Yes if you want the regulator to go to neutral in the reverse direction or in cogen operation.';
+     PropertyHelp^[26] := '{Yes/True* | No/False} Default is YES for regulator control. Log control actions to Eventlog.';
+     PropertyHelp^[27] := 'When regulating a bus (the Bus= property is set), the PT ratio required to convert actual voltage at the remote bus to control voltage. ' +
                          'Is initialized to PTratio property. Set this property after setting PTratio.';
-     PropertyHelp[28] := 'An integer number indicating the tap position that the controlled transformer winding tap position is currently at, or is being set to.  If being set, and the value is outside the range of the transformer min or max tap,'+
+     PropertyHelp^[28] := 'An integer number indicating the tap position that the controlled transformer winding tap position is currently at, or is being set to.  If being set, and the value is outside the range of the transformer min or max tap,'+
                          ' then set to the min or max tap position as appropriate. Default is 0';
-     PropertyHelp[29] := '{Yes | No} If Yes, forces Reset of this RegControl.' ;
-     PropertyHelp[30] := 'Z value for Beckwith LDC_Z control option. Volts adjustment at rated control current.';
-     PropertyHelp[31] := 'Reverse Z value for Beckwith LDC_Z control option.';
-     PropertyHelp[32] := '{Yes|No*} Default is No. The Cogen feature is activated. Continues looking forward if power ' +
+     PropertyHelp^[29] := '{Yes | No} If Yes, forces Reset of this RegControl.' ;
+     PropertyHelp^[30] := 'Z value for Beckwith LDC_Z control option. Volts adjustment at rated control current.';
+     PropertyHelp^[31] := 'Reverse Z value for Beckwith LDC_Z control option.';
+     PropertyHelp^[32] := '{Yes|No*} Default is No. The Cogen feature is activated. Continues looking forward if power ' +
                          'reverses, but switches to reverse-mode LDC, vreg and band values.';
 
      ActiveProperty := NumPropsThisClass;
@@ -1325,14 +1325,14 @@ begin
    // Write Transformer name out first so that it is set for later operations
    iProp := 1;
    If Length(PropertyValue[iProp])>0 Then  With ParentClass Do
-    Write(F,Format(' %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]],CheckForBlanks(PropertyValue[iProp])] ));
+    Write(F,Format(' %s=%s', [PropertyName^[RevPropertyIdxMap^[iProp]],CheckForBlanks(PropertyValue[iProp])] ));
 
    iProp := GetNextPropertySet(0); // Works on ActiveDSSObject
    While iProp > 0 Do  With ParentClass do
    Begin
       If iProp <> 1  Then   // Don't repeat Transformer property
         If Length(PropertyValue[iProp])>0 Then
-            Write(F,Format(' %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]],CheckForBlanks(PropertyValue[iProp])] ));
+            Write(F,Format(' %s=%s', [PropertyName^[RevPropertyIdxMap^[iProp]],CheckForBlanks(PropertyValue[iProp])] ));
       iProp := GetNextPropertySet(iProp);
    End;
 end;

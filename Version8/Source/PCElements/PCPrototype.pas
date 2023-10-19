@@ -198,7 +198,7 @@ Begin
 
      // Use the Command processor to manage property names
      // PropertyName is an array of String defined in DefineProperties
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 End;
 
@@ -263,7 +263,7 @@ Begin
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
      // You can optionally override default help string of an inherited property, for example
-     PropertyHelp[NumPropsThisClass +1] := 'Name of harmonic voltage or current spectrum for this PCPrototype. ' +
+     PropertyHelp^[NumPropsThisClass +1] := 'Name of harmonic voltage or current spectrum for this PCPrototype. ' +
                          'Voltage behind Xd" for machine - default. Current injection for inverter. ' +
                          'Default value is "default", which is defined when the DSS starts.';
 
@@ -347,14 +347,14 @@ Begin
          // Update the PropertyValy for this property
          // Actual index is mapped via PropertyIdxMap array for this class
          If  (ParamPointer>0) and (ParamPointer<=NumProperties)
-         Then PropertyValue[PropertyIdxMap[ParamPointer]] := Param
+         Then PropertyValue[PropertyIdxMap^[ParamPointer]] := Param
          ELSE DoSimpleMsg('Unknown parameter "'+ParamName+'" for PCPrototype "'+Name+'"', 560);
 
          // --------------- MAIN CASE STATEMENT ----------------------
          If ParamPointer > 0 Then
          // since we used AddProperty function to define properties, have to
          // use PropertyIdxMap to map to the correct Case index
-         CASE PropertyIdxMap[ParamPointer] OF
+         CASE PropertyIdxMap^[ParamPointer] OF
             0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 561);
             1: NPhases    := Parser.Intvalue; // num phases
             2: SetBus(1, param);
@@ -374,7 +374,7 @@ Begin
          // This case statment handles any side effects from setting a property
          // (for example, from Generator)
          If ParamPointer > 0 Then
-         CASE PropertyIdxMap[ParamPointer] OF
+         CASE PropertyIdxMap^[ParamPointer] OF
             1: SetNcondsForConnection;  // Force Reallocation of terminal info
 
             // keep kvar nominal up to date with kW and PF
@@ -446,7 +446,7 @@ Begin
        // Finally initialize all the property value strings to be the same as
        // the copied element
        For i := 1 to ParentClass.NumProperties Do
-           FPropertyValue^[i] := OtherPCPrototype.FPropertyValue^[i];
+           FPropertyValue[i] := OtherPCPrototype.FPropertyValue[i];
 
        Result := 1;
    End
@@ -1125,7 +1125,7 @@ Begin
     With ParentClass Do
      For i := 1 to NumProperties Do
      Begin
-        idx := PropertyIdxMap[i] ; // Map to get proper index into property value array
+        idx := PropertyIdxMap^[i] ; // Map to get proper index into property value array
         Case idx of
 
           {Trap any specials here, such as values that are array properties, for example}

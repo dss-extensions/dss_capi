@@ -113,7 +113,7 @@ Begin
   Class_name   := 'ExpControl';
   DSSClassType := DSSClassType + EXP_CONTROL;
   DefineProperties;
-  CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+  CommandList := TCommandList.Create(PropertyName, NumProperties);
   CommandList.Abbrev := TRUE;
 End;
 {--------------------------------------------------------------------------}
@@ -128,58 +128,58 @@ Begin
      CountProperties;   // Get inherited property count
      AllocatePropertyArrays;
      // Define Property names
-     PropertyName[1] := 'PVSystemList';
-     PropertyName[2] := 'Vreg';
-     PropertyName[3] := 'Slope';
-     PropertyName[4] := 'VregTau';
-     PropertyName[5] := 'Qbias';
-     PropertyName[6] := 'VregMin';
-     PropertyName[7] := 'VregMax';
-     PropertyName[8] := 'QmaxLead';
-     PropertyName[9] := 'QmaxLag';
-     PropertyName[10] := 'EventLog';
-     PropertyName[11] := 'DeltaQ_factor';
-     PropertyName[12] := 'PreferQ';
-     PropertyName[13] := 'Tresponse';
-     PropertyName[14] := 'DERList';
+     PropertyName^[1] := 'PVSystemList';
+     PropertyName^[2] := 'Vreg';
+     PropertyName^[3] := 'Slope';
+     PropertyName^[4] := 'VregTau';
+     PropertyName^[5] := 'Qbias';
+     PropertyName^[6] := 'VregMin';
+     PropertyName^[7] := 'VregMax';
+     PropertyName^[8] := 'QmaxLead';
+     PropertyName^[9] := 'QmaxLag';
+     PropertyName^[10] := 'EventLog';
+     PropertyName^[11] := 'DeltaQ_factor';
+     PropertyName^[12] := 'PreferQ';
+     PropertyName^[13] := 'Tresponse';
+     PropertyName^[14] := 'DERList';
 
-     PropertyHelp[1] := 'Array list of PVSystems to be controlled.'+CRLF+CRLF+
+     PropertyHelp^[1] := 'Array list of PVSystems to be controlled.'+CRLF+CRLF+
                         'If not specified, all PVSystems in the circuit are assumed to be controlled by this ExpControl.';
-     PropertyHelp[2] := 'Per-unit voltage at which reactive power is zero; defaults to 1.0.'+CRLF+CRLF+
+     PropertyHelp^[2] := 'Per-unit voltage at which reactive power is zero; defaults to 1.0.'+CRLF+CRLF+
                         'This may dynamically self-adjust when VregTau > 0, limited by VregMin and VregMax.'+
                         'If imput as 0, Vreg will be initialized from a snapshot solution with no inverter Q.'+
                         'The equilibrium point of reactive power is also affected by Qbias';
-     PropertyHelp[3] := 'Per-unit reactive power injection / per-unit voltage deviation from Vreg; defaults to 50.'+CRLF+CRLF+
+     PropertyHelp^[3] := 'Per-unit reactive power injection / per-unit voltage deviation from Vreg; defaults to 50.'+CRLF+CRLF+
                         'Unlike InvControl, base reactive power is constant at the inverter kva rating.';
-     PropertyHelp[4] := 'Time constant for adaptive Vreg. Defaults to 1200 seconds.'+CRLF+CRLF+
+     PropertyHelp^[4] := 'Time constant for adaptive Vreg. Defaults to 1200 seconds.'+CRLF+CRLF+
                         'When the control injects or absorbs reactive power due to a voltage deviation from the Q=0 crossing of the volt-var curve, '+
                         'the Q=0 crossing will move toward the actual terminal voltage with this time constant. '+
                         'Over time, the effect is to gradually bring inverter reactive power to zero as the grid voltage changes due to non-solar effects. '+
                         'If zero, then Vreg stays fixed. ' +
                         'IEEE1547-2018 requires adjustability from 300s to 5000s';
-     PropertyHelp[5] := 'Equilibrium per-unit reactive power when V=Vreg; defaults to 0.'+CRLF+CRLF+
+     PropertyHelp^[5] := 'Equilibrium per-unit reactive power when V=Vreg; defaults to 0.'+CRLF+CRLF+
                         'Enter > 0 for lagging (capacitive) bias, < 0 for leading (inductive) bias.';
-     PropertyHelp[6] := 'Lower limit on adaptive Vreg; defaults to 0.95 per-unit';
-     PropertyHelp[7] := 'Upper limit on adaptive Vreg; defaults to 1.05 per-unit';
-     PropertyHelp[8] := 'Limit on leading (inductive) reactive power injection, in per-unit of base kva; defaults to 0.44.'+
+     PropertyHelp^[6] := 'Lower limit on adaptive Vreg; defaults to 0.95 per-unit';
+     PropertyHelp^[7] := 'Upper limit on adaptive Vreg; defaults to 1.05 per-unit';
+     PropertyHelp^[8] := 'Limit on leading (inductive) reactive power injection, in per-unit of base kva; defaults to 0.44.'+
                         'For Category A inverters per P1547/D7, set this value to 0.25.'+CRLF+CRLF+
                         'Regardless of QmaxLead, the reactive power injection is still '+
                         'limited by dynamic headroom when actual real power output exceeds 0%';
-     PropertyHelp[9] := 'Limit on lagging (capacitive) reactive power injection, in per-unit of base kva; defaults to 0.44.'+CRLF+CRLF+
+     PropertyHelp^[9] := 'Limit on lagging (capacitive) reactive power injection, in per-unit of base kva; defaults to 0.44.'+CRLF+CRLF+
                         'For Category A inverters per P1547/D7, set this value to 0.25.'+
                         'Regardless of QmaxLag, the reactive power injection is still '+
                         'limited by dynamic headroom when actual real power output exceeds 0%';
-     PropertyHelp[10] := '{Yes/True* | No/False} Default is No for ExpControl. Log control actions to Eventlog.';
-     PropertyHelp[11] := 'Convergence parameter; Defaults to 0.7. '+CRLF+CRLF+
+     PropertyHelp^[10] := '{Yes/True* | No/False} Default is No for ExpControl. Log control actions to Eventlog.';
+     PropertyHelp^[11] := 'Convergence parameter; Defaults to 0.7. '+CRLF+CRLF+
                          'Sets the maximum change (in per unit) from the prior var output level to the desired var output level during each control iteration. '+
                          'If numerical instability is noticed in solutions such as var sign changing from one control iteration to the next and voltages oscillating between two values with some separation, '+
                          'this is an indication of numerical instability (use the EventLog to diagnose). '+
                          'If the maximum control iterations are exceeded, and no numerical instability is seen in the EventLog of via monitors, then try increasing the value of this parameter to reduce the number '+
                          'of control iterations needed to achieve the control criteria, and move to the power flow solution.';
-     PropertyHelp[12] := '{Yes/True* | No/False} Default is No for ExpControl.' + CRLF + CRLF +
+     PropertyHelp^[12] := '{Yes/True* | No/False} Default is No for ExpControl.' + CRLF + CRLF +
                          'Curtails real power output as needed to meet the reactive power requirement. ' +
                          'IEEE1547-2018 requires Yes, but the default is No for backward compatibility of OpenDSS models.';
-     PropertyHelp[13] := 'Open-loop response time for changes in Q.' + CRLF + CRLF +
+     PropertyHelp^[13] := 'Open-loop response time for changes in Q.' + CRLF + CRLF +
                          'The value of Q reaches 90% of the target change within Tresponse, which ' +
                          'corresponds to a low-pass filter having tau = Tresponse / 2.3026. ' +
                          'The behavior is similar to LPFTAU in InvControl, but here the response time is ' +
@@ -187,7 +187,7 @@ Begin
                          'IEEE1547-2018 default is 10s for Catagory A and 5s for Category B, ' +
                          'adjustable from 1s to 90s for both categories. However, the default is 0 for ' +
                          'backward compatibility of OpenDSS models.';
-     PropertyHelp[14] := 'Alternative to PVSystemList for CIM export and import.' + CRLF + CRLF +
+     PropertyHelp^[14] := 'Alternative to PVSystemList for CIM export and import.' + CRLF + CRLF +
                          'However, storage is not actually implemented yet. ' +
                          'Use fully qualified PVSystem names.';
      ActiveProperty  := NumPropsThisClass;

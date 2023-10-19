@@ -149,7 +149,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
      TCC_CurveClass := GetDSSClassPtr('TCC_Curve');
@@ -174,39 +174,39 @@ Begin
 
      // Define Property names
 
-     PropertyName[1]  := 'MonitoredObj';
-     PropertyName[2]  := 'MonitoredTerm';
-     PropertyName[3]  := 'SwitchedObj';
-     PropertyName[4]  := 'SwitchedTerm';
-     PropertyName[5]  := 'FuseCurve';
-     PropertyName[6]  := 'RatedCurrent';
-     PropertyName[7]  := 'Delay';
-     PropertyName[8]  := 'Action';
-     PropertyName[9]  := 'Normal';
-     PropertyName[10] := 'State';
+     PropertyName^[1]  := 'MonitoredObj';
+     PropertyName^[2]  := 'MonitoredTerm';
+     PropertyName^[3]  := 'SwitchedObj';
+     PropertyName^[4]  := 'SwitchedTerm';
+     PropertyName^[5]  := 'FuseCurve';
+     PropertyName^[6]  := 'RatedCurrent';
+     PropertyName^[7]  := 'Delay';
+     PropertyName^[8]  := 'Action';
+     PropertyName^[9]  := 'Normal';
+     PropertyName^[10] := 'State';
 
-     PropertyHelp[1] :=  'Full object name of the circuit element, typically a line, transformer, load, or generator, '+
+     PropertyHelp^[1] :=  'Full object name of the circuit element, typically a line, transformer, load, or generator, '+
                          'to which the Fuse is connected.' +
                          ' This is the "monitored" element. ' +
                          'There is no default; must be specified.';
-     PropertyHelp[2] :=  'Number of the terminal of the circuit element to which the Fuse is connected. '+
+     PropertyHelp^[2] :=  'Number of the terminal of the circuit element to which the Fuse is connected. '+
                          '1 or 2, typically.  Default is 1.';
-     PropertyHelp[3] :=  'Name of circuit element switch that the Fuse controls. '+
+     PropertyHelp^[3] :=  'Name of circuit element switch that the Fuse controls. '+
                          'Specify the full object name.' +
                          'Defaults to the same as the Monitored element. '+
                          'This is the "controlled" element.';
-     PropertyHelp[4] :=  'Number of the terminal of the controlled element in which the switch is controlled by the Fuse. '+
+     PropertyHelp^[4] :=  'Number of the terminal of the controlled element in which the switch is controlled by the Fuse. '+
                          '1 or 2, typically.  Default is 1.  Assumes all phases of the element have a fuse of this type.';
-     PropertyHelp[5] :=  'Name of the TCC Curve object that determines the fuse blowing.  Must have been previously defined as a TCC_Curve object.'+
+     PropertyHelp^[5] :=  'Name of the TCC Curve object that determines the fuse blowing.  Must have been previously defined as a TCC_Curve object.'+
                          ' Default is "Tlink". '+
                          'Multiplying the current values in the curve by the "RatedCurrent" value gives the actual current.';
-     PropertyHelp[6] :=  'Multiplier or actual phase amps for the phase TCC curve.  Defaults to 1.0.';
-     PropertyHelp[7] :=  'Fixed delay time (sec) added to Fuse blowing time determined from the TCC curve. Default is 0.0. Used to represent fuse clearing time or any other delay.' ;
-     PropertyHelp[8] :=  'DEPRECATED. See "State" property.';
-     PropertyHelp[9] :=  'ARRAY of strings {Open | Closed} representing the Normal state of the fuse in each phase of the controlled element. ' +
+     PropertyHelp^[6] :=  'Multiplier or actual phase amps for the phase TCC curve.  Defaults to 1.0.';
+     PropertyHelp^[7] :=  'Fixed delay time (sec) added to Fuse blowing time determined from the TCC curve. Default is 0.0. Used to represent fuse clearing time or any other delay.' ;
+     PropertyHelp^[8] :=  'DEPRECATED. See "State" property.';
+     PropertyHelp^[9] :=  'ARRAY of strings {Open | Closed} representing the Normal state of the fuse in each phase of the controlled element. ' +
                          'The fuse reverts to this state for reset, change of mode, etc. ' +
                          'Defaults to "State" if not specifically declared.';
-     PropertyHelp[10] := 'ARRAY of strings {Open | Closed} representing the Actual state of the fuse in each phase of the controlled element. ' +
+     PropertyHelp^[10] := 'ARRAY of strings {Open | Closed} representing the Actual state of the fuse in each phase of the controlled element. ' +
                          'Upon setting, immediately forces state of fuse(s). Simulates manual control on Fuse. Defaults to Closed for all phases.';
 
      ActiveProperty  := NumPropsThisClass;

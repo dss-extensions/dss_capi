@@ -100,7 +100,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 End;
 
@@ -122,10 +122,10 @@ Begin
 
      // Define Property names
 
-     PropertyName[1] := 'UPFCList';
+     PropertyName^[1] := 'UPFCList';
 
 
-     PropertyHelp[1] := 'The list of all the UPFC devices to be controlled by this controller, '+
+     PropertyHelp^[1] := 'The list of all the UPFC devices to be controlled by this controller, '+
                         'If left empty, this control will apply for all UPFCs in the model.';
 
      ActiveProperty  := NumPropsThisClass;

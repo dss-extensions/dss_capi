@@ -106,7 +106,7 @@ Begin
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+     CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 End;
 
@@ -131,10 +131,10 @@ Begin
 // Can't Think of any properties we want the user to be able to set
 
      // Define Property names
-//     PropertyName[1] := 'bus1';
+//     PropertyName^[1] := 'bus1';
 
      // define Property help values
-//     PropertyHelp[1] := 'Name of bus to which source is connected.'+CRLF+'bus1=busname'+CRLF+'bus1=busname.1.2.3';
+//     PropertyHelp^[1] := 'Name of bus to which source is connected.'+CRLF+'bus1=busname'+CRLF+'bus1=busname.1.2.3';
 
 
      ActiveProperty := NumPropsThisClass;
