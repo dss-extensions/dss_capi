@@ -25,7 +25,7 @@ VAR
 implementation
 
 Uses ShowResults, ParserDel, Monitor, Utilities,
-     DSSGlobals, sysutils,
+     DSSGlobals, sysutils, ExceptionTrace,
 {$IF not (defined(FPC) or defined(CONSOLE))}
      DSSForms,
 {$ELSE}
@@ -403,11 +403,14 @@ Begin
 End;
 
 Initialization
-
+  Try
     DefineOptions;
 
     ShowCommands := TCommandList.Create(ShowOption);
     ShowCommands.Abbrev := True;
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 
 Finalization
 

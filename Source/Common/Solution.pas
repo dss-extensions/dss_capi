@@ -426,8 +426,7 @@ USES  SolutionAlgs,
       HELICS,
 {$ENDIF}
       Math,  Circuit, Utilities, KLUSolve, PointerList, Line,
-      Transformer, Reactor, Diakoptics, StrUtils
-;
+      Transformer, Reactor, Diakoptics, StrUtils, ExceptionTrace;
 
 Const NumPropsThisClass = 1;
 
@@ -3366,7 +3365,7 @@ Begin
 End;
 
 initialization
-
+  Try
     IsMultiThread :=  True;
     {$IFDEF debugtrace}
     Assignfile(Fdebug, 'Debugtrace.csv');
@@ -3374,6 +3373,10 @@ initialization
     CloseFile(Fdebug);
    {$ENDIF}
 {$IFDEF FPC}{$pop}{$ENDIF}
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
+
 End.
 
 

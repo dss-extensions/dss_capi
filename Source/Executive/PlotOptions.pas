@@ -26,7 +26,7 @@ Var
 
 implementation
 
-Uses DSSPlot, DSSGlobals, SysUtils, ParserDel, Utilities;
+Uses DSSPlot, DSSGlobals, SysUtils, ParserDel, Utilities, ExceptionTrace;
 
 
 
@@ -388,11 +388,14 @@ End;
 
 
 Initialization
-
+  Try
     DefineOptions;
 
     PlotCommands := TCommandList.Create(PlotOption);
     PlotCommands.Abbrev := True;
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 
 Finalization
 

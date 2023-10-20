@@ -24,7 +24,7 @@ VAR
 
 implementation
 
-Uses ExportResults, Monitor, EnergyMeter, ParserDel, sysutils, DSSGlobals, ExportCIMXML, Utilities, NamedObject;
+Uses ExportResults, Monitor, EnergyMeter, ParserDel, sysutils, DSSGlobals, ExportCIMXML, Utilities, NamedObject, ExceptionTrace;
 
 function AssignNewUUID (val: String): TUuid;
 begin
@@ -523,11 +523,14 @@ Begin
 End;
 
 Initialization
-
+  Try
     DefineOptions;
 
     ExportCommands := TCommandList.Create(ExportOption);
     ExportCommands.Abbrev := True;
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 
 Finalization
 

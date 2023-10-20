@@ -58,6 +58,8 @@ interface
 
 Implementation
 
+  uses ExceptionTrace, SysUtils;
+
   Function CMPLX(const a,b:Double):complex; inline;
   BEGIN
     Result.RE:=A;
@@ -285,10 +287,12 @@ Implementation
 
 
 Initialization
-
-  cZERO := cmplx(0.0, 0.0);
-  cONE  := cmplx(1.0, 0.0);
-
+  Try
+    cZERO := cmplx(0.0, 0.0);
+    cONE  := cmplx(1.0, 0.0);
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 End.
 
 

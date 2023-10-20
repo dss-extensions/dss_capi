@@ -128,7 +128,7 @@ Const
 
 implementation
 
-Uses DSSGlobals, mathutil, sysutils, math;
+Uses DSSGlobals, mathutil, sysutils, math, ExceptionTrace;
 
 VAR
     C1_j1:Complex;
@@ -608,7 +608,7 @@ begin
 end;
 
 initialization
-
+  Try
     C1_j1 := Cmplx(1.0, 1.0);
 
     b1 := 1.0/(3.0 * sqrt(2.0));
@@ -619,6 +619,7 @@ initialization
     d4 := b4 * pi / 4.0;
     c2 := 1.3659315;
     c4 := c2 + 1.0/4.0 + 1.0/6.0;
-
-
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.

@@ -93,8 +93,7 @@ implementation
 
 uses
   {$IFDEF FPC}XMLUtils{$ELSE}XSBuiltIns{$ENDIF}
-  {$IFDEF MSWINDOWS}, Windows{$ENDIF}
-  ;
+  {$IFDEF MSWINDOWS}, Windows{$ENDIF}, ExceptionTrace;
 
 {$M+}
 {$TYPEINFO ON}
@@ -445,19 +444,23 @@ begin
 end;
 
 initialization
+  Try
 {$IFNDEF FPC}
-  DJSONFormatSettings := TFormatsettings.Create;
+    DJSONFormatSettings := TFormatsettings.Create;
 {$ENDIF}
-  with DJSONFormatSettings do
-  begin
-    DateSeparator := '-';
-    TimeSeparator := ':';
-    ShortDateFormat := 'yyyy-mm-dd';
-    LongDateFormat := 'yyyy-mm-dd';
-    ShortTimeFormat := 'hh:nn:ss';
-    LongTimeFormat := 'hh:nn:ss';
-  end;
+    with DJSONFormatSettings do
+    begin
+      DateSeparator := '-';
+      TimeSeparator := ':';
+      ShortDateFormat := 'yyyy-mm-dd';
+      LongDateFormat := 'yyyy-mm-dd';
+      ShortTimeFormat := 'hh:nn:ss';
+      LongTimeFormat := 'hh:nn:ss';
+    end;
 {$IFDEF FPC}{$pop}{$ENDIF}
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.
 
 

@@ -44,7 +44,7 @@ Uses DSSGlobals, ExecHelper, Executive, ExecOptions, ShowOptions,
      KLUSolve, Diakoptics, sparse_math,
      MemoryMap_lib,
      EnergyMeter,
-     GISCommands;
+     GISCommands, ExceptionTrace;
 
 
 PROCEDURE DefineCommands;
@@ -921,8 +921,11 @@ Begin
 End;
 
 Initialization
-
-     DefineCommands;
+  Try
+    DefineCommands;
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 
 Finalization
 

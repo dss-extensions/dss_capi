@@ -239,7 +239,8 @@ uses
   ImplStorages in 'ImplStorages.pas' {Storages: CoClass},
   DynamicExp in '..\General\DynamicExp.pas',
   InvDynamics in '..\Shared\InvDynamics.pas',
-  GenController in '..\Controls\GenController.pas';
+  GenController in '..\Controls\GenController.pas',
+  ExceptionTrace in '..\Shared\ExceptionTrace.pas';
 
 exports
   DllGetClassObject,

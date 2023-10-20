@@ -58,7 +58,7 @@ Uses uComplex,  Arraydef,  sysutils, Circuit, DSSClass, DSSClassDefs, DSSGlobals
      CmdForms,
 {$ENDIF}
      Math, Line, LineUnits, LineGeometry, YMatrix,
-     SwtControl, KLUSolve;
+     SwtControl, KLUSolve, ExceptionTrace;
 
 VAR
    MaxBusNameLength :Integer;
@@ -3610,7 +3610,10 @@ End;
 
 Initialization
 
-  MaxDeviceNameLength := 30;
-  MaxBusNameLength := 12;
-
+  Try
+    MaxDeviceNameLength := 30;
+    MaxBusNameLength := 12;
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.

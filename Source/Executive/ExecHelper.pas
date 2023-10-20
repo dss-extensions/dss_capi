@@ -164,7 +164,7 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      Classes,  CktElementClass, Sensor,  ExportCIMXML, NamedObject,
      {$IFNDEF FPC}RegularExpressionsCore,{$ELSE}RegExpr,{$ENDIF} PstCalc,
      PDELement, ReduceAlgs
-     {$IFDEF FPC_HELICS}, Fncs, Helics{$ENDIF}, Ucmatrix;
+     {$IFDEF FPC_HELICS}, Fncs, Helics{$ENDIF}, Ucmatrix, ExceptionTrace;
 
 Var
    SaveCommands, DistributeCommands,  DI_PlotCommands,
@@ -4269,7 +4269,7 @@ End;
 initialization
 
 {Initialize Command lists}
-
+  Try
     SaveCommands := TCommandList.Create(['class', 'file', 'dir', 'keepdisabled']);
     SaveCommands.Abbrev := True;
     DI_PlotCommands := TCommandList.Create(['case','year','registers','peak','meter']);
@@ -4299,6 +4299,9 @@ initialization
 
     RemoveCommands := TCommandList.Create(['ElementName', 'KeepLoad', 'Editstring']);
     RemoveCommands.abbrev := True;
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 
 finalization
 

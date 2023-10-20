@@ -27,7 +27,7 @@ Uses
   {$IFNDEF Linux}
   TCP_IP,
   {$ENDIF}
-  DSSGlobals, SysUtils, ParserDel, Utilities;
+  DSSGlobals, SysUtils, ParserDel, Utilities, ExceptionTrace;
 
 
 PROCEDURE DefineOptions;
@@ -89,9 +89,13 @@ End;
 
 
 Initialization
+  Try
     DefineOptions;
     ConnectCommands := TCommandList.Create(ConnectOption);
     ConnectCommands.Abbrev := True;
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 
 Finalization
     DoDisConnectCmd;

@@ -230,7 +230,8 @@ uses
   WindGenVars in '..\PCElements\WindGenVars.pas',
   DynamicExp in '..\General\DynamicExp.pas',
   InvDynamics in '..\Shared\InvDynamics.pas',
-  GenController in '..\Controls\GenController.pas';
+  GenController in '..\Controls\GenController.pas',
+  ExceptionTrace in '..\Shared\ExceptionTrace.pas';
 
 //**************************end of the functions*************************************
 exports
