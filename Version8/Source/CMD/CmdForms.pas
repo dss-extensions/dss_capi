@@ -16,7 +16,7 @@ unit CmdForms;
 
 interface
 
-Uses Classes;
+Uses Classes, sysutils;
 
 VAR
    ControlPanelCreated     :Boolean;  // signify whether this is the DLL or EXE
@@ -40,6 +40,7 @@ VAR
    Procedure ShowTreeView(Const Fname:String);
    FUNCTION  MakeChannelSelection(NumFieldsToSkip:Integer; const Filename:String):Boolean;
    procedure ShowHeapUsage; // copied from Lazarus form; not used in command line yet
+   procedure DumpExceptionCallStack(E: Exception);
 
 {$IFDEF FPC}
 {$INCLUDE VersionString.inc}
@@ -51,9 +52,29 @@ Uses ExecCommands, ExecOptions, ShowOptions, ExportOptions,
 {$IFNDEF FPC}
   Windows,
 {$ENDIF}
-	DSSGlobals, DSSClass, DSSClassDefs, ParserDel, Sysutils, Strutils, ArrayDef;
+	DSSGlobals, DSSClass, DSSClassDefs, ParserDel, Strutils, ArrayDef, ExceptionTrace;
 
 const colwidth = 25; numcols = 4;  // for listing commands to the console
+
+procedure DumpExceptionCallStack(E: Exception);
+var
+  I: Integer;
+  Frames: PPointer;
+  Report: string;
+begin
+  Report := 'Program exception! ' + LineEnding +
+    'Stacktrace:' + LineEnding + LineEnding;
+  if E <> nil then begin
+    Report := Report + 'Exception class: ' + E.ClassName + LineEnding +
+    'Message: ' + E.Message + LineEnding;
+  end;
+  Report := Report + BackTraceStrFunc(ExceptAddr);
+  Frames := ExceptFrames;
+  for I := 0 to ExceptFrameCount - 1 do
+    Report := Report + LineEnding + BackTraceStrFunc(Frames[I]);
+  DSSInfoMessageDlg(Report);
+  Halt; // End of program execution
+end;
 
 procedure ShowHeapUsage;
 {$IFDEF FPC}
@@ -303,7 +324,12 @@ End;
 
 initialization
 
-  RebuildHelpForm := True;
+  Try
+    RebuildHelpForm := True;
+  Except
+    On E:Exception do
+      DumpExceptionCallStack (E);
+  end;
 
 finalization
 

@@ -72,12 +72,12 @@ VAR
 
 implementation
 {$IFNDEF FPC} {$IFNDEF CONSOLE}
-Uses ComObj, AnsiStrings, SysUtils, Dialogs, ActiveX, DSSGlobals;
+Uses ComObj, AnsiStrings, SysUtils, Dialogs, ActiveX, DSSGlobals, ExceptionTrace;
 {$ELSE}
-Uses ComObj, AnsiStrings, SysUtils, CmdForms, ActiveX, DSSGlobals;
+Uses ComObj, AnsiStrings, SysUtils, CmdForms, ActiveX, DSSGlobals, ExceptionTrace;
 {$ENDIF}
 {$ELSE}
-Uses SysUtils, DSSGlobals, CmdForms, Variants;
+Uses SysUtils, DSSGlobals, CmdForms, Variants, ExceptionTrace;
 {$ENDIF}
 Var
   TOP_Inited:Boolean;
@@ -271,11 +271,15 @@ END;
 
 Initialization
 
+  Try
     TOP_Inited := FALSE;
     TOPTransferFile:= TOutFile32.Create;
     TOPTransferFile.Fname := 'DSSTransfer.STO';
 {$IFNDEF FPC}
     CoInitialize(Nil);
 {$ENDIF}
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.
 

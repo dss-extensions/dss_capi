@@ -157,7 +157,7 @@ VAR
 IMPLEMENTATION
 
 USES  ParserDel,  DSSClassDefs, DSSGlobals, Sysutils,
-      Utilities, Mathutil, ControlElem, LineUnits;
+      Utilities, Mathutil, ControlElem, LineUnits, ExceptionTrace;
 
 Const NumPropsThisClass = 30;
     //  MaxPhases = 20; // for fixed buffers
@@ -2101,7 +2101,10 @@ begin
 end;
 
 initialization
-
-   CAP_EPSILON := cmplx(0.0, 4.2e-8);  // 5 kvar of capacitive reactance at 345 kV to avoid open line problem
-   ONE_THIRD := 1.0/3.0;  // Do this to get more precision in certain calculations
+  Try
+    CAP_EPSILON := cmplx(0.0, 4.2e-8);  // 5 kvar of capacitive reactance at 345 kV to avoid open line problem
+    ONE_THIRD := 1.0/3.0;  // Do this to get more precision in certain calculations
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 End.

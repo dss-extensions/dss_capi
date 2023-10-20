@@ -110,7 +110,7 @@ VAR
 implementation
 
 USES  ParserDel, Circuit, DSSClassDefs, DSSGlobals, Utilities, Sysutils, Command,
-      Solution;
+      Solution, ExceptionTrace;
 
 Var  NumPropsThisClass:Integer;
      ALPHA1, ALPHA2: complex;
@@ -825,7 +825,11 @@ begin
 end;
 
 initialization
-  ALPHA1 := cmplx (-0.5, 0.5 * sqrt(3.0));  // 1 at 120 degrees
-  ALPHA2 := cmplx (-0.5, -ALPHA1.im);       // 1 at 240 degrees
+  Try
+    ALPHA1 := cmplx (-0.5, 0.5 * sqrt(3.0));  // 1 at 120 degrees
+    ALPHA2 := cmplx (-0.5, -ALPHA1.im);       // 1 at 240 degrees
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.
 

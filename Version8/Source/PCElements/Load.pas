@@ -261,7 +261,7 @@ Var
 implementation
 
 
-USES  ParserDel, Circuit, DSSClassDefs, DSSGlobals, Dynamics, Sysutils, Command, Math, MathUtil, Utilities;
+USES  ParserDel, Circuit, DSSClassDefs, DSSGlobals, Dynamics, Sysutils, Command, Math, MathUtil, Utilities, ExceptionTrace;
 
 Const  NumPropsThisClass = 38;
 
@@ -2341,7 +2341,9 @@ end;
 
 
 initialization
-
-   CDOUBLEONE := CMplx(1.0, 1.0);
-
+  Try
+    CDOUBLEONE := CMplx(1.0, 1.0);
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.

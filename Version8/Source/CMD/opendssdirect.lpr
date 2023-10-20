@@ -207,7 +207,8 @@ uses
   DGICSources in '..\DDLL\DGICSources.pas',
   DLineCodes in '..\DDLL\DLineCodes.pas',
   DParallel in '..\DDLL\DParallel.pas',
-  DReduceCkt in '..\DDLL\DReduceCkt.pas';
+  DReduceCkt in '..\DDLL\DReduceCkt.pas',
+  ExceptionTrace in '..\Shared\ExceptionTrace.pas';
 
 // Caution: these must match the case of the function names in
 // py_dss_interface configurations.json
@@ -257,11 +258,17 @@ exports
 // {$R *.res}
 
 begin
-  Writeln ('Begin OpenDSSDirect');
-  IsDLL := TRUE;
-  IsMultiThread := True;
+  Try
+    Writeln ('Begin OpenDSSDirect');
+    IsDLL := TRUE;
+    IsMultiThread := True;
 ///{Create one instance of DSS executive whenever the DSS Engine is init'd}
-  DSSExecutive[ActiveActor] := TExecutive.Create;  // Start the DSS when DSS interface is created
-  DSSExecutive[ActiveActor].CreateDefaultDSSItems;
+    DSSExecutive[ActiveActor] := TExecutive.Create;  // Start the DSS when DSS interface is created
+//    raise exception.create ('Testing');
+    DSSExecutive[ActiveActor].CreateDefaultDSSItems;
 ///  //WriteDLLDebugFile(DSSDirectory);
+  Except
+    On E:Exception do
+      DumpExceptionCallStack (E);
+  end;
 end.

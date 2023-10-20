@@ -281,7 +281,8 @@ USES  ParserDel,     // DSS parser
       Sysutils,      // Delphi misc utility functions
       Math,          // Delphi Math functions
       MathUtil,      // DSS Math utilities
-      Utilities;     // DSS misc utility functions
+      Utilities,     // DSS misc utility functions
+      ExceptionTrace;
 
 CONST
      NumPropsThisClass = 21; // Set this constant to the actual number of properties you define
@@ -2181,8 +2182,9 @@ initialization
 
 
   // For Example:  1 + j 1
-
+  Try
     CDOUBLEONE := CMPLX(1.0, 1.0);
-
-
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.

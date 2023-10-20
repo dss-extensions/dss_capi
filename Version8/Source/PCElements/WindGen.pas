@@ -246,7 +246,7 @@ VAR
 implementation
 
 
-USES  ParserDel, Circuit,  Sysutils, Command, Math, MathUtil, DSSClassDefs, DSSGlobals, Utilities, Classes;
+USES  ParserDel, Circuit,  Sysutils, Command, Math, MathUtil, DSSClassDefs, DSSGlobals, Utilities, Classes, ExceptionTrace;
 
 Const NumPropsThisClass = 41;  // removed Fuel variables
   // Dispatch modes
@@ -3033,9 +3033,11 @@ begin
 end;
 
 initialization
-
-   CDOUBLEONE := CMPLX(1.0, 1.0);
+  Try
+    CDOUBLEONE := CMPLX(1.0, 1.0);
 //   TWOPI3     := twopi/3.0;
-
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.
 

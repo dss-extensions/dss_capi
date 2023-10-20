@@ -129,7 +129,7 @@ VAR
 implementation
 
 
-USES  ParserDel, Circuit, DSSClassDefs, DSSGlobals, Dynamics, Utilities, Sysutils, Command, solution, YMatrix, UPFCControl;
+USES  ParserDel, Circuit, DSSClassDefs, DSSGlobals, Dynamics, Utilities, Sysutils, Command, solution, YMatrix, UPFCControl, ExceptionTrace;
 
 Const
     propLossCurve= 11;
@@ -1275,6 +1275,9 @@ end;
 // ======================== END STATE VARIABLES ===============================
 
 initialization
-
-   CDOUBLEONE := CMplx(1.0, 1.0);
+  Try
+    CDOUBLEONE := CMplx(1.0, 1.0);
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.

@@ -203,7 +203,7 @@ USES
 
     ParserDel, DSSClassDefs, DSSGlobals, Circuit,  Storage,
     Sysutils, uCmatrix, MathUtil, Math, Dynamics,
-    XYCurve;
+    XYCurve, ExceptionTrace;
 
 CONST
 
@@ -2576,7 +2576,9 @@ End;
 {--------------------------------------------------------------------------}
 
 INITIALIZATION
-
-     CDoubleOne := Cmplx(1.0, 1.0);
-
+  Try
+    CDoubleOne := Cmplx(1.0, 1.0);
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.

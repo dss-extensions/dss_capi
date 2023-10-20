@@ -319,7 +319,7 @@ implementation
 // Conditional compile for debugging Generator in Dynamic mode. Set to  DYNAMICDEBUG for debugging.
 
 USES  ParserDel, Circuit,  Sysutils, Command, Math, MathUtil, DSSClassDefs, DSSGlobals, Utilities, Classes,
-      KLUSolve, Solution;
+      KLUSolve, Solution, ExceptionTrace;
 
 Const NumPropsThisClass = 46;
   // Dispatch modes
@@ -3132,9 +3132,11 @@ begin
 end;
 
 initialization
-
-   CDOUBLEONE := CMPLX(1.0, 1.0);
+  Try
+    CDOUBLEONE := CMPLX(1.0, 1.0);
 //   TWOPI3     := twopi/3.0;
-
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.
 

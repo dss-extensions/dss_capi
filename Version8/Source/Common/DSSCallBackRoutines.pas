@@ -35,7 +35,8 @@ Uses
   SysUtils,
   CktElement,
   Math,
-  PDElement;
+  PDElement, 
+  ExceptionTrace;
 
 Var
    CallBackParser  :TParser;
@@ -424,9 +425,9 @@ End;
 Initialization
 
 {Initialize Function Interface variables for user-Written Callbacks}
-
-   With CallBackRoutines Do
-   begin
+  Try
+    With CallBackRoutines Do
+      begin
          MsgCallBack := DoSimpleMsgCallback; // for user-written callbacks
          GetIntValue := ParserIntValue;
          GetDblValue := ParserDblValue;
@@ -462,9 +463,12 @@ Initialization
          GetActiveElementPtr      := GetActiveElementPtrCallBack;
          ControlQueuePush         := ControlQueuePushCallBack;
          GetResultStr             := GetResultStrCallBack;
-  End;
+    End;
 
-  CallBackParser  := TParser.Create;
+    CallBackParser  := TParser.Create;
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 
 {====================================================================================================================}
 

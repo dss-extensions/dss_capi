@@ -332,7 +332,7 @@ type
 var
   ActivePVSystemObj   : TPVsystemObj;
 implementation
-uses  ParserDel, Circuit,  Sysutils, Command, Math, DSSClassDefs, DSSGlobals, Utilities, Classes;
+uses  ParserDel, Circuit,  Sysutils, Command, Math, DSSClassDefs, DSSGlobals, Utilities, Classes, ExceptionTrace;
 const
 // ===========================================================================================
 {
@@ -2938,5 +2938,9 @@ PROCEDURE TPVsystemObj.SetDragHandRegister(Reg: Integer; const Value: Double);
     If  (Value > Registers[reg]) Then Registers[Reg] := Value;
   End;
 initialization
-  CDOUBLEONE := Cmplx(1.0, 1.0);
+  Try
+    CDOUBLEONE := Cmplx(1.0, 1.0);
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.

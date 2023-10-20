@@ -51,7 +51,7 @@ Uses
     System.Classes,
 {$ENDIF}
     Utilities, SysUtils, MathUtil, Math, Fault, uComplex, YMatrix,
-    PCElement, Spectrum, Vsource, Isource, KLUSolve;
+    PCElement, Spectrum, Vsource, Isource, KLUSolve, ExceptionTrace;
 
 VAR ProgressCount:Integer;
 
@@ -1166,7 +1166,9 @@ Begin
 End;
 
 initialization
-
+  Try
     IsMultiThread :=  True;
-
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.

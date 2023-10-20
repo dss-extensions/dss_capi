@@ -35,7 +35,7 @@ Uses DSSClassDefs, DSSGlobals, ParserDel, Math,     Executive,  ExecHelper,
      {$ENDIF}
      {$ENDIF}
      Solution, Energymeter,
-     Diakoptics, Classes;
+     Diakoptics, Classes, ExceptionTrace;
 
 
 PROCEDURE DefineOptions;
@@ -1198,8 +1198,11 @@ End;
 
 
 Initialization
-
+  Try
     DefineOptions;
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 
 Finalization
 

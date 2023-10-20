@@ -208,7 +208,8 @@ uses
   InvDynamics in '..\Shared\InvDynamics.pas',
   GenController in '..\Controls\GenController.pas',
   Vcl.Themes,
-  Vcl.Styles;
+  Vcl.Styles,
+  ExceptionTrace in '..\Shared\ExceptionTrace.pas';
 
 {$R *.RES}
 

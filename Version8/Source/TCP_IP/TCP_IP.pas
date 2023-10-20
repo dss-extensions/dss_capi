@@ -130,7 +130,8 @@ uses
   Classes,
   Variants,
   Math,
-  MemoryMap_Lib;
+  MemoryMap_Lib,
+  ExceptionTrace;
 
 type
   THeaderRec = Record
@@ -1607,7 +1608,11 @@ end;
 {$ENDIF}
 
 initialization
-DSSConnectObj := nil; // Instantiate only if connect command issued
+  Try
+    DSSConnectObj := nil; // Instantiate only if connect command issued
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 
 finalization
 If Assigned(DSSConnectObj) then  DSSConnectObj.Free;

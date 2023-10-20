@@ -450,7 +450,7 @@ VAR
 implementation
 
 
-USES  ParserDel, Circuit,  Sysutils, Command, Math, DSSClassDefs, DSSGlobals, Utilities;
+USES  ParserDel, Circuit,  Sysutils, Command, Math, DSSClassDefs, DSSGlobals, Utilities, ExceptionTrace;
 
 Const
 
@@ -4450,8 +4450,10 @@ End;
 
 //----------------------------------------------------------------------------
 initialization
-
-   CDOUBLEONE := CMPLX(1.0, 1.0);
-
+  Try
+    CDOUBLEONE := CMPLX(1.0, 1.0);
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.
 

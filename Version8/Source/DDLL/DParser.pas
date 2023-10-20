@@ -9,7 +9,7 @@ procedure ParserV(mode:longint; var myPointer: Pointer; var myType, mySize: long
 
 implementation
 
-uses {$IFNDEF FPC_DLL}ComServ, Dialogs, {$ENDIF}ParserDel, Variants, ArrayDef, DSSGlobals, sysutils;
+uses {$IFNDEF FPC_DLL}ComServ, Dialogs, {$ENDIF}ParserDel, Variants, ArrayDef, DSSGlobals, sysutils, ExceptionTrace;
 
 Var ComParser : ParserDel.TParser;
 
@@ -167,6 +167,9 @@ begin
 end;
 
 initialization
-  ComParser := ParserDel.TParser.Create;  // create COM Parser object
-
+  Try
+    ComParser := ParserDel.TParser.Create;  // create COM Parser object
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.

@@ -21,7 +21,7 @@ function SolveSystem(var NodeV:pNodeVarray): integer; cdecl;
 
 implementation
 
-Uses DSSGlobals, Ymatrix, KLUSolve;
+Uses DSSGlobals, Ymatrix, KLUSolve, SysUtils, ExceptionTrace;
 
 Var {Global variables in this Module}
    Yhandle			: NativeUInt;
@@ -153,9 +153,13 @@ end;
 initialization
 
 // Initialize so Reallocmem will work reliably
-   Ycolumns := Nil;
-   YRows    := Nil;
-   YValues  := Nil;
+  Try
+    Ycolumns := Nil;
+    YRows    := Nil;
+    YValues  := Nil;
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 
 finalization
 

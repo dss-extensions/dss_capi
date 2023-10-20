@@ -10,7 +10,7 @@ procedure CtrlQueueV(mode:longint; var myPointer: Pointer; var myType, mySize: l
 
 implementation
 
-uses {$IFNDEF FPC_DLL}ComServ, {$ENDIF}DSSGlobals, ControlQueue, ControlElem, DSSClass,Variants;
+uses {$IFNDEF FPC_DLL}ComServ, {$ENDIF}DSSGlobals, ControlQueue, ControlElem, DSSClass, Variants, SysUtils, ExceptionTrace;
 
 Type
   pAction = ^Taction;
@@ -218,7 +218,10 @@ End;
 
 initialization
  {Make a Proxy Control Object to receiving control actions}
+  Try
     COMControlProxyObj := TCOMControlProxyObj.Create(Nil, 'COM_Proxy');
     ActiveAction := Nil;
-
+  Except
+    On E:Exception do DumpExceptionCallStack (E);
+  end;
 end.
