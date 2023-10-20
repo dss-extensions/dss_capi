@@ -509,7 +509,8 @@ begin
         with ActiveCircuit[ActiveActor].Solution do
         begin
           ArrSize    :=  IncMat.NZero * 3;
-          setlength(myIntArray, ArrSize);
+          if ArrSize > 0 then
+            setlength(myIntArray, ArrSize);  // the while test 3 lines below should protect this if ArrSize <= 0
           Counter    :=  0;
           IMIdx      :=  0;
           while IMIdx  < ArrSize Do
@@ -536,11 +537,11 @@ begin
         begin
            ArrSize    :=  length(Inc_Mat_Levels)-1;    // Removes the 3 initial zeros and the extra index
                                                         // Since it starts on 0
-           setlength(myIntArray, ArrSize);
-           for IMIdx  :=  0 to ArrSize Do
-           Begin
-              myIntArray[IMIdx] := Inc_Mat_levels[IMIdx];
-           End;
+           if ArrSize > 0 then begin
+             setlength(myIntArray, ArrSize);
+             for IMIdx  :=  0 to ArrSize Do
+               myIntArray[IMIdx] := Inc_Mat_levels[IMIdx];
+           end;
         end;
       END;
       myPointer :=  @(myIntArray[0]);
@@ -604,7 +605,8 @@ begin
         with ActiveCircuit[ActiveActor].Solution do
         begin
           ArrSize     :=  Laplacian.NZero * 3;
-          setlength(myIntArray, ArrSize);
+          if ArrSize > 0 then
+            setlength(myIntArray, ArrSize);  // the while test 3 lines below should protect this if ArrSize <= 0
           Counter     :=  0;
           IMIdx       :=  0;
           while IMIdx  < ArrSize Do
