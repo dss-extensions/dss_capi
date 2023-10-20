@@ -354,7 +354,7 @@ begin
       mySize    :=  Length(myStrArray);
     end;
   1:begin  // Monitor.ByteStream
-      myType  :=  4;        // String
+      myType  :=  5;        // NOT a String
       setlength(myStrArray,0);
       If ActiveCircuit[ActiveActor] <> Nil Then
       Begin
