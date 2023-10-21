@@ -26,7 +26,7 @@ Uses
     CmdForms,
     {$ENDIF}
     {$ELSE}
-    CmdForms,
+    CmdForms, ExceptionTrace,
     {$ENDIF}
     Sysutils, RPN, HashList;
 
