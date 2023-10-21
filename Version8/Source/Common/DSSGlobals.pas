@@ -806,39 +806,8 @@ End;
 
 {$IFDEF FPC}
 FUNCTION GetDSSVersion: String;
-(* Unlike most of AboutText (below), this takes significant activity at run-    *)
- (* time to extract version/release/build numbers from resource information      *)
- (* appended to the binary.                                                      *)
-
-VAR     Stream: TResourceStream;
-         vr: TVersionResource;
-         fi: TVersionFixedInfo;
-
 BEGIN
-   RESULT:= 'Unknown.';
-   TRY
-
- (* This raises an exception if version info has not been incorporated into the  *)
- (* binary (Lazarus Project -> Project Options -> Version Info -> Version        *)
- (* numbering).                                                                  *)
-
-     Stream:= TResourceStream.CreateFromID(HINSTANCE, 1, PChar(RT_VERSION));
-     TRY
-       vr:= TVersionResource.Create;
-       TRY
-         vr.SetCustomRawDataStream(Stream);
-         fi:= vr.FixedInfo;
-         RESULT := 'Version ' + IntToStr(fi.FileVersion[0]) + '.' + IntToStr(fi.FileVersion[1]) +
-                ' release ' + IntToStr(fi.FileVersion[2]) + ' build ' + IntToStr(fi.FileVersion[3]) + LineEnding;
-         vr.SetCustomRawDataStream(nil)
-       FINALLY
-         FreeAndNil (vr)
-       END
-     FINALLY
-       FreeAndNil (Stream)
-     END
-   EXCEPT
-   END
+  RESULT:= VersionStringFpc;
 End;
 {$ELSE}
 FUNCTION GetDSSVersion: String;
@@ -1517,11 +1486,11 @@ begin
 end;
 
 initialization
-
   Try
 //***************Initialization for Parallel Processing*************************
 
    Get_processor_info();
+
 
    setlength(ActiveCircuit,CPU_Cores + 1);
    {$IFNDEF FPC}{$IFNDEF CONSOLE}setlength(ActorProgress,CPU_Cores + 1);{$ENDIF}{$ENDIF}
