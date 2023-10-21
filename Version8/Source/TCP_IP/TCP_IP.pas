@@ -88,6 +88,9 @@ var
 implementation
 
 {$IFDEF FPC}  // would probably need to implement from scratch in FPC
+
+uses ExceptionTrace;
+
 constructor TDSSConnect.Create;begin end;
 destructor TDSSConnect.Destroy;begin inherited;end;
 procedure TDSSConnect.MySocketRead(Sender: TObject; Socket: TCustomWinSocket);begin end;
