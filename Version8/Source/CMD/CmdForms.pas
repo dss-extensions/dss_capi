@@ -39,8 +39,6 @@ VAR
    PROCEDURE CloseDownForms;
    Procedure ShowTreeView(Const Fname:String);
    FUNCTION  MakeChannelSelection(NumFieldsToSkip:Integer; const Filename:String):Boolean;
-   procedure ShowHeapUsage; // copied from Lazarus form; not used in command line yet
-   procedure DumpExceptionCallStack(E: Exception);
 
 {$IFDEF FPC}
 {$INCLUDE VersionString.inc}
@@ -48,47 +46,36 @@ VAR
 
 implementation
 
-Uses ExecCommands, ExecOptions, ShowOptions, ExportOptions,
-{$IFNDEF FPC}
-  Windows,
-{$ENDIF}
-	DSSGlobals, DSSClass, DSSClassDefs, ParserDel, Strutils, ArrayDef, ExceptionTrace;
+Uses ExecCommands, ExecOptions, ShowOptions, ExportOptions, 
+  {$IFDEF WINDOWS}Windows{$ELSE}dl{$ENDIF},
+  DSSGlobals, DSSClass, DSSClassDefs, ParserDel, Strutils, ArrayDef, ExceptionTrace;
 
 const colwidth = 25; numcols = 4;  // for listing commands to the console
 
-procedure DumpExceptionCallStack(E: Exception);
+////////////////////////////////////////////////////////
+// from https://forum.lazarus.freepascal.org/index.php?topic=46695.0
+{$IFNDEF WINDOWS}
+function mbGetModuleName(Address: Pointer): String;
+const
+  Dummy: Boolean = False;
 var
-  I: Integer;
-  Frames: PPointer;
-  Report: string;
+  dlinfo: dl_info;
 begin
-  Report := 'Program exception! ' + LineEnding +
-    'Stacktrace:' + LineEnding + LineEnding;
-  if E <> nil then begin
-    Report := Report + 'Exception class: ' + E.ClassName + LineEnding +
-    'Message: ' + E.Message + LineEnding;
+  if Address = nil then Address:= @Dummy;
+  FillChar({%H-}dlinfo, SizeOf(dlinfo), #0);
+  if dladdr(Address, @dlinfo) = 0 then
+    Result:= EmptyStr
+  else begin
+    Result:= UTF8Encode(dlinfo.dli_fname);
   end;
-  Report := Report + BackTraceStrFunc(ExceptAddr);
-  Frames := ExceptFrames;
-  for I := 0 to ExceptFrameCount - 1 do
-    Report := Report + LineEnding + BackTraceStrFunc(Frames[I]);
-  DSSInfoMessageDlg(Report);
-  Halt; // End of program execution
 end;
 
-procedure ShowHeapUsage;
-{$IFDEF FPC}
-var
-   hstat: TFPCHeapStatus;
-   s: string;
-{$ENDIF}
+function GetCurrentModuleName: String;
 begin
-{$IFDEF FPC}
-  hstat := GetFPCHeapStatus;
-  s := Format('Heap Memory Used: %dK',[hstat.CurrHeapUsed div 1024]);
-  DSSInfoMessageDlg(s);
-{$ENDIF}
+  Result := mbGetModuleName(get_caller_addr(get_frame));
 end;
+{$ENDIF}
+////////////////////////////////////////////////////////
 
 Procedure InitProgressForm;
 begin
@@ -115,7 +102,7 @@ End;
 Procedure ShowAboutBox;
 begin
 	writeln ('Console OpenDSS (Electric Power Distribution System Simulator)');
-	writeln ('Version: ' + VersionString);
+	writeln ('Version: ' + VersionStringFpc + ' (Free Pascal)');
 	writeln ('Copyright (c) 2008-2023, Electric Power Research Institute, Inc.');
 	writeln ('Copyright (c) 2016-2023, Battelle Memorial Institute');
 	writeln ('All rights reserved.');
@@ -126,22 +113,20 @@ Begin
 end;
 
 FUNCTION GetDSSExeFile: String;
-{$IFNDEF FPC}
+{$IFDEF WINDOWS}
 Var
-   TheFileName:Array[0..260] of char;
-{$ENDIF}
+  TheFileName:Array[0..260] of char;
 Begin
-  {$IFDEF FPC}
-  Result := 'todo'; // ExtractFilePath (Application.ExeName);
-  {$ELSE}
-    FillChar(TheFileName, SizeOF(TheFileName), #0);  // Fill it with nulls
-    GetModuleFileName(HInstance, TheFileName, SizeOF(TheFileName));
-    Result := TheFileName;
-
-    If IsLibrary then IsDLL := TRUE;
-  {$ENDIF}
+  FillChar(TheFileName, SizeOF(TheFileName), #0);  // Fill it with nulls
+  GetModuleFileName(HInstance, TheFileName, SizeOF(TheFileName));
+  Result := TheFileName;
+  If IsLibrary then IsDLL := TRUE;
 End;
-
+{$ELSE}
+Begin
+  Result := GetCurrentModuleName; // 'todo'; // ExtractFilePath (Application.ExeName);
+End;
+{$ENDIF}
 
 function DSSMessageDlg(const Msg:String;err:boolean):Integer;
 Begin

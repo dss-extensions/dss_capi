@@ -1,1 +1,1 @@
-const VersionString = '1.7.7';
+const VersionStringFpc = '1.7.8';

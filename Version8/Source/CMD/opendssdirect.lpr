@@ -259,7 +259,6 @@ exports
 
 begin
   Try
-    Writeln ('Begin OpenDSSDirect');
     IsDLL := TRUE;
     IsMultiThread := True;
 ///{Create one instance of DSS executive whenever the DSS Engine is init'd}
