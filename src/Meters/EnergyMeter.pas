@@ -513,7 +513,7 @@ begin
         PropInfo := TypeInfo(TProp);
         PropInfoLegacy := TypeInfo(TPropLegacy);
         ActionEnum := TDSSEnum.Create('EnergyMeter: Action', True, 1, 2, 
-            ['Allocate', 'Clear', 'Reduce', 'Save', 'Take', 'ZoneDump'],
+            ['Allocate', 'Clear', 'Reduce', 'Save', 'TakeSample', 'ZoneDump'],
             [0, 1, 2, 3, 4, 5]);
     end;
 

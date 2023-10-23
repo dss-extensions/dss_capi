@@ -274,7 +274,7 @@ begin
         PropInfo := TypeInfo(TProp);
         PropInfoLegacy := TypeInfo(TPropLegacy);
         ActionEnum := TDSSEnum.Create('Monitor: Action', True, 1, 1, 
-            ['Clear', 'Save', 'Take', 'Process', 'Reset'], 
+            ['Clear', 'Save', 'TakeSample', 'Process', 'Reset'], 
             [ord(TMonitorAction.Clear), ord(TMonitorAction.Save), ord(TMonitorAction.Take), ord(TMonitorAction.Process), ord(TMonitorAction.Clear)]);
     end;
 
