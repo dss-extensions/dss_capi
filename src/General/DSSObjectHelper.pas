@@ -73,6 +73,8 @@ type
     protected
         property ActiveCircuit: TDSSCircuit read GetCircuit;
     public
+        property Circuit: TDSSCircuit read GetCircuit;
+
         function AdjustInputFilePath(const Value: String): String;
 
         // Set[Property|Double|Integer|...] calls BeginEdit and EndEdit, for convenience, if not already in an active edit

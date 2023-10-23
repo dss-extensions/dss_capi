@@ -344,7 +344,7 @@ begin
     DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    Alt_Monitor_Get_dblFreq(pMon, ResultPtr, ResultCount);
+    Alt_Monitor_Get_dblFreq(ResultPtr, ResultCount, pMon);
 end;
 
 procedure Monitors_Get_dblFreq_GR(); CDECL;
@@ -362,7 +362,7 @@ begin
     DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    Alt_Monitor_Get_dblHour(pMon, ResultPtr, ResultCount);
+    Alt_Monitor_Get_dblHour(ResultPtr, ResultCount, pMon);
 end;
 
 procedure Monitors_Get_dblHour_GR(); CDECL;

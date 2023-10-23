@@ -77,6 +77,7 @@ implementation
 
 uses
     CAPI_Constants,
+    CAPI_Alt,
     EnergyMeter,
     DSSGlobals,
     SysUtils,
@@ -396,24 +397,11 @@ end;
 //------------------------------------------------------------------------------
 procedure Meters_Set_AllocFactors(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
-    Value: PDoubleArray0;
     pMeterObj: TEnergyMeterObj;
-    i: Integer;
 begin
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
-
-    Value := PDoubleArray0(ValuePtr);
-    if ValueCount <> pMeterObj.NPhases then
-    begin
-        DoSimpleMsg(DSSPrime, _('The provided number of values does not match the element''s number of phases.'), 5026);
-        Exit;
-    end;
-
-    for i := 1 to pMeterObj.NPhases do
-    begin
-        pMeterObj.PhsAllocationFactor[i] := Value[i - 1];
-    end;
+    Alt_Meter_Set_AllocFactors(pMeterObj, ValuePtr, ValueCount);
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_MeteredElement(): PAnsiChar; CDECL;
@@ -600,21 +588,12 @@ end;
 function Meters_Get_CountBranches(): Integer; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
-    pElem : TDSSCktElement;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
 
-    if pMeterObj.BranchList = NIL then
-        Exit;
-
-    pElem := pMeterObj.BranchList.First();
-    while pElem <> NIL do
-    begin
-        Inc(Result);
-        pElem := pMeterObj.BranchList.GoForward();
-    end;
+    Result := Alt_Meter_Get_NumBranchesInZone(pMeterObj);
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SAIFI(): Double; CDECL;
@@ -635,7 +614,6 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, pMeterObj, True) then
         Exit;
-
     
     Result := pMeterObj.SequenceList.ActiveIndex;
 end;
@@ -689,21 +667,12 @@ end;
 function Meters_Get_TotalCustomers(): Integer; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
-    PD_Element: TPDElement;
-
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pMeterObj, True) then
+    if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
 
-    if DSSPrime.ActiveCircuit.Buses = NIL then 
-        Exit;
-
-    PD_Element := pMeterObj.SequenceList.Get(1);
-    if PD_Element = NIL then
-        Exit;
-        
-    Result := DSSPrime.ActiveCircuit.Buses[PD_Element.Terminals[PD_Element.FromTerminal - 1].BusRef].BusTotalNumCustomers;
+    Result := Alt_Meter_Get_TotalCustomers(pMeterObj);
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SAIDI(): Double; CDECL;
@@ -903,12 +872,12 @@ begin
 
     pMeter.GetPCEatZone(True);
     
-    if not ((Length(pMeter.ZonePCE) > 0) and (pMeter.ZonePCE[0] <> '')) then
+    if not ((Length(pMeter.ZonePCE) > 0) and (pMeter.ZonePCE[0] <> NIL)) then
         Exit;
         
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, length(pMeter.ZonePCE));
     for k := 0 to High(pMeter.ZonePCE) do
-        Result[k] := DSS_CopyStringAsPChar(pMeter.ZonePCE[k]);
+        Result[k] := DSS_CopyStringAsPChar(pMeter.ZonePCE[k].FullName);
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_Pointer(): Pointer; CDECL;

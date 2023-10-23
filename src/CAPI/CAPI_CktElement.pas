@@ -159,7 +159,7 @@ begin
         DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
-    Alt_CE_Get_BusNames(elem, ResultPtr, ResultCount);
+    Alt_CE_Get_BusNames(ResultPtr, ResultCount, elem);
 end;
 
 procedure CktElement_Get_BusNames_GR(); CDECL;
@@ -228,7 +228,7 @@ begin
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
         
-    Alt_CE_Get_Currents(elem, ResultPtr, ResultCount);        
+    Alt_CE_Get_Currents(ResultPtr, ResultCount, elem);
 end;
 
 procedure CktElement_Get_Currents_GR(); CDECL;
@@ -249,7 +249,7 @@ begin
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
 
-    Alt_CE_Get_Voltages(elem, ResultPtr, ResultCount);
+    Alt_CE_Get_Voltages(ResultPtr, ResultCount, elem);
 end;
 
 procedure CktElement_Get_Voltages_GR(); CDECL;
@@ -297,7 +297,7 @@ begin
     DefaultResult(ResultPtr, ResultCount);
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
-    Alt_CE_Get_Losses(elem, REsultPtr, ResultCount);
+    Alt_CE_Get_Losses(ResultPtr, ResultCount, elem);
 end;
 
 procedure CktElement_Get_Losses_GR(); CDECL;
@@ -334,7 +334,7 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    Alt_CE_Get_PhaseLosses(elem, ResultPtr, ResultCount);
+    Alt_CE_Get_PhaseLosses(ResultPtr, ResultCount, elem);
 end;
 
 
@@ -355,7 +355,7 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    Alt_CE_Get_Powers(elem, ResultPtr, ResultCount);
+    Alt_CE_Get_Powers(ResultPtr, ResultCount, elem);
 end;
 
 procedure CktElement_Get_Powers_GR(); CDECL;
@@ -374,7 +374,7 @@ begin
     
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
-    Alt_CE_Get_SeqCurrents(elem, ResultPtr, ResultCount);
+    Alt_CE_Get_SeqCurrents(ResultPtr, ResultCount, elem);
 end;
 
 procedure CktElement_Get_SeqCurrents_GR(); CDECL;
@@ -394,7 +394,7 @@ begin
     if InvalidCktElement(DSSPrime, elem) then // or (not elem.Enabled)
         Exit;
 
-    Alt_CE_Get_SeqPowers(elem, ResultPtr, ResultCount);
+    Alt_CE_Get_SeqPowers(ResultPtr, ResultCount, elem);
 end;
 
 procedure CktElement_Get_SeqPowers_GR(); CDECL;
@@ -420,7 +420,7 @@ begin
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
 
-    Alt_CE_Get_SeqVoltages(elem, ResultPtr, ResultCount);
+    Alt_CE_Get_SeqVoltages(ResultPtr, ResultCount, elem);
 end;
 
 procedure CktElement_Get_SeqVoltages_GR(); CDECL;
@@ -757,7 +757,7 @@ begin
     DefaultResult(ResultPtr, ResultCount);
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
-    Alt_CE_Get_CplxSeqVoltages(elem, ResultPtr, ResultCount);
+    Alt_CE_Get_ComplexSeqVoltages(ResultPtr, ResultCount, elem);
 end;
 
 procedure CktElement_Get_CplxSeqVoltages_GR(); CDECL;
@@ -774,7 +774,7 @@ begin
     DefaultResult(ResultPtr, ResultCount);
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
-    Alt_CE_Get_CplxSeqCurrents(elem, ResultPtr, ResultCount);
+    Alt_CE_Get_ComplexSeqCurrents(ResultPtr, ResultCount, elem);
 end;
 
 procedure CktElement_Get_CplxSeqCurrents_GR(); CDECL;
@@ -791,7 +791,7 @@ begin
     DefaultResult(ResultPtr, ResultCount, '');
     if InvalidCktElement(DSSPrime, elem, True) then
         Exit;
-    Alt_PCE_Get_VariableNames(elem as TPCElement, ResultPtr, ResultCount);
+    Alt_PCE_Get_VariableNames(ResultPtr, ResultCount, elem as TPCElement);
 end;
 
 procedure CktElement_Get_AllVariableNames_GR(); CDECL;
@@ -809,7 +809,7 @@ begin
     DefaultResult(ResultPtr, ResultCount);
     if InvalidCktElement(DSSPrime, elem, True) then
         Exit;
-    Alt_PCE_Get_VariableValues(elem as TPCElement, ResultPtr, ResultCount);
+    Alt_PCE_Get_VariableValues(ResultPtr, ResultCount, elem as TPCElement);
 end;
 
 procedure CktElement_Get_AllVariableValues_GR(); CDECL;
@@ -1013,7 +1013,7 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    Alt_CE_Get_CurrentsMagAng(elem, ResultPtr, ResultCount);
+    Alt_CE_Get_CurrentsMagAng(ResultPtr, ResultCount, elem);
 end;
 
 procedure CktElement_Get_CurrentsMagAng_GR(); CDECL;
@@ -1034,7 +1034,7 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    Alt_CE_Get_VoltagesMagAng(elem, ResultPtr, ResultCount);
+    Alt_CE_Get_VoltagesMagAng(ResultPtr, ResultCount, elem);
 end;
 
 procedure CktElement_Get_VoltagesMagAng_GR(); CDECL;
@@ -1065,7 +1065,7 @@ begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
         Exit;
     end;
-    Alt_CE_Get_TotalPowers(elem, ResultPtr, ResultCount);
+    Alt_CE_Get_TotalPowers(ResultPtr, ResultCount, elem);
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_TotalPowers_GR(); CDECL;

@@ -420,7 +420,7 @@ type
         SectionCount: Integer;
         COM_ActiveSection: Integer;  // For COM interface to index into FeederSections array
         FeederSections: pFeederSections;
-        ZonePCE: Array of string;
+        ZonePCE: Array of TDSSCktElement;
 
         //*********** Flags for appending Files*****************************************
         DI_Append: Boolean;
@@ -1089,7 +1089,7 @@ begin
     COM_ActiveSection := 0;
 
     SetLength(ZonePCE, 1);
-    ZonePCE[0] := '';
+    ZonePCE[0] := NIL;
 
     // RecalcElementData;
 end;
@@ -2810,6 +2810,7 @@ procedure TEnergyMeterObj.GetPCEatZone(const allowEmpty: Boolean);
 var
     cktElem,
     shuntElement: TDSSCktElement;
+    numPCE: Integer = 0;
 begin
     //TODO: if performance ever becomes an issue, rewrite to use a temporary list,
     //      or try overallocating the array first
@@ -2819,7 +2820,7 @@ begin
     if not allowEmpty then
     begin
         SetLength(ZonePCE, 1);
-        ZonePCE[0] := '';
+        ZonePCE[0] := NIL;
     end
     else
         SetLength(ZonePCE, 0);
@@ -2827,6 +2828,7 @@ begin
     if BranchList = NIL then
         Exit;
 
+    SetLength(ZonePCE, Circuit.CktElements.Count);
     cktElem := BranchList.First();
     while cktElem <> NIL do
     begin
@@ -2837,18 +2839,19 @@ begin
             while shuntElement <> NIL do
             begin
                 ActiveCircuit.ActiveCktElement := shuntElement;
-                SetLength(ZonePCE, length(ZonePCE) + 1);
-                ZonePCE[high(ZonePCE)] := shuntElement.FullName;
+                ZonePCE[numPCE] := shuntElement;
+                numPCE += 1;
                 shuntElement := BranchList.NextObject;
             end;
         end;
         cktElem := BranchList.GoForward();
     end;
 
-    if (Length(ZonePCE) = 0) and (not allowEmpty) then
+    SetLength(ZonePCE, numPCE);
+    if (numPCE = 0) and (not allowEmpty) then
     begin
         SetLength(ZonePCE, 1);
-        ZonePCE[0] := '';
+        ZonePCE[0] := NIL;
     end;
 end;
 
@@ -3752,36 +3755,35 @@ var
     mtr: TEnergyMeterObj;
   // Filenm:String;
 begin
-    if FSaveDemandInterval then
+    if not FSaveDemandInterval then
+        Exit;
+
+    ClearDI_Totals;  // clears accumulator arrays
+
+    for mtr in DSS.ActiveCircuit.EnergyMeters do
     begin
-        ClearDI_Totals;  // clears accumulator arrays
-
-        for mtr in DSS.ActiveCircuit.EnergyMeters do
-        begin
-            if mtr.enabled then
-                mtr.OpenDemandIntervalFile;
-        end;
-
-        SystemMeter.OpenDemandIntervalFile;
-
-        // Optional Exception Reporting
-        if Do_OverloadReport then
-            OpenOverloadReportFile;
-        if Do_VoltageExceptionReport then
-            OpenVoltageReportFile;
-
-        // Open FDI_Totals
-        try
-            CreateFDI_Totals;
-
-        except
-            On E: Exception do
-                DoSimpleMsg('Error creating the memory space for demand interval "%s.csv" for appending.', [Name + DSS._Name, CRLF + E.Message], 538);
-        end;
-
-        DSS.DIFilesAreOpen := TRUE;
-
+        if mtr.enabled then
+            mtr.OpenDemandIntervalFile;
     end;
+
+    SystemMeter.OpenDemandIntervalFile;
+
+    // Optional Exception Reporting
+    if Do_OverloadReport then
+        OpenOverloadReportFile;
+    if Do_VoltageExceptionReport then
+        OpenVoltageReportFile;
+
+    // Open FDI_Totals
+    try
+        CreateFDI_Totals;
+
+    except
+        On E: Exception do
+            DoSimpleMsg('Error creating the memory space for demand interval "%s.csv" for appending.', [Name + DSS._Name, CRLF + E.Message], 538);
+    end;
+
+    DSS.DIFilesAreOpen := TRUE;
 end;
 
 procedure TEnergyMeter.OpenOverloadReportFile;

@@ -10,52 +10,56 @@ uses
     PDElement,
     LoadShape,
     Monitor,
+    Transformer,
+    EnergyMeter,
     CAPI_Types;
 
-procedure Alt_CE_Get_BusNames(elem: TDSSCktElement; var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 function Alt_CE_Get_NumConductors(elem: TDSSCktElement): Integer; CDECL;
 function Alt_CE_Get_NumPhases(elem: TDSSCktElement): Integer; CDECL;
 function Alt_CE_Get_NumTerminals(elem: TDSSCktElement): Integer; CDECL;
 procedure Alt_CE_Set_BusNames(elem: TDSSCktElement; ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
-procedure Alt_CE_Get_Currents(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-procedure Alt_CE_Get_Voltages(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-procedure Alt_CE_Get_Losses(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-procedure Alt_CE_Get_PhaseLosses(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-procedure Alt_CE_Get_Powers(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-procedure Alt_CE_Get_SeqCurrents(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-procedure Alt_CE_Get_SeqPowers(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-procedure Alt_CE_Get_SeqVoltages(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_Currents(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_Voltages(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_Losses(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_PhaseLosses(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_Powers(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 procedure Alt_CE_Close(elem: TDSSCktElement; Term, Phs: Integer); CDECL;
 procedure Alt_CE_Open(elem: TDSSCktElement; Term, Phs: Integer); CDECL;
 function Alt_CE_IsOpen(elem: TDSSCktElement; Term, Phs: Integer): TAPIBoolean; CDECL;
-procedure Alt_CE_Get_Residuals(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-procedure Alt_CE_Get_Yprim(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_Residuals(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_Yprim(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 function Alt_CE_Get_Handle(elem: TDSSCktElement): Integer; CDECL;
-function Alt_CE_Get_ControllerName(elem: TDSSCktElement; idx: Integer): PAnsiChar; CDECL;
-function Alt_CE_Get_Controller(elem: TDSSCktElement; idx: Integer): TDSSObject; CDECL;
+// function Alt_CE_Get_ControllerName(elem: TDSSCktElement; idx: Integer): PAnsiChar; CDECL;
+// function Alt_CE_Get_Controller(elem: TDSSCktElement; idx: Integer): TDSSObject; CDECL;
+procedure Alt_CE_Get_Controllers(var ResultPtr: PPointer; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 function Alt_CE_Get_HasVoltControl(elem: TDSSCktElement): TAPIBoolean; CDECL;
 function Alt_CE_Get_HasSwitchControl(elem: TDSSCktElement): TAPIBoolean; CDECL;
-procedure Alt_CE_Get_CplxSeqVoltages(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-procedure Alt_CE_Get_CplxSeqCurrents(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-procedure Alt_CE_Get_NodeOrder(elem: TDSSCktElement; var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_ComplexSeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_ComplexSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_NodeOrder(var ResultPtr: PInteger; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 function Alt_CE_Get_HasOCPDevice(elem: TDSSCktElement): TAPIBoolean; CDECL;
 function Alt_CE_Get_NumControllers(elem: TDSSCktElement): Integer; CDECL;
-function Alt_CE_Get_OCPDevIndex(elem: TDSSCktElement): Integer; CDECL;
-function Alt_CE_Get_OCPDevType(elem: TDSSCktElement): Integer; CDECL;
-procedure Alt_CE_Get_CurrentsMagAng(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-procedure Alt_CE_Get_VoltagesMagAng(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-procedure Alt_CE_Get_TotalPowers(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+function Alt_CE_Get_OCPDevice(elem: TDSSCktElement): TDSSCktElement; CDECL;
+function Alt_CE_Get_OCPDeviceIndex(elem: TDSSCktElement): Integer; CDECL;
+function Alt_CE_Get_OCPDeviceType(elem: TDSSCktElement): Integer; CDECL;
+procedure Alt_CE_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 function Alt_CE_Get_IsIsolated(elem: TDSSCktElement): TAPIBoolean; CDECL;
-procedure Alt_CE_Get_NodeRef(elem: TDSSCktElement; var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_NodeRef(var ResultPtr: PInteger; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 function Alt_CE_Get_DisplayName(elem: TDSSCktElement): PAnsiChar; CDECL;
 function Alt_CE_Get_GUID(elem: TDSSCktElement): PAnsiChar; CDECL;
 procedure Alt_CE_Set_DisplayName(elem: TDSSCktElement; const Value: PAnsiChar); CDECL;
 function Alt_CE_MaxCurrent(obj: TDSSCktElement; terminalIdx: Integer): Double; CDECL;
-procedure Alt_CE_Get_RegisterNames(elem: TDSSCktElement; var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Alt_CE_Get_RegisterValues(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 //PCElements
-procedure Alt_PCE_Get_VariableNames(elem: TPCElement; var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Alt_PCE_Get_VariableValues(elem: TPCElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_PCE_Get_VariableNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; elem: TPCElement); CDECL;
+procedure Alt_PCE_Get_VariableValues(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TPCElement); CDECL;
 procedure Alt_PCE_Set_VariableValue(elem: TPCElement; varIdx: Integer; Value: Double); CDECL;
 function Alt_PCE_Get_VariableValue(elem: TPCElement; varIdx: Integer): Double; CDECL;
 function Alt_PCE_Get_VariableName(elem: TPCElement; varIdx: Integer): PAnsiChar; CDECL;
@@ -79,22 +83,51 @@ procedure Alt_LoadShape_Set_Points(elem: TLoadshapeObj; Npts: TAPISize; HoursPtr
 procedure Alt_LoadShape_UseFloat64(elem: TLoadshapeObj); CDECL;
 procedure Alt_LoadShape_UseFloat32(elem: TLoadshapeObj); CDECL;
 //Monitor
-procedure Alt_Monitor_Get_ByteStream(pmon: TMonitorObj; var ResultPtr: PByte; ResultCount: PAPISize); CDECL;
+procedure Alt_Monitor_Get_ByteStream(var ResultPtr: PByte; ResultCount: PAPISize; pmon: TMonitorObj); CDECL;
 function Alt_Monitor_Get_SampleCount(pmon: TMonitorObj): Integer; CDECL;
 function Alt_Monitor_Get_FileName(pmon: TMonitorObj): PAnsiChar; CDECL;
 function Alt_Monitor_Get_NumChannels(pmon: TMonitorObj): Integer; CDECL;
 function Alt_Monitor_Get_RecordSize(pmon: TMonitorObj): Integer; CDECL;
 procedure Alt_Monitor_Show(pmon: TMonitorObj); CDECL;
-procedure Alt_Monitor_Get_Channel(pmon: TMonitorObj; var ResultPtr: PDouble; ResultCount: PAPISize; Index: Integer); CDECL;
-procedure Alt_Monitor_Get_dblFreq(pmon: TMonitorObj; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-procedure Alt_Monitor_Get_dblHour(pmon: TMonitorObj; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-procedure Alt_Monitor_Get_Header(pmon: TMonitorObj; var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure Alt_Monitor_Get_Channel(var ResultPtr: PDouble; ResultCount: PAPISize; pmon: TMonitorObj; Index: Integer); CDECL;
+procedure Alt_Monitor_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PAPISize; pmon: TMonitorObj); CDECL;
+procedure Alt_Monitor_Get_dblHour(var ResultPtr: PDouble; ResultCount: PAPISize; pmon: TMonitorObj); CDECL;
+procedure Alt_Monitor_Get_Header(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; pmon: TMonitorObj); CDECL;
+//Transformer
+procedure Alt_Transformer_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TTransfObj); CDECL;
+procedure Alt_Transformer_Get_WdgCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TTransfObj); CDECL;
+procedure Alt_Transformer_Get_LossesByType(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TTransfObj); CDECL;
+//EnergyMeter, general
+function Alt_Meter_Get_TotalCustomers(elem: TEnergyMeterObj): Integer; CDECL;
+procedure Alt_Meter_Get_CalcCurrent(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
+procedure Alt_Meter_Set_CalcCurrent(elem: TEnergyMeterObj; ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure Alt_Meter_Get_AllocFactors(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
+procedure Alt_Meter_Set_AllocFactors(elem: TEnergyMeterObj; ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure Alt_Meter_DoReliabilityCalc(elem: TEnergyMeterObj; AssumeRestoration: TAPIBoolean); CDECL;
+function Alt_Meter_Get_NumEndElements(elem: TEnergyMeterObj): Integer; CDECL;
+function Alt_Meter_Get_NumSections(elem: TEnergyMeterObj): Integer; CDECL;
+function Alt_Meter_Get_NumBranchesInZone(elem: TEnergyMeterObj): Integer; CDECL;
+procedure Alt_Meter_Get_ZonePCEs(var ResultPtr: PPointer; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
+procedure Alt_Meter_Get_EndElements(var ResultPtr: PPointer; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
+procedure Alt_Meter_Get_BranchesInZone(var ResultPtr: PPointer; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
+procedure Alt_Meter_Get_SequenceList(var ResultPtr: PPointer; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
+procedure Alt_Meter_Get_Loads(var ResultPtr: PPointer; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
+//MeterSection
+function Alt_MeterSection_AvgRepairTime(elem: TEnergyMeterObj; idx: Integer): Double; CDECL;
+function Alt_MeterSection_FaultRateXRepairHours(elem: TEnergyMeterObj; idx: Integer): Double; CDECL;
+function Alt_MeterSection_NumBranches(elem: TEnergyMeterObj; idx: Integer): Integer; CDECL;
+function Alt_MeterSection_NumCustomers(elem: TEnergyMeterObj; idx: Integer): Integer; CDECL;
+function Alt_MeterSection_OCPDeviceType(elem: TEnergyMeterObj; idx: Integer): Integer; CDECL;
+function Alt_MeterSection_SumBranchFaultRates(elem: TEnergyMeterObj; idx: Integer): Double; CDECL;
+function Alt_MeterSection_SequenceIndex(elem: TEnergyMeterObj; idx: Integer): Integer; CDECL;
+function Alt_MeterSection_TotalCustomers(elem: TEnergyMeterObj; idx: Integer): Integer; CDECL;
 
 
 implementation
 
 uses
     CAPI_Constants,
+    DSSObjectHelper,
     DSSClassDefs,
     DSSGlobals,
     UComplex, DSSUcomplex,
@@ -111,7 +144,8 @@ uses
     ArrayDef,
     Math,
     Classes,
-    CktElementClass;
+    CktElementClass,
+    CktTree;
     
 procedure _CalcSeqCurrents(elem: TDSSCktElement; i012: pComplexArray);
 // Assumes V012 is properly allocated before call.
@@ -229,7 +263,7 @@ begin
     Result := ((elem.DSSObjType and 3) = PD_ELEMENT)
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_BusNames(elem: TDSSCktElement; var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 var
     Result: PPAnsiCharArray0;
     i: Integer;
@@ -272,7 +306,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_Currents(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_Currents(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 var
     Result: PDoubleArray0;
 begin
@@ -284,7 +318,7 @@ begin
     elem.GetCurrents(pComplexArray(Result));
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_Voltages(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_Voltages(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 // Bus Voltages at active terminal
 var
     Result: PDoubleArray0;
@@ -314,7 +348,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_Losses(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_Losses(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 var
     Result: PDoubleArray0;
     LossValue: complex;
@@ -330,7 +364,7 @@ begin
     Result[1] := LossValue.im;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_PhaseLosses(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_PhaseLosses(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 // Returns Phase losses in kW, kVar
 var
     Result: PDoubleArray0;
@@ -351,7 +385,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_Powers(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_Powers(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 // Return complex kW, kvar in each conductor for each terminal
 var
     Result: PDoubleArray0;
@@ -371,7 +405,7 @@ begin
         Result[i] *= 0.001;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_SeqCurrents(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 // All sequence currents of active ciruit element
 // returns magnitude only.
 var
@@ -410,7 +444,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_SeqPowers(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 // All seq Powers of active 3-phase circuit element
 // returns kW + j kvar
 var
@@ -483,7 +517,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_SeqVoltages(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 // All voltages of active circuit element
 // magnitude only
 // returns a set of seq voltages (3) for each terminal
@@ -560,7 +594,7 @@ begin
         Result := not elem.Closed[Phs];
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_Residuals(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_Residuals(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 var
     Result: PDoubleArray0;
     cBuffer: pComplexArray;
@@ -594,7 +628,7 @@ begin
     Reallocmem(cBuffer, 0);
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_Yprim(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_Yprim(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 var
     cValues: pComplexArray;
 begin
@@ -612,28 +646,36 @@ begin
     Result := elem.Handle
 end;
 //------------------------------------------------------------------------------
-function Alt_CE_Get_ControllerName(elem: TDSSCktElement; idx: Integer): PAnsiChar; CDECL;
-var
-    ctrl: TDSSCktElement;
-begin
-    Result := NIL;
-    if (idx > 0) and (idx <= elem.ControlElementList.Count) then
-    begin
-        ctrl := elem.ControlElementList.Get(idx);
-        if ctrl <> NIL then
-            Result := DSS_GetAsPAnsiChar(elem.DSS, ctrl.FullName);
-    end;
-end;
+// function Alt_CE_Get_ControllerName(elem: TDSSCktElement; idx: Integer): PAnsiChar; CDECL;
+// var
+//     ctrl: TDSSCktElement;
+// begin
+//     Result := NIL;
+//     if (idx > 0) and (idx <= elem.ControlElementList.Count) then
+//     begin
+//         ctrl := elem.ControlElementList.Get(idx);
+//         if ctrl <> NIL then
+//             Result := DSS_GetAsPAnsiChar(elem.DSS, ctrl.FullName);
+//     end;
+// end;
+// //------------------------------------------------------------------------------
+// function Alt_CE_Get_Controller(elem: TDSSCktElement; idx: Integer): TDSSObject; CDECL;
+// begin
+//     Result := NIL;
+//     if (idx > 0) and (idx <= elem.ControlElementList.Count) then
+//     begin
+//         Result := elem.ControlElementList.Get(idx);
+//     end;
+// end;
 //------------------------------------------------------------------------------
-function Alt_CE_Get_Controller(elem: TDSSCktElement; idx: Integer): TDSSObject; CDECL;
-var
-    ctrl: TDSSCktElement;
+procedure Alt_CE_Get_Controllers(var ResultPtr: PPointer; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 begin
-    Result := NIL;
-    if (idx > 0) and (idx <= elem.ControlElementList.Count) then
-    begin
-        Result := elem.ControlElementList.Get(idx);
-    end;
+    ResultCount[0] := 0;
+    if elem.ControlElementList = NIL then
+        Exit;
+
+    DSS_RecreateArray_PPointer(ResultPtr, ResultCount, elem.ControlElementList.Count);
+    Move(elem.ControlElementList.InternalPointer^, ResultPtr^, ResultCount^ * SizeOf(Pointer));
 end;
 //------------------------------------------------------------------------------
 function Alt_PCE_Get_EnergyMeterName(elem: TPCElement): PAnsiChar; CDECL;
@@ -709,7 +751,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_CplxSeqVoltages(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_ComplexSeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 var
     S: String;
 begin
@@ -735,7 +777,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_CplxSeqCurrents(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_ComplexSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 var
     Result: PDoubleArray0;
     i012: pComplexArray;
@@ -765,7 +807,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_PCE_Get_VariableNames(elem: TPCElement; var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure Alt_PCE_Get_VariableNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; elem: TPCElement); CDECL;
 var
     Result: PPAnsiCharArray0;
     k: Integer;
@@ -777,7 +819,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_PCE_Get_VariableValues(elem: TPCElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_PCE_Get_VariableValues(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TPCElement); CDECL;
 // Return array of doubles with values of all variables if PCElement
 var
     Result: PDoubleArray0;
@@ -790,7 +832,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_NodeOrder(elem: TDSSCktElement; var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_NodeOrder(var ResultPtr: PInteger; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 var
     Result: PIntegerArray0;
     k: Integer;
@@ -828,7 +870,30 @@ begin
     Result := elem.ControlElementList.Count;
 end;
 //------------------------------------------------------------------------------
-function Alt_CE_Get_OCPDevIndex(elem: TDSSCktElement): Integer; CDECL;
+function Alt_CE_Get_OCPDevice(elem: TDSSCktElement): TDSSCktElement; CDECL;
+var
+    iControl: Integer;
+    ctrl: TDSSCktElement;
+begin
+    Result := NIL;
+    iControl := 1;
+    repeat
+        // cycle through the list of controls until we find a fuse, recloser, or relay
+        ctrl := elem.ControlElementList.Get(iControl);
+        if ctrl <> NIL then
+            case (ctrl.DSSObjType and CLASSMASK) of
+                FUSE_CONTROL:
+                    Result := ctrl;
+                RECLOSER_CONTROL:
+                    Result := ctrl;
+                RELAY_CONTROL:
+                    Result := ctrl;
+            end;
+        inc(iControl);
+    until (iControl > elem.ControlElementList.Count) or (Result <> NIL);
+end;
+//------------------------------------------------------------------------------
+function Alt_CE_Get_OCPDeviceIndex(elem: TDSSCktElement): Integer; CDECL;
 var
     iControl: Integer;
     ctrl: TDSSCktElement;
@@ -852,12 +917,12 @@ begin
     until (iControl > elem.ControlElementList.Count) or (Result > 0);
 end;
 //------------------------------------------------------------------------------
-function Alt_CE_Get_OCPDevType(elem: TDSSCktElement): Integer; CDECL;
+function Alt_CE_Get_OCPDeviceType(elem: TDSSCktElement): Integer; CDECL;
 begin
     Result := GetOCPDeviceType(elem);     // see Utilities.pas
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_CurrentsMagAng(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 // return currents in magnitude, angle array
 var
     Result: PDoubleArray0;
@@ -886,7 +951,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_VoltagesMagAng(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 // Bus Voltages in magnitude, angle at all terminal
 var
     Result: PDoubleArray0;
@@ -922,7 +987,7 @@ begin
     Result := Flg.IsIsolated in elem.Flags;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_TotalPowers(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 var
     cBuffer: pComplexArray;
     myInit,
@@ -960,7 +1025,7 @@ begin
     Reallocmem(cBuffer,0);
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_NodeRef(elem: TDSSCktElement; var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;    
+procedure Alt_CE_Get_NodeRef(var ResultPtr: PInteger; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;    
 begin
     DefaultResult(ResultPtr, ResultCount);
     if elem.NodeRef = NIL then
@@ -1172,7 +1237,7 @@ begin
     elem.UseFloat32();
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_RegisterNames(elem: TDSSCktElement; var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 var
     Result: PPAnsiCharArray0;
     k: Integer;
@@ -1194,9 +1259,8 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_RegisterValues(elem: TDSSCktElement; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_CE_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 var
-    Result: PDoubleArray0;
     num: Integer = 0;
     values: PDoubleArray;
     cls: TDSSClass;
@@ -1204,16 +1268,16 @@ begin
     cls := elem.ParentClass;
     if not (cls is TCktElementClass) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 0);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 0);
         Exit;
     end;
     values := TCktElementClass(cls).GetRegisterValues(elem, num);
     if (num = 0) or (values = NIL) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 0);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 0);
         Exit;
     end;
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, num);
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, num);
     Move(values^, ResultPtr^, num * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
@@ -1222,7 +1286,7 @@ begin
     PMon.TranslateToCSV(TRUE);
 end;
 //------------------------------------------------------------------------------
-procedure Alt_Monitor_Get_ByteStream(pmon: TMonitorObj; var ResultPtr: PByte; ResultCount: PAPISize); CDECL;
+procedure Alt_Monitor_Get_ByteStream(var ResultPtr: PByte; ResultCount: PAPISize; pmon: TMonitorObj); CDECL;
 begin
     DSS_RecreateArray_PByte(ResultPtr, ResultCount, pmon.MonitorStream.Size);
     pmon.MonitorStream.Seek(0, soFromBeginning);
@@ -1250,7 +1314,7 @@ begin
     Result := pmon.RecordSize;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_Monitor_Get_Channel(pmon: TMonitorObj; var ResultPtr: PDouble; ResultCount: PAPISize; Index: Integer); CDECL;
+procedure Alt_Monitor_Get_Channel(var ResultPtr: PDouble; ResultCount: PAPISize; pmon: TMonitorObj; Index: Integer); CDECL;
 // Return an array of doubles for selected channel
 var
     Result: PDoubleArray0;
@@ -1339,19 +1403,19 @@ begin
     Reallocmem(SngBuffer, 0);  // Dispose of buffer
 end;
 
-procedure Alt_Monitor_Get_dblFreq(pmon: TMonitorObj; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_Monitor_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PAPISize; pmon: TMonitorObj); CDECL;
 // Return an array of doubles for frequence for Harmonic solutions
 begin
     Alt_Monitor_Get_dblHourFreq(pmon, false, ResultPtr, ResultCount);
 end;
 
-procedure Alt_Monitor_Get_dblHour(pmon: TMonitorObj; var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Alt_Monitor_Get_dblHour(var ResultPtr: PDouble; ResultCount: PAPISize; pmon: TMonitorObj); CDECL;
 // Return an array of doubles for time in hours
 begin
     Alt_Monitor_Get_dblHourFreq(pmon, false, ResultPtr, ResultCount);
 end;
 //------------------------------------------------------------------------------
-procedure Alt_Monitor_Get_Header(pmon: TMonitorObj; var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure Alt_Monitor_Get_Header(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; pmon: TMonitorObj); CDECL;
 // Variant list of strings with names of all channels
 var
     Result: PPAnsiCharArray0;
@@ -1373,52 +1437,343 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
+procedure Alt_Transformer_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TTransfObj); CDECL;
+begin
+    if (elem.ActiveWinding > 0) and (elem.ActiveWinding <= elem.NumWindings) then
+    begin
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * elem.nphases);
+        if elem.Enabled then
+            elem.GetWindingVoltages(elem.ActiveWinding, pComplexArray(ResultPtr));
+        Exit;
+    end;
+    DefaultResult(ResultPtr, ResultCount);
+end;
+//------------------------------------------------------------------------------
+procedure Alt_Transformer_Get_WdgCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TTransfObj); CDECL;
+var
+    NumCurrents: Integer;
+begin
+    NumCurrents := 2 * elem.NPhases * elem.NumWindings; // 2 currents per winding
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumCurrents);
+    if elem.Enabled then
+        elem.GetAllWindingCurrents(pComplexArray(ResultPtr));
+end;
+//------------------------------------------------------------------------------
+procedure Alt_Transformer_Get_LossesByType(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TTransfObj); CDECL;
+// Returns an array with (TotalLosses, LoadLosses, NoLoadLosses) for the current active transformer, in VA
+var 
+    CResult: PComplexArray; // this array is one-based, see DSSUcomplex
+begin
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3);
+    CResult := PComplexArray(ResultPtr);
+    elem.GetLosses(CResult[1], CResult[2], CResult[3]);
+    // Keep the results in VA (NOT kVA) for consistency with CktElement_Get_Losses
+end;
+//------------------------------------------------------------------------------
+function checkLoadList(elem: TEnergyMeterObj): Boolean;
+begin
+    Result := true;
+    if (elem.LoadList = NIL) then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            elem.DoSimpleMsg('LoadList for %s is not initialized. Try solving or running "Makebuslist" first.', [elem.FullName], 8987);
+        end;
+        Result := false;
+    end;
+end;
 
-// + Readonly props
+function checkSequenceList(elem: TEnergyMeterObj): Boolean;
+begin
+    Result := true;
+    if (elem.SequenceList = NIL) then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            elem.DoSimpleMsg('SequenceList for %s is not initialized. Try solving or running "Makebuslist" first.', [elem.FullName], 8988);
+        end;
+        Result := false;
+    end;
+end;
 
-// function Meters_Get_TotalCustomers(): Integer; CDECL;
+function Alt_Meter_Get_TotalCustomers(elem: TEnergyMeterObj): Integer; CDECL;
+var
+    PD_Element: TPDElement;
+begin
+    Result := 0;
+    if (not checkSequenceList(elem)) or (elem.Circuit.Buses = NIL) then 
+        Exit;
 
-// procedure Meters_Get_CalcCurrent(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-// procedure Meters_Set_CalcCurrent(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
-// procedure Meters_Get_AllocFactors(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-// procedure Meters_Set_AllocFactors(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+    PD_Element := elem.SequenceList.Get(1);
+    if PD_Element = NIL then
+        Exit;
+        
+    Result := elem.ActiveCircuit.Buses[PD_Element.Terminals[PD_Element.FromTerminal - 1].BusRef].BusTotalNumCustomers;
+end;
+//------------------------------------------------------------------------------
+procedure Alt_Meter_Get_CalcCurrent(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
+var
+    Result: PDoubleArray0;
+    k: Integer;
+begin
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
+    for k := 0 to elem.NPhases - 1 do
+        Result[k] := Cabs(elem.CalculatedCurrent[k + 1]);
+end;
+//------------------------------------------------------------------------------
+procedure Alt_Meter_Set_CalcCurrent(elem: TEnergyMeterObj; ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+var
+    Value: PDoubleArray0;
+    i: Integer;
+begin
+    if ValueCount <> elem.NPhases then
+    begin
+        DoSimpleMsg(DSSPrime, _('The provided number of values does not match the element''s number of phases.'), 5025);
+        Exit;
+    end;
+    Value := PDoubleArray0(ValuePtr);
+    for i := 1 to elem.NPhases do
+        elem.CalculatedCurrent[i] := Value[i - 1];   // Just set the real part
+end;
+//------------------------------------------------------------------------------
+procedure Alt_Meter_Get_AllocFactors(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
+begin
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
+    Move(elem.PhsAllocationFactor[1], ResultPtr^, ResultCount^ * SizeOf(Double));
+end;
+//------------------------------------------------------------------------------
+procedure Alt_Meter_Set_AllocFactors(elem: TEnergyMeterObj; ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+var
+    Value: PDoubleArray0;
+    i: Integer;
+begin
+    Value := PDoubleArray0(ValuePtr);
+    if ValueCount <> elem.NPhases then
+    begin
+        DoSimpleMsg(DSSPrime, _('The provided number of values does not match the element''s number of phases.'), 5026);
+        Exit;
+    end;
+    for i := 1 to elem.NPhases do
+    begin
+        elem.PhsAllocationFactor[i] := Value[i - 1];
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure Alt_Meter_DoReliabilityCalc(elem: TEnergyMeterObj; AssumeRestoration: TAPIBoolean); CDECL;
+begin
+    elem.AssumeRestoration := AssumeRestoration;
+    elem.CalcReliabilityIndices();
+end;
+//------------------------------------------------------------------------------
+procedure Alt_Meter_Get_ZonePCEs(var ResultPtr: PPointer; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
+var
+   k: integer;
+begin
+    elem.GetPCEatZone(True);
+    if not ((Length(elem.ZonePCE) > 0) and (elem.ZonePCE[0] <> NIL)) then
+        Exit;
+        
+    DSS_RecreateArray_PPointer(ResultPtr, ResultCount, length(elem.ZonePCE));
+    Move(elem.ZonePCE[0], ResultPtr^, ResultCount^ * SizeOf(Pointer));
+end;
+//------------------------------------------------------------------------------
+procedure Alt_Meter_Get_EndElements(var ResultPtr: PPointer; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
+var
+    Result: PPointerArray0;
+    k, num: Integer;
+    node: TCktTreeNode;
+begin
+    ResultCount[0] := 0;
+    if not elem.CheckBranchList(5502) then
+        Exit;
+    if elem.BranchList.ZoneEndsList = NIL then
+        Exit;
 
-// procedure Meters_DoReliabilityCalc(AssumeRestoration: TAPIBoolean); CDECL;
+    num := elem.BranchList.ZoneEndsList.NumEnds;
+    DSS_RecreateArray_PPointer(Result, ResultPtr, ResultCount, num);
+    for k := 0 to num - 1 do
+    begin
+        elem.BranchList.ZoneEndsList.Get(k + 1, node);
+        Result[k] := node.CktObject;
+    end;
+end;
+//------------------------------------------------------------------------------
+function Alt_Meter_Get_NumEndElements(elem: TEnergyMeterObj): Integer; CDECL;
+begin
+    Result := 0;
+    if not elem.CheckBranchList(5500) then
+        Exit;
 
-// procedure Meters_Get_ZonePCE(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-// procedure Meters_Get_Totals(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-// procedure Meters_Get_AllEndElements(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-// function Meters_Get_CountEndElements(): Integer; CDECL;
+    if elem.BranchList.ZoneEndsList = NIL then
+        Exit;
 
+    Result := elem.BranchList.ZoneEndsList.NumEnds;
+end;
+//------------------------------------------------------------------------------
+function Alt_Meter_Get_NumSections(elem: TEnergyMeterObj): Integer; CDECL;
+begin
+    Result := elem.SectionCount;
+end;
+//------------------------------------------------------------------------------
+procedure Alt_Meter_Get_BranchesInZone(var ResultPtr: PPointer; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
+var
+    Result: PPointerArray0;
+    k: Integer;
+    BranchCount: Integer;
+    pElem: TDSSCktElement;
+begin
+    ResultCount[0] := 0;
+    if not elem.CheckBranchList(5501) then
+        Exit;
 
-// //TODO: remove concept of active section, modernize
-// function Meters_Get_NumSections(): Integer; CDECL;
-// procedure Meters_SetActiveSection(SectIdx: Integer); CDECL;
-// function Meters_Get_AvgRepairTime(): Double; CDECL;
-// function Meters_Get_FaultRateXRepairHrs(): Double; CDECL;
-// function Meters_Get_NumSectionBranches(): Integer; CDECL;
-// function Meters_Get_NumSectionCustomers(): Integer; CDECL;
-// function Meters_Get_OCPDeviceType(): Integer; CDECL;
-// function Meters_Get_SumBranchFltRates(): Double; CDECL;
-// function Meters_Get_SectSeqIdx(): Integer; CDECL;
-// function Meters_Get_SectTotalCust(): Integer; CDECL;
+    // Get count of branches
+    BranchCount := Alt_Meter_Get_NumBranchesInZone(elem);
+    if BranchCount <= 0 then 
+        Exit;
+        
+    DSS_RecreateArray_PPointer(Result, ResultPtr, ResultCount, BranchCount);
+    pElem := elem.BranchList.First();
+    k := 0;
+    while pElem <> NIL do
+    begin
+        Result[k] := pElem;
+        inc(k);
+        pElem := elem.BranchList.GoForward();
+    end;
+end;
+//------------------------------------------------------------------------------
+function Alt_Meter_Get_NumBranchesInZone(elem: TEnergyMeterObj): Integer; CDECL;
+var
+    pElem : TDSSCktElement;
+begin
+    Result := 0;
+    if elem.BranchList = NIL then //TODO: error/warning?
+        Exit;
 
-// //TODO: separate modern API
-// function Meters_Get_SeqListSize(): Integer; CDECL;
-// function Meters_Get_SequenceIndex(): Integer; CDECL;
-// procedure Meters_Set_SequenceIndex(Value: Integer); CDECL;
+    pElem := elem.BranchList.First();
+    while pElem <> NIL do
+    begin
+        Inc(Result);
+        pElem := elem.BranchList.GoForward();
+    end;
+end;
+//------------------------------------------------------------------------------
+function checkSectionIdx(elem: TEnergyMeterObj; idx: Integer; out psec: PFeederSection): Boolean;
+begin
+    if (idx <= 0) or (idx > elem.SectionCount) then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+            elem.DoSimpleMsg(_('Invalid active section. Has SetActiveSection been called?'), 5055);
+        psec := NIL;
+        Result := false;
+        Exit;
+    end;
+    psec := @elem.FeederSections[idx];
+    Result := true;
+end;
 
-// function Meters_Get_CountBranches(): Integer; CDECL;
+function Alt_MeterSection_AvgRepairTime(elem: TEnergyMeterObj; idx: Integer): Double; CDECL;
+var
+    psection: PFeederSection;
+begin
+    Result := 0;
+    if not checkSectionIdx(elem, idx, psection) then
+        Exit;
+    Result := psection^.AverageRepairTime;
+end;
 
+function Alt_MeterSection_FaultRateXRepairHours(elem: TEnergyMeterObj; idx: Integer): Double; CDECL;
+var
+    psection: PFeederSection;
+begin
+    Result := 0;
+    if not checkSectionIdx(elem, idx, psection) then
+        Exit;
+    Result := psection^.SumFltRatesXRepairHrs;
+end;
 
-// function Meters_Get_DIFilesAreOpen(): TAPIBoolean; CDECL;
-// procedure Meters_CloseAllDIFiles(); CDECL;
-// procedure Meters_OpenAllDIFiles(); CDECL;
-// procedure Meters_SampleAll(); CDECL;
-// procedure Meters_SaveAll(); CDECL;
-// procedure Meters_Get_AllBranchesInZone(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-// procedure Meters_Get_AllBranchesInZone_GR(); CDECL;
-// procedure Meters_ResetAll(); CDECL;
+function Alt_MeterSection_NumBranches(elem: TEnergyMeterObj; idx: Integer): Integer; CDECL;
+var
+    psection: PFeederSection;
+begin
+    Result := 0;
+    if not checkSectionIdx(elem, idx, psection) then
+        Exit;
+    Result := psection^.NBranches;
+end;
 
-// TODO/Loads: functions to set powers without changing Yprim?
+function Alt_MeterSection_NumCustomers(elem: TEnergyMeterObj; idx: Integer): Integer; CDECL;
+var
+    psection: PFeederSection;
+begin
+    Result := 0;
+    if not checkSectionIdx(elem, idx, psection) then
+        Exit;
+    Result := psection^.NCustomers;
+end;
+
+function Alt_MeterSection_OCPDeviceType(elem: TEnergyMeterObj; idx: Integer): Integer; CDECL;
+var
+    psection: PFeederSection;
+begin
+    Result := 0;
+    if not checkSectionIdx(elem, idx, psection) then
+        Exit;
+    Result := psection^.OCPDeviceType;
+end;
+
+function Alt_MeterSection_SumBranchFaultRates(elem: TEnergyMeterObj; idx: Integer): Double; CDECL;
+var
+    psection: PFeederSection;
+begin
+    Result := 0;
+    if not checkSectionIdx(elem, idx, psection) then
+        Exit;
+    Result := psection^.SumBranchFltRates;
+end;
+
+function Alt_MeterSection_SequenceIndex(elem: TEnergyMeterObj; idx: Integer): Integer; CDECL;
+var
+    psection: PFeederSection;
+begin
+    Result := 0;
+    if not checkSectionIdx(elem, idx, psection) then
+        Exit;
+    Result := psection^.SeqIndex;
+end;
+
+function Alt_MeterSection_TotalCustomers(elem: TEnergyMeterObj; idx: Integer): Integer; CDECL;
+var
+    psection: PFeederSection;
+begin
+    Result := 0;
+    if not checkSectionIdx(elem, idx, psection) then
+        Exit;
+    Result := psection^.TotalCustomers;
+end;
+//------------------------------------------------------------------------------
+procedure Alt_Meter_Get_SequenceList(var ResultPtr: PPointer; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
+begin
+    ResultCount[0] := 0;
+    if (not checkSequenceList(elem)) then
+        Exit;
+
+    DSS_RecreateArray_PPointer(ResultPtr, ResultCount, elem.SequenceList.Count);
+    Move(elem.SequenceList.InternalPointer^, ResultPtr^, ResultCount^ * SizeOf(Pointer));
+end;
+//------------------------------------------------------------------------------
+procedure Alt_Meter_Get_Loads(var ResultPtr: PPointer; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
+begin
+    ResultCount[0] := 0;
+    if (not checkLoadList(elem)) then
+        Exit;
+
+    DSS_RecreateArray_PPointer(ResultPtr, ResultCount, elem.LoadList.Count);
+    Move(elem.LoadList.InternalPointer^, ResultPtr^, ResultCount^ * SizeOf(Pointer));
+end;
+//------------------------------------------------------------------------------
+
+// + TODO/Loads: functions to set powers without changing Yprim?
+// - Modernize DynamicExp (idx etc. and other weirdness)
+// ? Reverse property numbers so that we can reuse DSSObj, CktElement, etc. for all components in batches
 end.
