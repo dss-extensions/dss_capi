@@ -589,7 +589,7 @@ end;
 procedure Transformers_Get_LossesByType(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Returns an array with (TotalLosses, LoadLosses, NoLoadLosses) for the current active transformer, in VA
 var 
-    CResult: PComplexArray; // this array is one-based, see UComplex, DSSUcomplex
+    CResult: PComplexArray; // this array is one-based, see DSSUcomplex
     elem: TObj;
 begin
     if not _activeObj(DSSPrime, elem) then
@@ -599,6 +599,10 @@ begin
     end;
     
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3);
+
+    if not elem.Enabled then
+        Exit;
+
     CResult := PComplexArray(ResultPtr);
     elem.GetLosses(CResult[1], CResult[2], CResult[3]);
     // Keep the results in VA (NOT kVA) for consistency with CktElement_Get_Losses
@@ -614,7 +618,7 @@ procedure Transformers_Get_AllLossesByType(var ResultPtr: PDouble; ResultCount: 
 // Returns an array with (TotalLosses, LoadLosses, NoLoadLosses) for all transformers, in VA
 var
     Result: PDoubleArray0;
-    CResult: PComplexArray; // this array is one-based, see UComplex, DSSUcomplex
+    CResult: PComplexArray; // this array is one-based, see DSSUcomplex
     elem: TObj;
     lst: TDSSPointerList;
     k: Integer;
@@ -633,7 +637,8 @@ begin
     begin
         if elem.Enabled or (DSS_CAPI_ITERATE_DISABLED = 1) then
         begin
-            elem.GetLosses(CResult[k], CResult[k + 1], CResult[k + 2]);
+            if elem.Enabled then
+                elem.GetLosses(CResult[k], CResult[k + 1], CResult[k + 2]);
             Inc(k, 3);
         end;
     end;
