@@ -260,6 +260,15 @@ extern "C" {
     typedef int32_t (*dss_callback_message_t)(void* ctx, char* messageStr, int32_t messageType, int64_t messageSize, int32_t messageSubType);
     typedef void (*dss_callback_solution_t)(void* ctx);
 
+    /*!  
+    Function types for extra object functions (used by the batch API)
+   
+    EXPERIMENTAL
+    */
+    typedef double (*dss_obj_float64_func_t)(void* obj);
+    typedef int32_t (*dss_obj_int32_func_t)(void* obj);
+
+
     /* Functions start here */
 
     DSS_CAPI_DLL void DSS_ResetStringBuffer(void);
@@ -7281,10 +7290,12 @@ extern "C" {
     DSS_CAPI_DLL void Batch_CreateByIndex(void* ctx, void*** ResultPtr, int32_t* ResultCount, int32_t clsidx, int32_t* Value, int32_t ValueCount);
     DSS_CAPI_DLL void Batch_CreateByInt32Property(void* ctx, void*** ResultPtr, int32_t* ResultCount, int32_t ClsIdx, int32_t idx, int32_t value);
 
+    DSS_CAPI_DLL void Batch_GetFloat64FromFunc(double** ResultPtr, int32_t* ResultDims, void **batch, int32_t batchSize, dss_obj_float64_func_t func);
     DSS_CAPI_DLL void Batch_GetFloat64(double** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
     DSS_CAPI_DLL void Batch_GetInt32(int32_t** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
     DSS_CAPI_DLL void Batch_GetString(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
     DSS_CAPI_DLL void Batch_GetAsString(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
+    DSS_CAPI_DLL void Batch_GetInt32FromFunc(int32_t** ResultPtr, int32_t* ResultDims, void **batch, int32_t batchSize, dss_obj_int32_func_t func);
 
     DSS_CAPI_DLL void Batch_GetObject(void*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
 

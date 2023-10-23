@@ -38,6 +38,10 @@ uses
     fpjson,
     Circuit;
 
+type
+    dss_obj_float64_function_t = function (obj: Pointer): Double; CDECL;    
+    dss_obj_int32_function_t = function (obj: Pointer): Integer; CDECL;    
+
 //TODO: decise if we want to expose the metadata (property index, name and type) now or later
 
 // The classic API keeps the string buffer in the global state,
@@ -110,6 +114,8 @@ procedure Batch_GetInt32(var ResultPtr: PInteger; ResultCount: PAPISize; batch: 
 procedure Batch_GetString(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; Index: Integer); CDECL;
 procedure Batch_GetAsString(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; Index: Integer); CDECL;
 procedure Batch_GetObject(var ResultPtr: PPointer; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; Index: Integer); CDECL;
+procedure Batch_GetFloat64FromFunc(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; func: dss_obj_float64_function_t); CDECL;
+procedure Batch_GetInt32FromFunc(var ResultPtr: PInteger; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; func: dss_obj_int32_function_t); CDECL;
 
 // procedure Batch_SetAsString(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PAnsiChar); CDECL;
 procedure Batch_Float64(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: Integer; Value: Double); CDECL;
@@ -2470,6 +2476,25 @@ begin
     end;
 end;
 
+procedure Batch_GetFloat64FromFunc(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; func: dss_obj_float64_function_t); CDECL;
+var
+    presult: PDouble;
+    i: Integer;
+begin
+    if (batch = NIL) or (batch^ = NIL) or ((@func) = NIL) then
+        Exit;
+
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, batchSize);
+    presult := ResultPtr;
+    
+    for i := 1 to batchSize do
+    begin
+        presult^ := func(batch^);
+        inc(batch);
+        inc(presult);
+    end;
+end;
+
 procedure Batch_GetInt32(var ResultPtr: PInteger; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; Index: Integer); CDECL;
 var
     cls: TDSSClass;
@@ -2528,6 +2553,24 @@ begin
     end;
 end;
 
+procedure Batch_GetInt32FromFunc(var ResultPtr: PInteger; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; func: dss_obj_int32_function_t); CDECL;
+var
+    presult: PInteger;
+    i: Integer;
+begin
+    if (batch = NIL) or (batch^ = NIL) or ((@func) = NIL) then
+    begin
+        Exit;
+    end;
+    DSS_RecreateArray_PInteger(ResultPtr, ResultCount, batchSize);
+    presult := ResultPtr;
+    for i := 1 to batchSize do
+    begin
+        presult^ := func(batch^);
+        inc(batch);
+        inc(presult);
+    end;
+end;
 
 procedure Batch_GetString(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; Index: Integer); CDECL;
 var
