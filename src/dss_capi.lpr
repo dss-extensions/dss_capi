@@ -253,6 +253,7 @@ uses
     CAPI_YMatrix in 'CAPI_YMatrix.pas',
     CAPI_Obj in 'CAPI_Obj.pas', // new experimental API
     CAPI_ZIP in 'CAPI_ZIP.pas', // new experimental API
+    CAPI_Schema in 'CAPI_Schema.pas',
     
     DSSGlobals in 'src/Common/DSSGlobals.pas'
 

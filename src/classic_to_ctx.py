@@ -69,7 +69,7 @@ def skip(fun):
 
 for fn in glob('src/CAPI/*.pas'):
     bn = os.path.basename(fn)
-    if bn in ['CAPI_Utils.pas', 'CAPI_Types.pas', 'CAPI_Metadata.pas', 'CAPI_Context.pas', 'CAPI_Obj.pas']:
+    if bn in ['CAPI_Utils.pas', 'CAPI_Types.pas', 'CAPI_Metadata.pas', 'CAPI_Context.pas', 'CAPI_Obj.pas', 'CAPI_Alt.pas', 'CAPI_Schema.pas']:
         continue
 
     if bn.startswith('CAPI_Alt_'):

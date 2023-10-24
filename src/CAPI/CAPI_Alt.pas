@@ -1772,8 +1772,4 @@ begin
     Move(elem.LoadList.InternalPointer^, ResultPtr^, ResultCount^ * SizeOf(Pointer));
 end;
 //------------------------------------------------------------------------------
-
-// + TODO/Loads: functions to set powers without changing Yprim?
-// - Modernize DynamicExp (idx etc. and other weirdness)
-// ? Reverse property numbers so that we can reuse DSSObj, CktElement, etc. for all components in batches
 end.
