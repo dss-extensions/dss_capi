@@ -140,10 +140,11 @@ begin
     // integer properties
     PropertyType[ord(TProp.NVariables)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.NVariables)] := ptruint(@obj.NVariables);
+    // PropertyFlags[ord(TProp.NVariables)] := [TPropertyFlag.Unused, TPropertyFlag.SuppressJSON];
 
     PropertyType[ord(TProp.VarIdx)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.VarIdx)] := ptruint(@obj.VarIdx);
-    PropertyFlags[ord(TProp.VarIdx)] := [TPropertyFlag.SilentReadOnly];
+    PropertyFlags[ord(TProp.VarIdx)] := [TPropertyFlag.SilentReadOnly, TPropertyFlag.SuppressJSON];
 
     // enums
     PropertyType[ord(TProp.Domain)] := TPropertyType.MappedStringEnumProperty;
@@ -157,7 +158,7 @@ begin
 
     PropertyType[ord(TProp.vr)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.vr)] := ptruint(@obj.ActiveVar);
-    PropertyFlags[ord(TProp.vr)] := [TPropertyFlag.Transform_LowerCase];
+    PropertyFlags[ord(TProp.vr)] := [TPropertyFlag.Transform_LowerCase, TPropertyFlag.SuppressJSON];
 
     // string lists
     PropertyType[ord(TProp.VarNames)] := TPropertyType.StringListProperty;
