@@ -2046,6 +2046,7 @@ exports
     Obj_GetClassIdx,
     Obj_GetNumProperties,
     Obj_GetCount,
+    Obj_GetListPointer,
     Obj_ToJSON,
     Obj_CktElement_MaxCurrent,
     Obj_Circuit_Set_ActiveCktElement,

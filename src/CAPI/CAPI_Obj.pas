@@ -59,6 +59,7 @@ function Obj_GetHandleByIdx(DSS: TDSSContext; ClsIdx: Integer; Idx: Integer): Po
 function Obj_GetName(Handle: Pointer): PAnsiChar; CDECL;
 function Obj_GetNumProperties(Handle: Pointer): Integer; CDECL;
 function Obj_GetCount(DSS: TDSSContext; ClsIdx: Integer): Integer; CDECL;
+function Obj_GetListPointer(DSS: TDSSContext; ClsIdx: Integer): PPointer; CDECL;
 function Obj_GetIdx(Handle: Pointer): Integer; CDECL;
 function Obj_GetClassName(Handle: Pointer): PAnsiChar; CDECL;
 function Obj_GetClassIdx(Handle: Pointer): Integer; CDECL;
@@ -1836,6 +1837,19 @@ end;
 function Obj_GetNumProperties(Handle: Pointer): Integer; CDECL;
 begin
     Result := TDSSObject(Handle).ParentClass.NumProperties;
+end;
+
+function Obj_GetListPointer(DSS: TDSSContext; ClsIdx: Integer): PPointer; CDECL;
+var
+    Cls: TDSSClass;
+begin
+    Result := NIL;
+    if DSS = NIL then DSS := DSSPrime;
+    Cls := DSS.DSSClassList.At(ClsIdx);
+    if Cls = NIL then
+        Exit;
+
+    Result := PPointer(Cls.ElementList.InternalPointer);
 end;
 
 function Obj_GetCount(DSS: TDSSContext; ClsIdx: Integer): Integer; CDECL;

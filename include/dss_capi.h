@@ -7167,6 +7167,7 @@ extern "C" {
 
     DSS_CAPI_DLL void* Obj_New(void* ctx, int32_t ClsIdx, const char* Name, uint16_t Activate, uint16_t BeginEdit);
     DSS_CAPI_DLL int32_t Obj_GetCount(void* ctx, int32_t ClsIdx);
+    DSS_CAPI_DLL void** Obj_GetListPointer(void* ctx, int32_t ClsIdx);
     DSS_CAPI_DLL void* Obj_GetHandleByName(void* ctx, int32_t ClsIdx, const char* Name);
     DSS_CAPI_DLL void* Obj_GetHandleByIdx(void* ctx, int32_t ClsIdx, int32_t Idx);
     DSS_CAPI_DLL uint16_t Obj_PropertySideEffects(void *obj, int32_t Index, int32_t PreviousInt);
