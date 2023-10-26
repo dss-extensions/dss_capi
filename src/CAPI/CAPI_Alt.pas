@@ -10,7 +10,7 @@ uses
     PDElement,
     LoadShape,
     Monitor,
-    Transformer,
+    ControlledTransformer,
     EnergyMeter,
     CAPI_Types;
 
@@ -94,9 +94,9 @@ procedure Alt_Monitor_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PAPISize;
 procedure Alt_Monitor_Get_dblHour(var ResultPtr: PDouble; ResultCount: PAPISize; pmon: TMonitorObj); CDECL;
 procedure Alt_Monitor_Get_Header(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; pmon: TMonitorObj); CDECL;
 //Transformer
-procedure Alt_Transformer_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TTransfObj); CDECL;
-procedure Alt_Transformer_Get_WdgCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TTransfObj); CDECL;
-procedure Alt_Transformer_Get_LossesByType(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TTransfObj); CDECL;
+procedure Alt_Transformer_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TControlledTransformerObj; winding: Integer); CDECL;
+procedure Alt_Transformer_Get_WdgCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TControlledTransformerObj); CDECL;
+procedure Alt_Transformer_Get_LossesByType(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TControlledTransformerObj); CDECL;
 //EnergyMeter, general
 function Alt_Meter_Get_TotalCustomers(elem: TEnergyMeterObj): Integer; CDECL;
 procedure Alt_Meter_Get_CalcCurrent(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
@@ -122,6 +122,7 @@ function Alt_MeterSection_SumBranchFaultRates(elem: TEnergyMeterObj; idx: Intege
 function Alt_MeterSection_SequenceIndex(elem: TEnergyMeterObj; idx: Integer): Integer; CDECL;
 function Alt_MeterSection_TotalCustomers(elem: TEnergyMeterObj; idx: Integer): Integer; CDECL;
 
+procedure Alt_Circuit_ElementLosses(DSS: TDSSContext; var resultPtr: PDouble; resultCount: PAPISize; elements: TDSSObjectPtr; elementsCount: TAPISize); CDECL;
 
 implementation
 
@@ -1437,19 +1438,20 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_Transformer_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TTransfObj); CDECL;
+procedure Alt_Transformer_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TControlledTransformerObj; winding: Integer); CDECL;
 begin
-    if (elem.ActiveWinding > 0) and (elem.ActiveWinding <= elem.NumWindings) then
+    if (winding > 0) and (winding <= elem.NumWindings) then
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * elem.nphases);
         if elem.Enabled then
-            elem.GetWindingVoltages(elem.ActiveWinding, pComplexArray(ResultPtr));
+            elem.GetWindingVoltages(winding, pComplexArray(ResultPtr));
         Exit;
     end;
+    elem.DoSimpleMsg('Invalid winding number (%d) for transformer %s. Valid numbers: from 1 to %d.', [winding, elem.FullName, elem.NumWindings], 8986);
     DefaultResult(ResultPtr, ResultCount);
 end;
 //------------------------------------------------------------------------------
-procedure Alt_Transformer_Get_WdgCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TTransfObj); CDECL;
+procedure Alt_Transformer_Get_WdgCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TControlledTransformerObj); CDECL;
 var
     NumCurrents: Integer;
 begin
@@ -1459,7 +1461,7 @@ begin
         elem.GetAllWindingCurrents(pComplexArray(ResultPtr));
 end;
 //------------------------------------------------------------------------------
-procedure Alt_Transformer_Get_LossesByType(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TTransfObj); CDECL;
+procedure Alt_Transformer_Get_LossesByType(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TControlledTransformerObj); CDECL;
 // Returns an array with (TotalLosses, LoadLosses, NoLoadLosses) for the current active transformer, in VA
 var 
     CResult: PComplexArray; // this array is one-based, see DSSUcomplex
@@ -1770,6 +1772,38 @@ begin
 
     DSS_RecreateArray_PPointer(ResultPtr, ResultCount, elem.LoadList.Count);
     Move(elem.LoadList.InternalPointer^, ResultPtr^, ResultCount^ * SizeOf(Pointer));
+end;
+//------------------------------------------------------------------------------
+procedure Alt_Circuit_ElementLosses(DSS: TDSSContext; var resultPtr: PDouble; resultCount: PAPISize; elements: TDSSObjectPtr; elementsCount: TAPISize); CDECL;
+var
+    Result: PDoubleArray0;
+    CResultPtr: pComplex;
+    i: TAPISize;
+begin
+    if MissingSolution(DSS) then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
+        Exit;
+    end;
+    
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * ElementsCount);
+    CResultPtr := pComplex(ResultPtr);
+
+    for i := 0 to elementsCount do
+    begin
+        if elements^ <> NIL then
+            CResultPtr^ := TDSSCktElement(elements^).Losses;
+
+        Inc(elements);
+        Inc(CResultPtr);
+    end;
+
+    i := 0;
+    while i < 2*ElementsCount do
+    begin
+        Result[i] := Result[i] * 0.001;
+        Inc(i);
+    end;
 end;
 //------------------------------------------------------------------------------
 end.

@@ -2229,7 +2229,9 @@ exports
     Alt_MeterSection_OCPDeviceType,
     Alt_MeterSection_SumBranchFaultRates,
     Alt_MeterSection_SequenceIndex,
-    Alt_MeterSection_TotalCustomers
+    Alt_MeterSection_TotalCustomers,
+
+    Alt_Circuit_ElementLosses
 
 
 {$IFDEF DSS_CAPI_CONTEXT},

@@ -7467,7 +7467,7 @@ extern "C" {
     DSS_CAPI_DLL void Alt_Monitor_Get_dblHour(double** resultPtr, int32_t *resultDims, void* pmon);
     DSS_CAPI_DLL void Alt_Monitor_Get_Header(char*** resultPtr, int32_t *resultDims, void* pmon);
 
-    DSS_CAPI_DLL void Alt_Transformer_Get_WdgVoltages(double** resultPtr, int32_t *resultDims, void* elem);
+    DSS_CAPI_DLL void Alt_Transformer_Get_WdgVoltages(double** resultPtr, int32_t *resultDims, void* elem, int32_t winding);
     DSS_CAPI_DLL void Alt_Transformer_Get_WdgCurrents(double** resultPtr, int32_t *resultDims, void* elem);
     DSS_CAPI_DLL void Alt_Transformer_Get_LossesByType(double** resultPtr, int32_t *resultDims, void* elem);
 
@@ -7497,6 +7497,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t Alt_MeterSection_SequenceIndex(void* elem, int32_t idx);
     DSS_CAPI_DLL int32_t Alt_MeterSection_TotalCustomers(void* elem, int32_t idx);
 
+    DSS_CAPI_DLL void Alt_Circuit_ElementLosses(void *ctx, double** resultPtr, int32_t *resultDims, void **elements, int32_t elementsCount);
 
 #ifdef __cplusplus
 } // extern "C"
