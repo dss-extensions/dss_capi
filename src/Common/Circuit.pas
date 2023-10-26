@@ -77,15 +77,11 @@ type
         Branch_List: TCktTree; // topology from the first source, lazy evaluation
         BusAdjPC, BusAdjPD: TAdjArray; // bus adjacency lists of PD and PC elements
 
-        procedure AddABus();
-        procedure AddANodeBus();
         function AddBus(const BusName: String; NNodes: Integer): Integer;
         procedure Set_ActiveCktElement(Value: TDSSCktElement);
         procedure Set_BusNameRedefined(Value: Boolean);
         function Get_Losses: Complex; //Total Circuit losses
         procedure Set_LoadMultiplier(Value: Double);
-        procedure SaveBusInfo;
-        procedure RestoreBusInfo;
 
         function SaveMasterFile: Boolean;
         function SaveDSSObjects: Boolean;
@@ -315,7 +311,7 @@ type
         function Save(Dir: String): Boolean;
 
         procedure ProcessBusDefs(element: TDSSCktElement);
-        procedure ReProcessBusDefs;
+        procedure ReprocessBusDefs;
         procedure DoResetMeterZones;
         function SetElementActive(const FullObjectName: String): Integer;
         procedure InvalidateAllPCElements;
@@ -1955,26 +1951,6 @@ begin
     end;
 end;
 
-
-procedure TDSSCircuit.AddABus();
-begin
-    //TODO: check if other growth rates are better from large systems
-    if NumBuses > MaxBuses then
-    begin
-        Inc(MaxBuses, IncBuses);
-        ReallocMem(Buses, SizeOf(Buses[1]) * MaxBuses);
-    end;
-end;
-
-procedure TDSSCircuit.AddANodeBus;
-begin
-    if NumNodes > MaxNodes then
-    begin
-        Inc(MaxNodes, IncNodes);
-        ReallocMem(MapNodeToBus, SizeOf(MapNodeToBus[1]) * MaxNodes);
-    end;
-end;
-
 function TDSSCircuit.AddBus(const BusName: String; NNodes: Integer): Integer;
 var
     NodeRef, i: Integer;
@@ -1996,7 +1972,13 @@ begin
     begin
         Result := BusList.Add(BusName); // Result is index of bus
         Inc(NumBuses);
-        AddABus();   // Allocates more memory if necessary
+        // Allocates more memory if necessary
+        //TODO: check if other growth rates are better from large systems
+        if NumBuses > MaxBuses then
+        begin
+            Inc(MaxBuses, IncBuses);
+            ReallocMem(Buses, SizeOf(Buses[1]) * MaxBuses);
+        end;
         bus := TDSSBus.Create(DSS);
         bus.Name := BusName;
         Buses[NumBuses] := bus;
@@ -2010,7 +1992,12 @@ begin
         NodeRef := bus.Add(self, NodeBuffer[i]);
         if NodeRef = NumNodes then
         begin  // This was a new node so Add a NodeToBus element ????
-            AddANodeBus(); // Allocates more memory if necessary
+            // Allocates more memory if necessary
+            if NumNodes > MaxNodes then
+            begin
+                Inc(MaxNodes, IncNodes);
+                ReallocMem(MapNodeToBus, SizeOf(MapNodeToBus[1]) * MaxNodes);
+            end;
             MapNodeToBus[NumNodes].BusRef := Result;
             MapNodeToBus[NumNodes].NodeNum := NodeBuffer[i]
         end;
@@ -2169,10 +2156,22 @@ begin
     FreeTopology;
 end;
 
-procedure TDSSCircuit.SaveBusInfo;
+procedure TDSSCircuit.ReprocessBusDefs;
+// Redo all Buslists, nodelists
 var
-    i: Integer;
+    element: TDSSCktElement;
+    i, j, idx, jdx: Integer;
+    bus, savedBus: TDSSBus;
 begin
+    if LogEvents then
+        DSS.LogThisEvent('Reprocessing Bus Definitions');
+
+    //TODO: callback
+
+    AbortBusProcess := FALSE;
+    // > SaveBusInfo
+    // So we don't have to keep re-doing this
+    // Keeps present definitions of bus objects until new ones created
     // Save existing bus definitions and names for info that needs to be restored
     SavedBuses := Allocmem(Sizeof(SavedBuses[1]) * NumBuses);
     SavedBusNames := Allocmem(Sizeof(SavedBusNames[1]) * NumBuses);
@@ -2183,13 +2182,29 @@ begin
         SavedBusNames[i] := BusList.NameOfIndex(i);
     end;
     SavedNumBuses := NumBuses;
-end;
+    // < SaveBusInfo
 
-procedure TDSSCircuit.RestoreBusInfo;
-var
-    i, j, idx, jdx: Integer;
-    bus, savedBus: TDSSBus;
-begin
+    // get rid of old bus lists
+    BusList.Free;  // Clears hash list of Bus names for adding more
+    BusList := TBusHashListType.Create(NumDevices);  // won't have many more buses than this
+
+    NumBuses := 0;  // Leave allocations same, but start count over
+    NumNodes := 0;
+
+    // Now redo all enabled circuit elements
+    for element in CktElements do
+    begin
+        if element.Enabled then
+            ProcessBusDefs(element);
+        if AbortBusProcess then
+            Exit;
+    end;
+
+    for i := 1 to NumBuses do
+        Buses[i].AllocateBusState;
+    
+    // > RestoreBusInfo
+    // frees old bus info, too
     // Restore  kV bases, other values to buses still in the list
     for i := 1 to SavedNumBuses do
     begin
@@ -2224,45 +2239,9 @@ begin
 
     ReallocMem(SavedBuses, 0);
     ReallocMem(SavedBusNames, 0);
-end;
+    // < RestoreBusInfo
 
-procedure TDSSCircuit.ReProcessBusDefs;
-// Redo all Buslists, nodelists
-var
-    CktElementSave: TDSSCktElement;
-    i: Integer;
-    element: TDSSCktElement;
-begin
-    if LogEvents then
-        DSS.LogThisEvent('Reprocessing Bus Definitions');
-
-    AbortBusProcess := FALSE;
-    SaveBusInfo;  // So we don't have to keep re-doing this
-    // Keeps present definitions of bus objects until new ones created
-
-    // get rid of old bus lists
-    BusList.Free;  // Clears hash list of Bus names for adding more
-    BusList := TBusHashListType.Create(NumDevices);  // won't have many more buses than this
-
-    NumBuses := 0;  // Leave allocations same, but start count over
-    NumNodes := 0;
-
-    // Now redo all enabled circuit elements
-    CktElementSave := ActiveCktElement;
-    for element in CktElements do
-    begin
-        if element.Enabled then
-            ProcessBusDefs(element);
-        if AbortBusProcess then
-            Exit;
-    end;
-
-    ActiveCktElement := CktElementSave;  // restore active circuit element
-
-    for i := 1 to NumBuses do
-        Buses[i].AllocateBusState;
-    RestoreBusInfo;     // frees old bus info, too
-    DoResetMeterZones;  // Fix up meter zones to correspond
+    DoResetMeterZones();  // Fix up meter zones to correspond
 
     BusNameRedefined := FALSE;  // Get ready for next time
 end;

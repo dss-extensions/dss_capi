@@ -304,7 +304,7 @@ begin
      // the following re counts the number of buses and resets meter zones and feeders
      // If radial but systemNodeMap not set then init for radial got skipped due to script sequence
         if (BusNameRedefined) then
-            ReProcessBusDefs;      // This changes the node references into the system Y matrix!!
+            ReprocessBusDefs;      // This changes the node references into the system Y matrix!!
 
         YMatrixSize := NumNodes;
 

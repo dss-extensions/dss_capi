@@ -2857,7 +2857,7 @@ var
 begin
      // Make sure bus list is built
     if DSS.ActiveCircuit.BusNameRedefined then
-        DSS.ActiveCircuit.ReProcessBusDefs;
+        DSS.ActiveCircuit.ReprocessBusDefs;
 
     with DSS.ActiveCircuit do
     begin
