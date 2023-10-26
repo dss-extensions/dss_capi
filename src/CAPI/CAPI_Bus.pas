@@ -710,7 +710,7 @@ begin
     if not _activeObj(DSSPrime, pBus) then
         Exit;
 
-    Result := pBus.BusCustDurations;
+    Result := pBus.BusCustInterrupts;
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_N_Customers(): Integer; CDECL;
