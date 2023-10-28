@@ -6982,6 +6982,14 @@ extern "C" {
     */
 
     /*! 
+    Returns a copy of the full object name, including class.
+    
+    Remember to dispose with `DSS_Dispose_String`.
+
+    (API Extension)
+    */
+
+    /*! 
     Returns the object's class name (direct access, no copy is done, no disposal required by the user; read only!)
 
     (API Extension)
@@ -6992,7 +7000,7 @@ extern "C" {
     /*! 
     Activates an object. The object is set as the current
     active DSSObject or CktElement, and in the list of its parent class.
-    If AllLists is true, other internal lists of OpenDSS are also
+    If allLists is true, other internal lists of OpenDSS are also
     updated (implies slow/linear searches).
 
     (API Extension)
@@ -7073,6 +7081,7 @@ extern "C" {
 
     // Relevant functions from the CktElement and PDElements API, working directly on the elements
     //TODO: copy comments and adapt
+
 
 
 

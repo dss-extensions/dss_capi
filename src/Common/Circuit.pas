@@ -320,7 +320,7 @@ type
 
         // Moved from Utilities.pas
         function GetMaxCktElementSize(): Integer;
-        function GetUniqueNodeNumber(const sBusName: String; StartNode: Integer): Integer;
+        function GetUniqueNodeNumber(bus: TDSSBus; StartNode: Integer): Integer;
 
         // Access to topology from the first source
         function GetTopology: TCktTree;
@@ -1733,7 +1733,7 @@ begin
         if not (DSS_Class is TCktElementClass) then
             continue;
 
-        // Checks if it is a PCE class
+        // Checks if it is a PDE class
         if not (DSS_Class.ClassType.InheritsFrom(TPDClass)) then
             continue;
 
@@ -2810,18 +2810,14 @@ begin
         Result := max(result, elem.Yorder);
 end;
 
-function TDSSCircuit.GetUniqueNodeNumber(const sBusName: String; StartNode: Integer): Integer;
+function TDSSCircuit.GetUniqueNodeNumber(bus: TDSSBus; StartNode: Integer): Integer;
 // To help avoid collisions of neutral numbers, this function returns a node number that is not being used,
 // Starting at the StartNode value
-var
-    iBusidx: Integer;
 begin
     Result := StartNode;
-    iBusidx := Buslist.Find(sBusName);
-    if iBusidx > 0 then
-        while Buses[iBusidx].FindIdx(Result) <> 0 do
-            Inc(Result);
-    Buses[iBusidx].Add(self, result);  // add it to the list so next call will be unique
+    while bus.FindIdx(Result) <> 0 do
+        Inc(Result);
+    bus.Add(self, result);  // add it to the list so next call will be unique
 end;
 
 constructor TBusMarker.Create;

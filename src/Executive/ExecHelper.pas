@@ -16,7 +16,8 @@ interface
 uses
     Executive,
     Classes,
-    DSSClass;
+    DSSClass,
+    Bus;
 
 type
     TExecHelper = class helper for TExecutive
@@ -81,7 +82,7 @@ type
         function DoCapacityCmd: Integer;
         function DoZscCmd(Zmatrix: Boolean): Integer;
         function DoZsc10Cmd: Integer;
-        function DoZscRefresh: Integer;
+        function DoZscRefresh(bus: TDSSBus = NIL): Integer;
         function DoZsc012Cmd: Integer;
 
         function DoBusCoordsCmd(SwapXY: Boolean): Integer;
@@ -163,7 +164,6 @@ uses
     UComplex,
     DSSUcomplex,
     mathutil,
-    Bus,
     SolutionAlgs,
     ExecCommands,
     Dynamics,
@@ -2828,26 +2828,28 @@ begin
     AppendGlobalResult(DSS, 'No User Classes Defined.');
 end;
 
-function TExecHelper.DoZscRefresh: Integer;
-
+function TExecHelper.DoZscRefresh(bus: TDSSBus = NIL): Integer;
 var
     j: Integer;
-
 begin
     Result := 1;
-
     try
-
         with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
         begin
             for j := 1 to NumNodes do
                 Currents[j] := 0;  // Clear Currents array
 
-            if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
+            if bus = NIL then
             begin
-                if not assigned(Buses[ActiveBusIndex].Zsc) then
-                    Buses[ActiveBusIndex].AllocateBusQuantities;
-                Solution.ComputeYsc(ActiveBusIndex);      // Compute YSC for active Bus
+                if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
+                    bus := Buses[ActiveBusIndex];
+            end;
+           
+            if bus <> NIL then
+            begin
+                if not assigned(bus.Zsc) then
+                    bus.AllocateBusQuantities;
+                Solution.ComputeYsc(bus);      // Compute YSC for active Bus
                 Result := 0;
             end;
         end;

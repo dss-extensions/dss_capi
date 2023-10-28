@@ -76,6 +76,7 @@ type
 
     // Bus Collection
     PBusArray = ^TBusArray;
+    PDSSBus = ^TDSSBus;
     TBusArray = array[1..10] of TDSSBus;
 
     TNodeBus = record

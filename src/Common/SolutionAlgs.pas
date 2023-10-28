@@ -9,7 +9,7 @@ unit SolutionAlgs;
 
 interface
 
-uses DSSClass, ArrayDef, PCElement, Solution, Circuit;
+uses DSSClass, ArrayDef, PCElement, Solution, Circuit, Bus;
 
 type
     TSolutionAlgs = class helper for TSolutionObj
@@ -33,7 +33,7 @@ type
         function SolveHarmTime: Integer;  // solve harmonics vs time (like general time mode) created by Davis Montenegro 25/06/2014
         function SolveGeneralTime: Integer;
 
-        procedure ComputeYsc(iB: Integer);
+        procedure ComputeYsc(pBus: TDSSBus);
         procedure ComputeAllYsc;
         procedure IntegratePCStates;
         procedure EndOfTimeStepCleanup();
@@ -64,7 +64,6 @@ uses
     Spectrum,
     Vsource,
     Isource,
-    Bus,
     KLUSolve,
     DSSHelper;
 
@@ -786,17 +785,14 @@ begin
         ckt.Buses[i].Ysc.MVMult(ckt.Buses[i].BusCurrent, ckt.Buses[i].VBus);
 end;
 
-procedure TSolutionAlgs.ComputeYsc(iB: Integer);
+procedure TSolutionAlgs.ComputeYsc(pBus: TDSSBus);
 // Compute YSC for I-th bus
 // Assume InjCurr is zeroed
 var
     i,
     j,
     ref1: Integer;
-    pBus: TDSSBus;
 begin
-    pBus := ckt.Buses[iB];
-
     pBus.Zsc.Clear();
     for i := 1 to pBus.NumNodesThisBus do
     begin
@@ -830,7 +826,7 @@ begin
 
     for iB := 1 to ckt.NumBuses do
     begin
-        ComputeYsc(iB);  // Compute YSC for iB-th Bus
+        ComputeYsc(ckt.Buses[iB]);  // Compute YSC for iB-th Bus
         if ((iB * 10) div ckt.NumBuses) > ProgressCount then
         begin
             Inc(ProgressCount);

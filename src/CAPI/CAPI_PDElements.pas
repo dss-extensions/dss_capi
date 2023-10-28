@@ -74,7 +74,8 @@ uses
     Math,
     MathUtil,
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    DSSObject;
 
 //------------------------------------------------------------------------------
 function _activeObj(DSS: TDSSContext; out obj: TPDElement): Boolean; inline;
@@ -364,125 +365,19 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function _PDElements_Get_pctCapacity_for(const AllNodes: Boolean; const What: integer; RatingIdx: Integer; pElem: TPDElement; cBuffer: pComplexArray): Double; inline;
-var
-    i: Integer;
-    EmergAmps,
-    NormAmps,
-    Currmag,
-    MaxCurrent: Double;
-    NumNodes: Integer;
-begin
-    Result := 0;
-    MaxCurrent := 0.0;
-    
-    if AllNodes then
-        NumNodes := pElem.NConds * pElem.NTerms
-    else
-        NumNodes := pElem.Nphases;
-    
-    for i := 1 to NumNodes do
-    begin
-        Currmag := Cabs(cBuffer[i]);
-        if Currmag > MaxCurrent then
-            MaxCurrent := Currmag;
-    end;
-    if What = 0 then
-    begin
-        Result := MaxCurrent;
-        Exit;
-    end;
-    
-    NormAmps := pElem.NormAmps;
-    EmergAmps := pElem.EmergAmps;
-    if (RatingIdx <= pElem.NumAmpRatings) and (pElem.NumAmpRatings > 1) then
-    begin
-        NormAmps := pElem.AmpRatings[RatingIdx];
-        EmergAmps := pElem.AmpRatings[RatingIdx];
-    end;
-
-    case What of
-        1: if NormAmps <> 0 then Result := 100 * MaxCurrent / NormAmps;
-        2: if EmergAmps <> 0 then Result := 100 * MaxCurrent / EmergAmps;
-    end;
-end;
-
 procedure _PDElements_Get_x(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; const What: integer; const AllNodes: Boolean);
 // Internal helper function to calculate for all PDElements
 // MaxCurrent (0), CapacityNorm (1), CapacityEmerg (2), Power (3)
 var
-    Result: PDoubleArray0;
-    k, idx_before, maxSize, RatingIdx: Integer;
-    pElem: TPDElement;
     pList: TDSSPointerList;
-    LocalPower: Complex;
-    cBuffer: pComplexArray;
-    RSignal: TXYCurveObj;
 begin
-    cBuffer := NIL;
     if (MissingSolution(DSS)) or (DSS.ActiveCircuit.PDElements.Count <= 0) then 
     begin
         DefaultResult(ResultPtr, ResultCount, -1.0);
         Exit;
     end;
-
     pList := DSS.ActiveCircuit.PDElements;
-    idx_before := pList.ActiveIndex;
-    k := 0;
-    case What of
-    3: 
-        begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pList.Count * 2); // complex
-            for pElem in pList do
-            begin
-                if pElem.Enabled then
-                begin
-                    LocalPower := pElem.Power[1];
-                    Result[k] := Localpower.re * 0.001;
-                    Result[k + 1] := Localpower.im * 0.001;
-                end;
-                Inc(k, 2);
-            end;
-        end;
-    0, 1, 2:
-        try
-            RatingIdx := -1;
-            if DSS.SeasonalRating then
-            begin
-                if DSS.SeasonSignal <> '' then
-                begin
-                    RSignal := DSS.XYCurveClass.Find(DSS.SeasonSignal);
-                    if RSignal <> NIL then
-                    begin
-                        RatingIdx := trunc(RSignal.GetYValue(DSS.ActiveCircuit.Solution.DynaVars.intHour));
-                    end
-                    else
-                        DSS.SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
-                end
-                else
-                    DSS.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
-            end;
-
-            maxSize := DSS.ActiveCircuit.GetMaxCktElementSize();
-            Getmem(cBuffer, sizeof(Complex) * maxSize);
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pList.Count); // real
-            for pElem in pList do 
-            begin
-                if pElem.Enabled then
-                begin
-                    pElem.GetCurrents(cBuffer);
-                    Result[k] := _PDElements_Get_pctCapacity_for(AllNodes, What, RatingIdx, pElem, cBuffer);
-                end;
-                Inc(k);
-            end;
-        finally
-            if Assigned(cBuffer) then
-                Freemem(cBuffer);
-        end;
-    end;
-    
-    if (idx_before > 0) and (idx_before <= pList.Count) then
-        pList.Get(idx_before);
+    _Alt_PDEBatch_Get_x(ResultPtr, ResultCount, TDSSCktElementPtr(pList.InternalPointer), pList.Count, What, AllNodes);
 end;
 
 //------------------------------------------------------------------------------
@@ -524,15 +419,8 @@ end;
 //------------------------------------------------------------------------------
 procedure _PDElements_Get_AllCurrents_x(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; const What: Integer);
 // What=1 for polar form, otherwise rectangular
-type
-    PPolar = ^Polar;
 var
-    idx_before: Integer;
-    pElem: TPDElement;
     pList: TDSSPointerList;
-    cBuffer: pComplexArray;
-    NValuesTotal, NValues, i: Integer;
-    CResultPtr: PPolar;
 begin
     if (InvalidCircuit(DSS)) or (DSS.ActiveCircuit.PDElements.Count <= 0) then 
     begin
@@ -540,49 +428,7 @@ begin
         Exit;
     end;
     pList := DSS.ActiveCircuit.PDElements;
-    idx_before := pList.ActiveIndex;
-
-    // Get the total number of (complex) elements
-    NValuesTotal := 0;
-    for pElem in pList do
-    begin
-        Inc(NValuesTotal, pElem.NConds * pElem.NTerms);
-    end;
-
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2);
-    CResultPtr := PPolar(ResultPtr);
-
-    // Get the actual values
-    for pElem in pList do
-    begin
-        NValues := pElem.NConds * pElem.NTerms;
-        if pElem.Enabled then
-            pElem.GetCurrents(pComplexArray(CResultPtr));
-            
-        Inc(CResultPtr, NValues);
-    end;
-    
-    case What of
-        1: //Polar (Mag/Angle)
-        begin
-            cBuffer := pComplexArray(ResultPtr);
-            CResultPtr := PPolar(ResultPtr);
-            if DSS_EXTENSIONS_ARRAY_DIMS then
-            begin
-                ResultCount[2] := 2;
-                ResultCount[3] := NValuesTotal;
-            end;
-
-            for i := 1 to NValuesTotal do
-            begin
-                CResultPtr^ := ctopolardeg(cBuffer[i]);
-                inc(CResultPtr);
-            end;
-        end;
-    end;
-    
-    if (idx_before > 0) and (idx_before <= pList.Count) then
-        pList.Get(idx_before);
+    _Alt_CEBatch_Get_AllCurrentsVoltages_x(ResultPtr, ResultCount, TDSSCktElementPtr(pList.InternalPointer), pList.Count, What);
 end;
 
 //------------------------------------------------------------------------------
@@ -610,16 +456,8 @@ end;
 
 //------------------------------------------------------------------------------
 procedure _PDElements_Get_AllxSeqCurrents(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; magnitude: boolean);
-type
-    PPolar = ^Polar;
 var
-    Result: PDoubleArray0;
-    idx_before: Integer;
     pList: TDSSPointerList;
-    pElem: TPDElement;
-    cBuffer: pComplexArray;
-    i012v, i012: pComplex;
-    maxSize, NTermsTotal, i, j, k: Integer;
 begin
     if (MissingSolution(DSS)) or (DSS.ActiveCircuit.PDElements.Count <= 0) then 
     begin
@@ -628,83 +466,7 @@ begin
     end;
     
     pList := DSS.ActiveCircuit.PDElements;
-    idx_before := pList.ActiveIndex;
-
-    // Get the total number of (complex) elements, max. terminals, max. conductors
-    NTermsTotal := 0;
-    for pElem in pList do
-    begin
-        Inc(NTermsTotal, pElem.NTerms);
-    end;
-
-    // Get the actual values
-    i012v := AllocMem(SizeOf(Complex) * 3 * NTermsTotal);
-    i012 := i012v; // this is a running pointer
-    maxSize := DSS.ActiveCircuit.GetMaxCktElementSize();
-    cBuffer := AllocMem(SizeOf(Complex) * maxSize);
-    for pElem in pList do
-    begin
-        if pElem.Enabled then
-            pElem.GetCurrents(cBuffer)
-        else
-            FillByte(cBuffer^, SizeOf(Complex) * maxSize, 0);
-
-        // _CalcSeqCurrents(pElem, i012);
-        if pElem.NPhases = 3 then
-        begin    // for 3-phase elements
-            for j := 1 to pElem.NTerms do
-            begin
-                k := (j - 1) * pElem.NConds;
-                Phase2SymComp(pComplexArray(@cBuffer[1 + k]), pComplexArray(i012));
-                Inc(i012, 3);
-            end;
-            continue;
-        end;
-
-        // Handle non-3 phase elements
-        if (pElem.Nphases = 1) and DSS.ActiveCircuit.PositiveSequence then
-        begin
-            // Populate only phase 1 quantities in Pos seq
-            i012 += 1;
-            for j := 1 to pElem.NTerms do
-            begin
-                k := (j - 1) * pElem.NConds;
-                i012^ := cBuffer[1 + k];
-                Inc(i012, 3);  // inc to pos seq of next terminal
-            end;
-            Dec(i012);
-        end
-        // if neither 3-phase or pos seq model, just put in -1.0 for each element
-        else
-        begin
-            for i := 1 to 3 * pElem.NTerms do
-            begin
-                i012^ := -1;  // Signify n/A
-                Inc(i012);
-            end;
-        end;
-    end;
-    
-    if magnitude then
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NTermsTotal * 3, 3, NTermsTotal);
-        i012 := i012v;
-        for i := 0 to NTermsTotal * 3 - 1 do
-        begin
-            Result[i] := Cabs(i012^);
-            i012 += 1;
-        end;
-    end
-    else
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NTermsTotal * 3 * 2, 3, NTermsTotal);
-        Move(i012v^, ResultPtr[0], NTermsTotal * 3 * 2 * SizeOf(Double));
-    end;
-
-    ReallocMem(i012v, 0);
-    
-    if (idx_before > 0) and (idx_before <= pList.Count) then
-        pList.Get(idx_before);
+    _Alt_CEBatch_Get_AllxSeqCurrents(ResultPtr, ResultCount, TDSSObjectPtr(pList.InternalPointer), pList.Count, magnitude);
 end;
 
 //------------------------------------------------------------------------------
@@ -735,12 +497,7 @@ end;
 procedure PDElements_Get_AllPowers(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return complex kW, kvar in each conductor for each terminal, for each PDElement
 var
-    Result: PDoubleArray0;
-    NValuesTotal, NValues, i: Integer;
-    idx_before: Integer;
     pList: TDSSPointerList;
-    pElem: TPDElement;
-    CResultPtr: PComplex;
 begin
     if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveCircuit.PDElements.Count <= 0) then 
     begin
@@ -748,34 +505,7 @@ begin
         Exit;
     end;
     pList := DSSPrime.ActiveCircuit.PDElements;
-    idx_before := pList.ActiveIndex;
-
-    // Get the total number of (complex) elements
-    NValuesTotal := 0;
-    for pElem in pList do
-    begin
-        Inc(NValuesTotal, pElem.NConds * pElem.NTerms);
-    end;
-
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2);
-    CResultPtr := PComplex(ResultPtr);
-
-    // Get the actual values
-    for pElem in pList do
-    begin
-        NValues := pElem.NConds * pElem.NTerms;
-        
-        if pElem.Enabled then
-            pElem.GetPhasePower(pComplexArray(CResultPtr));
-            
-        Inc(CResultPtr, NValues);
-    end;
-    
-    if (idx_before > 0) and (idx_before <= pList.Count) then
-        pList.Get(idx_before);
-
-    for i := 0 to (2 * NValuesTotal) - 1 do
-        Result[i] *= 0.001;
+    Alt_CEBatch_Get_Powers(ResultPtr, ResultCount, TDSSObjectPtr(pList.InternalPointer), pList.Count);
 end;
 
 procedure PDElements_Get_AllPowers_GR(); CDECL;
@@ -849,11 +579,14 @@ begin
                 for j := 1 to pElem.NTerms do
                 begin
                     k := (j - 1) * pElem.NConds;
-                    n := pElem.NodeRef[k + 1];
-                    Vph[1] := NodeV[n];  // Get voltage at node
-                    S := Vph[1] * cong(cBuffer[k + 1]);   // Compute power per phase
-                    Result[icount] := S.re * 0.003; // 3-phase kW conversion
-                    Result[icount + 1] := S.im * 0.003; // 3-phase kvar conversion
+                    if pElem.Enabled and (pElem.NodeRef <> NIL) then
+                    begin
+                        n := pElem.NodeRef[k + 1];
+                        Vph[1] := NodeV[n];  // Get voltage at node
+                        S := Vph[1] * cong(cBuffer[k + 1]);   // Compute power per phase
+                        Result[icount] := S.re * 0.003; // 3-phase kW conversion
+                        Result[icount + 1] := S.im * 0.003; // 3-phase kvar conversion
+                    end;                    
                     Inc(icount, 6);
                 end;
                 Dec(iCount, 2);
@@ -876,21 +609,26 @@ begin
             for j := 1 to pElem.NTerms do
             begin
                 k := (j - 1) * pElem.NConds;
-                for i := 1 to 3 do
-                    Vph[i] := NodeV[pElem.NodeRef[i + k]];
-                for i := 1 to 3 do
-                    Iph[i] := cBuffer[k + i];
-
-                Phase2SymComp(@Iph, @I012);
-                Phase2SymComp(@Vph, @V012);
-
-                for i := 1 to 3 do
+                if pElem.Enabled and (pElem.NodeRef <> NIL) then                
                 begin
-                    S := V012[i] * cong(I012[i]);
-                    Result[icount] := S.re * 0.003; // 3-phase kW conversion
-                    Result[icount + 1] := S.im * 0.003; // 3-phase kW conversion
-                    Inc(icount, 2);
-                end;
+                    for i := 1 to 3 do
+                        Vph[i] := NodeV[pElem.NodeRef[i + k]];
+                    for i := 1 to 3 do
+                        Iph[i] := cBuffer[k + i];
+
+                    Phase2SymComp(@Iph, @I012);
+                    Phase2SymComp(@Vph, @V012);
+
+                    for i := 1 to 3 do
+                    begin
+                        S := V012[i] * cong(I012[i]);
+                        Result[icount] := S.re * 0.003; // 3-phase kW conversion
+                        Result[icount + 1] := S.im * 0.003; // 3-phase kW conversion
+                        Inc(icount, 2);
+                    end;
+                end
+                else
+                    Inc(icount, 6);
             end;
         end;
         Inc(CResultPtr, 3 * pElem.NTerms);

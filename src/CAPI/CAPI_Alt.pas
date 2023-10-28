@@ -10,9 +10,16 @@ uses
     PDElement,
     LoadShape,
     Monitor,
+    Bus,
     ControlledTransformer,
     EnergyMeter,
-    CAPI_Types;
+    CAPI_Types,
+    fpjson;
+
+type
+    dss_ctx_bus_float64_function_t = function (ctx: Pointer; obj: Pointer): Double; CDECL;
+    dss_ctx_bus_int32_function_t = function (ctx: Pointer; obj: Pointer): Integer; CDECL;
+    TDSSCktElementPtr = ^TDSSCktElement;
 
 procedure Alt_CE_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 function Alt_CE_Get_NumConductors(elem: TDSSCktElement): Integer; CDECL;
@@ -29,19 +36,19 @@ procedure Alt_CE_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PAPISize; el
 procedure Alt_CE_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 procedure Alt_CE_Close(elem: TDSSCktElement; Term, Phs: Integer); CDECL;
 procedure Alt_CE_Open(elem: TDSSCktElement; Term, Phs: Integer); CDECL;
-function Alt_CE_IsOpen(elem: TDSSCktElement; Term, Phs: Integer): TAPIBoolean; CDECL;
+function Alt_CE_IsOpen(elem: TDSSCktElement; Term, Phs: Integer): TAltAPIBoolean; CDECL;
 procedure Alt_CE_Get_Residuals(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 procedure Alt_CE_Get_Yprim(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 function Alt_CE_Get_Handle(elem: TDSSCktElement): Integer; CDECL;
 // function Alt_CE_Get_ControllerName(elem: TDSSCktElement; idx: Integer): PAnsiChar; CDECL;
 // function Alt_CE_Get_Controller(elem: TDSSCktElement; idx: Integer): TDSSObject; CDECL;
 procedure Alt_CE_Get_Controllers(var ResultPtr: PPointer; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
-function Alt_CE_Get_HasVoltControl(elem: TDSSCktElement): TAPIBoolean; CDECL;
-function Alt_CE_Get_HasSwitchControl(elem: TDSSCktElement): TAPIBoolean; CDECL;
+function Alt_CE_Get_HasVoltControl(elem: TDSSCktElement): TAltAPIBoolean; CDECL;
+function Alt_CE_Get_HasSwitchControl(elem: TDSSCktElement): TAltAPIBoolean; CDECL;
 procedure Alt_CE_Get_ComplexSeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 procedure Alt_CE_Get_ComplexSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 procedure Alt_CE_Get_NodeOrder(var ResultPtr: PInteger; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
-function Alt_CE_Get_HasOCPDevice(elem: TDSSCktElement): TAPIBoolean; CDECL;
+function Alt_CE_Get_HasOCPDevice(elem: TDSSCktElement): TAltAPIBoolean; CDECL;
 function Alt_CE_Get_NumControllers(elem: TDSSCktElement): Integer; CDECL;
 function Alt_CE_Get_OCPDevice(elem: TDSSCktElement): TDSSCktElement; CDECL;
 function Alt_CE_Get_OCPDeviceIndex(elem: TDSSCktElement): Integer; CDECL;
@@ -49,18 +56,32 @@ function Alt_CE_Get_OCPDeviceType(elem: TDSSCktElement): Integer; CDECL;
 procedure Alt_CE_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 procedure Alt_CE_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 procedure Alt_CE_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
-function Alt_CE_Get_IsIsolated(elem: TDSSCktElement): TAPIBoolean; CDECL;
+function Alt_CE_Get_IsIsolated(elem: TDSSCktElement): TAltAPIBoolean; CDECL;
 procedure Alt_CE_Get_NodeRef(var ResultPtr: PInteger; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 function Alt_CE_Get_DisplayName(elem: TDSSCktElement): PAnsiChar; CDECL;
 function Alt_CE_Get_GUID(elem: TDSSCktElement): PAnsiChar; CDECL;
-procedure Alt_CE_Set_DisplayName(elem: TDSSCktElement; const Value: PAnsiChar); CDECL;
+procedure Alt_CE_Set_DisplayName(elem: TDSSCktElement; const value: PAnsiChar); CDECL;
 function Alt_CE_MaxCurrent(obj: TDSSCktElement; terminalIdx: Integer): Double; CDECL;
 procedure Alt_CE_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 procedure Alt_CE_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+
+procedure Alt_CEBatch_Get_Losses(var resultPtr: PDouble; resultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: TAPISize); CDECL;
+procedure Alt_CEBatch_Get_PhaseLosses(var resultPtr: PDouble; resultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: TAPISize); CDECL;
+procedure Alt_CEBatch_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_Powers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_ComplexSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_Currents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_ComplexSeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_Voltages(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+
 //PCElements
 procedure Alt_PCE_Get_VariableNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; elem: TPCElement); CDECL;
 procedure Alt_PCE_Get_VariableValues(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TPCElement); CDECL;
-procedure Alt_PCE_Set_VariableValue(elem: TPCElement; varIdx: Integer; Value: Double); CDECL;
+procedure Alt_PCE_Set_VariableValue(elem: TPCElement; varIdx: Integer; value: Double); CDECL;
 function Alt_PCE_Get_VariableValue(elem: TPCElement; varIdx: Integer): Double; CDECL;
 function Alt_PCE_Get_VariableName(elem: TPCElement; varIdx: Integer): PAnsiChar; CDECL;
 function Alt_PCE_Get_EnergyMeter(elem: TPCElement): TDSSObject; CDECL;
@@ -69,7 +90,7 @@ function Alt_PCE_Get_EnergyMeterName(elem: TPCElement): PAnsiChar; CDECL;
 //PDElements
 function Alt_PDE_Get_EnergyMeter(elem: TPDElement): TDSSObject; CDECL;
 function Alt_PDE_Get_EnergyMeterName(elem: TPDElement): PAnsiChar; CDECL;
-function Alt_PDE_Get_IsShunt(elem: TPDElement): TAPIBoolean; CDECL;
+function Alt_PDE_Get_IsShunt(elem: TPDElement): TAltAPIBoolean; CDECL;
 function Alt_PDE_Get_AccumulatedL(elem: TPDElement): Double; CDECL;
 function Alt_PDE_Get_Lambda(elem: TPDElement): Double; CDECL;
 function Alt_PDE_Get_NumCustomers(elem: TPDElement): Integer; CDECL;
@@ -78,8 +99,15 @@ function Alt_PDE_Get_TotalCustomers(elem: TPDElement): Integer; CDECL;
 function Alt_PDE_Get_FromTerminal(elem: TPDElement): Integer; CDECL;
 function Alt_PDE_Get_TotalMiles(elem: TPDElement): Double; CDECL;
 function Alt_PDE_Get_SectionID(elem: TPDElement): Integer; CDECL;
+// function Alt_PDE_Get_MaxCurrent(elem: TPDElement; const AllNodes: TAltAPIBoolean): Double; CDECL; -- removed in favour of the CE version
+function Alt_PDE_Get_pctNorm(elem: TPDElement; const AllNodes: TAltAPIBoolean): Double; CDECL;
+function Alt_PDE_Get_pctEmerg(elem: TPDElement; const AllNodes: TAltAPIBoolean): Double; CDECL;
+// procedure Alt_PDEBatch_Get_MaxCurrent(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer; const AllNodes: TAltAPIBoolean); CDECL;
+procedure Alt_PDEBatch_Get_pctNorm(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer; const AllNodes: TAltAPIBoolean); CDECL;
+procedure Alt_PDEBatch_Get_pctEmerg(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer; const AllNodes: TAltAPIBoolean); CDECL;
+
 //LoadShape
-procedure Alt_LoadShape_Set_Points(elem: TLoadshapeObj; Npts: TAPISize; HoursPtr: Pointer; PMultPtr: Pointer; QMultPtr: Pointer; ExternalMemory: TAPIBoolean; IsFloat32: TAPIBoolean; Stride: Integer); CDECL;
+procedure Alt_LoadShape_Set_Points(elem: TLoadshapeObj; Npts: TAPISize; HoursPtr: Pointer; PMultPtr: Pointer; QMultPtr: Pointer; ExternalMemory: TAltAPIBoolean; IsFloat32: TAltAPIBoolean; Stride: Integer); CDECL;
 procedure Alt_LoadShape_UseFloat64(elem: TLoadshapeObj); CDECL;
 procedure Alt_LoadShape_UseFloat32(elem: TLoadshapeObj); CDECL;
 //Monitor
@@ -103,7 +131,7 @@ procedure Alt_Meter_Get_CalcCurrent(var ResultPtr: PDouble; ResultCount: PAPISiz
 procedure Alt_Meter_Set_CalcCurrent(elem: TEnergyMeterObj; ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 procedure Alt_Meter_Get_AllocFactors(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
 procedure Alt_Meter_Set_AllocFactors(elem: TEnergyMeterObj; ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
-procedure Alt_Meter_DoReliabilityCalc(elem: TEnergyMeterObj; AssumeRestoration: TAPIBoolean); CDECL;
+procedure Alt_Meter_DoReliabilityCalc(elem: TEnergyMeterObj; AssumeRestoration: TAltAPIBoolean); CDECL;
 function Alt_Meter_Get_NumEndElements(elem: TEnergyMeterObj): Integer; CDECL;
 function Alt_Meter_Get_NumSections(elem: TEnergyMeterObj): Integer; CDECL;
 function Alt_Meter_Get_NumBranchesInZone(elem: TEnergyMeterObj): Integer; CDECL;
@@ -121,8 +149,60 @@ function Alt_MeterSection_OCPDeviceType(elem: TEnergyMeterObj; idx: Integer): In
 function Alt_MeterSection_SumBranchFaultRates(elem: TEnergyMeterObj; idx: Integer): Double; CDECL;
 function Alt_MeterSection_SequenceIndex(elem: TEnergyMeterObj; idx: Integer): Integer; CDECL;
 function Alt_MeterSection_TotalCustomers(elem: TEnergyMeterObj; idx: Integer): Integer; CDECL;
+//Bus
+function Alt_Bus_Get_Name(DSS: TDSSContext; pBus: TDSSBus): PAnsiChar; CDECL;
+function Alt_Bus_Get_NumNodes(DSS: TDSSContext; pBus: TDSSBus): Integer; CDECL;
+function Alt_Bus_Get_kVBase(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+function Alt_Bus_Get_CoordDefined(DSS: TDSSContext; pBus: TDSSBus): TAltAPIBoolean; CDECL;
+function Alt_Bus_Get_X(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+procedure Alt_Bus_Set_X(DSS: TDSSContext; pBus: TDSSBus; value: Double); CDECL;
+function Alt_Bus_Get_Y(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+procedure Alt_Bus_Set_Y(DSS: TDSSContext; pBus: TDSSBus; value: Double); CDECL;
+function Alt_Bus_Get_Distance(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+function Alt_Bus_Get_IntDuration(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+function Alt_Bus_Get_Lambda(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+function Alt_Bus_Get_CustDuration(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+function Alt_Bus_Get_CustInterrupts(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+function Alt_Bus_Get_NumCustomers(DSS: TDSSContext; pBus: TDSSBus): Integer; CDECL;
+function Alt_Bus_Get_NumInterrupts(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+function Alt_Bus_Get_TotalMiles(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+function Alt_Bus_Get_SectionID(DSS: TDSSContext; pBus: TDSSBus): Integer; CDECL;
+function Alt_Bus_ZscRefresh(DSS: TDSSContext; pBus: TDSSBus): TAltAPIBoolean; CDECL;
+function Alt_Bus_GetUniqueNodeNumber(DSS: TDSSContext; pBus: TDSSBus; StartNumber: Integer): Integer; CDECL;
+procedure Alt_Bus_Get_Voltages(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_Nodes(DSS: TDSSContext; var ResultPtr: PInteger; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_SeqVoltages(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_Isc(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_Voc(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_puVoltages(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_Zsc0(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_Zsc1(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_ZscMatrix(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_YscMatrix(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_ComplexSeqVoltages(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_puVLL(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_VLL(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_puVMagAngle(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_VMagAngle(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_Zsc012Matrix(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_Lines(DSS: TDSSContext; var ResultPtr: PPointer; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_Loads(DSS: TDSSContext; var ResultPtr: PPointer; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_PCElements(DSS: TDSSContext; var ResultPtr: PPointer; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+procedure Alt_Bus_Get_PDElements(DSS: TDSSContext; var ResultPtr: PPointer; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+function Alt_Bus_GetListPtr(DSS: TDSSContext): PPointer; CDECL;
+function Alt_Bus_GetByIndex(DSS: TDSSContext; idx: Integer): TDSSBus; CDECL;
+function Alt_Bus_GetByName(DSS: TDSSContext; name: PAnsiChar): TDSSBus; CDECL;
+function Alt_Bus_ToJSON(DSS: TDSSContext; pBus: TDSSBus; joptions: Integer): PAnsiChar; CDECL;
+procedure Alt_BusBatch_GetFloat64FromFunc(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; batch: PDSSBus; batchSize: Integer; func: dss_ctx_bus_float64_function_t); CDECL;
+procedure Alt_BusBatch_GetInt32FromFunc(DSS: TDSSContext; var ResultPtr: PInteger; ResultCount: PAPISize; batch: PDSSBus; batchSize: Integer; func: dss_ctx_bus_int32_function_t); CDECL;
+function Alt_BusBatch_ToJSON(DSS: TDSSContext; batch: PDSSBus; batchSize: Integer; joptions: Integer): PAnsiChar; CDECL;
 
-procedure Alt_Circuit_ElementLosses(DSS: TDSSContext; var resultPtr: PDouble; resultCount: PAPISize; elements: TDSSObjectPtr; elementsCount: TAPISize); CDECL;
+procedure _Alt_CEBatch_Get_AllxSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; magnitude: boolean);
+procedure _Alt_CEBatch_Get_AllCurrentsVoltages_x(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; const What: Integer);
+procedure _Alt_PDEBatch_Get_x(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer; const What: integer; const AllNodes: Boolean);
+
+// Used in CAPI_Obj
+function alt_Bus_ToJSON_(DSS: TDSSContext; bus: TDSSBus; joptions: Integer): TJSONObject;
 
 implementation
 
@@ -137,7 +217,6 @@ uses
     Utilities,
     DSSClass,
     DSSHelper,
-    Bus,
     Solution,
     PDClass,
     DSSPointerList,
@@ -146,8 +225,11 @@ uses
     Math,
     Classes,
     CktElementClass,
-    CktTree;
-    
+    CktTree,
+    PCClass,
+    Ucmatrix,
+    ExecHelper;
+
 procedure _CalcSeqCurrents(elem: TDSSCktElement; i012: pComplexArray);
 // Assumes V012 is properly allocated before call.
 var
@@ -287,11 +369,11 @@ end;
 //------------------------------------------------------------------------------
 procedure Alt_CE_Set_BusNames(elem: TDSSCktElement; ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
 var
-    Value: PPAnsiCharArray0;
+    value: PPAnsiCharArray0;
     i: Integer;
     Count: Integer;
 begin
-    Value := PPAnsiCharArray0(ValuePtr);
+    value := PPAnsiCharArray0(ValuePtr);
     Count := ValueCount;
     if (Count <> elem.NTerms) AND (DSS_CAPI_EXT_ERRORS) then
     begin
@@ -303,7 +385,7 @@ begin
         Count := elem.NTerms;
     for i := 1 to Count do
     begin
-        elem.SetBus(i, Value[i - 1]);
+        elem.SetBus(i, value[i - 1]);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -334,7 +416,7 @@ begin
     if MissingSolution(elem) or (elem.NodeRef = NIL) then
         Exit;
 
-    NodeV := elem.DSS.ActiveCircuit.Solution.NodeV;
+    NodeV := elem.ActiveCircuit.Solution.NodeV;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * (elem.NConds * elem.Nterms), elem.NConds, elem.Nterms);
     // k := (Terminal-1)*numcond;    // RCD 8-30-00 Changed
     iV := 0;
@@ -573,7 +655,7 @@ begin
     elem.Closed[Phs] := FALSE;
 end;
 //------------------------------------------------------------------------------
-function Alt_CE_IsOpen(elem: TDSSCktElement; Term, Phs: Integer): TAPIBoolean; CDECL;
+function Alt_CE_IsOpen(elem: TDSSCktElement; Term, Phs: Integer): TAltAPIBoolean; CDECL;
 var
     i: Integer;
 begin
@@ -716,7 +798,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function Alt_CE_Get_HasVoltControl(elem: TDSSCktElement): TAPIBoolean; CDECL;
+function Alt_CE_Get_HasVoltControl(elem: TDSSCktElement): TAltAPIBoolean; CDECL;
 // Returns true if any of the controls is a capcontrol or a regcontrol
 var
     ctrl: TDSSCktElement;
@@ -735,7 +817,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function Alt_CE_Get_HasSwitchControl(elem: TDSSCktElement): TAPIBoolean; CDECL;
+function Alt_CE_Get_HasSwitchControl(elem: TDSSCktElement): TAltAPIBoolean; CDECL;
 var
     ctrl: TDSSCktElement;
 begin
@@ -860,7 +942,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function Alt_CE_Get_HasOCPDevice(elem: TDSSCktElement): TAPIBoolean; CDECL;
+function Alt_CE_Get_HasOCPDevice(elem: TDSSCktElement): TAltAPIBoolean; CDECL;
 // Check for presence of a fuse, recloser, etc.
 begin
     Result := Flg.HasOCPDevice in elem.Flags;
@@ -983,7 +1065,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function Alt_CE_Get_IsIsolated(elem: TDSSCktElement): TAPIBoolean; CDECL;
+function Alt_CE_Get_IsIsolated(elem: TDSSCktElement): TAltAPIBoolean; CDECL;
 begin
     Result := Flg.IsIsolated in elem.Flags;
 end;
@@ -1017,7 +1099,7 @@ begin
         myEnd := elem.NConds * j;
         for i := myInit to myEnd do
         begin
-            buffer[j - 1] := buffer[j - 1] + cBuffer[i];
+            buffer[j - 1] += cBuffer[i];
         end;
         Result[iV + 0] := buffer[j - 1].re * 0.001;
         Result[iV + 1] := buffer[j - 1].im * 0.001; 
@@ -1042,8 +1124,46 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Alt_CE_MaxCurrent(obj: TDSSCktElement; terminalIdx: Integer): Double; CDECL;
+var
+    i, k: Integer;
+    CurrMag: Double;
+    // MaxPhase: Integer;
+    minTerm, maxTerm: Integer;
 begin
-    Result := obj.MaxCurrent[terminalIdx];
+    Result := 0.0;
+    if (not obj.Enabled) or (obj.NodeRef = NIL) then
+        Exit;
+
+    if terminalIdx = -1 then
+    begin
+        minTerm := 1;
+        maxTerm := obj.NTerms;
+    end
+    else
+    begin
+        if (terminalIdx = 0) or (terminalIdx > obj.NTerms) then
+        begin
+            obj.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals. Use -1 for all terminals.', [obj.NTerms, obj.FullName], 97803);
+            Exit;
+        end;
+        minTerm := terminalIdx;
+        maxTerm := terminalIdx;
+    end;
+
+    obj.ComputeIterminal();
+    // Method: Get max current at terminal (magnitude)
+    for terminalIdx := minTerm to maxTerm do
+    begin
+        k := (terminalIdx - 1) * obj.NConds; // starting index of terminal
+        for i := 1 to obj.Fnphases do
+        begin
+            CurrMag := Cabs(obj.Iterminal[k + i]);
+            if CurrMag > Result then
+            begin
+                Result := CurrMag;
+            end;
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
 function Alt_PCE_Get_VariableName(elem: TPCElement; varIdx: Integer): PAnsiChar; CDECL;
@@ -1068,7 +1188,7 @@ begin
     Result := elem.Variable[varIdx];
 end;
 //------------------------------------------------------------------------------
-procedure Alt_PCE_Set_VariableValue(elem: TPCElement; varIdx: Integer; Value: Double); CDECL;
+procedure Alt_PCE_Set_VariableValue(elem: TPCElement; varIdx: Integer; value: Double); CDECL;
 begin
     if (varIdx <= 0) or (varIdx > elem.NumVariables) then
     begin
@@ -1076,7 +1196,7 @@ begin
             DoSimpleMsg(elem.DSS, 'Invalid variable index %d for "%s"', [varIdx, elem.FullName], 100002);
         Exit;
     end;
-    elem.Variable[varIdx] := Value;
+    elem.Variable[varIdx] := value;
 end;
 //------------------------------------------------------------------------------
 function Alt_CE_Get_NumPhases(elem: TDSSCktElement): Integer; CDECL;
@@ -1084,14 +1204,9 @@ begin
     Result := elem.NPhases
 end;
 //------------------------------------------------------------------------------
-function Alt_CE_Get_Name(elem: TDSSCktElement): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(elem.DSS, elem.FullName);
-end;
-//------------------------------------------------------------------------------
 function Alt_CE_Get_DisplayName(elem: TDSSCktElement): PAnsiChar; CDECL;
 begin
-    if elem.DisplayName <> '' then
+    if elem.DisplayName = '' then
         Result := DSS_GetAsPAnsiChar(elem.DSS, elem.DisplayName)
     else
         Result := DSS_GetAsPAnsiChar(elem.DSS, elem.ParentClass.Name + '_' + elem.Name);
@@ -1102,12 +1217,12 @@ begin
     Result := DSS_GetAsPAnsiChar(elem.DSS, elem.ID)
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Set_DisplayName(elem: TDSSCktElement; const Value: PAnsiChar); CDECL;
+procedure Alt_CE_Set_DisplayName(elem: TDSSCktElement; const value: PAnsiChar); CDECL;
 begin
-    elem.DisplayName := Value;
+    elem.DisplayName := value;
 end;
 //------------------------------------------------------------------------------
-function Alt_PDE_Get_IsShunt(elem: TPDElement): TAPIBoolean; CDECL;
+function Alt_PDE_Get_IsShunt(elem: TPDElement): TAltAPIBoolean; CDECL;
 begin
     Result := elem.IsShunt;
 end;
@@ -1153,7 +1268,7 @@ begin
     Result := elem.BranchSectionID;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_LoadShape_Set_Points(elem: TLoadshapeObj; Npts: TAPISize; HoursPtr: Pointer; PMultPtr: Pointer; QMultPtr: Pointer; ExternalMemory: TAPIBoolean; IsFloat32: TAPIBoolean; Stride: Integer); CDECL;
+procedure Alt_LoadShape_Set_Points(elem: TLoadshapeObj; Npts: TAPISize; HoursPtr: Pointer; PMultPtr: Pointer; QMultPtr: Pointer; ExternalMemory: TAltAPIBoolean; IsFloat32: TAltAPIBoolean; Stride: Integer); CDECL;
 begin
     // If the LoadShape owns the memory, dispose the current data and reallocate if necessary
     if not elem.ExternalMemory then
@@ -1525,17 +1640,17 @@ end;
 //------------------------------------------------------------------------------
 procedure Alt_Meter_Set_CalcCurrent(elem: TEnergyMeterObj; ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
-    Value: PDoubleArray0;
+    value: PDoubleArray0;
     i: Integer;
 begin
     if ValueCount <> elem.NPhases then
     begin
-        DoSimpleMsg(DSSPrime, _('The provided number of values does not match the element''s number of phases.'), 5025);
+        elem.DoSimpleMsg(_('The provided number of values does not match the element''s number of phases.'), 5025);
         Exit;
     end;
-    Value := PDoubleArray0(ValuePtr);
+    value := PDoubleArray0(ValuePtr);
     for i := 1 to elem.NPhases do
-        elem.CalculatedCurrent[i] := Value[i - 1];   // Just set the real part
+        elem.CalculatedCurrent[i] := value[i - 1];   // Just set the real part
 end;
 //------------------------------------------------------------------------------
 procedure Alt_Meter_Get_AllocFactors(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
@@ -1546,30 +1661,28 @@ end;
 //------------------------------------------------------------------------------
 procedure Alt_Meter_Set_AllocFactors(elem: TEnergyMeterObj; ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
-    Value: PDoubleArray0;
+    value: PDoubleArray0;
     i: Integer;
 begin
-    Value := PDoubleArray0(ValuePtr);
+    value := PDoubleArray0(ValuePtr);
     if ValueCount <> elem.NPhases then
     begin
-        DoSimpleMsg(DSSPrime, _('The provided number of values does not match the element''s number of phases.'), 5026);
+        elem.DoSimpleMsg(_('The provided number of values does not match the element''s number of phases.'), 5026);
         Exit;
     end;
     for i := 1 to elem.NPhases do
     begin
-        elem.PhsAllocationFactor[i] := Value[i - 1];
+        elem.PhsAllocationFactor[i] := value[i - 1];
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_Meter_DoReliabilityCalc(elem: TEnergyMeterObj; AssumeRestoration: TAPIBoolean); CDECL;
+procedure Alt_Meter_DoReliabilityCalc(elem: TEnergyMeterObj; AssumeRestoration: TAltAPIBoolean); CDECL;
 begin
     elem.AssumeRestoration := AssumeRestoration;
     elem.CalcReliabilityIndices();
 end;
 //------------------------------------------------------------------------------
 procedure Alt_Meter_Get_ZonePCEs(var ResultPtr: PPointer; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
-var
-   k: integer;
 begin
     elem.GetPCEatZone(True);
     if not ((Length(elem.ZonePCE) > 0) and (elem.ZonePCE[0] <> NIL)) then
@@ -1774,36 +1887,1419 @@ begin
     Move(elem.LoadList.InternalPointer^, ResultPtr^, ResultCount^ * SizeOf(Pointer));
 end;
 //------------------------------------------------------------------------------
-procedure Alt_Circuit_ElementLosses(DSS: TDSSContext; var resultPtr: PDouble; resultCount: PAPISize; elements: TDSSObjectPtr; elementsCount: TAPISize); CDECL;
+procedure Alt_CEBatch_Get_Losses(var resultPtr: PDouble; resultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: TAPISize); CDECL;
 var
     Result: PDoubleArray0;
     CResultPtr: pComplex;
     i: TAPISize;
 begin
-    if MissingSolution(DSS) then
+    resultCount[0] := 0;
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
+        Exit;
+    if MissingSolution(batch^) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * ElementsCount);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * batchSize);
     CResultPtr := pComplex(ResultPtr);
-
-    for i := 0 to elementsCount do
+    for i := 0 to batchSize do
     begin
-        if elements^ <> NIL then
-            CResultPtr^ := TDSSCktElement(elements^).Losses;
+        if batch^ <> NIL then
+            CResultPtr^ := batch^.Losses;
 
-        Inc(elements);
+        Inc(batch);
         Inc(CResultPtr);
     end;
 
     i := 0;
-    while i < 2*ElementsCount do
+    while i < 2 * batchSize do
     begin
         Result[i] := Result[i] * 0.001;
         Inc(i);
     end;
 end;
 //------------------------------------------------------------------------------
+procedure Alt_CEBatch_Get_PhaseLosses(var resultPtr: PDouble; resultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: TAPISize); CDECL;
+// Returns Phase losses in kW, kVar
+var
+    Result: PDoubleArray0;
+    NValuesTotal, NValues, i: Integer;
+    pElem: TDSSCktElementPtr;
+    outPtr: PComplex;
+begin
+    resultCount[0] := 0;
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
+        Exit;
+    if MissingSolution(batch^) then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
+        Exit;
+    end;
+
+    NValuesTotal := 0;
+    pElem := batch;    
+    for i := 1 to batchSize do
+    begin
+        NValuesTotal += pElem^.NPhases;
+        Inc(pElem);
+    end;
+
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
+    outPtr := PComplex(ResultPtr);
+    pElem := batch;    
+    for i := 1 to batchSize do
+    begin
+        NValues := pElem^.NPhases;
+        pElem^.GetPhaseLosses(NValues, pComplexArray(outPtr));
+        inc(outPtr, NValues);
+        inc(pElem);
+    end;
+
+    for i := 0 to (2 * NValuesTotal - 1) do
+    begin
+        Result[i] *= 0.001;
+    end;
+end;
+//------------------------------------------------------------------------------
+function Alt_Bus_Get_Name(DSS: TDSSContext; pBus: TDSSBus): PAnsiChar; CDECL;
+begin
+    Result := PChar(pBus.Name);
+end;
+function Alt_Bus_Get_NumNodes(DSS: TDSSContext; pBus: TDSSBus): Integer; CDECL;
+begin
+    Result := pBus.NumNodesThisBus;
+end;
+function Alt_Bus_Get_kVBase(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+begin
+    Result := pBus.kVBase;
+end;
+function Alt_Bus_Get_CoordDefined(DSS: TDSSContext; pBus: TDSSBus): TAltAPIBoolean; CDECL;
+begin
+    Result := pBus.CoordDefined;
+end;
+function Alt_Bus_Get_X(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+begin
+    Result := 0;
+    if pBus.CoordDefined then
+        Result := pBus.x;
+end;
+procedure Alt_Bus_Set_X(DSS: TDSSContext; pBus: TDSSBus; value: Double); CDECL;
+begin
+    pBus.CoordDefined := true;
+    pBus.x := value;
+end;
+function Alt_Bus_Get_Y(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+begin
+    Result := 0;
+    if pBus.CoordDefined then
+        Result := pBus.y;
+end;
+procedure Alt_Bus_Set_Y(DSS: TDSSContext; pBus: TDSSBus; value: Double); CDECL;
+begin
+    pBus.CoordDefined := true;
+    pBus.y := value;
+end;
+function Alt_Bus_Get_Distance(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+begin
+    Result := pBus.DistFromMeter;
+end;
+function Alt_Bus_Get_IntDuration(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+begin
+    Result := pBus.Bus_Int_Duration;
+end;
+function Alt_Bus_Get_Lambda(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+begin
+    Result := pBus.BusFltRate;
+end;
+function Alt_Bus_Get_CustDuration(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+begin
+    Result := pBus.BusCustDurations;
+end;
+function Alt_Bus_Get_CustInterrupts(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+begin
+    Result := pBus.BusCustInterrupts;
+end;
+function Alt_Bus_Get_NumCustomers(DSS: TDSSContext; pBus: TDSSBus): Integer; CDECL;
+begin
+    Result := pBus.BusTotalNumCustomers;
+end;
+function Alt_Bus_Get_NumInterrupts(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+begin
+    Result := pBus.Bus_Num_Interrupt;
+end;
+function Alt_Bus_Get_TotalMiles(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
+begin
+    Result := pBus.BusTotalMiles;
+end;
+function Alt_Bus_Get_SectionID(DSS: TDSSContext; pBus: TDSSBus): Integer; CDECL;
+begin
+    Result := pBus.BusSectionID;
+end;
+function Alt_Bus_ZscRefresh(DSS: TDSSContext; pBus: TDSSBus): TAltAPIBoolean; CDECL;
+begin
+    Result := (DSS.DSSExecutive.DoZscRefresh(pBus) = 0);
+end;
+function Alt_Bus_GetUniqueNodeNumber(DSS: TDSSContext; pBus: TDSSBus; StartNumber: Integer): Integer; CDECL;
+begin
+    Result := DSS.ActiveCircuit.GetUniqueNodeNumber(pBus, StartNumber);
+end;
+
+procedure Alt_Bus_Get_Voltages(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+// Return Complex for all nodes of voltages for Active Bus
+var
+    Result: PDoubleArray0;
+    Nvalues, i, iV, NodeIdx, jj: Integer;
+    Volts: Complex;
+begin
+    Nvalues := pBus.NumNodesThisBus;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
+    iV := 0;
+    jj := 1;
+    for i := 1 to NValues do
+    begin
+        // this code so nodes come out in order from smallest to larges
+        repeat
+            NodeIdx := pBus.FindIdx(jj);  // Get the index of the Node that matches jj
+            inc(jj)
+        until NodeIdx > 0;
+
+        Volts := DSS.ActiveCircuit.Solution.NodeV[pBus.GetRef(NodeIdx)];
+        Result[iV] := Volts.re;
+        Inc(iV);
+        Result[iV] := Volts.im;
+        Inc(iV);
+    end;
+end;
+
+procedure Alt_Bus_Get_Nodes(DSS: TDSSContext; var ResultPtr: PInteger; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+// return array of node numbers corresponding to voltages
+var
+    Result: PIntegerArray0;
+    Nvalues, i, iV, NodeIdx, jj: Integer;
+begin
+    Nvalues := pBus.NumNodesThisBus;
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, NValues);
+    iV := 0;
+    jj := 1;
+    for i := 1 to NValues do
+    begin
+        // this code so nodes come out in order from smallest to larges
+        repeat
+            NodeIdx := pBus.FindIdx(jj);  // Get the index of the Node that matches jj
+            inc(jj)
+        until NodeIdx > 0;
+        Result[iV] := pBus.GetNum(NodeIdx);
+        Inc(iV);
+    end;
+end;
+
+procedure Alt_Bus_Get_SeqVoltages(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+// Compute sequence voltages for Active Bus
+// magnitude only
+// returns a set of seq voltages (3)
+var
+    Result: PDoubleArray0;
+    Nvalues, i, iV: Integer;
+    VPh, V012: Complex3;
+begin
+    Nvalues := pBus.NumNodesThisBus;
+    if Nvalues > 3 then
+        Nvalues := 3;
+
+    // Assume nodes 1, 2, and 3 are the 3 phases
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 3);
+    if Nvalues <> 3 then
+    begin
+        for i := 1 to 3 do
+            Result[i - 1] := -1.0;  // Signify seq voltages n/A for less then 3 phases
+        Exit;
+    end;
+
+    iV := 0;
+    for i := 1 to 3 do
+    begin
+        Vph[i] := DSS.ActiveCircuit.Solution.NodeV[pBus.Find(i)];
+    end;
+
+    Phase2SymComp(@Vph, @V012);   // Compute Symmetrical components
+
+    for i := 1 to 3 do  // Stuff it in the result
+    begin
+        Result[iV] := Cabs(V012[i]);
+        Inc(iV);
+    end;
+end;
+
+procedure Alt_Bus_Get_Isc(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+var
+    Result: PDoubleArray0;
+    Isc: Complex;
+    i, iV, NValues: Integer;
+begin
+    if pBus.BusCurrent = NIL then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
+        Exit;
+    end;
+
+    NValues := pBus.NumNodesThisBus;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
+    iV := 0;
+    for i := 1 to NValues do
+    begin
+        Isc := pBus.BusCurrent[i];
+        Result[iV] := Isc.Re;
+        Inc(iV);
+        Result[iV] := Isc.Im;
+        Inc(iV);
+    end;
+end;
+
+procedure Alt_Bus_Get_Voc(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+var
+    Result: PDoubleArray0;
+    Voc: Complex;
+    i, iV, NValues: Integer;
+begin
+    if pBus.VBus = NIL then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
+        Exit;
+    end;
+    NValues := pBus.NumNodesThisBus;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
+    iV := 0;
+    for i := 1 to NValues do
+    begin
+        Voc := pBus.VBus[i];
+        Result[iV] := Voc.Re;
+        Inc(iV);
+        Result[iV] := Voc.Im;
+        Inc(iV);
+    end;
+end;
+
+procedure Alt_Bus_Get_puVoltages(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+var
+    Result: PDoubleArray0;
+    Nvalues, i, iV, NodeIdx, jj: Integer;
+    Volts: Complex;
+    BaseFactor: Double;
+begin
+    Nvalues := pBus.NumNodesThisBus;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
+    iV := 0;
+    jj := 1;
+    if pBus.kVBase > 0.0 then
+        BaseFactor := 1000.0 * pBus.kVBase
+    else
+        BaseFactor := 1.0;
+
+    for i := 1 to NValues do
+    begin
+        // this code so nodes come out in order from smallest to larges
+        repeat
+            NodeIdx := pBus.FindIdx(jj);  // Get the index of the Node that matches jj
+            inc(jj)
+        until NodeIdx > 0;
+
+        Volts := DSS.ActiveCircuit.Solution.NodeV[pBus.GetRef(NodeIdx)];
+        Result[iV] := Volts.re / BaseFactor;
+        Inc(iV);
+        Result[iV] := Volts.im / BaseFactor;
+        Inc(iV);
+    end;
+end;
+
+procedure Alt_Bus_Get_Zsc0(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+var
+    Result: PDoubleArray0;
+    Z: Complex;
+begin
+    Z := pBus.Zsc0;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+    Result[0] := Z.Re;
+    Result[1] := Z.Im;
+end;
+
+procedure Alt_Bus_Get_Zsc1(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+var
+    Result: PDoubleArray0;
+    Z: Complex;
+begin
+    Z := pBus.Zsc1;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+    Result[0] := Z.Re;
+    Result[1] := Z.Im;
+end;
+
+procedure Alt_Bus_Get_ZscMatrix(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+var
+    Result: PDoubleArray0;
+    Nelements, iV, i, j: Integer;
+    Z: Complex;
+begin
+    DefaultResult(ResultPtr, ResultCount);
+    try
+        if pBus.Zsc = NIL then
+            Exit;
+
+        Nelements := pBus.Zsc.Order;
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Nelements * Nelements, Nelements, Nelements);
+        iV := 0;
+        for i := 1 to Nelements do
+        begin
+            for j := 1 to Nelements do
+            begin
+                Z := pBus.Zsc[i, j];
+                Result[iV] := Z.Re;
+                Inc(iV);
+                Result[iV] := Z.Im;
+                Inc(iV);
+            end;
+        end;
+    except
+        On E: Exception do
+            DoSimpleMsg(DSS, 'ZscMatrix Error: %s', [E.message], 5016);
+    end;
+end;
+
+procedure Alt_Bus_Get_YscMatrix(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+var
+    Result: PDoubleArray0;
+    Nelements, iV, i, j: Integer;
+    Y1: Complex;
+begin
+    DefaultResult(ResultPtr, ResultCount);
+    try
+        if pBus.Ysc = NIL then
+            Exit;
+
+        Nelements := pBus.Ysc.Order;
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Nelements * Nelements, Nelements, Nelements);
+        iV := 0;
+        for i := 1 to Nelements do
+        begin
+            for j := 1 to Nelements do
+            begin
+                Y1 := pBus.Ysc[i, j];
+                Result[iV] := Y1.Re;
+                Inc(iV);
+                Result[iV] := Y1.Im;
+                Inc(iV);
+            end;
+        end;
+    except
+        On E: Exception do
+            DoSimpleMsg(DSS, 'ZscMatrix Error: %s', [E.message], 5017);
+    end;
+end;
+
+procedure Alt_Bus_Get_ComplexSeqVoltages(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+var
+    Result: PDoubleArray0;
+    Nvalues, i, iV: Integer;
+    VPh, V012: Complex3;
+begin
+    Nvalues := pBus.NumNodesThisBus;
+    if Nvalues > 3 then
+        Nvalues := 3;
+
+    // Assume nodes labelled 1, 2, and 3 are the 3 phases
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 6);
+    if Nvalues <> 3 then
+        for i := 1 to 6 do
+            Result[i - 1] := -1.0  // Signify seq voltages n/A for less then 3 phases
+    else
+    begin
+        iV := 0;
+        for i := 1 to 3 do
+        Vph[i] := DSS.ActiveCircuit.Solution.NodeV[pBus.Find(i)];
+
+        Phase2SymComp(@Vph, @V012);   // Compute Symmetrical components
+
+        for i := 1 to 3 do  // Stuff it in the result
+        begin
+            Result[iV] := V012[i].re;
+            Inc(iV);
+            Result[iV] := V012[i].im;
+            Inc(iV);
+        end;
+    end;
+end;
+
+procedure Alt_Bus_Get_puVLL(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+var
+    Result: PDoubleArray0;
+    Nvalues, i, iV, NodeIdxi, NodeIdxj, jj, k: Integer;
+    Volts: Complex;
+    BaseFactor: Double;
+    NodeV: pNodeVArray;
+begin
+    NodeV := DSS.ActiveCircuit.Solution.NodeV;
+    Nvalues := pBus.NumNodesThisBus;
+    if Nvalues > 3 then
+        Nvalues := 3;
+
+    if Nvalues <= 1 then
+    begin  // for 1-phase buses, do not attempt to compute.
+        //TODO: actual error?
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+        Result[0] := -99999.0;
+        Result[1] := 0.0;
+        Exit;
+    end;
+    
+    if Nvalues = 2 then
+        Nvalues := 1;  // only one L-L voltage if 2 phase
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
+    iV := 0;
+
+    if pBus.kVBase > 0.0 then
+        BaseFactor := 1000.0 * pBus.kVBase * sqrt3
+    else
+        BaseFactor := 1.0;
+
+    for i := 1 to NValues do     // for 2- or 3-phases
+    begin
+        // this code assumes the nodes are ordered 1, 2, 3
+        //------------------------------------------------------------------------------------------------
+        // This section was added to prevent measuring using disconnected nodes, for example, if the
+        // bus has 2 nodes but those are 1 and 3, that will bring a problem.
+        jj := i;
+        repeat
+            NodeIdxi := pBus.FindIdx(jj);  // Get the index of the Node that matches i
+            inc(jj);
+        until NodeIdxi > 0;
+
+        // (2020-03-01) Changed in DSS C-API to avoid some corner
+        // cases that resulted in infinite loops
+        for k := 1 to 3 do
+        begin
+            NodeIdxj := pBus.FindIdx(jj);  // Get the index of the Node that matches i
+            if jj > 3 then
+                jj := 1
+            else
+                inc(jj);
+
+            if NodeIdxj > 0 then
+                break;
+        end;
+        if NodeIdxj = 0 then
+        begin
+            // Could not find appropriate node
+            DefaultResult(ResultPtr, ResultCount);
+            Exit;
+        end;
+        //------------------------------------------------------------------------------------------------
+            Volts := NodeV[pBus.GetRef(NodeIdxi)] - NodeV[pBus.GetRef(NodeIdxj)];
+        Result[iV] := Volts.re / BaseFactor;
+        Inc(iV);
+        Result[iV] := Volts.im / BaseFactor;
+        Inc(iV);
+    end;
+end;
+
+
+procedure Alt_Bus_Get_VLL(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+var
+    Result: PDoubleArray0;
+    Nvalues, i, iV, NodeIdxi, NodeIdxj, jj, k: Integer;
+    Volts: Complex;
+    NodeV: pNodeVArray;
+begin
+    NodeV := DSS.ActiveCircuit.Solution.NodeV;
+    Nvalues := pBus.NumNodesThisBus;
+    if Nvalues > 3 then
+        Nvalues := 3;
+
+    if Nvalues <= 1 then
+    begin  // for 1-phase buses, do not attempt to compute.
+        //TODO: actual error?
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+        Result[0] := -99999.0;
+        Result[1] := 0.0;
+        Exit;
+    end;
+
+    if Nvalues = 2 then
+        Nvalues := 1;  // only one L-L voltage if 2 phase
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
+    iV := 0;
+    
+    for i := 1 to NValues do     // for 2- or 3-phases
+    begin
+        // this code assumes the nodes are ordered 1, 2, 3
+        //------------------------------------------------------------------------------------------------
+        // This section was added to prevent measuring using disconnected nodes, for example, if the
+        // bus has 2 nodes but those are 1 and 3, that will bring a problem.
+
+        jj := i;
+        repeat
+            NodeIdxi := pBus.FindIdx(jj);  // Get the index of the Node that matches i
+            inc(jj);
+        until NodeIdxi > 0;
+
+        // (2020-03-01) Changed in DSS C-API to avoid some corner
+        // cases that resulted in infinite loops
+        for k := 1 to 3 do
+        begin
+            NodeIdxj := pBus.FindIdx(jj);  // Get the index of the Node that matches i
+            if jj > 3 then
+                jj := 1
+            else
+                inc(jj);
+
+            if NodeIdxj > 0 then
+                break;
+        end;
+        if NodeIdxj = 0 then
+        begin
+            // Could not find appropriate node
+            DefaultResult(ResultPtr, ResultCount);
+            Exit;
+        end;
+        //------------------------------------------------------------------------------------------------
+        Volts := NodeV[pBus.GetRef(NodeIdxi)] - NodeV[pBus.GetRef(NodeIdxj)];
+        Result[iV] := Volts.re;
+        Inc(iV);
+        Result[iV] := Volts.im;
+        Inc(iV);
+    end;
+end;
+
+procedure Alt_Bus_Get_puVMagAngle(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+var
+    Result: PDoubleArray0;
+    Nvalues, i, iV, NodeIdx, jj: Integer;
+    Volts: polar;
+    Basefactor: Double;
+begin
+    Nvalues := pBus.NumNodesThisBus;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
+    iV := 0;
+    jj := 1;
+
+    if pBus.kVBase > 0.0 then
+        BaseFactor := 1000.0 * pBus.kVBase
+    else
+        BaseFactor := 1.0;
+
+    for i := 1 to NValues do
+    begin
+        // this code so nodes come out in order from smallest to larges
+        repeat
+            NodeIdx := pBus.FindIdx(jj);  // Get the index of the Node that matches jj
+            inc(jj)
+        until NodeIdx > 0;
+
+        Volts := ctopolardeg(DSS.ActiveCircuit.Solution.NodeV[pBus.GetRef(NodeIdx)]);
+        Result[iV] := Volts.mag / BaseFactor;
+        Inc(iV);
+        Result[iV] := Volts.ang;
+        Inc(iV);
+    end;
+end;
+
+procedure Alt_Bus_Get_VMagAngle(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+var
+    Result: PDoubleArray0;
+    Nvalues, i, iV, NodeIdx, jj: Integer;
+    Volts: polar;
+begin
+    Nvalues := pBus.NumNodesThisBus;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
+    iV := 0;
+    jj := 1;
+    for i := 1 to NValues do
+    begin
+        // this code so nodes come out in order from smallest to larges
+        repeat
+            NodeIdx := pBus.FindIdx(jj);  // Get the index of the Node that matches jj
+            inc(jj)
+        until NodeIdx > 0;
+
+        Volts := ctopolardeg(DSS.ActiveCircuit.Solution.NodeV[pBus.GetRef(NodeIdx)]);
+        Result[iV] := Volts.mag;
+        Inc(iV);
+        Result[iV] := Volts.ang;
+        Inc(iV);
+    end;
+end;
+
+procedure Alt_Bus_Get_Zsc012Matrix(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; pBus: TDSSBus); CDECL; //TODO: remove duplication between this and DoZsc012Cmd
+var
+    Zsc012Temp: TCmatrix;
+    NValues: Integer;
+    Norder: Integer;
+begin
+    if (pBus.NumNodesThisBus <> 3) or (pBus.Zsc = NIL) then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
+        Exit;
+    end;
+
+    Nvalues := pBus.NumNodesThisBus * pBus.NumNodesThisBus * 2;  // Should be 9 complex numbers
+    // Compute ZSC012 for 3-phase buses else leave it zeros
+    // ZSC012 = Ap2s Zsc As2p
+    Zsc012Temp := pBus.Zsc.MtrxMult(As2p);  // temp for intermediate result
+    if Assigned(pBus.ZSC012) then
+        pBus.ZSC012.Free;
+    pBus.ZSC012 := Ap2s.MtrxMult(Zsc012Temp);
+    // Cleanup
+    Zsc012Temp.Free;
+
+    // Return all the elements of ZSC012
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValues, pBus.NumNodesThisBus, pBus.NumNodesThisBus);
+    Move(pBus.ZSC012.GetValuesArrayPtr(Norder)[1], ResultPtr[0], NValues * SizeOf(Double));
+end;
+
+procedure _Alt_Bus_Get_XElements(DSS: TDSSContext; var ResultPtr: PPointer; ResultCount: PAPISize; pBus: TDSSBus; loads: Boolean; lines: Boolean; pces: Boolean; pdes: Boolean);
+var
+    cls: TDSSClass;
+    i, n, t, nbus: Integer;
+    busName, elemBus, elemBus2: String;
+    nodes: Array of Integer = NIL;
+    found: Boolean;
+    elem: TDSSCktElement;
+    maxTerm: Integer = 1;
+    Result: PPointerArray0;
+begin
+    Result := DSS_RecreateArray_PPointer(ResultPtr, ResultCount, ResultCount^ + 1);
+    ResultCount[0] := 0;
+    SetLength(nodes, pBus.NumNodesThisBus);
+    for i := 1 to pBus.NumNodesThisBus do
+        nodes[i - 1] := pBus.GetRef(i);
+
+    if pdes or lines then
+        maxTerm := 2;
+
+    busName := AnsiLowerCase(pBus.Name);
+    for i := 1 to DSS.DSSClassList.Count do
+    begin
+        cls := DSS.DSSClassList.Get(i);
+        if not (cls is TCktElementClass) then
+            continue;
+
+        // Checks if this class is included in the targets
+        if not (
+            (loads and (cls = DSS.LoadClass)) or
+            (lines and (cls = DSS.LineClass)) or
+            (pces and (cls.ClassType.InheritsFrom(TPCClass) or (cls = DSS.CapacitorClass) or (cls = DSS.ReactorClass))) or
+            (pdes and (cls.ClassType.InheritsFrom(TPDClass)))
+        ) then
+            continue;
+
+        // If it is, checks all the elements to verify if one or more are
+        // connected to the bus given
+        for elem in cls do
+        begin
+            if (nodes <> NIL) and (elem.Terminals <> NIL) and (elem.Terminals[0].TermNodeRef <> NIL) then
+            begin
+                // Fast path
+                found := False;
+                for t := 0 to Min(High(elem.Terminals), maxTerm) do
+                begin
+                    for n := 0 to High(elem.Terminals[0].TermNodeRef) do
+                    begin
+                        for nbus in nodes do
+                        begin
+                            found := (elem.Terminals[0].TermNodeRef[n] = nbus);
+                            if not found then
+                                continue;
+
+                            if pdes then
+                            begin
+                                elemBus := AnsiLowerCase(StripExtension(elem.GetBus(t)));
+                                if (t = 0) then
+                                    elemBus2 := AnsiLowerCase(StripExtension(elem.GetBus(t + 1)))
+                                else
+                                    elemBus2 := AnsiLowerCase(StripExtension(elem.GetBus(t - 1)));
+                                    
+                                if elemBus = elemBus2 then
+                                    break;
+                            end;
+                            Result := DSS_RecreateArray_PPointer(ResultPtr, ResultCount, ResultCount^ + 1);
+                            Result[ResultCount^ - 1] := elem;
+                            break;
+                        end;
+                        if found then
+                            break;
+                    end;
+                    if found then
+                        break;
+                end;
+                continue;
+            end;
+
+            // Original code as fallback
+            for t := 0 to Min(High(elem.Terminals), maxTerm) do
+            begin
+                elemBus := AnsiLowerCase(StripExtension(elem.GetBus(t)));
+                if elemBus <> busName then
+                    continue;
+
+                if (pdes) then
+                begin
+                    if (t = 0) then
+                        elemBus2 := AnsiLowerCase(StripExtension(elem.GetBus(t + 1)))
+                    else
+                        elemBus2 := AnsiLowerCase(StripExtension(elem.GetBus(t - 1)));
+
+                    if elemBus = elemBus2 then
+                        break;
+                end;
+
+                Result := DSS_RecreateArray_PPointer(ResultPtr, ResultCount, ResultCount^ + 1);
+                Result[ResultCount^ - 1] := elem;
+                break;
+            end;
+        end;
+    end;
+end;
+
+procedure Alt_Bus_Get_Lines(DSS: TDSSContext; var ResultPtr: PPointer; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+begin
+    _Alt_Bus_Get_XElements(DSS, ResultPtr, ResultCount, pBus, false, true, false, false);
+end;
+procedure Alt_Bus_Get_Loads(DSS: TDSSContext; var ResultPtr: PPointer; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+begin
+    _Alt_Bus_Get_XElements(DSS, ResultPtr, ResultCount, pBus, true, false, false, false);
+end;
+procedure Alt_Bus_Get_PCElements(DSS: TDSSContext; var ResultPtr: PPointer; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+begin
+    _Alt_Bus_Get_XElements(DSS, ResultPtr, ResultCount, pBus, false, false, true, false);
+end;
+procedure Alt_Bus_Get_PDElements(DSS: TDSSContext; var ResultPtr: PPointer; ResultCount: PAPISize; pBus: TDSSBus); CDECL;
+begin
+    _Alt_Bus_Get_XElements(DSS, ResultPtr, ResultCount, pBus, false, false, false, true);
+end;
+
+function Alt_Bus_GetListPtr(DSS: TDSSContext): PPointer; CDECL;
+begin
+    Result := PPointer(DSS.ActiveCircuit.Buses);
+end;
+
+function Alt_Bus_GetByIndex(DSS: TDSSContext; idx: Integer): TDSSBus; CDECL;
+begin
+    if (idx >= 0) and (idx < DSS.ActiveCircuit.NumBuses) then
+    begin
+        Result := DSS.ActiveCircuit.Buses[idx + 1];
+        Exit;
+    end;
+    Result := NIL;
+    DoSimpleMsg(DSS, 'Could not find bus with index number "%d".', [idx], 8984);
+end;
+
+function Alt_Bus_GetByName(DSS: TDSSContext; name: PAnsiChar): TDSSBus; CDECL;
+var
+    idx: Integer;
+    sname: String;
+begin
+    sname := StripExtension(String(name));
+    idx := DSS.ActiveCircuit.BusList.Find(sname);
+    if idx = 0 then
+    begin
+        Result := NIL;
+        DoSimpleMsg(DSS, 'Could not find bus named "%s".', [sname], 8985);
+        Exit;
+    end;
+    Result := DSS.ActiveCircuit.Buses[idx];
+end;
+
+procedure Alt_BusBatch_GetFloat64FromFunc(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; batch: PDSSBus; batchSize: Integer; func: dss_ctx_bus_float64_function_t); CDECL;
+var
+    presult: PDouble;
+    i: Integer;
+begin
+    ResultCount[0] := 0;
+    if (batch = NIL) or (batch^ = NIL) or ((@func) = NIL) then
+        Exit;
+
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, batchSize);
+    presult := ResultPtr;
+
+    for i := 1 to batchSize do
+    begin
+        presult^ := func(DSS, batch^);
+        inc(batch);
+        inc(presult);
+    end;
+end;
+
+procedure Alt_BusBatch_GetInt32FromFunc(DSS: TDSSContext; var ResultPtr: PInteger; ResultCount: PAPISize; batch: PDSSBus; batchSize: Integer; func: dss_ctx_bus_int32_function_t); CDECL;
+var
+    presult: PInteger;
+    i: Integer;
+begin
+    ResultCount[0] := 0;
+    if (batch = NIL) or (batch^ = NIL) or ((@func) = NIL) then
+    begin
+        Exit;
+    end;
+    DSS_RecreateArray_PInteger(ResultPtr, ResultCount, batchSize);
+    presult := ResultPtr;
+    for i := 1 to batchSize do
+    begin
+        presult^ := func(DSS, batch^);
+        inc(batch);
+        inc(presult);
+    end;
+end;
+
+function alt_Bus_ToJSON_(DSS: TDSSContext; bus: TDSSBus; joptions: Integer): TJSONObject;
+begin
+    Result := TJSONObject.Create(['Name', bus.Name]);
+    if bus.CoordDefined then
+    begin
+        Result.Add('X', bus.x);
+        Result.Add('Y', bus.y);
+    end;
+    if bus.kVBase <> 0 then
+        Result.Add('kVLN', bus.kVBase);
+    if bus.Keep then
+        Result.Add('Keep', true);
+end;
+
+function Alt_Bus_ToJSON(DSS: TDSSContext; pBus: TDSSBus; joptions: Integer): PAnsiChar; CDECL;
+var
+    json: TJSONObject = NIL;
+begin
+    Result := NIL;
+    try
+        json := alt_Bus_ToJSON_(DSS, pBus, joptions);
+        if (Integer(DSSJSONOptions.Pretty) and joptions) <> 0 then
+            Result := DSS_CopyStringAsPChar(json.FormatJSON([], 2))
+        else
+            Result := DSS_CopyStringAsPChar(json.FormatJSON([foSingleLineArray, foSingleLineObject, foskipWhiteSpace], 0));
+    finally
+        FreeAndNil(json);
+    end;
+end;
+
+function Alt_BusBatch_ToJSON(DSS: TDSSContext; batch: PDSSBus; batchSize: Integer; joptions: Integer): PAnsiChar; CDECL;
+var
+    json: TJSONArray = NIL;
+    i: Integer;
+begin
+    Result := NIL;
+    if (batch = NIL) or (batch^ = NIL) then
+        Exit;
+
+    try
+        json := TJSONArray.Create();
+        for i := 1 to batchSize do
+        begin
+            json.Add(alt_Bus_ToJSON_(DSS, TDSSBus(batch^), joptions));
+            inc(batch);
+        end;
+        if (Integer(DSSJSONOptions.Pretty) and joptions) <> 0 then
+            Result := DSS_CopyStringAsPChar(json.FormatJSON([], 2))
+        else
+            Result := DSS_CopyStringAsPChar(json.FormatJSON([foSingleLineArray, foSingleLineObject, foskipWhiteSpace], 0));
+    finally
+        FreeAndNil(json);
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure Alt_CEBatch_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+var
+    cBuffer: pComplexArray;
+    myInit, myEnd, maxSize, NTermsTotal, idx, j, i, iV: Integer;
+    buffer: Array of Complex;
+    Result: PDoubleArray0;
+    pElem: TDSSCktElementPtr;
+begin
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) or MissingSolution(TDSSCktElement(batch^)) then
+    begin
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+        Exit;
+    end;
+
+    NTermsTotal := 0;
+    maxSize := 0;
+    pElem := TDSSCktElementPtr(batch);
+    for idx := 1 to batchSize do
+    begin
+        Inc(NTermsTotal, pElem^.NTerms);
+        maxSize := max(maxSize, pElem^.NConds * pElem^.Nterms);
+        inc(pElem);
+    end;
+
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NTermsTotal);
+    cBuffer := Allocmem(2 * SizeOf(Double) * maxSize);
+    SetLength(buffer, maxSize);
+    iV := 0;
+    pElem := TDSSCktElementPtr(batch);
+    dec(pElem);
+    for idx := 1 to batchSize do
+    begin
+        inc(pElem);
+        if (not pElem^.Enabled) or (pElem^.NodeRef = NIL) then
+        begin
+            Inc(iV, 2 * pElem^.NTerms);
+            continue
+        end;
+        pElem^.GetPhasePower(cBuffer);    
+        for j := 1 to pElem^.Nterms do
+        Begin
+            buffer[j - 1] := 0;
+            myInit := (j - 1) * pElem^.NConds + 1;
+            myEnd := pElem^.NConds * j;
+            for i := myInit to myEnd do
+            begin
+                buffer[j - 1] += cBuffer[i];
+            end;
+            Result[iV + 0] := buffer[j - 1].re * 0.001;
+            Result[iV + 1] := buffer[j - 1].im * 0.001; 
+            Inc(iV, 2);
+        end;
+    end;
+    Reallocmem(cBuffer, 0);
+end;
+
+procedure Alt_CEBatch_Get_Powers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+// Return complex kW, kvar in each conductor for each terminal, for each element in the batch
+var
+    Result: PDoubleArray0;
+    NValuesTotal, NValues, i: Integer;
+    pElem: TDSSCktElementPtr;
+    CResultPtr: PComplex;
+begin
+    // Get the total number of (complex) elements
+    NValuesTotal := 0;
+    pElem := TDSSCktElementPtr(batch);
+    for i := 1 to batchSize do
+    begin
+        Inc(NValuesTotal, pElem^.NConds * pElem^.NTerms);
+        inc(pElem);
+    end;
+
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2); // TODO: dimensions
+    CResultPtr := PComplex(ResultPtr);
+
+    // Get the actual values
+    pElem := TDSSCktElementPtr(batch);
+    for i := 1 to batchSize do
+    begin
+        NValues := pElem^.NConds * pElem^.NTerms;
+        
+        if pElem^.Enabled then
+            pElem^.GetPhasePower(pComplexArray(CResultPtr));
+            
+        Inc(CResultPtr, NValues);
+        inc(pElem);
+    end;
+    for i := 0 to (2 * NValuesTotal) - 1 do
+        Result[i] *= 0.001;    
+end;
+
+procedure _Alt_CEBatch_Get_AllxSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; magnitude: boolean);
+type
+    PPolar = ^Polar;
+var
+    Result: PDoubleArray0;
+    pElem: TDSSCktElementPtr;
+    cBuffer: pComplexArray;
+    i012v, i012: pComplex;
+    maxSize, NTermsTotal, i, j, k, idx: Integer;
+    posSeq: Boolean;
+begin
+    if batchSize = 0 then
+    begin
+        ResultCount[0] := 0;
+        Exit;
+    end;
+    // Get the total number of (complex) elements, max. terminals, max. conductors
+    NTermsTotal := 0;
+    pElem := TDSSCktElementPtr(batch);
+    posSeq := pElem^.ActiveCircuit.PositiveSequence;
+    maxSize := 0;
+    for idx := 1 to batchSize do
+    begin
+        Inc(NTermsTotal, pElem^.NTerms);
+        maxSize := max(maxSize, pElem^.Yorder);
+        inc(pElem);
+    end;
+
+    // Get the actual values
+    i012v := AllocMem(SizeOf(Complex) * 3 * NTermsTotal);
+    i012 := i012v; // this is a running pointer
+    cBuffer := AllocMem(SizeOf(Complex) * maxSize);
+    pElem := TDSSCktElementPtr(batch);
+    dec(pElem);
+    for idx := 1 to batchSize do
+    begin
+        inc(pElem);
+        if pElem^.Enabled then
+            pElem^.GetCurrents(cBuffer)
+        else
+            FillByte(cBuffer^, SizeOf(Complex) * maxSize, 0);
+
+        // _CalcSeqCurrents(pElem, i012);
+        if pElem^.NPhases = 3 then
+        begin    // for 3-phase elements
+            for j := 1 to pElem^.NTerms do
+            begin
+                k := (j - 1) * pElem^.NConds;
+                Phase2SymComp(pComplexArray(@cBuffer[1 + k]), pComplexArray(i012));
+                Inc(i012, 3);
+            end;
+            continue;
+        end;
+
+        // Handle non-3 phase elements
+        if (pElem^.Nphases = 1) and posSeq then
+        begin
+            // Populate only phase 1 quantities in Pos seq
+            i012 += 1;
+            for j := 1 to pElem^.NTerms do
+            begin
+                k := (j - 1) * pElem^.NConds;
+                i012^ := cBuffer[1 + k];
+                Inc(i012, 3);  // inc to pos seq of next terminal
+            end;
+            Dec(i012);
+        end
+        // if neither 3-phase or pos seq model, just put in -1.0 for each element
+        else
+        begin
+            for i := 1 to 3 * pElem^.NTerms do
+            begin
+                i012^ := -1;  // Signify n/A
+                Inc(i012);
+            end;
+        end;
+    end;
+    
+    if magnitude then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NTermsTotal * 3, 3, NTermsTotal);
+        i012 := i012v;
+        for i := 0 to NTermsTotal * 3 - 1 do
+        begin
+            Result[i] := Cabs(i012^);
+            i012 += 1;
+        end;
+    end
+    else
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NTermsTotal * 3 * 2, 3, NTermsTotal);
+        Move(i012v^, ResultPtr[0], NTermsTotal * 3 * 2 * SizeOf(Double));
+    end;
+
+    ReallocMem(i012v, 0);
+end;
+
+procedure Alt_CEBatch_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+begin
+    _Alt_CEBatch_Get_AllxSeqCurrents(ResultPtr, ResultCount, batch, batchSize, True);
+end;
+procedure Alt_CEBatch_Get_ComplexSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+begin
+    _Alt_CEBatch_Get_AllxSeqCurrents(ResultPtr, ResultCount, batch, batchSize, False);
+end;
+//------------------------------------------------------------------------------
+procedure _Alt_CEBatch_Get_AllCurrentsVoltages_x(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; const What: Integer);
+// What=1 for polar form, otherwise rectangular
+type
+    PPolar = ^Polar;
+var
+    pElem: TDSSCktElementPtr;
+    cBuffer: pComplexArray;
+    NValuesTotal, NValues, i, idx: Integer;
+    CResultPtr: PPolar;
+    polarVal: Polar;
+    NodeV: pNodeVArray;
+begin
+    // Get the total number of (complex) elements
+    NValuesTotal := 0;
+    pElem := TDSSCktElementPtr(batch);
+    for idx := 1 to batchSize do
+    begin
+        Inc(NValuesTotal, pElem^.NConds * pElem^.NTerms);
+        inc(pElem);
+    end;
+
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2);
+    CResultPtr := PPolar(ResultPtr);
+
+    // Get the actual values
+    pElem := TDSSCktElementPtr(batch);
+    if what < 2 then
+    begin
+        for idx := 1 to batchSize do
+        begin
+            NValues := pElem^.NConds * pElem^.NTerms;
+            if pElem^.Enabled then
+                pElem^.GetCurrents(pComplexArray(CResultPtr));
+                
+            Inc(CResultPtr, NValues);
+            inc(pElem);
+        end;
+    end
+    else
+    begin
+        NodeV := elem.ActiveCircuit.Solution.NodeV;
+        for idx := 1 to batchSize do
+        begin
+            NValues := pElem^.NConds * pElem^.NTerms;
+            if pElem^.Enabled then
+            begin
+                for i := 1 to elem.NConds * elem.Nterms do
+                begin
+                    CResultPtr^ := NodeV[pElem^.NodeRef[i]]; // ok if =0
+                    inc(CResultPtr);
+                end;                
+            end
+            else
+            begin
+                Inc(CResultPtr, NValues);
+            end;
+            inc(pElem);
+        end;    
+    end;
+
+    case What of
+        1, 3: //Polar (Mag/Angle)
+        begin
+            cBuffer := pComplexArray(ResultPtr);
+            CResultPtr := PPolar(ResultPtr);
+            if DSS_EXTENSIONS_ARRAY_DIMS then
+            begin
+                ResultCount[2] := 2;
+                ResultCount[3] := NValuesTotal;
+            end;
+
+            for i := 1 to NValuesTotal do
+            begin
+                polarVal := ctopolardeg(cBuffer[i]);
+                CResultPtr^ := polarVal;
+                inc(CResultPtr);
+            end;
+        end;
+    end;
+end;
+
+procedure Alt_CEBatch_Get_Currents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+begin
+    _Alt_CEBatch_Get_AllCurrentsVoltages_x(ResultPtr, ResultCount, batch, batchSize, 0);
+end;
+procedure Alt_CEBatch_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+begin
+    _Alt_CEBatch_Get_AllCurrentsVoltages_x(ResultPtr, ResultCount, batch, batchSize, 1);
+end;
+procedure Alt_CEBatch_Get_Voltages(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+begin
+    _Alt_CEBatch_Get_AllCurrentsVoltages_x(ResultPtr, ResultCount, batch, batchSize, 2);
+end;
+procedure Alt_CEBatch_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+begin
+    _Alt_CEBatch_Get_AllCurrentsVoltages_x(ResultPtr, ResultCount, batch, batchSize, 3);
+end;
+
+//------------------------------------------------------------------------------
+function _Alt_PDElements_Get_pctCapacity_for(const AllNodes: Boolean; const What: integer; RatingIdx: Integer; pElem: TPDElement; cBuffer: pComplexArray): Double; inline;
+// What=0 -> MaxCurrent
+// What=1 -> pct of NormAmps
+// What=2 -> pct of EmergAmps
+var
+    i: Integer;
+    EmergAmps,
+    NormAmps,
+    Currmag,
+    MaxCurrent: Double;
+    NumNodes: Integer;
+begin
+    Result := 0;
+    MaxCurrent := 0.0;
+    
+    if AllNodes then
+        NumNodes := pElem.NConds * pElem.NTerms
+    else
+        NumNodes := pElem.Nphases;
+    
+    for i := 1 to NumNodes do
+    begin
+        Currmag := Cabs(cBuffer[i]);
+        if Currmag > MaxCurrent then
+            MaxCurrent := Currmag;
+    end;
+    if What = 0 then
+    begin
+        Result := MaxCurrent;
+        Exit;
+    end;
+    
+    NormAmps := pElem.NormAmps;
+    EmergAmps := pElem.EmergAmps;
+    if (RatingIdx <= pElem.NumAmpRatings) and (pElem.NumAmpRatings > 1) then
+    begin
+        NormAmps := pElem.AmpRatings[RatingIdx];
+        EmergAmps := pElem.AmpRatings[RatingIdx];
+    end;
+
+    case What of
+        1: if NormAmps <> 0 then Result := 100 * MaxCurrent / NormAmps;
+        2: if EmergAmps <> 0 then Result := 100 * MaxCurrent / EmergAmps;
+    end;
+end;
+
+function _Alt_PDE_Get_x(pElem: TPDElement; const What: integer; const AllNodes: Boolean; cresult: PComplex=NIL): Double;
+// MaxCurrent (0), CapacityNorm (1), CapacityEmerg (2), Power (3)
+var
+    RatingIdx: Integer;
+    // LocalPower: Complex;
+    cBuffer: pComplexArray = NIL;
+    RSignal: TXYCurveObj;
+    DSS: TDSSContext;
+begin
+    Result := 0;
+    if not pElem.Enabled then
+        Exit;
+
+    case What of // MaxCurrent (0), CapacityNorm (1), CapacityEmerg (2), Power (3)
+    3: 
+        begin
+            cResult^ := pElem.Power[1] * 0.001;
+        end;
+    0, 1, 2:
+        try
+            RatingIdx := -1;
+            DSS := pElem.DSS;
+            if DSS.SeasonalRating then
+            begin
+                if DSS.SeasonSignal <> '' then
+                begin
+                    RSignal := DSS.XYCurveClass.Find(DSS.SeasonSignal);
+                    if RSignal <> NIL then
+                    begin
+                        RatingIdx := trunc(RSignal.GetYValue(DSS.ActiveCircuit.Solution.DynaVars.intHour));
+                    end
+                    else
+                        DSS.SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
+                end
+                else
+                    DSS.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
+            end;
+            Getmem(cBuffer, sizeof(Complex) * pElem.Yorder);
+            if pElem.Enabled then
+            begin
+                pElem.GetCurrents(cBuffer);
+                Result := _Alt_PDElements_Get_pctCapacity_for(AllNodes, What, RatingIdx, pElem, cBuffer);
+            end;
+        finally
+            if Assigned(cBuffer) then
+                Freemem(cBuffer);
+        end;
+    end;
+end;
+
+procedure _Alt_PDEBatch_Get_x(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer; const What: integer; const AllNodes: Boolean);
+// Internal helper function to calculate for a batch of PDElements
+// MaxCurrent (0), CapacityNorm (1), CapacityEmerg (2), Power (3)
+type
+    TPDElementPtr = ^TPDElement;
+var
+    Result: PDoubleArray0;
+    k, idx, maxSize, RatingIdx: Integer;
+    pElem: TPDElementPtr;
+    LocalPower: Complex;
+    cBuffer: pComplexArray = NIL;
+    RSignal: TXYCurveObj;
+    DSS: TDSSContext;
+begin
+    if batchSize = 0 then
+    begin
+        ResultCount[0] := 0;
+        Exit;
+    end;
+
+    k := 0;
+    pElem := TPDElementPtr(batch);
+    DSS := pElem^.DSS;
+    case What of  
+    3: // Power (3)
+        begin
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, batchSize * 2); // complex
+            for idx := 1 to batchSize do
+            begin
+                if pElem^.Enabled then
+                begin
+                    LocalPower := pElem^.Power[1];
+                    Result[k] := Localpower.re * 0.001;
+                    Result[k + 1] := Localpower.im * 0.001;
+                end;
+                Inc(k, 2);
+                inc(pElem);
+            end;
+        end;
+    0, 1, 2: // MaxCurrent (0), CapacityNorm (1), CapacityEmerg (2),
+        try
+            RatingIdx := -1;
+            if DSS.SeasonalRating then
+            begin
+                if DSS.SeasonSignal <> '' then
+                begin
+                    RSignal := DSS.XYCurveClass.Find(DSS.SeasonSignal);
+                    if RSignal <> NIL then
+                    begin
+                        RatingIdx := trunc(RSignal.GetYValue(DSS.ActiveCircuit.Solution.DynaVars.intHour));
+                    end
+                    else
+                        DSS.SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
+                end
+                else
+                    DSS.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
+            end;
+
+            maxSize := 0;
+            for idx := 1 to batchSize do
+            begin
+                maxSize := max(maxSize, pElem^.Yorder);
+                inc(pElem);
+            end;
+            Getmem(cBuffer, sizeof(Complex) * maxSize);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, batchSize); // real
+
+            pElem := TPDElementPtr(batch);
+            for idx := 1 to batchSize do
+            begin
+                if pElem^.Enabled then
+                begin
+                    pElem^.GetCurrents(cBuffer);
+                    Result[k] := _Alt_PDElements_Get_pctCapacity_for(AllNodes, What, RatingIdx, pElem^, cBuffer);
+                end;
+                Inc(k);
+                inc(pElem);
+            end;
+        finally
+            if Assigned(cBuffer) then
+                Freemem(cBuffer);
+        end;
+    end;
+end;
+
+function Alt_PDE_Get_pctNorm(elem: TPDElement; const AllNodes: TAltAPIBoolean): Double; CDECL;
+begin
+    Result := _Alt_PDE_Get_x(elem, 1, AllNodes);
+end;
+
+function Alt_PDE_Get_pctEmerg(elem: TPDElement; const AllNodes: TAltAPIBoolean): Double; CDECL;
+begin
+    Result := _Alt_PDE_Get_x(elem, 2, AllNodes);
+end;
+
+procedure Alt_PDEBatch_Get_pctNorm(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer; const AllNodes: TAltAPIBoolean); CDECL;
+begin
+    _Alt_PDEBatch_Get_x(ResultPtr, ResultCount, batch, batchSize, 1, AllNodes);
+end;
+
+procedure Alt_PDEBatch_Get_pctEmerg(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer; const AllNodes: TAltAPIBoolean); CDECL;
+begin
+    _Alt_PDEBatch_Get_x(ResultPtr, ResultCount, batch, batchSize, 2, AllNodes);
+end;
+
 end.

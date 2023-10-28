@@ -3,21 +3,21 @@ unit CAPI_Obj;
 // Copyright (c) 2020-2023, DSS C-API contributors
 // Copyright (c) 2020-2023, Paulo Meira
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // * Redistributions of source code must retain the above copyright notice, this
 //   list of conditions and the following disclaimer.
-// 
+//
 // * Redistributions in binary form must reproduce the above copyright notice,
 //   this list of conditions and the following disclaimer in the documentation
 //   and/or other materials provided with the distribution.
-// 
+//
 // * Neither the name of the copyright holder nor the names of its
 //   contributors may be used to endorse or promote products derived from
 //   this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 // AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -39,8 +39,10 @@ uses
     Circuit;
 
 type
-    dss_obj_float64_function_t = function (obj: Pointer): Double; CDECL;    
-    dss_obj_int32_function_t = function (obj: Pointer): Integer; CDECL;    
+    dss_obj_float64_function_t = function (obj: Pointer): Double; CDECL;
+    dss_obj_int32_function_t = function (obj: Pointer): Integer; CDECL;
+    dss_obj_float64_int32_function_t = function (obj: Pointer; funcArg: Integer): Double; CDECL;
+    // dss_obj_int32_int32_function_t = function (obj: Pointer): Integer; CDECL;
 
 //TODO: decise if we want to expose the metadata (property index, name and type) now or later
 
@@ -50,22 +52,23 @@ type
 //TODO: consider using the same API as numeric arrays for string
 procedure DSS_Dispose_String(S: PAnsiChar); CDECL;
 
-function Obj_New(DSS: TDSSContext; ClsIdx: Integer; Name: PAnsiChar; Activate: TAPIBoolean; BeginEdit: TAPIBoolean): Pointer; CDECL;
+function Obj_New(DSS: TDSSContext; ClsIdx: Integer; Name: PAnsiChar; Activate: TAltAPIBoolean; BeginEdit: TAltAPIBoolean): Pointer; CDECL;
 function Obj_GetHandleByName(DSS: TDSSContext; ClsIdx: Integer; Name: PAnsiChar): Pointer; CDECL;
 function Obj_GetHandleByIdx(DSS: TDSSContext; ClsIdx: Integer; Idx: Integer): Pointer; CDECL;
 
-function Obj_GetName(Handle: Pointer): PAnsiChar; CDECL;
-function Obj_GetNumProperties(Handle: Pointer): Integer; CDECL;
+function Obj_GetName(obj: TDSSObject): PAnsiChar; CDECL;
+function Obj_GetFullName(obj: TDSSObject): PAnsiChar; CDECL;
+function Obj_GetNumProperties(obj: TDSSObject): Integer; CDECL;
 function Obj_GetCount(DSS: TDSSContext; ClsIdx: Integer): Integer; CDECL;
 function Obj_GetListPointer(DSS: TDSSContext; ClsIdx: Integer): PPointer; CDECL;
-function Obj_GetIdx(Handle: Pointer): Integer; CDECL;
-function Obj_GetClassName(Handle: Pointer): PAnsiChar; CDECL;
-function Obj_GetClassIdx(Handle: Pointer): Integer; CDECL;
-function Obj_PropertySideEffects(Handle: Pointer; Index: Integer; PreviousInt: Integer): TAPIBoolean; CDECL;
-procedure Obj_BeginEdit(Handle: Pointer); CDECL;
-procedure Obj_EndEdit(Handle: Pointer; NumChanges: Integer); CDECL;
-procedure Obj_Activate(Handle: Pointer; AllLists: TAPIBoolean); CDECL;
-function Obj_GetPropSeqPtr(Handle: Pointer): PInteger; CDECL;
+function Obj_GetIdx(obj: TDSSObject): Integer; CDECL;
+function Obj_GetClassName(obj: TDSSObject): PAnsiChar; CDECL;
+function Obj_GetClassIdx(obj: TDSSObject): Integer; CDECL;
+function Obj_PropertySideEffects(obj: TDSSObject; Index: Integer; PreviousInt: Integer): TAltAPIBoolean; CDECL;
+procedure Obj_BeginEdit(obj: TDSSObject); CDECL;
+procedure Obj_EndEdit(obj: TDSSObject; NumChanges: Integer); CDECL;
+procedure Obj_Activate(obj: TDSSObject; AllLists: TAltAPIBoolean); CDECL;
+function Obj_GetPropSeqPtr(obj: TDSSObject): PInteger; CDECL;
 
 function Obj_GetFloat64(obj: TDSSObject; Index: Integer): Double; CDECL;
 function Obj_GetInt32(obj: TDSSObject; Index: Integer): Integer; CDECL;
@@ -94,7 +97,7 @@ function Obj_ToJSON_(obj: TDSSObject; joptions: Integer): String;
 function Obj_ToJSONData(obj: TDSSObject; joptions: Integer): TJSONData;
 
 // Batch: creation and state setup
-procedure Batch_CreateFromNew(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; Names: PPAnsiChar; Count: Integer; BeginEdit: TAPIBoolean); CDECL;
+procedure Batch_CreateFromNew(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; Names: PPAnsiChar; Count: Integer; BeginEdit: TAltAPIBoolean); CDECL;
 procedure Batch_Dispose(batch: Pointer); CDECL;
 procedure Batch_BeginEdit(batch: TDSSObjectPtr; batchSize: Integer); CDECL;
 procedure Batch_EndEdit(batch: TDSSObjectPtr; batchSize: Integer; NumEdits: Integer); CDECL;
@@ -114,6 +117,7 @@ procedure Batch_GetString(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; batc
 procedure Batch_GetAsString(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; Index: Integer); CDECL;
 procedure Batch_GetObject(var ResultPtr: PPointer; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; Index: Integer); CDECL;
 procedure Batch_GetFloat64FromFunc(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; func: dss_obj_float64_function_t); CDECL;
+procedure Batch_GetFloat64FromFunc2(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; func: dss_obj_float64_int32_function_t; funcArg: Integer); CDECL;
 procedure Batch_GetInt32FromFunc(var ResultPtr: PInteger; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; func: dss_obj_int32_function_t); CDECL;
 
 // procedure Batch_SetAsString(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PAnsiChar); CDECL;
@@ -128,7 +132,7 @@ procedure Batch_SetStringArray(batch: TDSSObjectPtr; batchSize: Integer; Index: 
 procedure Batch_SetObjectArray(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: TDSSObjectPtr); CDECL;
 
 // Batch -- using class and property names
-procedure Batch_CreateFromNewS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; clsName: String; Names: PPAnsiChar; Count: Integer; BeginEdit: TAPIBoolean); CDECL;
+procedure Batch_CreateFromNewS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; clsName: String; Names: PPAnsiChar; Count: Integer; BeginEdit: TAltAPIBoolean); CDECL;
 procedure Batch_CreateByClassS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; clsName: PAnsiChar); CDECL;
 procedure Batch_CreateByRegExpS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; clsname: PAnsiChar; re: PAnsiChar); CDECL;
 procedure Batch_CreateByIndexS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; clsname: PAnsiChar; Value: PInteger; ValueCount: Integer); CDECL;
@@ -159,6 +163,7 @@ implementation
 
 uses
     CAPI_metadata,
+    CAPI_Alt,
     StrUtils,
     Utilities,
     RegExpr,
@@ -190,7 +195,7 @@ begin
     FreeMem(S);
 end;
 
-function Obj_New(DSS: TDSSContext; ClsIdx: Integer; Name: PAnsiChar; Activate: TAPIBoolean; BeginEdit: TAPIBoolean): Pointer; CDECL;
+function Obj_New(DSS: TDSSContext; ClsIdx: Integer; Name: PAnsiChar; Activate: TAltAPIBoolean; BeginEdit: TAltAPIBoolean): Pointer; CDECL;
 var
     Obj: TDSSObject;
     Cls: TDSSClass;
@@ -235,18 +240,18 @@ begin
     Cls := DSS.DSSClassList.At(ClsIdx);
     if Cls = NIL then
         Exit;
-    
+
     Result := Cls.ElementList.At(Idx);
 end;
 
-procedure Obj_BeginEdit(Handle: Pointer); CDECL;
+procedure Obj_BeginEdit(obj: TDSSObject); CDECL;
 begin
-    TDSSObject(Handle).ParentClass.BeginEdit(Handle, False);
+    obj.ParentClass.BeginEdit(obj, False);
 end;
 
-procedure Obj_EndEdit(Handle: Pointer; NumChanges: Integer); CDECL;
+procedure Obj_EndEdit(obj: TDSSObject; NumChanges: Integer); CDECL;
 begin
-    TDSSObject(Handle).ParentClass.EndEdit(Handle, NumChanges);
+    obj.ParentClass.EndEdit(obj, NumChanges);
 end;
 
 procedure activateOnList(Obj: TDSSObject; List: TDSSPointerList);
@@ -271,12 +276,8 @@ begin
     List.Get(prev);
 end;
 
-procedure Obj_Activate(Handle: Pointer; AllLists: TAPIBoolean); CDECL;
-var
-    obj: TDSSObject;
+procedure Obj_Activate(obj: TDSSObject; AllLists: TAltAPIBoolean); CDECL;
 begin
-    obj := TDSSObject(Handle);
-
     if obj is TDSSCktElement then
         obj.DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(obj)
     else
@@ -288,7 +289,7 @@ begin
         Exit;
 
     // Adapted from TDSSCircuit.AddCktElement
-    with obj.DSS.ActiveCircuit do 
+    with obj.DSS.ActiveCircuit do
     begin
         // Update lists of PC and PD elements
         case (Obj.DSSObjType and BaseClassMask) of
@@ -360,22 +361,24 @@ begin
     end;
 end;
 
-function Obj_GetPropSeqPtr(Handle: Pointer): PInteger; CDECL;
-var
-    obj: TDSSObject;
+function Obj_GetPropSeqPtr(obj: TDSSObject): PInteger; CDECL;
 begin
-    obj := TDSSObject(Handle);
     Result := PInteger(obj.PrpSequence);
 end;
 
-function Obj_GetName(Handle: Pointer): PAnsiChar; CDECL;
+function Obj_GetName(obj: TDSSObject): PAnsiChar; CDECL;
 begin
-    Result := PChar(TDSSObject(Handle).Name);
+    Result := PAnsiChar(obj.Name);
 end;
 
-function Obj_GetNumProperties(Handle: Pointer): Integer; CDECL;
+function Obj_GetFullName(obj: TDSSObject): PAnsiChar; CDECL;
 begin
-    Result := TDSSObject(Handle).ParentClass.NumProperties;
+    Result := DSS_CopyStringAsPChar(obj.FullName);
+end;
+
+function Obj_GetNumProperties(obj: TDSSObject): Integer; CDECL;
+begin
+    Result := obj.ParentClass.NumProperties;
 end;
 
 function Obj_GetListPointer(DSS: TDSSContext; ClsIdx: Integer): PPointer; CDECL;
@@ -404,26 +407,26 @@ begin
     Result := Cls.ElementList.Count
 end;
 
-function Obj_GetIdx(Handle: Pointer): Integer; CDECL;
+function Obj_GetIdx(obj: TDSSObject): Integer; CDECL;
 begin
-    Result := TDSSObject(Handle).ClassIndex;
+    Result := obj.ClassIndex;
 end;
 
-function Obj_GetClassName(Handle: Pointer): PAnsiChar; CDECL;
+function Obj_GetClassName(obj: TDSSObject): PAnsiChar; CDECL;
 begin
-    Result := PChar(TDSSObject(Handle).ParentClass.Name);
+    Result := PChar(obj.ParentClass.Name);
 end;
 
-function Obj_GetClassIdx(Handle: Pointer): Integer; CDECL;
+function Obj_GetClassIdx(obj: TDSSObject): Integer; CDECL;
 begin
-    Result := TDSSObject(Handle).ParentClass.DSSClassIndex;
+    Result := obj.ParentClass.DSSClassIndex;
 end;
 
-function Obj_PropertySideEffects(Handle: Pointer; Index: Integer; PreviousInt: Integer): TAPIBoolean; CDECL;
+function Obj_PropertySideEffects(obj: TDSSObject; Index: Integer; PreviousInt: Integer): TAltAPIBoolean; CDECL;
 begin
     Result := True;
     try
-        TDSSObject(Handle).PropertySideEffects(Index, PreviousInt);
+        obj.PropertySideEffects(Index, PreviousInt);
     except
         Result := False;
     end;
@@ -520,7 +523,7 @@ begin
 end;
 
 function Obj_ToJSONData(obj: TDSSObject; joptions: Integer): TJSONData;
-var 
+var
     iProp, iPropNext: Integer;
     jvalue: TJSONData = NIL;
     cls: TDSSClass;
@@ -576,8 +579,8 @@ begin
             done[iProp] := True;
 
             // skip substructure (winding, wire) index or suppressed props
-            if (TPropertyFlag.SuppressJSON in cls.PropertyFlags[iProp]) or 
-                (TPropertyFlag.AltIndex in cls.PropertyFlags[iProp]) or 
+            if (TPropertyFlag.SuppressJSON in cls.PropertyFlags[iProp]) or
+                (TPropertyFlag.AltIndex in cls.PropertyFlags[iProp]) or
                 (TPropertyFlag.IntegerStructIndex in cls.PropertyFlags[iProp]) then
                 continue;
 
@@ -626,8 +629,8 @@ begin
             if ((Integer(DSSJSONOptions.SkipRedundant) and joptions) <> 0) and (TPropertyFlag.Redundant in cls.PropertyFlags[iProp]) then
                 continue;
             // skip substructure (winding, wire) index or suppressed props
-            if (TPropertyFlag.SuppressJSON in cls.PropertyFlags[iProp]) or 
-                (TPropertyFlag.AltIndex in cls.PropertyFlags[iProp]) or 
+            if (TPropertyFlag.SuppressJSON in cls.PropertyFlags[iProp]) or
+                (TPropertyFlag.AltIndex in cls.PropertyFlags[iProp]) or
                 (TPropertyFlag.IntegerStructIndex in cls.PropertyFlags[iProp]) then
                 continue;
 
@@ -638,7 +641,7 @@ begin
 end;
 
 function Obj_ToJSON_(obj: TDSSObject; joptions: Integer): String;
-var 
+var
     json: TJSONData = NIL;
 begin
     Result := '';
@@ -743,7 +746,7 @@ begin
     end;
 end;
 
-procedure Batch_CreateFromNew(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; Names: PPAnsiChar; Count: Integer; BeginEdit: TAPIBoolean); CDECL;
+procedure Batch_CreateFromNew(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; Names: PPAnsiChar; Count: Integer; BeginEdit: TAltAPIBoolean); CDECL;
 var
     // Obj: TDSSObject;
     Cls: TDSSClass;
@@ -755,9 +758,9 @@ begin
     Cls := DSS.DSSClassList.At(ClsIdx);
     if Cls = NIL then
         Exit;
-    ensureBatchSize(Count, ResultPtr, ResultCount);    
+    ensureBatchSize(Count, ResultPtr, ResultCount);
     outptr := ResultPtr;
-    
+
     if Names = NIL then
     begin
         // Use a random batch prefix to avoid collisions
@@ -813,14 +816,14 @@ begin
     if cls = NIL then
         Exit;
     ensureBatchSize(cls.ElementList.Count, ResultPtr, ResultCount);
-    objlist := TDSSObjectPtr(cls.ElementList.InternalPointer);    
+    objlist := TDSSObjectPtr(cls.ElementList.InternalPointer);
     outptr := ResultPtr;
     try
         rex := TRegExpr.Create();
         rex.ModifierI := True;
         rex.Expression:= re;
         ResultCount[0] := 0;
-        for i := 1 to cls.ElementList.Count do 
+        for i := 1 to cls.ElementList.Count do
         begin
             if rex.Exec(objlist^.Name) then
             begin
@@ -849,9 +852,9 @@ begin
         Exit;
     ensureBatchSize(cls.ElementList.Count, ResultPtr, ResultCount);
     ResultCount[0] := cls.ElementList.Count;
-    objlist := TDSSObjectPtr(cls.ElementList.InternalPointer);    
+    objlist := TDSSObjectPtr(cls.ElementList.InternalPointer);
     outptr := ResultPtr;
-    for i := 1 to cls.ElementList.Count do 
+    for i := 1 to cls.ElementList.Count do
     begin
         outptr^:= objlist^;
         inc(outptr);
@@ -901,7 +904,7 @@ begin
     begin
         Exit;
     end;
-    
+
     ptype := cls.PropertyType[propidx];
     if not (ptype in [
         TPropertyType.IntegerProperty,
@@ -928,7 +931,7 @@ begin
         TPropertyType.IntegerProperty,
         TPropertyType.MappedIntEnumProperty,
         TPropertyType.MappedStringEnumProperty,
-        TPropertyType.BooleanProperty]) and 
+        TPropertyType.BooleanProperty]) and
         (not (TPropertyFlag.CustomGet in propFlags)) and
         (not (TPropertyFlag.ReadByFunction in propFlags)) and
         (not (TPropertyFlag.ScaledByFunction in propFlags)) then
@@ -1012,7 +1015,7 @@ begin
     // propOffset := cls.PropertyOffset[propIdx];
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, batchSize);
     presult := ResultPtr;
-    
+
     if not (cls.PropertyType[Index] in [
         TPropertyType.DoubleProperty,
         TPropertyType.DoubleOnArrayProperty,
@@ -1039,10 +1042,29 @@ begin
 
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, batchSize);
     presult := ResultPtr;
-    
+
     for i := 1 to batchSize do
     begin
         presult^ := func(batch^);
+        inc(batch);
+        inc(presult);
+    end;
+end;
+
+procedure Batch_GetFloat64FromFunc2(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; func: dss_obj_float64_int32_function_t; funcArg: Integer); CDECL;
+var
+    presult: PDouble;
+    i: Integer;
+begin
+    if (batch = NIL) or (batch^ = NIL) or ((@func) = NIL) then
+        Exit;
+
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, batchSize);
+    presult := ResultPtr;
+
+    for i := 1 to batchSize do
+    begin
+        presult^ := func(batch^, funcArg);
         inc(batch);
         inc(presult);
     end;
@@ -1067,7 +1089,7 @@ begin
 
     DSS_RecreateArray_PInteger(ResultPtr, ResultCount, batchSize);
     presult := ResultPtr;
-    
+
     if not (cls.PropertyType[Index] in [
         TPropertyType.IntegerProperty,
         TPropertyType.MappedIntEnumProperty,
@@ -1084,7 +1106,7 @@ begin
         TPropertyType.IntegerProperty,
         TPropertyType.MappedIntEnumProperty,
         TPropertyType.MappedStringEnumProperty,
-        TPropertyType.BooleanProperty]) and 
+        TPropertyType.BooleanProperty]) and
         (not (TPropertyFlag.CustomGet in propFlags)) and
         (not (TPropertyFlag.ReadByFunction in propFlags)) and
         (not (TPropertyFlag.ScaledByFunction in propFlags)) then
@@ -1140,7 +1162,7 @@ begin
     // propOffset := cls.PropertyOffset[propIdx];
     DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, batchSize);
     presult := ResultPtr;
-    
+
     if not (cls.PropertyType[Index] in [
         TPropertyType.StringSilentROFunctionProperty,
         TPropertyType.StringProperty,
@@ -1200,7 +1222,7 @@ begin
     // propOffset := cls.PropertyOffset[propIdx];
     DSS_CreateArray_PPointer(ResultPtr, ResultCount, batchSize);
     presult := TDSSObjectPtr(ResultPtr);
-    
+
     if not (cls.PropertyType[Index] in [
         TPropertyType.DSSObjectReferenceProperty,
         TPropertyType.DSSObjectReferenceArrayProperty
@@ -1240,7 +1262,7 @@ begin
     ]) then
         Exit;
 
-    if (cls.PropertyType[Index] = TPropertyType.DoubleProperty) and 
+    if (cls.PropertyType[Index] = TPropertyType.DoubleProperty) and
         (propFlags = []) and
         (cls.PropertyScale[Index] = 1) then
     begin
@@ -1360,7 +1382,7 @@ begin
     //     TPropertyType.IntegerProperty,
     //     TPropertyType.MappedIntEnumProperty,
     //     TPropertyType.MappedStringEnumProperty,
-    //     TPropertyType.BooleanProperty]) and 
+    //     TPropertyType.BooleanProperty]) and
     //     (not (TPropertyFlag.CustomSet in propFlags)) and
     //     (not (TPropertyFlag.WriteByFunction in propFlags)) and
     //     (not (TPropertyFlag.ScaledByFunction in propFlags)) then
@@ -1412,7 +1434,7 @@ begin
     cls := batch^.ParentClass;
     // propFlags := cls.PropertyFlags[Index];
     // propOffset := cls.PropertyOffset[Index];
-    
+
     if not (cls.PropertyType[Index] in [
         // TPropertyType.StringEnumActionProperty, --TODO? Not in SetObjString
         //TPropertyType.MappedStringEnumOnStructArrayProperty, --TODO? Not in SetObjString
@@ -1443,7 +1465,7 @@ end;
 // begin
     // if (batch = NIL) or (batch^ = NIL) then
         // Exit;
-// 
+//
     // cls := batch^.ParentClass;
     // propFlags := cls.PropertyFlags[Index];
     // propOffset := cls.PropertyOffset[Index];
@@ -1503,7 +1525,7 @@ begin
     ]) then
         Exit;
 
-    if (cls.PropertyType[Index] = TPropertyType.DoubleProperty) and 
+    if (cls.PropertyType[Index] = TPropertyType.DoubleProperty) and
         (propFlags = []) and
         (cls.PropertyScale[Index] = 1) then
     begin
@@ -1560,7 +1582,7 @@ begin
     ]) then
         Exit;
 
-    if (cls.PropertyType[Index] <> TPropertyType.IntegerOnStructArrayProperty) and 
+    if (cls.PropertyType[Index] <> TPropertyType.IntegerOnStructArrayProperty) and
         (propFlags = []) and
         (cls.PropertyScale[Index] = 1) then
     begin
@@ -1604,7 +1626,7 @@ begin
     cls := batch^.ParentClass;
     // propFlags := cls.PropertyFlags[Index];
     // propOffset := cls.PropertyOffset[Index];
-    
+
     if not (cls.PropertyType[Index] in [
         // TPropertyType.StringEnumActionProperty, --TODO? Not in SetObjString
         // TPropertyType.MappedStringEnumOnStructArrayProperty, --TODO? Not in SetObjString
@@ -1657,7 +1679,7 @@ begin
     end;
 end;
 
-procedure Batch_CreateFromNewS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; clsName: String; Names: PPAnsiChar; Count: Integer; BeginEdit: TAPIBoolean); CDECL;
+procedure Batch_CreateFromNewS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; clsName: String; Names: PPAnsiChar; Count: Integer; BeginEdit: TAltAPIBoolean); CDECL;
 var
     clsIdx: Integer;
 begin
@@ -1943,7 +1965,6 @@ function Obj_Circuit_ToJSON_(ckt: TDSSCircuit; joptions: Integer): PAnsiChar;
 var
     circ: TJSONObject = NIL;
     busArray: TJSONArray = NIL;
-    busObj: TJSONObject = NIL;
     clsArray: TJSONArray = NIL;
     cmds: TJSONArray = NIL;
     // vsrc: TVSourceObj = NIL;
@@ -1968,24 +1989,12 @@ begin
         busArray := TJSONArray.Create();
         for i := 1 to ckt.NumBuses do
         begin
-            bus := ckt.Buses[i];
-            busObj := TJSONObject.Create(['Name', bus.Name]);
-            if bus.CoordDefined then
-            begin
-                busObj.Add('X', bus.x);
-                busObj.Add('Y', bus.y);
-            end;
-            if bus.kVBase <> 0 then
-                busObj.Add('', bus.kVBase);
-            if bus.Keep then
-                busObj.Add('Keep', true);
-            busArray.Add(busObj);
-            busObj := NIL;
+            busArray.Add(alt_Bus_ToJSON_(ckt.DSS, ckt.Buses[i], joptions));
         end;
         circ := TJSONObject.Create([
             'Name', ckt.Name,
             'DefaultBaseFreq', ckt.DSS.DefaultBaseFreq,
-            'PreCommands', cmds, 
+            'PreCommands', cmds,
             // MakeBusList as a PostCommand is implicit
             'Bus', busArray
         ]);
@@ -2037,8 +2046,6 @@ begin
         circ.Free();
     if busArray <> NIL then
         busArray.Free();
-    if busObj <> NIL then
-        busObj.Free();
     if clsArray <> NIL then
         clsArray.Free();
     // if vsrc <> NIL then
@@ -2069,11 +2076,11 @@ begin
 
     obj.Find('DblFile', fn);
     if fn <> NIL then
-    
+
     obj.Find('SngFile', fn);
     if fn <> NIL then
-    
-    
+
+
     obj.Find('CSVFile', fn);
     if fn = NIL then
         raise Exception.Create('Array is not correctly specified');
@@ -2142,7 +2149,7 @@ begin
                     FreeAndNil(data);
                     lineNum += 1;
                 end;
-                Exit;        
+                Exit;
             end;
         end
         else
@@ -2177,7 +2184,7 @@ begin
     tmp := jckt.Find('DefaultBaseFreq');
     if tmp <> NIL then
         DSS.DefaultBaseFreq := tmp.AsFloat;
-    
+
     MakeNewCircuit(DSS, jckt.Get('Name', 'untitled'));
     tmp := jckt.Find('PreCommands');
     if (tmp <> NIL) then
@@ -2203,5 +2210,4 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-
 end.

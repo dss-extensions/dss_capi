@@ -261,13 +261,20 @@ extern "C" {
     typedef void (*dss_callback_solution_t)(void* ctx);
 
     /*!  
-    Function types for extra object functions (used by the batch API)
+    Function types for extra object functions (used by the batch APIs)
    
     EXPERIMENTAL
     */
     typedef double (*dss_obj_float64_func_t)(void* obj);
     typedef int32_t (*dss_obj_int32_func_t)(void* obj);
+    typedef int32_t (*dss_obj_float64_int32_func_t)(void* obj, int32_t val);
+    typedef double (*dss_ctx_bus_float64_func_t)(void* ctx, void* obj);
+    typedef int32_t (*dss_ctx_bus_int32_func_t)(void* ctx, void* obj);
 
+    /*!
+    Typedefs for the Alt API
+    */
+    typedef uint32_t altdss_bool_t;
 
     /* Functions start here */
 
@@ -7213,14 +7220,23 @@ extern "C" {
 
     (API Extension)
     */
-    DSS_CAPI_DLL char* Batch_ToJSON(void **batch, int32_t batchSize, int32_t options);
+    DSS_CAPI_DLL char* Batch_ToJSON(void** batch, int32_t batchSize, int32_t options);
 
     /*! 
     Returns the object name (direct access, no copy is done, no disposal required by the user; read only!)
 
     (API Extension)
     */
-    DSS_CAPI_DLL char* Obj_GetName(void *obj);
+    DSS_CAPI_DLL const char* Obj_GetName(void *obj);
+
+    /*! 
+    Returns a copy of the full object name, including class.
+    
+    Remember to dispose with `DSS_Dispose_String`.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL const char* Obj_GetFullName(void *obj);
 
     /*! 
     Returns the object's class name (direct access, no copy is done, no disposal required by the user; read only!)
@@ -7236,12 +7252,12 @@ extern "C" {
     /*! 
     Activates an object. The object is set as the current
     active DSSObject or CktElement, and in the list of its parent class.
-    If AllLists is true, other internal lists of OpenDSS are also
+    If allLists is true, other internal lists of OpenDSS are also
     updated (implies slow/linear searches).
 
     (API Extension)
     */
-    DSS_CAPI_DLL void Obj_Activate(void *obj, uint16_t AllLists);
+    DSS_CAPI_DLL void Obj_Activate(void *obj, altdss_bool_t allLists);
 
     /*! 
     Returns the pointer to the internal property fill sequence.
@@ -7280,60 +7296,61 @@ extern "C" {
     DSS_CAPI_DLL double Obj_CktElement_MaxCurrent(void *obj, int32_t terminalIdx);
     DSS_CAPI_DLL void Obj_Circuit_Set_ActiveCktElement(void *obj);
 
-    DSS_CAPI_DLL void Batch_Dispose(void **batch);
-    DSS_CAPI_DLL void Batch_BeginEdit(void **batch, int32_t batchSize);
-    DSS_CAPI_DLL void Batch_EndEdit(void **batch, int32_t batchSize, int32_t numEdits);
-    DSS_CAPI_DLL void Batch_GetPropSeq(int32_t** ResultPtr, int32_t* ResultDims, void **batch, int32_t batchSize);
+    DSS_CAPI_DLL void Batch_Dispose(void** batch);
+    DSS_CAPI_DLL void Batch_BeginEdit(void** batch, int32_t batchSize);
+    DSS_CAPI_DLL void Batch_EndEdit(void** batch, int32_t batchSize, int32_t numEdits);
+    DSS_CAPI_DLL void Batch_GetPropSeq(int32_t** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize);
 
-    DSS_CAPI_DLL void Batch_CreateFromNew(void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t clsid, const char** names, int32_t count, uint16_t BeginEdit);
+    DSS_CAPI_DLL void Batch_CreateFromNew(void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t clsid, const char** names, int32_t count, altdss_bool_t BeginEdit);
     DSS_CAPI_DLL void Batch_CreateByClass(void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t clsidx);
     DSS_CAPI_DLL void Batch_CreateByRegExp(void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t clsidx, const char* re);
     DSS_CAPI_DLL void Batch_CreateByIndex(void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t clsidx, int32_t* Value, int32_t ValueCount);
     DSS_CAPI_DLL void Batch_CreateByInt32Property(void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t ClsIdx, int32_t idx, int32_t value);
 
-    DSS_CAPI_DLL void Batch_GetFloat64(double** ResultPtr, int32_t* ResultDims, void **batch, int32_t batchSize, int32_t Index);
-    DSS_CAPI_DLL void Batch_GetFloat64FromFunc(double** ResultPtr, int32_t* ResultDims, void **batch, int32_t batchSize, dss_obj_float64_func_t func);
-    DSS_CAPI_DLL void Batch_GetInt32(int32_t** ResultPtr, int32_t* ResultDims, void **batch, int32_t batchSize, int32_t Index);
-    DSS_CAPI_DLL void Batch_GetInt32FromFunc(int32_t** ResultPtr, int32_t* ResultDims, void **batch, int32_t batchSize, dss_obj_int32_func_t func);
-    DSS_CAPI_DLL void Batch_GetString(char*** ResultPtr, int32_t* ResultDims, void **batch, int32_t batchSize, int32_t Index);
-    DSS_CAPI_DLL void Batch_GetAsString(char*** ResultPtr, int32_t* ResultDims, void **batch, int32_t batchSize, int32_t Index);
+    DSS_CAPI_DLL void Batch_GetFloat64(double** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, int32_t Index);
+    DSS_CAPI_DLL void Batch_GetFloat64FromFunc(double** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, dss_obj_float64_func_t func);
+    DSS_CAPI_DLL void Batch_GetFloat64FromFunc2(double** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, dss_obj_float64_int32_func_t func, int32_t funcArg);
+    DSS_CAPI_DLL void Batch_GetInt32(int32_t** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, int32_t Index);
+    DSS_CAPI_DLL void Batch_GetInt32FromFunc(int32_t** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, dss_obj_int32_func_t func);
+    DSS_CAPI_DLL void Batch_GetString(char*** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, int32_t Index);
+    DSS_CAPI_DLL void Batch_GetAsString(char*** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, int32_t Index);
 
-    DSS_CAPI_DLL void Batch_GetObject(void*** ResultPtr, int32_t* ResultDims, void **batch, int32_t batchSize, int32_t Index);
+    DSS_CAPI_DLL void Batch_GetObject(void*** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, int32_t Index);
 
-    // DSS_CAPI_DLL void Batch_SetAsString(void **batch, int32_t batchSize, int32_t Index, const char* Value);
-    DSS_CAPI_DLL void Batch_Float64(void **batch, int32_t batchSize, int32_t Index, int32_t Operation, double Value);
-    DSS_CAPI_DLL void Batch_Int32(void **batch, int32_t batchSize, int32_t Index, int32_t Operation, int32_t Value);
-    DSS_CAPI_DLL void Batch_SetString(void **batch, int32_t batchSize, int32_t Index, const char* Value);
-    DSS_CAPI_DLL void Batch_SetObject(void **batch, int32_t batchSize, int32_t Index, const void *Value);
+    // DSS_CAPI_DLL void Batch_SetAsString(void** batch, int32_t batchSize, int32_t Index, const char* Value);
+    DSS_CAPI_DLL void Batch_Float64(void** batch, int32_t batchSize, int32_t Index, int32_t Operation, double Value);
+    DSS_CAPI_DLL void Batch_Int32(void** batch, int32_t batchSize, int32_t Index, int32_t Operation, int32_t Value);
+    DSS_CAPI_DLL void Batch_SetString(void** batch, int32_t batchSize, int32_t Index, const char* Value);
+    DSS_CAPI_DLL void Batch_SetObject(void** batch, int32_t batchSize, int32_t Index, const void *Value);
 
-    DSS_CAPI_DLL void Batch_SetFloat64Array(void **batch, int32_t batchSize, int32_t Index, double* Value);
-    DSS_CAPI_DLL void Batch_SetInt32Array(void **batch, int32_t batchSize, int32_t Index, int32_t* Value);
-    DSS_CAPI_DLL void Batch_SetStringArray(void **batch, int32_t batchSize, int32_t Index, const char** Value);
-    DSS_CAPI_DLL void Batch_SetObjectArray(void **batch, int32_t batchSize, int32_t Index, const void** Value);
+    DSS_CAPI_DLL void Batch_SetFloat64Array(void** batch, int32_t batchSize, int32_t Index, double* Value);
+    DSS_CAPI_DLL void Batch_SetInt32Array(void** batch, int32_t batchSize, int32_t Index, int32_t* Value);
+    DSS_CAPI_DLL void Batch_SetStringArray(void** batch, int32_t batchSize, int32_t Index, const char** Value);
+    DSS_CAPI_DLL void Batch_SetObjectArray(void** batch, int32_t batchSize, int32_t Index, const void** Value);
 
-    DSS_CAPI_DLL void Batch_CreateFromNewS(void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname, const char** names, int32_t count, uint16_t BeginEdit);
+    DSS_CAPI_DLL void Batch_CreateFromNewS(void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname, const char** names, int32_t count, altdss_bool_t BeginEdit);
     DSS_CAPI_DLL void Batch_CreateByClassS(void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname);
     DSS_CAPI_DLL void Batch_CreateByRegExpS(void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname, const char* re);
     DSS_CAPI_DLL void Batch_CreateByIndexS(void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname, int32_t* Value, int32_t ValueCount);
     DSS_CAPI_DLL void Batch_CreateByInt32PropertyS(void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname, const char* Name, int32_t value);
 
-    DSS_CAPI_DLL void Batch_GetFloat64S(double** ResultPtr, int32_t* ResultDims, void **batch, int32_t batchSize, const char* Name);
-    DSS_CAPI_DLL void Batch_GetInt32S(int32_t** ResultPtr, int32_t* ResultDims, void **batch, int32_t batchSize, const char* Name);
-    DSS_CAPI_DLL void Batch_GetStringS(char*** ResultPtr, int32_t* ResultDims, void **batch, int32_t batchSize, const char* Name);
-    DSS_CAPI_DLL void Batch_GetAsStringS(char*** ResultPtr, int32_t* ResultDims, void **batch, int32_t batchSize, const char* Name);
+    DSS_CAPI_DLL void Batch_GetFloat64S(double** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, const char* Name);
+    DSS_CAPI_DLL void Batch_GetInt32S(int32_t** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, const char* Name);
+    DSS_CAPI_DLL void Batch_GetStringS(char*** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, const char* Name);
+    DSS_CAPI_DLL void Batch_GetAsStringS(char*** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, const char* Name);
 
-    DSS_CAPI_DLL void Batch_GetObjectS(void*** ResultPtr, int32_t* ResultDims, void **batch, int32_t batchSize, const char* Name);
+    DSS_CAPI_DLL void Batch_GetObjectS(void*** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, const char* Name);
 
-    // DSS_CAPI_DLL void Batch_SetAsStringS(void **batch, int32_t batchSize, const char* Name, const char* Value);
-    DSS_CAPI_DLL void Batch_Float64S(void **batch, int32_t batchSize, const char* Name, int32_t Operation, double Value);
-    DSS_CAPI_DLL void Batch_Int32S(void **batch, int32_t batchSize, const char* Name, int32_t Operation, int32_t Value);
-    DSS_CAPI_DLL void Batch_SetStringS(void **batch, int32_t batchSize, const char* Name, const char* Value);
-    DSS_CAPI_DLL void Batch_SetObjectS(void **batch, int32_t batchSize, const char* Name, const void* Value);
+    // DSS_CAPI_DLL void Batch_SetAsStringS(void** batch, int32_t batchSize, const char* Name, const char* Value);
+    DSS_CAPI_DLL void Batch_Float64S(void** batch, int32_t batchSize, const char* Name, int32_t Operation, double Value);
+    DSS_CAPI_DLL void Batch_Int32S(void** batch, int32_t batchSize, const char* Name, int32_t Operation, int32_t Value);
+    DSS_CAPI_DLL void Batch_SetStringS(void** batch, int32_t batchSize, const char* Name, const char* Value);
+    DSS_CAPI_DLL void Batch_SetObjectS(void** batch, int32_t batchSize, const char* Name, const void* Value);
 
-    DSS_CAPI_DLL void Batch_SetFloat64ArrayS(void **batch, int32_t batchSize, const char* Name, double* Value);
-    DSS_CAPI_DLL void Batch_SetInt32ArrayS(void **batch, int32_t batchSize, const char* Name, int32_t* Value);
-    DSS_CAPI_DLL void Batch_SetStringArrayS(void **batch, int32_t batchSize, const char* Name, const char** Value);
-    DSS_CAPI_DLL void Batch_SetObjectArrayS(void **batch, int32_t batchSize, const char* Name, const void** Value);
+    DSS_CAPI_DLL void Batch_SetFloat64ArrayS(void** batch, int32_t batchSize, const char* Name, double* Value);
+    DSS_CAPI_DLL void Batch_SetInt32ArrayS(void** batch, int32_t batchSize, const char* Name, int32_t* Value);
+    DSS_CAPI_DLL void Batch_SetStringArrayS(void** batch, int32_t batchSize, const char* Name, const char** Value);
+    DSS_CAPI_DLL void Batch_SetObjectArrayS(void** batch, int32_t batchSize, const char* Name, const void** Value);
 
     /*! 
     `DSS_BeginPascalThread` can be used to start a new thread from the Pascal side.
@@ -7406,17 +7423,17 @@ extern "C" {
     DSS_CAPI_DLL void Alt_CE_Get_SeqVoltages(double** resultPtr, int32_t *resultDims, void* elem);
     DSS_CAPI_DLL void Alt_CE_Close(void* elem, int32_t terminal, int32_t phase);
     DSS_CAPI_DLL void Alt_CE_Open(void* elem, int32_t terminal, int32_t phase);
-    DSS_CAPI_DLL uint16_t Alt_CE_IsOpen(void* elem, int32_t terminal, int32_t phase);
+    DSS_CAPI_DLL altdss_bool_t Alt_CE_IsOpen(void* elem, int32_t terminal, int32_t phase);
     DSS_CAPI_DLL void Alt_CE_Get_Residuals(double** resultPtr, int32_t *resultDims, void* elem);
     DSS_CAPI_DLL void Alt_CE_Get_Yprim(double** resultPtr, int32_t *resultDims, void* elem);
     DSS_CAPI_DLL int32_t Alt_CE_Get_Handle(void* elem);
     DSS_CAPI_DLL void Alt_CE_Get_Controllers(void*** resultPtr, int32_t* resultDims, void* elem);
-    DSS_CAPI_DLL uint16_t Alt_CE_Get_HasVoltControl(void* elem);
-    DSS_CAPI_DLL uint16_t Alt_CE_Get_HasSwitchControl(void* elem);
+    DSS_CAPI_DLL altdss_bool_t Alt_CE_Get_HasVoltControl(void* elem);
+    DSS_CAPI_DLL altdss_bool_t Alt_CE_Get_HasSwitchControl(void* elem);
     DSS_CAPI_DLL void Alt_CE_Get_ComplexSeqVoltages(double** resultPtr, int32_t *resultDims, void* elem);
     DSS_CAPI_DLL void Alt_CE_Get_ComplexSeqCurrents(double** resultPtr, int32_t *resultDims, void* elem);
     DSS_CAPI_DLL void Alt_CE_Get_NodeOrder(int32_t** resultPtr, int32_t *resultDims, void* elem);
-    DSS_CAPI_DLL uint16_t Alt_CE_Get_HasOCPDevice(void* elem);
+    DSS_CAPI_DLL altdss_bool_t Alt_CE_Get_HasOCPDevice(void* elem);
     DSS_CAPI_DLL int32_t Alt_CE_Get_NumControllers(void* elem);
     DSS_CAPI_DLL void* Alt_CE_Get_OCPDevice(void* elem);
     DSS_CAPI_DLL int32_t Alt_CE_Get_OCPDeviceIndex(void* elem);
@@ -7424,23 +7441,35 @@ extern "C" {
     DSS_CAPI_DLL void Alt_CE_Get_CurrentsMagAng(double** resultPtr, int32_t *resultDims, void* elem);
     DSS_CAPI_DLL void Alt_CE_Get_VoltagesMagAng(double** resultPtr, int32_t *resultDims, void* elem);
     DSS_CAPI_DLL void Alt_CE_Get_TotalPowers(double** resultPtr, int32_t *resultDims, void* elem);
-    DSS_CAPI_DLL uint16_t Alt_CE_Get_IsIsolated(void* elem);
+    DSS_CAPI_DLL altdss_bool_t Alt_CE_Get_IsIsolated(void* elem);
     DSS_CAPI_DLL void Alt_CE_Get_NodeRef(int32_t** resultPtr, int32_t *resultDims, void* elem);
-    DSS_CAPI_DLL char* Alt_CE_Get_DisplayName(void* pce);
-    DSS_CAPI_DLL char* Alt_CE_Get_GUID(void* elem);
+    DSS_CAPI_DLL const char* Alt_CE_Get_DisplayName(void* pce);
+    DSS_CAPI_DLL const char* Alt_CE_Get_GUID(void* elem);
     DSS_CAPI_DLL void Alt_CE_Set_DisplayName(void* elem, const char* value);
     DSS_CAPI_DLL double Alt_CE_MaxCurrent(void* elem, int32_t terminalIdx);
     DSS_CAPI_DLL void Alt_PCE_Get_VariableNames(char*** resultPtr, int32_t *resultDims, void* pce);
     DSS_CAPI_DLL void Alt_PCE_Get_VariableValues(double** resultPtr, int32_t *resultDims, void* pce);
     DSS_CAPI_DLL void Alt_PCE_Set_VariableValue(void* pce, int32_t varIdx, double value);
     DSS_CAPI_DLL double Alt_PCE_Get_VariableValue(void* pce, int32_t varIdx);
-    DSS_CAPI_DLL char* Alt_PCE_Get_VariableName(void* pce, int32_t varIdx);
+    DSS_CAPI_DLL const char* Alt_PCE_Get_VariableName(void* pce, int32_t varIdx);
     DSS_CAPI_DLL void* Alt_PCE_Get_EnergyMeter(void* elem);
-    DSS_CAPI_DLL char* Alt_PCE_Get_EnergyMeterName(void* elem);
+    DSS_CAPI_DLL const char* Alt_PCE_Get_EnergyMeterName(void* elem);
     DSS_CAPI_DLL void Alt_CE_Get_RegisterNames(char*** resultPtr, int32_t *resultDims, void* pce);
     DSS_CAPI_DLL void Alt_CE_Get_RegisterValues(void*** resultPtr, int32_t *resultDims, void* pce);
-
-    DSS_CAPI_DLL uint16_t Alt_PDE_Get_IsShunt(void* pde);
+    DSS_CAPI_DLL void Alt_CEBatch_Get_Losses(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
+    DSS_CAPI_DLL void Alt_CEBatch_Get_PhaseLosses(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
+    DSS_CAPI_DLL void Alt_CEBatch_Get_Powers(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
+    DSS_CAPI_DLL void Alt_CEBatch_Get_TotalPowers(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
+    DSS_CAPI_DLL void Alt_CEBatch_Get_SeqCurrents(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
+    DSS_CAPI_DLL void Alt_CEBatch_Get_ComplexSeqCurrents(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
+    DSS_CAPI_DLL void Alt_CEBatch_Get_Currents(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
+    DSS_CAPI_DLL void Alt_CEBatch_Get_VoltagesMagAng(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
+    DSS_CAPI_DLL void Alt_CEBatch_Get_SeqVoltages(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
+    DSS_CAPI_DLL void Alt_CEBatch_Get_ComplexSeqVoltages(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
+    DSS_CAPI_DLL void Alt_CEBatch_Get_Voltages(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
+    DSS_CAPI_DLL void Alt_CEBatch_Get_VoltagesMagAng(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
+    
+    DSS_CAPI_DLL altdss_bool_t Alt_PDE_Get_IsShunt(void* pde);
     DSS_CAPI_DLL double Alt_PDE_Get_AccumulatedL(void* pde);
     DSS_CAPI_DLL double Alt_PDE_Get_Lambda(void* pde);
     DSS_CAPI_DLL int32_t Alt_PDE_Get_NumCustomers(void* pde);
@@ -7450,15 +7479,21 @@ extern "C" {
     DSS_CAPI_DLL double Alt_PDE_Get_TotalMiles(void* pde);
     DSS_CAPI_DLL int32_t Alt_PDE_Get_SectionID(void* pde);
     DSS_CAPI_DLL void* Alt_PDE_Get_EnergyMeter(void* elem);
-    DSS_CAPI_DLL char* Alt_PDE_Get_EnergyMeterName(void* elem);
+    DSS_CAPI_DLL const char* Alt_PDE_Get_EnergyMeterName(void* elem);
+    // DSS_CAPI_DLL double Alt_PDE_Get_MaxCurrent(void* elem, altdss_bool_t allNodes);
+    DSS_CAPI_DLL double Alt_PDE_Get_pctNorm(void* elem, altdss_bool_t allNodes);
+    DSS_CAPI_DLL double Alt_PDE_Get_pctEmerg(void* elem, altdss_bool_t allNodes);
+    // DSS_CAPI_DLL void Alt_PDEBatch_Get_MaxCurrent(double** resultPtr, int32_t* resultDims, void** batch, int32_t batchSize, altdss_bool_t allNodes);
+    DSS_CAPI_DLL void Alt_PDEBatch_Get_pctNorm(double** resultPtr, int32_t* resultDims, void** batch, int32_t batchSize, altdss_bool_t allNodes);
+    DSS_CAPI_DLL void Alt_PDEBatch_Get_pctEmerg(double** resultPtr, int32_t* resultDims, void** batch, int32_t batchSize, altdss_bool_t allNodes);
 
-    DSS_CAPI_DLL void Alt_LoadShape_Set_Points(void *objPtr, int32_t Npts, void *HoursPtr, void *PMultPtr, void *QMultPtr, uint16_t ExternalMemory, uint16_t IsFloat32, int32_t Stride);
+    DSS_CAPI_DLL void Alt_LoadShape_Set_Points(void *objPtr, int32_t Npts, void *HoursPtr, void *PMultPtr, void *QMultPtr, altdss_bool_t ExternalMemory, altdss_bool_t IsFloat32, int32_t Stride);
     DSS_CAPI_DLL void Alt_LoadShape_UseFloat64(void *objPtr);
     DSS_CAPI_DLL void Alt_LoadShape_UseFloat32(void *objPtr);
 
     DSS_CAPI_DLL void Alt_Monitor_Get_ByteStream(int8_t** resultPtr, int32_t* resultDims, void* pmon);
     DSS_CAPI_DLL int32_t Alt_Monitor_Get_SampleCount(void* pmon);
-    DSS_CAPI_DLL char* Alt_Monitor_Get_FileName(void* pmon);
+    DSS_CAPI_DLL const char* Alt_Monitor_Get_FileName(void* pmon);
     DSS_CAPI_DLL int32_t Alt_Monitor_Get_NumChannels(void* pmon);
     DSS_CAPI_DLL int32_t Alt_Monitor_Get_RecordSize(void* pmon);
     DSS_CAPI_DLL void Alt_Monitor_Show(void* pmon);
@@ -7480,7 +7515,7 @@ extern "C" {
     DSS_CAPI_DLL void Alt_Meter_Set_CalcCurrent(void* elem, double* valuePtr, int32_t valueCount);
     DSS_CAPI_DLL void Alt_Meter_Get_AllocFactors(double** resultPtr, int32_t *resultDims, void* elem);
     DSS_CAPI_DLL void Alt_Meter_Set_AllocFactors(void* elem, double* valuePtr, int32_t valueCount);
-    DSS_CAPI_DLL void Alt_Meter_DoReliabilityCalc(void* elem, uint16_t assumeRestoration);
+    DSS_CAPI_DLL void Alt_Meter_DoReliabilityCalc(void* elem, altdss_bool_t assumeRestoration);
 
     DSS_CAPI_DLL void Alt_Meter_Get_ZonePCEs(void*** resultPtr, int32_t* resultDims, void* elem);
     DSS_CAPI_DLL void Alt_Meter_Get_EndElements(void*** resultPtr, int32_t* resultDims, void* elem);
@@ -7497,7 +7532,52 @@ extern "C" {
     DSS_CAPI_DLL int32_t Alt_MeterSection_SequenceIndex(void* elem, int32_t idx);
     DSS_CAPI_DLL int32_t Alt_MeterSection_TotalCustomers(void* elem, int32_t idx);
 
-    DSS_CAPI_DLL void Alt_Circuit_ElementLosses(void *ctx, double** resultPtr, int32_t *resultDims, void **elements, int32_t elementsCount);
+    DSS_CAPI_DLL const char* Alt_Bus_Get_Name(void* ctx, void* pBus);
+    DSS_CAPI_DLL int32_t Alt_Bus_Get_NumNodes(void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_kVBase(void* ctx, void* pBus);
+    DSS_CAPI_DLL altdss_bool_t Alt_Bus_Get_CoordDefined(void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_X(void* ctx, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Set_X(void* ctx, void* pBus, double value);
+    DSS_CAPI_DLL double Alt_Bus_Get_Y(void* ctx, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Set_Y(void* ctx, void* pBus, double value);
+    DSS_CAPI_DLL double Alt_Bus_Get_Distance(void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_IntDuration(void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_Lambda(void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_CustDuration(void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_CustInterrupts(void* ctx, void* pBus);
+    DSS_CAPI_DLL int32_t Alt_Bus_Get_NumCustomers(void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_NumInterrupts(void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_TotalMiles(void* ctx, void* pBus);
+    DSS_CAPI_DLL int32_t Alt_Bus_Get_SectionID(void* ctx, void* pBus);
+    DSS_CAPI_DLL altdss_bool_t Alt_Bus_ZscRefresh(void* ctx, void* pBus);
+    DSS_CAPI_DLL int32_t Alt_Bus_GetUniqueNodeNumber(void *ctx, void *pBus, int32_t startNumber);
+    DSS_CAPI_DLL void Alt_Bus_Get_Voltages(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Nodes(void* ctx, int32_t** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_SeqVoltages(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Isc(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Voc(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_puVoltages(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Zsc0(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Zsc1(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_ZscMatrix(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_YscMatrix(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_ComplexSeqVoltages(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_puVLL(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_VLL(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_puVMagAngle(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_VMagAngle(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Zsc012Matrix(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Lines(void* ctx, void*** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Loads(void* ctx, void*** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_PCElements(void* ctx, void*** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_PDElements(void* ctx, void*** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void** Alt_Bus_GetListPtr(void *ctx);
+    DSS_CAPI_DLL void* Alt_Bus_GetByIndex(void *ctx, int32_t idx);
+    DSS_CAPI_DLL void* Alt_Bus_GetByName(void *ctx, const char* name);
+    DSS_CAPI_DLL const char* Alt_Bus_ToJSON(void *ctx, void* pBus, int32_t options);
+    DSS_CAPI_DLL void Alt_BusBatch_GetFloat64FromFunc(void *ctx, double** resultPtr, int32_t* resultDims, void** batch, int32_t batchSize, dss_ctx_bus_float64_func_t func);
+    DSS_CAPI_DLL void Alt_BusBatch_GetInt32FromFunc(void *ctx, int32_t** resultPtr, int32_t* resultDims, void** batch, int32_t batchSize, dss_ctx_bus_int32_func_t func);
+    DSS_CAPI_DLL const char* Alt_BusBatch_ToJSON(void *ctx, void** batch, int32_t batchSize, int32_t options);
 
 #ifdef __cplusplus
 } // extern "C"
