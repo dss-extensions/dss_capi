@@ -13,9 +13,6 @@ uses DSSGlobals, Executive, SysUtils, Variants,CktElement,
   ParserDel,KLUSolve, {$IFDEF FPC_DLL}Classes{$ELSE}Dialogs, System.Classes{$ENDIF};
 
 function ParallelI(mode:longint; arg:longint):longint;cdecl;
-var
-  i : Integer;
-
 begin
   Result:=0;             // Default return value
   case mode of

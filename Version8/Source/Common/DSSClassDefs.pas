@@ -296,9 +296,7 @@ End;
 PROCEDURE   DisposeDSSClasses(AllActors: Boolean);
 
 VAR
-    k,
     DSSCidx,
-    temp,
     i                 : Integer;
     DSSObj            : TDSSObject;
     DSSClass_idx      : TDSSClass;
@@ -351,7 +349,7 @@ BEGIN
   end
   else
   begin
-    temp  :=  ActiveActor;
+    // temp  :=  ActiveActor;
     for DSSCidx := 1 to NumOfActors do
     begin
       ActiveActor := DSSCidx;

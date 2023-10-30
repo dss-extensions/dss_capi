@@ -150,7 +150,6 @@ VAR
    ParamPointer:Integer;
    ParamName:String;
    Param:String;
-   i:Integer;
 
 Begin
 
@@ -342,9 +341,7 @@ End;
 {--------------------------------------------------------------------------}
 PROCEDURE TUPFCControlObj.DoPendingAction;
 VAR
-  Update      : Boolean;
   i           : Integer;
-  MyClass     : TDSSClass;
   myUPFC      : TUPFCObj;
 
 begin
@@ -363,7 +360,6 @@ PROCEDURE TUPFCControlObj.Sample(ActorID : Integer);
 VAR
   Update      : Boolean;
   i           : Integer;
-  MyClass     : TDSSClass;
   myUPFC      : TUPFCObj;
 
 begin

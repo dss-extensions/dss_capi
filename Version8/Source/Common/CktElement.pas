@@ -769,11 +769,9 @@ End;
 function TDSSCktElement.Get_MaxVoltage(idxTerm:Integer; ActorID: integer):Double;
 {Get Voltage at the specified terminal 09/17/2019}
 VAR
-   volts,
-   VN,
-   cPower    : Complex;
+   volts     : Complex;
    ClassIdx,
-   i, k, l, m,
+   i, k,
    nrefN,
    nref      : Integer;
    MaxCurr,
@@ -783,7 +781,6 @@ VAR
 Begin
 
    ActiveTerminalIdx  :=  idxTerm;   // set active Terminal
-   Cpower             :=  CZERO;
    If FEnabled Then Begin
        ComputeIterminal(ActorID);
 
@@ -831,11 +828,9 @@ End;
 function TDSSCktElement.Get_MaxVoltageAng(idxTerm:Integer; ActorID: integer):Double;
 {Get Voltage angle at the specified terminal 04/26/2022}
 VAR
-   volts,
-   VN,
-   cPower    : Complex;
+   volts     : Complex;
    ClassIdx,
-   i, k, l, m,
+   i, k,
    nrefN,
    nref      : Integer;
    MaxCurr,
@@ -845,7 +840,6 @@ VAR
 Begin
 
    ActiveTerminalIdx  :=  idxTerm;   // set active Terminal
-   Cpower             :=  CZERO;
    If FEnabled Then Begin
        ComputeIterminal(ActorID);
 
@@ -896,10 +890,9 @@ function TDSSCktElement.Get_MaxPower(idxTerm: Integer;ActorID: integer): Complex
  2/12/2019}
 VAR
    volts,
-   VN,
    cPower    : Complex;
    ClassIdx,
-   i, k, l, m,
+   i, k, 
    nrefN,
    nref      : Integer;
    MaxCurr,
@@ -970,11 +963,9 @@ end;
 FUNCTION  TDSSCktElement.Get_MaxCurrent(idxTerm:Integer; ActorID: integer):Double;
 {returns the magnitude fo the maximum current at the element's terminal}
 VAR
-   i, k,
-   nref      : Integer;
+   i, k     : Integer;
    MaxCurr,
    CurrMag   : Double;
-   MaxPhase  : Integer;
 
 Begin
    ActiveTerminalIdx  :=  idxTerm;   // set active Terminal
@@ -983,13 +974,11 @@ Begin
        ComputeIterminal(ActorID);
     // Method: Get max current at terminal (magnitude)
        MaxCurr := 0.0;
-       MaxPhase := 1;  // Init this so it has a non zero value
        k := (idxTerm -1)*Fnconds; // starting index of terminal
        For i := 1 to Fnphases do Begin
           CurrMag := Cabs(Iterminal[k+i]);
           If CurrMag > MaxCurr Then Begin
              MaxCurr := CurrMag;
-             MaxPhase := i
           End;
        End;
    End;
@@ -1001,12 +990,10 @@ End;
 FUNCTION  TDSSCktElement.Get_MaxCurrentAng(idxTerm:Integer; ActorID: integer):Double;
 {returns the angle fo the maximum current at the element's terminal}
 VAR
-   i, k,
-   nref      : Integer;
+   i, k      : Integer;
    CurrAng,
    MaxCurr,
    CurrMag   : Double;
-   MaxPhase  : Integer;
 
 Begin
    ActiveTerminalIdx  :=  idxTerm;   // set active Terminal
@@ -1016,14 +1003,12 @@ Begin
        ComputeIterminal(ActorID);
     // Method: Get max current at terminal (magnitude)
        MaxCurr := 0.0;
-       MaxPhase := 1;  // Init this so it has a non zero value
        k := (idxTerm -1)*Fnconds; // starting index of terminal
        For i := 1 to Fnphases do Begin
           CurrMag := Cabs(Iterminal[k+i]);
           If CurrMag > MaxCurr Then Begin
              MaxCurr  := CurrMag;
              CurrAng  := Cang(Iterminal[k+i]);
-             MaxPhase := i
           End;
        End;
    End;
@@ -1281,8 +1266,7 @@ PROCEDURE TDSSCktElement.GetTermVoltages(iTerm: Integer;   VBuffer: PComplexArra
 
 VAR
   ncond,
-  i,
-  j       :Integer;
+  i       :Integer;
 
 Begin
 
@@ -1380,7 +1364,7 @@ procedure TDSSCktElement.ComputeVterminal(ActorID : Integer);
 
 {Put terminal voltages in an array}
 
-VAR i, j:Integer;
+VAR i:Integer;
 
 Begin
    With ActiveCircuit[ActorID].solution Do For i := 1 to Yorder Do

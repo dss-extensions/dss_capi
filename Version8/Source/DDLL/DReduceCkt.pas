@@ -136,26 +136,26 @@ begin
   Result:= pAnsiChar(AnsiString(''));  // Default return value
   case mode of
   0: begin  // ReduceCkt.EditString - Read
-        Result := pAnsiChar(ReduceEditString);
+        Result := pAnsiChar(AnsiString(ReduceEditString));
      end;
   1: begin  // ReduceCkt.EditString - Write
-        ReduceEditString := arg;
+        ReduceEditString := string(arg);
      end;
   2: begin  // ReduceCkt.EnergyMeter - Read
-        Result := pAnsiChar(EnergyMeterName);
+        Result := pAnsiChar(AnsiString(EnergyMeterName));
      end;
   3: begin  // ReduceCkt.EnergyMeter - Write
-        EnergyMeterName := arg;
+        EnergyMeterName := string(arg);
      end;
   4: begin  // ReduceCkt.SaveCircuit
         DSSExecutive[ActiveActor].Command := 'Save Circuit Dir=' + arg;
         // Master file name is returned in DSSText.Result
      end;
   5: begin  // ReduceCkt.StartPDElement - Read
-        Result := pAnsiChar(FirstPDelement);
+        Result := pAnsiChar(AnsiString(FirstPDelement));
      end;
   6: begin  // ReduceCkt.StartPDElement - Write
-        FirstPDelement := arg;
+        FirstPDelement := string(arg);
      end
   end;
 

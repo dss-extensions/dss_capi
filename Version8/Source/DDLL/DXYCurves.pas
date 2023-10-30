@@ -240,7 +240,7 @@ begin
   1: begin  // XYCurve.Name write
        If ActiveCircuit[ActiveActor] <> Nil Then
        Begin
-            If Not XYCurveClass[ActiveActor].SetActive (arg) Then
+            If Not XYCurveClass[ActiveActor].SetActive (string(arg)) Then
              DoSimpleMsg('XYCurve "'+ arg +'" Not Found in Active Circuit.', 51008);
          // Still same active object if not found
    End;

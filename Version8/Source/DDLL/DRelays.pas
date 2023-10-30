@@ -128,7 +128,7 @@ begin
   1: begin   // Relays.Name write
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-          If RelayClass.SetActive(arg) Then
+          If RelayClass.SetActive(string(arg)) Then
           Begin
                ActiveCircuit[ActiveActor].ActiveCktElement := RelayClass.ElementList.Active ;
           End
@@ -144,7 +144,7 @@ begin
   end;
   3: begin   // Relays.MonitoredObj write
       elem := RelayClass.GetActiveObj ;
-      if elem <> nil then Set_parameter('monitoredObj', arg);
+      if elem <> nil then Set_parameter('monitoredObj', string(arg));
   end;
   4: begin   // Relays.SwitchedObj read
       Result := pAnsiChar(AnsiString(''));
@@ -153,7 +153,7 @@ begin
   end;
   5: begin   // Relays.SwitchedObj write
       elem := RelayClass.GetActiveObj ;
-      if elem <> nil then Set_parameter('SwitchedObj', arg);
+      if elem <> nil then Set_parameter('SwitchedObj', string(arg));
   end;
   6: begin  // Relays.State read
       Result := pAnsiChar(AnsiString(''));
@@ -167,7 +167,7 @@ begin
   7: begin  // Relays.State write
       elem := RelayClass.GetActiveObj;
       if elem <> nil then Begin
-        if LowerCase(arg)[1] = 'c' then elem.PresentState := CTRL_CLOSE
+        if LowerCase(string(arg))[1] = 'c' then elem.PresentState := CTRL_CLOSE
         else elem.PresentState := CTRL_OPEN;
       End;
   end;
@@ -182,7 +182,7 @@ begin
   9: begin  // Relays.Normal write
       elem := RelayClass.GetActiveObj;
       if elem <> nil then Begin
-        if LowerCase(arg)[1] = 'c' then elem.NormalState := CTRL_CLOSE
+        if LowerCase(string(arg))[1] = 'c' then elem.NormalState := CTRL_CLOSE
         else elem.NormalState := CTRL_OPEN;
       End;
   end;
@@ -197,7 +197,6 @@ procedure RelaysV(mode:longint; var myPointer: Pointer; var myType, mySize: long
 Var
   elem    : TRelayObj;
   pList   : TPointerList;
-  k       : Integer;
 
 begin
   case mode of

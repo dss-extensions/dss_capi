@@ -116,12 +116,13 @@ uses DSSGlobals;
 
   // Solves the derivative term of the differential equation to be integrated
   Procedure TInvDynamicVars.SolveDynamicStep(i, ActorID : Integer; PICtrl : PPICtrl);
+  {
   var
     myDCycle,
     iDelta,
     iErrorPct,
     iError  : Double;
-
+  }
   Begin
     with ActiveCircuit[ActorID].Solution do
     Begin
@@ -181,8 +182,8 @@ uses DSSGlobals;
 //|             Calculates the current phasors to match with the target (v)             |
 //---------------------------------------------------------------------------------------
   Procedure TInvDynamicVars.FixPhaseAngle(ActorID, idx : Integer);
-  Var
-    myError     : Double;
+{  Var
+    myError     : Double;}
 
   Begin
     // Corrects the phase angle
@@ -206,9 +207,9 @@ uses DSSGlobals;
     X0,
     X1,
     R1,
-    R2,
-    X2,
-    X1R1,
+   // R2,
+   // X2,
+   // X1R1,
     X0R0,
     Isc1,
     Xs,
@@ -222,11 +223,11 @@ uses DSSGlobals;
 
     X1    := ( Sqr( RatedkVLL ) / mKVARating ) / Sqrt(1.0 + 0.0625);
     R1    := X1 /4; // Uses defaults
-    R2    := R1;     // default Z2 = Z1
-    X2    := X1;
+    // R2    := R1;     // default Z2 = Z1
+    // X2    := X1;
     R0    := 1.9;
     X0    := 5.7;
-    X1R1  := X1/R1;
+    // X1R1  := X1/R1;
     X0R0  := X0/R0;
     Isc1  := ( mKVARating * 1000.0 / ( sqrt(3) * RatedkVLL ) ) / NPhases;
   //  Compute R0, X0

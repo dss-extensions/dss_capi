@@ -159,21 +159,21 @@ end;
 
 procedure AddHelpForClasses(BaseClass: WORD; bProperties: boolean);
 Var
-	HelpList  :TList;
+  HelpList  :TList;
   pDSSClass :TDSSClass;
-  i,j, idx  :Integer;
+  i,j       :Integer;
 begin
-	HelpList := TList.Create();
-  idx := ActiveDSSClass[ActiveActor].First;
+  HelpList := TList.Create();
+  ActiveDSSClass[ActiveActor].First; // retval idx is not used
   pDSSClass := DSSClassList[ActiveActor].First;
   WHILE pDSSClass<>Nil DO Begin
     If (pDSSClass.DSSClassType AND BASECLASSMASK) = BaseClass Then HelpList.Add (pDSSClass);
-    idx := ActiveDSSClass[ActiveActor].Next;
+    ActiveDSSClass[ActiveActor].Next;
     pDSSClass := DSSClassList[ActiveActor].Next;
   End;
   HelpList.Sort(@CompareClassNames);
 
-	for i := 1 to HelpList.Count do begin
+  for i := 1 to HelpList.Count do begin
     pDSSClass := HelpList.Items[i-1];
     writeln (pDSSClass.name);
     if bProperties=true then for j := 1 to pDSSClass.NumProperties do
@@ -236,10 +236,10 @@ end;
 procedure ShowClassHelp (const opt:String);
 var
   pDSSClass :TDSSClass;
-  i, idx :Integer;
+  i :Integer;
 begin
   if Length(opt) > 0 then begin
-    idx := ActiveDSSClass[ActiveActor].First;
+    ActiveDSSClass[ActiveActor].First; // retval idx is not used
     pDSSClass := DSSClassList[ActiveActor].First;
     while pDSSClass<>nil do begin
       if AnsiStartsStr (opt, LowerCase(pDSSClass.name)) then begin
@@ -248,7 +248,7 @@ begin
         for i := 1 to pDSSClass.NumProperties do
           writeln ('  ', pDSSClass.PropertyName^[i], ': ', pDSSClass.PropertyHelp^[i]);
       end;
-      idx := ActiveDSSClass[ActiveActor].Next;
+      ActiveDSSClass[ActiveActor].Next;
       pDSSClass := DSSClassList[ActiveActor].Next;
     end;
   end else begin

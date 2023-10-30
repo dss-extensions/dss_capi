@@ -272,7 +272,7 @@ begin
   1: begin  // RegControls.Name write
       IF ActiveCircuit[ActiveActor] <> NIL THEN Begin
         lst := ActiveCircuit[ActiveActor].RegControls;
-        S := arg;  // Convert to Pascal String
+        S := string(arg);  // Convert to Pascal String
         Found := FALSE;
         ActiveSave := lst.ActiveIndex;
         elem := lst.First;
@@ -297,7 +297,7 @@ begin
       if elem <> nil then Result := pAnsiChar(AnsiString(elem.RegulatedBusName));
   end;
   3: begin  // RegControls.MonitoredBus write
-      Set_Parameter ('Bus', arg);
+      Set_Parameter ('Bus', string(arg));
   end;
   4: begin  // RegControls.Transformer read
       Result:=pAnsiChar(AnsiString(''));
@@ -305,7 +305,7 @@ begin
       if elem <> nil then Result:=pAnsiChar(AnsiString(elem.Transformer.Name));
   end;
   5: begin  // RegControls.Transformer write
-      Set_Parameter ('Transformer', arg);
+      Set_Parameter ('Transformer', string(arg));
   end
   else
       Result:=pAnsiChar(AnsiString('Error, parameter not valid'));
@@ -318,7 +318,6 @@ procedure RegControlsV(mode:longint; var myPointer: Pointer; var myType, mySize:
 Var
   elem: TRegControlObj;
   lst: TPointerList;
-  k: Integer;
 
 begin
   case mode of

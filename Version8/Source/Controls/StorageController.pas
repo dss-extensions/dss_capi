@@ -1457,7 +1457,6 @@ end;
 {--------------------------------------------------------------------------}
 Function TStorageControllerObj.Get_DynamicTarget(THigh : Integer; ActorID : Integer): Double;
 var
-  Temp , temp2       : Double;
   RatingIdx   : Integer;
   RSignal     : TXYCurveObj;
 Begin
@@ -1815,9 +1814,8 @@ Var
    AmpsDiff,
    ChargekW,
    ActualkWh,
-   ActualkW,
+   // ActualkW,
    TotalRatingkWh,
-   KwtoPercentagekW,
    CtrlTarget,
    ActualkWDispatch   : Double;
 
@@ -1854,7 +1852,7 @@ Begin
           PDiff        := S.re * 0.001 - CtrlTarget;  // Assume S.re is normally positive
        end;
 
-       ActualkW       := FleetkW;
+       // ActualkW       := FleetkW;
        ActualkWh      := FleetkWh;
        TotalRatingkWh := FleetkWhRating;
 
@@ -2139,8 +2137,7 @@ VAR
      FleetStateSaved  :Integer;
      RateChanged      :Boolean;
      NewChargeRate    :Double;
-     NewkWRate,
-     NewkvarRate      :Double;
+     NewkWRate        :Double;
 Begin
 
     FleetStateSaved := FleetState;
@@ -2484,7 +2481,7 @@ End;
 PROCEDURE TStorageControllerObj.GetControlPower(var ControlPower: Complex; ActorID : Integer);
 // Get power to control based on active power
 Var
-   i, ControlPowerPhase  : Integer;
+   i                     : Integer;
    TempPower             : Double;
 
 Begin
@@ -2506,10 +2503,9 @@ Begin
          MAXPHASE:    Begin  // Get abs max of all phases
                           ControlPower := Cmplx(0.0, 0.0);
                           FOR i := (1 + CondOffset) to (MonitoredElement.NConds + CondOffset) Do Begin
-                                          TempPower := abs(cBuffer^[i].re);
-                                          if TempPower > abs(ControlPower.re)  then
-                                              ControlPower      := cBuffer^[i];
-                                              ControlPowerPhase := i;
+                             TempPower := abs(cBuffer^[i].re);
+                             if TempPower > abs(ControlPower.re)  then // ControlPowerPhase was not even updated properly under this IF
+                                ControlPower      := cBuffer^[i];
                           End;
                           // Compute equivalent total power of all phases assuming equal to max power in all phases
                           ControlPower := cMulReal(ControlPower, Fnphases);
@@ -2517,10 +2513,9 @@ Begin
          MINPHASE:    Begin // Get abs min of all phases
                           ControlPower := Cmplx(1.0e50, 1.0e50);
                           FOR i := (1 + CondOffset) to (MonitoredElement.NConds + CondOffset) Do Begin
-                                          TempPower := abs(cBuffer^[i].re);
-                                            if TempPower < abs(ControlPower.re)  then
-                                                ControlPower      := cBuffer^[i];
-                                                ControlPowerPhase := i;
+                             TempPower := abs(cBuffer^[i].re);
+                             if TempPower < abs(ControlPower.re)  then // ControlPowerPhase was not even updated properly under this IF
+                                ControlPower      := cBuffer^[i];
                           End;
                           // Compute equivalent total power of all phases assuming equal to min power in all phases
                           ControlPower := cMulReal(ControlPower, Fnphases);  // sign according to phase with min abs value

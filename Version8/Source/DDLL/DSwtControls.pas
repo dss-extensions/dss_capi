@@ -167,7 +167,7 @@ begin
    1: begin  // SwtControls.Name write
       IF ActiveCircuit[ActiveActor] <> NIL THEN Begin
         lst := ActiveCircuit[ActiveActor].SwtControls;
-        S := arg;  // Convert to Pascal String
+        S := string(arg);  // Convert to Pascal String
         Found := FALSE;
         ActiveSave := lst.ActiveIndex;
         elem := lst.First;
@@ -192,7 +192,7 @@ begin
       if elem <> nil then Result := pAnsiChar(AnsiString(elem.ElementName));
    end;
    3: begin  // SwtControl.SwitchedObj write
-      Set_Parameter ('SwitchedObj', arg);
+      Set_Parameter ('SwitchedObj', string(arg));
    end
    else
       Result:=pAnsiChar(AnsiString('Error, parameter not valid'));
@@ -205,7 +205,6 @@ procedure SwtControlsV(mode:longint; var myPointer: Pointer; var myType, mySize:
 var
   elem: TSwtControlObj;
   lst: TPointerList;
-  k: Integer;
 
 begin
   case mode of

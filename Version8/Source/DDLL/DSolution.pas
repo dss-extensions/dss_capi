@@ -438,7 +438,7 @@ begin
       IF ActiveCircuit[ActiveActor] <> Nil
       THEN With ActiveCircuit[ActiveActor] DO
       Begin
-            LoadDurCurve    := arg;
+            LoadDurCurve    := string(arg);
             LoadDurCurveObj := LoadShapeClass[ActiveActor].Find(LoadDurCurve);
             IF LoadDurCurveObj=NIL THEN
              DoSimpleMsg('Load-Duration Curve not found.', 5001);
@@ -453,7 +453,7 @@ begin
      If ActiveCircuit[ActiveActor] <> Nil
      Then
      Begin
-           TestLoadShapeObj := LoadShapeClass[ActiveActor].Find(arg);
+           TestLoadShapeObj := LoadShapeClass[ActiveActor].Find(string(arg));
            IF TestLoadShapeObj <> NIL THEN ActiveCircuit[ActiveActor].DefaultDailyShapeObj  := TestLoadShapeObj;
      END;
   end;
@@ -466,7 +466,7 @@ begin
      If ActiveCircuit[ActiveActor] <> Nil
      Then
      Begin
-           TestLoadShapeObj := LoadShapeClass[ActiveActor].Find(arg);
+           TestLoadShapeObj := LoadShapeClass[ActiveActor].Find(string(arg));
            IF TestLoadShapeObj <> NIL THEN ActiveCircuit[ActiveActor].DefaultYearlyShapeObj  := TestLoadShapeObj;
      END;
   end
@@ -481,7 +481,6 @@ Var
   Counter,
   i,
   IMIdx,
-  Idx,
   ArrSize : Integer;
 begin
   case mode of

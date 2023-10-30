@@ -488,8 +488,6 @@ PROCEDURE TPCElement.Set_DRCmode(const Value: Boolean);
 
 
 procedure TPCElement.ComputeIterminal(ActorID : Integer);
-var
-  i : Integer;
 begin
   IF IterminalSolutionCount[ActorID] <> ActiveCircuit[ActorID].Solution.SolutionCount THEN
   Begin

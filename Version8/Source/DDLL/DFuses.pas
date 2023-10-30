@@ -184,7 +184,7 @@ begin
   1: begin  // Fuses.Name write
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-          If FuseClass.SetActive(arg) Then
+          If FuseClass.SetActive(string(arg)) Then
           Begin
                ActiveCircuit[ActiveActor].ActiveCktElement := FuseClass.ElementList.Active ;
           End
@@ -200,7 +200,7 @@ begin
   end;
   3: begin  // Fuses. MonitoredObj write
       elem := FuseClass.GetActiveObj ;
-      if elem <> nil then Set_parameter('monitoredObj', arg);
+      if elem <> nil then Set_parameter('monitoredObj', string(arg));
   end;
   4: begin  // Fuses.SwitchedObj read
       Result := pAnsiChar(AnsiString(''));
@@ -209,7 +209,7 @@ begin
   end;
   5: begin  // Fuses.SwitchedObj write
       elem := FuseClass.GetActiveObj ;
-      if elem <> nil then Set_parameter('SwitchedObj', arg);
+      if elem <> nil then Set_parameter('SwitchedObj', string(arg));
   end;
   6: begin  // Fuses.TCCcurve read
       elem := FuseClass.GetActiveObj ;
@@ -218,7 +218,7 @@ begin
   end;
   7: begin  // Fuses.TCCcurve write
       elem := FuseClass.GetActiveObj ;
-      if elem <> nil then Set_parameter('FuseCurve', arg);
+      if elem <> nil then Set_parameter('FuseCurve', string(arg));
   end
   else
       Result:= pAnsiChar(AnsiString('Error, parameter not valid'));
@@ -232,8 +232,7 @@ Var
   elem        : TFuseObj;
   pList       : TPointerList;
   k,
-  i,
-  LoopLimit   : Integer;
+  i           : Integer;
   S           : String;
 
 begin

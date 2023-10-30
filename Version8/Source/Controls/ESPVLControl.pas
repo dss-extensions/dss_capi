@@ -86,12 +86,12 @@ TYPE
 
   //          YearlyShape     :String;  // ='fixed' means no variation  on all the time
    //         YearlyShapeObj  :TLoadShapeObj;  // Shape for this Storage element
-            DailyForecastShape       :String;  // Daily (24 HR) Storage element shape
-            DailyForecasstShapeObj   :TLoadShapeObj;  // Daily Storage element Shape for this load
+  //          DailyForecastShape       :String;  // Daily (24 HR) Storage element shape
+  //          DailyForecasstShapeObj   :TLoadShapeObj;  // Daily Storage element Shape for this load
   //          DutyShape       :String;  // Duty cycle load shape for changes typically less than one hour
   //          DutyShapeObj    :TLoadShapeObj;  // Shape for this Storage element
 
-            LoadShapeMult   :Complex;
+  //          LoadShapeMult   :Complex;
 
 
      public
@@ -500,12 +500,12 @@ PROCEDURE TESPVLControlObj.Sample;
 
 VAR
    i           :Integer;
-   PDiff,
-   QDiff       :Double;
+   PDiff       :Double;
+   //QDiff       :Double;
    S           :Complex ;
    Gen         :TGeneratorObj;
-   GenkWChanged, Genkvarchanged: Boolean;
-   GenkW, Genkvar :Double;
+   //GenkWChanged, Genkvarchanged: Boolean;
+   GenkW {, Genkvar} :Double;
 
 begin
      // If list is not define, go make one from all generators in circuit
@@ -518,12 +518,12 @@ begin
 
        PDiff := S.re * 0.001 - FkWLimit;
 
-       QDiff := S.im * 0.001 - FkvarLimit;
+       //QDiff := S.im * 0.001 - FkvarLimit;
 
        // Redispatch the vars.
 
-       GenkWChanged := FALSE;
-       GenkvarChanged := FALSE;
+       //GenkWChanged := FALSE;
+       //GenkvarChanged := FALSE;
 
        If Abs(PDiff) > HalfkWBand Then Begin // Redispatch Generators
           // PDiff is kW needed to get back into band
@@ -533,7 +533,7 @@ begin
               GenkW := Max(1.0, (Gen.kWBase + PDiff *(FLocalControlWeights^[i]/TotalWeight)));
               If GenkW <> Gen.kWBase Then Begin
                   Gen.kWBase := GenkW;
-                  GenkWChanged := TRUE;
+                  //GenkWChanged := TRUE;
               End;
           End;
        End;

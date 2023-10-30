@@ -137,8 +137,6 @@ Const
     NumUPFCVariables = 14;
 
 
-Var CDOUBLEONE: Complex;
-
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TUPFC.Create;  // Creates superstructure for all Line objects
 Begin
@@ -961,16 +959,11 @@ End;
 
 function TUPFCObj.CheckStatus(ActorID : Integer): Boolean;
 VAR
-   i    : Integer;
-   S,
    Error,
-   TError,
    VinMag,
    RefH,
    RefL     : Double;
    Vpolar   : polar;
-   VTemp,
-   CurrOut  : complex;
 Begin
   Result  :=  False;
   WITH ActiveCircuit[ActorID].Solution Do UPFCON:=True;
@@ -978,14 +971,11 @@ Begin
   if (VinMag > VHLimit) or (VinMag < VLLimit) then
   begin   // Check Limits (Voltage)
     UPFCON  :=  False;
-    CurrOut :=  cmplx(0,0);
   end
   else                                                       // Limits OK
   begin
     case ModeUPFC of
-    0:  Begin
-          CurrOut         :=  cmplx(0,0); //UPFC off
-        end;
+    0:  Begin End; // UPFC off, CurrOut :=  cmplx(0,0) was not used
     1:  Begin              //UPFC as a voltage regulator
           Vpolar:=ctopolar(Vbout);
           Error:=abs(1-abs(Vpolar.mag/(VRef*1000)));
@@ -993,7 +983,6 @@ Begin
 
         end;
     2:  Begin
-          CurrOut         :=  cmplx(0,0); //UPFC as a phase angle regulator
           Result          :=  CheckPFStatus(ActorID);
         End;
     3:  Begin              //UPFC in Dual mode Voltage and Phase angle regulator
@@ -1274,10 +1263,4 @@ end;
 
 // ======================== END STATE VARIABLES ===============================
 
-initialization
-  Try
-    CDOUBLEONE := CMplx(1.0, 1.0);
-  Except
-    On E:Exception do DumpExceptionCallStack (E);
-  end;
 end.

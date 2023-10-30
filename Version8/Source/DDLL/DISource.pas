@@ -15,18 +15,15 @@ function IsourceI(mode:longint;arg:longint):Longint;cdecl;
 
 Var
    pElem : TIsourceObj;
-   elem: TIsourceObj;
 
 begin
   Result:=0; // Default return value
   case mode of
   0: begin  // Isources.Count
-     Result := 0;
      If ActiveCircuit[ActiveActor] <> Nil Then
         Result := IsourceClass[ActiveActor].ElementList.ListSize;
   end;
   1: begin  // Isources.First
-     Result := 0;
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
         pElem := IsourceClass[ActiveActor].ElementList.First;
@@ -41,7 +38,6 @@ begin
      End;
   end;
   2: begin  // Isources.Next
-     Result := 0;
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
         pElem := IsourceClass[ActiveActor].ElementList.Next;
@@ -64,7 +60,6 @@ end;
 function IsourceF(mode:longint;arg:double):double;cdecl;
 
 Var
-   pElem : TIsourceObj;
    elem: TIsourceObj;
 
 begin
@@ -119,7 +114,7 @@ begin
   1: begin  // Isoruces.Name write
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-          If IsourceClass[ActiveActor].SetActive(arg) Then
+          If IsourceClass[ActiveActor].SetActive(string(arg)) Then
           Begin
                ActiveCircuit[ActiveActor].ActiveCktElement := IsourceClass[ActiveActor].ElementList.Active ;
           End
@@ -139,7 +134,6 @@ procedure IsourceV(mode:longint; var myPointer: Pointer; var myType, mySize: lon
 Var
   elem: TIsourceObj;
   pList: TPointerList;
-  k: Integer;
 
 begin
   case mode of

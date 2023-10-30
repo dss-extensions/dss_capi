@@ -209,8 +209,6 @@ begin
   Result:=pAnsiChar(AnsiString('0')); //Default return value
   case mode of
   0: begin                                           // Bus.Name read
-      Result :=pAnsiChar(AnsiString(''));
-
      If (ActiveCircuit[ActiveActor] <> Nil) Then With ActiveCircuit[ActiveActor] Do
      IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
               Result := pAnsiChar(AnsiString(BusList.Get(ActiveBusIndex)));
@@ -237,11 +235,7 @@ var
   Nelements,
   j,
   NodeIdxi          : Integer;
-  Volts,
-  Voc,
-  Z,
-  Y1,
-  Isc               : Complex;
+  Volts             : Complex;
   pBus              : TDSSBus;
   VPh,
   V012              : Array[1..3] of Complex;
@@ -410,7 +404,6 @@ begin
         Begin
           Nvalues := NumNodesThisBus;
           setlength(myCmplxArray,NValues);
-          iV := 0;
           jj := 1;
           If kVBase>0.0 Then BaseFactor := 1000.0*kVBase
                         Else BaseFactor := 1.0;
@@ -552,7 +545,6 @@ begin
       Begin
         pBus    := Buses^[ActiveBusIndex];
         Nvalues := pBus.NumNodesThisBus;
-        jj      :=  1;
         If Nvalues > 3 Then Nvalues := 3;
         If Nvalues > 1 Then
         Begin
@@ -561,8 +553,6 @@ begin
             iV := 0;
             WITH pBus DO
             Begin
-              If kVBase>0.0 Then BaseFactor := 1000.0*kVBase*sqrt3
-                            Else BaseFactor := 1.0;
               FOR i := 1 to  NValues DO     // for 2- or 3-phases
               Begin
                     // this code assumes the nodes are ordered 1, 2, 3
@@ -901,8 +891,7 @@ begin
     myType  :=  4;        // String
     S       :=  'Command not recognized';
     setlength(myStrArray, 0);
-    for j := 1 to High(myPXEList[i]) do
-    Begin
+    for j := 1 to High(S) do Begin
       setlength(myStrArray, length(myStrArray) + 1);
       myStrArray[High(myStrArray)]  :=  Byte(S[j]);
     End;

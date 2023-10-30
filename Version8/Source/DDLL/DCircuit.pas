@@ -150,7 +150,6 @@ begin
       End;
   end;
   10: begin                                            // Circuit.FirstElement
-      Result := 0;
       IF (ActiveCircuit[ActiveActor] <> Nil) and Assigned(ActiveDSSClass[ActiveActor]) THEN
       Begin
          Result := ActiveDSSClass[ActiveActor].First;
@@ -158,7 +157,6 @@ begin
         ELSE Result := 0;
   end;
   11: begin                                            // Circuit.NextElement
-      Result := 0;
       IF (ActiveCircuit[ActiveActor] <> Nil) and Assigned(ActiveDSSClass[ActiveActor]) THEN
       Begin
          Result := ActiveDSSClass[ActiveActor].Next;
@@ -202,12 +200,7 @@ begin
            CapacityStart := arg1;
            CapacityIncrement := arg2;
            If ComputeCapacity(ActiveActor) Then
-               Result := RegisterTotals[3] + RegisterTotals[19]
-           Else
-               Result := 0.0;
-      End
-      Else Begin
-          Result := 0.0;
+               Result := RegisterTotals[3] + RegisterTotals[19];
       End;
   end
   else
@@ -233,13 +226,13 @@ begin
        IF ActiveCircuit[ActiveActor] <> Nil THEN
        WITH ActiveCircuit[ActiveActor] DO
        Begin
-          SetElementActive(arg);
+          SetElementActive(string(arg));
           If ActiveCktElement<>nil THEN ActiveCktElement.Enabled := FALSE;
        End;
   end;
   2: begin                                             // Circuit.Enable
        WITH ActiveCircuit[ActiveActor] DO Begin
-          SetElementActive(arg);
+          SetElementActive(string(arg));
           If ActiveCktElement<>nil THEN ActiveCktElement.Enabled := TRUE;
        End;
   end;
@@ -247,17 +240,17 @@ begin
       Result := pAnsiChar(AnsiString('-1'));
        IF ActiveCircuit[ActiveActor] <> NIL
        THEN Begin
-           Result := pAnsiChar(AnsiString(Inttostr(ActiveCircuit[ActiveActor].SetElementActive(arg) - 1)));   // make zero based to be compatible with collections and variant arrays
+           Result := pAnsiChar(AnsiString(Inttostr(ActiveCircuit[ActiveActor].SetElementActive(string(arg)) - 1)));   // make zero based to be compatible with collections and variant arrays
        End
        ELSE DoSimpleMsg('Create a circuit before trying to set an element active!', 5015);
   end;
   4: begin                                             // Circuit.SetActiveBus
-     DSSGlobals.SetActiveBus(StripExtension(arg));
+     DSSGlobals.SetActiveBus(StripExtension(string(arg)));
      If Assigned(ActiveCircuit[ActiveActor]) then Result := pAnsiChar(AnsiString(InttoStr(ActiveCircuit[ActiveActor].ActiveBusIndex - 1))) Else Result := pAnsiChar(AnsiString('-1'));
   end;
   5: begin                                             // Circuit.SetActiveClass
      Result := pAnsiChar(AnsiString('0'));
-     DevClassIndex := ClassNames[ActiveActor].Find(arg);
+     DevClassIndex := ClassNames[ActiveActor].Find(string(arg));
      If DevClassIndex = 0 Then  Begin
         DoSimplemsg('Error: Class ' + arg + ' not found.' , 5016);
         Exit;
@@ -275,22 +268,17 @@ end;
 procedure CircuitV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 var
-   LossValue        : complex;
    pLine            : TLineObj;
    Loss             : Complex;
    pTransf          : TTransfObj;
    pCktElem         : TDSSCktElement;
-   cPower,
-   cLoss,
-   Volts,
-   Curr             : Complex;
+   cPower           : Complex;
    i,j,k,
    NodeIdx,
-   Phase            :Integer;
-   BaseFactor,
-   VoltsD           : double;
+   Phase            : Integer;
+   BaseFactor       : Double;
    BusName          : String;
-   iV, p,
+   iV, p, i_lwd, j_lwd,
    NValues,
    nBus, nNZ        : LongWord;
    hY               : NativeUInt;
@@ -412,7 +400,7 @@ begin
         k:=0;
         FOR i := 1 to NumBuses DO
         Begin
-          If Buses^[i].kVBase >0.0 then BaseFactor :=  1000.0* Buses^[i].kVBase  Else BaseFactor := 1.0;
+          // If Buses^[i].kVBase >0.0 then BaseFactor :=  1000.0* Buses^[i].kVBase  Else BaseFactor := 1.0;
           For j := 1 to Buses^[i].NumNodesThisBus  DO
           Begin
            myDBLArray[k] := Cabs(ActiveCircuit[ActiveActor].Solution.NodeV^[Buses^[i].GetRef(j)]);
@@ -557,10 +545,10 @@ begin
         // the new way, first set all elements to zero
         for iV := 0 to (NValues - 1) do myCmplxArray[iV] := cmplx(0,0);
         // then back-fill the non-zero values
-        for j := 0 to nBus - 1 do begin /// the zero-based column
-          for p := ColPtr[j] to ( ColPtr[j + 1] - 1 ) do begin
-            i := RowIdx[p];  // the zero-based row
-            iV := i * nBus + j; // the zero-based, row-wise, complex result index
+        for j_lwd := 0 to nBus - 1 do begin /// the zero-based column
+          for p := ColPtr[j_lwd] to ( ColPtr[j_lwd + 1] - 1 ) do begin
+            i_lwd := RowIdx[p];  // the zero-based row
+            iV := i_lwd * nBus + j_lwd; // the zero-based, row-wise, complex result index
             myCmplxArray[iV] := cVals[p];
           End;
         End;
@@ -787,7 +775,7 @@ begin
       WITH ActiveCircuit[ActiveActor] DO
           myPointer := @(ActiveCircuit[ActiveActor].Solution.Currents^[1]);
     End
-    ELSE myCmplxArray[k] := cmplx(0,0);
+    ELSE myCmplxArray[0] := cmplx(0,0);
     mySize    :=  SizeOf(ActiveCircuit[ActiveActor].Solution.Currents^[1]) * ActiveCircuit[ActiveActor].NumNodes;
   end
   else

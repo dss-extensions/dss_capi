@@ -396,7 +396,6 @@ begin
   Result := pAnsiChar(AnsiString('')); // Default return value
   case mode of
   0: begin                                     // Loads.Name - Read
-       Result := pAnsiChar(AnsiString(''));
        load := ActiveLoad;
        if load <> nil then
           Result := pAnsiChar(AnsiString(Load.Name))
@@ -406,7 +405,7 @@ begin
       THEN Begin      // Search list of Loads in active circuit for name
          WITH ActiveCircuit[ActiveActor].Loads DO
          Begin
-               S := arg;  // Convert to Pascal String
+               S := string(arg);  // Convert to Pascal String
                Found := FALSE;
                ActiveSave := ActiveIndex;
                pLoad := First;
@@ -428,58 +427,44 @@ begin
                End;
           End;
       End;
-      Result:=pAnsiChar(AnsiString(''));
   end;
   2: begin                                     // Loads.CVRCurve - Read
-      Result := pAnsiChar(AnsiString(''));
       Result := pAnsiChar(AnsiString(ActiveLoad.CVRshape));
   end;
   3: begin                                     // Loads.CVRCurve - Write
-      Set_Parameter ('CVRcurve', arg);
-      Result:=pAnsiChar(AnsiString(''));
+      Set_Parameter ('CVRcurve', string(arg));
   end;
   4: begin                                     // Loads.Daily - Read
-      Result := pAnsiChar(AnsiString(''));
       Result := pAnsiChar(AnsiString(ActiveLoad.DailyShape));
   end;
   5: begin                                     // Loads.Daily - Write
-      Set_Parameter ('Daily', arg);
-      Result:=pAnsiChar(AnsiString(''));
+      Set_Parameter ('Daily', string(arg));
   end;
   6: begin                                     // Loads.Duty - read
-      Result := pAnsiChar(AnsiString(''));
       Result := pAnsiChar(AnsiString(ActiveLoad.DailyShape));
   end;
   7: begin                                     // Loads.Duty - Write
-      Set_Parameter ('Duty', arg);
-      Result:=pAnsiChar(AnsiString(''));
+      Set_Parameter ('Duty', string(arg));
   end;
   8: begin                                     // Loads.Spectrum - Read
-      Result := pAnsiChar(AnsiString(''));
       Result := pAnsiChar(AnsiString(ActiveLoad.Spectrum));
   end;
   9: begin                                     // Loads.Spectrum - Write
-      Set_Parameter ('Spectrum', arg);
-      Result:=pAnsiChar(AnsiString(''));
+      Set_Parameter ('Spectrum', string(arg));
   end;
   10: begin                                    // Loads.Yearly - Read
-      Result := pAnsiChar(AnsiString(''));
       Result := pAnsiChar(AnsiString(ActiveLoad.YearlyShape));
   end;
   11: begin                                    // Loads.Yearly - Write
-      Set_Parameter ('Yearly', arg);
-      Result:=pAnsiChar(AnsiString(''));
+      Set_Parameter ('Yearly', string(arg));
   end;
   12: begin                                    // Loads.Growth - read
-      Result := pAnsiChar(AnsiString(''));
       Result := pAnsiChar(AnsiString(ActiveLoad.GrowthShape));
   end;
   13: begin                                    // Loads.Growth - Write
-      Set_Parameter ('Growth', arg);
-      Result:=pAnsiChar(AnsiString(''));
+      Set_Parameter ('Growth', string(arg));
   end;
   14: begin                                    // Loads.Sensor - read
-      Result := pAnsiChar(AnsiString(''));
       if ActiveLoad.SensorObj <> nil then
           Result := pAnsiChar(AnsiString(ActiveLoad.SensorObj.ElementName));
   end

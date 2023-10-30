@@ -216,7 +216,7 @@ end;
 
 procedure TECPObject.AddConnection(pObj: TNamedObject);
 var
-  ref, size: Integer;
+  size: Integer;
 begin
   size := High(connections) + 1;
   if nconn > size then SetLength (connections, 2 * size);
@@ -1227,20 +1227,18 @@ end;
 
 procedure XfmrTankPhasesAndGround (fprf: ProfileChoice; eprf: ProfileChoice; pXf:TTransfObj; bus: Integer);
 var
-  ordered_phs, phs: String;
+  ordered_phs: String;
   j1, j2: Integer;
-  reverse_ground, wye_ground, delta, wye_unground: Boolean;
+  reverse_ground, wye_ground, wye_unground: Boolean;
 begin
   j1 := (bus-1) * pXf.NConds + 1;
   j2 := j1 + pXf.Nphases;
   reverse_ground := False;
   wye_ground := False;
   wye_unground := False;
-  delta := False;
 //  writeln(Format('  Testing %d and %d', [j1, j2]));
   if (pXf.Winding^[bus].Connection = 1) then begin // delta
     BooleanNode (fprf, 'TransformerEnd.grounded', false);
-    delta := True;
   end else if (pXf.NodeRef^[j2] = 0) then begin // last conductor is grounded solidly
     BooleanNode (FunPrf, 'TransformerEnd.grounded', true);
     DoubleNode (EpPrf, 'TransformerEnd.rground', 0.0);
@@ -3603,7 +3601,6 @@ Begin
     pReg := ActiveCircuit[ActiveActor].RegControls.First;
     while (pReg <> nil) do begin
       with pReg do begin
-        v1 := 120.0; // neutral voltage on secondary side
         v1 := Transformer.BaseVoltage[TrWinding] / PT;
         pName2.LocalName := pReg.LocalName + '_Ctrl';
         pName2.UUID := GetDevUuid (TapCtrl, pReg.LocalName, 1);

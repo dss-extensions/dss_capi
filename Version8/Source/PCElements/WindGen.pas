@@ -2507,7 +2507,6 @@ Var
 
 begin
   YprimInvalid[ActorID] := TRUE;  // Force rebuild of YPrims
-  NumData               :=  0;
   With WindGenvars Do Begin
 
      CASE Genmodel of
@@ -2616,7 +2615,6 @@ end;
 
 procedure TWindGenObj.IntegrateStates(ActorID : Integer);
 Var
-  temp      : double;
   i,
   Numdata   : Integer;
   TracePower:Complex;
