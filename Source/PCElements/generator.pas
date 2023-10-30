@@ -2566,7 +2566,6 @@ Var
 
 begin
   YprimInvalid[ActorID] := TRUE;  // Force rebuild of YPrims
-  NumData               :=  0;
   With GenVars Do Begin
 
      CASE Genmodel of
@@ -2706,7 +2705,7 @@ end;
 procedure TGeneratorObj.IntegrateStates(ActorID : Integer);
 
 Var
-  temp      : double;
+  // temp      : double;
   i,
   Numdata   : Integer;
   TracePower: Complex;
@@ -2729,7 +2728,7 @@ begin
             ThetaHistory := Theta + 0.5*h*dTheta;
             SpeedHistory := Speed + 0.5*h*dSpeed;
         End;
-      temp  :=  Mmass;
+      // temp  :=  Mmass;
       // Compute shaft dynamics
       TracePower := TerminalPowerIn(Vterminal,Iterminal,FnPhases) ;
       dSpeed := (Pshaft + TracePower.re - D*Speed) / Mmass;

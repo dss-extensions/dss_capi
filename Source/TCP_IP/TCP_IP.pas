@@ -56,9 +56,11 @@ type
     procedure MySocketDisconnect(Sender: TObject; Socket:{$IFDEF MSWINDOWS}TCustomWinSocket{$ELSE}integer{$ENDIF});
     procedure MySocketError(Sender: TObject; Socket:{$IFDEF MSWINDOWS}TCustomWinSocket{$ELSE}integer{$ENDIF};
       ErrorEvent: {$IFDEF MSWINDOWS}TErrorEvent{$ELSE}integer{$ENDIF}; var ErrorCode: Integer);
+{$IFNDEF FPC}
   private
     myStr: String;
     MySocket: {$IFDEF MSWINDOWS}TClientSocket{$ELSE}integer{$ENDIF};
+{$ENDIF}
   public
     constructor Create;
     destructor Destroy; override;
@@ -219,7 +221,7 @@ begin
       ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
       with pMon do
         pStr := @StrBuffer[0];
-      AuxParser[ActiveActor].CmdString := pStr;
+      AuxParser[ActiveActor].CmdString := string(pStr);
       AuxParser[ActiveActor].AutoIncrement := TRUE;
       FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
       AuxParser[ActiveActor].AutoIncrement := FALSE;
@@ -611,7 +613,7 @@ begin
       ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
       with pMon do
         pStr := @StrBuffer[0];
-      AuxParser[ActiveActor].CmdString := pStr;
+      AuxParser[ActiveActor].CmdString := string(pStr);
       AuxParser[ActiveActor].AutoIncrement := TRUE;
       FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
       AuxParser[ActiveActor].AutoIncrement := FALSE;

@@ -20,15 +20,12 @@ var
   BData         :  wordbool;
   i,
   count,
-  low,
   numcond,
   n,
   iV,
   VarIdx        : Integer;
-  Volts,
   cResid        : Complex;
   cBuffer       : pComplexArray;
-  S:String;
 
 Procedure CalcSeqCurrents(pActiveElement:TDSSCktElement; i012:pComplexArray);
 {Assumes V012 is properly allocated before call.}
@@ -186,8 +183,8 @@ begin
            Begin
                With ActiveCktElement Do ActiveTerminal := Terminals^[arg];
                Result := 0;
-               For i := 1 to ActiveCktElement.NConds Do
-                  If not ActiveCktElement.Closed[i,ActiveActor] Then
+               For iControl := 1 to ActiveCktElement.NConds Do
+                  If not ActiveCktElement.Closed[iControl,ActiveActor] Then
                     Begin
                        Result :=  1;
                        Exit;
@@ -195,7 +192,6 @@ begin
            End;
         end;
         6: begin                                    // CktElement.NumProperties
-            Result := 0;
             IF ActiveCircuit[ActiveActor] <> Nil THEN
              WITH ActiveCircuit[ActiveActor] DO
              Begin
@@ -207,7 +203,6 @@ begin
              End;
         end;
         7: begin                                    // CktElement.HasSwitchControl
-            Result := 0;
             If ActiveCircuit[ActiveActor] <> Nil Then begin
               ctrl := ActiveCircuit[ActiveActor].ActiveCktElement.ControlElementList.First;
               While ctrl <> Nil Do
@@ -223,7 +218,6 @@ begin
             end;
         end;
         8: begin                                    // CktElement.HasVoltControl
-            Result := 0;
             If ActiveCircuit[ActiveActor] <> Nil Then begin
               ctrl := ActiveCircuit[ActiveActor].ActiveCktElement.ControlElementlist.First;
               While ctrl <> Nil Do Begin
@@ -239,13 +233,11 @@ begin
             end;
         end;
         9: begin                                    // CktElement.NumControls
-            Result := 0;
             If ActiveCircuit[ActiveActor] <> Nil Then begin
               Result := ActiveCircuit[ActiveActor].ActiveCktElement.ControlElementList.listSize;
             end;
         end;
         10: begin                                   // CktElement.OCPDevIndex
-            Result := 0;
             If ActiveCircuit[ActiveActor] <> Nil Then  With ActiveCircuit[ActiveActor] Do
             Begin
                  iControl :=  1;
@@ -263,12 +255,10 @@ begin
              End;
         end;
         11: begin                                   // CktElement.OCPDevType
-               Result := 0;
                If ActiveCircuit[ActiveActor] <> Nil Then  With ActiveCircuit[ActiveActor] Do
                  Result := GetOCPDeviceType(ActiveCktElement);     // see Utilities.pas
         end;
         12: begin                                   // CktElement.enabled -read
-            Result:=0;
             If ActiveCircuit[ActiveActor] <> Nil Then begin
                if ActiveCircuit[ActiveActor].ActiveCktElement.Enabled then
                    Result:=1;
@@ -426,29 +416,21 @@ begin
        WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
        Begin
          Result := pAnsiChar(AnsiString(ParentClass.Name + '.' + Name));
-       End
-    Else
-       Result :=pAnsiChar(AnsiString( ''));
+       End;
   end;
   1: begin                                          // CktElement.Display - read
      If ActiveCircuit[ActiveActor] <> Nil Then
-       Result := pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].ActiveCktElement.DisplayName))
-    Else
-       Result :=pAnsiChar(AnsiString(''));
+       Result := pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].ActiveCktElement.DisplayName));
   end;
   2: begin                                          // CktElement.Display - Write
      If ActiveCircuit[ActiveActor] <> Nil Then
-        ActiveCircuit[ActiveActor].ActiveCktElement.DisplayName := arg;
-     Result := pAnsiChar(AnsiString(''));
+        ActiveCircuit[ActiveActor].ActiveCktElement.DisplayName := string(arg);
   end;
   3: begin                                          // CktElement.GUID
      If ActiveCircuit[ActiveActor] <> Nil Then
-       Result := pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].ActiveCktElement.ID))
-    Else
-       Result := pAnsiChar(AnsiString(''));
+       Result := pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].ActiveCktElement.ID));
   end;
   4: begin                                          // CktElement.EnergyMeter
-        Result := pAnsiChar(AnsiString(''));
       If ActiveCircuit[ActiveActor] <> Nil Then begin
         if ActiveCircuit[ActiveActor].ActiveCktElement.HasEnergyMeter then begin
           pPDElem := ActiveCircuit[ActiveActor].ActiveCktElement as TPDElement;
@@ -457,8 +439,7 @@ begin
       end;
   end;
   5: begin                                          // CktElement.Controller
-      Result := pAnsiChar(AnsiString(''));
-      i   :=  strtoInt(arg);
+      i   :=  strtoInt(string(arg));
       If ActiveCircuit[ActiveActor] <> Nil Then With ActiveCircuit[ActiveActor] Do begin
         If (i>0) and (i <= ActiveCktElement.ControlElementList.Listsize) Then
         Begin
@@ -480,7 +461,7 @@ begin
            If (DSSObjType And BASECLASSMASK) = PC_ELEMENT Then
             Begin
                 pPCElem := (ActiveCktElement as TPCElement);
-                VarIdx := pPCElem.LookupVariable(Arg);
+                VarIdx := pPCElem.LookupVariable(string(Arg));
                 If (VarIdx>0) and (VarIdx <= pPCElem.NumVariables) Then
                   Result := AnsiString('OK');     // we are good, the variable seems
             End;
@@ -508,7 +489,6 @@ var
   i,
   NValues     : Integer;
   cValues     : pComplexArray;
-  CMagAng     : polar;
   myBuffer    : Array of Complex;
   S           : String;
 

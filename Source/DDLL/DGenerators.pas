@@ -330,7 +330,7 @@ begin
     THEN Begin      // Search list of generators in active circuit for name
          WITH ActiveCircuit[ActiveActor].Generators DO
            Begin
-               S := arg;  // Convert to Pascal String
+               S := string(arg);  // Convert to Pascal String
                Found := FALSE;
                ActiveSave := ActiveIndex;
                Gen := First;

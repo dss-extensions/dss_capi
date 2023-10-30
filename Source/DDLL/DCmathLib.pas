@@ -11,16 +11,15 @@ uses Ucomplex, variants, DSSGLobals, sysutils;
 
 function CmathLibF(mode:longint; arg1:double; arg2:double):double;cdecl;
 begin
-  Result:=0.0; // Default return value
   case mode of
   0: begin  // CmathLib.Cabs
      Result := cabs(cmplx(arg1, arg2));
   end;
   1: begin
-       Result := cdang(cmplx(arg1, arg2));
+     Result := cdang(cmplx(arg1, arg2));
   end
   else
-      Result:=-1.0;
+     Result:=-1.0;
   end;
 end;
 

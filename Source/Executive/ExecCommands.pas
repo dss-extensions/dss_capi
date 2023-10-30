@@ -582,7 +582,6 @@ VAR
    Param,
    ObjName,
    PropName     : String;
-   MeterElem    : TEnergyMeterObj;
 
 Begin
 

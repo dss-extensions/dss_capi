@@ -432,7 +432,7 @@ begin
       THEN Begin      // Search list of Lines in active circuit for name
            WITH ActiveCircuit[ActiveActor].Lines DO
              Begin
-                 S := arg;  // Convert to Pascal String
+                 S := string(arg);  // Convert to Pascal String
                  Found := FALSE;
                  ActiveSave := ActiveIndex;
                  pLine := First;
@@ -468,7 +468,7 @@ begin
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
       THEN Begin
            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-             SetBus(1, arg);
+             SetBus(1, string(arg));
            END;
       End;
   end;
@@ -485,7 +485,7 @@ begin
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
       THEN Begin
            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-             SetBus(2, arg);
+             SetBus(2, string(arg));
            END;
       End;
   end;
@@ -502,7 +502,7 @@ begin
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
       THEN Begin
            With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) DO Begin
-             FetchLineCode(arg);
+             FetchLineCode(string(arg));
              YprimInvalid[ActiveActor] := True;
            End;
       End;
@@ -560,7 +560,6 @@ Var
   i,
   j,
   k,
-  iV,
   NValues   : Integer;
   cValues   : pComplexArray;
   PDouble   : ^Double;
@@ -754,7 +753,7 @@ begin
   7:  begin  // Lines.Yprim read
         myType  :=  3;        // Complex
         setlength(myCmplxArray, 1);
-        myCmplxArray[k] := cmplx(0,0);
+        myCmplxArray[0] := cmplx(0,0);
         IF ActiveCircuit[ActiveActor] <> nil Then
         Begin
           With ActiveCircuit[ActiveActor] Do

@@ -80,7 +80,7 @@ begin
   0: begin // DSSProgress.Caption
      If NoFormsAllowed Then Exit;
      InitProgressForm(ActiveActor);
-     ProgressCaption (arg,ActiveActor);
+     ProgressCaption (string(arg), ActiveActor);
   end
   else
       Result:=pAnsiChar(AnsiString('Error, parameter not recognized'));

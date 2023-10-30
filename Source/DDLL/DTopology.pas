@@ -65,7 +65,6 @@ begin
   Result:=0;         // Default return value
   case mode of
   0: begin  // Topology.NumLoops
-      Result := 0;
       topo := ActiveTree;
       if topo <> nil then begin
         Result := 0;
@@ -78,7 +77,6 @@ begin
       Result := Result div 2;
   end;
   1: begin  // Topology.NumIsolatedBranches
-      Result := 0;
       topo := ActiveTree;
       if Assigned(topo) then begin
         elm := ActiveCircuit[ActiveActor].PDElements.First;
@@ -89,7 +87,6 @@ begin
       end;
   end;
   2: begin  // Topology.NumIsolatedLoads
-      Result := 0;
       topo := ActiveTree;
       if Assigned(topo) then begin
         elm := ActiveCircuit[ActiveActor].PCElements.First;
@@ -100,7 +97,6 @@ begin
       end;
   end;
   3: begin  // Topology.First
-      Result := 0;
       topo := ActiveTree;
       if assigned (topo) then begin
         if assigned(topo.First) then begin
@@ -119,7 +115,6 @@ begin
       Result := ForWardBranch;
   end;
   7: begin  // Topology.BackwardBranch
-      Result := 0;
       topo := ActiveTree;
       if assigned (topo) then begin
         if assigned(topo.GoBackward) then begin
@@ -129,7 +124,6 @@ begin
       end;
   end;
   8: begin  // Topology.LoopedBranch
-      Result := 0;
       node := ActiveTreeNode;
       if assigned(node) then begin
         if node.IsLoopedHere then begin
@@ -139,7 +133,6 @@ begin
     end;
   end;
   9: begin  // Topology.ParallelBranch
-      Result := 0;
       node := ActiveTreeNode;
       if assigned(node) then begin
         if node.IsParallel then begin
@@ -149,7 +142,6 @@ begin
       end;
   end;
   10: begin  // Topology.FirstLoad
-      Result := 0;
       node := ActiveTreeNode;
       if assigned(node) then begin
         elm := node.FirstShuntObject;
@@ -160,7 +152,6 @@ begin
       end;
   end;
   11: begin  // Topology.NextLoad
-      Result := 0;
       node := ActiveTreeNode;
       if assigned(node) then begin
         elm := node.NextShuntObject;
@@ -204,7 +195,7 @@ begin
   1: begin  // Topology.BranchName write
       Found := FALSE;
       elem := nil;
-      S := arg;  // Convert to Pascal String
+      S := string(arg);  // Convert to Pascal String
       topo := ActiveTree;
       if assigned(topo) then begin
         elem := ActiveCircuit[ActiveActor].ActiveCktElement;
@@ -234,7 +225,7 @@ begin
   3: begin  // Topology.BusName write
       Found := FALSE;
       elem := nil;
-      S := arg;  // Convert to Pascal String
+      S := string(arg);  // Convert to Pascal String
       topo := ActiveTree;
       if assigned(topo) then begin
         elem := ActiveCircuit[ActiveActor].ActiveCktElement;

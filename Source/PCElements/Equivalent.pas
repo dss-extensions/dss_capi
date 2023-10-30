@@ -693,7 +693,7 @@ end;
 PROCEDURE TEquivalent.InterpretAllBuses(const S:String);
 //  routine expecting all winding connections expressed in one array of strings
 VAR
-    S1, BusNam:String;
+    BusNam:String;
     i:Integer;
 Begin
 
@@ -702,7 +702,7 @@ Begin
     {Loop for no more than the expected number of windings;  Ignore omitted values}
     WITH ActiveEquivalentObj DO
     FOR i := 1 to FNterms Do  Begin
-         S1 := AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+         AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
          BusNam := AuxParser[ActiveActor].StrValue;
          IF Length(BusNam)>0 THEN SetBus(i, BusNam);
     End;

@@ -189,7 +189,6 @@ VAR
    Parm1,
    Parm2,
    FileName :String;
-   i,
    MVAopt               :Integer;
    UEonlyOpt            :Boolean;
    TripletOpt   :Boolean;

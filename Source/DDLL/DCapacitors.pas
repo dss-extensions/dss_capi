@@ -177,7 +177,6 @@ Var
   S: String;
   Found :Boolean;
   lst: TPointerList;
-  k: Integer;
 
 begin
   Result := pAnsiChar(AnsiString('0'));  // default return value
@@ -190,7 +189,7 @@ begin
   1: begin  // Capacitors.Name write
       IF ActiveCircuit[ActiveActor] <> NIL THEN Begin
         lst := ActiveCircuit[ActiveActor].ShuntCapacitors;
-        S := arg;  // Convert to Pascal String
+        S := string(arg);  // Convert to Pascal String
         Found := FALSE;
         ActiveSave := lst.ActiveIndex;
         elem := lst.First;
@@ -219,13 +218,9 @@ procedure CapacitorsV(mode:longint; var myPointer: Pointer; var myType, mySize: 
 
 var
   elem        : TCapacitorObj;
-  ActiveSave  : Integer;
   S           : String;
-  Found       : Boolean;
   lst         : TPointerList;
-  k,
-  i,
-  LoopLimit   : Integer;
+  i, k        : Integer;
   Pint        : ^Integer;
 
 begin
@@ -241,7 +236,6 @@ begin
         Begin
           setlength(myStrArray,0);
           lst := ShuntCapacitors;
-          k:=0;
           elem := lst.First;
           WHILE elem<>Nil DO Begin
             S             := elem.Name;
@@ -266,6 +260,8 @@ begin
   end;
 
   1: begin  // Capacitors.States read
+      myType    :=  1;                  // Integer
+      mySize    := 4; // unless Numsteps > 1 below
       setlength(myIntArray, 1);
       myIntArray[0] :=  0;
       IF ActiveCircuit[ActiveActor] <> Nil THEN
@@ -274,6 +270,7 @@ begin
           If Elem <> nil Then
           Begin
             setlength(myIntArray, elem.Numsteps);
+            mySize :=  4 * (elem.Numsteps);
             k:=0;
             for i:= 1 to elem.Numsteps DO Begin
                 myIntArray[k] := elem.States[i,ActiveActor];
@@ -281,8 +278,6 @@ begin
             End;
           End;
       End;
-      myType    :=  1;                  // Integer
-      mySize    :=  4 * (elem.Numsteps);
       myPointer :=  @myIntArray[0];
   end;
   2: begin  // Capacitors.States write
@@ -293,7 +288,6 @@ begin
          // setting NumSteps allocates the memory
          // only put as many elements as proviced up to nZIPV
 //         myIntArray   :=  myPointer;
-         k := 0;
          for i := 1 to elem.Numsteps do
          Begin
           PInt  :=  myPointer;

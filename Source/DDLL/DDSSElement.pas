@@ -14,7 +14,6 @@ uses DSSGlobals,
 
 function DSSElementI(mode:longint; arg: longint):longint;cdecl;
 begin
-  Result:=0; // Default return value
   case mode of
   0: begin  // DSSElement.NumProperties
     Result := 0;

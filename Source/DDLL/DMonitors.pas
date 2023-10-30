@@ -237,7 +237,6 @@ function MonitorsS(mode:longint; arg: pAnsiChar):pAnsiChar; cdecl;
 
 Var
    pMon       : TMonitorObj;
-   Header     : THeaderRec;
    activesave : integer;
    S          : String;
    Found      : Boolean;
@@ -266,7 +265,7 @@ begin
       THEN Begin      // Search list of monitors in active circuit for name
            WITH ActiveCircuit[ActiveActor].Monitors DO
            Begin
-             S := arg;  // Convert to Pascal String
+             S := string(arg);  // Convert to Pascal String
              Found := FALSE;
              ActiveSave := ActiveIndex;
              pMon := First;
@@ -296,8 +295,9 @@ begin
      if ActiveCircuit[ActiveActor] <> Nil then begin
         pMon := ActiveCircuit[ActiveActor].Monitors.Active;
         if PMon <> Nil then Begin
-           pMon.ElementName := arg ;
-           pMon.PropertyValue [1] := arg;
+           s := string(arg);
+           pMon.ElementName := s;
+           pMon.PropertyValue [1] := s;
            pMon.RecalcElementData(ActiveActor) ;
         End;
      end;
@@ -388,7 +388,7 @@ begin
             AuxParser[ActiveActor].Whitespace  :=  '';
             TempStr                            :=  '';
             for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
-            TempStr   :=  TempStr + pMon.StrBuffer[i]; // For some reason needed for DLL
+            TempStr   :=  TempStr + string(pMon.StrBuffer[i]); // For some reason needed for DLL
 
             AuxParser[ActiveActor].CmdString := TempStr;
             AuxParser[ActiveActor].AutoIncrement := TRUE;
@@ -423,7 +423,7 @@ begin
 
           TempStr                            :=  '';
           for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
-          TempStr   :=  TempStr + pMon.StrBuffer[i]; // For some reason needed for DLL
+          TempStr   :=  TempStr + string(pMon.StrBuffer[i]); // For some reason needed for DLL
 
           AuxParser[ActiveActor].CmdString := string(TempStr);
           AuxParser[ActiveActor].AutoIncrement := TRUE;
@@ -470,7 +470,7 @@ begin
           ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
           TempStr                            :=  '';
           for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
-          TempStr   :=  TempStr + pMon.StrBuffer[i]; // For some reason needed for DLL
+          TempStr   :=  TempStr + string(pMon.StrBuffer[i]); // For some reason needed for DLL
 
           AuxParser[ActiveActor].CmdString := string(TempStr);
           AuxParser[ActiveActor].AutoIncrement := TRUE;
@@ -518,7 +518,7 @@ begin
           ReadMonitorHeader(Header, FALSE);   // FALSE = leave at beginning of data
           TempStr                            :=  '';
           for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
-          TempStr   :=  TempStr + pMon.StrBuffer[i]; // For some reason needed for DLL
+          TempStr   :=  TempStr + string(pMon.StrBuffer[i]); // For some reason needed for DLL
 
           AuxParser[ActiveActor].CmdString := string(TempStr);
           AuxParser[ActiveActor].AutoIncrement := TRUE;

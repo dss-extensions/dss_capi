@@ -19,14 +19,12 @@ begin
   Result:=0; // Default return value
   case mode of
   0: begin  // PDElements.Count
-      Result := 0;
       If Assigned(ActiveCircuit[ActiveActor]) Then
       With ActiveCircuit[ActiveActor] Do Begin
           Result := PDElements.ListSize ;
       End;
   end;
   1: begin  // PDElements.First
-      Result := 0;
       If Assigned(ActiveCircuit[ActiveActor]) Then
       With ActiveCircuit[ActiveActor] Do Begin
            ActivePDElement := PDElements.First;
@@ -44,7 +42,6 @@ begin
       End;
   end;
   2: begin  // PDElements.Next
-      Result := 0;
       If Assigned(ActiveCircuit[ActiveActor]) Then
       With ActiveCircuit[ActiveActor] Do Begin
            ActivePDElement := PDElements.Next;
@@ -62,7 +59,6 @@ begin
       End;
   end;
   3: begin  // PDElements.IsShunt
-      Result := 0;
       If Assigned(ActiveCircuit[ActiveActor]) Then
       With ActiveCircuit[ActiveActor] Do Begin
           If ActiveCktElement is TPDElement Then Begin
@@ -72,7 +68,6 @@ begin
       End;
   end;
   4: begin  // PDElements.NumCustomers
-      Result := 0;
       If Assigned(ActiveCircuit[ActiveActor]) Then
       With ActiveCircuit[ActiveActor] Do Begin
           If ActiveCktElement is TPDElement Then Begin
@@ -82,7 +77,6 @@ begin
       End;
   end;
   5: begin  // PDElements.TotalCustomers
-      Result := 0;
       If Assigned(ActiveCircuit[ActiveActor]) Then
       With ActiveCircuit[ActiveActor] Do Begin
           If ActiveCktElement is TPDElement Then Begin
@@ -92,7 +86,6 @@ begin
       End;
   end;
   6: begin  // PDElements.ParentPDElement
-      Result := 0;
       If Assigned(ActiveCircuit[ActiveActor]) Then
       With ActiveCircuit[ActiveActor] Do Begin
           If ActiveCktElement is TPDElement Then Begin
@@ -106,7 +99,6 @@ begin
       End;
   end;
   7: begin   // PDElements.FromTerminal
-      Result := 0;
       If Assigned(ActiveCircuit[ActiveActor]) Then
       With ActiveCircuit[ActiveActor] Do Begin
           If ActiveCktElement is TPDElement Then Begin
@@ -116,7 +108,6 @@ begin
       End;
   end;
   8: begin  // PDElements.SectionID
-      Result := 0;
       If Assigned(ActiveCircuit[ActiveActor]) Then
       With ActiveCircuit[ActiveActor] Do Begin
           If ActiveCktElement is TPDElement Then Begin
@@ -246,7 +237,7 @@ begin
   1: begin  // PDElements.Name write
       If Assigned(ActiveCircuit[ActiveActor]) Then
       With ActiveCircuit[ActiveActor] Do Begin
-          TestString := arg;
+          TestString := string(arg);
           // Search through list of PD Elements until we find this one
           ActivePDElement := PDElements.First;
           While Assigned(ActivePDElement) do

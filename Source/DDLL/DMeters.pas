@@ -126,10 +126,8 @@ begin
   end;
   8: begin  // Meters.DIFilesAreOpen
        IF ActiveCircuit[ActiveActor] <> Nil THEN Begin
-          Result:=0;
           if DIFilesAreOpen[ActiveActor] then Result:=1;    // Global variable
        End;
-       Result:=0;
   end;
   9: begin  // Meters.SampleAll
      IF ActiveCircuit[ActiveActor] <> Nil THEN Begin
@@ -329,7 +327,6 @@ begin
   Result:=0.0;  // Default return value
   case mode of
   0: begin  // Meters.SAIFI
-     Result := 0.0;
      If Assigned(ActiveCircuit[ActiveActor]) Then With ActiveCircuit[ActiveActor] Do
      Begin
          pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
@@ -341,7 +338,6 @@ begin
      End;
   end;
   1: begin   // Meters.SAIFIkW
-     Result := 0.0;
      If Assigned(ActiveCircuit[ActiveActor]) Then With ActiveCircuit[ActiveActor] Do
      Begin
          pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
@@ -353,7 +349,6 @@ begin
      End;
   end;
   2: begin  // Meters.SAIDI
-     Result := 0.0;
      If Assigned(ActiveCircuit[ActiveActor]) Then With ActiveCircuit[ActiveActor] Do
      Begin
          pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
@@ -363,7 +358,6 @@ begin
      End;
   end;
   3: begin  // Meters.CustItnerrupts
-     Result := 0.0;
      If Assigned(ActiveCircuit[ActiveActor]) Then With ActiveCircuit[ActiveActor] Do
      Begin
          pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
@@ -373,7 +367,6 @@ begin
      End;
   end;
   4: begin  // Meters.AvgRepairTime
-     Result := 0.0;
      If Assigned(ActiveCircuit[ActiveActor]) Then With ActiveCircuit[ActiveActor] Do
      Begin
          pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
@@ -383,7 +376,6 @@ begin
      End;
   end;
   5: begin  // Meters.FaultRateXRepairHrs
-     Result := 0.0;
      If Assigned(ActiveCircuit[ActiveActor]) Then With ActiveCircuit[ActiveActor] Do
      Begin
          pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
@@ -393,7 +385,6 @@ begin
      End;
   end;
   6: begin  // Meters.SumBranchFltRates
-     Result := 0.0;
      If Assigned(ActiveCircuit[ActiveActor]) Then With ActiveCircuit[ActiveActor] Do
      Begin
          pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
@@ -431,7 +422,7 @@ begin
       THEN Begin      // Search list of EnergyMeters in active circuit for name
            WITH ActiveCircuit[ActiveActor].EnergyMeters DO
              Begin
-                 TestStr := arg;  // Convert to Pascal String for testing
+                 TestStr := string(arg);  // Convert to Pascal String for testing
                  Found := FALSE;
                  ActiveSave := ActiveIndex;
                  pMeterObj := First;
@@ -476,7 +467,7 @@ begin
             pMeterObj :=  TEnergyMeterObj(ActiveCircuit[ActiveActor].EnergyMeters.Active);
             If pMeterObj <> Nil Then
             Begin
-                pMeterObj.elementName := arg;
+                pMeterObj.elementName := string(arg);
                 pMeterObj.MeteredElementChanged := TRUE;
                 pMeterObj.RecalcElementData(ActiveActor);
             End;
@@ -498,12 +489,9 @@ Var
   last,
   k,
   i             : Integer;
-  cktElem,
-  shuntElement,
   pElem,
   elem          : TDSSCktElement;
   node          : TCktTreeNode;
-  MyPCEList     : array of string;
   PDouble       : ^Double;
 
 begin

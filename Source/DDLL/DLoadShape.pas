@@ -169,7 +169,7 @@ begin
   1: begin  // LoadShapes.Name write
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-          If LoadshapeClass[ActiveActor].SetActive(arg) Then
+          If LoadshapeClass[ActiveActor].SetActive(string(arg)) Then
           Begin
                ActiveLSObject := LoadshapeClass[ActiveActor].ElementList.Active ;
                ActiveDSSObject[ActiveActor]    := ActiveLSObject;
