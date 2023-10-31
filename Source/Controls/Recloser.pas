@@ -998,6 +998,4 @@ begin
 
 end;
 
-INITIALIZATION
-
 end.

@@ -482,11 +482,4 @@ begin
 
 end;
 
-
-
-INITIALIZATION
-
-
-
-
 end.

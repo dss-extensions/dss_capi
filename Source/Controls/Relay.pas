@@ -2414,6 +2414,4 @@ begin
 
 end;
 
-INITIALIZATION
-
 end.

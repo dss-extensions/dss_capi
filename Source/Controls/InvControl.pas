@@ -4385,15 +4385,6 @@ begin
 {$ENDIF}
 end;
 
-
-INITIALIZATION
-
-
-
-Finalization
-
-
-
 end.
 
 
