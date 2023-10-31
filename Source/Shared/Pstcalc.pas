@@ -715,7 +715,4 @@ begin
   end;
 end;
 
-
-initialization
-
 End.
