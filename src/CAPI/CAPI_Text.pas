@@ -38,12 +38,39 @@ end;
 //------------------------------------------------------------------------------
 procedure Text_CommandBlock(const Value: PAnsiChar); CDECL;
 var
+    posCurrent, posNext: Integer;
+    full, s: String;
+    i: Integer = 1;
     strs: TStringList;
 begin
     DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    full := Value;
+    posCurrent := 1;
+    posNext := Pos(#10, full, posCurrent);
+    if posNext = 0 then
+    begin
+        DSSPrime.DSSExecutive.ParseCommand(full);
+        Exit;
+    end;
     strs := TStringList.Create();
     strs.AddText(Value);
     DSSPrime.DSSExecutive.DoRedirect(false, strs); // DoRedirect will free the stringlist.
+//     while posCurrent < Length(full) do
+//     begin
+//         s := Copy(full, posCurrent, (posNext - posCurrent));
+//         DSSPrime.DSSExecutive.ParseCommand(s, i);  // Convert to String
+//         if DSSPrime.ErrorNumber <> 0 then
+//         begin
+//             //TODO: complement error message?
+//             Exit;
+//         end;
+//         posCurrent := posNext + 1;
+//         posNext := Pos(#10, full, posCurrent);
+//         if posNext = 0 then
+//             posNext := Length(full) + 1;
+//         inc(i);
+//     end;
+// end;
 end;
 //------------------------------------------------------------------------------
 procedure Text_CommandArray(const Value: PPAnsiChar; ValueCount: TAPISize); CDECL;
