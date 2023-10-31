@@ -796,6 +796,4 @@ begin
 
 end;
 
-INITIALIZATION
-
 end.
