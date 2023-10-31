@@ -653,7 +653,7 @@ begin
       Begin
         pBus    := Buses^[ActiveBusIndex];
         Nvalues := pBus.NumNodesThisBus;
-        setlength(myPolarArray, ( 2 * NValues ) - 1);
+        setlength(myPolarArray, NValues);
         iV := 0;
         jj := 1;
         WITH pBus DO
