@@ -38,7 +38,7 @@ procedure Alt_CE_Close(elem: TDSSCktElement; Term, Phs: Integer); CDECL;
 procedure Alt_CE_Open(elem: TDSSCktElement; Term, Phs: Integer); CDECL;
 function Alt_CE_IsOpen(elem: TDSSCktElement; Term, Phs: Integer): TAltAPIBoolean; CDECL;
 procedure Alt_CE_Get_Residuals(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
-procedure Alt_CE_Get_Yprim(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_YPrim(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 function Alt_CE_Get_Handle(elem: TDSSCktElement): Integer; CDECL;
 // function Alt_CE_Get_ControllerName(elem: TDSSCktElement; idx: Integer): PAnsiChar; CDECL;
 // function Alt_CE_Get_Controller(elem: TDSSCktElement; idx: Integer): TDSSObject; CDECL;
@@ -67,16 +67,17 @@ procedure Alt_CE_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISiz
 
 procedure Alt_CEBatch_Get_Losses(var resultPtr: PDouble; resultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: TAPISize); CDECL;
 procedure Alt_CEBatch_Get_PhaseLosses(var resultPtr: PDouble; resultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: TAPISize); CDECL;
-procedure Alt_CEBatch_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
-procedure Alt_CEBatch_Get_Powers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
-procedure Alt_CEBatch_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
-procedure Alt_CEBatch_Get_ComplexSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
-procedure Alt_CEBatch_Get_Currents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
-procedure Alt_CEBatch_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
-procedure Alt_CEBatch_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
-procedure Alt_CEBatch_Get_ComplexSeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
-procedure Alt_CEBatch_Get_Voltages(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
-procedure Alt_CEBatch_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_Powers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_ComplexSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_Currents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_ComplexSeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_Voltages(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
 
 //PCElements
 procedure Alt_PCE_Get_VariableNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; elem: TPCElement); CDECL;
@@ -197,8 +198,8 @@ procedure Alt_BusBatch_GetFloat64FromFunc(DSS: TDSSContext; var ResultPtr: PDoub
 procedure Alt_BusBatch_GetInt32FromFunc(DSS: TDSSContext; var ResultPtr: PInteger; ResultCount: PAPISize; batch: PDSSBus; batchSize: Integer; func: dss_ctx_bus_int32_function_t); CDECL;
 function Alt_BusBatch_ToJSON(DSS: TDSSContext; batch: PDSSBus; batchSize: Integer; joptions: Integer): PAnsiChar; CDECL;
 
-procedure _Alt_CEBatch_Get_AllxSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; magnitude: boolean);
-procedure _Alt_CEBatch_Get_AllCurrentsVoltages_x(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; const What: Integer);
+procedure _Alt_CEBatch_Get_AllxSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer; magnitude: boolean);
+procedure _Alt_CEBatch_Get_AllCurrentsVoltages_x(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer; const What: Integer);
 procedure _Alt_PDEBatch_Get_x(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer; const What: integer; const AllNodes: Boolean);
 
 // Used in CAPI_Obj
@@ -292,7 +293,7 @@ procedure CalcSeqVoltages(elem: TDSSCktElement; V012: pComplexArray);
 // Assumes V012 is properly allocated before call.
 var
     i, j, k, iV: Integer;
-    VPh, V012a: Complex3;
+    VPh: Complex3;
     NodeV: pNodeVArray;
     DSS: TDSSContext;
 begin
@@ -330,13 +331,9 @@ begin
         k := (j - 1) * elem.NConds;
         for i := 1 to 3 do
             Vph[i] := NodeV[elem.NodeRef[i + k]];
-        Phase2SymComp(@Vph, @V012a);   // Compute Symmetrical components
 
-        for i := 1 to 3 do
-        begin     // Stuff it in the result array
-            V012[iV] := V012a[i];
-            Inc(iV);
-        end;
+        Phase2SymComp(@Vph, PComplex3(@V012[iV]));   // Compute Symmetrical components
+        iV += 3;
     end;
 end;
 
@@ -527,77 +524,95 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
-// All seq Powers of active 3-phase circuit element
-// returns kW + j kvar
-var
-    Result: PDoubleArray0;
-    Nvalues, i, j, k, n, icount: Integer;
-    S: Complex;
+procedure Alt_CE_Get_SeqPowers_(
+    var cBuffer: ArrayOfComplex; 
+    NodeV: pNodeVArray; 
+    Result: PComplex;
+    elem: TDSSCktElement;
     VPh, V012: Complex3;
     IPh, I012: Complex3;
-    cBuffer: pComplexArray;
-    NodeV: pNodeVArray;
+    var nextPos: Integer
+);
+var
+    Nvalues, i, j, k, n, icount: Integer;
+    S: Complex;
 begin
-    DefaultResult(ResultPtr, ResultCount);
-    
-    if MissingSolution(elem) or (elem.NodeRef = NIL) then // or (not elem.Enabled)
+    NValues := 3 * elem.NTerms;
+    nextPos := NValues;
+    if (not elem.Enabled) or (elem.NodeRef = NIL) then
         Exit;
 
-    NodeV := elem.DSS.ActiveCircuit.Solution.NodeV;
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * elem.NTerms, 3, elem.NTerms); // allocate for kW and kvar
+    if Length(cBuffer) < elem.Yorder then
+        SetLength(cBuffer, elem.Yorder);
+    elem.GetCurrents(cBuffer);
+    
     if elem.NPhases <> 3 then
     begin
         if (elem.Nphases = 1) and elem.DSS.ActiveCircuit.PositiveSequence then
         begin
-            NValues := elem.NConds * elem.NTerms;
-            cBuffer := Allocmem(sizeof(Complex) * NValues);
-            elem.GetCurrents(cBuffer);
-            iCount := 2;  // Start with kW1
+            iCount := 1;  // Start with kVA1
             // Put only phase 1 quantities in Pos seq
             for j := 1 to elem.NTerms do
             begin
                 k := (j - 1) * elem.NConds;
                 n := elem.NodeRef[k + 1];
-                Vph[1] := NodeV[n];  // Get voltage at node
-                S := Vph[1] * cong(cBuffer[k + 1]);   // Compute power per phase
-                Result[icount] := S.re * 0.003; // 3-phase kW conversion
-                inc(icount);
-                Result[icount] := S.im * 0.003; // 3-phase kvar conversion
-                inc(icount, 5);
+                Result[icount] := (NodeV[n] * cong(cBuffer[k])) * 0.003; // 3-phase kVA conversion
+                inc(icount, 3);
             end;
-            Reallocmem(cBuffer, 0);
         end
         else
-            for i := 0 to 2 * 3 * elem.NTerms - 1 do
-                Result[i] := -1.0;  // Signify n/A
-    end
-    else
-    begin
-        NValues := elem.NConds * elem.NTerms;
-        cBuffer := Allocmem(sizeof(Complex) * NValues);
-        elem.GetCurrents(cBuffer);
-        icount := 0;
-        for j := 1 to elem.NTerms do
-        begin
-            k := (j - 1) * elem.NConds;
-            for i := 1 to 3 do
-                Vph[i] := NodeV[elem.NodeRef[i + k]];
-            for i := 1 to 3 do
-                Iph[i] := cBuffer[k + i];
-            Phase2SymComp(@Iph, @I012);
-            Phase2SymComp(@Vph, @V012);
-            for i := 1 to 3 do
-            begin
-                S := V012[i] * cong(I012[i]);
-                Result[icount] := S.re * 0.003; // 3-phase kW conversion
-                inc(icount);
-                Result[icount] := S.im * 0.003; // 3-phase kvar conversion
-                inc(icount);
-            end;
-        end;
-        Reallocmem(cBuffer, 0);
+            for i := 0 to 3 * elem.NTerms - 1 do
+                Result[i] := cmplx(-1.0, -1.0);  // Signify n/A
+        Exit;
     end;
+
+    icount := 0;
+    for j := 1 to elem.NTerms do
+    begin
+        k := (j - 1) * elem.NConds;
+        for i := 1 to 3 do
+            Vph[i] := NodeV[elem.NodeRef[i + k]];
+        for i := 1 to 3 do
+            Iph[i] := cBuffer[k + i - 1];
+        Phase2SymComp(@Iph, @I012);
+        Phase2SymComp(@Vph, @V012);
+        for i := 1 to 3 do
+        begin
+            S := V012[i] * cong(I012[i]);
+            
+            // One of the absurd features of FPC: ((S * 0.003).re) is different from (S.re * 0.003)
+
+            // 3-phase kVA conversion
+            Result[icount].re := S.re * 0.003;
+            Result[icount].im := S.im * 0.003; 
+            inc(icount);
+        end;
+    end;
+end;
+procedure Alt_CE_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+// All seq Powers of active 3-phase circuit element
+// returns kW + j kvar
+var
+    Nvalues: Integer;
+    VPh, V012: Complex3;
+    IPh, I012: Complex3;
+    cBuffer: ArrayOfComplex = NIL;
+begin
+    DefaultResult(ResultPtr, ResultCount);
+    if MissingSolution(elem) or (elem.NodeRef = NIL) then // or (not elem.Enabled)
+        Exit;
+
+    SetLength(cBuffer, 4 * 3);
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * elem.NTerms, 3, elem.NTerms); // allocate for kW and kvar
+    Alt_CE_Get_SeqPowers_(
+        cBuffer, 
+        elem.DSS.ActiveCircuit.Solution.NodeV,
+        PComplex(ResultPtr),
+        elem,
+        Vph, V012,
+        IPh, I012,
+        Nvalues
+    );
 end;
 //------------------------------------------------------------------------------
 procedure Alt_CE_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
@@ -711,7 +726,7 @@ begin
     Reallocmem(cBuffer, 0);
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_Yprim(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_YPrim(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 var
     cValues: pComplexArray;
 begin
@@ -1522,7 +1537,7 @@ end;
 procedure Alt_Monitor_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PAPISize; pmon: TMonitorObj); CDECL;
 // Return an array of doubles for frequence for Harmonic solutions
 begin
-    Alt_Monitor_Get_dblHourFreq(pmon, false, ResultPtr, ResultCount);
+    Alt_Monitor_Get_dblHourFreq(pmon, true, ResultPtr, ResultCount);
 end;
 
 procedure Alt_Monitor_Get_dblHour(var ResultPtr: PDouble; ResultCount: PAPISize; pmon: TMonitorObj); CDECL;
@@ -1946,7 +1961,7 @@ begin
         Inc(pElem);
     end;
 
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValuesTotal);
     outPtr := PComplex(ResultPtr);
     pElem := batch;    
     for i := 1 to batchSize do
@@ -2808,7 +2823,7 @@ begin
     FreeAndNil(json);
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CEBatch_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
 var
     cBuffer: pComplexArray;
     myInit, myEnd, maxSize, NTermsTotal, idx, j, i, iV: Integer;
@@ -2818,7 +2833,7 @@ var
 begin
     if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) or MissingSolution(TDSSCktElement(batch^)) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+        ResultCount[0] := 0;
         Exit;
     end;
 
@@ -2864,7 +2879,7 @@ begin
     Reallocmem(cBuffer, 0);
 end;
 
-procedure Alt_CEBatch_Get_Powers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_Powers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
 // Return complex kW, kvar in each conductor for each terminal, for each element in the batch
 var
     Result: PDoubleArray0;
@@ -2872,6 +2887,12 @@ var
     pElem: TDSSCktElementPtr;
     CResultPtr: PComplex;
 begin
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) or MissingSolution(TDSSCktElement(batch^)) then
+    begin
+        ResultCount[0] := 0;
+        Exit;
+    end;
+
     // Get the total number of (complex) elements
     NValuesTotal := 0;
     pElem := TDSSCktElementPtr(batch);
@@ -2900,7 +2921,55 @@ begin
         Result[i] *= 0.001;    
 end;
 
-procedure _Alt_CEBatch_Get_AllxSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; magnitude: boolean);
+procedure Alt_CEBatch_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
+// Return complex seq kW, kvar for all terminals of all elements in the batch
+var
+    CResultPtr: PComplex;
+    pElem: TDSSCktElementPtr;
+    i, NtermsTotal, Next: Integer;
+    VPh, V012: Complex3;
+    IPh, I012: Complex3;
+    cBuffer: ArrayOfComplex = NIL;
+    NodeV: pNodeVArray; 
+begin
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) or MissingSolution(TDSSCktElement(batch^)) then
+    begin
+        ResultCount[0] := 0;
+        Exit;
+    end;
+
+    SetLength(cBuffer, 4 * 3);
+    // Get the total number of (complex) elements
+    NtermsTotal := 0;
+    pElem := TDSSCktElementPtr(batch);
+    for i := 1 to batchSize do
+    begin
+        NtermsTotal += pElem^.NTerms;
+        inc(pElem);
+    end;
+
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * NtermsTotal, 3, NtermsTotal); // allocate for kW and kvar
+    CResultPtr := PComplex(ResultPtr);
+    // Get the actual values
+    pElem := TDSSCktElementPtr(batch);
+    NodeV := pElem^.DSS.ActiveCircuit.Solution.NodeV;
+    for i := 1 to batchSize do
+    begin
+        Alt_CE_Get_SeqPowers_(
+            cBuffer, 
+            NodeV,
+            CResultPtr,
+            pElem^,
+            Vph, V012,
+            IPh, I012,
+            Next
+        );
+        Inc(CResultPtr, Next);
+        inc(pElem);
+    end;
+end;
+
+procedure _Alt_CEBatch_Get_AllxSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer; magnitude: boolean);
 type
     PPolar = ^Polar;
 var
@@ -2911,7 +2980,7 @@ var
     maxSize, NTermsTotal, i, j, k, idx: Integer;
     posSeq: Boolean;
 begin
-    if batchSize = 0 then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) or MissingSolution(TDSSCktElement(batch^)) then
     begin
         ResultCount[0] := 0;
         Exit;
@@ -2997,16 +3066,85 @@ begin
     ReallocMem(i012v, 0);
 end;
 
-procedure Alt_CEBatch_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
 begin
     _Alt_CEBatch_Get_AllxSeqCurrents(ResultPtr, ResultCount, batch, batchSize, True);
 end;
-procedure Alt_CEBatch_Get_ComplexSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_ComplexSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
 begin
     _Alt_CEBatch_Get_AllxSeqCurrents(ResultPtr, ResultCount, batch, batchSize, False);
 end;
 //------------------------------------------------------------------------------
-procedure _Alt_CEBatch_Get_AllCurrentsVoltages_x(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; const What: Integer);
+procedure _Alt_CEBatch_Get_AllxSeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer; magnitude: boolean); CDECL;
+// All voltages of all circuit element in the batch
+// optionally, magnitude only
+// returns a set of seq voltages (3) for each terminal
+// 0, 1, 2 sequence  (0, +, -)
+var
+    outPtr: PDouble = NIL;
+    idx, i, NTermsTotal, maxTerms: Integer;
+    V012: pComplex;
+    pElem: TDSSCktElementPtr;
+begin
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) or MissingSolution(TDSSCktElement(batch^)) then
+    begin
+        ResultCount[0] := 0;
+        Exit;
+    end;
+
+    // Get sizes
+    NTermsTotal := 0;
+    maxTerms := 0;
+    pElem := TDSSCktElementPtr(batch);
+    for idx := 1 to batchSize do
+    begin
+        Inc(NTermsTotal, pElem^.NTerms);
+        maxTerms := max(maxTerms, pElem^.Nterms);
+        inc(pElem);
+    end;
+
+    if magnitude then
+    begin
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 3 * NTermsTotal, 3, NTermsTotal);
+        outPtr := PDouble(ResultPtr);
+        V012 := Allocmem(sizeof(Complex) * 3 * maxTerms);
+        pElem := TDSSCktElementPtr(batch);
+        for idx := 1 to batchSize do
+        begin
+            CalcSeqVoltages(pElem^, pComplexArray(V012));
+            for i := 1 to 3 * pElem^.Nterms do
+                outPtr[i - 1] := Cabs(V012[i - 1]);  // return mag only
+
+            inc(outPtr, 3 * pElem^.NTerms);
+            inc(pElem);
+        end;
+        Reallocmem(V012, 0);  // throw away temp memory
+        Exit;
+    end;
+
+    // Results are complex numbers
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * NTermsTotal, 3, NTermsTotal);
+    V012 := pComplex(ResultPtr);
+    pElem := TDSSCktElementPtr(batch);
+    for idx := 1 to batchSize do
+    begin
+        CalcSeqVoltages(pElem^, pComplexArray(V012));
+        inc(V012, 3 * pElem^.NTerms);
+        inc(pElem);
+    end;
+end;
+
+procedure Alt_CEBatch_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
+begin
+    _Alt_CEBatch_Get_AllxSeqVoltages(ResultPtr, ResultCount, batch, batchSize, True);
+end;
+procedure Alt_CEBatch_Get_ComplexSeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
+begin
+    _Alt_CEBatch_Get_AllxSeqVoltages(ResultPtr, ResultCount, batch, batchSize, False);
+end;
+
+//------------------------------------------------------------------------------
+procedure _Alt_CEBatch_Get_AllCurrentsVoltages_x(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer; const What: Integer);
 // What=1 for polar form, otherwise rectangular
 type
     PPolar = ^Polar;
@@ -3014,10 +3152,17 @@ var
     pElem: TDSSCktElementPtr;
     cBuffer: pComplexArray;
     NValuesTotal, NValues, i, idx: Integer;
-    CResultPtr: PPolar;
+    CResultPtr: PComplex;
+    CPolarResultPtr: PPolar;
     polarVal: Polar;
     NodeV: pNodeVArray;
 begin
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) or MissingSolution(TDSSCktElement(batch^)) then
+    begin
+        ResultCount[0] := 0;
+        Exit;
+    end;
+
     // Get the total number of (complex) elements
     NValuesTotal := 0;
     pElem := TDSSCktElementPtr(batch);
@@ -3028,12 +3173,14 @@ begin
     end;
 
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2);
-    CResultPtr := PPolar(ResultPtr);
+    CPolarResultPtr := PPolar(ResultPtr);
+    CResultPtr := PComplex(ResultPtr);
 
     // Get the actual values
     pElem := TDSSCktElementPtr(batch);
     if what < 2 then
     begin
+        // Currents
         for idx := 1 to batchSize do
         begin
             NValues := pElem^.NConds * pElem^.NTerms;
@@ -3046,13 +3193,14 @@ begin
     end
     else
     begin
-        NodeV := elem.ActiveCircuit.Solution.NodeV;
+        // Voltages
+        NodeV := pElem^.ActiveCircuit.Solution.NodeV;
         for idx := 1 to batchSize do
         begin
             NValues := pElem^.NConds * pElem^.NTerms;
             if pElem^.Enabled then
             begin
-                for i := 1 to elem.NConds * elem.Nterms do
+                for i := 1 to pElem^.NConds * pElem^.Nterms do
                 begin
                     CResultPtr^ := NodeV[pElem^.NodeRef[i]]; // ok if =0
                     inc(CResultPtr);
@@ -3070,7 +3218,6 @@ begin
         1, 3: //Polar (Mag/Angle)
         begin
             cBuffer := pComplexArray(ResultPtr);
-            CResultPtr := PPolar(ResultPtr);
             if DSS_EXTENSIONS_ARRAY_DIMS then
             begin
                 ResultCount[2] := 2;
@@ -3080,26 +3227,26 @@ begin
             for i := 1 to NValuesTotal do
             begin
                 polarVal := ctopolardeg(cBuffer[i]);
-                CResultPtr^ := polarVal;
-                inc(CResultPtr);
+                CPolarResultPtr^ := polarVal;
+                inc(CPolarResultPtr);
             end;
         end;
     end;
 end;
 
-procedure Alt_CEBatch_Get_Currents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_Currents(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
 begin
     _Alt_CEBatch_Get_AllCurrentsVoltages_x(ResultPtr, ResultCount, batch, batchSize, 0);
 end;
-procedure Alt_CEBatch_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
 begin
     _Alt_CEBatch_Get_AllCurrentsVoltages_x(ResultPtr, ResultCount, batch, batchSize, 1);
 end;
-procedure Alt_CEBatch_Get_Voltages(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_Voltages(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
 begin
     _Alt_CEBatch_Get_AllCurrentsVoltages_x(ResultPtr, ResultCount, batch, batchSize, 2);
 end;
-procedure Alt_CEBatch_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
+procedure Alt_CEBatch_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
 begin
     _Alt_CEBatch_Get_AllCurrentsVoltages_x(ResultPtr, ResultCount, batch, batchSize, 3);
 end;

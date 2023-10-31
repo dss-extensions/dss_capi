@@ -466,7 +466,7 @@ begin
     end;
     
     pList := DSS.ActiveCircuit.PDElements;
-    _Alt_CEBatch_Get_AllxSeqCurrents(ResultPtr, ResultCount, TDSSObjectPtr(pList.InternalPointer), pList.Count, magnitude);
+    _Alt_CEBatch_Get_AllxSeqCurrents(ResultPtr, ResultCount, TDSSCktElementPtr(pList.InternalPointer), pList.Count, magnitude);
 end;
 
 //------------------------------------------------------------------------------
@@ -505,7 +505,7 @@ begin
         Exit;
     end;
     pList := DSSPrime.ActiveCircuit.PDElements;
-    Alt_CEBatch_Get_Powers(ResultPtr, ResultCount, TDSSObjectPtr(pList.InternalPointer), pList.Count);
+    Alt_CEBatch_Get_Powers(ResultPtr, ResultCount, TDSSCktElementPtr(pList.InternalPointer), pList.Count);
 end;
 
 procedure PDElements_Get_AllPowers_GR(); CDECL;

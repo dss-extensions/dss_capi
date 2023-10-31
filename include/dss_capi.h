@@ -7425,7 +7425,7 @@ extern "C" {
     DSS_CAPI_DLL void Alt_CE_Open(void* elem, int32_t terminal, int32_t phase);
     DSS_CAPI_DLL altdss_bool_t Alt_CE_IsOpen(void* elem, int32_t terminal, int32_t phase);
     DSS_CAPI_DLL void Alt_CE_Get_Residuals(double** resultPtr, int32_t *resultDims, void* elem);
-    DSS_CAPI_DLL void Alt_CE_Get_Yprim(double** resultPtr, int32_t *resultDims, void* elem);
+    DSS_CAPI_DLL void Alt_CE_Get_YPrim(double** resultPtr, int32_t *resultDims, void* elem);
     DSS_CAPI_DLL int32_t Alt_CE_Get_Handle(void* elem);
     DSS_CAPI_DLL void Alt_CE_Get_Controllers(void*** resultPtr, int32_t* resultDims, void* elem);
     DSS_CAPI_DLL altdss_bool_t Alt_CE_Get_HasVoltControl(void* elem);
@@ -7459,6 +7459,7 @@ extern "C" {
     DSS_CAPI_DLL void Alt_CEBatch_Get_Losses(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
     DSS_CAPI_DLL void Alt_CEBatch_Get_PhaseLosses(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
     DSS_CAPI_DLL void Alt_CEBatch_Get_Powers(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
+    DSS_CAPI_DLL void Alt_CEBatch_Get_SeqPowers(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
     DSS_CAPI_DLL void Alt_CEBatch_Get_TotalPowers(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
     DSS_CAPI_DLL void Alt_CEBatch_Get_SeqCurrents(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
     DSS_CAPI_DLL void Alt_CEBatch_Get_ComplexSeqCurrents(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
