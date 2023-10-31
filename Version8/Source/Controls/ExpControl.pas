@@ -764,6 +764,5 @@ Begin
     With TExpControlObj(ElementList.Get(i)) Do
       If Enabled Then UpdateExpControl(i, ActorID);
 End;
-INITIALIZATION
-Finalization
+
 end.

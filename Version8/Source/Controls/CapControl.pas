@@ -1282,8 +1282,4 @@ begin
   DblTraceParameter := Integer(Value);
 end;
 
-
-
-INITIALIZATION
-
 end.
