@@ -196,9 +196,11 @@ begin
             else
                 Result := DSS_GetAsPAnsiChar(DSSPrime, json.FormatJSON([foSingleLineArray, foSingleLineObject, foskipWhiteSpace], 0));
         end;
-    finally
-        FreeAndNil(json);
+    except 
+    on E: Exception do
+        DoSimpleMsg(DSSPrime, 'Error converting to JSON: %s', [E.Message], 20231030);
     end;
+    FreeAndNil(json);
 end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_Pointer(): Pointer; CDECL;

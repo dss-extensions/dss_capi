@@ -114,9 +114,11 @@ begin
                 inc(ResultCount[0]);
             end;
         end;
-    finally
-        FreeAndNil(rex);
+    except
+        on E: Exception do
+            DoSimpleMsg(DSSPrime, 'Error processing regular expression: %s', [E.Message], 20231029);
     end;
+    FreeAndNil(rex);
 end;
 //------------------------------------------------------------------------------
 end.

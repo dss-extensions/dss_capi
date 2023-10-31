@@ -2774,9 +2774,11 @@ begin
             Result := DSS_CopyStringAsPChar(json.FormatJSON([], 2))
         else
             Result := DSS_CopyStringAsPChar(json.FormatJSON([foSingleLineArray, foSingleLineObject, foskipWhiteSpace], 0));
-    finally
-        FreeAndNil(json);
+    except
+        on E: Exception do
+            DoSimpleMsg(DSS, 'Error converting bus data to JSON: %s', [E.message], 5020);
     end;
+    FreeAndNil(json);
 end;
 
 function Alt_BusBatch_ToJSON(DSS: TDSSContext; batch: PDSSBus; batchSize: Integer; joptions: Integer): PAnsiChar; CDECL;
@@ -2799,9 +2801,11 @@ begin
             Result := DSS_CopyStringAsPChar(json.FormatJSON([], 2))
         else
             Result := DSS_CopyStringAsPChar(json.FormatJSON([foSingleLineArray, foSingleLineObject, foskipWhiteSpace], 0));
-    finally
-        FreeAndNil(json);
+    except
+        on E: Exception do
+            DoSimpleMsg(DSS, 'Error converting bus data to JSON: %s', [E.message], 5020);
     end;
+    FreeAndNil(json);
 end;
 //------------------------------------------------------------------------------
 procedure Alt_CEBatch_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
@@ -3190,11 +3194,13 @@ begin
                 pElem.GetCurrents(cBuffer);
                 Result := _Alt_PDElements_Get_pctCapacity_for(AllNodes, What, RatingIdx, pElem, cBuffer);
             end;
-        finally
-            if Assigned(cBuffer) then
-                Freemem(cBuffer);
+        except
+            on E: Exception do
+                DoSimpleMsg(DSS, 'Error processing currents: %s', [E.message], 5019);
         end;
     end;
+    if Assigned(cBuffer) then
+        Freemem(cBuffer);
 end;
 
 procedure _Alt_PDEBatch_Get_x(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer; const What: integer; const AllNodes: Boolean);
@@ -3275,11 +3281,13 @@ begin
                 Inc(k);
                 inc(pElem);
             end;
-        finally
-            if Assigned(cBuffer) then
-                Freemem(cBuffer);
+        except
+            on E: Exception do
+                DoSimpleMsg(DSS, 'Error processing currents: %s', [E.message], 5019);
         end;
     end;
+    if Assigned(cBuffer) then
+        Freemem(cBuffer);
 end;
 
 function Alt_PDE_Get_pctNorm(elem: TPDElement; const AllNodes: TAltAPIBoolean): Double; CDECL;

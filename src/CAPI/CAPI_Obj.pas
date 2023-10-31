@@ -657,9 +657,11 @@ begin
             else
                 Result := json.FormatJSON([foSingleLineArray, foSingleLineObject, foskipWhiteSpace], 0);
         end;
-    finally
-        FreeAndNil(json);
+    except
+        on E: Exception do
+            obj.DoSimpleMsg('Error converting object data to JSON: %s', [E.message], 5020);
     end;
+    FreeAndNil(json);
 end;
 
 function Obj_ToJSON(obj: TDSSObject; joptions: Integer): PAnsiChar; CDECL;
@@ -730,7 +732,7 @@ var
     i, N: Integer;
     // propFlags: TPropertyFlags;
 begin
-    if (batch = NIL) or (batch^ = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
     begin
         Exit;
     end;
@@ -809,6 +811,7 @@ var
     rex: TRegExpr = NIL;
     objlist: TDSSObjectPtr;
     outptr: TDSSObjectPtr;
+    res: String;
     i: Integer;
 begin
     if DSS = NIL then DSS := DSSPrime;
@@ -819,9 +822,10 @@ begin
     objlist := TDSSObjectPtr(cls.ElementList.InternalPointer);
     outptr := ResultPtr;
     try
+        res := re;
         rex := TRegExpr.Create();
         rex.ModifierI := True;
-        rex.Expression:= re;
+        rex.Expression:= res;
         ResultCount[0] := 0;
         for i := 1 to cls.ElementList.Count do
         begin
@@ -833,9 +837,14 @@ begin
             end;
             inc(objlist);
         end;
-    finally
-        FreeAndNil(rex);
+    except
+        on E: Exception do
+        begin
+            DoSimpleMsg(DSSPrime, 'Error processing regular expression: %s', [E.Message], 20231029);    
+            ResultCount[0] := 0;
+        end;
     end;
+    FreeAndNil(rex);
 end;
 
 
@@ -968,6 +977,9 @@ var
     i: Integer;
 begin
     Result := NIL;
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
+        Exit;
+
     try
         json := TJSONArray.Create([]);
         if ((joptions and Integer(DSSJSONOptions.ExcludeDisabled)) = 0) or not (batch^ is TDSSCktElement) then
@@ -995,9 +1007,11 @@ begin
             else
                 Result := DSS_CopyStringAsPChar(json.FormatJSON([foSingleLineArray, foSingleLineObject, foskipWhiteSpace], 0));
         end;
-    finally
-        FreeAndNil(json);
+    except
+        on E: Exception do
+            batch^.DoSimpleMsg('Error converting batch data to JSON: %s', [E.message], 5020);
     end;
+    FreeAndNil(json);
 end;
 
 procedure Batch_GetFloat64(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; Index: Integer); CDECL;
@@ -1007,7 +1021,7 @@ var
     presult: PDouble;
     i: Integer;
 begin
-    if (batch = NIL) or (batch^ = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
     cls := batch^.ParentClass;
@@ -1037,7 +1051,7 @@ var
     presult: PDouble;
     i: Integer;
 begin
-    if (batch = NIL) or (batch^ = NIL) or ((@func) = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) or ((@func) = NIL) then
         Exit;
 
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, batchSize);
@@ -1056,7 +1070,7 @@ var
     presult: PDouble;
     i: Integer;
 begin
-    if (batch = NIL) or (batch^ = NIL) or ((@func) = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) or ((@func) = NIL) then
         Exit;
 
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, batchSize);
@@ -1078,7 +1092,7 @@ var
     i: Integer;
     propFlags: TPropertyFlags;
 begin
-    if (batch = NIL) or (batch^ = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
     begin
         Exit;
     end;
@@ -1133,7 +1147,7 @@ var
     presult: PInteger;
     i: Integer;
 begin
-    if (batch = NIL) or (batch^ = NIL) or ((@func) = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) or ((@func) = NIL) then
     begin
         Exit;
     end;
@@ -1154,7 +1168,7 @@ var
     presult: PPAnsiChar;
     i: Integer;
 begin
-    if (batch = NIL) or (batch^ = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
     cls := batch^.ParentClass;
@@ -1192,7 +1206,7 @@ var
     i: Integer;
     s: String;
 begin
-    if (batch = NIL) or (batch^ = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
     cls := batch^.ParentClass;
@@ -1214,7 +1228,7 @@ var
     presult: TDSSObjectPtr;
     i: Integer;
 begin
-    if (batch = NIL) or (batch^ = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
     cls := batch^.ParentClass;
@@ -1248,7 +1262,7 @@ var
     propFlags: TPropertyFlags;
     singleEdit: Boolean;
 begin
-    if (batch = NIL) or (batch^ = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
     cls := batch^.ParentClass;
@@ -1355,7 +1369,7 @@ var
     // propFlags: TPropertyFlags;
     ptype: TPropertyType;
 begin
-    if (batch = NIL) or (batch^ = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
     cls := batch^.ParentClass;
@@ -1428,7 +1442,7 @@ var
     // propFlags: TPropertyFlags;
     sValue: String;
 begin
-    if (batch = NIL) or (batch^ = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
     cls := batch^.ParentClass;
@@ -1463,7 +1477,7 @@ end;
     // propFlags: TPropertyFlags;
     // sValue: String;
 // begin
-    // if (batch = NIL) or (batch^ = NIL) then
+    // if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         // Exit;
 //
     // cls := batch^.ParentClass;
@@ -1484,7 +1498,7 @@ var
     i: Integer;
     // propFlags: TPropertyFlags;
 begin
-    if (batch = NIL) or (batch^ = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
     cls := batch^.ParentClass;
@@ -1511,7 +1525,7 @@ var
     propFlags: TPropertyFlags;
     singleEdit: Boolean;
 begin
-    if (batch = NIL) or (batch^ = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
     cls := batch^.ParentClass;
@@ -1566,7 +1580,7 @@ var
     propFlags: TPropertyFlags;
     singleEdit: Boolean;
 begin
-    if (batch = NIL) or (batch^ = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
     cls := batch^.ParentClass;
@@ -1620,7 +1634,7 @@ var
     i: Integer;
     // propFlags: TPropertyFlags;
 begin
-    if (batch = NIL) or (batch^ = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
     cls := batch^.ParentClass;
@@ -1655,7 +1669,7 @@ var
     i: Integer;
     // propFlags: TPropertyFlags;
 begin
-    if (batch = NIL) or (batch^ = NIL) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
     if Value = NIL then
@@ -2036,8 +2050,8 @@ begin
 
         Result := DSS_GetAsPAnsiChar(ckt.DSS, circ.FormatJSON());
     except
-    on E: Exception do
-        DoSimpleMsg(ckt.DSS, 'Error converting data to JSON: %s', [E.message], 20230918);
+        on E: Exception do
+            DoSimpleMsg(ckt.DSS, 'Error converting data to JSON: %s', [E.message], 5020);
     end;
 
     if cmds <> NIL then
@@ -2166,10 +2180,12 @@ begin
             loadSingleObj(TJSONObject(arrItem));
         end;
 
-    finally
-        FreeAndNil(F);
-        FreeAndNil(data);
+    except
+        on E: Exception do
+            DoSimpleMsg(DSS, 'Error loading data from JSON: %s', [E.message], 5021);
     end;
+    FreeAndNil(F);
+    FreeAndNil(data);
 end;
 
 procedure Obj_Circuit_FromJSON_(DSS: TDSSContext; jckt: TJSONObject; joptions: Integer);
