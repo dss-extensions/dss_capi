@@ -2005,12 +2005,8 @@ exports
 
     DSS_RegisterPlotCallback,
     DSS_RegisterMessageCallback,
-    DSSEvents_RegisterInitControls,
-    DSSEvents_RegisterCheckControls,
-    DSSEvents_RegisterStepControls,
-    DSSEvents_UnregisterInitControls,
-    DSSEvents_UnregisterCheckControls,
-    DSSEvents_UnregisterStepControls,
+    DSSEvents_RegisterAlt,
+    DSSEvents_UnregisterAlt,
 
     DSS_ExtractSchema,
     DSS_Dispose_String,
@@ -2183,6 +2179,10 @@ exports
     Alt_CEBatch_Get_ComplexSeqCurrents,
     Alt_CEBatch_Get_Currents,
     Alt_CEBatch_Get_CurrentsMagAng,
+    Alt_CEBatch_Get_Voltages,
+    Alt_CEBatch_Get_VoltagesMagAng,
+    Alt_CEBatch_Get_SeqVoltages,
+    Alt_CEBatch_Get_ComplexSeqVoltages,
 
     Alt_PCE_Get_VariableNames,
     Alt_PCE_Get_VariableValues,
@@ -2295,7 +2295,7 @@ exports
     Alt_Bus_ToJSON,
     Alt_BusBatch_GetFloat64FromFunc,
     Alt_BusBatch_GetInt32FromFunc,
-    Alt_BusBatch_ToJSON,
+    Alt_BusBatch_ToJSON
 
 {$IFDEF DSS_CAPI_CONTEXT},
     {$I '../build/generated/ctx_functions.inc'}

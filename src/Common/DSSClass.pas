@@ -252,6 +252,16 @@ type
 {$PUSH}
 {$Z4} // keep enums as int32 values
     TPlotPhases = (LLPrimary = -6, LLAll = -5, LL3Ph = -4, Primary = -3, All = -2, ThreePhase = -1);
+
+    TAltDSSEvent = (
+        Legacy_InitControls = 0,
+        Legacy_CheckControls,
+        Legacy_StepControls,
+        Clear,
+        ReprocessBuses,
+        BuildSystemY
+        //InvalidateSystemY
+    );
 {$POP}
 {$SCOPEDENUMS OFF}
 
@@ -331,8 +341,8 @@ type
 
     dss_callback_plot_t = function (DSS: TDSSContext; jsonParams: PChar): Integer; CDECL;
     dss_callback_message_t = function (DSS: TDSSContext; messageStr: PChar; messageType: Integer; messageSize: int64; messageSubType: Integer = 0): Integer; CDECL;
-    dss_callback_solution_t = procedure (DSS: TDSSContext); CDECL;
-    dss_callbacks_solution_t = Array of dss_callback_solution_t;
+    altdss_callback_event_t = procedure (DSS: TDSSContext; eventCode: TAltDSSEvent; step: Integer; obj: Pointer); CDECL;
+    altdss_callbacks_event_t = Array of altdss_callback_event_t;
 
     // Base for all collection classes
     TDSSClass = class;
@@ -572,9 +582,7 @@ type
     
         DSSPlotCallback: dss_callback_plot_t;
         DSSMessageCallback: dss_callback_message_t;
-        DSSInitControlsCallbacks: dss_callbacks_solution_t;
-        DSSCheckControlsCallbacks: dss_callbacks_solution_t;
-        DSSStepControlsCallbacks: dss_callbacks_solution_t;
+        DSSAltEventCallbacks: Array[TAltDSSEvent] of altdss_callbacks_event_t;
     
         // Parallel Machine state
 {$IFDEF DSS_CAPI_PM}
@@ -706,10 +714,8 @@ type
         function GetOutputStreamNoEx(fn: String; mode: Integer=fmCreate or fmOpenWrite): TStream; // This one maps the exception/error to the Error API
         procedure NewDSSClass(Value: Pointer);
 
-        // For the DSSEvents interface
-        procedure Fire_InitControls();
-        procedure Fire_CheckControls();
-        procedure Fire_StepControls();
+        // For the DSSEvents interface and our extensions
+        procedure SignalEvent(evt: TAltDSSEvent; step: Integer = 0);
 
         procedure SetPropertyNameStyle(style: TDSSPropertyNameStyle);
         // Moved from Utilities.pas
@@ -1121,9 +1127,8 @@ begin
     
     DSSPlotCallback := nil;
     DSSMessageCallback := nil;
-    DSSInitControlsCallbacks := nil;
-    DSSCheckControlsCallbacks := nil;
-    DSSStepControlsCallbacks := nil;
+    for i := 0 to ord(High(TAltDSSEvent)) do
+        DSSAltEventCallbacks[TAltDSSEvent(i)] := nil;
 
     ClassNames := NIL;
     DSSClassList := NIL;
@@ -1276,49 +1281,18 @@ begin
     inherited Destroy;
 end;
 
-
-procedure TDSSContext.Fire_InitControls();
+procedure TDSSContext.SignalEvent(evt: TAltDSSEvent; step: Integer = 0);
 var 
-    cb: dss_callback_solution_t;
+    cb: altdss_callback_event_t;
 begin
-    if Length(DSSInitControlsCallbacks) = 0 then
+    if Length(DSSAltEventCallbacks[evt]) = 0 then
         Exit;
 
-    for cb in DSSInitControlsCallbacks do
+    for cb in DSSAltEventCallbacks[evt] do
     begin
         if (@cb) = NIL then
             continue;
-        cb(self);
-    end;
-end;
-
-procedure TDSSContext.Fire_CheckControls();
-var 
-    cb: dss_callback_solution_t;
-begin
-    if Length(DSSCheckControlsCallbacks) = 0 then
-        Exit;
-
-    for cb in DSSCheckControlsCallbacks do
-    begin
-        if (@cb) = NIL then
-            continue;
-        cb(self);
-    end;
-end;
-
-procedure TDSSContext.Fire_StepControls();
-var 
-    cb: dss_callback_solution_t;
-begin
-    if Length(DSSStepControlsCallbacks) = 0 then
-        Exit;
-
-    for cb in DSSStepControlsCallbacks do
-    begin
-        if (@cb) = NIL then
-            continue;
-        cb(self);
+        cb(self, evt, step, NIL);
     end;
 end;
 

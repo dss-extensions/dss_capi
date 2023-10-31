@@ -279,9 +279,7 @@ end;
 {$ENDIF} //DSS_CAPI_INCREMENTAL_Y
 
 procedure BuildYMatrix(DSS: TDSSContext; BuildOption: Integer; AllocateVI: Boolean);
-
 // Builds designated Y matrix for system and allocates solution arrays
-
 var
     YMatrixsize: Integer;
     CmatArray: pComplexArray;
@@ -289,12 +287,11 @@ var
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
     Incremental: Boolean;
 {$ENDIF}
-
 begin
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
     Incremental := False;
 {$ENDIF}
-
+    DSS.SignalEvent(TAltDSSEvent.BuildSystemY, 0);
     CmatArray := NIL;
     with DSS.ActiveCircuit, Solution do
     begin
@@ -448,6 +445,7 @@ begin
             RestoreNodeVfromVbus;
 
     end;
+    DSS.SignalEvent(TAltDSSEvent.BuildSystemY, 1);
 end;
 
 // leave the call to GetMatrixElement, but add more diagnostics

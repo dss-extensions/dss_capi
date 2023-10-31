@@ -1,7 +1,7 @@
 /*! \file dss_capi.h */
 #ifndef DSS_CAPI_DLL_H
 #define DSS_CAPI_DLL_H
-#define DSS_CAPI_VERSION "0.13.0-dev"
+#define DSS_CAPI_VERSION "0.14.0-dev"
 #ifndef DSS_CAPI_DLL
 //#define DSS_CAPI_DLL __declspec(dllimport)
 #define DSS_CAPI_DLL
@@ -246,8 +246,27 @@ extern "C" {
             the current state of DSS objects.
             Set this flag to disable this behavior, following the original OpenDSS implementation for potential
             compatibility with older software that may require the original behavior; note that may lead to
-            errorneous interpretation of the data in the DSS properties. Introduced in DSS C-API v0.14.0.
+            errorneous interpretation of the data in the DSS properties. This was introduced in DSS C-API v0.14.0
+            and will be further developed for future versions.
         */
+    };
+
+    /*!
+    The values from AltDSSEvent are used in the updated DSSEvents_* functions to
+    register callbacks for different events. Note that in the official OpenDSS
+    (COM implementation) only the first three event types (marked as Legacy) are
+    avaiable and the callback functions do not receive the extra arguments. To
+    simplify our implementation, we decided to merge the legacy events in our
+    new system. As such, some functions were removed and the old callback
+    "dss_callback_solution_t" was replaced with "altdss_callback_event_t".
+    */
+    enum AltDSSEvent {
+        AltDSSEvent_Legacy_InitControls = 0,
+        AltDSSEvent_Legacy_CheckControls = 1,
+        AltDSSEvent_Legacy_StepControls = 2,
+        AltDSSEvent_Clear = 3,
+        AltDSSEvent_ReprocessBuses = 4,
+        AltDSSEvent_BuildSystemY = 5
     };
 
     /*!  
@@ -258,7 +277,7 @@ extern "C" {
     */
     typedef int32_t (*dss_callback_plot_t)(void* ctx, char* jsonParams);
     typedef int32_t (*dss_callback_message_t)(void* ctx, char* messageStr, int32_t messageType, int64_t messageSize, int32_t messageSubType);
-    typedef void (*dss_callback_solution_t)(void* ctx);
+    typedef void (*altdss_callback_event_t)(void* ctx, int32_t eventCode, int32_t step, void* ptr);
 
     /*!  
     Function types for extra object functions (used by the batch APIs)
@@ -319,13 +338,14 @@ extern "C" {
     DSS_CAPI_DLL void DSS_RegisterPlotCallback(dss_callback_plot_t cb);
     DSS_CAPI_DLL void DSS_RegisterMessageCallback(dss_callback_message_t cb);
 
-    /*! Functions to register and unregister callbacks for the solution events (DSSEvents in COM) */
-    DSS_CAPI_DLL uint16_t DSSEvents_RegisterInitControls(dss_callback_solution_t cb);
-    DSS_CAPI_DLL uint16_t DSSEvents_RegisterCheckControls(dss_callback_solution_t cb);
-    DSS_CAPI_DLL uint16_t DSSEvents_RegisterStepControls(dss_callback_solution_t cb);
-    DSS_CAPI_DLL uint16_t DSSEvents_UnregisterInitControls(dss_callback_solution_t cb);
-    DSS_CAPI_DLL uint16_t DSSEvents_UnregisterCheckControls(dss_callback_solution_t cb);
-    DSS_CAPI_DLL uint16_t DSSEvents_UnregisterStepControls(dss_callback_solution_t cb);
+    /*!
+    API Extension: connect callbacks to both legacy (same style of COM DSSEvents) 
+    and more general events of the engine operation.
+
+    See the enumeration AltDSSEvent for values to "evt".
+    */
+    DSS_CAPI_DLL uint16_t DSSEvents_RegisterAlt(int32_t evt, altdss_callback_event_t cb);
+    DSS_CAPI_DLL uint16_t DSSEvents_UnregisterAlt(int32_t evt, altdss_callback_event_t cb);
 
     DSS_CAPI_DLL void DSS_NewCircuit(const char* Value);
 
@@ -7464,7 +7484,7 @@ extern "C" {
     DSS_CAPI_DLL void Alt_CEBatch_Get_SeqCurrents(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
     DSS_CAPI_DLL void Alt_CEBatch_Get_ComplexSeqCurrents(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
     DSS_CAPI_DLL void Alt_CEBatch_Get_Currents(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
-    DSS_CAPI_DLL void Alt_CEBatch_Get_VoltagesMagAng(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
+    DSS_CAPI_DLL void Alt_CEBatch_Get_CurrentsMagAng(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
     DSS_CAPI_DLL void Alt_CEBatch_Get_SeqVoltages(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
     DSS_CAPI_DLL void Alt_CEBatch_Get_ComplexSeqVoltages(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
     DSS_CAPI_DLL void Alt_CEBatch_Get_Voltages(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);

@@ -2166,7 +2166,7 @@ begin
     if LogEvents then
         DSS.LogThisEvent('Reprocessing Bus Definitions');
 
-    //TODO: callback
+    DSS.SignalEvent(TAltDSSEvent.ReprocessBuses, 0);
 
     AbortBusProcess := FALSE;
     // > SaveBusInfo
@@ -2244,6 +2244,7 @@ begin
     DoResetMeterZones();  // Fix up meter zones to correspond
 
     BusNameRedefined := FALSE;  // Get ready for next time
+    DSS.SignalEvent(TAltDSSEvent.ReprocessBuses, 1);
 end;
 
 procedure TDSSCircuit.Set_BusNameRedefined(Value: Boolean);

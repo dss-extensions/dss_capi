@@ -30,13 +30,11 @@ function DSS_Get_AllowForms(): TAPIBoolean; CDECL;
 procedure DSS_Set_AllowForms(Value: TAPIBoolean); CDECL;
 
 // These were originally implemented (very differently) in the DSSEvents interface, 
-// but they are simple functions here.
-function DSSEvents_RegisterInitControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
-function DSSEvents_RegisterCheckControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
-function DSSEvents_RegisterStepControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
-function DSSEvents_UnregisterInitControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
-function DSSEvents_UnregisterCheckControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
-function DSSEvents_UnregisterStepControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
+// but they are simple functions here. We extended the event interface to allow more
+// event types, and provide more info to the callbacks, so the original functionality
+// is a subset of our current approach.
+function DSSEvents_RegisterAlt(evt: TAltDSSEvent; cb: altdss_callback_event_t): TAPIBoolean; CDECL;
+function DSSEvents_UnregisterAlt(evt: TAltDSSEvent; cb: altdss_callback_event_t): TAPIBoolean; CDECL;
 
 // Extensions
 function DSS_Get_AllowEditor(): TAPIBoolean; CDECL;
@@ -317,7 +315,7 @@ begin
     SelectAs2pVersion((DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.BadPrecision)) <> 0);
 end;
 //------------------------------------------------------------------------------
-function removeFromArray(var cbs: dss_callbacks_solution_t; target: dss_callback_solution_t): Boolean;
+function removeFromArray(var cbs: altdss_callbacks_event_t; target: altdss_callback_event_t): Boolean;
 var
     i, j: Integer;
 begin
@@ -338,9 +336,9 @@ begin
     end;
 end;
 
-function appendToArray(var cbs: dss_callbacks_solution_t; target: dss_callback_solution_t): Boolean;
+function appendToArray(var cbs: altdss_callbacks_event_t; target: altdss_callback_event_t): Boolean;
 var
-    cb: dss_callback_solution_t;
+    cb: altdss_callback_event_t;
 begin
     Result := False;
     for cb in cbs do
@@ -353,29 +351,14 @@ begin
     Result := True;
 end;
 
-function DSSEvents_RegisterInitControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
+function DSSEvents_RegisterAlt(evt: TAltDSSEvent; cb: altdss_callback_event_t): TAPIBoolean; CDECL;
 begin
-    Result := appendToArray(DSSPrime.DSSInitControlsCallbacks, @cb);
+    Result := appendToArray(DSSPrime.DSSAltEventCallbacks[evt], @cb);
 end;
-function DSSEvents_RegisterCheckControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
+function DSSEvents_UnregisterAlt(evt: TAltDSSEvent; cb: altdss_callback_event_t): TAPIBoolean; CDECL;
 begin
-    Result := appendToArray(DSSPrime.DSSCheckControlsCallbacks, @cb);
+    Result := removeFromArray(DSSPrime.DSSAltEventCallbacks[evt], @cb);
 end;
-function DSSEvents_RegisterStepControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
-begin
-    Result := appendToArray(DSSPrime.DSSStepControlsCallbacks, @cb);
-end;
-function DSSEvents_UnregisterInitControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
-begin
-    Result := removeFromArray(DSSPrime.DSSInitControlsCallbacks, @cb);
-end;
-function DSSEvents_UnregisterCheckControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
-begin
-    Result := removeFromArray(DSSPrime.DSSCheckControlsCallbacks, @cb);
-end;
-function DSSEvents_UnregisterStepControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
-begin
-    Result := removeFromArray(DSSPrime.DSSStepControlsCallbacks, @cb);
-end;
+
 //------------------------------------------------------------------------------
 end.

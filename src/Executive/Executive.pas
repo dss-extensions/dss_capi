@@ -252,6 +252,7 @@ end;
 
 procedure TExecutive.Clear(Resetting: Boolean = True);
 begin
+    DSS.SignalEvent(TAltDSSEvent.Clear, 0);
     if (DSS.NumCircuits > 0) then
 	begin
 {$IFDEF DSS_CAPI_PM}
@@ -298,6 +299,8 @@ begin
     if not IsDLL then
         ControlPanel.UpdateElementBox;
     {$ENDIF}
+
+    DSS.SignalEvent(TAltDSSEvent.Clear, 1);
 end;
 
 {$IFDEF DSS_CAPI_PM}

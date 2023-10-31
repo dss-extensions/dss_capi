@@ -86,13 +86,14 @@ extern "C" {
     DSS_CAPI_DLL void ctx_DSS_RegisterPlotCallback(void* ctx, dss_callback_plot_t cb);
     DSS_CAPI_DLL void ctx_DSS_RegisterMessageCallback(void* ctx, dss_callback_message_t cb);
 
-    /*! Functions to register and unregister callbacks for the solution events (DSSEvents in COM) */
-    DSS_CAPI_DLL uint16_t ctx_DSSEvents_RegisterInitControls(void* ctx, dss_callback_solution_t cb);
-    DSS_CAPI_DLL uint16_t ctx_DSSEvents_RegisterCheckControls(void* ctx, dss_callback_solution_t cb);
-    DSS_CAPI_DLL uint16_t ctx_DSSEvents_RegisterStepControls(void* ctx, dss_callback_solution_t cb);
-    DSS_CAPI_DLL uint16_t ctx_DSSEvents_UnregisterInitControls(void* ctx, dss_callback_solution_t cb);
-    DSS_CAPI_DLL uint16_t ctx_DSSEvents_UnregisterCheckControls(void* ctx, dss_callback_solution_t cb);
-    DSS_CAPI_DLL uint16_t ctx_DSSEvents_UnregisterStepControls(void* ctx, dss_callback_solution_t cb);
+    /*!
+    API Extension: connect callbacks to both legacy (same style of COM DSSEvents) 
+    and more general events of the engine operation.
+
+    See the enumeration AltDSSEvent for values to "evt".
+    */
+    DSS_CAPI_DLL uint16_t ctx_DSSEvents_RegisterAlt(void* ctx, int32_t evt, altdss_callback_event_t cb);
+    DSS_CAPI_DLL uint16_t ctx_DSSEvents_UnregisterAlt(void* ctx, int32_t evt, altdss_callback_event_t cb);
 
     DSS_CAPI_DLL void ctx_DSS_NewCircuit(void* ctx, const char* Value);
 
@@ -7082,8 +7083,7 @@ extern "C" {
     // Relevant functions from the CktElement and PDElements API, working directly on the elements
     //TODO: copy comments and adapt
 
-
-
+    
 
 
 

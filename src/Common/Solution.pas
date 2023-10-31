@@ -574,7 +574,7 @@ begin
             ckt.DefaultGrowthFactor := 1.0    // RCD 8-17-00
         else
             ckt.DefaultGrowthFactor := IntPower(ckt.DefaultGrowthRate, (year - 1));
-        DSS.Fire_InitControls();
+        DSS.SignalEvent(TAltDSSEvent.Legacy_InitControls);
 
         // CheckFaultStatus;  ???? needed here??
 
@@ -1179,7 +1179,7 @@ begin
 
         SolveCircuit();  // Do circuit solution w/o checking controls
         // Now Check controls
-        DSS.Fire_CheckControls();
+        DSS.SignalEvent(TAltDSSEvent.Legacy_CheckControls);
         CheckControls;
 
         // For reporting max iterations per control iteration
@@ -1199,7 +1199,7 @@ begin
     if ckt.LogEvents then
         DSS.LogThisEvent('Solution Done');
 
-    DSS.Fire_StepControls();
+    DSS.SignalEvent(TAltDSSEvent.Legacy_StepControls);
 
     {$IFDEF MSWINDOWS}
     QueryPerformanceCounter(SolveEndTime);
