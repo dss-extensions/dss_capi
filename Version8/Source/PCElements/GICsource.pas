@@ -628,8 +628,4 @@ begin
 
 end;
 
-
-
-Initialization
-
 end.
