@@ -1561,10 +1561,10 @@ Begin
      Integrate(Reg_TransformerLosseskWh,  TotalTransformerLosses.re,  Delta_Hrs, ActorID);
      for i  := 1 to MaxVBaseCount do begin
         Integrate(Reg_VbaseStart + i, VBaseTotalLosses^[i],  Delta_Hrs, ActorID);
-        Integrate(Reg_VbaseStart + 1 * MaxVBaseCount + i, VBaseLineLosses^[i],    Delta_Hrs, ActorID);
-        Integrate(Reg_VbaseStart + 2 * MaxVBaseCount + i, VBaseLoadLosses^[i],    Delta_Hrs, ActorID);
-        Integrate(Reg_VbaseStart + 3 * MaxVBaseCount + i, VBaseNoLoadLosses^[i],  Delta_Hrs, ActorID);
-        Integrate(Reg_VbaseStart + 4 * MaxVBaseCount + i, VBaseLoad^[i],          Delta_Hrs, ActorID);
+        Integrate(Reg_VbaseStart + (1 * MaxVBaseCount) + i, VBaseLineLosses^[i],    Delta_Hrs, ActorID);
+        Integrate(Reg_VbaseStart + (2 * MaxVBaseCount) + i, VBaseLoadLosses^[i],    Delta_Hrs, ActorID);
+        Integrate(Reg_VbaseStart + (3 * MaxVBaseCount) + i, VBaseNoLoadLosses^[i],  Delta_Hrs, ActorID);
+        Integrate(Reg_VbaseStart + (4 * MaxVBaseCount) + i, VBaseLoad^[i],          Delta_Hrs, ActorID);
      end;
 
 

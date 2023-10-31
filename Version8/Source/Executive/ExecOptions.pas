@@ -12,7 +12,7 @@ interface
 Uses Command;
 
 CONST
-        NumExecOptions = 138;
+        NumExecOptions = 139;
 
 VAR
          ExecOption,
