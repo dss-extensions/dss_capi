@@ -42,7 +42,6 @@ uses
   {$ENDIF}
   SysUtils,
   Classes,
-  {
   Arraydef in '..\Shared\Arraydef.pas',
   AutoAdd in '..\Common\AutoAdd.pas',
   AutoTrans in '..\PDElements\AutoTrans.pas',
@@ -69,9 +68,7 @@ uses
   DSSCallBackRoutines in '..\Common\DSSCallBackRoutines.pas',
   DSSClass in '..\Common\DSSClass.pas',
   DSSClassDefs in '..\Common\DSSClassDefs.pas',
-  }
   DSSGlobals in '..\Common\DSSGlobals.pas',
-  {
   DSSObject in '..\General\DSSObject.pas',
   DynamicExp in '..\General\DynamicExp.pas',
   Dynamics in '..\Shared\Dynamics.pas',
@@ -168,7 +165,6 @@ uses
   XfmrCode in '..\General\XfmrCode.pas',
   XYcurve in '..\General\XYcurve.pas',
   Ymatrix in '..\Common\Ymatrix.pas',
-  }
   Executive in '..\Executive\Executive.pas',
   DText in '..\DDLL\DText.pas',
   DLoads in '..\DDLL\DLoads.pas',
