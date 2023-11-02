@@ -242,7 +242,7 @@ begin
 end;
 
 initialization
-//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
+  {$IFDEF FPC_TRACE_INIT}writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));{$ENDIF}
   Try
     DegToRad := 3.14159265359/180.0;
     RadToDeg := 1.0/DegToRad;
