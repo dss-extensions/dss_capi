@@ -242,6 +242,7 @@ begin
 end;
 
 initialization
+//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
   Try
     DegToRad := 3.14159265359/180.0;
     RadToDeg := 1.0/DegToRad;

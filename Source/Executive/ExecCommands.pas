@@ -920,6 +920,7 @@ Begin
 End;
 
 Initialization
+//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
   Try
     DefineCommands;
   Except

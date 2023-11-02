@@ -1486,6 +1486,7 @@ begin
 end;
 
 initialization
+//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
   Try
 //***************Initialization for Parallel Processing*************************
 

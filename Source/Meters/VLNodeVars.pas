@@ -76,7 +76,7 @@ TYPE
         vl_Pmax_dg, vl_Qmax_dg,
         vl_Pmax_phase_dg, vl_Qmax_phase_dg : double;
         vl_V_base_dg,
-        vl_V_ref_dg, vl_V_ref1_dg, vl_V_ref2_dg, vl_V_ref3_dg : double;// nominal value with respect to p.u. 1  //must be set by initialization
+        vl_V_ref_dg, vl_V_ref1_dg, vl_V_ref2_dg, vl_V_ref3_dg : double;// nominal value with respect to p.u. 1  //must be set by initializing routines
         vl_kcq_dg : double; // the step size gain of agent i //has to be defined befor used
         vl_p_DG,vl_p_DG1,vl_p_DG2,vl_p_DG3 : double;
         vl_kcd_dg : double; // the step size gain of agent i //has to be defined befor used

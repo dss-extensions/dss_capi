@@ -34,7 +34,7 @@ unit Solution;
 
  9-28-03 Redefined V to NodeV and changed from an array from 1..n to 0..n where
          0-th element is alway ground(complex zero volts).
- 8-14-06 Revised power flow initialization; removed forward/backward sweep
+ 8-14-06 Revised power flow initial condition; removed forward/backward sweep
 
  9-14-16 Added SampleTheMeters Flag to allow sampling energy meters in Time and DutyCycle mode
 
@@ -332,7 +332,7 @@ TYPE
        PROCEDURE SnapShotInit(ActorID : Integer);
        FUNCTION  SolveSnap(ActorID : integer):Integer;    // solve for now once
        FUNCTION  SolveDirect(ActorID : integer):Integer;  // solve for now once, direct solution
-       FUNCTION  SolveYDirect(ActorID : Integer):Integer; // Similar to SolveDirect; used for initialization
+       FUNCTION  SolveYDirect(ActorID : Integer):Integer; // Similar to SolveDirect; used for initial conditions
        FUNCTION  SolveCircuit(ActorID : integer):Integer; // SolveSnap sans control iteration
        PROCEDURE CheckControls(ActorID : Integer);       // Snapshot checks with matrix rebuild
        PROCEDURE SampleControlDevices(ActorID : Integer);
@@ -1106,7 +1106,7 @@ Begin
           Raise ESolveError.Create('Aborting');
         End;
       END;
-        If SolutionAbort Then Exit; // Initialization can result in abort
+        If SolutionAbort Then Exit; // Initializing can result in abort
 
       TRY
         SetGeneratordQdV(ActorID);  // Set dQdV for Model 3 generators
@@ -1135,7 +1135,7 @@ End;
 // ===========================================================================================
 FUNCTION TSolutionObj.SolveZeroLoadSnapShot(ActorID : Integer):Integer;
 
-// Solve without load for initialization purposes;
+// Solve without load for initial condition purposes;
 
 Begin
    Result := 0;
@@ -3367,6 +3367,7 @@ Begin
 End;
 
 initialization
+//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
   Try
     IsMultiThread :=  True;
     {$IFDEF debugtrace}
@@ -3378,7 +3379,6 @@ initialization
   Except
     On E:Exception do DumpExceptionCallStack (E);
   end;
-
 End.
 
 

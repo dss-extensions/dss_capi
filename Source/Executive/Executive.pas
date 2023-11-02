@@ -321,9 +321,5 @@ begin
    Writeln(Recorderfile, S);
 end;
 
-initialization
-
-//WriteDLLDebugFile('Executive');
-
 end.
 

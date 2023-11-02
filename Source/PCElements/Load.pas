@@ -261,11 +261,9 @@ Var
 implementation
 
 
-USES  ParserDel, Circuit, DSSClassDefs, DSSGlobals, Dynamics, Sysutils, Command, Math, MathUtil, Utilities, ExceptionTrace;
+USES  ParserDel, Circuit, DSSClassDefs, DSSGlobals, Dynamics, Sysutils, Command, Math, MathUtil, Utilities;
 
 Const  NumPropsThisClass = 38;
-
-Var  CDOUBLEONE:Complex;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TLoad.Create;  // Creates superstructure FOR all Line objects
@@ -2339,11 +2337,4 @@ begin
      End;
 end;
 
-
-initialization
-  Try
-    CDOUBLEONE := CMplx(1.0, 1.0);
-  Except
-    On E:Exception do DumpExceptionCallStack (E);
-  end;
 end.

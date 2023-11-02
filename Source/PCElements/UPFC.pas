@@ -129,7 +129,7 @@ VAR
 implementation
 
 
-USES  ParserDel, Circuit, DSSClassDefs, DSSGlobals, Dynamics, Utilities, Sysutils, Command, solution, YMatrix, UPFCControl, ExceptionTrace;
+USES  ParserDel, Circuit, DSSClassDefs, DSSGlobals, Dynamics, Utilities, Sysutils, Command, solution, YMatrix, UPFCControl;
 
 Const
     propLossCurve= 11;

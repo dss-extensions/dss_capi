@@ -1166,6 +1166,7 @@ Begin
 End;
 
 initialization
+//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
   Try
     IsMultiThread :=  True;
   Except

@@ -332,7 +332,7 @@ type
 var
   ActivePVSystemObj   : TPVsystemObj;
 implementation
-uses  ParserDel, Circuit,  Sysutils, Command, Math, DSSClassDefs, DSSGlobals, Utilities, Classes, ExceptionTrace;
+uses  ParserDel, Circuit,  Sysutils, Command, Math, DSSClassDefs, DSSGlobals, Utilities, Classes;
 const
 // ===========================================================================================
 {
@@ -394,7 +394,6 @@ const
   NumPropsThisClass           = 50; // Make this agree with the last property constant
 var
   cBuffer             : Array[1..24] of Complex;  // Temp buffer for calcs  24-phase PVSystem element?
-  CDOUBLEONE          : Complex;
 constructor TPVsystem.Create;  // Creates superstructure for all PVSystem elements
   begin
     Inherited Create;
@@ -1363,7 +1362,7 @@ Begin
 
   with ActiveCircuit[ActorID].Solution, myDynVars do
   Begin
-    {Initialization just in case}
+    {Initial conditions just in case}
     if length( myDynVars.Vgrid ) < NPhases then setlength(myDynVars.Vgrid, NPhases);
 
     for i := 1 to NPhases do Vgrid[i - 1]      :=  ctopolar( NodeV^[ NodeRef^[ i ] ] );
@@ -1503,7 +1502,7 @@ Begin
     IF IsHarmonicModel Then
     Begin
       {YEQ is computed from %R and %X -- inverse of Rthev + j Xthev}
-      Y  := YEQ;   // L-N value computed in initialization routines
+      Y  := YEQ;   // L-N value computed in initial condition routines
       IF Connection=1 Then Y := CDivReal(Y, 3.0); // Convert to delta impedance
       Y.im := Y.im / FreqMultiplier;
       Yij := Cnegate(Y);
@@ -2937,10 +2936,4 @@ PROCEDURE TPVsystemObj.SetDragHandRegister(Reg: Integer; const Value: Double);
   Begin
     If  (Value > Registers[reg]) Then Registers[Reg] := Value;
   End;
-initialization
-  Try
-    CDOUBLEONE := Cmplx(1.0, 1.0);
-  Except
-    On E:Exception do DumpExceptionCallStack (E);
-  end;
 end.

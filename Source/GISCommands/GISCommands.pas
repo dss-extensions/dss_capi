@@ -2074,6 +2074,7 @@ Begin
 End;
 
 Initialization
+//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
 
   Try
     DefineOptions;

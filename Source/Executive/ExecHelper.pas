@@ -1639,7 +1639,7 @@ Begin
            ELSE  Buses^[ActiveBusIndex].kVBase := kVValue / SQRT3;
            Result := 0;
            Solution.VoltageBaseChanged := TRUE;
-           // Solution.SolutionInitialized := FALSE;  // Force reinitialization
+           // Solution.SolutionInitialized := FALSE;  // Force re-initializing
       End
       ELSE Begin
            Result := 1;
@@ -4267,6 +4267,7 @@ Begin
 End;
 
 initialization
+//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
 
 {Initialize Command lists}
   Try

@@ -319,7 +319,7 @@ implementation
 // Conditional compile for debugging Generator in Dynamic mode. Set to  DYNAMICDEBUG for debugging.
 
 USES  ParserDel, Circuit,  Sysutils, Command, Math, MathUtil, DSSClassDefs, DSSGlobals, Utilities, Classes,
-      KLUSolve, Solution, ExceptionTrace;
+      KLUSolve, Solution;
 
 Const NumPropsThisClass = 46;
   // Dispatch modes
@@ -328,7 +328,6 @@ Const NumPropsThisClass = 46;
       PRICEMODE = 2;
 
 Var cBuffer:Array[1..24] of Complex;  // Temp buffer for calcs  24-phase generator?
-    CDOUBLEONE: Complex;
 //    TwoPI3:Double;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1264,7 +1263,7 @@ Begin
    With  ActiveCircuit[ActorID].solution  Do
    IF IsDynamicModel or IsHarmonicModel Then
      Begin
-       IF GenON Then   Y  := Yeq   // L-N value computed in initialization routines
+       IF GenON Then   Y  := Yeq   // L-N value computed in initial condition routines
        ELSE Y := Cmplx(EPSILON, 0.0);
 
        IF Connection=1 Then Y := CDivReal(Y, 3.0); // Convert to delta impedance
@@ -2673,7 +2672,7 @@ begin
          Begin
            // Initializes the memory values for the dynamic equation
           for i := 0 to High(DynamicEqVals) do  DynamicEqVals[i][1] :=  0.0;
-           // Check for initializations using calculated values (P0, Q0)
+           // Check for initial conditions using calculated values (P0, Q0)
           NumData   :=  ( length(DynamicEqPair) div 2 )  - 1 ;
           for i := 0 to NumData do
             if DynamicEqObj.IsInitVal(DynamicEqPair[( i * 2 ) + 1]) then
@@ -2771,7 +2770,7 @@ begin
             ThetaHistory := DynamicEqVals[DynOut[1]][0] + 0.5*h*DynamicEqVals[DynOut[1]][1]; // then angle
         End;
 
-      // Check for initializations using calculated values (P, Q, VMag, VAng, IMag, IAng)
+      // Check for initial conditions using calculated values (P, Q, VMag, VAng, IMag, IAng)
       NumData   :=  ( length(DynamicEqPair) div 2 )  - 1 ;
       for i := 0 to NumData do
         if not DynamicEqObj.IsInitVal(DynamicEqPair[( i * 2 ) + 1]) then     // it's not intialization
@@ -3130,12 +3129,5 @@ begin
 
 end;
 
-initialization
-  Try
-    CDOUBLEONE := CMPLX(1.0, 1.0);
-//   TWOPI3     := twopi/3.0;
-  Except
-    On E:Exception do DumpExceptionCallStack (E);
-  end;
 end.
 

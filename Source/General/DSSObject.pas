@@ -123,7 +123,7 @@ procedure TDSSObject.InitPropertyValues(ArrayOffset: Integer);
 begin
      PropertyValue[ArrayOffset+1] := ''; //Like   Property
 
-     // Clear propertySequence Array  after initialization
+     // Clear propertySequence Array  after initializing
      ClearPropSeqArray;
 
 end;

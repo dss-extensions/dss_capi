@@ -203,7 +203,7 @@ USES
 
     ParserDel, DSSClassDefs, DSSGlobals, Circuit,  Storage,
     Sysutils, uCmatrix, MathUtil, Math, Dynamics,
-    XYCurve, ExceptionTrace;
+    XYCurve;
 
 CONST
 
@@ -266,9 +266,6 @@ CONST
 
 //= = = = = = = = = = = = = = DEFINE OTHER CONSTANTS = = = = = = = = = = = = = = = = = = = = = = = = =
     RELEASE_INHIBIT = 999;
-
-VAR
-    CDoubleOne :Complex;
 
 {--------------------------------------------------------------------------}
 constructor TStorageController.Create;  // Creates superstructure for all StorageController objects
@@ -2567,13 +2564,4 @@ Begin
 
 End;
 
-
-{--------------------------------------------------------------------------}
-
-INITIALIZATION
-  Try
-    CDoubleOne := Cmplx(1.0, 1.0);
-  Except
-    On E:Exception do DumpExceptionCallStack (E);
-  end;
 end.

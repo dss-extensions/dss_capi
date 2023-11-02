@@ -1613,6 +1613,7 @@ end;
 {$ENDIF}
 
 initialization
+//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
   Try
     DSSConnectObj := nil; // Instantiate only if connect command issued
   Except
@@ -1621,5 +1622,4 @@ initialization
 
 finalization
 If Assigned(DSSConnectObj) then  DSSConnectObj.Free;
-
 end.

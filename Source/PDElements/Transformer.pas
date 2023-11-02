@@ -1081,7 +1081,7 @@ Begin
      For i := 1 to NumWindings do Winding^[i].ComputeAntiFloatAdder(ppm_FloatFactor, VABase/FNPhases);
 
    { Normal and Emergency terminal current Rating for UE check}
-     Vfactor := 1.0;  // ensure initialization
+     Vfactor := 1.0;  // ensure initial values
      Case Winding^[1].connection Of
         0:        VFactor := Winding^[1].VBase * 0.001;   // wye
         1:Case Fnphases of

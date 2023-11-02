@@ -450,7 +450,7 @@ VAR
 implementation
 
 
-USES  ParserDel, Circuit,  Sysutils, Command, Math, DSSClassDefs, DSSGlobals, Utilities, ExceptionTrace;
+USES  ParserDel, Circuit,  Sysutils, Command, Math, DSSClassDefs, DSSGlobals, Utilities;
 
 Const
 
@@ -529,7 +529,6 @@ Const
 VAR
 
   cBuffer:Array[1..24] of Complex;  // Temp buffer for calcs  24-phase Storage element?
-  CDOUBLEONE: Complex;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TStorage.Create;  // Creates superstructure for all Storage elements
@@ -2174,7 +2173,7 @@ Begin
    IF IsHarmonicModel Then
    Begin
    {Yeq is computed from %R and %X -- inverse of Rthev + j Xthev}
-    Y  := YEQ;   // L-N value computed in initialization routines
+    Y  := YEQ;   // L-N value computed in initial condition routines
 
     IF Connection=1 Then Y := CDivReal(Y, 3.0); // Convert to delta impedance
     Y.im := Y.im / FreqMultiplier;
@@ -4450,12 +4449,5 @@ Begin
     If Value>Registers[reg] Then Registers[Reg] := Value;
 End;
 
-//----------------------------------------------------------------------------
-initialization
-  Try
-    CDOUBLEONE := CMPLX(1.0, 1.0);
-  Except
-    On E:Exception do DumpExceptionCallStack (E);
-  end;
 end.
 
