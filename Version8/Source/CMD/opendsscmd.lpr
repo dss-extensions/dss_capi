@@ -427,11 +427,8 @@ end;
 var
   Application: TMyApplication;
 
-// {$R *.res}
-
-{$R *.res}
-
 begin
+  {$IFDEF FPC_TRACE_INIT}writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));{$ENDIF}
   Application:=TMyApplication.Create(nil);
   Application.Run;
   ExitCode := DSSExecutive[ActiveActor].Error;

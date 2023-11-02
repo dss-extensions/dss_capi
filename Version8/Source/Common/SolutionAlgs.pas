@@ -1166,7 +1166,7 @@ Begin
 End;
 
 initialization
-//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
+  {$IFDEF FPC_TRACE_INIT}writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));{$ENDIF}
   Try
     IsMultiThread :=  True;
   Except

@@ -205,7 +205,7 @@ Begin
 End;
 
 initialization
-//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
+  {$IFDEF FPC_TRACE_INIT}writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));{$ENDIF}
  {Make a Proxy Control Object to receiving control actions}
   Try
     COMControlProxyObj := TCOMControlProxyObj.Create(Nil, 'COM_Proxy');
