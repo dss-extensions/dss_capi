@@ -381,6 +381,7 @@ End;
 
 
 initialization
+//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
 
   HelpFormObj := NIL;
   Progress := Nil;   // Created in Solution and ImplDSSProgress

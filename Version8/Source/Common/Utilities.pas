@@ -3227,11 +3227,5 @@ Begin
          Else  Result := Copy(BusName, dotpos, length(BusName));    // preserve node designations if any
 End;
 
-initialization
-
-Finalization
-
-
-
 end.
 

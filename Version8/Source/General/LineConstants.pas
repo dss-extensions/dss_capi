@@ -131,7 +131,6 @@ implementation
 Uses DSSGlobals, mathutil, sysutils, math, ExceptionTrace;
 
 VAR
-    C1_j1:Complex;
     b1, b2, b3, b4, d2, d4,c2, c4 :double;
 
 
@@ -608,9 +607,8 @@ begin
 end;
 
 initialization
+//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
   Try
-    C1_j1 := Cmplx(1.0, 1.0);
-
     b1 := 1.0/(3.0 * sqrt(2.0));
     b2 := 1.0/16.0;
     b3 := b1/3.0/5.0;

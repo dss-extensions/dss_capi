@@ -205,6 +205,7 @@ Begin
 End;
 
 initialization
+//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
  {Make a Proxy Control Object to receiving control actions}
   Try
     COMControlProxyObj := TCOMControlProxyObj.Create(Nil, 'COM_Proxy');

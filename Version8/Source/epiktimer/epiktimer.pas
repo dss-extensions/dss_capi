@@ -101,7 +101,7 @@ type
     variable to the Private area of TEpikTimer and providing a "Ticks" routine
     that returns the current counter value.
 
-    Timebases are "calibrated" during initialization by taking samples of the
+    Timebases are "calibrated" during initially by taking samples of the
     execution times of the SystemSleep and Ticks functions measured with in the
     tick period of the selected timebase. At runtime, these values are retrieved
     and used to remove the call overhead to the best degree possible.
@@ -730,7 +730,7 @@ begin
     FHWTicks.TicksFrequency:=GetTimebaseCorrelation
 end;
 
-(* * * * * * * * Initialization: Constructor and Destructor  * * * * * * *)
+(* * * * * * * * Constructor and Destructor  * * * * * * *)
 
 constructor TEpikTimer.Create(AOwner: TComponent);
 

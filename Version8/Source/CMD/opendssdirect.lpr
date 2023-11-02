@@ -42,6 +42,7 @@ uses
   {$ENDIF}
   SysUtils,
   Classes,
+  {
   Arraydef in '..\Shared\Arraydef.pas',
   AutoAdd in '..\Common\AutoAdd.pas',
   AutoTrans in '..\PDElements\AutoTrans.pas',
@@ -68,7 +69,9 @@ uses
   DSSCallBackRoutines in '..\Common\DSSCallBackRoutines.pas',
   DSSClass in '..\Common\DSSClass.pas',
   DSSClassDefs in '..\Common\DSSClassDefs.pas',
+  }
   DSSGlobals in '..\Common\DSSGlobals.pas',
+  {
   DSSObject in '..\General\DSSObject.pas',
   DynamicExp in '..\General\DynamicExp.pas',
   Dynamics in '..\Shared\Dynamics.pas',
@@ -78,7 +81,6 @@ uses
   ExecCommands in '..\Executive\ExecCommands.pas',
   ExecHelper in '..\Executive\ExecHelper.pas',
   ExecOptions in '..\Executive\ExecOptions.pas',
-  Executive in '..\Executive\Executive.pas',
   ExpControl in '..\Controls\ExpControl.pas',
   ExportCIMXML in '..\Common\ExportCIMXML.pas',
   ExportOptions in '..\Executive\ExportOptions.pas',
@@ -166,6 +168,8 @@ uses
   XfmrCode in '..\General\XfmrCode.pas',
   XYcurve in '..\General\XYcurve.pas',
   Ymatrix in '..\Common\Ymatrix.pas',
+  }
+  Executive in '..\Executive\Executive.pas',
   DText in '..\DDLL\DText.pas',
   DLoads in '..\DDLL\DLoads.pas',
   DIDSSProperty in '..\DDLL\DIDSSProperty.pas',
@@ -255,17 +259,13 @@ exports
    getVpointer,SolveSystem,ParallelI,ParallelV,LineCodesI,LineCodesF,LineCodesS,
    LineCodesV, GICSourcesI,GICSourcesF,GICSourcesS,GICSourcesV,ReduceCktI,ReduceCktF,ReduceCktS;
 
-// {$R *.res}
-
 begin
+  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
   Try
     IsDLL := TRUE;
     IsMultiThread := True;
-///{Create one instance of DSS executive whenever the DSS Engine is init'd}
     DSSExecutive[ActiveActor] := TExecutive.Create;  // Start the DSS when DSS interface is created
-//    raise exception.create ('Testing');
     DSSExecutive[ActiveActor].CreateDefaultDSSItems;
-///  //WriteDLLDebugFile(DSSDirectory);
   Except
     On E:Exception do
       DumpExceptionCallStack (E);

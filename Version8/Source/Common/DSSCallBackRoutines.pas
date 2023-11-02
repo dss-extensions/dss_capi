@@ -423,7 +423,6 @@ End;
 {====================================================================================================================}
 
 Initialization
-
 {Initialize Function Interface variables for user-Written Callbacks}
   Try
     With CallBackRoutines Do
@@ -475,5 +474,4 @@ Initialization
 Finalization
 
   CallBackParser.Free;
-
 end.

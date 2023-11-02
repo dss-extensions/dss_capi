@@ -235,7 +235,7 @@ Begin
           SERIESONLY: SeriesYInvalid := False;  // SystemYChange unchanged
      End;
     // Deleted RCD only done now on mode change
-    // SolutionInitialized := False;  //Require initialization of voltages if Y changed
+    // SolutionInitialized := False;  //Require new initial condition of voltages if Y changed
 
     If PreserveNodeVoltages Then RestoreNodeVfromVbus;
 

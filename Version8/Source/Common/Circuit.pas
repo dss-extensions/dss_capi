@@ -598,7 +598,7 @@ BEGIN
    BusAdjPC             := nil;
    BusAdjPD             := nil;
 
-   // tearing algorithm vars initialization
+   // initialize variables for the tearing algorithm
 
 
   Coverage              :=  0.9;      // 90% coverage expected by default

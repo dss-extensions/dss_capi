@@ -3858,15 +3858,5 @@ begin
 
 end;
 
-initialization
-
-  {RegisterNameList := TCommandList.Create(['kWh', 'kvarh', 'Max kW', 'Max kVA', 'Zone kWh',
-  'Zone kvarh', 'Zone Max kW','Zone Max kVA','Overload kWh Normal','Overload kWh Emerg','Load EEN',
-  'Load UE', 'Zone Losses kWh', 'Zone Losses kvarh', 'Zone Max kW Losses', 'Zone Max kvar Losses',
-  'Gen kWh', 'Gen kvarh', 'Gen Max kW', 'Gen Max kVA']); }
-
-
-Finalization
-
 end.
 

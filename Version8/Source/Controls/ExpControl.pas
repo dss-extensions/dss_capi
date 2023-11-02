@@ -339,7 +339,7 @@ Begin
      FPVSystemNameList := TSTringList.Create;
      FPVSystemPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
      // user parameters for dynamic Vreg
-     FVregInit := 1.0; // 0 means to find it during initialization
+     FVregInit := 1.0; // 0 means to find it during initial condition
      FSlope := 50.0;
      FVregTau := 1200.0;
      FVregs := nil;

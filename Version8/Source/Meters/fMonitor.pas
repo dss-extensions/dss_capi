@@ -128,7 +128,7 @@ TYPE
 
        // attack and defense
        d_atk_inited,
-       z_dfs_inited       : boolean;        // for attack initialization if attack is dynamic
+       z_dfs_inited       : boolean;        // initializing attack if attack is dynamic
        atk_node_num       : integer;        //default no. 1;
        atk_time,                            //when the attack starts to work, default by 0.5s.
        beta_dfs,                            //defense index
@@ -865,7 +865,7 @@ Begin
      virtual_Ld_Nd := 1;
      nUp_dlys := 0;
      //bCurtl_Clstr := false;
-     {end of leader initialization}
+     {end of initializing leader}
      //virtual generator for frequency
      eg_defed := false;
      kVA_fm := 0.0; M_fm := 0.0; D_fm := 0.0; Tau_fm := 0.0; Ki_fm := 0.0;
@@ -1612,7 +1612,7 @@ begin
         end;
         }
         ///
-        vl_V_ref1_dg:= vl_V_ref_dg;//:=1000*2.4; 1000*2.4; V_ref2:=1000*2.4; V_ref3 :=1000*2.4;// norminal value with respect to p.u. 1  //must be set by initialization
+        vl_V_ref1_dg:= vl_V_ref_dg;//:=1000*2.4; 1000*2.4; V_ref2:=1000*2.4; V_ref3 :=1000*2.4;// norminal value with respect to p.u. 1  //must be set by initializing routine
         vl_V_ref2_dg:= vl_V_ref_dg;
         vl_V_ref3_dg:= vl_V_ref_dg;
         //kcq := 1.0; // the step size gain of agent i //has to be defined befor used
@@ -4008,7 +4008,7 @@ var
   domg, ddlt, dPm : double;
   DeltaP, tmp : double;
 begin
-      //first time initialization
+      // initializing first time
       if ActiveCircuit[ActorID].Solution.DynaVars.t < init_time then
                          pm_fm := self.Get_power_trans(ActorID);
 
@@ -4135,7 +4135,7 @@ begin
        if (atk = true) AND (ActiveCircuit[ActorID].Solution.DynaVars.SolutionMode = DYNAMICMODE)
        AND (ActiveCircuit[ActorID].Solution.DynaVars.t >= atk_time) then
        begin
-           // initialization first, only once
+           // initializing first, and only once
            if d_atk_inited = false then
            BEGIN
                for j := 1 to Nodes do

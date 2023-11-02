@@ -46,7 +46,7 @@
     </Parsing>
     <CodeGeneration>
       <RelocatableUnit Value="True"/>
-      <TargetCPU Value="x86_64"/>
+      <TargetCPU Value="aarch64"/>
     </CodeGeneration>
     <Linking>
       <Options>

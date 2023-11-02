@@ -270,7 +270,7 @@ BEGIN
 END;
 
 Initialization
-
+//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
   Try
     TOP_Inited := FALSE;
     TOPTransferFile:= TOutFile32.Create;
