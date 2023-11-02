@@ -2100,7 +2100,7 @@ begin
 end;
 
 initialization
-  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
+//  writeln(format ('init %s:%s', [{$I %FILE%}, {$I %LINE%}]));
   Try
     ONE_THIRD := 1.0/3.0;  // Do this to get more precision in certain calculations
   Except
