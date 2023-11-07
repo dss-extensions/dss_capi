@@ -2173,7 +2173,7 @@ Begin
   FINALLY
 
      CloseFile(F);
-     FireOffEditor(Fname);
+     If AutoDisplayShowReport Then FireOffEditor(Fname);
 
   End;
 
