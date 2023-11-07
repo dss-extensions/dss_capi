@@ -285,11 +285,9 @@ type
     N14               : TMenuItem;
     ScriptFontMnu     : TMenuItem;
     Summary1          : TMenuItem;
-    LinkstoHelpFiles1 : TMenuItem;
     Timer1            : TTimer;
     COMHelp1: TMenuItem;
     Checkforupdates1: TMenuItem;
-    DirectDLL1: TMenuItem;
     WindowColorTheme1: TMenuItem;
     Standard1: TMenuItem;
     Dark1: TMenuItem;
@@ -694,7 +692,7 @@ end;
 
 procedure TControlPanel.COMHelp1Click(Sender: TObject);
 begin
-  ActiveScriptForm.ExecuteDSSCommand('COMHelp');
+  ActiveScriptForm.ExecuteDSSCommand('UserManual');
 end;
 
 procedure TControlPanel.Exit1Click(Sender: TObject);
@@ -2449,7 +2447,7 @@ end;
 
 procedure TControlPanel.OpenDSSWiki1Click(Sender: TObject);
 begin
-  shellexecute(handle,'open','http://smartgrid.epri.com/SimulationTool.aspx',nil,nil,1);
+  shellexecute(handle,'open','https://www.epri.com/pages/sa/opendss',nil,nil,1);
 end;
 
 procedure TControlPanel.Save2Click(Sender: TObject);
