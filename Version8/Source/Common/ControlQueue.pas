@@ -479,7 +479,7 @@ begin
     End;
   Finally
     CloseFile(F);
-    FireOffEditor(FileNm);
+    If AutoDisplayShowReport Then FireOffEditor(FileNm);
   End;
 
 

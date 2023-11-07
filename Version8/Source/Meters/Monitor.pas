@@ -1771,7 +1771,7 @@ Begin
 
      END;
 
-     IF Show Then FireOffEditor(CSVName);
+     IF (Show and AutoDisplayShowReport) Then FireOffEditor(CSVName);
 
      GlobalResult := CSVName;
 End;
