@@ -195,6 +195,25 @@ begin
     FreeMem(S);
 end;
 
+function obj_NewFromClass(DSS: TDSSContext; Cls: TDSSClass; Name: String; Activate: TAltAPIBoolean; BeginEdit: TAltAPIBoolean): Pointer;
+var
+    Obj: TDSSObject;
+begin
+    Result := NIL;
+    if DSS = NIL then DSS := DSSPrime;
+    Obj := Cls.NewObject(Name, Activate);
+    if BeginEdit then
+        Cls.BeginEdit(Obj, False);
+
+    if Cls.DSSClassType = DSS_OBJECT then
+        DSS.DSSObjs.Add(Obj)
+    else
+        DSS.ActiveCircuit.AddCktElement(TDSSCktElement(Obj));
+
+    Result := Obj;
+end;
+
+
 function Obj_New(DSS: TDSSContext; ClsIdx: Integer; Name: PAnsiChar; Activate: TAltAPIBoolean; BeginEdit: TAltAPIBoolean): Pointer; CDECL;
 var
     Obj: TDSSObject;
@@ -1181,8 +1200,6 @@ begin
         TPropertyType.StringSilentROFunctionProperty,
         TPropertyType.StringProperty,
         TPropertyType.BusProperty,
-        // TPropertyType.StringOnArrayProperty,
-        // TPropertyType.StringOnStructArrayProperty,
         TPropertyType.BusOnStructArrayProperty,
         TPropertyType.MappedStringEnumProperty,
         TPropertyType.DSSObjectReferenceProperty
@@ -1455,8 +1472,6 @@ begin
         TPropertyType.StringProperty,
         TPropertyType.BusProperty,
         TPropertyType.MappedStringEnumProperty,
-        // TPropertyType.StringOnArrayProperty,
-        // TPropertyType.StringOnStructArrayProperty,
         TPropertyType.BusOnStructArrayProperty,
         TPropertyType.DSSObjectReferenceProperty
     ]) then
@@ -1642,13 +1657,10 @@ begin
     // propOffset := cls.PropertyOffset[Index];
 
     if not (cls.PropertyType[Index] in [
-        // TPropertyType.StringEnumActionProperty, --TODO? Not in SetObjString
-        // TPropertyType.MappedStringEnumOnStructArrayProperty, --TODO? Not in SetObjString
+        TPropertyType.StringEnumActionProperty,
         TPropertyType.StringProperty,
         TPropertyType.BusProperty,
         TPropertyType.MappedStringEnumProperty,
-        // TPropertyType.StringOnArrayProperty,
-        // TPropertyType.StringOnStructArrayProperty,
         TPropertyType.BusOnStructArrayProperty,
         TPropertyType.DSSObjectReferenceProperty
     ]) then
@@ -2084,7 +2096,7 @@ begin
             Result[i] := arr.Floats[i];
         Exit;
     end;
-    obj := obj as TJSONOBject;
+    obj := obj as TJSONObject;
     if obj = NIL then
         raise Exception.Create('Array is not correctly specified');
 
@@ -2120,15 +2132,35 @@ var
     specialFirst: Boolean;
     line: String;
 
-    procedure loadSingleObj(o: TJSONObject);
+    procedure loadSingleObj(o: TJSONObject; num: Integer);
+    var
+        dssObj: TDSSObject;
+        nameData: TJSONData = NIL;
+        name: String;
     begin
-        if specialFirst then
-        begin
-            WriteLn('"SPECIAL loading first" ', cls.Name, '.', o.Get('name', 'MISSING_NAME'));
-            specialFirst := false;
-        end;
+        try
+            nameData := o.Extract('Name');
+            if nameData = NIL then
+                nameData := o.Extract('name');
 
-        WriteLn('"Loading" ', cls.Name, '.', o.Get('name', 'MISSING_NAME'));
+            if nameData = NIL then
+                raise Exception.Create(Format('JSON/%s: missing "Name" from item %d.', [cls.Name, num]));
+
+            name := nameData.Value;
+            if specialFirst then
+            begin
+                WriteLn('"SPECIAL loading first" ', cls.Name, '.', name);
+                specialFirst := false;
+            end;
+
+            WriteLn('"Loading" ', cls.Name, '.', name);
+            dssObj := obj_NewFromClass(DSS, cls, name, false, true);
+            if not cls.FillObjFromJSON(dssObj, o, joptions) then
+                raise Exception.Create(Format('JSON/%s/%s: error processing item.', [cls.Name, name]));
+        finally
+            if nameData <> NIL then
+                nameData.Free();
+        end;
     end;
 begin
     specialFirst := (cls = DSS.VSourceClass);
@@ -2136,9 +2168,7 @@ begin
         if jcls is TJSONObject then
         begin
             obj := TJSONObject(jcls);
-            obj.Find('JSONFile', jsonFilePath);
-            obj.Find('JSONLinesFile', jsonLinesFilePath);
-            if jsonFilePath <> NIL then
+            if obj.Find('JSONFile', jsonFilePath) then
             begin
                 F := DSS.GetInputStreamEx(jsonFilePath.Value);
                 data := GetJSON(F);
@@ -2148,7 +2178,7 @@ begin
                 // continue as if the array as built-in
             end
             else
-            if jsonLinesFilePath <> NIL then
+            if obj.Find('JSONLinesFile', jsonLinesFilePath) then
             begin
                 F := DSS.GetInputStreamEx(jsonLinesFilePath.Value);
                 lineNum := 1;
@@ -2159,7 +2189,7 @@ begin
                     if not (data is TJSONObject) then
                         raise Exception.Create(Format('JSON/%s: unexpected format in file "%s", line %d.', [cls.Name, jsonLinesFilePath.Value, lineNum]));
 
-                    loadSingleObj(TJSONObject(data));
+                    loadSingleObj(TJSONObject(data), lineNum);
                     FreeAndNil(data);
                     lineNum += 1;
                 end;
@@ -2177,7 +2207,7 @@ begin
             arrItem := arr.Items[lineNum];
             if not (arrItem is TJSONObject) then
                 raise Exception.Create(Format('JSON/%s: unexpected format for object number %d.', [cls.Name, lineNum]));
-            loadSingleObj(TJSONObject(arrItem));
+            loadSingleObj(TJSONObject(arrItem), lineNum);
         end;
 
     except
@@ -2188,12 +2218,55 @@ begin
     FreeAndNil(data);
 end;
 
+procedure busFromJSON(DSS: TDSSContext; obj: TJSONObject; arrayIdx: Integer);
+var
+    busIdx: Integer;
+    bus: TDSSBus;
+    name: String;
+    numVal: TJSONNumber;
+    boolVal: TJSONBoolean;
+    kVDone: Boolean = false;
+begin
+    busIdx := DSS.ActiveCircuit.BusList.Find(obj['Name'].AsString);
+    if (busIdx = 0) then
+        Exit; // TODO: error?
+
+    bus := DSS.ActiveCircuit.Buses[busIdx];
+    
+    if obj.Find('X', numVal) then
+    begin
+        bus.CoordDefined := true;
+        bus.X := numVal.AsFloat;
+    end;
+    if obj.Find('Y', numVal) then
+    begin
+        bus.CoordDefined := true;
+        bus.Y := numVal.AsFloat;
+    end;
+    if obj.Find('Keep', boolVal) then
+    begin
+        bus.keep := boolVal.AsBoolean;
+    end;
+    if obj.Find('kVLN', numVal) then
+    begin
+        bus.kVBase := numVal.AsFloat;
+        kVDone := true;
+    end;
+    if obj.Find('kVLL', numVal) then
+    begin
+        if not kVDone then
+            bus.kVBase := numVal.AsFloat / SQRT3
+        else
+            raise Exception.Create(_('Both "kVLN" and "kVLL" were specified.'));
+    end;
+end;
+
 procedure Obj_Circuit_FromJSON_(DSS: TDSSContext; jckt: TJSONObject; joptions: Integer);
 var
     ckt: TDSSCircuit;
     tmp: TJSONData;
     cls: TDSSClass;
-    cmds: TJSONArray;
+    items, item: TJSONArray;
     i: Integer;
 begin
     DSS.DSSExecutive.Clear();
@@ -2208,10 +2281,10 @@ begin
         if not (tmp is TJSONArray) then
             raise Exception.Create('"PreCommands" must be an array of strings, if provided.');
 
-        cmds := tmp as TJSONArray;
-        for i := 0 to cmds.Count - 1 do
+        items := tmp as TJSONArray;
+        for i := 0 to items.Count - 1 do
         begin
-            DSSPrime.DSSExecutive.ParseCommand(cmds.Items[i].AsString);
+            DSSPrime.DSSExecutive.ParseCommand(items.Items[i].AsString, i + 1);
         end;
     end;
 
@@ -2221,7 +2294,42 @@ begin
         if tmp = NIL then
             continue;
 
-        loadClassFromJSON(DSS, cls, tmp,  joptions);
+        loadClassFromJSON(DSS, cls, tmp, joptions);
+    end;
+
+    tmp := jckt.Find('Bus');
+    if (tmp <> NIL) then
+    begin
+        if not (tmp is TJSONArray) then
+            raise Exception.Create('"Bus" must be an array of bus objects, if provided.');
+
+        items := tmp as TJSONArray;
+        if (items.Count <> 0) then
+        begin
+            if DSS.ActiveCircuit.BusNameRedefined then
+                DSS.ActiveCircuit.ReprocessBusDefs();
+        end;
+
+        for i := 0 to items.Count - 1 do
+        begin
+            tmp := items.Items[i];
+            if not (tmp is TJSONObject) then
+                raise Exception.Create(Format(_('"Bus[%d]" must be a bus object.'), [i]));
+
+            busFromJSON(DSS, tmp as TJSONObject, i);
+        end;
+    end;
+    tmp := jckt.Find('PostCommands');
+    if (tmp <> NIL) then
+    begin
+        if not (tmp is TJSONArray) then
+            raise Exception.Create('"PostCommands" must be an array of strings, if provided.');
+
+        items := tmp as TJSONArray;
+        for i := 0 to items.Count - 1 do
+        begin
+            DSSPrime.DSSExecutive.ParseCommand(items.Items[i].AsString, i + 1);
+        end;
     end;
 
 end;

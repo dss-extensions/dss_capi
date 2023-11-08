@@ -121,7 +121,7 @@ type
         ConditionalValue, // for sym comp in LineCode
         IntegerToDouble, // for double arrays -- read integer, convert to double
         CheckForVar, // for object references
-        AllowNone, // for arrays
+        AllowNone, // for arrays, only used in Relay.RecloseIntervals
         ArrayMaxSize, // for arrays
         ValueOffset, // only implemented for integers
         FullNameAsArray, // special case for LineGeometry, when reading wire as an array of strings through the Obj_* API
@@ -234,14 +234,8 @@ type
         // For (double,string,integer)-on-array, 
         // offset is the offset pointer to the pointer/array
         // offset2 is the offset pointer to the element index (Integer)
-        // StringOnArrayProperty,  //1-based
-
-        // For (double,string,integer)-on-array, 
-        // offset is the offset pointer to the pointer/array
-        // offset2 is the offset pointer to the element index (Integer)
         // step is the size of the step used in offset2 (direct integer)
         IntegerOnStructArrayProperty, // AutoTrans, Transformer, XfmrCode
-        // StringOnStructArrayProperty,
 
         BusOnStructArrayProperty, // AutoTrans, Transformer
         BusesOnStructArrayProperty, // AutoTrans, Transformer
@@ -1240,9 +1234,18 @@ begin
 end;
 
 destructor TDSSContext.Destroy;
-// var
-//     i: Integer;
+var
+    i: Integer;
 begin
+    // If it's the Prime context, remove all callbacks first since it usually 
+    // means we're at the end of the process life and other required libraries
+    // could have been unloaded already.
+    if IsPrime then
+    begin
+        for i := 0 to ord(High(TAltDSSEvent)) do
+            DSSAltEventCallbacks[TAltDSSEvent(i)] := nil;
+    end;
+
     DSS_Dispose_PByte(GR_DataPtr_PByte);
     DSS_Dispose_PDouble(GR_DataPtr_PDouble);
     DSS_Dispose_PInteger(GR_DataPtr_PInteger);
@@ -1816,10 +1819,14 @@ begin
             // Skip redundant/removed
             skipped += 1
         else
+        begin
             AltPropertyOrder[i - skipped] := nextIdx;
-
+            WriteLn(Name, '.', PropertyName[i], nextIdx);
+            TODO: FIX
+        end;
         nextZorder := propZorder[nextIdx];
     end;
+    WriteLn();
 End;
 
 function TDSSClass.ElementCount(): Integer;

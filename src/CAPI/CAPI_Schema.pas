@@ -394,7 +394,7 @@ begin
     end;
 end;
 
-function prepareClassJsonSchema(clsidx: Integer; cls: TDSSClass; enumIds: TClassNamesHashListType): TJSONObject;
+function prepareClassJsonSchema(cls: TDSSClass; enumIds: TClassNamesHashListType): TJSONObject;
 const 
     PropertyTypeJson: array[TPropertyType] of string = (
         'number', // DoubleProperty
@@ -415,7 +415,7 @@ const
         'numberArray', //'symMatrix', // DoubleSymMatrixProperty,
 
         'integerArray', // IntegerArrayProperty, // Capacitor
-        'stringArray', // StringListProperty, //TODO: maybe replace later with DSSObjectReferenceArrayProperty in lots of instances
+        '#/$defs/StringArrayOrFilePath', // StringListProperty, //TODO: maybe replace later with DSSObjectReferenceArrayProperty in lots of instances
         '-', // DSSObjectReferenceProperty,
         'stringArray', //DSSObjectReferenceArrayProperty, // Line, LineGeometry
 
@@ -490,7 +490,7 @@ var
     oneOf: TJSONArray = NIL;
     specSet: TJSONObject = NIL;
     propName: String;
-    propJSON: Array of TJSONObject;
+    propJSON: Array of TJSONObject = NIL;
     requiredInSpec: TJSONArray = NIL;
 
     zorder: Integer;
@@ -1282,8 +1282,8 @@ begin
                     'type', 'object', 
                     'properties', TJSONObject.Create([
                         'CSVFile', TJSONObject.Create(['type', 'string', 'format', 'file-path']),
-                        'column', TJSONObject.Create(['type', 'integer', 'default', 1, 'exclusiveMinimum', 0]),
-                        'header', TJSONObject.Create(['type', 'boolean', 'default', false])
+                        'Column', TJSONObject.Create(['type', 'integer', 'default', 1, 'exclusiveMinimum', 0]),
+                        'Header', TJSONObject.Create(['type', 'boolean', 'default', false])
                     ]),
                     'required', TJSONArray.Create(['CSVFile'])
                 ]),
@@ -1302,6 +1302,22 @@ begin
                         'SngFile', TJSONObject.Create(['type', 'string', 'format', 'file-path'])
                     ]),
                     'required', TJSONArray.Create(['SngFile'])
+                ])
+            ])
+        ])
+    );
+    globalDefs.Add(
+        'StringArrayOrFilePath',
+        TJSONObject.Create([
+            'oneOf', TJSONArray.Create([
+                TJSONObject.Create(['title', 'StringArray', 'type', 'array', 'items', TJSONObject.Create(['type', 'string', 'minLength', 1])]),
+                TJSONObject.Create([
+                    'title', 'StringArrayFromFile',
+                    'type', 'object', 
+                    'properties', TJSONObject.Create([
+                        'File', TJSONObject.Create(['type', 'string', 'format', 'file-path'])
+                    ]),
+                    'required', TJSONArray.Create(['File'])
                 ])
             ])
         ])
@@ -1411,13 +1427,13 @@ begin
         ])
         // 'circuitVsource', TJSONObject.Create(['$ref', '#/$defs/Vsource'])
     ]);
-
+    
     for dssEnum in DSS.Enums do
         globalDefs.Add(dssEnum.JSONName, prepareEnumJsonSchema(dssEnum, enumIds));
 
     for cls in DSS.DSSClassList do
     begin
-        globalDefs.Add(cls.Name, prepareClassJsonSchema(i, DSS.DSSClassList.At(i), enumIds));
+        globalDefs.Add(cls.Name, prepareClassJsonSchema(cls, enumIds));
         clsArrayDef := TJSONObject.Create([
             'title', cls.Name + 'List',
             'type', 'array',
