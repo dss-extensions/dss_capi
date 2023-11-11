@@ -18,6 +18,7 @@ type
     private
         lst: TDSSPointerList;
         currentPtr: Pointer;
+        currentIdx: Integer;
         function Get_Current(): Pointer;
     public
         constructor Create(alst: TDSSPointerList); 
@@ -173,15 +174,32 @@ end;
 
 function TDSSPointerEnumerator.MoveNext(): Boolean;
 begin
-    currentPtr := lst.Next();
+    if lst.Count > 0 then
+    begin
+        Inc(currentIdx);
+        if currentIdx > lst.Count then
+        begin
+            currentIdx := lst.Count;
+            currentPtr := NIL;
+            lst.ActiveItem := currentIdx; // for backwards compatibility
+        end
+        else
+            currentPtr := lst.List[currentIdx];
+    end
+    else
+    begin
+        currentIdx := 0;
+        currentPtr := NIL;
+    end;
     Result := currentPtr <> NIL;
 end;
 
 constructor TDSSPointerEnumerator.Create(alst: TDSSPointerList);
 begin
     lst := alst;
+    // lst.ResetActive(); // this could be required for backwards compat.
     currentPtr := NIL;
-    lst.ResetActive();
+    currentIdx := 0;
 end;
 
 end.
