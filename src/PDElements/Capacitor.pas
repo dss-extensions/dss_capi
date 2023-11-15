@@ -219,7 +219,7 @@ begin
     // real matrix
     PropertyType[ord(TProp.cmatrix)] := TPropertyType.DoubleSymMatrixProperty;
     PropertyOffset[ord(TProp.cmatrix)] := ptruint(@obj.Cmatrix);
-    PropertyOffset2[ord(TProp.cmatrix)] := ptruint(@obj.Fnphases);
+    PropertyOffset3[ord(TProp.cmatrix)] := ptruint(@obj.Fnphases);
     PropertyScale[ord(TProp.cmatrix)] := 1.0e-6;
     PropertyFlags[ord(TProp.cmatrix)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_uF];
 

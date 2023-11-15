@@ -308,6 +308,11 @@ var
 begin
     Result := '';
     propOffset := cls.PropertyOffset2[sizedPropIndex];
+    if cls.PropertyType[sizedPropIndex] in [TPropertyType.DoubleSymMatrixProperty, TPropertyType.ComplexPartSymMatrixProperty] then
+    begin
+        propOffset := cls.PropertyOffset3[sizedPropIndex];
+    end
+    else
     if TPropertyFlag.IndirectCount in cls.PropertyFlags[sizedPropIndex] then
     begin
         propOffset := cls.PropertyOffset3[sizedPropIndex];
@@ -411,8 +416,21 @@ const
         '#/$defs/ArrayOrFilePath', // DoubleDArrayProperty, // -> For dynamic arrays
         'numberArray', // DoubleVArrayProperty, // -> Use ParseAsVector
         'numberArray', // DoubleFArrayProperty, // -> For fixed-size arrays, with size in offset2
-        'numberArray', // ComplexPartSymMatrixProperty,
-        'numberArray', //'symMatrix', // DoubleSymMatrixProperty,
+        
+        
+        // "Fault.gmatrix"
+        // "Reactor.rmatrix"
+        // "Reactor.xmatrix"
+        // "Capacitor.cmatrix"
+        // "Line.cmatrix"
+        // "Line.rmatrix"
+        // "Line.xmatrix"
+        // "LineCode.cmatrix"
+        // "LineCode.rmatrix"
+        // "LineCode.xmatrix"
+        
+        '#/$defs/SymmetricMatrix', // ComplexPartSymMatrixProperty,
+        '#/$defs/SymmetricMatrix', // DoubleSymMatrixProperty,
 
         'integerArray', // IntegerArrayProperty, // Capacitor
         '#/$defs/StringArrayOrFilePath', // StringListProperty, //TODO: maybe replace later with DSSObjectReferenceArrayProperty in lots of instances
@@ -473,7 +491,7 @@ var
     obj: TDSSObject = NIL;
 
     // For handling default values
-    j: Integer;
+    j, k: Integer;
     defaultF64: Double;
     defaultI32: Integer;
     defaultStr: String;
@@ -483,6 +501,7 @@ var
     defaultI32A: PInteger = NIL;
     defaultStrA: PPAnsiChar = NIL;
     defaultArray: TJSONArray = NIL;
+    defaultSubArray: TJSONArray = NIL;
     aDim: Array[0..3] of TAPISize;
 
     // For handling spec sets
@@ -493,7 +512,7 @@ var
     propJSON: Array of TJSONObject = NIL;
     requiredInSpec: TJSONArray = NIL;
 
-    zorder: Integer;
+    zorder, zorderAlt: Integer;
 begin
     SetLength(propJSON, cls.NumProperties + 1);
 
@@ -534,6 +553,7 @@ begin
                 // Skip redundant/removed
                 continue;
 
+            zorder := indexOfIn(propIndex, AltPropertyOrder);
             if (PropertyArrayAlternative[propIndex] <> 0) then
             begin
                 // Redirect to the alternative property, but keep the name!
@@ -541,8 +561,11 @@ begin
                 propIndex := PropertyArrayAlternative[propIndex];
                 ptype := PropertyType[propIndex];
                 flags := PropertyFlags[propIndex];
+                zorderAlt := indexOfIn(propIndex, AltPropertyOrder);
+                if zorderAlt <> -1 then
+                    zorder := zorderAlt;
             end;
-            zorder := indexOfIn(propIndex, AltPropertyOrder);
+            
 
             units := extractUnits(flags);
 
@@ -554,12 +577,22 @@ begin
             prop := TJSONObject.Create();
             jtype_single := jtype;
 
-            onArray := (('-' = jtype) and AnsiEndsStr('Array', stype)) or AnsiEndsStr('Array', jtype) or (jtype = '#/$defs/ArrayOrFilePath') or (jtype = '#/$defs/BusConnectionArray') or (TPropertyFlag.OnArray in flags);
+            onArray := 
+                (('-' = jtype) and AnsiEndsStr('Array', stype)) or 
+                AnsiEndsStr('Array', jtype) or 
+                (jtype = '#/$defs/ArrayOrFilePath') or 
+                (jtype = '#/$defs/BusConnectionArray') or 
+                (jtype = '#/$defs/StringArrayOrFilePath') or 
+                (jtype = '#/$defs/SymmetricMatrix') or 
+                (TPropertyFlag.OnArray in flags);
+
             // WriteLn('ONARRAY FOR ', cls.Name, '.', propName, '>', cls.PropertyName[propIndex_], ' ->>> ', onArray);SysFlushStdIO();
             if onArray and (jtype <> '-') then
             begin
-                if jtype = '#/$defs/ArrayOrFilePath' then
+                if (jtype = '#/$defs/ArrayOrFilePath') or (jtype = '#/$defs/SymmetricMatrix') then
                     jtype_single := 'number'
+                else if jtype = '#/$defs/StringArrayOrFilePath' then
+                    jtype_single := 'string'
                 else if jtype = '#/$defs/BusConnectionArray' then
                 begin
                     jtype_single := '#/$defs/BusConnection';
@@ -608,23 +641,41 @@ begin
                         defaultF64 := NaN;
                         if defaultF64A <> NIL then
                         begin
-                            for j := 0 to aDim[0] - 1 do
+                            for j := 0 to aDim[1] - 1 do
                             begin
                                 defaultF64 := defaultF64A[j];
                                 if (IsNaN(defaultF64) or IsInfinite(defaultF64)) then
                                     break;
                             end;
                         end;
-                        
+                       
                         if not (IsNaN(defaultF64) or IsInfinite(defaultF64)) then
                         begin
                             defaultArray := TJSONArray.Create();
-                            for j := 0 to aDim[0] - 1 do
+                            if jtype = '#/$defs/SymmetricMatrix' then
                             begin
-                                defaultArray.Add(defaultF64A[j]);
+                                // Matrices
+                                for j := 0 to aDim[2] - 1 do
+                                begin
+                                    defaultSubArray := TJSONArray.Create();
+                                    for k := 0 to aDim[3] - 1 do
+                                    begin
+                                        defaultSubArray.Add(defaultF64A[j * aDim[3] + k]);
+                                    end;
+                                    defaultArray.Add(defaultSubArray);
+                                end;
+                            end
+                            else
+                            begin
+                                // Arrays
+                                for j := 0 to aDim[0] - 1 do
+                                begin
+                                    defaultArray.Add(defaultF64A[j]);
+                                end;
                             end;
                             prop.Add('default', defaultArray);
                             defaultArray := NIL;
+                            defaultSubArray := NIL;
                         end;
                         DSS_Dispose_PDouble(defaultF64A);
                         defaultF64A := NIL;
@@ -936,7 +987,7 @@ begin
                     // WriteLn('LENGTH PROP FOR ', cls.Name, '.', propName, '>', cls.PropertyName[propIndex_], ' ->>> ', lengthProp);SysFlushStdIO();
                     if (lengthProp <> '') and not (TPropertyFlag.SizeIsFunction in flags) then
                     begin
-                        if ANSIContainsStr(stype, 'Matrix') then
+                        if jtype = '#/$defs/SymmetricMatrix' then
                         begin
                             prop.Add('$dssShape', TJSONArray.Create([lengthProp, lengthProp]));
                         end
@@ -1244,10 +1295,13 @@ var
     circuitProperties: TJSONObject;
     i: Integer;
     cls: TDSSClass;
+    orgArrayDims: Boolean;
 begin
     if DSS = NIL then DSS := DSSPrime;
     DSS.DSSExecutive.ParseCommand('clear');
     DSS.DSSExecutive.ParseCommand('new circuit.defaults');
+    orgArrayDims := DSS_EXTENSIONS_ARRAY_DIMS;
+    DSS_EXTENSIONS_ARRAY_DIMS := True;
 
     Result := NIL;
     globalDefs := TJSONObject.Create();
@@ -1272,6 +1326,20 @@ begin
             '$comment', 'A **polar** complex number represented as an array of two floating-point numbers, magnitude and angle parts. Angle in degrees.'
         ])
     );
+
+    globalDefs.Add(
+        'SymmetricMatrix',
+        TJSONObject.Create([
+            'title', 'SymmetricMatrix', 
+            'type', 'array', 
+            'items', TJSONObject.Create([
+                'type', 'array',
+                'items', TJSONObject.Create([
+                    'type', 'number'
+                ])
+            ])])
+    );
+
     globalDefs.Add(
         'ArrayOrFilePath',
         TJSONObject.Create([
@@ -1463,10 +1531,13 @@ begin
         'properties', circuitProperties,
         'required', TJSONArray.Create(['Vsource'])
     ]);
+
+    DSS_EXTENSIONS_ARRAY_DIMS := orgArrayDims;
     Result := DSS_GetAsPAnsiChar(DSS, schema.FormatJSON());
     //Result := DSS_GetAsPAnsiChar(DSS, '-');
     schema.Free();
     enumIds.Free();
+   
 end;
 function DSS_ExtractSchema(DSS: TDSSContext): PAnsiChar; CDECL;
 // - Enums are mapped to a sequential integer id

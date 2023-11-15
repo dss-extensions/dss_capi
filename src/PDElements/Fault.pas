@@ -172,7 +172,7 @@ begin
     // real matrix
     PropertyType[ord(TProp.Gmatrix)] := TPropertyType.DoubleSymMatrixProperty;
     PropertyOffset[ord(TProp.Gmatrix)] := ptruint(@obj.Gmatrix);
-    PropertyOffset2[ord(TProp.Gmatrix)] := ptruint(@obj.Fnphases);
+    PropertyOffset3[ord(TProp.Gmatrix)] := ptruint(@obj.Fnphases);
     PropertyFlags[ord(TProp.Gmatrix)] := [TPropertyFlag.RequiredInSpecSet];
 
     // integer properties

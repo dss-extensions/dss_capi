@@ -225,11 +225,11 @@ begin
     // real matrix
     PropertyType[ord(TProp.Rmatrix)] := TPropertyType.DoubleSymMatrixProperty;
     PropertyOffset[ord(TProp.Rmatrix)] := ptruint(@obj.Rmatrix);
-    PropertyOffset2[ord(TProp.Rmatrix)] := ptruint(@obj.Fnphases);
+    PropertyOffset3[ord(TProp.Rmatrix)] := ptruint(@obj.Fnphases);
 
     PropertyType[ord(TProp.Xmatrix)] := TPropertyType.DoubleSymMatrixProperty;
     PropertyOffset[ord(TProp.Xmatrix)] := ptruint(@obj.Xmatrix);
-    PropertyOffset2[ord(TProp.Xmatrix)] := ptruint(@obj.Fnphases);
+    PropertyOffset3[ord(TProp.Xmatrix)] := ptruint(@obj.Fnphases);
     PropertyFlags[ord(TProp.Xmatrix)] := [TPropertyFlag.RequiredInSpecSet];
 
     // integer properties

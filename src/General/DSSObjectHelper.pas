@@ -523,7 +523,7 @@ begin
         TPropertyType.DoubleSymMatrixProperty:
         begin
             scale := PropertyScale[Index];
-            Norder := PInteger(PByte(obj) + PropertyOffset2[Index])^; // e.g. Fnphases
+            Norder := PInteger(PByte(obj) + PropertyOffset3[Index])^; // e.g. Fnphases
             dataPtr := PByte(obj) + PropertyOffset[Index];
             darray := Allocmem(Sizeof(Double) * Norder * Norder);
             PropParser.Token := Value;
@@ -966,7 +966,7 @@ var
     darray: PDoubleArray;
     mat: TCMatrix;
     ValueCount: Array[0..3] of TAPISize;
-    valArray: TJSONArray;
+    valArray, valArrayItem: TJSONArray;
     ptype: TPropertyType;
     jsonArray: TJSONArray = NIL;
 begin
@@ -1199,14 +1199,27 @@ begin
         TPropertyType.DoubleSymMatrixProperty:
         begin
             scale := PropertyScale[Index];
-            Norder := PInteger(PByte(obj) + PropertyOffset2[Index])^;
+            Norder := PInteger(PByte(obj) + PropertyOffset3[Index])^;
             darray := PDoubleArray(PByte(obj) + PropertyOffset[Index]);
+            if darray = NIL then
+            begin
+                val := TJSONNull.Create();
+                Exit;
+            end;
             valArray := TJSONArray.Create([]);
             val := valArray;
             if (darray <> NIL) and (Norder > 0) then
+            begin
                 for i := 1 to Norder do
-                    for j := 1 to i do
-                        valArray.Add(darray[(i - 1) * Norder + j] / scale);
+                begin
+                    valArrayItem := TJSONArray.Create();
+                    for j := 1 to Norder do
+                    begin
+                        valArrayItem.Add(darray[(i - 1) * Norder + j] / scale);
+                    end;
+                    valArray.Add(valArrayItem);
+                end;
+            end;
             Exit;
         end;
         TPropertyType.ComplexPartSymMatrixProperty:
@@ -1227,18 +1240,29 @@ begin
             val := valArray;
 
             if TPropertyFlag.ImagPart in PropertyFlags[Index] then
+            begin
                 for i := 1 to mat.order do
                 begin
-                    for j := 1 to i do
-                        valArray.Add(mat[i, j].im / scale);
+                    valArrayItem := TJSONArray.Create();
+                    for j := 1 to mat.order do
+                    begin
+                        valArrayItem.Add(mat[i, j].im / scale);
+                    end;
+                    valArray.Add(valArrayItem);
                 end
+            end
             else
+            begin
                 for i := 1 to mat.order do
                 begin
-                    for j := 1 to i do
-                        valArray.Add(mat[i, j].re / scale);
+                    valArrayItem := TJSONArray.Create();
+                    for j := 1 to mat.order do
+                    begin
+                        valArrayItem.Add(mat[i, j].re / scale);
+                    end;
+                    valArray.Add(valArrayItem);
                 end;
-
+            end;
             Exit;
         end;
         TPropertyType.DoubleArrayOnStructArrayProperty:
@@ -1650,11 +1674,15 @@ begin
                 Norder := PropertyOffset2[Index];
             end
             else
-            //TODO: size for TPropertyType.ComplexPartSymMatrixProperty
             begin
                 if TPropertyFlag.SizeIsFunction in PropertyFlags[Index] then
                 begin
                     Norder := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj)
+                end
+                else
+                if PropertyType[Index] in [TPropertyType.DoubleSymMatrixProperty, TPropertyType.ComplexPartSymMatrixProperty] then
+                begin
+                    Norder := PInteger(PByte(obj) + PropertyOffset3[Index])^;
                 end
                 else
                 begin
@@ -1794,7 +1822,7 @@ begin
             TPropertyType.DoubleSymMatrixProperty:
             begin
                 scale := PropertyScale[Index];
-                Norder := PInteger(PByte(obj) + PropertyOffset2[Index])^;
+                Norder := PInteger(PByte(obj) + PropertyOffset3[Index])^;
                 darray := PDoubleArray(PByte(obj) + PropertyOffset[Index]);
                 PropStr := '(';
                 if (darray <> NIL) and (Norder > 0) then
@@ -2893,7 +2921,7 @@ begin
         TPropertyType.DoubleSymMatrixProperty:
         begin
             scale := PropertyScale[Index];
-            Norder := PInteger(PByte(obj) + PropertyOffset2[Index])^; // e.g. Fnphases
+            Norder := PInteger(PByte(obj) + PropertyOffset3[Index])^; // e.g. Fnphases
             dataPtr := PPDouble(PByte(obj) + PropertyOffset[Index]);
             
             // Allow both the full matrix or the triangle
@@ -3625,6 +3653,9 @@ begin
             end
             else if TPropertyFlag.SizeIsFunction in PropertyFlags[Index] then
                 count := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj) //TODO: check if we can use a simple flag for this
+            else
+            if PropertyType[Index] = TPropertyType.DoubleSymMatrixProperty then
+                count := PInteger(PByte(obj) + PropertyOffset3[Index])^
             else
                 count := PInteger(PByte(obj) + PropertyOffset2[Index])^;
 

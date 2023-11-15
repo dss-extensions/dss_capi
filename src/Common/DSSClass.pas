@@ -1752,13 +1752,12 @@ end;
 
 procedure TDSSClass.DefineProperties;
 var
-    i, nextZorder, nextIdx, zorder: Integer;
+    i, nextZorder, propIdx, zorder, outIdx: Integer;
     propZorder: ArrayOfInteger;
     ptype: TPropertyType;
     flags: TPropertyFlags;
     zorderNextStart: Integer = -999;
     zorderNextEnd: Integer = 999;
-    skipped: Integer = 0;
 begin
     PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, PropInfoLegacy, False, 'DSSClass');
 
@@ -1799,34 +1798,47 @@ begin
         end;        
         propZorder[i] := zorder;
     end;
-    
+
     AltPropertyOrder[0] := 0;
-    nextZorder := propZorder[0];
     for i := 1 to NumProperties do
         AltPropertyOrder[i] := -1;
 
+    nextZorder := -1001;
+    outIdx := 1;
     for i := 1 to NumProperties do
     begin
-        ptype := PropertyType[i];
-        flags := PropertyFlags[i];
-
-        nextIdx := nextByZOrder(nextZorder, propZorder);
+        propIdx := nextByZOrder(nextZorder, propZorder);
+        if propIdx = -1 then
+        begin
+            break;
+        end;
+        nextZorder := propZorder[propIdx];
+        ptype := PropertyType[propIdx];
+        flags := PropertyFlags[propIdx];
         if (TPropertyFlag.SuppressJSON in flags) or 
             (TPropertyFlag.AltIndex in flags) or 
             (TPropertyFlag.IntegerStructIndex in flags) or
             (TPropertyFlag.Redundant in flags) or
             (TPropertyType.DeprecatedAndRemoved = ptype) then
             // Skip redundant/removed
-            skipped += 1
-        else
-        begin
-            AltPropertyOrder[i - skipped] := nextIdx;
-            WriteLn(Name, '.', PropertyName[i], nextIdx);
-            TODO: FIX
-        end;
-        nextZorder := propZorder[nextIdx];
+            continue;
+
+        AltPropertyOrder[outIdx] := propIdx;
+        inc(outIdx);
     end;
-    WriteLn();
+    // WriteLn();
+    // for i := 1 to NumProperties do
+    // begin
+    //     WriteLn(Name, '.', PropertyName[i], '    ', i, '    ', propZorder[i]);
+    // end;
+    // WriteLn();
+    // for i := 1 to NumProperties do
+    // begin
+    //     if AltPropertyOrder[i] > 0 then
+    //         WriteLn(Name, '.', PropertyName[AltPropertyOrder[i]], '    ', AltPropertyOrder[i], '    ', i);
+    // end;
+    // WriteLn();
+    // WriteLn();
 End;
 
 function TDSSClass.ElementCount(): Integer;

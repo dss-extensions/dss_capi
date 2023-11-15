@@ -315,8 +315,6 @@ begin
         TSpecSet.Create(ord(TProp.r1), ord(TProp.x1), ord(TProp.r0), ord(TProp.x0), ord(TProp.B1), ord(TProp.B0)),
         TSpecSet.Create(ord(TProp.rmatrix), ord(TProp.xmatrix), ord(TProp.cmatrix))
     );
-    //TODO: apply switch FIRST since it overwrites other data
-
     // list of objects
     PropertyStructArrayCountOffset := ptruint(@obj.FWireDataSize);
     //PropertyStructArrayIndexOffset := ptruint(@obj.FActiveCond);
@@ -344,16 +342,19 @@ begin
     PropertyType[ord(TProp.rmatrix)] := TPropertyType.ComplexPartSymMatrixProperty;
     PropertyOffset[ord(TProp.rmatrix)] := ptruint(@obj.Z);
     PropertyOffset2[ord(TProp.rmatrix)] := ptruint(@GetZmatScale);
+    PropertyOffset3[ord(TProp.rmatrix)] := ptruint(@obj.FNPhases);
     PropertyFlags[ord(TProp.rmatrix)] := [TPropertyFlag.ScaledByFunction, TPropertyFlag.RealPart, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm_per_length];
     
     PropertyType[ord(TProp.xmatrix)] := TPropertyType.ComplexPartSymMatrixProperty;
     PropertyOffset[ord(TProp.xmatrix)] := ptruint(@obj.Z);
     PropertyOffset2[ord(TProp.xmatrix)] := ptruint(@GetZmatScale);
+    PropertyOffset3[ord(TProp.xmatrix)] := ptruint(@obj.FNPhases);
     PropertyFlags[ord(TProp.xmatrix)] := [TPropertyFlag.ScaledByFunction, TPropertyFlag.ImagPart, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm_per_length];
 
     PropertyType[ord(TProp.cmatrix)] := TPropertyType.ComplexPartSymMatrixProperty;
     PropertyOffset[ord(TProp.cmatrix)] := ptruint(@obj.YC);
     PropertyOffset2[ord(TProp.cmatrix)] := ptruint(@GetYCScale);
+    PropertyOffset3[ord(TProp.cmatrix)] := ptruint(@obj.FNPhases);
     PropertyFlags[ord(TProp.cmatrix)] := [TPropertyFlag.ScaledByFunction, TPropertyFlag.ImagPart, TPropertyFlag.Units_nF_per_length];
 
     // integer properties

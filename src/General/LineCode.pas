@@ -227,15 +227,18 @@ begin
     // matrix parts
     PropertyType[ord(TProp.rmatrix)] := TPropertyType.ComplexPartSymMatrixProperty;
     PropertyOffset[ord(TProp.rmatrix)] := ptruint(@obj.Z);
+    PropertyOffset3[ord(TProp.rmatrix)] := ptruint(@obj.FNPhases);
     PropertyFlags[ord(TProp.rmatrix)] := [TPropertyFlag.RealPart, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_ohm_per_length];
     
     PropertyType[ord(TProp.xmatrix)] := TPropertyType.ComplexPartSymMatrixProperty;
     PropertyOffset[ord(TProp.xmatrix)] := ptruint(@obj.Z);
+    PropertyOffset3[ord(TProp.xmatrix)] := ptruint(@obj.FNPhases);
     PropertyFlags[ord(TProp.xmatrix)] := [TPropertyFlag.ImagPart, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_ohm_per_length];
 
     PropertyType[ord(TProp.cmatrix)] := TPropertyType.ComplexPartSymMatrixProperty;
     PropertyOffset[ord(TProp.cmatrix)] := ptruint(@obj.YC);
     PropertyOffset2[ord(TProp.cmatrix)] := ptruint(@GetYCScale);
+    PropertyOffset3[ord(TProp.cmatrix)] := ptruint(@obj.FNPhases);
     PropertyFlags[ord(TProp.cmatrix)] := [TPropertyFlag.ScaledByFunction, TPropertyFlag.ImagPart, TPropertyFlag.Units_nF_per_length];
 
     // boolean properties
