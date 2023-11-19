@@ -2538,8 +2538,11 @@ begin
         BeginEdit(True);
     Result := True; // TODO
     ParentClass.ParseObjPropertyValue(self, Index, Value, prevInt);
-    SetAsNextSeq(Index);
-    PropertySideEffects(Index, prevInt);
+    if DSS.ErrorNumber = 0 then
+    begin
+        SetAsNextSeq(Index);
+        PropertySideEffects(Index, prevInt);
+    end;
     if singleEdit then
         EndEdit(1);
 end;
@@ -2553,8 +2556,11 @@ begin
         BeginEdit(True);
     Result := True; // TODO
     ParentClass.SetObjDouble(self, Index, Value);
-    SetAsNextSeq(Index);
-    PropertySideEffects(Index);
+    if DSS.ErrorNumber = 0 then
+    begin
+        SetAsNextSeq(Index);
+        PropertySideEffects(Index);
+    end;
     if singleEdit then
         EndEdit(1);
 end;
@@ -2568,8 +2574,11 @@ begin
         BeginEdit(True);
     Result := True; // TODO
     ParentClass.SetObjString(self, Index, Value);
-    SetAsNextSeq(Index);
-    PropertySideEffects(Index);
+    if DSS.ErrorNumber = 0 then
+    begin
+        SetAsNextSeq(Index);
+        PropertySideEffects(Index);
+    end;
     if singleEdit then
         EndEdit(1);
 end;
@@ -2599,8 +2608,11 @@ begin
         BeginEdit(True);
     Result := True; // TODO
     ParentClass.SetObjObject(self, Index, Value);
-    SetAsNextSeq(Index);
-    PropertySideEffects(Index);
+    if DSS.ErrorNumber = 0 then
+    begin
+        SetAsNextSeq(Index);
+        PropertySideEffects(Index);
+    end;
     if singleEdit then
         EndEdit(1);
 end;
@@ -2619,8 +2631,11 @@ begin
         BeginEdit(True);
     Result := True; // TODO
     ParentClass.SetObjObjects(self, Index, Value, ValueCount);
-    SetAsNextSeq(Index);
-    PropertySideEffects(Index);
+    if DSS.ErrorNumber = 0 then
+    begin
+        SetAsNextSeq(Index);
+        PropertySideEffects(Index);
+    end;
     if singleEdit then
         EndEdit(1);
 end;
@@ -2639,8 +2654,11 @@ begin
         BeginEdit(True);
     Result := True;//TODO
     ParentClass.SetObjIntegers(self, Index, Value, ValueCount);
-    SetAsNextSeq(Index);
-    PropertySideEffects(Index);
+    if DSS.ErrorNumber = 0 then
+    begin
+        SetAsNextSeq(Index);
+        PropertySideEffects(Index);
+    end;
     if singleEdit then
         EndEdit(1);
 end;
@@ -2659,8 +2677,11 @@ begin
         BeginEdit(True);
     Result := True;//TODO
     ParentClass.SetObjDoubles(self, Index, Value, ValueCount);
-    SetAsNextSeq(Index);
-    PropertySideEffects(Index);
+    if DSS.ErrorNumber = 0 then
+    begin
+        SetAsNextSeq(Index);
+        PropertySideEffects(Index);
+    end;
     if singleEdit then
         EndEdit(1);
 end;
@@ -2681,8 +2702,11 @@ begin
         ValuePChar[i] := PChar(Value[i]);
 
     ParentClass.SetObjStrings(self, Index, @ValuePChar[0], Length(Value));
-    SetAsNextSeq(Index);
-    PropertySideEffects(Index);
+    if DSS.ErrorNumber = 0 then
+    begin
+        SetAsNextSeq(Index);
+        PropertySideEffects(Index);
+    end;
     if singleEdit then
         EndEdit(1);
 end;
@@ -2696,8 +2720,11 @@ begin
         BeginEdit(True);
     Result := True;//TODO
     ParentClass.SetObjStrings(self, Index, Value, ValueCount);
-    SetAsNextSeq(Index);
-    PropertySideEffects(Index);
+    if DSS.ErrorNumber = 0 then
+    begin
+        SetAsNextSeq(Index);
+        PropertySideEffects(Index);
+    end;
     if singleEdit then
         EndEdit(1);
 end;
@@ -2908,6 +2935,14 @@ begin
             begin
                 complexPtr := PComplex(PByte(obj) + PropertyOffset[Index]);
                 complexPtr^ := PComplex(Value)^;
+            end
+            else
+            begin
+                DoSimpleMsg(
+                    '%s.%s: Invalid number of elements. Provide a complex number (pair of two float64 values).', 
+                    [TDSSObject(obj).FullName, PropertyName[Index]],
+                2020040);
+                Exit;
             end;
         TPropertyType.ComplexPartsProperty:
             if ValueCount = 2 then
@@ -2917,6 +2952,14 @@ begin
                 doublePtr := PDouble(PByte(obj) + PropertyOffset2[Index]);
                 Inc(Value);
                 doublePtr^ := Value^;
+            end
+            else
+            begin
+                DoSimpleMsg(
+                    '%s.%s: Invalid number of elements. Provide a complex number (pair of two float64 values).', 
+                    [TDSSObject(obj).FullName, PropertyName[Index]],
+                2020039);
+                Exit;
             end;
         TPropertyType.DoubleSymMatrixProperty:
         begin
@@ -2929,7 +2972,7 @@ begin
             begin
                 DoSimpleMsg(
                     '%s.%s: Invalid number of elements. Provide either the full matrix or the lower triangle.', 
-                    [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                    [TDSSObject(obj).FullName, PropertyName[Index]],
                 2020036);
                 Exit;
             end;
@@ -3067,21 +3110,33 @@ begin
                         maxSize := sizePtr^;
 
                     if maxSize <> ValueCount then
-                        Exit; // TODO
-
-                    Move(Value^, doublePtr^, maxSize * SizeOf(Double));
+                    begin
+                        DoSimpleMsg(
+                            '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
+                            [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
+                        2020042);
+                        Exit;
+                    end;
+                    if not (TPropertyFlag.WriteByFunction in flags) then
+                        Move(Value^, doublePtr^, maxSize * SizeOf(Double));
                 end;
                 TPropertyType.DoubleFArrayProperty:
                 begin
                     maxSize := PropertyOffset2[Index];
                     if maxSize <> ValueCount then
-                        Exit; // TODO
-
-                    Move(Value^, doublePtr^, maxSize * SizeOf(Double));
+                    begin
+                        DoSimpleMsg(
+                            '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
+                            [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
+                        2020042);
+                        Exit;
+                    end;
+                    if not (TPropertyFlag.WriteByFunction in flags) then
+                        Move(Value^, doublePtr^, maxSize * SizeOf(Double));
                 end;
             end;
 
-            if scale <> 1 then
+            if (scale <> 1) and not (TPropertyFlag.WriteByFunction in flags) then
             begin
                 for i := 1 to sizePtr^ do
                 begin
@@ -3102,10 +3157,14 @@ begin
         begin
             // Number of items
             maxSize := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
-
             if maxSize <> ValueCount then
-                Exit; // TODO
-
+            begin
+                DoSimpleMsg(
+                    '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
+                    [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
+                2020038);
+                Exit;
+            end;
             if PropertyType[Index] = TPropertyType.DoubleOnStructArrayProperty then
             begin
                 step := PropertyStructArrayStep;
@@ -3148,7 +3207,13 @@ begin
             maxSize := PInteger(PByte(obj) + PropertyOffset2[Index])^;
 
             if maxSize <> ValueCount then
-                Exit; // TODO
+            begin
+                DoSimpleMsg(
+                    '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
+                    [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
+                2020041);
+                Exit;
+            end;
 
             // Current position
             positionPtr := PInteger(PByte(obj) + PropertyStructArrayIndexOffset);
