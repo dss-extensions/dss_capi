@@ -617,25 +617,16 @@ begin
                     else
                         maxSize := integerPtr^;
 
-                    if not (TPropertyFlag.IntegerToDouble in flags) then
-                        integerPtr^ := InterpretDblArray(DSS,
-                            Value, 
-                            maxSize, 
-                            pDoubleArray(PPDouble(dataPtr)^)
-                        )
-                    else
+                    integerPtr^ := InterpretDblArray(DSS,
+                        Value, 
+                        maxSize, 
+                        pDoubleArray(PPDouble(dataPtr)^)
+                    );
+                    if (TPropertyFlag.ApplyRound in flags) then
                     begin
-                        iarray := Allocmem(Sizeof(Integer) * integerPtr^);
-                        integerPtr^ := InterpretIntArray(DSS,
-                            Value, 
-                            maxSize, 
-                            iarray
-                        );
                         darray := pDoubleArray(PPDouble(dataPtr)^);
                         for i := 1 to integerPtr^ do
-                            darray[i] := iarray[i];
-
-                        ReallocMem(iarray, 0);
+                            darray[i] := Round(darray[i]);
                     end;
                 end;
                 TPropertyType.DoubleVArrayProperty:
@@ -3055,7 +3046,7 @@ begin
                     for j := 0 to Norder - 1 do
                         doublePtr[(i * Norder + j) * 2] *= scale;
             end;
-        end;    
+        end;
         TPropertyType.DoubleArrayProperty,
         TPropertyType.DoubleDArrayProperty,
         TPropertyType.DoubleFArrayProperty,

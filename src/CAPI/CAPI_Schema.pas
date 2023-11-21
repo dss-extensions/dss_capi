@@ -61,7 +61,7 @@ begin
     if TPropertyFlag.SizeIsFunction in flags then Result.Add('SizeIsFunction');
     if TPropertyFlag.SilentReadOnly in flags then Result.Add('SilentReadOnly');
     if TPropertyFlag.ConditionalReadOnly in flags then Result.Add('ConditionalReadOnly');
-    if TPropertyFlag.IntegerToDouble in flags then Result.Add('IntegerToDouble');
+    if TPropertyFlag.ApplyRound in flags then Result.Add('ApplyRound');
     if TPropertyFlag.CheckForVar in flags then Result.Add('CheckForVar');
     if TPropertyFlag.AllowNone in flags then Result.Add('AllowNone');
     if TPropertyFlag.ArrayMaxSize in flags then Result.Add('ArrayMaxSize');

@@ -162,7 +162,7 @@ begin
     PropertyType[ord(TProp.year)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.year)] := ptruint(@obj.Year);
     PropertyOffset2[ord(TProp.year)] := ptruint(@obj.Npts);
-    PropertyFlags[ord(TProp.year)] := [TPropertyFlag.IntegerToDouble, TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.year)] := [TPropertyFlag.ApplyRound, TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.mult)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.mult)] := ptruint(@obj.Multiplier);

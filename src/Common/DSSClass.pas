@@ -119,7 +119,7 @@ type
         SilentReadOnly, //TODO: SilentRO=ignore writes. We might want to change this in the future to error out instead of ignoring
         ConditionalReadOnly, // only implemented for MappedStringEnumProperty
         ConditionalValue, // for sym comp in LineCode
-        IntegerToDouble, // for double arrays -- read integer, convert to double
+        ApplyRound, // for double arrays -- read doubles and then round the values
         CheckForVar, // for object references
         AllowNone, // for arrays, only used in Relay.RecloseIntervals
         ArrayMaxSize, // for arrays
