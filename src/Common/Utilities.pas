@@ -613,7 +613,10 @@ begin
 
         except
             On E: Exception do
+            begin
+                FreeAndNil(F);
                 DoSimpleMsg(DSS, 'Error trying to read numeric array values from file "%s". Error is: %s', [Param, E.Message], 706);
+            end;
         end;
     end
     else
@@ -672,7 +675,10 @@ begin
 
         except
             On E: Exception do
+            begin
+                FreeAndNil(F);
                 DoSimpleMsg(DSS, 'Error trying to read lines from a file. Error is: %s', [E.message], 708);
+            end;
         end;
     end
     else
