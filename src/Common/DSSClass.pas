@@ -376,6 +376,7 @@ type
         PropertyName: pStringArray; // Nowadays this is just a reference to one of the other pointers
         PropertyRedundantWith: pIntegerArray;
         PropertyArrayAlternative: pIntegerArray;
+        PropertySizingPropertyIndex: pIntegerArray;
         PropertySource: pStringArray;
         PropertyScale, PropertyValueOffset: pDoubleArray;
         PropertyTrapZero: pDoubleArray;
@@ -1396,6 +1397,7 @@ begin
     PropertyNameJSON := nil;
     PropertyRedundantWith := nil;
     PropertyArrayAlternative := nil;
+    PropertySizingPropertyIndex := nil;
     PropertySource := nil;
     PropertyScale := nil;
     PropertyValueOffset := nil;
@@ -1446,6 +1448,7 @@ begin
 
     Reallocmem(PropertyRedundantWith, 0);
     Reallocmem(PropertyArrayAlternative, 0);
+    Reallocmem(PropertySizingPropertyIndex, 0);
     Reallocmem(PropertyNameLegacy, 0);
     Reallocmem(PropertyNameModern, 0);
     Reallocmem(PropertyNameLowercase, 0);
@@ -1696,6 +1699,7 @@ begin
     PropertyNameJSON := Allocmem(SizeOf(String) * NumProperties);
     PropertyRedundantWith := Allocmem(SizeOf(Integer) * NumProperties);
     PropertyArrayAlternative := Allocmem(SizeOf(Integer) * NumProperties);
+    PropertySizingPropertyIndex := Allocmem(SizeOf(Integer) * NumProperties);
     PropertySource := Allocmem(SizeOf(String) * NumProperties);
     PropertyScale := Allocmem(SizeOf(Double) * NumProperties);
     PropertyValueOffset := Allocmem(SizeOf(Double) * NumProperties);
@@ -1726,6 +1730,7 @@ begin
         PropertyReadFunction[i] := NIL;
         PropertyWriteFunction[i] := NIL;
         PropertyArrayAlternative[i] := 0;
+        PropertySizingPropertyIndex[i] := 0;
     end;
 
     ActiveProperty := 0;    // initialize for AddPropert
@@ -1746,6 +1751,55 @@ begin
         begin
             Smallest := propZorder[i];
             Result := i;
+        end;
+    end;
+end;
+
+function getSizePropertyIndex(cls: TDSSClass; sizedPropIndex: Integer): Integer;
+var
+    propIndex: Integer;
+    propOffset: PtrInt;
+begin
+    Result := 0;
+    propOffset := cls.PropertyOffset2[sizedPropIndex];
+    if cls.PropertyType[sizedPropIndex] in [TPropertyType.DoubleSymMatrixProperty, TPropertyType.ComplexPartSymMatrixProperty] then
+    begin
+        propOffset := cls.PropertyOffset3[sizedPropIndex];
+    end
+    else
+    if TPropertyFlag.IndirectCount in cls.PropertyFlags[sizedPropIndex] then
+    begin
+        propOffset := cls.PropertyOffset3[sizedPropIndex];
+        for propIndex := 1 to cls.NumProperties do
+        begin
+            if (cls.PropertyType[propIndex] = TPropertyType.StringListProperty) and (cls.PropertyOffset[propIndex] = propOffset) then
+            begin
+                Result := propIndex;
+                Exit;
+            end;
+        end;
+        Exit;
+    end
+    else
+    if (TPropertyFlag.GlobalCount in cls.PropertyFlags[sizedPropIndex]) or 
+        (TPropertyFlag.OnArray in cls.PropertyFlags[sizedPropIndex]) or (cls.PropertyType[sizedPropIndex] in [
+        TPropertyType.BusOnStructArrayProperty,
+        TPropertyType.BusesOnStructArrayProperty,
+        TPropertyType.DoubleOnArrayProperty, 
+        TPropertyType.IntegerOnStructArrayProperty,
+        TPropertyType.DoubleOnStructArrayProperty,
+        TPropertyType.MappedStringEnumOnStructArrayProperty]) then
+    begin
+        propOffset := cls.PropertyStructArrayCountOffset;
+    end;
+    Result := 0;
+
+    for propIndex := 1 to cls.NumProperties do
+    begin
+        if (cls.PropertyType[propIndex] = TPropertyType.IntegerProperty) and (cls.PropertyOffset[propIndex] = propOffset) then
+        begin
+            Result := propIndex;
+            Exit;
         end;
     end;
 end;
@@ -1826,6 +1880,13 @@ begin
         AltPropertyOrder[outIdx] := propIdx;
         inc(outIdx);
     end;
+    SetLength(AltPropertyOrder, outIdx + 1);
+
+    for i := 1 to NumProperties do
+    begin
+        PropertySizingPropertyIndex[i] := getSizePropertyIndex(self, i);
+    end;
+
     // WriteLn();
     // for i := 1 to NumProperties do
     // begin

@@ -301,55 +301,6 @@ begin
     Result := '';
 end;
 
-function getLengthPropertyName(cls: TDSSClass; sizedPropIndex: Integer): String;
-var
-    propIndex: Integer;
-    propOffset: PtrInt;
-begin
-    Result := '';
-    propOffset := cls.PropertyOffset2[sizedPropIndex];
-    if cls.PropertyType[sizedPropIndex] in [TPropertyType.DoubleSymMatrixProperty, TPropertyType.ComplexPartSymMatrixProperty] then
-    begin
-        propOffset := cls.PropertyOffset3[sizedPropIndex];
-    end
-    else
-    if TPropertyFlag.IndirectCount in cls.PropertyFlags[sizedPropIndex] then
-    begin
-        propOffset := cls.PropertyOffset3[sizedPropIndex];
-        for propIndex := 1 to cls.NumProperties do
-        begin
-            if (cls.PropertyType[propIndex] = TPropertyType.StringListProperty) and (cls.PropertyOffset[propIndex] = propOffset) then
-            begin
-                Result := cls.PropertyNameJSON[propIndex];
-                Exit;
-            end;
-        end;
-        Exit;
-    end
-    else
-    if (TPropertyFlag.GlobalCount in cls.PropertyFlags[sizedPropIndex]) or 
-        (TPropertyFlag.OnArray in cls.PropertyFlags[sizedPropIndex]) or (cls.PropertyType[sizedPropIndex] in [
-        TPropertyType.BusOnStructArrayProperty,
-        TPropertyType.BusesOnStructArrayProperty,
-        TPropertyType.DoubleOnArrayProperty, 
-        TPropertyType.IntegerOnStructArrayProperty,
-        TPropertyType.DoubleOnStructArrayProperty,
-        TPropertyType.MappedStringEnumOnStructArrayProperty]) then
-    begin
-        propOffset := cls.PropertyStructArrayCountOffset;
-    end;
-    Result := '';
-
-    for propIndex := 1 to cls.NumProperties do
-    begin
-        if (cls.PropertyType[propIndex] = TPropertyType.IntegerProperty) and (cls.PropertyOffset[propIndex] = propOffset) then
-        begin
-            Result := cls.PropertyNameJSON[propIndex];
-            Exit;
-        end;
-    end;
-end;
-
 function getIteratorPropertyName(cls: TDSSClass; sizedPropIndex: Integer): String;
 var
     propIndex: Integer;
@@ -478,7 +429,8 @@ var
     requiredProps: TJSONArray;
 
     onArray: Boolean;
-    lengthProp, iteratorProp: String;
+    iteratorProp: String;
+    lengthPropIndex: Integer;
 
     units: String;
 
@@ -980,16 +932,16 @@ begin
                 end
                 else
                 begin
-                    lengthProp := getLengthPropertyName(cls, propIndex);
-                    if (propIndex_ <> propIndex) and (lengthProp = '') then
-                        lengthProp := getLengthPropertyName(cls, propIndex_);
+                    lengthPropIndex := PropertySizingPropertyIndex[propIndex];
+                    if (propIndex_ <> propIndex) and (lengthPropIndex <= 0) then
+                        lengthPropIndex := PropertySizingPropertyIndex[propIndex_];
 
-                    // WriteLn('LENGTH PROP FOR ', cls.Name, '.', propName, '>', cls.PropertyName[propIndex_], ' ->>> ', lengthProp);SysFlushStdIO();
-                    if (lengthProp <> '') and not (TPropertyFlag.SizeIsFunction in flags) then
+                    // WriteLn('LENGTH PROP FOR ', cls.Name, '.', propName, '>', cls.PropertyName[propIndex_], ' ->>> ', lengthPropIndex);SysFlushStdIO();
+                    if (lengthPropIndex > 0) and not (TPropertyFlag.SizeIsFunction in flags) then
                     begin
                         if jtype = '#/$defs/SymmetricMatrix' then
                         begin
-                            prop.Add('$dssShape', TJSONArray.Create([lengthProp, lengthProp]));
+                            prop.Add('$dssShape', TJSONArray.Create([PropertyNameJSON[lengthPropIndex], PropertyNameJSON[lengthPropIndex]]));
                         end
                         else
                         begin
@@ -997,7 +949,7 @@ begin
                             if (propIndex_ <> propIndex) and (iteratorProp = '') then
                                 iteratorProp := getIteratorPropertyName(cls, propIndex_);
 
-                            prop.Add('$dssLength', lengthProp);
+                            prop.Add('$dssLength', PropertyNameJSON[lengthPropIndex]);
                             if iteratorProp <> '' then
                             begin
                                 prop.Add('$dssIterator', iteratorProp);
@@ -1077,9 +1029,9 @@ begin
             if TPropertyFlag.IsFilename in flags then
             begin
                 prop.Add('format', 'file-path');
-                lengthProp := getLengthPropertyName(cls, propIndex);
-                if lengthProp <> '' then
-                    prop.Add('$dssLength', lengthProp);
+                lengthPropIndex := PropertySizingPropertyIndex[propIndex];
+                if lengthPropIndex > 0 then
+                    prop.Add('$dssLength', PropertyNameJSON[lengthPropIndex]);
             end;
 
             prop.Add('$dssPropertyIndex', propIndex_);
