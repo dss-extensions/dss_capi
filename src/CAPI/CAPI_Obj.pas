@@ -81,16 +81,16 @@ procedure Obj_GetStringArray(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; o
 procedure Obj_GetObjectArray(var ResultPtr: PPointer; ResultCount: PAPISize; obj: TDSSObject; Index: Integer); CDECL;
 function Obj_ToJSON(obj: TDSSObject; joptions: Integer): PAnsiChar; CDECL;
 
-procedure Obj_SetAsString(obj: TDSSObject; Index: Integer; Value: PAnsiChar); CDECL;
-procedure Obj_SetFloat64(obj: TDSSObject; Index: Integer; Value: Double); CDECL;
-procedure Obj_SetInt32(obj: TDSSObject; Index: Integer; Value: Integer); CDECL;
-procedure Obj_SetString(obj: TDSSObject; Index: Integer; Value: PAnsiChar); CDECL;
-procedure Obj_SetObject(obj: TDSSObject; Index: Integer; Value: TDSSObject); CDECL;
+procedure Obj_SetAsString(obj: TDSSObject; Index: Integer; Value: PAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Obj_SetFloat64(obj: TDSSObject; Index: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Obj_SetInt32(obj: TDSSObject; Index: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Obj_SetString(obj: TDSSObject; Index: Integer; Value: PAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Obj_SetObject(obj: TDSSObject; Index: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags); CDECL;
 
-procedure Obj_SetFloat64Array(obj: TDSSObject; Index: Integer; Value: PDouble; ValueCount: Integer); CDECL;
-procedure Obj_SetInt32Array(obj: TDSSObject; Index: Integer; Value: PInteger; ValueCount: Integer); CDECL;
-procedure Obj_SetStringArray(obj: TDSSObject; Index: Integer; Value: PPAnsiChar; ValueCount: Integer); CDECL;
-procedure Obj_SetObjectArray(obj: TDSSObject; Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer); CDECL;
+procedure Obj_SetFloat64Array(obj: TDSSObject; Index: Integer; Value: PDouble; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Obj_SetInt32Array(obj: TDSSObject; Index: Integer; Value: PInteger; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Obj_SetStringArray(obj: TDSSObject; Index: Integer; Value: PPAnsiChar; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Obj_SetObjectArray(obj: TDSSObject; Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
 
 // internal functions
 function Obj_ToJSON_(obj: TDSSObject; joptions: Integer): String;
@@ -121,15 +121,15 @@ procedure Batch_GetFloat64FromFunc2(var ResultPtr: PDouble; ResultCount: PAPISiz
 procedure Batch_GetInt32FromFunc(var ResultPtr: PInteger; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; func: dss_obj_int32_function_t); CDECL;
 
 // procedure Batch_SetAsString(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PAnsiChar); CDECL;
-procedure Batch_Float64(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: Integer; Value: Double); CDECL;
-procedure Batch_Int32(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: Integer; Value: Integer); CDECL;
-procedure Batch_SetString(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PAnsiChar); CDECL;
-procedure Batch_SetObject(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: TDSSObject); CDECL;
+procedure Batch_Float64(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_Int32(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_SetString(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_SetObject(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags); CDECL;
 
-procedure Batch_SetFloat64Array(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PDouble); CDECL;
-procedure Batch_SetInt32Array(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PInteger); CDECL;
-procedure Batch_SetStringArray(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PPAnsiChar); CDECL;
-procedure Batch_SetObjectArray(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: TDSSObjectPtr); CDECL;
+procedure Batch_SetFloat64Array(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PDouble; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_SetInt32Array(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PInteger; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_SetStringArray(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PPAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_SetObjectArray(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: TDSSObjectPtr; setterFlags: TDSSPropertySetterFlags); CDECL;
 
 // Batch -- using class and property names
 procedure Batch_CreateFromNewS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; clsName: String; Names: PPAnsiChar; Count: Integer; BeginEdit: TAltAPIBoolean); CDECL;
@@ -145,15 +145,15 @@ procedure Batch_GetAsStringS(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; b
 procedure Batch_GetObjectS(var ResultPtr: PPointer; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; Name: PChar); CDECL;
 
 // procedure Batch_SetAsStringS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PAnsiChar); CDECL;
-procedure Batch_Float64S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: Integer; Value: Double); CDECL;
-procedure Batch_Int32S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: Integer; Value: Integer); CDECL;
-procedure Batch_SetStringS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PAnsiChar); CDECL;
-procedure Batch_SetObjectS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: TDSSObject); CDECL;
+procedure Batch_Float64S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_Int32S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_SetStringS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_SetObjectS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags); CDECL;
 
-procedure Batch_SetFloat64ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PDouble); CDECL;
-procedure Batch_SetInt32ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PInteger); CDECL;
-procedure Batch_SetStringArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PPAnsiChar); CDECL;
-procedure Batch_SetObjectArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: TDSSObjectPtr); CDECL;
+procedure Batch_SetFloat64ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PDouble; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_SetInt32ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PInteger; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_SetStringArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PPAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_SetObjectArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: TDSSObjectPtr; setterFlags: TDSSPropertySetterFlags); CDECL;
 
 // JSON functions, internal
 function Obj_Circuit_ToJSON_(ckt: TDSSCircuit; joptions: Integer): PAnsiChar;
@@ -476,49 +476,49 @@ begin
     Result := obj.GetObject(Index);
 end;
 
-procedure Obj_SetFloat64(obj: TDSSObject; Index: Integer; Value: Double); CDECL;
+procedure Obj_SetFloat64(obj: TDSSObject; Index: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
 begin
-    obj.SetDouble(Index, Value);
+    obj.SetDouble(Index, Value, setterFlags);
 end;
 
-procedure Obj_SetInt32(obj: TDSSObject; Index: Integer; Value: Integer); CDECL;
+procedure Obj_SetInt32(obj: TDSSObject; Index: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
 begin
-    obj.SetInteger(Index, Value);
+    obj.SetInteger(Index, Value, setterFlags);
 end;
 
-procedure Obj_SetString(obj: TDSSObject; Index: Integer; Value: PAnsiChar); CDECL;
+procedure Obj_SetString(obj: TDSSObject; Index: Integer; Value: PAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
 begin
-    obj.SetString(Index, Value);
+    obj.SetString(Index, Value, setterFlags);
 end;
 
-procedure Obj_SetAsString(obj: TDSSObject; Index: Integer; Value: PAnsiChar); CDECL;
+procedure Obj_SetAsString(obj: TDSSObject; Index: Integer; Value: PAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
 begin
-    obj.ParsePropertyValue(Index, Value);
+    obj.ParsePropertyValue(Index, Value, setterFlags);
 end;
 
-procedure Obj_SetObject(obj: TDSSObject; Index: Integer; Value: TDSSObject); CDECL;
+procedure Obj_SetObject(obj: TDSSObject; Index: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags); CDECL;
 begin
-    obj.SetObject(Index, Value);
+    obj.SetObject(Index, Value, setterFlags);
 end;
 
-procedure Obj_SetFloat64Array(obj: TDSSObject; Index: Integer; Value: PDouble; ValueCount: Integer); CDECL;
+procedure Obj_SetFloat64Array(obj: TDSSObject; Index: Integer; Value: PDouble; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
 begin
-    obj.SetDoubles(Index, Value, ValueCount);
+    obj.SetDoubles(Index, Value, ValueCount, setterFlags);
 end;
 
-procedure Obj_SetInt32Array(obj: TDSSObject; Index: Integer; Value: PInteger; ValueCount: Integer); CDECL;
+procedure Obj_SetInt32Array(obj: TDSSObject; Index: Integer; Value: PInteger; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
 begin
-    obj.SetIntegers(Index, Value, ValueCount);
+    obj.SetIntegers(Index, Value, ValueCount, setterFlags);
 end;
 
-procedure Obj_SetStringArray(obj: TDSSObject; Index: Integer; Value: PPAnsiChar; ValueCount: Integer); CDECL;
+procedure Obj_SetStringArray(obj: TDSSObject; Index: Integer; Value: PPAnsiChar; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
 begin
-    obj.SetStrings(Index, Value, ValueCount);
+    obj.SetStrings(Index, Value, ValueCount, setterFlags);
 end;
 
-procedure Obj_SetObjectArray(obj: TDSSObject; Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer); CDECL;
+procedure Obj_SetObjectArray(obj: TDSSObject; Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
 begin
-    obj.SetObjects(Index, Value, ValueCount);
+    obj.SetObjects(Index, Value, ValueCount, setterFlags);
 end;
 
 procedure Obj_GetFloat64Array(var ResultPtr: PDouble; ResultCount: PAPISize; obj: TDSSObject; Index: Integer); CDECL;
@@ -1269,7 +1269,7 @@ begin
     end;
 end;
 
-procedure Batch_Float64(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: Integer; Value: Double); CDECL;
+procedure Batch_Float64(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     cls: TDSSClass;
     propOffset: PtrUint;
@@ -1343,7 +1343,7 @@ begin
                 prev := doubleptr^;
                 doublePtr^ := Value;
                 batch^.SetAsNextSeq(Index);
-                batch^.PropertySideEffects(Index, Round(prev));
+                batch^.PropertySideEffects(Index, Round(prev), setterFlags);
 
                 if singleEdit then
                     cls.EndEdit(batch^, 1);
@@ -1358,25 +1358,25 @@ begin
         Batch_Multiply:
             for i := 1 to batchSize do
             begin
-                batch^.SetDouble(Index, Value * cls.GetObjDouble(batch^, Index));
+                batch^.SetDouble(Index, Value * cls.GetObjDouble(batch^, Index), setterFlags);
                 inc(batch);
             end;
         Batch_Increment:
             for i := 1 to batchSize do
             begin
-                batch^.SetDouble(Index, Value + cls.GetObjDouble(batch^, Index));
+                batch^.SetDouble(Index, Value + cls.GetObjDouble(batch^, Index), setterFlags);
                 inc(batch);
             end;
     else
         for i := 1 to batchSize do
         begin
-            batch^.SetDouble(Index, Value);
+            batch^.SetDouble(Index, Value, setterFlags);
             inc(batch);
         end;
     end;
 end;
 
-procedure Batch_Int32(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: Integer; Value: Integer); CDECL;
+procedure Batch_Int32(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     cls: TDSSClass;
     // propOffset: PtrUint;
@@ -1433,25 +1433,25 @@ begin
         Batch_Multiply:
             for i := 1 to batchSize do
             begin
-                batch^.SetInteger(Index, Value * cls.GetObjInteger(batch^, Index));
+                batch^.SetInteger(Index, Value * cls.GetObjInteger(batch^, Index), setterFlags);
                 inc(batch);
             end;
         Batch_Increment:
             for i := 1 to batchSize do
             begin
-                batch^.SetInteger(Index, Value + cls.GetObjInteger(batch^, Index));
+                batch^.SetInteger(Index, Value + cls.GetObjInteger(batch^, Index), setterFlags);
                 inc(batch);
             end;
     else
         for i := 1 to batchSize do
         begin
-            batch^.SetInteger(Index, Value);
+            batch^.SetInteger(Index, Value, setterFlags);
             inc(batch);
         end;
     end;
 end;
 
-procedure Batch_SetString(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PAnsiChar); CDECL;
+procedure Batch_SetString(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     cls: TDSSClass;
     // propOffset: PtrUint;
@@ -1480,7 +1480,7 @@ begin
     sValue := Value;
     for i := 1 to batchSize do
     begin
-        batch^.SetString(Index, sValue);
+        batch^.SetString(Index, sValue, setterFlags);
         inc(batch);
     end;
 end;
@@ -1506,7 +1506,7 @@ end;
     // end;
 // end;
 
-procedure Batch_SetObject(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: TDSSObject); CDECL;
+procedure Batch_SetObject(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     cls: TDSSClass;
     // propOffset: PtrUint;
@@ -1525,12 +1525,12 @@ begin
 
     for i := 1 to batchSize do
     begin
-        batch^.SetObject(Index, Value);
+        batch^.SetObject(Index, Value, setterFlags);
         inc(batch);
     end;
 end;
 
-procedure Batch_SetFloat64Array(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PDouble); CDECL;
+procedure Batch_SetFloat64Array(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PDouble; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     cls: TDSSClass;
     propOffset: PtrUint;
@@ -1579,13 +1579,13 @@ begin
 
     for i := 1 to batchSize do
     begin
-        batch^.SetDouble(Index, Value^);
+        batch^.SetDouble(Index, Value^, setterFlags);
         inc(batch);
         inc(Value)
     end;
 end;
 
-procedure Batch_SetInt32Array(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PInteger); CDECL;
+procedure Batch_SetInt32Array(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PInteger; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     cls: TDSSClass;
     propOffset: PtrUint;
@@ -1636,13 +1636,13 @@ begin
 
     for i := 1 to batchSize do
     begin
-        batch^.SetInteger(Index, Value^);
+        batch^.SetInteger(Index, Value^, setterFlags);
         inc(batch);
         inc(Value)
     end;
 end;
 
-procedure Batch_SetStringArray(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PPAnsiChar); CDECL;
+procedure Batch_SetStringArray(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PPAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     cls: TDSSClass;
     // propOffset: PtrUint;
@@ -1668,13 +1668,13 @@ begin
 
     for i := 1 to batchSize do
     begin
-        batch^.SetString(Index, Value^);
+        batch^.SetString(Index, Value^, setterFlags);
         inc(batch);
         inc(Value)
     end;
 end;
 
-procedure Batch_SetObjectArray(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: TDSSObjectPtr); CDECL;
+procedure Batch_SetObjectArray(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: TDSSObjectPtr; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     cls: TDSSClass;
     // propOffset: PtrUint;
@@ -1686,7 +1686,7 @@ begin
 
     if Value = NIL then
     begin
-        Batch_SetObject(batch, batchSize, Index, NIL);
+        Batch_SetObject(batch, batchSize, Index, NIL, setterFlags);
         Exit;
     end;
 
@@ -1699,7 +1699,7 @@ begin
 
     for i := 1 to batchSize do
     begin
-        batch^.SetObject(Index, Value^);
+        batch^.SetObject(Index, Value^, setterFlags);
         inc(batch);
         inc(Value)
     end;
@@ -1881,7 +1881,7 @@ end;
 //     Batch_SetAsString(batch, batchSize, propIdx, Value);
 // end;
 
-procedure Batch_Float64S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: Integer; Value: Double); CDECL;
+procedure Batch_Float64S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     propIdx: Integer;
 begin
@@ -1891,10 +1891,10 @@ begin
     if not GetPropIndex(batch, Name, propIdx) then
         Exit;
 
-    Batch_Float64(batch, batchSize, propIdx, Operation, Value);
+    Batch_Float64(batch, batchSize, propIdx, Operation, Value, setterFlags);
 end;
 
-procedure Batch_Int32S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: Integer; Value: Integer); CDECL;
+procedure Batch_Int32S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     propIdx: Integer;
 begin
@@ -1904,10 +1904,10 @@ begin
     if not GetPropIndex(batch, Name, propIdx) then
         Exit;
 
-    Batch_Int32(batch, batchSize, propIdx, Operation, Value);
+    Batch_Int32(batch, batchSize, propIdx, Operation, Value, setterFlags);
 end;
 
-procedure Batch_SetStringS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PAnsiChar); CDECL;
+procedure Batch_SetStringS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     propIdx: Integer;
 begin
@@ -1917,10 +1917,10 @@ begin
     if not GetPropIndex(batch, Name, propIdx) then
         Exit;
 
-    Batch_SetString(batch, batchSize, propIdx, Value);
+    Batch_SetString(batch, batchSize, propIdx, Value, setterFlags);
 end;
 
-procedure Batch_SetObjectS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: TDSSObject); CDECL;
+procedure Batch_SetObjectS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     propIdx: Integer;
 begin
@@ -1930,11 +1930,11 @@ begin
     if not GetPropIndex(batch, Name, propIdx) then
         Exit;
 
-    Batch_SetObject(batch, batchSize, propIdx, Value);
+    Batch_SetObject(batch, batchSize, propIdx, Value, setterFlags);
 end;
 
 
-procedure Batch_SetFloat64ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PDouble); CDECL;
+procedure Batch_SetFloat64ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PDouble; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     propIdx: Integer;
 begin
@@ -1944,10 +1944,10 @@ begin
     if not GetPropIndex(batch, Name, propIdx) then
         Exit;
 
-    Batch_SetFloat64Array(batch, batchSize, propIdx, Value);
+    Batch_SetFloat64Array(batch, batchSize, propIdx, Value, setterFlags);
 end;
 
-procedure Batch_SetInt32ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PInteger); CDECL;
+procedure Batch_SetInt32ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PInteger; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     propIdx: Integer;
 begin
@@ -1957,10 +1957,10 @@ begin
     if not GetPropIndex(batch, Name, propIdx) then
         Exit;
 
-    Batch_SetInt32Array(batch, batchSize, propIdx, Value);
+    Batch_SetInt32Array(batch, batchSize, propIdx, Value, setterFlags);
 end;
 
-procedure Batch_SetStringArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PPAnsiChar); CDECL;
+procedure Batch_SetStringArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PPAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     propIdx: Integer;
 begin
@@ -1970,10 +1970,10 @@ begin
     if not GetPropIndex(batch, Name, propIdx) then
         Exit;
 
-    Batch_SetStringArray(batch, batchSize, propIdx, Value);
+    Batch_SetStringArray(batch, batchSize, propIdx, Value, setterFlags);
 end;
 
-procedure Batch_SetObjectArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: TDSSObjectPtr); CDECL;
+procedure Batch_SetObjectArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: TDSSObjectPtr; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     propIdx: Integer;
 begin
@@ -1983,7 +1983,7 @@ begin
     if not GetPropIndex(batch, Name, propIdx) then
         Exit;
 
-    Batch_SetObjectArray(batch, batchSize, propIdx, Value);
+    Batch_SetObjectArray(batch, batchSize, propIdx, Value, setterFlags);
 end;
 
 //------------------------------------------------------------------------------
@@ -2076,44 +2076,6 @@ begin
         clsArray.Free();
     // if vsrc <> NIL then
     //     vsrc.Free();
-end;
-
-function processArrayOrFilePath(DSS: TDSSContext; data: TJSONData): ArrayOfDouble;
-var
-    arr: TJSONArray = NIL;
-    obj: TJSONObject = NIL;
-    i: Integer;
-    col: Integer = 1;
-    header: Boolean = false;
-    fn: TJSONString = NIL;
-begin
-    if data is TJSONArray then
-    begin
-        // Easy path
-        arr := TJSONArray(data);
-        SetLength(Result, arr.Count);
-        for i := 0 to High(Result) do
-            Result[i] := arr.Floats[i];
-        Exit;
-    end;
-    obj := obj as TJSONObject;
-    if obj = NIL then
-        raise Exception.Create('Array is not correctly specified');
-
-    obj.Find('DblFile', fn);
-    if fn <> NIL then
-
-    obj.Find('SngFile', fn);
-    if fn <> NIL then
-
-
-    obj.Find('CSVFile', fn);
-    if fn = NIL then
-        raise Exception.Create('Array is not correctly specified');
-
-    col := obj.Get('Column', col);
-    header := obj.Get('Header', header);
-
 end;
 
 procedure loadClassFromJSON(DSS: TDSSContext; cls: TDSSClass; jcls: TJSONData; joptions: Integer);

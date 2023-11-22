@@ -27,6 +27,8 @@ USES
 
 type
 {$SCOPEDENUMS ON}
+{$PUSH}
+{$PACKSET 4} // keep sets as int32
     DSSMessageType = (
         Error = -1,
         General = 0,
@@ -58,6 +60,18 @@ type
         Legacy = 2
         // JSONSchema = 3
     );
+    
+    TDSSPropertySetterFlag = (
+        AllowResizing = 1 shl 0,
+
+        // Some components like Loads don't need to update Yprim for every change, e.g. setting
+        // "load.a_load.kW=1" if was "kW" previously 2 should not force a Yprim update, if desired.
+        // Using this flag will reproduce what the classic OpenDSS API for Loads does, but
+        // removes a lot of duplicated code. Besides that, we can extend the feature for other
+        // components if we think it fits.
+        AvoidYprimUpdate = 1 shl 1
+    );
+    TDSSPropertySetterFlags = set of TDSSPropertySetterFlag;
 
     TDSSObjectFlag = (
         EditingActive, 
@@ -243,7 +257,6 @@ type
         DeprecatedAndRemoved
         // OtherProperty
     );
-{$PUSH}
 {$Z4} // keep enums as int32 values
     TPlotPhases = (LLPrimary = -6, LLAll = -5, LL3Ph = -4, Primary = -3, All = -2, ThreePhase = -1);
 

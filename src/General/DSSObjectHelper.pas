@@ -39,22 +39,22 @@ type
         procedure AddProperties_Double(props: Array of Integer; ptrs: Array of PDouble);
         procedure AddProperties_Object(props: Array of Integer; ptrs: Array of TDSSObjectPtr; clss: Array of TDSSClass);
 
-        function ParseObjPropertyValue(Obj: Pointer; Index: Integer; const Value: String; out prevInt: Integer): Boolean;
+        function ParseObjPropertyValue(Obj: Pointer; Index: Integer; const Value: String; out prevInt: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
         function GetObjPropertyValue(obj: Pointer; Index: Integer; out PropStr: String): Boolean;
         function GetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; var val: TJSONData; preferArray: Boolean = False): Boolean;
         function SetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; val: TJSONData): Boolean;
 
         //TODO: add error as result for the 16 following functions
 
-        procedure SetObjDouble(ptr: Pointer; Index: Integer; Value: Double);
-        procedure SetObjInteger(ptr: Pointer; Index: Integer; Value: Integer; prevInt: PInteger);
-        procedure SetObjString(ptr: Pointer; Index: Integer; Value: String);
-        procedure SetObjObject(ptr: Pointer; Index: Integer; Value: TDSSObject);
+        procedure SetObjDouble(ptr: Pointer; Index: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags);
+        procedure SetObjInteger(ptr: Pointer; Index: Integer; Value: Integer; prevInt: PInteger; setterFlags: TDSSPropertySetterFlags);
+        procedure SetObjString(ptr: Pointer; Index: Integer; Value: String; setterFlags: TDSSPropertySetterFlags);
+        procedure SetObjObject(ptr: Pointer; Index: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags);
 
-        procedure SetObjDoubles(ptr: Pointer; Index: Integer; Value: PDouble; ValueCount: Integer);
-        procedure SetObjIntegers(ptr: Pointer; Index: Integer; Value: PInteger; ValueCount: Integer);
-        procedure SetObjStrings(ptr: Pointer; Index: Integer; Value: PPAnsiChar; ValueCount: Integer);
-        procedure SetObjObjects(ptr: Pointer; Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer);
+        procedure SetObjDoubles(ptr: Pointer; Index: Integer; Value: PDouble; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
+        procedure SetObjIntegers(ptr: Pointer; Index: Integer; Value: PInteger; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
+        procedure SetObjStrings(ptr: Pointer; Index: Integer; Value: PPAnsiChar; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
+        procedure SetObjObjects(ptr: Pointer; Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 
         function GetObjDouble(Obj: Pointer; Index: Integer): Double;
         function GetObjInteger(Obj: Pointer; Index: Integer): Integer;
@@ -66,7 +66,7 @@ type
         procedure GetObjStrings(Obj: Pointer; Index: Integer; var ResultPtr: PPAnsiChar; ResultCount: PAPISize);
         procedure GetObjObjects(Obj: Pointer; Index: Integer; var ResultPtr: PPointer; ResultCount: PAPISize);
 
-        function FillObjFromJSON(obj: Pointer; json: TJSONObject; joptions: Integer): Boolean;
+        function FillObjFromJSON(obj: Pointer; json: TJSONObject; joptions: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
     end;
 
     TDSSObjectHelper = class helper for TDSSObject
@@ -80,19 +80,19 @@ type
         function AdjustInputFilePath(const Value: String): String;
 
         // Set[Property|Double|Integer|...] calls BeginEdit and EndEdit, for convenience, if not already in an active edit
-        function ParsePropertyValue(Index: Integer; Value: String): Boolean;
-        function SetDouble(Index: Integer; Value: Double): Boolean;
-        function SetInteger(Index: Integer; Value: Integer): Boolean;
-        function SetString(Index: Integer; Value: String): Boolean;
-        function SetObject(Index: Integer; Value: TDSSObject): Boolean;
-        function SetDoubles(Index: Integer; Value: ArrayOfDouble): Boolean; overload;
-        function SetDoubles(Index: Integer; Value: PDouble; ValueCount: Integer): Boolean; overload;
-        function SetIntegers(Index: Integer; Value: ArrayOfInteger): Boolean; overload;
-        function SetIntegers(Index: Integer; Value: PInteger; ValueCount: Integer): Boolean; overload;
-        function SetStrings(Index: Integer; Value: ArrayOfString): Boolean; overload;
-        function SetObjects(Index: Integer; Value: ArrayOfDSSObject): Boolean; overload;
-        function SetObjects(Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer): Boolean; overload;
-        function SetStrings(Index: Integer; Value: PPAnsiChar; ValueCount: Integer): Boolean; overload;
+        function ParsePropertyValue(Index: Integer; Value: String; setterFlags: TDSSPropertySetterFlags): Boolean;
+        function SetDouble(Index: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags): Boolean;
+        function SetInteger(Index: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
+        function SetString(Index: Integer; Value: String; setterFlags: TDSSPropertySetterFlags): Boolean;
+        function SetObject(Index: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags): Boolean;
+        function SetDoubles(Index: Integer; Value: ArrayOfDouble; setterFlags: TDSSPropertySetterFlags): Boolean; overload;
+        function SetDoubles(Index: Integer; Value: PDouble; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags): Boolean; overload;
+        function SetIntegers(Index: Integer; Value: ArrayOfInteger; setterFlags: TDSSPropertySetterFlags): Boolean; overload;
+        function SetIntegers(Index: Integer; Value: PInteger; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags): Boolean; overload;
+        function SetStrings(Index: Integer; Value: ArrayOfString; setterFlags: TDSSPropertySetterFlags): Boolean; overload;
+        function SetObjects(Index: Integer; Value: ArrayOfDSSObject; setterFlags: TDSSPropertySetterFlags): Boolean; overload;
+        function SetObjects(Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags): Boolean; overload;
+        function SetStrings(Index: Integer; Value: PPAnsiChar; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags): Boolean; overload;
 
         function GetDouble(Index: Integer): Double;
         function GetInteger(Index: Integer): Integer;
@@ -1447,30 +1447,258 @@ begin
     Result := False;
 end;
 
+function JSON_InterpretDblArrayCSV(DSS: TDSSContext; const CSVFileName: String; CSVColumn: Integer; CSVHeader: Boolean; prevCount: Integer): ArrayOfDouble;
+var
+    F: TStream = NIL; // input
+    InputLine: String;
+    iskip: Integer;
+    numRead: Integer = 0;
+begin
+    SetLength(Result, 0);
+    if prevCount <= 0 then
+        prevCount := 100;
+    SetLength(Result, prevCount);
+    try
+        F := DSS.GetInputStreamEx(CSVFileName);
+    except
+        SetLength(Result, 0);
+        DoSimpleMsg(DSS, 'CSV file "%s" could not be opened', [CSVFileName], 70401);
+        Exit;
+    end;
+
+    // load the list from a file
+    try
+        if CSVHeader then
+            FSReadln(F, InputLine);  // skip the header row
+
+        try
+            while true do
+            begin
+                if (F.Position + 1) >= F.Size then
+                    break;
+
+                FSReadln(F, InputLine);
+                DSS.AuxParser.CmdString := InputLine;
+                for iskip := 1 to CSVColumn do
+                    DSS.AuxParser.NextParam();
+
+                if (numRead + 1) >= Length(Result) then
+                begin
+                    SetLength(Result, Length(Result) * 3 div 2); // 100, 150, 225, 337, 505, 757, 1135, 1702...
+                end;
+                Result[numRead] := DSS.AuxParser.dblValue;
+                inc(numRead);
+            end;
+        except
+            On E: Exception do
+            begin
+                SetLength(Result, 0);
+                DoSimpleMsg(DSS, 'Error reading %d-th numeric array value from file: "%s" Error is:', [i, CSVFileName, E.message], 705);
+                Exit;
+            end;
+        end;
+    finally
+        FreeAndNil(F);
+    end;
+    SetLength(Result, numRead);
+end;
+
+function JSON_InterpretDblArraySngFile(DSS: TDSSContext; const fileName: String): ArrayOfDouble;
+var
+    MStream: TMemoryStream = NIL;
+    F: TStream = NIL; // input
+    i: Integer;
+    // Temp: Single;
+    iskip: Integer;
+    sngArray: ArrayDef.PSingleArray;
+    ValueCount: Integer;
+begin
+    SetLength(Result, 0);
+    try    
+        // load the list from a file of singles (no checking done on type of data)
+        try
+            F := DSS.GetInputStreamEx(fileName)
+        except
+            DoSimpleMsg(DSS, 'File of Singles "%s" could not be opened.', [Param], 70502);
+            Exit;
+        end;
+        MStream := TMemoryStream.Create;
+        MStream.LoadFromStream(F);
+        FreeAndNil(F);
+        sngArray := ArrayDef.PSingleArray(MStream.Memory);
+        // Now move the singles from the file into the destination array
+        ValueCount := MStream.Size div sizeof(Single);  // no. of singles
+        SetLength(Result, ValueCount);
+        for i := 1 to ValueCount do
+        begin
+            Result[i - 1] := sngArray[i];  // Single to Double
+        end;
+    finally
+        FreeAndNil(F);
+        FreeAndNil(MStream);
+    end;
+end;
+
+function JSON_InterpretDblArrayDblFile(DSS: TDSSContext; const fileName: String): ArrayOfDouble;
+var
+    F: TStream = NIL; // input
+begin
+    SetLength(Result, 0);
+    try
+         // load the list from a file of doubles (no checking done on type of data)
+        try
+            F := DSS.GetInputStreamEx(fileName);
+        except
+            DoSimpleMsg(DSS, 'File of doubles "%s" could not be opened.', [fileName], 70501);
+            Exit;
+        end;
+        ValueCount := F.Size div sizeof(Double);  // no. of doubles
+        SetLength(Result, ValueCount);
+        F.ReadBuffer(Result[0], SizeOf(Double) * Result);
+    finally
+        FreeAndNil(F);
+    end;
+end;
+
+// function JSON_InterpretIntArrayFile(DSS: TDSSContext; const filePath: String; prevCount: Integer): ArrayOfInteger;
+// //  Get numeric values from an array specified in a text file.
+// //  File is assumed to have one value per line.
+// var
+//     F: TStream = nil;
+//     line: String;
+//     numRead: Integer = 0;
+// begin
+//     SetLength(Result, 0);
+//     if prevCount <= 0 then
+//     begin
+//         prevCount := 100;
+//     end;
+//     SetLength(Result, prevCount);
+
+//     // Syntax can be either a list of numeric values or a file specification:  File= ...
+//     // load the list from a file
+//     try
+//         F := DSS.GetInputStreamEx(filePath);
+//         while true do
+//         begin
+//             if (F.Position + 1) >= F.Size then
+//                 break;
+
+//             FSReadln(F, line);
+//             if (numRead + 1) >= Length(Result) then
+//             begin
+//                 SetLength(Result, Length(Result) * 3 div 2); // 100, 150, 225, 337, 505, 757, 1135, 1702...
+//             end;
+//             Result[numRead] := StrToInt(line);
+//             inc(numRead);
+//         end;
+//         FreeAndNil(F);
+//     except
+//         On E: Exception do
+//         begin
+//             FreeAndNil(F);
+//             SetLength(Result, 0);
+//             DoSimpleMsg(DSS, 'Error trying to read numeric array values from file "%s". Error is: %s', [filePath, E.Message], 706);
+//             Exit;
+//         end;
+//     end;
+//     SetLength(Result, numRead);
+// end;
+
+function JSON_InterpretStringArray(DSS: TDSSContext; obj: TJSONObject; ApplyLower: Boolean = False): ArrayOfString;
+// Get string values from an array specified either as a list on strings or a text file spec.
+// ResultList is allocated as needed.
+// File is assumed to have one value per line.
+var
+    Param,
+    fn,
+    NextParam: String;
+    F: TStream = nil;
+    numRead: Integer = 0;
+begin
+    SetLength(Result, 0);
+
+    if (obj = NIL) or (not obj.Find('File', fn)) then
+        raise Exception.Create('String list is not correctly specified');
+
+    // load the list from a file
+    try
+        F := DSS.GetInputStreamEx(fn);
+        while (F.Position + 1) < F.Size do
+        begin
+            FSReadln(F, Param);
+            DSS.AuxParser.CmdString := Param;
+            DSS.AuxParser.NextParam();
+            NextParam := DSS.AuxParser.StrValue;
+            if Length(NextParam) <= 0 then
+                continue; // Ignore Blank Lines in File
+
+            if (numRead + 1) >= Length(Result) then
+            begin
+                SetLength(Result, Length(Result) * 3 div 2); // 100, 150, 225, 337, 505, 757, 1135, 1702...
+            end;
+            if ApplyLower then
+                Result[numRead] := AnsiLowerCase(NextParam)
+            else
+                Result[numRead] := NextParam;
+            
+            inc(numRead);
+        end;
+        FreeAndNil(F);
+    except
+        On E: Exception do
+        begin
+            FreeAndNil(F);
+            SetLength(Result, 0);
+            DoSimpleMsg(DSS, 'Error trying to read lines from a file. Error is: %s', [E.message], 708);
+        end;
+    end;
+    SetLength(Result, numRead);
+end;
+
+function JSON_NumberArrayFilePath(DSS: TDSSContext; obj: TJSONObject; prevCount: Integer): ArrayOfDouble;
+var
+    obj: TJSONObject = NIL;
+    i: Integer;
+    col: Integer = 1;
+    header: Boolean = false;
+    fn: TJSONString = NIL;
+begin
+    Result := NIL;
+    if obj = NIL then
+        raise Exception.Create('Array is not correctly specified');
+
+    if obj.Find('DblFile', fn) then
+    begin
+        Result := JSON_InterpretDblArrayDblFile(DSS, fn);
+        Exit;
+    end;
+    if obj.Find('SngFile', fn) then
+    begin
+        Result := JSON_InterpretDblArraySngFile(DSS, fn);
+        Exit;
+    end;
+    if not obj.Find('CSVFile', fn) then
+        raise Exception.Create('Array is not correctly specified');
+
+    col := obj.Get('Column', col);
+    header := obj.Get('Header', header);
+
+    Result := JSON_InterpretDblArrayCSV(DSS, fn, col, header, prevCount);
+end;
 
 
 function TDSSClassHelper.SetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; val: TJSONData): Boolean;
-// Lots of code reused here from TDSSClassHelper.GetObjPropertyValue below.
-// When ported to C++, we should address this duplication.
 var
-    // c: PComplex;
-    // otherObj: TDSSObject;
-    // otherObjPtr, otherObjPtr0: TDSSObjectPtr;
-    // dval, scale: Double;
-    // stringList: TStringList;
-    // doublePtr: PDouble;
-    // integerPtr: PInteger;
-    // darray: PDoubleArray;
-    // mat: TCMatrix;
-    // ValueCount: Array[0..3] of TAPISize;
-    // valArray: TJSONArray;
-    // ptype: TPropertyType;
-    // jsonArray: TJSONArray = NIL;
+    doublePtr: PDouble;
+    dataPtr: PPDouble = NIL;
+    mat: TCMatrix;
 
     i: Integer;
 
     boolVal: Boolean;
-    arrayVal: TJSONArray;
+    arrayVal, arrayVal2: TJSONArray;
+    doubleVal: Double;
     ints: ArrayOfInteger;
     doubles: ArrayOfDouble;
     strs: ArrayOfString;
@@ -1478,7 +1706,16 @@ var
     objs: Array of TDSSObject;
     otherObj: TDSSObject = NIL;
     otherName: String;
+    sizingPropIndex: Integer;        
+    allowSetSize: Boolean;
+    nmult: Integer; // for matrices
+    ValueCount: Integer;
+    dssObj: TDSSObject;
+    
+    flags: TPropertyFlags;
+    setterFlags: TDSSPropertySetterFlags = [];
 begin
+    dssObj := TDSSObject(obj);
     if (PropertyArrayAlternative[Index] <> 0) then
     begin
         // This should handle most properties that have redundant element-in-array versions.
@@ -1490,28 +1727,60 @@ begin
         Result := GetObjPropertyJSONValue(obj, PropertyArrayAlternative[Index], joptions, val, True);
         Exit;
     end;
-{
-    // if not ((Index > 0) and (Index <= NumProperties) and (PropertyOffset[Index] <> -1)) then
-    // begin
-    //     Result := False;
-    //     Exit;
-    // end;
+    if not ((Index > 0) and (Index <= NumProperties) and (PropertyOffset[Index] <> -1)) then
+    begin
+        Result := False;
+        Exit;
+    end;
+
+    sizingPropIndex := PropertySizingPropertyIndex[Index];
+    allowSetSize := (sizingPropIndex > 0) and 
+        // Disallow overwriting the size with different properties
+        (not PrpSpecified(sizingPropIndex)) and 
+        // Only allow resizing if no explicit sizing property is actually exposed
+        (not (TPropertyFlag.SuppressJSON in PropertyFlags[sizingPropIndex])); 
+    //TODO: setterFlags := DSS.DefaultSetterFlags;
+    if allowSetSize then
+        Include(setterFlags, TDSSPropertySetterFlag.AllowResizing);
+
+    flags := PropertyFlags[Index];
 
     Result := True;
     ptype := PropertyType[Index];
     
-    if not (TPropertyFlag.OnArray in PropertyFlags[index]) then
+    if not (TPropertyFlag.OnArray in flags) then
     begin
         case ptype of
             TPropertyType.DoubleProperty:
             begin
-                SetObjDouble(obj, index, val.AsFloat, -1);
+                SetObjDouble(obj, index, val.AsFloat, -1, setterFlags);
                 Exit;
             end;
             TPropertyType.MappedIntEnumProperty,
             TPropertyType.IntegerProperty:
             begin        
-                SetObjInteger(obj, index, val.AsInteger, -1);
+                SetObjInteger(obj, index, val.AsInteger, -1, setterFlags);
+                Exit;
+            end;
+            TPropertyFlag.StringEnumActionProperty,
+            TPropertyFlag.MappedStringEnumProperty:
+            begin
+                if (joptions and Integer(DSSJSONOptions.EnumAsInt)) = 0 then
+                begin
+                    SetObjString(obj, index, val.AsString, -1, setterFlags);
+                    Exit;
+                end
+                else
+                begin
+                    SetObjInteger(obj, index, val.AsInteger, -1, setterFlags);
+                    Exit;
+                end;
+            end;
+            TPropertyType.BusProperty,
+            TPropertyType.StringProperty,
+            TPropertyType.MakeLikeProperty:
+            begin
+                SetObjString(obj, index, val.AsString, -1, setterFlags);
                 Exit;
             end;
         end;
@@ -1524,9 +1793,9 @@ begin
         begin
             boolVal := val.AsBoolean;
             if boolVal then
-                SetObjInteger(obj, index, 1, -1)
+                SetObjInteger(obj, index, 1, -1, setterFlags)
             else
-                SetObjInteger(obj, index, 0, -1);
+                SetObjInteger(obj, index, 0, -1, setterFlags);
             Exit;
         end;
         TPropertyType.ComplexProperty,
@@ -1537,7 +1806,7 @@ begin
                 raise Exception(_('Expected an array of two numbers for complex property.'));
 
             complexVal := cmplx(val.Items[0].AsFloat, val.Items[1].AsFloat);
-            SetObjDoubles(obj, index, PDouble(@complexVal), 2);
+            SetObjDoubles(obj, index, PDouble(@complexVal), 2, setterFlags);
             Exit;
         end;
 
@@ -1545,28 +1814,50 @@ begin
         TPropertyType.IntegerOnStructArrayProperty,
         TPropertyType.IntegerArrayProperty:
         begin
-            valArray := val as TJSONArray;
             Norder := PInteger(PByte(obj) + PropertyOffset2[Index])^;
-            if (valArray.Count <> Norder) then
+            // if val is TJSONObject then
+            // begin
+            //     ints := JSON_InterpretIntArray();
+            //     if (Length(ints) <> Norder) then
+            //     begin
+            //         if allowSetSize then
+            //         begin
+            //             dssObj.SetInteger(sizingPropIndex, arrayVal.Count, Norder, setterFlags);
+            //         end
+            //         else
+            //         begin
+            //             //TODO: update size etc.
+            //             raise Exception(Format(_('Expected an array of %d numbers, got %d items.'), [Norder, Length(ints)]));
+            //         end;
+            //     end;
+            // end
+            // else
+            // begin
+            arrayVal := val as TJSONArray;
+            if (arrayVal.Count <> Norder) and (not allowSetSize) then
             begin
-                //TODO: update size etc.
-                raise Exception(Format(_('Expected an array of %d numbers.'), [Norder]));
+                // if allowSetSize then
+                // begin
+                //     dssObj.SetInteger(sizingPropIndex, arrayVal.Count, Norder, setterFlags);
+                // end
+                raise Exception(Format(_('Expected an array of %d numbers, got %d items.'), [Norder, arrayVal.Count]));
             end;
-            SetLength(ints, valArray.Count);
-            for i := 0 to valArray.Count - 1 do
+            // end;
+            SetLength(ints, arrayVal.Count);
+            for i := 0 to arrayVal.Count - 1 do
             begin
-                ints[i] := valArray.Items[i].AsInteger;
+                ints[i] := arrayVal.Items[i].AsInteger;
             end;
-            SetObjIntegers(obj, index, PInteger(@ints[0]), Length(ints));
+            SetObjIntegers(obj, index, PInteger(@ints[0]), Length(ints), setterFlags);
             Exit;
         end;
 
+        // All "on array" versions
         TPropertyType.BusProperty,
         TPropertyType.BusOnStructArrayProperty,
         TPropertyType.BusesOnStructArrayProperty,
         TPropertyType.StringEnumActionProperty,
         TPropertyType.StringProperty,
-        TPropertyType.MakeLikeProperty,
         TPropertyType.MappedStringEnumOnStructArrayProperty,
         TPropertyType.MappedStringEnumArrayOnStructArrayProperty,
         TPropertyType.MappedStringEnumArrayProperty,
@@ -1577,77 +1868,185 @@ begin
         begin
             if ((ptype = TPropertyType.StringListProperty) and (val is TJSONObject)) then
             begin
-                //TODO: adjust and use InterpretTStringListArray
+                strs := JSON_InterpretStringArray(DSS, val as TJSONObject, ResultList, TPropertyFlag.Transform_LowerCase in flags);
+                SetObjStrings(obj, index, PPAnsiChar(@strs[0]), Length(strs), setterFlags);
                 Exit;
             end;
 
             if (val is TJSONArray) then
             begin
-                valArray := val as TJSONArray;
-                if valArray.Count = 0 then
+                arrayVal := val as TJSONArray;
+                if arrayVal.Count = 0 then
                 begin
                     SetObjStrings(obj, index, NIL, 0);
                     Exit;
                 end;
-                val := valArray[0];
+                val := arrayVal[0];
                 if (varType(val.Value) = varString) then
                 begin
-                    if (ptype in [TPropertyType.BusOnStructArrayProperty, TPropertyType.DSSObjectReferenceArrayProperty]) or 
-                        (TPropertyFlag.OnArray in PropertyFlags[Index]) then
+                    if (ptype in [TPropertyType.BusOnStructArrayProperty, TPropertyType.DSSObjectReferenceArrayProperty]) or (TPropertyFlag.OnArray in flags) then
                     begin
                         // Array of strings
-                        valArray := val as TJSONArray;
-                        SetLength(strs, Max(valArray.Count));
-                        for i := 0 to valArray.Count - 1 do
+                        arrayVal := val as TJSONArray;
+                        ValueCount := arrayVal.Count;
+                        SetLength(strs, ValueCount);
+                        if TPropertyFlag.Transform_LowerCase in flags then
                         begin
-                            strs[i] := valArray[i].Value;
+                            for i := 0 to ValueCount - 1 do
+                            begin
+                                strs[i] := AnsiLowerCase(arrayVal[i].Value);
+                            end;
+                        end
+                        else
+                        begin
+                            for i := 0 to ValueCount - 1 do
+                            begin
+                                strs[i] := arrayVal[i].Value;
+                            end;
                         end;
-                        SetObjStrings(obj, index, PPAnsiChar(@strs[0]), Length(strs));
+                        SetObjStrings(obj, index, PPAnsiChar(@strs[0]), Length(strs), setterFlags);
                         Exit;
                     end;
                     raise Exception(_('Expected a single value, got array.'));
                 end
                 else
                 begin
-                    if (TPropertyFlag.OnArray in PropertyFlags[Index]) then
+                    if (TPropertyFlag.OnArray in flags) then
                     begin
                         // Array of strings
-                        valArray := val as TJSONArray;
-                        SetLength(ints, Max(valArray.Count));
-                        for i := 0 to valArray.Count - 1 do
+                        arrayVal := val as TJSONArray;
+                        ValueCount := arrayVal.Count;
+                        SetLength(ints, ValueCount);
+                        for i := 0 to ValueCount - 1 do
                         begin
-                            ints[i] := valArray[i].Value;
+                            ints[i] := arrayVal[i].Value;
                         end;
-                        SetObjIntegers(obj, index, PInteger(@ints[0]), Length(ints));
+                        SetObjIntegers(obj, index, PInteger(@ints[0]), Length(ints), setterFlags);
                         Exit;
                     end;
                     raise Exception(_('Expected a single value, got array.'));
                 end;
             end;
 
-            if  (TPropertyFlag.OnArray in PropertyFlags[Index]) or (ptype in [
-                    TPropertyType.StringListProperty,
-                    TPropertyType.BusOnStructArrayProperty,
-                    TPropertyType.BusesOnStructArrayProperty,
-                    TPropertyType.MappedStringEnumOnStructArrayProperty,
-                    TPropertyType.MappedStringEnumArrayOnStructArrayProperty,
-                    TPropertyType.MappedStringEnumArrayProperty,
-                    TPropertyType.DSSObjectReferenceArrayProperty
-                ]) then
-                    raise Exception(_('Expected array, got a single value.'));
+            if (TPropertyFlag.OnArray in flags) or (ptype in [
+                TPropertyType.StringListProperty,
+                TPropertyType.BusOnStructArrayProperty,
+                TPropertyType.BusesOnStructArrayProperty,
+                TPropertyType.MappedStringEnumOnStructArrayProperty,
+                TPropertyType.MappedStringEnumArrayOnStructArrayProperty,
+                TPropertyType.MappedStringEnumArrayProperty,
+                TPropertyType.DSSObjectReferenceArrayProperty
+            ]) then
+                raise Exception(_('Expected array.'));
 
             if (varType(val.Value) = varString) then
             begin
                 // Single string
-                SetObjString(obj, index, val.Value);
+                SetObjString(obj, index, val.Value, setterFlags);
                 Exit;
             end
             else
             begin
                 // Single integer
-                SetObjInteger(obj, index, val.Value, -1);
+                SetObjInteger(obj, index, val.Value, -1, setterFlags);
                 Exit;
             end;
+        end;
+
+        TPropertyType.DoubleSymMatrixProperty,
+        TPropertyType.ComplexPartSymMatrixProperty:
+        begin
+            // This is a specialized version for JSON matrix (array of arrays),
+            // since SetObjDoubles expects a plain array.
+
+            Norder := PInteger(PByte(obj) + PropertyOffset3[Index])^;
+            arrayVal := val as TJSONArray;
+            // First size check, which may allow resizing; we do resize here for matrices,
+            // all the rest resize in the generic setters
+            if (arrayVal.Count <> Norder) then
+            begin
+                if allowSetSize then
+                begin
+                    dssObj.SetInteger(sizingPropIndex, arrayVal.Count, Norder, setterFlags);
+                    if DSS.ErrorNumber <> 0 then
+                    begin
+                        raise Exception(Format(_('Could not resize structures to match provided matrix order (%d).'), [arrayVal.Count]));
+                    end;
+                    Norder := arrayVal.Count;
+                end
+                else
+                begin
+                    raise Exception(Format(_('Expected a matrix of %d rows/cols.'), [Norder]));
+                end;
+            end;
+            if TPropertyFlag.ScaledByFunction in flags then
+                scale := TPropertyScaleFunction(Pointer(PropertyOffset2[Index]))(obj, False) // False = Setter scale
+            else
+                scale := PropertyScale[Index];
+
+            if (ptype = TPropertyType.ComplexPartSymMatrixProperty) then
+            begin
+                nmult := 2; // part of a complex matrix, double the number of elements
+                mat := PCMatrix(Pointer(PByte(obj) + PropertyOffset[Index]))^;
+                doublePtr := PDouble(mat.GetValuesArrayPtr(Norder));
+                if TPropertyFlag.ImagPart in flags then
+                    Inc(doublePtr);
+            end
+            else
+            // if (ptype = TPropertyType.DoubleSymMatrixProperty) then
+            begin
+                nmult := 1; // simple real matrix
+                dataPtr := PPDouble(PByte(obj) + PropertyOffset[Index]);
+                doublePtr := PPDouble(dataPtr)^;
+                if doublePtr = NIL then
+                begin
+                    ReAllocMem(dataPtr^, 0);
+                    doublePtr := Allocmem(Sizeof(Double) * Norder * Norder);
+                    dataPtr^ := doublePtr;
+                end;
+            end;
+
+            // Count elements
+            ValueCount := 0;
+            for i := 0 to arrayVal.Count - 1 do
+            begin
+                ValueCount += arrayVal.Arrays[i].Count;
+            end;
+
+            // Second size check, including element count. 
+            // No need to recheck the outer size again.
+            // Allow both the full matrix or the triangle
+            if (ValueCount <> (Norder * Norder)) and (ValueCount <> (Norder * (Norder + 1)) div 2) then
+            begin
+                DoSimpleMsg(
+                    '%s.%s: Invalid number of elements. Provide either the full matrix or a triangle (lower or upper).', 
+                    [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                2020037);
+                Exit;
+            end;
+
+            // Copy... at this point, we should be safe to copy directly. If errors
+            // here are common, we could copy and restore the original matrix when
+            // errors happen.
+            for i := 0 to Norder - 1 do
+            begin
+                arrayVal2 := arrayVal.Arrays[i]; // we should be safe to do this, size already checked
+                for j := 0 to arrayVal2.Count - 1 do
+                begin
+                    doubleVal := arrayVal2.Floats[j];
+                    doublePtr[(i * Norder + j) * nmult] := doubleVal;
+                    if i <> j then
+                        doublePtr[(j * Norder + i) * nmult] := doubleVal;
+                end;
+            end;
+
+            if scale = 1 then
+                Exit;
+
+            // Apply scale
+            for i := 0 to Norder - 1 do
+                for j := 0 to Norder - 1 do
+                    doublePtr[(i * Norder + j) * nmult] *= scale;
         end;
         TPropertyType.DoubleProperty, // onArray
         TPropertyType.DoubleOnArrayProperty,
@@ -1656,9 +2055,7 @@ begin
         TPropertyType.DoubleDArrayProperty,
         TPropertyType.DoubleVArrayProperty,
         TPropertyType.DoubleArrayOnStructArrayProperty,
-        TPropertyType.DoubleFArrayProperty,
-        TPropertyType.DoubleSymMatrixProperty,
-        TPropertyType.ComplexPartSymMatrixProperty:
+        TPropertyType.DoubleFArrayProperty:
         begin
             if ptype = TPropertyType.DoubleFArrayProperty then
             begin
@@ -1666,14 +2063,9 @@ begin
             end
             else
             begin
-                if TPropertyFlag.SizeIsFunction in PropertyFlags[Index] then
+                if TPropertyFlag.SizeIsFunction in flags then
                 begin
                     Norder := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj)
-                end
-                else
-                if PropertyType[Index] in [TPropertyType.DoubleSymMatrixProperty, TPropertyType.ComplexPartSymMatrixProperty] then
-                begin
-                    Norder := PInteger(PByte(obj) + PropertyOffset3[Index])^;
                 end
                 else
                 begin
@@ -1681,28 +2073,67 @@ begin
                 end;
             end;
 
-            valArray := val as TJSONArray;
-            if (TPropertyFlag.AllowNone in PropertyFlags[Index]) and (val.IsNull or ((valArray <> NIL) and (valArray.Count = 0))) then
+            ValueCount := 0;
+            if (val is TJSONObject) then
             begin
-                SetObjDoubles(obj, index, NIL, 0);
+                if (ptype in [TPropertyType.DoubleArrayProperty, TPropertyType.DoubleDArrayProperty]) then
+                begin
+                    doubles := JSON_NumberArrayFilePath(DSS, (val as TJSONObject), Norder);
+                    ValueCount := Length(doubles);
+                end
+                else
+                begin
+                    raise Exception(_('Expected an array of numbers, not an object.'));
+                end;
+            end
+            else
+            begin
+                arrayVal := val as TJSONArray;
+                if not ((arrayVal = NIL) or (val.IsNull)) then
+                    ValueCount := arrayVal.Count;
+
+                SetLength(doubles, ValueCount);
+                for i := 0 to ValueCount - 1 do
+                begin
+                    doubles[i] := arrayVal.Items[i].AsFloat;
+                end;
+            end;
+
+            if (TPropertyFlag.AllowNone in flags) and (val.IsNull or (ValueCount = 0)) then
+            begin
+                SetObjDoubles(obj, index, NIL, 0, allowSetSize);
                 Exit;
             end;
 
-            if (valArray.Count <> Norder) then
+            if (not allowSetSize) and (ValueCount <> Norder) then
             begin
-                //TODO: update size etc.
+                // if allowSetSize then
+                // begin
+                //     dssObj.SetInteger(sizingPropIndex, ValueCount, Norder);
+                //     if DSS.ErrorNumber <> 0 then
+                //     begin
+                //         raise Exception(Format(_('Could not resize structures to match provided array length (%d).'), [ValueCount]));
+                //     end;
+                //     Norder := ValueCount;
+                // end
+                // else
+                // begin
                 raise Exception(Format(_('Expected an array of %d numbers (maximum length).'), [Norder]));
+                // end;
             end;
-            SetLength(doubles, valArray.Count);
-            for i := 0 to valArray.Count - 1 do
+
+            if TPropertyFlag.ApplyRound in flags then
             begin
-                doubles[i] := valArray.Items[i].AsFloat;
+                for i := 0 to ValueCount - 1 do
+                begin
+                    doubles[i] := Round(doubles[i]);
+                end;
             end;
-            SetObjDoubles(obj, index, PDouble(@doubles[0]), Length(doubles));
+            SetObjDoubles(obj, index, PDouble(@doubles[0]), Length(doubles), allowSetSize);
             Exit;
         end;
     end;
-    Result := False;}
+    Result := False;
 end;
 
 function TDSSClassHelper.GetObjPropertyValue(obj: Pointer; Index: Integer; out PropStr: String): Boolean;
@@ -2519,7 +2950,7 @@ begin
     Result := Utilities.AdjustInputFilePath(DSS, Value)
 end;
 
-function TDSSObjectHelper.ParsePropertyValue(Index: Integer; Value: String): Boolean;
+function TDSSObjectHelper.ParsePropertyValue(Index: Integer; Value: String; setterFlags: TDSSPropertySetterFlags): Boolean;
 var
     prevInt: Integer;
     singleEdit: Boolean;
@@ -2538,7 +2969,7 @@ begin
         EndEdit(1);
 end;
 
-function TDSSObjectHelper.SetDouble(Index: Integer; Value: Double): Boolean;
+function TDSSObjectHelper.SetDouble(Index: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags): Boolean;
 var
     singleEdit: Boolean;
 begin
@@ -2556,7 +2987,7 @@ begin
         EndEdit(1);
 end;
 
-function TDSSObjectHelper.SetString(Index: Integer; Value: String): Boolean;
+function TDSSObjectHelper.SetString(Index: Integer; Value: String; setterFlags: TDSSPropertySetterFlags): Boolean;
 var
     singleEdit: Boolean;
 begin
@@ -2574,7 +3005,7 @@ begin
         EndEdit(1);
 end;
 
-function TDSSObjectHelper.SetInteger(Index: Integer; Value: Integer): Boolean;
+function TDSSObjectHelper.SetInteger(Index: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
 var
     prevInt: Integer;
     singleEdit: Boolean;
@@ -2590,7 +3021,7 @@ begin
         EndEdit(1);
 end;
 
-function TDSSObjectHelper.SetObject(Index: Integer; Value: TDSSObject): Boolean;
+function TDSSObjectHelper.SetObject(Index: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags): Boolean;
 var
     singleEdit: Boolean;
 begin
@@ -2608,12 +3039,12 @@ begin
         EndEdit(1);
 end;
 
-function TDSSObjectHelper.SetObjects(Index: Integer; Value: ArrayOfDSSObject): Boolean;
+function TDSSObjectHelper.SetObjects(Index: Integer; Value: ArrayOfDSSObject; setterFlags: TDSSPropertySetterFlags): Boolean;
 begin
-    Result := SetObjects(Index, @Value[0], Length(Value));
+    Result := SetObjects(Index, @Value[0], Length(Value), setterFlags);
 end;
 
-function TDSSObjectHelper.SetObjects(Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer): Boolean;
+function TDSSObjectHelper.SetObjects(Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
 var
     singleEdit: Boolean;
 begin
@@ -2621,7 +3052,7 @@ begin
     if singleEdit then
         BeginEdit(True);
     Result := True; // TODO
-    ParentClass.SetObjObjects(self, Index, Value, ValueCount);
+    ParentClass.SetObjObjects(self, Index, Value, ValueCount, setterFlags);
     if DSS.ErrorNumber = 0 then
     begin
         SetAsNextSeq(Index);
@@ -2631,12 +3062,12 @@ begin
         EndEdit(1);
 end;
 
-function TDSSObjectHelper.SetIntegers(Index: Integer; Value: ArrayOfInteger): Boolean;
+function TDSSObjectHelper.SetIntegers(Index: Integer; Value: ArrayOfInteger; setterFlags: TDSSPropertySetterFlags): Boolean;
 begin
-    Result := SetIntegers(Index, @Value[0], Length(Value));
+    Result := SetIntegers(Index, @Value[0], Length(Value), setterFlags);
 end;
 
-function TDSSObjectHelper.SetIntegers(Index: Integer; Value: PInteger; ValueCount: Integer): Boolean;
+function TDSSObjectHelper.SetIntegers(Index: Integer; Value: PInteger; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
 var
     singleEdit: Boolean;
 begin
@@ -2654,12 +3085,12 @@ begin
         EndEdit(1);
 end;
 
-function TDSSObjectHelper.SetDoubles(Index: Integer; Value: ArrayOfDouble): Boolean;
+function TDSSObjectHelper.SetDoubles(Index: Integer; Value: ArrayOfDouble; setterFlags: TDSSPropertySetterFlags): Boolean;
 begin
     Result := SetDoubles(Index, @Value[0], Length(Value));
 end;
 
-function TDSSObjectHelper.SetDoubles(Index: Integer; Value: PDouble; ValueCount: Integer): Boolean;
+function TDSSObjectHelper.SetDoubles(Index: Integer; Value: PDouble; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
 var
     singleEdit: Boolean;
 begin
@@ -2667,7 +3098,7 @@ begin
     if singleEdit then
         BeginEdit(True);
     Result := True;//TODO
-    ParentClass.SetObjDoubles(self, Index, Value, ValueCount);
+    ParentClass.SetObjDoubles(self, Index, Value, ValueCount, setterFlags);
     if DSS.ErrorNumber = 0 then
     begin
         SetAsNextSeq(Index);
@@ -2677,7 +3108,7 @@ begin
         EndEdit(1);
 end;
 
-function TDSSObjectHelper.SetStrings(Index: Integer; Value: ArrayOfString): Boolean;
+function TDSSObjectHelper.SetStrings(Index: Integer; Value: ArrayOfString; setterFlags: TDSSPropertySetterFlags): Boolean;
 var
     ValuePChar: Array of PChar = NIL;
     i: Integer;
@@ -2692,7 +3123,7 @@ begin
     for i := 0 to High(Value) do
         ValuePChar[i] := PChar(Value[i]);
 
-    ParentClass.SetObjStrings(self, Index, @ValuePChar[0], Length(Value));
+    ParentClass.SetObjStrings(self, Index, @ValuePChar[0], Length(Value), setterFlags);
     if DSS.ErrorNumber = 0 then
     begin
         SetAsNextSeq(Index);
@@ -2702,7 +3133,7 @@ begin
         EndEdit(1);
 end;
 
-function TDSSObjectHelper.SetStrings(Index: Integer; Value: PPAnsiChar; ValueCount: Integer): Boolean; overload;
+function TDSSObjectHelper.SetStrings(Index: Integer; Value: PPAnsiChar; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags): Boolean; overload;
 var
     singleEdit: Boolean;
 begin
@@ -2796,7 +3227,7 @@ begin
     Result := PrpSequence[idx] <> 0;
 end;
 
-procedure TDSSClassHelper.SetObjIntegers(ptr: Pointer; Index: Integer; Value: PInteger; ValueCount: Integer);
+procedure TDSSClassHelper.SetObjIntegers(ptr: Pointer; Index: Integer; Value: PInteger; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i, maxSize, step: Integer;
     integerPtr, positionPtr, sizePtr: PInteger;
@@ -4212,10 +4643,12 @@ begin
     propIndex := -1;
     Result := false;
     dssObj := TDSSObject(obj);
-{    for propIndex := 1 to orderedProperties.Count do
+
+    for i := 1 to High(AltPropertyOrder) do
     begin
         //TODO: flag to lowercase transform key? legacy etc.?
         //TODO: flag to error on extra keys
+        propIndex := AltPropertyOrder[i];
         propName := PropertyNameJSON[propIndex];
         propFlags := PropertyFlags[propIndex]
         ptype := PropertyType[propIndex];
@@ -4226,16 +4659,15 @@ begin
 
             continue;
         end;
-        
         if (ptype = TPropertyType.StringSilentROFunctionProperty) or (TPropertyFlag.ReadOnly in propFlags) then
-            continue; // ignore...
+            continue; // ignore... TODO: error or warning
 
         if not SetObjPropertyJSONValue(obj, propIndex, joptions, propData) then
             Exit;
 
         numChanges += 1;
     end;
-    EndEdit(dssObj, numChanges);}
+    EndEdit(dssObj, numChanges);
     Result := true;
 end;
 

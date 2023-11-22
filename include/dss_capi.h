@@ -7302,16 +7302,16 @@ extern "C" {
     DSS_CAPI_DLL void Obj_GetStringArray(char*** ResultPtr, int32_t* ResultDims, void *obj, int32_t Index);
     DSS_CAPI_DLL void Obj_GetObjectArray(void*** ResultPtr, int32_t* ResultDims, void *obj, int32_t Index);
 
-    DSS_CAPI_DLL void Obj_SetAsString(void *obj, int32_t Index, const char* Value);
-    DSS_CAPI_DLL void Obj_SetFloat64(void *obj, int32_t Index, double Value);
-    DSS_CAPI_DLL void Obj_SetInt32(void *obj, int32_t Index, int32_t Value);
-    DSS_CAPI_DLL void Obj_SetString(void *obj, int32_t Index, const char* Value);
-    DSS_CAPI_DLL void Obj_SetObject(void *obj, int32_t Index, void* Value);
+    DSS_CAPI_DLL void Obj_SetAsString(void *obj, int32_t Index, const char* Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Obj_SetFloat64(void *obj, int32_t Index, double Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Obj_SetInt32(void *obj, int32_t Index, int32_t Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Obj_SetString(void *obj, int32_t Index, const char* Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Obj_SetObject(void *obj, int32_t Index, void* Value, int32_t setterFlags);
     
-    DSS_CAPI_DLL void Obj_SetFloat64Array(void *obj, int32_t Index, double* Value, int32_t ValueCount);
-    DSS_CAPI_DLL void Obj_SetInt32Array(void *obj, int32_t Index, int32_t* Value, int32_t ValueCount);
-    DSS_CAPI_DLL void Obj_SetStringArray(void *obj, int32_t Index, const char** Value, int32_t ValueCount);
-    DSS_CAPI_DLL void Obj_SetObjectArray(void *obj, int32_t Index, void **Value, int32_t ValueCount);
+    DSS_CAPI_DLL void Obj_SetFloat64Array(void *obj, int32_t Index, double* Value, int32_t ValueCount, int32_t setterFlags);
+    DSS_CAPI_DLL void Obj_SetInt32Array(void *obj, int32_t Index, int32_t* Value, int32_t ValueCount, int32_t setterFlags);
+    DSS_CAPI_DLL void Obj_SetStringArray(void *obj, int32_t Index, const char** Value, int32_t ValueCount, int32_t setterFlags);
+    DSS_CAPI_DLL void Obj_SetObjectArray(void *obj, int32_t Index, void **Value, int32_t ValueCount, int32_t setterFlags);
 
     DSS_CAPI_DLL double Obj_CktElement_MaxCurrent(void *obj, int32_t terminalIdx);
     DSS_CAPI_DLL void Obj_Circuit_Set_ActiveCktElement(void *obj);
@@ -7338,15 +7338,15 @@ extern "C" {
     DSS_CAPI_DLL void Batch_GetObject(void*** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, int32_t Index);
 
     // DSS_CAPI_DLL void Batch_SetAsString(void** batch, int32_t batchSize, int32_t Index, const char* Value);
-    DSS_CAPI_DLL void Batch_Float64(void** batch, int32_t batchSize, int32_t Index, int32_t Operation, double Value);
-    DSS_CAPI_DLL void Batch_Int32(void** batch, int32_t batchSize, int32_t Index, int32_t Operation, int32_t Value);
-    DSS_CAPI_DLL void Batch_SetString(void** batch, int32_t batchSize, int32_t Index, const char* Value);
-    DSS_CAPI_DLL void Batch_SetObject(void** batch, int32_t batchSize, int32_t Index, const void *Value);
+    DSS_CAPI_DLL void Batch_Float64(void** batch, int32_t batchSize, int32_t Index, int32_t Operation, double Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Batch_Int32(void** batch, int32_t batchSize, int32_t Index, int32_t Operation, int32_t Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Batch_SetString(void** batch, int32_t batchSize, int32_t Index, const char* Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Batch_SetObject(void** batch, int32_t batchSize, int32_t Index, const void *Value, int32_t setterFlags);
 
-    DSS_CAPI_DLL void Batch_SetFloat64Array(void** batch, int32_t batchSize, int32_t Index, double* Value);
-    DSS_CAPI_DLL void Batch_SetInt32Array(void** batch, int32_t batchSize, int32_t Index, int32_t* Value);
-    DSS_CAPI_DLL void Batch_SetStringArray(void** batch, int32_t batchSize, int32_t Index, const char** Value);
-    DSS_CAPI_DLL void Batch_SetObjectArray(void** batch, int32_t batchSize, int32_t Index, const void** Value);
+    DSS_CAPI_DLL void Batch_SetFloat64Array(void** batch, int32_t batchSize, int32_t Index, double* Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Batch_SetInt32Array(void** batch, int32_t batchSize, int32_t Index, int32_t* Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Batch_SetStringArray(void** batch, int32_t batchSize, int32_t Index, const char** Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Batch_SetObjectArray(void** batch, int32_t batchSize, int32_t Index, const void** Value, int32_t setterFlags);
 
     DSS_CAPI_DLL void Batch_CreateFromNewS(void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname, const char** names, int32_t count, altdss_bool_t BeginEdit);
     DSS_CAPI_DLL void Batch_CreateByClassS(void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname);
@@ -7362,15 +7362,15 @@ extern "C" {
     DSS_CAPI_DLL void Batch_GetObjectS(void*** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, const char* Name);
 
     // DSS_CAPI_DLL void Batch_SetAsStringS(void** batch, int32_t batchSize, const char* Name, const char* Value);
-    DSS_CAPI_DLL void Batch_Float64S(void** batch, int32_t batchSize, const char* Name, int32_t Operation, double Value);
-    DSS_CAPI_DLL void Batch_Int32S(void** batch, int32_t batchSize, const char* Name, int32_t Operation, int32_t Value);
-    DSS_CAPI_DLL void Batch_SetStringS(void** batch, int32_t batchSize, const char* Name, const char* Value);
-    DSS_CAPI_DLL void Batch_SetObjectS(void** batch, int32_t batchSize, const char* Name, const void* Value);
+    DSS_CAPI_DLL void Batch_Float64S(void** batch, int32_t batchSize, const char* Name, int32_t Operation, double Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Batch_Int32S(void** batch, int32_t batchSize, const char* Name, int32_t Operation, int32_t Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Batch_SetStringS(void** batch, int32_t batchSize, const char* Name, const char* Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Batch_SetObjectS(void** batch, int32_t batchSize, const char* Name, const void* Value, int32_t setterFlags);
 
-    DSS_CAPI_DLL void Batch_SetFloat64ArrayS(void** batch, int32_t batchSize, const char* Name, double* Value);
-    DSS_CAPI_DLL void Batch_SetInt32ArrayS(void** batch, int32_t batchSize, const char* Name, int32_t* Value);
-    DSS_CAPI_DLL void Batch_SetStringArrayS(void** batch, int32_t batchSize, const char* Name, const char** Value);
-    DSS_CAPI_DLL void Batch_SetObjectArrayS(void** batch, int32_t batchSize, const char* Name, const void** Value);
+    DSS_CAPI_DLL void Batch_SetFloat64ArrayS(void** batch, int32_t batchSize, const char* Name, double* Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Batch_SetInt32ArrayS(void** batch, int32_t batchSize, const char* Name, int32_t* Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Batch_SetStringArrayS(void** batch, int32_t batchSize, const char* Name, const char** Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Batch_SetObjectArrayS(void** batch, int32_t batchSize, const char* Name, const void** Value, int32_t setterFlags);
 
     /*! 
     `DSS_BeginPascalThread` can be used to start a new thread from the Pascal side.
