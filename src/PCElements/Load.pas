@@ -264,7 +264,7 @@ type
         HasBeenAllocated: Boolean;
         kWBase: Double;
         kVABase: Double;
-        kWref: Double;
+        kWref: Double; //TODO: check if this is useful
         kVARref: Double;
         kvarBase: Double;
         kVLoadBase: Double;
@@ -278,7 +278,7 @@ type
         YearlyShapeObj: TLoadShapeObj;  // Shape for this load
         CVRShapeObj: TLoadShapeObj;
         ZIPV: Array[1..7] of Double;  // Made public 5-20-2013
-        ZIPVset: Boolean;
+        ZIPVset: Boolean; // TODO: check if property is set directly
         puSeriesRL: Double;
         RelWeighting: Double;
 
@@ -492,7 +492,27 @@ begin
 end;
 
 procedure TLoadObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
+var
+    addedNeedsYprim: Boolean = false;
 begin
+    if not (Flg.NeedsYprim in Flags) then
+    begin
+        addedNeedsYprim := true;
+        Include(Flags, Flg.NeedsYprim);
+    end;
+
+    if (Idx > 0) and (Idx <= NumPropsThisClass) then
+    begin
+        if addedNeedsYprim and 
+            (TSetterFlag.AvoidYprimUpdate in setterFlags) and 
+            (TProp(idx) in [TProp.kvar, TProp.kW, TProp.model, TProp.pf, TProp.status, TProp.bus1, 
+                            TProp.RelWeight, TProp.pctSeriesRL, TProp.ZIPV, TProp.kV,
+                            TProp.Daily, TProp.Yearly, TProp.Growth, TProp.Duty]) then
+        begin
+            Exclude(Flags, Flg.NeedsYprim);
+        end;
+    end;
+
     case Idx of
         ord(TProp.conn):
         begin
@@ -703,7 +723,10 @@ var
 begin
     obj := TObj(ptr);
     obj.RecalcElementData();
-    obj.YPrimInvalid := TRUE;
+    if Flg.NeedsYprim in obj.flags then
+    begin
+        obj.YPrimInvalid := TRUE;
+    end;    
     Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
