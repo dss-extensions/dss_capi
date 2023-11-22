@@ -51,7 +51,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const CNDataName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         property NStrand: Integer READ FkStrand;
@@ -138,7 +138,7 @@ begin
     Result := Obj;
 end;
 
-procedure TCNDataObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TCNDataObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     // Set defaults
     case Idx of
@@ -158,7 +158,7 @@ begin
             if (FGmrStrand <= 0.0) then
                 DoSimpleMsg('Error: Neutral strand GMR must be positive for CNData %s', [Name], 999);
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TCNDataObj.MakeLike(OtherPtr: Pointer);

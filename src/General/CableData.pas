@@ -46,7 +46,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const CableDataName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherObj: Pointer); override;
 
         property EpsR: Double READ FEpsR;
@@ -127,7 +127,7 @@ begin
     inherited DefineProperties;
 end;
 
-procedure TCableDataObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TCableDataObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     // Check for critical errors
     case (Idx - (ParentClass as TCableData).PropertyOffset_CableData)  of
@@ -144,7 +144,7 @@ begin
             if (FDiaCable <= 0.0) then
                 DoSimpleMsg('Error: Diameter over cable must be positive for CableData %s', [Name], 999);
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TCableDataObj.MakeLike(OtherObj: Pointer);

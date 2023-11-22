@@ -140,7 +140,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const LineGeometryName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
         
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
@@ -367,7 +367,7 @@ begin
     Result := Obj;
 end;
 
-procedure TLineGeometryObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TLineGeometryObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     tmpName: String;
     i: Integer;
@@ -525,7 +525,7 @@ begin
             DataChanged := TRUE;
     end;
 
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TLineGeometryObj.MakeLike(OtherPtr: Pointer);
@@ -833,7 +833,7 @@ var
 begin
     prev := Fnconds;
     Fnconds := Value;
-    PropertySideEffects(ord(TProp.nconds), prev)
+    PropertySideEffects(ord(TProp.nconds), prev, [])
 end;
 
 procedure TLineGeometryObj.set_Nphases(const Value: Integer);

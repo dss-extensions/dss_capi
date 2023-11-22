@@ -968,7 +968,6 @@ begin
         prev := Integer(True);
 
     elem.SetInteger(ord(TLineProp.Switch), Integer(Value), []);
-    elem.PropertySideEffects(ord(TLineProp.Switch), prev);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_IsSwitch(): TAPIBoolean; CDECL;

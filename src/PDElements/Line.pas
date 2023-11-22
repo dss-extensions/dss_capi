@@ -166,7 +166,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const LineName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure RecalcElementData; OVERRIDE;
@@ -566,7 +566,7 @@ begin
     KillGeometrySpecified;
 end;
 
-procedure TLineObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TLineObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of
         ord(TProp.C1), ord(TProp.C0), ord(TProp.cmatrix), ord(TProp.B1), ord(TProp.B0):
@@ -729,7 +729,7 @@ begin
         (NumPropsThisClass + ord(TPDElementProp.EmergAmps)):
             RatingsSpecified := TRUE;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TLine.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
@@ -1731,9 +1731,9 @@ begin
             SetAsNextSeq(ord(TProp.cmatrix));
             SetAsNextSeq(ord(TProp.length));
             SetAsNextSeq(ord(TProp.units));
-            PropertySideEffects(ord(TProp.rmatrix));
-            PropertySideEffects(ord(TProp.xmatrix));
-            PropertySideEffects(ord(TProp.cmatrix));
+            PropertySideEffects(ord(TProp.rmatrix), 0, []);
+            PropertySideEffects(ord(TProp.xmatrix), 0, []);
+            PropertySideEffects(ord(TProp.cmatrix), 0, []);
         end;  // Matrix definition
 
         Other.Enabled := FALSE;  // Disable the Other Line

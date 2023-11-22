@@ -70,7 +70,7 @@ type
     PUBLIC
         constructor Create(ParClass: TDSSClass; const GenDispatcherName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
@@ -174,7 +174,7 @@ begin
     Result := Obj;
 end;
 
-procedure TGenDispatcherObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TGenDispatcherObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i: Integer;
 begin
@@ -190,7 +190,7 @@ begin
                 FWeights[i] := 1.0;
         end;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TGenDispatcherObj.MakeLike(OtherPtr: Pointer);

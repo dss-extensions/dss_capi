@@ -158,7 +158,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const SourceName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure RecalcElementData; OVERRIDE;
@@ -364,7 +364,7 @@ begin
     Result := Obj;
 end;
 
-procedure TVsourceObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TVsourceObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     S, S2: String;
     i, dotpos: Integer;
@@ -471,7 +471,7 @@ begin
         ord(TProp.baseMVA):
             ZBase := SQR(kVBase) / BaseMVA;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TVsource.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;

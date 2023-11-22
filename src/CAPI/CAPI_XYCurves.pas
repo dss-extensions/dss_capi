@@ -171,7 +171,7 @@ begin
 
     prev := pXYCurve.FNumPoints;
     pXYCurve.FNumPoints := Value;
-    pXYCurve.PropertySideEffects(ord(TXYcurveProp.npts), prev);
+    pXYCurve.PropertySideEffects(ord(TXYcurveProp.npts), prev, []);
 end;
 //------------------------------------------------------------------------------
 procedure XYCurves_Set_Xarray(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;

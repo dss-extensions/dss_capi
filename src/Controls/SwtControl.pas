@@ -54,7 +54,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const SwtControlName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure Set_Enabled(Value: Boolean); OVERRIDE;
@@ -204,7 +204,7 @@ begin
     Result := Obj;
 end;
 
-procedure TSwtControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TSwtControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of
         // Default to first action specified for legacy scripts
@@ -235,7 +235,7 @@ begin
             end;
         end;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TSwtControlObj.MakeLike(OtherPtr: Pointer);

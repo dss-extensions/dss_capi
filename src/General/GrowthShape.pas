@@ -92,7 +92,7 @@ type
     PUBLIC
         constructor Create(ParClass: TDSSClass; const GrowthShapeName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
         function GetMult(Yr: Integer): Double;  // Get multiplier for Specified Year
     end;
@@ -204,7 +204,7 @@ begin
     Result := Obj;
 end;
 
-procedure TGrowthShapeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TGrowthShapeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of 
         ord(TProp.Npts):
@@ -219,7 +219,7 @@ begin
         ord(TProp.dblfile):
             DoDblFile(DSS, Year, Multiplier, Npts, False, dblfile, ParentClass.Name, True);
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TGrowthShape.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;

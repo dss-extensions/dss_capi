@@ -263,7 +263,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const TransfName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure SetNumWindings(N: Integer);
@@ -615,7 +615,7 @@ begin
     Result := Obj;
 end;
 
-procedure TTransfObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TTransfObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i: Integer;
     OldXSCSize, NewXSCSize: Integer;
@@ -735,7 +735,7 @@ begin
         ord(TProp.Xscarray):
             YprimInvalid := TRUE;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TTransf.BeginEdit(ptr: Pointer; SetActive: Boolean): Pointer;
@@ -875,7 +875,7 @@ var
 begin
     prev := NumWindings;
     NumWindings := N;
-    PropertySideEffects(ord(TProp.windings), prev);
+    PropertySideEffects(ord(TProp.windings), prev, []);
 end;
 
 destructor TTransfObj.Destroy;

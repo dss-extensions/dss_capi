@@ -88,7 +88,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const SourceName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure RecalcElementData; OVERRIDE;
@@ -207,7 +207,7 @@ begin
     Result := Obj;
 end;
 
-procedure TGICsourceObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TGICsourceObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of
         ord(TProp.Volts),
@@ -226,7 +226,7 @@ begin
         ord(TProp.Lon2):
             VoltsSpecified := FALSE;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TGICsource.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;

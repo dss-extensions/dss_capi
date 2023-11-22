@@ -291,7 +291,7 @@ begin
         Exit;
 
     pLoad.kVLoadBase := Value;
-    pload.PropertySideEffects(ord(TLoadProp.kV));
+    pload.PropertySideEffects(ord(TLoadProp.kV), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_kvar(Value: Double); CDECL;
@@ -712,7 +712,7 @@ begin
         Exit;
 
     elem.DailyShapeObj := DSSPrime.LoadShapeClass.Find(Value);
-    elem.PropertySideEffects(ord(TLoadProp.daily));
+    elem.PropertySideEffects(ord(TLoadProp.daily), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_duty(const Value: PAnsiChar); CDECL;
@@ -723,7 +723,7 @@ begin
         Exit;
 
     elem.DutyShapeObj := DSSPrime.LoadShapeClass.Find(Value);
-    elem.PropertySideEffects(ord(TLoadProp.duty));
+    elem.PropertySideEffects(ord(TLoadProp.duty), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Growth(const Value: PAnsiChar); CDECL;
@@ -734,7 +734,7 @@ begin
         Exit;
 
     elem.GrowthShapeObj := DSSPrime.GrowthShapeClass.Find(Value);
-    elem.PropertySideEffects(ord(TLoadProp.growth));
+    elem.PropertySideEffects(ord(TLoadProp.growth), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_IsDelta(Value: TAPIBoolean); CDECL;
@@ -761,7 +761,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.kWh := Value;
-    elem.PropertySideEffects(ord(TLoadProp.kwh));
+    elem.PropertySideEffects(ord(TLoadProp.kwh), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_kwhdays(Value: Double); CDECL;
@@ -860,7 +860,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.YearlyShapeObj := DSSPrime.LoadShapeClass.Find(Value);
-    elem.PropertySideEffects(ord(TLoadProp.yearly));
+    elem.PropertySideEffects(ord(TLoadProp.yearly), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Get_ZIPV(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -964,7 +964,7 @@ begin
     begin
         prevVal := elem.FNPhases;
         elem.FNPhases := Value;
-        elem.PropertySideEffects(ord(TLoadProp.phases), prevVal);
+        elem.PropertySideEffects(ord(TLoadProp.phases), prevVal, []);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -985,7 +985,7 @@ begin
     if not _activeObj(DSSPrime, pLoad) then
         Exit;
     pLoad.SetBus(1, Value);
-    pLoad.PropertySideEffects(ord(TLoadProp.bus1));
+    pLoad.PropertySideEffects(ord(TLoadProp.bus1), 0, []);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Sensor(): PAnsiChar; CDECL;

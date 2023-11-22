@@ -201,7 +201,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const LoadShapeName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
         procedure CustomSetRaw(Idx: Integer; Value: String); override;
         procedure SaveWrite(F: TStream); override;
@@ -703,7 +703,7 @@ begin
     end;
 end;
 
-procedure TLoadShapeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TLoadShapeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of 
         ord(TProp.csvfile):
@@ -730,7 +730,7 @@ begin
             if UseMMF then
                 UseFloat64;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TLoadShapeObj.CustomSetRaw(Idx: Integer; Value: String);

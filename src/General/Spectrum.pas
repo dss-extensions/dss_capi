@@ -76,7 +76,7 @@ type
         constructor Create(ParClass: TDSSClass; const SpectrumName: String);
         destructor Destroy; OVERRIDE;
         procedure MakeLike(OtherPtr: Pointer); override;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
 
         function GetMult(const h: Double): Complex;
 
@@ -192,7 +192,7 @@ begin
     Result := Obj;
 end;
 
-procedure TSpectrumObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TSpectrumObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i: Integer;
 begin
@@ -209,7 +209,7 @@ begin
         ord(TProp.csvfile):
             DoCSVFile(self, csvfile);
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TSpectrum.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;

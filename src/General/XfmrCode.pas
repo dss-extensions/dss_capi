@@ -154,7 +154,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const XfmrCodeName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
     end;
@@ -401,10 +401,10 @@ var
 begin
     prev := NumWindings;
     NumWindings := N;
-    PropertySideEffects(ord(TProp.windings), prev);
+    PropertySideEffects(ord(TProp.windings), prev, []);
 end;
 
-procedure TXfmrCodeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TXfmrCodeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i: Integer;
     OldXSCSize, NewXSCSize: Integer;
@@ -463,7 +463,7 @@ begin
         38:
             SetLength(kVARatings, NumkVARatings);
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TXfmrCode.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;

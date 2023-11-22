@@ -42,7 +42,7 @@ type
         function ParseObjPropertyValue(Obj: Pointer; Index: Integer; const Value: String; out prevInt: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
         function GetObjPropertyValue(obj: Pointer; Index: Integer; out PropStr: String): Boolean;
         function GetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; var val: TJSONData; preferArray: Boolean = False): Boolean;
-        function SetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; val: TJSONData): Boolean;
+        function SetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; val: TJSONData; setterFlags: TDSSPropertySetterFlags): Boolean;
 
         //TODO: add error as result for the 16 following functions
 
@@ -1686,7 +1686,7 @@ begin
 end;
 
 
-function TDSSClassHelper.SetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; val: TJSONData): Boolean;
+function TDSSClassHelper.SetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; val: TJSONData; setterFlags: TDSSPropertySetterFlags): Boolean;
 var
     doublePtr: PDouble;
     dataPtr: PPDouble = NIL;
@@ -1702,9 +1702,9 @@ var
     doubles: ArrayOfDouble;
     strs: ArrayOfString;
     complexVal: Complex;
-    objs: Array of TDSSObject;
-    otherObj: TDSSObject = NIL;
-    otherName: String;
+    // objs: Array of TDSSObject;
+    // otherObj: TDSSObject = NIL;
+    // otherName: String;
     sizingPropIndex: Integer;        
     allowSetSize: Boolean;
     nmult: Integer; // for matrices
@@ -1714,7 +1714,6 @@ var
     
     flags: TPropertyFlags;
     ptype: TPropertyType;
-    setterFlags: TDSSPropertySetterFlags = [];
 begin
     dssObj := TDSSObject(obj);
     if (PropertyArrayAlternative[Index] <> 0) then
@@ -1739,10 +1738,10 @@ begin
         // Disallow overwriting the size with different properties
         (not dssObj.PrpSpecified(sizingPropIndex)) and 
         // Only allow resizing if no explicit sizing property is actually exposed
-        (not (TPropertyFlag.SuppressJSON in PropertyFlags[sizingPropIndex])); 
+        ((TPropertyFlag.SuppressJSON in PropertyFlags[sizingPropIndex]));
     //TODO: setterFlags := DSS.DefaultSetterFlags;
-    if allowSetSize then
-        Include(setterFlags, TDSSPropertySetterFlag.AllowResizing);
+    if (not allowSetSize) and (TSetterFlag.AllowResizing in setterFlags) then
+        Exclude(setterFlags, TSetterFlag.AllowResizing);
 
     flags := PropertyFlags[Index];
 
@@ -2207,6 +2206,7 @@ begin
                 if (TPropertyFlag.AllowNone in PropertyFlags[Index]) and (Norder = 0) then
                 begin
                     PropStr := '[NONE]';
+                    Result := true;
                     Exit;
                 end;
 
@@ -2227,6 +2227,7 @@ begin
                         PropertyScale[Index]
                     );
                     DSS_Dispose_PDouble(doublePtr);
+                    Result := true;
                     Exit;
                 end;
 
@@ -2451,6 +2452,7 @@ begin
                 if count < 1 then
                 begin
                     PropStr := '[]';
+                    Result := true;
                     Exit;
                 end;
 
@@ -2964,7 +2966,7 @@ begin
     if Result then
     begin
         SetAsNextSeq(Index);
-        PropertySideEffects(Index, prevInt);
+        PropertySideEffects(Index, prevInt, setterFlags);
     end;
     if singleEdit then
         EndEdit(1);
@@ -2982,7 +2984,7 @@ begin
     if Result then
     begin
         SetAsNextSeq(Index);
-        PropertySideEffects(Index);
+        PropertySideEffects(Index, 0, setterFlags);
     end;
     if singleEdit then
         EndEdit(1);
@@ -3002,7 +3004,7 @@ begin
     if Result then
     begin
         SetAsNextSeq(Index);
-        PropertySideEffects(Index);
+        PropertySideEffects(Index, 0, setterFlags);
     end;
     if singleEdit then
         EndEdit(1);
@@ -3023,7 +3025,7 @@ begin
     if Result then
     begin
         SetAsNextSeq(Index);
-        PropertySideEffects(Index, prevInt);
+        PropertySideEffects(Index, prevInt, setterFlags);
     end;
     if singleEdit then
         EndEdit(1);
@@ -3043,7 +3045,7 @@ begin
     if Result then
     begin
         SetAsNextSeq(Index);
-        PropertySideEffects(Index);
+        PropertySideEffects(Index, 0, setterFlags);
     end;
     if singleEdit then
         EndEdit(1);
@@ -3068,7 +3070,7 @@ begin
     if Result then
     begin
         SetAsNextSeq(Index);
-        PropertySideEffects(Index);
+        PropertySideEffects(Index, 0, setterFlags);
     end;
     if singleEdit then
         EndEdit(1);
@@ -3093,7 +3095,7 @@ begin
     if Result then
     begin
         SetAsNextSeq(Index);
-        PropertySideEffects(Index);
+        PropertySideEffects(Index, 0, setterFlags);
     end;
     if singleEdit then
         EndEdit(1);
@@ -3118,7 +3120,7 @@ begin
     if Result then
     begin
         SetAsNextSeq(Index);
-        PropertySideEffects(Index);
+        PropertySideEffects(Index, 0, setterFlags);
     end;
     if singleEdit then
         EndEdit(1);
@@ -3144,7 +3146,7 @@ begin
     if Result then
     begin
         SetAsNextSeq(Index);
-        PropertySideEffects(Index);
+        PropertySideEffects(Index, 0, setterFlags);
     end;
     if singleEdit then
         EndEdit(1);
@@ -3162,7 +3164,7 @@ begin
     if Result then
     begin
         SetAsNextSeq(Index);
-        PropertySideEffects(Index);
+        PropertySideEffects(Index, 0, setterFlags);
     end;
     if singleEdit then
         EndEdit(1);
@@ -3353,7 +3355,7 @@ end;
 
 procedure TDSSClassHelper.SetObjDoubles(ptr: Pointer; Index: Integer; Value: PDouble; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 var
-    i, j, maxSize, Norder, intVal, step: Integer;
+    i, j, sizingPropIndex, maxSize, Norder, intVal, step: Integer;
     positionPtr, sizePtr: PInteger;
     scale: Double;
     doublePtr: PDouble;
@@ -3407,6 +3409,8 @@ begin
             dataPtr := PPDouble(PByte(obj) + PropertyOffset[Index]);
             
             // Allow both the full matrix or the triangle
+            // NOTE: we cannot allow resizing here since the values are ambiguous,
+            // e.g. 6*6 (full matrix of order 6) = 36 = 8*(8+1)/2 (triangular matrix of order 8)
             if (ValueCount <> (Norder * Norder)) and (ValueCount <> (Norder * (Norder + 1)) div 2) then
             begin
                 DoSimpleMsg(
@@ -3457,7 +3461,8 @@ begin
             if TPropertyFlag.ImagPart in flags then
                 Inc(doublePtr);
 
-            // Allow both the full matrix or the triangle
+            // Allow both the full matrix or the triangle.
+            // See above (DoubleSymMatrixProperty) for why we cannot resize.
             if (ValueCount <> (Norder * Norder)) and (ValueCount <> (Norder * (Norder + 1)) div 2) then
             begin
                 DoSimpleMsg(
@@ -3507,10 +3512,18 @@ begin
             begin
                 intVal := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj);
                 sizePtr := @intVal;
+                // Cannot resize even if allowed
+                if TSetterFlag.AllowResizing in setterFlags then
+                    Exclude(setterFlags, TSetterFlag.AllowResizing);
             end
             else
             if (ptype <> TPropertyType.DoubleFArrayProperty) then
+            begin
                 sizePtr := PInteger(PByte(obj) + PropertyOffset2[Index]); // Size pointer
+                // Cannot resize even if allowed
+                if TSetterFlag.AllowResizing in setterFlags then
+                    Exclude(setterFlags, TSetterFlag.AllowResizing);
+            end;
 
             if (TPropertyFlag.AllowNone in flags) and (ValueCount = 0) then
             begin
@@ -3529,8 +3542,7 @@ begin
                 doublePtr := dataPtr^;
             end;
 
-            if ((ptype = TPropertyType.DoubleArrayProperty) or (ptype = TPropertyType.DoubleVArrayProperty)) 
-                and (doublePtr = NIL) then
+            if ((ptype = TPropertyType.DoubleArrayProperty) or (ptype = TPropertyType.DoubleVArrayProperty)) and (doublePtr = NIL) then
             begin
                 // If not initialized, allocate here.
                 // Note that this should not be used with dynamic arrays
@@ -3544,17 +3556,45 @@ begin
                 TPropertyType.DoubleVArrayProperty:
                 begin
                     if TPropertyFlag.ArrayMaxSize in flags then
-                        maxSize := PropertyOffset3[Index]
+                    begin
+                        maxSize := PropertyOffset3[Index];
+                        // Cannot resize even if allowed
+                        if TSetterFlag.AllowResizing in setterFlags then
+                            Exclude(setterFlags, TSetterFlag.AllowResizing);
+                    end
                     else
                         maxSize := sizePtr^;
 
-                    if maxSize <> ValueCount then
+                    if ((TPropertyFlag.ArrayMaxSize in flags) and (maxSize >= ValueCount)) or // Allow fewer elements for some properties
+                        ((not (TPropertyFlag.ArrayMaxSize in flags)) and (maxSize <> ValueCount)) then 
                     begin
-                        DoSimpleMsg(
-                            '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
-                            [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
-                        2020042);
-                        Exit;
+                        if TSetterFlag.AllowResizing in setterFlags then
+                        begin
+                            sizingPropIndex := PropertySizingPropertyIndex[Index];
+                            if (sizingPropIndex > 0) and 
+                                // Disallow overwriting the size with different properties
+                                (not obj.PrpSpecified(sizingPropIndex)) and 
+                                // Only allow resizing if no explicit sizing property is actually exposed
+                                ((TPropertyFlag.SuppressJSON in PropertyFlags[sizingPropIndex])) then
+                            begin
+                                // Resize!
+                                if obj.SetInteger(sizingPropIndex, ValueCount, setterFlags) and (DSS.ErrorNumber = 0) then
+                                begin
+                                    // If successful, retry from the start, since the pointer may have changed
+                                    Exclude(setterFlags, TSetterFlag.AllowResizing);
+                                    SetObjDoubles(ptr, Index, Value, ValueCount, setterFlags);
+                                    Exit;
+                                end;
+                            end;
+                        end;
+                        if maxSize <> ValueCount then
+                        begin
+                            DoSimpleMsg(
+                                '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
+                                [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
+                            2020042);
+                            Exit;
+                        end;
                     end;
                     if not (TPropertyFlag.WriteByFunction in flags) then
                         Move(Value^, doublePtr^, maxSize * SizeOf(Double));
@@ -4661,6 +4701,8 @@ begin
     propIndex := -1;
     Result := false;
     dssObj := TDSSObject(obj);
+    if not (TSetterFlag.AllowResizing in setterFlags) then
+        Include(setterFlags, TSetterFlag.AllowResizing);
 
     for i := 1 to High(AltPropertyOrder) do
     begin
@@ -4680,7 +4722,7 @@ begin
         if (ptype = TPropertyType.StringSilentROFunctionProperty) or (TPropertyFlag.SilentReadOnly in propFlags) then
             continue; // ignore... TODO: error or warning
 
-        if not SetObjPropertyJSONValue(obj, propIndex, joptions, propData) then
+        if not SetObjPropertyJSONValue(obj, propIndex, joptions, propData, setterFlags) then
             Exit;
 
         numChanges += 1;

@@ -61,7 +61,7 @@ type
         constructor Create(ParClass: TDSSClass);
         destructor Destroy; OVERRIDE;
         procedure MakeLike(OtherObj: Pointer); override;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present values of terminal
 
@@ -303,7 +303,7 @@ begin
     HrsToRepair := Other.HrsToRepair;
 end;
 
-procedure TPDElement.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TPDElement.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case (Idx - (ParentClass as TPDClass).PropertyOffset_PDClass)  of
         ord(TPDElementProp.normamps):
@@ -311,7 +311,7 @@ begin
         ord(TPDElementProp.emergamps):
             emergAmpsSpecified := True;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 end.

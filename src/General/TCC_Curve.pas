@@ -58,7 +58,7 @@ type
     PUBLIC
         constructor Create(ParClass: TDSSClass; const TCC_CurveName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         function GetTCCTime(const C_Value: Double): Double;  // Return operating time for a particular time value
@@ -157,7 +157,7 @@ begin
             LogX[i] := Ln(0.001);
 end;
 
-procedure TTCC_CurveObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TTCC_CurveObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of
         1:
@@ -172,7 +172,7 @@ begin
         3:
             CalcLogPoints(T_Values, LogT, Npts);
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TTCC_CurveObj.MakeLike(OtherPtr: Pointer);

@@ -381,7 +381,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const SourceName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
@@ -761,7 +761,7 @@ begin
             obj.UpdateStorage();
 end;
 
-procedure TStorageObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TStorageObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i: Integer;
 begin
@@ -887,7 +887,7 @@ begin
             if DynamicEqObj <> NIL then
                 SetLength(DynamicEqVals, DynamicEqObj.NVariables);            
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TStorage.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;

@@ -428,7 +428,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const EnergyMeterName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model, reset nphases
@@ -716,7 +716,7 @@ begin
     Result := Obj;
 end;
 
-procedure TEnergyMeterObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TEnergyMeterObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i: Integer;
 begin
@@ -730,7 +730,7 @@ begin
             for i := previousIntVal + 1 to NumEMRegisters do
                 TotalsMask[i] := 1.0;  // Set the rest to 1
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TEnergyMeter.BeginEdit(ptr: Pointer; SetActive_: Boolean): Pointer;
@@ -2727,7 +2727,7 @@ begin
                 if LoadElement.HasBeenAllocated then
                 begin
                     // Manually set the allocation factor so it shows up
-                    LoadElement.PropertySideEffects(ord(TLoadProp.allocationfactor), 0);
+                    LoadElement.PropertySideEffects(ord(TLoadProp.allocationfactor), 0, []);
                     LoadElement.SetAsNextSeq(ord(TLoadProp.allocationfactor));
                 end;
                 Inc(NLoads);

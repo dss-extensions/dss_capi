@@ -64,7 +64,7 @@ type
         DataChanged: Boolean;
         constructor Create(ParClass: TDSSClass; const LineSpacingName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         // CIM XML accessors
@@ -157,7 +157,7 @@ begin
     Result := Obj;
 end;
 
-procedure TLineSpacingObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TLineSpacingObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of
         ord(TProp.nconds):
@@ -170,7 +170,7 @@ begin
         2..5:
             DataChanged := TRUE;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TLineSpacingObj.MakeLike(OtherPtr: Pointer);
@@ -181,7 +181,7 @@ begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
     FNConds := Other.FNConds;
-    PropertySideEffects(ord(TProp.NConds), 0);
+    PropertySideEffects(ord(TProp.NConds), 0, []);
     NPhases := Other.NPhases;
     for i := 1 to FNConds do
         FX[i] := Other.FX[i];
@@ -204,7 +204,7 @@ begin
     FY := NIL;
     units := UNITS_FT;
     FNConds := 3;
-    PropertySideEffects(ord(TProp.NConds), 0);
+    PropertySideEffects(ord(TProp.NConds), 0, []);
     // TODO: consider using NaN to indicate that the user left invalid data
     for i := 1 to FNConds do
     begin

@@ -114,7 +114,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const ESPVLControlName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
@@ -242,7 +242,7 @@ begin
     Result := Obj;
 end;
 
-procedure TESPVLControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TESPVLControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i: Integer;
 begin
@@ -269,7 +269,7 @@ begin
         end;
     end;
 
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TESPVLControlObj.MakeLike(OtherPtr: Pointer);

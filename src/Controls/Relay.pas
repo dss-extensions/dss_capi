@@ -286,7 +286,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const RelayName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
@@ -521,7 +521,7 @@ begin
     Result := Obj;
 end;
 
-procedure TRelayObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TRelayObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of
         // Default the controlled element to the monitored element
@@ -592,7 +592,7 @@ begin
                 NormalState := FPresentState;
             end;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TRelayObj.MakeLike(OtherPtr: Pointer);

@@ -249,7 +249,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const TransfName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
         procedure SetBus(iwdg: Integer; const s: String); override;
 
@@ -570,7 +570,7 @@ begin
     Result := Obj;
 end;
 
-procedure TAutoTransObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TAutoTransObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i: Integer;
     OldWdgSize: Integer;
@@ -713,7 +713,7 @@ begin
         ord(TProp.XSCarray):
             YprimInvalid := TRUE;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TAutoTransObj.SetBus(iwdg: Integer; const s: String); 
@@ -898,7 +898,7 @@ var
 begin
     prev := NumWindings;
     NumWindings := N;
-    PropertySideEffects(ord(TProp.windings), prev);
+    PropertySideEffects(ord(TProp.windings), prev, []);
 end;
 
 destructor TAutoTransObj.Destroy;

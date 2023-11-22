@@ -107,7 +107,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const SensorName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model, reset nphases
@@ -274,7 +274,7 @@ begin
     Result := Obj;
 end;
 
-procedure TSensorObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TSensorObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of
         1..2:
@@ -315,7 +315,7 @@ begin
             Include(Flags, Flg.NeedsRecalc);
         end;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TSensor.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;

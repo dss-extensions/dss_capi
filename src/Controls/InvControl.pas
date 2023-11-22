@@ -368,7 +368,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const InvControlName: Ansistring);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE; // Make a positive Sequence Model
@@ -654,7 +654,7 @@ begin
     end;
 end;
 
-procedure TInvControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TInvControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     NodeBuffer: array[1..10] of Integer;
     i,
@@ -706,7 +706,7 @@ begin
             for i := 0 to (DERNameList.Count - 1) do
                 DERNameList[i] := 'PVSystem.' + DERNameList[i];
 
-            PropertySideEffects(ord(TProp.DERList), previousIntVal);
+            PropertySideEffects(ord(TProp.DERList), previousIntVal, setterFlags);
         end;
         ord(TProp.vvc_curve1):
             ValidateXYCurve(DSS, Fvvc_curve, VOLTVAR);
@@ -719,7 +719,7 @@ begin
         ord(TProp.wattvar_curve):
             ValidateXYCurve(DSS, Fwattvar_curve, WATTVAR);
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TInvControlObj.MakeLike(OtherPtr: Pointer);

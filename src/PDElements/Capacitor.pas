@@ -134,7 +134,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const CapacitorName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure RecalcElementData; OVERRIDE;
@@ -293,7 +293,7 @@ begin
     Result := Obj;
 end;
 
-procedure TCapacitorObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TCapacitorObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     S, S2: String;
     StepSize, RStep, XLstep: Double;
@@ -491,7 +491,7 @@ begin
 {$ENDIF}
                 YprimInvalid := TRUE;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TCapacitorObj.MakeLike(OtherPtr: Pointer);
@@ -849,7 +849,7 @@ begin
 
     prev := FNumSteps;
     FNumSteps := value;
-    PropertySideEffects(ord(TProp.numsteps), prev);
+    PropertySideEffects(ord(TProp.numsteps), prev, []);
 end;
 
 procedure TCapacitorObj.FindLastStepInService;

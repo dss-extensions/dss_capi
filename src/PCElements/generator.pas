@@ -362,7 +362,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const SourceName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure RecalcElementData; OVERRIDE;
@@ -675,7 +675,7 @@ begin
     end;
 end;
 
-procedure TGeneratorObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TGeneratorObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i: Integer;
     kVA_Gen: Double;
@@ -793,7 +793,7 @@ begin
 
         end;
 
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TGenerator.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
@@ -2825,7 +2825,7 @@ end;
 procedure TGeneratorObj.Set_PresentkV(const Value: Double);
 begin
     Genvars.kVGeneratorBase := Value;
-    PropertySideEffects(ord(TProp.kV));
+    PropertySideEffects(ord(TProp.kV), 0, []);
     // if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
     // begin
     //    SetAsNextSeq(ord(TLoadProp.kV));
@@ -2868,7 +2868,7 @@ procedure TGeneratorObj.SetkWkvar(const PkW, Qkvar: Double);
 begin
     kWBase := PkW;
     kvarBase := Qkvar;
-    PropertySideEffects(ord(TProp.kvar));
+    PropertySideEffects(ord(TProp.kvar), 0, []); //TODO: this may benefit from setterFlags
 end;
 
 procedure TGeneratorObj.CalcVthev_Dyn;

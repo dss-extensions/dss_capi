@@ -91,7 +91,7 @@ type
     PUBLIC
         constructor Create(ParClass: TDSSClass; const FaultName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure RecalcElementData; OVERRIDE;
@@ -248,7 +248,7 @@ begin
     Result := Obj;
 end;
 
-procedure TGICTransformerObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TGICTransformerObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     S, S2: String;
     dotpos: Integer;
@@ -346,7 +346,7 @@ begin
         ord(TProp.R2):
             YprimInvalid := TRUE;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TGICTransformerObj.MakeLike(OtherPtr: Pointer);

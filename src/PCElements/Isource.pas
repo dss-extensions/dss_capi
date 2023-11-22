@@ -95,7 +95,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const SourceName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;        
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;        
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure RecalcElementData; OVERRIDE;
@@ -218,7 +218,7 @@ begin
     Result := Obj;
 end;
 
-procedure TIsourceObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TIsourceObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     S, S2: String;
     i, dotpos: Integer;
@@ -258,7 +258,7 @@ begin
             if YearlyShapeObj = NIL then
                 YearlyShapeObj := DailyShapeObj;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TIsource.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;

@@ -177,7 +177,7 @@ type
     PUBLIC
         constructor Create(ParClass: TDSSClass; const CapControlName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
@@ -364,7 +364,7 @@ begin
     Result := Obj;
 end;
 
-procedure TCapControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TCapControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     // PF Controller changes
     if ControlType = PFCONTROL then // TODO: check -- is this correct for all below??
@@ -439,7 +439,7 @@ begin
     if IsUserModel then
         ControlType := USERCONTROL;
 
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TCapControlObj.MakeLike(OtherPtr: Pointer);

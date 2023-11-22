@@ -193,7 +193,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const RegControlName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
         procedure RecalcElementData; OVERRIDE;
         procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
@@ -403,7 +403,7 @@ begin
     Result := Obj;
 end;
 
-procedure TRegControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TRegControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of
         ord(TProp.Transformer):
@@ -435,7 +435,7 @@ begin
         ord(TProp.revThreshold):
             RevPowerThreshold := kWRevPowerThreshold * 1000.0;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TRegControlObj.MakeLike(OtherPtr: Pointer);

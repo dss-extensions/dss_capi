@@ -65,7 +65,7 @@ function Obj_GetListPointer(DSS: TDSSContext; ClsIdx: Integer): PPointer; CDECL;
 function Obj_GetIdx(obj: TDSSObject): Integer; CDECL;
 function Obj_GetClassName(obj: TDSSObject): PAnsiChar; CDECL;
 function Obj_GetClassIdx(obj: TDSSObject): Integer; CDECL;
-function Obj_PropertySideEffects(obj: TDSSObject; Index: Integer; PreviousInt: Integer): TAltAPIBoolean; CDECL;
+function Obj_PropertySideEffects(obj: TDSSObject; Index: Integer; PreviousInt: Integer; setterFlags: TDSSPropertySetterFlags): TAltAPIBoolean; CDECL;
 procedure Obj_BeginEdit(obj: TDSSObject); CDECL;
 procedure Obj_EndEdit(obj: TDSSObject; NumChanges: Integer); CDECL;
 procedure Obj_Activate(obj: TDSSObject; AllLists: TAltAPIBoolean); CDECL;
@@ -441,11 +441,11 @@ begin
     Result := obj.ParentClass.DSSClassIndex;
 end;
 
-function Obj_PropertySideEffects(obj: TDSSObject; Index: Integer; PreviousInt: Integer): TAltAPIBoolean; CDECL;
+function Obj_PropertySideEffects(obj: TDSSObject; Index: Integer; PreviousInt: Integer; setterFlags: TDSSPropertySetterFlags): TAltAPIBoolean; CDECL;
 begin
     Result := True;
     try
-        obj.PropertySideEffects(Index, PreviousInt);
+        obj.PropertySideEffects(Index, PreviousInt, setterFlags);
     except
         Result := False;
     end;
@@ -1309,7 +1309,7 @@ begin
                     prev := doubleptr^;
                     doublePtr^ := doublePtr^ * Value;
                     batch^.SetAsNextSeq(Index);
-                    batch^.PropertySideEffects(Index, Round(prev));
+                    batch^.PropertySideEffects(Index, Round(prev), setterFlags);
 
                     if singleEdit then
                         cls.EndEdit(batch^, 1);
@@ -1326,7 +1326,7 @@ begin
                     prev := doubleptr^;
                     doublePtr^ := doublePtr^ + Value;
                     batch^.SetAsNextSeq(Index);
-                    batch^.PropertySideEffects(Index, Round(prev));
+                    batch^.PropertySideEffects(Index, Round(prev), setterFlags);
 
                     if singleEdit then
                         cls.EndEdit(batch^, 1);
@@ -1343,7 +1343,7 @@ begin
                 prev := doubleptr^;
                 doublePtr^ := Value;
                 batch^.SetAsNextSeq(Index);
-                batch^.PropertySideEffects(Index, Round(prev));
+                batch^.PropertySideEffects(Index, Round(prev), setterFlags);
 
                 if singleEdit then
                     cls.EndEdit(batch^, 1);
@@ -1567,7 +1567,7 @@ begin
             doublePtr := PDouble(PtrUint(batch^) + propOffset);
             prev := doubleptr^;
             doublePtr^ := Value^;
-            batch^.PropertySideEffects(Index, Round(prev));
+            batch^.PropertySideEffects(Index, Round(prev), setterFlags);
 
             if singleEdit then
                 cls.EndEdit(batch^, 1);
@@ -1624,7 +1624,7 @@ begin
             intPtr := PInteger(PtrUint(batch^) + propOffset);
             prev := intPtr^;
             intPtr^ := Value^;
-            batch^.PropertySideEffects(Index, prev);
+            batch^.PropertySideEffects(Index, prev, setterFlags);
 
             if singleEdit then
                 cls.EndEdit(batch^, 1);

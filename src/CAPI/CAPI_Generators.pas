@@ -292,7 +292,7 @@ begin
         Exit;
 
     pGen.kvarBase := Value;
-    pGen.PropertySideEffects(ord(TGeneratorProp.kvar))
+    pGen.PropertySideEffects(ord(TGeneratorProp.kvar), 0, [])
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_kW(Value: Double); CDECL;
@@ -545,7 +545,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.SetBus(1, Value);
-    elem.PropertySideEffects(ord(TGeneratorProp.bus1));
+    elem.PropertySideEffects(ord(TGeneratorProp.bus1), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Class_(Value: Integer); CDECL;
@@ -565,7 +565,7 @@ begin
         Exit;
 
     elem.DailyDispShapeObj := DSSPrime.LoadShapeClass.Find(Value);
-    elem.PropertySideEffects(ord(TGeneratorProp.daily));
+    elem.PropertySideEffects(ord(TGeneratorProp.daily), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_duty(const Value: PAnsiChar); CDECL;
@@ -576,7 +576,7 @@ begin
         Exit;
 
     elem.DutyShapeObj := DSSPrime.LoadShapeClass.Find(Value);
-    elem.PropertySideEffects(ord(TGeneratorProp.duty));
+    elem.PropertySideEffects(ord(TGeneratorProp.duty), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_IsDelta(Value: TAPIBoolean); CDECL;
@@ -617,7 +617,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.YearlyShapeObj := DSSPrime.LoadShapeClass.Find(Value);
-    elem.PropertySideEffects(ord(TGeneratorProp.yearly));
+    elem.PropertySideEffects(ord(TGeneratorProp.yearly), 0, []);
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Pointer(): Pointer; CDECL;

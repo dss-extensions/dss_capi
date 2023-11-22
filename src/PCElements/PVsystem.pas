@@ -293,7 +293,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const SourceName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
@@ -619,7 +619,7 @@ begin
             obj.UpdatePVSystem();
 end;
 
-procedure TPVsystemObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TPVsystemObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i: Integer;
 begin
@@ -633,7 +633,7 @@ begin
         ord(TProp.phases):
         begin
             SetNcondsForConnection(self); // Force Reallocation of terminal info
-            PropertySideEffects(ord(TProp.kv), 0); // In case phases have been defined after
+            PropertySideEffects(ord(TProp.kv), 0, setterFlags); // In case phases have been defined after
         end;
         ord(TProp.conn):
         begin
@@ -727,7 +727,7 @@ begin
             YprimInvalid := TRUE;
         end;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TPVsystem.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;

@@ -134,7 +134,7 @@ begin
     if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
     pLineSpacing.FNConds := Value;
-    pLineSpacing.PropertySideEffects(ord(TLineSpacingProp.NConds), 0);
+    pLineSpacing.PropertySideEffects(ord(TLineSpacingProp.NConds), 0, []);
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_Phases(): Integer; CDECL;

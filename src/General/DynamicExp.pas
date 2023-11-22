@@ -64,7 +64,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const ObjName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); OVERRIDE;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); OVERRIDE;
         procedure MakeLike(OtherPtr: Pointer); OVERRIDE;
 
         procedure InterpretDiffEq();
@@ -169,7 +169,7 @@ begin
     inherited DefineProperties;
 end;
 
-procedure TDynamicExpObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TDynamicExpObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     if (Idx > 0) and (Idx <= NumPropsThisClass) then
         case Idx of
@@ -188,7 +188,7 @@ begin
             end;
         end;
 
-    inherited PropertySideEffects(Idx, previousIntVal);        
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);        
 end;
 
 function TDynamicExp.NewObject(const ObjName: String; Activate: Boolean): Pointer;

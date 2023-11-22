@@ -93,7 +93,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const ConductorDataName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherObj: Pointer); override;
 
         property Rdc: Double READ FRDC;
@@ -217,7 +217,7 @@ begin
     inherited DefineProperties;
 end;
 
-procedure TConductorDataObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TConductorDataObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     Idx2: Integer;
 begin
@@ -258,7 +258,7 @@ begin
         ord(TProp.Seasons):
             setlength(AmpRatings, NumAmpRatings);
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TConductorDataObj.MakeLike(OtherObj: Pointer);

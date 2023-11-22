@@ -320,7 +320,7 @@ begin
     else
         pReactor.Connection := TReactorConnection.Wye;
 
-    pReactor.PropertySideEffects(ord(TReactorProp.conn), prevVal);    
+    pReactor.PropertySideEffects(ord(TReactorProp.conn), prevVal, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Parallel(Value: TAPIBoolean); CDECL;
@@ -333,7 +333,7 @@ begin
     
     prevVal := Integer(pReactor.IsParallel);
     pReactor.IsParallel := Value;
-    pReactor.PropertySideEffects(ord(TReactorProp.Parallel), prevVal);
+    pReactor.PropertySideEffects(ord(TReactorProp.Parallel), prevVal, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Bus1(const Value: PAnsiChar); CDECL;
@@ -352,7 +352,7 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.SetBus(2, Value);
-    pReactor.PropertySideEffects(ord(TReactorProp.bus2));
+    pReactor.PropertySideEffects(ord(TReactorProp.bus2), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_LCurve(const Value: PAnsiChar); CDECL;
@@ -363,7 +363,7 @@ begin
         Exit;
         
     pReactor.LCurveObj := DSSPrime.XYCurveClass.Find(Value);
-    pReactor.PropertySideEffects(ord(TReactorProp.LCurve));
+    pReactor.PropertySideEffects(ord(TReactorProp.LCurve), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_RCurve(const Value: PAnsiChar); CDECL;
@@ -374,7 +374,7 @@ begin
         Exit;
 
     pReactor.RCurveObj := DSSPrime.XYCurveClass.Find(Value);
-    pReactor.PropertySideEffects(ord(TReactorProp.RCurve));
+    pReactor.PropertySideEffects(ord(TReactorProp.RCurve), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_kV(Value: Double); CDECL;
@@ -384,7 +384,7 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.kvrating := Value;
-    pReactor.PropertySideEffects(ord(TReactorProp.kv));
+    pReactor.PropertySideEffects(ord(TReactorProp.kv), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_kvar(Value: Double); CDECL;
@@ -394,7 +394,7 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.kvarRating := Value;
-    pReactor.PropertySideEffects(ord(TReactorProp.kvar));
+    pReactor.PropertySideEffects(ord(TReactorProp.kvar), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_LmH(Value: Double); CDECL;
@@ -404,7 +404,7 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.L := Value / 1000.0;
-    pReactor.PropertySideEffects(ord(TReactorProp.LmH));
+    pReactor.PropertySideEffects(ord(TReactorProp.LmH), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Phases(Value: Integer); CDECL;
@@ -423,7 +423,7 @@ begin
         Exit;
     prevVal := elem.FNPhases;
     elem.FNPhases := Value;
-    elem.PropertySideEffects(ord(TReactorProp.phases), prevVal);
+    elem.PropertySideEffects(ord(TReactorProp.phases), prevVal, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_R(Value: Double); CDECL;
@@ -433,7 +433,7 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.R := Value;
-    pReactor.PropertySideEffects(ord(TReactorProp.R));
+    pReactor.PropertySideEffects(ord(TReactorProp.R), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_X(Value: Double); CDECL;
@@ -443,7 +443,7 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.X := Value;
-    pReactor.PropertySideEffects(ord(TReactorProp.X));
+    pReactor.PropertySideEffects(ord(TReactorProp.X), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Rp(Value: Double); CDECL;
@@ -453,7 +453,7 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.Rp := Value;
-    pReactor.PropertySideEffects(ord(TReactorProp.Rp));
+    pReactor.PropertySideEffects(ord(TReactorProp.Rp), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Rmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -472,7 +472,7 @@ begin
         Exit;
     end;
     Move(ValuePtr^, pReactor.Rmatrix[1], ValueCount * SizeOf(Double));
-    pReactor.PropertySideEffects(ord(TReactorProp.Rmatrix));
+    pReactor.PropertySideEffects(ord(TReactorProp.Rmatrix), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Xmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -490,7 +490,7 @@ begin
         Exit;
     end;
     Move(ValuePtr^, pReactor.Xmatrix[1], ValueCount * SizeOf(Double));
-    pReactor.PropertySideEffects(ord(TReactorProp.Xmatrix));
+    pReactor.PropertySideEffects(ord(TReactorProp.Xmatrix), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -634,7 +634,7 @@ begin
         Exit;
 
     pReactor.Z2 := Cmplx(Value[0], Value[1]);
-    pReactor.PropertySideEffects(ord(TReactorProp.Z2));
+    pReactor.PropertySideEffects(ord(TReactorProp.Z2), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Z1(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -650,7 +650,7 @@ begin
         Exit;
 
     pReactor.Z1 := Cmplx(Value[0], Value[1]);
-    pReactor.PropertySideEffects(ord(TReactorProp.Z1));        
+    pReactor.PropertySideEffects(ord(TReactorProp.Z1), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Z0(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -666,7 +666,7 @@ begin
         Exit;
     
     pReactor.Z0 := Cmplx(Value[0], Value[1]);
-    pReactor.PropertySideEffects(ord(TReactorProp.Z0));
+    pReactor.PropertySideEffects(ord(TReactorProp.Z0), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Z(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -682,7 +682,7 @@ begin
         Exit;
 
     pReactor.Z := Cmplx(Value[0], Value[1]);
-    pReactor.PropertySideEffects(ord(TReactorProp.Z));
+    pReactor.PropertySideEffects(ord(TReactorProp.Z), 0, []);
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_idx(): Integer; CDECL;

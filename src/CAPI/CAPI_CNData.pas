@@ -183,7 +183,7 @@ begin
         Exit;
 
     elem.NormAmps := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.NormAmps))
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.NormAmps), 0, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_EmergAmps(): Double; CDECL;
@@ -205,7 +205,7 @@ begin
         Exit;
 
     elem.EmergAmps := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.EmergAmps))
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.EmergAmps), 0, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_Diameter(): Double; CDECL;
@@ -227,7 +227,7 @@ begin
         Exit;
 
     elem.FRadius := Value / 2.0;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.diam))
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.diam), 0, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_Radius(): Double; CDECL;
@@ -249,7 +249,7 @@ begin
         Exit;
 
     elem.FRadius := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Radius))
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Radius), 0, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_GMRac(): Double; CDECL;
@@ -271,7 +271,7 @@ begin
         Exit;
 
     elem.FGMR60 := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRac))
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRac), 0, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_Rac(): Double; CDECL;
@@ -293,7 +293,7 @@ begin
         Exit;
 
     elem.FR60 := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rac))
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rac), 0, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_Rdc(): Double; CDECL;
@@ -315,7 +315,7 @@ begin
         Exit;
 
     elem.FRDC := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rdc))
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rdc), 0, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_GMRUnits(): Integer; CDECL;
@@ -339,7 +339,7 @@ begin
 
     prevVal := elem.FGMRUnits;
     elem.FGMRUnits := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRunits), prevVal)
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRunits), prevVal, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_RadiusUnits(): Integer; CDECL;
@@ -363,7 +363,7 @@ begin
 
     prevVal := elem.FRadiusUnits;
     elem.FRadiusUnits := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.radunits), prevVal)
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.radunits), prevVal, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_ResistanceUnits(): Integer; CDECL;
@@ -387,7 +387,7 @@ begin
 
     prevVal := elem.FResistanceUnits;
     elem.FResistanceUnits := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Runits), prevVal)
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Runits), prevVal, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_EpsR(): Double; CDECL;
@@ -409,7 +409,7 @@ begin
         Exit;
 
     elem.FEpsR := Value;
-    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.EpsR))
+    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.EpsR), 0, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_InsLayer(): Double; CDECL;
@@ -431,7 +431,7 @@ begin
         Exit;
 
     elem.FInsLayer := Value;
-    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.InsLayer))
+    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.InsLayer), 0, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_DiaIns(): Double; CDECL;
@@ -452,7 +452,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.FDiaIns := Value;
-    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.DiaIns))
+    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.DiaIns), 0, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_DiaCable(): Double; CDECL;
@@ -472,7 +472,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.FDiaCable := Value;
-    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.DiaCable))
+    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.DiaCable), 0, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_k(): Integer; CDECL;
@@ -494,7 +494,7 @@ begin
         Exit;
     prevVal := elem.FkStrand;
     elem.FkStrand := Value;
-    elem.PropertySideEffects(ord(TCNDataProp.k), prevVal)
+    elem.PropertySideEffects(ord(TCNDataProp.k), prevVal, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_DiaStrand(): Double; CDECL;
@@ -516,7 +516,7 @@ begin
         Exit;
 
     elem.FDiaStrand := Value;
-    elem.PropertySideEffects(ord(TCNDataProp.DiaStrand))
+    elem.PropertySideEffects(ord(TCNDataProp.DiaStrand), 0, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_GmrStrand(): Double; CDECL;
@@ -537,7 +537,7 @@ begin
         Exit;
 
     elem.FGmrStrand := Value;
-    elem.PropertySideEffects(ord(TCNDataProp.GmrStrand))
+    elem.PropertySideEffects(ord(TCNDataProp.GmrStrand), 0, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_RStrand(): Double; CDECL;
@@ -559,7 +559,7 @@ begin
         Exit;
 
     elem.FRStrand := Value;
-    elem.PropertySideEffects(ord(TCNDataProp.RStrand))
+    elem.PropertySideEffects(ord(TCNDataProp.RStrand), 0, [])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_idx(): Integer; CDECL;

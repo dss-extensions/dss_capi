@@ -153,7 +153,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.NormAmps := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.NormAmps))
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.NormAmps), 0, [])
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_EmergAmps(): Double; CDECL;
@@ -173,7 +173,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.EmergAmps := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.EmergAmps))
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.EmergAmps), 0, [])
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_Diameter(): Double; CDECL;
@@ -194,7 +194,7 @@ begin
         Exit;
 
     elem.FRadius := Value / 2.0;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.diam))
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.diam), 0, [])
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_Radius(): Double; CDECL;
@@ -214,7 +214,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.FRadius := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Radius))
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Radius), 0, [])
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_GMRac(): Double; CDECL;
@@ -234,7 +234,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.FGMR60 := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRac))
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRac), 0, [])
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_Rac(): Double; CDECL;
@@ -254,7 +254,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.FR60 := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rac))
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rac), 0, [])
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_Rdc(): Double; CDECL;
@@ -274,7 +274,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.FRDC := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rdc))
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rdc), 0, [])
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_CapRadius(): Double; CDECL;
@@ -294,7 +294,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Fcapradius60 := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.CapRadius))
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.CapRadius), 0, [])
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_GMRUnits(): Integer; CDECL;
@@ -317,7 +317,7 @@ begin
 
     prevVal := elem.FGMRUnits;
     elem.FGMRUnits := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRunits), prevVal)
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRunits), prevVal, [])
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_RadiusUnits(): Integer; CDECL;
@@ -340,7 +340,7 @@ begin
 
     prevVal := elem.FRadiusUnits;
     elem.FRadiusUnits := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.radunits), prevVal)
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.radunits), prevVal, [])
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_ResistanceUnits(): Integer; CDECL;
@@ -363,7 +363,7 @@ begin
 
     prevVal := elem.FResistanceUnits;
     elem.FResistanceUnits := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Runits), prevVal)
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Runits), prevVal, [])
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_idx(): Integer; CDECL;

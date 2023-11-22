@@ -111,7 +111,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const PriceShapeName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         function GetPrice(hr: Double): Double;  // Get Prices at specified time, hr
@@ -308,7 +308,7 @@ begin
     Result := Obj;
 end;
 
-procedure TPriceShapeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TPriceShapeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of 
         ord(TProp.csvfile):
@@ -346,7 +346,7 @@ begin
             //TODO: check if needed after full migration: NumPoints := FNumPoints;  // Keep Properties in order for save command
         end;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TPriceShape.Find(const ObjName: String; const ChangeActive: Boolean): Pointer;

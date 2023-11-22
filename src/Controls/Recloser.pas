@@ -107,7 +107,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const RecloserName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
@@ -275,7 +275,7 @@ begin
     Result := Obj;
 end;
 
-procedure TRecloserObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TRecloserObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of
         ord(TProp.MonitoredObj):
@@ -292,7 +292,7 @@ begin
                 NormalState := FPresentState;
             end;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TRecloserObj.MakeLike(OtherPtr: Pointer);

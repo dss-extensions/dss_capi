@@ -240,7 +240,7 @@ extern "C" {
             list. This change was done for DSS C-API v0.13.5, as well as the introduction of this flag.
         */
 
-       DSSCompatFlags_NoPropertyTracking = 0x00000020 /*!< 
+       DSSCompatFlags_NoPropertyTracking = 0x00000020, /*!< 
             On DSS-Extensions/AltDSS, when setting a property invalidates a previous input value, the engine
             will try to mark the invalidated data as unset. This allows for better exports and tracking of 
             the current state of DSS objects.
@@ -248,6 +248,14 @@ extern "C" {
             compatibility with older software that may require the original behavior; note that may lead to
             errorneous interpretation of the data in the DSS properties. This was introduced in DSS C-API v0.14.0
             and will be further developed for future versions.
+        */
+
+       DSSCompatFlags_SkipSideEffects = 0x00000040 /*!< 
+            Some specific functions on the official OpenDSS APIs skip important side-effects.
+            By default, on DSS-Extensions/AltDSS, those side-effects are enabled. Use this flag
+            to try to follow the behavior of the official APIs. Beware that some side-effects are
+            important and skipping them may result in incorrect results.
+            This flag only affects some of the classic API functions, especially Loads and Generators.
         */
     };
 
@@ -7197,7 +7205,7 @@ extern "C" {
     DSS_CAPI_DLL void** Obj_GetListPointer(void* ctx, int32_t ClsIdx);
     DSS_CAPI_DLL void* Obj_GetHandleByName(void* ctx, int32_t ClsIdx, const char* Name);
     DSS_CAPI_DLL void* Obj_GetHandleByIdx(void* ctx, int32_t ClsIdx, int32_t Idx);
-    DSS_CAPI_DLL uint16_t Obj_PropertySideEffects(void *obj, int32_t Index, int32_t PreviousInt);
+    DSS_CAPI_DLL uint16_t Obj_PropertySideEffects(void *obj, int32_t Index, int32_t PreviousInt, int32_t setterFlags);
     DSS_CAPI_DLL void Obj_BeginEdit(void *obj);
     DSS_CAPI_DLL void Obj_EndEdit(void *obj, int32_t NumChanges);
     DSS_CAPI_DLL int32_t Obj_GetNumProperties(void *obj);

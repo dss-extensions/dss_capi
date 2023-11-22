@@ -42,7 +42,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const TSDataName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
     end;
 
@@ -119,7 +119,7 @@ begin
     Result := Obj;
 end;
 
-procedure TTSDataObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TTSDataObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     // Check for critical errors
     case Idx of
@@ -133,7 +133,7 @@ begin
             if ((TapeLap < 0.0) or (TapeLap > 100.0)) then
                 DoSimpleMsg('Error: Tap lap must range from 0 to 100 for TapeShieldData %s', [Name], 999);
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TTSDataObj.MakeLike(OtherPtr: Pointer);

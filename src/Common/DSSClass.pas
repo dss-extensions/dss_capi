@@ -51,7 +51,8 @@ type
         InvControl9611 = 4,
         SaveCalcVoltageBases = 8,
         ActiveLine = 16,
-        NoPropertyTracking = 32
+        NoPropertyTracking = 32,
+        SkipSideEffects = 64
     );
 
     TDSSPropertyNameStyle = (
@@ -71,6 +72,7 @@ type
         // components if we think it fits.
         AvoidYprimUpdate = 1 shl 1
     );
+    TSetterFlag = TDSSPropertySetterFlag;
     TDSSPropertySetterFlags = set of TDSSPropertySetterFlag;
 
     TDSSObjectFlag = (
@@ -1617,7 +1619,7 @@ begin
         end;
         
         Obj.SetAsNextSeq(ParamPointer);
-        Obj.PropertySideEffects(ParamPointer, prevInt);
+        Obj.PropertySideEffects(ParamPointer, prevInt, []);
 
 //            GetObjPropertyValue(Obj, ParamPointer, tmp);
 //            WriteLn(TDSSObject(Obj).FullName, '.', PropertyName[ParamPointer], ' = ', tmp);

@@ -343,7 +343,7 @@ begin
 
     for i := 1 to elem.ControlledElement.NPhases do 
         elem.FPresentState[i] := CTRL_CLOSE; // Close all phases
-    elem.PropertySideEffects(ord(TFuseProp.State));
+    elem.PropertySideEffects(ord(TFuseProp.State), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Reset(); CDECL;
@@ -489,7 +489,7 @@ begin
                 'c': elem.FPresentState[i] := CTRL_CLOSE;
             end;
     end;
-    elem.PropertySideEffects(ord(TFuseProp.State));
+    elem.PropertySideEffects(ord(TFuseProp.State), 0, []);
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_NormalState(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;

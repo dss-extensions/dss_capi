@@ -113,7 +113,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const XYCurveName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         function GetYValue(X: Double): Double;  // Get Y value at specified X Value
@@ -331,7 +331,7 @@ begin
     Result := Obj;
 end;
 
-procedure TXYcurveObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TXYcurveObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of
         ord(TProp.csvfile):
@@ -367,7 +367,7 @@ begin
             LastValueAccessed := 1;
         end;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TXYcurve.Find(const ObjName: String; const ChangeActive: Boolean): Pointer;

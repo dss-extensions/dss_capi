@@ -186,7 +186,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const IndMach012ObjName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
@@ -373,7 +373,7 @@ begin
     end;
 end;
 
-procedure TIndMach012Obj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TIndMach012Obj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of
         ord(TProp.phases):
@@ -398,7 +398,7 @@ begin
             if (DutyShapeObj <> NIL) and  DutyShapeObj.UseActual then
                 SetPowerkW(DutyShapeObj.MaxP);
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TIndMach012.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
@@ -495,7 +495,7 @@ begin
     // Set slip local and make generator model agree
     MaxSlip := 0.1;  // 10% slip limit     - set this before setting slip
     set_LocalSlip(0.007);   // About 1 pu power
-    PropertySideEffects(ord(TProp.slip));
+    PropertySideEffects(ord(TProp.slip), 0, []);
 
     FixedSlip := FALSE;  // Allow Slip to float to match specified power
 
@@ -1398,7 +1398,7 @@ begin
         7:
         begin
             set_LocalSlip(Value);
-            PropertySideEffects(ord(TProp.slip));
+            PropertySideEffects(ord(TProp.slip), 0, []);
         end;
         8:
             puRs := Value;

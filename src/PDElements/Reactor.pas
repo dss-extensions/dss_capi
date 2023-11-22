@@ -142,7 +142,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const ReactorName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure GetLosses(var TotalLosses, LoadLosses, NoLoadLosses: Complex); OVERRIDE;
@@ -323,7 +323,7 @@ begin
     Result := Obj;
 end;
 
-procedure TReactorObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TReactorObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     S, S2: String;
     i, dotpos: Integer;
@@ -451,7 +451,7 @@ begin
         ord(TProp.LmH):
             YprimInvalid := TRUE;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TReactorObj.MakeLike(OtherPtr: Pointer);

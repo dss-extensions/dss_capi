@@ -4451,7 +4451,7 @@ begin
         else
             pLoad.kVLoadBase := kvln;
 
-        pLoad.PropertySideEffects(ord(TLoadProp.kV));
+        pLoad.PropertySideEffects(ord(TLoadProp.kV), 0, []);
         pLoad.RecalcElementData;
     end;
 

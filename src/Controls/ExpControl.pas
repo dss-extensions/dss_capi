@@ -124,7 +124,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const ExpControlName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); OVERRIDE;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); OVERRIDE;
         procedure MakeLike(OtherPtr: Pointer); OVERRIDE;
 
             // PROCEDURE Set_Enabled(Value: Boolean);Override;
@@ -254,7 +254,7 @@ begin
     Result := Obj;
 end;
 
-procedure TExpControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TExpControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i: Integer;
 begin
@@ -276,7 +276,7 @@ begin
                 FPVSystemNameList.Add(StripClassName(DERNameList[i]));
         end;
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TExpControlObj.MakeLike(OtherPtr: Pointer);

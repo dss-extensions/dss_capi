@@ -139,7 +139,7 @@ type
 
         constructor Create(ParClass: TDSSClass; const LineCodeName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
         
         procedure CalcMatricesFromZ1Z0;
@@ -338,7 +338,7 @@ begin
     Result := Obj;
 end;
 
-procedure TLineCodeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TLineCodeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of
         ord(TProp.nphases):
@@ -360,7 +360,7 @@ begin
         25:
             setlength(AmpRatings, NumAmpRatings);
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 function TLineCode.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;

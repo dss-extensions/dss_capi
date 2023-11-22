@@ -28,7 +28,7 @@ type
         PrpSequence: pIntegerArray0;
 
         function GetNextPropertySet(idx: Integer): Integer;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); virtual;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); virtual;
 
         // DSSContext convenience functions
         procedure DoErrorMsg(Const S, Emsg, ProbCause: String; ErrNum: Integer);inline;
@@ -201,7 +201,7 @@ begin
     PrpSequence[Index] := PrpSequence[0];
 end;
 
-procedure TDSSObject.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TDSSObject.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
 end;
 

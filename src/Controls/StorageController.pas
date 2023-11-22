@@ -224,7 +224,7 @@ type
     PUBLIC
         constructor Create(ParClass: TDSSClass; const StorageControllerName: String);
         destructor Destroy; OVERRIDE;
-        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
@@ -479,7 +479,7 @@ begin
     Result := Obj;
 end;
 
-procedure TStorageControllerObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+procedure TStorageControllerObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i: Integer;
     casemult: Double;
@@ -576,7 +576,7 @@ begin
         ord(TProp.InhibitTime):
             Inhibithrs := Max(1, Inhibithrs);  // >=1, silent
     end;
-    inherited PropertySideEffects(Idx, previousIntVal);
+    inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
 procedure TStorageControllerObj.MakeLike(OtherPtr: Pointer);
