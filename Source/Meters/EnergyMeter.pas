@@ -1687,9 +1687,7 @@ begin
                  Checked := TRUE;
                  Inc(BranchTotalCustomers, BranchNumCustomers);
                  If ParentPDElement <> Nil Then
-                    if HasOCPDevice and AssumeRestoration and HasAutoOCPDevice then
-                        Inc(ParentPDElement.BranchTotalCustomers, 0)
-                    else
+                    if not (HasOCPDevice and AssumeRestoration and HasAutoOCPDevice) then
                         Inc(ParentPDElement.BranchTotalCustomers, BranchTotalCustomers);
             End;
      End;  {For i}
