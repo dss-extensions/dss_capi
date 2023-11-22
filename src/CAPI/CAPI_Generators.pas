@@ -554,7 +554,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.SetInteger(ord(TGeneratorProp.cls), Value);
+    elem.SetInteger(ord(TGeneratorProp.cls), Value, []);
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_daily(const Value: PAnsiChar); CDECL;
@@ -597,7 +597,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.SetDouble(ord(TGeneratorProp.kva), Value);
+    elem.SetDouble(ord(TGeneratorProp.kva), Value, []);
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Status(Value: Integer); CDECL;

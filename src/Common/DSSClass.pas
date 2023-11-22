@@ -1602,7 +1602,7 @@ begin
 
         Inc(Result);
 
-        if not ParseObjPropertyValue(Obj, ParamPointer, Param, prevInt) then
+        if not ParseObjPropertyValue(Obj, ParamPointer, Param, prevInt, []) then
         begin
             if DSS_CAPI_EARLY_ABORT then
             begin

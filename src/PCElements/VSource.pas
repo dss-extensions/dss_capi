@@ -1140,10 +1140,10 @@ begin
     X1new := X1;
     kVnew := kVBase / SQRT3;
     BeginEdit(True);
-    SetInteger(ord(TProp.Phases), 1);
-    SetDouble(ord(TProp.basekv), kVnew);
-    SetDouble(ord(TProp.R1), R1new);
-    SetDouble(ord(TProp.X1), X1new);
+    SetInteger(ord(TProp.Phases), 1, []);
+    SetDouble(ord(TProp.basekv), kVnew, []);
+    SetDouble(ord(TProp.R1), R1new, []);
+    SetDouble(ord(TProp.X1), X1new, []);
     EndEdit(4);
     inherited;
 end;

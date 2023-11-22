@@ -342,7 +342,7 @@ var
 begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    pReactor.SetString(ord(TReactorProp.bus1), Value);
+    pReactor.SetString(ord(TReactorProp.bus1), Value, []);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Bus2(const Value: PAnsiChar); CDECL;

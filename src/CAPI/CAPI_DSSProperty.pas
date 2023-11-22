@@ -119,7 +119,7 @@ begin
     
     if IsPropIndexInvalid(DSSPrime, 33001) then
         Exit;
-    obj.ParsePropertyValue(DSSPrime.FPropIndex, Value);
+    obj.ParsePropertyValue(DSSPrime.FPropIndex, Value, []);
 end;
 //------------------------------------------------------------------------------
 procedure DSSProperty_Set_Index(const Value: Integer); CDECL;

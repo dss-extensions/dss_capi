@@ -588,7 +588,7 @@ end;
 procedure TGICTransformerObj.MakePosSequence();
 begin
     if Fnphases > 1 then
-        SetInteger(ord(TProp.Phases), 1);    
+        SetInteger(ord(TProp.Phases), 1, []);
     inherited;
 end;
 

@@ -136,7 +136,7 @@ begin
     if not _activeObj(DSS, elem) then
         Exit;
     DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
-    elem.ParsePropertyValue(idx, val);
+    elem.ParsePropertyValue(idx, val, []);
 end;
 //------------------------------------------------------------------------------
 procedure Set_Parameter(DSS: TDSSContext; const idx: Integer; const val: Double); overload;
@@ -146,7 +146,7 @@ begin
     if not _activeObj(DSS, elem) then
         Exit;
     DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
-    elem.SetDouble(idx, val);
+    elem.SetDouble(idx, val, []);
 end;
 //------------------------------------------------------------------------------
 procedure Set_Parameter(DSS: TDSSContext; const idx: Integer; const val: Integer); overload;
@@ -156,7 +156,7 @@ begin
     if not _activeObj(DSS, elem) then
         Exit;
     DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
-    elem.SetInteger(idx, val);
+    elem.SetInteger(idx, val, []);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;

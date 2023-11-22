@@ -159,7 +159,7 @@ begin
         Exit;
 
     if Value < dssLineUnitsMaxnum then
-        pLineCode.SetInteger(ord(TLineCodeProp.Units), Value)
+        pLineCode.SetInteger(ord(TLineCodeProp.Units), Value, [])
     else
         DoSimpleMsg(DSSPrime,  _('Invalid line units integer. Please enter a value within range.'), 183);
 end;
@@ -203,7 +203,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    pLineCode.SetDouble(ord(TLineCodeProp.R1), Value)
+    pLineCode.SetDouble(ord(TLineCodeProp.R1), Value, [])
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_X1(): Double; CDECL;
@@ -224,7 +224,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    pLineCode.SetDouble(ord(TLineCodeProp.X1), Value);
+    pLineCode.SetDouble(ord(TLineCodeProp.X1), Value, []);
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_R0(): Double; CDECL;
@@ -256,7 +256,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    pLineCode.SetDouble(ord(TLineCodeProp.R0), Value);
+    pLineCode.SetDouble(ord(TLineCodeProp.R0), Value, []);
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_X0(Value: Double); CDECL;
@@ -266,7 +266,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    pLineCode.SetDouble(ord(TLineCodeProp.X0), Value);
+    pLineCode.SetDouble(ord(TLineCodeProp.X0), Value, []);
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_C0(): Double; CDECL;
@@ -298,7 +298,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    pLineCode.SetDouble(ord(TLineCodeProp.C0), Value);
+    pLineCode.SetDouble(ord(TLineCodeProp.C0), Value, []);
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_C1(Value: Double); CDECL;
@@ -308,7 +308,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    pLineCode.SetDouble(ord(TLineCodeProp.C1), Value);
+    pLineCode.SetDouble(ord(TLineCodeProp.C1), Value, []);
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;

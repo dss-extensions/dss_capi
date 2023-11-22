@@ -1471,11 +1471,11 @@ begin
 
         if IsSwitch then
         begin
-            SetDouble(ord(TProp.R1), 1);
-            SetDouble(ord(TProp.X1), 1);
-            SetDouble(ord(TProp.C1), 1.1);
-            SetInteger(ord(TProp.Phases), 1);
-            SetDouble(ord(TProp.length), 0.001);
+            SetDouble(ord(TProp.R1), 1, []);
+            SetDouble(ord(TProp.X1), 1, []);
+            SetDouble(ord(TProp.C1), 1.1, []);
+            SetInteger(ord(TProp.Phases), 1, []);
+            SetDouble(ord(TProp.length), 0.001, []);
             changes := 5;
         end
         else
@@ -1516,17 +1516,17 @@ begin
                 Z1 := Z1 / FunitsConvert;
                 C1_New := C1_New / FunitsConvert;
             end;
-            SetDouble(ord(TProp.R1), Z1.re);
-            SetDouble(ord(TProp.X1), Z1.im);
-            SetDouble(ord(TProp.C1), C1_new);
-            SetInteger(ord(TProp.Phases), 1);
+            SetDouble(ord(TProp.R1), Z1.re, []);
+            SetDouble(ord(TProp.X1), Z1.im, []);
+            SetDouble(ord(TProp.C1), C1_new, []);
+            SetInteger(ord(TProp.Phases), 1, []);
             changes := 4;
         end;
         // Conductor Current Ratings
-        SetDouble(NumPropsThisClass + ord(TPDElementProp.NormAmps), NormAmps0);
-        SetDouble(NumPropsThisClass + ord(TPDElementProp.EmergAmps), EmergAmps0);
+        SetDouble(NumPropsThisClass + ord(TPDElementProp.NormAmps), NormAmps0, []);
+        SetDouble(NumPropsThisClass + ord(TPDElementProp.EmergAmps), EmergAmps0, []);
         // Repeat the Length Units to compensate for unexpected reset
-        SetInteger(ord(TProp.Units), LengthUnits0);
+        SetInteger(ord(TProp.Units), LengthUnits0, []);
         EndEdit(changes + 3);
     end;
     inherited MakePosSequence();
@@ -1595,16 +1595,16 @@ begin
                 1:
                     case Common2 of
                         1:
-                            ParsePropertyValue(ord(TProp.Bus1), Other.GetBus(2));
+                            ParsePropertyValue(ord(TProp.Bus1), Other.GetBus(2), []);
                         2:
-                            ParsePropertyValue(ord(TProp.Bus1), Other.GetBus(1));
+                            ParsePropertyValue(ord(TProp.Bus1), Other.GetBus(1), []);
                     end;
                 2:
                     case Common2 of
                         1:
-                            ParsePropertyValue(ord(TProp.Bus2), Other.GetBus(2));
+                            ParsePropertyValue(ord(TProp.Bus2), Other.GetBus(2), []);
                         2:
-                            ParsePropertyValue(ord(TProp.Bus2), Other.GetBus(1));
+                            ParsePropertyValue(ord(TProp.Bus2), Other.GetBus(1), []);
                     end;
             end;
         end; // If Series
@@ -1652,7 +1652,7 @@ begin
                 end 
                 else
                 if Other.IsSwitch then
-                    SetInteger(ord(TProp.Switch), 1)
+                    SetInteger(ord(TProp.Switch), 1, [])
                 else
                 begin
                     // ********* Will This work with Length multiplier?  did it ever work? *************************
@@ -1671,19 +1671,19 @@ begin
             end;
             if UseRXC then
             begin
-                SetDouble(ord(TProp.R1), RXC[1]);
-                SetDouble(ord(TProp.X1), RXC[2]);
-                SetDouble(ord(TProp.R0), RXC[3]);
-                SetDouble(ord(TProp.X0), RXC[4]);
-                SetDouble(ord(TProp.C1), RXC[5]);
-                SetDouble(ord(TProp.C0), RXC[6]);
+                SetDouble(ord(TProp.R1), RXC[1], []);
+                SetDouble(ord(TProp.X1), RXC[2], []);
+                SetDouble(ord(TProp.R0), RXC[3], []);
+                SetDouble(ord(TProp.X0), RXC[4], []);
+                SetDouble(ord(TProp.C1), RXC[5], []);
+                SetDouble(ord(TProp.C0), RXC[6], []);
             end;
             EndEdit(6);
 
             // update length units
             BeginEdit(False);
-            SetDouble(ord(TProp.Length), TotalLen);
-            SetInteger(ord(TProp.Units), LenUnitsSaved);
+            SetDouble(ord(TProp.Length), TotalLen, []);
+            SetInteger(ord(TProp.Units), LenUnitsSaved, []);
             EndEdit(2);
             // Update symmetrical Components computation
             // (Only time this function is called is for sym comp update -- computes Z and Yc)
@@ -1750,7 +1750,7 @@ begin
     for pControlElem in ActiveCircuit.DSSControls do
     begin
         if OldLine = pControlElem.MonitoredElement then // TODO: check if this works (and needs to work) with Fuse
-            pControlElem.ParsePropertyValue(pControlElem.ParentClass.CommandList.GetCommand('element'), NewLine.FullName);
+            pControlElem.ParsePropertyValue(pControlElem.ParentClass.CommandList.GetCommand('element'), NewLine.FullName, []);
     end;
 end;
 

@@ -2207,15 +2207,15 @@ begin
     newkva := ConnectedKVA / 3.0;
 
     BeginEdit(True);
-    SetInteger(ord(TProp.Phases), 1);
-    SetInteger(ord(TProp.conn), 0);
-    SetDouble(ord(TProp.kV), V);
-    SetDouble(ord(TProp.kW), newkW);
-    SetDouble(ord(TProp.kvar), newkvar);
+    SetInteger(ord(TProp.Phases), 1, []);
+    SetInteger(ord(TProp.conn), 0, []);
+    SetDouble(ord(TProp.kV), V, []);
+    SetDouble(ord(TProp.kW), newkW, []);
+    SetDouble(ord(TProp.kvar), newkvar, []);
     changes := 5;
     if newkva > 0.0 then
     begin
-        SetDouble(ord(TProp.xfkVA), newkva);
+        SetDouble(ord(TProp.xfkVA), newkva, []);
         changes := changes + 1;
     end;
     EndEdit(changes);

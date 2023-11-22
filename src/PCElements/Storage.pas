@@ -3325,13 +3325,13 @@ begin
         newPF := PFNominal;
         changes := changes + 2;
     end;
-    SetInteger(ord(TProp.Phases), 1);
-    SetInteger(ord(TProp.conn), 0);
-    SetDouble(ord(TProp.kV), V);
+    SetInteger(ord(TProp.Phases), 1, []);
+    SetInteger(ord(TProp.conn), 0, []);
+    SetDouble(ord(TProp.kV), V, []);
     if oldPhases > 1 then
     begin
-        SetDouble(ord(TProp.kWrated), newkW);
-        SetDouble(ord(TProp.PF), newPF);
+        SetDouble(ord(TProp.kWrated), newkW, []);
+        SetDouble(ord(TProp.PF), newPF, []);
     end;
     EndEdit(changes);
 

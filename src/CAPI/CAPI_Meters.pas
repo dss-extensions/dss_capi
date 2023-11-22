@@ -434,7 +434,7 @@ begin
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
 
-    pMeterObj.ParsePropertyValue(ord(TEnergyMeterProp.element), Value);
+    pMeterObj.ParsePropertyValue(ord(TEnergyMeterProp.element), Value, []);
     pMeterObj.MeteredElementChanged := TRUE;
     pMeterObj.RecalcElementData;
 end;

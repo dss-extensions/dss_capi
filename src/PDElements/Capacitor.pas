@@ -782,14 +782,14 @@ begin
                 newkvars[i - 1] := kvarPerPhase;
             end;
             BeginEdit(True);
-            SetInteger(ord(TProp.Phases), 1);
-            SetDouble(ord(TProp.kV), PhasekV);
-            SetDoubles(ord(TProp.kvar), newkvars);
+            SetInteger(ord(TProp.Phases), 1, []);
+            SetDouble(ord(TProp.kV), PhasekV, []);
+            SetDoubles(ord(TProp.kvar), newkvars, []);
             EndEdit(3);
             // Leave R as specified
         end;
         2: //
-            SetInteger(ord(TProp.Phases), 1);
+            SetInteger(ord(TProp.Phases), 1, []);
         3:
             if FnPhases > 1 then
             begin //  C Matrix
@@ -804,8 +804,8 @@ begin
                         Cm := Cm + Cmatrix[(i - 1) * Fnphases + j];
                 Cm := Cm / (FnPhases * (Fnphases - 1.0) / 2.0);
                 BeginEdit(True);
-                SetInteger(ord(TProp.Phases), 1);
-                SetDouble(ord(TProp.Cuf), (Cs - Cm));
+                SetInteger(ord(TProp.Phases), 1, []);
+                SetDouble(ord(TProp.Cuf), (Cs - Cm), []);
                 EndEdit(2);
             end;
     end;

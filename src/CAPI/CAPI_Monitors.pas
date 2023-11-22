@@ -454,7 +454,7 @@ var
 begin
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    pMon.ParsePropertyValue(ord(TMonitorProp.element), Value);
+    pMon.ParsePropertyValue(ord(TMonitorProp.element), Value, []);
     pMon.SetAsNextSeq(ord(TMonitorProp.Element));
     pMon.RecalcElementData;
 end;

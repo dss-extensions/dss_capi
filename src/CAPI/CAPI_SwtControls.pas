@@ -242,7 +242,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
-    elem.ParsePropertyValue(ord(TSwtControlProp.SwitchedObj), Value);
+    elem.ParsePropertyValue(ord(TSwtControlProp.SwitchedObj), Value, []);
 end;
 //------------------------------------------------------------------------------
 procedure SwtControls_Set_SwitchedTerm(Value: Integer); CDECL;
@@ -252,7 +252,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
-    elem.SetInteger(ord(TSwtControlProp.SwitchedTerm), Value);
+    elem.SetInteger(ord(TSwtControlProp.SwitchedTerm), Value, []);
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_Count(): Integer; CDECL;

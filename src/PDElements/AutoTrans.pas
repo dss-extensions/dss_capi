@@ -1719,13 +1719,13 @@ begin
     new_emerg := EmergMaxHkVA / FNPhases;
 
     BeginEdit(True);
-    SetInteger(ord(TProp.Phases), 1);
-    SetIntegers(ord(TProp.Conns), new_conns);
-    SetStrings(ord(TProp.Buses), new_buses);
-    SetDoubles(ord(TProp.kVs), new_kVs);
-    SetDoubles(ord(TProp.kVAs), new_kVAs);
-    SetDouble(ord(TProp.NormHkVA), new_norm);
-    SetDouble(ord(TProp.EmergHkVA), new_emerg);
+    SetInteger(ord(TProp.Phases), 1, []);
+    SetIntegers(ord(TProp.Conns), new_conns, []);
+    SetStrings(ord(TProp.Buses), new_buses, []);
+    SetDoubles(ord(TProp.kVs), new_kVs, []);
+    SetDoubles(ord(TProp.kVAs), new_kVAs, []);
+    SetDouble(ord(TProp.NormHkVA), new_norm, []);
+    SetDouble(ord(TProp.EmergHkVA), new_emerg, []);
     EndEdit(7);
     inherited;
 end;

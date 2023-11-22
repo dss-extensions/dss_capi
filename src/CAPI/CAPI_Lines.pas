@@ -705,7 +705,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.ParsePropertyValue(ord(TLineProp.geometry), Value); // calls FetchGeometryCode and sets YPrimInvalid
+    elem.ParsePropertyValue(ord(TLineProp.geometry), Value, []); // calls FetchGeometryCode and sets YPrimInvalid
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Rg(): Double; CDECL;
@@ -744,7 +744,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.SetDouble(ord(TLineProp.Rg), Value); //TODO: it doesn't seem to set YPrimInvalid
+    elem.SetDouble(ord(TLineProp.Rg), Value, []); //TODO: it doesn't seem to set YPrimInvalid
     elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
@@ -754,7 +754,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.SetDouble(ord(TLineProp.rho), Value); //TODO: it doesn't seem to set YPrimInvalid
+    elem.SetDouble(ord(TLineProp.rho), Value, []); //TODO: it doesn't seem to set YPrimInvalid
     elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
@@ -764,7 +764,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.SetDouble(ord(TLineProp.xg), Value); //TODO: it doesn't seem to set YPrimInvalid
+    elem.SetDouble(ord(TLineProp.xg), Value, []); //TODO: it doesn't seem to set YPrimInvalid
     elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
@@ -874,7 +874,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.ParsePropertyValue(ord(TLineProp.spacing), Value); // Sets YprimInvalid
+    elem.ParsePropertyValue(ord(TLineProp.spacing), Value, []); // Sets YprimInvalid
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Units(): Integer; CDECL;
@@ -897,7 +897,7 @@ begin
         Exit;
     if (Value >= dssLineUnitsNone) and (Value < dssLineUnitsMaxnum) then
     begin
-        elem.ParsePropertyValue(ord(TLineProp.units), LineUnitsStr(Value));
+        elem.ParsePropertyValue(ord(TLineProp.units), LineUnitsStr(Value), []);
         elem.YprimInvalid := TRUE;
     end
     else
@@ -967,7 +967,7 @@ begin
     if elem.IsSwitch then
         prev := Integer(True);
 
-    elem.SetInteger(ord(TLineProp.Switch), Integer(Value));
+    elem.SetInteger(ord(TLineProp.Switch), Integer(Value), []);
     elem.PropertySideEffects(ord(TLineProp.Switch), prev);
 end;
 //------------------------------------------------------------------------------

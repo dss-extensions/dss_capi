@@ -487,8 +487,8 @@ begin
     if FnPhases <> 2 then
     begin
         //TODO: why two edits?
-        SetInteger(ord(TProp.Phases), 2);
-        SetInteger(ord(TProp.Ndc), 1);
+        SetInteger(ord(TProp.Phases), 2, []);
+        SetInteger(ord(TProp.Ndc), 1, []);
     end;
     inherited;
 end;

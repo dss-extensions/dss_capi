@@ -996,7 +996,7 @@ begin
         case SpecType of
             2, // R + j X
             4: // symmetrical components  Z1 specified
-                SetInteger(ord(TProp.Phases), 1);
+                SetInteger(ord(TProp.Phases), 1, []);
             1:
             begin // kvar
                 kvarPerPhase := kvarRating / 3.0;  // divide among 3 phases Fnphases;
@@ -1005,9 +1005,9 @@ begin
                 else
                     PhasekV := kVRating;
 
-                SetInteger(ord(TProp.Phases), 1);
-                SetDouble(ord(TProp.kV), PhasekV);
-                SetDouble(ord(TProp.kvar), kvarPerPhase);
+                SetInteger(ord(TProp.Phases), 1, []);
+                SetDouble(ord(TProp.kV), PhasekV, []);
+                SetDouble(ord(TProp.kvar), kvarPerPhase, []);
                 changes := 3;
                 // Leave R as specified
             end;
@@ -1038,9 +1038,9 @@ begin
                     Rm := Rm / (FnPhases * (Fnphases - 1.0) / 2.0);
                     X := (Rs - Rm);
 
-                    SetInteger(ord(TProp.Phases), 1);
-                    SetDouble(ord(TProp.R), R);
-                    SetDouble(ord(TProp.X), X);
+                    SetInteger(ord(TProp.Phases), 1, []);
+                    SetDouble(ord(TProp.R), R, []);
+                    SetDouble(ord(TProp.X), X, []);
                     changes := 3;
                 end;
         end;

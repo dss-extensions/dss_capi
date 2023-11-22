@@ -347,7 +347,7 @@ begin
             SetBus(1, GICBus);
             SetBus(2, LineBus2);
              // Redefine the bus2 spec for LineElem
-            pLineElem.ParsePropertyValue(ord(TLineProp.Bus2), GICBus);
+            pLineElem.ParsePropertyValue(ord(TLineProp.Bus2), GICBus, []);
         end;
 
         Bus2Defined := TRUE;
@@ -471,7 +471,7 @@ end;
 procedure TGICSourceObj.MakePosSequence();
 begin
     if Fnphases > 1 then
-        SetInteger(ord(TProp.Phases), 1);
+        SetInteger(ord(TProp.Phases), 1, []);
     inherited;
 end;
 

@@ -2786,22 +2786,22 @@ begin
     end;
 
     BeginEdit(True);
-    SetInteger(ord(TProp.Phases), 1);
-    SetInteger(ord(TProp.conn), 0);
-    SetDouble(ord(TProp.kV), V);
+    SetInteger(ord(TProp.Phases), 1, []);
+    SetInteger(ord(TProp.conn), 0, []);
+    SetDouble(ord(TProp.kV), V, []);
     if oldPhases > 1 then
     begin
-        SetDouble(ord(TProp.kW), kW_new);
-        SetDouble(ord(TProp.PF), PF_new);
+        SetDouble(ord(TProp.kW), kW_new, []);
+        SetDouble(ord(TProp.PF), PF_new, []);
         if had_kvars then
         begin
-            SetDouble(ord(TProp.minkvar), new_minkvar);
-            SetDouble(ord(TProp.maxkvar), new_maxkvar);
+            SetDouble(ord(TProp.minkvar), new_minkvar, []);
+            SetDouble(ord(TProp.maxkvar), new_maxkvar, []);
         end;
         if had_kVA then
-            SetDouble(ord(TProp.kVA), new_kVA);
+            SetDouble(ord(TProp.kVA), new_kVA, []);
         if had_MVA then
-            SetDouble(ord(TProp.MVA), new_MVA);
+            SetDouble(ord(TProp.MVA), new_MVA, []);
     end;
     EndEdit(changes);
 

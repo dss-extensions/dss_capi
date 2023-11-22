@@ -666,11 +666,11 @@ begin
     R_new := R;
     X_new := X;
     BeginEdit(True);
-    SetInteger(ord(TProp.Phases), 1);
-    SetDouble(ord(TProp.Volts), Volts_new);
-    SetDouble(ord(TProp.Angle), Angle_new);
-    SetDouble(ord(TProp.R), R_new);
-    SetDouble(ord(TProp.X), X_new);
+    SetInteger(ord(TProp.Phases), 1, []);
+    SetDouble(ord(TProp.Volts), Volts_new, []);
+    SetDouble(ord(TProp.Angle), Angle_new, []);
+    SetDouble(ord(TProp.R), R_new, []);
+    SetDouble(ord(TProp.X), X_new, []);
     EndEdit(5);
 
     inherited;
