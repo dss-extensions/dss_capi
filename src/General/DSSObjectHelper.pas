@@ -2959,9 +2959,9 @@ begin
     singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
-    Result := True; // TODO
     ParentClass.ParseObjPropertyValue(self, Index, Value, prevInt, setterFlags);
-    if DSS.ErrorNumber = 0 then
+    Result := (DSS.ErrorNumber = 0);
+    if Result then
     begin
         SetAsNextSeq(Index);
         PropertySideEffects(Index, prevInt);
@@ -2977,9 +2977,9 @@ begin
     singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
-    Result := True; // TODO
     ParentClass.SetObjDouble(self, Index, Value, setterFlags);
-    if DSS.ErrorNumber = 0 then
+    Result := (DSS.ErrorNumber = 0);
+    if Result then
     begin
         SetAsNextSeq(Index);
         PropertySideEffects(Index);
@@ -2995,9 +2995,11 @@ begin
     singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
-    Result := True; // TODO
+
     ParentClass.SetObjString(self, Index, Value, setterFlags);
-    if DSS.ErrorNumber = 0 then
+
+    Result := (DSS.ErrorNumber = 0);
+    if Result then
     begin
         SetAsNextSeq(Index);
         PropertySideEffects(Index);
@@ -3014,10 +3016,15 @@ begin
     singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
-    Result := True; // TODO
+
     ParentClass.SetObjInteger(self, Index, Value, @prevInt, setterFlags);
-    SetAsNextSeq(Index);
-    PropertySideEffects(Index, prevInt);
+
+    Result := (DSS.ErrorNumber = 0);
+    if Result then
+    begin
+        SetAsNextSeq(Index);
+        PropertySideEffects(Index, prevInt);
+    end;
     if singleEdit then
         EndEdit(1);
 end;
@@ -3029,9 +3036,11 @@ begin
     singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
-    Result := True; // TODO
+
     ParentClass.SetObjObject(self, Index, Value, setterFlags);
-    if DSS.ErrorNumber = 0 then
+
+    Result := (DSS.ErrorNumber = 0);
+    if Result then
     begin
         SetAsNextSeq(Index);
         PropertySideEffects(Index);
@@ -3052,9 +3061,11 @@ begin
     singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
-    Result := True; // TODO
+
     ParentClass.SetObjObjects(self, Index, Value, ValueCount, setterFlags);
-    if DSS.ErrorNumber = 0 then
+
+    Result := (DSS.ErrorNumber = 0);
+    if Result then
     begin
         SetAsNextSeq(Index);
         PropertySideEffects(Index);
@@ -3075,9 +3086,11 @@ begin
     singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
-    Result := True;//TODO
+
     ParentClass.SetObjIntegers(self, Index, Value, ValueCount, setterFlags);
-    if DSS.ErrorNumber = 0 then
+
+    Result := (DSS.ErrorNumber = 0);
+    if Result then
     begin
         SetAsNextSeq(Index);
         PropertySideEffects(Index);
@@ -3098,9 +3111,11 @@ begin
     singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
-    Result := True;//TODO
+
     ParentClass.SetObjDoubles(self, Index, Value, ValueCount, setterFlags);
-    if DSS.ErrorNumber = 0 then
+
+    Result := (DSS.ErrorNumber = 0);
+    if Result then
     begin
         SetAsNextSeq(Index);
         PropertySideEffects(Index);
@@ -3119,13 +3134,14 @@ begin
     singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
-    Result := True;//TODO
     Setlength(ValuePChar, Length(Value));
     for i := 0 to High(Value) do
         ValuePChar[i] := PChar(Value[i]);
 
     ParentClass.SetObjStrings(self, Index, @ValuePChar[0], Length(Value), setterFlags);
-    if DSS.ErrorNumber = 0 then
+
+    Result := (DSS.ErrorNumber = 0);
+    if Result then
     begin
         SetAsNextSeq(Index);
         PropertySideEffects(Index);
@@ -3141,9 +3157,9 @@ begin
     singleEdit := not (Flg.EditingActive in Flags);
     if singleEdit then
         BeginEdit(True);
-    Result := True;//TODO
     ParentClass.SetObjStrings(self, Index, Value, ValueCount, setterFlags);
-    if DSS.ErrorNumber = 0 then
+    Result := (DSS.ErrorNumber = 0);
+    if Result then
     begin
         SetAsNextSeq(Index);
         PropertySideEffects(Index);
