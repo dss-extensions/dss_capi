@@ -36,7 +36,8 @@ uses
     CAPI_Types,
     DSSObject,
     fpjson,
-    Circuit;
+    Circuit,
+    DSSClass;
 
 type
     dss_obj_float64_function_t = function (obj: Pointer): Double; CDECL;
@@ -170,7 +171,6 @@ uses
     DSSGlobals,
     SysUtils,
     CktElement,
-    DSSClass,
     DSSPointerList,
     DSSClassDefs,
     DSSHelper,
@@ -1343,7 +1343,7 @@ begin
                 prev := doubleptr^;
                 doublePtr^ := Value;
                 batch^.SetAsNextSeq(Index);
-                batch^.PropertySideEffects(Index, Round(prev), setterFlags);
+                batch^.PropertySideEffects(Index, Round(prev));
 
                 if singleEdit then
                     cls.EndEdit(batch^, 1);
@@ -2117,7 +2117,7 @@ var
 
             WriteLn('"Loading" ', cls.Name, '.', name);
             dssObj := obj_NewFromClass(DSS, cls, name, false, true);
-            if not cls.FillObjFromJSON(dssObj, o, joptions) then
+            if not cls.FillObjFromJSON(dssObj, o, joptions, []) then
                 raise Exception.Create(Format('JSON/%s/%s: error processing item.', [cls.Name, name]));
         finally
             if nameData <> NIL then

@@ -124,7 +124,8 @@ uses
     UcMatrix,
     ParserDel,
     Math,
-    CAPI_Utils;
+    CAPI_Utils,
+    Variants;
 
 type
     PLongBool = ^LongBool;
@@ -149,7 +150,7 @@ begin
     result := Format('%s.%s', [FClassName, FObjName]);
 end;
 
-function TDSSClassHelper.ParseObjPropertyValue(Obj: Pointer; Index: Integer; const Value: String; out prevInt: Integer): Boolean;
+function TDSSClassHelper.ParseObjPropertyValue(Obj: Pointer; Index: Integer; const Value: String; out prevInt: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
 // This handles most of the parsing and passes the processed values to 
 // the specific functions (e.g. SetObjInteger) if possible, to reduce code duplication.
 var
@@ -175,7 +176,6 @@ var
     OrderFound, Norder, maxSize: Integer;
     mat, matbak: TCmatrix;
     darray: PDoubleArray;
-    iarray: pIntegerArray;
 
     errCode: Word;
 
@@ -255,7 +255,7 @@ begin
             if flags = [] then
             begin
                 // Most properties don't have any flags set, just skip the checks
-                SetObjDouble(Obj, Index, GetDouble(Value));
+                SetObjDouble(Obj, Index, GetDouble(Value), setterFlags);
                 Result := True;
                 Exit;
             end;
@@ -301,17 +301,17 @@ begin
             else
                 doubleVal := GetDouble(Value);
 
-            SetObjDouble(Obj, index, doubleVal);
+            SetObjDouble(Obj, index, doubleVal, setterFlags);
             Result := True;
         end;
         TPropertyType.MappedStringEnumOnStructArrayProperty:
         begin
-            SetObjInteger(Obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt);
+            SetObjInteger(Obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt, setterFlags);
             Result := True;
         end;
         TPropertyType.StringEnumActionProperty:
         begin
-            SetObjInteger(Obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt);
+            SetObjInteger(Obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt, setterFlags);
             Result := True;
         end;
         TPropertyType.IntegerOnStructArrayProperty,
@@ -354,7 +354,7 @@ begin
             else
                 intVal := GetInteger(Value);
 
-            SetObjInteger(Obj, Index, intVal, @prevInt);
+            SetObjInteger(Obj, Index, intVal, @prevInt, setterFlags);
             Result := True;
         end;
         TPropertyType.MappedStringEnumProperty:
@@ -364,7 +364,7 @@ begin
                 Result := True;
                 Exit;
             end;
-            SetObjInteger(Obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt);
+            SetObjInteger(Obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt, setterFlags);
             Result := True;
         end;
         TPropertyType.MappedIntEnumProperty:
@@ -377,17 +377,17 @@ begin
                     Format('%s.%s: "%s" is not a valid value.',
                         [TDSSObject(obj).FullName, PropertyName[Index], Value]
                     ), 401);
-                DoSimpleMsg('Invalid value (%d).', [intVal], 5004);
+                // DoSimpleMsg('Invalid value (%d).', [intVal], 5004);
                 Exit;
             end;
-            SetObjInteger(Obj, Index, intVal, @prevInt);
+            SetObjInteger(Obj, Index, intVal, @prevInt, setterFlags);
             Result := True;
         end;
         TPropertyType.EnabledProperty,
         TPropertyType.BooleanActionProperty,
         TPropertyType.BooleanProperty:
         begin
-            SetObjInteger(Obj, Index, Integer(InterpretYesNo(Value)), @prevInt);
+            SetObjInteger(Obj, Index, Integer(InterpretYesNo(Value)), @prevInt, setterFlags);
             Result := True;
         end;
         TPropertyType.StringListProperty:
@@ -425,7 +425,7 @@ begin
         TPropertyType.StringProperty,
         TPropertyType.MakeLikeProperty:
         begin
-            SetObjString(Obj, Index, Value);
+            SetObjString(Obj, Index, Value, setterFlags);
             Result := True;
         end;
         TPropertyType.BusesOnStructArrayProperty:
@@ -1493,7 +1493,7 @@ begin
             On E: Exception do
             begin
                 SetLength(Result, 0);
-                DoSimpleMsg(DSS, 'Error reading %d-th numeric array value from file: "%s" Error is:', [i, CSVFileName, E.message], 705);
+                DoSimpleMsg(DSS, 'Error reading %d-th numeric array value from file: "%s" Error is:', [numRead, CSVFileName, E.message], 705);
                 Exit;
             end;
         end;
@@ -1509,7 +1509,6 @@ var
     F: TStream = NIL; // input
     i: Integer;
     // Temp: Single;
-    iskip: Integer;
     sngArray: ArrayDef.PSingleArray;
     ValueCount: Integer;
 begin
@@ -1519,7 +1518,7 @@ begin
         try
             F := DSS.GetInputStreamEx(fileName)
         except
-            DoSimpleMsg(DSS, 'File of Singles "%s" could not be opened.', [Param], 70502);
+            DoSimpleMsg(DSS, 'File of Singles "%s" could not be opened.', [fileName], 70502);
             Exit;
         end;
         MStream := TMemoryStream.Create;
@@ -1542,6 +1541,7 @@ end;
 function JSON_InterpretDblArrayDblFile(DSS: TDSSContext; const fileName: String): ArrayOfDouble;
 var
     F: TStream = NIL; // input
+    ValueCount: Integer;
 begin
     SetLength(Result, 0);
     try
@@ -1554,7 +1554,7 @@ begin
         end;
         ValueCount := F.Size div sizeof(Double);  // no. of doubles
         SetLength(Result, ValueCount);
-        F.ReadBuffer(Result[0], SizeOf(Double) * Result);
+        F.ReadBuffer(Result[0], SizeOf(Double) * ValueCount);
     finally
         FreeAndNil(F);
     end;
@@ -1611,19 +1611,19 @@ function JSON_InterpretStringArray(DSS: TDSSContext; obj: TJSONObject; ApplyLowe
 // File is assumed to have one value per line.
 var
     Param,
-    fn,
     NextParam: String;
     F: TStream = nil;
     numRead: Integer = 0;
+    jfn: TJSONString = NIL;
 begin
     SetLength(Result, 0);
 
-    if (obj = NIL) or (not obj.Find('File', fn)) then
+    if (obj = NIL) or (not obj.Find('File', jfn)) then
         raise Exception.Create('String list is not correctly specified');
 
     // load the list from a file
     try
-        F := DSS.GetInputStreamEx(fn);
+        F := DSS.GetInputStreamEx(jfn.AsString);
         while (F.Position + 1) < F.Size do
         begin
             FSReadln(F, Param);
@@ -1658,33 +1658,31 @@ end;
 
 function JSON_NumberArrayFilePath(DSS: TDSSContext; obj: TJSONObject; prevCount: Integer): ArrayOfDouble;
 var
-    obj: TJSONObject = NIL;
-    i: Integer;
     col: Integer = 1;
     header: Boolean = false;
-    fn: TJSONString = NIL;
+    jfn: TJSONString = NIL;
 begin
     Result := NIL;
     if obj = NIL then
         raise Exception.Create('Array is not correctly specified');
 
-    if obj.Find('DblFile', fn) then
+    if obj.Find('DblFile', jfn) then
     begin
-        Result := JSON_InterpretDblArrayDblFile(DSS, fn);
+        Result := JSON_InterpretDblArrayDblFile(DSS, jfn.AsString);
         Exit;
     end;
-    if obj.Find('SngFile', fn) then
+    if obj.Find('SngFile', jfn) then
     begin
-        Result := JSON_InterpretDblArraySngFile(DSS, fn);
+        Result := JSON_InterpretDblArraySngFile(DSS, jfn.AsString);
         Exit;
     end;
-    if not obj.Find('CSVFile', fn) then
+    if not obj.Find('CSVFile', jfn) then
         raise Exception.Create('Array is not correctly specified');
 
     col := obj.Get('Column', col);
     header := obj.Get('Header', header);
 
-    Result := JSON_InterpretDblArrayCSV(DSS, fn, col, header, prevCount);
+    Result := JSON_InterpretDblArrayCSV(DSS, jfn.AsString, col, header, prevCount);
 end;
 
 
@@ -1694,11 +1692,12 @@ var
     dataPtr: PPDouble = NIL;
     mat: TCMatrix;
 
-    i: Integer;
+    i, j: Integer;
 
     boolVal: Boolean;
     arrayVal, arrayVal2: TJSONArray;
     doubleVal: Double;
+    scale: Double;
     ints: ArrayOfInteger;
     doubles: ArrayOfDouble;
     strs: ArrayOfString;
@@ -1711,8 +1710,10 @@ var
     nmult: Integer; // for matrices
     ValueCount: Integer;
     dssObj: TDSSObject;
+    Norder: Integer;
     
     flags: TPropertyFlags;
+    ptype: TPropertyType;
     setterFlags: TDSSPropertySetterFlags = [];
 begin
     dssObj := TDSSObject(obj);
@@ -1736,7 +1737,7 @@ begin
     sizingPropIndex := PropertySizingPropertyIndex[Index];
     allowSetSize := (sizingPropIndex > 0) and 
         // Disallow overwriting the size with different properties
-        (not PrpSpecified(sizingPropIndex)) and 
+        (not dssObj.PrpSpecified(sizingPropIndex)) and 
         // Only allow resizing if no explicit sizing property is actually exposed
         (not (TPropertyFlag.SuppressJSON in PropertyFlags[sizingPropIndex])); 
     //TODO: setterFlags := DSS.DefaultSetterFlags;
@@ -1753,26 +1754,26 @@ begin
         case ptype of
             TPropertyType.DoubleProperty:
             begin
-                SetObjDouble(obj, index, val.AsFloat, -1, setterFlags);
+                SetObjDouble(obj, index, val.AsFloat, setterFlags);
                 Exit;
             end;
             TPropertyType.MappedIntEnumProperty,
             TPropertyType.IntegerProperty:
             begin        
-                SetObjInteger(obj, index, val.AsInteger, -1, setterFlags);
+                SetObjInteger(obj, index, val.AsInteger, NIL, setterFlags);
                 Exit;
             end;
-            TPropertyFlag.StringEnumActionProperty,
-            TPropertyFlag.MappedStringEnumProperty:
+            TPropertyType.StringEnumActionProperty,
+            TPropertyType.MappedStringEnumProperty:
             begin
                 if (joptions and Integer(DSSJSONOptions.EnumAsInt)) = 0 then
                 begin
-                    SetObjString(obj, index, val.AsString, -1, setterFlags);
+                    SetObjString(obj, index, val.AsString, setterFlags);
                     Exit;
                 end
                 else
                 begin
-                    SetObjInteger(obj, index, val.AsInteger, -1, setterFlags);
+                    SetObjInteger(obj, index, val.AsInteger, NIL, setterFlags);
                     Exit;
                 end;
             end;
@@ -1780,7 +1781,7 @@ begin
             TPropertyType.StringProperty,
             TPropertyType.MakeLikeProperty:
             begin
-                SetObjString(obj, index, val.AsString, -1, setterFlags);
+                SetObjString(obj, index, val.AsString, setterFlags);
                 Exit;
             end;
         end;
@@ -1793,9 +1794,9 @@ begin
         begin
             boolVal := val.AsBoolean;
             if boolVal then
-                SetObjInteger(obj, index, 1, -1, setterFlags)
+                SetObjInteger(obj, index, 1, NIL, setterFlags)
             else
-                SetObjInteger(obj, index, 0, -1, setterFlags);
+                SetObjInteger(obj, index, 0, NIL, setterFlags);
             Exit;
         end;
         TPropertyType.ComplexProperty,
@@ -1868,7 +1869,7 @@ begin
         begin
             if ((ptype = TPropertyType.StringListProperty) and (val is TJSONObject)) then
             begin
-                strs := JSON_InterpretStringArray(DSS, val as TJSONObject, ResultList, TPropertyFlag.Transform_LowerCase in flags);
+                strs := JSON_InterpretStringArray(DSS, val as TJSONObject, TPropertyFlag.Transform_LowerCase in flags);
                 SetObjStrings(obj, index, PPAnsiChar(@strs[0]), Length(strs), setterFlags);
                 Exit;
             end;
@@ -1878,7 +1879,7 @@ begin
                 arrayVal := val as TJSONArray;
                 if arrayVal.Count = 0 then
                 begin
-                    SetObjStrings(obj, index, NIL, 0);
+                    SetObjStrings(obj, index, NIL, 0, setterFlags);
                     Exit;
                 end;
                 val := arrayVal[0];
@@ -1948,7 +1949,7 @@ begin
             else
             begin
                 // Single integer
-                SetObjInteger(obj, index, val.Value, -1, setterFlags);
+                SetObjInteger(obj, index, val.Value, NIL, setterFlags);
                 Exit;
             end;
         end;
@@ -1967,7 +1968,7 @@ begin
             begin
                 if allowSetSize then
                 begin
-                    dssObj.SetInteger(sizingPropIndex, arrayVal.Count, Norder, setterFlags);
+                    dssObj.SetInteger(sizingPropIndex, arrayVal.Count, setterFlags);
                     if DSS.ErrorNumber <> 0 then
                     begin
                         raise Exception(Format(_('Could not resize structures to match provided matrix order (%d).'), [arrayVal.Count]));
@@ -2020,7 +2021,7 @@ begin
             begin
                 DoSimpleMsg(
                     '%s.%s: Invalid number of elements. Provide either the full matrix or a triangle (lower or upper).', 
-                    [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                    [TDSSObject(obj).FullName, PropertyName[Index]],
                 2020037);
                 Exit;
             end;
@@ -2101,7 +2102,7 @@ begin
 
             if (TPropertyFlag.AllowNone in flags) and (val.IsNull or (ValueCount = 0)) then
             begin
-                SetObjDoubles(obj, index, NIL, 0, allowSetSize);
+                SetObjDoubles(obj, index, NIL, 0, setterFlags);
                 Exit;
             end;
 
@@ -2129,7 +2130,7 @@ begin
                     doubles[i] := Round(doubles[i]);
                 end;
             end;
-            SetObjDoubles(obj, index, PDouble(@doubles[0]), Length(doubles), allowSetSize);
+            SetObjDoubles(obj, index, PDouble(@doubles[0]), Length(doubles), setterFlags);
             Exit;
         end;
     end;
@@ -2514,7 +2515,7 @@ begin
     end;
 end;
 
-procedure TDSSClassHelper.SetObjObjects(ptr: Pointer;Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer);
+procedure TDSSClassHelper.SetObjObjects(ptr: Pointer;Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 // Note: there is some duplication between this and ParseObjPropertyValue
 var
     otherObjPtr: TDSSObjectPtr;
@@ -2571,7 +2572,7 @@ begin
         positionPtr^ := maxCount;
 end;
 
-procedure TDSSClassHelper.SetObjObject(ptr: Pointer; Index: Integer; Value: TDSSObject);
+procedure TDSSClassHelper.SetObjObject(ptr: Pointer; Index: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags);
 var
     otherObjPtr: TDSSObjectPtr;
     flags: TPropertyFlags;
@@ -2598,7 +2599,7 @@ begin
     end;
 end;
 
-procedure TDSSClassHelper.SetObjString(ptr: Pointer; Index: Integer; Value: String);
+procedure TDSSClassHelper.SetObjString(ptr: Pointer; Index: Integer; Value: String; setterFlags: TDSSPropertySetterFlags);
 var
     stringPtr: PString;
     otherObj: TDSSObject;
@@ -2614,7 +2615,7 @@ begin
 
     case PropertyType[Index] of
         TPropertyType.DSSObjectReferenceProperty:
-            ParseObjPropertyValue(Obj, Index, Value, prevInt);
+            ParseObjPropertyValue(Obj, Index, Value, prevInt, setterFlags);
 
         TPropertyType.MakeLikeProperty:
         begin
@@ -2653,12 +2654,12 @@ begin
         begin
             if (TPropertyFlag.ConditionalReadOnly in flags) and (PLongBool(PByte(obj) + PropertyOffset3[Index])^) then
                 Exit;
-            SetObjInteger(Obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt);
+            SetObjInteger(Obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt, setterFlags);
         end;            
     end;
 end;
 
-procedure TDSSClassHelper.SetObjDouble(ptr: Pointer; Index: Integer; Value: Double);
+procedure TDSSClassHelper.SetObjDouble(ptr: Pointer; Index: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags);
 var
     flags: TPropertyFlags;
     scale: Double;
@@ -2764,7 +2765,7 @@ begin
     end;
 end;
 
-procedure TDSSClassHelper.SetObjInteger(ptr: Pointer; Index: Integer; Value: Integer; prevInt: PInteger);
+procedure TDSSClassHelper.SetObjInteger(ptr: Pointer; Index: Integer; Value: Integer; prevInt: PInteger; setterFlags: TDSSPropertySetterFlags);
 var
     flags: TPropertyFlags;
     integerPtr: PInteger = NIL;
@@ -2959,7 +2960,7 @@ begin
     if singleEdit then
         BeginEdit(True);
     Result := True; // TODO
-    ParentClass.ParseObjPropertyValue(self, Index, Value, prevInt);
+    ParentClass.ParseObjPropertyValue(self, Index, Value, prevInt, setterFlags);
     if DSS.ErrorNumber = 0 then
     begin
         SetAsNextSeq(Index);
@@ -2977,7 +2978,7 @@ begin
     if singleEdit then
         BeginEdit(True);
     Result := True; // TODO
-    ParentClass.SetObjDouble(self, Index, Value);
+    ParentClass.SetObjDouble(self, Index, Value, setterFlags);
     if DSS.ErrorNumber = 0 then
     begin
         SetAsNextSeq(Index);
@@ -2995,7 +2996,7 @@ begin
     if singleEdit then
         BeginEdit(True);
     Result := True; // TODO
-    ParentClass.SetObjString(self, Index, Value);
+    ParentClass.SetObjString(self, Index, Value, setterFlags);
     if DSS.ErrorNumber = 0 then
     begin
         SetAsNextSeq(Index);
@@ -3014,7 +3015,7 @@ begin
     if singleEdit then
         BeginEdit(True);
     Result := True; // TODO
-    ParentClass.SetObjInteger(self, Index, Value, @prevInt);
+    ParentClass.SetObjInteger(self, Index, Value, @prevInt, setterFlags);
     SetAsNextSeq(Index);
     PropertySideEffects(Index, prevInt);
     if singleEdit then
@@ -3029,7 +3030,7 @@ begin
     if singleEdit then
         BeginEdit(True);
     Result := True; // TODO
-    ParentClass.SetObjObject(self, Index, Value);
+    ParentClass.SetObjObject(self, Index, Value, setterFlags);
     if DSS.ErrorNumber = 0 then
     begin
         SetAsNextSeq(Index);
@@ -3075,7 +3076,7 @@ begin
     if singleEdit then
         BeginEdit(True);
     Result := True;//TODO
-    ParentClass.SetObjIntegers(self, Index, Value, ValueCount);
+    ParentClass.SetObjIntegers(self, Index, Value, ValueCount, setterFlags);
     if DSS.ErrorNumber = 0 then
     begin
         SetAsNextSeq(Index);
@@ -3087,7 +3088,7 @@ end;
 
 function TDSSObjectHelper.SetDoubles(Index: Integer; Value: ArrayOfDouble; setterFlags: TDSSPropertySetterFlags): Boolean;
 begin
-    Result := SetDoubles(Index, @Value[0], Length(Value));
+    Result := SetDoubles(Index, @Value[0], Length(Value), setterFlags);
 end;
 
 function TDSSObjectHelper.SetDoubles(Index: Integer; Value: PDouble; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
@@ -3141,7 +3142,7 @@ begin
     if singleEdit then
         BeginEdit(True);
     Result := True;//TODO
-    ParentClass.SetObjStrings(self, Index, Value, ValueCount);
+    ParentClass.SetObjStrings(self, Index, Value, ValueCount, setterFlags);
     if DSS.ErrorNumber = 0 then
     begin
         SetAsNextSeq(Index);
@@ -3334,7 +3335,7 @@ begin
     end;
 end;
 
-procedure TDSSClassHelper.SetObjDoubles(ptr: Pointer; Index: Integer; Value: PDouble; ValueCount: Integer);
+procedure TDSSClassHelper.SetObjDoubles(ptr: Pointer; Index: Integer; Value: PDouble; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i, j, maxSize, Norder, intVal, step: Integer;
     positionPtr, sizePtr: PInteger;
@@ -3660,7 +3661,7 @@ begin
     end;
 end;
 
-procedure TDSSClassHelper.SetObjStrings(ptr: Pointer; Index: Integer; Value: PPAnsiChar; ValueCount: Integer);
+procedure TDSSClassHelper.SetObjStrings(ptr: Pointer; Index: Integer; Value: PPAnsiChar; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i, maxSize, step, intVal: Integer;
     positionPtr, integerPtr: PInteger;
@@ -4629,7 +4630,7 @@ begin
     end;
 end;
 
-function TDSSClassHelper.FillObjFromJSON(obj: Pointer; json: TJSONObject; joptions: Integer): Boolean;
+function TDSSClassHelper.FillObjFromJSON(obj: Pointer; json: TJSONObject; joptions: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
 var
     propIndex: Integer;
     propName: String;
@@ -4639,6 +4640,7 @@ var
     dssObj: TDSSObject;
     ptype: TPropertyType;
     numChanges: Integer = 0;
+    i: Integer;
 begin
     propIndex := -1;
     Result := false;
@@ -4650,16 +4652,16 @@ begin
         //TODO: flag to error on extra keys
         propIndex := AltPropertyOrder[i];
         propName := PropertyNameJSON[propIndex];
-        propFlags := PropertyFlags[propIndex]
+        propFlags := PropertyFlags[propIndex];
         ptype := PropertyType[propIndex];
         if (not json.Find(propName, propData)) then
         begin
             if TPropertyFlag.Required in propFlags then
-                raise Exception.Create(Format('JSON/%s/%s: required property not provided: "%s".', [Name, obj.Name, propName]));
+                raise Exception.Create(Format('JSON/%s/%s: required property not provided: "%s".', [Name, dssObj.Name, propName]));
 
             continue;
         end;
-        if (ptype = TPropertyType.StringSilentROFunctionProperty) or (TPropertyFlag.ReadOnly in propFlags) then
+        if (ptype = TPropertyType.StringSilentROFunctionProperty) or (TPropertyFlag.SilentReadOnly in propFlags) then
             continue; // ignore... TODO: error or warning
 
         if not SetObjPropertyJSONValue(obj, propIndex, joptions, propData) then
