@@ -679,8 +679,24 @@ procedure TGeneratorObj.PropertySideEffects(Idx: Integer; previousIntVal: Intege
 var
     i: Integer;
     kVA_Gen: Double;
+    addedNeedsYprim: Boolean = false;
 begin
+    if not (Flg.NeedsYprim in Flags) then
+    begin
+        addedNeedsYprim := true;
+        Include(Flags, Flg.NeedsYprim);
+    end;
+
     if (Idx > 0) and (Idx <= NumPropsThisClass) then
+    begin
+        if addedNeedsYprim and 
+            (TSetterFlag.AvoidYprimUpdate in setterFlags) and 
+            (TProp(idx) in [TProp.kvar, TProp.kW, TProp.model, TProp.pf, TProp.status, TProp.bus1,
+                            TProp.Daily, TProp.Yearly, TProp.Duty, TProp.cls,
+                            TProp.Vminpu, TProp.Vmaxpu, TProp.ForceOn]) then
+        begin
+            Exclude(Flags, Flg.NeedsYprim);
+        end;
         case TProp(Idx) of
             TProp.Conn:
             begin
@@ -712,7 +728,6 @@ begin
                         VBase := kVGeneratorBase * 1000.0;
                     end;
                 end;
-
             TProp.kvar:
             begin
                 Genvars.Qnominalperphase := 1000.0 * kvarBase / Fnphases; // init to something reasonable
@@ -734,7 +749,6 @@ begin
             // keep kvar nominal up to date with kW and PF
             TProp.kW, TProp.pf:
                 SyncUpPowerQuantities;
-
             TProp.UserModel:
                 UserModel.Name := UserModelNameStr;  // Connect to user written models
             TProp.UserData:
@@ -792,7 +806,7 @@ begin
                     SetLength(DynamicEqVals, DynamicEqObj.NVariables);
 
         end;
-
+    end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
@@ -802,7 +816,11 @@ var
 begin
     obj:= TObj(ptr);
     obj.RecalcElementData();
-    obj.YPrimInvalid := TRUE;
+    if Flg.NeedsYprim in obj.Flags then
+    begin
+        obj.YPrimInvalid := TRUE;
+        Exclude(obj.Flags, Flg.NeedsYprim);
+    end;
     Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;

@@ -328,7 +328,12 @@ begin
         Exit;
     end;
     elem.FNphases := Value;
-    //TODO: missing side-effects?
+
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+    begin
+        elem.RecalcElementData();
+        elem.YPrimInvalid := true;
+    end;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Count(): Integer; CDECL;
@@ -589,6 +594,9 @@ begin
         elem.Connection := 1
     else
         elem.Connection := 0;
+
+    elem.RecalcElementData();
+    elem.YPrimInvalid := true;
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_kva(Value: Double); CDECL;

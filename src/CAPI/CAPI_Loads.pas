@@ -713,6 +713,8 @@ begin
 
     elem.DailyShapeObj := DSSPrime.LoadShapeClass.Find(Value);
     elem.PropertySideEffects(ord(TLoadProp.daily), 0, []);
+    elem.RecalcElementData();
+    elem.YPrimInvalid := true;
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_duty(const Value: PAnsiChar); CDECL;
@@ -724,6 +726,8 @@ begin
 
     elem.DutyShapeObj := DSSPrime.LoadShapeClass.Find(Value);
     elem.PropertySideEffects(ord(TLoadProp.duty), 0, []);
+    elem.RecalcElementData();
+    elem.YPrimInvalid := true;
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Growth(const Value: PAnsiChar); CDECL;
@@ -735,6 +739,8 @@ begin
 
     elem.GrowthShapeObj := DSSPrime.GrowthShapeClass.Find(Value);
     elem.PropertySideEffects(ord(TLoadProp.growth), 0, []);
+    elem.RecalcElementData();
+    elem.YPrimInvalid := true;
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_IsDelta(Value: TAPIBoolean); CDECL;
@@ -747,6 +753,12 @@ begin
         elem.Connection := TLoadConnection.Delta
     else
         elem.Connection := TLoadConnection.Wye;
+
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+    begin
+        elem.RecalcElementData();
+        elem.YPrimInvalid := true;
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_kva(Value: Double); CDECL;
@@ -965,6 +977,7 @@ begin
         prevVal := elem.FNPhases;
         elem.FNPhases := Value;
         elem.PropertySideEffects(ord(TLoadProp.phases), prevVal, []);
+        elem.YPrimInvalid := TRUE;
     end;
 end;
 //------------------------------------------------------------------------------

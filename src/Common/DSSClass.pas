@@ -63,14 +63,14 @@ type
     );
     
     TDSSPropertySetterFlag = (
-        AllowResizing = 1 shl 0,
+        AllowResizing = 0,
 
         // Some components like Loads don't need to update Yprim for every change, e.g. setting
         // "load.a_load.kW=1" if was "kW" previously 2 should not force a Yprim update, if desired.
         // Using this flag will reproduce what the classic OpenDSS API for Loads does, but
         // removes a lot of duplicated code. Besides that, we can extend the feature for other
         // components if we think it fits.
-        AvoidYprimUpdate = 1 shl 1
+        AvoidYprimUpdate = 1
     );
     TSetterFlag = TDSSPropertySetterFlag;
     TDSSPropertySetterFlags = set of TDSSPropertySetterFlag;
@@ -92,7 +92,8 @@ type
         HasOCPDevice, // Fuse, Relay, or Recloser
         HasAutoOCPDevice, // Relay or Recloser only
         // HasSwtControl // Has a remotely-controlled Switch -- UNUSED
-        NeedsRecalc // Used for Edit command loops
+        NeedsRecalc, // Used for Edit command loops
+        NeedsYprim // Used for Edit command loops + setter flags
     );
     TDSSObjectFlags = set of TDSSObjectFlag;
     Flg = TDSSObjectFlag;
