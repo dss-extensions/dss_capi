@@ -1834,13 +1834,14 @@ begin
             // else
             // begin
             arrayVal := val as TJSONArray;
-            if (arrayVal.Count <> Norder) and (not allowSetSize) then
+            ValueCount := arrayVal.Count;
+            if (not allowSetSize) and (ValueCount <> Norder) then
             begin
                 // if allowSetSize then
                 // begin
                 //     dssObj.SetInteger(sizingPropIndex, arrayVal.Count, Norder, setterFlags);
                 // end
-                raise Exception(Format(_('Expected an array of %d numbers, got %d items.'), [Norder, arrayVal.Count]));
+                raise Exception(Format(_('Expected an array of %d elements (maximum length), got %d.'), [Norder, ValueCount]));
             end;
             // end;
             SetLength(ints, arrayVal.Count);
@@ -2105,6 +2106,7 @@ begin
                 Exit;
             end;
 
+            //TODO: remove some checks like this since now there's logic in SetObjDoubles
             if (not allowSetSize) and (ValueCount <> Norder) then
             begin
                 // if allowSetSize then
@@ -2118,7 +2120,7 @@ begin
                 // end
                 // else
                 // begin
-                raise Exception(Format(_('Expected an array of %d numbers (maximum length).'), [Norder]));
+                raise Exception(Format(_('Expected an array of %d numbers (maximum length), got %d.'), [Norder, ValueCount]));
                 // end;
             end;
 
@@ -2528,6 +2530,10 @@ var
 begin
     Obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
+
+    if TPropertyType.DSSObjectReferenceArrayProperty <> PropertyType[Index] then
+        Exit;
+
     if TPropertyFlag.WriteByFunction in flags then
     begin
         TWriteObjRefsPropertyFunction(PropertyWriteFunction[Index])(obj, PPointer(Value), ValueCount);
@@ -2583,6 +2589,9 @@ var
 begin
     Obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
+
+    if TPropertyType.DSSObjectReferenceProperty <> PropertyType[Index] then
+        Exit;
 
     //TODO: add type validation -- e.g. PD element for EnergyMeter
     if (TPropertyFlag.WriteByFunction in flags) then
@@ -3248,11 +3257,50 @@ end;
 
 procedure TDSSClassHelper.SetObjIntegers(ptr: Pointer; Index: Integer; Value: PInteger; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 var
-    i, maxSize, step: Integer;
+    i, sizingPropIndex, maxSize, step: Integer;
     integerPtr, positionPtr, sizePtr: PInteger;
     dataPtr: PPInteger;
     flags: TPropertyFlags;
     Obj: TDSSObject;
+
+    function checkSize(): Boolean;
+    begin
+        Result := false;
+
+        if ((TPropertyFlag.ArrayMaxSize in flags) and (maxSize >= ValueCount)) or // Allow fewer elements for some properties
+            ((not (TPropertyFlag.ArrayMaxSize in flags)) and (maxSize <> ValueCount)) then 
+        begin
+            if TSetterFlag.AllowResizing in setterFlags then
+            begin
+                sizingPropIndex := PropertySizingPropertyIndex[Index];
+                if (sizingPropIndex > 0) and 
+                    // Disallow overwriting the size with different properties
+                    (not obj.PrpSpecified(sizingPropIndex)) and 
+                    // Only allow resizing if no explicit sizing property is actually exposed
+                    ((TPropertyFlag.SuppressJSON in PropertyFlags[sizingPropIndex])) then
+                begin
+                    // Resize!
+                    if obj.SetInteger(sizingPropIndex, ValueCount, setterFlags) and (DSS.ErrorNumber = 0) then
+                    begin
+                        // If successful, retry from the start, since the pointer may have changed
+                        Exclude(setterFlags, TSetterFlag.AllowResizing);
+                        SetObjIntegers(ptr, Index, Value, ValueCount, setterFlags);
+                        Exit;
+                    end;
+                end;
+            end;
+            if maxSize <> ValueCount then
+            begin
+                DoSimpleMsg(
+                    '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
+                    [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
+                2020042);
+                Exit;
+            end;
+        end;
+        Result := true;
+    end;
+
 begin
     Obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
@@ -3262,8 +3310,8 @@ begin
             sizePtr := PInteger(PByte(obj) + PropertyOffset2[Index]);
             dataPtr := PPInteger(PByte(obj) + PropertyOffset[Index]);
             maxSize := sizePtr^;
-            if maxSize <> ValueCount then
-                Exit; //TODO: ERROR
+            if not checkSize() then
+                Exit;
                 
             if dataPtr^ = NIL then
             begin
@@ -3281,8 +3329,8 @@ begin
             else
                 maxSize := PropertyOffset3[Index];
 
-            if maxSize <> ValueCount then
-                Exit; //TODO: ERROR
+            if not checkSize() then
+                Exit;
 
             //TODO: validate -- if not TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalIsValid(Value^) then Exit;
 
@@ -3295,8 +3343,8 @@ begin
             // Number of items
             maxSize := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
 
-            if maxSize <> ValueCount then
-                Exit; //TODO: ERROR
+            if not checkSize() then
+                Exit;
 
             // Current position
             positionPtr := PInteger(PByte(obj) + PropertyStructArrayIndexOffset);
@@ -3324,8 +3372,9 @@ begin
 
             // Number of items
             maxSize := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
-            if maxSize <> ValueCount then
-                Exit; //TODO: ERROR
+
+            if not checkSize() then
+                Exit;
 
             if (PropertyType[Index] = TPropertyType.MappedStringEnumProperty) and (TPropertyFlag.OnArray in PropertyFlags[Index]) then
             begin
@@ -3719,7 +3768,7 @@ end;
 
 procedure TDSSClassHelper.SetObjStrings(ptr: Pointer; Index: Integer; Value: PPAnsiChar; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 var
-    i, maxSize, step, intVal: Integer;
+    i, sizingPropIndex, maxSize, step, intVal: Integer;
     positionPtr, integerPtr: PInteger;
     flags: TPropertyFlags;
     stringListPtr: PStringList;
@@ -3731,6 +3780,45 @@ var
     objs: Array of TDSSObject = NIL;
     otherObj: TDSSObject;
     otherObjPtr: TDSSObjectPtr;
+
+    function checkSize(): Boolean;
+    begin
+        Result := false;
+
+        if ((TPropertyFlag.ArrayMaxSize in flags) and (maxSize >= ValueCount)) or // Allow fewer elements for some properties
+            ((not (TPropertyFlag.ArrayMaxSize in flags)) and (maxSize <> ValueCount)) then 
+        begin
+            if TSetterFlag.AllowResizing in setterFlags then
+            begin
+                sizingPropIndex := PropertySizingPropertyIndex[Index];
+                if (sizingPropIndex > 0) and 
+                    // Disallow overwriting the size with different properties
+                    (not obj.PrpSpecified(sizingPropIndex)) and 
+                    // Only allow resizing if no explicit sizing property is actually exposed
+                    ((TPropertyFlag.SuppressJSON in PropertyFlags[sizingPropIndex])) then
+                begin
+                    // Resize!
+                    if obj.SetInteger(sizingPropIndex, ValueCount, setterFlags) and (DSS.ErrorNumber = 0) then
+                    begin
+                        // If successful, retry from the start, since the pointer may have changed
+                        Exclude(setterFlags, TSetterFlag.AllowResizing);
+                        SetObjStrings(ptr, Index, Value, ValueCount, setterFlags);
+                        Exit;
+                    end;
+                end;
+            end;
+            if maxSize <> ValueCount then
+            begin
+                DoSimpleMsg(
+                    '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
+                    [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
+                2020042);
+                Exit;
+            end;
+        end;
+        Result := true;
+    end;
+
 begin
     Obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
@@ -3887,8 +3975,8 @@ begin
             // Current position
             positionPtr := PInteger(PByte(obj) + PropertyStructArrayIndexOffset);
 
-            if ValueCount <> maxSize then
-                Exit; //TODO: error
+            if not checkSize() then
+                Exit;
 
             // Loop for no more than the expected number of items;  Ignore omitted values
             for i := 1 to maxSize do
@@ -3908,8 +3996,8 @@ begin
 
             integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
 
-            if ValueCount <> maxSize then
-                Exit; //TODO: error
+            if not checkSize() then
+                Exit;
 
             for i := 1 to maxSize do
             begin
@@ -3928,8 +4016,8 @@ begin
 
             // Number of items
             maxSize := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
-            if maxSize <> ValueCount then
-                Exit; //TODO: error
+            if not checkSize() then
+                Exit;
 
             // Current position
             positionPtr := PInteger(PByte(obj) + PropertyStructArrayIndexOffset);
