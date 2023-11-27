@@ -336,7 +336,7 @@ begin
     PropertyOffset2[ord(TProp.wires)] := ptruint(DSS.WireDataClass);
     PropertyWriteFunction[ord(TProp.wires)] := @SetWires;
     PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.FullNameAsJSONArray, TPropertyFlag.RequiredInSpecSet];
-    PropertyNameJSON[ord(TProp.wires)] := 'conductors';
+    PropertyNameJSON[ord(TProp.wires)] := 'Conductors';
 
     // matrices
     PropertyType[ord(TProp.rmatrix)] := TPropertyType.ComplexPartSymMatrixProperty;
