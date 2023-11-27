@@ -1778,7 +1778,7 @@ var
 begin
     Result := 0;
     propOffset := cls.PropertyOffset2[sizedPropIndex];
-    if cls.PropertyType[sizedPropIndex] in [TPropertyType.DoubleSymMatrixProperty, TPropertyType.ComplexPartSymMatrixProperty] then
+    if cls.PropertyType[sizedPropIndex] in [TPropertyType.DoubleSymMatrixProperty, TPropertyType.ComplexPartSymMatrixProperty, TPropertyType.DSSObjectReferenceArrayProperty] then
     begin
         propOffset := cls.PropertyOffset3[sizedPropIndex];
     end
