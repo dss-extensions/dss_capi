@@ -280,7 +280,7 @@ begin
     PropertyWriteFunction[ord(TProp.wires)] := @SetWires;
     PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.FullNameAsArray, TPropertyFlag.FullNameAsJSONArray];
     // PropertyRedundantWith[ord(TProp.wires)] := ord(TProp.wire);
-    PropertyNameJSON[ord(TProp.wires)] := 'conductors';
+    PropertyNameJSON[ord(TProp.wires)] := 'Conductors';
 
 
     // PropertyArrayAlternative[ord(TProp.wire)] := ord(TProp.wires);
