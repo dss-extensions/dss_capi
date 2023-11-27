@@ -277,6 +277,7 @@ begin
     PropertyType[ord(TProp.wires)] := TPropertyType.DSSObjectReferenceArrayProperty;
     PropertyOffset[ord(TProp.wires)] := ptruint(@obj.FWireData);
     PropertyOffset2[ord(TProp.wires)] := ptruint(DSS.WireDataClass);
+    PropertyOffset3[ord(TProp.wires)] := ptruint(@obj.FNConds);
     PropertyWriteFunction[ord(TProp.wires)] := @SetWires;
     PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.FullNameAsArray, TPropertyFlag.FullNameAsJSONArray];
     // PropertyRedundantWith[ord(TProp.wires)] := ord(TProp.wire);
