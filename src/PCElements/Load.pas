@@ -504,7 +504,7 @@ begin
     if (Idx > 0) and (Idx <= NumPropsThisClass) then
     begin
         if addedNeedsYprim and 
-            (TSetterFlag.AvoidYprimUpdate in setterFlags) and 
+            (TSetterFlag.AvoidFullRecalc in setterFlags) and 
             (TProp(idx) in [TProp.kvar, TProp.kW, TProp.model, TProp.pf, TProp.status, TProp.bus1, 
                             TProp.RelWeight, TProp.pctSeriesRL, TProp.ZIPV, TProp.kV,
                             TProp.Daily, TProp.Yearly, TProp.Growth, TProp.Duty]) then

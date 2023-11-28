@@ -63,14 +63,19 @@ type
     );
     
     TDSSPropertySetterFlag = (
-        AllowResizing = 0,
+        // Most array properties depend on sizes defined by other properties.
+        // Using this flag, many properties allow users to skip setting the other property
+        // directly, allowing the engine to use the size of the provided array to
+        // initialize the other property.
+        ImplicitSizes = 0,
 
-        // Some components like Loads don't need to update Yprim for every change, e.g. setting
-        // "load.a_load.kW=1" if was "kW" previously 2 should not force a Yprim update, if desired.
-        // Using this flag will reproduce what the classic OpenDSS API for Loads does, but
-        // removes a lot of duplicated code. Besides that, we can extend the feature for other
-        // components if we think it fits.
-        AvoidYprimUpdate = 1
+        // Some components like Loads don't need to update YPrim for every change, e.g. setting
+        // "`load.a_load.kW=1`" if was "kW" previously 2 should not force a YPrim update, but it does
+        // force an update by default.
+        // Using this flag will reproduce what the classic OpenDSS API for Loads (DSS.ActiveCircuit.Loads)
+        // does, but removes a lot of duplicated code. Besides that, we can extend the feature 
+        // for other components if we think it fits.
+        AvoidFullRecalc = 1
     );
     TSetterFlag = TDSSPropertySetterFlag;
     TDSSPropertySetterFlags = set of TDSSPropertySetterFlag;

@@ -1740,8 +1740,8 @@ begin
         // Only allow resizing if no explicit sizing property is actually exposed
         ((TPropertyFlag.SuppressJSON in PropertyFlags[sizingPropIndex]));
     //TODO: setterFlags := DSS.DefaultSetterFlags;
-    if (not allowSetSize) and (TSetterFlag.AllowResizing in setterFlags) then
-        Exclude(setterFlags, TSetterFlag.AllowResizing);
+    if (not allowSetSize) and (TSetterFlag.ImplicitSizes in setterFlags) then
+        Exclude(setterFlags, TSetterFlag.ImplicitSizes);
 
     flags := PropertyFlags[Index];
 
@@ -3270,7 +3270,7 @@ var
         if ((TPropertyFlag.ArrayMaxSize in flags) and (maxSize >= ValueCount)) or // Allow fewer elements for some properties
             ((not (TPropertyFlag.ArrayMaxSize in flags)) and (maxSize <> ValueCount)) then 
         begin
-            if TSetterFlag.AllowResizing in setterFlags then
+            if TSetterFlag.ImplicitSizes in setterFlags then
             begin
                 sizingPropIndex := PropertySizingPropertyIndex[Index];
                 if (sizingPropIndex > 0) and 
@@ -3283,7 +3283,7 @@ var
                     if obj.SetInteger(sizingPropIndex, ValueCount, setterFlags) and (DSS.ErrorNumber = 0) then
                     begin
                         // If successful, retry from the start, since the pointer may have changed
-                        Exclude(setterFlags, TSetterFlag.AllowResizing);
+                        Exclude(setterFlags, TSetterFlag.ImplicitSizes);
                         SetObjIntegers(ptr, Index, Value, ValueCount, setterFlags);
                         Exit;
                     end;
@@ -3562,16 +3562,16 @@ begin
                 intVal := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj);
                 sizePtr := @intVal;
                 // Cannot resize even if allowed
-                if TSetterFlag.AllowResizing in setterFlags then
-                    Exclude(setterFlags, TSetterFlag.AllowResizing);
+                if TSetterFlag.ImplicitSizes in setterFlags then
+                    Exclude(setterFlags, TSetterFlag.ImplicitSizes);
             end
             else
             if (ptype <> TPropertyType.DoubleFArrayProperty) then
             begin
                 sizePtr := PInteger(PByte(obj) + PropertyOffset2[Index]); // Size pointer
                 // Cannot resize even if allowed
-                if TSetterFlag.AllowResizing in setterFlags then
-                    Exclude(setterFlags, TSetterFlag.AllowResizing);
+                if TSetterFlag.ImplicitSizes in setterFlags then
+                    Exclude(setterFlags, TSetterFlag.ImplicitSizes);
             end;
 
             if (TPropertyFlag.AllowNone in flags) and (ValueCount = 0) then
@@ -3608,8 +3608,8 @@ begin
                     begin
                         maxSize := PropertyOffset3[Index];
                         // Cannot resize even if allowed
-                        if TSetterFlag.AllowResizing in setterFlags then
-                            Exclude(setterFlags, TSetterFlag.AllowResizing);
+                        if TSetterFlag.ImplicitSizes in setterFlags then
+                            Exclude(setterFlags, TSetterFlag.ImplicitSizes);
                     end
                     else
                         maxSize := sizePtr^;
@@ -3617,7 +3617,7 @@ begin
                     if ((TPropertyFlag.ArrayMaxSize in flags) and (maxSize >= ValueCount)) or // Allow fewer elements for some properties
                         ((not (TPropertyFlag.ArrayMaxSize in flags)) and (maxSize <> ValueCount)) then 
                     begin
-                        if TSetterFlag.AllowResizing in setterFlags then
+                        if TSetterFlag.ImplicitSizes in setterFlags then
                         begin
                             sizingPropIndex := PropertySizingPropertyIndex[Index];
                             if (sizingPropIndex > 0) and 
@@ -3630,7 +3630,7 @@ begin
                                 if obj.SetInteger(sizingPropIndex, ValueCount, setterFlags) and (DSS.ErrorNumber = 0) then
                                 begin
                                     // If successful, retry from the start, since the pointer may have changed
-                                    Exclude(setterFlags, TSetterFlag.AllowResizing);
+                                    Exclude(setterFlags, TSetterFlag.ImplicitSizes);
                                     SetObjDoubles(ptr, Index, Value, ValueCount, setterFlags);
                                     Exit;
                                 end;
@@ -3788,7 +3788,7 @@ var
         if ((TPropertyFlag.ArrayMaxSize in flags) and (maxSize >= ValueCount)) or // Allow fewer elements for some properties
             ((not (TPropertyFlag.ArrayMaxSize in flags)) and (maxSize <> ValueCount)) then 
         begin
-            if TSetterFlag.AllowResizing in setterFlags then
+            if TSetterFlag.ImplicitSizes in setterFlags then
             begin
                 sizingPropIndex := PropertySizingPropertyIndex[Index];
                 if (sizingPropIndex > 0) and 
@@ -3801,7 +3801,7 @@ var
                     if obj.SetInteger(sizingPropIndex, ValueCount, setterFlags) and (DSS.ErrorNumber = 0) then
                     begin
                         // If successful, retry from the start, since the pointer may have changed
-                        Exclude(setterFlags, TSetterFlag.AllowResizing);
+                        Exclude(setterFlags, TSetterFlag.ImplicitSizes);
                         SetObjStrings(ptr, Index, Value, ValueCount, setterFlags);
                         Exit;
                     end;
@@ -4789,8 +4789,8 @@ begin
     propIndex := -1;
     Result := false;
     dssObj := TDSSObject(obj);
-    if not (TSetterFlag.AllowResizing in setterFlags) then
-        Include(setterFlags, TSetterFlag.AllowResizing);
+    if not (TSetterFlag.ImplicitSizes in setterFlags) then
+        Include(setterFlags, TSetterFlag.ImplicitSizes);
 
     for i := 1 to High(AltPropertyOrder) do
     begin
