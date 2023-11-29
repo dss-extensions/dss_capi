@@ -591,6 +591,8 @@ begin
                 FUnitsConvert := FUnitsConvert * ConvertLineUnits(previousIntVal, LengthUnits);
             
             UserLengthUnits := LengthUnits;
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+                YprimInvalid := true;
         end;
     end;
 
@@ -715,13 +717,34 @@ begin
     end;
 
     case Idx of
-        3..14: // TODO: check -- looks incomplete
+        ord(TProp.LineCode),
+        ord(TProp.Length),
+        ord(TProp.Phases),
+        ord(TProp.R1),
+        ord(TProp.X1),
+        ord(TProp.R0),
+        ord(TProp.X0),
+        ord(TProp.C1),
+        ord(TProp.C0),
+        ord(TProp.RMatrix),
+        ord(TProp.XMatrix),
+        ord(TProp.CMatrix):
             //YPrim invalidation on anything that changes impedance values
             YprimInvalid := TRUE;
+
+        ord(TProp.Rg),
+        ord(TProp.Xg):
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+                YprimInvalid := true;
+
         ord(TProp.rho):
         begin
             if LineGeometryObj <> NIL then
+            begin
                 LineGeometryObj.rhoearth := rho; // TODO: This is weird
+                if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+                    YprimInvalid := true;
+            end;
         end;
         ord(TProp.Seasons), 
         ord(TProp.Ratings),
