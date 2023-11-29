@@ -67,7 +67,7 @@ function DSS_GetAsPAnsiChar(DSS: TDSSContext; s: Ansistring): PAnsiChar;
 procedure ctx_DSS_ResetStringBuffer(DSS: TDSSContext); CDECL;
 procedure DSS_ResetStringBuffer(); CDECL;
 
-function DSS_CopyStringAsPChar(s: Ansistring): PAnsiChar; // TODO: check possible memory leaks for := DSS_CopyStringAsPChar('NONE')
+function DSS_CopyStringAsPChar(s: Ansistring): PAnsiChar;
 
 procedure DSS_Dispose_PByte(var p: PByte); CDECL;
 procedure DSS_Dispose_PSingle(var p: PSingle); CDECL;
@@ -699,7 +699,10 @@ var
     elem: TDSSObject;
 begin
     if pList.Count <= 0 then
+    begin
+        DefaultResult(ResultPtr, ResultCount); // For backwards compatibility.
         Exit;
+    end;
     DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pList.Count);
     idx_before := pList.ActiveIndex;
     k := 0;

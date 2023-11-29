@@ -104,9 +104,11 @@ end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
-    DefaultResult(ResultPtr, ResultCount);
     if InvalidCircuit(DSSPrime) then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
+    end;
 
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.ShuntCapacitors, False);
 end;

@@ -90,9 +90,11 @@ end;
 //------------------------------------------------------------------------------
 procedure Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
-    DefaultResult(ResultPtr, ResultCount);
     if InvalidCircuit(DSSPrime) then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
+    end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Monitors, False);
 end;
 
@@ -391,12 +393,17 @@ var
     ListSize: Integer;
     pMon: TMonitorObj;
 begin
-    DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(DSSPrime, pMon) then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
+    end;
 
     if pMon.RecordSize <= 0 then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
+    end;
 
     ListSize := pMon.RecordSize;
     DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, ListSize);
