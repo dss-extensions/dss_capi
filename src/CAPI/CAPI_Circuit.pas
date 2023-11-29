@@ -336,24 +336,45 @@ end;
 
 //------------------------------------------------------------------------------
 procedure Circuit_Disable(const ElementName: PAnsiChar); CDECL;
-begin
-    if InvalidCircuit(DSSPrime) then
-        Exit;
-    //TODO: fail on invalid names
-    DSSPrime.ActiveCircuit.SetElementActive(ElementName);
-    if DSSPrime.ActiveCircuit.ActiveCktElement <> NIL then
-        DSSPrime.ActiveCircuit.ActiveCktElement.Enabled := FALSE;
-end;
-//------------------------------------------------------------------------------
-procedure Circuit_Enable(const ElementName: PAnsiChar); CDECL;
+var
+    nameStr: String;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
 
-    //TODO: fail on invalid names        
-    DSSPrime.ActiveCircuit.SetElementActive(ElementName);
+    nameStr := ElementName;
+    DSSPrime.ActiveCircuit.SetElementActive(nameStr);
     if DSSPrime.ActiveCircuit.ActiveCktElement <> NIL then
+    begin
+        DSSPrime.ActiveCircuit.ActiveCktElement.Enabled := FALSE;
+        Exit;
+    end;
+    if (DSS_CAPI_EXT_ERRORS) then
+    begin
+        DoSimpleMsg(DSSPrime, 'No element with name "%s" was found in this circuit.', [nameStr], 97896);
+        Exit;
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure Circuit_Enable(const ElementName: PAnsiChar); CDECL;
+var
+    nameStr: String;
+begin
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+
+    nameStr := ElementName;
+    DSSPrime.ActiveCircuit.SetElementActive(nameStr);
+    if DSSPrime.ActiveCircuit.ActiveCktElement <> NIL then
+    begin
         DSSPrime.ActiveCircuit.ActiveCktElement.Enabled := TRUE;
+        Exit;
+    end;
+    if (DSS_CAPI_EXT_ERRORS) then
+    begin
+        DoSimpleMsg(DSSPrime, 'No element with name "%s" was found in this circuit.', [nameStr], 97896);
+        Exit;
+    end;
 end;
 //------------------------------------------------------------------------------
 function Circuit_FirstPDElement(): Integer; CDECL;
