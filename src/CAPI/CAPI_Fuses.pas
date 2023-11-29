@@ -329,8 +329,6 @@ begin
         Exit;
 
     elem.ControlledElement.Closed[0] := FALSE; // Open all phases
-
-    // TODO: check why original code doesn't do this (see related issue with GetPropertyValue)
     for i := 1 to elem.ControlledElement.NPhases do 
         elem.FPresentState[i] := CTRL_OPEN; // Open all phases
 end;
