@@ -45,7 +45,16 @@ type
     dss_obj_float64_int32_function_t = function (obj: Pointer; funcArg: Integer): Double; CDECL;
     // dss_obj_int32_int32_function_t = function (obj: Pointer): Integer; CDECL;
 
-//TODO: decise if we want to expose the metadata (property index, name and type) now or later
+{$SCOPEDENUMS ON}
+{$PUSH}
+{$Z4} // keep enums as int32 values
+    BatchOp = (
+        SetValues = 0,
+        Multiply = 1,
+        Increment = 2
+    );
+{$POP}    
+{$SCOPEDENUMS OFF}
 
 // The classic API keeps the string buffer in the global state,
 // but since this new API wants to avoid that, users must dispose
@@ -122,8 +131,8 @@ procedure Batch_GetFloat64FromFunc2(var ResultPtr: PDouble; ResultCount: PAPISiz
 procedure Batch_GetInt32FromFunc(var ResultPtr: PInteger; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; func: dss_obj_int32_function_t); CDECL;
 
 // procedure Batch_SetAsString(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PAnsiChar); CDECL;
-procedure Batch_Float64(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
-procedure Batch_Int32(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_Float64(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: BatchOp; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_Int32(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: BatchOp; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
 procedure Batch_SetString(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
 procedure Batch_SetObject(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags); CDECL;
 
@@ -146,8 +155,8 @@ procedure Batch_GetAsStringS(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; b
 procedure Batch_GetObjectS(var ResultPtr: PPointer; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; Name: PChar); CDECL;
 
 // procedure Batch_SetAsStringS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PAnsiChar); CDECL;
-procedure Batch_Float64S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
-procedure Batch_Int32S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_Float64S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: BatchOp; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_Int32S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: BatchOp; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
 procedure Batch_SetStringS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
 procedure Batch_SetObjectS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags); CDECL;
 
@@ -183,12 +192,6 @@ uses
     jsonparser,
     Bus,
     DateUtils;
-
-const
-    // TODO: enum?
-    Batch_Set = 0;
-    Batch_Multiply = 1;
-    Batch_Increment = 2;
 
 procedure DSS_Dispose_String(S: PAnsiChar); CDECL;
 begin
@@ -611,7 +614,6 @@ begin
             // - Transformer: MaxTap, MinTap, RdcOhms, NumTaps, Rneut, Xneut
             // - AutoTrans: MaxTap, MinTap, RdcOhms, NumTaps
             // - XfmrCode: MaxTap, MinTap, RdcOhms, NumTaps, Rneut, Xneut
-            //TODO: validate Line in JSON
             if (TPropertyFlag.Redundant in cls.PropertyFlags[iProp]) and
                 (cls.PropertyRedundantWith[iProp] <> 0) and (
                     (TPropertyFlag.OnArray in cls.PropertyFlags[iProp]) or
@@ -1269,7 +1271,7 @@ begin
     end;
 end;
 
-procedure Batch_Float64(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_Float64(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: BatchOp; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     cls: TDSSClass;
     propOffset: PtrUint;
@@ -1298,7 +1300,7 @@ begin
         (cls.PropertyScale[Index] = 1) then
     begin
         case Operation of
-            Batch_Multiply:
+            BatchOp.Multiply:
                 for i := 1 to batchSize do
                 begin
                     singleEdit := not (Flg.EditingActive in batch^.Flags);
@@ -1315,7 +1317,7 @@ begin
                         cls.EndEdit(batch^, 1);
                     inc(batch);
                 end;
-            Batch_Increment:
+            BatchOp.Increment:
                 for i := 1 to batchSize do
                 begin
                     singleEdit := not (Flg.EditingActive in batch^.Flags);
@@ -1355,13 +1357,13 @@ begin
     end;
 
     case Operation of
-        Batch_Multiply:
+        BatchOp.Multiply:
             for i := 1 to batchSize do
             begin
                 batch^.SetDouble(Index, Value * cls.GetObjDouble(batch^, Index), setterFlags);
                 inc(batch);
             end;
-        Batch_Increment:
+        BatchOp.Increment:
             for i := 1 to batchSize do
             begin
                 batch^.SetDouble(Index, Value + cls.GetObjDouble(batch^, Index), setterFlags);
@@ -1376,7 +1378,7 @@ begin
     end;
 end;
 
-procedure Batch_Int32(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_Int32(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: BatchOp; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     cls: TDSSClass;
     // propOffset: PtrUint;
@@ -1404,7 +1406,7 @@ begin
     ]) then
         Exit;
 
-    if (ptype in [TPropertyType.BooleanProperty, TPropertyType.EnabledProperty, TPropertyType.BooleanActionProperty]) and not (Operation in [Batch_Increment]) then
+    if (ptype in [TPropertyType.BooleanProperty, TPropertyType.EnabledProperty, TPropertyType.BooleanActionProperty]) and not (Operation in [BatchOp.Increment]) then
     begin
         Value := Integer(LongBool(value <> 0));
     end;
@@ -1430,13 +1432,13 @@ begin
     // end;
 
     case Operation of
-        Batch_Multiply:
+        BatchOp.Multiply:
             for i := 1 to batchSize do
             begin
                 batch^.SetInteger(Index, Value * cls.GetObjInteger(batch^, Index), setterFlags);
                 inc(batch);
             end;
-        Batch_Increment:
+        BatchOp.Increment:
             for i := 1 to batchSize do
             begin
                 batch^.SetInteger(Index, Value + cls.GetObjInteger(batch^, Index), setterFlags);
@@ -1881,7 +1883,7 @@ end;
 //     Batch_SetAsString(batch, batchSize, propIdx, Value);
 // end;
 
-procedure Batch_Float64S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_Float64S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: BatchOp; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     propIdx: Integer;
 begin
@@ -1894,7 +1896,7 @@ begin
     Batch_Float64(batch, batchSize, propIdx, Operation, Value, setterFlags);
 end;
 
-procedure Batch_Int32S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_Int32S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: BatchOp; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     propIdx: Integer;
 begin
