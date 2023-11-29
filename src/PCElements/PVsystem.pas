@@ -1830,7 +1830,7 @@ var
     i: Integer;
     // V012, I012: array[0..2] of Complex;
     NeutAmps: Complex;
-    Vthev: Complex;
+    // Vthev: Complex;
     iActual: Double;
     Theta: Double; // phase angle of thevinen source
 
@@ -1849,7 +1849,7 @@ var
             else
                 Theta := LastThevAngle;
 
-            Vthev := pclx(VthevMagDyn, Theta); //TODO: check why it's unused
+            // Vthev := pclx(VthevMagDyn, Theta);
             LastThevAngle := Theta;     // remember this for angle persistence
         end;
     end;

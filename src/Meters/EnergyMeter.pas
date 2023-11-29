@@ -1744,10 +1744,7 @@ begin
         Include(pde.Flags, Flg.Checked);
         Inc(pde.BranchTotalCustomers, pde.BranchNumCustomers);
         if pde.ParentPDElement <> NIL then
-            //TODO: check
-            if (Flg.HasOCPDevice in pde.Flags) and AssumeRestoration and (Flg.HasAutoOCPDevice in pde.Flags) then
-                Inc(pde.ParentPDElement.BranchTotalCustomers, 0)
-            else
+            if not ((Flg.HasOCPDevice in pde.Flags) and AssumeRestoration and (Flg.HasAutoOCPDevice in pde.Flags)) then
                 Inc(pde.ParentPDElement.BranchTotalCustomers, pde.BranchTotalCustomers);
     end;
 end;

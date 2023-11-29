@@ -411,10 +411,7 @@ begin
         ctx.NumCircuits := 0;
         ctx.Circuits.Free;
         ctx.Circuits := TDSSPointerList.Create(2);   // Make a new list of circuits
-        
-        //TODO: check why v8 does this:
-        // FreeAndNil(Parser);
-        
+
         // Revert on key global flags to Original States
         ctx.DefaultEarthModel := DERI;
         ctx.LogQueries := FALSE;
