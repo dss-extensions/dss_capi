@@ -744,7 +744,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.SetDouble(ord(TLineProp.Rg), Value, []); //TODO: it doesn't seem to set YPrimInvalid
+    elem.SetDouble(ord(TLineProp.Rg), Value, []);
+    // NOTE: for Rg, Xg and Rho, we only form YprimInvalid=true here
+    //       to ensure it happens if the user has SkipSideEffects enabled,
+    //       since the original code in Line.pas did not set YprimInvalid
+    //       when changing the properties. 
     elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
@@ -754,7 +758,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.SetDouble(ord(TLineProp.rho), Value, []); //TODO: it doesn't seem to set YPrimInvalid
+    elem.SetDouble(ord(TLineProp.rho), Value, []);
     elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
@@ -764,7 +768,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.SetDouble(ord(TLineProp.xg), Value, []); //TODO: it doesn't seem to set YPrimInvalid
+    elem.SetDouble(ord(TLineProp.xg), Value, []);
     elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
