@@ -155,6 +155,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.kVBase := Value;
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+    begin
+        elem.PropertySideEffects(ord(TVsourceProp.BasekV), 0, []);
+        elem.RecalcElementData();
+        elem.YPrimInvalid := true;
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Vsources_Set_pu(Value: Double); CDECL;
@@ -164,6 +170,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.PerUnit := Value;
+    //TODO: could be missing side-effects
 end;
 //------------------------------------------------------------------------------
 function Vsources_Get_AngleDeg(): Double; CDECL;
@@ -217,6 +224,7 @@ end;
 procedure Vsources_Set_Phases(Value: Integer); CDECL;
 var
     elem: TVsourceObj;
+    prev: Integer;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
@@ -226,8 +234,14 @@ begin
         DoSimpleMsg(DSSPrime, '%s: Number of phases must be a positive integer!', [elem.FullName], 6568);
         Exit;
     end;
+    prev := elem.FNphases;
     elem.FNphases := Value;
-    //TODO: missing side-effects?
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+    begin
+        elem.PropertySideEffects(ord(TVsourceProp.phases), prev, []);
+        elem.RecalcElementData();
+        elem.YPrimInvalid := true;
+    end;
 end;
 //------------------------------------------------------------------------------
 function Vsources_Get_idx(): Integer; CDECL;
