@@ -1553,9 +1553,11 @@ var
     k: Integer;
     ListSize: Integer;
 begin
-    DefaultResult(ResultPtr, ResultCount);
     if pmon.RecordSize <= 0 then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
+    end;
 
     ListSize := pmon.RecordSize;
     DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, ListSize);

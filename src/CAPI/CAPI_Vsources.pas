@@ -63,9 +63,11 @@ end;
 //------------------------------------------------------------------------------
 procedure Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
-    DefaultResult(ResultPtr, ResultCount);
     if InvalidCircuit(DSSPrime) then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
+    end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.VsourceClass.ElementList, False);
 end;
 

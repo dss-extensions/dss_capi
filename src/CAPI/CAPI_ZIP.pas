@@ -76,11 +76,11 @@ var
     i: Integer;
     rex: TRegExpr = NIL;
 begin
-    DefaultResult(ResultPtr, ResultCount);
     unzipper := TUnZipper(DSSPrime.unzipper);
     if unzipper = NIL then
     begin
         DoSimpleMsg(DSSPrime, _('No ZIP file is open.'), 89892);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     if RegExp <> NIL then

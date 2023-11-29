@@ -788,9 +788,11 @@ procedure CktElement_Get_AllVariableNames(var ResultPtr: PPAnsiChar; ResultCount
 var
     elem: TDSSCktElement;
 begin
-    DefaultResult(ResultPtr, ResultCount, '');
     if InvalidCktElement(DSSPrime, elem, True) then
+    begin
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
+    end;
     Alt_PCE_Get_VariableNames(ResultPtr, ResultCount, elem as TPCElement);
 end;
 

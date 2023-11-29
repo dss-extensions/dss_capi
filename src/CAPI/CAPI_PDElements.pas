@@ -328,13 +328,18 @@ var
     elem: TPDElement;
     pList: TDSSPointerList;
 begin
-    DefaultResult(ResultPtr, ResultCount);
     if InvalidCircuit(DSSPrime) then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
+    end;
 
     pList := DSSPrime.ActiveCircuit.PDElements;
     if pList.Count <= 0 then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
+    end;
     
     idx_before := pList.ActiveIndex;
     k := 0;

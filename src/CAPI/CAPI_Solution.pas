@@ -983,13 +983,18 @@ var
     IMIdx,
     ArrSize: Integer;
 begin
-    DefaultResult(ResultPtr, ResultCount, '');
     if InvalidCircuit(DSSPrime) then
+    begin
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
+    end;
     if DSSPrime.IncMat_Ordered then
     begin
         if DSSPrime.ActiveCircuit.Solution.Inc_Mat_Cols = NIL then
+        begin
+            DefaultResult(ResultPtr, ResultCount, '');
             Exit;
+        end;
             
         ArrSize := length(DSSPrime.ActiveCircuit.Solution.Inc_Mat_Cols);
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, ArrSize);
@@ -1001,7 +1006,10 @@ begin
     else
     begin
         if DSSPrime.ActiveCircuit.NumBuses = 0 then
+        begin
+            DefaultResult(ResultPtr, ResultCount, '');
             Exit;
+        end;
 
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.NumBuses);
         for i := 0 to DSSPrime.ActiveCircuit.NumBuses - 1 do

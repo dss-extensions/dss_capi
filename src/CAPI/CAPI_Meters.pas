@@ -135,9 +135,11 @@ end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
-    DefaultResult(ResultPtr, ResultCount);
     if InvalidCircuit(DSSPrime) then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
+    end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.EnergyMeters, False);
 end;
 
@@ -495,15 +497,23 @@ var
     elem: TDSSCktElement;
     node: TCktTreeNode;
 begin
-    DefaultResult(ResultPtr, ResultCount, '');
     if not _activeObj(DSSPrime, pMeterObj) then
+    begin
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
+    end;
 
     if not pMeterObj.CheckBranchList(5502) then
+    begin
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
+    end;
     
     if pMeterObj.BranchList.ZoneEndsList = NIL then
+    begin
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
+    end;
 
     num := pMeterObj.BranchList.ZoneEndsList.NumEnds;
     DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, num);
@@ -555,17 +565,25 @@ var
     BranchCount: Integer;
     pElem: TDSSCktElement;
 begin
-    DefaultResult(ResultPtr, ResultCount, '');
     if not _activeObj(DSSPrime, pMeterObj) then
+    begin
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
+    end;
 
     if not pMeterObj.CheckBranchList(5501) then
+    begin
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
+    end;
 
     // Get count of branches
     BranchCount := Meters_Get_CountBranches();
     if BranchCount <= 0 then 
+    begin
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
+    end;
         
     DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, BranchCount);
     pElem := pMeterObj.BranchList.First();
