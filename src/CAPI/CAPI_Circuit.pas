@@ -503,8 +503,10 @@ begin
     DSSPrime.ActiveCircuit.CapacityStart := Start;
     DSSPrime.ActiveCircuit.CapacityIncrement := Increment;
     if DSSPrime.ActiveCircuit.ComputeCapacity then
-        //TODO: replace magic numbers
-        Result := DSSPrime.ActiveCircuit.RegisterTotals[3] + DSSPrime.ActiveCircuit.RegisterTotals[19]
+        Result := (
+            DSSPrime.ActiveCircuit.RegisterTotals[ord(EMRegister.MaxkW)] + 
+            DSSPrime.ActiveCircuit.RegisterTotals[ord(EMRegister.GenMaxkW)]
+        )
     else
         Result := 0.0;
 end;

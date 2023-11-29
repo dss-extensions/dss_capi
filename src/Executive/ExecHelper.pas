@@ -2802,8 +2802,10 @@ begin
     with DSS.ActiveCircuit do
         if ComputeCapacity then
         begin   // Totalizes EnergyMeters at End
-
-            DSS.GlobalResult := Format('%-.6g', [(DSS.ActiveCircuit.RegisterTotals[3] + DSS.ActiveCircuit.RegisterTotals[19])]);  // Peak KW in Meters
+            DSS.GlobalResult := Format('%-.6g', [
+                DSS.ActiveCircuit.RegisterTotals[ord(EMRegister.MaxkW)] + 
+                DSS.ActiveCircuit.RegisterTotals[ord(EMRegister.GenMaxkW)]
+            ]);  // Peak KW in Meters
             AppendGlobalResult(DSS, Format('%-.6g', [LoadMultiplier]));
         end;
 end;

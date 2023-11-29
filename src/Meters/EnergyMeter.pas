@@ -59,41 +59,6 @@ uses
 const
     NumEMVbase = 7;
     NumEMRegisters = 32 + 5 * NumEMVbase;   // Total Number of energy meter registers
-    
-    // Fixed Registers
-    Reg_kWh = 1;
-    Reg_kvarh = 2;
-    Reg_MaxkW = 3;
-    Reg_MaxkVA = 4;
-    Reg_ZonekWh = 5;
-    Reg_Zonekvarh = 6;
-    Reg_ZoneMaxkW = 7;
-    Reg_ZoneMaxkVA = 8;
-    Reg_OverloadkWhNorm = 9;    // Max overload
-    Reg_OverloadkWhEmerg = 10;
-    Reg_LoadEEN = 11;
-    Reg_LoadUE = 12;  // Energy served below normal voltage
-    Reg_ZoneLosseskWh = 13;
-    Reg_ZoneLosseskvarh = 14;
-    Reg_LossesMaxkW = 15;
-    Reg_LossesMaxkvar = 16;
-    Reg_LoadLosseskWh = 17;
-    Reg_LoadLosseskvarh = 18;
-    Reg_NoLoadLosseskWh = 19;
-    Reg_NoLoadLosseskvarh = 20;
-    Reg_MaxLoadLosses = 21;
-    Reg_MaxNoLoadLosses = 22;
-    Reg_LineLosseskWh = 23;
-    Reg_TransformerLosseskWh = 24;
-    Reg_LineModeLineLoss = 25;    // for 3-phase feeder lines
-    Reg_ZeroModeLineLoss = 26;
-    Reg_3_phaseLineLoss = 27;
-    Reg_1_phaseLineLoss = 28;
-    Reg_GenkWh = 29;
-    Reg_Genkvarh = 30;
-    Reg_GenMaxkW = 31;
-    Reg_GenMaxkVA = 32;
-    Reg_VBaseStart = 32;  // anchor for the voltage base loss registers
 
 type
 {$SCOPEDENUMS ON}
@@ -150,6 +115,44 @@ type
         SAIDI = 22, // Read only
         CAIDI = 23, // Read only
         CustInterrupts = 24 // Read only
+    );
+
+    EMRegister = (
+        INVALID = 0,
+        // Fixed Registers
+        kWh = 1,
+        kvarh = 2,
+        MaxkW = 3,
+        MaxkVA = 4,
+        ZonekWh = 5,
+        Zonekvarh = 6,
+        ZoneMaxkW = 7,
+        ZoneMaxkVA = 8,
+        OverloadkWhNorm = 9,
+        OverloadkWhEmerg = 10,
+        LoadEEN = 11,
+        LoadUE = 12,
+        ZoneLosseskWh = 13,
+        ZoneLosseskvarh = 14,
+        LossesMaxkW = 15,
+        LossesMaxkvar = 16,
+        LoadLosseskWh = 17,
+        LoadLosseskvarh = 18,
+        NoLoadLosseskWh = 19,
+        NoLoadLosseskvarh = 20,
+        MaxLoadLosses = 21,
+        MaxNoLoadLosses = 22,
+        LineLosseskWh = 23,
+        TransformerLosseskWh = 24,
+        LineModeLineLoss = 25,
+        ZeroModeLineLoss = 26,
+        ThreePhaseLineLoss = 27,
+        OnePhaseLineLoss = 28,
+        GenkWh = 29,
+        Genkvarh = 30,
+        GenMaxkW = 31,
+        GenMaxkVA = 32,
+        VBaseStart = 32  // anchor for the voltage base loss registers
     );
 {$SCOPEDENUMS OFF}
 
@@ -992,7 +995,7 @@ begin
     VBaseNoLoadLosses := NIL;
     VBaseLoad := NIL;
     VBaseCount := 0;
-    MaxVBaseCount := (NumEMRegisters - Reg_VBaseStart) div 5;
+    MaxVBaseCount := (NumEMRegisters - ord(EMRegister.VBaseStart)) div 5;
     ReallocMem(VBaseList, MaxVBaseCount * SizeOf(VBaseList[1]));
     ReallocMem(VBaseTotalLosses, MaxVBaseCount * SizeOf(VBaseTotalLosses[1]));
     ReallocMem(VBaseLineLosses, MaxVBaseCount * SizeOf(VBaseLineLosses[1]));
@@ -1208,17 +1211,17 @@ begin
     for i := 1 to NumEMregisters do
         Derivatives[i] := 0.0;
     // Initialize DragHand registers to some big negative number
-    Registers[Reg_MaxkW] := -1.0e50;
-    Registers[Reg_MaxkVA] := -1.0e50;
-    Registers[Reg_ZoneMaxkW] := -1.0e50;
-    Registers[Reg_ZoneMaxkVA] := -1.0e50;
-    Registers[Reg_MaxLoadLosses] := -1.0e50;
-    Registers[Reg_MaxNoLoadLosses] := -1.0e50;
-    Registers[Reg_LossesMaxkW] := -1.0e50;
-    Registers[Reg_LossesMaxkvar] := -1.0e50;
+    Registers[ord(EMRegister.MaxkW)] := -1.0e50;
+    Registers[ord(EMRegister.MaxkVA)] := -1.0e50;
+    Registers[ord(EMRegister.ZoneMaxkW)] := -1.0e50;
+    Registers[ord(EMRegister.ZoneMaxkVA)] := -1.0e50;
+    Registers[ord(EMRegister.MaxLoadLosses)] := -1.0e50;
+    Registers[ord(EMRegister.MaxNoLoadLosses)] := -1.0e50;
+    Registers[ord(EMRegister.LossesMaxkW)] := -1.0e50;
+    Registers[ord(EMRegister.LossesMaxkvar)] := -1.0e50;
 
-    Registers[Reg_GenMaxkW] := -1.0e50;
-    Registers[Reg_GenMaxkVA] := -1.0e50;
+    Registers[ord(EMRegister.GenMaxkW)] := -1.0e50;
+    Registers[ord(EMRegister.GenMaxkVA)] := -1.0e50;
 
     FirstSampleAfterReset := TRUE;  // initialize for trapezoidal integration
    // Removed .. open in solution loop See Solve Yearly If EnergyMeterClass.SaveDemandInterval Then OpenDemandIntervalFile;
@@ -1344,10 +1347,10 @@ begin
     S_Local := MeteredElement.Power[MeteredTerminal] * 0.001;
     S_Local_kVA := Cabs(S_Local);
     DSS.EnergyMeterClass.Delta_Hrs := DSS.ActiveCircuit.Solution.IntervalHrs;
-    Integrate(Reg_kWh, S_Local.re, DSS.EnergyMeterClass.Delta_Hrs);   // Accumulate the power
-    Integrate(Reg_kvarh, S_Local.im, DSS.EnergyMeterClass.Delta_Hrs);
-    SetDragHandRegister(Reg_MaxkW, S_Local.re);   // 3-10-04 removed abs()
-    SetDragHandRegister(Reg_MaxkVA, S_Local_kVA);
+    Integrate(ord(EMRegister.kWh), S_Local.re, DSS.EnergyMeterClass.Delta_Hrs);   // Accumulate the power
+    Integrate(ord(EMRegister.kvarh), S_Local.im, DSS.EnergyMeterClass.Delta_Hrs);
+    SetDragHandRegister(ord(EMRegister.MaxkW), S_Local.re);   // 3-10-04 removed abs()
+    SetDragHandRegister(ord(EMRegister.MaxkVA), S_Local_kVA);
 
     // Compute Maximum overload energy in all branches in zone
     // and mark all load downline from an overloaded branch as unserved
@@ -1596,29 +1599,29 @@ begin
     Delta_hrs_local := DSS.EnergyMeterClass.Delta_Hrs;
     
     // NOTE: Integrate proc automatically sets derivatives array
-    Integrate(Reg_LoadEEN, TotalLoad_EEN, Delta_hrs_local);
-    Integrate(Reg_LoadUE, TotalLoad_UE, Delta_hrs_local);
+    Integrate(ord(EMRegister.LoadEEN), TotalLoad_EEN, Delta_hrs_local);
+    Integrate(ord(EMRegister.LoadUE), TotalLoad_UE, Delta_hrs_local);
 
     // Accumulate losses in appropriate registers
-    Integrate(Reg_ZoneLosseskWh, TotalLosses.re, Delta_hrs_local);
-    Integrate(Reg_ZoneLosseskvarh, TotalLosses.im, Delta_hrs_local);
-    Integrate(Reg_LoadLosseskWh, TotalLoadLosses.re, Delta_hrs_local);
-    Integrate(Reg_LoadLosseskvarh, TotalLoadLosses.im, Delta_hrs_local);
-    Integrate(Reg_NoLoadLosseskWh, TotalNoLoadLosses.re, Delta_hrs_local);
-    Integrate(Reg_NoLoadLosseskvarh, TotalNoLoadLosses.im, Delta_hrs_local);
-    Integrate(Reg_LineLosseskWh, TotalLineLosses.re, Delta_hrs_local);
-    Integrate(Reg_LineModeLineLoss, TotalLineModeLosses.re, Delta_hrs_local);
-    Integrate(Reg_ZeroModeLineLoss, TotalZeroModeLosses.re, Delta_hrs_local);
-    Integrate(Reg_3_phaseLineLoss, Total3phaseLosses.re, Delta_hrs_local);
-    Integrate(Reg_1_phaseLineLoss, Total1phaseLosses.re, Delta_hrs_local);
-    Integrate(Reg_TransformerLosseskWh, TotalTransformerLosses.re, Delta_hrs_local);
+    Integrate(ord(EMRegister.ZoneLosseskWh), TotalLosses.re, Delta_hrs_local);
+    Integrate(ord(EMRegister.ZoneLosseskvarh), TotalLosses.im, Delta_hrs_local);
+    Integrate(ord(EMRegister.LoadLosseskWh), TotalLoadLosses.re, Delta_hrs_local);
+    Integrate(ord(EMRegister.LoadLosseskvarh), TotalLoadLosses.im, Delta_hrs_local);
+    Integrate(ord(EMRegister.NoLoadLosseskWh), TotalNoLoadLosses.re, Delta_hrs_local);
+    Integrate(ord(EMRegister.NoLoadLosseskvarh), TotalNoLoadLosses.im, Delta_hrs_local);
+    Integrate(ord(EMRegister.LineLosseskWh), TotalLineLosses.re, Delta_hrs_local);
+    Integrate(ord(EMRegister.LineModeLineLoss), TotalLineModeLosses.re, Delta_hrs_local);
+    Integrate(ord(EMRegister.ZeroModeLineLoss), TotalZeroModeLosses.re, Delta_hrs_local);
+    Integrate(ord(EMRegister.ThreePhaseLineLoss), Total3phaseLosses.re, Delta_hrs_local);
+    Integrate(ord(EMRegister.OnePhaseLineLoss), Total1phaseLosses.re, Delta_hrs_local);
+    Integrate(ord(EMRegister.TransformerLosseskWh), TotalTransformerLosses.re, Delta_hrs_local);
     for i := 1 to MaxVBaseCount do
     begin
-        Integrate(Reg_VbaseStart + i, VBaseTotalLosses[i], Delta_hrs_local);
-        Integrate(Reg_VbaseStart + 1 * MaxVBaseCount + i, VBaseLineLosses[i], Delta_hrs_local);
-        Integrate(Reg_VbaseStart + 2 * MaxVBaseCount + i, VBaseLoadLosses[i], Delta_hrs_local);
-        Integrate(Reg_VbaseStart + 3 * MaxVBaseCount + i, VBaseNoLoadLosses[i], Delta_hrs_local);
-        Integrate(Reg_VbaseStart + 4 * MaxVBaseCount + i, VBaseLoad[i], Delta_hrs_local);
+        Integrate(ord(EMRegister.VbaseStart) + i, VBaseTotalLosses[i], Delta_hrs_local);
+        Integrate(ord(EMRegister.VbaseStart) + 1 * MaxVBaseCount + i, VBaseLineLosses[i], Delta_hrs_local);
+        Integrate(ord(EMRegister.VbaseStart) + 2 * MaxVBaseCount + i, VBaseLoadLosses[i], Delta_hrs_local);
+        Integrate(ord(EMRegister.VbaseStart) + 3 * MaxVBaseCount + i, VBaseNoLoadLosses[i], Delta_hrs_local);
+        Integrate(ord(EMRegister.VbaseStart) + 4 * MaxVBaseCount + i, VBaseLoad[i], Delta_hrs_local);
     end;
 
 
@@ -1626,10 +1629,10 @@ begin
     //---------------   Total Zone Load and Generation -------------------------
     //--------------------------------------------------------------------------
 
-    Integrate(Reg_ZonekWh, TotalZonekW, Delta_hrs_local);
-    Integrate(Reg_Zonekvarh, TotalZonekvar, Delta_hrs_local);
-    Integrate(Reg_GenkWh, TotalGenkW, Delta_hrs_local);
-    Integrate(Reg_Genkvarh, TotalGenkvar, Delta_hrs_local);
+    Integrate(ord(EMRegister.ZonekWh), TotalZonekW, Delta_hrs_local);
+    Integrate(ord(EMRegister.Zonekvarh), TotalZonekvar, Delta_hrs_local);
+    Integrate(ord(EMRegister.GenkWh), TotalGenkW, Delta_hrs_local);
+    Integrate(ord(EMRegister.Genkvarh), TotalGenkvar, Delta_hrs_local);
     GenkVA := Sqrt(Sqr(TotalGenkvar) + Sqr(TotalGenkW));
     LoadkVA := Sqrt(Sqr(TotalZonekvar) + Sqr(TotalZonekW));
 
@@ -1637,15 +1640,15 @@ begin
     //---------------   Set Drag Hand Registers  -------------------------------
     //--------------------------------------------------------------------------
 
-    SetDragHandRegister(Reg_LossesMaxkW, Abs(TotalLosses.Re));
-    SetDragHandRegister(Reg_LossesMaxkvar, Abs(TotalLosses.im));
-    SetDragHandRegister(Reg_MaxLoadLosses, Abs(TotalLoadLosses.Re));
-    SetDragHandRegister(Reg_MaxNoLoadLosses, Abs(TotalNoLoadLosses.Re));
-    SetDragHandRegister(Reg_ZoneMaxkW, TotalZonekW); // Removed abs()  3-10-04
-    SetDragHandRegister(Reg_ZoneMaxkVA, LoadkVA);
+    SetDragHandRegister(ord(EMRegister.LossesMaxkW), Abs(TotalLosses.Re));
+    SetDragHandRegister(ord(EMRegister.LossesMaxkvar), Abs(TotalLosses.im));
+    SetDragHandRegister(ord(EMRegister.MaxLoadLosses), Abs(TotalLoadLosses.Re));
+    SetDragHandRegister(ord(EMRegister.MaxNoLoadLosses), Abs(TotalNoLoadLosses.Re));
+    SetDragHandRegister(ord(EMRegister.ZoneMaxkW), TotalZonekW); // Removed abs()  3-10-04
+    SetDragHandRegister(ord(EMRegister.ZoneMaxkVA), LoadkVA);
     // Max total generator registers
-    SetDragHandRegister(Reg_GenMaxkW, TotalGenkW); // Removed abs()  3-10-04
-    SetDragHandRegister(Reg_GenMaxkVA, GenkVA);
+    SetDragHandRegister(ord(EMRegister.GenMaxkW), TotalGenkW); // Removed abs()  3-10-04
+    SetDragHandRegister(ord(EMRegister.GenMaxkVA), GenkVA);
 
     //--------------------------------------------------------------------------
     //---------------------   Overload Energy  ---------------------------------
@@ -1664,22 +1667,22 @@ begin
     begin
         if (S_Local_KVA = 0.0) then
             S_Local_KVA := MaxZonekVA_Norm;
-        Integrate(Reg_OverloadkWhNorm, Max(0.0, (ZonekW * (1.0 - MaxZonekVA_Norm / S_Local_KVA))), Delta_Hrs_local);
+        Integrate(ord(EMRegister.OverloadkWhNorm), Max(0.0, (ZonekW * (1.0 - MaxZonekVA_Norm / S_Local_KVA))), Delta_Hrs_local);
     end
     else
     begin
-        Integrate(Reg_OverloadkWhNorm, MaxExcesskWNorm, Delta_hrs_local);
+        Integrate(ord(EMRegister.OverloadkWhNorm), MaxExcesskWNorm, Delta_hrs_local);
     end;
 
     if (MaxZonekVA_Emerg > 0.0) then
     begin
         if (S_Local_KVA = 0.0) then
             S_Local_KVA := MaxZonekVA_Emerg;
-        Integrate(Reg_OverloadkWhEmerg, Max(0.0, (ZonekW * (1.0 - MaxZonekVA_Emerg / S_Local_KVA))), Delta_Hrs_local);
+        Integrate(ord(EMRegister.OverloadkWhEmerg), Max(0.0, (ZonekW * (1.0 - MaxZonekVA_Emerg / S_Local_KVA))), Delta_Hrs_local);
     end
     else
     begin
-        Integrate(Reg_OverloadkWhEmerg, MaxExcesskWEmerg, Delta_hrs_local);
+        Integrate(ord(EMRegister.OverloadkWhEmerg), MaxExcesskWEmerg, Delta_hrs_local);
     end;
 
     FirstSampleAfterReset := FALSE;
@@ -3082,27 +3085,27 @@ begin
         if VBaseList[i] > 0.0 then
         begin
             vbase := VBaseList[i] * SQRT3;
-            RegisterNames[i + Reg_VBaseStart - 1] := Format('%.3g kV Losses', [vbase]);
-            RegisterNames[i + 1 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('%.3g kV Line Loss', [vbase]);
-            RegisterNames[i + 2 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('%.3g kV Load Loss', [vbase]);
-            RegisterNames[i + 3 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('%.3g kV No Load Loss', [vbase]);
-            RegisterNames[i + 4 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('%.3g kV Load Energy', [vbase])
+            RegisterNames[i + ord(EMRegister.VBaseStart) - 1] := Format('%.3g kV Losses', [vbase]);
+            RegisterNames[i + 1 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('%.3g kV Line Loss', [vbase]);
+            RegisterNames[i + 2 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('%.3g kV Load Loss', [vbase]);
+            RegisterNames[i + 3 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('%.3g kV No Load Loss', [vbase]);
+            RegisterNames[i + 4 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('%.3g kV Load Energy', [vbase])
         end
         else
         begin
-            RegisterNames[i + Reg_VBaseStart - 1] := Format('Aux%d', [ireg]);
+            RegisterNames[i + ord(EMRegister.VBaseStart) - 1] := Format('Aux%d', [ireg]);
             Inc(ireg);
-            RegisterNames[i + 1 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('Aux%d', [ireg]);
+            RegisterNames[i + 1 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('Aux%d', [ireg]);
             Inc(ireg);
-            RegisterNames[i + 2 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('Aux%d', [ireg]);
+            RegisterNames[i + 2 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('Aux%d', [ireg]);
             Inc(ireg);
-            RegisterNames[i + 3 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('Aux%d', [ireg]);
+            RegisterNames[i + 3 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('Aux%d', [ireg]);
             Inc(ireg);
-            RegisterNames[i + 4 * MaxVBaseCount + Reg_VBaseStart - 1] := Format('Aux%d', [ireg]);
+            RegisterNames[i + 4 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('Aux%d', [ireg]);
             Inc(ireg);
         end;
     end;
-    for i := 1 + Reg_VBaseStart + 5 * MaxVBaseCount to NumEMRegisters do
+    for i := 1 + ord(EMRegister.VBaseStart) + 5 * MaxVBaseCount to NumEMRegisters do
     begin
         RegisterNames[i - 1] := Format('Aux%d', [ireg]);
         Inc(ireg);
