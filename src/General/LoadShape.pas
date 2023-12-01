@@ -246,7 +246,9 @@ uses
     DSSPointerList,
     DSSHelper,
     DSSObjectHelper,
-    TypInfo;
+    TypInfo,
+    CAPI_Utils,
+    CAPI_Types;
 
 type
     ELoadShapeError = class(Exception);  // Raised to abort solution
@@ -344,6 +346,55 @@ begin
         obj.NumPoints := Value;
 end;
 
+procedure getLSArray(
+    npts: Integer; d: PDoubleArray0; s: PSingleArray0; var ResultPtr: PDouble; ResultCount: PAPISize
+);
+var
+    i: Integer;
+    inPtr: PSingle;
+    outPtr: PDouble;
+begin
+    ResultCount[0] := 0;
+    if npts = 0 then
+        Exit;
+
+    if d <> NIL then
+    begin
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, npts);
+        Move(d[0], ResultPtr[0], npts * SizeOf(Double));
+        Exit;
+    end;
+    if s <> NIL then
+    begin
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, npts);
+        outPtr := PDouble(ResultPtr);
+        inPtr := PSingle(s);
+        for i := 0 to npts - 1 do
+        begin
+            outPtr^ := inPtr^;
+            inc(outPtr);
+            inc(inPtr);
+        end;
+        Exit;
+    end;
+end;
+
+procedure getHour(obj: TObj; var ResultPtr: PDouble; ResultCount: PAPISize);
+begin
+    getLSArray(obj.NumPoints, obj.dH, obj.sH, ResultPtr, ResultCount);
+end;
+
+procedure getPMult(obj: TObj; var ResultPtr: PDouble; ResultCount: PAPISize);
+begin
+    getLSArray(obj.NumPoints, obj.dP, obj.sP, ResultPtr, ResultCount);
+end;
+
+procedure getQMult(obj: TObj; var ResultPtr: PDouble; ResultCount: PAPISize);
+begin
+    getLSArray(obj.NumPoints, obj.dQ, obj.sQ, ResultPtr, ResultCount);
+end;
+
+
 procedure TLoadShape.DefineProperties;
 var 
     obj: TObj = NIL; // NIL (0) on purpose
@@ -423,26 +474,30 @@ begin
     PropertyOffset[ord(TProp.hour)] := ptruint(@obj.dH);
     PropertyOffset2[ord(TProp.hour)] := ptruint(@obj.NumPoints);
     PropertyOffset3[ord(TProp.hour)] := ptruint(@obj.ExternalMemory);
-    PropertyFlags[ord(TProp.hour)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly, TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.hour)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.ReadByFunction, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly, TPropertyFlag.RequiredInSpecSet];
+    PropertyReadFunction[ord(TProp.hour)] := @getHour;
 
     PropertyType[ord(TProp.mult)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.mult)] := ptruint(@obj.dP);
     PropertyOffset2[ord(TProp.mult)] := ptruint(@obj.NumPoints);
     PropertyOffset3[ord(TProp.mult)] := ptruint(@obj.ExternalMemory);
-    PropertyFlags[ord(TProp.mult)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly, TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.mult)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.ReadByFunction, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly, TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.mult)] := ord(TProp.pmult);
+    PropertyReadFunction[ord(TProp.mult)] := @getPMult;
 
     PropertyType[ord(TProp.Pmult)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.Pmult)] := ptruint(@obj.dP);
     PropertyOffset2[ord(TProp.Pmult)] := ptruint(@obj.NumPoints);
     PropertyOffset3[ord(TProp.Pmult)] := ptruint(@obj.ExternalMemory);
-    PropertyFlags[ord(TProp.Pmult)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly, TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.Pmult)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.ReadByFunction, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly, TPropertyFlag.RequiredInSpecSet];
+    PropertyReadFunction[ord(TProp.Pmult)] := @getPMult;
 
     PropertyType[ord(TProp.Qmult)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.Qmult)] := ptruint(@obj.dQ);
     PropertyOffset2[ord(TProp.Qmult)] := ptruint(@obj.NumPoints);
     PropertyOffset3[ord(TProp.Qmult)] := ptruint(@obj.ExternalMemory);
-    PropertyFlags[ord(TProp.Qmult)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly];
+    PropertyFlags[ord(TProp.Qmult)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.ReadByFunction, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly];
+    PropertyReadFunction[ord(TProp.Qmult)] := @getQMult;
 
     // integer
     Propertytype[ord(TProp.npts)] := TPropertyType.IntegerProperty;
@@ -794,7 +849,7 @@ begin
     begin
         ReallocMem(dP, SizeOf(Double) * NumPoints);
         //Move(Other.dP[0], dP[0], SizeOf(Double) * NumPoints);
-        for i := 1 to NumPoints do
+        for i := 0 to NumPoints - 1do
             dP[i] := Other.dP[Stride * i];
     end
     else
@@ -804,7 +859,7 @@ begin
     begin
         ReallocMem(dQ, SizeOf(Double) * NumPoints);
         //Move(Other.dQ[0], dQ[0], SizeOf(Double) * NumPoints);
-        for i := 1 to NumPoints do
+        for i := 0 to NumPoints - 1 do
             dQ[i] := Other.dQ[Stride * i];
         
     end;
@@ -815,7 +870,7 @@ begin
     begin
         ReallocMem(dH, SizeOf(Double) * NumPoints);
         // Move(Other.dH[0], dH[0], SizeOf(Double) * NumPoints);
-        for i := 1 to NumPoints do
+        for i := 0 to NumPoints - 1 do
             dH[i] := Other.dH[Stride * i];
     end;
 
@@ -824,7 +879,7 @@ begin
     begin
         ReallocMem(sP, SizeOf(Single) * NumPoints);
         // Move(Other.sP[0], sP[0], SizeOf(Single) * NumPoints);
-        for i := 1 to NumPoints do
+        for i := 0 to NumPoints - 1 do
             sP[i] := Other.sP[Stride * i];
     end
     else
@@ -834,7 +889,7 @@ begin
     begin
         ReallocMem(sQ, SizeOf(Single) * NumPoints);
         // Move(Other.sQ[0], sQ[0], SizeOf(Single) * NumPoints);
-        for i := 1 to NumPoints do
+        for i := 0 to NumPoints - 1 do
             sQ[i] := Other.sQ[Stride * i];
     end;
 
@@ -844,7 +899,7 @@ begin
     begin
         ReallocMem(sH, SizeOf(Single) * NumPoints);
         // Move(Other.sH[0], sH[0], SizeOf(Single) * NumPoints);
-        for i := 1 to NumPoints do
+        for i := 0 to NumPoints - 1 do
             sH[i] := Other.sH[Stride * i];
     end;
 
@@ -1287,7 +1342,7 @@ var
    OffSet, i, j : Integer;
 begin
     Result := 1.0; // Default Return Value;
-    OffSet := (INDEX - 1) * DataSize;
+    OffSet := INDEX * DataSize;
 
     if FileType = TLSFileType.PlainText then  // Normal file (CSV, txt, ASCII based file)
     begin
@@ -1408,9 +1463,9 @@ begin
                 i := i mod mmDataSize;  // Wrap around using remainder
             if i = 0 then 
                 i := mmDataSize;
-            Result.re := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen);
+            Result.re := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i - 1, mmLineLen);
             if Assigned(dQ) then
-                Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ)
+                Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i - 1, mmLineLenQ)
             else
                 Result.im := Set_Result_im(Result.re);
             
@@ -1455,9 +1510,9 @@ begin
         begin
             if UseMMF then
             begin
-                Result.re := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i + 1, mmLineLen);
+                Result.re := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen);
                 if Assigned(dQ) then
-                    Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i + 1, mmLineLenQ)
+                    Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ)
                 else
                     Result.im := Set_Result_im(Result.re);
             
@@ -1501,15 +1556,15 @@ begin
                 poffset := offset - Stride;
                 if UseMMF then
                 begin
-                    Result.re := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, LastValueAccessed + 1, mmLineLen) +
+                    Result.re := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, LastValueAccessed, mmLineLen) +
                         (Hr - dH[LastValueAccessed]) / (dH[i] - dH[LastValueAccessed]) *
-                        (InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen) -
-                        InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, LastValueAccessed, mmLineLen));
+                        (InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i - 1, mmLineLen) -
+                        InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, LastValueAccessed - 1, mmLineLen));
                     if Assigned(dQ) then
-                        Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, LastValueAccessed + 1, mmLineLenQ) +
+                        Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, LastValueAccessed, mmLineLenQ) +
                             (Hr - dH[LastValueAccessed]) / (dH[i] - dH[LastValueAccessed]) *
-                            (InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ) -
-                            InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, LastValueAccessed, mmLineLenQ))
+                            (InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i - 1, mmLineLenQ) -
+                            InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, LastValueAccessed - 1, mmLineLenQ))
                     else
                         Result.im := Set_Result_im(Result.re);
                         
@@ -1690,7 +1745,7 @@ begin
     if (i < NumPoints) and (i >= 0) then
     begin
         if UseMMF then
-            Result := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i + 1, mmLineLen)
+            Result := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen)
         else if dP <> nil then
             Result := dP[Stride * i]
         else
@@ -1708,7 +1763,7 @@ begin
     if (i < NumPoints) and (i >= 0) then
     begin
         if UseMMF then
-            Result := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i + 1, mmLineLen)
+            Result := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen)
         else if dP <> nil then
             Result := dP[Stride * i]
         else
@@ -1826,7 +1881,7 @@ begin
         F := DSS.GetOutputStreamEx(FName, fmCreate);
         if UseMMF then
         begin
-            for i := 1 to NumPoints do
+            for i := 0 to NumPoints - 1 do
             begin
                 myDBL := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen);
                 F.Write(myDBL, sizeOf(myDBL));
@@ -1834,7 +1889,7 @@ begin
         end
         else
         begin
-            for i := 1 to NumPoints do
+            for i := 0 to NumPoints - 1 do
                 F.Write(dP[Stride * i], sizeOf(Double)); 
         end;
         DSS.GlobalResult := 'mult=[dblfile=' + FName + ']';
@@ -1849,14 +1904,14 @@ begin
             F := DSS.GetOutputStreamEx(FName, fmCreate);
             if UseMMF then
             begin
-                for i := 1 to NumPoints do
+                for i := 0 to NumPoints - 1 do
                 begin
                     myDBL := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ);
                     F.Write(myDBL, sizeOf(myDBL));
                 end;
             end
             else
-                for i := 1 to NumPoints do
+                for i := 0 to NumPoints - 1 do
                     F.Write(dQ[Stride * i], sizeOf(Double)); 
             AppendGlobalResult(DSS, ' Qmult=[dblfile=' + FName + ']');
         finally
@@ -1882,13 +1937,21 @@ begin
     try
         FName := DSS.OutputDirectory + Format('%s_P.sng', [Name]); // CurrentDSSDir
         F := DSS.GetOutputStreamEx(FName, fmCreate);
-        for i := 1 to NumPoints do
+        if UseMMF then
         begin
-            if UseMMF then
-                Temp := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen)
-            else
+            for i := 0 to NumPoints - 1 do
+            begin
+                Temp := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen);
+                F.Write(Temp, SizeOf(Temp));
+            end;
+        end
+        else
+        begin
+            for i := 0 to NumPoints - 1 do
+            begin
                 Temp := dP[Stride * i];
-            F.Write(Temp, SizeOf(Temp));
+                F.Write(Temp, SizeOf(Temp));
+            end;
         end;
         DSS.GlobalResult := 'mult=[sngfile=' + FName + ']';
     finally
@@ -1900,13 +1963,21 @@ begin
         try
             FName := DSS.OutputDirectory + Format('%s_Q.sng', [Name]); // CurrentDSSDir
             F := DSS.GetOutputStreamEx(FName, fmCreate);
-            for i := 1 to NumPoints do
+            if UseMMF then
             begin
-                if UseMMF then
-                    Temp := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ)
-                else
+                for i := 0 to NumPoints - 1 do
+                begin
+                    Temp := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ);
+                    F.Write(Temp, SizeOf(Temp));
+                end;
+            end
+            else
+            begin
+                for i := 0 to NumPoints - 1 do
+                begin
                     Temp := dQ[Stride * i];
-                F.Write(Temp, SizeOf(Temp));
+                    F.Write(Temp, SizeOf(Temp));
+                end;
             end;
             AppendGlobalResult(DSS, ' Qmult=[sngfile=' + FName + ']');
         finally
@@ -2087,7 +2158,7 @@ begin
     if Assigned(dH) then
     begin
         ReallocMem(sH, NumPoints * SizeOf(Single));
-        for i := 1 to NumPoints do
+        for i := 0 to NumPoints - 1 do
             sH[i] := dH[i];
         FreeMem(dH);
         dH := nil;
@@ -2095,7 +2166,7 @@ begin
     if Assigned(dP) then
     begin
         ReallocMem(sP, NumPoints * SizeOf(Single));
-        for i := 1 to NumPoints do
+        for i := 0 to NumPoints - 1 do
             sP[i] := dP[i];
         FreeMem(dP);
         dP := nil;
@@ -2103,7 +2174,7 @@ begin
     if Assigned(dQ) then
     begin
         ReallocMem(sQ, NumPoints * SizeOf(Single));
-        for i := 1 to NumPoints do
+        for i := 0 to NumPoints - 1 do
             sQ[i] := dQ[i];
         FreeMem(dQ);
         dQ := nil;

@@ -30,7 +30,7 @@ type
 
     SingleArray0 = Float32Array0;
     PSingleArray0 = PFloat32Array0;
-    PSingle = PFloat32;
+    // PSingle = PFloat32;
     PPSingle = PPFloat32;
     
     // TODO: for 0.14, update to Int64 and Boolean (at least on 64-bit platforms?)
