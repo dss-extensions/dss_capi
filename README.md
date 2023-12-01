@@ -3,7 +3,7 @@
 
 *Para uma versão em português deste arquivo, veja [README.pt-BR.md](https://github.com/dss-extensions/dss_capi/blob/master/README.pt-BR.md).*
 
-# DSS C-API: a library with a C API for an Alternative implementation of EPRI's OpenDSS
+# AltDSS/DSS C-API: a library with a C API for an Alternative implementation of EPRI's OpenDSS
 
 Please see [FAQ](https://github.com/dss-extensions/dss-extensions#faq) for a couple of notes.
 
@@ -46,7 +46,8 @@ Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) for a detailed list.
 
-- **2023-06-27 / version 0.13.4: Bugfix release (CapControl), incremental improvements. See the changelog or release page for details.**
+- 2023-12-13 / version 0.14.0b1: Beta release for 0.14.0. Lots of changes and bugfixes, see the changelog.
+- 2023-06-27 / version 0.13.4: Bugfix release (CapControl), incremental improvements. See the changelog or release page for details.
 - 2023-06-11 / version 0.13.3: Bugfix release for some components (notably Capacitor, Reactor, UPFC).
 - 2023-05-24 / version 0.13.2: Minor release, includes updates to JSON exports, some more error-checking, internal code refactoring, header updates, and minor ports from the official OpenDSS.
 - 2023-04-01 / version 0.13.1: Minor release to address a few PVSystem properties
@@ -141,7 +142,7 @@ After taking care of KLUSolve and placing a copy of it in the same folder, overa
     bash build/build_macos_x64.sh
 ```
 
-Similar steps are required for the ARM64 version.
+Similar steps are required for the ARM64 (aka "Apple Silicon" in marketing-speak) version.
 
 ## Usage and examples
 
@@ -175,7 +176,7 @@ Please allow me a few days to respond.
 
 This project was derived from EPRI's OpenDSS and the same style of license is used. See `LICENSE` and `OPENDSS_LICENSE`, also check each subfolder for more details.
 
-Note that, since OpenDSS depends on KLU via KLUSolve, the KLU licensing conditions (LGPL or GPL, depending on how you build KLU) apply to the resulting binaries; from the DSS-Extension KLUSolve repository, check the files `klusolve/COPYING`, `klusolve/lgpl_2_1.txt`, the SuiteSparse documentation and the Eigen3 documentation.
+Note that, since OpenDSS depends on KLU via KLUSolve, the KLU licensing conditions (LGPL or GPL, depending on how you build KLU) apply to the resulting binaries; from the DSS-Extensions KLUSolve repository, check the files `klusolve/COPYING`, `klusolve/lgpl_2_1.txt`, the SuiteSparse documentation and the Eigen3 documentation.
 
 Also note that even though we don't add copyright notices to each of the files, most of files from the OpenDSS original codebase were modified to create the version presented today in this repository. Please refer to the Git commit history for more information.
 

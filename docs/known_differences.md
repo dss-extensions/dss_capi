@@ -5,7 +5,7 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
 ## Important notes
 
 - **This library is not supported by the original authors of OpenDSS**. If you find issues or have features specific to the library, please open [an issue ticket on GitHub](https://github.com/dss-extensions/dss_capi/issues/) or send an email (pmeira at ieee.org). For general OpenDSS issues, be sure to test with the official distribution before posting in the official forum at SourceForge. Users are welcome to post at [our own General Discussion page](https://github.com/orgs/dss-extensions/discussions/categories/general).
-- Several projects that use DSS C-API, such as DSS-Python, OpenDSSDirect.py, OpenDSSDirect.jl, DSS Sharp and DSS MATLAB are hosted at [DSS-Extensions](http://github.com/dss-extensions/). These projects provide user-friendly programming interfaces for different languages. There are some non-affiliate projects that expose our engine to other languages.
+- Several projects that use DSS C-API, such as DSS-Python, OpenDSSDirect.py, OpenDSSDirect.jl, DSS Sharp and DSS MATLAB are hosted at [DSS-Extensions](http://github.com/dss-extensions/). These projects provide user-friendly programming interfaces for different languages. There are some non-affiliated projects that expose our engine to other languages.
 - DSS C-API is currently based on the open-source Free Pascal compiler instead of Delphi. If you find a system where the results are different between the two distributions, please share a sample with us to help identify it, allowing us to fix the issue for all users.
 - Bits and pieces of the API code, as well as some small specific changes of the main OpenDSS code, have been modified for better multi-platform compatibility and, sometimes, performance. Most of these are not explicitly listed here since they do not affect the library behavior.
 - The API is compatible with languages which support C calls and is mostly self-documented in the header files (`dss_capi.h` in the `include` folder). See also [the usage document](https://github.com/dss-extensions/dss_capi/blob/master/docs/usage.md) to get understand the memory model and advanced usage — including the Global Result interface, which can drastically reduce memory (re)allocations in some use-cases.
@@ -66,7 +66,7 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
 
 👉 Besides the omissions and caveats listed here, our general policy on commits/features from official OpenDSS is to port them in a matter of hours/days, if possible. If we find that a SVN commit/feature in the official OpenDSS introduces issues/bugs, we may postpone porting and/or report the issues in the official OpenDSS forum. Our releases are not coordinated with the official version.
 
-Starting on version 0.13.0, we started introducing explicit compatibility flags for some behavior. See the docs for `DSS_Set_CompatFlags` and the `DSSCompatFlags` enum. From our header as of v0.13.3:
+Starting on version 0.13.0, we started introducing explicit compatibility flags for some behavior. See the docs for `DSS_Set_CompatFlags` and the `DSSCompatFlags` enum. From our header as of v0.14.0:
 
 ```c
     enum DSSCompatFlags {
@@ -94,6 +94,36 @@ Starting on version 0.13.0, we started introducing explicit compatibility flags 
             When using "save circuit", the official OpenDSS always includes the "CalcVoltageBases" command in the
             saved script. We found that it is not always a good idea, so we removed the command (leaving it commented).
             Use this flag to enable the command in the saved script.
+        */
+
+       DSSCompatFlags_ActiveLine = 0x00000010, /*!< 
+            In the official OpenDSS implementation, the Lines API use the active circuit element instead of the
+            active line. This can lead to unexpected behavior if the user is not aware of this detail.
+            For example, if the user accidentally enables any other circuit element, the next time they use
+            the Lines API, the line object that was previously enabled is overwritten with another unrelated
+            object.
+            This flag enables this behavior above if compatibility at this level is required. On DSS-Extensions,
+            we changed the behavior to follow what most of the other APIs do: use the active object in the internal
+            list. This change was done for DSS C-API v0.13.5, as well as the introduction of this flag.
+        */
+
+       DSSCompatFlags_NoPropertyTracking = 0x00000020, /*!< 
+            On DSS-Extensions/AltDSS, when setting a property invalidates a previous input value, the engine
+            will try to mark the invalidated data as unset. This allows for better exports and tracking of 
+            the current state of DSS objects.
+            Set this flag to disable this behavior, following the original OpenDSS implementation for potential
+            compatibility with older software that may require the original behavior; note that may lead to
+            erroneous interpretation of the data in the DSS properties. This was introduced in DSS C-API v0.14.0
+            and will be further developed for future versions.
+        */
+
+       DSSCompatFlags_SkipSideEffects = 0x00000040 /*!< 
+            Some specific functions on the official OpenDSS APIs and internal code skip important side-effects.
+            By default, on DSS-Extensions/AltDSS, those side-effects are enabled. Use this flag
+            to try to follow the behavior of the official APIs. Beware that some side-effects are
+            important and skipping them may result in incorrect results.
+            This flag affects some of the classic API functions, especially Loads and Generators,
+            as well as the behavior of some DSS properties (Line: Rg, Xg, rho, Transformer/AutoTrans: XscArray).
         */
     };
 ```

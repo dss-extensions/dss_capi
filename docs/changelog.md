@@ -1,9 +1,9 @@
-# Version 0.14
+# Version 1.0 (planned)
 
 **not released**
 
 - **Done**:
-    - drop the GR API for strings (bytes, ints and floats will continue); we might introduce an alternative API for strings if there are benefits
+    - drop the GR API for strings (bytes, integers and floats will continue); we might introduce an alternative API for strings if there are benefits
     - simplify the types used by the interface. For example, dropping the `uint16_t` type (used for booleans) and using `int32_t` instead — this was an artifact to ensure initial compatibility with the COM code.
     - extend the API to work with 64-bit integers where appropriate
     - extend the API to allow 32-bit floats
@@ -15,11 +15,81 @@
     - i18n complements
     - drop the `ctx_` prefix for most functions, leave the DSSContext API as the default version. We plan to drop the current single-instance API, but we can add a header with inline C functions, prefixed, for easier migration. 
 
+
+## Version 0.14.0
+
+Starting on this version, we will call DSS C-API and related projects AltDSS, an alternative implementation of OpenDSS, to make it more clear that this is not supported by EPRI and many extra features are not present in the official OpenDSS. Watch the DSS-Extensions org on GitHub for more announcements soon, including some support for the official implementation (still Windows-only at the moment).
+
+This version should match OpenDSS v9.7.1.1 (SVN r3646). Remember to check the compatibility flags and [Known differences](https://github.com/dss-extensions/dss_capi/blob/master/docs/known_differences.md). Other recent SVN commits, up to r3717 (dated 2023-12-11), either do not update code or are not relevant for the implementation on AltDSS/DSS C-API.
+
+- Another large internal code refactoring step and general clean-up. Check the commits for details, too many to list. A last step is under progress and will be merged in the next major release.
+
+- **Introduces a preview of JSON schema (new), JSON export (updated) and import (new).** Too many details to include in the changelog. Includes many updates to the internal metadata. A separate project will be posted at https://github.com/dss-extensions/AltDSS-Schema and community feedback is welcome. Note: the JSON schema will be used for projects and features beyond JSON IO.
+
+- **Introduce property tracking.** Setting some properties now mark conflicting property definitions as unset. This affects some functionality for saving circuits and is also used for the JSON schema, for instance. An example: a user creates a load with `kW=10 kvar=0`. Later, the user updates the load, setting `PF=0.9`. Setting the power factor toggles the load internal state to use kW and PF as the load definition, but `kvar` is still marked as set. The DSS engine correctly tracks the order that properties were defined, so everything works as expected. Now, with the growing usage of DSS implementation to export the circuit, every single user is required to correctly implement this tracking if they want to ensure compatibility. That is, dumping the data from this example generator in an unordered dictionary/map/etc. for processing and later dumping back to DSS scripts will result in the wrong model.
+    - Users can, of course, still query the value of all properties.
+    - See also `NoPropertyTracking` compat flag.
+    - Currently implemented, at least partially, in the following DSS classes (plus Lines and Loads API): LineCode, LineGeometry, LoadShape, Generator, Load, PVSystem, Storage, VSource, Fault, Line, Reactor, Transformer. 
+    - This functionally may be extended to other classes, if required.
+
+- **Introduce "Setter" flags.** These are flags used to tweak how the property update is done. Notably,`AvoidFullRecalc` (some other flags are only using by the engine, internally): some specific properties like `Load.kW` can be updated both directly through a DSS script (or Text interface), or through the dedicated Loads API in any of the specific language bindings of the many APIs. The dedicated API does not force a YPrim update and full load model recalculation. 
+    - When using this flag `AvoidFullRecalc` in the Obj/Batch APIs, the behavior will follow the dedicated Loads API.
+    - Other flags include `ImplicitSizes` and `AllowAllConductors`. Both are currently used for enabling some of the JSON Schema functionally.
+    - The relevant API functions were updated to include an extra function argument with the setter flags.
+    - Is this `AvoidFullRecalc` the same as `SkipSideEffects` compat flag? **No.** `AvoidFullRecalc` is still valid and by design (including some behavior listed in OpenDSS docs), whereas `SkipSideEffects` is potentially unintended behavior.
+
+- **New** compatibility flags in `DSSCompatFlags`: 
+    - `ActiveLine` (0x10). In the official OpenDSS implementation, the Lines API use the active circuit element instead of the active line. This can lead to unexpected behavior if the user is not aware of this detail. For example, if the user accidentally enables any other circuit element, the next time they use the Lines API, the line object that was previously enabled is overwritten with another unrelated object. This flag enables this behavior above if compatibility at this level is required. On DSS-Extensions, we changed the behavior to follow what most of the other APIs do: use the active object in the internal list, starting on version v0.14.0.
+    - `NoPropertyTracking` (0x20): On DSS-Extensions/AltDSS, when setting a property invalidates a previous input value, the engine will try to mark the invalidated data as unset. This allows for better exports and tracking of the current state of DSS objects. Set this flag to disable this behavior, following the original OpenDSS implementation for potential compatibility with older software that may require the original behavior; note that may lead to erroneous interpretation of the data in the DSS properties. This was introduced in DSS C-API v0.14.0 and will be further developed for future versions.
+    - `SkipSideEffects` (0x40). Some specific functions on the official OpenDSS APIs and internal code skip important side-effects. By default, on DSS-Extensions/AltDSS, those side-effects are enabled. Use this flag
+    to try to follow the behavior of the official APIs. Beware that some side-effects are
+    important and skipping them may result in incorrect results.
+    This flag affects some of the classic API functions (Loads, Generators, Vsources) as well as the behavior of some specific DSS properties (Line: Rg, Xg, rho; Transformer/AutoTrans: XSCArray).
+
+- **New** Alt and Obj families of functions. A new family of functions was added to allow most legacy API operations and new functionality directly on objects and batches, instead of relying on "active..." idiom. A new package, **AltDSS-Python**, will be published to illustrate the new approach. Since the engine is shared, users can mix both approach (e.g. use AltDSS-Python and OpenDSSDirect.py in the same script).
+
+- Batch/API: allow using batches with simple functions that return float64/int32 for each object.
+
+- Headers: 
+    - remove `stdint_compat.h`. This was only required for very old or non-standard compiler like MSVC 2008. Users that require that can still source the file from older releases or get similar files from other sources.
+    - mark `CktElement_Get_IsIsolated` with `(API Extension)``
+
+- Specific bug fixes:
+    - AutoTrans: fix `DumpProperties`, readd `bank` property (unused internally).
+    - Commands/Save: add version and timestamp to master file.
+    - DynamicExp and DynEqPCE: fix `DumpProperties`; extend to support JSON in/out.
+    - Generator: fix default value for `D` (as DSS property); previously, the value was left uninitialized. It seems to only affect user models, so it doesn't seem like a big issue. Explicitly providing a value would also work fine as a workaround.
+    - Line and LineCode: fix formatting issues in `DumpProperties`
+    - LoadShape: fix some issues when copying/saving data when using float32 data (which users need to explicitly opt-in).
+    - Relay: fix handling of `DOC_PhaseCurveInner` (DSS property)
+    - PriceShape/TempShape: adjust setters for mean/stddev properties
+    - Sensor: `DeltaDirection` was not initialized; make `clear` an explicit action.
+    - SwtControl: If no element is attached (misuse), set state as "none".
+    - Transformers/API: `Transformers_Get_LossesByType` and `Transformers_Get_AllLossesByType` now check if the transformer is enabled.
+    - API/general: avoid tiny memory leaks (pointer size, 8 bytes) on empty data and some error situations.
+    - Bus/classic API: fix `Bus_Get_N_interrupts`; was previously returning the duration instead.
+    - Circuit_Capacity (API, command): fix register index, remove magic numbers. (Bug introduced back in 2008!)
+    - Circuit/API: fix `Circuit_Enable` and `Circuit_Disable` (enabling/disabling circuit elements by name). An equivalent fix is included in the official OpenDSS v9.7.1.1, in the COM interface. Additionally, provide error message when trying to use invalid element names.
+    - Obj/Batch API: better handling of booleans. With this change, any non-zero value is interpreted as `true`, which simplifies integration with other programming languages. This was the original intention.
+    - API/Iteration: Fix issues with iteration in a few of the internal functions which could have resulted in empty results in some situations. These situations occurred only during testing, so we don't expect many users were affected.
+
+- Misc:
+    - Properties/capitalization: adjust capitalization of nearly all property names. Use lowercase for description keys (help strings). *Feedback on the capitalization is welcome.* As a reminder, OpenDSS is case-insensitive, but other other are not. Providing a better internal representation of the properties will help other tools to use the internal names without extra work (no need for each tool to adjust capitalization), and it doesn't affect the DSS engine itself nor compatibility with the upstream OpenDSS.
+    - Obj/API: introduce `ExtraClassIDs` to get some special lists.
+    - Classic to Obj/Alt API bridge: add many `*_Get_Pointer` functions (e.g. `CktElement_Get_Pointer`, `Loads_Get_Pointer`). These functions return a pointer that can be used in the Obj API. This should enable an easier migration from the classic API, or allow users to use the Obj API to complement the classic API where the latter is lacking.
+    - API/Callbacks: `dss_callback_message_t` function signature extended with two more arguments. We are not aware of any user using these, but if you are, remember to update your callbacks.
+    - API/Extended errors: add a few more checks, and disable some error messages when extended errors are disabled. (Extended errors are extra error checks introduced to signal wrong usage of the DSS engine; extra = not present in the original/official codebase)
+    - API/Text: microoptimize `Text_CommandBlock` for single commands. That is, users could use `Text_CommandBlock` for both single and multi-line strings without performance impacts. We did not replace `Text_Set_Command` in order to avoid potential compatibility issues.
+    - API/Events: generalize the API for event extensions.
+    - API/Obj: handle incorrect array sizes better, add error messages.
+
+- Ported from the official SVN:
+    - r3637: "Removing force EventLog for StorageController to match all the other controls and their defaults." (by davismont)
+    - r3640: "Updated "Show" fault study report to better arrange output. (...)" (by aovallev)
+    - r3642: "Skipping disabled meters when interpolating all meters." (by celsorocha)
+    - r3646: updates to `TInvDynamicVars.CalcGFMYprim` (by davismont)
+
 # Versions 0.13.x
-
-## Version 0.13.5 (WIP)
-
-- New compatibility flag in `DSSCompatFlags`: add `ActiveLine` (0x00000010). In the official OpenDSS implementation, the Lines API use the active circuit element instead of the active line. This can lead to unexpected behavior if the user is not aware of this detail. For example, if the user accidentally enables any other circuit element, the next time they use the Lines API, the line object that was previously enabled is overwritten with another unrelated object. This flag enables this behavior above if compatibility at this level is required. On DSS-Extensions, we changed the behavior to follow what most of the other APIs do: use the active object in the internal list on v0.13.5.
 
 ## Version 0.13.4 (2023-06-27)
 
