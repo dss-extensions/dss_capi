@@ -51,6 +51,8 @@ The getters present two interfaces: a immediate result (classic) and a global re
 
 ### Immediate Result (IR, classic, updated in v0.10.0)
 
+**Note (2023-12-12):** See also `DSS_Get_EnableArrayDimensions` and `DSS_Set_EnableArrayDimensions`. Enabling array dimensions will interpret the size pointer as a 4 element array, with the last two elements representing the shape of a matrix, if that's the case.
+
 The immediate/direct result getters use two parameters. Its usage is like the follow snippet:
 
 ```c
@@ -119,7 +121,8 @@ As a side note, it is recommended to avoid using `Circuit_Get_SystemY` (and `Cir
 The global result interface uses a single set of global pointers to pass the results. It is useful for double and integer arrays, and tight loops. The GR interface was created to address a couple of concerns:
 
 - It reduces the memory handling burden (at the cost of a loss of explicit names for the pointers)
-- It removes two arguments of the function call -- it may seem an exageration, but it does have an impact on Python, for example
+- It removes two arguments of the function call -- it may seem an exaggeration, but it does have an impact on Python, for example, although growing optimization efforts in CPython has reduced the overhead (compare Python 3.6 to 3.12, for example).
+- Base on our experience from 2017 to 2023, it provides us a faster path to create new language bindings.
     
 It is important to note that the GR mode can be used in conjunction with the IR mode, so you can update you code to use the GR mode where it excels.
 
