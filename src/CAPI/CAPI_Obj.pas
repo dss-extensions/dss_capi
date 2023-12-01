@@ -53,6 +53,13 @@ type
         Multiply = 1,
         Increment = 2
     );
+
+    ExtraClassIDs = (
+        DSSObjs = -1,
+        CktElements = -2,
+        PCElements = -3,
+        PDElements = -4
+    );
 {$POP}    
 {$SCOPEDENUMS OFF}
 
@@ -409,6 +416,27 @@ var
 begin
     Result := NIL;
     if DSS = NIL then DSS := DSSPrime;
+
+    if ClsIdx <= 0 then
+    begin
+        if (ClsIdx <> ord(ExtraClassIDs.DSSObjs)) and InvalidCircuit(DSS) then
+            Exit;
+        
+        case ClsIdx of
+            ord(ExtraClassIDs.DSSObjs):
+                Result := PPointer(DSS.DSSObjs.InternalPointer);
+            ord(ExtraClassIDs.CktElements):
+                Result := PPointer(DSS.ActiveCircuit.CktElements.InternalPointer);
+            ord(ExtraClassIDs.PCElements):
+                Result := PPointer(DSS.ActiveCircuit.PCElements.InternalPointer);
+            ord(ExtraClassIDs.PDElements):
+                Result := PPointer(DSS.ActiveCircuit.PDElements.InternalPointer);
+        else
+            DoSimpleMsg(DSS, 'Class index is not a valid DSS class or convenience extra class.', [ClsIdx], 5022);
+        end;
+        Exit;
+    end;
+
     Cls := DSS.DSSClassList.At(ClsIdx);
     if Cls = NIL then
         Exit;
@@ -422,6 +450,27 @@ var
 begin
     Result := 0;
     if DSS = NIL then DSS := DSSPrime;
+
+    if ClsIdx <= 0 then
+    begin
+        if (ClsIdx <> ord(ExtraClassIDs.DSSObjs)) and InvalidCircuit(DSS) then
+            Exit;
+
+        case ClsIdx of
+            ord(ExtraClassIDs.DSSObjs):
+                Result := DSS.DSSObjs.Count;
+            ord(ExtraClassIDs.CktElements):
+                Result := DSS.ActiveCircuit.CktElements.Count;
+            ord(ExtraClassIDs.PCElements):
+                Result := DSS.ActiveCircuit.PCElements.Count;
+            ord(ExtraClassIDs.PDElements):
+                Result := DSS.ActiveCircuit.PDElements.Count;
+        else
+            DoSimpleMsg(DSS, 'Class index is not a valid DSS class or convenience extra class.', [ClsIdx], 5022);
+        end;
+        Exit;
+    end;
+
     Cls := DSS.DSSClassList.At(ClsIdx);
     if Cls = NIL then
         Exit;
