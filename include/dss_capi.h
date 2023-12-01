@@ -301,7 +301,16 @@ extern "C" {
     /*!
     Typedefs for the Alt API
     */
-    typedef uint32_t altdss_bool_t;
+    typedef int32_t altdss_bool_t;
+
+    /*!
+    Extra class IDs, currently used by Obj_GetListPointer and Obj_GetCount
+    */
+    enum ExtraClassIDs {
+        ExtraClassIDs_CktElements = -1,
+        ExtraClassIDs_PCElements = -2,
+        ExtraClassIDs_PDElements = -3
+    };
 
     /* Functions start here */
 
