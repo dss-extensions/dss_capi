@@ -1047,8 +1047,14 @@ var
     i: Integer;
 begin
     Result := NIL;
-    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
+    if (batch = NIL) or (batch^ = NIL) then
         Exit;
+
+    if (batchSize = 0) then
+    begin
+        Result := DSS_CopyStringAsPChar('[]');
+        Exit;
+    end;
 
     try
         json := TJSONArray.Create([]);
