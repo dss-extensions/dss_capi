@@ -1624,7 +1624,9 @@ begin
             continue;
         end;
         
-        Obj.SetAsNextSeq(ParamPointer);
+        if not (PropertyType[ParamPointer] in [TPropertyType.StringEnumActionProperty, TPropertyType.BooleanActionProperty]) then
+            Obj.SetAsNextSeq(ParamPointer);
+
         Obj.PropertySideEffects(ParamPointer, prevInt, []);
 
 //            GetObjPropertyValue(Obj, ParamPointer, tmp);
