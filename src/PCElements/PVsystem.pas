@@ -524,7 +524,7 @@ begin
     PropertyOffset[ord(TProp.irradiance)] := ptruint(@obj.PVSystemVars.FIrradiance);
 
     PropertyOffset[ord(TProp.pf)] := ptruint(@obj.PFnominal);
-    PropertyFlags[ord(TProp.pf)] := [TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.pf)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.PowerFactorLimits];
 
     PropertyOffset[ord(TProp.pctR)] := ptruint(@obj.pctR);
     PropertyOffset[ord(TProp.pctX)] := ptruint(@obj.pctX);

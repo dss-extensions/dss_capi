@@ -369,8 +369,8 @@ begin
         'kW, PF',
         'kW, kvar',
         'kVA, PF',
-        'xfkVA, Allocationfactor, PF',
-        'kWh, kWhdays, Cfactor, PF'
+        'xfkVA, AllocationFactor, PF',
+        'kWh, kWhDays, CFactor, PF'
     );
     SpecSets := TSpecSets.Create(
         TSpecSet.Create(ord(TProp.kW), ord(TProp.PF)),
@@ -449,7 +449,7 @@ begin
 
     PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.RequiredInSpecSet];
     PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault];
-    PropertyFlags[ord(TProp.PF)] := [TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.PF)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.PowerFactorLimits];
 
     PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault];
     PropertyFlags[ord(TProp.xfkVA)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kVA];
@@ -657,11 +657,11 @@ begin
             LoadSpecType := TLoadSpec.kW_kvar;
             if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
             begin
-                SetAsNextSeq(ord(TLoadProp.kWh));
+                SetAsNextSeq(ord(TLoadProp.kW));
                 // SetAsNextSeq(ord(TLoadProp.kvar));
                 PrpSequence[ord(TLoadProp.kVA)] := 0;
                 PrpSequence[ord(TLoadProp.PF)] := 0;
-                PrpSequence[ord(TLoadProp.kW)] := 0;
+                PrpSequence[ord(TLoadProp.kWh)] := 0;
                 PrpSequence[ord(TLoadProp.xfkVA)] := 0;
             end;
             PFSpecified := FALSE;
