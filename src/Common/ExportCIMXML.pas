@@ -1140,12 +1140,12 @@ begin
         (obj.SpectrumObj <> DSS.SpectrumClass.DefaultLoad)) then
     begin
         key := Format('Load:%s:%s:%s:%s:%s:%s', [
-            StrUtils.IfThen(obj.DailyShapeObj <> NIL, obj.DailyShapeObj.Name, ''),
-            StrUtils.IfThen(obj.DutyShapeObj <> NIL, obj.DutyShapeObj.Name, ''),
-            StrUtils.IfThen(obj.GrowthShapeObj <> NIL, obj.GrowthShapeObj.Name, ''),
-            StrUtils.IfThen(obj.YearlyShapeObj <> NIL, obj.YearlyShapeObj.Name, ''),
-            StrUtils.IfThen(obj.CVRshapeObj <> NIL, obj.CVRshapeObj.Name, ''),
-            StrUtils.IfThen(obj.SpectrumObj <> NIL, obj.SpectrumObj.Name, '')
+            NameIfNotNil(obj.DailyShapeObj),
+            NameIfNotNil(obj.DutyShapeObj),
+            NameIfNotNil(obj.GrowthShapeObj),
+            NameIfNotNil(obj.YearlyShapeObj),
+            NameIfNotNil(obj.CVRshapeObj),
+            NameIfNotNil(obj.SpectrumObj)
         ]);
         pECP := GetECP(key);
         if pECP = NIL then
@@ -1154,11 +1154,11 @@ begin
             pECP.localName := key;
             pECP.UUID := GetDevUuid(ECProfile, key, 0);
 
-            pECP.daily := StrUtils.IfThen(obj.DailyShapeObj <> NIL, obj.DailyShapeObj.Name, '');
-            pECP.duty := StrUtils.IfThen(obj.DutyShapeObj <> NIL, obj.DutyShapeObj.Name, '');
-            pECP.growth := StrUtils.IfThen(obj.GrowthShapeObj <> NIL, obj.GrowthShapeObj.Name, '');
-            pECP.cvr := StrUtils.IfThen(obj.CVRshapeObj <> NIL, obj.CVRshapeObj.Name, '');
-            pECP.yearly := StrUtils.IfThen(obj.YearlyShapeObj <> NIL, obj.YearlyShapeObj.Name, '');
+            pECP.daily := NameIfNotNil(obj.DailyShapeObj);
+            pECP.duty := NameIfNotNil(obj.DutyShapeObj);
+            pECP.growth := NameIfNotNil(obj.GrowthShapeObj);
+            pECP.cvr := NameIfNotNil(obj.CVRshapeObj);
+            pECP.yearly := NameIfNotNil(obj.YearlyShapeObj);
             if (obj.SpectrumObj <> NIL) and (obj.SpectrumObj <> DSS.SpectrumClass.DefaultLoad) then
                 pECP.spectrum := obj.SpectrumObj.Name;
             AddECP(pECP);
@@ -1181,13 +1181,13 @@ begin
         (obj.SpectrumObj <> NIL)) then
     begin
         key := Format('PV:%s:%s:%s:%s:%s:%s:%s', [
-            StrUtils.IfThen(obj.DailyShapeObj <> NIL, obj.DailyShapeObj.Name, ''),
-            StrUtils.IfThen(obj.DutyShapeObj <> NIL, obj.DutyShapeObj.Name, ''),
-            StrUtils.IfThen(obj.YearlyShapeObj <> NIL, obj.YearlyShapeObj.Name, ''),
-            StrUtils.IfThen(obj.DailyTShapeObj <> NIL, obj.DailyTShapeObj.Name, ''),
-            StrUtils.IfThen(obj.DutyTShapeObj <> NIL, obj.DutyTShapeObj.Name, ''),
-            StrUtils.IfThen(obj.YearlyTShapeObj <> NIL, obj.YearlyTShapeObj.Name, ''),
-            StrUtils.IfThen(obj.SpectrumObj <> NIL, obj.SpectrumObj.Name, '')
+            NameIfNotNil(obj.DailyShapeObj),
+            NameIfNotNil(obj.DutyShapeObj),
+            NameIfNotNil(obj.YearlyShapeObj),
+            NameIfNotNil(obj.DailyTShapeObj),
+            NameIfNotNil(obj.DutyTShapeObj),
+            NameIfNotNil(obj.YearlyTShapeObj),
+            NameIfNotNil(obj.SpectrumObj)
         ]);
         pECP := GetECP(key);
         if pECP = NIL then
@@ -1195,13 +1195,13 @@ begin
             pECP := TECPObject.Create(PvECP);
             pECP.localName := key;
             pECP.UUID := GetDevUuid(ECProfile, key, 0);
-            pECP.daily := StrUtils.IfThen(obj.DailyShapeObj <> NIL, obj.DailyShapeObj.Name, '');
-            pECP.duty := StrUtils.IfThen(obj.DutyShapeObj <> NIL, obj.DutyShapeObj.Name, '');
-            pECP.yearly := StrUtils.IfThen(obj.YearlyShapeObj <> NIL, obj.YearlyShapeObj.Name, '');
-            pECP.Tdaily := StrUtils.IfThen(obj.DailyTShapeObj <> NIL, obj.DailyTShapeObj.Name, '');
-            pECP.Tduty := StrUtils.IfThen(obj.DutyTShapeObj <> NIL, obj.DutyTShapeObj.Name, '');
-            pECP.Tyearly := StrUtils.IfThen(obj.YearlyTShapeObj <> NIL, obj.YearlyTShapeObj.Name, '');
-            pECP.spectrum := StrUtils.IfThen(obj.SpectrumObj <> NIL, obj.SpectrumObj.Name, '');
+            pECP.daily := NameIfNotNil(obj.DailyShapeObj);
+            pECP.duty := NameIfNotNil(obj.DutyShapeObj);
+            pECP.yearly := NameIfNotNil(obj.YearlyShapeObj);
+            pECP.Tdaily := NameIfNotNil(obj.DailyTShapeObj);
+            pECP.Tduty := NameIfNotNil(obj.DutyTShapeObj);
+            pECP.Tyearly := NameIfNotNil(obj.YearlyTShapeObj);
+            pECP.spectrum := NameIfNotNil(obj.SpectrumObj);
             AddECP(pECP);
         end;
         pECP.AddConnection(obj);
@@ -1219,10 +1219,10 @@ begin
         (obj.SpectrumObj <> NIL)) then
     begin
         key := Format('Bat:%s:%s:%s:%s', [
-            StrUtils.IfThen(obj.DailyShapeObj <> NIL, obj.DailyShapeObj.Name, ''),
-            StrUtils.IfThen(obj.DutyShapeObj <> NIL, obj.DutyShapeObj.Name, ''),
-            StrUtils.IfThen(obj.YearlyShapeObj <> NIL, obj.YearlyShapeObj.Name, ''),
-            StrUtils.IfThen(obj.SpectrumObj <> NIL, obj.SpectrumObj.Name, '')
+            NameIfNotNil(obj.DailyShapeObj),
+            NameIfNotNil(obj.DutyShapeObj),
+            NameIfNotNil(obj.YearlyShapeObj),
+            NameIfNotNil(obj.SpectrumObj)
         ]);
         pECP := GetECP(key);
         if pECP = NIL then
@@ -1230,10 +1230,10 @@ begin
             pECP := TECPObject.Create(BatECP);
             pECP.localName := key;
             pECP.UUID := GetDevUuid(ECProfile, key, 0);
-            pECP.daily := StrUtils.IfThen(obj.DailyShapeObj <> NIL, obj.DailyShapeObj.Name, '');
-            pECP.duty := StrUtils.IfThen(obj.DutyShapeObj <> NIL, obj.DutyShapeObj.Name, '');
-            pECP.yearly := StrUtils.IfThen(obj.YearlyShapeObj <> NIL, obj.YearlyShapeObj.Name, '');
-            pECP.spectrum := StrUtils.IfThen(obj.SpectrumObj <> NIL, obj.SpectrumObj.Name, '');
+            pECP.daily := NameIfNotNil(obj.DailyShapeObj);
+            pECP.duty := NameIfNotNil(obj.DutyShapeObj);
+            pECP.yearly := NameIfNotNil(obj.YearlyShapeObj);
+            pECP.spectrum := NameIfNotNil(obj.SpectrumObj);
             AddECP(pECP);
         end;
         pECP.AddConnection(obj);
@@ -1251,10 +1251,10 @@ begin
         (obj.SpectrumObj <> DSS.SpectrumClass.DefaultGen)) then
     begin
         key := Format('Gen:%s:%s:%s:%s', [
-            StrUtils.IfThen(obj.DailyDispShapeObj <> NIL, obj.DailyDispShapeObj.Name, ''),
-            StrUtils.IfThen(obj.DutyShapeObj <> NIL, obj.DutyShapeObj.Name, ''),
-            StrUtils.IfThen(obj.YearlyShapeObj <> NIL, obj.YearlyShapeObj.Name, ''),
-            StrUtils.IfThen(obj.SpectrumObj <> NIL, obj.SpectrumObj.Name, '')
+            NameIfNotNil(obj.DailyDispShapeObj),
+            NameIfNotNil(obj.DutyShapeObj),
+            NameIfNotNil(obj.YearlyShapeObj),
+            NameIfNotNil(obj.SpectrumObj)
         ]);
         pECP := GetECP(key);
         if pECP = NIL then
@@ -1262,11 +1262,11 @@ begin
             pECP := TECPObject.Create(GenECP);
             pECP.localName := key;
             pECP.UUID := GetDevUuid(ECProfile, key, 0);
-            pECP.daily := StrUtils.IfThen(obj.DailyDispShapeObj <> NIL, obj.DailyDispShapeObj.Name, '');
-            pECP.duty := StrUtils.IfThen(obj.DutyShapeObj <> NIL, obj.DutyShapeObj.Name, '');
-            pECP.yearly := StrUtils.IfThen(obj.YearlyShapeObj <> NIL, obj.YearlyShapeObj.Name, '');
+            pECP.daily := NameIfNotNil(obj.DailyDispShapeObj);
+            pECP.duty := NameIfNotNil(obj.DutyShapeObj);
+            pECP.yearly := NameIfNotNil(obj.YearlyShapeObj);
             if (obj.SpectrumObj <> NIL) and (obj.SpectrumObj <> DSS.SpectrumClass.DefaultGen) then
-                pECP.spectrum := StrUtils.IfThen(obj.SpectrumObj <> NIL, obj.SpectrumObj.Name, '');
+                pECP.spectrum := NameIfNotNil(obj.SpectrumObj);
             AddECP(pECP);
         end;
         pECP.AddConnection(obj);

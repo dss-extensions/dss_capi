@@ -858,7 +858,7 @@ begin
                 26:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.DefaultDailyShapeObj.StdDev * 100.0);
                 27:
-                    AppendGlobalResult(DSS, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name));
+                    AppendGlobalResult(DSS, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj));
                 28:
                     AppendGlobalResult(DSS, (DSS.ActiveCircuit.DefaultGrowthRate - 1.0) * 100.0);
                 29:

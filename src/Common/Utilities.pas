@@ -126,6 +126,8 @@ procedure DoCSVFile(DSS: TDSSContext; var pA, pB: PDoubleArray; var NumPoints: I
 
 procedure DelFilesFromDir(DSS: TDSSContext; Directory: String; FileMask: String = '*'; DelSubDirs: Boolean = True);
 
+function NameIfNotNil(obj: TDSSObject): String;
+
 implementation
 
 uses
@@ -2341,5 +2343,13 @@ begin
         until FindNext(info) <> 0;
     end;
 end;{$ENDIF}
+
+function NameIfNotNil(obj: TDSSObject): String;
+begin
+    if obj = NIL then
+        Result := ''
+    else
+        Result := obj.Name;
+end;
 
 end.

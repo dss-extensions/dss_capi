@@ -1805,7 +1805,7 @@ begin
                 F := TBufferedFileStream.Create(FileNm, fmOpenReadWrite);
                 F.Seek(0, soEnd);
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.Year), Separator);
-                FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
+                FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.DynaVars.intHour), Separator);
                 FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                 for j := 1 to NumEMRegisters do
@@ -1886,7 +1886,7 @@ begin
             if pElem.Enabled then
             begin
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.Year), Separator);
-                FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
+                FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.DynaVars.intHour), Separator);
                 FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                 for j := 1 to NumEMRegisters do
@@ -1963,7 +1963,7 @@ begin
                 with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
+                    FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                     for j := 1 to NumGenRegisters do
@@ -2052,7 +2052,7 @@ begin
                 with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
+                    FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                     for j := 1 to NumGenRegisters do
@@ -2111,7 +2111,7 @@ begin
                 with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
+                    FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                     for j := 1 to NumPVSystemRegisters do
@@ -2196,7 +2196,7 @@ begin
                 with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
+                    FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                     for j := 1 to NumPVSystemRegisters do
@@ -2256,7 +2256,7 @@ begin
                 with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
+                    FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                     for j := 1 to NumStorageRegisters do
@@ -2340,7 +2340,7 @@ begin
                 with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, StrUtils.IfThen(DSS.ActiveCircuit.LoadDurCurveObj = NIL, '', DSS.ActiveCircuit.LoadDurCurveObj.Name), Separator);
+                    FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
                     for j := 1 to NumStorageRegisters do
