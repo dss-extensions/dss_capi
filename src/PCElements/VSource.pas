@@ -278,6 +278,7 @@ begin
     // integer
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNphases);
+    PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     // complex properties
     PropertyType[ord(TProp.puZ0)] := TPropertyType.ComplexProperty;

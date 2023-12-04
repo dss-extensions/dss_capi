@@ -148,6 +148,7 @@ type
         ValueOffset, // only implemented for integers
         FullNameAsArray, // special case for LineGeometry, when reading wire as an array of strings through the Obj_* API
         FullNameAsJSONArray, // special case for Line, when exporting wires property as JSON
+        PowerFactorLimits, // -1..1
         Redundant,
         Util, // things like X and Y from XYcurve that don't have value as data
         Unused,

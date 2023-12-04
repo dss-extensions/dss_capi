@@ -75,6 +75,7 @@ begin
     if TPropertyFlag.Deprecated in flags then Result.Add('Deprecated');
     if TPropertyFlag.InverseValue in flags then Result.Add('InverseValue');
     if TPropertyFlag.SuppressJSON in flags then Result.Add('SuppressJSON');
+    if TPropertyFlag.PowerFactorLimits in flags then Result.Add('PowerFactorLimits');
 end;
 
 function prepareEnum(e: TDSSEnum; enumIds: TClassNamesHashListType): TJSONObject;
@@ -759,6 +760,11 @@ begin
                         prop.Add('exclusiveMinimum', 0)
                     else
                         prop.Add('minimum', 0);
+                end
+                else if TPropertyFlag.PowerFactorLimits in flags then
+                begin
+                    prop.Add('minimum', -1);
+                    prop.Add('maximum', 1);
                 end
                 //TODO
                 else if (PropertyTrapZero[propIndex] <> 0) or (TPropertyFlag.NonZero in flags) then

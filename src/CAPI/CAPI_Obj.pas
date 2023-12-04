@@ -610,7 +610,7 @@ begin
 
     if (joptions and Integer(DSSJSONOptions.LowercaseKeys)) = 0 then
     begin
-        pnames := cls.PropertyName;
+        pnames := cls.PropertyNameJSON;
     end
     else
     begin
@@ -650,7 +650,7 @@ begin
             done[iProp] := True;
 
             // skip substructure (winding, wire) index or suppressed props
-            if (TPropertyFlag.SuppressJSON in cls.PropertyFlags[iProp]) or
+            if ((TPropertyFlag.SuppressJSON in cls.PropertyFlags[iProp]) and (not (TPropertyFlag.Redundant in cls.PropertyFlags[iProp]))) or
                 (TPropertyFlag.AltIndex in cls.PropertyFlags[iProp]) or
                 (TPropertyFlag.IntegerStructIndex in cls.PropertyFlags[iProp]) then
                 continue;
@@ -676,7 +676,9 @@ begin
                         TPropertyType.DoubleFArrayProperty,
                         TPropertyType.DoubleVArrayProperty,
                         TPropertyType.DoubleDArrayProperty,
-                        TPropertyType.DoubleArrayProperty
+                        TPropertyType.DoubleArrayProperty,
+                        TPropertyType.DoubleProperty
+                        //TODO: any other?
                     ])
                 ) then
             begin

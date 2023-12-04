@@ -682,7 +682,7 @@ begin
     PropertyFlags[ord(TProp.TimeChargeTrig)] := [TPropertyFlag.Units_ToD_hour];
 
     PropertyOffset[ord(TProp.pf)] := ptruint(@obj.PFnominal);
-    PropertyFlags[ord(TProp.pf)] := [TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.pf)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.PowerFactorLimits];
 
     PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.StorageVars.FkVArating);
     PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.Units_kVA];

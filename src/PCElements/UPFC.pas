@@ -240,6 +240,7 @@ begin
     // double properties (default type)
     PropertyOffset[ord(TProp.refkv)] := ptruint(@obj.VRef);
     PropertyOffset[ord(TProp.pf)] := ptruint(@obj.pf);
+    PropertyFlags[ord(TProp.pf)] := [TPropertyFlag.PowerFactorLimits];
 
     PropertyOffset[ord(TProp.frequency)] := ptruint(@obj.Freq);
     PropertyFlags[ord(TProp.frequency)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];

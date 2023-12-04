@@ -633,7 +633,7 @@ begin
     PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet];
 
     PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.RequiredInSpecSet];
-    PropertyFlags[ord(TProp.PF)] := [TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.PF)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.PowerFactorLimits];
 
     // adv doubles
     PropertyOffset[ord(TProp.MVA)] := ptruint(@obj.GenVars.kVArating);

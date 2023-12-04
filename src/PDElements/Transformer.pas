@@ -454,7 +454,8 @@ begin
     // double on struct array properties
     PropertyType[ord(TProp.kV)] := TPropertyType.DoubleOnStructArrayProperty;
     PropertyOffset[ord(TProp.kV)] := ptruint(@TWinding(nil^).kVLL);
-    PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
+    PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
+    //TODO: kV should be required if not using XfmrCode!
 
     PropertyType[ord(TProp.kVA)] := TPropertyType.DoubleOnStructArrayProperty;
     PropertyOffset[ord(TProp.kVA)] := ptruint(@TWinding(nil^).kVA);
@@ -588,9 +589,9 @@ begin
     PropertyTrapZero[ord(TProp.X13)] := 35.0;
     PropertyTrapZero[ord(TProp.X23)] := 30.0;
     PropertyFlags[ord(TProp.X12)] := [TPropertyFlag.RequiredInSpecSet];
-    PropertyFlags[ord(TProp.XHL)] := [TPropertyFlag.Redundant, TPropertyFlag.RequiredInSpecSet];
-    PropertyFlags[ord(TProp.XHT)] := [TPropertyFlag.Redundant, TPropertyFlag.RequiredInSpecSet];
-    PropertyFlags[ord(TProp.XLT)] := [TPropertyFlag.Redundant, TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.XHL)] := [TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.XHT)] := [TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.XLT)] := [TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.XHL)] := ord(TProp.X12);
     PropertyRedundantWith[ord(TProp.XHT)] := ord(TProp.X13);
     PropertyRedundantWith[ord(TProp.XLT)] := ord(TProp.X23);
