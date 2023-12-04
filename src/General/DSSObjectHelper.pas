@@ -3012,7 +3012,9 @@ begin
     Result := (DSS.ErrorNumber = 0);
     if Result then
     begin
-        SetAsNextSeq(Index);
+        if not (ParentClass.PropertyType[Index] in [TPropertyType.StringEnumActionProperty, TPropertyType.BooleanActionProperty]) then
+            SetAsNextSeq(Index);
+
         PropertySideEffects(Index, 0, setterFlags);
     end;
     if singleEdit then
@@ -3033,7 +3035,9 @@ begin
     Result := (DSS.ErrorNumber = 0);
     if Result then
     begin
-        SetAsNextSeq(Index);
+        if not (ParentClass.PropertyType[Index] in [TPropertyType.StringEnumActionProperty, TPropertyType.BooleanActionProperty]) then
+            SetAsNextSeq(Index);
+
         PropertySideEffects(Index, prevInt, setterFlags);
     end;
     if singleEdit then
