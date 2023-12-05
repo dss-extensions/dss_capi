@@ -538,6 +538,19 @@ begin
     SetAsNextSeq(ord(TProp.Ratings));
     SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
     SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    begin
+        PrpSequence[ord(TProp.spacing)] := 0;
+        PrpSequence[ord(TProp.geometry)] := 0;
+        PrpSequence[ord(TProp.r1)] := 0;
+        PrpSequence[ord(TProp.x1)] := 0;
+        PrpSequence[ord(TProp.r0)] := 0;
+        PrpSequence[ord(TProp.x0)] := 0;
+        PrpSequence[ord(TProp.C1)] := 0;
+        PrpSequence[ord(TProp.C0)] := 0;
+        PrpSequence[ord(TProp.B1)] := 0;
+        PrpSequence[ord(TProp.B0)] := 0;
+    end;
 
     if Fnphases <> LineCodeObj.FNphases then
     begin
@@ -656,19 +669,6 @@ begin
         ord(TProp.Switch):
             if IsSwitch then
             begin
-                if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
-                begin
-                    PrpSequence[ord(TProp.r1)] := 0;
-                    PrpSequence[ord(TProp.x1)] := 0;
-                    PrpSequence[ord(TProp.r0)] := 0;
-                    PrpSequence[ord(TProp.x0)] := 0;
-                    PrpSequence[ord(TProp.C1)] := 0;
-                    PrpSequence[ord(TProp.C0)] := 0;
-                    PrpSequence[ord(TProp.B1)] := 0;
-                    PrpSequence[ord(TProp.B0)] := 0;
-                    PrpSequence[ord(TProp.length)] := 0;
-                    PrpSequence[ord(TProp.units)] := 0;
-                end;
                 SymComponentsChanged := TRUE;
                 YprimInvalid := TRUE;
                 KillLineCodeSpecified(); //TODO: check if this missing is relevant bug
@@ -682,6 +682,19 @@ begin
                 c0 := 1.0 * 1.0e-9;
                 len := 0.001;
                 ResetLengthUnits;
+                if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+                begin
+                    SetAsNextSeq(ord(TProp.r1));
+                    SetAsNextSeq(ord(TProp.x1));
+                    SetAsNextSeq(ord(TProp.r0));
+                    SetAsNextSeq(ord(TProp.x0));
+                    SetAsNextSeq(ord(TProp.C1));
+                    SetAsNextSeq(ord(TProp.C0));
+                    PrpSequence[ord(TProp.B1)] := 0;
+                    PrpSequence[ord(TProp.B0)] := 0;
+                    SetAsNextSeq(ord(TProp.length));
+                    SetAsNextSeq(ord(TProp.units));
+                end;
             end;
         ord(TProp.Xg),
         ord(TProp.rho):
@@ -707,6 +720,14 @@ begin
                     PrpSequence[ord(TProp.Ratings)] := 0;
                     PrpSequence[(NumPropsThisClass + ord(TPDElementProp.NormAmps))] := 0;
                     PrpSequence[(NumPropsThisClass + ord(TPDElementProp.EmergAmps))] := 0;
+                    PrpSequence[ord(TProp.r1)] := 0;
+                    PrpSequence[ord(TProp.x1)] := 0;
+                    PrpSequence[ord(TProp.r0)] := 0;
+                    PrpSequence[ord(TProp.x0)] := 0;
+                    PrpSequence[ord(TProp.C1)] := 0;
+                    PrpSequence[ord(TProp.C0)] := 0;
+                    PrpSequence[ord(TProp.B1)] := 0;
+                    PrpSequence[ord(TProp.B0)] := 0;
                 end;
 
             end;
@@ -919,6 +940,18 @@ begin
     rho := 100.0;
     Kxg := Xg / ln(658.5 * sqrt(rho / BaseFrequency));
     FCapSpecified := FALSE;
+
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    begin
+        //TODO: should we put everything here, or just the 
+        //      required values to disambiguate the spec?
+        SetAsNextSeq(ord(TProp.R1));
+        SetAsNextSeq(ord(TProp.X1));
+        SetAsNextSeq(ord(TProp.R0));
+        SetAsNextSeq(ord(TProp.X0));
+        SetAsNextSeq(ord(TProp.C1));
+        SetAsNextSeq(ord(TProp.C0));
+    end;
 
     // Basefrequency := 60.0; // set in base class
     Normamps := 400.0;
@@ -1815,6 +1848,19 @@ begin
     SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
     SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
 
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    begin
+        PrpSequence[ord(TProp.linecode)] := 0;
+        PrpSequence[ord(TProp.r1)] := 0;
+        PrpSequence[ord(TProp.x1)] := 0;
+        PrpSequence[ord(TProp.r0)] := 0;
+        PrpSequence[ord(TProp.x0)] := 0;
+        PrpSequence[ord(TProp.C1)] := 0;
+        PrpSequence[ord(TProp.C0)] := 0;
+        PrpSequence[ord(TProp.B1)] := 0;
+        PrpSequence[ord(TProp.B0)] := 0;
+    end;
+
     FNPhases := LineGeometryObj.Nconds;
     Nconds := FNPhases;  // Force Reallocation of terminal info
     Yorder := Fnconds * Fnterms;
@@ -1924,7 +1970,7 @@ procedure TLineObj.KillLineCodeSpecified();
 begin
     LineCodeObj := NIL;
     if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
-        PrpSequence[ord(TLineProp.LineCode)] := 0;
+        PrpSequence[ord(TProp.LineCode)] := 0;
 end;
 
 procedure TLineObj.KillGeometrySpecified;

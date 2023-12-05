@@ -564,12 +564,12 @@ begin
             LoadSpecType := TLoadSpec.kW_PF;
             if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
             begin
-                // SetAsNextSeq(ord(TLoadProp.kW));
-                SetAsNextSeq(ord(TLoadProp.PF));
-                PrpSequence[ord(TLoadProp.kVA)] := 0;
-                PrpSequence[ord(TLoadProp.kvar)] := 0;
-                PrpSequence[ord(TLoadProp.xfkVA)] := 0;
-                PrpSequence[ord(TLoadProp.kWh)] := 0;
+                // SetAsNextSeq(ord(TProp.kW));
+                SetAsNextSeq(ord(TProp.PF));
+                PrpSequence[ord(TProp.kVA)] := 0;
+                PrpSequence[ord(TProp.kvar)] := 0;
+                PrpSequence[ord(TProp.xfkVA)] := 0;
+                PrpSequence[ord(TProp.kWh)] := 0;
             end;
             kWRef := kWBase;
         end;
@@ -577,6 +577,10 @@ begin
         begin
             PFChanged := TRUE;
             PFSpecified := TRUE;
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.kvar)] := 0;
+            end;
         end;
 
         ord(TProp.allocationfactor):
@@ -585,12 +589,12 @@ begin
             LoadSpecType := TLoadSpec.ConnectedkVA_PF;
             if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
             begin
-                SetAsNextSeq(ord(TLoadProp.xfkVA));
-                SetAsNextSeq(ord(TLoadProp.PF));
-                PrpSequence[ord(TLoadProp.kVA)] := 0;
-                PrpSequence[ord(TLoadProp.kvar)] := 0;
-                PrpSequence[ord(TLoadProp.kW)] := 0;
-                PrpSequence[ord(TLoadProp.kWh)] := 0;
+                SetAsNextSeq(ord(TProp.xfkVA));
+                SetAsNextSeq(ord(TProp.PF));
+                PrpSequence[ord(TProp.kVA)] := 0;
+                PrpSequence[ord(TProp.kvar)] := 0;
+                PrpSequence[ord(TProp.kW)] := 0;
+                PrpSequence[ord(TProp.kWh)] := 0;
             end;
             ComputeAllocatedLoad;
             HasBeenAllocated := TRUE;
@@ -602,12 +606,12 @@ begin
             LoadSpecType := TLoadSpec.kWh_PF;
             if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
             begin
-                SetAsNextSeq(ord(TLoadProp.kWh));
-                SetAsNextSeq(ord(TLoadProp.PF));
-                PrpSequence[ord(TLoadProp.kVA)] := 0;
-                PrpSequence[ord(TLoadProp.kvar)] := 0;
-                PrpSequence[ord(TLoadProp.kW)] := 0;
-                PrpSequence[ord(TLoadProp.xfkVA)] := 0;
+                SetAsNextSeq(ord(TProp.kWh));
+                SetAsNextSeq(ord(TProp.PF));
+                PrpSequence[ord(TProp.kVA)] := 0;
+                PrpSequence[ord(TProp.kvar)] := 0;
+                PrpSequence[ord(TProp.kW)] := 0;
+                PrpSequence[ord(TProp.xfkVA)] := 0;
             end;
             ComputeAllocatedLoad;
             HasBeenAllocated := TRUE;
@@ -642,12 +646,12 @@ begin
             LoadSpecType := TLoadSpec.kWh_PF;
             if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
             begin
-                // SetAsNextSeq(ord(TLoadProp.kWh));
-                SetAsNextSeq(ord(TLoadProp.PF));
-                PrpSequence[ord(TLoadProp.kVA)] := 0;
-                PrpSequence[ord(TLoadProp.kvar)] := 0;
-                PrpSequence[ord(TLoadProp.kW)] := 0;
-                PrpSequence[ord(TLoadProp.xfkVA)] := 0;
+                // SetAsNextSeq(ord(TProp.kWh));
+                SetAsNextSeq(ord(TProp.PF));
+                PrpSequence[ord(TProp.kVA)] := 0;
+                PrpSequence[ord(TProp.kvar)] := 0;
+                PrpSequence[ord(TProp.kW)] := 0;
+                PrpSequence[ord(TProp.xfkVA)] := 0;
             end;
             FAllocationFactor := FCFactor;
             ComputeAllocatedLoad;
@@ -657,12 +661,13 @@ begin
             LoadSpecType := TLoadSpec.kW_kvar;
             if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
             begin
-                SetAsNextSeq(ord(TLoadProp.kW));
-                // SetAsNextSeq(ord(TLoadProp.kvar));
-                PrpSequence[ord(TLoadProp.kVA)] := 0;
-                PrpSequence[ord(TLoadProp.PF)] := 0;
-                PrpSequence[ord(TLoadProp.kWh)] := 0;
-                PrpSequence[ord(TLoadProp.xfkVA)] := 0;
+                if PrpSequence[ord(TProp.kW)] = 0 then
+                    SetAsNextSeq(ord(TProp.kW));
+                // SetAsNextSeq(ord(TProp.kvar));
+                PrpSequence[ord(TProp.kVA)] := 0;
+                PrpSequence[ord(TProp.PF)] := 0;
+                PrpSequence[ord(TProp.kWh)] := 0;
+                PrpSequence[ord(TProp.xfkVA)] := 0;
             end;
             PFSpecified := FALSE;
             kVARref := kVARbase;
@@ -673,12 +678,12 @@ begin
             LoadSpecType := TLoadSpec.ConnectedkVA_PF;
             if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
             begin
-                SetAsNextSeq(ord(TLoadProp.xfkVA));
-                SetAsNextSeq(ord(TLoadProp.PF));
-                PrpSequence[ord(TLoadProp.kVA)] := 0;
-                PrpSequence[ord(TLoadProp.kvar)] := 0;
-                PrpSequence[ord(TLoadProp.kW)] := 0;
-                PrpSequence[ord(TLoadProp.kWh)] := 0;
+                SetAsNextSeq(ord(TProp.xfkVA));
+                SetAsNextSeq(ord(TProp.PF));
+                PrpSequence[ord(TProp.kVA)] := 0;
+                PrpSequence[ord(TProp.kvar)] := 0;
+                PrpSequence[ord(TProp.kW)] := 0;
+                PrpSequence[ord(TProp.kWh)] := 0;
             end;
             FAllocationFactor := FkVAAllocationFactor;
             ComputeAllocatedLoad;
@@ -688,12 +693,12 @@ begin
             LoadSpecType := TLoadSpec.kWh_PF;
             if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
             begin
-                // SetAsNextSeq(ord(TLoadProp.kWh));
-                SetAsNextSeq(ord(TLoadProp.PF));
-                PrpSequence[ord(TLoadProp.kVA)] := 0;
-                PrpSequence[ord(TLoadProp.kvar)] := 0;
-                PrpSequence[ord(TLoadProp.kW)] := 0;
-                PrpSequence[ord(TLoadProp.xfkVA)] := 0;
+                // SetAsNextSeq(ord(TProp.kWh));
+                SetAsNextSeq(ord(TProp.PF));
+                PrpSequence[ord(TProp.kVA)] := 0;
+                PrpSequence[ord(TProp.kvar)] := 0;
+                PrpSequence[ord(TProp.kW)] := 0;
+                PrpSequence[ord(TProp.xfkVA)] := 0;
             end;
             ComputeAllocatedLoad;
         end;
@@ -702,12 +707,12 @@ begin
             LoadSpecType := TLoadSpec.kVA_PF;  // kVA, PF
             if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
             begin
-                // SetAsNextSeq(ord(TLoadProp.kVA));
-                SetAsNextSeq(ord(TLoadProp.PF));
-                PrpSequence[ord(TLoadProp.kWh)] := 0;
-                PrpSequence[ord(TLoadProp.kvar)] := 0;
-                PrpSequence[ord(TLoadProp.kW)] := 0;
-                PrpSequence[ord(TLoadProp.xfkVA)] := 0;
+                // SetAsNextSeq(ord(TProp.kVA));
+                SetAsNextSeq(ord(TProp.PF));
+                PrpSequence[ord(TProp.kWh)] := 0;
+                PrpSequence[ord(TProp.kvar)] := 0;
+                PrpSequence[ord(TProp.kW)] := 0;
+                PrpSequence[ord(TProp.xfkVA)] := 0;
             end;
         end;
         // *** see set_kwh, etc           28..30: LoadSpecType := 4;  // kWh, days, cfactor, PF 
@@ -811,8 +816,8 @@ begin
     kVABase := kWBase / PFNominal;
     LoadSpecType := TLoadSpec.kW_PF;
 
-    // SetAsNextSeq(ord(TLoadProp.kW));
-    // SetAsNextSeq(ord(TLoadProp.PF));
+    // SetAsNextSeq(ord(TProp.kW));
+    // SetAsNextSeq(ord(TProp.PF));
 
     Rneut := -1.0;  // signify neutral is open
     Xneut := 0.0;
@@ -987,19 +992,18 @@ begin
     kvarbase := Qkvar;
     if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
     begin
-        PrpSequence[ord(TLoadProp.kVA)] := 0;
-        PrpSequence[ord(TLoadProp.kWh)] := 0;
-        PrpSequence[ord(TLoadProp.kW)] := 0;
-        PrpSequence[ord(TLoadProp.xfkVA)] := 0;
+        PrpSequence[ord(TProp.kVA)] := 0;
+        PrpSequence[ord(TProp.kWh)] := 0;
+        PrpSequence[ord(TProp.xfkVA)] := 0;
         if PFSpecified then
         begin
-            SetAsNextSeq(ord(TLoadProp.PF));
-            PrpSequence[ord(TLoadProp.kvar)] := 0;
+            SetAsNextSeq(ord(TProp.PF));
+            PrpSequence[ord(TProp.kvar)] := 0;
         end
         else
         begin
-            SetAsNextSeq(ord(TLoadProp.kvar));
-            PrpSequence[ord(TLoadProp.PF)] := 0;
+            SetAsNextSeq(ord(TProp.kvar));
+            PrpSequence[ord(TProp.PF)] := 0;
         end;
     end;
 
@@ -2117,12 +2121,12 @@ begin
     LoadSpecType := TLoadSpec.ConnectedkVA_PF;
     if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
     begin
-        SetAsNextSeq(ord(TLoadProp.xfkVA));
-        SetAsNextSeq(ord(TLoadProp.PF));
-        PrpSequence[ord(TLoadProp.kVA)] := 0;
-        PrpSequence[ord(TLoadProp.kvar)] := 0;
-        PrpSequence[ord(TLoadProp.kW)] := 0;
-        PrpSequence[ord(TLoadProp.kWh)] := 0;
+        SetAsNextSeq(ord(TProp.xfkVA));
+        SetAsNextSeq(ord(TProp.PF));
+        PrpSequence[ord(TProp.kVA)] := 0;
+        PrpSequence[ord(TProp.kvar)] := 0;
+        PrpSequence[ord(TProp.kW)] := 0;
+        PrpSequence[ord(TProp.kWh)] := 0;
     end;
     ComputeAllocatedLoad;
     HasBeenAllocated := TRUE;
@@ -2149,12 +2153,12 @@ begin
     LoadSpecType := TLoadSpec.kWh_PF;
     if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
     begin
-        SetAsNextSeq(ord(TLoadProp.kWh));
-        SetAsNextSeq(ord(TLoadProp.PF));
-        PrpSequence[ord(TLoadProp.kVA)] := 0;
-        PrpSequence[ord(TLoadProp.kvar)] := 0;
-        PrpSequence[ord(TLoadProp.kW)] := 0;
-        PrpSequence[ord(TLoadProp.xfkVA)] := 0;
+        SetAsNextSeq(ord(TProp.kWh));
+        SetAsNextSeq(ord(TProp.PF));
+        PrpSequence[ord(TProp.kVA)] := 0;
+        PrpSequence[ord(TProp.kvar)] := 0;
+        PrpSequence[ord(TProp.kW)] := 0;
+        PrpSequence[ord(TProp.xfkVA)] := 0;
     end;
     ComputeAllocatedLoad;
     HasBeenAllocated := TRUE;

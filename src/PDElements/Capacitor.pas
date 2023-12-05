@@ -206,14 +206,14 @@ begin
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
-        'kvar',
+        'kvar, kV',
         'cmatrix',
-        'cuf'
+        'cuf, kV'
     );
     SpecSets := TSpecSets.Create(
-        TSpecSet.Create(ord(TProp.kvar)),
+        TSpecSet.Create(ord(TProp.kvar), ord(TProp.kV)),
         TSpecSet.Create(ord(TProp.cmatrix)),
-        TSpecSet.Create(ord(TProp.cuf))
+        TSpecSet.Create(ord(TProp.cuf), ord(TProp.kV))
     );
 
     // real matrix
@@ -267,7 +267,7 @@ begin
 
     // double properties (default type)
     PropertyOffset[ord(TProp.kv)] := ptruint(@obj.kvrating);
-    PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
+    PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
     // integer properties
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
@@ -373,11 +373,17 @@ begin
                 Yorder := Fnterms * Fnconds;
             end;
         ord(TProp.kvar):
+        begin
             SpecType := 1;
+        end;
         ord(TProp.cmatrix):
+        begin
             SpecType := 3;
+        end;
         ord(TProp.cuf):
+        begin
             SpecType := 2;
+        end;
         ord(TProp.Numsteps):
         begin
             // reallocate all arrays associated with steps 

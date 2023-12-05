@@ -445,16 +445,65 @@ begin
     // Set the Z spec type switch depending on which was specified.
     case Idx of
         ord(TProp.MVAsc3), ord(TProp.MVAsc1):
+        begin
             ZSpecType := 1;  // MVAsc
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.Isc3)] := 0;
+                PrpSequence[ord(TProp.Isc1)] := 0;
+                PrpSequence[ord(TProp.R1)] := 0;
+                PrpSequence[ord(TProp.X1)] := 0;
+                PrpSequence[ord(TProp.R0)] := 0;
+                PrpSequence[ord(TProp.X0)] := 0;
+                PrpSequence[ord(TProp.Z1)] := 0;
+                PrpSequence[ord(TProp.Z0)] := 0;
+                PrpSequence[ord(TProp.Z2)] := 0;
+                PrpSequence[ord(TProp.puZ1)] := 0;
+                PrpSequence[ord(TProp.puZ0)] := 0;
+                PrpSequence[ord(TProp.puZ2)] := 0;
+            end;
+        end;
         ord(TProp.Isc3), ord(TProp.Isc1):
+        begin
             ZSpecType := 2;  // Isc
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.MVAsc3)] := 0;
+                PrpSequence[ord(TProp.MVAsc1)] := 0;
+                PrpSequence[ord(TProp.R1)] := 0;
+                PrpSequence[ord(TProp.X1)] := 0;
+                PrpSequence[ord(TProp.R0)] := 0;
+                PrpSequence[ord(TProp.X0)] := 0;
+                PrpSequence[ord(TProp.Z1)] := 0;
+                PrpSequence[ord(TProp.Z0)] := 0;
+                PrpSequence[ord(TProp.Z2)] := 0;
+                PrpSequence[ord(TProp.puZ1)] := 0;
+                PrpSequence[ord(TProp.puZ0)] := 0;
+                PrpSequence[ord(TProp.puZ2)] := 0;
+            end;
+        end;
         ord(TProp.R1), ord(TProp.X1), ord(TProp.R0), ord(TProp.X0):
+        begin
             ZSpecType := 3; // Specified in Ohms
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.Isc3)] := 0;
+                PrpSequence[ord(TProp.Isc1)] := 0;
+                PrpSequence[ord(TProp.MVAsc3)] := 0;
+                PrpSequence[ord(TProp.MVAsc1)] := 0;
+            end;
+        end;
         ord(TProp.bus2):
             Bus2Defined := TRUE;
         ord(TProp.Z1), ord(TProp.Z0), ord(TProp.Z2), 
         ord(TProp.puZ1), ord(TProp.puZ0), ord(TProp.puZ2):
+        begin
             Zspectype := 3;
+            PrpSequence[ord(TProp.Isc3)] := 0;
+            PrpSequence[ord(TProp.Isc1)] := 0;
+            PrpSequence[ord(TProp.MVAsc3)] := 0;
+            PrpSequence[ord(TProp.MVAsc1)] := 0;
+        end;
     end;
 
     case Idx of
@@ -583,6 +632,13 @@ begin
     kVBase := 115.0;
     BaseMVA := 100.0;
     ZBase := SQR(kVBase) / BaseMVA;
+
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    begin
+        SetAsNextSeq(ord(TProp.MVASC3));
+        SetAsNextSeq(ord(TProp.MVASC1));
+        SetAsNextSeq(ord(TProp.BasekV));
+    end;
 
     SrcFrequency := BaseFrequency;
     Angle := 0.0;

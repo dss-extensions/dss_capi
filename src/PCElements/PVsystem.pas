@@ -657,10 +657,21 @@ begin
         end;
 
         ord(TProp.pf):
+        begin
             varMode := VARMODEPF;
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.kvar)] := 0;
+            end;
+        end;
         ord(TProp.kvar):
+        begin
             varMode := VARMODEKVAR;
-
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.pf)] := 0;
+            end;
+        end;
         ord(TProp.kv):
         begin
             with PVSystemVars do
@@ -933,6 +944,10 @@ begin
     kW_out := 500.0;
     kvar_out := 0.0;
     PFnominal := 1.0;
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    begin
+        SetAsNextSeq(ord(TProp.PF));
+    end;
 
     pctR := 50.0;
     pctX := 0.0;

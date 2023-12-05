@@ -538,12 +538,12 @@ begin
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
-        'kW, PF',
-        'kW, kvar'
+        'kWRated, PF',
+        'kWRated, kvar'
     );
     SpecSets := TSpecSets.Create(
-        TSpecSet.Create(ord(TProp.kW), ord(TProp.PF)),
-        TSpecSet.Create(ord(TProp.kW), ord(TProp.kvar))
+        TSpecSet.Create(ord(TProp.kWRated), ord(TProp.PF)),
+        TSpecSet.Create(ord(TProp.kWRated), ord(TProp.kvar))
     );
 
     // strings
@@ -666,7 +666,7 @@ begin
     PropertyOffset[ord(TProp.Vmaxpu)] := ptruint(@obj.VMaxPu);
 
     PropertyOffset[ord(TProp.kWrated)] := ptruint(@obj.StorageVars.kWrating);
-    PropertyFlags[ord(TProp.kWrated)] := [TPropertyFlag.Units_kW];
+    PropertyFlags[ord(TProp.kWrated)] := [TPropertyFlag.Units_kW, TPropertyFlag.RequiredInSpecSet];
 
     PropertyOffset[ord(TProp.kWhrated)] := ptruint(@obj.StorageVars.kWhrating);
     PropertyFlags[ord(TProp.kWhrated)] := [TPropertyFlag.Units_kWh];
@@ -703,7 +703,7 @@ begin
     PropertyType[ord(TProp.kW)] := TPropertyType.DoubleProperty;
     PropertyOffset[ord(TProp.kW)] := ptruint(@obj.kW_out);
     PropertyWriteFunction[ord(TProp.kW)] := @SetkW;
-    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kW];
+    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Units_kW];
 
     PropertyOffset[ord(TProp.kVDC)] := ptruint(@obj.dynVars.RatedVDC);
     PropertyScale[ord(TProp.kVDC)] := 1000;
@@ -805,10 +805,21 @@ begin
             end;
 
         ord(TProp.pf):
+        begin
             varMode := VARMODEPF;
-
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.kvar)] := 0;
+            end;
+        end;
         ord(TProp.kvar):
+        begin
             varMode := VARMODEKVAR;
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.pf)] := 0;
+            end;
+        end;
 
         ord(TProp.kvarMax):
         begin
@@ -1120,9 +1131,13 @@ begin
     kvar_out := 0.0;
      // removed kvarBase     := kvar_out;     // initialize
     PFNominal := 1.0;
-
     pctR := 0.0;
     pctX := 50.0;
+
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    begin
+        SetAsNextSeq(ord(TProp.PF));
+    end;
 
     // Make the StorageVars struct as public
     PublicDataStruct := @StorageVars;

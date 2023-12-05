@@ -714,6 +714,16 @@ begin
             DoDblFile(self, dblfile);
         ord(TProp.PQCSVFile):
             Do2ColCSVFile(self, pqcsvfile);
+        ord(TProp.Interval):
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.Hour)] := 0;
+            end;
+        ord(TProp.Hour):
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.Interval)] := 0;
+            end;
     end;
     case Idx of
         ord(TProp.npts):
@@ -1250,6 +1260,10 @@ begin
 
     NumPoints := 0;
     Interval := 1.0;  // hr
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    begin
+        SetAsNextSeq(ord(TProp.interval));
+    end;
     dH := NIL;
     dP := NIL;
     dQ := NIL;
@@ -1840,10 +1854,12 @@ begin
                 Result := GetDSSArray(NumPoints, pSingleArray(sP));
         end;
         ord(TProp.hour):
+        begin
             if dH <> NIL then
                 Result := GetDSSArray(NumPoints, pDoubleArray(dH))
             else if sH <> NIL then
                 Result := GetDSSArray(NumPoints, pSingleArray(sH));
+        end;
         ord(TProp.qmult):
         begin
             if UseMMF then

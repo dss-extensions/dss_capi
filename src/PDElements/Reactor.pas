@@ -201,7 +201,7 @@ begin
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
-        'kvar, Rcurve, Lcurve',
+        'kV, kvar, Rcurve, Lcurve',
         'Z, Rcurve, Lcurve',
         'R, Rcurve, Lcurve',
         'R, X, Rcurve, Lcurve',
@@ -214,7 +214,7 @@ begin
     // have to accept it in any spec set.
 
     SpecSets := TSpecSets.Create(
-        TSpecSet.Create(ord(TProp.kvar), ord(TProp.Rcurve), ord(TProp.Lcurve)),
+        TSpecSet.Create(ord(TProp.kV), ord(TProp.kvar), ord(TProp.Rcurve), ord(TProp.Lcurve)),
         TSpecSet.Create(ord(TProp.Z), ord(TProp.Rcurve), ord(TProp.Lcurve)),
         TSpecSet.Create(ord(TProp.R), ord(TProp.X), ord(TProp.Rcurve), ord(TProp.Lcurve)),
         TSpecSet.Create(ord(TProp.R), ord(TProp.LmH), ord(TProp.Rcurve), ord(TProp.Lcurve)),
@@ -286,7 +286,7 @@ begin
     PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kvar];
 
     PropertyOffset[ord(TProp.kv)] := ptruint(@obj.kvRating);
-    PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
+    PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
     PropertyOffset[ord(TProp.R)] := ptruint(@obj.R);
     PropertyFlags[ord(TProp.R)] := [TPropertyFlag.Redundant, TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm];
@@ -379,7 +379,21 @@ begin
                 Yorder := Fnterms * Fnconds;
             end;
         ord(TProp.kvar):
+        begin
             SpecType := 1;   // X specified by kvar, kV
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.RMatrix)] := 0;
+                PrpSequence[ord(TProp.XMatrix)] := 0;
+                PrpSequence[ord(TProp.R)] := 0;
+                PrpSequence[ord(TProp.X)] := 0;
+                PrpSequence[ord(TProp.Z)] := 0;
+                PrpSequence[ord(TProp.Z0)] := 0;
+                PrpSequence[ord(TProp.Z1)] := 0;
+                PrpSequence[ord(TProp.Z2)] := 0;
+                PrpSequence[ord(TProp.LmH)] := 0;
+            end;
+        end;
         ord(TProp.conn):
             case Connection of
                 TReactorConnection.Delta:
@@ -402,9 +416,35 @@ begin
             end;
         ord(TProp.Rmatrix),
         ord(TProp.Xmatrix):
+        begin
             SpecType := 3;
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.kvar)] := 0;
+                PrpSequence[ord(TProp.R)] := 0;
+                PrpSequence[ord(TProp.X)] := 0;
+                PrpSequence[ord(TProp.Z)] := 0;
+                PrpSequence[ord(TProp.Z0)] := 0;
+                PrpSequence[ord(TProp.Z1)] := 0;
+                PrpSequence[ord(TProp.Z2)] := 0;
+                PrpSequence[ord(TProp.LmH)] := 0;
+            end;
+        end;
         ord(TProp.X):
+        begin
             SpecType := 2;   // X specified directly rather than computed from kvar
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.RMatrix)] := 0;
+                PrpSequence[ord(TProp.XMatrix)] := 0;
+                PrpSequence[ord(TProp.kvar)] := 0;
+                PrpSequence[ord(TProp.Z)] := 0;
+                PrpSequence[ord(TProp.Z0)] := 0;
+                PrpSequence[ord(TProp.Z1)] := 0;
+                PrpSequence[ord(TProp.Z2)] := 0;
+                PrpSequence[ord(TProp.LmH)] := 0;
+            end;
+        end;
         ord(TProp.Rp):
             RpSpecified := TRUE;
         ord(TProp.Z1):
@@ -414,6 +454,17 @@ begin
                 Z2 := Z1;
             if not Z0Specified then
                 Z0 := Z1;
+
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.RMatrix)] := 0;
+                PrpSequence[ord(TProp.XMatrix)] := 0;
+                PrpSequence[ord(TProp.R)] := 0;
+                PrpSequence[ord(TProp.X)] := 0;
+                PrpSequence[ord(TProp.Z)] := 0;
+                PrpSequence[ord(TProp.kvar)] := 0;
+                PrpSequence[ord(TProp.LmH)] := 0;
+            end;
         end;
         ord(TProp.Z2):
             Z2Specified := TRUE;
@@ -429,6 +480,17 @@ begin
         begin
             SpecType := 2;
             X := L * TwoPi * BaseFrequency;
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.RMatrix)] := 0;
+                PrpSequence[ord(TProp.XMatrix)] := 0;
+                PrpSequence[ord(TProp.kvar)] := 0;
+                PrpSequence[ord(TProp.Z)] := 0;
+                PrpSequence[ord(TProp.Z0)] := 0;
+                PrpSequence[ord(TProp.Z1)] := 0;
+                PrpSequence[ord(TProp.Z2)] := 0;
+                PrpSequence[ord(TProp.X)] := 0;
+            end;
         end
     end;
 

@@ -350,14 +350,43 @@ begin
             end;
     end;
     case Idx of
-        1..6, 23, 24:
+        ord(TProp.NPhases),
+        ord(TProp.R1),
+        ord(TProp.X1),
+        ord(TProp.R0),
+        ord(TProp.X0),
+        ord(TProp.C1),
+        // ord(TProp.C0), -- Missing?
+        ord(TProp.B1),
+        ord(TProp.B0):
+        begin
             SymComponentsModel := TRUE;
-        9..11:
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.RMatrix)] := 0;
+                PrpSequence[ord(TProp.XMatrix)] := 0;
+                PrpSequence[ord(TProp.CMatrix)] := 0;
+            end;
+        end;
+        ord(TProp.RMatrix),
+        ord(TProp.XMatrix),
+        ord(TProp.CMatrix):
         begin
             Include(Flags, Flg.NeedsRecalc);
             SymComponentsModel := FALSE;
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.r1)] := 0;
+                PrpSequence[ord(TProp.x1)] := 0;
+                PrpSequence[ord(TProp.r0)] := 0;
+                PrpSequence[ord(TProp.x0)] := 0;
+                PrpSequence[ord(TProp.C1)] := 0;
+                PrpSequence[ord(TProp.C0)] := 0;
+                PrpSequence[ord(TProp.B1)] := 0;
+                PrpSequence[ord(TProp.B0)] := 0;
+            end;
         end;
-        25:
+        ord(TProp.Seasons):
             setlength(AmpRatings, NumAmpRatings);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
@@ -437,6 +466,19 @@ begin
     X0 := 0.4047;
     C1 := 3.4e-9;  // nf per 1000ft
     C0 := 1.6e-9;
+
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    begin
+        //TODO: should we put everything here, or just the 
+        //      required values to disambiguate the spec?
+        SetAsNextSeq(ord(TProp.R1));
+        SetAsNextSeq(ord(TProp.X1));
+        SetAsNextSeq(ord(TProp.R0));
+        SetAsNextSeq(ord(TProp.X0));
+        SetAsNextSeq(ord(TProp.C1));
+        SetAsNextSeq(ord(TProp.C0));
+    end;
+
     Z := NIL;
     Zinv := NIL;
     Yc := NIL;

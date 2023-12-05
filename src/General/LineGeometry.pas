@@ -450,7 +450,12 @@ begin
                         FX[i] := LineSpacingObj.Xcoord[i];
                         FY[i] := LineSpacingObj.Ycoord[i];
                         FUnits[i] := FLastUnit;
-                    end
+                    end;
+                    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+                    begin
+                        PrpSequence[ord(TProp.X)] := 0;
+                        PrpSequence[ord(TProp.H)] := 0;
+                    end;
                 end
                 else
                     DoSimpleMsg('LineSpacing object %s has the wrong number of wires.', [LineSpacingObj.Name], 10103);

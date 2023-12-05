@@ -378,13 +378,13 @@ begin
 
     SpecSetNames := ArrayOfString.Create(
         'XfmrCode', //TODO: always apply first
-        'X12, X13, X23',
-        'XscArray'
+        'X12, X13, X23, kV',
+        'XscArray, kV'
     );
     SpecSets := TSpecSets.Create(
         TSpecSet.Create(ord(TProp.XfmrCode)),
-        TSpecSet.Create(ord(TProp.X12), ord(TProp.X13), ord(TProp.X23)),
-        TSpecSet.Create(ord(TProp.XscArray))
+        TSpecSet.Create(ord(TProp.X12), ord(TProp.X13), ord(TProp.X23), ord(TProp.kV)),
+        TSpecSet.Create(ord(TProp.XscArray), ord(TProp.kV))
     );
 
     PropertyStructArrayOffset := ptruint(@obj.Winding);
@@ -454,8 +454,7 @@ begin
     // double on struct array properties
     PropertyType[ord(TProp.kV)] := TPropertyType.DoubleOnStructArrayProperty;
     PropertyOffset[ord(TProp.kV)] := ptruint(@TWinding(nil^).kVLL);
-    PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
-    //TODO: kV should be required if not using XfmrCode!
+    PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Units_kV, TPropertyFlag.NonNegative, TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.kVA)] := TPropertyType.DoubleOnStructArrayProperty;
     PropertyOffset[ord(TProp.kVA)] := ptruint(@TWinding(nil^).kVA);
@@ -496,7 +495,7 @@ begin
     PropertyType[ord(TProp.kVs)] := TPropertyType.DoubleArrayOnStructArrayProperty;
     PropertyOffset[ord(TProp.kVs)] := ptruint(@TWinding(nil^).kVLL); 
     PropertyOffset2[ord(TProp.kVs)] := ptruint(@obj.NumWindings);
-    PropertyFlags[ord(TProp.kVs)] := [TPropertyFlag.Redundant, TPropertyFlag.Required];
+    PropertyFlags[ord(TProp.kVs)] := [TPropertyFlag.Redundant, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
     PropertyRedundantWith[ord(TProp.kVs)] := ord(TProp.kV);
     PropertyArrayAlternative[ord(TProp.kV)] := ord(TProp.kVs);
 
@@ -687,8 +686,14 @@ begin
         end;
         ord(TProp.XHL), ord(TProp.XHT), ord(TProp.XLT),
         ord(TProp.X12), ord(TProp.X13), ord(TProp.X23):
+        begin
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.XscArray)] := 0;
+                PrpSequence[ord(TProp.XfmrCode)] := 0;
+            end;
             XHLChanged := TRUE;
-
+        end;
         ord(TProp.pctloadloss):
         begin    // Assume load loss is split evenly  between windings 1 and 2
             Winding[1].Rpu := pctLoadLoss / 2.0 / 100.0;
@@ -702,6 +707,17 @@ begin
             Winding[ActiveWinding].RdcSpecified := TRUE;
         ord(TProp.Seasons):
             SetLength(kVARatings, NumAmpRatings);
+        ord(TProp.Xscarray):
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.XHL)] := 0;
+                PrpSequence[ord(TProp.XHT)] := 0;
+                PrpSequence[ord(TProp.XLT)] := 0;
+                PrpSequence[ord(TProp.X12)] := 0;
+                PrpSequence[ord(TProp.X13)] := 0;
+                PrpSequence[ord(TProp.X23)] := 0;
+                PrpSequence[ord(TProp.XfmrCode)] := 0;
+            end;
     end;
 
     //YPrim invalidation on anything that changes impedance values
@@ -825,6 +841,11 @@ begin
     Nterms := NumWindings;  // Force allocation of terminals and conductors
 
     XHL := 0.07;
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    begin
+        SetAsNextSeq(ord(TProp.XHL));
+    end;
+
     XHT := 0.35;
     XLT := 0.30;
     XHLChanged := TRUE;  // Set flag to for calc of XSC array from XHL, etc.
@@ -1988,6 +2009,17 @@ begin
     XLT := Obj.XLT;
     for i := 1 to (NumWindings * (NumWindings - 1) div 2) do
         XSc[i] := Obj.XSC[i];
+
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    begin
+        PrpSequence[ord(TProp.XHL)] := 0;
+        PrpSequence[ord(TProp.XHT)] := 0;
+        PrpSequence[ord(TProp.XLT)] := 0;
+        PrpSequence[ord(TProp.X12)] := 0;
+        PrpSequence[ord(TProp.X13)] := 0;
+        PrpSequence[ord(TProp.X23)] := 0;
+        PrpSequence[ord(TProp.Xscarray)] := 0;
+    end;
 
     ThermalTimeConst := Obj.ThermalTimeConst;
     n_thermal := Obj.n_thermal;

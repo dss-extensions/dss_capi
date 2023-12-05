@@ -932,10 +932,15 @@ begin
     Nterms := 1;  // forces allocations
     kWBase := 1000.0;
     kvarBase := 60.0;
-
     kvarMax := kvarBase * 2.0;
     kvarMin := -kvarmax;
     PFNominal := 0.88;
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    begin
+        SetAsNextSeq(ord(TProp.kW));
+        SetAsNextSeq(ord(TProp.PF));
+    end;
+
     YearlyShapeObj := NIL;  // if YearlyShapeobj = nil then the load alway stays nominal * global multipliers
     DailyDispShapeObj := NIL;  // if DaillyShapeobj = nil then the load alway stays nominal * global multipliers
     DutyShapeObj := NIL;  // if DutyShapeobj = nil then the load alway stays nominal * global multipliers
