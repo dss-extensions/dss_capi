@@ -1061,23 +1061,33 @@ begin
             for j := 0 to High(SpecSets) do
             begin
                 specSet := TJSONObject.Create();
-                requiredInSpec := TJSONArray.Create();                
-                for propIndex in SpecSets[j] do
+                requiredInSpec := TJSONArray.Create();
+                for propIndex_ in SpecSets[j] do
                 begin
+                    propIndex := propIndex_;
+                    propName := PropertyName[propIndex];
+                    propNameJSON := PropertyNameJSON[propIndex];
+                    if propJSON[propIndex] = NIL then
+                    begin
+                        if (PropertyArrayAlternative[propIndex] <> 0) then
+                        begin
+                            propIndex := PropertyArrayAlternative[propIndex];
+                        end;
+                    end;
                     if propJSON[propIndex] = NIL then
                     begin
                         specSet.Free();
                         specSet := NIL;
                         break;
                     end;
-                    specSet.Add(PropertyNameJSON[propIndex], propJSON[propIndex].Clone());
-                    if toRemove.IndexOf(PropertyNameJSON[propIndex]) < 0 then
+                    specSet.Add(propNameJSON, propJSON[propIndex].Clone());
+                    if toRemove.IndexOf(propNameJSON) < 0 then
                     begin
-                        toRemove.Add(PropertyNameJSON[propIndex]);
+                        toRemove.Add(propNameJSON);
                     end;
 
                     if (TPropertyFlag.RequiredInSpecSet in PropertyFlags[propIndex]) then
-                        requiredInSpec.Add(PropertyNameJSON[propIndex]);
+                        requiredInSpec.Add(propNameJSON);
                 end;
                 if specSet = NIL then
                     continue;

@@ -960,6 +960,7 @@ var
     valArray, valArrayItem: TJSONArray;
     ptype: TPropertyType;
     jsonArray: TJSONArray = NIL;
+    enumAsInt: Boolean;
 begin
     if preferArray and (PropertyArrayAlternative[Index] <> 0) then
     begin
@@ -981,6 +982,7 @@ begin
 
     Result := True;
     ptype := PropertyType[Index];
+    enumAsInt := (joptions and Integer(DSSJSONOptions.EnumAsInt) <> 0);
     case ptype of
         TPropertyType.DoubleProperty,
         TPropertyType.DoubleOnArrayProperty,
@@ -1082,7 +1084,50 @@ begin
         TPropertyType.MappedStringEnumOnStructArrayProperty,
         TPropertyType.MappedStringEnumProperty:
         begin
-            if ((joptions and Integer(DSSJSONOptions.EnumAsInt) = 0) or (not (ptype in [
+            if (TPropertyFlag.OnArray in PropertyFlags[Index]) or 
+                (ptype in [TPropertyType.BusOnStructArrayProperty, TPropertyType.MappedStringEnumOnStructArrayProperty]) then
+            begin
+                valArray := TJSONArray.Create();
+                val := valArray;
+
+                if ptype = TPropertyType.BusOnStructArrayProperty then
+                begin
+                    for i := 1 to PInteger(PByte(obj) + PropertyStructArrayCountOffset)^ do
+                        valArray.Add(TDSSCktElement(obj).GetBus(i));
+                    Exit;
+                end;
+
+                if TPropertyFlag.OnArray in PropertyFlags[Index] then
+                begin
+                    integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
+                    for i := 1 to PInteger(PByte(obj) + PropertyStructArrayCountOffset)^ do
+                    begin
+                        if enumAsInt then
+                            valArray.Add(integerPtr^)
+                        else
+                            valArray.Add(TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalToString(integerPtr^));
+
+                        inc(integerPtr, 1);
+                    end;
+                    Exit;
+                end
+                else
+                begin
+                    integerPtr := PInteger(PPByte(PByte(obj) + PropertyStructArrayOffset)^ + PropertyOffset[Index]);
+                    for i := 1 to PInteger(PByte(obj) + PropertyStructArrayCountOffset)^ do
+                    begin
+                        if enumAsInt then
+                            valArray.Add(integerPtr^)
+                        else
+                            valArray.Add(TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalToString(integerPtr^));
+
+                        inc(integerPtr, PropertyStructArrayStep);
+                    end;
+                    Exit;
+                end;
+            end;
+
+            if ((not enumAsInt) or (not (ptype in [
                 TPropertyType.MappedStringEnumOnStructArrayProperty, 
                 TPropertyType.MappedStringEnumProperty
             ]))) then
@@ -1311,7 +1356,7 @@ begin
 
             integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
 
-            if (joptions and Integer(DSSJSONOptions.EnumAsInt)) = 0 then
+            if not enumAsInt then
             begin
                 for i := 1 to intVal do
                 begin
@@ -1345,7 +1390,7 @@ begin
                 PropertyOffset[Index]
             );
 
-            if joptions and Integer(DSSJSONOptions.EnumAsInt) = 0 then
+            if not enumAsInt then
             begin
                 for i := 1 to intVal do
                 begin

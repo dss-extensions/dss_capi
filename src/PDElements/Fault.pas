@@ -269,9 +269,19 @@ begin
             SpecType := 1;
             if G = 0 then
                 G := 10000.0;  // Default to a low resistance
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.Gmatrix)] := 0;
+            end;
         end;
         ord(TProp.Gmatrix):
+        begin
             SpecType := 2;
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.r)] := 0;
+            end;
+        end;
         ord(TProp.ONtime):
             if ON_Time > 0.0 then
                 Is_ON := FALSE;   // Assume fault will be on later
@@ -346,7 +356,11 @@ begin
 
     Gmatrix := NIL;
     G := 10000.0;
-    SpecType := 1; // G  2=Gmatrix
+    SpecType := 1; // G (r property)  2=Gmatrix
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    begin
+        SetAsNextSeq(ord(TProp.r)); // ensure value is marked as filled
+    end;
 
     MinAmps := 5.0;
     IsTemporary := FALSE;
