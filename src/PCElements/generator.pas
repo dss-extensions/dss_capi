@@ -741,14 +741,27 @@ begin
 
                 kvarMax := 2.0 * kvarBase;
                 kvarMin := -kvarMax;
-            end;
 
+                if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+                begin
+                    PrpSequence[ord(TProp.PF)] := 0;
+                end;
+            end;
             TProp.phases:
                 SetNCondsForConnection(self);  // Force Reallocation of terminal info
 
             // keep kvar nominal up to date with kW and PF
             TProp.kW, TProp.pf:
+            begin
                 SyncUpPowerQuantities;
+                if TProp(idx) = TProp.pf then
+                begin
+                    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+                    begin
+                        PrpSequence[ord(TProp.kvar)] := 0;
+                    end;
+                end;
+            end;
             TProp.UserModel:
                 UserModel.Name := UserModelNameStr;  // Connect to user written models
             TProp.UserData:
@@ -799,7 +812,9 @@ begin
                 end;
                 
             TProp.kVA, TProp.MVA:
+            begin
                 kVANotSet := FALSE;
+            end;
 
             TProp.DynamicEq:
                 if DynamicEqObj <> NIL then
