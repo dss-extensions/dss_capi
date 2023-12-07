@@ -2309,7 +2309,7 @@ begin
         end;
     end;
 
-    for cls in ckt.DSS.DSSClassList do
+    for cls in DSS.DSSClassList do
     begin
         tmp := jckt.Find(cls.Name);
         if tmp = NIL then
@@ -2318,6 +2318,10 @@ begin
         loadClassFromJSON(DSS, cls, tmp, joptions);
     end;
 
+    // "MakeBusList"
+    if DSS.ActiveCircuit.BusNameRedefined then
+        DSS.ActiveCircuit.ReprocessBusDefs();
+
     tmp := jckt.Find('Bus');
     if (tmp <> NIL) then
     begin
@@ -2325,12 +2329,6 @@ begin
             raise Exception.Create('"Bus" must be an array of bus objects, if provided.');
 
         items := tmp as TJSONArray;
-        if (items.Count <> 0) then
-        begin
-            if DSS.ActiveCircuit.BusNameRedefined then
-                DSS.ActiveCircuit.ReprocessBusDefs();
-        end;
-
         for i := 0 to items.Count - 1 do
         begin
             tmp := items.Items[i];
