@@ -965,8 +965,8 @@ begin
                     if propIndex <> propIndex_ then
                     begin
                         // This should give us eanough info to export the data in the two alternative representations
-                        prop.Add('$dssScalarProperty', cls.PropertyNameJSON[propIndex_]);
-                        prop.Add('$dssArrayProperty', cls.PropertyNameJSON[propIndex]);
+                        prop.Add('$dssScalarProperty', cls.PropertyName[propIndex_]);
+                        prop.Add('$dssArrayProperty', cls.PropertyName[propIndex]);
                     end;
                 end;
             end;
@@ -1256,7 +1256,7 @@ end;
 
 function DSS_ExtractJSONSchema(DSS: TDSSContext): PAnsiChar; CDECL;
 var
-    schema, clsSchema, clsArrayDef: TJSONObject;
+    schema, clsArrayDef: TJSONObject;
     globalDefs: TJSONObject;
     dssEnum: TDSSEnum;
     enumIds: TClassNamesHashListType;
@@ -1453,7 +1453,7 @@ begin
 
     circuitProperties := TJSONObject.Create([
         'Name', TJSONObject.Create(['title', 'Name', 'type', 'string', 'minLength', 1, 'maxLength', 255]),
-        'DefaultBaseFreq', TJSONObject.Create(['title', 'DefaultBaseFreq', 'type', 'float', 'exclusiveMinimum', 0, '$comment', 'Dynamic default.']),
+        'DefaultBaseFreq', TJSONObject.Create(['title', 'DefaultBaseFreq', 'type', 'number', 'exclusiveMinimum', 0, '$comment', 'Dynamic default.']),
         'PreCommands', TJSONObject.Create(['type', 'array', 'items', TJSONObject.Create(['type', 'string'])]),
         'PostCommands', TJSONObject.Create(['type', 'array', 'items', TJSONObject.Create(['type', 'string'])]),
         'Bus', TJSONObject.Create([
@@ -1475,18 +1475,21 @@ begin
             'type', 'array',
             'items', TJSONObject.Create(['$ref', Format('#/$defs/%s', [cls.Name])])
         ]);
-        clsSchema := TJSONObject.Create([
+        globalDefs.Add(cls.Name + 'List', clsArrayDef);
+        globalDefs.Add(cls.Name + 'Container', TJSONObject.Create([
             'default', TJSONArray.Create(),
+            'title', cls.Name + 'Container',
             'oneOf', TJSONArray.Create([
-                clsArrayDef,
+                TJSONObject.Create(['$ref', '#/$defs/' + cls.Name + 'List']),
                 TJSONObject.Create(['$ref', '#/$defs/JSONFilePath']),
                 TJSONObject.Create(['$ref', '#/$defs/JSONLinesFilePath'])
-            ])]);
+            ])]
+        ));
         if cls = DSS.VSourceClass then
         begin
             clsArrayDef.Add('minLength', 1);
         end;
-        circuitProperties.Add(cls.Name, clsSchema);
+        circuitProperties.Add(cls.Name, TJSONObject.Create(['$ref', '#/$defs/' + cls.name + 'Container']));
     end;
 
     schema := TJSONObject.Create([
