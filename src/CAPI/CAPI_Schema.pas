@@ -33,7 +33,8 @@ uses
     Classes,
     jsonparser,
     Bus,
-    DateUtils;
+    DateUtils,
+    DynEqPCE;
 
 function flagsToArray(flags: TPropertyFlags): TJSONArray;
 begin
@@ -465,7 +466,7 @@ var
     propJSON: Array of TJSONObject = NIL;
     requiredInSpec: TJSONArray = NIL;
 
-    zorder, zorderAlt: Integer;
+    maxZorder, zorder, zorderAlt: Integer;
 begin
     SetLength(propJSON, cls.NumProperties + 1);
 
@@ -489,6 +490,10 @@ begin
 
         for clsParent in ClassParents do
             parents.Add(clsParent);
+
+        maxZorder := -999999;
+        for zorder in cls.AltPropertyOrder do
+            maxZorder := Max(maxZorder, zorder);
 
         for propIndex_ := 1 to NumProperties do
         begin
@@ -1128,6 +1133,15 @@ begin
             toRemove.Free();
         end;
 
+        if cls is TDynEqPCEClass then
+        begin
+            props.Add('DynInit', TJSONObject.Create([
+                '$ref', '#/$defs/DynInitType',
+                '$dssPropertyOrder', maxZorder + 1
+            ]));
+            inc(maxZorder);
+        end;
+
         Result := TJSONObject.Create([
             'title', cls.Class_Name,
             'type', 'object',
@@ -1446,6 +1460,20 @@ begin
         TJSONObject.Create([
             'type', 'string',
             'pattern', '[^.]+(\.[0-9]+)*'
+        ])
+    );
+    
+    globalDefs.Add(
+        'DynInitType',
+        TJSONObject.Create([
+            'title', 'DynInitType',
+            'type', 'object',
+            'additionalProperties', TJSONObject.Create([
+                'anyOf', TJSONArray.Create([
+                    TJSONObject.Create(['type', 'string']), 
+                    TJSONObject.Create(['type', 'number'])
+                ])
+            ])
         ])
     );
 

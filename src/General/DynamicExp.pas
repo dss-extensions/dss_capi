@@ -288,10 +288,11 @@ var
     // dblval: Double;
     idx: Integer;
 begin
+    varName := AnsiLowercase(varName);
     // dblval := 0.0;
     Result := -1;   // error
     for idx := 0 to (VarNames.Count - 1) do
-        if AnsiLowercase(varName) = VarNames[idx] then
+        if varName = VarNames[idx] then
         begin
             Result := idx;
             break;
@@ -312,13 +313,14 @@ end;
 
 function TDynamicExpObj.Get_Out_Idx(varName: String): Integer;
 // Returns the index of the variable if it exists in the state variable list,
-// and if it is an output (-50 in the next cell ot the Cmds automation array)
+// and if it is an output (-50 in the next cell of the Cmds automation array)
 var
     CmdIdx: Integer;
     idx: Integer;
 begin
     Result := -1; // error
     for idx := 0 to (VarNames.Count - 1) do
+    begin
         if AnsiLowercase(varName) = VarNames[idx] then
         begin
             // now, check if the index corresponds to an output
@@ -328,10 +330,11 @@ begin
                 begin
                     // Means that the variable found is an output, we can leave
                     Result := idx;
-                    break;
+                    Exit;
                 end;
             end;
         end;
+    end;
 end;
 
 function TDynamicExpObj.Get_VarName(idx: Integer): String;
@@ -470,14 +473,15 @@ var
     SubXp,
     Op: String;
     vars: TStringList;
-    Expr: String;
-    Result: Boolean = FALSE;
+    FullExpr, Expr: String;
+    gotError: Boolean = FALSE;
 begin
     ErrorSrc := '';
     vars := TStringList.Create;
     vars.Clear;
     SetLength(Cmds, 0);
-    Expr := '[' + AnsiLowercase(Expression) + ']';
+    FullExpr := '[' + AnsiLowercase(Expression) + ']';
+    Expr := FullExpr;
     try
         while Expr.Length > 0 do
         begin
@@ -553,14 +557,20 @@ begin
             begin
                 DoSimpleMsg('DynamicExp: Variable "%s" not Found.', [ErrorSrc], 50005);
                 Expr := '';
-                Result := TRUE;
+                gotError := TRUE;
             end;
         end;
 
-        if not Result then
-            Expression := Expr
+        if not gotError then
+        begin
+            // Commented below -- keep the original input instead
+            // Expression := FullExpr; // adds brackets (back) to the input
+        end
         else
+        begin
+            Expression := ''; // clear the expression if any error
             DoSimpleMsg('There are errors in the differential equation.', 50003);
+        end;
     finally
         vars.Free();
     end;

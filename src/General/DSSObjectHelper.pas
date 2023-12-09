@@ -127,6 +127,7 @@ uses
     ParserDel,
     Math,
     CAPI_Utils,
+    DynEqPCE,
     Variants;
 
 type
@@ -4881,6 +4882,8 @@ var
     numChanges: Integer = 0;
     prevInt: Integer;
     i: Integer;
+    dynObj: TDynEqPCE;
+    dynInitData: TJSONData;
 begin
     propIndex := -1;
     Result := false;
@@ -4919,6 +4922,24 @@ begin
         dssObj.PropertySideEffects(propIndex, prevInt, setterFlags);
         // WriteLn('<-'); SysFlushStdIO();
         numChanges += 1;
+    end;
+    if (dssObj is TDynEqPCE) then
+    begin
+        dynObj := dssObj as TDynEqPCE;
+        dynInitData := json.Extract('DynInit');
+        if dynInitData <> NIL then
+        begin
+            if not (dynInitData is TJSONObject) then
+            begin
+                dynInitData.Free;
+                raise Exception.Create(Format('JSON/%s/%s: if provided, "DynInit" must be a JSON object.', [Name, dssObj.Name]));
+            end;
+        end;
+        if dynInitData <> NIL then
+        begin
+            if not dynObj.SetDynVars(DSS.AuxParser, TJSONObject(dynInitData)) then
+                dynInitData.Free; // it will only take ownership on success
+        end;
     end;
     EndEdit(dssObj, numChanges);
     Result := true;

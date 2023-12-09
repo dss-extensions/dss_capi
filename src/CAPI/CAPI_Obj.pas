@@ -198,7 +198,8 @@ uses
     Classes,
     jsonparser,
     Bus,
-    DateUtils;
+    DateUtils,
+    DynEqPCE;
 
 procedure DSS_Dispose_String(S: PAnsiChar); CDECL;
 begin
@@ -601,6 +602,7 @@ var
     done: array of Boolean;
     resObj: TJSONObject;
     pnames: pStringArray;
+    dynObj: TDynEqPCE;
 begin
     Result := NIL;
     if obj = NIL then
@@ -711,6 +713,14 @@ begin
                 resObj.Add(pnames[iProp], jvalue);
         end;
     end;
+    if not (obj is TDynEqPCE) then
+        Exit;
+    
+    dynObj := obj as TDynEqPCE;
+    if dynObj.UserDynInit = NIL then
+        Exit;
+
+    resObj.Add('DynInit', dynObj.UserDynInit.Clone());
 end;
 
 function Obj_ToJSON_(obj: TDSSObject; joptions: Integer): String;

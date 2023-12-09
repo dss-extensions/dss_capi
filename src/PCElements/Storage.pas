@@ -519,14 +519,15 @@ begin
     Result := obj.StorageVars.kWhStored / obj.StorageVars.kWhRating * 100.0;
 end;
 
-procedure ObjSetDynOutput(obj: TObj; variable: String);
+procedure ObjSetDynOutputNames(obj: TObj; variables: TStringList);
 begin
-    obj.SetDynOutput(variable);
+    obj.SetDynOutputNames(variables);
+    variables.Free();
 end;
 
-function ObjGetDynOutputStr(obj: TObj): String;
+function ObjGetDynOutputNames(obj: TObj): TStringList;
 begin
-    Result := obj.GetDynOutputStr();
+    Result := obj.GetDynOutputNames();
 end;
 
 procedure TStorage.DefineProperties;
@@ -561,10 +562,10 @@ begin
     PropertyType[ord(TProp.DynaData)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.DynaData)] := ptruint(@obj.DynaModelEditStr);
 
-    PropertyType[ord(TProp.DynOut)] := TPropertyType.StringProperty;
+    PropertyType[ord(TProp.DynOut)] := TPropertyType.StringListProperty;
     PropertyOffset[ord(TProp.DynOut)] := 1; // dummy
-    PropertyWriteFunction[ord(TProp.DynOut)] := @ObjSetDynOutput;
-    PropertyReadFunction[ord(TProp.DynOut)] := @ObjGetDynOutputStr;
+    PropertyWriteFunction[ord(TProp.DynOut)] := @ObjSetDynOutputNames;
+    PropertyReadFunction[ord(TProp.DynOut)] := @ObjGetDynOutputNames;
     PropertyFlags[ord(TProp.DynOut)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.ReadByFunction];
 
     // enum properties
