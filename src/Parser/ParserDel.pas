@@ -60,16 +60,17 @@ type
         procedure SetCmdString(const Value: String);
         function MakeString: String;
         function MakeInteger: Integer;
-        function MakeDouble: Double;
         procedure SkipWhiteSpace(const LineBuffer: String; var LinePos: Integer);
         function IsWhiteSpace(ch: Char): Boolean;
         function IsDelimiter(const LineBuffer: String; var LinePos: Integer): Boolean;
         function IsDelimChar(ch: Char): Boolean;
         function IsCommentChar(const LineBuffer: String; var LinePos: Integer): Boolean;
         function GetToken(const LineBuffer: String; var LinePos: Integer): String;
-        function InterpretRPNString(var Code: Integer): Double;
+        function InterpretRPNString(var Code: Integer; requiredRPN: PBoolean = NIL): Double;
     PUBLIC
         DSSCtx: TObject;
+        function MakeDouble(requiredRPN: PBoolean): Double; overload;
+        function MakeDouble(): Double; overload;
 
         constructor Create(dssContext: TObject);
         destructor Destroy; OVERRIDE;
@@ -89,7 +90,7 @@ type
         function ParseAsSymMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray; Stride: Integer = 1; Scale: Double = 1): Integer;
         function ParseAsSymMatrix(var MatrixBuffer: ArrayOfDouble; Stride: Integer = 1; Scale: Double = 1): Integer;
         procedure ResetDelims;   // resets delimiters to default
-        procedure CheckforVar(var TokenBuffer_: String);
+        function CheckforVar(var TokenBuffer_: String): Boolean;
         procedure SetVars(vars: TParserVar);
 
         property CmdString: String READ CmdBuffer WRITE SetCmdString;
@@ -211,12 +212,13 @@ begin
     Result := Copy(S, 1, dotpos - 1);
 end;
 
-procedure TDSSParser.CheckforVar(var TokenBuffer_: String);
+function TDSSParser.CheckforVar(var TokenBuffer_: String): Boolean;
 var
     VariableValue,
     VariableName: String;
     DotPos,
     CaratPos: Integer;
+    inputStr: String;
 
     procedure ReplaceToDotPos(const S: String);
     begin
@@ -226,6 +228,7 @@ var
             TokenBuffer_ := S;
     end;
 begin
+    inputStr := TokenBuffer_;
     // Replace TokenBuffer_ with Variable value if first character is VariableDelimiter character
     if Length(TokenBuffer_) > 1 then
         if TokenBuffer_[1] = VariableDelimiter then  // looking for '@'
@@ -252,6 +255,8 @@ begin
                     ReplaceToDotPos(VariableValue);
             end;
         end;
+
+    Result := (inputStr <> TokenBuffer_);
 end;
 
 constructor TDSSParser.Create(dssContext: TObject);
@@ -705,7 +710,12 @@ begin
     end;
 end;
 
-function TDSSParser.MakeDouble: Double;
+function TDSSParser.MakeDouble(): Double; overload;
+begin
+    Result := MakeDouble(NIL);
+end;
+
+function TDSSParser.MakeDouble(requiredRPN: PBoolean): Double; overload;
 var
     Code: Integer;
 begin
@@ -717,9 +727,15 @@ begin
     else
     begin
         if IsQuotedString then
-            Result := InterpretRPNString(Code)
+        begin
+            Result := InterpretRPNString(Code, requiredRPN)
+        end
         else
+        begin
+            if requiredRPN <> NIL then
+                requiredRPN^ := false;
             Val(TokenBuffer, Result, Code);
+        end;
 
         if Code <> 0 then
         begin
@@ -753,10 +769,11 @@ begin
     end;
 end;
 
-function TDSSParser.InterpretRPNString(var Code: Integer): Double;
+function TDSSParser.InterpretRPNString(var Code: Integer; requiredRPN: PBoolean = NIL): Double;
 var
     ParseBufferPos: Integer;
     ParseBuffer: String;
+    cnt: Integer = 0;    
 begin
     Code := 0;
     ParseBuffer := TokenBuffer + ' ';
@@ -764,14 +781,19 @@ begin
 
     SkipWhiteSpace(ParseBuffer, ParseBufferPos);
     TokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
-    CheckForVar(TokenBuffer);
+    if CheckForVar(TokenBuffer) then
+        inc(cnt);
 
     while Length(TokenBuffer) > 0 do
     begin
         ProcessRPNCommand(TokenBuffer, RPNCalculator);
         TokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
         CheckForVar(TokenBuffer);
+        inc(cnt);
     end;
+
+    if (requiredRPN <> NIL) then
+        requiredRPN^ := (cnt > 1);
 
     Result := RPNCalculator.X;
 

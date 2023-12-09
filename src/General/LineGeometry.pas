@@ -343,11 +343,13 @@ begin
     PropertyRedundantWith[ord(TProp.wire)] := ord(TProp.wires);
 
     PropertyType[ord(TProp.x)] := TPropertyType.DoubleOnArrayProperty; //TODO: use TPropertyFlag.OnArray instead
-    PropertyOffset[ord(TProp.x)] := ptruint(@obj.FX); PropertyOffset2[ord(TProp.x)] := ptruint(@obj.FActiveCond);
+    PropertyOffset[ord(TProp.x)] := ptruint(@obj.FX); 
+    PropertyOffset2[ord(TProp.x)] := ptruint(@obj.FActiveCond);
     PropertyFlags[ord(TProp.x)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.h)] := TPropertyType.DoubleOnArrayProperty; //TODO: use TPropertyFlag.OnArray instead
-    PropertyOffset[ord(TProp.h)] := ptruint(@obj.FY); PropertyOffset2[ord(TProp.h)] := ptruint(@obj.FActiveCond);
+    PropertyOffset[ord(TProp.h)] := ptruint(@obj.FY); 
+    PropertyOffset2[ord(TProp.h)] := ptruint(@obj.FActiveCond);
     PropertyFlags[ord(TProp.h)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyOffset[ord(TProp.NormAmps)] := ptruint(@obj.NormAmps);
