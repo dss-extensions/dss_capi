@@ -23,8 +23,9 @@ type
         ExcludeDisabled = 1 shl 5,
         IncludeDSSClass = 1 shl 6,
         LowercaseKeys = 1 shl 7,
-        State = 1 shl 8, //TODO: power flow state, state variables for the given element, if applies
-        Debug = 1 shl 9 // TODO
+        IncludeDefaultObjs = 1 shl 8,
+        State = 1 shl 9, //TODO: power flow state, state variables for the given element, if applies
+        Debug = 1 shl 10 // TODO
     );
 {$SCOPEDENUMS OFF}
     
@@ -983,7 +984,7 @@ begin
 
     Result := True;
     ptype := PropertyType[Index];
-    enumAsInt := (joptions and Integer(DSSJSONOptions.EnumAsInt) <> 0);
+    enumAsInt := (joptions and Integer(DSSJSONOptions.EnumAsInt)) <> 0;
     case ptype of
         TPropertyType.DoubleProperty,
         TPropertyType.DoubleOnArrayProperty,

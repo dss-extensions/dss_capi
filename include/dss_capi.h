@@ -176,8 +176,9 @@ extern "C" {
         DSSJSONFlags_ExcludeDisabled = 0x00000020, //< Exclude disabled elements (only valid when exporting a collection)
         DSSJSONFlags_SkipDSSClass = 0x00000040, //< Do not add the "DSSClass" property to the output
         DSSJSONFlags_LowercaseKeys = 0x00000080, //< Use lowercase representation for the property names (and other keys) instead of the internal variants.
-        DSSJSONFlags_State = 0x00000100, //< NOT IMPLEMENTED, avoid using until it's implemented.
-        DSSJSONFlags_Debug = 0x00000200 //< NOT IMPLEMENTED, avoid using until it's implemented.
+        DSSJSONFlags_IncludeDefaultObjs = 0x00000100, //< Include default unchanged objects in the exports. Any default object that has been edited is always exported. Affects whole circuit and batch exports.
+        DSSJSONFlags_State = 0x00000200, //< NOT IMPLEMENTED, avoid using until it's implemented.
+        DSSJSONFlags_Debug = 0x00000400 //< NOT IMPLEMENTED, avoid using until it's implemented.
     };
 
     enum DSSPropertyNameStyle {
