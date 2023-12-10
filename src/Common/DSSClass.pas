@@ -75,7 +75,40 @@ type
         // Using this flag will reproduce what the classic OpenDSS API for Loads (DSS.ActiveCircuit.Loads)
         // does, but removes a lot of duplicated code. Besides that, we can extend the feature 
         // for other components if we think it fits.
-        AvoidFullRecalc = 1
+        AvoidFullRecalc = 1,
+
+        Reserved2 = 2,
+        Reserved3 = 3,
+        Reserved4 = 4,
+        Reserved5 = 5,
+        Reserved6 = 6,
+        Reserved7 = 7,
+        Reserved8 = 8,
+        Reserved9 = 9,
+        Reserved10 = 10,
+        Reserved11 = 11,
+        Reserved12 = 12,
+        Reserved13 = 13,
+        Reserved14 = 14,
+        Reserved15 = 15,
+        Reserved16 = 16,
+        Reserved17 = 17,
+        Reserved18 = 18,
+        Reserved19 = 19,
+        Reserved20 = 20,
+        Reserved21 = 21,
+        Reserved22 = 22,
+        Reserved23 = 23,
+        Reserved24 = 24,
+        Reserved25 = 25,
+        Reserved27 = 27,
+        Reserved28 = 28,
+        Reserved29 = 29,
+        Reserved30 = 30,
+        
+        // Used internally for the "Wires" property ("Conductors").
+        // 
+        AllowAllConductors = 31
     );
     TSetterFlag = TDSSPropertySetterFlag;
     TDSSPropertySetterFlags = set of TDSSPropertySetterFlag;
@@ -83,6 +116,7 @@ type
     TDSSObjectFlag = (
         EditingActive, 
         HasBeenSaved, // originally from TDSSObject
+        DefaultAndUnedited,
 
         // Originally from TDSSCktElement
         Checked,
@@ -1809,10 +1843,13 @@ begin
         (TPropertyFlag.OnArray in cls.PropertyFlags[sizedPropIndex]) or (cls.PropertyType[sizedPropIndex] in [
         TPropertyType.BusOnStructArrayProperty,
         TPropertyType.BusesOnStructArrayProperty,
-        TPropertyType.DoubleOnArrayProperty, 
         TPropertyType.IntegerOnStructArrayProperty,
         TPropertyType.DoubleOnStructArrayProperty,
-        TPropertyType.MappedStringEnumOnStructArrayProperty]) then
+        TPropertyType.MappedStringEnumOnStructArrayProperty,
+        TPropertyType.MappedStringEnumArrayOnStructArrayProperty,
+        TPropertyType.DoubleArrayOnStructArrayProperty,
+        TPropertyType.DoubleOnArrayProperty
+        ]) then
     begin
         propOffset := cls.PropertyStructArrayCountOffset;
     end;
@@ -1904,7 +1941,7 @@ begin
         AltPropertyOrder[outIdx] := propIdx;
         inc(outIdx);
     end;
-    SetLength(AltPropertyOrder, outIdx + 1);
+    SetLength(AltPropertyOrder, outIdx);
 
     for i := 1 to NumProperties do
     begin
