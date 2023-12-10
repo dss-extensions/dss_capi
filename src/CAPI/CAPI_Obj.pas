@@ -1048,7 +1048,9 @@ function Batch_ToJSON(batch: TDSSObjectPtr; batchSize: Integer; joptions: Intege
 var
     json: TJSONArray = NIL;
     i: Integer;
+    exportDefaultObjs: Boolean;
 begin
+    exportDefaultObjs := (joptions and Integer(DSSJSONOptions.IncludeDefaultObjs)) <> 0;
     Result := NIL;
     if (batch = NIL) or (batch^ = NIL) then
         Exit;
@@ -1065,7 +1067,9 @@ begin
         begin
             for i := 1 to batchSize do
             begin
-                json.Add(Obj_ToJSONData(batch^, joptions));
+                if (not (Flg.DefaultAndUnedited in batch^.Flags)) or exportDefaultObjs then
+                    json.Add(Obj_ToJSONData(batch^, joptions));
+
                 inc(batch);
             end;
         end
@@ -1073,6 +1077,8 @@ begin
         begin
             for i := 1 to batchSize do
             begin
+                // NOTE: Default objects are circuit elements, so we can skip the check here.
+                // if ((not (Flg.DefaultAndUnedited in batch^.Flags)) or exportDefaultObjs) and
                 if TDSSCktElement(batch^).Enabled then
                     json.Add(Obj_ToJSONData(batch^, joptions));
 
@@ -2060,7 +2066,9 @@ var
     // vsrccls: TDSSClass;
     bus: TDSSBus;
     i: Integer;
+    exportDefaultObjs: Boolean;
 begin
+    exportDefaultObjs := (joptions and Integer(DSSJSONOptions.IncludeDefaultObjs)) <> 0;
     Result := NIL;
     try
         cmds := TJSONArray.Create();
@@ -2108,9 +2116,20 @@ begin
             // end;
             // else
             // begin
-            for obj in cls do
+            if exportDefaultObjs then
             begin
-                clsArray.Add(Obj_ToJSONData(obj, joptions));
+                for obj in cls do
+                begin
+                    clsArray.Add(Obj_ToJSONData(obj, joptions));
+                end;
+            end
+            else
+            begin
+                for obj in cls do
+                begin
+                    if not (Flg.DefaultAndUnedited in obj.Flags) then
+                        clsArray.Add(Obj_ToJSONData(obj, joptions));
+                end;
             end;
             // end;
             if clsArray.Count <> 0 then
@@ -2153,6 +2172,8 @@ var
     lineNum: Integer;
     specialFirst: Boolean;
     line: String;
+    dupsAllowed: Boolean;
+    localError: Boolean = false;
 
     procedure loadSingleObj(o: TJSONObject; num: Integer);
     var
@@ -2171,7 +2192,26 @@ var
             name := nameData.Value;
             if not specialFirst then
             begin
-                dssObj := obj_NewFromClass(DSS, cls, name, false, true);
+                if dupsAllowed then
+                begin
+                    dssObj := obj_NewFromClass(DSS, cls, name, false, true);
+                end
+                else
+                begin // Check to see if we can set it active first
+                    dssObj := cls.Find(Name, true);
+                    if dssObj = NIL then
+                    begin
+                        dssObj := obj_NewFromClass(DSS, cls, name, false, true);
+                    end
+                    else
+                    if (cls.DSSClassType <> DSS_OBJECT) then 
+                    begin
+                        // Allow redefining/editing default objects to mirror the DSS scripting behavior.
+                        // Error out for everything else.
+                        DoSimpleMsg(DSS, 'Duplicate new element definition: "%s.%s".', [DSS.ActiveDSSClass.Name, Name], 266);
+                        Exit;
+                    end;
+                end;
             end
             else
             begin
@@ -2187,6 +2227,7 @@ var
     end;
 begin
     specialFirst := (cls = DSS.VSourceClass);
+    dupsAllowed := DSS.ActiveCircuit.DuplicatesAllowed and (cls.DSSClassType <> DSS_OBJECT);
     try
         if jcls is TJSONObject then
         begin
@@ -2214,6 +2255,8 @@ begin
 
                     loadSingleObj(TJSONObject(data), lineNum);
                     FreeAndNil(data);
+                    if DSS.ErrorNumber <> 0 then
+                        break;
                     lineNum += 1;
                 end;
                 Exit;
@@ -2231,6 +2274,8 @@ begin
             if not (arrItem is TJSONObject) then
                 raise Exception.Create(Format('JSON/%s: unexpected format for object number %d.', [cls.Name, lineNum])); 
             loadSingleObj(arrItem as TJSONObject, lineNum);
+            if DSS.ErrorNumber <> 0 then
+                break;
         end;
 
     except
@@ -2240,18 +2285,24 @@ begin
             if arrItem <> NIL then
                 line := arrItem.FormatJSON([foSingleLineObject, foSingleLineArray]);
 
-            if DSS.ErrorNumber <> 0 then
-            begin
-                DoSimpleMsg(DSS, 'Error loading %s record from JSON: %s Previous error (#%d): %s Context follows: `%s`', 
-                    [cls.Name, E.message, DSS.ErrorNumber, DSS.LastErrorMessage, line], 5021
-                );
-            end
-            else
+            if DSS.ErrorNumber = 0 then
             begin
                 DoSimpleMsg(DSS, 'Error loading %s record from JSON: %s Context follows: `%s`', [cls.Name, E.message, line], 5021);
+                localError := true;
             end;
         end;
     end;
+
+    if (not localError) and (DSS.ErrorNumber <> 0) then
+    begin
+        line := '';
+        if arrItem <> NIL then
+            line := arrItem.FormatJSON([foSingleLineObject, foSingleLineArray]);
+        DoSimpleMsg(DSS, 'Error loading %s record from JSON (#%d): %s Context follows: `%s`', 
+            [cls.Name, DSS.ErrorNumber, DSS.LastErrorMessage, line], 5021
+        );
+    end;
+
     FreeAndNil(F);
     FreeAndNil(data);
 end;

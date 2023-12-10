@@ -82,7 +82,8 @@ USES BufStream, ExecCommands, ExecOptions, PlotOptions, ShowOptions, ExportOptio
      ExecHelper, DSSClassDefs, DSSGlobals, ParserDel,  SysUtils,
      Utilities, Solution, DSSHelper,
       Zipper,
-     StrUtils;
+     StrUtils,
+     DSSObject;
 
 type
     TDSSUnZipper = class(TUnZipper)
@@ -175,6 +176,8 @@ End;
 PROCEDURE TExecutive.CreateDefaultDSSItems;
 // Create default loadshapes, growthshapes, and other general DSS objects
 // used by all circuits.
+var
+    obj: TDSSObject;
 begin
     // this load shape used for generator dispatching, etc.   Loads may refer to it, also. 
     ParseCommand('new loadshape.default npts=24 1.0 mult=(.677 .6256 .6087 .5833 .58028 .6025 .657 .7477 .832 .88 .94 .989 .985 .98 .9898 .999 1 .958 .936 .913 .876 .876 .828 .756)');
@@ -200,6 +203,18 @@ begin
     ParseCommand('New "TCC_Curve.very_inv" npts=15 C_array=(1.1, 1.3, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 50, 100, ) T_array=(93.872, 28.9113, 16.179, 7.0277, 2.9423, 1.7983, 1.3081, 1.0513, 0.8995, 0.8023, 0.7361, 0.6891, 0.5401, 0.4988, 0.493, )');
     ParseCommand('New "TCC_Curve.ext_inv" npts=15 C_array=(1.1, 1.3, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 50, 100, ) T_array=(134.4074, 40.9913, 22.6817, 9.5217, 3.6467, 2.0017, 1.2967, 0.9274, 0.7092, 0.5693, 0.4742, 0.4065, 0.1924, 0.133, 0.1245, )');
     ParseCommand('New "TCC_Curve.definite" npts=3 C_array=(1, 1.001, 100, ) T_array=(300, 1, 1, )');
+
+    for obj in DSS.LoadShapeClass do
+        Include(obj.Flags, Flg.DefaultAndUnedited);
+
+    for obj in DSS.GrowthShapeClass do
+        Include(obj.Flags, Flg.DefaultAndUnedited);
+
+    for obj in DSS.SpectrumClass do
+        Include(obj.Flags, Flg.DefaultAndUnedited);
+
+    for obj in DSS.TCC_CurveClass do
+        Include(obj.Flags, Flg.DefaultAndUnedited);
 end;
 
 function TExecutive.Get_Command: String;

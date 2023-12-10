@@ -1567,6 +1567,8 @@ begin
     else
         Obj := ElementList.Active;
 
+    Exclude(Obj.Flags, Flg.DefaultAndUnedited);
+
     Result := Obj;
     if SetActive then
     begin
