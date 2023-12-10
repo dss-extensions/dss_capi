@@ -42,7 +42,7 @@ type
         function ParseObjPropertyValue(Obj: Pointer; Index: Integer; const Value: String; out prevInt: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
         function GetObjPropertyValue(obj: Pointer; Index: Integer; out PropStr: String): Boolean;
         function GetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; var val: TJSONData; preferArray: Boolean = False): Boolean;
-        function SetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; val: TJSONData; setterFlags: TDSSPropertySetterFlags): Boolean;
+        function SetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; val: TJSONData; setterFlags: TDSSPropertySetterFlags; var prevInt: Integer): Boolean;
 
         //TODO: add error as result for the 16 following functions
 
@@ -119,6 +119,7 @@ uses
     DSSHelper,
     CktElement,
     PDElement,
+    LineCode,
     Utilities,
     SysUtils,
     UcMatrix,
@@ -1149,7 +1150,9 @@ begin
                 otherObjPtr := TDSSObjectPtrPtr(PByte(obj) + PropertyOffset[Index])^;
                 jsonArray := TJSONArray.Create();
                 val := jsonArray;
-                if (TPropertyFlag.FullNameAsArray in PropertyFlags[Index]) then
+                if (TPropertyFlag.FullNameAsArray in PropertyFlags[Index]) or 
+                    (Pointer(PropertyOffset2[Index]) = NIL) or 
+                    ((joptions and Integer(DSSJSONOptions.FullNames)) <> 0) then
                 begin
                     for i := 1 to Norder do
                     begin
@@ -1171,7 +1174,7 @@ begin
             otherObj := GetObjObject(obj, Index);
             if otherObj = NIL then
                 val := TJSONNull.Create()
-            else if (joptions and Integer(DSSJSONOptions.FullNames)) <> 0 then
+            else if ((joptions and Integer(DSSJSONOptions.FullNames)) <> 0) or (Pointer(PropertyOffset2[Index]) = NIL) then
             begin
                 val := TJSONString.Create(otherObj.FullName)
             end
@@ -1731,7 +1734,7 @@ begin
 end;
 
 
-function TDSSClassHelper.SetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; val: TJSONData; setterFlags: TDSSPropertySetterFlags): Boolean;
+function TDSSClassHelper.SetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; val: TJSONData; setterFlags: TDSSPropertySetterFlags; var prevInt: Integer): Boolean;
 var
     doublePtr: PDouble;
     dataPtr: PPDouble = NIL;
@@ -1740,6 +1743,7 @@ var
     i, j: Integer;
 
     boolVal: Boolean;
+    arrayItem: TJSONData;
     arrayVal, arrayVal2: TJSONArray;
     doubleVal: Double;
     scale: Double;
@@ -1769,7 +1773,7 @@ begin
         // DoubleOnStructArrayProperty,
         // IntegerOnStructArrayProperty,
         // DSSObjectReferenceProperty + OnArray flag
-        Result := GetObjPropertyJSONValue(obj, PropertyArrayAlternative[Index], joptions, val, True);
+        Result := SetObjPropertyJSONValue(obj, PropertyArrayAlternative[Index], joptions, val, setterFlags, prevInt);
         Exit;
     end;
     if not ((Index > 0) and (Index <= NumProperties) and (PropertyOffset[Index] <> -1)) then
@@ -1777,7 +1781,6 @@ begin
         Result := False;
         Exit;
     end;
-
     sizingPropIndex := PropertySizingPropertyIndex[Index];
     allowSetSize := (sizingPropIndex > 0) and 
         // Disallow overwriting the size with different properties
@@ -1804,7 +1807,7 @@ begin
             TPropertyType.MappedIntEnumProperty,
             TPropertyType.IntegerProperty:
             begin        
-                SetObjInteger(obj, index, val.AsInteger, NIL, setterFlags);
+                SetObjInteger(obj, index, val.AsInteger, @prevInt, setterFlags);
                 Exit;
             end;
             TPropertyType.StringEnumActionProperty,
@@ -1817,13 +1820,14 @@ begin
                 end
                 else
                 begin
-                    SetObjInteger(obj, index, val.AsInteger, NIL, setterFlags);
+                    SetObjInteger(obj, index, val.AsInteger, @prevInt, setterFlags);
                     Exit;
                 end;
             end;
             TPropertyType.BusProperty,
             TPropertyType.StringProperty,
-            TPropertyType.MakeLikeProperty:
+            TPropertyType.MakeLikeProperty,
+            TPropertyType.DSSObjectReferenceProperty:
             begin
                 SetObjString(obj, index, val.AsString, setterFlags);
                 Exit;
@@ -1838,9 +1842,9 @@ begin
         begin
             boolVal := val.AsBoolean;
             if boolVal then
-                SetObjInteger(obj, index, 1, NIL, setterFlags)
+                SetObjInteger(obj, index, 1, @prevInt, setterFlags)
             else
-                SetObjInteger(obj, index, 0, NIL, setterFlags);
+                SetObjInteger(obj, index, 0, @prevInt, setterFlags);
             Exit;
         end;
         TPropertyType.ComplexProperty,
@@ -1927,33 +1931,28 @@ begin
                     SetObjStrings(obj, index, NIL, 0, setterFlags);
                     Exit;
                 end;
-                val := arrayVal[0];
-                if (varType(val.Value) = varString) then
+                arrayItem := arrayVal[0];
+                if (varType(arrayItem.Value) in [varString, varStrArg, varOleStr]) then
                 begin
-                    if (ptype in [TPropertyType.BusOnStructArrayProperty, TPropertyType.DSSObjectReferenceArrayProperty]) or (TPropertyFlag.OnArray in flags) then
+                    // Array of strings
+                    ValueCount := arrayVal.Count;
+                    SetLength(strs, ValueCount);
+                    if TPropertyFlag.Transform_LowerCase in flags then
                     begin
-                        // Array of strings
-                        arrayVal := val as TJSONArray;
-                        ValueCount := arrayVal.Count;
-                        SetLength(strs, ValueCount);
-                        if TPropertyFlag.Transform_LowerCase in flags then
+                        for i := 0 to ValueCount - 1 do
                         begin
-                            for i := 0 to ValueCount - 1 do
-                            begin
-                                strs[i] := AnsiLowerCase(arrayVal[i].Value);
-                            end;
-                        end
-                        else
-                        begin
-                            for i := 0 to ValueCount - 1 do
-                            begin
-                                strs[i] := arrayVal[i].Value;
-                            end;
+                            strs[i] := AnsiLowerCase(arrayVal[i].Value);
                         end;
-                        SetObjStrings(obj, index, PPAnsiChar(@strs[0]), Length(strs), setterFlags);
-                        Exit;
+                    end
+                    else
+                    begin
+                        for i := 0 to ValueCount - 1 do
+                        begin
+                            strs[i] := arrayVal[i].Value;
+                        end;
                     end;
-                    raise Exception(_('Expected a single value, got array.'));
+                    SetObjStrings(obj, index, PPAnsiChar(@strs[0]), Length(strs), setterFlags);
+                    Exit;
                 end
                 else
                 begin
@@ -1985,18 +1984,7 @@ begin
             ]) then
                 raise Exception(_('Expected array.'));
 
-            if (varType(val.Value) = varString) then
-            begin
-                // Single string
-                SetObjString(obj, index, val.Value, setterFlags);
-                Exit;
-            end
-            else
-            begin
-                // Single integer
-                SetObjInteger(obj, index, val.Value, NIL, setterFlags);
-                Exit;
-            end;
+            raise Exception(_('Something is not implemented! Ref:1988-OH'));
         end;
 
         TPropertyType.DoubleSymMatrixProperty,
@@ -2093,6 +2081,8 @@ begin
             for i := 0 to Norder - 1 do
                 for j := 0 to Norder - 1 do
                     doublePtr[(i * Norder + j) * nmult] *= scale;
+
+            Exit;
         end;
         TPropertyType.DoubleProperty, // onArray
         TPropertyType.DoubleOnArrayProperty,
@@ -2114,6 +2104,11 @@ begin
                     Norder := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj)
                 end
                 else
+                if ptype in [TPropertyType.DoubleOnArrayProperty, TPropertyType.DoubleOnStructArrayProperty] then
+                begin
+                    Norder := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+                end
+                else
                 begin
                     Norder := PInteger(PByte(obj) + PropertyOffset2[Index])^;
                 end;
@@ -2132,7 +2127,7 @@ begin
                     raise Exception(_('Expected an array of numbers, not an object.'));
                 end;
             end
-            else
+            else if not val.IsNull then
             begin
                 arrayVal := val as TJSONArray;
                 if not ((arrayVal = NIL) or (val.IsNull)) then
@@ -2144,7 +2139,6 @@ begin
                     doubles[i] := arrayVal.Items[i].AsFloat;
                 end;
             end;
-
             if (TPropertyFlag.AllowNone in flags) and (val.IsNull or (ValueCount = 0)) then
             begin
                 SetObjDoubles(obj, index, NIL, 0, setterFlags);
@@ -3329,7 +3323,7 @@ var
                     ((TPropertyFlag.SuppressJSON in PropertyFlags[sizingPropIndex])) then
                 begin
                     // Resize!
-                    if obj.SetInteger(sizingPropIndex, ValueCount, setterFlags) and (DSS.ErrorNumber = 0) then
+                    if obj.SetInteger(sizingPropIndex, ValueCount - Round(PropertyValueOffset[sizingPropIndex]), setterFlags) and (DSS.ErrorNumber = 0) then
                     begin
                         // If successful, retry from the start, since the pointer may have changed
                         Exclude(setterFlags, TSetterFlag.ImplicitSizes);
@@ -3343,7 +3337,7 @@ var
                 DoSimpleMsg(
                     '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
                     [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
-                2020042);
+                20200421);
                 Exit;
             end;
         end;
@@ -3453,7 +3447,7 @@ end;
 
 procedure TDSSClassHelper.SetObjDoubles(ptr: Pointer; Index: Integer; Value: PDouble; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 var
-    i, j, sizingPropIndex, maxSize, Norder, intVal, step: Integer;
+    i, j, sizingPropIndex, currentSize, maxSize, Norder, intVal, step: Integer;
     positionPtr, sizePtr: PInteger;
     scale: Double;
     doublePtr: PDouble;
@@ -3464,6 +3458,44 @@ var
     doubleVals: Array of Double = NIL;
     mat: TCMatrix;
     Obj: TDSSObject;
+
+    function checkSize(): Boolean;
+    begin
+        Result := false;
+
+        if ((TPropertyFlag.ArrayMaxSize in flags) and ((maxSize >= ValueCount) and (currentSize <> ValueCount))) or // Allow fewer elements for some properties
+            ((not (TPropertyFlag.ArrayMaxSize in flags)) and (maxSize <> ValueCount)) then 
+        begin
+            if TSetterFlag.ImplicitSizes in setterFlags then
+            begin
+                sizingPropIndex := PropertySizingPropertyIndex[Index];
+                if (sizingPropIndex > 0) and 
+                    // Disallow overwriting the size with different properties
+                    (not obj.PrpSpecified(sizingPropIndex)) and 
+                    // Only allow resizing if no explicit sizing property is actually exposed
+                    ((TPropertyFlag.SuppressJSON in PropertyFlags[sizingPropIndex])) then
+                begin
+                    // Resize!
+                    if obj.SetInteger(sizingPropIndex, ValueCount - Round(PropertyValueOffset[sizingPropIndex]), setterFlags) and (DSS.ErrorNumber = 0) then
+                    begin
+                        // If successful, retry from the start, since the pointer may have changed
+                        Exclude(setterFlags, TSetterFlag.ImplicitSizes);
+                        SetObjDoubles(ptr, Index, Value, ValueCount, setterFlags);
+                        Exit;
+                    end;
+                end;
+            end;
+            if maxSize <> ValueCount then
+            begin
+                DoSimpleMsg(
+                    '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
+                    [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
+                20200425);
+                Exit;
+            end;
+        end;
+        Result := true;
+    end;    
 begin
     Obj := TDSSObject(ptr);
     ptype := PropertyType[Index];
@@ -3612,15 +3644,22 @@ begin
                 sizePtr := @intVal;
                 // Cannot resize even if allowed
                 if TSetterFlag.ImplicitSizes in setterFlags then
+                begin
                     Exclude(setterFlags, TSetterFlag.ImplicitSizes);
+                end;
             end
             else
             if (ptype <> TPropertyType.DoubleFArrayProperty) then
             begin
                 sizePtr := PInteger(PByte(obj) + PropertyOffset2[Index]); // Size pointer
+            end
+            else
+            begin
                 // Cannot resize even if allowed
                 if TSetterFlag.ImplicitSizes in setterFlags then
+                begin
                     Exclude(setterFlags, TSetterFlag.ImplicitSizes);
+                end;
             end;
 
             if (TPropertyFlag.AllowNone in flags) and (ValueCount = 0) then
@@ -3637,7 +3676,10 @@ begin
             else
             begin
                 dataPtr := PPDouble(PByte(obj) + PropertyOffset[Index]);
-                doublePtr := dataPtr^;
+                if (ptype <> TPropertyType.DoubleFArrayProperty) then
+                    doublePtr := dataPtr^
+                else
+                    doublePtr := PDouble(dataPtr);
             end;
 
             if ((ptype = TPropertyType.DoubleArrayProperty) or (ptype = TPropertyType.DoubleVArrayProperty)) and (doublePtr = NIL) then
@@ -3656,60 +3698,34 @@ begin
                     if TPropertyFlag.ArrayMaxSize in flags then
                     begin
                         maxSize := PropertyOffset3[Index];
+                        currentSize := sizePtr^;
                         // Cannot resize even if allowed
                         if TSetterFlag.ImplicitSizes in setterFlags then
+                        begin
                             Exclude(setterFlags, TSetterFlag.ImplicitSizes);
+                        end;
                     end
                     else
                         maxSize := sizePtr^;
 
-                    if ((TPropertyFlag.ArrayMaxSize in flags) and (maxSize >= ValueCount)) or // Allow fewer elements for some properties
-                        ((not (TPropertyFlag.ArrayMaxSize in flags)) and (maxSize <> ValueCount)) then 
-                    begin
-                        if TSetterFlag.ImplicitSizes in setterFlags then
-                        begin
-                            sizingPropIndex := PropertySizingPropertyIndex[Index];
-                            if (sizingPropIndex > 0) and 
-                                // Disallow overwriting the size with different properties
-                                (not obj.PrpSpecified(sizingPropIndex)) and 
-                                // Only allow resizing if no explicit sizing property is actually exposed
-                                ((TPropertyFlag.SuppressJSON in PropertyFlags[sizingPropIndex])) then
-                            begin
-                                // Resize!
-                                if obj.SetInteger(sizingPropIndex, ValueCount, setterFlags) and (DSS.ErrorNumber = 0) then
-                                begin
-                                    // If successful, retry from the start, since the pointer may have changed
-                                    Exclude(setterFlags, TSetterFlag.ImplicitSizes);
-                                    SetObjDoubles(ptr, Index, Value, ValueCount, setterFlags);
-                                    Exit;
-                                end;
-                            end;
-                        end;
-                        if maxSize <> ValueCount then
-                        begin
-                            DoSimpleMsg(
-                                '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
-                                [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
-                            2020042);
-                            Exit;
-                        end;
-                    end;
+                    if not checkSize() then
+                        Exit;
                     if not (TPropertyFlag.WriteByFunction in flags) then
                         Move(Value^, doublePtr^, maxSize * SizeOf(Double));
                 end;
                 TPropertyType.DoubleFArrayProperty:
                 begin
                     maxSize := PropertyOffset2[Index];
-                    if maxSize <> ValueCount then
+                    if maxSize <> ValueCount then  //TODO: allow less elements?
                     begin
                         DoSimpleMsg(
                             '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
                             [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
-                        2020042);
+                        20200423);
                         Exit;
                     end;
                     if not (TPropertyFlag.WriteByFunction in flags) then
-                        Move(Value^, doublePtr^, maxSize * SizeOf(Double));
+                        Move(Value^, doublePtr^, ValueCount * SizeOf(Double));
                 end;
             end;
 
@@ -3734,14 +3750,8 @@ begin
         begin
             // Number of items
             maxSize := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
-            if maxSize <> ValueCount then
-            begin
-                DoSimpleMsg(
-                    '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
-                    [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
-                2020038);
+            if not checkSize() then
                 Exit;
-            end;
             if PropertyType[Index] = TPropertyType.DoubleOnStructArrayProperty then
             begin
                 step := PropertyStructArrayStep;
@@ -3782,15 +3792,8 @@ begin
         begin
             // Number of items
             maxSize := PInteger(PByte(obj) + PropertyOffset2[Index])^;
-
-            if maxSize <> ValueCount then
-            begin
-                DoSimpleMsg(
-                    '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
-                    [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
-                2020041);
+            if not checkSize() then
                 Exit;
-            end;
 
             // Current position
             positionPtr := PInteger(PByte(obj) + PropertyStructArrayIndexOffset);
@@ -3825,10 +3828,11 @@ var
     stringPtr: PString;
     Obj: TDSSObject;
     cls: TDSSClass;
-    ElemName: String;
+    elemClassName, ElemName: String;
     objs: Array of TDSSObject = NIL;
     otherObj: TDSSObject;
     otherObjPtr: TDSSObjectPtr;
+    allowAllConductors: Boolean = false;
 
     function checkSize(): Boolean;
     begin
@@ -3847,7 +3851,7 @@ var
                     ((TPropertyFlag.SuppressJSON in PropertyFlags[sizingPropIndex])) then
                 begin
                     // Resize!
-                    if obj.SetInteger(sizingPropIndex, ValueCount, setterFlags) and (DSS.ErrorNumber = 0) then
+                    if obj.SetInteger(sizingPropIndex, ValueCount - Round(PropertyValueOffset[sizingPropIndex]), setterFlags) and (DSS.ErrorNumber = 0) then
                     begin
                         // If successful, retry from the start, since the pointer may have changed
                         Exclude(setterFlags, TSetterFlag.ImplicitSizes);
@@ -3861,7 +3865,7 @@ var
                 DoSimpleMsg(
                     '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
                     [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
-                2020042);
+                20200424);
                 Exit;
             end;
         end;
@@ -3877,10 +3881,13 @@ begin
             // Class of the objects
             cls := Pointer(PropertyOffset2[Index]);
 
+            allowAllConductors := (TSetterFlag.AllowAllConductors in setterFlags) and
+                ((self = DSS.LineGeometryClass) or (self = DSS.LineClass));
+
             if TPropertyFlag.WriteByFunction in flags then
             begin
                 SetLength(objs, ValueCount);
-                if cls <> NIL then
+                if (cls <> NIL) and (not allowAllConductors) then
                 begin
                     for i := 1 to ValueCount do
                     begin
@@ -3901,8 +3908,46 @@ begin
                         Inc(Value);
                     end;
                 end
-                else
+                else if allowAllConductors then // Special case for Line, LineGeometry -- TODO: extend and use TProxyClass instead
                 begin
+                    for i := 1 to ValueCount do
+                    begin
+                        ParseObjectClassandName(DSS, AnsiLowerCase(Value^), ElemClassName, ElemName);
+                        otherObj := NIL;
+                        if elemClassName = 'wiredata' then
+                        begin
+                            otherObj := DSS.WireDataClass.Find(ElemName, False);
+                        end
+                        else if elemClassName = 'cndata' then
+                        begin
+                            otherObj := DSS.CNDataClass.Find(ElemName, False);
+                        end
+                        else if elemClassName = 'tsdata' then
+                        begin
+                            otherObj := DSS.TSDataClass.Find(ElemName, False);
+                        end
+                        else if elemClassName = '' then // Try all
+                        begin
+                            otherObj := DSS.WireDataClass.Find(ElemName, False);
+                            if otherObj = NIL then
+                                otherObj := DSS.CNDataClass.Find(ElemName, False);
+                            if otherObj = NIL then
+                                otherObj := DSS.TSDataClass.Find(ElemName, False);
+                        end;
+                        if otherObj = NIL then
+                        begin
+                            DoSimpleMsg(
+                                Format('%s.%s: conductor object "%s" not found. Please provide the full name of a conductor object (types WireData, CNData, TSData) which is already defined.',
+                                    [TDSSObject(obj).FullName, PropertyName[Index], ElemName]
+                                ), 40300);
+                            Exit;
+                        end;
+                        objs[i - 1] := otherObj;
+                        Inc(Value);
+                    end;
+                end
+                else
+                begin // here, CktElements only
                     for i := 1 to ValueCount do
                     begin
                         ElemName := constructElemName(DSS, AnsiLowerCase(Value^));
@@ -4833,11 +4878,13 @@ var
     dssObj: TDSSObject;
     ptype: TPropertyType;
     numChanges: Integer = 0;
+    prevInt: Integer;
     i: Integer;
 begin
     propIndex := -1;
     Result := false;
     dssObj := TDSSObject(obj);
+    Include(setterFlags, TSetterFlag.AllowAllConductors);
     if not (TSetterFlag.ImplicitSizes in setterFlags) then
         Include(setterFlags, TSetterFlag.ImplicitSizes);
 
@@ -4849,6 +4896,7 @@ begin
         propName := PropertyNameJSON[propIndex];
         propFlags := PropertyFlags[propIndex];
         ptype := PropertyType[propIndex];
+        // WriteLn(dssObj.FullName, '  -  ', propName, '  -  ', ptype); SysFlushStdIO();
         if (not json.Find(propName, propData)) then
         begin
             if TPropertyFlag.Required in propFlags then
@@ -4859,9 +4907,16 @@ begin
         if (ptype = TPropertyType.StringSilentROFunctionProperty) or (TPropertyFlag.SilentReadOnly in propFlags) then
             continue; // ignore... TODO: error or warning
 
-        if not SetObjPropertyJSONValue(obj, propIndex, joptions, propData, setterFlags) then
+        // WriteLn('-> ', propName, ' = ', propData.FormatJSON()); SysFlushStdIO();
+        prevInt := 0;
+        if (not SetObjPropertyJSONValue(obj, propIndex, joptions, propData, setterFlags, prevInt)) or (DSS.ErrorNumber <> 0) then
+        begin
+            EndEdit(dssObj, numChanges);
             Exit;
-
+        end;
+        dssObj.SetAsNextSeq(propIndex);
+        dssObj.PropertySideEffects(propIndex, prevInt, setterFlags);
+        // WriteLn('<-'); SysFlushStdIO();
         numChanges += 1;
     end;
     EndEdit(dssObj, numChanges);

@@ -649,8 +649,9 @@ begin
 
             done[iProp] := True;
 
-            // skip substructure (winding, wire) index or suppressed props
-            if ((TPropertyFlag.SuppressJSON in cls.PropertyFlags[iProp]) and (not (TPropertyFlag.Redundant in cls.PropertyFlags[iProp]))) or
+            // skip "Like", substructure (winding, wire) index or suppressed props
+            if ((cls.PropertyType[iProp] = TPropertyType.MakeLikeProperty) or 
+                (TPropertyFlag.SuppressJSON in cls.PropertyFlags[iProp]) and (not (TPropertyFlag.Redundant in cls.PropertyFlags[iProp]))) or
                 (TPropertyFlag.AltIndex in cls.PropertyFlags[iProp]) or
                 (TPropertyFlag.IntegerStructIndex in cls.PropertyFlags[iProp]) then
                 continue;
@@ -2145,7 +2146,7 @@ var
     obj: TJSONObject;
     data: TJSONData = NIL;
     arr: TJSONArray;
-    arrItem: TJSONData;
+    arrItem: TJSONData = NIL;
     jsonFilePath: TJSONString = NIL;
     jsonLinesFilePath: TJSONString = NIL;
     F: TStream = NIL;
@@ -2168,14 +2169,15 @@ var
                 raise Exception.Create(Format('JSON/%s: missing "Name" from item %d.', [cls.Name, num]));
 
             name := nameData.Value;
-            if specialFirst then
+            if not specialFirst then
             begin
-                WriteLn('"SPECIAL loading first" ', cls.Name, '.', name);
+                dssObj := obj_NewFromClass(DSS, cls, name, false, true);
+            end
+            else
+            begin
                 specialFirst := false;
+                dssObj := cls.ElementList.Get(1);
             end;
-
-            WriteLn('"Loading" ', cls.Name, '.', name);
-            dssObj := obj_NewFromClass(DSS, cls, name, false, true);
             if not cls.FillObjFromJSON(dssObj, o, joptions, []) then
                 raise Exception.Create(Format('JSON/%s/%s: error processing item.', [cls.Name, name]));
         finally
@@ -2227,13 +2229,28 @@ begin
         begin
             arrItem := arr.Items[lineNum];
             if not (arrItem is TJSONObject) then
-                raise Exception.Create(Format('JSON/%s: unexpected format for object number %d.', [cls.Name, lineNum]));
-            loadSingleObj(TJSONObject(arrItem), lineNum);
+                raise Exception.Create(Format('JSON/%s: unexpected format for object number %d.', [cls.Name, lineNum])); 
+            loadSingleObj(arrItem as TJSONObject, lineNum);
         end;
 
     except
         on E: Exception do
-            DoSimpleMsg(DSS, 'Error loading data from JSON: %s', [E.message], 5021);
+        begin
+            line := '';
+            if arrItem <> NIL then
+                line := arrItem.FormatJSON([foSingleLineObject, foSingleLineArray]);
+
+            if DSS.ErrorNumber <> 0 then
+            begin
+                DoSimpleMsg(DSS, 'Error loading %s record from JSON: %s Previous error (#%d): %s Context follows: `%s`', 
+                    [cls.Name, E.message, DSS.ErrorNumber, DSS.LastErrorMessage, line], 5021
+                );
+            end
+            else
+            begin
+                DoSimpleMsg(DSS, 'Error loading %s record from JSON: %s Context follows: `%s`', [cls.Name, E.message, line], 5021);
+            end;
+        end;
     end;
     FreeAndNil(F);
     FreeAndNil(data);
@@ -2316,6 +2333,8 @@ begin
             continue;
 
         loadClassFromJSON(DSS, cls, tmp, joptions);
+        if DSS.ErrorNumber <> 0 then
+            Exit;
     end;
 
     // "MakeBusList"
