@@ -711,7 +711,8 @@ begin
         ord(TProp.pctRs):
             YprimInvalid := TRUE;
         ord(TProp.XSCarray):
-            YprimInvalid := TRUE;
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+                YprimInvalid := TRUE;
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
