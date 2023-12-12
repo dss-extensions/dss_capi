@@ -731,9 +731,11 @@ begin
         ord(TProp.pctloadloss), ord(TProp.pctnoloadloss),
         ord(TProp.pctimag), ord(TProp.ppm_antifloat), ord(TProp.pctRs), 
         ord(TProp.XHL), ord(TProp.XHT), ord(TProp.XLT),
-        ord(TProp.X12), ord(TProp.X13), ord(TProp.X23),
-        ord(TProp.Xscarray):
+        ord(TProp.X12), ord(TProp.X13), ord(TProp.X23):
             YprimInvalid := TRUE;
+        ord(TProp.Xscarray):
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+                YprimInvalid := TRUE;
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
