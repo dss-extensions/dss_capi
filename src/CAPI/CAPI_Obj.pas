@@ -2176,7 +2176,7 @@ procedure loadClassFromJSON(DSS: TDSSContext; cls: TDSSClass; jcls: TJSONData; j
 var
     obj: TJSONObject;
     data: TJSONData = NIL;
-    arr: TJSONArray;
+    arr: TJSONArray = NIL;
     arrItem: TJSONData = NIL;
     jsonFilePath: TJSONString = NIL;
     jsonLinesFilePath: TJSONString = NIL;
@@ -2186,6 +2186,7 @@ var
     line: String;
     dupsAllowed: Boolean;
     localError: Boolean = false;
+    typeStr: String;
 
     procedure loadSingleObj(o: TJSONObject; num: Integer);
     var
@@ -2280,6 +2281,13 @@ begin
             arr := TJSONArray(jcls);
         end;
 
+        if arr = NIL then
+        begin
+            WriteStr(typeStr, jcls.JSONtype);
+            typeStr := Copy(typeStr, 3, length(typeStr));
+            raise Exception.Create(Format('JSON/%s: unexpected format (%s) for class container.', [cls.Name, typeStr])); 
+        end;
+
         for lineNum := 0 to arr.Count - 1 do
         begin
             arrItem := arr.Items[lineNum];
@@ -2299,7 +2307,9 @@ begin
 
             if DSS.ErrorNumber = 0 then
             begin
-                DoSimpleMsg(DSS, 'Error loading %s record from JSON: %s Context follows: `%s`', [cls.Name, E.message, line], 5021);
+                if Length(line) <> 0 then
+                    line := 'Context follows: ' + line;
+                DoSimpleMsg(DSS, 'Error loading %s record from JSON: %s %s', [cls.Name, E.message, line], 5021);
                 localError := true;
             end;
         end;
