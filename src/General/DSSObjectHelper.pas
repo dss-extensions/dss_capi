@@ -127,8 +127,7 @@ uses
     ParserDel,
     Math,
     CAPI_Utils,
-    DynEqPCE,
-    Variants;
+    DynEqPCE;
 
 type
     PLongBool = ^LongBool;
@@ -1934,7 +1933,7 @@ begin
                     Exit;
                 end;
                 arrayItem := arrayVal[0];
-                if (varType(arrayItem.Value) in [varString, varStrArg, varOleStr]) then
+                if arrayItem.JSONtype = jtString then
                 begin
                     // Array of strings
                     ValueCount := arrayVal.Count;
@@ -1943,7 +1942,7 @@ begin
                     begin
                         for i := 0 to ValueCount - 1 do
                         begin
-                            strs[i] := AnsiLowerCase(arrayVal[i].Value);
+                            strs[i] := AnsiLowerCase(arrayVal[i].AsString);
                         end;
                     end
                     else
