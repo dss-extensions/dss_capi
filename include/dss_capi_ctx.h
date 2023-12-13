@@ -3116,7 +3116,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_LoadShapes_Normalize(void* ctx);
 
     /*! 
-    Time array in hours correscponding to P and Q multipliers when the Interval=0.
+    Time array in hours corresponding to P and Q multipliers when the Interval=0.
     */
     DSS_CAPI_DLL void ctx_LoadShapes_Get_TimeArray(void* ctx, double** ResultPtr, int32_t* ResultDims);
     /*! 
@@ -3125,7 +3125,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_LoadShapes_Get_TimeArray_GR(void* ctx);
 
     /*! 
-    Time array in hours correscponding to P and Q multipliers when the Interval=0.
+    Time array in hours corresponding to P and Q multipliers when the Interval=0.
     */
     DSS_CAPI_DLL void ctx_LoadShapes_Set_TimeArray(void* ctx, double* ValuePtr, int32_t ValueCount);
 
@@ -3553,7 +3553,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Monitors_Get_dblFreq_GR(void* ctx);
 
     /*! 
-    Array of doubles containgin time value in hours for time-sampled monitor values; Empty if frequency-sampled values for harmonics solution  (see dblFreq)
+    Array of doubles containing time value in hours for time-sampled monitor values; Empty if frequency-sampled values for harmonics solution  (see dblFreq)
     */
     DSS_CAPI_DLL void ctx_Monitors_Get_dblHour(void* ctx, double** ResultPtr, int32_t* ResultDims);
     /*! 
@@ -3753,12 +3753,12 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Parser_Set_EndQuote(void* ctx, const char* Value);
 
     /*! 
-    String defining hard delimiters used to separate token on the command string. Default is , and =. The = separates token name from token value. These override whitesspace to separate tokens.
+    String defining hard delimiters used to separate token on the command string. Default is , and =. The = separates token name from token value. These override whitespace to separate tokens.
     */
     DSS_CAPI_DLL char* ctx_Parser_Get_Delimiters(void* ctx);
 
     /*! 
-    String defining hard delimiters used to separate token on the command string. Default is , and =. The = separates token name from token value. These override whitesspace to separate tokens.
+    String defining hard delimiters used to separate token on the command string. Default is , and =. The = separates token name from token value. These override whitespace to separate tokens.
     */
     DSS_CAPI_DLL void ctx_Parser_Set_Delimiters(void* ctx, const char* Value);
 
@@ -3833,7 +3833,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_PDElements_Set_Name(void* ctx, const char* Value);
 
     /*! 
-    accummulated failure rate for this branch on downline
+    Accumulated failure rate for this branch on downline
     */
     DSS_CAPI_DLL double ctx_PDElements_Get_AccumulatedL(void* ctx);
 
@@ -4021,7 +4021,7 @@ extern "C" {
 
 
     /*! 
-    Complex array of sequence powers into each 3-phase teminal, for each PD element
+    Complex array of sequence powers into each 3-phase terminal, for each PD element
     
     (API Extension)
     */
@@ -4345,7 +4345,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Reclosers_Set_PhaseTrip(void* ctx, double Value);
 
     /*! 
-    Ground (3I0) instantaneous trip setting - curve multipler or actual amps.
+    Ground (3I0) instantaneous trip setting - curve multiplier or actual amps.
     */
     DSS_CAPI_DLL double ctx_Reclosers_Get_GroundInst(void* ctx);
 
@@ -4355,7 +4355,7 @@ extern "C" {
     DSS_CAPI_DLL double ctx_Reclosers_Get_GroundTrip(void* ctx);
 
     /*! 
-    Phase instantaneous curve multipler or actual amps
+    Phase instantaneous curve multiplier or actual amps
     */
     DSS_CAPI_DLL double ctx_Reclosers_Get_PhaseInst(void* ctx);
 
@@ -4442,7 +4442,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t ctx_RegControls_Get_First(void* ctx);
 
     /*! 
-    Regulation bandwidth in forward direciton, centered on Vreg
+    Regulation bandwidth in forward direction, centered on Vreg
     */
     DSS_CAPI_DLL double ctx_RegControls_Get_ForwardBand(void* ctx);
 
@@ -4472,7 +4472,7 @@ extern "C" {
     DSS_CAPI_DLL uint16_t ctx_RegControls_Get_IsReversible(void* ctx);
 
     /*! 
-    Maximum tap change per iteration in STATIC solution mode. 1 is more realistic, 16 is the default for a faster soluiton.
+    Maximum tap change per iteration in STATIC solution mode. 1 is more realistic, 16 is the default for a faster solution.
     */
     DSS_CAPI_DLL int32_t ctx_RegControls_Get_MaxTapChange(void* ctx);
 
@@ -4554,7 +4554,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_RegControls_Set_Delay(void* ctx, double Value);
 
     /*! 
-    Regulation bandwidth in forward direciton, centered on Vreg
+    Regulation bandwidth in forward direction, centered on Vreg
     */
     DSS_CAPI_DLL void ctx_RegControls_Set_ForwardBand(void* ctx, double Value);
 
@@ -4584,7 +4584,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_RegControls_Set_IsReversible(void* ctx, uint16_t Value);
 
     /*! 
-    Maximum tap change per iteration in STATIC solution mode. 1 is more realistic, 16 is the default for a faster soluiton.
+    Maximum tap change per iteration in STATIC solution mode. 1 is more realistic, 16 is the default for a faster solution.
     */
     DSS_CAPI_DLL void ctx_RegControls_Set_MaxTapChange(void* ctx, int32_t Value);
 
@@ -4649,7 +4649,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_RegControls_Set_Winding(void* ctx, int32_t Value);
 
     /*! 
-    Integer number of the tap that the controlled transformer winding is currentliy on.
+    Integer number of the tap that the controlled transformer winding is currently on.
     */
     DSS_CAPI_DLL void ctx_RegControls_Set_TapNumber(void* ctx, int32_t Value);
 
@@ -5870,7 +5870,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t ctx_Transformers_Get_Wdg(void* ctx);
 
     /*! 
-    Name of an XfrmCode that supplies electircal parameters for this Transformer.
+    Name of an XfrmCode that supplies electrical parameters for this Transformer.
     */
     DSS_CAPI_DLL char* ctx_Transformers_Get_XfmrCode(void* ctx);
 
@@ -5880,7 +5880,7 @@ extern "C" {
     DSS_CAPI_DLL double ctx_Transformers_Get_Xhl(void* ctx);
 
     /*! 
-    Percent reactance between windigns 1 and 3, on winding 1 kVA base.  Use for 3-winding transformers only.
+    Percent reactance between windings 1 and 3, on winding 1 kVA base.  Use for 3-winding transformers only.
     */
     DSS_CAPI_DLL double ctx_Transformers_Get_Xht(void* ctx);
 
@@ -5925,7 +5925,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Transformers_Set_Name(void* ctx, const char* Value);
 
     /*! 
-    Active Winding number of tap steps betwein MinTap and MaxTap.
+    Active Winding number of tap steps between MinTap and MaxTap.
     */
     DSS_CAPI_DLL void ctx_Transformers_Set_NumTaps(void* ctx, int32_t Value);
 
@@ -5955,7 +5955,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Transformers_Set_Wdg(void* ctx, int32_t Value);
 
     /*! 
-    Name of an XfrmCode that supplies electircal parameters for this Transformer.
+    Name of an XfrmCode that supplies electrical parameters for this Transformer.
     */
     DSS_CAPI_DLL void ctx_Transformers_Set_XfmrCode(void* ctx, const char* Value);
 
@@ -5965,7 +5965,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Transformers_Set_Xhl(void* ctx, double Value);
 
     /*! 
-    Percent reactance between windigns 1 and 3, on winding 1 kVA base.  Use for 3-winding transformers only.
+    Percent reactance between windings 1 and 3, on winding 1 kVA base.  Use for 3-winding transformers only.
     */
     DSS_CAPI_DLL void ctx_Transformers_Set_Xht(void* ctx, double Value);
 

@@ -8,7 +8,10 @@ uses
     DSSObject,
     fpjson;
 
-function DSS_ExtractSchema(DSS: TDSSContext): PAnsiChar; CDECL;
+const 
+    ALTDSS_SCHEMA_ID = 'https://dss-extensions.org/altdss-schema/2023-12-13.schema.json';
+
+function DSS_ExtractSchema(DSS: TDSSContext; jsonSchema: TAPIBoolean): PAnsiChar; CDECL;
 
 implementation
 
@@ -1522,7 +1525,7 @@ begin
 
     schema := TJSONObject.Create([
         '$schema', 'https://json-schema.org/draft/2020-12/schema',
-        '$id', 'https://dss-extensions.org/altdss-flat.schema.json',
+        '$id', ALTDSS_SCHEMA_ID,
         // 'version', DSS_CAPI_VERSION,
         // 'commit', DSS_CAPI_REV,
         '$defs', globalDefs,
@@ -1538,7 +1541,7 @@ begin
     enumIds.Free();
    
 end;
-function DSS_ExtractSchema(DSS: TDSSContext): PAnsiChar; CDECL;
+function DSS_ExtractSchema(DSS: TDSSContext; jsonSchema: TAPIBoolean): PAnsiChar; CDECL;
 // - Enums are mapped to a sequential integer id
 // - Object references are translated to (class) names
 var
@@ -1550,7 +1553,7 @@ var
 begin
     if DSS = NIL then DSS := DSSPrime;
 
-    if (SysUtils.GetEnvironmentVariable('DSS_EXTENSIONS_EXPERIMENTAL_JSON_SCHEMA') = '1') then
+    if jsonSchema then
     begin
         Result := DSS_ExtractJSONSchema(DSS);
         Exit;

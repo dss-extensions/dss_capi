@@ -41,7 +41,7 @@ extern "C" {
         SolveModes_PeakDay = 5, ///< Solves for Peak Day using Daily load curve
         SolveModes_DutyCycle = 6, ///< Solve following Duty Cycle load shapes
         SolveModes_Direct = 7, ///< Solve direct (forced admittance model)
-        SolveModes_MonteFault = 8, ///< Monte carlo Fault Study
+        SolveModes_MonteFault = 8, ///< Monte Carlo Fault Study
         SolveModes_FaultStudy = 9, ///< Fault study at all buses
         SolveModes_Monte2 = 10, ///< Monte Carlo Mode 2
         SolveModes_Monte3 = 11, ///< Monte Carlo Mode 3
@@ -247,16 +247,17 @@ extern "C" {
             the current state of DSS objects.
             Set this flag to disable this behavior, following the original OpenDSS implementation for potential
             compatibility with older software that may require the original behavior; note that may lead to
-            errorneous interpretation of the data in the DSS properties. This was introduced in DSS C-API v0.14.0
+            erroneous interpretation of the data in the DSS properties. This was introduced in DSS C-API v0.14.0
             and will be further developed for future versions.
         */
 
        DSSCompatFlags_SkipSideEffects = 0x00000040 /*!< 
-            Some specific functions on the official OpenDSS APIs skip important side-effects.
+            Some specific functions on the official OpenDSS APIs and internal code skip important side-effects.
             By default, on DSS-Extensions/AltDSS, those side-effects are enabled. Use this flag
             to try to follow the behavior of the official APIs. Beware that some side-effects are
             important and skipping them may result in incorrect results.
-            This flag only affects some of the classic API functions, especially Loads and Generators.
+            This flag affects some of the classic API functions (Loads, Generators, Vsources)
+            as well as the behavior of some DSS properties (Line: Rg, Xg, rho, Transformer/AutoTrans: XscArray).
         */
     };
 
@@ -264,7 +265,7 @@ extern "C" {
     The values from AltDSSEvent are used in the updated DSSEvents_* functions to
     register callbacks for different events. Note that in the official OpenDSS
     (COM implementation) only the first three event types (marked as Legacy) are
-    avaiable and the callback functions do not receive the extra arguments. To
+    available and the callback functions do not receive the extra arguments. To
     simplify our implementation, we decided to merge the legacy events in our
     new system. As such, some functions were removed and the old callback
     "dss_callback_solution_t" was replaced with "altdss_callback_event_t".
@@ -3386,7 +3387,7 @@ extern "C" {
     DSS_CAPI_DLL void LoadShapes_Normalize(void);
 
     /*! 
-    Time array in hours correscponding to P and Q multipliers when the Interval=0.
+    Time array in hours corresponding to P and Q multipliers when the Interval=0.
     */
     DSS_CAPI_DLL void LoadShapes_Get_TimeArray(double** ResultPtr, int32_t* ResultDims);
     /*! 
@@ -3395,7 +3396,7 @@ extern "C" {
     DSS_CAPI_DLL void LoadShapes_Get_TimeArray_GR(void);
 
     /*! 
-    Time array in hours correscponding to P and Q multipliers when the Interval=0.
+    Time array in hours corresponding to P and Q multipliers when the Interval=0.
     */
     DSS_CAPI_DLL void LoadShapes_Set_TimeArray(double* ValuePtr, int32_t ValueCount);
 
@@ -3823,7 +3824,7 @@ extern "C" {
     DSS_CAPI_DLL void Monitors_Get_dblFreq_GR(void);
 
     /*! 
-    Array of doubles containgin time value in hours for time-sampled monitor values; Empty if frequency-sampled values for harmonics solution  (see dblFreq)
+    Array of doubles containing time value in hours for time-sampled monitor values; Empty if frequency-sampled values for harmonics solution  (see dblFreq)
     */
     DSS_CAPI_DLL void Monitors_Get_dblHour(double** ResultPtr, int32_t* ResultDims);
     /*! 
@@ -4023,12 +4024,12 @@ extern "C" {
     DSS_CAPI_DLL void Parser_Set_EndQuote(const char* Value);
 
     /*! 
-    String defining hard delimiters used to separate token on the command string. Default is , and =. The = separates token name from token value. These override whitesspace to separate tokens.
+    String defining hard delimiters used to separate token on the command string. Default is , and =. The = separates token name from token value. These override whitespace to separate tokens.
     */
     DSS_CAPI_DLL char* Parser_Get_Delimiters(void);
 
     /*! 
-    String defining hard delimiters used to separate token on the command string. Default is , and =. The = separates token name from token value. These override whitesspace to separate tokens.
+    String defining hard delimiters used to separate token on the command string. Default is , and =. The = separates token name from token value. These override whitespace to separate tokens.
     */
     DSS_CAPI_DLL void Parser_Set_Delimiters(const char* Value);
 
@@ -4103,7 +4104,7 @@ extern "C" {
     DSS_CAPI_DLL void PDElements_Set_Name(const char* Value);
 
     /*! 
-    accummulated failure rate for this branch on downline
+    Accumulated failure rate for this branch on downline
     */
     DSS_CAPI_DLL double PDElements_Get_AccumulatedL(void);
 
@@ -4291,7 +4292,7 @@ extern "C" {
 
 
     /*! 
-    Complex array of sequence powers into each 3-phase teminal, for each PD element
+    Complex array of sequence powers into each 3-phase terminal, for each PD element
     
     (API Extension)
     */
@@ -4615,7 +4616,7 @@ extern "C" {
     DSS_CAPI_DLL void Reclosers_Set_PhaseTrip(double Value);
 
     /*! 
-    Ground (3I0) instantaneous trip setting - curve multipler or actual amps.
+    Ground (3I0) instantaneous trip setting - curve multiplier or actual amps.
     */
     DSS_CAPI_DLL double Reclosers_Get_GroundInst(void);
 
@@ -4625,7 +4626,7 @@ extern "C" {
     DSS_CAPI_DLL double Reclosers_Get_GroundTrip(void);
 
     /*! 
-    Phase instantaneous curve multipler or actual amps
+    Phase instantaneous curve multiplier or actual amps
     */
     DSS_CAPI_DLL double Reclosers_Get_PhaseInst(void);
 
@@ -4712,7 +4713,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t RegControls_Get_First(void);
 
     /*! 
-    Regulation bandwidth in forward direciton, centered on Vreg
+    Regulation bandwidth in forward direction, centered on Vreg
     */
     DSS_CAPI_DLL double RegControls_Get_ForwardBand(void);
 
@@ -4742,7 +4743,7 @@ extern "C" {
     DSS_CAPI_DLL uint16_t RegControls_Get_IsReversible(void);
 
     /*! 
-    Maximum tap change per iteration in STATIC solution mode. 1 is more realistic, 16 is the default for a faster soluiton.
+    Maximum tap change per iteration in STATIC solution mode. 1 is more realistic, 16 is the default for a faster solution.
     */
     DSS_CAPI_DLL int32_t RegControls_Get_MaxTapChange(void);
 
@@ -4824,7 +4825,7 @@ extern "C" {
     DSS_CAPI_DLL void RegControls_Set_Delay(double Value);
 
     /*! 
-    Regulation bandwidth in forward direciton, centered on Vreg
+    Regulation bandwidth in forward direction, centered on Vreg
     */
     DSS_CAPI_DLL void RegControls_Set_ForwardBand(double Value);
 
@@ -4854,7 +4855,7 @@ extern "C" {
     DSS_CAPI_DLL void RegControls_Set_IsReversible(uint16_t Value);
 
     /*! 
-    Maximum tap change per iteration in STATIC solution mode. 1 is more realistic, 16 is the default for a faster soluiton.
+    Maximum tap change per iteration in STATIC solution mode. 1 is more realistic, 16 is the default for a faster solution.
     */
     DSS_CAPI_DLL void RegControls_Set_MaxTapChange(int32_t Value);
 
@@ -4919,7 +4920,7 @@ extern "C" {
     DSS_CAPI_DLL void RegControls_Set_Winding(int32_t Value);
 
     /*! 
-    Integer number of the tap that the controlled transformer winding is currentliy on.
+    Integer number of the tap that the controlled transformer winding is currently on.
     */
     DSS_CAPI_DLL void RegControls_Set_TapNumber(int32_t Value);
 
@@ -6140,7 +6141,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t Transformers_Get_Wdg(void);
 
     /*! 
-    Name of an XfrmCode that supplies electircal parameters for this Transformer.
+    Name of an XfrmCode that supplies electrical parameters for this Transformer.
     */
     DSS_CAPI_DLL char* Transformers_Get_XfmrCode(void);
 
@@ -6150,7 +6151,7 @@ extern "C" {
     DSS_CAPI_DLL double Transformers_Get_Xhl(void);
 
     /*! 
-    Percent reactance between windigns 1 and 3, on winding 1 kVA base.  Use for 3-winding transformers only.
+    Percent reactance between windings 1 and 3, on winding 1 kVA base.  Use for 3-winding transformers only.
     */
     DSS_CAPI_DLL double Transformers_Get_Xht(void);
 
@@ -6195,7 +6196,7 @@ extern "C" {
     DSS_CAPI_DLL void Transformers_Set_Name(const char* Value);
 
     /*! 
-    Active Winding number of tap steps betwein MinTap and MaxTap.
+    Active Winding number of tap steps between MinTap and MaxTap.
     */
     DSS_CAPI_DLL void Transformers_Set_NumTaps(int32_t Value);
 
@@ -6225,7 +6226,7 @@ extern "C" {
     DSS_CAPI_DLL void Transformers_Set_Wdg(int32_t Value);
 
     /*! 
-    Name of an XfrmCode that supplies electircal parameters for this Transformer.
+    Name of an XfrmCode that supplies electrical parameters for this Transformer.
     */
     DSS_CAPI_DLL void Transformers_Set_XfmrCode(const char* Value);
 
@@ -6235,7 +6236,7 @@ extern "C" {
     DSS_CAPI_DLL void Transformers_Set_Xhl(double Value);
 
     /*! 
-    Percent reactance between windigns 1 and 3, on winding 1 kVA base.  Use for 3-winding transformers only.
+    Percent reactance between windings 1 and 3, on winding 1 kVA base.  Use for 3-winding transformers only.
     */
     DSS_CAPI_DLL void Transformers_Set_Xht(double Value);
 
@@ -7205,7 +7206,7 @@ extern "C" {
 
     (API Extension)
     */
-    DSS_CAPI_DLL char* DSS_ExtractSchema(void *ctx);
+    DSS_CAPI_DLL char* DSS_ExtractSchema(void *ctx, uint16_t jsonSchema);
 
     DSS_CAPI_DLL void DSS_Dispose_String(char* S);
     DSS_CAPI_DLL void DSS_Dispose_PPointer(void*** p);
