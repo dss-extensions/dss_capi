@@ -181,6 +181,7 @@ implementation
 uses
     CAPI_metadata,
     CAPI_Alt,
+    CAPI_Schema,
     StrUtils,
     Utilities,
     RegExpr,
@@ -2096,6 +2097,7 @@ begin
             busArray.Add(alt_Bus_ToJSON_(ckt.DSS, ckt.Buses[i], joptions));
         end;
         circ := TJSONObject.Create([
+            '$schema', ALTDSS_SCHEMA_ID,
             'Name', ckt.Name,
             'DefaultBaseFreq', ckt.DSS.DefaultBaseFreq,
             'PreCommands', cmds,
