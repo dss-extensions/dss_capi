@@ -4911,6 +4911,9 @@ begin
         if (ptype = TPropertyType.StringSilentROFunctionProperty) or (TPropertyFlag.SilentReadOnly in propFlags) then
             continue; // ignore... TODO: error or warning
 
+        if propData.IsNull and (not (TPropertyFlag.AllowNone in PropertyFlags[propIndex])) then
+            continue;
+
         // WriteLn('-> ', propName, ' = ', propData.FormatJSON()); SysFlushStdIO();
         prevInt := 0;
         if (not SetObjPropertyJSONValue(obj, propIndex, joptions, propData, setterFlags, prevInt)) or (DSS.ErrorNumber <> 0) then
