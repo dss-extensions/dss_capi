@@ -61,6 +61,7 @@ function InterpretIntArray(DSS: TDSSContext; const s: String; MaxValues: Integer
 procedure InterpretTStringListArray(DSS: TDSSContext; const s: String; var ResultList: TStringList; ApplyLower: Boolean = False);
 function InterpretColorName(DSS: TDSSContext; const s: String): Integer;
 
+function GetDSSArray(dbls: ArrayOfDouble; scale: Double = 1.0): String; overload;
 function GetDSSArray(n: Integer; dbls: pDoubleArray; scale: Double = 1.0): String; overload;
 function GetDSSArray(n: Integer; sngs: pSingleArray): String; overload;
 function GetDSSArray(n: Integer; ints: pIntegerArray): String; overload;
@@ -1521,6 +1522,11 @@ begin
     end;
 
     Result := Result + ']';
+end;
+
+function GetDSSArray(dbls: ArrayOfDouble; scale: Double = 1.0): String;
+begin
+    Result := GetDSSArray(Length(dbls), pDoubleArray(@dbls[0]), scale);
 end;
 
 function GetDSSArray(n: Integer; sngs: pSingleArray): String;

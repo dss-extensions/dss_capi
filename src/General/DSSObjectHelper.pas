@@ -24,8 +24,10 @@ type
         IncludeDSSClass = 1 shl 6,
         LowercaseKeys = 1 shl 7,
         IncludeDefaultObjs = 1 shl 8,
-        State = 1 shl 9, //TODO: power flow state, state variables for the given element, if applies
-        Debug = 1 shl 10 // TODO
+        SkipTimestamp = 1 shl 9,
+        SkipBuses = 1 shl 10,
+        State = 1 shl 11, //TODO: power flow state, state variables for the given element, if applies
+        Debug = 1 shl 12 // TODO
     );
 {$SCOPEDENUMS OFF}
     
