@@ -306,40 +306,6 @@ begin
     Result := '';
 end;
 
-function getIteratorPropertyName(cls: TDSSClass; sizedPropIndex: Integer): String;
-var
-    propIndex: Integer;
-    propOffset: PtrInt;
-begin
-    Result := '';
-    if (TPropertyFlag.OnArray in cls.PropertyFlags[sizedPropIndex]) or (cls.PropertyType[sizedPropIndex] in [
-        TPropertyType.BusOnStructArrayProperty,
-        TPropertyType.BusesOnStructArrayProperty,
-        TPropertyType.IntegerOnStructArrayProperty,
-        TPropertyType.DoubleOnStructArrayProperty,
-        TPropertyType.MappedStringEnumOnStructArrayProperty]) then
-    begin
-        propOffset := cls.PropertyStructArrayIndexOffset;
-    end
-    else 
-    if cls.PropertyType[sizedPropIndex] = TPropertyType.DoubleOnArrayProperty then
-    begin
-        propOffset := cls.PropertyOffset2[sizedPropIndex];
-    end
-    else
-    begin
-        Exit;
-    end;
-    for propIndex := 1 to cls.NumProperties do
-    begin
-        if (cls.PropertyType[propIndex] = TPropertyType.IntegerProperty) and (cls.PropertyOffset[propIndex] = propOffset) then
-        begin
-            Result := cls.PropertyNameJSON[propIndex];
-            Exit;
-        end;
-    end;
-end;
-
 function indexOfIn(propIndex: Integer; const AltPropertyOrder: ArrayOfInteger): Integer;
 var
     i: Integer;
@@ -434,7 +400,7 @@ var
     requiredProps: TJSONArray;
 
     onArray: Boolean;
-    iteratorProp: String;
+    iteratorPropIdx: Integer;
     lengthPropIndex: Integer;
 
     units: String;
@@ -959,14 +925,14 @@ begin
                         end
                         else
                         begin
-                            iteratorProp := getIteratorPropertyName(cls, propIndex);
-                            if (propIndex_ <> propIndex) and (iteratorProp = '') then
-                                iteratorProp := getIteratorPropertyName(cls, propIndex_);
+                            iteratorPropIdx := cls.PropertyIteratorPropertyIndex[propIndex];
+                            if (propIndex_ <> propIndex) and (iteratorPropIdx = 0) then
+                                iteratorPropIdx := cls.PropertyIteratorPropertyIndex[propIndex_];
 
                             prop.Add('$dssLength', PropertyNameJSON[lengthPropIndex]);
-                            if iteratorProp <> '' then
+                            if iteratorPropIdx <> 0 then
                             begin
-                                prop.Add('$dssIterator', iteratorProp);
+                                prop.Add('$dssIterator', PropertyNameJSON[iteratorPropIdx]);
                             end;
                         end;
                     end;
