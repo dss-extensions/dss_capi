@@ -45,7 +45,7 @@ type
         function ParseObjPropertyValue(Obj: Pointer; Index: Integer; const Value: String; out prevInt: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
         function GetObjPropertyValue(obj: Pointer; Index: Integer; out PropStr: String): Boolean;
         function GetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; var val: TJSONData; preferArray: Boolean = False): Boolean;
-        function SetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; val: TJSONData; setterFlags: TDSSPropertySetterFlags; var prevInt: Integer): Boolean;
+        function SetObjPropertyJSONValue(obj: Pointer; var Index: Integer; joptions: Integer; val: TJSONData; setterFlags: TDSSPropertySetterFlags; var prevInt: Integer): Boolean;
 
         //TODO: add error as result for the 16 following functions
 
@@ -1737,7 +1737,7 @@ begin
 end;
 
 
-function TDSSClassHelper.SetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; val: TJSONData; setterFlags: TDSSPropertySetterFlags; var prevInt: Integer): Boolean;
+function TDSSClassHelper.SetObjPropertyJSONValue(obj: Pointer; var Index: Integer; joptions: Integer; val: TJSONData; setterFlags: TDSSPropertySetterFlags; var prevInt: Integer): Boolean;
 var
     doublePtr: PDouble;
     dataPtr: PPDouble = NIL;
@@ -1757,7 +1757,7 @@ var
     // objs: Array of TDSSObject;
     // otherObj: TDSSObject = NIL;
     // otherName: String;
-    sizingPropIndex: Integer;        
+    sizingPropIndex, iteratorPropIndex: Integer;
     allowSetSize: Boolean;
     nmult: Integer; // for matrices
     ValueCount: Integer;
@@ -1776,7 +1776,8 @@ begin
         // DoubleOnStructArrayProperty,
         // IntegerOnStructArrayProperty,
         // DSSObjectReferenceProperty + OnArray flag
-        Result := SetObjPropertyJSONValue(obj, PropertyArrayAlternative[Index], joptions, val, setterFlags, prevInt);
+        Index := PropertyArrayAlternative[Index];
+        Result := SetObjPropertyJSONValue(obj, Index, joptions, val, setterFlags, prevInt);
         Exit;
     end;
     if not ((Index > 0) and (Index <= NumProperties) and (PropertyOffset[Index] <> -1)) then
@@ -1784,6 +1785,10 @@ begin
         Result := False;
         Exit;
     end;
+    iteratorPropIndex := PropertyIteratorPropertyIndex[Index];
+    if iteratorPropIndex <> 0 then
+        dssObj.SetAsNextSeq(iteratorPropIndex);
+
     sizingPropIndex := PropertySizingPropertyIndex[Index];
     allowSetSize := (sizingPropIndex > 0) and 
         // Disallow overwriting the size with different properties
@@ -4873,7 +4878,7 @@ end;
 
 function TDSSClassHelper.FillObjFromJSON(obj: Pointer; json: TJSONObject; joptions: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
 var
-    propIndex: Integer;
+    propIndex, propIndex0: Integer;
     propName: String;
     jsonProp: TJSONEnum;
     propData: TJSONData = NIL;
@@ -4917,6 +4922,7 @@ begin
 
         // WriteLn('-> ', propName, ' = ', propData.FormatJSON()); SysFlushStdIO();
         prevInt := 0;
+        // Note: propIndex may be replaced/redirected in SetObjPropertyJSONValue
         if (not SetObjPropertyJSONValue(obj, propIndex, joptions, propData, setterFlags, prevInt)) or (DSS.ErrorNumber <> 0) then
         begin
             EndEdit(dssObj, numChanges);

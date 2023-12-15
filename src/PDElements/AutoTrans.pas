@@ -1056,6 +1056,7 @@ procedure TAutoTransObj.SaveWrite(F: TStream);
 var
     iprop: Integer;
     i: Integer;
+    done: Set of TProp = [];    
 begin
     // Write only properties that were explicitly set in the
     // final order they were actually set
@@ -1064,18 +1065,33 @@ begin
     begin
             // Trap wdg= and write out array properties instead
             case iProp of
-                3:
+                ord(TProp.Wdg):
                 begin   // if WDG= was ever used write out arrays ...
-                    for i := 12 to 16 do
+                    for i := ord(TProp.Buses) to ord(TProp.Taps) do
+                    begin
+                        if TProp(iProp) in done then
+                            continue;
+
+                        Include(done, TProp(i));
                         FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[i], GetPropertyValue(i)]));
+                    end;
                     for i := 1 to Numwindings do
                         FSWrite(F, Format(' wdg=%d %sR=%.7g', [i, '%', Winding[i].Rpu * 100.0]));
                 end;
-                4..9:
+                ord(TProp.Bus),
+                ord(TProp.Conn),
+                ord(TProp.kV),
+                ord(TProp.kVA),
+                ord(TProp.Tap),
+                ord(TProp.pctR):
                     ; // Ignore these properties; use arrays instead
             else
-                if Length(PropertyValue[iProp]) > 0 then
-                    FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(PropertyValue[iProp])]));
+                if not (TProp(iProp) in done) then
+                begin
+                    Include(done, TProp(iProp));
+                    if (Length(PropertyValue[iProp]) > 0) then
+                        FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(PropertyValue[iProp])]));
+                end;
             end;
         iProp := GetNextPropertySet(iProp);
     end;
