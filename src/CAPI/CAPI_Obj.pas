@@ -2083,7 +2083,8 @@ begin
     Result := NIL;
     try
         cmds := TJSONArray.Create();
-        cmds.Add(Format('! Last saved by AltDSS/%s on %s',  [VersionString, DateToISO8601(Now())]));
+        if (joptions and Integer(DSSJSONOptions.SkipTimestamp)) = 0 then
+            cmds.Add(Format('! Last saved by AltDSS/%s on %s',  [VersionString, DateToISO8601(Now())]));
         if ckt.PositiveSequence then
             cmds.Add(Format('Set CktModel=%s', [ckt.DSS.CktModelEnum.OrdinalToString(Integer(ckt.PositiveSequence))]));
         if ckt.DuplicatesAllowed then
@@ -2091,19 +2092,26 @@ begin
         if ckt.LongLineCorrection then
             cmds.Add('Set LongLineCorrection=True');
 
-        busArray := TJSONArray.Create();
-        for i := 1 to ckt.NumBuses do
+        cmds.Add('Set VoltageBases=' + GetDSSArray(ckt.LegalVoltageBases));
+        if (joptions and Integer(DSSJSONOptions.SkipBuses)) = 0 then
         begin
-            busArray.Add(alt_Bus_ToJSON_(ckt.DSS, ckt.Buses[i], joptions));
+            busArray := TJSONArray.Create();
+            for i := 1 to ckt.NumBuses do
+            begin
+                busArray.Add(alt_Bus_ToJSON_(ckt.DSS, ckt.Buses[i], joptions));
+            end;
         end;
+
         circ := TJSONObject.Create([
             '$schema', ALTDSS_SCHEMA_ID,
             'Name', ckt.Name,
             'DefaultBaseFreq', ckt.DSS.DefaultBaseFreq,
-            'PreCommands', cmds,
+            'PreCommands', cmds
             // MakeBusList as a PostCommand is implicit
-            'Bus', busArray
         ]);
+        if busArray <> NIL then
+            circ.Add('Bus', busArray);
+
         cmds := NIL;
         busArray := NIL;
 
@@ -2252,7 +2260,7 @@ begin
                 if not (data is TJSONArray) then
                     raise Exception.Create(Format('JSON/%s: unexpected format in file "%s".', [cls.Name, jsonFilePath.Value]));
                 arr := TJSONArray(data);
-                // continue as if the array as built-in
+                // continue as if the array was built-in
             end
             else
             if obj.Find('JSONLinesFile', jsonLinesFilePath) then
@@ -2414,8 +2422,8 @@ begin
     if DSS.ActiveCircuit.BusNameRedefined then
         DSS.ActiveCircuit.ReprocessBusDefs();
 
-    tmp := jckt.Find('Bus');
-    if (tmp <> NIL) then
+    tmp := jckt.Find('Bus'); 
+    if (tmp <> NIL) then // Providing buses is optional
     begin
         if not (tmp is TJSONArray) then
             raise Exception.Create('"Bus" must be an array of bus objects, if provided.');
