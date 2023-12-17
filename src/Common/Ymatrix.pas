@@ -350,6 +350,11 @@ begin
         
         if DSS.SolutionAbort then
         begin
+            if DSS.ErrorNumber <> 0 then
+            begin
+                DSS.LastErrorMessage := _('Y matrix build aborted due to error in primitive Y calculations. Previous error message follows.'#10) + DSS.LastErrorMessage;
+                Exit;
+            end;
             DoSimpleMsg(DSS, _('Y matrix build aborted due to error in primitive Y calculations.'), 11001);
             Exit;  // Some problem occured building Yprims
         end;

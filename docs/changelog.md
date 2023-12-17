@@ -74,6 +74,7 @@ This version should match OpenDSS v9.7.1.1 (SVN r3646). Remember to check the co
     - API/Iteration: Fix issues with iteration in a few of the internal functions which could have resulted in empty results in some situations. These situations occurred only during testing, so we don't expect many users were affected.
 
 - Misc:
+    - Error handling: add a few numeric checks, and check for errors in more places during solution algorithms. The changes should help finding issues earlier and/or more easily.
     - Properties/capitalization: adjust capitalization of nearly all property names. Use lowercase for description keys (help strings). *Feedback on the capitalization is welcome.* As a reminder, OpenDSS is case-insensitive, but other other are not. Providing a better internal representation of the properties will help other tools to use the internal names without extra work (no need for each tool to adjust capitalization), and it doesn't affect the DSS engine itself nor compatibility with the upstream OpenDSS.
     - Obj/API: introduce `ExtraClassIDs` to get some special lists.
     - Classic to Obj/Alt API bridge: add many `*_Get_Pointer` functions (e.g. `CktElement_Get_Pointer`, `Loads_Get_Pointer`). These functions return a pointer that can be used in the Obj API. This should enable an easier migration from the classic API, or allow users to use the Obj API to complement the classic API where the latter is lacking.

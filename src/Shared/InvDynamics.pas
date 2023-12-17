@@ -265,7 +265,7 @@ begin
     a := 10;
     b := (4.0 * (R1 + (X1 * X0R0)));
     c := (4.0 * (R1 * R1 + X1 * X1) - SQR((sqrt(3) * RatedkVLL * 1000.0) / Isc1));
-    R0 := QuadSolver(a, b, c);
+    R0 := QuadSolver(a, b, c); //TODO: check -- can this be NaN/complex?
     X0 := R0 * X0R0;
     // for Z matrix
     Xs := (2.0 * X1 + X0) / 3.0;
