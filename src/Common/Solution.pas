@@ -817,6 +817,8 @@ begin
             //     repeat
             //         Inc(Iteration);
             //         ZeroInjCurr;
+            //         if DSS.SolutionAbort then
+            //             Exit;
             //         GetSourceInjCurrents;
             //         pGen.InjCurrents;   // get generator currents with nominal vars
             //         SolveSystem(NodeV);
@@ -830,6 +832,8 @@ begin
             //     repeat
             //         Inc(Iteration);
             //         ZeroInjCurr;
+            //         if DSS.SolutionAbort then
+            //             Exit;
             //         GetSourceInjCurrents;
             //         pGen.InjCurrents;   // get generator currents with nominal vars
             //         SolveSystem(NodeV);
@@ -1025,9 +1029,15 @@ begin
     begin
         BuildYMatrix(DSS, SERIESONLY, TRUE);   // Side Effect: Allocates V
     end;
+    if DSS.SolutionAbort then
+        Exit;
+
     Inc(SolutionCount);    //Unique number for this solution
 
-    ZeroInjCurr;   // Side Effect: Allocates InjCurr
+    ZeroInjCurr;
+    if DSS.SolutionAbort then
+        Exit;
+
     GetSourceInjCurrents;    // Vsource, Isource and VCCS only
 
     // Make the series Y matrix the active matrix
@@ -1086,6 +1096,8 @@ begin
         ckt.ZonesLocked := TRUE;
 
         SolveZeroLoadSnapShot;
+        if DSS.SolutionAbort then
+            Exit;
 
         for i := 1 to ckt.NumBuses do
             ckt.Buses[i].kVBase := nearestBasekV(DSS, Cabs(NodeV[ckt.Buses[i].RefNo[1]]) * 0.001732) / SQRT3;  // l-n base kV
@@ -1231,7 +1243,10 @@ begin
             BuildYMatrix(DSS, WHOLEMATRIX, TRUE); // Side Effect: Allocates V
         end;
 
-        ZeroInjCurr;   // Side Effect: Allocates InjCurr
+        ZeroInjCurr;
+        if DSS.SolutionAbort then
+            Exit;
+
         GetSourceInjCurrents;
 
         // Pick up PCELEMENT injections for Harmonics mode and Dynamics mode
@@ -2382,7 +2397,10 @@ begin
     if not ADiakoptics or (DSS.Parent <> NIL) then
     begin
 {$ENDIF}
-        ZeroInjCurr; // Side Effect: Allocates InjCurr
+        ZeroInjCurr;
+        if DSS.SolutionAbort then
+            Exit;
+
         GetSourceInjCurrents;
         if IsDynamicModel then
             GetPCInjCurr; // Need this in dynamics mode to pick up additional injections
@@ -2642,6 +2660,9 @@ begin
     if Initialize then
     begin
         ZeroInjCurr;
+        if DSS.SolutionAbort then
+            Exit;
+
         GetSourceInjCurrents;  // sources
         if ADiak_PCInj then
         begin

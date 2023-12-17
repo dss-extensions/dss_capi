@@ -185,7 +185,8 @@ uses
     DSSHelper,
     DSSObjectHelper,
     ArrayDef,
-    TypInfo;
+    TypInfo,
+    Math;
 
 type
     TObj = TVsourceObj;
@@ -719,6 +720,10 @@ begin
 
             //  Compute R0, X0
             R0 := QuadSolver((1.0 + SQR(X0R0)), (4.0 * (R1 + X1 * X0R0)), (4.0 * (R1 * R1 + X1 * X1) - SQR(3.0 * kVBase * 1000.0 / Factor / Isc1)));
+            if IsNaN(R0) then
+            begin
+                raise Exception.Create(Format('%s: cannot calculate a real-valued R0; check the Vsource/Circuit definitions.', [FullName]));
+            end;
             X0 := R0 * X0R0;
 
             // for Z matrix
@@ -739,6 +744,10 @@ begin
             X2 := X1;
             //  Compute R0, X0
             R0 := QuadSolver((1.0 + SQR(X0R0)), (4.0 * (R1 + X1 * X0R0)), (4.0 * (R1 * R1 + X1 * X1) - SQR(3.0 * kVBase * 1000.0 / Factor / Isc1)));
+            if IsNaN(R0) then
+            begin
+                raise Exception.Create(Format('%s: cannot calculate a real-valued R0; check the Vsource/Circuit definitions.', [FullName]));
+            end;
             X0 := R0 * X0R0;
 
             // for Z matrix

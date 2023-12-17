@@ -2600,7 +2600,7 @@ begin
         case FState of
 
             STORE_DISCHARGING:
-                FDCkW := QuadSolver(coefGuess[1] / StorageVars.FkVArating, coefGuess[2], -1.0 * abs(Power[1].re * 0.001));
+                FDCkW := QuadSolver(coefGuess[1] / StorageVars.FkVArating, coefGuess[2], -1.0 * abs(Power[1].re * 0.001)); //TODO: check -- can this be NaN/complex?
             STORE_CHARGING,
             STORE_IDLING:
                 FDCkW := abs(FDCkW) * coefGuess[2] / (1.0 - (coefGuess[1] * abs(FDCkW) / StorageVars.FkVArating));
