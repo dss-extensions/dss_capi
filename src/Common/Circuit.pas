@@ -2497,8 +2497,6 @@ begin
     for i := 1 to DSS.DSSClassList.Count do
         TDssClass(DSS.DSSClassList.Get(i)).Saved := FALSE;
 
-    // Define voltage sources first
-    Success := WriteVsourceClassFile(DSS, GetDssClassPtr(DSS, 'vsource'), TRUE);
     // Write library files so that they will be available to lines, loads, etc
     // Use default filename=classname
     if Success then
@@ -2530,6 +2528,12 @@ begin
         Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'TCC_Curve'), '', FALSE);
     if Success then
         Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'Spectrum'), '', FALSE);
+    if Success then
+        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'DynamicExp'), '', FALSE);
+
+    // Define voltage sources first
+    Success := WriteVsourceClassFile(DSS, GetDssClassPtr(DSS, 'vsource'), TRUE);
+
     if Success then
         Success := SaveFeeders; // Save feeders first
     if Success then
@@ -2623,6 +2627,9 @@ begin
             FSWriteln(F, 'set AllowDuplicates=yes');
         If LongLineCorrection Then 
             FSWriteln(F, 'Set LongLineCorrection=True');
+        
+        FSWriteln(F, 'Set EarthModel=' + DSS.EarthModelEnum.OrdinalToString(DSS.DefaultEarthModel));
+        
         FSWriteln(F);
 
         // Write Redirect for all populated DSS Classes  Except Solution Class

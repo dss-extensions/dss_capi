@@ -73,6 +73,7 @@ This version should match OpenDSS v9.7.1.1 (SVN r3646). Remember to check the co
     - Circuit/API: fix `Circuit_Enable` and `Circuit_Disable` (enabling/disabling circuit elements by name). An equivalent fix is included in the official OpenDSS v9.7.1.1, in the COM interface. Additionally, provide error message when trying to use invalid element names.
     - Obj/Batch API: better handling of booleans. With this change, any non-zero value is interpreted as `true`, which simplifies integration with other programming languages. This was the original intention.
     - API/Iteration: Fix issues with iteration in a few of the internal functions which could have resulted in empty results in some situations. These situations occurred only during testing, so we don't expect many users were affected.
+    - `save circuit`: include `set EarthModel=...`; adjust order of elements.
 
 - Misc:
     - Error handling: add a few numeric checks, and check for errors in more places during solution algorithms. The changes should help finding issues earlier and/or more easily.
