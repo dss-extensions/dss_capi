@@ -1860,7 +1860,7 @@ begin
         begin
             arrayVal := val as TJSONArray;
             if (val = NIL) or (val.Count <> 2) then
-                raise Exception(_('Expected an array of two numbers for complex property.'));
+                raise Exception.Create(_('Expected an array of two numbers for complex property.'));
 
             complexVal := cmplx(val.Items[0].AsFloat, val.Items[1].AsFloat);
             SetObjDoubles(obj, index, PDouble(@complexVal), 2, setterFlags);
@@ -1884,7 +1884,7 @@ begin
             //         else
             //         begin
             //             //TODO: update size etc.
-            //             raise Exception(Format(_('Expected an array of %d numbers, got %d items.'), [Norder, Length(ints)]));
+            //             raise Exception.Create(Format(_('Expected an array of %d numbers, got %d items.'), [Norder, Length(ints)]));
             //         end;
             //     end;
             // end
@@ -1898,7 +1898,7 @@ begin
                 // begin
                 //     dssObj.SetInteger(sizingPropIndex, arrayVal.Count, Norder, setterFlags);
                 // end
-                raise Exception(Format(_('Expected an array of %d elements (maximum length), got %d.'), [Norder, ValueCount]));
+                raise Exception.Create(Format(_('Expected an array of %d elements (maximum length), got %d.'), [Norder, ValueCount]));
             end;
             // end;
             SetLength(ints, arrayVal.Count);
@@ -1977,7 +1977,7 @@ begin
                         SetObjIntegers(obj, index, PInteger(@ints[0]), Length(ints), setterFlags);
                         Exit;
                     end;
-                    raise Exception(_('Expected a single value, got array.'));
+                    raise Exception.Create(_('Expected a single value, got array.'));
                 end;
             end;
 
@@ -1990,9 +1990,9 @@ begin
                 TPropertyType.MappedStringEnumArrayProperty,
                 TPropertyType.DSSObjectReferenceArrayProperty
             ]) then
-                raise Exception(_('Expected array.'));
+                raise Exception.Create(_('Expected array.'));
 
-            raise Exception(_('Something is not implemented! Ref:1988-OH'));
+            raise Exception.Create(_('Something is not implemented! Ref:1988-OH'));
         end;
 
         TPropertyType.DoubleSymMatrixProperty,
@@ -2012,13 +2012,13 @@ begin
                     dssObj.SetInteger(sizingPropIndex, arrayVal.Count, setterFlags);
                     if DSS.ErrorNumber <> 0 then
                     begin
-                        raise Exception(Format(_('Could not resize structures to match provided matrix order (%d).'), [arrayVal.Count]));
+                        raise Exception.Create(Format(_('Could not resize structures to match provided matrix order (%d).'), [arrayVal.Count]));
                     end;
                     Norder := arrayVal.Count;
                 end
                 else
                 begin
-                    raise Exception(Format(_('Expected a matrix of %d rows/cols.'), [Norder]));
+                    raise Exception.Create(Format(_('Expected a matrix of %d rows/cols.'), [Norder]));
                 end;
             end;
             if TPropertyFlag.ScaledByFunction in flags then
@@ -2132,7 +2132,7 @@ begin
                 end
                 else
                 begin
-                    raise Exception(_('Expected an array of numbers, not an object.'));
+                    raise Exception.Create(_('Expected an array of numbers, not an object.'));
                 end;
             end
             else if not val.IsNull then
@@ -2161,13 +2161,13 @@ begin
                 //     dssObj.SetInteger(sizingPropIndex, ValueCount, Norder);
                 //     if DSS.ErrorNumber <> 0 then
                 //     begin
-                //         raise Exception(Format(_('Could not resize structures to match provided array length (%d).'), [ValueCount]));
+                //         raise Exception.Create(Format(_('Could not resize structures to match provided array length (%d).'), [ValueCount]));
                 //     end;
                 //     Norder := ValueCount;
                 // end
                 // else
                 // begin
-                raise Exception(Format(_('Expected an array of %d numbers (maximum length), got %d.'), [Norder, ValueCount]));
+                raise Exception.Create(Format(_('Expected an array of %d numbers (maximum length), got %d.'), [Norder, ValueCount]));
                 // end;
             end;
 
