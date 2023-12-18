@@ -285,7 +285,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    Result := pReactor.R;
+    Result := pReactor.Z.re;
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_X(): Double; CDECL;
@@ -295,7 +295,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    Result := pReactor.X;
+    Result := pReactor.Z.im;
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Rp(): Double; CDECL;
@@ -434,7 +434,7 @@ var
 begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    pReactor.R := Value;
+    pReactor.Z.re := Value;
     pReactor.PropertySideEffects(ord(TReactorProp.R), 0, []);
 end;
 //------------------------------------------------------------------------------
@@ -444,7 +444,7 @@ var
 begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    pReactor.X := Value;
+    pReactor.Z.im := Value;
     pReactor.PropertySideEffects(ord(TReactorProp.X), 0, []);
 end;
 //------------------------------------------------------------------------------
@@ -612,8 +612,8 @@ begin
         Exit;
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-    Result[0] := pReactor.R;
-    Result[1] := pReactor.X;
+    Result[0] := pReactor.Z.re;
+    Result[1] := pReactor.Z.im;
 end;
 
 procedure Reactors_Get_Z_GR(); CDECL;

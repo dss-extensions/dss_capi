@@ -120,9 +120,8 @@ type
 
     TReactorObj = class(TPDElement)
     PUBLIC
-        //TODO: remove R and X, use Z instead
-        R, Rp, Gp,
-        X, L,
+        Rp, Gp,
+        L,
         kvarrating,
         kvrating: Double;
         Z, Z1, Z2, Z0: Complex;
@@ -288,11 +287,11 @@ begin
     PropertyOffset[ord(TProp.kv)] := ptruint(@obj.kvRating);
     PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
-    PropertyOffset[ord(TProp.R)] := ptruint(@obj.R);
+    PropertyOffset[ord(TProp.R)] := ptruint(@obj.Z.re);
     PropertyFlags[ord(TProp.R)] := [TPropertyFlag.Redundant, TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm];
     PropertyRedundantWith[ord(TProp.R)] := ord(TProp.Z);
 
-    PropertyOffset[ord(TProp.X)] := ptruint(@obj.X);
+    PropertyOffset[ord(TProp.X)] := ptruint(@obj.Z.im);
     PropertyFlags[ord(TProp.X)] := [TPropertyFlag.Redundant, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm];
     PropertyRedundantWith[ord(TProp.X)] := ord(TProp.Z);
 
@@ -472,14 +471,12 @@ begin
             Z0Specified := TRUE;
         ord(TProp.Z):
         begin
-            R := Z.re;
-            X := Z.im;
             SpecType := 2;
         end;
         ord(TProp.LmH):
         begin
             SpecType := 2;
-            X := L * TwoPi * BaseFrequency;
+            Z.im := L * TwoPi * BaseFrequency;
             if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.RMatrix)] := 0;
@@ -533,8 +530,6 @@ begin
         YPrimInvalid := TRUE;
     end;
 
-    R := Other.R;
-    X := Other.X;
     Rp := Other.Rp;
 
     RpSpecified := Other.RpSpecified;
@@ -595,8 +590,7 @@ begin
 
     kvarrating := 100.0;
     kvrating := 12.47;
-    X := SQR(kvrating) * 1000.0 / kvarrating;
-    R := 0.0;
+    Z := cmplx(0.0, SQR(kvrating) * 1000.0 / kvarrating);
     Rp := 0.0;  // Indicates it has not been set to a proper value
     IsParallel := FALSE;
     RpSpecified := FALSE;
@@ -651,8 +645,8 @@ begin
                 end;
             end;
             end;
-            X := SQR(PhasekV) * 1000.0 / kvarPerPhase;
-            L := X / twopi / BaseFrequency;
+            Z.im := SQR(PhasekV) * 1000.0 / kvarPerPhase;
+            L := Z.im / twopi / BaseFrequency;
             // Leave R as specified
             if not normAmpsSpecified then 
                 NormAmps := kvarPerPhase / PhasekV;
@@ -662,7 +656,7 @@ begin
         2:
         begin // R + j X
           // Nothing much to do
-            L := X / twopi / BaseFrequency;
+            L := Z.im / twopi / BaseFrequency;
         end;
         3:
         begin // Matrices
@@ -750,9 +744,9 @@ begin
     // If GIC simulation, Resistance Only
     if ActiveCircuit.Solution.Frequency < 0.51 then
     begin    // 0.5 Hz is cutoff
-        if X > 0.0 then
-            if R <= 0.0 then
-                R := X / 50.0;   // Assume X/R = 50
+        if Z.im > 0.0 then
+            if Z.re <= 0.0 then
+                Z.re := Z.im / 50.0;   // Assume X/R = 50
         FYprimFreq := 0.0;        // Set these to 0.0 for GIC model
         FreqMultiplier := 0.0;    // sets reactance part to zero
     end;
@@ -765,9 +759,9 @@ begin
         begin   // Some form of R and X specified
             // Adjust for frequency
             if Assigned(RCurveObj) then
-                RValue := R * RCurveObj.GetYValue(FYprimFreq)
+                RValue := Z.re * RCurveObj.GetYValue(FYprimFreq)
             else
-                RValue := R;
+                RValue := Z.re;
             if Assigned(LCurveObj) then
                 LValue := L * LCurveObj.GetYValue(FYprimFreq)
             else
@@ -1011,7 +1005,7 @@ begin
             ord(TProp.Z0):
                 FSWriteln(F, Format('~ Z0=[%-.8g, %-.8g]', [Z0.re, Z0.im]));
             ord(TProp.Z):
-                FSWriteln(F, Format('~ Z =[%-.8g, %-.8g]', [R, X]));
+                FSWriteln(F, Format('~ Z =[%-.8g, %-.8g]', [Z.re, Z.im]));
             ord(TProp.LmH):
                 FSWriteln(F, Format('~ LmH=%-.8g', [L * 1000.0]));
         else
