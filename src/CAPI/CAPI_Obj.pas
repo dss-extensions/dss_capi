@@ -924,7 +924,7 @@ begin
     except
         on E: Exception do
         begin
-            DoSimpleMsg(DSSPrime, 'Error processing regular expression: %s', [E.Message], 20231029);    
+            DoSimpleMsg(DSS, 'Error processing regular expression: %s', [E.Message], 20231029);    
             ResultCount[0] := 0;
         end;
     end;
