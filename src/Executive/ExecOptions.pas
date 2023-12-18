@@ -920,7 +920,7 @@ begin
                 50:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.PriceSignal);
                 51:
-                    AppendGlobalResult(DSS, StrUtils.IfThen(DSS.ActiveCircuit.PriceCurveObj = NIL, '', DSS.ActiveCircuit.PriceCurveObj.Name));
+                    AppendGlobalResult(DSS, NameIfNotNil(DSS.ActiveCircuit.PriceCurveObj));
                 52:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.ActiveCktElement.ActiveTerminalIdx);
                 53:

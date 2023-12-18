@@ -1781,18 +1781,26 @@ begin
     // Inherited DumpProperties(F,Complete);
 
     FSWriteln(F, '! NumNodes = ', IntToStr(ckt.NumNodes));
-
-    FSWriteln(F, 'Set Mode=', DSS.SolveModeEnum.OrdinalToString(ord(mode)));
+    if Leaf then
+    begin
+        FSWriteln(F, 'Set Mode=', DSS.SolveModeEnum.OrdinalToString(ord(mode)));
+    end;
     FSWriteln(F, 'Set ControlMode=', DSS.ControlModeEnum.OrdinalToString(Controlmode));
     FSWriteln(F, 'Set Random=', DSS.RandomModeEnum.OrdinalToString(RandomType));
-    FSWriteln(F, 'Set hour=', IntToStr(DynaVars.intHour));
-    FSWriteln(F, 'Set sec=', Format('%-g', [DynaVars.t]));
-    FSWriteln(F, 'Set year=', IntToStr(Year));
+    if Leaf then
+    begin
+        FSWriteln(F, 'Set hour=', IntToStr(DynaVars.intHour));
+        FSWriteln(F, 'Set sec=', Format('%-g', [DynaVars.t]));
+        FSWriteln(F, 'Set year=', IntToStr(Year));
+    end;
     FSWriteln(F, 'Set frequency=', Format('%-g', [Frequency]));
     FSWriteln(F, 'Set stepsize=', Format('%-g', [DynaVars.h]));
     FSWriteln(F, 'Set number=', IntToStr(NumberOfTimes));
-    FSWriteln(F, 'Set circuit=', ckt.Name);
-    FSWriteln(F, 'Set editor=', DefaultEditor);
+    if Leaf then
+    begin
+        FSWriteln(F, 'Set circuit=', ckt.Name);
+        FSWriteln(F, 'Set editor=', DefaultEditor);
+    end;
     FSWriteln(F, 'Set tolerance=', Format('%-g', [ConvergenceTolerance]));
     FSWriteln(F, 'Set maxiterations=', IntToStr(MaxIterations));
     FSWriteln(F, 'Set miniterations=', IntToStr(MinIterations));
@@ -1805,7 +1813,7 @@ begin
     FSWriteln(F, 'Set Emergvmaxpu=', Format('%-g', [ckt.EmergMaxVolts]));
     FSWriteln(F, 'Set %mean=', Format('%-.4g', [ckt.DefaultDailyShapeObj.Mean * 100.0]));
     FSWriteln(F, 'Set %stddev=', Format('%-.4g', [ckt.DefaultDailyShapeObj.StdDev * 100.0]));
-    FSWriteln(F, 'Set LDCurve=', StrUtils.IfThen(ckt.LoadDurCurveObj <> NIL, ckt.LoadDurCurveObj.Name, ''));  // Load Duration Curve
+    FSWriteln(F, 'Set LDCurve=', NameIfNotNil(ckt.LoadDurCurveObj));  // Load Duration Curve
     FSWriteln(F, 'Set %growth=', Format('%-.4g', [((ckt.DefaultGrowthRate - 1.0) * 100.0)]));  // default growth rate
 
     FSWriteln(F, 'Set genkw=', Format('%-g', [ckt.AutoAddObj.GenkW]));
@@ -1818,20 +1826,25 @@ begin
         CAPADD:
             FSWriteln(F, 'capacitor');
     end;
-    FSWrite(F, 'Set allowduplicates=');
-    FSWriteln(F, StrYorN(ckt.DuplicatesAllowed));
+    if Leaf then
+    begin
+        FSWrite(F, 'Set allowduplicates='); FSWriteln(F, StrYorN(ckt.DuplicatesAllowed));
+    end;
     FSWrite(F, 'Set zonelock=');
     FSWriteln(F, StrYorN(ckt.ZonesLocked));
     FSWriteln(F, Format('Set ueweight=%8.2f', [ckt.UEWeight]));
     FSWriteln(F, Format('Set lossweight=%8.2f', [ckt.LossWeight]));
     FSWriteln(F, 'Set ueregs=', IntArraytoString(ckt.UEregs));
     FSWriteln(F, 'Set lossregs=', IntArraytoString(ckt.Lossregs));
-    FSWrite(F, 'Set voltagebases=(');  //  changes the default voltage base rules
-    for i := 0 to High(ckt.LegalVoltageBases) do
+    if Leaf then
     begin
-        FSWrite(F, Format('%10.2f', [ckt.LegalVoltageBases[i]]));
+        FSWrite(F, 'Set voltagebases=(');  //  changes the default voltage base rules
+        for i := 0 to High(ckt.LegalVoltageBases) do
+        begin
+            FSWrite(F, Format('%10.2f', [ckt.LegalVoltageBases[i]]));
+        end;
+        FSWriteln(F, ')');
     end;
-    FSWriteln(F, ')');
     FSWriteln(F, 'Set algorithm=' + DSS.SolveAlgEnum.OrdinalToString(Algorithm));
     FSWrite(F, 'Set Trapezoidal=');
     FSWriteln(F, StrYorN(ckt.TrapezoidalIntegration));

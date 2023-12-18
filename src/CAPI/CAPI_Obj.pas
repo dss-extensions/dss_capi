@@ -2078,7 +2078,9 @@ var
     bus: TDSSBus;
     i: Integer;
     exportDefaultObjs: Boolean;
+    DSS: TDSSContext;
 begin
+    DSS := ckt.DSS;
     exportDefaultObjs := (joptions and Integer(DSSJSONOptions.IncludeDefaultObjs)) <> 0;
     Result := NIL;
     try
@@ -2111,10 +2113,53 @@ begin
             // MakeBusList as a PostCommand is implicit
         ]);
         if busArray <> NIL then
+        begin
             circ.Add('Bus', busArray);
+            busArray := NIL;
+        end;
 
+        // This will be automated later
+        cmds := TJSONArray.Create();
+        // cmds.Add('Set Mode=' + DSS.SolveModeEnum.OrdinalToString(ord(ckt.Solution.mode)));
+        cmds.Add('Set ControlMode=' + DSS.ControlModeEnum.OrdinalToString(ckt.Solution.Controlmode));
+        cmds.Add('Set Random=' + DSS.RandomModeEnum.OrdinalToString(ckt.Solution.RandomType));
+        cmds.Add('Set frequency=' + Format('%-g', [ckt.Solution.Frequency]));
+        cmds.Add('Set stepsize=' + Format('%-g', [ckt.Solution.DynaVars.h]));
+        cmds.Add('Set number=' + IntToStr(ckt.Solution.NumberOfTimes));
+        cmds.Add('Set tolerance=' + Format('%-g', [ckt.Solution.ConvergenceTolerance]));
+        cmds.Add('Set maxiterations=' + IntToStr(ckt.Solution.MaxIterations));
+        cmds.Add('Set miniterations=' + IntToStr(ckt.Solution.MinIterations));
+        cmds.Add('Set loadmodel=' + DSS.DefaultLoadModelEnum.OrdinalToString(ckt.Solution.LoadModel));
+        cmds.Add('Set loadmult=' + Format('%-g', [ckt.LoadMultiplier]));
+        cmds.Add('Set Normvminpu=' + Format('%-g', [ckt.NormalMinVolts]));
+        cmds.Add('Set Normvmaxpu=' + Format('%-g', [ckt.NormalMaxVolts]));
+        cmds.Add('Set Emergvminpu=' + Format('%-g', [ckt.EmergMinVolts]));
+        cmds.Add('Set Emergvmaxpu=' + Format('%-g', [ckt.EmergMaxVolts]));
+        cmds.Add('Set %mean=' + Format('%-.4g', [ckt.DefaultDailyShapeObj.Mean * 100.0]));
+        cmds.Add('Set %stddev=' + Format('%-.4g', [ckt.DefaultDailyShapeObj.StdDev * 100.0]));
+        cmds.Add('Set LDCurve=' + NameIfNotNil(ckt.LoadDurCurveObj));
+        cmds.Add('Set %growth=' + Format('%-.4g', [((ckt.DefaultGrowthRate - 1.0) * 100.0)]));  // default growth rate
+        cmds.Add('Set genkw=' + Format('%-g', [ckt.AutoAddObj.GenkW]));
+        cmds.Add('Set genpf=' + Format('%-g', [ckt.AutoAddObj.GenPF]));
+        cmds.Add('Set capkvar=' + Format('%-g', [ckt.AutoAddObj.Capkvar]));
+        cmds.Add('Set addtype=' + DSS.AddTypeEnum.OrdinalToString(DSS.ActiveCircuit.AutoAddObj.AddType));
+        cmds.Add('Set zonelock=' + StrYorN(ckt.ZonesLocked));
+        cmds.Add(Format('Set ueweight=%8.2f', [ckt.UEWeight]));
+        cmds.Add(Format('Set lossweight=%8.2f', [ckt.LossWeight]));
+        cmds.Add('Set ueregs=' + IntArraytoString(ckt.UEregs));
+        cmds.Add('Set lossregs=' + IntArraytoString(ckt.Lossregs));
+        cmds.Add('Set algorithm=' + DSS.SolveAlgEnum.OrdinalToString(ckt.Solution.Algorithm));
+        cmds.Add('Set Trapezoidal=' + StrYorN(ckt.TrapezoidalIntegration));
+        cmds.Add('Set genmult=' + Format('%-g', [ckt.GenMultiplier]));
+        cmds.Add('Set Basefrequency=' + Format('%-g', [ckt.Fundamental]));
+        if ckt.Solution.DoAllHarmonics then
+            cmds.Add('Set harmonics=ALL')
+        else
+            cmds.Add('Set harmonics=' + GetDSSArray(ckt.Solution.HarmonicList));
+        cmds.Add('Set maxcontroliter=' + IntToStr(ckt.Solution.MaxControlIterations));
+
+        circ.Add('PostCommands', cmds);
         cmds := NIL;
-        busArray := NIL;
 
         // vsrccls := ckt.DSS.VSourceClass;
         for cls in ckt.DSS.DSSClassList do

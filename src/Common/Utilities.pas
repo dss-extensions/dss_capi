@@ -128,6 +128,7 @@ procedure DoCSVFile(DSS: TDSSContext; var pA, pB: PDoubleArray; var NumPoints: I
 procedure DelFilesFromDir(DSS: TDSSContext; Directory: String; FileMask: String = '*'; DelSubDirs: Boolean = True);
 
 function NameIfNotNil(obj: TDSSObject): String;
+function FullNameIfNotNil(obj: TDSSObject): String;
 
 implementation
 
@@ -1110,7 +1111,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg(DSS, 'WriteClassFile Error: %s', [E.Message], 717);
+            DoSimpleMsg(DSS, 'WriteVsourceClassFile Error: %s', [E.Message], 717);
             Result := FALSE;
         end;
     end;
@@ -2362,6 +2363,14 @@ begin
         Result := ''
     else
         Result := obj.Name;
+end;
+
+function FullNameIfNotNil(obj: TDSSObject): String;
+begin
+    if obj = NIL then
+        Result := ''
+    else
+        Result := obj.FullName;
 end;
 
 end.

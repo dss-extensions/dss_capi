@@ -2629,7 +2629,7 @@ begin
             FSWriteln(F, 'Set LongLineCorrection=True');
         
         FSWriteln(F, 'Set EarthModel=' + DSS.EarthModelEnum.OrdinalToString(DSS.DefaultEarthModel));
-        
+        Solution.DumpProperties(F, False, False);
         FSWriteln(F);
 
         // Write Redirect for all populated DSS Classes  Except Solution Class
