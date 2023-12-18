@@ -2196,6 +2196,7 @@ var
     dupsAllowed: Boolean;
     localError: Boolean = false;
     typeStr: String;
+    elementName: String = '';
 
     procedure loadSingleObj(o: TJSONObject; num: Integer);
     var
@@ -2212,6 +2213,7 @@ var
                 raise Exception.Create(Format('JSON/%s: missing "Name" from item %d.', [cls.Name, num]));
 
             name := nameData.Value;
+            elementName := name; // context for potential expections
             if not specialFirst then
             begin
                 if dupsAllowed then
@@ -2317,7 +2319,16 @@ begin
             if DSS.ErrorNumber = 0 then
             begin
                 if Length(line) <> 0 then
-                    line := 'Context follows: ' + line;
+                begin
+                    if Length(elementName) <> 0 then
+                    begin
+                        line := Format('Element: %s.%s. Context follows: `%s`', [cls.Name, elementName, line]);
+                    end
+                    else
+                    begin
+                        line := 'Context follows: `' + line + '`';
+                    end;
+                end;
                 DoSimpleMsg(DSS, 'Error loading %s record from JSON: %s %s', [cls.Name, E.message, line], 5021);
                 localError := true;
             end;
@@ -2328,8 +2339,24 @@ begin
     begin
         line := '';
         if arrItem <> NIL then
-            line := arrItem.FormatJSON([foSingleLineObject, foSingleLineArray]);
-        DoSimpleMsg(DSS, 'Error loading %s record from JSON (#%d): %s Context follows: `%s`', 
+        begin
+            if Length(line) <> 0 then
+            begin
+                if Length(elementName) <> 0 then
+                begin
+                    line := Format('Element: %s.%s. Context follows: `%s`', [
+                        cls.Name, 
+                        elementName, 
+                        arrItem.FormatJSON([foSingleLineObject, foSingleLineArray])
+                    ]);
+                end
+                else
+                begin
+                    line := 'Context follows: `' + arrItem.FormatJSON([foSingleLineObject, foSingleLineArray]) + '`';
+                end;
+            end;
+        end;
+        DoSimpleMsg(DSS, 'Error loading %s record from JSON (#%d): %s %s', 
             [cls.Name, DSS.ErrorNumber, DSS.LastErrorMessage, line], 5021
         );
     end;
@@ -2404,7 +2431,9 @@ begin
         items := tmp as TJSONArray;
         for i := 0 to items.Count - 1 do
         begin
-            DSSPrime.DSSExecutive.ParseCommand(items.Items[i].AsString, i + 1);
+            DSS.DSSExecutive.ParseCommand(items.Items[i].AsString, i + 1);
+            if DSS.ErrorNumber <> 0 then
+                Exit;
         end;
     end;
 
@@ -2448,7 +2477,9 @@ begin
         items := tmp as TJSONArray;
         for i := 0 to items.Count - 1 do
         begin
-            DSSPrime.DSSExecutive.ParseCommand(items.Items[i].AsString, i + 1);
+            DSS.DSSExecutive.ParseCommand(items.Items[i].AsString, i + 1);
+            if DSS.ErrorNumber <> 0 then
+                Exit;
         end;
     end;
 
