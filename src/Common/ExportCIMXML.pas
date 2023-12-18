@@ -3735,7 +3735,7 @@ begin
             StartInstance(FunPrf, 'RegulatingControl', pCapC);
             UuidNode(GeoPrf, 'PowerSystemResource.Location', GetDevUuid(CapLoc, pCapC.This_Capacitor.Name, 1));
             RefNode(FunPrf, 'RegulatingControl.RegulatingCondEq', pCapC.This_Capacitor);
-            i1 := GetCktElementIndex(DSS, StrUtils.IfThen(pCapC.MonitoredElement <> NIL, pCapC.MonitoredElement.FullName, '')); // Global function
+            i1 := GetCktElementIndex(DSS, FullNameIfNotNil(pCapC.MonitoredElement)); // Global function
             UuidNode(FunPrf, 'RegulatingControl.Terminal', GetTermUuid(DSS.ActiveCircuit.CktElements.Get(i1), pCapC.ElementTerminal));
             s := FirstPhaseString(DSS.ActiveCircuit.CktElements.Get(i1), 1);
             if pCapC.PTPhase > 0 then
