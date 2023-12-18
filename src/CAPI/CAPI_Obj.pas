@@ -2092,6 +2092,7 @@ begin
         if ckt.LongLineCorrection then
             cmds.Add('Set LongLineCorrection=True');
 
+        cmds.Add('Set EarthModel=' + ckt.DSS.EarthModelEnum.OrdinalToString(ckt.DSS.DefaultEarthModel));
         cmds.Add('Set VoltageBases=' + GetDSSArray(ckt.LegalVoltageBases));
         if (joptions and Integer(DSSJSONOptions.SkipBuses)) = 0 then
         begin
