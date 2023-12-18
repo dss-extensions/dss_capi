@@ -61,8 +61,9 @@ This version should match OpenDSS v9.7.1.1 (SVN r3646). Remember to check the co
     - Generator: fix default value for `D` (as DSS property); previously, the value was left uninitialized. It seems to only affect user models, so it doesn't seem like a big issue. Explicitly providing a value would also work fine as a workaround.
     - Line and LineCode: fix formatting issues in `DumpProperties`
     - LoadShape: fix some issues when copying/saving data when using float32 data (which users need to explicitly opt-in).
-    - Relay: fix handling of `DOC_PhaseCurveInner` (DSS property)
     - PriceShape/TempShape: adjust setters for mean/stddev properties
+    - Relay: fix handling of `DOC_PhaseCurveInner` (DSS property)
+    - Reactor: in some situations, R and X were not synched with Z. Fixed by removing the internal duplication (does not affect user code).
     - Sensor: `DeltaDirection` was not initialized; make `clear` an explicit action.
     - SwtControl: If no element is attached (misuse), set state as "none".
     - Transformers/API: `Transformers_Get_LossesByType` and `Transformers_Get_AllLossesByType` now check if the transformer is enabled.

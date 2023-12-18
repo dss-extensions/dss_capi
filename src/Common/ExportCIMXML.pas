@@ -4282,10 +4282,10 @@ begin
             VbaseNode(FunPrf, pReac);
             geoUUID := GetDevUuid(ReacLoc, pReac.Name, 1);
             UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
-            DoubleNode(EpPrf, 'SeriesCompensator.r', pReac.R);
-            DoubleNode(EpPrf, 'SeriesCompensator.x', pReac.X);
-            DoubleNode(EpPrf, 'SeriesCompensator.r0', pReac.R);
-            DoubleNode(EpPrf, 'SeriesCompensator.x0', pReac.X);
+            DoubleNode(EpPrf, 'SeriesCompensator.r', pReac.Z.re);
+            DoubleNode(EpPrf, 'SeriesCompensator.x', pReac.Z.im);
+            DoubleNode(EpPrf, 'SeriesCompensator.r0', pReac.Z.re);
+            DoubleNode(EpPrf, 'SeriesCompensator.x0', pReac.Z.im);
             EndInstance(FunPrf, 'SeriesCompensator');
             // AttachLinePhases (F_, pReac); // for the 8500-node circuit, we only need 3 phase series reactors
             WriteTerminals(pReac, geoUUID, crsUUID, pReac.NormAmps, pReac.EmergAmps);
