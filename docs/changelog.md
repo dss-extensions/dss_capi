@@ -51,8 +51,9 @@ This version should match OpenDSS v9.7.1.1 (SVN r3646). Remember to check the co
 - Batch/API: allow using batches with simple functions that return float64/int32 for each object.
 
 - Headers: 
-    - remove `stdint_compat.h`. This was only required for very old or non-standard compiler like MSVC 2008. Users that require that can still source the file from older releases or get similar files from other sources.
-    - mark `CktElement_Get_IsIsolated` with `(API Extension)``
+    - Remove `stdint_compat.h`. This was only required for very old or non-standard compiler like MSVC 2008. Users that require that can still source the file from older releases or get similar files from other sources.
+    - Include `stddef.h` when building as C code.
+    - Mark `CktElement_Get_IsIsolated` with `(API Extension)``
 
 - Specific bug fixes:
     - AutoTrans: fix `DumpProperties`, readd `bank` property (unused internally).
