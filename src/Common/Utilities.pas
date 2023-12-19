@@ -1514,12 +1514,12 @@ begin
     if scale = 1 then
     begin
         for i := 1 to n do
-            Result := Result + Format(' %-.6g', [dbls[i]])
+            Result := Result + Format(' %g', [dbls[i]])
     end
     else
     begin
         for i := 1 to n do
-            Result := Result + Format(' %-.6g', [dbls[i] / scale]);
+            Result := Result + Format(' %g', [dbls[i] / scale]);
     end;
 
     Result := Result + ']';
@@ -1544,7 +1544,7 @@ begin
     for i := 1 to n do
     begin
         tmp := sngs[i];
-        Result := Result + Format(' %-.6g', [tmp]);
+        Result := Result + Format(' %g', [tmp]);
     end;
     Result := Result + ']';
 end;

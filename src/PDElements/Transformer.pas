@@ -1067,7 +1067,7 @@ begin
                 end;
                 for i := 1 to Numwindings do
                     with Winding[i] do
-                        FSWrite(F, Format(' wdg=%d %sR=%.7g RdcOhms=%.7g', [i, '%', Rpu * 100.0, RdcOhms]));
+                        FSWrite(F, Format(' wdg=%d %sR=%g RdcOhms=%g', [i, '%', Rpu * 100.0, RdcOhms]));
             end;
             ord(TProp.Bus)..ord(TProp.pctR): //TODO: mark to avoid in "savewrite"
                 ; // Ignore these properties; use arrays instead

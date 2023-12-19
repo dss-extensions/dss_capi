@@ -2366,7 +2366,7 @@ begin
                 propStr := '[';
                 for i := 1 to intVal do
                 begin
-                    PropStr := PropStr + Format('%.7g, ', [doublePtr^ / scale]);
+                    PropStr := PropStr + Format('%g, ', [doublePtr^ / scale]);
                     doublePtr := PDouble(ptruint(doublePtr) + PropertyStructArrayStep);
                 end;
                 propStr := propStr + ']';

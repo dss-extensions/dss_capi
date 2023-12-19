@@ -1076,7 +1076,7 @@ begin
                         FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[i], GetPropertyValue(i)]));
                     end;
                     for i := 1 to Numwindings do
-                        FSWrite(F, Format(' wdg=%d %sR=%.7g', [i, '%', Winding[i].Rpu * 100.0]));
+                        FSWrite(F, Format(' wdg=%d %sR=%g', [i, '%', Winding[i].Rpu * 100.0]));
                 end;
                 ord(TProp.Bus),
                 ord(TProp.Conn),
