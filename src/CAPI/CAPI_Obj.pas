@@ -597,7 +597,7 @@ end;
 
 function Obj_ToJSONData(obj: TDSSObject; joptions: Integer): TJSONData;
 var
-    iProp, iPropNext: Integer;
+    iProp, iPropNext, iPropNext2: Integer;
     jvalue: TJSONData = NIL;
     cls: TDSSClass;
     done: array of Boolean;
@@ -642,22 +642,23 @@ begin
 
         // Return only filled properties, but adjust some odd ones
         iPropNext := obj.GetNextPropertySet(-9999999);
+        iPropNext2 := 0;
         while iPropNext > 0 do
         begin
             iProp := iPropNext;
-            iPropNext := obj.GetNextPropertySet(iProp);
-
+            if iPropNext2 <> 0 then
+            begin
+                iPropNext := iPropNext2; // try to keep the previous ordering
+                iPropNext2 := 0;
+            end
+            else
+            begin
+                iPropNext := obj.GetNextPropertySet(iProp);
+            end;
             if done[iProp] then
                 continue;
 
             done[iProp] := True;
-
-            // skip "Like", substructure (winding, wire) index or suppressed props
-            if ((cls.PropertyType[iProp] = TPropertyType.MakeLikeProperty) or 
-                (TPropertyFlag.SuppressJSON in cls.PropertyFlags[iProp]) and (not (TPropertyFlag.Redundant in cls.PropertyFlags[iProp]))) or
-                (TPropertyFlag.AltIndex in cls.PropertyFlags[iProp]) or
-                (TPropertyFlag.IntegerStructIndex in cls.PropertyFlags[iProp]) then
-                continue;
 
             // If redundant and array-related, prefer the original property.
             // We use the singular-named property (e.g. kV instead of kVs) since not
@@ -686,12 +687,18 @@ begin
                     ])
                 ) then
             begin
-                iProp := cls.PropertyRedundantWith[iProp];
-                if done[iProp] then
-                    continue;
-
-                done[iProp] := True;
+                // Set iPropNext to allow multiple levels of redundancy
+                iPropNext2 := iPropNext;
+                iPropNext := cls.PropertyRedundantWith[iProp];
+                continue;
             end;
+
+            // skip "Like", substructure (winding, wire) index or suppressed props
+            if ((cls.PropertyType[iProp] = TPropertyType.MakeLikeProperty) or 
+                (TPropertyFlag.SuppressJSON in cls.PropertyFlags[iProp]) and (not (TPropertyFlag.Redundant in cls.PropertyFlags[iProp]))) or
+                (TPropertyFlag.AltIndex in cls.PropertyFlags[iProp]) or
+                (TPropertyFlag.IntegerStructIndex in cls.PropertyFlags[iProp]) then
+                continue;
 
             if cls.GetObjPropertyJSONValue(Pointer(obj), iProp, joptions, jvalue, True) then
                 resObj.Add(pnames[iProp], jvalue);
@@ -2248,6 +2255,7 @@ var
         dssObj: TDSSObject;
         nameData: TJSONData = NIL;
         name: String;
+        extraOptions: Integer = 0;
     begin
         try
             nameData := o.Extract('Name');
@@ -2273,12 +2281,15 @@ var
                         dssObj := obj_NewFromClass(DSS, cls, name, false, true);
                     end
                     else
-                    if (cls.DSSClassType <> DSS_OBJECT) then 
                     begin
-                        // Allow redefining/editing default objects to mirror the DSS scripting behavior.
-                        // Error out for everything else.
-                        DoSimpleMsg(DSS, 'Duplicate new element definition: "%s.%s".', [DSS.ActiveDSSClass.Name, Name], 266);
-                        Exit;
+                        if (cls.DSSClassType <> DSS_OBJECT) then 
+                        begin
+                            // Allow redefining/editing default objects to mirror the DSS scripting behavior.
+                            // Error out for everything else.
+                            DoSimpleMsg(DSS, 'Duplicate new element definition: "%s.%s".', [DSS.ActiveDSSClass.Name, Name], 266);
+                            Exit;
+                        end;
+                        extraOptions := ord(DSSJSONOptions.Edit);
                     end;
                 end;
             end
@@ -2287,7 +2298,7 @@ var
                 specialFirst := false;
                 dssObj := cls.ElementList.Get(1);
             end;
-            if not cls.FillObjFromJSON(dssObj, o, joptions, []) then
+            if not cls.FillObjFromJSON(dssObj, o, joptions or extraOptions, []) then
                 raise Exception.Create(Format('JSON/%s/%s: error processing item.', [cls.Name, name]));
         finally
             if nameData <> NIL then

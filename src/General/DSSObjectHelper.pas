@@ -27,7 +27,8 @@ type
         SkipTimestamp = 1 shl 9,
         SkipBuses = 1 shl 10,
         State = 1 shl 11, //TODO: power flow state, state variables for the given element, if applies
-        Debug = 1 shl 12 // TODO
+        Debug = 1 shl 12, // TODO
+        Edit = 1 shl 13
     );
 {$SCOPEDENUMS OFF}
     
@@ -4920,7 +4921,7 @@ begin
         if propData.IsNull and (not (TPropertyFlag.AllowNone in PropertyFlags[propIndex])) then
             continue;
 
-        // WriteLn('-> ', propName, ' = ', propData.FormatJSON()); SysFlushStdIO();
+        // WriteLn('-> ', dssObj.FullName, '.', propName, ' = ', propData.FormatJSON()); SysFlushStdIO();
         prevInt := 0;
         // Note: propIndex may be replaced/redirected in SetObjPropertyJSONValue
         if (not SetObjPropertyJSONValue(obj, propIndex, joptions, propData, setterFlags, prevInt)) or (DSS.ErrorNumber <> 0) then

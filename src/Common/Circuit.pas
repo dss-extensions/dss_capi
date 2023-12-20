@@ -352,6 +352,7 @@ uses
     DSSClassDefs,
     DSSGlobals,
     Dynamics,
+    DSSObject,
     Line,
     Transformer,
     Vsource,
@@ -2405,6 +2406,7 @@ var
     i: Integer;
     Success: Boolean;
     CurrDir, SaveDir: String;
+    obj: TDSSObject;
 begin
     Result := FALSE;
     // Make a new subfolder in the present folder based on the circuit name and
@@ -2489,9 +2491,11 @@ begin
 
     DSS.SavedFileList.Clear;  // This list keeps track of all files saved
 
-    // Initialize so we will know when we have saved the circuit elements
-    for i := 1 to CktElements.Count do
-        Exclude(TDSSCktElement(CktElements.Get(i)).Flags, Flg.HasBeenSaved);
+    // Initialize so we will know when we have saved the elements -- in the upstream version, only CktElements used the flag
+    for obj in DSS.DSSObjs do
+        Exclude(obj.Flags, Flg.HasBeenSaved);
+    for obj in CktElements do
+        Exclude(obj.Flags, Flg.HasBeenSaved);
 
     // Initialize so we don't save a class twice
     for i := 1 to DSS.DSSClassList.Count do

@@ -175,6 +175,7 @@ uses
     UComplex, DSSUcomplex,
     Utilities,
     LineUnits,
+    WireData,
     OHLineConstants,
     CNLineConstants,
     TSLineConstants,
@@ -405,6 +406,9 @@ begin
 
                 // Allocations
                 Reallocmem(FWireData, Sizeof(FWireData[1]) * FNconds);
+                for i := max(1, previousIntVal) to FNconds do
+                    FWireData[i] := NIL;
+
                 Reallocmem(FX, Sizeof(FX[1]) * FNconds);
                 Reallocmem(FY, Sizeof(FY[1]) * FNconds);
                 Reallocmem(FUnits, Sizeof(FUnits[1]) * FNconds);
@@ -466,34 +470,62 @@ begin
     case Idx of 
         ord(TProp.wires), ord(TProp.cncables), ord(TProp.tscables):
         begin
-            i := 1;
-            if Idx = ord(TProp.wires) then
+            if (TSetterFlag.AllowAllConductors in setterFlags) then // Special handling for "Conductors"
             begin
-                if FPhaseChoice[ActiveCond] = Unknown then
+                // Simulate setting the conductors one by one
+                // Much easier/safer than reproducing the whole code paths
+                for i := 1 to NConds do
                 begin
-                    // no other cables set for ActiveCond
-                end
-                else 
-                if FPhaseChoice[ActiveCond] <> Overhead then
-                    // these are buried neutral wires
-                    // (only when the phase conductors not overhead)
-                    i := FNPhases + 1;
-            end;
-            if i = 1 then
+                    ActiveCond := i;
+                    if FWireData[ActiveCond] is TWireDataObj then 
+                    begin
+                        PropertySideEffects(ord(TProp.wire), 0, setterFlags);
+                        continue;
+                    end;
+                    if FWireData[ActiveCond] is TCNDataObj then 
+                    begin
+                        PropertySideEffects(ord(TProp.cncable), 0, setterFlags);
+                        continue;
+                    end;
+                    if FWireData[ActiveCond] is TTSDataObj then 
+                    begin
+                        PropertySideEffects(ord(TProp.tscable), 0, setterFlags);
+                        continue;
+                    end;
+                end;
+            end
+            else
             begin
-                conductorObj := FWireData[1];
-                if (conductorObj.NormAmps > 0.0) and (Normamps = 0.0) then 
-                    Normamps  := conductorObj.NormAmps;
-                
-                if (conductorObj.Emergamps > 0.0) and (Emergamps = 0.0) then 
-                    Emergamps := conductorObj.EmergAmps;
-                
-                if (conductorObj.NumAmpRatings > 1) and (NumAmpRatings = 1) then 
-                    NumAmpRatings  := conductorObj.NumAmpRatings;
+                // Traditional wires/cncables/tscables            
+                i := 1;
+                if Idx = ord(TProp.wires) then
+                begin
+                    if FPhaseChoice[ActiveCond] = Unknown then
+                    begin
+                        // no other cables set for ActiveCond
+                    end
+                    else 
+                    if FPhaseChoice[ActiveCond] <> Overhead then
+                        // these are buried neutral wires
+                        // (only when the phase conductors not overhead)
+                        i := FNPhases + 1;
+                end;
+                if i = 1 then
+                begin
+                    conductorObj := FWireData[1];
+                    if (conductorObj.NormAmps > 0.0) and (Normamps = 0.0) then 
+                        Normamps  := conductorObj.NormAmps;
+                    
+                    if (conductorObj.Emergamps > 0.0) and (Emergamps = 0.0) then 
+                        Emergamps := conductorObj.EmergAmps;
+                    
+                    if (conductorObj.NumAmpRatings > 1) and (NumAmpRatings = 1) then 
+                        NumAmpRatings  := conductorObj.NumAmpRatings;
 
-                if (Length(conductorObj.AmpRatings) > 1) and (length(AmpRatings) = 1) then
-                begin
-                    AmpRatings := Copy(conductorObj.AmpRatings, 0, Length(conductorObj.AmpRatings));
+                    if (Length(conductorObj.AmpRatings) > 1) and (length(AmpRatings) = 1) then
+                    begin
+                        AmpRatings := Copy(conductorObj.AmpRatings, 0, Length(conductorObj.AmpRatings));
+                    end;
                 end;
             end;
         end;
@@ -502,7 +534,7 @@ begin
             conductorObj := FWireData[ActiveCond];
             if Assigned(conductorObj) then
             begin
-                FWireData[ActiveCond] := conductorObj;
+                // FWireData[ActiveCond] := conductorObj;
                 // Default the current ratings for this geometry to the rating of the first conductor
                 if (ActiveCond = 1) then
                 begin
@@ -529,7 +561,17 @@ begin
     end;
 
     case Idx of
-        1, 4..7, 11..16:
+        ord(TProp.NConds),
+        ord(TProp.Wire),
+        ord(TProp.X),
+        ord(TProp.H),
+        ord(TProp.Units),
+        ord(TProp.Spacing),
+        ord(TProp.Wires),
+        ord(TProp.CNCable),
+        ord(TProp.TSCable),
+        ord(TProp.CNCables),
+        ord(TProp.TSCables):
             DataChanged := TRUE;
     end;
 
@@ -684,7 +726,7 @@ end;
 
 function TLineGeometryObj.Get_ConductorName(i: Integer): String;
 begin
-    if i <= FNConds then
+    if (i <= FNConds) and (FWireData[i] <> NIL) then
         Result := FWireData[i].Name
     else
         Result := '';
@@ -692,7 +734,7 @@ end;
 
 function TLineGeometryObj.Get_ConductorData(i: Integer): TConductorDataObj;
 begin
-    if i <= FNConds then
+    if (i <= FNConds) and (FWireData[i] <> NIL) then
         Result := FWireData[i]
     else
         Result := NIL;
@@ -873,6 +915,9 @@ var
 begin
     for i := 1 to FNconds do
     begin
+        if FWireData[i] = NIL then
+            raise Exception.Create(Format(_('%s: WireData is not correctly initialized. Check the object definition.'), [FullName]));
+
         FLineData.X[i, FUnits[i]] := FX[i];
         FLineData.Y[i, FUnits[i]] := FY[i];
         FLineData.radius[i, FWireData[i].RadiusUnits] := FWireData[i].Radius;
