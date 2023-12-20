@@ -1122,7 +1122,7 @@ function WriteClassFile(DSS: TDSSContext; const DSS_Class: TDSSClass; FileName: 
 var
     F: TStream = nil;
     ClassName: String;
-    Nrecords: Integer;
+    Nrecords: Integer = 0;
     ParClass: TDssClass;
     obj: TDSSObject;
     elem: TDSSCktElement;
@@ -1130,6 +1130,15 @@ begin
     Result := TRUE;
 
     if DSS_Class.ElementCount() = 0 then
+        Exit;
+
+    for obj in DSS_Class do
+    begin
+        if not (Flg.DefaultAndUnedited in obj.Flags) then
+            inc(Nrecords);
+    end;
+
+    if Nrecords = 0 then
         Exit;
 
     try
@@ -1150,6 +1159,9 @@ begin
                 if (Flg.HasBeenSaved in elem.Flags) or (not elem.Enabled) then
                     continue;
             end;
+            if ((Flg.HasBeenSaved in obj.Flags) or (Flg.DefaultAndUnedited in obj.Flags)) then
+                continue;
+
             ParClass := obj.ParentClass;
             if AnsiLowerCase(ParClass.Name) = 'loadshape' then
                 if not TLoadShapeObj(obj).Enabled then

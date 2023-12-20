@@ -377,7 +377,7 @@ begin
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     SpecSetNames := ArrayOfString.Create(
-        'XfmrCode', //TODO: always apply first
+        'XfmrCode', // always apply first
         'X12, X13, X23, kV',
         'XscArray, kV'
     );
@@ -400,7 +400,7 @@ begin
     PropertyType[ord(TProp.XfmrCode)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.XfmrCode)] := ptruint(@obj.XfmrCodeObj);
     PropertyOffset2[ord(TProp.XfmrCode)] := ptruint(DSS.XfmrCodeClass);
-    PropertyFlags[ord(TProp.XfmrCode)] := [TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.XfmrCode)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Ordering_First];
 
     // double arrays
     PropertyType[ord(TProp.Ratings)] := TPropertyType.DoubleDArrayProperty;
@@ -1055,22 +1055,61 @@ begin
     begin
         // Trap wdg= and write out array properties instead
         case iProp of
+            ord(TProp.RdcOhms),
+            ord(TProp.Bus),
+            ord(TProp.Conn),
+            ord(TProp.kV),
+            ord(TProp.kVA),
+            ord(TProp.Tap),
+            ord(TProp.MinTap),
+            ord(TProp.MaxTap),
+            ord(TProp.pctR),
+            ord(TProp.RNeut),
+            ord(TProp.Xneut),
+            ord(TProp.NumTaps),
             ord(TProp.Wdg): //TODO: automate this
-            begin   // if WDG= was ever used write out arrays ...
-                for i := ord(TProp.Buses) to ord(TProp.Taps) do
-                begin
-                    if TProp(iProp) in done then
-                        continue;
+                if not (TProp(iProp) in done) then
+                begin   // if WDG= was ever used write out arrays ...
+                    for i in [ord(TProp.Buses), ord(TProp.Conns), ord(TProp.kVs), ord(TProp.kVAs), ord(TProp.Taps), ord(TProp.pctRs)] do
+                    begin
+                        if TProp(i) in done then
+                            continue;
 
-                    Include(done, TProp(i));
-                    FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[i], GetPropertyValue(i)]));
+                        FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[i], GetPropertyValue(i)]));
+                        Include(done, TProp(i));
+                    end;
+                    for i := 1 to Numwindings do
+                        with Winding[i] do
+                        begin
+                            FSWrite(F, Format(' Wdg=%d', [i]));
+                            if PrpSpecified(ord(TProp.RdcOhms)) then
+                                FSWrite(F, Format(' RdcOhms=%g', [RdcOhms]));
+                            if PrpSpecified(ord(TProp.RNeut)) then
+                                FSWrite(F, Format(' RNeut=%g', [RNeut]));
+                            if PrpSpecified(ord(TProp.XNeut)) then
+                                FSWrite(F, Format(' XNeut=%g', [XNeut]));
+                            if PrpSpecified(ord(TProp.MinTap)) then
+                                FSWrite(F, Format(' MinTap=%g', [MinTap]));
+                            if PrpSpecified(ord(TProp.MaxTap)) then
+                                FSWrite(F, Format(' MaxTap=%g', [MaxTap]));
+                            if PrpSpecified(ord(TProp.NumTaps)) then
+                                FSWrite(F, Format(' NumTaps=%d', [NumTaps]));
+                        end;
+                    
+                    Include(done, TProp.RdcOhms);
+                    Include(done, TProp.Bus);
+                    Include(done, TProp.Conn);
+                    Include(done, TProp.kV);
+                    Include(done, TProp.kVA);
+                    Include(done, TProp.Tap);
+                    Include(done, TProp.MinTap);
+                    Include(done, TProp.MaxTap);
+                    Include(done, TProp.NumTaps);
+                    Include(done, TProp.pctR);
+                    Include(done, TProp.RNeut);
+                    Include(done, TProp.XNeut);
+                    Include(done, TProp.Wdg);
                 end;
-                for i := 1 to Numwindings do
-                    with Winding[i] do
-                        FSWrite(F, Format(' wdg=%d %sR=%g RdcOhms=%g', [i, '%', Rpu * 100.0, RdcOhms]));
-            end;
-            ord(TProp.Bus)..ord(TProp.pctR): //TODO: mark to avoid in "savewrite"
-                ; // Ignore these properties; use arrays instead
         else
             if not (TProp(iProp) in done) then
             begin

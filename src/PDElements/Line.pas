@@ -177,6 +177,7 @@ type
         procedure UpdateControlElements(NewLine, OldLine: TLineObj);
 
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure SaveWrite(F: TStream); OVERRIDE;        
         procedure SetWires(Value: TDSSObjectPtr; ValueCount: Integer);
 
         // Public for the COM Interface
@@ -2087,6 +2088,67 @@ end;
 function TLineObj.SpacingSpecified: Boolean;
 begin
     Result := Assigned(LineSpacingObj) and Assigned(LineWireData);
+end;
+
+procedure TLineObj.SaveWrite(F: TStream);
+// Override standard SaveWrite
+// Line.Wires/CNCables/TSCables not conducive to standard means of saving
+var
+    strPhaseChoice: String;
+    iprop: Integer;
+    i, i0: Integer;
+    wroteConds: Boolean = False;
+    strConductors: String;
+    conductorCls: TDSSClass;
+begin
+    // Write only properties that were explicitly set in the
+    // final order they were actually set
+    iProp := GetNextPropertySet(0);
+    while iProp > 0 do
+    begin
+        case iProp of
+            ord(TProp.Wires), ord(TProp.CNCables), ord(TProp.TSCables):
+                if not wroteConds then
+                begin   // if cond=, spacing, or wires were ever used write out arrays ...
+                    i := 1;
+                    while i <= FWireDataSize do
+                    begin
+                        i0 := i;
+                        strConductors := '';
+                        strPhaseChoice := '';
+                        if LineWireData[i] = NIL then
+                        begin
+                            inc(i);
+                            continue; // shouldn't happen in normal conditions
+                        end;
+                        conductorCls := LineWireData[i].ParentClass;
+                        if conductorCls = DSS.TSDataClass then
+                            strPhaseChoice := 'TSCables'
+                        else if conductorCls = DSS.CNDataClass then
+                            strPhaseChoice := 'CNCables'
+                        else
+                            strPhaseChoice := 'Wires';
+
+                        strConductors := CheckForBlanks(LineWireData[i].Name);
+                        for i := i0 + 1 to FWireDataSize do
+                        begin
+                            if (conductorCls <> LineWireData[i].ParentClass) then
+                                break;
+
+                            strConductors += ', ' + CheckForBlanks(LineWireData[i].Name);
+                            i0 := i;
+                        end;
+                        FSWrite(F, Format(' %s=[%s]', [strPhaseChoice, strConductors]));
+                        if i = i0 then
+                            inc(i);
+                    end;
+                    wroteConds := True;
+                end;
+        else
+            FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(PropertyValue[iProp])]));
+        end;
+        iProp := GetNextPropertySet(iProp);
+    end;
 end;
 
 end.

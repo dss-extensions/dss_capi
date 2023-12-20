@@ -157,6 +157,7 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
+        procedure SaveWrite(F: TStream); OVERRIDE;
     end;
 
 implementation
@@ -447,20 +448,23 @@ begin
             NormMaxHkVA := 1.1 * Winding[1].kVA;    // Defaults for new winding rating.
             EmergMaxHkVA := 1.5 * Winding[1].kVA;
         end;
-        15..17:
-            Include(Flags, Flg.NeedsRecalc);
-        24:
+        ord(TProp.pctLoadLoss):
         begin    // Assume load loss is split evenly  between windings 1 and 2
             Winding[1].Rpu := pctLoadLoss / 2.0 / 100.0;
             Winding[2].Rpu := Winding[1].Rpu;
         end;
-        33:
+        ord(TProp.pctRs):
             pctLoadLoss := (Winding[1].Rpu + Winding[2].Rpu) * 100.0; // Keep this up to date
-        34..36:
+        ord(TProp.X12),
+        ord(TProp.X13),
+        ord(TProp.X23),
+        ord(TProp.XHL),
+        ord(TProp.XHT),
+        ord(TProp.XLT):
             Include(Flags, Flg.NeedsRecalc);
-        37:
+        ord(TProp.RDCOhms):
             Winding[ActiveWinding].RdcSpecified := TRUE;
-        38:
+        ord(TProp.Seasons):
             SetLength(kVARatings, NumkVARatings);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
@@ -658,6 +662,87 @@ begin
 
     for i := NumPropsthisClass + 1 to ParentClass.NumProperties do
         FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+end;
+
+procedure TXfmrCodeObj.SaveWrite(F: TStream);
+// Override standard SaveWrite
+// Like Transformer's, XfmrCode structure not conducive to standard means of saving
+// Same as Transformer's SaveWrite, removing buses
+var
+    iprop: Integer;
+    i: Integer;
+    done: Set of TProp = [];
+begin
+    // Write only properties that were explicitly set in the
+    // final order they were actually set
+    iProp := GetNextPropertySet(-9999999);
+    while iProp > 0 do
+    begin
+        // Trap wdg= and write out array properties instead
+        case iProp of
+            ord(TProp.RdcOhms),
+            ord(TProp.Conn),
+            ord(TProp.kV),
+            ord(TProp.kVA),
+            ord(TProp.Tap),
+            ord(TProp.MinTap),
+            ord(TProp.MaxTap),
+            ord(TProp.pctR),
+            ord(TProp.RNeut),
+            ord(TProp.Xneut),
+            ord(TProp.NumTaps),
+            ord(TProp.Wdg): //TODO: automate this
+                if not (TProp(iProp) in done) then
+                begin   // if WDG= was ever used write out arrays ...
+                    for i in [ord(TProp.Conns), ord(TProp.kVs), ord(TProp.kVAs), ord(TProp.Taps), ord(TProp.pctRs)] do
+                    begin
+                        if TProp(i) in done then
+                            continue;
+
+                        FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[i], GetPropertyValue(i)]));
+                        Include(done, TProp(i));
+                    end;
+                    for i := 1 to Numwindings do
+                        with Winding[i] do
+                        begin
+                            FSWrite(F, Format(' Wdg=%d', [i]));
+                            if PrpSpecified(ord(TProp.RdcOhms)) then
+                                FSWrite(F, Format(' RdcOhms=%g', [RdcOhms]));
+                            if PrpSpecified(ord(TProp.RNeut)) then
+                                FSWrite(F, Format(' RNeut=%g', [RNeut]));
+                            if PrpSpecified(ord(TProp.XNeut)) then
+                                FSWrite(F, Format(' XNeut=%g', [XNeut]));
+                            if PrpSpecified(ord(TProp.MinTap)) then
+                                FSWrite(F, Format(' MinTap=%g', [MinTap]));
+                            if PrpSpecified(ord(TProp.MaxTap)) then
+                                FSWrite(F, Format(' MaxTap=%g', [MaxTap]));
+                            if PrpSpecified(ord(TProp.NumTaps)) then
+                                FSWrite(F, Format(' NumTaps=%d', [NumTaps]));
+                        end;
+                    
+                    Include(done, TProp.RdcOhms);
+                    Include(done, TProp.Conn);
+                    Include(done, TProp.kV);
+                    Include(done, TProp.kVA);
+                    Include(done, TProp.Tap);
+                    Include(done, TProp.MinTap);
+                    Include(done, TProp.MaxTap);
+                    Include(done, TProp.NumTaps);
+                    Include(done, TProp.pctR);
+                    Include(done, TProp.RNeut);
+                    Include(done, TProp.XNeut);
+                    Include(done, TProp.Wdg);
+                end;
+        else
+            if not (TProp(iProp) in done) then
+            begin
+                Include(done, TProp(iProp));
+                if (Length(PropertyValue[iProp]) > 0) then
+                    FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(PropertyValue[iProp])]));
+            end;
+        end;
+        iProp := GetNextPropertySet(iProp);
+    end;
 end;
 
 end.
