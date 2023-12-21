@@ -22,15 +22,19 @@ Starting on this version, we will call DSS C-API and related projects AltDSS, an
 
 This version should match OpenDSS v9.7.1.1 (SVN r3646). Remember to check the compatibility flags and [Known differences](https://github.com/dss-extensions/dss_capi/blob/master/docs/known_differences.md). Other recent SVN commits, up to r3717 (dated 2023-12-11), either do not update code or are not relevant for the implementation on AltDSS/DSS C-API.
 
-- Another large internal code refactoring step and general clean-up. Check the commits for details, too many to list. A last step is under progress and will be merged in the next major release.
+- Another large internal (Pascal) code refactoring step and general clean-up. Check the commits for details, too many to list. A last step is under progress and will be merged in the next major release.
+
+- **Capitalization of property names adjusted!** A first pass was done to try to make the property names more uniform. Since **OpenDSS is case insensitive**, we are free to change the capitalization as we see fit. In the past, the official OpenDSS already changed some property names, so a general suggestion for users that process the property names is to transform the names to upper or lower cases before comparing. This should ensure better stability across past and future versions of both DSS-Extensions and the official OpenDSS. For code that do not check the names in a case insensitive approach, DSS C-API 0.14.0 provides a function to adjust the property names (`Settings_SetPropertyNameStyle`), allowing the user to choose between three alternatives: the "Modern" version with adjusted capitalization; "Lowercase" names; and "Legacy" names. "Legacy" names can be used to avoid updating the names.
 
 - **Introduces a preview of JSON schema (new), JSON export (updated) and import (new).** Too many details to include in the changelog. Includes many updates to the internal metadata. A separate project will be posted at https://github.com/dss-extensions/AltDSS-Schema and community feedback is welcome. Note: the JSON schema will be used for projects and features beyond JSON IO.
+
+- **Introduced options and improve correctness for `save circuit`.** During the testing of the JSON dump, issues were fixed when saving Line, LineGeometry, Transformer, AutoTrans, XfmrCode. The issues vary from simple omissions to invalid exported DSS code. The property tracking feature below also helps generating clear and valid DSS scripts from `save circuit`, eliminating properties invalidated when changing some component definitions. To control to options, use the functions `Settings_Set_SaveCircuitFlags`/`Settings_Get_SaveCircuitFlags`.
 
 - **Introduce property tracking.** Setting some properties now mark conflicting property definitions as unset. This affects some functionality for saving circuits and is also used for the JSON schema, for instance. An example: a user creates a load with `kW=10 kvar=0`. Later, the user updates the load, setting `PF=0.9`. Setting the power factor toggles the load internal state to use kW and PF as the load definition, but `kvar` is still marked as set. The DSS engine correctly tracks the order that properties were defined, so everything works as expected. Now, with the growing usage of DSS implementation to export the circuit, every single user is required to correctly implement this tracking if they want to ensure compatibility. That is, dumping the data from this example generator in an unordered dictionary/map/etc. for processing and later dumping back to DSS scripts will result in the wrong model.
     - Users can, of course, still query the value of all properties.
     - See also `NoPropertyTracking` compat flag.
     - Currently implemented, at least partially, in the following DSS classes (plus Lines and Loads API): LineCode, LineGeometry, LoadShape, Generator, Load, PVSystem, Storage, VSource, Fault, Line, Reactor, Transformer. 
-    - This functionally may be extended to other classes, if required.
+    - This functionally may be extended to other classes in future versions, if required.
 
 - **Introduce "Setter" flags.** These are flags used to tweak how the property update is done. Notably,`AvoidFullRecalc` (some other flags are only using by the engine, internally): some specific properties like `Load.kW` can be updated both directly through a DSS script (or Text interface), or through the dedicated Loads API in any of the specific language bindings of the many APIs. The dedicated API does not force a YPrim update and full load model recalculation. 
     - When using this flag `AvoidFullRecalc` in the Obj/Batch APIs, the behavior will follow the dedicated Loads API.
@@ -53,7 +57,7 @@ This version should match OpenDSS v9.7.1.1 (SVN r3646). Remember to check the co
 - Headers: 
     - Remove `stdint_compat.h`. This was only required for very old or non-standard compiler like MSVC 2008. Users that require that can still source the file from older releases or get similar files from other sources.
     - Include `stddef.h` when building as C code.
-    - Mark `CktElement_Get_IsIsolated` with `(API Extension)``
+    - Mark `CktElement_Get_IsIsolated` with `(API Extension)`
 
 - Specific bug fixes:
     - AutoTrans: fix `DumpProperties`, readd `bank` property (unused internally).
@@ -74,7 +78,6 @@ This version should match OpenDSS v9.7.1.1 (SVN r3646). Remember to check the co
     - Circuit/API: fix `Circuit_Enable` and `Circuit_Disable` (enabling/disabling circuit elements by name). An equivalent fix is included in the official OpenDSS v9.7.1.1, in the COM interface. Additionally, provide error message when trying to use invalid element names.
     - Obj/Batch API: better handling of booleans. With this change, any non-zero value is interpreted as `true`, which simplifies integration with other programming languages. This was the original intention.
     - API/Iteration: Fix issues with iteration in a few of the internal functions which could have resulted in empty results in some situations. These situations occurred only during testing, so we don't expect many users were affected.
-    - `save circuit`: include `set EarthModel=...`; adjust order of elements.
 
 - Misc:
     - Error handling: add a few numeric checks, and check for errors in more places during solution algorithms. The changes should help finding issues earlier and/or more easily.
