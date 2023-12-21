@@ -267,7 +267,7 @@ begin
         if varValue is TJSONNumber then
             FSWrite(F, '=' + FloatToStr(varValue.AsFloat))
         else
-            FSWrite(F, '=' + varValue.AsString);
+            FSWrite(F, '=' + CheckForBlanks(varValue.AsString));
     end;
 end;
 
