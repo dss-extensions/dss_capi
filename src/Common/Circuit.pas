@@ -2538,8 +2538,8 @@ begin
     // Define voltage sources first
     Success := WriteVsourceClassFile(DSS, GetDssClassPtr(DSS, 'vsource'), TRUE);
 
-    if Success then
-        Success := SaveFeeders; // Save feeders first
+    // if Success then
+    //     Success := SaveFeeders; // Save feeders first
     if Success then
         Success := SaveDSSObjects;  // Save rest ot the objects
     if Success then
