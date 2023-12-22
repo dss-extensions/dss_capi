@@ -196,6 +196,7 @@ type
         DynamicDefault,
 
         Ordering_First,
+        Ordering_Last,
         IndirectCount,
         GlobalCount, //TODO: use this more, replacing older constructs
 
@@ -1947,7 +1948,7 @@ begin
             zorderNextStart += 1;
         end
         else
-        if (ptype in [TPropertyType.BooleanActionProperty, TPropertyType.StringEnumActionProperty])  then
+        if (ptype in [TPropertyType.BooleanActionProperty, TPropertyType.StringEnumActionProperty]) or (TPropertyFlag.Ordering_Last in flags) then
         begin
             zorder := zorderNextEnd; // ALWAYS the last ones
             zorderNextEnd += 1;
