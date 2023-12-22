@@ -2555,7 +2555,16 @@ begin
         // DoSimpleMsg('Circuit saved in directory: ' + CurrentDSSDir, 433)
     end
     else
-        DoSimpleMsg(DSS, 'Error attempting to save circuit in %s', [DSS.CurrentDSSDir], 434);
+    begin
+        if DSS.ErrorNumber <> 0 then
+        begin
+            DoSimpleMsg(DSS, 'Error attempting to save circuit in "%s". Previous error: %s', [DSS.CurrentDSSDir, DSS.LastErrorMessage], 434);
+        end
+        else
+        begin
+            DoSimpleMsg(DSS, 'Error attempting to save circuit in "%s".', [DSS.CurrentDSSDir], 434);
+        end;
+    end;
 
     // Return to Original directory
     DSS.SetCurrentDSSDir(SaveDir);
