@@ -288,9 +288,9 @@ extern "C" {
     
     EXPERIMENTAL
     */
-    typedef int32_t (*dss_callback_plot_t)(void* ctx, char* jsonParams);
-    typedef int32_t (*dss_callback_message_t)(void* ctx, char* messageStr, int32_t messageType, int64_t messageSize, int32_t messageSubType);
-    typedef void (*altdss_callback_event_t)(void* ctx, int32_t eventCode, int32_t step, void* ptr);
+    typedef int32_t (*dss_callback_plot_t)(const void* ctx, char* jsonParams);
+    typedef int32_t (*dss_callback_message_t)(const void* ctx, char* messageStr, int32_t messageType, int64_t messageSize, int32_t messageSubType);
+    typedef void (*altdss_callback_event_t)(const void* ctx, int32_t eventCode, int32_t step, void* ptr);
 
     /*!  
     Function types for extra object functions (used by the batch APIs)
@@ -300,8 +300,8 @@ extern "C" {
     typedef double (*dss_obj_float64_func_t)(void* obj);
     typedef int32_t (*dss_obj_int32_func_t)(void* obj);
     typedef int32_t (*dss_obj_float64_int32_func_t)(void* obj, int32_t val);
-    typedef double (*dss_ctx_bus_float64_func_t)(void* ctx, void* obj);
-    typedef int32_t (*dss_ctx_bus_int32_func_t)(void* ctx, void* obj);
+    typedef double (*dss_ctx_bus_float64_func_t)(const void* ctx, void* obj);
+    typedef int32_t (*dss_ctx_bus_int32_func_t)(const void* ctx, void* obj);
 
     /*!
     Typedefs for the Alt API
@@ -789,7 +789,7 @@ extern "C" {
     /*! 
     Array of integer [0..numSteps-1] indicating the state of each step
     */
-    DSS_CAPI_DLL void Capacitors_Set_States(int32_t* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Capacitors_Set_States(const int32_t* ValuePtr, int32_t ValueCount);
 
     DSS_CAPI_DLL void Capacitors_Open(void);
 
@@ -2696,11 +2696,11 @@ extern "C" {
     */
     DSS_CAPI_DLL void LineCodes_Get_Xmatrix_GR(void);
 
-    DSS_CAPI_DLL void LineCodes_Set_Cmatrix(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void LineCodes_Set_Cmatrix(const double* ValuePtr, int32_t ValueCount);
 
-    DSS_CAPI_DLL void LineCodes_Set_Rmatrix(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void LineCodes_Set_Rmatrix(const double* ValuePtr, int32_t ValueCount);
 
-    DSS_CAPI_DLL void LineCodes_Set_Xmatrix(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void LineCodes_Set_Xmatrix(const double* ValuePtr, int32_t ValueCount);
 
     /*! 
     Normal Ampere rating
@@ -2880,7 +2880,7 @@ extern "C" {
     */
     DSS_CAPI_DLL void Lines_Set_C1(double Value);
 
-    DSS_CAPI_DLL void Lines_Set_Cmatrix(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Lines_Set_Cmatrix(const double* ValuePtr, int32_t ValueCount);
 
     /*! 
     Zero-sequence resistance, ohms per unit length.
@@ -2890,14 +2890,14 @@ extern "C" {
     /*! 
     Resistance matrix (full), ohms per unit length. Array of doubles.
     */
-    DSS_CAPI_DLL void Lines_Set_Rmatrix(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Lines_Set_Rmatrix(const double* ValuePtr, int32_t ValueCount);
 
     /*! 
     Zero-sequence reactance ohms per unit length.
     */
     DSS_CAPI_DLL void Lines_Set_X0(double Value);
 
-    DSS_CAPI_DLL void Lines_Set_Xmatrix(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Lines_Set_Xmatrix(const double* ValuePtr, int32_t ValueCount);
 
     /*! 
     Emergency (maximum) ampere rating of Line.
@@ -2971,7 +2971,7 @@ extern "C" {
     /*! 
     Yprimitive: Does Nothing at present on Put; Dangerous
     */
-    DSS_CAPI_DLL void Lines_Set_Yprim(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Lines_Set_Yprim(const double* ValuePtr, int32_t ValueCount);
 
     /*! 
     Number of customers on this line section.
@@ -3291,7 +3291,7 @@ extern "C" {
     */
     DSS_CAPI_DLL void Loads_Get_ZIPV_GR(void);
 
-    DSS_CAPI_DLL void Loads_Set_ZIPV(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Loads_Set_ZIPV(const double* ValuePtr, int32_t ValueCount);
 
     DSS_CAPI_DLL double Loads_Get_pctSeriesRL(void);
 
@@ -3380,12 +3380,12 @@ extern "C" {
     /*! 
     Array of doubles containing the P array for the Loadshape.
     */
-    DSS_CAPI_DLL void LoadShapes_Set_Pmult(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void LoadShapes_Set_Pmult(const double* ValuePtr, int32_t ValueCount);
 
     /*! 
     Array of doubles containing the Q multipliers.
     */
-    DSS_CAPI_DLL void LoadShapes_Set_Qmult(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void LoadShapes_Set_Qmult(const double* ValuePtr, int32_t ValueCount);
 
     DSS_CAPI_DLL void LoadShapes_Normalize(void);
 
@@ -3401,7 +3401,7 @@ extern "C" {
     /*! 
     Time array in hours corresponding to P and Q multipliers when the Interval=0.
     */
-    DSS_CAPI_DLL void LoadShapes_Set_TimeArray(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void LoadShapes_Set_TimeArray(const double* ValuePtr, int32_t ValueCount);
 
     /*! 
     Fixed interval time value, hours
@@ -3536,7 +3536,7 @@ extern "C" {
     /*! 
     Array of doubles to set values of Peak Current property
     */
-    DSS_CAPI_DLL void Meters_Set_Peakcurrent(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Meters_Set_Peakcurrent(const double* ValuePtr, int32_t ValueCount);
 
     /*! 
     Set the magnitude of the real part of the Calculated Current (normally determined by solution) for the Meter to force some behavior on Load Allocation
@@ -3550,7 +3550,7 @@ extern "C" {
     /*! 
     Set the magnitude of the real part of the Calculated Current (normally determined by solution) for the Meter to force some behavior on Load Allocation
     */
-    DSS_CAPI_DLL void Meters_Set_CalcCurrent(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Meters_Set_CalcCurrent(const double* ValuePtr, int32_t ValueCount);
 
     /*! 
     Array of doubles: set the phase allocation factors for the active meter.
@@ -3564,7 +3564,7 @@ extern "C" {
     /*! 
     Array of doubles: set the phase allocation factors for the active meter.
     */
-    DSS_CAPI_DLL void Meters_Set_AllocFactors(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Meters_Set_AllocFactors(const double* ValuePtr, int32_t ValueCount);
 
     /*! 
     Set Name of metered element
@@ -5144,15 +5144,15 @@ extern "C" {
 
     DSS_CAPI_DLL void Sensors_ResetAll(void);
 
-    DSS_CAPI_DLL void Sensors_Set_Currents(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Sensors_Set_Currents(const double* ValuePtr, int32_t ValueCount);
 
     DSS_CAPI_DLL void Sensors_Set_IsDelta(uint16_t Value);
 
-    DSS_CAPI_DLL void Sensors_Set_kVARS(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Sensors_Set_kVARS(const double* ValuePtr, int32_t ValueCount);
 
-    DSS_CAPI_DLL void Sensors_Set_kVS(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Sensors_Set_kVS(const double* ValuePtr, int32_t ValueCount);
 
-    DSS_CAPI_DLL void Sensors_Set_kWS(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Sensors_Set_kWS(const double* ValuePtr, int32_t ValueCount);
 
     DSS_CAPI_DLL void Sensors_Set_MeteredElement(const char* Value);
 
@@ -5305,7 +5305,7 @@ extern "C" {
     /*! 
     Integer array defining which energy meter registers to use for computing losses
     */
-    DSS_CAPI_DLL void Settings_Set_LossRegs(int32_t* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Settings_Set_LossRegs(const int32_t* ValuePtr, int32_t ValueCount);
 
     /*! 
     Weighting factor applied to Loss register values.
@@ -5320,7 +5320,7 @@ extern "C" {
     /*! 
     Array of Integers defining energy meter registers to use for computing UE
     */
-    DSS_CAPI_DLL void Settings_Set_UEregs(int32_t* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Settings_Set_UEregs(const int32_t* ValuePtr, int32_t ValueCount);
 
     /*! 
     Weighting factor applied to UE register values.
@@ -5349,7 +5349,7 @@ extern "C" {
     /*! 
     Array of doubles defining the legal voltage bases in kV L-L
     */
-    DSS_CAPI_DLL void Settings_Set_VoltageBases(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Settings_Set_VoltageBases(const double* ValuePtr, int32_t ValueCount);
 
     /*! 
     Name of LoadShape object that serves as the source of price signal data for yearly simulations, etc.
@@ -6460,7 +6460,7 @@ extern "C" {
     /*! 
     Get/Set X values as a Array of doubles. Set Npts to max number expected if setting
     */
-    DSS_CAPI_DLL void XYCurves_Set_Xarray(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void XYCurves_Set_Xarray(const double* ValuePtr, int32_t ValueCount);
 
     /*! 
     Set X value or get interpolated value after setting Y
@@ -6491,7 +6491,7 @@ extern "C" {
     /*! 
     Get/Set Y values in curve; Set Npts to max number expected if setting
     */
-    DSS_CAPI_DLL void XYCurves_Set_Yarray(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void XYCurves_Set_Yarray(const double* ValuePtr, int32_t ValueCount);
 
     /*! 
     Factor to scale X values from original curve
@@ -6741,13 +6741,13 @@ extern "C" {
     DSS_CAPI_DLL void LineGeometries_Get_Zmatrix_GR(double Frequency, double Length, int32_t Units);
     DSS_CAPI_DLL void LineGeometries_Get_Units(int32_t** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void LineGeometries_Get_Units_GR(void);
-    DSS_CAPI_DLL void LineGeometries_Set_Units(int32_t *ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void LineGeometries_Set_Units(const int32_t* ValuePtr, int32_t ValueCount);
     DSS_CAPI_DLL void LineGeometries_Get_Xcoords(double** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void LineGeometries_Get_Xcoords_GR(void);
-    DSS_CAPI_DLL void LineGeometries_Set_Xcoords(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void LineGeometries_Set_Xcoords(const double* ValuePtr, int32_t ValueCount);
     DSS_CAPI_DLL void LineGeometries_Get_Ycoords(double** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void LineGeometries_Get_Ycoords_GR(void);
-    DSS_CAPI_DLL void LineGeometries_Set_Ycoords(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void LineGeometries_Set_Ycoords(const double* ValuePtr, int32_t ValueCount);
     DSS_CAPI_DLL void LineGeometries_Get_Conductors(char*** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void LineGeometries_Get_Conductors_GR(void);
     DSS_CAPI_DLL uint16_t LineGeometries_Get_Reduce(void);
@@ -6774,10 +6774,10 @@ extern "C" {
     DSS_CAPI_DLL void LineSpacings_Set_Units(int32_t Value);
     DSS_CAPI_DLL void LineSpacings_Get_Xcoords(double** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void LineSpacings_Get_Xcoords_GR(void);
-    DSS_CAPI_DLL void LineSpacings_Set_Xcoords(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void LineSpacings_Set_Xcoords(const double* ValuePtr, int32_t ValueCount);
     DSS_CAPI_DLL void LineSpacings_Get_Ycoords(double** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void LineSpacings_Get_Ycoords_GR(void);
-    DSS_CAPI_DLL void LineSpacings_Set_Ycoords(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void LineSpacings_Set_Ycoords(const double* ValuePtr, int32_t ValueCount);
     DSS_CAPI_DLL void LineSpacings_Get_AllNames(char*** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void LineSpacings_Get_AllNames_GR(void);
 
@@ -6819,22 +6819,22 @@ extern "C" {
     DSS_CAPI_DLL void Reactors_Set_LCurve(const char* Value);
     DSS_CAPI_DLL void Reactors_Get_Rmatrix(double** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void Reactors_Get_Rmatrix_GR(void);
-    DSS_CAPI_DLL void Reactors_Set_Rmatrix(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Reactors_Set_Rmatrix(const double* ValuePtr, int32_t ValueCount);
     DSS_CAPI_DLL void Reactors_Get_Xmatrix(double** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void Reactors_Get_Xmatrix_GR(void);
-    DSS_CAPI_DLL void Reactors_Set_Xmatrix(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Reactors_Set_Xmatrix(const double* ValuePtr, int32_t ValueCount);
     DSS_CAPI_DLL void Reactors_Get_Z(double** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void Reactors_Get_Z_GR(void);
-    DSS_CAPI_DLL void Reactors_Set_Z(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Reactors_Set_Z(const double* ValuePtr, int32_t ValueCount);
     DSS_CAPI_DLL void Reactors_Get_Z1(double** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void Reactors_Get_Z1_GR(void);
-    DSS_CAPI_DLL void Reactors_Set_Z1(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Reactors_Set_Z1(const double* ValuePtr, int32_t ValueCount);
     DSS_CAPI_DLL void Reactors_Get_Z2(double** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void Reactors_Get_Z2_GR(void);
-    DSS_CAPI_DLL void Reactors_Set_Z2(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Reactors_Set_Z2(const double* ValuePtr, int32_t ValueCount);
     DSS_CAPI_DLL void Reactors_Get_Z0(double** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void Reactors_Get_Z0_GR(void);
-    DSS_CAPI_DLL void Reactors_Set_Z0(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void Reactors_Set_Z0(const double* ValuePtr, int32_t ValueCount);
     DSS_CAPI_DLL int32_t Reactors_Get_SpecType(void);
 
     DSS_CAPI_DLL int32_t TSData_Get_Count(void);
@@ -7214,11 +7214,11 @@ extern "C" {
     DSS_CAPI_DLL void DSS_Dispose_String(char* S);
     DSS_CAPI_DLL void DSS_Dispose_PPointer(void*** p);
 
-    DSS_CAPI_DLL void* Obj_New(void* ctx, int32_t ClsIdx, const char* Name, uint16_t Activate, uint16_t BeginEdit);
-    DSS_CAPI_DLL int32_t Obj_GetCount(void* ctx, int32_t ClsIdx);
-    DSS_CAPI_DLL void** Obj_GetListPointer(void* ctx, int32_t ClsIdx);
-    DSS_CAPI_DLL void* Obj_GetHandleByName(void* ctx, int32_t ClsIdx, const char* Name);
-    DSS_CAPI_DLL void* Obj_GetHandleByIdx(void* ctx, int32_t ClsIdx, int32_t Idx);
+    DSS_CAPI_DLL void* Obj_New(const void* ctx, int32_t ClsIdx, const char* Name, uint16_t Activate, uint16_t BeginEdit);
+    DSS_CAPI_DLL int32_t Obj_GetCount(const void* ctx, int32_t ClsIdx);
+    DSS_CAPI_DLL void** Obj_GetListPointer(const void* ctx, int32_t ClsIdx);
+    DSS_CAPI_DLL void* Obj_GetHandleByName(const void* ctx, int32_t ClsIdx, const char* Name);
+    DSS_CAPI_DLL void* Obj_GetHandleByIdx(const void* ctx, int32_t ClsIdx, int32_t Idx);
     DSS_CAPI_DLL uint16_t Obj_PropertySideEffects(void *obj, int32_t Index, int32_t PreviousInt, int32_t setterFlags);
     DSS_CAPI_DLL void Obj_BeginEdit(void *obj);
     DSS_CAPI_DLL void Obj_EndEdit(void *obj, int32_t NumChanges);
@@ -7343,11 +7343,11 @@ extern "C" {
     DSS_CAPI_DLL void Batch_EndEdit(void** batch, int32_t batchSize, int32_t numEdits);
     DSS_CAPI_DLL void Batch_GetPropSeq(int32_t** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize);
 
-    DSS_CAPI_DLL void Batch_CreateFromNew(void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t clsid, const char** names, int32_t count, altdss_bool_t BeginEdit);
-    DSS_CAPI_DLL void Batch_CreateByClass(void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t clsidx);
-    DSS_CAPI_DLL void Batch_CreateByRegExp(void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t clsidx, const char* re);
-    DSS_CAPI_DLL void Batch_CreateByIndex(void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t clsidx, int32_t* Value, int32_t ValueCount);
-    DSS_CAPI_DLL void Batch_CreateByInt32Property(void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t ClsIdx, int32_t idx, int32_t value);
+    DSS_CAPI_DLL void Batch_CreateFromNew(const void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t clsid, const char** names, int32_t count, altdss_bool_t BeginEdit);
+    DSS_CAPI_DLL void Batch_CreateByClass(const void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t clsidx);
+    DSS_CAPI_DLL void Batch_CreateByRegExp(const void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t clsidx, const char* re);
+    DSS_CAPI_DLL void Batch_CreateByIndex(const void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t clsidx, int32_t* Value, int32_t ValueCount);
+    DSS_CAPI_DLL void Batch_CreateByInt32Property(const void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t ClsIdx, int32_t idx, int32_t value);
 
     DSS_CAPI_DLL void Batch_GetFloat64(double** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, int32_t Index);
     DSS_CAPI_DLL void Batch_GetFloat64FromFunc(double** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, dss_obj_float64_func_t func);
@@ -7370,11 +7370,11 @@ extern "C" {
     DSS_CAPI_DLL void Batch_SetStringArray(void** batch, int32_t batchSize, int32_t Index, const char** Value, int32_t setterFlags);
     DSS_CAPI_DLL void Batch_SetObjectArray(void** batch, int32_t batchSize, int32_t Index, const void** Value, int32_t setterFlags);
 
-    DSS_CAPI_DLL void Batch_CreateFromNewS(void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname, const char** names, int32_t count, altdss_bool_t BeginEdit);
-    DSS_CAPI_DLL void Batch_CreateByClassS(void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname);
-    DSS_CAPI_DLL void Batch_CreateByRegExpS(void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname, const char* re);
-    DSS_CAPI_DLL void Batch_CreateByIndexS(void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname, int32_t* Value, int32_t ValueCount);
-    DSS_CAPI_DLL void Batch_CreateByInt32PropertyS(void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname, const char* Name, int32_t value);
+    DSS_CAPI_DLL void Batch_CreateFromNewS(const void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname, const char** names, int32_t count, altdss_bool_t BeginEdit);
+    DSS_CAPI_DLL void Batch_CreateByClassS(const void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname);
+    DSS_CAPI_DLL void Batch_CreateByRegExpS(const void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname, const char* re);
+    DSS_CAPI_DLL void Batch_CreateByIndexS(const void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname, int32_t* Value, int32_t ValueCount);
+    DSS_CAPI_DLL void Batch_CreateByInt32PropertyS(const void* ctx, void*** ResultPtr, int32_t* ResultDims, const char* clsname, const char* Name, int32_t value);
 
     DSS_CAPI_DLL void Batch_GetFloat64S(double** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, const char* Name);
     DSS_CAPI_DLL void Batch_GetInt32S(int32_t** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, const char* Name);
@@ -7454,7 +7454,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t Alt_CE_Get_NumConductors(void* elem);
     DSS_CAPI_DLL int32_t Alt_CE_Get_NumPhases(void* elem);
     DSS_CAPI_DLL int32_t Alt_CE_Get_NumTerminals(void* elem);
-    DSS_CAPI_DLL void Alt_CE_Set_BusNames(void* elem, char** valuePtr, int32_t valueCount);
+    DSS_CAPI_DLL void Alt_CE_Set_BusNames(void* elem, const char** valuePtr, int32_t valueCount);
     DSS_CAPI_DLL void Alt_CE_Get_Currents(double** resultPtr, int32_t *resultDims, void* elem);
     DSS_CAPI_DLL void Alt_CE_Get_Voltages(double** resultPtr, int32_t *resultDims, void* elem);
     DSS_CAPI_DLL void Alt_CE_Get_Losses(double** resultPtr, int32_t *resultDims, void* elem);
@@ -7555,9 +7555,9 @@ extern "C" {
     DSS_CAPI_DLL int32_t Alt_Meter_Get_NumBranchesInZone(void* elem);
 
     DSS_CAPI_DLL void Alt_Meter_Get_CalcCurrent(double** resultPtr, int32_t *resultDims, void* elem);
-    DSS_CAPI_DLL void Alt_Meter_Set_CalcCurrent(void* elem, double* valuePtr, int32_t valueCount);
+    DSS_CAPI_DLL void Alt_Meter_Set_CalcCurrent(void* elem, const double* ValuePtr, int32_t valueCount);
     DSS_CAPI_DLL void Alt_Meter_Get_AllocFactors(double** resultPtr, int32_t *resultDims, void* elem);
-    DSS_CAPI_DLL void Alt_Meter_Set_AllocFactors(void* elem, double* valuePtr, int32_t valueCount);
+    DSS_CAPI_DLL void Alt_Meter_Set_AllocFactors(void* elem, const double* ValuePtr, int32_t valueCount);
     DSS_CAPI_DLL void Alt_Meter_DoReliabilityCalc(void* elem, altdss_bool_t assumeRestoration);
 
     DSS_CAPI_DLL void Alt_Meter_Get_ZonePCEs(void*** resultPtr, int32_t* resultDims, void* elem);
@@ -7575,45 +7575,45 @@ extern "C" {
     DSS_CAPI_DLL int32_t Alt_MeterSection_SequenceIndex(void* elem, int32_t idx);
     DSS_CAPI_DLL int32_t Alt_MeterSection_TotalCustomers(void* elem, int32_t idx);
 
-    DSS_CAPI_DLL const char* Alt_Bus_Get_Name(void* ctx, void* pBus);
-    DSS_CAPI_DLL int32_t Alt_Bus_Get_NumNodes(void* ctx, void* pBus);
-    DSS_CAPI_DLL double Alt_Bus_Get_kVBase(void* ctx, void* pBus);
-    DSS_CAPI_DLL altdss_bool_t Alt_Bus_Get_CoordDefined(void* ctx, void* pBus);
-    DSS_CAPI_DLL double Alt_Bus_Get_X(void* ctx, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Set_X(void* ctx, void* pBus, double value);
-    DSS_CAPI_DLL double Alt_Bus_Get_Y(void* ctx, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Set_Y(void* ctx, void* pBus, double value);
-    DSS_CAPI_DLL double Alt_Bus_Get_Distance(void* ctx, void* pBus);
-    DSS_CAPI_DLL double Alt_Bus_Get_IntDuration(void* ctx, void* pBus);
-    DSS_CAPI_DLL double Alt_Bus_Get_Lambda(void* ctx, void* pBus);
-    DSS_CAPI_DLL double Alt_Bus_Get_CustDuration(void* ctx, void* pBus);
-    DSS_CAPI_DLL double Alt_Bus_Get_CustInterrupts(void* ctx, void* pBus);
-    DSS_CAPI_DLL int32_t Alt_Bus_Get_NumCustomers(void* ctx, void* pBus);
-    DSS_CAPI_DLL double Alt_Bus_Get_NumInterrupts(void* ctx, void* pBus);
-    DSS_CAPI_DLL double Alt_Bus_Get_TotalMiles(void* ctx, void* pBus);
-    DSS_CAPI_DLL int32_t Alt_Bus_Get_SectionID(void* ctx, void* pBus);
-    DSS_CAPI_DLL altdss_bool_t Alt_Bus_ZscRefresh(void* ctx, void* pBus);
+    DSS_CAPI_DLL const char* Alt_Bus_Get_Name(const void* ctx, void* pBus);
+    DSS_CAPI_DLL int32_t Alt_Bus_Get_NumNodes(const void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_kVBase(const void* ctx, void* pBus);
+    DSS_CAPI_DLL altdss_bool_t Alt_Bus_Get_CoordDefined(const void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_X(const void* ctx, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Set_X(const void* ctx, void* pBus, double value);
+    DSS_CAPI_DLL double Alt_Bus_Get_Y(const void* ctx, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Set_Y(const void* ctx, void* pBus, double value);
+    DSS_CAPI_DLL double Alt_Bus_Get_Distance(const void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_IntDuration(const void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_Lambda(const void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_CustDuration(const void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_CustInterrupts(const void* ctx, void* pBus);
+    DSS_CAPI_DLL int32_t Alt_Bus_Get_NumCustomers(const void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_NumInterrupts(const void* ctx, void* pBus);
+    DSS_CAPI_DLL double Alt_Bus_Get_TotalMiles(const void* ctx, void* pBus);
+    DSS_CAPI_DLL int32_t Alt_Bus_Get_SectionID(const void* ctx, void* pBus);
+    DSS_CAPI_DLL altdss_bool_t Alt_Bus_ZscRefresh(const void* ctx, void* pBus);
     DSS_CAPI_DLL int32_t Alt_Bus_GetUniqueNodeNumber(void *ctx, void *pBus, int32_t startNumber);
-    DSS_CAPI_DLL void Alt_Bus_Get_Voltages(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_Nodes(void* ctx, int32_t** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_SeqVoltages(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_Isc(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_Voc(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_puVoltages(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_Zsc0(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_Zsc1(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_ZscMatrix(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_YscMatrix(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_ComplexSeqVoltages(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_puVLL(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_VLL(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_puVMagAngle(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_VMagAngle(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_Zsc012Matrix(void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_Lines(void* ctx, void*** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_Loads(void* ctx, void*** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_PCElements(void* ctx, void*** resultPtr, int32_t* resultDims, void* pBus);
-    DSS_CAPI_DLL void Alt_Bus_Get_PDElements(void* ctx, void*** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Voltages(const void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Nodes(const void* ctx, int32_t** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_SeqVoltages(const void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Isc(const void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Voc(const void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_puVoltages(const void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Zsc0(const void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Zsc1(const void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_ZscMatrix(const void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_YscMatrix(const void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_ComplexSeqVoltages(const void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_puVLL(const void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_VLL(const void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_puVMagAngle(const void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_VMagAngle(const void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Zsc012Matrix(const void* ctx, double** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Lines(const void* ctx, void*** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_Loads(const void* ctx, void*** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_PCElements(const void* ctx, void*** resultPtr, int32_t* resultDims, void* pBus);
+    DSS_CAPI_DLL void Alt_Bus_Get_PDElements(const void* ctx, void*** resultPtr, int32_t* resultDims, void* pBus);
     DSS_CAPI_DLL void** Alt_Bus_GetListPtr(void *ctx);
     DSS_CAPI_DLL void* Alt_Bus_GetByIndex(void *ctx, int32_t idx);
     DSS_CAPI_DLL void* Alt_Bus_GetByName(void *ctx, const char* name);
