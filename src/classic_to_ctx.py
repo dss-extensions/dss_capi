@@ -208,15 +208,19 @@ with open('include/dss_capi_ctx.h', 'w') as fo:
 
     # Enums and other definitions are used from the main header
     
-    functions = header.split('/* Functions start here */\n')[1].split('#ifdef __cplusplus')[0].split('\n')
+    functions = header.replace('const char', 'Xconst_charX').split('/* Functions start here */\n')[1].split('#ifdef __cplusplus')[0].split('\n')
     
     functions = [
-        re.sub(r'(    DSS_CAPI_DLL [^ ]+[ \*]*)([a-zA-Z0-9_]+)\(', r'\1ctx_\2(void* ctx, ', function) 
+        re.sub(r'(    DSS_CAPI_DLL [^ ]+[ \*]*)([a-zA-Z0-9_]+)\(', r'\1ctx_\2(const void* ctx, ', function) 
         for function in functions
         if not skip(function)
     ]
-    functions = '\n'.join(functions).replace('(void* ctx, void)', '(void* ctx)')
-    
+   
+    functions = ('\n'.join(functions).
+        replace('(const void* ctx, void)', '(const void* ctx)').
+        replace('Xconst_charX', 'const char')
+    )
+
     fo.write('''#ifndef DSS_CAPI_CTX_H
 #define DSS_CAPI_CTX_H
 
@@ -232,14 +236,14 @@ extern "C" {
     /*!
     Create a new DSS engine context. 
     */
-    DSS_CAPI_DLL void* ctx_New(void);
+    DSS_CAPI_DLL const void* ctx_New(void);
 
     /*!
     Dispose an existing DSS engine context. 
     
     Pass a pointer to the variable, which will be zeroed on success.
     */
-    DSS_CAPI_DLL void ctx_Dispose(void *ctx);
+    DSS_CAPI_DLL void ctx_Dispose(const void *ctx);
 
     /*!
     Returns the prime (default) instance of the DSS engine.
@@ -247,7 +251,7 @@ extern "C" {
     This engine is created by default. This instance is used 
     by the classic API.
     */
-    DSS_CAPI_DLL void* ctx_Get_Prime(void);
+    DSS_CAPI_DLL const void* ctx_Get_Prime(void);
 
     /*!
     Replaces the existing prime DSS engine context, returning
@@ -258,7 +262,7 @@ extern "C" {
     The user is responsible for handling the potential disposal of the 
     previous prime instance returned by ctx_Set_Prime, if required.
     */
-    DSS_CAPI_DLL void *ctx_Set_Prime(void *ctx);
+    DSS_CAPI_DLL const void *ctx_Set_Prime(const void *ctx);
 
 ''')
     fo.write(functions)
