@@ -1276,6 +1276,13 @@ begin
     begin
         // If error, put in tiny series conductance
 // TEMc - shut this up for the CDPSM connectivity profile test, or whenever else it gets annoying
+        if DSS_CAPI_EARLY_ABORT then
+        begin
+            DoErrorMsg('TLineObj.CalcYPrim', 
+                Format(_('Matrix Inversion Error for Line "%s"'), [Name]),
+                _('Invalid impedance specified. Aborting solution.'), 183);
+            Exit;
+        end;
         DoErrorMsg('TLineObj.CalcYPrim', 
             Format(_('Matrix Inversion Error for Line "%s"'), [Name]),
             _('Invalid impedance specified. Replaced with tiny conductance.'), 183);
