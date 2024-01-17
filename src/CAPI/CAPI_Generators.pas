@@ -331,7 +331,7 @@ begin
     end;
     elem.FNphases := Value;
 
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
         elem.RecalcElementData();
         elem.YPrimInvalid := true;

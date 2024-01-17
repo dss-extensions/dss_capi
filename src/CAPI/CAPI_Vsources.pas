@@ -155,7 +155,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.kVBase := Value;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
         elem.PropertySideEffects(ord(TVsourceProp.BasekV), 0, []);
         elem.RecalcElementData();
@@ -236,7 +236,7 @@ begin
     end;
     prev := elem.FNphases;
     elem.FNphases := Value;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
         elem.PropertySideEffects(ord(TVsourceProp.phases), prev, []);
         elem.RecalcElementData();

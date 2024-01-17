@@ -539,7 +539,7 @@ begin
     SetAsNextSeq(ord(TProp.Ratings));
     SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
     SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         PrpSequence[ord(TProp.spacing)] := 0;
         PrpSequence[ord(TProp.geometry)] := 0;
@@ -605,7 +605,7 @@ begin
                 FUnitsConvert := FUnitsConvert * ConvertLineUnits(previousIntVal, LengthUnits);
             
             UserLengthUnits := LengthUnits;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
                 YprimInvalid := true;
         end;
     end;
@@ -652,7 +652,7 @@ begin
         begin
             KillLineCodeSpecified();
             SymComponentsModel := FALSE;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.r1)] := 0;
                 PrpSequence[ord(TProp.x1)] := 0;
@@ -683,7 +683,7 @@ begin
                 c0 := 1.0 * 1.0e-9;
                 len := 0.001;
                 ResetLengthUnits;
-                if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+                if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
                 begin
                     SetAsNextSeq(ord(TProp.r1));
                     SetAsNextSeq(ord(TProp.x1));
@@ -715,7 +715,7 @@ begin
                 SymComponentsChanged := FALSE;
                 KillGeometrySpecified;
                 RatingsSpecified := FALSE;
-                if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+                if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
                 begin
                     PrpSequence[ord(TProp.Seasons)] := 0;
                     PrpSequence[ord(TProp.Ratings)] := 0;
@@ -756,7 +756,7 @@ begin
 
         ord(TProp.Rg),
         ord(TProp.Xg):
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
                 YprimInvalid := true;
 
         ord(TProp.rho):
@@ -764,7 +764,7 @@ begin
             if LineGeometryObj <> NIL then
             begin
                 LineGeometryObj.rhoearth := rho; // TODO: This is weird
-                if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+                if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
                     YprimInvalid := true;
             end;
         end;
@@ -942,7 +942,7 @@ begin
     Kxg := Xg / ln(658.5 * sqrt(rho / BaseFrequency));
     FCapSpecified := FALSE;
 
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         //TODO: should we put everything here, or just the 
         //      required values to disambiguate the spec?
@@ -1856,7 +1856,7 @@ begin
     SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
     SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
 
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         PrpSequence[ord(TProp.linecode)] := 0;
         PrpSequence[ord(TProp.r1)] := 0;
@@ -1977,7 +1977,7 @@ end;
 procedure TLineObj.KillLineCodeSpecified();
 begin
     LineCodeObj := NIL;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
         PrpSequence[ord(TProp.LineCode)] := 0;
 end;
 
@@ -1988,7 +1988,7 @@ begin
         Exit;
 
     LineGeometryObj := NIL;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
         PrpSequence[ord(TProp.geometry)] := 0;
     FZFrequency := -1.0;
 end;
@@ -2003,7 +2003,7 @@ begin
     Reallocmem(LineWireData, 0);
     FPhaseChoice := Unknown;
     FZFrequency := -1.0;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         PrpSequence[ord(TProp.Spacing)] := 0;
         PrpSequence[ord(TProp.Wires)] := 0;

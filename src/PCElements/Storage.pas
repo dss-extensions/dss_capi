@@ -808,7 +808,7 @@ begin
         ord(TProp.pf):
         begin
             varMode := VARMODEPF;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.kvar)] := 0;
             end;
@@ -816,7 +816,7 @@ begin
         ord(TProp.kvar):
         begin
             varMode := VARMODEKVAR;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.pf)] := 0;
             end;
@@ -1135,7 +1135,7 @@ begin
     pctR := 0.0;
     pctX := 50.0;
 
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         SetAsNextSeq(ord(TProp.PF));
     end;

@@ -269,7 +269,7 @@ begin
             SpecType := 1;
             if G = 0 then
                 G := 10000.0;  // Default to a low resistance
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.Gmatrix)] := 0;
             end;
@@ -277,7 +277,7 @@ begin
         ord(TProp.Gmatrix):
         begin
             SpecType := 2;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.r)] := 0;
             end;
@@ -357,7 +357,7 @@ begin
     Gmatrix := NIL;
     G := 10000.0;
     SpecType := 1; // G (r property)  2=Gmatrix
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         SetAsNextSeq(ord(TProp.r)); // ensure value is marked as filled
     end;
