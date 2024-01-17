@@ -2695,7 +2695,7 @@ begin
                     ;
 {$ELSE}
                 else
-                if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.InvControl9611)) = 0 then
+                if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.InvControl9611)) = 0 then
                     FdeltaQFactor := FdeltaQ_factor;
 {$ENDIF}
                 QDesiredVV := QOldVV + DeltaQ * FdeltaQFactor;
@@ -2736,7 +2736,7 @@ begin
                 ;
 {$ELSE}
             else
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.InvControl9611)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.InvControl9611)) = 0 then
                 FdeltaQFactor := FdeltaQ_factor;
 {$ENDIF}
 
@@ -2795,7 +2795,7 @@ begin
                 ;
 {$ELSE}
             else
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.InvControl9611)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.InvControl9611)) = 0 then
                 FdeltaQFactor := FdeltaQ_factor;
 {$ENDIF}
 
@@ -2831,7 +2831,7 @@ begin
                 ;
 {$ELSE}
             else
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.InvControl9611)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.InvControl9611)) = 0 then
                 FdeltaQFactor := FdeltaQ_factor;
 {$ENDIF}
 

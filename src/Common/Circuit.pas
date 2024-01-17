@@ -2606,7 +2606,7 @@ begin
 {$IFDEF DSS_CAPI_NOCOMPATFLAGS}
         FSWriteln(F, '! CalcVoltageBases');
 {$ELSE}
-        if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SaveCalcVoltageBases)) = 0 then
+        if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SaveCalcVoltageBases)) = 0 then
             FSWriteln(F, '! CalcVoltageBases')
         else
             FSWriteln(F, 'CalcVoltageBases');

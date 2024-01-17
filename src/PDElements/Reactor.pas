@@ -380,7 +380,7 @@ begin
         ord(TProp.kvar):
         begin
             SpecType := 1;   // X specified by kvar, kV
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.RMatrix)] := 0;
                 PrpSequence[ord(TProp.XMatrix)] := 0;
@@ -417,7 +417,7 @@ begin
         ord(TProp.Xmatrix):
         begin
             SpecType := 3;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.kvar)] := 0;
                 PrpSequence[ord(TProp.R)] := 0;
@@ -432,7 +432,7 @@ begin
         ord(TProp.X):
         begin
             SpecType := 2;   // X specified directly rather than computed from kvar
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.RMatrix)] := 0;
                 PrpSequence[ord(TProp.XMatrix)] := 0;
@@ -454,7 +454,7 @@ begin
             if not Z0Specified then
                 Z0 := Z1;
 
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.RMatrix)] := 0;
                 PrpSequence[ord(TProp.XMatrix)] := 0;
@@ -477,7 +477,7 @@ begin
         begin
             SpecType := 2;
             Z.im := L * TwoPi * BaseFrequency;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.RMatrix)] := 0;
                 PrpSequence[ord(TProp.XMatrix)] := 0;

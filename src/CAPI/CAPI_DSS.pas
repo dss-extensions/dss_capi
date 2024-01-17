@@ -312,7 +312,7 @@ end;
 procedure DSS_Set_CompatFlags(Value: LongWord); CDECL;
 begin
     DSS_EXTENSIONS_COMPAT := Value;
-    SelectAs2pVersion((DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.BadPrecision)) <> 0);
+    SelectAs2pVersion((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.BadPrecision)) <> 0);
 end;
 //------------------------------------------------------------------------------
 function removeFromArray(var cbs: altdss_callbacks_event_t; target: altdss_callback_event_t): Boolean;

@@ -712,7 +712,7 @@ begin
     end;
 
 {$IFNDEF DSS_CAPI_NOCOMPATFLAGS}
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoSolverFloatChecks)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoSolverFloatChecks)) = 0 then
 {$ENDIF}
         Result := (MaxError <= ConvergenceTolerance) and (not IsNaN(MaxError)) and (not IsInfinite(MaxError))
 {$IFNDEF DSS_CAPI_NOCOMPATFLAGS}

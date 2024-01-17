@@ -715,12 +715,12 @@ begin
         ord(TProp.PQCSVFile):
             Do2ColCSVFile(self, pqcsvfile);
         ord(TProp.Interval):
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.Hour)] := 0;
             end;
         ord(TProp.Hour):
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.Interval)] := 0;
             end;
@@ -1260,7 +1260,7 @@ begin
 
     NumPoints := 0;
     Interval := 1.0;  // hr
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         SetAsNextSeq(ord(TProp.interval));
     end;

@@ -448,7 +448,7 @@ begin
         ord(TProp.MVAsc3), ord(TProp.MVAsc1):
         begin
             ZSpecType := 1;  // MVAsc
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.Isc3)] := 0;
                 PrpSequence[ord(TProp.Isc1)] := 0;
@@ -467,7 +467,7 @@ begin
         ord(TProp.Isc3), ord(TProp.Isc1):
         begin
             ZSpecType := 2;  // Isc
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.MVAsc3)] := 0;
                 PrpSequence[ord(TProp.MVAsc1)] := 0;
@@ -486,7 +486,7 @@ begin
         ord(TProp.R1), ord(TProp.X1), ord(TProp.R0), ord(TProp.X0):
         begin
             ZSpecType := 3; // Specified in Ohms
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.Isc3)] := 0;
                 PrpSequence[ord(TProp.Isc1)] := 0;
@@ -634,7 +634,7 @@ begin
     BaseMVA := 100.0;
     ZBase := SQR(kVBase) / BaseMVA;
 
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         SetAsNextSeq(ord(TProp.MVASC3));
         SetAsNextSeq(ord(TProp.MVASC1));

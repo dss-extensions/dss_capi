@@ -45,7 +45,7 @@ type
         ShowTreeView = 11
     );
 
-    TDSSCompatFlags = (
+    DSSCompatFlag = (
         NoSolverFloatChecks = 1,
         BadPrecision = 2,
         InvControl9611 = 4,

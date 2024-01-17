@@ -687,7 +687,7 @@ begin
         ord(TProp.XHL), ord(TProp.XHT), ord(TProp.XLT),
         ord(TProp.X12), ord(TProp.X13), ord(TProp.X23):
         begin
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.XscArray)] := 0;
                 PrpSequence[ord(TProp.XfmrCode)] := 0;
@@ -708,7 +708,7 @@ begin
         ord(TProp.Seasons):
             SetLength(kVARatings, NumAmpRatings);
         ord(TProp.Xscarray):
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.XHL)] := 0;
                 PrpSequence[ord(TProp.XHT)] := 0;
@@ -751,7 +751,7 @@ begin
         ord(TProp.X12), ord(TProp.X13), ord(TProp.X23):
             YprimInvalid := TRUE;
         ord(TProp.Xscarray):
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
                 YprimInvalid := TRUE;
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
@@ -841,7 +841,7 @@ begin
     Nterms := NumWindings;  // Force allocation of terminals and conductors
 
     XHL := 0.07;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         SetAsNextSeq(ord(TProp.XHL));
     end;
@@ -2060,7 +2060,7 @@ begin
     for i := 1 to (NumWindings * (NumWindings - 1) div 2) do
         XSc[i] := Obj.XSC[i];
 
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         PrpSequence[ord(TProp.XHL)] := 0;
         PrpSequence[ord(TProp.XHT)] := 0;

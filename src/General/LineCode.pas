@@ -361,7 +361,7 @@ begin
         ord(TProp.B0):
         begin
             SymComponentsModel := TRUE;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.RMatrix)] := 0;
                 PrpSequence[ord(TProp.XMatrix)] := 0;
@@ -374,7 +374,7 @@ begin
         begin
             Include(Flags, Flg.NeedsRecalc);
             SymComponentsModel := FALSE;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.r1)] := 0;
                 PrpSequence[ord(TProp.x1)] := 0;
@@ -467,7 +467,7 @@ begin
     C1 := 3.4e-9;  // nf per 1000ft
     C0 := 1.6e-9;
 
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         //TODO: should we put everything here, or just the 
         //      required values to disambiguate the spec?

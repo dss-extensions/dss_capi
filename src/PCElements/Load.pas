@@ -562,7 +562,7 @@ begin
         ord(TProp.kW):
         begin
             LoadSpecType := TLoadSpec.kW_PF;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 // SetAsNextSeq(ord(TProp.kW));
                 SetAsNextSeq(ord(TProp.PF));
@@ -577,7 +577,7 @@ begin
         begin
             PFChanged := TRUE;
             PFSpecified := TRUE;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 PrpSequence[ord(TProp.kvar)] := 0;
             end;
@@ -587,7 +587,7 @@ begin
         begin
             FAllocationFactor := FkVAAllocationFactor;
             LoadSpecType := TLoadSpec.ConnectedkVA_PF;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 SetAsNextSeq(ord(TProp.xfkVA));
                 SetAsNextSeq(ord(TProp.PF));
@@ -604,7 +604,7 @@ begin
         begin
             FAllocationFactor := FCFactor;
             LoadSpecType := TLoadSpec.kWh_PF;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 SetAsNextSeq(ord(TProp.kWh));
                 SetAsNextSeq(ord(TProp.PF));
@@ -644,7 +644,7 @@ begin
         ord(TProp.kwh):
         begin
             LoadSpecType := TLoadSpec.kWh_PF;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 // SetAsNextSeq(ord(TProp.kWh));
                 SetAsNextSeq(ord(TProp.PF));
@@ -659,7 +659,7 @@ begin
         ord(TProp.kvar):
         begin
             LoadSpecType := TLoadSpec.kW_kvar;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 if PrpSequence[ord(TProp.kW)] = 0 then
                     SetAsNextSeq(ord(TProp.kW));
@@ -676,7 +676,7 @@ begin
         ord(TProp.xfkVA):
         begin
             LoadSpecType := TLoadSpec.ConnectedkVA_PF;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 SetAsNextSeq(ord(TProp.xfkVA));
                 SetAsNextSeq(ord(TProp.PF));
@@ -691,7 +691,7 @@ begin
         ord(TProp.kwhdays):
         begin
             LoadSpecType := TLoadSpec.kWh_PF;
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 // SetAsNextSeq(ord(TProp.kWh));
                 SetAsNextSeq(ord(TProp.PF));
@@ -705,7 +705,7 @@ begin
         ord(TProp.kVA):
         begin
             LoadSpecType := TLoadSpec.kVA_PF;  // kVA, PF
-            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
                 // SetAsNextSeq(ord(TProp.kVA));
                 SetAsNextSeq(ord(TProp.PF));
@@ -990,7 +990,7 @@ procedure TLoadObj.SetkWkvar(const PkW, Qkvar: Double);
 begin
     kWBase := PkW;
     kvarbase := Qkvar;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         PrpSequence[ord(TProp.kVA)] := 0;
         PrpSequence[ord(TProp.kWh)] := 0;
@@ -2119,7 +2119,7 @@ begin
     FkVAAllocationFactor := Value;
     FAllocationFactor := Value;
     LoadSpecType := TLoadSpec.ConnectedkVA_PF;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         SetAsNextSeq(ord(TProp.xfkVA));
         SetAsNextSeq(ord(TProp.PF));
@@ -2151,7 +2151,7 @@ begin
     FCFactor := Value;
     FAllocationFactor := Value;
     LoadSpecType := TLoadSpec.kWh_PF;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         SetAsNextSeq(ord(TProp.kWh));
         SetAsNextSeq(ord(TProp.PF));

@@ -457,7 +457,7 @@ begin
                         FY[i] := LineSpacingObj.Ycoord[i];
                         FUnits[i] := FLastUnit;
                     end;
-                    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+                    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
                     begin
                         PrpSequence[ord(TProp.X)] := 0;
                         PrpSequence[ord(TProp.H)] := 0;

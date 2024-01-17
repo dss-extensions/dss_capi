@@ -107,7 +107,7 @@ begin
 
     // If the compatibility flag is set, use the active circuit element instead
     // of the active line in the line list
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.ActiveLine)) <> 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.ActiveLine)) <> 0 then
     begin
         CktElem := DSS.ActiveCircuit.ActiveCktElement;
         if CktElem = NIL then
@@ -152,7 +152,7 @@ begin
         Exit;
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Lines, 
-        (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.ActiveLine)) = 0
+        (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.ActiveLine)) = 0
     );
 end;
 
@@ -306,7 +306,7 @@ begin
         DoSimpleMsg(DSSPrime, 'LineCode "%s" not found.', [Value], 5009);
         Exit;
     end;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         elem.SetAsNextSeq(ord(TLineProp.LineCode));
     end;
@@ -993,7 +993,7 @@ begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.ActiveLine)) <> 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.ActiveLine)) <> 0 then
     begin
         CktElem := DSSPrime.ActiveCircuit.ActiveCktElement;
         if CktElem = NIL then

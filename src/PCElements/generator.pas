@@ -743,7 +743,7 @@ begin
                 kvarMax := 2.0 * kvarBase;
                 kvarMin := -kvarMax;
 
-                if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+                if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
                 begin
                     PrpSequence[ord(TProp.PF)] := 0;
                 end;
@@ -757,7 +757,7 @@ begin
                 SyncUpPowerQuantities;
                 if TProp(idx) = TProp.pf then
                 begin
-                    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+                    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
                     begin
                         PrpSequence[ord(TProp.kvar)] := 0;
                     end;
@@ -951,7 +951,7 @@ begin
     kvarMax := kvarBase * 2.0;
     kvarMin := -kvarmax;
     PFNominal := 0.88;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         SetAsNextSeq(ord(TProp.kW));
         SetAsNextSeq(ord(TProp.PF));
@@ -2865,7 +2865,7 @@ procedure TGeneratorObj.Set_PresentkV(const Value: Double);
 begin
     Genvars.kVGeneratorBase := Value;
     PropertySideEffects(ord(TProp.kV), 0, []);
-    // if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    // if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     // begin
     //    SetAsNextSeq(ord(TLoadProp.kV));
     // end;

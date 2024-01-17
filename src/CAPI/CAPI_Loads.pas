@@ -305,7 +305,7 @@ begin
 
     pLoad.kvarBase := Value;
     pLoad.LoadSpecType := TLoadSpec.kW_kvar;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         pLoad.SetAsNextSeq(ord(TLoadProp.kW));
         pLoad.SetAsNextSeq(ord(TLoadProp.kvar));
@@ -327,7 +327,7 @@ begin
 
     pLoad.kWBase := Value;
     pLoad.LoadSpecType := TLoadSpec.kW_PF;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         pLoad.SetAsNextSeq(ord(TLoadProp.kW));
         pLoad.SetAsNextSeq(ord(TLoadProp.PF));
@@ -348,7 +348,7 @@ begin
 
     pLoad.PFNominal := Value;
     pLoad.LoadSpecType := TLoadSpec.kW_PF;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         pLoad.SetAsNextSeq(ord(TLoadProp.kW));
         pLoad.SetAsNextSeq(ord(TLoadProp.PF));
@@ -756,7 +756,7 @@ begin
     else
         elem.Connection := TLoadConnection.Wye;
 
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SkipSideEffects)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
         elem.RecalcElementData();
         elem.YPrimInvalid := true;
