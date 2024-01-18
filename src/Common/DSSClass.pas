@@ -55,6 +55,21 @@ type
         SkipSideEffects = 64
     );
 
+    DSSSaveFlag = (
+        CalcVoltageBases = 0,
+        SetVoltageBases = 1,
+        IncludeOptions = 2,
+        IncludeDisabled = 3,
+        ExcludeDefault = 4,
+        SingleFile = 5,
+        KeepOrder = 6,
+        ExcludeMeterZones = 7,
+        IsOpen = 8,
+        ToString = 9
+    );
+    DSSSaveFlags = set of DSSSaveFlag;
+    PDSSSaveFlags = ^DSSSaveFlags;
+
     TDSSPropertyNameStyle = (
         Modern = 0,
         Lowercase = 1,
