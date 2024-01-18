@@ -445,7 +445,7 @@ type
 
         procedure AllocateLoad;
         procedure ReduceZone;  // Reduce Zone by eliminating buses and merging lines
-        procedure SaveZone();
+        procedure SaveZone(saveFlags: DSSSaveFlags);
         procedure GetPCEatZone(const allowEmpty: Boolean = False);
 
         procedure CalcReliabilityIndices();
@@ -2582,7 +2582,7 @@ begin
         SAIFIkW := SAIFIkW / dblkW; // Normalize to total kW
 end;
 
-procedure TEnergyMeterObj.SaveZone();
+procedure TEnergyMeterObj.SaveZone(saveFlags: DSSSaveFlags);
 var
     cktElem, shuntElement: TDSSCktElement;
     LoadElement: TLoadObj;
@@ -2590,7 +2590,10 @@ var
     FBranches, FShunts, FLoads, FGens, FCaps, FXfmrs: TStream;
     NBranches, NShunts, Nloads, NGens, NCaps, NXfmrs: Integer;
     dirname: String;
+    skipDisabled: Boolean;
 begin
+    skipDisabled := not (DSSSaveFlag.IncludeDisabled in saveFlags);
+
     // We are in the directory indicated by DSS.CurrentDSSDir
 
     // Run down the zone and write each element into a file
@@ -2682,7 +2685,7 @@ begin
     cktElem := BranchList.First();
     while cktElem <> NIL do
     begin
-        if not cktElem.Enabled then
+        if (skipDisabled) and (not cktElem.Enabled) then
         begin
             cktElem := BranchList.GoForward();
             continue;

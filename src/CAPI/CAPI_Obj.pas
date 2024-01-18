@@ -2071,6 +2071,49 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+procedure saveOpenTerminalsJSON(ckt: TDSSCircuit; var cmds: TJSONArray);
+// Equivalent of TDSSCircuit.SaveOpenTerminals
+var
+    elem: TDSSCktElement;
+    name: String;
+    i, termIdx, numCondOpen: Integer;
+begin
+    for elem in ckt.CktElements do
+    begin
+        if elem.AllConductorsClosed() then
+            continue;
+
+        name := CheckForBlanks(elem.FullName);
+        for termIdx := 0 to elem.NTerms - 1 do
+        begin
+            numCondOpen := 0;
+            for i := 0 to elem.NConds - 1 do 
+            begin
+                if not elem.Terminals[termIdx].ConductorsClosed[i] then
+                    numCondOpen += 1;
+            end;
+            if numCondOpen = 0 then
+                continue;
+
+            if numCondOpen = elem.NConds then
+            begin   
+                // Open all conductors in the terminal, easy path
+                cmds.Add(Format('Open %s %d', [name, termIdx + 1]));
+                continue;
+            end;
+
+            // Open specific conductors
+            for i := 0 to elem.NConds - 1 do 
+            begin
+                if elem.Terminals[termIdx].ConductorsClosed[i] then
+                    continue;
+
+                cmds.Add(Format('Open %s %d %d', [name, termIdx + 1, i + 1]));
+            end;
+        end;
+    end;
+end;
+
 function Obj_Circuit_ToJSON_(ckt: TDSSCircuit; joptions: Integer): PAnsiChar;
 var
     circ: TJSONObject = NIL;
@@ -2164,6 +2207,8 @@ begin
         else
             cmds.Add('Set harmonics=' + GetDSSArray(ckt.Solution.HarmonicList));
         cmds.Add('Set maxcontroliter=' + IntToStr(ckt.Solution.MaxControlIterations));
+
+        saveOpenTerminalsJSON(ckt, cmds);
 
         circ.Add('PostCommands', cmds);
         cmds := NIL;

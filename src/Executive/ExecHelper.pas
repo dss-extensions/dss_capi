@@ -788,8 +788,7 @@ begin
     DSS.InShowResults := TRUE;
     if (Length(ObjClass) = 0) or (CompareTextShortest(ObjClass, 'meters') = 0) then
     begin
-   // Save monitors and Meters
-
+        // Save monitors and Meters
         with DSS.ActiveCircuit.Monitors do
             for i := 1 to Count do
             begin
@@ -818,7 +817,7 @@ begin
         Exit;
     end;
 
-   {Assume that we have a class name for a DSS Class}
+    // Assume that we have a class name for a DSS Class
     DSSClass := GetDSSClassPtr(DSS, ObjClass);
     if DSSClass <> NIL then
     begin
@@ -835,7 +834,7 @@ begin
                 end;
             SaveFile := SaveDir + PathDelim + SaveFile;
         end;
-        WriteClassFile(DSS, DSSClass, SaveFile, FALSE); // just write the class with no checks
+        WriteClassFile(DSS, NIL, [], DSSClass, SaveFile, FALSE); // just write the class with no checks
     end;
 
     SetLastResultFile(DSS, SaveFile);

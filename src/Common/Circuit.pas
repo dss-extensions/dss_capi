@@ -83,11 +83,12 @@ type
         function Get_Losses: Complex; //Total Circuit losses
         procedure Set_LoadMultiplier(Value: Double);
 
-        function SaveMasterFile: Boolean;
-        function SaveDSSObjects: Boolean;
-        function SaveFeeders: Boolean;
-        function SaveBusCoords: Boolean;
-        function SaveVoltageBases: Boolean;
+        function SaveMasterFile(circF: TStream; saveFlags: DSSSaveFlags; header: Boolean = true; footer: Boolean = true): Boolean;
+        function SaveDSSObjects(circF: TStream; saveFlags: DSSSaveFlags): Boolean;
+        function SaveFeeders(circF: TStream; saveFlags: DSSSaveFlags): Boolean;
+        function SaveBusCoords(circF: TStream; saveFlags: DSSSaveFlags): Boolean;
+        function SaveOpenTerminals(circF: TStream; saveFlags: DSSSaveFlags): Boolean;
+        function SaveVoltageBases(circF: TStream; saveFlags: DSSSaveFlags): Boolean;
 
         procedure ReallocDeviceList;
         procedure Set_CaseName(const Value: String);
@@ -308,7 +309,7 @@ type
         procedure TotalizeMeters;
         function ComputeCapacity: Boolean;
 
-        function Save(Dir: String): Boolean;
+        function Save(Dir: String; psaveFlags: PDSSSaveFlags = NIL; outString: PString = NIL): Boolean;
 
         procedure ProcessBusDefs(element: TDSSCktElement);
         procedure ReprocessBusDefs;
@@ -1062,7 +1063,7 @@ end;
 // The flag AddISrc indicates if its necessary to create
 // Isources at the edges of the link branches, the ISource
 // magnitude is equal to 0.000001, angle 0 (for A-Diakoptics)
-procedure TDSSCircuit.Save_SubCircuits(AddISrc: Boolean);
+procedure TDSSCircuit.Save_SubCircuits(AddISrc: Boolean; saveFlags: DSSSaveFlags=[]);
 var
     Fileroot: String;
 begin
@@ -2400,93 +2401,128 @@ begin
     Result := TRUE;
 end;
 
-function TDSSCircuit.Save(Dir: String): Boolean;
-// Save the present circuit - Enabled devices only
+function TDSSCircuit.Save(Dir: String; psaveFlags: PDSSSaveFlags; outString: PString): Boolean;
+// Save the present circuit - acoording to saveFlags
 var
     i: Integer;
     Success: Boolean;
     CurrDir, SaveDir: String;
     obj: TDSSObject;
+    circF: TStream = NIL;
+    saveFlags: DSSSaveFlags;
 begin
+    if psaveFlags <> NIL then
+        saveFlags := psaveFlags^
+    else
+        saveFlags := [];
+
     Result := FALSE;
     // Make a new subfolder in the present folder based on the circuit name and
     // a unique sequence number
     SaveDir := DSS.CurrentDSSDir;  // remember where to come back to
     Success := FALSE;
-    if Length(Dir) = 0 then
-    begin
-        Dir := Name;
-        if DSS_CAPI_ALLOW_CHANGE_DIR then
-            CurrDir := Dir
-        else
-            CurrDir := SaveDir + Dir;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SaveCalcVoltageBases)) <> 0 then
+        Include(saveFlags, DSSSaveFlag.CalcVoltageBases);
 
-        for i := 0 to 999 do  // Find a unique dir name
-        begin
-            if not DirectoryExists(CurrDir) then
+    if DSSSaveFlag.SingleFile in saveFlags then
+    begin
+        if Length(Dir) = 0 then
+            Dir := Name + '.dss';
+
+        try
+            if (DSSSaveFlag.ToString in saveFlags) and (outString <> NIL) then
+                // String stream
+                circF := TStringStream.Create()
+            else
+                // Normal stream
+                circF := DSS.GetOutputStreamEx(Dir, fmCreate);
+
+            Success := TRUE;
+        except
+            on E: Exception do
             begin
-                if CreateDir(CurrDir) then
-                begin
-                    DSS.SetCurrentDSSDir(CurrDir);
-                    Success := TRUE;
-                    Break;
-                end;
+                DoSimpleMsg(DSS, 'Error creating circuit script file: %s', [E.Message], 43502);
+                Result := false;
+                Exit;
             end;
-            CurrDir := dir + Format('%.3d', [i]);
         end;
     end
     else
     begin
-        if not DSS_CAPI_ALLOW_CHANGE_DIR then
+        if Length(Dir) = 0 then
         begin
-            // There doesn't seem to exist a function for "is absolute path" in FPC,
-            // so let's do some simple checks instead
-{$ifdef WINDOWS}
-            if ((Length(Dir) >= 3) and (AnsiUpperCase(Dir[1]) >= 'A') and (AnsiUpperCase(Dir[1]) <= 'Z') and (Dir[2] = ':')) or // "X:"?
-                ((Length(Dir) >= 2) and (Dir[1] = '\') and (Dir[2] = '\')) // \\networkdrive?
-            then
-            begin
-                // At least looks like a full path, nothing to do
-            end
-            else if ((Length(Dir) >= 2) and ((Dir[1] = '\') or (Dir[1] = '/'))) then // root path
-            begin
-                // Looks like a root path, so add the current drive
-                Dir := ExtractFileDrive(SaveDir) + ':' + Dir;
-            end
-{$else}
-            if ((Length(Dir) >= 2) and (Dir[1] = '/')) then // root path
-            begin
-                // Looks like a root path, nothing to do
-            end
-{$endif}
+            Dir := Name;
+            if DSS_CAPI_ALLOW_CHANGE_DIR then
+                CurrDir := Dir
             else
-            begin
-                // Probably a relative path
-                Dir := SaveDir + Dir;
-            end;
-        end;
+                CurrDir := SaveDir + Dir;
 
-        if not DirectoryExists(Dir) then
-        begin
-            CurrDir := dir;
-            if CreateDir(CurrDir) then
+            for i := 0 to 999 do  // Find a unique dir name
             begin
-                DSS.SetCurrentDSSDir(CurrDir);
-                Success := TRUE;
+                if not DirectoryExists(CurrDir) then
+                begin
+                    if CreateDir(CurrDir) then
+                    begin
+                        DSS.SetCurrentDSSDir(CurrDir);
+                        Success := TRUE;
+                        Break;
+                    end;
+                end;
+                CurrDir := dir + Format('%.3d', [i]);
             end;
         end
         else
-        begin  // Exists - overwrite
-            CurrDir := Dir;
-            DSS.SetCurrentDSSDir(CurrDir);
-            Success := TRUE;
-        end;
-    end;
+        begin
+            if not DSS_CAPI_ALLOW_CHANGE_DIR then
+            begin
+                // There doesn't seem to exist a function for "is absolute path" in FPC,
+                // so let's do some simple checks instead
+    {$ifdef WINDOWS}
+                if ((Length(Dir) >= 3) and (AnsiUpperCase(Dir[1]) >= 'A') and (AnsiUpperCase(Dir[1]) <= 'Z') and (Dir[2] = ':')) or // "X:"?
+                    ((Length(Dir) >= 2) and (Dir[1] = '\') and (Dir[2] = '\')) // \\networkdrive?
+                then
+                begin
+                    // At least looks like a full path, nothing to do
+                end
+                else if ((Length(Dir) >= 2) and ((Dir[1] = '\') or (Dir[1] = '/'))) then // root path
+                begin
+                    // Looks like a root path, so add the current drive
+                    Dir := ExtractFileDrive(SaveDir) + ':' + Dir;
+                end
+    {$else}
+                if ((Length(Dir) >= 2) and (Dir[1] = '/')) then // root path
+                begin
+                    // Looks like a root path, nothing to do
+                end
+    {$endif}
+                else
+                begin
+                    // Probably a relative path
+                    Dir := SaveDir + Dir;
+                end;
+            end;
 
-    if not Success then
-    begin
-        DoSimpleMsg(DSS, 'Could not create a folder "%s" for saving the circuit.', [Dir], 432);
-        Exit;
+            if not DirectoryExists(Dir) then
+            begin
+                CurrDir := dir;
+                if CreateDir(CurrDir) then
+                begin
+                    DSS.SetCurrentDSSDir(CurrDir);
+                    Success := TRUE;
+                end;
+            end
+            else
+            begin  // Exists - overwrite
+                CurrDir := Dir;
+                DSS.SetCurrentDSSDir(CurrDir);
+                Success := TRUE;
+            end;
+        end;
+        if not Success then
+        begin
+            DoSimpleMsg(DSS, 'Could not create a folder "%s" for saving the circuit.', [Dir], 432);
+            Exit;
+        end;
     end;
 
     DSS.SavedFileList.Clear;  // This list keeps track of all files saved
@@ -2501,57 +2537,98 @@ begin
     for i := 1 to DSS.DSSClassList.Count do
         TDssClass(DSS.DSSClassList.Get(i)).Saved := FALSE;
 
+    if DSSSaveFlag.SingleFile in saveFlags then
+    begin
+        if Success then
+            Success := SaveMasterFile(circF, saveFlags, true, false); // HEADER
+    end;
+    
     // Write library files so that they will be available to lines, loads, etc
     // Use default filename=classname
     if Success then
-        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'wiredata'), '', FALSE);
+        Success := WriteClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'wiredata'), '', FALSE);
     if Success then
-        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'cndata'), '', FALSE);
+        Success := WriteClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'cndata'), '', FALSE);
     if Success then
-        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'tsdata'), '', FALSE);
+        Success := WriteClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'tsdata'), '', FALSE);
     if Success then
-        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'linegeometry'), '', FALSE);
-    // If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'linecode'),'', FALSE);
+        Success := WriteClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'linegeometry'), '', FALSE);
     if Success then
-        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'linespacing'), '', FALSE);
+        Success := WriteClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'linespacing'), '', FALSE);
     if Success then
-        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'linecode'), '', FALSE);
+        Success := WriteClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'linecode'), '', FALSE);
     if Success then
-        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'xfmrcode'), '', FALSE);
+        Success := WriteClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'xfmrcode'), '', FALSE);
     if Success then
-        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'loadshape'), '', FALSE);
+        Success := WriteClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'loadshape'), '', FALSE);
     if Success then
-        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'TShape'), '', FALSE);
+        Success := WriteClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'TShape'), '', FALSE);
     if Success then
-        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'priceshape'), '', FALSE);
+        Success := WriteClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'priceshape'), '', FALSE);
     if Success then
-        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'growthshape'), '', FALSE);
+        Success := WriteClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'growthshape'), '', FALSE);
     if Success then
-        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'XYcurve'), '', FALSE);
+        Success := WriteClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'XYcurve'), '', FALSE);
     if Success then
-        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'TCC_Curve'), '', FALSE);
+        Success := WriteClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'TCC_Curve'), '', FALSE);
     if Success then
-        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'Spectrum'), '', FALSE);
+        Success := WriteClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'Spectrum'), '', FALSE);
     if Success then
-        Success := WriteClassFile(DSS, GetDssClassPtr(DSS, 'DynamicExp'), '', FALSE);
+        Success := WriteClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'DynamicExp'), '', FALSE);
 
     // Define voltage sources first
-    Success := WriteVsourceClassFile(DSS, GetDssClassPtr(DSS, 'vsource'), TRUE);
+    if Success and (not ((DSSSaveFlag.SingleFile in saveFlags) and (DSSSaveFlag.KeepOrder in saveFlags))) then
+        Success := WriteVsourceClassFile(DSS, circF, saveFlags, GetDssClassPtr(DSS, 'vsource'));
 
+    if Success and (not (DSSSaveFlag.ExcludeMeterZones in saveFlags)) and not (DSSSaveFlag.SingleFile in saveFlags) then
+        Success := SaveFeeders(circF, saveFlags); // Save feeders first
     if Success then
-        Success := SaveFeeders; // Save feeders first
-    if Success then
-        Success := SaveDSSObjects;  // Save rest ot the objects
-    if Success then
-        Success := SaveVoltageBases;
-    if Success then
-        Success := SaveBusCoords;
-    if Success then
-        Success := SaveMasterFile;
+        Success := SaveDSSObjects(circF, saveFlags);  // Save rest ot the objects
+
+    if DSSSaveFlag.SingleFile in saveFlags then
+    begin
+        if Success then
+            Success := SaveMasterFile(circF, saveFlags, false, true); // FOOTER
+        
+        // right after after MakeBusList:
+        if Success then
+            Success := SaveVoltageBases(circF, saveFlags);
+        if Success then
+            Success := SaveBusCoords(circF, saveFlags);
+        if Success and (DSSSaveFlag.IsOpen in saveFlags) then
+            Success := SaveOpenTerminals(circF, saveFlags);
+    end
+    else
+    begin
+        if Success then
+            Success := SaveVoltageBases(circF, saveFlags);
+        if Success then
+            Success := SaveBusCoords(circF, saveFlags);
+        if Success then
+            Success := SaveMasterFile(circF, saveFlags); //SaveOpenTerminals is called inside in this case
+    end;
+    if circF <> NIL then
+    begin
+        if (DSSSaveFlag.ToString in saveFlags) and (outString <> NIL) then
+        begin
+            outString^ := TStringStream(circF).DataString;
+        end;
+        FreeAndNil(circF);
+    end;
 
     if Success then
     begin
-        DSS.GlobalResult := Format('Circuit saved in directory: %s', [DSS.CurrentDSSDir]);
+        if (DSSSaveFlag.ToString in saveFlags) and (outString <> NIL) then
+        begin
+            DSS.GlobalResult := 'Circuit saved to string.';
+        end
+        else
+        if (DSSSaveFlag.SingleFile in saveFlags) then
+        begin
+            DSS.GlobalResult := Format('Circuit saved to file: "%s"', [Dir]);
+        end
+        else
+            DSS.GlobalResult := Format('Circuit saved in directory: "%s"', [DSS.CurrentDSSDir]);
         // DoSimpleMsg('Circuit saved in directory: ' + CurrentDSSDir, 433)
     end
     else
@@ -2572,104 +2649,167 @@ begin
     Result := TRUE;
 end;
 
-function TDSSCircuit.SaveDSSObjects: Boolean;
+function TDSSCircuit.SaveDSSObjects(circF: TStream; saveFlags: DSSSaveFlags): Boolean;
 var
     cls: TDSSClass;
+    keepOrder: Boolean;
+    includeDisabled: Boolean;
+    obj: TDSSCktElement;
 begin
     Result := FALSE;
+    keepOrder := ((DSSSaveFlag.SingleFile in saveFlags) and (DSSSaveFlag.KeepOrder in saveFlags)) and (circF <> NIL);
 
     // Write Files for all populated DSS Classes  Except Solution Class
     for cls in DSS.DSSClassList do
     begin
         if cls.Saved then
-            Continue;   // Cycle to next
+            continue;
+
+        if keepOrder and (cls is TCktElementClass) then
+            continue;
+
         //use default filename=classname
-        if not WriteClassFile(DSS, cls, '', (cls is TCktElementClass)) then
+        if not WriteClassFile(DSS, circF, saveFlags, cls, '', (cls is TCktElementClass)) then
             Exit;  // bail on error
-        cls.Saved := TRUE;
     end;
 
+    if not keepOrder then
+    begin
+        Result := TRUE;
+        Exit;
+    end;
+
+    // Same remaining circuit elements in the order we kept them
+    DSS.VsourceClass.First();
+    obj := TDSSCktElement(DSS.ActiveDSSObject);
+    if not (Flg.HasBeenSaved in obj.Flags) then
+        WriteDSSObject(obj, circF, 'Edit');
+
+    includeDisabled := (DSSSaveFlag.IncludeDisabled in saveFlags);
+
+    for obj in CktElements do
+    begin
+        // Skip Cktelements that have been checked before and written out by
+        // something else
+        if (not includeDisabled) and (not obj.Enabled) then
+            continue;
+        if (Flg.HasBeenSaved in obj.Flags) then
+            continue;
+        WriteDSSObject(obj, circF, 'New');  // sets HasBeenSaved
+    end;
     Result := TRUE;
 end;
 
-function TDSSCircuit.SaveVoltageBases: Boolean;
+function TDSSCircuit.SaveVoltageBases(circF: TStream; saveFlags: DSSSaveFlags): Boolean;
 var
-    F: TStream = NIL;
+    F: TStream;
     VBases: String;
+    i: Integer;
 begin
+    F := circF;
     Result := FALSE;
     try
-        F := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'BusVoltageBases.dss', fmCreate);
+        if F = NIL then
+            F := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'BusVoltageBases.dss', fmCreate);
+
         DSS.DssExecutive.ParseCommand('get voltagebases');
         VBases := DSS.GlobalResult;
         FSWriteln(F, 'Set VoltageBases=' + VBases);
 {$IFDEF DSS_CAPI_NOCOMPATFLAGS}
-        FSWriteln(F, '! CalcVoltageBases');
+        FSWriteln(F, 'CalcVoltageBases');
 {$ELSE}
-        if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SaveCalcVoltageBases)) = 0 then
-            FSWriteln(F, '! CalcVoltageBases')
+        if (DSSSaveFlag.CalcVoltageBases in saveFlags) then
+            FSWriteln(F, 'CalcVoltageBases')
         else
-            FSWriteln(F, 'CalcVoltageBases');
+            FSWriteln(F, '! CalcVoltageBases');
 {$ENDIF}
-        FreeAndNil(F);
+        if (DSSSaveFlag.SetVoltageBases in saveFlags) then
+        begin
+            for i := 1 to NumBuses do
+            begin
+                FSWriteLn(F, Format('SetkVBase Bus=%s kVLN=%g', [CheckForBlanks(BusList.NameOfIndex(i)), Buses[i].kVBase]));
+            end;
+        end;
+        if F <> circF then
+            FreeAndNil(F);
         Result := TRUE;
     except
         On E: Exception do
             DoSimpleMsg(DSS, 'Error Saving BusVoltageBases File: %s', [E.Message], 43501);
     end;
-
-    FreeAndNil(F);
+    if F <> circF then
+        FreeAndNil(F);
 end;
 
-function TDSSCircuit.SaveMasterFile: Boolean;
+function TDSSCircuit.SaveMasterFile(circF: TStream; saveFlags: DSSSaveFlags; header: Boolean; footer: Boolean): Boolean;
 var
-    F: TStream = NIL;
+    F: TStream;
     i: Integer;
 begin
     Result := FALSE;
+    F := circF;
     try
-        F := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'Master.dss', fmCreate);
-        FSWriteln(F, Format('! Last saved by AltDSS/%s on %s',  [VersionString, DateToISO8601(Now())]));
-        FSWriteln(F, 'Clear');
-        FSWriteln(F, 'Set DefaultBaseFreq=', FloatToStr(DSS.DefaultBaseFreq));
-        FSWriteln(F, 'New Circuit.' + Name);
-        FSWriteln(F);
-        If PositiveSequence Then 
-            FSWriteln(F, 'Set Cktmodel=', DSS.CktModelEnum.OrdinalToString(Integer(PositiveSequence)));
-        if DuplicatesAllowed then
-            FSWriteln(F, 'set AllowDuplicates=yes');
-        If LongLineCorrection Then 
-            FSWriteln(F, 'Set LongLineCorrection=True');
+        if F = NIL then
+            F := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'Master.dss', fmCreate);
         
-        FSWriteln(F, 'Set EarthModel=' + DSS.EarthModelEnum.OrdinalToString(DSS.DefaultEarthModel));
-        Solution.DumpProperties(F, False, False);
-        FSWriteln(F);
-
-        // Write Redirect for all populated DSS Classes  Except Solution Class
-        for i := 1 to DSS.SavedFileList.Count do
+        if header then
         begin
-            FSWrite(F, 'Redirect ');
-            FSWriteln(F, ExtractRelativePath(DSS.CurrentDSSDir, DSS.SavedFileList.Strings[i - 1]));
+            FSWriteln(F, Format('! Last saved by AltDSS/%s on %s',  [VersionString, DateToISO8601(Now())]));
+            FSWriteln(F, 'Clear');
+            FSWriteln(F, 'Set DefaultBaseFreq=', FloatToStr(DSS.DefaultBaseFreq));
+            FSWriteln(F, 'New Circuit.' + Name);
+            FSWriteln(F);
+            If PositiveSequence Then 
+                FSWriteln(F, 'Set Cktmodel=', DSS.CktModelEnum.OrdinalToString(Integer(PositiveSequence)));
+            if DuplicatesAllowed then
+                FSWriteln(F, 'set AllowDuplicates=yes');
+            If LongLineCorrection Then 
+                FSWriteln(F, 'Set LongLineCorrection=True');
+            
+            FSWriteln(F, 'Set EarthModel=' + DSS.EarthModelEnum.OrdinalToString(DSS.DefaultEarthModel));
+            if DSSSaveFlag.IncludeOptions in saveFlags then
+                Solution.DumpProperties(F, False, False);
+            FSWriteln(F);
         end;
 
-        FSWriteln(F, 'MakeBusList');
-        FSWriteln(F, 'Redirect BusVoltageBases.dss  ! set voltage bases');
-
-        if FileExists('BusCoords.dss') then
+        if footer then
         begin
-            FSWriteln(F, 'BusCoords BusCoords.dss');
+            // Write Redirect for all populated DSS Classes  Except Solution Class
+            for i := 1 to DSS.SavedFileList.Count do
+            begin
+                FSWrite(F, 'Redirect ');
+                FSWriteln(F, ExtractRelativePath(DSS.CurrentDSSDir, DSS.SavedFileList.Strings[i - 1]));
+            end;
+
+            FSWriteln(F, 'MakeBusList');
+
+            if not (DSSSaveFlag.SingleFile in saveFlags) then
+            begin
+                FSWriteln(F, 'Redirect BusVoltageBases.dss  ! set voltage bases');
+
+                if FileExists('BusCoords.dss') then
+                begin
+                    FSWriteln(F, 'BusCoords BusCoords.dss');
+                end;
+
+                if DSSSaveFlag.IsOpen in saveFlags then
+                    SaveOpenTerminals(F, saveFlags);                
+            end;
         end;
 
-        FreeAndNil(F);
+        if circF <> F then
+            FreeAndNil(F);
+
         Result := TRUE;
     except
         On E: Exception do
             DoSimpleMsg(DSS, 'Error Saving Master File: %s', [E.Message], 435);
     end;
-    FreeAndNil(F);
+    if circF <> F then
+        FreeAndNil(F);
 end;
 
-function TDSSCircuit.SaveFeeders: Boolean;
+function TDSSCircuit.SaveFeeders(circF: TStream; saveFlags: DSSSaveFlags): Boolean;
 var
     i: Integer;
     SaveDir, CurrDir: String;
@@ -2688,7 +2828,7 @@ begin
         if DirectoryExists(CurrDir) then
         begin
             DSS.SetCurrentDSSDir(CurrDir);
-            Meter.SaveZone();
+            Meter.SaveZone(saveFlags);
             DSS.SetCurrentDSSDir(SaveDir);
         end
         else
@@ -2696,7 +2836,7 @@ begin
             if CreateDir(CurrDir) then
             begin
                 DSS.SetCurrentDSSDir(CurrDir);
-                Meter.SaveZone();
+                Meter.SaveZone(saveFlags);
                 DSS.SetCurrentDSSDir(SaveDir);
             end
             else
@@ -2710,25 +2850,127 @@ begin
     end;
 end;
 
-function TDSSCircuit.SaveBusCoords: Boolean;
+function TDSSCircuit.SaveOpenTerminals(circF: TStream; saveFlags: DSSSaveFlags): Boolean;
 var
-    F: TStream = NIL;
+    F: TStream;
     i: Integer;
+    anyOpen: Boolean = false;
+    elem: TDSSCktElement;
+    termIdx: Integer;
+    numCondOpen: Integer;
+    name: String;
 begin
-    Result := FALSE;
-    try
-        F := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'BusCoords.dss', fmCreate);
+    Result := false;
 
-        for i := 1 to NumBuses do
+    // First, check if there is actually any open terminals
+    for elem in CktElements do
+    begin
+        if not elem.Enabled then
+            continue;
+        if not elem.AllConductorsClosed() then
         begin
-            if Buses[i].CoordDefined then
+            anyOpen := true;
+            break;
+        end;
+    end;
+    if not anyOpen then
+    begin
+        Result := true;
+        Exit;
+    end;
+
+    F := circF;
+    try
+        if F = NIL then
+        begin
+            F := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'OpenTerminals.dss', fmCreate);
+            DSS.SavedFileList.Add(DSS.CurrentDSSDir + 'OpenTerminals.dss');
+        end;
+
+        for elem in CktElements do
+        begin
+            if elem.AllConductorsClosed() then
+                continue;
+
+            name := CheckForBlanks(elem.FullName);
+            for termIdx := 0 to elem.NTerms - 1 do
             begin
-                FSWrite(F, CheckForBlanks(BusList.NameOfIndex(i)));
-                FSWriteLn(F, Format(', %-g, %-g', [Buses[i].X, Buses[i].Y]));
+                numCondOpen := 0;
+                for i := 0 to elem.NConds - 1 do 
+                begin
+                    if not elem.Terminals[termIdx].ConductorsClosed[i] then
+                        numCondOpen += 1;
+                end;
+                if numCondOpen = 0 then
+                    continue;
+
+                if numCondOpen = elem.NConds then
+                begin   
+                    // Open all conductors in the terminal, easy path
+                    FSWriteLn(F, Format('Open %s %d', [name, termIdx + 1]));
+                    continue;
+                end;
+
+                // Open specific conductors
+                for i := 0 to elem.NConds - 1 do 
+                begin
+                    if elem.Terminals[termIdx].ConductorsClosed[i] then
+                        continue;
+
+                    FSWriteLn(F, Format('Open %s %d %d', [name, termIdx + 1, i + 1]));
+                end;
             end;
         end;
 
+        if F <> circF then
+            FreeAndNil(F);
+
+        Result := TRUE;
+    except
+        On E: Exception do
+            DoSimpleMsg(DSS, _('Error creating %s.'), ['OpenTerminals.dss'], 437);
+    end;
+    if F <> circF then
         FreeAndNil(F);
+end;
+
+function TDSSCircuit.SaveBusCoords(circF: TStream; saveFlags: DSSSaveFlags): Boolean;
+var
+    F: TStream;
+    i: Integer;
+begin
+    Result := FALSE;
+    F := circF;
+    try
+        if F = NIL then
+            F := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + 'BusCoords.dss', fmCreate);
+
+        if F <> circF then
+        begin
+            // Separate file, use CSV
+            for i := 1 to NumBuses do
+            begin
+                if Buses[i].CoordDefined then
+                begin
+                    FSWrite(F, CheckForBlanks(BusList.NameOfIndex(i)));
+                    FSWriteLn(F, Format(', %-g, %-g', [Buses[i].X, Buses[i].Y]));
+                end;
+            end;
+        end
+        else
+        begin
+            // Single .DSS file, use commands (SetBusXY)
+            for i := 1 to NumBuses do
+            begin
+                if Buses[i].CoordDefined then
+                begin
+                    FSWriteLn(F, Format('SetBusXY Bus=%s X=%g Y=%g', [CheckForBlanks(BusList.NameOfIndex(i)), Buses[i].X, Buses[i].Y]));
+                end;
+            end;
+        end;
+
+        if F <> circF then
+            FreeAndNil(F);
 
         Result := TRUE;
 
@@ -2736,7 +2978,8 @@ begin
         On E: Exception do
             DoSimpleMsg(DSS, _('Error creating %s.'), ['BusCoords.dss'], 437);
     end;
-    FreeAndNil(F);
+    if F <> circF then
+        FreeAndNil(F);
 end;
 
 procedure TDSSCircuit.ReallocDeviceList;

@@ -190,6 +190,23 @@ extern "C" {
         DSSPropertyNameStyle_Legacy = 2 //< Use the previous capitalization of the property names.
     };
 
+    /*!
+    DSSSaveFlags are bit flags used in the Circuit_Save function to
+    customize the saved circuit.
+    */
+    enum DSSSaveFlags {
+        DSSSaveFlags_CalcVoltageBases = 0x0001, ///< Include the command CalcVoltageBases.
+        DSSSaveFlags_SetVoltageBases = 0x0002, ///< Include commands to set the voltage bases individually.
+        DSSSaveFlags_IncludeOptions = 0x0004, ///< Include most of the options (from the Set/Get DSS commands).
+        DSSSaveFlags_IncludeDisabled = 0x0008, ///< Include disabled circuit elements (and LoadShapes).
+        DSSSaveFlags_ExcludeDefault = 0x0010, ///< Exclude default DSS items if they are not modified by the user.
+        DSSSaveFlags_SingleFile = 0x0020, ///< Use a single file instead of a folder for output.
+        DSSSaveFlags_KeepOrder = 0x0040, ///< Save the circuit elements in the order they were loaded in the active circuit. Guarantees better reproducibility, especially when the system is ill-conditioned. Requires "SingleFile" flag.
+        DSSSaveFlags_ExcludeMeterZones = 0x0080, ///< Do not export meter zones (as "feeders") separately. Has no effect when using a single file.
+        DSSSaveFlags_IsOpen = 0x0100, ///< Export commands to open terminals of elements.
+        DSSSaveFlags_ToString = 0x0200 ///< Export to the result string. Requires "SingleFile" flag.
+    };
+
     enum BatchOperation {
         BatchOperation_Set = 0,
         BatchOperation_Multiply = 1,
@@ -1227,6 +1244,29 @@ extern "C" {
     (API Extension)
     */
     DSS_CAPI_DLL const char* Circuit_ToJSON(int32_t options);
+
+    /*
+    Equivalent of the "save circuit" DSS command, but allows customization
+    through the `saveFlags` argument, which is a set of bit flags. 
+    See the "DSSSaveFlags" enumeration for available flags:
+
+    - `CalcVoltageBases`: Include the command CalcVoltageBases.
+    - `SetVoltageBases`: Include commands to set the voltage bases individually.
+    - `IncludeOptions`: Include most of the options (from the Set/Get DSS commands).
+    - `IncludeDisabled`: Include disabled circuit elements (and LoadShapes).
+    - `ExcludeDefault`: Exclude default DSS items if they are not modified by the user.
+    - `SingleFile`: Use a single file instead of a folder for output.
+    - `KeepOrder`: Save the circuit elements in the order they were loaded in the active circuit. Guarantees better reproducibility, especially when the system is ill-conditioned. Requires "SingleFile" flag.
+    - `ExcludeMeterZones`: Do not export meter zones (as "feeders") separately. Has no effect when using a single file.
+    - `IsOpen`: Export commands to open terminals of elements.
+    - `ToString`: to the result string. Requires "SingleFile" flag.
+
+    If `SingleFile` is enabled, the first argument (`dirOrFilePath`) is the file path,
+    otherwise it is the folder path. For string output, the argument is not used.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL const char* Circuit_Save(const char* dirOrFilePath, int32_t saveFlags);
 
     /*
     EXPERIMENTAL: Loads a full circuit from a JSON-encoded string. The data must 

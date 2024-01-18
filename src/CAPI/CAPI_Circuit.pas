@@ -4,7 +4,8 @@ interface
 
 uses
     CAPI_Utils,
-    CAPI_Types;
+    CAPI_Types,
+    DSSClass;
 
 function Circuit_Get_Name(): PAnsiChar; CDECL;
 function Circuit_Get_NumBuses(): Integer; CDECL;
@@ -78,6 +79,7 @@ procedure Circuit_Get_ElementLosses(var ResultPtr: PDouble; ResultCount: PAPISiz
 procedure Circuit_Get_ElementLosses_GR(ElementsPtr: PInteger; ElementsCount: TAPISize); CDECL;
 function Circuit_ToJSON(options: Integer): PAnsiChar; CDECL;
 procedure Circuit_FromJSON(circStr: PAnsiChar; options: Integer); CDECL;
+function Circuit_Save(dirfilepath: PAnsiChar; saveFlags: DSSSaveFlags): PAnsiChar; CDECL;
 
 implementation
 
@@ -90,7 +92,6 @@ uses
     sysutils,
     CktElement,
     DSSObject,
-    DSSClass,
     Transformer,
     PCElement,
     PDElement,
@@ -1134,6 +1135,16 @@ begin
 
     if errorMsg <> '' then
         DoSimpleMsg(DSSPrime, 'Error converting data from JSON: %s', [errorMsg], 20230919);
+end;
+//------------------------------------------------------------------------------
+function Circuit_Save(dirfilepath: PAnsiChar; saveFlags: DSSSaveFlags): PAnsiChar; CDECL;
+var
+    res: String;
+begin
+    res := '';
+    Result := NIL;
+    if DSSPrime.ActiveCircuit.Save(dirfilepath, @saveFlags, @res) then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, res);
 end;
 //------------------------------------------------------------------------------
 end.

@@ -955,6 +955,29 @@ extern "C" {
     DSS_CAPI_DLL const char* ctx_Circuit_ToJSON(const void* ctx, int32_t options);
 
     /*
+    Equivalent of the "save circuit" DSS command, but allows customization
+    through the `saveFlags` argument, which is a set of bit flags. 
+    See the "DSSSaveFlags" enumeration for available flags:
+
+    - `CalcVoltageBases`: Include the command CalcVoltageBases.
+    - `SetVoltageBases`: Include commands to set the voltage bases individually.
+    - `IncludeOptions`: Include most of the options (from the Set/Get DSS commands).
+    - `IncludeDisabled`: Include disabled circuit elements (and LoadShapes).
+    - `ExcludeDefault`: Exclude default DSS items if they are not modified by the user.
+    - `SingleFile`: Use a single file instead of a folder for output.
+    - `KeepOrder`: Save the circuit elements in the order they were loaded in the active circuit. Guarantees better reproducibility, especially when the system is ill-conditioned. Requires "SingleFile" flag.
+    - `ExcludeMeterZones`: Do not export meter zones (as "feeders") separately. Has no effect when using a single file.
+    - `IsOpen`: Export commands to open terminals of elements.
+    - `ToString`: to the result string. Requires "SingleFile" flag.
+
+    If `SingleFile` is enabled, the first argument (`dirOrFilePath`) is the file path,
+    otherwise it is the folder path. For string output, the argument is not used.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL const char* ctx_Circuit_Save(const void* ctx, const char* dirOrFilePath, int32_t saveFlags);
+
+    /*
     EXPERIMENTAL: Loads a full circuit from a JSON-encoded string. The data must 
     be encoded using the proposed AltDSS Schema, see
     https://github.com/orgs/dss-extensions/discussions/ for links to docs and to

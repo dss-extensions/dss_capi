@@ -81,8 +81,8 @@ function QuadSolver(const a, b, c: Double): Double; // returns largest of two an
 
 
 // Save Function Helper
-function WriteClassFile(DSS: TDSSContext; const DSS_Class: TDSSClass; FileName: String; IsCktElement: Boolean): Boolean;
-function WriteVsourceClassFile(DSS: TDSSContext; const DSS_Class: TDSSClass; IsCktElement: Boolean): Boolean;
+function WriteClassFile(DSS: TDSSContext; circF: TStream; saveFlags: DSSSaveFlags; const DSS_Class: TDSSClass; FileName: String; IsCktElement: Boolean): Boolean;
+function WriteVsourceClassFile(DSS: TDSSContext; circF: TStream; saveFlags: DSSSaveFlags; const DSS_Class: TDSSClass): Boolean;
 procedure WriteDSSObject(obj: TDSSObject; F: TStream; const NeworEdit: String);
 function CheckForBlanks(const S: String): String;
 
@@ -1081,33 +1081,41 @@ begin
         Result := 1.0;
 end;
 
-function WriteVsourceClassFile(DSS: TDSSContext; const DSS_Class: TDSSClass; IsCktElement: Boolean): Boolean;
+function WriteVsourceClassFile(DSS: TDSSContext; circF: TStream; saveFlags: DSSSaveFlags; const DSS_Class: TDSSClass): Boolean;
 // Special Function to write the Vsource class and change the DSS command of the first Source
 // so that there is no problem with duplication when the circuit is subsequently created
 var
-    F: TStream = nil;
+    F: TStream;
     ClassName: String;
+    includeDisabled: Boolean;
 begin
     Result := TRUE;
+    includeDisabled := (DSSSaveFlag.IncludeDisabled in saveFlags);
+
+    F := circF;
     if DSS_Class.ElementCount() = 0 then
         Exit;
     try
         ClassName := DSS_Class.Name;
-        F := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + ClassName + '.dss', fmCreate);
-        DSS.SavedFileList.Add(DSS.CurrentDSSDir + ClassName + '.dss');
+        if F = NIL then
+        begin
+            F := DSS.GetOutputStreamEx(DSS.CurrentDSSDir + ClassName + '.dss', fmCreate);
+            DSS.SavedFileList.Add(DSS.CurrentDSSDir + ClassName + '.dss');
+        end;
         DSS_Class.First();   // Sets DSS.ActiveDSSObject
         WriteDSSObject(DSS.ActiveDSSObject, F, 'Edit'); // Write First Vsource out as an Edit
         while DSS_Class.Next() > 0 do
         begin
-            // Skip Cktelements that have been checked before and written out by
+            // Skip elements that have been checked before and written out by
             // something else
             if Flg.HasBeenSaved in TDSSCktElement(DSS.ActiveDSSObject).Flags then
-                Continue;
+                continue;
+            if (not includeDisabled) and (not TDSSCktElement(DSS.ActiveDSSObject).Enabled) then
+                continue;
             // Skip disabled circuit elements; write all general DSS objects
             WriteDSSObject(DSS.ActiveDSSObject, F, 'New');    // sets HasBeenSaved := TRUE
         end;
         DSS_Class.Saved := TRUE;
-
     except
         On E: Exception do
         begin
@@ -1115,18 +1123,26 @@ begin
             Result := FALSE;
         end;
     end;
-    FreeAndNil(F);
+    if circF <> F then
+        FreeAndNil(F);
 end;
 
-function WriteClassFile(DSS: TDSSContext; const DSS_Class: TDSSClass; FileName: String; IsCktElement: Boolean): Boolean;
+function WriteClassFile(DSS: TDSSContext; circF: TStream; saveFlags: DSSSaveFlags; const DSS_Class: TDSSClass; FileName: String; IsCktElement: Boolean): Boolean;
 var
-    F: TStream = nil;
+    F: TStream;
     ClassName: String;
     Nrecords: Integer = 0;
-    ParClass: TDssClass;
     obj: TDSSObject;
-    elem: TDSSCktElement;
+    excludeDefault: Boolean;
+    includeDisabled: Boolean;
+    isLoadShape: Boolean;
 begin
+    F := circF;
+
+    excludeDefault := (DSSSaveFlag.ExcludeDefault in saveFlags);
+    includeDisabled := (DSSSaveFlag.IncludeDisabled in saveFlags);
+    isLoadShape := AnsiLowerCase(DSS_Class.Name) = 'loadshape';
+
     Result := TRUE;
 
     if DSS_Class.ElementCount() = 0 then
@@ -1134,8 +1150,10 @@ begin
 
     for obj in DSS_Class do
     begin
-        if not (Flg.DefaultAndUnedited in obj.Flags) then
-            inc(Nrecords);
+        if excludeDefault and (Flg.DefaultAndUnedited in obj.Flags) then
+            continue;
+        
+        inc(Nrecords);
     end;
 
     if Nrecords = 0 then
@@ -1145,7 +1163,8 @@ begin
         ClassName := DSS_Class.Name;
         if Length(FileName) = 0 then
             FileName := DSS.CurrentDSSDir + ClassName + '.dss';   // default file name
-        F := DSS.GetOutputStreamEx(FileName, fmCreate);
+        if F = NIL then
+            F := DSS.GetOutputStreamEx(FileName, fmCreate);
 
         Nrecords := 0;
 
@@ -1153,33 +1172,28 @@ begin
         begin
             // Skip Cktelements that have been checked before and written out by
             // something else
-            if IsCktElement then
-            begin
-                elem := TDSSCktElement(obj);
-                if (Flg.HasBeenSaved in elem.Flags) or (not elem.Enabled) then
-                    continue;
-            end;
-            if ((Flg.HasBeenSaved in obj.Flags) or (Flg.DefaultAndUnedited in obj.Flags)) then
+            if IsCktElement and (not includeDisabled) and (not TDSSCktElement(obj).Enabled) then
                 continue;
-
-            ParClass := obj.ParentClass;
-            if AnsiLowerCase(ParClass.Name) = 'loadshape' then
-                if not TLoadShapeObj(obj).Enabled then
-                    continue;
-            WriteDSSObject(obj, F, 'New');  // sets HasBeenSaved := TRUE
+            if (Flg.HasBeenSaved in obj.Flags) then
+                continue;
+            if excludeDefault and (Flg.DefaultAndUnedited in obj.Flags) then
+                continue;
+            if isLoadShape and (not includeDisabled) and (not TLoadShapeObj(obj).Enabled) then
+                continue;
+            WriteDSSObject(obj, F, 'New');  // sets HasBeenSaved
             Inc(Nrecords); // count the actual records
-
         end;
 
-        FreeAndNil(F);
-
-        if Nrecords > 0 then
-            DSS.SavedFileList.Add(FileName)
-        else
-            DeleteFile(FileName);
+        if F <> circF then
+        begin
+            FreeAndNil(F);
+            if Nrecords > 0 then
+                DSS.SavedFileList.Add(FileName)
+            else
+                DeleteFile(FileName);
+        end;
 
         DSS_Class.Saved := TRUE;
-
     except
         On E: Exception do
         begin
@@ -1187,8 +1201,8 @@ begin
             Result := FALSE;
         end;
     end;
-    
-    FreeAndNil(F);
+    if circF <> F then
+        FreeAndNil(F);
 end;
 
 function CheckForBlanks(const S: String): String;

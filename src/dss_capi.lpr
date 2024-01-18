@@ -1980,6 +1980,7 @@ exports
     Circuit_Get_ElementLosses_GR,
     Circuit_ToJSON,
     Circuit_FromJSON,
+    Circuit_Save,
     
     YMatrix_Set_LoadsNeedUpdating,
     YMatrix_Get_LoadsNeedUpdating,
