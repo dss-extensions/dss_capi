@@ -151,6 +151,67 @@ extern "C" {
         StorageStates_Discharging = 1
     };
 
+    /*!
+    \brief Energy meter registers
+
+    This enumeration lists the basic energy meter registers. Extra registers start
+    at `VBaseStart`. This is exposed to make it easier to access common registers
+    without needing to check the register names every time, plus makes it safer to
+    access the registers by index directly without introducing bugs we found in
+    OpenDSS code (both user code and engine code) in the past due to direct use
+    of magic numbers.
+    */
+    enum EnergyMeterRegisters {
+        EnergyMeterRegisters_kWh = 0,
+        EnergyMeterRegisters_kvarh = 1,
+        EnergyMeterRegisters_MaxkW = 2,
+        EnergyMeterRegisters_MaxkVA = 3,
+        EnergyMeterRegisters_ZonekWh = 4,
+        EnergyMeterRegisters_Zonekvarh = 5,
+        EnergyMeterRegisters_ZoneMaxkW = 6,
+        EnergyMeterRegisters_ZoneMaxkVA = 7,
+        EnergyMeterRegisters_OverloadkWhNorm = 8,
+        EnergyMeterRegisters_OverloadkWhEmerg = 9,
+        EnergyMeterRegisters_LoadEEN = 10,
+        EnergyMeterRegisters_LoadUE = 11,
+        EnergyMeterRegisters_ZoneLosseskWh = 12,
+        EnergyMeterRegisters_ZoneLosseskvarh = 13,
+        EnergyMeterRegisters_LossesMaxkW = 14,
+        EnergyMeterRegisters_LossesMaxkvar = 15,
+        EnergyMeterRegisters_LoadLosseskWh = 16,
+        EnergyMeterRegisters_LoadLosseskvarh = 17,
+        EnergyMeterRegisters_NoLoadLosseskWh = 18,
+        EnergyMeterRegisters_NoLoadLosseskvarh = 19,
+        EnergyMeterRegisters_MaxLoadLosses = 20,
+        EnergyMeterRegisters_MaxNoLoadLosses = 21,
+        EnergyMeterRegisters_LineLosseskWh = 22,
+        EnergyMeterRegisters_TransformerLosseskWh = 23,
+        EnergyMeterRegisters_LineModeLineLoss = 24,
+        EnergyMeterRegisters_ZeroModeLineLoss = 25,
+        EnergyMeterRegisters_ThreePhaseLineLoss = 26,
+        EnergyMeterRegisters_OnePhaseLineLoss = 27,
+        EnergyMeterRegisters_GenkWh = 28,
+        EnergyMeterRegisters_Genkvarh = 29,
+        EnergyMeterRegisters_GenMaxkW = 30,
+        EnergyMeterRegisters_GenMaxkVA = 31,
+        EnergyMeterRegisters_VBaseStart = 32 // anchor for the voltage base loss registers
+    };
+
+    /*!
+    \brief Generator registers
+
+    Enumeration of the generator registers by index. 
+    Currently shared between the Generator, Storage and PVSystem models.
+    */
+    enum GeneratorRegisters {
+        GeneratorRegisters_kWh = 0,
+        GeneratorRegisters_kvarh = 1,
+        GeneratorRegisters_MaxkW = 2,
+        GeneratorRegisters_MaxkVA = 3,
+        GeneratorRegisters_Hours = 4,
+        GeneratorRegisters_Price = 5
+    };
+
     /// EXPERIMENTAL: For message/write callbacks
     enum DSSMessageType {
         DSSMessageType_Error = -1,
@@ -169,25 +230,25 @@ extern "C" {
     };
 
     enum DSSJSONFlags {
-        DSSJSONFlags_Full = 0x00000001, //< Return all properties, regardless of order or if the property was filled by the user
-        DSSJSONFlags_SkipRedundant = 0x00000002, //< Skip redundant properties
-        DSSJSONFlags_EnumAsInt = 0x00000004, //< Return enums as integers instead of strings
-        DSSJSONFlags_FullNames = 0x00000008, //< Use full names for the elements, including the class name
-        DSSJSONFlags_Pretty = 0x00000010, //< Try to "pretty" format the JSON output
-        DSSJSONFlags_ExcludeDisabled = 0x00000020, //< Exclude disabled elements (only valid when exporting a collection)
-        DSSJSONFlags_SkipDSSClass = 0x00000040, //< Do not add the "DSSClass" property to the output
-        DSSJSONFlags_LowercaseKeys = 0x00000080, //< Use lowercase representation for the property names (and other keys) instead of the internal variants.
-        DSSJSONFlags_IncludeDefaultObjs = 0x00000100, //< Include default unchanged objects in the exports. Any default object that has been edited is always exported. Affects whole circuit and batch exports.
-        DSSJSONFlags_SkipTimestamp = 0x00000200, //< Skip timestamp/version comment, which is added a pre-command by default. Affects whole circuit exports.
-        DSSJSONFlags_SkipBuses = 0x00000400, //< Skip exporting buses. Affects whole circuit exports.
-        DSSJSONFlags_State = 0x00000800, //< NOT IMPLEMENTED, avoid using until it's implemented.
-        DSSJSONFlags_Debug = 0x00001000 //< NOT IMPLEMENTED, avoid using until it's implemented.
+        DSSJSONFlags_Full = 0x00000001, ///< Return all properties, regardless of order or if the property was filled by the user
+        DSSJSONFlags_SkipRedundant = 0x00000002, ///< Skip redundant properties
+        DSSJSONFlags_EnumAsInt = 0x00000004, ///< Return enums as integers instead of strings
+        DSSJSONFlags_FullNames = 0x00000008, ///< Use full names for the elements, including the class name
+        DSSJSONFlags_Pretty = 0x00000010, ///< Try to "pretty" format the JSON output
+        DSSJSONFlags_ExcludeDisabled = 0x00000020, ///< Exclude disabled elements (only valid when exporting a collection)
+        DSSJSONFlags_SkipDSSClass = 0x00000040, ///< Do not add the "DSSClass" property to the output
+        DSSJSONFlags_LowercaseKeys = 0x00000080, ///< Use lowercase representation for the property names (and other keys) instead of the internal variants.
+        DSSJSONFlags_IncludeDefaultObjs = 0x00000100, ///< Include default unchanged objects in the exports. Any default object that has been edited is always exported. Affects whole circuit and batch exports.
+        DSSJSONFlags_SkipTimestamp = 0x00000200, ///< Skip timestamp/version comment, which is added a pre-command by default. Affects whole circuit exports.
+        DSSJSONFlags_SkipBuses = 0x00000400 ///< Skip exporting buses. Affects whole circuit exports.
+        // DSSJSONFlags_State = 0x00000800, ///< NOT IMPLEMENTED, avoid using until it's implemented.
+        // DSSJSONFlags_Debug = 0x00001000 ///< NOT IMPLEMENTED, avoid using until it's implemented.
     };
 
     enum DSSPropertyNameStyle {
-        DSSPropertyNameStyle_Modern = 0, //< By default, the modern names are used. The names were reviewed to try to reach a convention across all components.
-        DSSPropertyNameStyle_Lowercase = 1, //< Use all lowercase strings.
-        DSSPropertyNameStyle_Legacy = 2 //< Use the previous capitalization of the property names.
+        DSSPropertyNameStyle_Modern = 0, ///< By default, the modern names are used. The names were reviewed to try to reach a convention across all components.
+        DSSPropertyNameStyle_Lowercase = 1, ///< Use all lowercase strings.
+        DSSPropertyNameStyle_Legacy = 2 ///< Use the previous capitalization of the property names.
     };
 
     /*!
