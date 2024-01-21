@@ -65,6 +65,10 @@ end;
 procedure Error_Set_Description(Value: PAnsiChar); CDECL;
 begin
     DSSPrime.LastErrorMessage := Value;
+    if DSS_CAPI_EARLY_ABORT then
+    begin
+        DSSPrime.SolutionAbort := true;
+    end;
 end;
 //------------------------------------------------------------------------------
 
