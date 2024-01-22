@@ -95,6 +95,9 @@ extern "C" {
     DSS_CAPI_DLL uint16_t ctx_DSSEvents_RegisterAlt(const void* ctx, int32_t evt, altdss_callback_event_t cb);
     DSS_CAPI_DLL uint16_t ctx_DSSEvents_UnregisterAlt(const void* ctx, int32_t evt, altdss_callback_event_t cb);
 
+    /*!
+    Make a new circuit and activates it.
+    */
     DSS_CAPI_DLL void ctx_DSS_NewCircuit(const void* ctx, const char* Value);
 
     /*! 
@@ -107,12 +110,18 @@ extern "C" {
     DSS_CAPI_DLL void ctx_ActiveClass_Get_AllNames_GR(const void* ctx);
 
     /*! 
-    Sets first element in the active class to be the active DSS object. If object is a CktElement, ActiveCktElement also points to this element. Returns 0 if none.
+    Sets first element in the active class to be the active DSS object. 
+    If the object is a CktElement, ActiveCktELement also points to this element. 
+
+    Returns 0 if none.
     */
     DSS_CAPI_DLL int32_t ctx_ActiveClass_Get_First(const void* ctx);
 
     /*! 
-    Sets next element in active class to be the active DSS object. If object is a CktElement, ActiveCktElement also points to this element.  Returns 0 if no more.
+    Sets next element in active class to be the active DSS object. 
+    If the object is a CktElement, ActiveCktElement also points to this element.
+
+    Returns 0 if no more.
     */
     DSS_CAPI_DLL int32_t ctx_ActiveClass_Get_Next(const void* ctx);
 
@@ -504,7 +513,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t ctx_Capacitors_Get_AvailableSteps(const void* ctx);
 
     /*! 
-    A array of  integer [0..numsteps-1] indicating state of each step. If value is -1 an error has occurred.
+    An array of integers [0..NumSteps-1] indicating state of each step. If the read value is -1 an error has occurred.
     */
     DSS_CAPI_DLL void ctx_Capacitors_Get_States(const void* ctx, int32_t** ResultPtr, int32_t* ResultDims);
     /*! 
@@ -1400,22 +1409,38 @@ extern "C" {
     */
     DSS_CAPI_DLL void ctx_CmathLib_Get_cdiv_GR(const void* ctx, double a1, double b1, double a2, double b2);
 
+    /*!
+    Clear the control queue.
+    */
     DSS_CAPI_DLL void ctx_CtrlQueue_ClearQueue(const void* ctx);
 
+    /*!
+    Delete an Action from the DSS Control Queue by the handle that is returned when the action is added.
+    
+    (The Push function returns the handle.)
+    */
     DSS_CAPI_DLL void ctx_CtrlQueue_Delete(const void* ctx, int32_t ActionHandle);
 
     /*! 
-    Code for the active action. Long integer code to tell the control device what to do
+    Code for the active action. Integer code to tell the control device what to do.
+    
+    Use this to determine what the user-defined controls are supposed to do.
+    It can be any 32-bit integer of the user's choosing and is the same value that the control pushed onto the control queue earlier.
     */
     DSS_CAPI_DLL int32_t ctx_CtrlQueue_Get_ActionCode(const void* ctx);
 
     /*! 
-    Handle (User defined) to device that must act on the pending action.
+    Handle (user defined) to device that must act on the pending action.
+    
+    The user-written code driving the interface may support more than one 
+    control element as necessary to perform the simulation. This handle is
+    an index returned to the user program that lets the program know which
+    control is to perform the active action.        
     */
     DSS_CAPI_DLL int32_t ctx_CtrlQueue_Get_DeviceHandle(const void* ctx);
 
     /*! 
-    Number of Actions on the current actionlist (that have been popped off the control queue by CheckControlActions)
+    Number of Actions on the current action list (that have been popped off the control queue by CheckControlActions)
     */
     DSS_CAPI_DLL int32_t ctx_CtrlQueue_Get_NumActions(const void* ctx);
 
@@ -1424,8 +1449,14 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t ctx_CtrlQueue_Push(const void* ctx, int32_t Hour, double Seconds, int32_t ActionCode, int32_t DeviceHandle);
 
+    /*!
+    Export the queue to a CSV table and show it.    
+    */
     DSS_CAPI_DLL void ctx_CtrlQueue_Show(const void* ctx);
 
+    /*!
+    Clear all actions from the Control Proxy's Action List (they are popped off the list). 
+    */
     DSS_CAPI_DLL void ctx_CtrlQueue_ClearActions(const void* ctx);
 
     /*! 
@@ -1443,6 +1474,11 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t ctx_CtrlQueue_Get_QueueSize(const void* ctx);
 
+    /*!
+    Execute all actions currently on the Control Queue. 
+
+    Side effect: clears the queue.    
+    */
     DSS_CAPI_DLL void ctx_CtrlQueue_DoAllQueue(const void* ctx);
 
     /*! 
@@ -1703,6 +1739,9 @@ extern "C" {
     */
     DSS_CAPI_DLL const char* ctx_DSSProperty_Get_Name(const void* ctx);
 
+    /*!
+    Get/set the value of the active property. The value must be specified as a string.
+    */
     DSS_CAPI_DLL const char* ctx_DSSProperty_Get_Val(const void* ctx);
 
     DSS_CAPI_DLL void ctx_DSSProperty_Set_Val(const void* ctx, const char* Value);
@@ -1951,6 +1990,8 @@ extern "C" {
 
     /*! 
     Array of Names of all generator energy meter registers
+    
+    See also the enum `GeneratorRegisters`.
     */
     DSS_CAPI_DLL void ctx_Generators_Get_RegisterNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims);
     /*! 
@@ -3136,6 +3177,9 @@ extern "C" {
     */
     DSS_CAPI_DLL void ctx_LoadShapes_Set_Qmult(const void* ctx, const double* ValuePtr, int32_t ValueCount);
 
+    /*!
+    Normalize the LoadShape data inplace
+    */
     DSS_CAPI_DLL void ctx_LoadShapes_Normalize(const void* ctx);
 
     /*! 
@@ -3153,7 +3197,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_LoadShapes_Set_TimeArray(const void* ctx, const double* ValuePtr, int32_t ValueCount);
 
     /*! 
-    Fixed interval time value, hours
+    Fixed interval time value, in hours
     */
     DSS_CAPI_DLL double ctx_LoadShapes_Get_HrInterval(const void* ctx);
 
@@ -3163,17 +3207,17 @@ extern "C" {
     DSS_CAPI_DLL double ctx_LoadShapes_Get_MinInterval(const void* ctx);
 
     /*! 
-    Fixed interval data time interval, seconds
+    Fixed interval data time interval, in seconds
     */
     DSS_CAPI_DLL double ctx_LoadShapes_Get_SInterval(const void* ctx);
 
     /*! 
-    Fixed interval data time interval, seconds
+    Fixed interval data time interval, in seconds
     */
     DSS_CAPI_DLL void ctx_LoadShapes_Set_SInterval(const void* ctx, double Value);
 
     /*! 
-    Fixed interval time value, hours.
+    Fixed interval time value, in hours.
     */
     DSS_CAPI_DLL void ctx_LoadShapes_Set_HrInterval(const void* ctx, double Value);
 
@@ -3185,6 +3229,9 @@ extern "C" {
 
     DSS_CAPI_DLL int32_t ctx_LoadShapes_New(const void* ctx, const char* Name);
 
+    /*!
+    Base P value for normalization. Default is zero, meaning the peak will be used.    
+    */
     DSS_CAPI_DLL double ctx_LoadShapes_Get_PBase(const void* ctx);
 
     /*! 
@@ -3192,6 +3239,9 @@ extern "C" {
     */
     DSS_CAPI_DLL double ctx_LoadShapes_Get_Qbase(const void* ctx);
 
+    /*!
+    Base P value for normalization. Default is zero, meaning the peak will be used.    
+    */
     DSS_CAPI_DLL void ctx_LoadShapes_Set_PBase(const void* ctx, double Value);
 
     /*! 
@@ -3377,7 +3427,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Meters_Get_AllBranchesInZone_GR(const void* ctx);
 
     /*! 
-    Number of branches in Active energymeter zone. (Same as sequencelist size)
+    Number of branches in Active Energy Meter zone. (Same as sequence list size)
     */
     DSS_CAPI_DLL int32_t ctx_Meters_Get_CountBranches(const void* ctx);
 
@@ -3510,12 +3560,28 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t ctx_Monitors_Get_Next(const void* ctx);
 
+    /*!
+    Reset active Monitor object.
+    */
     DSS_CAPI_DLL void ctx_Monitors_Reset(const void* ctx);
 
+    /*!
+    Reset all Monitor objects.
+    */
     DSS_CAPI_DLL void ctx_Monitors_ResetAll(const void* ctx);
 
+    /*!
+    Instruct the active Monitor to take a sample of the present state.
+    */
     DSS_CAPI_DLL void ctx_Monitors_Sample(const void* ctx);
 
+    /*!
+    Instructs the active monitor to save its current sample buffer to its monitor stream.
+
+    After the data is on the stream, you can access the ByteStream or channel data.
+
+    **Most standard solution modes do this automatically.**
+    */
     DSS_CAPI_DLL void ctx_Monitors_Save(const void* ctx);
 
     /*! 
@@ -3523,6 +3589,9 @@ extern "C" {
     */
     DSS_CAPI_DLL void ctx_Monitors_Set_Mode(const void* ctx, int32_t Value);
 
+    /*!
+    Convert the monitor data to text and displays it with the text editor.
+    */
     DSS_CAPI_DLL void ctx_Monitors_Show(const void* ctx);
 
     /*! 
@@ -3544,8 +3613,16 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t ctx_Monitors_Get_SampleCount(const void* ctx);
 
+    /*!
+    Instruct all Monitor objects to take a sample of the present state.    
+    */
     DSS_CAPI_DLL void ctx_Monitors_SampleAll(const void* ctx);
 
+    /*!
+    Instructs the all monitor objects to save their current sample buffers to the respective monitor streams.
+    
+    **Most standard solution modes do this automatically.**
+    */
     DSS_CAPI_DLL void ctx_Monitors_SaveAll(const void* ctx);
 
     /*! 
@@ -3553,12 +3630,25 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t ctx_Monitors_Get_Count(const void* ctx);
 
+    /*!
+    Post-process monitor samples taken so far, e.g., Pst for mode=4.
+    */
     DSS_CAPI_DLL void ctx_Monitors_Process(const void* ctx);
 
+    /*!
+    Post-process all monitor samples taken so far, e.g., Pst for mode=4.
+    */
     DSS_CAPI_DLL void ctx_Monitors_ProcessAll(const void* ctx);
 
     /*! 
-    Array of doubles for the specified channel  (usage: MyArray = DSSMonitor.Channel(i)) A Save or SaveAll  should be executed first. Done automatically by most standard solution modes.
+    Array of doubles for the specified channel  
+    
+    usage: `MyArray = DSSMonitor.Channel(i)`
+    
+    A `Save` or `SaveAll` should be executed first, which is done automatically by most standard solution modes.
+
+    Note: it might be beneficial to use process the ByteStream directly in your programming language. For example,
+    see the DSS-Python's implementation for `Channel` and `AsMatrix`.
     */
     DSS_CAPI_DLL void ctx_Monitors_Get_Channel(const void* ctx, double** ResultPtr, int32_t* ResultDims, int32_t Index);
     /*! 
@@ -3648,6 +3738,9 @@ extern "C" {
     */
     DSS_CAPI_DLL void ctx_Parallel_Set_ActiveActor(const void* ctx, int32_t Value);
 
+    /*!
+    Create a new actor, if there are still cores available.    
+    */
     DSS_CAPI_DLL void ctx_Parallel_CreateActor(const void* ctx);
 
     /*! 
@@ -3665,6 +3758,9 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t ctx_Parallel_Get_NumOfActors(const void* ctx);
 
+    /*!
+    Suspends the host's thread until all the OpenDSS running jobs finish.
+    */
     DSS_CAPI_DLL void ctx_Parallel_Wait(const void* ctx);
 
     /*! 
@@ -4101,7 +4197,9 @@ extern "C" {
     DSS_CAPI_DLL void ctx_PVSystems_Get_AllNames_GR(const void* ctx);
 
     /*! 
-    Array of PVSYSTEM energy meter register names
+    Array of PVSystem energy meter register names
+    
+    See also the enum `GeneratorRegisters`.
     */
     DSS_CAPI_DLL void ctx_PVSystems_Get_RegisterNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims);
     /*! 
@@ -5607,7 +5705,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_SwtControls_Get_AllNames_GR(const void* ctx);
 
     /*! 
-    Time delay [s] betwen arming and opening or closing the switch.  Control may reset before actually operating the switch.
+    Time delay [s] between arming and opening or closing the switch.  Control may reset before actually operating the switch.
     */
     DSS_CAPI_DLL double ctx_SwtControls_Get_Delay(const void* ctx);
 
@@ -5647,7 +5745,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_SwtControls_Set_Action(const void* ctx, int32_t Value);
 
     /*! 
-    Time delay [s] betwen arming and opening or closing the switch.  Control may reset before actually operating the switch.
+    Time delay [s] between arming and opening or closing the switch.  Control may reset before actually operating the switch.
     */
     DSS_CAPI_DLL void ctx_SwtControls_Set_Delay(const void* ctx, double Value);
 
@@ -5674,7 +5772,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t ctx_SwtControls_Get_Count(const void* ctx);
 
     /*! 
-    Normal state of switch (see ActionCodes) ActionOpen or ActionClose
+    Normal state of switch (see ActionCodes enum), ActionOpen or ActionClose
     */
     DSS_CAPI_DLL int32_t ctx_SwtControls_Get_NormalState(const void* ctx);
 
@@ -5863,7 +5961,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t ctx_Transformers_Get_Next(const void* ctx);
 
     /*! 
-    Active Winding number of tap steps betwein MinTap and MaxTap.
+    Active Winding number of tap steps between MinTap and MaxTap.
     */
     DSS_CAPI_DLL int32_t ctx_Transformers_Get_NumTaps(const void* ctx);
 
@@ -6316,7 +6414,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_ReduceCkt_Set_StartPDElement(const void* ctx, const char* Value);
 
     /*! 
-    Name of Energymeter to use for reduction
+    Name of EnergyMeter to use for reduction
     */
     DSS_CAPI_DLL char *ctx_ReduceCkt_Get_EnergyMeter(const void* ctx);
     DSS_CAPI_DLL void ctx_ReduceCkt_Set_EnergyMeter(const void* ctx, const char* Value);
@@ -6342,10 +6440,37 @@ extern "C" {
     */
     DSS_CAPI_DLL void ctx_ReduceCkt_DoDangling(const void* ctx);
 
+    /*!
+    Break (disable) all the loops found in the active circuit.
+
+    Disables one of the Line objects at the head of a loop to force the circuit to be radial.
+    */
     DSS_CAPI_DLL void ctx_ReduceCkt_DoLoopBreak(const void* ctx);
+
+    /*!
+    Merge all parallel lines found in the circuit to facilitate its reduction.
+    */
     DSS_CAPI_DLL void ctx_ReduceCkt_DoParallelLines(const void* ctx);
+
+    /*!
+    Merge Line objects in which the IsSwitch property is true with the down-line Line object.
+    */
     DSS_CAPI_DLL void ctx_ReduceCkt_DoSwitches(const void* ctx);
+
+    /*!
+    Remove all 1-phase laterals in the active EnergyMeter's zone.
+
+    Loads and other shunt elements are moved to the parent 3-phase bus.
+    */
     DSS_CAPI_DLL void ctx_ReduceCkt_Do1phLaterals(const void* ctx);
+
+    /*!
+    Remove (disable) all branches down-line from the active PDElement. 
+    
+    Circuit must have an EnergyMeter on this branch.
+    If KeepLoad=Y (default), a new Load element is defined and kW, kvar are set to present power flow solution for the first element eliminated. 
+    The EditString is applied to each new Load element defined. 
+    */
     DSS_CAPI_DLL void ctx_ReduceCkt_DoBranchRemove(const void* ctx);
 
     /*! 
@@ -6389,7 +6514,9 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Storages_Set_Name(const void* ctx, const char* Value);
 
     /*! 
-    Array of Names of all Storage energy meter registers
+    Array of Storage energy meter register names
+    
+    See also the enum `GeneratorRegisters`.
     */
     DSS_CAPI_DLL void ctx_Storages_Get_RegisterNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims);
 
