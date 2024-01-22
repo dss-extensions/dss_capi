@@ -447,6 +447,9 @@ extern "C" {
     DSS_CAPI_DLL uint16_t DSSEvents_RegisterAlt(int32_t evt, altdss_callback_event_t cb);
     DSS_CAPI_DLL uint16_t DSSEvents_UnregisterAlt(int32_t evt, altdss_callback_event_t cb);
 
+    /*!
+    Make a new circuit and activates it.
+    */
     DSS_CAPI_DLL void DSS_NewCircuit(const char* Value);
 
     /*! 
@@ -459,12 +462,18 @@ extern "C" {
     DSS_CAPI_DLL void ActiveClass_Get_AllNames_GR(void);
 
     /*! 
-    Sets first element in the active class to be the active DSS object. If object is a CktElement, ActiveCktElement also points to this element. Returns 0 if none.
+    Sets first element in the active class to be the active DSS object. 
+    If the object is a CktElement, ActiveCktELement also points to this element. 
+
+    Returns 0 if none.
     */
     DSS_CAPI_DLL int32_t ActiveClass_Get_First(void);
 
     /*! 
-    Sets next element in active class to be the active DSS object. If object is a CktElement, ActiveCktElement also points to this element.  Returns 0 if no more.
+    Sets next element in active class to be the active DSS object. 
+    If the object is a CktElement, ActiveCktElement also points to this element.
+
+    Returns 0 if no more.
     */
     DSS_CAPI_DLL int32_t ActiveClass_Get_Next(void);
 
@@ -856,7 +865,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t Capacitors_Get_AvailableSteps(void);
 
     /*! 
-    A array of  integer [0..numsteps-1] indicating state of each step. If value is -1 an error has occurred.
+    An array of integers [0..NumSteps-1] indicating state of each step. If the read value is -1 an error has occurred.
     */
     DSS_CAPI_DLL void Capacitors_Get_States(int32_t** ResultPtr, int32_t* ResultDims);
     /*! 
@@ -1752,22 +1761,38 @@ extern "C" {
     */
     DSS_CAPI_DLL void CmathLib_Get_cdiv_GR(double a1, double b1, double a2, double b2);
 
+    /*!
+    Clear the control queue.
+    */
     DSS_CAPI_DLL void CtrlQueue_ClearQueue(void);
 
+    /*!
+    Delete an Action from the DSS Control Queue by the handle that is returned when the action is added.
+    
+    (The Push function returns the handle.)
+    */
     DSS_CAPI_DLL void CtrlQueue_Delete(int32_t ActionHandle);
 
     /*! 
-    Code for the active action. Long integer code to tell the control device what to do
+    Code for the active action. Integer code to tell the control device what to do.
+    
+    Use this to determine what the user-defined controls are supposed to do.
+    It can be any 32-bit integer of the user's choosing and is the same value that the control pushed onto the control queue earlier.
     */
     DSS_CAPI_DLL int32_t CtrlQueue_Get_ActionCode(void);
 
     /*! 
-    Handle (User defined) to device that must act on the pending action.
+    Handle (user defined) to device that must act on the pending action.
+    
+    The user-written code driving the interface may support more than one 
+    control element as necessary to perform the simulation. This handle is
+    an index returned to the user program that lets the program know which
+    control is to perform the active action.        
     */
     DSS_CAPI_DLL int32_t CtrlQueue_Get_DeviceHandle(void);
 
     /*! 
-    Number of Actions on the current actionlist (that have been popped off the control queue by CheckControlActions)
+    Number of Actions on the current action list (that have been popped off the control queue by CheckControlActions)
     */
     DSS_CAPI_DLL int32_t CtrlQueue_Get_NumActions(void);
 
@@ -1776,8 +1801,14 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t CtrlQueue_Push(int32_t Hour, double Seconds, int32_t ActionCode, int32_t DeviceHandle);
 
+    /*!
+    Export the queue to a CSV table and show it.    
+    */
     DSS_CAPI_DLL void CtrlQueue_Show(void);
 
+    /*!
+    Clear all actions from the Control Proxy's Action List (they are popped off the list). 
+    */
     DSS_CAPI_DLL void CtrlQueue_ClearActions(void);
 
     /*! 
@@ -1795,6 +1826,11 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t CtrlQueue_Get_QueueSize(void);
 
+    /*!
+    Execute all actions currently on the Control Queue. 
+
+    Side effect: clears the queue.    
+    */
     DSS_CAPI_DLL void CtrlQueue_DoAllQueue(void);
 
     /*! 
@@ -2055,6 +2091,9 @@ extern "C" {
     */
     DSS_CAPI_DLL const char* DSSProperty_Get_Name(void);
 
+    /*!
+    Get/set the value of the active property. The value must be specified as a string.
+    */
     DSS_CAPI_DLL const char* DSSProperty_Get_Val(void);
 
     DSS_CAPI_DLL void DSSProperty_Set_Val(const char* Value);
@@ -2303,6 +2342,8 @@ extern "C" {
 
     /*! 
     Array of Names of all generator energy meter registers
+    
+    See also the enum `GeneratorRegisters`.
     */
     DSS_CAPI_DLL void Generators_Get_RegisterNames(char*** ResultPtr, int32_t* ResultDims);
     /*! 
@@ -3488,6 +3529,9 @@ extern "C" {
     */
     DSS_CAPI_DLL void LoadShapes_Set_Qmult(const double* ValuePtr, int32_t ValueCount);
 
+    /*!
+    Normalize the LoadShape data inplace
+    */
     DSS_CAPI_DLL void LoadShapes_Normalize(void);
 
     /*! 
@@ -3505,7 +3549,7 @@ extern "C" {
     DSS_CAPI_DLL void LoadShapes_Set_TimeArray(const double* ValuePtr, int32_t ValueCount);
 
     /*! 
-    Fixed interval time value, hours
+    Fixed interval time value, in hours
     */
     DSS_CAPI_DLL double LoadShapes_Get_HrInterval(void);
 
@@ -3515,17 +3559,17 @@ extern "C" {
     DSS_CAPI_DLL double LoadShapes_Get_MinInterval(void);
 
     /*! 
-    Fixed interval data time interval, seconds
+    Fixed interval data time interval, in seconds
     */
     DSS_CAPI_DLL double LoadShapes_Get_SInterval(void);
 
     /*! 
-    Fixed interval data time interval, seconds
+    Fixed interval data time interval, in seconds
     */
     DSS_CAPI_DLL void LoadShapes_Set_SInterval(double Value);
 
     /*! 
-    Fixed interval time value, hours.
+    Fixed interval time value, in hours.
     */
     DSS_CAPI_DLL void LoadShapes_Set_HrInterval(double Value);
 
@@ -3537,6 +3581,9 @@ extern "C" {
 
     DSS_CAPI_DLL int32_t LoadShapes_New(const char* Name);
 
+    /*!
+    Base P value for normalization. Default is zero, meaning the peak will be used.    
+    */
     DSS_CAPI_DLL double LoadShapes_Get_PBase(void);
 
     /*! 
@@ -3544,6 +3591,9 @@ extern "C" {
     */
     DSS_CAPI_DLL double LoadShapes_Get_Qbase(void);
 
+    /*!
+    Base P value for normalization. Default is zero, meaning the peak will be used.    
+    */
     DSS_CAPI_DLL void LoadShapes_Set_PBase(double Value);
 
     /*! 
@@ -3729,7 +3779,7 @@ extern "C" {
     DSS_CAPI_DLL void Meters_Get_AllBranchesInZone_GR(void);
 
     /*! 
-    Number of branches in Active energymeter zone. (Same as sequencelist size)
+    Number of branches in Active Energy Meter zone. (Same as sequence list size)
     */
     DSS_CAPI_DLL int32_t Meters_Get_CountBranches(void);
 
@@ -3862,12 +3912,28 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t Monitors_Get_Next(void);
 
+    /*!
+    Reset active Monitor object.
+    */
     DSS_CAPI_DLL void Monitors_Reset(void);
 
+    /*!
+    Reset all Monitor objects.
+    */
     DSS_CAPI_DLL void Monitors_ResetAll(void);
 
+    /*!
+    Instruct the active Monitor to take a sample of the present state.
+    */
     DSS_CAPI_DLL void Monitors_Sample(void);
 
+    /*!
+    Instructs the active monitor to save its current sample buffer to its monitor stream.
+
+    After the data is on the stream, you can access the ByteStream or channel data.
+
+    **Most standard solution modes do this automatically.**
+    */
     DSS_CAPI_DLL void Monitors_Save(void);
 
     /*! 
@@ -3875,6 +3941,9 @@ extern "C" {
     */
     DSS_CAPI_DLL void Monitors_Set_Mode(int32_t Value);
 
+    /*!
+    Convert the monitor data to text and displays it with the text editor.
+    */
     DSS_CAPI_DLL void Monitors_Show(void);
 
     /*! 
@@ -3896,8 +3965,16 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t Monitors_Get_SampleCount(void);
 
+    /*!
+    Instruct all Monitor objects to take a sample of the present state.    
+    */
     DSS_CAPI_DLL void Monitors_SampleAll(void);
 
+    /*!
+    Instructs the all monitor objects to save their current sample buffers to the respective monitor streams.
+    
+    **Most standard solution modes do this automatically.**
+    */
     DSS_CAPI_DLL void Monitors_SaveAll(void);
 
     /*! 
@@ -3905,12 +3982,25 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t Monitors_Get_Count(void);
 
+    /*!
+    Post-process monitor samples taken so far, e.g., Pst for mode=4.
+    */
     DSS_CAPI_DLL void Monitors_Process(void);
 
+    /*!
+    Post-process all monitor samples taken so far, e.g., Pst for mode=4.
+    */
     DSS_CAPI_DLL void Monitors_ProcessAll(void);
 
     /*! 
-    Array of doubles for the specified channel  (usage: MyArray = DSSMonitor.Channel(i)) A Save or SaveAll  should be executed first. Done automatically by most standard solution modes.
+    Array of doubles for the specified channel  
+    
+    usage: `MyArray = DSSMonitor.Channel(i)`
+    
+    A `Save` or `SaveAll` should be executed first, which is done automatically by most standard solution modes.
+
+    Note: it might be beneficial to use process the ByteStream directly in your programming language. For example,
+    see the DSS-Python's implementation for `Channel` and `AsMatrix`.
     */
     DSS_CAPI_DLL void Monitors_Get_Channel(double** ResultPtr, int32_t* ResultDims, int32_t Index);
     /*! 
@@ -4000,6 +4090,9 @@ extern "C" {
     */
     DSS_CAPI_DLL void Parallel_Set_ActiveActor(int32_t Value);
 
+    /*!
+    Create a new actor, if there are still cores available.    
+    */
     DSS_CAPI_DLL void Parallel_CreateActor(void);
 
     /*! 
@@ -4017,6 +4110,9 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t Parallel_Get_NumOfActors(void);
 
+    /*!
+    Suspends the host's thread until all the OpenDSS running jobs finish.
+    */
     DSS_CAPI_DLL void Parallel_Wait(void);
 
     /*! 
@@ -4453,7 +4549,9 @@ extern "C" {
     DSS_CAPI_DLL void PVSystems_Get_AllNames_GR(void);
 
     /*! 
-    Array of PVSYSTEM energy meter register names
+    Array of PVSystem energy meter register names
+    
+    See also the enum `GeneratorRegisters`.
     */
     DSS_CAPI_DLL void PVSystems_Get_RegisterNames(char*** ResultPtr, int32_t* ResultDims);
     /*! 
@@ -5959,7 +6057,7 @@ extern "C" {
     DSS_CAPI_DLL void SwtControls_Get_AllNames_GR(void);
 
     /*! 
-    Time delay [s] betwen arming and opening or closing the switch.  Control may reset before actually operating the switch.
+    Time delay [s] between arming and opening or closing the switch.  Control may reset before actually operating the switch.
     */
     DSS_CAPI_DLL double SwtControls_Get_Delay(void);
 
@@ -5999,7 +6097,7 @@ extern "C" {
     DSS_CAPI_DLL void SwtControls_Set_Action(int32_t Value);
 
     /*! 
-    Time delay [s] betwen arming and opening or closing the switch.  Control may reset before actually operating the switch.
+    Time delay [s] between arming and opening or closing the switch.  Control may reset before actually operating the switch.
     */
     DSS_CAPI_DLL void SwtControls_Set_Delay(double Value);
 
@@ -6026,7 +6124,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t SwtControls_Get_Count(void);
 
     /*! 
-    Normal state of switch (see ActionCodes) ActionOpen or ActionClose
+    Normal state of switch (see ActionCodes enum), ActionOpen or ActionClose
     */
     DSS_CAPI_DLL int32_t SwtControls_Get_NormalState(void);
 
@@ -6215,7 +6313,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t Transformers_Get_Next(void);
 
     /*! 
-    Active Winding number of tap steps betwein MinTap and MaxTap.
+    Active Winding number of tap steps between MinTap and MaxTap.
     */
     DSS_CAPI_DLL int32_t Transformers_Get_NumTaps(void);
 
@@ -6668,7 +6766,7 @@ extern "C" {
     DSS_CAPI_DLL void ReduceCkt_Set_StartPDElement(const char* Value);
 
     /*! 
-    Name of Energymeter to use for reduction
+    Name of EnergyMeter to use for reduction
     */
     DSS_CAPI_DLL char *ReduceCkt_Get_EnergyMeter(void);
     DSS_CAPI_DLL void ReduceCkt_Set_EnergyMeter(const char* Value);
@@ -6694,10 +6792,37 @@ extern "C" {
     */
     DSS_CAPI_DLL void ReduceCkt_DoDangling(void);
 
+    /*!
+    Break (disable) all the loops found in the active circuit.
+
+    Disables one of the Line objects at the head of a loop to force the circuit to be radial.
+    */
     DSS_CAPI_DLL void ReduceCkt_DoLoopBreak(void);
+
+    /*!
+    Merge all parallel lines found in the circuit to facilitate its reduction.
+    */
     DSS_CAPI_DLL void ReduceCkt_DoParallelLines(void);
+
+    /*!
+    Merge Line objects in which the IsSwitch property is true with the down-line Line object.
+    */
     DSS_CAPI_DLL void ReduceCkt_DoSwitches(void);
+
+    /*!
+    Remove all 1-phase laterals in the active EnergyMeter's zone.
+
+    Loads and other shunt elements are moved to the parent 3-phase bus.
+    */
     DSS_CAPI_DLL void ReduceCkt_Do1phLaterals(void);
+
+    /*!
+    Remove (disable) all branches down-line from the active PDElement. 
+    
+    Circuit must have an EnergyMeter on this branch.
+    If KeepLoad=Y (default), a new Load element is defined and kW, kvar are set to present power flow solution for the first element eliminated. 
+    The EditString is applied to each new Load element defined. 
+    */
     DSS_CAPI_DLL void ReduceCkt_DoBranchRemove(void);
 
     /*! 
@@ -6741,7 +6866,9 @@ extern "C" {
     DSS_CAPI_DLL void Storages_Set_Name(const char* Value);
 
     /*! 
-    Array of Names of all Storage energy meter registers
+    Array of Storage energy meter register names
+    
+    See also the enum `GeneratorRegisters`.
     */
     DSS_CAPI_DLL void Storages_Get_RegisterNames(char*** ResultPtr, int32_t* ResultDims);
 
