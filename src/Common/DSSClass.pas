@@ -92,7 +92,9 @@ type
         // for other components if we think it fits.
         AvoidFullRecalc = 1,
 
-        Reserved2 = 2,
+        // For batch operations, skip NA values -- values of NaN for float64, INT32_MIN (0x80000000) for int32, null pointers for strings.
+        SkipNA = 2,
+
         Reserved3 = 3,
         Reserved4 = 4,
         Reserved5 = 5,

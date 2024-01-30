@@ -1623,6 +1623,7 @@ var
     doublePtr: PDouble;
     propFlags: TPropertyFlags;
     singleEdit: Boolean;
+    allowNA: Boolean;
 begin
     if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
@@ -1638,23 +1639,30 @@ begin
     ]) then
         Exit;
 
+    allowNA := not (TDSSPropertySetterFlag.SkipNA in setterFlags);
+
     if (cls.PropertyType[Index] = TPropertyType.DoubleProperty) and
         (propFlags = []) and
         (cls.PropertyScale[Index] = 1) then
     begin
+        // Faster path
         for i := 1 to batchSize do
         begin
-            singleEdit := not (Flg.EditingActive in batch^.Flags);
-            if singleEdit then
-                cls.BeginEdit(batch^, False);
+            // check for each element, in case the element is being edited somewhere else
+            if (allowNA) or (not IsNaN(Value^)) then
+            begin
+                singleEdit := not (Flg.EditingActive in batch^.Flags);
+                if singleEdit then
+                    cls.BeginEdit(batch^, False);
 
-            doublePtr := PDouble(PtrUint(batch^) + propOffset);
-            prev := doubleptr^;
-            doublePtr^ := Value^;
-            batch^.PropertySideEffects(Index, Round(prev), setterFlags);
+                doublePtr := PDouble(PtrUint(batch^) + propOffset);
+                prev := doubleptr^;
+                doublePtr^ := Value^;
+                batch^.PropertySideEffects(Index, Round(prev), setterFlags);
 
-            if singleEdit then
-                cls.EndEdit(batch^, 1);
+                if singleEdit then
+                    cls.EndEdit(batch^, 1);
+            end;
             inc(batch);
             inc(Value);
         end;
@@ -1663,7 +1671,9 @@ begin
 
     for i := 1 to batchSize do
     begin
-        batch^.SetDouble(Index, Value^, setterFlags);
+        if (allowNA) or (not IsNaN(Value^)) then
+            batch^.SetDouble(Index, Value^, setterFlags);
+
         inc(batch);
         inc(Value)
     end;
@@ -1678,6 +1688,7 @@ var
     intPtr: PInteger;
     propFlags: TPropertyFlags;
     singleEdit: Boolean;
+    allowNA: Boolean;
 begin
     if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
@@ -1695,23 +1706,30 @@ begin
     ]) then
         Exit;
 
+    allowNA := not (TDSSPropertySetterFlag.SkipNA in setterFlags);
+
     if (cls.PropertyType[Index] <> TPropertyType.IntegerOnStructArrayProperty) and
         (propFlags = []) and
         (cls.PropertyScale[Index] = 1) then
     begin
+        // Faster path
         for i := 1 to batchSize do
         begin
-            singleEdit := not (Flg.EditingActive in batch^.Flags);
-            if singleEdit then
-                cls.BeginEdit(batch^, False);
+            if (allowNA) or (Value^ = $80000000) then
+            begin
+                // check for each element, in case the element is being edited somewhere else
+                singleEdit := not (Flg.EditingActive in batch^.Flags);
+                if singleEdit then
+                    cls.BeginEdit(batch^, False);
 
-            intPtr := PInteger(PtrUint(batch^) + propOffset);
-            prev := intPtr^;
-            intPtr^ := Value^;
-            batch^.PropertySideEffects(Index, prev, setterFlags);
+                intPtr := PInteger(PtrUint(batch^) + propOffset);
+                prev := intPtr^;
+                intPtr^ := Value^;
+                batch^.PropertySideEffects(Index, prev, setterFlags);
 
-            if singleEdit then
-                cls.EndEdit(batch^, 1);
+                if singleEdit then
+                    cls.EndEdit(batch^, 1);
+            end;
             inc(batch);
             inc(Value);
         end;
@@ -1720,7 +1738,8 @@ begin
 
     for i := 1 to batchSize do
     begin
-        batch^.SetInteger(Index, Value^, setterFlags);
+        if (allowNA) or (Value^ = $80000000) then
+            batch^.SetInteger(Index, Value^, setterFlags);
         inc(batch);
         inc(Value)
     end;
@@ -1732,6 +1751,7 @@ var
     // propOffset: PtrUint;
     i: Integer;
     // propFlags: TPropertyFlags;
+    allowNA: Boolean;
 begin
     if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
@@ -1750,9 +1770,12 @@ begin
     ]) then
         Exit;
 
+    allowNA := not (TDSSPropertySetterFlag.SkipNA in setterFlags);
+
     for i := 1 to batchSize do
     begin
-        batch^.SetString(Index, Value^, setterFlags);
+        if (allowNA) or (Value^ <> NIL) then
+            batch^.SetString(Index, Value^, setterFlags);
         inc(batch);
         inc(Value)
     end;
