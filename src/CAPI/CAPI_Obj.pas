@@ -1715,7 +1715,7 @@ begin
         // Faster path
         for i := 1 to batchSize do
         begin
-            if (allowNA) or (Value^ <> $80000000) then
+            if (allowNA) or (Value^ <> $7fffffff) then
             begin
                 // check for each element, in case the element is being edited somewhere else
                 singleEdit := not (Flg.EditingActive in batch^.Flags);
@@ -1738,7 +1738,7 @@ begin
 
     for i := 1 to batchSize do
     begin
-        if (allowNA) or (Value^ <> $80000000) then
+        if (allowNA) or (Value^ <> $7fffffff) then
             batch^.SetInteger(Index, Value^, setterFlags);
         inc(batch);
         inc(Value)
