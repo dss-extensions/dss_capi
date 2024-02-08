@@ -1139,6 +1139,9 @@ var
     nref: PInteger;
     nv0, nv: PDouble;
 begin
+    if NodeRef = NIL then 
+        Exit;
+
     vterm := PDouble(VTerminal);
     nref := PInteger(NodeRef);
     nv0 := PDouble(ActiveCircuit.solution.NodeV);

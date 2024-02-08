@@ -1019,8 +1019,17 @@ var
     i: Integer;
     v: Complex;
 begin
+    if (not FEnabled) or (NodeRef = NIL) then
+    begin
+        TotalLosses := 0;
+        LoadLosses := 0;
+        NoLoadLosses := 0;
+        Exit;
+    end;
+
     // Only report No Load Losses if Rp defined and Reactor is a shunt device;
     // Else do default behavior.
+
     if (RpSpecified and IsShunt and (Rp <> 0.0)) then
     begin
         TotalLosses := Losses;  // Side effect: computes Iterminal and Vterminal

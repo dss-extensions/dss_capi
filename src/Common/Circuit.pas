@@ -2266,6 +2266,11 @@ var
 begin
     // Return total losses in all PD Elements
     Result := 0;
+    if (Solution.NodeV = NIL) then
+    begin
+        Exit;
+    end;
+
     for pdelem in PDElements do
     begin
         if pdelem.enabled then

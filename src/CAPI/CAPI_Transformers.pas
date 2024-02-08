@@ -494,7 +494,7 @@ procedure Transformers_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PAPI
 var
     elem: TObj;
 begin
-    if not _activeObj(DSSPrime, elem) then
+    if (not _activeObj(DSSPrime, elem))  or MissingSolution(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -521,7 +521,7 @@ var
     elem: TObj;
     NumCurrents: Integer;
 begin
-    if not _activeObj(DSSPrime, elem) then
+    if (not _activeObj(DSSPrime, elem)) or MissingSolution(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -594,16 +594,13 @@ var
     CResult: PComplexArray; // this array is one-based, see DSSUcomplex
     elem: TObj;
 begin
-    if not _activeObj(DSSPrime, elem) then
+    if (not _activeObj(DSSPrime, elem)) or MissingSolution(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3);
-
-    if not elem.Enabled then
-        Exit;
 
     CResult := PComplexArray(ResultPtr);
     elem.GetLosses(CResult[1], CResult[2], CResult[3]);

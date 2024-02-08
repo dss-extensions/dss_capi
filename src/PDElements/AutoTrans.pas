@@ -1535,6 +1535,9 @@ var
     ITerm_NL: pComplexArray;
 
 begin
+    if (not Enabled) or (NodeRef = NIL) or (ActiveCircuit.Solution.NodeV = NIL) then
+        Exit;
+
     try
         Vterm := Allocmem(SizeOf(Complex) * 2 * NumWindings);
         Iterm := Allocmem(SizeOf(Complex) * 2 * NumWindings);
@@ -1604,6 +1607,9 @@ procedure TAutoTransObj.GetWindingVoltages(iWind: Integer; VBuffer: pComplexArra
 var
     i, ii, k, NeutTerm: Integer;
 begin
+    if (not Enabled) or (NodeRef = NIL) or (ActiveCircuit.Solution.NodeV = NIL) then
+        Exit;
+
     try
         // return Zero if winding number improperly specified
         if (iWind < 1) or (iWind > NumWindings) then
@@ -1669,6 +1675,14 @@ var
     cTempIterminal: pComplexArray;
     i: Integer;
 begin
+    if (not FEnabled) or (NodeRef = NIL) then
+    begin
+        TotalLosses := 0;
+        LoadLosses := 0;
+        NoLoadLosses := 0;
+        Exit;
+    end;
+
     // Calculates losses in watts, vars
     TotalLosses := Losses;   // Side effect: computes Iterminal
 

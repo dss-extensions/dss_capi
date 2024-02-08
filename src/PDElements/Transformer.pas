@@ -1583,6 +1583,9 @@ procedure TTransfObj.GetWindingVoltages(iWind: Integer; VBuffer: pComplexArray);
 var
     i, ii, k, NeutTerm: Integer;
 begin
+    if (not Enabled) or (NodeRef = NIL) or (ActiveCircuit.Solution.NodeV = NIL) then
+        Exit;
+
     // return Zero if winding number improperly specified
     if (iWind < 1) or (iWind > NumWindings) then
     begin
@@ -1632,7 +1635,7 @@ var
     cTempIterminal: pComplexArray;
     i: Integer;
 begin
-    if not FEnabled then
+    if (not FEnabled) or (NodeRef = NIL) then
     begin
         TotalLosses := 0;
         LoadLosses := 0;
