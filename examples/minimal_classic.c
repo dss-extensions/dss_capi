@@ -6,7 +6,7 @@ int main(void)
 {
     // For numVoltages, first `int` is the current count, 
     // the second `int` is the allocated capacity.
-    int numVoltages[2] = {0, 0}; 
+    int numVoltages[4] = {0, 0, 0, 0}; 
     double *voltages = NULL;
     int numNodes;
     int i;

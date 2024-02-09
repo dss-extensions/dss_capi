@@ -15,12 +15,13 @@
     - i18n complements
     - drop the `ctx_` prefix for most functions, leave the DSSContext API as the default version. We plan to drop the current single-instance API, but we can add a header with inline C functions, prefixed, for easier migration. 
 
+# Versions 0.14.x
 
-## Version 0.14.0
+## Version 0.14.0 (2024-02-09)
 
-Starting on this version, we will call DSS C-API and related projects AltDSS, an alternative implementation of OpenDSS, to make it more clear that this is not supported by EPRI and many extra features are not present in the official OpenDSS. Watch the DSS-Extensions org on GitHub for more announcements soon, including some support for the official implementation (still Windows-only at the moment).
+Starting on this version, we will call DSS C-API and related projects AltDSS, an alternative implementation of OpenDSS, to make it more clear that this is not supported by EPRI and many extra features are not present in the official OpenDSS. Watch the DSS-Extensions org on GitHub for more announcements soon, including some support for the official implementation (still Windows-only at the moment). The name change **does not** mean compatibility or other aspects are expected to change, the project will still follow the basic guidelines of compatibility that have been followed since 2018.
 
-This version should match OpenDSS v9.7.1.1 (SVN r3646). Remember to check the compatibility flags and [Known differences](https://github.com/dss-extensions/dss_capi/blob/master/docs/known_differences.md). Other recent SVN commits, up to r3717 (dated 2023-12-11), either do not update code or are not relevant for the implementation on AltDSS/DSS C-API.
+This version should match OpenDSS v9.8.0.1 (SVN r3723). Remember to check the compatibility flags and [Known differences](https://github.com/dss-extensions/dss_capi/blob/master/docs/known_differences.md).
 
 - Another large internal (Pascal) code refactoring step and general clean-up. Check the commits for details, too many to list. A last step is under progress and will be merged in the next major release.
 
@@ -39,6 +40,7 @@ This version should match OpenDSS v9.7.1.1 (SVN r3646). Remember to check the co
 - **Introduce "Setter" flags.** These are flags used to tweak how the property update is done. Notably,`AvoidFullRecalc` (some other flags are only using by the engine, internally): some specific properties like `Load.kW` can be updated both directly through a DSS script (or Text interface), or through the dedicated Loads API in any of the specific language bindings of the many APIs. The dedicated API does not force a YPrim update and full load model recalculation. 
     - When using this flag `AvoidFullRecalc` in the Obj/Batch APIs, the behavior will follow the dedicated Loads API.
     - Other flags include `ImplicitSizes` and `AllowAllConductors`. Both are currently used for enabling some of the JSON Schema functionally.
+    - For batch operations, `SkipNA` was introduced to allow handling scenarios with non-uniform data.
     - The relevant API functions were updated to include an extra function argument with the setter flags.
     - Is this `AvoidFullRecalc` the same as `SkipSideEffects` compat flag? **No.** `AvoidFullRecalc` is still valid and by design (including some behavior listed in OpenDSS docs), whereas `SkipSideEffects` is potentially unintended behavior.
 
@@ -52,12 +54,15 @@ This version should match OpenDSS v9.7.1.1 (SVN r3646). Remember to check the co
 
 - **New** Alt and Obj families of functions. A new family of functions was added to allow most legacy API operations and new functionality directly on objects and batches, instead of relying on "active..." idiom. A new package, **AltDSS-Python**, will be published to illustrate the new approach. Since the engine is shared, users can mix both approach (e.g. use AltDSS-Python and OpenDSSDirect.py in the same script).
 
-- Batch/API: allow using batches with simple functions that return float64/int32 for each object.
+- Batch/API: 
+    - Allow using batches with simple functions that return float64/int32 for each object.
+    - Allow using `INT32_MAX` and `NaN` for missing values, which can be skipped with the `SetterFlags_SkipNA` flag. Sooner or later, there should a better alternative, but this can be useful in the time being.
 
 - Headers: 
     - Remove `stdint_compat.h`. This was only required for very old or non-standard compiler like MSVC 2008. Users that require that can still source the file from older releases or get similar files from other sources.
     - Include `stddef.h` when building as C code.
     - Mark `CktElement_Get_IsIsolated` with `(API Extension)`
+    - Add more `const` qualifiers. Especially useful for the new Rust and Golang bindings.
 
 - Specific bug fixes:
     - AutoTrans: fix `DumpProperties`, readd `bank` property (unused internally).
@@ -81,6 +86,7 @@ This version should match OpenDSS v9.7.1.1 (SVN r3646). Remember to check the co
 
 - Misc:
     - Error handling: add a few numeric checks, and check for errors in more places during solution algorithms. The changes should help finding issues earlier and/or more easily.
+    - Check for null pointers (usually missing circuit solution) in a few more places.
     - Properties/capitalization: adjust capitalization of nearly all property names. Use lowercase for description keys (help strings). *Feedback on the capitalization is welcome.* As a reminder, OpenDSS is case-insensitive, but other other are not. Providing a better internal representation of the properties will help other tools to use the internal names without extra work (no need for each tool to adjust capitalization), and it doesn't affect the DSS engine itself nor compatibility with the upstream OpenDSS.
     - Obj/API: introduce `ExtraClassIDs` to get some special lists.
     - Classic to Obj/Alt API bridge: add many `*_Get_Pointer` functions (e.g. `CktElement_Get_Pointer`, `Loads_Get_Pointer`). These functions return a pointer that can be used in the Obj API. This should enable an easier migration from the classic API, or allow users to use the Obj API to complement the classic API where the latter is lacking.

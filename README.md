@@ -12,7 +12,7 @@ This library exposes the OpenDSS/OpenDSS-PM v9+ engine in a plain C interface th
 Through the other projects under DSS-Extensions, DSS C-API enables projects to use the OpenDSS in multiple platforms (Windows, Linux, macOS) across multiple architectures (Intel x86, x86-64, ARM32, and ARM64, including Apple's M1 and M2). Most of the features added to this based library is shared across all other projects. If you need support for a language not listed below, please open a new issue (either here or in https://github.com/dss-extensions/dss-extensions/issues) and we will evaluate that language.
 
 <p align="center">
-    <img alt="Overview of related repositories" src="https://raw.githubusercontent.com/dss-extensions/dss_capi/master/docs/images/repomap.png" width=600>
+    <img alt="Overview of related repositories" src="https://raw.githubusercontent.com/dss-extensions/dss-extensions/main/images/repomap.png" width=600>
 </p>
 
 If you are looking for the bindings to other languages:
@@ -23,11 +23,11 @@ If you are looking for the bindings to other languages:
 - [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible with the API of the official OpenDSS COM classes.
 - [dss.hpp](https://dss-extensions.org/dss_capi/): header-only library for C++, also hosped in this repository (`include/` directory). Allows using DSS C-API more comfortably from C++, abstract away memory management and low-level details such as API conventions of the DSS C-API library. Currently uses Eigen and fmt.
 
-Version 0.13.x is based on OpenDSS revision 3619 (exactly OpenDSS v9.6.1.2), with many extra/custom features.
+Version 0.14.x is based on OpenDSS revision 3723 (exactly OpenDSS v9.8.0.1), with many extra/custom features.
 
 **For the source-code of a specific version, check the Git tags or the Releases page.**
 
-While the main objective of COM compatibility has been reached, this is still a work-in-progress and is subject to changes. Especially, there are planned changes targeting version 0.14, which will become v1.0 when we consider it ready.
+While the main objective of COM compatibility has been reached, this is still a work-in-progress and is subject to changes. Especially, there are planned changes targeting version 1.0.
 
 Instead of using extra numeric parameters as in the official DDLL interface ("OpenDSSDirect" or "DCSL"), each original COM property is exposed as a pair of functions. For example, the load kVA property is exposed as:
 
@@ -46,7 +46,7 @@ Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) for a detailed list.
 
-- 2023-12-13 / version 0.14.0b1: Beta release for 0.14.0. Lots of changes and bugfixes, see the changelog.
+- 2024-02-09 / version 0.14.0: Lots of changes and bugfixes, see the changelog. 
 - 2023-06-27 / version 0.13.4: Bugfix release (CapControl), incremental improvements. See the changelog or release page for details.
 - 2023-06-11 / version 0.13.3: Bugfix release for some components (notably Capacitor, Reactor, UPFC).
 - 2023-05-24 / version 0.13.2: Minor release, includes updates to JSON exports, some more error-checking, internal code refactoring, header updates, and minor ports from the official OpenDSS.

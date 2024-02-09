@@ -61,10 +61,10 @@ int main(void)
         }
         
         // Get total for the register "Zone Losses kWh" (index 12)
-        int32_t count[2] = {0, 0};
+        int32_t dims[4] = {0, 0, 0, 0};
         double *totals = NULL;
         ctx_Meters_Get_First(ctx);
-        ctx_Meters_Get_Totals(ctx, &totals, count);
+        ctx_Meters_Get_Totals(ctx, &totals, dims);
         kWh_losses += totals[12];
         DSS_Dispose_PDouble(&totals);
     }

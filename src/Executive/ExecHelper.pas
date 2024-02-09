@@ -935,7 +935,6 @@ var
 begin
     if Length(opt) < 1 then
     begin
-        Writeln('if Length(opt) < 1 then');
         lst := TStringList.Create;
         for i := 0 to High(cmd) do
             lst.Add(PadRight(cmd[i], colwidth));

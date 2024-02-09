@@ -8,10 +8,10 @@ int main(void)
     double** data_PDouble;
     int32_t** data_PInteger;
     int8_t** data_PByte;
-    int32_t* count_PPAnsiChar;
-    int32_t* count_PDouble;
-    int32_t* count_PInteger;
-    int32_t* count_PByte;
+    int32_t* dims_PPAnsiChar;
+    int32_t* dims_PDouble;
+    int32_t* dims_PInteger;
+    int32_t* dims_PByte;
     
     double* voltages;
     int numNodes;
@@ -23,10 +23,10 @@ int main(void)
         &data_PDouble,
         &data_PInteger,
         &data_PByte,
-        &count_PPAnsiChar,
-        &count_PDouble,
-        &count_PInteger,
-        &count_PByte
+        &dims_PPAnsiChar,
+        &dims_PDouble,
+        &dims_PInteger,
+        &dims_PByte
     );
     
     Text_Set_Command("compile master.dss");
@@ -34,13 +34,13 @@ int main(void)
     Circuit_Get_AllBusVolts_GR();
     
     // The result for Circuit_Get_AllBusVolts is now in 
-    // dataPtr_PDouble[0] and countPtr_PDouble
+    // dataPtr_PDouble[0] and dims_PDouble
     
     // Copy just the pointer for convenience, the GR mechanism
     // in Pascal is responsible for the allocated memory.
     voltages = data_PDouble[0];
     
-    numNodes = count_PDouble[0]/2;
+    numNodes = dims_PDouble[0]/2;
     if (numNodes == 0)
     {
         return -1;
