@@ -2578,9 +2578,19 @@ var
 begin
     Obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
-
     if TPropertyType.DSSObjectReferenceArrayProperty <> PropertyType[Index] then
-        Exit;
+    begin
+        if (PropertyArrayAlternative[Index] = 0) then
+        begin
+            Exit;
+        end;
+
+        Index := PropertyArrayAlternative[Index];
+        if TPropertyType.DSSObjectReferenceArrayProperty <> PropertyType[Index] then
+        begin
+            Exit;
+        end;
+    end;
 
     if TPropertyFlag.WriteByFunction in flags then
     begin
@@ -3354,6 +3364,10 @@ var
     end;
 
 begin
+    if (PropertyArrayAlternative[Index] <> 0) then
+    begin
+        Index := PropertyArrayAlternative[Index];
+    end;
     Obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
     case PropertyType[Index] of
@@ -3506,6 +3520,10 @@ var
         Result := true;
     end;    
 begin
+    if (PropertyArrayAlternative[Index] <> 0) then
+    begin
+        Index := PropertyArrayAlternative[Index];
+    end;
     Obj := TDSSObject(ptr);
     ptype := PropertyType[Index];
     flags := PropertyFlags[Index];
@@ -3883,6 +3901,12 @@ var
 
 begin
     Obj := TDSSObject(ptr);
+
+    if (PropertyArrayAlternative[Index] <> 0) then
+    begin
+        Index := PropertyArrayAlternative[Index];
+    end;
+
     flags := PropertyFlags[Index];
     case PropertyType[Index] of 
         TPropertyType.DSSObjectReferenceArrayProperty:

@@ -295,8 +295,7 @@ begin
     // PropertyRedundantWith[ord(TProp.wires)] := ord(TProp.wire);
     PropertyNameJSON[ord(TProp.wires)] := 'Conductors';
 
-
-    // PropertyArrayAlternative[ord(TProp.wire)] := ord(TProp.wires);
+    PropertyArrayAlternative[ord(TProp.wire)] := ord(TProp.wires);
 
     // enums
     PropertyType[ord(TProp.units)] := TPropertyType.MappedStringEnumProperty;

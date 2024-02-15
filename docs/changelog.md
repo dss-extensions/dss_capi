@@ -68,7 +68,7 @@ This version should match OpenDSS v9.8.0.1 (SVN r3723). Remember to check the co
     - AutoTrans: fix `DumpProperties`, readd `bank` property (unused internally).
     - Commands/Save: add version and timestamp to master file.
     - DynamicExp and DynEqPCE: fix `DumpProperties`; extend to support JSON in/out.
-    - Generator: fix default value for `D` (as DSS property); previously, the value was left uninitialized. It seems to only affect user models, so it doesn't seem like a big issue. Explicitly providing a value would also work fine as a workaround.
+    - Generator: fix default value for `D` (as DSS property); previously, the value was left uninitialized. It seems to only affect user models, so it doesn't seem like a big issue. Explicitly providing a value would also works fine as a workaround.
     - Line and LineCode: fix formatting issues in `DumpProperties`
     - LoadShape: fix some issues when copying/saving data when using float32 data (which users need to explicitly opt-in).
     - PriceShape/TempShape: adjust setters for mean/stddev properties
