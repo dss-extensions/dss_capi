@@ -368,11 +368,11 @@ extern "C" {
             
             Currently, NA values are interpret as:
             - NaN for float64
-            - INT32_MIN (0x80000000) for int32
+            - INT32_MAX (0x7FFFFFFF) for int32
             - Null pointers for strings (in this case, use a `"\0"` string for empty strings)
         */
         
-        SetterFlags_AllowAllConductors = 0x80000000 /*!< 
+        SetterFlags_AllowAllConductors = 0x40000000 /*!< 
             Used internally for the "Wires" property ("Conductors").
             This was left public in case someone tries to implement some internal aspects in
             external functions.

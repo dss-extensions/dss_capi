@@ -178,7 +178,7 @@ type
 
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
         procedure SaveWrite(F: TStream); OVERRIDE;        
-        procedure SetWires(Value: TDSSObjectPtr; ValueCount: Integer);
+        procedure SetWires(Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 
         // Public for the COM Interface
         procedure FetchLineCode();
@@ -211,6 +211,8 @@ uses
     LineUnits,
     DSSHelper,
     DSSObjectHelper,
+    CNData,
+    TSData,
     TypInfo;
 
 type
@@ -287,7 +289,7 @@ begin
         Result := Result * obj.FUnitsConvert
 end;
 
-procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer); forward;
+procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); forward;
 
 procedure TLine.DefineProperties;
 var 
@@ -336,7 +338,7 @@ begin
     PropertyOffset[ord(TProp.wires)] := ptruint(@obj.LineWireData);
     PropertyOffset2[ord(TProp.wires)] := ptruint(DSS.WireDataClass);
     PropertyWriteFunction[ord(TProp.wires)] := @SetWires;
-    PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.FullNameAsJSONArray, TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.FullNameAsArray, TPropertyFlag.FullNameAsJSONArray, TPropertyFlag.RequiredInSpecSet];
     PropertyNameJSON[ord(TProp.wires)] := 'Conductors';
 
     // matrices
@@ -785,16 +787,18 @@ begin
     Result := True;
 end;
 
-procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer);
+procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
-    obj.SetWires(Value, ValueCount);
+    obj.SetWires(Value, ValueCount, setterFlags);
 end;
 
-procedure TLineObj.SetWires(Value: TDSSObjectPtr; ValueCount: Integer);
+procedure TLineObj.SetWires(Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     RatingsInc: Boolean;
     NewNumRat, i, istart: Integer;
     NewRatings: array of Double = NIL;
+    condObj: TConductorDataObj;
+    allConductors: Boolean;
 begin
     // Previously in "FetchWireList"
     if not assigned(LineSpacingObj) then
@@ -803,12 +807,25 @@ begin
         Exit;
     end;
 
-    if FPhaseChoice = Unknown then
+    allConductors := ((TDSSPropertySetterFlag.AllowAllConductors in setterFlags) and (LineSpacingObj.NWires = ValueCount));
+    if (FPhaseChoice = Unknown) or allConductors then
     begin // it's an overhead line
         KillLineCodeSpecified();
         KillGeometrySpecified;
         istart := 1;
-        FPhaseChoice := Overhead;
+        if allConductors then
+        begin
+            // Try to simulate using TSCables=... or CNCables=..., potentially followed
+            // with Wires=... by checking what is the kind of the first conductor
+            condObj := TConductorDataObj(Value^);
+            if condObj is TCNDataObj then
+                FPhaseChoice := ConcentricNeutral
+            else
+            if condObj is TTSDataObj then
+                FPhaseChoice := TapeShield
+            else
+                FPhaseChoice := Overhead;
+        end;
     end
     else
     begin // adding bare neutrals to an underground line - TODO what about repeat invocation?

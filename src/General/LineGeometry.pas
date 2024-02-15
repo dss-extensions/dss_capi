@@ -210,13 +210,24 @@ begin
     inherited Destroy;
 end;
 
-procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer);
+procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i, istart, istop: Integer;
 begin
     istart := 1;
     istop := obj.FNConds;
-    if obj.FPhaseChoice[obj.ActiveCond] = Unknown then
+
+    if ((TDSSPropertySetterFlag.AllowAllConductors in setterFlags) and (obj.FNConds = ValueCount)) and (ValueCount > 0) then
+    begin
+        for i := istart to istop do
+        begin
+            obj.FWireData[i] := TConductorDataObj(Value^);
+            Inc(Value);
+        end;
+        // TLineGeometryObj.PropertySideEffects should handle the other side-effects
+        Exit;
+    end
+    else if obj.FPhaseChoice[obj.ActiveCond] = Unknown then
         obj.ChangeLineConstantsType(Overhead)
     else if obj.FPhaseChoice[obj.ActiveCond] <> Overhead then
         // these are buried neutral wires 

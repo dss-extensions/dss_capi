@@ -802,7 +802,7 @@ begin
                             DoSimpleMsg(
                                 Format('%s.%s: %s object "%s" not found.',
                                     [TDSSObject(obj).FullName, PropertyName[Index], cls.Name, PropParser.StrValue]
-                                ), 403);
+                                ), 40303);
                             Exit;
                         end;
                         SetLength(objs, Length(objs) + 1);
@@ -825,7 +825,7 @@ begin
                             DoSimpleMsg(
                                 Format('%s.%s: object "%s" not found.',
                                     [TDSSObject(obj).FullName, PropertyName[Index], ElemName]
-                                ), 403);
+                                ), 40304);
                             Exit;
                         end;
                         SetLength(objs, Length(objs) + 1);
@@ -833,7 +833,7 @@ begin
                         PropParser.NextParam();
                     end;
                 end;
-                TWriteObjRefsPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, PPointer(@objs[0]), Length(objs));
+                TWriteObjRefsPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, PPointer(@objs[0]), Length(objs), setterFlags);
                 Result := True;
                 Exit;
             end;
@@ -877,7 +877,7 @@ begin
                     DoSimpleMsg(
                         Format('%s.%s: %s object "%s" not found.',
                             [TDSSObject(obj).FullName, PropertyName[Index], cls.Name, PropParser.StrValue]
-                        ), 403);
+                        ), 40305);
                     //TODO: stop?
                 end
                 else
@@ -2584,7 +2584,7 @@ begin
 
     if TPropertyFlag.WriteByFunction in flags then
     begin
-        TWriteObjRefsPropertyFunction(PropertyWriteFunction[Index])(obj, PPointer(Value), ValueCount);
+        TWriteObjRefsPropertyFunction(PropertyWriteFunction[Index])(obj, PPointer(Value), ValueCount, setterFlags);
         Exit;
     end;
 
@@ -3910,7 +3910,7 @@ begin
                             DoSimpleMsg(
                                 Format('%s.%s: %s object "%s" not found.',
                                     [TDSSObject(obj).FullName, PropertyName[Index], cls.Name, ElemName]
-                                ), 403);
+                                ), 40306);
                             Exit;
                         end;
                         objs[i - 1] := otherObj;
@@ -3970,14 +3970,14 @@ begin
                             DoSimpleMsg(
                                 Format('%s.%s: object "%s" not found.',
                                     [TDSSObject(obj).FullName, PropertyName[Index], ElemName]
-                                ), 403);
+                                ), 40301);
                             Exit;
                         end;
                         objs[i - 1] := otherObj;
                         Inc(Value);
                     end;
                 end;
-                TWriteObjRefsPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, PPointer(@objs[0]), Length(objs));
+                TWriteObjRefsPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, PPointer(@objs[0]), Length(objs), setterFlags);
                 // Result := True;
                 Exit;
             end;
@@ -4025,7 +4025,7 @@ begin
                     DoSimpleMsg(
                         Format('%s.%s: %s object "%s" not found.',
                             [TDSSObject(obj).FullName, PropertyName[Index], cls.Name, Value^]
-                        ), 403);
+                        ), 40302);
                     Exit;
                 end
                 else

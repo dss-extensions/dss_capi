@@ -121,11 +121,11 @@ type
         Reserved27 = 27,
         Reserved28 = 28,
         Reserved29 = 29,
-        Reserved30 = 30,
         
         // Used internally for the "Wires" property ("Conductors").
-        // 
-        AllowAllConductors = 31
+        AllowAllConductors = 30
+
+        // Leave the last bit alone; it creates some issues elsewhere.
     );
     TSetterFlag = TDSSPropertySetterFlag;
     TDSSPropertySetterFlags = set of TDSSPropertySetterFlag;
@@ -350,7 +350,7 @@ type
     TWriteIntegerPropertyFunction = procedure (obj: Pointer; Value: Integer);
     TWriteStringPropertyFunction = procedure (obj: Pointer; Value: String);
     TWriteStringListPropertyFunction = procedure (obj: Pointer; Value: TStringList);
-    TWriteObjRefsPropertyFunction = procedure (obj: Pointer; Values: PPointer; ValueCount: Integer);
+    TWriteObjRefsPropertyFunction = procedure (obj: Pointer; Values: PPointer; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
     TWriteDoublesPropertyFunction = procedure (obj: Pointer; Values: PDouble; ValueCount: Integer);
     TEnumActionProcedure = TWriteIntegerPropertyFunction;
     TActionProcedure = procedure (obj: Pointer);
