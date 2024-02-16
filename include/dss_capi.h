@@ -7744,6 +7744,8 @@ extern "C" {
     DSS_CAPI_DLL void Alt_PCE_Get_VariableValues(double** resultPtr, int32_t *resultDims, void* pce);
     DSS_CAPI_DLL void Alt_PCE_Set_VariableValue(void* pce, int32_t varIdx, double value);
     DSS_CAPI_DLL double Alt_PCE_Get_VariableValue(void* pce, int32_t varIdx);
+    DSS_CAPI_DLL void Alt_PCE_Set_VariableSValue(void* pce, const char* varName, double value);
+    DSS_CAPI_DLL double Alt_PCE_Get_VariableSValue(void* pce, const char* varName);
     DSS_CAPI_DLL const char* Alt_PCE_Get_VariableName(void* pce, int32_t varIdx);
     DSS_CAPI_DLL void* Alt_PCE_Get_EnergyMeter(void* elem);
     DSS_CAPI_DLL const char* Alt_PCE_Get_EnergyMeterName(void* elem);

@@ -46,6 +46,7 @@ Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) for a detailed list.
 
+- 2024-02-16 / version 0.14.1: Incremental updates and fixes, especially in the alternative API.
 - 2024-02-09 / version 0.14.0: Lots of changes and bugfixes, see the changelog. 
 - 2023-06-27 / version 0.13.4: Bugfix release (CapControl), incremental improvements. See the changelog or release page for details.
 - 2023-06-11 / version 0.13.3: Bugfix release for some components (notably Capacitor, Reactor, UPFC).

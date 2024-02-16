@@ -2192,6 +2192,8 @@ exports
     Alt_PCE_Get_VariableName,
     Alt_PCE_Get_VariableValue,
     Alt_PCE_Set_VariableValue,
+    Alt_PCE_Get_VariableSValue,
+    Alt_PCE_Set_VariableSValue,
     Alt_PDE_Get_AccumulatedL,
     Alt_PDE_Get_EnergyMeter,
     Alt_PDE_Get_EnergyMeterName,

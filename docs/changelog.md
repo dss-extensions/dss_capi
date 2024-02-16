@@ -17,6 +17,16 @@
 
 # Versions 0.14.x
 
+## Version 0.14.1 (2024-02-16)
+
+Minor release to address issues found through AltDSS-Python. These shouldn't affect software that use only the classic API.
+
+- Alt_PCE: implement two missing functions
+- DSSObj, LineGeometry: for the alternative API, add array shortcuts for Wire; use the array shortcuts more.
+- `SetterFlags_AllowAllConductors`:
+    - Update value of `SetterFlags_AllowAllConductors` to `0x40000000` to avoid difficulties in Python.
+    - Propagate setting when using Obj/Batch APIs; adjust Line.Conductors.
+
 ## Version 0.14.0 (2024-02-09)
 
 Starting on this version, we will call DSS C-API and related projects AltDSS, an alternative implementation of OpenDSS, to make it more clear that this is not supported by EPRI and many extra features are not present in the official OpenDSS. Watch the DSS-Extensions org on GitHub for more announcements soon, including some support for the official implementation (still Windows-only at the moment). The name change **does not** mean compatibility or other aspects are expected to change, the project will still follow the basic guidelines of compatibility that have been followed since 2018.

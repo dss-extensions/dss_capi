@@ -84,6 +84,8 @@ procedure Alt_PCE_Get_VariableNames(var ResultPtr: PPAnsiChar; ResultCount: PAPI
 procedure Alt_PCE_Get_VariableValues(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TPCElement); CDECL;
 procedure Alt_PCE_Set_VariableValue(elem: TPCElement; varIdx: Integer; value: Double); CDECL;
 function Alt_PCE_Get_VariableValue(elem: TPCElement; varIdx: Integer): Double; CDECL;
+procedure Alt_PCE_Set_VariableSValue(elem: TPCElement; varName: PAnsiChar; value: Double); CDECL;
+function Alt_PCE_Get_VariableSValue(elem: TPCElement; varName: PAnsiChar): Double; CDECL;
 function Alt_PCE_Get_VariableName(elem: TPCElement; varIdx: Integer): PAnsiChar; CDECL;
 function Alt_PCE_Get_EnergyMeter(elem: TPCElement): TDSSObject; CDECL;
 function Alt_PCE_Get_EnergyMeterName(elem: TPCElement): PAnsiChar; CDECL;
@@ -1209,6 +1211,37 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
             DoSimpleMsg(elem.DSS, 'Invalid variable index %d for "%s"', [varIdx, elem.FullName], 100002);
+        Exit;
+    end;
+    elem.Variable[varIdx] := value;
+end;
+//------------------------------------------------------------------------------
+function Alt_PCE_Get_VariableSValue(elem: TPCElement; varName: PAnsiChar): Double; CDECL;
+var
+    sname: String;
+    varIdx: Integer;
+begin
+    Result := 0;
+    sname := varName;
+    varIdx := elem.LookupVariable(sname);
+    if (varIdx <= 0) or (varIdx > elem.NumVariables) then
+    begin
+        DoSimpleMsg(elem.DSS, 'Invalid variable name %s for "%s"', [sname, elem.FullName], 100002);
+        Exit;
+    end;
+    Result := elem.Variable[varIdx];
+end;
+//------------------------------------------------------------------------------
+procedure Alt_PCE_Set_VariableSValue(elem: TPCElement; varName: PAnsiChar; value: Double); CDECL;
+var
+    sname: String;
+    varIdx: Integer;
+begin
+    sname := varName;
+    varIdx := elem.LookupVariable(sname);
+    if (varIdx <= 0) or (varIdx > elem.NumVariables) then
+    begin
+        DoSimpleMsg(elem.DSS, 'Invalid variable name %s for "%s"', [sname, elem.FullName], 100002);
         Exit;
     end;
     elem.Variable[varIdx] := value;
