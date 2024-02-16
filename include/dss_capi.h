@@ -236,7 +236,7 @@ extern "C" {
         DSSJSONFlags_FullNames = 0x00000008, ///< Use full names for the elements, including the class name
         DSSJSONFlags_Pretty = 0x00000010, ///< Try to "pretty" format the JSON output
         DSSJSONFlags_ExcludeDisabled = 0x00000020, ///< Exclude disabled elements (only valid when exporting a collection)
-        DSSJSONFlags_SkipDSSClass = 0x00000040, ///< Do not add the "DSSClass" property to the output
+        DSSJSONFlags_IncludeDSSClass = 0x00000040, ///< Add the "DSSClass" property to the output objects
         DSSJSONFlags_LowercaseKeys = 0x00000080, ///< Use lowercase representation for the property names (and other keys) instead of the internal variants.
         DSSJSONFlags_IncludeDefaultObjs = 0x00000100, ///< Include default unchanged objects in the exports. Any default object that has been edited is always exported. Affects whole circuit and batch exports.
         DSSJSONFlags_SkipTimestamp = 0x00000200, ///< Skip timestamp/version comment, which is added a pre-command by default. Affects whole circuit exports.
@@ -7498,20 +7498,6 @@ extern "C" {
     As a reminder, OpenDSS is sensitive to the order of the properties.
 
     The `options` bit-flags are available in the `DSSJSONFlags` enum.
-    Values used by this function are:
-
-    - `Full`: if set, all properties are returned, ordered by property index instead.
-    - `SkipRedundant`: if used with `Full`, all properties except redundant and unused ones are returned.
-    - `EnumAsInt`: enumerated properties are returned as integer values instead of strings.
-    - `FullNames`: any element reference will use the full name (`{class name}.{element name}`) even if not required.
-    - `Pretty`: more whitespace is used in the output for a "prettier" format.
-    - `SkipDSSClass`: do not add the "DSSClass" property to the JSON objects.
-
-    **NOT IMPLEMENTED YET**:
-    - `State`: include run-time state information
-    - `Debug`: include debug information
-
-    Other bit-flags are reserved for future uses. Please use `DSSJSONFlags` enum to avoid potential conflicts.
 
     (API Extension)
     */
