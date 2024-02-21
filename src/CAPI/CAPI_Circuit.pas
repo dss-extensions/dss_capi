@@ -1143,6 +1143,8 @@ var
 begin
     res := '';
     Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
     if DSSPrime.ActiveCircuit.Save(dirfilepath, @saveFlags, @res) then
         Result := DSS_GetAsPAnsiChar(DSSPrime, res);
 end;

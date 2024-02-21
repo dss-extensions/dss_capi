@@ -22,6 +22,7 @@
 - Alt/CE: Fix `RegisterValues` in the C header.
 - Alt/PDE: Check for missing solution in a few functions.
 - Commands/`CalcLaplacian`: Give proper error message instead of crashing or giving "access violation" messages.
+- `Circuit_Save`: check if there is circuit to save.
 
 ## Version 0.14.1 (2024-02-16)
 
