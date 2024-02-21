@@ -3343,7 +3343,7 @@ var
     DSS: TDSSContext;
 begin
     Result := 0;
-    if not pElem.Enabled then
+    if (not pElem.Enabled) or (pElem.NodeRef = NIL) or MissingSolution(pElem) then
         Exit;
 
     case What of // MaxCurrent (0), CapacityNorm (1), CapacityEmerg (2), Power (3)
@@ -3371,11 +3371,8 @@ begin
                     DSS.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
             end;
             Getmem(cBuffer, sizeof(Complex) * pElem.Yorder);
-            if pElem.Enabled then
-            begin
-                pElem.GetCurrents(cBuffer);
-                Result := _Alt_PDElements_Get_pctCapacity_for(AllNodes, What, RatingIdx, pElem, cBuffer);
-            end;
+            pElem.GetCurrents(cBuffer);
+            Result := _Alt_PDElements_Get_pctCapacity_for(AllNodes, What, RatingIdx, pElem, cBuffer);
         except
             on E: Exception do
                 DoSimpleMsg(DSS, 'Error processing currents: %s', [E.message], 5019);
