@@ -17,6 +17,11 @@
 
 # Versions 0.14.x
 
+## Version 0.14.2 (to be released)
+
+- Alt/CE: Fix `RegisterValues` in the C header.
+- Alt/PDE: Check for missing solution in a few functions.
+
 ## Version 0.14.1 (2024-02-16)
 
 Minor release to address issues found through AltDSS-Python. These shouldn't affect software that use only the classic API.

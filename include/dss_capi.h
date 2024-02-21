@@ -7750,7 +7750,7 @@ extern "C" {
     DSS_CAPI_DLL void* Alt_PCE_Get_EnergyMeter(void* elem);
     DSS_CAPI_DLL const char* Alt_PCE_Get_EnergyMeterName(void* elem);
     DSS_CAPI_DLL void Alt_CE_Get_RegisterNames(char*** resultPtr, int32_t *resultDims, void* pce);
-    DSS_CAPI_DLL void Alt_CE_Get_RegisterValues(void*** resultPtr, int32_t *resultDims, void* pce);
+    DSS_CAPI_DLL void Alt_CE_Get_RegisterValues(double** resultPtr, int32_t *resultDims, void* pce);
     DSS_CAPI_DLL void Alt_CEBatch_Get_Losses(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
     DSS_CAPI_DLL void Alt_CEBatch_Get_PhaseLosses(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
     DSS_CAPI_DLL void Alt_CEBatch_Get_Powers(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
