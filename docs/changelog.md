@@ -21,6 +21,7 @@
 
 - Alt/CE: Fix `RegisterValues` in the C header.
 - Alt/PDE: Check for missing solution in a few functions.
+- Commands/`CalcLaplacian`: Give proper error message instead of crashing or giving "access violation" messages.
 
 ## Version 0.14.1 (2024-02-16)
 

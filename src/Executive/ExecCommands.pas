@@ -420,6 +420,11 @@ begin
 {$ENDIF}
             ord(Cmd.CalcLaplacian):
             begin
+                if DSS.ActiveCircuit.Solution.IncMat = NIL then
+                begin
+                    DoSimpleMsg(DSS, _('Indidence matrix is not present. Please run either "CalcIncMatrix" or "CalcIncMatrix_O" first.'), 8877);
+                    Exit;
+                end;
                 with DSS.ActiveCircuit.Solution do
                 begin
                     Laplacian := IncMat.Transpose();          // Transposes the Incidence Matrix
