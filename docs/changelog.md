@@ -19,10 +19,11 @@
 
 ## Version 0.14.2 (to be released)
 
-- Alt/CE: Fix `RegisterValues` in the C header.
+- Alt/CE: Fix `Alt_CE_Get_RegisterValues` in the C header.
 - Alt/PDE: Check for missing solution in a few functions.
 - Commands/`CalcLaplacian`: Give proper error message instead of crashing or giving "access violation" messages.
-- `Circuit_Save`: check if there is circuit to save.
+- Circuit/API: check if there is a circuit in `Circuit_Save`.
+- Lines/API: adjust behavior of `Lines_Get_Parent` when the compat flag is off.
 
 ## Version 0.14.1 (2024-02-16)
 

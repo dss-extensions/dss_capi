@@ -840,17 +840,22 @@ function Lines_Get_Parent(): Integer; CDECL;
 //  Returns line index  or 0 if it fails or no more lines
 var
     pLine: TLineObj;
+    other: TDSSCktElement;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, pLine) then
         Exit;
 
-    if pLine.ParentPDelement = NIL then
+    other := pLine.ParentPDElement;
+    if other = NIL then
         Exit;
         
-    if (pLine.ParentPDelement.Enabled and ((pLine.ParentPDelement.DssObjtype and CLASSMASK) = LINE_ELEMENT)) then
+    if (other.Enabled and ((other.DssObjtype and CLASSMASK) = LINE_ELEMENT)) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := pLine.ParentPDElement;
+        DSSPrime.ActiveCircuit.ActiveCktElement := other;
+        if ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.ActiveLine)) = 0) then
+            DSSPrime.ActiveCircuit.Lines.Get(other.ClassIndex);
+
         Result := DSSPrime.ActiveCircuit.Lines.ActiveIndex;
     end;
 end;
