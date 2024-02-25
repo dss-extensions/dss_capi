@@ -89,13 +89,13 @@ procedure DSS_RecreateArray_PSingle(var res: PSingleArray0; var p: PSingle; cnt:
 procedure DSS_RecreateArray_PDouble(var res: PDoubleArray0; var p: PDouble; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0);
 procedure DSS_RecreateArray_PInteger(var res: PIntegerArray0; var p: PInteger; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0);
 procedure DSS_RecreateArray_PPAnsiChar(var res: PPAnsiCharArray0; var p: PPAnsiChar; cnt: PAPISize; const incount: TAPISize);
-procedure DSS_RecreateArray_PPointer(var res: PPointerArray0; var p: PPointer; cnt: PAPISize; const incount: TAPISize);
+procedure DSS_RecreateArray_PPointer(var res: PPointerArray0; var p: PPointer; cnt: PAPISize; const incount: TAPISize; preserve: Boolean=false);
 function DSS_RecreateArray_PByte(var p: PByte; cnt: PAPISize; const incount: TAPISize): PByteArray;
 function DSS_RecreateArray_PSingle(var p: PSingle; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0): PSingleArray0;
 function DSS_RecreateArray_PDouble(var p: PDouble; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0): PDoubleArray0;
 function DSS_RecreateArray_PInteger(var p: PInteger; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0): PIntegerArray0;
 function DSS_RecreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PAPISize; const incount: TAPISize): PPAnsiCharArray0;
-function DSS_RecreateArray_PPointer(var p: PPointer; cnt: PAPISize; const incount: TAPISize): PPointerArray0;
+function DSS_RecreateArray_PPointer(var p: PPointer; cnt: PAPISize; const incount: TAPISize; preserve: Boolean=false): PPointerArray0;
 // MATLAB doesn't handle pointers that well,
 // this just gets a single string from the pointer of strings
 function DSS_Get_PAnsiChar(var p: Pointer; Index: TAPISize): PAnsiChar; CDECL;
@@ -470,7 +470,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function DSS_RecreateArray_PPointer(var p: PPointer; cnt: PAPISize; const incount: TAPISize): PPointerArray0;
+function DSS_RecreateArray_PPointer(var p: PPointer; cnt: PAPISize; const incount: TAPISize; preserve: Boolean): PPointerArray0;
 begin
     if (cnt[1] < incount) then
     begin
@@ -480,12 +480,13 @@ begin
     end;
     cnt[0] := incount;
     Result := PPointerArray0(p);
-    FillByte(Result^, incount * sizeof(Pointer), 0); // needs to zero it for compatibility
+    if not preserve then // If we have capacity, decide if we will preserve existing data
+        FillByte(Result^, incount * sizeof(Pointer), 0);
 end;
 
-procedure DSS_RecreateArray_PPointer(var res: PPointerArray0; var p: PPointer; cnt: PAPISize; const incount: TAPISize);
+procedure DSS_RecreateArray_PPointer(var res: PPointerArray0; var p: PPointer; cnt: PAPISize; const incount: TAPISize; preserve: Boolean);
 begin
-    res := DSS_RecreateArray_PPointer(p, cnt, incount);
+    res := DSS_RecreateArray_PPointer(p, cnt, incount, preserve);
 end;
 
 //------------------------------------------------------------------------------

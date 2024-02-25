@@ -2617,7 +2617,8 @@ var
     maxTerm: Integer = 1;
     Result: PPointerArray0;
 begin
-    Result := DSS_RecreateArray_PPointer(ResultPtr, ResultCount, ResultCount^ + 1);
+    // Initially allocate a buffer for 10 elements.
+    Result := DSS_RecreateArray_PPointer(ResultPtr, ResultCount, 10);
     ResultCount[0] := 0;
     SetLength(nodes, pBus.NumNodesThisBus);
     for i := 1 to pBus.NumNodesThisBus do
@@ -2662,16 +2663,16 @@ begin
 
                             if pdes then
                             begin
-                                elemBus := AnsiLowerCase(StripExtension(elem.GetBus(t)));
+                                elemBus := AnsiLowerCase(StripExtension(elem.GetBus(t + 1)));
                                 if (t = 0) then
-                                    elemBus2 := AnsiLowerCase(StripExtension(elem.GetBus(t + 1)))
+                                    elemBus2 := AnsiLowerCase(StripExtension(elem.GetBus(t + 2)))
                                 else
-                                    elemBus2 := AnsiLowerCase(StripExtension(elem.GetBus(t - 1)));
+                                    elemBus2 := AnsiLowerCase(StripExtension(elem.GetBus(t)));
                                     
                                 if elemBus = elemBus2 then
                                     break;
                             end;
-                            Result := DSS_RecreateArray_PPointer(ResultPtr, ResultCount, ResultCount^ + 1);
+                            Result := DSS_RecreateArray_PPointer(ResultPtr, ResultCount, ResultCount^ + 1, true);
                             Result[ResultCount^ - 1] := elem;
                             break;
                         end;
@@ -2702,7 +2703,7 @@ begin
                         break;
                 end;
 
-                Result := DSS_RecreateArray_PPointer(ResultPtr, ResultCount, ResultCount^ + 1);
+                Result := DSS_RecreateArray_PPointer(ResultPtr, ResultCount, ResultCount^ + 1, true);
                 Result[ResultCount^ - 1] := elem;
                 break;
             end;

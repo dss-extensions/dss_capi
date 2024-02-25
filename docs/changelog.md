@@ -19,6 +19,7 @@
 
 ## Version 0.14.2 (to be released)
 
+- Alt/Bus: fix Lines/Loads/PCElements/PDElements when multiple elements are present
 - Alt/CE: Fix `Alt_CE_Get_RegisterValues` in the C header.
 - Alt/PDE: Check for missing solution in a few functions.
 - Commands/`CalcLaplacian`: Give proper error message instead of crashing or giving "access violation" messages.
