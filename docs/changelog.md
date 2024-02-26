@@ -17,7 +17,9 @@
 
 # Versions 0.14.x
 
-## Version 0.14.2 (to be released)
+## Version 0.14.2 (2024-02-26)
+
+Minor release to address issues found in the Alt API. Besides `Lines_Get_Parent`, the other changes do not affect behavior of the classic API functions.
 
 - Alt/Bus: fix Lines/Loads/PCElements/PDElements when multiple elements are present
 - Alt/CE: Fix `Alt_CE_Get_RegisterValues` in the C header.

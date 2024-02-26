@@ -7,7 +7,7 @@
 
 Please see [FAQ](https://github.com/dss-extensions/dss-extensions#faq) for a couple of notes.
 
-This library exposes the OpenDSS/OpenDSS-PM v9+ engine in a plain C interface that tries to reproduce most of the COM methods, plus many extensions. In fact, most of the code was initially derived from the COM implementation files. The resulting DLL can be using directly by advanced users or, for example, through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level.
+This library exposes the OpenDSS/OpenDSS-PM v9+ engine in a plain C interface that tries to reproduce most of the COM methods, plus many extensions. In fact, most of the code was initially derived from the COM implementation files. The resulting DLL can be using directly by advanced users or, for example, through the `DSS-Python` package in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level.
 
 Through the other projects under DSS-Extensions, DSS C-API enables projects to use the OpenDSS in multiple platforms (Windows, Linux, macOS) across multiple architectures (Intel x86, x86-64, ARM32, and ARM64, including Apple's M1 and M2). Most of the features added to this based library is shared across all other projects. If you need support for a language not listed below, please open a new issue (either here or in https://github.com/dss-extensions/dss-extensions/issues) and we will evaluate that language.
 
@@ -17,11 +17,12 @@ Through the other projects under DSS-Extensions, DSS C-API enables projects to u
 
 If you are looking for the bindings to other languages:
 
-- [DSS-Python](http://github.com/dss-extensions/dss_python/) is a multi-platform Python module (Windows, Linux, MacOS) very compatible with the original COM DLL. See also [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) if you don't need COM compatibility, or just would like to check its extra functionalities (you can mix DSS-Python and OpenDSSDirect.py).
+- [DSS-Python](http://github.com/dss-extensions/DSS-Python/) is a multi-platform Python module (Windows, Linux, MacOS) very compatible with the original COM DLL. See also [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) if you don't need COM compatibility, or just would like to check its extra functionalities (you can mix DSS-Python and OpenDSSDirect.py).
 - [OpenDSSDirect.jl](http://github.com/dss-extensions/OpenDSSDirect.jl/) is a Julia module, created by Tom Short (@tshort), migrated with the help of Dheepak Krishnamurthy (@kdheepak) to DSS C-API instead of the DDLL in Feb 2019.
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) is available for .NET/C#, [packaged on NuGet](https://www.nuget.org/packages/dss_sharp/), also mimics the COM classes (drop-in replacement for `OpenDSSengine.DLL`). The current version is now multi-platform too! Soon it will be possible to use it via COM.
 - [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible with the API of the official OpenDSS COM classes.
-- [dss.hpp](https://dss-extensions.org/dss_capi/): header-only library for C++, also hosped in this repository (`include/` directory). Allows using DSS C-API more comfortably from C++, abstract away memory management and low-level details such as API conventions of the DSS C-API library. Currently uses Eigen and fmt.
+- [dss.hpp](https://dss-extensions.org/dss_capi/): header-only library for C++, also hosted in this repository (`include/` directory). Allows using DSS C-API more comfortably from C++, abstract away memory management and low-level details such as API conventions of the DSS C-API library. Currently uses Eigen and fmt.
+- New projects in 2024 include [AltDSS-Python](http://dss-extensions.org/AltDSS-Python/) (where we are testing the new API, [AltDSS-Go](https://github.com/dss-extensions/AltDSS-Go/) and [AltDSS-Rust](https://github.com/dss-extensions/AltDSS-Rust/).
 
 Version 0.14.x is based on OpenDSS revision 3723 (exactly OpenDSS v9.8.0.1), with many extra/custom features.
 
@@ -46,6 +47,7 @@ Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) for a detailed list.
 
+- 2024-02-26 / version 0.14.2: More incremental updates and fixes, especially in the alternative API.
 - 2024-02-16 / version 0.14.1: Incremental updates and fixes, especially in the alternative API.
 - 2024-02-09 / version 0.14.0: Lots of changes and bugfixes, see the changelog. 
 - 2023-06-27 / version 0.13.4: Bugfix release (CapControl), incremental improvements. See the changelog or release page for details.
