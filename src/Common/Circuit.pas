@@ -2015,7 +2015,7 @@ var
     DevType,
     DevName: String;
     DevCls: TDSSClass;
-    element: TDSSCktElement;
+    element: TDSSObject;
 begin
     Result := 0;
     ParseObjectClassandName(DSS, FullObjectName, DevType, DevName);
@@ -2029,12 +2029,12 @@ begin
 
     if not DuplicatesAllowed then
     begin
-        element := TDSSCktElement(DevCls.Find(DevName, FALSE));
-        if element <> NIL then
+        element := DevCls.Find(DevName, FALSE);
+        if (element <> NIL) and (element is TDSSCktElement) then
         begin
             DSS.ActiveDSSClass := DSS.DSSClassList.Get(DevClassIndex);
             DSS.LastClassReferenced := DevClassIndex;
-            Result := element.Handle;
+            Result := TDSSCktElement(element).Handle;
             ActiveCktElement := CktElements.Get(Result);
         end;
     end
