@@ -17,6 +17,10 @@
 
 # Versions 0.14.x
 
+## Version 0.14.3 (next, unreleased)
+
+- API/YMatrix: check for valid circuit in a few more functions.
+
 ## Version 0.14.2 (2024-02-26)
 
 Minor release to address issues found in the Alt API. Besides `Lines_Get_Parent`, the other changes do not affect behavior of the classic API functions.

@@ -187,37 +187,48 @@ end;
 
 function YMatrix_Get_LoadsNeedUpdating(): TAPIBoolean; CDECL;
 begin
+    Result := False;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
     Result := DSSPrime.ActiveCircuit.Solution.LoadsNeedUpdating;
 end;
 
 procedure YMatrix_Set_SolutionInitialized(arg: TAPIBoolean); CDECL;
 begin
+    if InvalidCircuit(DSSPrime) then
+        Exit;
    DSSPrime.ActiveCircuit.Solution.SolutionInitialized := arg;
 end;
 
 function YMatrix_Get_SolutionInitialized(): TAPIBoolean; CDECL;
 begin
+    Result := False;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
     Result := DSSPrime.ActiveCircuit.Solution.SolutionInitialized;
 end;
 
-
 function YMatrix_CheckConvergence(): TAPIBoolean; CDECL;
 begin
+    Result := False;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
     Result := DSSPrime.ActiveCircuit.Solution.Converged;
 end;
 
 procedure YMatrix_Set_Iteration(Value: Integer); CDECL;
 begin
-    if InvalidCircuit(DSSPrime) then Exit;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
    DSSPrime.ActiveCircuit.Solution.Iteration := Value;
 end;
 
 function YMatrix_Get_Iteration(): Integer; CDECL;
 begin
-    if DSSPrime.ActiveCircuit <> NIL then
-        Result := DSSPrime.ActiveCircuit.Solution.Iteration
-    else
-        Result := -1;
+    Result := -1;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.Solution.Iteration
 end;
 
 procedure YMatrix_SetGeneratordQdV(); CDECL;
