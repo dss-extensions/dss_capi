@@ -512,9 +512,12 @@ begin
         pLoad := ActiveLoad;
         IF pLoad <> Nil THEN
         Begin
-          setlength(myDBLArray, pLoad.nZIPV);
-          For k:=0 to ( pLoad.nZIPV - 1 ) Do
-              myDBLArray[k] := pLoad.ZipV^[ k + 1 ];
+          if (pLoad.nZIPV >= 1) then
+          Begin
+            setlength(myDBLArray, pLoad.nZIPV);
+            For k:=0 to ( pLoad.nZIPV - 1 ) Do
+                myDBLArray[k] := pLoad.ZipV^[ k + 1 ];
+          End;
         End;
         myPointer :=  @(myDBLArray[0]);
         mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
