@@ -494,8 +494,9 @@ begin
           WriteStr2Array(EventStrings[ActiveActor].Strings[i]);
           WriteStr2Array(Char(0));
         End;
-      END
-      Else  WriteStr2Array('');
+      END;
+      if (length(myStrArray) = 0) then
+        WriteStr2Array('None');
       myPointer :=  @(myStrArray[0]);
       mySize    :=  Length(myStrArray);
     end;
@@ -560,8 +561,9 @@ begin
              WriteStr2Array(Char(0));
           End;
         end;
-      END
-      Else  WriteStr2Array('');
+      END;
+      if (length(myStrArray) = 0) then
+        WriteStr2Array('None');
       myPointer :=  @(myStrArray[0]);
       mySize    :=  Length(myStrArray);
     end;
@@ -590,8 +592,9 @@ begin
             End;
           end;
         end;
-      End
-      Else  WriteStr2Array('');
+      End;
+      if (length(myStrArray) = 0) then
+        WriteStr2Array('None');
       myPointer :=  @(myStrArray[0]);
       mySize    :=  Length(myStrArray);
     end;

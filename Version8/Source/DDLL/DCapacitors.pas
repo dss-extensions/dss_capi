@@ -226,8 +226,7 @@ var
 begin
   case mode of
   0: begin  // Capacitors.AllNames
-      setlength(myStrArray,1);
-      myStrArray[0] :=  0;
+      setlength(myStrArray,0);
       mySize        :=  0;
       IF ActiveCircuit[ActiveActor] <> Nil THEN
       Begin
@@ -237,23 +236,16 @@ begin
           setlength(myStrArray,0);
           lst := ShuntCapacitors;
           elem := lst.First;
-          WHILE elem<>Nil DO Begin
-            S             := elem.Name;
-            for i := 1 to High(S) do
-            Begin
-              setlength(myStrArray,length(myStrArray) + 1);
-              myStrArray[High(myStrArray)]  :=  Byte(S[i]);
-            End;
+          WHILE elem<>Nil DO
+          Begin
+            WriteStr2Array(elem.Name);
+            WriteStr2Array(Char(0));
             elem := lst.Next;
-            if elem <> Nil then
-            Begin
-              setlength(myStrArray,length(myStrArray) + 1);
-              myStrArray[High(myStrArray)]  :=  Byte(0);
-            End;
-
           End;
         End;
       End;
+      if (length(myStrArray) = 0) then
+        WriteStr2Array('None');
       myType    :=  4;                  // String
       mySize    :=  length(myStrArray);
       myPointer :=  @(myStrArray[0]);

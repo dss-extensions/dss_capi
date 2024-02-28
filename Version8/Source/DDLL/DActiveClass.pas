@@ -101,8 +101,7 @@ Var
 begin
   case mode of
   0: begin
-    setlength(myStrArray,1);
-    myStrArray[0] :=  0;
+    setlength(myStrArray,0);
     mySize        :=  0;
     If (ActiveCircuit[ActiveActor] <> Nil) and Assigned(ActiveDSSClass[ActiveActor]) Then
     Begin
@@ -111,21 +110,14 @@ begin
          setlength(myStrArray,0);
          idx := ActiveDSSClass[ActiveActor].First;
          WHILE idx > 0 DO  Begin
-            S := ActiveDSSObject[ActiveActor].Name;
-            for i := 1 to High(S) do
-            Begin
-              setlength(myStrArray,length(myStrArray) + 1);
-              myStrArray[High(myStrArray)]  :=  Byte(S[i]);
-            End;
+            WriteStr2Array(ActiveDSSObject[ActiveActor].Name);
+            WriteStr2Array(Char(0));
             idx := ActiveDSSClass[ActiveActor].Next;
-            if idx > 0 then
-            Begin
-              setlength(myStrArray,length(myStrArray) + 1);
-              myStrArray[High(myStrArray)]  :=  Byte(0);
-            End;
          End;
        End
     End;
+    if (length(myStrArray) = 0) then
+      WriteStr2Array('None');
     myType    :=  4;                  // String
     mySize    :=  length(myStrArray);
     myPointer :=  @(myStrArray[0]);

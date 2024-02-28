@@ -299,8 +299,9 @@ begin
             PVSystemElem := PVSystems.Next;
           End;
         End;
-      End
-      Else  WriteStr2Array('');
+      End;
+      if (length(myStrArray) = 0) then
+        WriteStr2Array('None');
       myPointer :=  @(myStrArray[0]);
       mySize    :=  Length(myStrArray);
     end

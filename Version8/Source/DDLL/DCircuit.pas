@@ -294,10 +294,10 @@ begin
   0: begin                                             // Circuit.Losses
     myType  :=  3;          // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := CZero;
     IF ActiveCircuit[ActiveActor] <> Nil THEN
-       myCmplxArray[0] := ActiveCircuit[ActiveActor].Losses[ActiveActor]
-    else
-      myCmplxArray[0] := cmplx( 0, 0 );
+       myCmplxArray[0] := ActiveCircuit[ActiveActor].Losses[ActiveActor];
+
     myPointer :=  @(myCmplxArray[0]);
     mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
 
@@ -305,6 +305,7 @@ begin
   1: begin                                             // Circuit.LineLosses
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := CZero;
     IF ActiveCircuit[ActiveActor] <> NIL THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO
@@ -318,15 +319,15 @@ begin
         End;
         myCmplxArray[0] := cmulreal(Loss, 0.001);
       End;
-    End
-    else
-      myCmplxArray[0] := cmplx(0,0);
+    End;
+
     myPointer :=  @(myCmplxArray[0]);
     mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   2: begin                                             // Circuit.SubstationLosses
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := CZero;
     IF ActiveCircuit[ActiveActor] <> nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO
@@ -340,15 +341,15 @@ begin
        End;
         myCmplxArray[0] := cmulreal(Loss, 0.001);
       End
-    End
-    else
-      myCmplxArray[0] := cmplx(0,0);
+    End;
+
     myPointer :=  @(myCmplxArray[0]);
     mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   3: begin                                             // Circuit.TotalPower
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := CZero;
     IF ActiveCircuit[ActiveActor] <> nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO Begin
@@ -360,15 +361,15 @@ begin
         End;
         myCmplxArray[0] := cmulreal(cPower, 0.001);
       End
-    end
-    else
-      myCmplxArray[0] := cmplx(0,0);
+    end;
+
     myPointer :=  @(myCmplxArray[0]);
     mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   4: begin                                             // Circuit.AllBusVolts
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := CZero;
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
      WITH ActiveCircuit[ActiveActor] DO
@@ -384,14 +385,15 @@ begin
          End;
        End;
      End
-    End
-    ELSE myCmplxArray[0] := cmplx(0,0);
+    End;
+
     myPointer :=  @(myCmplxArray[0]);
     mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   5: begin                                             // Circuit.AllBusVMag
     myType  :=  2;        // Double
     setlength(myDBLArray, 1);
+    myDBLArray := 0;
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO
@@ -408,8 +410,8 @@ begin
           End;
         End;
       End
-    End
-    ELSE myDBLArray[0] := 0;
+    End;
+
     myPointer :=  @(myDBLArray[0]);
     mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
@@ -427,8 +429,10 @@ begin
           WriteStr2Array(Char(0));
         End;
       End
-    End
-    ELSE WriteStr2Array('');
+    End;
+    if (length(myStrArray) = 0) then
+      WriteStr2Array('None');
+
     myPointer :=  @(myStrArray[0]);
     mySize    :=  Length(myStrArray);
   end;
@@ -445,14 +449,16 @@ begin
           WriteStr2Array(Char(0));
         End;
       End
-    End
-    ELSE WriteStr2Array('');
+    End;
+    if (length(myStrArray) = 0) then
+      WriteStr2Array('None');
     myPointer :=  @(myStrArray[0]);
     mySize    :=  Length(myStrArray);
   end;
   8: begin                                             // Circuit.AllElementLosses
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := CZero;
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO
@@ -467,14 +473,15 @@ begin
           pCktElem := CktElements.Next;
         End;
       End
-    End
-    ELSE myCmplxArray[0]  :=  cmplx(0,0);
+    End;
+
     myPointer :=  @(myCmplxArray[0]);
     mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   9: begin                                             // Circuit.AllBusMagPu
     myType  :=  2;        // Double
     setlength(myDBLArray, 1);
+    myDBLArray[0] := 0;
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO
@@ -491,8 +498,7 @@ begin
             End;
         End;
       End
-    End
-    ELSE myDBLArray[0] := 0;
+    End;
     myPointer :=  @(myDBLArray[0]);
     mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
@@ -513,8 +519,9 @@ begin
           End;
         End;
       End
-    End
-    ELSE WriteStr2Array('');
+    End;
+    if (length(myStrArray) = 0) then
+      WriteStr2Array('None');
     myPointer :=  @(myStrArray[0]);
     mySize    :=  Length(myStrArray);
   end;
@@ -522,9 +529,8 @@ begin
     { Return zero length Array if no circuit or no Y matrix}
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
-    IF ActiveCircuit[ActiveActor] = nil                Then myCmplxArray[0] :=  cmplx(0,0)
-    ELSE If ActiveCircuit[ActiveActor].Solution.hY = 0 Then myCmplxArray[0] :=  cmplx(0,0)
-    ELSE
+    myCmplxArray[0] :=  CZero;
+    IF (not (ActiveCircuit[ActiveActor] = nil)) and (not (ActiveCircuit[ActiveActor].Solution.hY = 0)) then
     Begin
       With ActiveCircuit[ActiveActor] Do
       Begin
@@ -560,6 +566,7 @@ begin
   12: begin                                            // Circuit.AllBusDistances
     myType  :=  2;        // Double
     setlength(myDBLArray, 1);
+    myDBLArray[0] := 0;
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO
@@ -568,14 +575,14 @@ begin
         FOR i := 0 to NumBuses-1 DO
           myDBLArray[i] := Buses^[i + 1].DistFromMeter;
       End
-    End
-    ELSE myDBLArray[0] := 0;
+    End;
     myPointer :=  @(myDBLArray[0]);
     mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
   13: begin                                            // Circuit.AllNodeDistances
     myType  :=  2;        // Double
     setlength(myDBLArray, 1);
+    myDBLArray[0] := 0;
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO
@@ -591,14 +598,14 @@ begin
           End;
         End;
       End;
-    End
-    ELSE myDBLArray[0]  := 0;
+    End;
     myPointer :=  @(myDBLArray[0]);
     mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
   14: begin                                            // Circuit.AllNodeVmagByPhase
     myType  :=  2;        // Double
     setlength(myDBLArray, 1);
+    myDBLArray[0] := 0;
     PInt  :=  myPointer;
     Phase :=  integer(PInt^);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
@@ -623,14 +630,14 @@ begin
         For i := 0 to (k - 1) do  myDBLArray[i] := Temp^[i + 1];
         Freemem(Temp, SizeOF(Temp^[1])*NumNodes);
       End
-    End
-    ELSE myDBLArray[0] := 0;
+    End;
     myPointer :=  @(myDBLArray[0]);
     mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
   15: begin                                            // Circuit.AllNodeVmagPUByPhase
     myType  :=  2;        // Double
     setlength(myDBLArray, 1);
+    myDBLArray[0] := 0;
     PInt  :=  myPointer;
     Phase :=  integer(PInt^);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
@@ -655,14 +662,14 @@ begin
         For i := 0 to (k - 1) do  myDBLArray[i] := Temp^[i+1];
         Freemem(Temp, SizeOF(Temp^[1])*NumNodes);
       End;
-    End
-    ELSE myDBLArray[0]  :=  0;
+    End;
     myPointer :=  @(myDBLArray[0]);
     mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
   16: begin                                            // Circuit.AllNodeDistancesByPhase
     myType  :=  2;        // Double
     setlength(myDBLArray, 1);
+    myDBLArray[0] := 0;
     PInt  :=  myPointer;
     Phase :=  integer(PInt^);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
@@ -691,8 +698,7 @@ begin
 
         Freemem(Temp, SizeOF(Temp^[1])*NumNodes);
       End;
-    End
-    ELSE myDBLArray[0]  :=  0;
+    End;
     myPointer :=  @(myDBLArray[0]);
     mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
@@ -728,14 +734,16 @@ begin
 
         FreeStringArray(Temp2, NumNodes);
       End;
-    End
-    ELSE WriteStr2Array('');
+    End;
+    if (length(myStrArray) = 0) then
+      WriteStr2Array('None');
     myPointer :=  @(myStrArray[0]);
     mySize    :=  Length(myStrArray);
   end;
   18: begin                                            // Circuit.YNodeVArray
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := CZero;
     myPointer :=  @(myCmplxArray[0]);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
@@ -743,8 +751,7 @@ begin
       Begin
           myPointer := @(ActiveCircuit[ActiveActor].Solution.NodeV^[1]);
       End;
-    End
-    ELSE  myCmplxArray[0] := cmplx(0,0);
+    End;
     mySize    :=  SizeOf(ActiveCircuit[ActiveActor].Solution.NodeV^[1]) * ActiveCircuit[ActiveActor].NumNodes;
   end;
   19: begin                                            // Circuit.YNodeOrder
@@ -761,21 +768,22 @@ begin
             WriteStr2Array(Char(0));
         End;
       End;
-    End
-    ELSE WriteStr2Array('');
+    End;
+    if (length(myStrArray) = 0) then
+      WriteStr2Array('None');
     myPointer :=  @(myStrArray[0]);
     mySize    :=  Length(myStrArray);
   end;
   20: begin                                            // Circuit.YCurrents
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := CZero;
     myPointer :=  @(myCmplxArray[0]);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO
           myPointer := @(ActiveCircuit[ActiveActor].Solution.Currents^[1]);
-    End
-    ELSE myCmplxArray[0] := cmplx(0,0);
+    End;
     mySize    :=  SizeOf(ActiveCircuit[ActiveActor].Solution.Currents^[1]) * ActiveCircuit[ActiveActor].NumNodes;
   end
   else

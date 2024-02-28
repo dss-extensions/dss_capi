@@ -112,6 +112,7 @@ begin
   0:begin  // Parser.Vector
       myType        :=  2;        // Double
       setlength(myDBLArray, 1);
+      myDBLArray[0] := 0;
       ExpectedSize  := integer(mySize);
       VectorBuffer  := Allocmem(SizeOf(VectorBuffer^[1]) * ExpectedSize);
       ActualSize    := ComParser.ParseAsVector(ExpectedSize, VectorBuffer);

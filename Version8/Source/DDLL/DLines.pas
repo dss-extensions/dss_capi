@@ -585,14 +585,16 @@ begin
               End;
             End;
           End;
-        End
-        Else  WriteStr2Array('');
+        End;
+        if (length(myStrArray) = 0) then
+          WriteStr2Array('None');
         myPointer :=  @(myStrArray[0]);
         mySize    :=  Length(myStrArray);
       end;
   1:  begin  // Lines.RMatrix read
         myType  :=  2;        // Double
         setlength(myDBLArray, 1);
+        myDBLArray[0] := 0;
         IF ActiveCircuit[ActiveActor] <> NIL THEN
         Begin
           If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) THEN
@@ -612,8 +614,7 @@ begin
               End;
             End;
           End;
-        End
-        else myDBLArray[0] := 0;
+        End;
         myPointer :=  @(myDBLArray[0]);
         mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
       end;
@@ -646,6 +647,7 @@ begin
   3:  begin  // Lines.Xmatrix read
         myType  :=  2;        // Double
         setlength(myDBLArray, 1);
+        myDBLArray[0] := 0;
         IF ActiveCircuit[ActiveActor] <> NIL THEN
         Begin
           If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) THEN
@@ -665,8 +667,7 @@ begin
               End;
             End;
           End;
-        End
-        else myDBLArray[0] := 0;
+        End;
         myPointer :=  @(myDBLArray[0]);
         mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
       end;
@@ -699,6 +700,7 @@ begin
   5:  begin  // Lines.CMatrix read
         myType  :=  2;        // Double
         setlength(myDBLArray, 1);
+        myDBLArray[0] := 0;
         IF ActiveCircuit[ActiveActor] <> NIL THEN
         Begin
           If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) THEN
@@ -719,8 +721,7 @@ begin
               End;
             End;
           End;
-        End
-        else myDBLArray[0] := 0;
+        End;
         myPointer :=  @(myDBLArray[0]);
         mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
       end;
@@ -753,7 +754,7 @@ begin
   7:  begin  // Lines.Yprim read
         myType  :=  3;        // Complex
         setlength(myCmplxArray, 1);
-        myCmplxArray[0] := cmplx(0,0);
+        myCmplxArray[0] := CZero;
         IF ActiveCircuit[ActiveActor] <> nil Then
         Begin
           With ActiveCircuit[ActiveActor] Do

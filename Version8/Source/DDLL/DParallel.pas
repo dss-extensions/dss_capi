@@ -85,7 +85,7 @@ Begin
       myPointer :=  @(myIntArray[0]);
       mySize    :=  SizeOf(myIntArray[0]) * Length(myIntArray);
     end;
-  1:begin  // Parallel.AxtorState Read
+  1:begin  // Parallel.ActorState Read
       myType  :=  1;        // Integer
       setlength(myIntArray, NumOfActors);
       for i := 1 to NumOfActors do
