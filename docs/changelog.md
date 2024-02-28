@@ -21,6 +21,7 @@
 
 - API/YMatrix: check for valid circuit in a few more functions.
 - API/Circuit: adjust `SetActiveElement` to be more conformant with the official version, i.e., returns -1 for non-circuit elements.
+- Alt/CircuitElement: Fix error message.
 
 ## Version 0.14.2 (2024-02-26)
 

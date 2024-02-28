@@ -1158,9 +1158,9 @@ begin
     end
     else
     begin
-        if (terminalIdx = 0) or (terminalIdx > obj.NTerms) then
+        if (terminalIdx <= 0) or (terminalIdx > obj.NTerms) then
         begin
-            obj.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals. Use -1 for all terminals.', [obj.NTerms, obj.FullName], 97803);
+            obj.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals. Use -1 for all terminals.', [terminalIdx, obj.FullName, obj.NTerms], 97803);
             Exit;
         end;
         minTerm := terminalIdx;
