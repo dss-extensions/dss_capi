@@ -348,8 +348,9 @@ begin
             End;
           End;
         End;
-      End
-      Else  WriteStr2Array('');
+      End;
+      if (length(myStrArray) = 0) then
+        WriteStr2Array('None');
       myPointer :=  @(myStrArray[0]);
       mySize    :=  Length(myStrArray);
     end;
@@ -365,8 +366,9 @@ begin
           p := @(myStrArray[0]);
           pmon.MonitorStream.Read(p^, pmon.MonitorStream.Size);   // Move it all over
         End
-      End
-      Else  WriteStr2Array('');
+      End;
+      if (length(myStrArray) = 0) then
+        WriteStr2Array('None');
       myPointer :=  @(myStrArray[0]);
       mySize    :=  Length(myStrArray);
     end;
@@ -406,8 +408,9 @@ begin
             AuxParser[ActiveActor].Whitespace := SaveWhiteSpace;
           End;
         End;
-      End
-      Else  WriteStr2Array('');
+      End;
+      if (length(myStrArray) = 0) then
+        WriteStr2Array('None');
       myPointer :=  @(myStrArray[0]);
       mySize    :=  Length(myStrArray);
     end;

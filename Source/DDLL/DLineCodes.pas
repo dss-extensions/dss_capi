@@ -295,6 +295,7 @@ begin
     0:  begin  // LineCodes.Rmatrix Read
           myType  :=  2;        // Double
           setlength(myDBLArray, 1);
+          myDBLArray[0] := 0;
           IF ActiveCircuit[ActiveActor] <> NIL THEN
           Begin
             pLineCode := LineCodeClass.GetActiveObj ;
@@ -311,8 +312,7 @@ begin
                 End;
               End;
             End;
-          End
-          else myDBLArray[0] := 0;
+          End;
           myPointer :=  @(myDBLArray[0]);
           mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
         end;
@@ -343,6 +343,7 @@ begin
     2:  begin  // LineCodes.Xmatrix Read
           myType  :=  2;        // Double
           setlength(myDBLArray, 1);
+          myDBLArray[0] := 0;
           IF ActiveCircuit[ActiveActor] <> NIL THEN
           Begin
             pLineCode := LineCodeClass.GetActiveObj ;
@@ -359,8 +360,7 @@ begin
                 End;
               End;
             End;
-          End
-          else myDBLArray[0] := 0;
+          End;
           myPointer :=  @(myDBLArray[0]);
           mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
         end;
@@ -390,6 +390,7 @@ begin
     4:  begin  // LineCodes.Cmatrix Read
           myType  :=  2;        // Double
           setlength(myDBLArray, 1);
+          myDBLArray[0] := 0;
           IF ActiveCircuit[ActiveActor] <> NIL
           THEN
           Begin
@@ -408,8 +409,7 @@ begin
                 End;
               End;
             End;
-          End
-          else myDBLArray[0] := 0;
+          End;
           myPointer :=  @(myDBLArray[0]);
           mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
         end;
@@ -455,8 +455,9 @@ begin
                 End;
               End;
             End;
-          end
-          Else  WriteStr2Array('');
+          end;
+          if (length(myStrArray) = 0) then
+            WriteStr2Array('None');
           myPointer :=  @(myStrArray[0]);
           mySize    :=  Length(myStrArray);
         end

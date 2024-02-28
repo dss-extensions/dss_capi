@@ -499,22 +499,23 @@ begin
               pLoad := Loads.Next;
             End;
           End;
-        End
-        Else  WriteStr2Array('');
+        End;
+        if (length(myStrArray) = 0) then
+          WriteStr2Array('None');
         myPointer :=  @(myStrArray[0]);
         mySize    :=  Length(myStrArray);
       end;
   1:  begin                   // Loads.ZIPV - read
         myType  :=  2;        // Double
         setlength(myDBLArray, 1);
+        myDBLArray[0] := 0;
         pLoad := ActiveLoad;
         IF pLoad <> Nil THEN
         Begin
           setlength(myDBLArray, pLoad.nZIPV);
           For k:=0 to ( pLoad.nZIPV - 1 ) Do
               myDBLArray[k] := pLoad.ZipV^[ k + 1 ];
-        End
-        else myDBLArray[0] := 0;
+        End;
         myPointer :=  @(myDBLArray[0]);
         mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
       end;

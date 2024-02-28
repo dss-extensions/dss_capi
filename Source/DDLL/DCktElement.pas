@@ -507,9 +507,9 @@ begin
            WriteStr2Array(Char(0));
         End;
       End;
-    End
-    Else
-      WriteStr2Array('');
+    End;
+    if (length(myStrArray) = 0) then
+      WriteStr2Array('None');
     myPointer :=  @(myStrArray[0]);
     mySize    :=  Length(myStrArray);
   end;
@@ -535,6 +535,7 @@ begin
   2: begin                                          // CktElement.Voltages
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := CZero;
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO
@@ -554,14 +555,14 @@ begin
           End;
         End;
       End;
-    End
-    ELSE myCmplxArray[0] := cmplx(0,0);
+    End;
     myPointer :=  @(myCmplxArray[0]);
     mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   3: begin                                          // CktElement.Currents
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := cmplx(0,0);
     If ActiveCircuit[ActiveActor] <> Nil Then
     Begin
       WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
@@ -578,14 +579,14 @@ begin
          End;
          Reallocmem(cBuffer,0);
       End
-    End
-    Else  myCmplxArray[0] := cmplx(0,0);
+    End;
     myPointer :=  @(myCmplxArray[0]);
     mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   4: begin                                          // CktElement.Powers
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := cmplx(0,0);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
@@ -601,14 +602,14 @@ begin
         End;
         Reallocmem(cBuffer,0);
       End
-    End
-    ELSE myCmplxArray[0] := cmplx(0,0);
+    End;
     myPointer :=  @(myCmplxArray[0]);
     mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   5: begin                                          // CktElement.Losses
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := cmplx(0,0);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO
@@ -618,14 +619,14 @@ begin
          myCmplxArray[0] := ActiveCktElement.Losses[ActiveActor];
         End;
       End
-    End
-    ELSE myCmplxArray[0] := cmplx(0,0);
+    End;
     myPointer :=  @(myCmplxArray[0]);
     mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   6: begin                                          // CktElement.Phaselosses
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := cmplx(0,0);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
@@ -641,8 +642,7 @@ begin
         End;
         Reallocmem(cBuffer,0);
       End
-    End
-    ELSE myCmplxArray[0] := cmplx(0,0);
+    End;
     myPointer :=  @(myCmplxArray[0]);
     mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
@@ -728,6 +728,7 @@ begin
   9: begin                                          // CktElement.Seqpowers
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := CZero;
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO
@@ -782,8 +783,7 @@ begin
           End;
         End;
       End
-    End
-    Else myCmplxArray[0] := cmplx(0,0);
+    End;
     myPointer :=  @(myCmplxArray[0]);
     mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
@@ -807,14 +807,16 @@ begin
           End;
         End
       End;
-    End
-    ELSE WriteStr2Array('');
+    End;
+    if (length(myStrArray) = 0) then
+      WriteStr2Array('None');
     myPointer :=  @(myStrArray[0]);
     mySize    :=  Length(myStrArray);
   end;
   11: begin                                         // CktElement.Residuals
     myType  :=  3;        // Complex
     setlength(myPolarArray, 1);
+    myPolarArray[0] := ctopolar(CZero);
     If ActiveCircuit[ActiveActor] <> Nil Then
     Begin
       WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
@@ -836,14 +838,14 @@ begin
         End;
         Reallocmem(cBuffer,0);
       End
-    End
-    Else myPolarArray[0] := ctopolar(cmplx(0,0));
+    End;
     myPointer :=  @(myPolarArray[0]);
     mySize    :=  SizeOf(myPolarArray[0]) * Length(myPolarArray);
   end;
   12: begin                                         // CktElement.YPrim
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := CZero;
     IF ActiveCircuit[ActiveActor] <> nil Then
     Begin
       With ActiveCircuit[ActiveActor] Do
@@ -865,15 +867,14 @@ begin
           End;
         End;
       End
-    End
-    ELSE myCmplxArray[0] := cmplx(0,0);
+    End;
     myPointer :=  @(myCmplxArray[0]);
     mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   13: begin                                         // CktElement.CplxSeqVoltages
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
-    myCmplxArray[0] := cmplx(0,0);
+    myCmplxArray[0] := CZero;
     IF   ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO
@@ -919,7 +920,7 @@ begin
   14: begin                                         // CktElement.CplxSeqCurrents
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
-    myCmplxArray[0] := cmplx(0,0);
+    myCmplxArray[0] := CZero;
     IF   ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO
@@ -984,8 +985,9 @@ begin
           {Else zero-length array null string}
         End
       End;
-    End
-    ELSE WriteStr2Array('');
+    End;
+    if (length(myStrArray) = 0) then
+      WriteStr2Array('None');
     myPointer :=  @(myStrArray[0]);
     mySize    :=  Length(myStrArray);
   end;
@@ -1045,6 +1047,7 @@ begin
   18: begin                                         // CktElement.CurrentsMagAng
     myType  :=  3;        // Complex
     setlength(myPolarArray, 1);
+    myPolarArray[0] := ctopolar(CZero);
     If ActiveCircuit[ActiveActor] <> Nil Then
     Begin
        WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
@@ -1061,8 +1064,7 @@ begin
          End;
          Reallocmem(cBuffer,0);
        End
-    End
-    Else  myPolarArray[0] := ctopolar(cmplx(0,0));
+    End;
     myPointer :=  @(myPolarArray[0]);
     mySize    :=  SizeOf(myPolarArray[0]) * Length(myPolarArray);
   end;
@@ -1070,6 +1072,7 @@ begin
 // Return voltages for all terminals
     myType  :=  3;        // Complex
     setlength(myPolarArray, 1);
+    myPolarArray[0] := ctopolar(CZero);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO
@@ -1089,8 +1092,7 @@ begin
           End;
         End;
       End;
-    End
-    ELSE myPolarArray[0] := ctopolar(cmplx(0,0));
+    End;
     myPointer :=  @(myPolarArray[0]);
     mySize    :=  SizeOf(myPolarArray[0]) * Length(myPolarArray);
   end;
@@ -1098,6 +1100,7 @@ begin
 // Return total powers for the active element at all terminals
     myType  :=  3;        // Complex
     setlength(myCmplxArray, 1);
+    myCmplxArray[0] := CZero;
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
@@ -1122,8 +1125,7 @@ begin
         End;
         Reallocmem(cBuffer,0);
       End;
-    End
-    ELSE myCmplxArray[0] := cmplx(0,0);
+    End;
     myPointer :=  @(myCmplxArray[0]);
     mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end
