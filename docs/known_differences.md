@@ -1,6 +1,6 @@
 # Known differences 
 
-This document assumes some knowledge of the COM API and the basic model of DSS C-API.
+This document assumes some knowledge of the COM API and the basic model of AltDSS/DSS C-API.
 
 ## Important notes
 
@@ -14,7 +14,7 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
 
 ## Differences
 
-- There is no direct support for plots from the DSS language or general GUI elements. As a library, DSS C-API can, of course, be integrate with GUI environments. Optional integration with plotting system is being implemented. For example, [DSS-Python provides optional plotting capabilities based on matplotlib](https://github.com/dss-extensions/dss_python/blob/master/docs/examples/Plotting.ipynb).
+- There is no direct support for plots from the DSS language or general GUI elements. As a library, DSS C-API can, of course, be integrated with GUI environments. Optional integration with plotting system is being implemented. For example, [DSS-Python provides optional plotting capabilities based on matplotlib](https://github.com/dss-extensions/dss_python/blob/master/docs/examples/Plotting.ipynb).
 - The TCP connection options are disabled as well as GIS features (which require proprietary software not available to us).
 - This library contains fixes for user-written DLLs ("UserModels" and "UserControls" for elements like Generators and CapUserControls) which include truncated pointers and correct support for the DSS language `Edit` command. Some of these have been fixed in the official version after some time, but at least the `Edit` issue persists.
 - Free Pascal hashlists are used for tracking elements. This means that accessing elements by name is usually faster in DSS C-API and present a linear behavior. We still recommend using the element index where possible for better performance in general.
