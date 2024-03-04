@@ -414,7 +414,7 @@ extern "C" {
     */
     typedef double (*dss_obj_float64_func_t)(void* obj);
     typedef int32_t (*dss_obj_int32_func_t)(void* obj);
-    typedef int32_t (*dss_obj_float64_int32_func_t)(void* obj, int32_t val);
+    typedef double (*dss_obj_float64_int32_func_t)(void* obj, int32_t val);
     typedef double (*dss_ctx_bus_float64_func_t)(const void* ctx, void* obj);
     typedef int32_t (*dss_ctx_bus_int32_func_t)(const void* ctx, void* obj);
 
