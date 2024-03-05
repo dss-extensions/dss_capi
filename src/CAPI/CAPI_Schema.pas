@@ -1143,6 +1143,7 @@ var
     poffset2: PtrInt;
     param2: TJSONData;
     prop: TJSONObject;
+    units: String;
 begin
     props := TJSONArray.Create();
     localEnums := TJSONArray.Create();
@@ -1221,6 +1222,16 @@ begin
                 prop.Add('arrayAlternative', PropertyArrayAlternative[i]);
             if (PropertyType[i] = TPropertyType.DeprecatedAndRemoved) or (TPropertyFlag.Deprecated in PropertyFlags[i]) then
                 prop.Add('deprecationMessage', PropertyDeprecatedMessage[i]);
+
+            units := extractUnits(PropertyFlags[i]);
+            if units <> '' then
+            begin
+                if units = 'ToD-hour' then
+                begin
+                    units := 'hour (0-24)';
+                end;
+                prop.Add('units', units);
+            end;
 
             props.Add(prop);
         end;
