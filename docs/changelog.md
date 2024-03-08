@@ -21,7 +21,7 @@
 
 - API/YMatrix: check for valid circuit in a few more functions.
 - API/Circuit: adjust `SetActiveElement` to be more conformant with the official version, i.e., returns -1 for non-circuit elements.
-- Alt/CircuitElement: Fix error message.
+- Alt/CircuitElement: Fix error message; fix logic for `DisplayName`.
 - Header/Alt: fix `dss_obj_float64_int32_func_t` (returns `double`, not `int32_t`).
 
 ## Version 0.14.2 (2024-02-26)

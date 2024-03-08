@@ -1254,7 +1254,7 @@ end;
 //------------------------------------------------------------------------------
 function Alt_CE_Get_DisplayName(elem: TDSSCktElement): PAnsiChar; CDECL;
 begin
-    if elem.DisplayName = '' then
+    if elem.DisplayName <> '' then
         Result := DSS_GetAsPAnsiChar(elem.DSS, elem.DisplayName)
     else
         Result := DSS_GetAsPAnsiChar(elem.DSS, elem.ParentClass.Name + '_' + elem.Name);
