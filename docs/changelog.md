@@ -21,7 +21,13 @@
 
 - API/YMatrix: check for valid circuit in a few more functions.
 - API/Circuit: adjust `SetActiveElement` to be more conformant with the official version, i.e., returns -1 for non-circuit elements.
-- Alt/CircuitElement: Fix error message; fix logic for `DisplayName`.
+- Alt/CircuitElement:
+    - Fix error message
+    - Fix logic for `DisplayName`
+    - Fix 13+ old bug in `Open`/`Close`/`IsOpen` -- the terminal parameters was being effectively ignored, applying the operations to the active terminal; also add check for valid terminal index.
+
+- API/CircuitElement (classic): call Alt implementation for `Open`/`Close`/`IsOpen` to reduce code duplication.
+- API/Capacitors: fix `Close` (same issue as CE).
 - Header/Alt: fix `dss_obj_float64_int32_func_t` (returns `double`, not `int32_t`).
 
 ## Version 0.14.2 (2024-02-26)

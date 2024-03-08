@@ -343,8 +343,8 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     
-    //TODO: why is this changing ActiveTerminal directly?
     elem.ActiveTerminal := @elem.Terminals[0];  // make sure terminal 1 is closed
+    elem.FActiveTerminal := 0;  // make sure terminal 1 is closed
     elem.Closed[0] := TRUE;    // closes all phases
     for i := 1 to elem.NumSteps do
         elem.States[i] := 1;

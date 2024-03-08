@@ -25,7 +25,6 @@ type
         FEnabled: Boolean;
     PRIVATE
         FBusNames: pStringArray; // Bus + Nodes (a.1.2.3.0)
-        FActiveTerminal: Int8;
         FYPrimInvalid: Boolean;
 
         procedure Set_Freq(Value: Double);  // set freq and recompute YPrim.
@@ -48,6 +47,7 @@ type
         procedure DoYprimCalcs(Ymatrix: TCMatrix);
 
     PUBLIC
+        FActiveTerminal: Int8;
         Fnterms: Int8;
         Fnconds: Int8;  // no. conductors per terminal
         Fnphases: Integer;  // Phases, this device -- TODO: Int8 someday...

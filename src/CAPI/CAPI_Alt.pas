@@ -660,15 +660,27 @@ end;
 //------------------------------------------------------------------------------
 procedure Alt_CE_Close(elem: TDSSCktElement; Term, Phs: Integer); CDECL;
 begin
-    //TODO: why is this changing ActiveTerminal directly?
+    if (Term <= 0) or (Term > elem.fNterms) then
+    begin
+        elem.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals.', [Term, elem.FullName, elem.NTerms], 97804);
+        Exit;
+    end;
+
     elem.ActiveTerminal := @elem.Terminals[Term - 1];
+    elem.FActiveTerminal := Term - 1;
     elem.Closed[Phs] := TRUE;
 end;
 //------------------------------------------------------------------------------
 procedure Alt_CE_Open(elem: TDSSCktElement; Term, Phs: Integer); CDECL;
 begin
-    //TODO: why is this changing ActiveTerminal directly?
+    if (Term <= 0) or (Term > elem.fNterms) then
+    begin
+        elem.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals.', [Term, elem.FullName, elem.NTerms], 97805);
+        Exit;
+    end;
+
     elem.ActiveTerminal := @elem.Terminals[Term - 1];
+    elem.FActiveTerminal := Term - 1;
     elem.Closed[Phs] := FALSE;
 end;
 //------------------------------------------------------------------------------
@@ -678,8 +690,14 @@ var
 begin
     Result := False;
     
-    //TODO: why is this changing ActiveTerminal directly?
+    if (Term <= 0) or (Term > elem.fNterms) then
+    begin
+        elem.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals.', [Term, elem.FullName, elem.NTerms], 97806);
+        Exit;
+    end;
+
     elem.ActiveTerminal := @elem.Terminals[Term - 1];
+    elem.FActiveTerminal := Term - 1;
     if Phs = 0 then // At least one must be open
     begin
         Result := FALSE;

@@ -437,9 +437,7 @@ begin
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
 
-    //TODO: why is this changing ActiveTerminal directly?
-    elem.ActiveTerminal := @elem.Terminals[Term - 1];
-    elem.Closed[Phs] := TRUE;
+    Alt_CE_Close(elem, Term, Phs);
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Open(Term, Phs: Integer); CDECL;
@@ -449,9 +447,7 @@ begin
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
 
-    //TODO: why is this changing ActiveTerminal directly?
-    elem.ActiveTerminal := @elem.Terminals[Term - 1];
-    elem.Closed[Phs] := FALSE;
+    Alt_CE_Open(elem, Term, Phs);
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Set_EmergAmps(Value: Double); CDECL;
@@ -495,27 +491,13 @@ end;
 //------------------------------------------------------------------------------
 function CktElement_IsOpen(Term, Phs: Integer): TAPIBoolean; CDECL;
 var
-    i: Integer;
     elem: TDSSCktElement;
 begin
     Result := False;
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
-    
-    //TODO: why is this changing ActiveTerminal directly?
-    elem.ActiveTerminal := @elem.Terminals[Term - 1];
-    if Phs = 0 then // At least one must be open
-    begin
-        Result := FALSE;
-        for i := 1 to elem.NConds do
-            if not elem.Closed[i] then
-            begin
-                Result := TRUE;
-                Exit;
-            end;
-    end
-    else // Check a specific phase or conductor
-        Result := not elem.Closed[Phs];
+
+    Result := Alt_CE_IsOpen(elem, Term, Phs);    
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
