@@ -17,7 +17,7 @@
 
 # Versions 0.14.x
 
-## Version 0.14.3 (next, unreleased)
+## Version 0.14.3 (next, unreleased -- 2024-03-10)
 
 - API/YMatrix: check for valid circuit in a few more functions.
 - API/Circuit: adjust `SetActiveElement` to be more conformant with the official version, i.e., returns -1 for non-circuit elements.
@@ -29,6 +29,9 @@
 - API/CircuitElement (classic): call Alt implementation for `Open`/`Close`/`IsOpen` to reduce code duplication.
 - API/Capacitors: fix `Close` (same issue as CE).
 - Header/Alt: fix `dss_obj_float64_int32_func_t` (returns `double`, not `int32_t`).
+- API/Batch: 
+    - Implement `BatchOperation_Divide`; needed for integers, and could be slightly better for floats, even though it's a tiny bit slower in modern processors.
+    - Generalize `Batch_SetFloat64Array`/`Batch_SetIn32Array` to `Batch_Float64Array`/`Batch_In32Array`. This allows dropping the basic batch operations to the engine for array values, and allow for future optimizations in C++. In the current Pascal codebase, this is still better than running the operations on user-side due to memory layout and potential extra memory allocations when running on user-side.
 
 ## Version 0.14.2 (2024-02-26)
 

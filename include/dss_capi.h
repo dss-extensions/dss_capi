@@ -271,7 +271,8 @@ extern "C" {
     enum BatchOperation {
         BatchOperation_Set = 0,
         BatchOperation_Multiply = 1,
-        BatchOperation_Increment = 2
+        BatchOperation_Increment = 2,
+        BatchOperation_Divide = 3
     };
 
     /// The values themselves are subject to change in future versions,
@@ -7615,9 +7616,19 @@ extern "C" {
     DSS_CAPI_DLL void Batch_Int32(void** batch, int32_t batchSize, int32_t Index, int32_t Operation, int32_t Value, int32_t setterFlags);
     DSS_CAPI_DLL void Batch_SetString(void** batch, int32_t batchSize, int32_t Index, const char* Value, int32_t setterFlags);
     DSS_CAPI_DLL void Batch_SetObject(void** batch, int32_t batchSize, int32_t Index, const void *Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Batch_Float64Array(void** batch, int32_t batchSize, int32_t Index, int32_t Operation, double* Value, int32_t setterFlags);
+    DSS_CAPI_DLL void Batch_Int32Array(void** batch, int32_t batchSize, int32_t Index, int32_t Operation, int32_t* Value, int32_t setterFlags);
 
+    /*!
+    DEPRECATED: use `Batch_Float64Array` with `Operation=BatchOperation_Set` instead
+    */
     DSS_CAPI_DLL void Batch_SetFloat64Array(void** batch, int32_t batchSize, int32_t Index, double* Value, int32_t setterFlags);
+
+    /*!
+    DEPRECATED: use `Batch_Int32Array` with `Operation=BatchOperation_Set` instead
+    */
     DSS_CAPI_DLL void Batch_SetInt32Array(void** batch, int32_t batchSize, int32_t Index, int32_t* Value, int32_t setterFlags);
+
     DSS_CAPI_DLL void Batch_SetStringArray(void** batch, int32_t batchSize, int32_t Index, const char** Value, int32_t setterFlags);
     DSS_CAPI_DLL void Batch_SetObjectArray(void** batch, int32_t batchSize, int32_t Index, const void** Value, int32_t setterFlags);
 
@@ -7640,7 +7651,16 @@ extern "C" {
     DSS_CAPI_DLL void Batch_SetStringS(void** batch, int32_t batchSize, const char* Name, const char* Value, int32_t setterFlags);
     DSS_CAPI_DLL void Batch_SetObjectS(void** batch, int32_t batchSize, const char* Name, const void* Value, int32_t setterFlags);
 
+    DSS_CAPI_DLL void Batch_Float64ArrayS(void** batch, int32_t batchSize, const char* Name, int32_t Operation, double* Value, int32_t setterFlags);
+    /*!
+    DEPRECATED: use `Batch_Int32ArrayS` with `Operation=BatchOperation_Set` instead
+    */
     DSS_CAPI_DLL void Batch_SetFloat64ArrayS(void** batch, int32_t batchSize, const char* Name, double* Value, int32_t setterFlags);
+
+    DSS_CAPI_DLL void Batch_Int32ArrayS(void** batch, int32_t batchSize, const char* Name, int32_t Operation, int32_t* Value, int32_t setterFlags);
+    /*!
+    DEPRECATED: use `Batch_Int32ArrayS` with `Operation=BatchOperation_Set` instead
+    */
     DSS_CAPI_DLL void Batch_SetInt32ArrayS(void** batch, int32_t batchSize, const char* Name, int32_t* Value, int32_t setterFlags);
     DSS_CAPI_DLL void Batch_SetStringArrayS(void** batch, int32_t batchSize, const char* Name, const char** Value, int32_t setterFlags);
     DSS_CAPI_DLL void Batch_SetObjectArrayS(void** batch, int32_t batchSize, const char* Name, const void** Value, int32_t setterFlags);

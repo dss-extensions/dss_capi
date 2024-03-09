@@ -51,7 +51,8 @@ type
     BatchOp = (
         SetValues = 0,
         Multiply = 1,
-        Increment = 2
+        Increment = 2,
+        Divide = 3
     );
 
     ExtraClassIDs = (
@@ -139,7 +140,11 @@ procedure Batch_GetInt32FromFunc(var ResultPtr: PInteger; ResultCount: PAPISize;
 
 // procedure Batch_SetAsString(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PAnsiChar); CDECL;
 procedure Batch_Float64(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: BatchOp; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_Float64Array(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: BatchOp; Value: PDouble; setterFlags: TDSSPropertySetterFlags); CDECL;
+
 procedure Batch_Int32(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: BatchOp; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_Int32Array(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: BatchOp; Value: PInteger; setterFlags: TDSSPropertySetterFlags); CDECL;
+
 procedure Batch_SetString(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
 procedure Batch_SetObject(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags); CDECL;
 
@@ -167,7 +172,9 @@ procedure Batch_Int32S(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Op
 procedure Batch_SetStringS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
 procedure Batch_SetObjectS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags); CDECL;
 
+procedure Batch_Float64ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: BatchOp; Value: PDouble; setterFlags: TDSSPropertySetterFlags); CDECL;
 procedure Batch_SetFloat64ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PDouble; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_Int32ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: BatchOp; Value: PInteger; setterFlags: TDSSPropertySetterFlags); CDECL;
 procedure Batch_SetInt32ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PInteger; setterFlags: TDSSPropertySetterFlags); CDECL;
 procedure Batch_SetStringArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PPAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
 procedure Batch_SetObjectArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: TDSSObjectPtr; setterFlags: TDSSPropertySetterFlags); CDECL;
@@ -1399,6 +1406,23 @@ begin
                         cls.EndEdit(batch^, 1);
                     inc(batch);
                 end;
+            BatchOp.Divide:
+                for i := 1 to batchSize do
+                begin
+                    singleEdit := not (Flg.EditingActive in batch^.Flags);
+                    if singleEdit then
+                        cls.BeginEdit(batch^, False);
+
+                    doublePtr := (PDouble(PtrUint(batch^) + propOffset));
+                    prev := doubleptr^;
+                    doublePtr^ := doublePtr^ / Value;
+                    batch^.SetAsNextSeq(Index);
+                    batch^.PropertySideEffects(Index, Round(prev), setterFlags);
+
+                    if singleEdit then
+                        cls.EndEdit(batch^, 1);
+                    inc(batch);
+                end;
             BatchOp.Increment:
                 for i := 1 to batchSize do
                 begin
@@ -1445,6 +1469,12 @@ begin
                 batch^.SetDouble(Index, Value * cls.GetObjDouble(batch^, Index), setterFlags);
                 inc(batch);
             end;
+        BatchOp.Divide:
+            for i := 1 to batchSize do
+            begin
+                batch^.SetDouble(Index, cls.GetObjDouble(batch^, Index) / Value, setterFlags);
+                inc(batch);
+            end;
         BatchOp.Increment:
             for i := 1 to batchSize do
             begin
@@ -1456,6 +1486,162 @@ begin
         begin
             batch^.SetDouble(Index, Value, setterFlags);
             inc(batch);
+        end;
+    end;
+end;
+
+procedure Batch_Float64Array(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: BatchOp; Value: PDouble; setterFlags: TDSSPropertySetterFlags); CDECL;
+var
+    cls: TDSSClass;
+    propOffset: PtrUint;
+    i: Integer;
+    prev: Double;
+    doublePtr: PDouble;
+    propFlags: TPropertyFlags;
+    singleEdit: Boolean;
+    allowNA: Boolean;
+begin
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
+        Exit;
+
+    allowNA := not (TDSSPropertySetterFlag.SkipNA in setterFlags);
+    cls := batch^.ParentClass;
+    propFlags := cls.PropertyFlags[Index];
+    propOffset := cls.PropertyOffset[Index];
+
+    if not (cls.PropertyType[Index] in [
+        TPropertyType.DoubleProperty,
+        TPropertyType.DoubleOnStructArrayProperty,
+        TPropertyType.DoubleOnArrayProperty
+    ]) then
+        Exit;
+
+    if (cls.PropertyType[Index] = TPropertyType.DoubleProperty) and
+        (propFlags = []) and
+        (cls.PropertyScale[Index] = 1) then
+    begin
+        case Operation of
+            BatchOp.Multiply:
+                for i := 1 to batchSize do
+                begin
+                    if (allowNA) or (not IsNaN(Value^)) then
+                    begin
+                        singleEdit := not (Flg.EditingActive in batch^.Flags);
+                        if singleEdit then
+                            cls.BeginEdit(batch^, False);
+
+                        doublePtr := (PDouble(PtrUint(batch^) + propOffset));
+                        prev := doubleptr^;
+                        doublePtr^ := doublePtr^ * Value^;
+                        batch^.SetAsNextSeq(Index);
+                        batch^.PropertySideEffects(Index, Round(prev), setterFlags);
+
+                        if singleEdit then
+                            cls.EndEdit(batch^, 1);
+                    end;
+                    inc(batch);
+                    inc(Value);
+                end;
+            BatchOp.Divide:
+                for i := 1 to batchSize do
+                begin
+                    if (allowNA) or (not IsNaN(Value^)) then
+                    begin
+                        singleEdit := not (Flg.EditingActive in batch^.Flags);
+                        if singleEdit then
+                            cls.BeginEdit(batch^, False);
+
+                        doublePtr := (PDouble(PtrUint(batch^) + propOffset));
+                        prev := doubleptr^;
+                        doublePtr^ := doublePtr^ / Value^;
+                        batch^.SetAsNextSeq(Index);
+                        batch^.PropertySideEffects(Index, Round(prev), setterFlags);
+
+                        if singleEdit then
+                            cls.EndEdit(batch^, 1);
+                    end;
+                    inc(batch);
+                    inc(Value);
+                end;
+            BatchOp.Increment:
+                for i := 1 to batchSize do
+                begin
+                    if (allowNA) or (not IsNaN(Value^)) then
+                    begin
+                        singleEdit := not (Flg.EditingActive in batch^.Flags);
+                        if singleEdit then
+                            cls.BeginEdit(batch^, False);
+
+                        doublePtr := (PDouble(PtrUint(batch^) + propOffset));
+                        prev := doubleptr^;
+                        doublePtr^ := doublePtr^ + Value^;
+                        batch^.SetAsNextSeq(Index);
+                        batch^.PropertySideEffects(Index, Round(prev), setterFlags);
+
+                        if singleEdit then
+                            cls.EndEdit(batch^, 1);
+                    end;
+                    inc(batch);
+                    inc(Value);
+                end;
+            BatchOp.SetValues:
+                for i := 1 to batchSize do
+                begin
+                    if (allowNA) or (not IsNaN(Value^)) then
+                    begin
+                        singleEdit := not (Flg.EditingActive in batch^.Flags);
+                        if singleEdit then
+                            cls.BeginEdit(batch^, False);
+
+                        doublePtr := PDouble(PtrUint(batch^) + propOffset);
+                        prev := doubleptr^;
+                        doublePtr^ := Value^;
+                        batch^.SetAsNextSeq(Index);
+                        batch^.PropertySideEffects(Index, Round(prev), setterFlags);
+
+                        if singleEdit then
+                            cls.EndEdit(batch^, 1);
+                    end;
+                    inc(batch);
+                    inc(Value);
+                end;
+        end;
+
+        Exit;
+    end;
+
+    case Operation of
+        BatchOp.Multiply:
+            for i := 1 to batchSize do
+            begin
+                if (allowNA) or (not IsNaN(Value^)) then
+                    batch^.SetDouble(Index, Value^ * cls.GetObjDouble(batch^, Index), setterFlags);
+                inc(batch);
+                inc(Value);
+            end;
+        BatchOp.Divide:
+            for i := 1 to batchSize do
+            begin
+                if (allowNA) or (not IsNaN(Value^)) then
+                    batch^.SetDouble(Index, cls.GetObjDouble(batch^, Index) / Value^, setterFlags);
+                inc(batch);
+                inc(Value);
+            end;
+        BatchOp.Increment:
+            for i := 1 to batchSize do
+            begin
+                if (allowNA) or (not IsNaN(Value^)) then
+                    batch^.SetDouble(Index, Value^ + cls.GetObjDouble(batch^, Index), setterFlags);
+                inc(batch);
+                inc(Value);
+            end;
+    else
+        for i := 1 to batchSize do
+        begin
+            if (allowNA) or (not IsNaN(Value^)) then
+                batch^.SetDouble(Index, Value^, setterFlags);
+            inc(batch);
+            inc(Value);
         end;
     end;
 end;
@@ -1518,6 +1704,12 @@ begin
             for i := 1 to batchSize do
             begin
                 batch^.SetInteger(Index, Value * cls.GetObjInteger(batch^, Index), setterFlags);
+                inc(batch);
+            end;
+        BatchOp.Divide:
+            for i := 1 to batchSize do
+            begin
+                batch^.SetInteger(Index, cls.GetObjInteger(batch^, Index) div Value, setterFlags);
                 inc(batch);
             end;
         BatchOp.Increment:
@@ -1615,134 +1807,142 @@ begin
 end;
 
 procedure Batch_SetFloat64Array(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PDouble; setterFlags: TDSSPropertySetterFlags); CDECL;
-var
-    cls: TDSSClass;
-    propOffset: PtrUint;
-    i: Integer;
-    prev: Double;
-    doublePtr: PDouble;
-    propFlags: TPropertyFlags;
-    singleEdit: Boolean;
-    allowNA: Boolean;
 begin
-    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
-        Exit;
-
-    cls := batch^.ParentClass;
-    propFlags := cls.PropertyFlags[Index];
-    propOffset := cls.PropertyOffset[Index];
-
-    if not (cls.PropertyType[Index] in [
-        TPropertyType.DoubleProperty,
-        TPropertyType.DoubleOnStructArrayProperty,
-        TPropertyType.DoubleOnArrayProperty
-    ]) then
-        Exit;
-
-    allowNA := not (TDSSPropertySetterFlag.SkipNA in setterFlags);
-
-    if (cls.PropertyType[Index] = TPropertyType.DoubleProperty) and
-        (propFlags = []) and
-        (cls.PropertyScale[Index] = 1) then
-    begin
-        // Faster path
-        for i := 1 to batchSize do
-        begin
-            // check for each element, in case the element is being edited somewhere else
-            if (allowNA) or (not IsNaN(Value^)) then
-            begin
-                singleEdit := not (Flg.EditingActive in batch^.Flags);
-                if singleEdit then
-                    cls.BeginEdit(batch^, False);
-
-                doublePtr := PDouble(PtrUint(batch^) + propOffset);
-                prev := doubleptr^;
-                doublePtr^ := Value^;
-                batch^.PropertySideEffects(Index, Round(prev), setterFlags);
-
-                if singleEdit then
-                    cls.EndEdit(batch^, 1);
-            end;
-            inc(batch);
-            inc(Value);
-        end;
-        Exit;
-    end;
-
-    for i := 1 to batchSize do
-    begin
-        if (allowNA) or (not IsNaN(Value^)) then
-            batch^.SetDouble(Index, Value^, setterFlags);
-
-        inc(batch);
-        inc(Value)
-    end;
+    Batch_Float64Array(batch, batchSize, Index, BatchOp.SetValues, Value, setterFlags);
 end;
 
-procedure Batch_SetInt32Array(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PInteger; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_Int32Array(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: BatchOp; Value: PInteger; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     cls: TDSSClass;
     propOffset: PtrUint;
     i: Integer;
     prev: Integer;
-    intPtr: PInteger;
+    intptr: PInteger;
     propFlags: TPropertyFlags;
+    ptype: TPropertyType;
+    ValueCursor: PInteger;
     singleEdit: Boolean;
     allowNA: Boolean;
 begin
-    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) or (Value = NIL) then
         Exit;
 
+    allowNA := not (TDSSPropertySetterFlag.SkipNA in setterFlags);
     cls := batch^.ParentClass;
     propFlags := cls.PropertyFlags[Index];
     propOffset := cls.PropertyOffset[Index];
 
-    if not (cls.PropertyType[Index] in [
+    ptype := cls.PropertyType[Index];
+    if not (ptype in [
         TPropertyType.IntegerProperty,
         TPropertyType.MappedIntEnumProperty,
         TPropertyType.MappedStringEnumProperty,
         TPropertyType.BooleanProperty,
+        TPropertyType.EnabledProperty,
         TPropertyType.IntegerOnStructArrayProperty
     ]) then
         Exit;
 
-    allowNA := not (TDSSPropertySetterFlag.SkipNA in setterFlags);
-
-    if (cls.PropertyType[Index] <> TPropertyType.IntegerOnStructArrayProperty) and
-        (propFlags = []) and
-        (cls.PropertyScale[Index] = 1) then
+    if (ptype in [TPropertyType.BooleanProperty, TPropertyType.EnabledProperty, TPropertyType.BooleanActionProperty]) and not (Operation in [BatchOp.Increment]) then
     begin
-        // Faster path
-        for i := 1 to batchSize do
+        ValueCursor := Value;
+        for i := 0 to batchSize - 1 do
         begin
-            if (allowNA) or (Value^ <> $7fffffff) then
-            begin
-                // check for each element, in case the element is being edited somewhere else
-                singleEdit := not (Flg.EditingActive in batch^.Flags);
-                if singleEdit then
-                    cls.BeginEdit(batch^, False);
-
-                intPtr := PInteger(PtrUint(batch^) + propOffset);
-                prev := intPtr^;
-                intPtr^ := Value^;
-                batch^.PropertySideEffects(Index, prev, setterFlags);
-
-                if singleEdit then
-                    cls.EndEdit(batch^, 1);
-            end;
-            inc(batch);
-            inc(Value);
+            ValueCursor^ := Integer(LongBool(ValueCursor^ <> 0));
+            inc(ValueCursor);
         end;
-        Exit;
     end;
 
-    for i := 1 to batchSize do
-    begin
-        if (allowNA) or (Value^ <> $7fffffff) then
-            batch^.SetInteger(Index, Value^, setterFlags);
-        inc(batch);
-        inc(Value)
+    // if (cls.PropertyType[Index] in [
+    //     TPropertyType.IntegerProperty,
+    //     TPropertyType.MappedIntEnumProperty,
+    //     TPropertyType.MappedStringEnumProperty,
+    //     TPropertyType.BooleanProperty]) and
+    //     (not (TPropertyFlag.CustomSet in propFlags)) and
+    //     (not (TPropertyFlag.WriteByFunction in propFlags)) and
+    //     (not (TPropertyFlag.ScaledByFunction in propFlags)) then
+    // begin
+    //     for i := 1 to batchSize do
+    //     begin
+    //         intptr := (PInteger(PtrUint(batch^) + propoffset));
+    //         prev := intptr^;
+    //         intptr^ := Value^;
+
+    //         inc(batch);
+    //         inc(Value);
+    //     end;
+    //     Exit;
+    // end;
+
+    case Operation of
+        BatchOp.Multiply:
+            for i := 1 to batchSize do
+            begin
+                if (allowNA) or (Value^ <> $7fffffff) then
+                    batch^.SetInteger(Index, Value^ * cls.GetObjInteger(batch^, Index), setterFlags);
+                inc(batch);
+                inc(Value);
+            end;
+        BatchOp.Divide:
+            for i := 1 to batchSize do
+            begin
+                if (allowNA) or (Value^ <> $7fffffff) then
+                    batch^.SetInteger(Index, cls.GetObjInteger(batch^, Index) div Value^, setterFlags);
+                inc(batch);
+                inc(Value);
+            end;
+        BatchOp.Increment:
+            for i := 1 to batchSize do
+            begin
+                if (allowNA) or (Value^ <> $7fffffff) then
+                    batch^.SetInteger(Index, Value^ + cls.GetObjInteger(batch^, Index), setterFlags);
+                inc(batch);
+                inc(Value);
+            end;
+        BatchOp.SetValues:
+        begin
+            if (cls.PropertyType[Index] <> TPropertyType.IntegerOnStructArrayProperty) and
+                (propFlags = []) and
+                (cls.PropertyScale[Index] = 1) then
+            begin
+                // Faster path
+                for i := 1 to batchSize do
+                begin
+                    if (allowNA) or (Value^ <> $7fffffff) then
+                    begin
+                        // check for each element, in case the element is being edited somewhere else
+                        singleEdit := not (Flg.EditingActive in batch^.Flags);
+                        if singleEdit then
+                            cls.BeginEdit(batch^, False);
+
+                        intPtr := PInteger(PtrUint(batch^) + propOffset);
+                        prev := intPtr^;
+                        intPtr^ := Value^;
+                        batch^.PropertySideEffects(Index, prev, setterFlags);
+
+                        if singleEdit then
+                            cls.EndEdit(batch^, 1);
+                    end;
+                    inc(batch);
+                    inc(Value);
+                end;
+                Exit;
+            end;
+
+            for i := 1 to batchSize do
+            begin
+                if (allowNA) or (Value^ <> $7fffffff) then
+                    batch^.SetInteger(Index, Value^, setterFlags);
+                inc(batch);
+                inc(Value);
+            end;
+        end;
     end;
+end;
+
+procedure Batch_SetInt32Array(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PInteger; setterFlags: TDSSPropertySetterFlags); CDECL;
+begin
+    Batch_Int32Array(batch, batchSize, Index, BatchOp.SetValues, Value, setterFlags);
 end;
 
 procedure Batch_SetStringArray(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PPAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
@@ -2040,31 +2240,40 @@ begin
     Batch_SetObject(batch, batchSize, propIdx, Value, setterFlags);
 end;
 
-
-procedure Batch_SetFloat64ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PDouble; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Batch_Float64ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: BatchOp; Value: PDouble; setterFlags: TDSSPropertySetterFlags); CDECL;
 var
     propIdx: Integer;
 begin
-    if (batch = NIL) or (batch^ = NIL) or (batchSize <= 0) then
+    if (batch = NIL) or (batch^ = NIL) or (batchSize <= 0) or (Value = NIL) then
         Exit;
 
     if not GetPropIndex(batch, Name, propIdx) then
         Exit;
 
-    Batch_SetFloat64Array(batch, batchSize, propIdx, Value, setterFlags);
+    Batch_Float64Array(batch, batchSize, propIdx, Operation, Value, setterFlags);
+end;
+
+procedure Batch_SetFloat64ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PDouble; setterFlags: TDSSPropertySetterFlags); CDECL;
+begin
+    Batch_Float64ArrayS(batch, batchSize, Name, BatchOp.SetValues, Value, setterFlags);
+end;
+
+procedure Batch_Int32ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Operation: BatchOp; Value: PInteger; setterFlags: TDSSPropertySetterFlags); CDECL;
+var
+    propIdx: Integer;
+begin
+    if (batch = NIL) or (batch^ = NIL) or (batchSize <= 0) or (Value = NIL) then
+        Exit;
+
+    if not GetPropIndex(batch, Name, propIdx) then
+        Exit;
+
+    Batch_Int32Array(batch, batchSize, propIdx, Operation, Value, setterFlags);
 end;
 
 procedure Batch_SetInt32ArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PInteger; setterFlags: TDSSPropertySetterFlags); CDECL;
-var
-    propIdx: Integer;
 begin
-    if (batch = NIL) or (batch^ = NIL) or (batchSize <= 0) then
-        Exit;
-
-    if not GetPropIndex(batch, Name, propIdx) then
-        Exit;
-
-    Batch_SetInt32Array(batch, batchSize, propIdx, Value, setterFlags);
+    Batch_Int32ArrayS(batch, batchSize, Name, BatchOp.SetValues, Value, setterFlags);
 end;
 
 procedure Batch_SetStringArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: PChar; Value: PPAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
