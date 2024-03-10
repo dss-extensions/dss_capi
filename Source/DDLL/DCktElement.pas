@@ -2,1140 +2,1264 @@ unit DCktElement;
 
 interface
 
-uses DSSClassDefs, DSSGlobals, UComplex, Sysutils,
-     PDElement, PCElement, MathUtil, Variants, CktElement, Utilities;
+uses
+    DSSClassDefs,
+    DSSGlobals,
+    UComplex,
+    Sysutils,
+    PDElement,
+    PCElement,
+    MathUtil,
+    Variants,
+    CktElement,
+    Utilities;
 
-function CktElementI(mode:longint; arg:longint):longint;cdecl;
-function CktElementF(mode:longint; arg:double):double;cdecl;
-function CktElementS(mode:longint; arg:pAnsiChar):pAnsiChar;cdecl;
-procedure CktElementV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
+function CktElementI(mode: Longint; arg: Longint): Longint; CDECL;
+function CktElementF(mode: Longint; arg: Double): Double; CDECL;
+function CktElementS(mode: Longint; arg: Pansichar): Pansichar; CDECL;
+procedure CktElementV(mode: Longint; var myPointer: Pointer; var myType, mySize: Longint); CDECL;
 
 
 implementation
 
 var
-  ctrl          : TDSSCktElement;
-  pPCElem       : TPCElement;
-  pPDElem       : TPDElement;
-  BData         :  wordbool;
-  i,
-  count,
-  numcond,
-  n,
-  iV,
-  VarIdx        : Integer;
-  cResid        : Complex;
-  cBuffer       : pComplexArray;
+    ctrl: TDSSCktElement;
+    pPCElem: TPCElement;
+    pPDElem: TPDElement;
+    BData: Wordbool;
+    i,
+    count,
+    numcond,
+    n,
+    iV,
+    VarIdx: Integer;
+    cResid: Complex;
+    cBuffer: pComplexArray;
 
-Procedure CalcSeqCurrents(pActiveElement:TDSSCktElement; i012:pComplexArray);
+procedure CalcSeqCurrents(pActiveElement: TDSSCktElement; i012: pComplexArray);
 {Assumes V012 is properly allocated before call.}
-VAR
-    Nvalues,i,j,k,iV  :Integer;
-    IPh, I012a        :Array[1..3] of Complex;
-    cBuffer:pComplexArray;
+var
+    Nvalues, i, j, k, iV: Integer;
+    IPh, I012a: array[1..3] of Complex;
+    cBuffer: pComplexArray;
 
-BEGIN
-    {$IFDEF FPC_DLL}initialize(cBuffer);{$ENDIF}
-    With pActiveElement, ActiveCircuit[ActiveActor] Do BEGIN
-      Nvalues := NPhases;
-      IF Nvalues <> 3 THEN Begin
+begin
+    {$IFDEF FPC_DLL}
+    initialize(cBuffer);
+{$ENDIF}
+    with pActiveElement, ActiveCircuit[ActiveActor] do
+    begin
+        Nvalues := NPhases;
+        if Nvalues <> 3 then
+        begin
         {Handle non-3 phase elements}
-           IF (Nphases = 1) and PositiveSequence THEN
-           Begin
-                NValues := NConds*NTerms;
-                cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
+            if (Nphases = 1) and PositiveSequence then
+            begin
+                NValues := NConds * NTerms;
+                cBuffer := Allocmem(sizeof(cBuffer^[1]) * NValues);
                 GetCurrents(cBuffer, ActiveActor);
 
-                For i := 1 to  3*NTerms DO i012^[i] := CZERO;   // Initialize Result
+                for i := 1 to 3 * NTerms do
+                    i012^[i] := CZERO;   // Initialize Result
                 iV := 2;  // pos seq is 2nd element in array
                 {Populate only phase 1 quantities in Pos seq}
-                FOR j := 1 to NTerms Do Begin
+                for j := 1 to NTerms do
+                begin
                     k := (j - 1) * NConds;
                     i012^[iV] := cBuffer^[1 + k];
                     Inc(iV, 3);  // inc to pos seq of next terminal
-                End;
+                end;
                 Reallocmem(cBuffer, 0);
-           END
+            end
            // if neither 3-phase or pos seq model, just put in -1.0 for each element
-           ELSE  For i := 1 to  3*NTerms Do i012^[i] := Cmplx(-1.0, 0.0);  // Signify n/A
-      End
-      ELSE Begin    // for 3-phase elements
-           iV := 1;
-           NValues := NConds * NTerms;
-           cBuffer := Allocmem(sizeof(cBuffer^[1]) * NValues);
-           GetCurrents(cBuffer,ActiveActor);
-           FOR j := 1 to NTerms Do
-           Begin
-                k := (j-1)*NConds;
-                For i := 1 to  3 DO Iph[i] := cBuffer^[k+i];
+            else
+                for i := 1 to 3 * NTerms do
+                    i012^[i] := Cmplx(-1.0, 0.0);  // Signify n/A
+        end
+        else
+        begin    // for 3-phase elements
+            iV := 1;
+            NValues := NConds * NTerms;
+            cBuffer := Allocmem(sizeof(cBuffer^[1]) * NValues);
+            GetCurrents(cBuffer, ActiveActor);
+            for j := 1 to NTerms do
+            begin
+                k := (j - 1) * NConds;
+                for i := 1 to 3 do
+                    Iph[i] := cBuffer^[k + i];
                 Phase2SymComp(@Iph, @I012a);
 
-                For i := 1 to 3 DO  Begin     // Stuff it in the result array
-                   i012^[iV] := i012a[i];
-                   Inc(iV);
-                End;
-           End;
-           Reallocmem(cBuffer, 0);
-      End;
-    END;
-END;
+                for i := 1 to 3 do
+                begin     // Stuff it in the result array
+                    i012^[iV] := i012a[i];
+                    Inc(iV);
+                end;
+            end;
+            Reallocmem(cBuffer, 0);
+        end;
+    end;
+end;
 
 
-Procedure CalcSeqVoltages(pActiveElement:TDSSCktElement; V012:pComplexArray);
+procedure CalcSeqVoltages(pActiveElement: TDSSCktElement; V012: pComplexArray);
 {Assumes V012 is properly allocated before call.}
-VAR
-    Nvalues,i,j,k,iV  :Integer;
-    VPh, V012a        :Array[1..3] of Complex;
-BEGIN
-    With pActiveElement, ActiveCircuit[ActiveActor] Do BEGIN
-      Nvalues := NPhases;
-      IF Nvalues <> 3 THEN Begin
+var
+    Nvalues, i, j, k, iV: Integer;
+    VPh, V012a: array[1..3] of Complex;
+begin
+    with pActiveElement, ActiveCircuit[ActiveActor] do
+    begin
+        Nvalues := NPhases;
+        if Nvalues <> 3 then
+        begin
         {Handle non-3 phase elements}
-           IF (Nphases = 1) and PositiveSequence THEN
-           Begin
-                For i := 1 to  3*NTerms DO V012^[i] := CZERO;   // Initialize Result
+            if (Nphases = 1) and PositiveSequence then
+            begin
+                for i := 1 to 3 * NTerms do
+                    V012^[i] := CZERO;   // Initialize Result
                 iV := 2;  // pos seq is 2nd element in array
                 {Populate only phase 1 quantities in Pos seq}
-                FOR j := 1 to NTerms Do Begin
+                for j := 1 to NTerms do
+                begin
                     k := (j - 1) * NConds;
                     V012^[iV] := Solution.NodeV^[NodeRef^[1 + k]];
                     Inc(iV, 3);  // inc to pos seq of next terminal
-                End;
-           END
+                end;
+            end
            // if neither 3-phase or pos seq model, just put in -1.0 for each element
-           ELSE  For i := 1 to  3*NTerms Do V012^[i] := Cmplx(-1.0, 0.0);  // Signify n/A
-      End
-      ELSE Begin    // for 3-phase elements
-           iV := 1;
-           FOR j := 1 to NTerms Do
-           Begin
-                k :=(j-1)*NConds;
-                FOR i := 1 to  3 DO Vph[i] := Solution.NodeV^[NodeRef^[i+k]];
+            else
+                for i := 1 to 3 * NTerms do
+                    V012^[i] := Cmplx(-1.0, 0.0);  // Signify n/A
+        end
+        else
+        begin    // for 3-phase elements
+            iV := 1;
+            for j := 1 to NTerms do
+            begin
+                k := (j - 1) * NConds;
+                for i := 1 to 3 do
+                    Vph[i] := Solution.NodeV^[NodeRef^[i + k]];
                 Phase2SymComp(@Vph, @V012a);   // Compute Symmetrical components
 
-                For i := 1 to 3 DO  Begin     // Stuff it in the result array
-                   V012^[iV] := V012a[i];
-                   Inc(iV);
-                End;
-           End;
-      End;
-    END;
-END;
+                for i := 1 to 3 do
+                begin     // Stuff it in the result array
+                    V012^[iV] := V012a[i];
+                    Inc(iV);
+                end;
+            end;
+        end;
+    end;
+end;
 
-FUNCTION IsPDElement : Boolean;
-Begin
-    Result :=  ((ActiveCircuit[ActiveActor].ActiveCktElement.DSSObjType and 3) = PD_ELEMENT)
-End;
+function IsPDElement: Boolean;
+begin
+    Result := ((ActiveCircuit[ActiveActor].ActiveCktElement.DSSObjType and 3) = PD_ELEMENT)
+end;
 
-function CktElementI(mode:longint; arg:longint):longint;cdecl;
+function CktElementI(mode: Longint; arg: Longint): Longint; CDECL;
 var
-   pCktElement  : TDSSCktElement;
-   iControl     : integer;
-   pPCElem      : TPCElement;
+    pCktElement: TDSSCktElement;
+    iControl: Integer;
+    pPCElem: TPCElement;
 
 begin
-    Result:=0;  // Default return value
+    Result := 0;  // Default return value
     case mode of
-        0: begin                                    // CktElement.Numterminals
-            If ActiveCircuit[ActiveActor] <> Nil Then
-            Result := ActiveCircuit[ActiveActor].ActiveCktElement.NTerms
-            Else Result := 0;
+        0:
+        begin                                    // CktElement.Numterminals
+            if ActiveCircuit[ActiveActor] <> NIL then
+                Result := ActiveCircuit[ActiveActor].ActiveCktElement.NTerms
+            else
+                Result := 0;
         end;
-        1: begin                                    // CktElement.NumConductors
-            If ActiveCircuit[ActiveActor] <> Nil Then
-            Result := ActiveCircuit[ActiveActor].ActiveCktElement.NConds
-            Else Result := 0;
+        1:
+        begin                                    // CktElement.NumConductors
+            if ActiveCircuit[ActiveActor] <> NIL then
+                Result := ActiveCircuit[ActiveActor].ActiveCktElement.NConds
+            else
+                Result := 0;
         end;
-        2: begin                                    // CktElement.NumPhases
-            If ActiveCircuit[ActiveActor] <> Nil Then
-            Result := ActiveCircuit[ActiveActor].ActiveCktElement.NPhases
-            Else Result := 0;
+        2:
+        begin                                    // CktElement.NumPhases
+            if ActiveCircuit[ActiveActor] <> NIL then
+                Result := ActiveCircuit[ActiveActor].ActiveCktElement.NPhases
+            else
+                Result := 0;
         end;
-        3: begin                                    // CktElement.Open
-           IF ActiveCircuit[ActiveActor] <> Nil THEN
-           WITH ActiveCircuit[ActiveActor] DO
-           Begin
-              If ActiveCktElement<>nil THEN
-              WITH ActiveCktElement DO
-              Begin
-               ActiveTerminal := Terminals^[arg];
-              Closed[3,ActiveActor] := FALSE;
-              End;
-           End;
-           Result:=0;
-        end;
-        4: begin                                    // CktElement.Close
-           IF ActiveCircuit[ActiveActor] <> Nil THEN
-           WITH ActiveCircuit[ActiveActor] DO
-           Begin
-              If ActiveCktElement<>nil THEN
-              WITH ActiveCktElement DO
-              Begin
-               ActiveTerminal := Terminals^[arg];
-              Closed[3,ActiveActor] := TRUE;
-              End;
-           End;
-           Result:=0;
-        end;
-        5: begin                                    // CktElement.IsOpen
-            If ActiveCircuit[ActiveActor] <> Nil Then
-           With ActiveCircuit[ActiveActor] Do
-           Begin
-               With ActiveCktElement Do ActiveTerminal := Terminals^[arg];
-               Result := 0;
-               For iControl := 1 to ActiveCktElement.NConds Do
-                  If not ActiveCktElement.Closed[iControl,ActiveActor] Then
-                    Begin
-                       Result :=  1;
-                       Exit;
-                    End;
-           End;
-        end;
-        6: begin                                    // CktElement.NumProperties
-            IF ActiveCircuit[ActiveActor] <> Nil THEN
-             WITH ActiveCircuit[ActiveActor] DO
-             Begin
-               If ActiveCktElement<>Nil THEN
-               WITH ActiveCktElement DO
-               Begin
-                    Result := ParentClass.NumProperties ;
-               End
-             End;
-        end;
-        7: begin                                    // CktElement.HasSwitchControl
-            If ActiveCircuit[ActiveActor] <> Nil Then begin
-              ctrl := ActiveCircuit[ActiveActor].ActiveCktElement.ControlElementList.First;
-              While ctrl <> Nil Do
-              Begin
-                case (ctrl.DSSObjType And CLASSMASK) of
-                  SWT_CONTROL: Result := 1;
-                else
-                  Result := 0;
+        3:
+        begin                                    // CktElement.Open
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                        with ActiveCktElement do
+                        begin
+                            ActiveTerminal := Terminals^[arg];
+                            Closed[3, ActiveActor] := FALSE;
+                        end;
                 end;
-                If Result=1 Then  Exit;
-                ctrl := ActiveCircuit[ActiveActor].ActiveCktElement.ControlElementlist.Next;
-              End;
-            end;
+            Result := 0;
         end;
-        8: begin                                    // CktElement.HasVoltControl
-            If ActiveCircuit[ActiveActor] <> Nil Then begin
-              ctrl := ActiveCircuit[ActiveActor].ActiveCktElement.ControlElementlist.First;
-              While ctrl <> Nil Do Begin
-                case (ctrl.DSSObjType And CLASSMASK) of
-                  CAP_CONTROL,
-                  REG_CONTROL: Result := 1;
-                else
-                  Result := 0;
+        4:
+        begin                                    // CktElement.Close
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                        with ActiveCktElement do
+                        begin
+                            ActiveTerminal := Terminals^[arg];
+                            Closed[3, ActiveActor] := TRUE;
+                        end;
                 end;
-                If Result=1 Then  Exit;
-                ctrl := ActiveCircuit[ActiveActor].ActiveCktElement.ControlElementlist.Next;
-              End;
+            Result := 0;
+        end;
+        5:
+        begin                                    // CktElement.IsOpen
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    with ActiveCktElement do
+                        ActiveTerminal := Terminals^[arg];
+                    Result := 0;
+                    for iControl := 1 to ActiveCktElement.NConds do
+                        if not ActiveCktElement.Closed[iControl, ActiveActor] then
+                        begin
+                            Result := 1;
+                            Exit;
+                        end;
+                end;
+        end;
+        6:
+        begin                                    // CktElement.NumProperties
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                        with ActiveCktElement do
+                        begin
+                            Result := ParentClass.NumProperties;
+                        end
+                end;
+        end;
+        7:
+        begin                                    // CktElement.HasSwitchControl
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                ctrl := ActiveCircuit[ActiveActor].ActiveCktElement.ControlElementList.First;
+                while ctrl <> NIL do
+                begin
+                    case (ctrl.DSSObjType and CLASSMASK) of
+                        SWT_CONTROL:
+                            Result := 1;
+                    else
+                        Result := 0;
+                    end;
+                    if Result = 1 then
+                        Exit;
+                    ctrl := ActiveCircuit[ActiveActor].ActiveCktElement.ControlElementlist.Next;
+                end;
             end;
         end;
-        9: begin                                    // CktElement.NumControls
-            If ActiveCircuit[ActiveActor] <> Nil Then begin
-              Result := ActiveCircuit[ActiveActor].ActiveCktElement.ControlElementList.listSize;
+        8:
+        begin                                    // CktElement.HasVoltControl
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                ctrl := ActiveCircuit[ActiveActor].ActiveCktElement.ControlElementlist.First;
+                while ctrl <> NIL do
+                begin
+                    case (ctrl.DSSObjType and CLASSMASK) of
+                        CAP_CONTROL,
+                        REG_CONTROL:
+                            Result := 1;
+                    else
+                        Result := 0;
+                    end;
+                    if Result = 1 then
+                        Exit;
+                    ctrl := ActiveCircuit[ActiveActor].ActiveCktElement.ControlElementlist.Next;
+                end;
             end;
         end;
-        10: begin                                   // CktElement.OCPDevIndex
-            If ActiveCircuit[ActiveActor] <> Nil Then  With ActiveCircuit[ActiveActor] Do
-            Begin
-                 iControl :=  1;
-                 Repeat
+        9:
+        begin                                    // CktElement.NumControls
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                Result := ActiveCircuit[ActiveActor].ActiveCktElement.ControlElementList.listSize;
+            end;
+        end;
+        10:
+        begin                                   // CktElement.OCPDevIndex
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    iControl := 1;
+                    repeat
            // cycle through the list of controls until we find a fuse, recloser, or relay
-                      pCktElement :=  ActiveCktElement.ControlElementList.Get(iControl);
-                      If pCktElement <> Nil Then
-                      Case (pCktElement.DSSObjType and CLASSMASK) of
-                          FUSE_CONTROL     : Result := longint(iControl);
-                          RECLOSER_CONTROL : Result := longint(iControl);
-                          RELAY_CONTROL    : Result := longint(iControl);
-                      End;
-                      inc(iControl);
-                 Until (iControl > ActiveCktElement.ControlElementList.listSize) or (Result > 0);
-             End;
+                        pCktElement := ActiveCktElement.ControlElementList.Get(iControl);
+                        if pCktElement <> NIL then
+                            case (pCktElement.DSSObjType and CLASSMASK) of
+                                FUSE_CONTROL:
+                                    Result := Longint(iControl);
+                                RECLOSER_CONTROL:
+                                    Result := Longint(iControl);
+                                RELAY_CONTROL:
+                                    Result := Longint(iControl);
+                            end;
+                        inc(iControl);
+                    until (iControl > ActiveCktElement.ControlElementList.listSize) or (Result > 0);
+                end;
         end;
-        11: begin                                   // CktElement.OCPDevType
-               If ActiveCircuit[ActiveActor] <> Nil Then  With ActiveCircuit[ActiveActor] Do
-                 Result := GetOCPDeviceType(ActiveCktElement);     // see Utilities.pas
+        11:
+        begin                                   // CktElement.OCPDevType
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                    Result := GetOCPDeviceType(ActiveCktElement);     // see Utilities.pas
         end;
-        12: begin                                   // CktElement.enabled -read
-            If ActiveCircuit[ActiveActor] <> Nil Then begin
-               if ActiveCircuit[ActiveActor].ActiveCktElement.Enabled then
-                   Result:=1;
+        12:
+        begin                                   // CktElement.enabled -read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                if ActiveCircuit[ActiveActor].ActiveCktElement.Enabled then
+                    Result := 1;
             end
-            Else
-               Result := 0;
+            else
+                Result := 0;
         end;
-        13: begin                                   // CktElement.enabled -Write
-            if arg=1 then BData:=TRUE
-            else BData:=FALSE;
-            If ActiveCircuit[ActiveActor] <> Nil Then
+        13:
+        begin                                   // CktElement.enabled -Write
+            if arg = 1 then
+                BData := TRUE
+            else
+                BData := FALSE;
+            if ActiveCircuit[ActiveActor] <> NIL then
                 ActiveCircuit[ActiveActor].ActiveCktElement.Enabled := BData;
         end;
-        14: begin                                   // CktElement.ActiveVariableIndex -Write
-          Result := -1; // Signifies an error; no variable found
-          IF ActiveCircuit[ActiveActor] <> Nil THEN
-           WITH ActiveCircuit[ActiveActor] DO
-           Begin
-             If ActiveCktElement<>Nil THEN
-             WITH ActiveCktElement DO
-             Begin
+        14:
+        begin                                   // CktElement.ActiveVariableIndex -Write
+            Result := -1; // Signifies an error; no variable found
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                        with ActiveCktElement do
+                        begin
 
-                 If (DSSObjType And BASECLASSMASK) = PC_ELEMENT Then
-                  Begin
-                      pPCElem := (ActiveCktElement as TPCElement);
-                      If (Arg>0) and (Arg <= pPCElem.NumVariables) Then
-                      Begin
-                        Result := 0;  // the variable seems to exist
-                        VarIdx := Arg;
-                      End;
-                  End;
+                            if (DSSObjType and BASECLASSMASK) = PC_ELEMENT then
+                            begin
+                                pPCElem := (ActiveCktElement as TPCElement);
+                                if (Arg > 0) and (Arg <= pPCElem.NumVariables) then
+                                begin
+                                    Result := 0;  // the variable seems to exist
+                                    VarIdx := Arg;
+                                end;
+                            end;
 
                  {Else zero-length array null string}
-             End
-           End;
+                        end
+                end;
         end
     else
-        Result:=-1;
+        Result := -1;
     end;
 
 end;
 
 //**************************Float commands****************************************
-function CktElementF(mode:longint; arg:double):double;cdecl;
+function CktElementF(mode: Longint; arg: Double): Double; CDECL;
 begin
-    Result:=0.0;  // Default return value
+    Result := 0.0;  // Default return value
     case mode of
-    0: begin                                        // CktElement.NormalAmps - read
-          If ActiveCircuit[ActiveActor] <> Nil Then
-         With ActiveCircuit[ActiveActor] Do
-           Begin
-             If (ActiveCktElement.DSSObjType and 3) = PD_ELEMENT Then
-             Begin
-                 With ActiveCktElement As TPDElement Do Result := NormAmps ;
-             End
-           Else Result := 0.0;
-         End;
-    end;
-    1: begin                                        // CktElement.NormalAmps - Write
-       If ActiveCircuit[ActiveActor] <> Nil Then
-       Begin
-           If IsPDElement Then
-           Begin
-               With ActiveCircuit[ActiveActor] Do With ActiveCktElement As TPDElement Do NormAmps := arg;
-          End;  {Else Do Nothing}
-       End;
-    end;
-      2: begin                                      // CktElement.EmergAmps - read
-       If ActiveCircuit[ActiveActor] <> Nil Then
-       With ActiveCircuit[ActiveActor] Do
-       Begin
-           If (ActiveCktElement.DSSObjType and 3) = PD_ELEMENT Then
-           Begin
-               With ActiveCktElement As TPDElement Do Result := EmergAmps ;
-           End
-           Else Result := 0.0;
-       End;
-    end;
-    3: begin                                        // CktElement.EmergAmps - Write
-      If ActiveCircuit[ActiveActor] <> Nil Then
-      With ActiveCircuit[ActiveActor] Do
-      Begin
-          If IsPDElement Then
-          Begin
-              With ActiveCktElement As TPDElement Do EmergAmps := arg;
-          End;  {Else Do Nothing}
-      End;
-    end;
-    4: begin                                        // CktElement.variablei
-        Result := 0.0; // Signifies an error; no value set
-        i := trunc(arg);
-        IF ActiveCircuit[ActiveActor] <> Nil THEN
-         WITH ActiveCircuit[ActiveActor] DO
-         Begin
-           If ActiveCktElement<>Nil THEN
-           WITH ActiveCktElement DO
-           Begin
-               If (DSSObjType And BASECLASSMASK) = PC_ELEMENT Then
-                Begin
-                    pPCElem := (ActiveCktElement as TPCElement);
-                    If (i>0) and (i <= pPCElem.NumVariables) Then
-                    Begin
-                         Result := pPCElem.Variable[i];
-                    End;
-                End;
+        0:
+        begin                                        // CktElement.NormalAmps - read
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if (ActiveCktElement.DSSObjType and 3) = PD_ELEMENT then
+                    begin
+                        with ActiveCktElement as TPDElement do
+                            Result := NormAmps;
+                    end
+                    else
+                        Result := 0.0;
+                end;
+        end;
+        1:
+        begin                                        // CktElement.NormalAmps - Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                if IsPDElement then
+                begin
+                    with ActiveCircuit[ActiveActor] do
+                        with ActiveCktElement as TPDElement do
+                            NormAmps := arg;
+                end;  {Else Do Nothing}
+            end;
+        end;
+        2:
+        begin                                      // CktElement.EmergAmps - read
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if (ActiveCktElement.DSSObjType and 3) = PD_ELEMENT then
+                    begin
+                        with ActiveCktElement as TPDElement do
+                            Result := EmergAmps;
+                    end
+                    else
+                        Result := 0.0;
+                end;
+        end;
+        3:
+        begin                                        // CktElement.EmergAmps - Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if IsPDElement then
+                    begin
+                        with ActiveCktElement as TPDElement do
+                            EmergAmps := arg;
+                    end;  {Else Do Nothing}
+                end;
+        end;
+        4:
+        begin                                        // CktElement.variablei
+            Result := 0.0; // Signifies an error; no value set
+            i := trunc(arg);
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                        with ActiveCktElement do
+                        begin
+                            if (DSSObjType and BASECLASSMASK) = PC_ELEMENT then
+                            begin
+                                pPCElem := (ActiveCktElement as TPCElement);
+                                if (i > 0) and (i <= pPCElem.NumVariables) then
+                                begin
+                                    Result := pPCElem.Variable[i];
+                                end;
+                            end;
                {Else zero-length array null string}
-           End
-         End;
-    end;
-    5: begin                                        // CktElement.SetActiveVariable
-      Result    :=  -1;
-      IF ActiveCircuit[ActiveActor] <> Nil THEN
-      WITH ActiveCircuit[ActiveActor] DO
-      Begin
-         If ActiveCktElement <> Nil Then
-         WITH ActiveCktElement DO
-         Begin
+                        end
+                end;
+        end;
+        5:
+        begin                                        // CktElement.SetActiveVariable
+            Result := -1;
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                        with ActiveCktElement do
+                        begin
 
-           If (VarIdx>0) and (VarIdx <= pPCElem.NumVariables) Then       //Checks that the active Idx is valid
-           Begin
-            Result                    := 0;        // No error, the variable exists and is set
-            pPCElem.Variable[VarIdx]  := Arg;
-           End
+                            if (VarIdx > 0) and (VarIdx <= pPCElem.NumVariables) then       //Checks that the active Idx is valid
+                            begin
+                                Result := 0;        // No error, the variable exists and is set
+                                pPCElem.Variable[VarIdx] := Arg;
+                            end
 
-         End;
-      End;
-    end;
-    6: begin                                        // CktElement.GetActiveVariable
-      Result    :=  -1;
-      IF ActiveCircuit[ActiveActor] <> Nil THEN
-      WITH ActiveCircuit[ActiveActor] DO
-      Begin
-         If ActiveCktElement <> Nil Then
-         WITH ActiveCktElement DO
-         Begin
+                        end;
+                end;
+        end;
+        6:
+        begin                                        // CktElement.GetActiveVariable
+            Result := -1;
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                        with ActiveCktElement do
+                        begin
 
-           If (VarIdx>0) and (VarIdx <= pPCElem.NumVariables) Then       //Checks that the active Idx is valid
-            Result                    := pPCElem.Variable[VarIdx];        // No error, the variable exists and is returned
+                            if (VarIdx > 0) and (VarIdx <= pPCElem.NumVariables) then       //Checks that the active Idx is valid
+                                Result := pPCElem.Variable[VarIdx];        // No error, the variable exists and is returned
 
-         End;
-      End;
-    end
+                        end;
+                end;
+        end
     else
-        Result:=-1;
+        Result := -1;
     end;
 end;
 
 //**************************String commands****************************************
-function CktElementS(mode:longint; arg:pAnsiChar):pAnsiChar;cdecl;
+function CktElementS(mode: Longint; arg: Pansichar): Pansichar; CDECL;
 begin
-  Result:=pAnsiChar(AnsiString('0'));  // Default return value
-  case mode of
-  0: begin                                          // CktElement.Name
-     If ActiveCircuit[ActiveActor] <> Nil Then
-       WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
-       Begin
-         Result := pAnsiChar(AnsiString(ParentClass.Name + '.' + Name));
-       End;
-  end;
-  1: begin                                          // CktElement.Display - read
-     If ActiveCircuit[ActiveActor] <> Nil Then
-       Result := pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].ActiveCktElement.DisplayName));
-  end;
-  2: begin                                          // CktElement.Display - Write
-     If ActiveCircuit[ActiveActor] <> Nil Then
-        ActiveCircuit[ActiveActor].ActiveCktElement.DisplayName := string(arg);
-  end;
-  3: begin                                          // CktElement.GUID
-     If ActiveCircuit[ActiveActor] <> Nil Then
-       Result := pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].ActiveCktElement.ID));
-  end;
-  4: begin                                          // CktElement.EnergyMeter
-      If ActiveCircuit[ActiveActor] <> Nil Then begin
-        if ActiveCircuit[ActiveActor].ActiveCktElement.HasEnergyMeter then begin
-          pPDElem := ActiveCircuit[ActiveActor].ActiveCktElement as TPDElement;
-          Result := pAnsiChar(AnsiString(pPDElem.MeterObj.Name));
+    Result := Pansichar(Ansistring('0'));  // Default return value
+    case mode of
+        0:
+        begin                                          // CktElement.Name
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor].ActiveCktElement do
+                begin
+                    Result := Pansichar(Ansistring(ParentClass.Name + '.' + Name));
+                end;
         end;
-      end;
-  end;
-  5: begin                                          // CktElement.Controller
-      i   :=  strtoInt(string(arg));
-      If ActiveCircuit[ActiveActor] <> Nil Then With ActiveCircuit[ActiveActor] Do begin
-        If (i>0) and (i <= ActiveCktElement.ControlElementList.Listsize) Then
-        Begin
-          ctrl := ActiveCktElement.ControlElementList.Get(i);
-          If ctrl <> Nil Then
-            Result := pAnsiChar(AnsiString(Format('%s.%s', [ctrl.ParentClass.Name, ctrl.Name])));
-        End;
-      end;
-  end;
-  6: begin                                          // CktElement.ActiveVariableName
-    Result := AnsiString('Error');  // Signifies an error; the variable doesn't exist
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       If ActiveCktElement<>Nil THEN
-       WITH ActiveCktElement DO
-       Begin
+        1:
+        begin                                          // CktElement.Display - read
+            if ActiveCircuit[ActiveActor] <> NIL then
+                Result := Pansichar(Ansistring(ActiveCircuit[ActiveActor].ActiveCktElement.DisplayName));
+        end;
+        2:
+        begin                                          // CktElement.Display - Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+                ActiveCircuit[ActiveActor].ActiveCktElement.DisplayName := String(arg);
+        end;
+        3:
+        begin                                          // CktElement.GUID
+            if ActiveCircuit[ActiveActor] <> NIL then
+                Result := Pansichar(Ansistring(ActiveCircuit[ActiveActor].ActiveCktElement.ID));
+        end;
+        4:
+        begin                                          // CktElement.EnergyMeter
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                if ActiveCircuit[ActiveActor].ActiveCktElement.HasEnergyMeter then
+                begin
+                    pPDElem := ActiveCircuit[ActiveActor].ActiveCktElement as TPDElement;
+                    Result := Pansichar(Ansistring(pPDElem.MeterObj.Name));
+                end;
+            end;
+        end;
+        5:
+        begin                                          // CktElement.Controller
+            i := strtoInt(String(arg));
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if (i > 0) and (i <= ActiveCktElement.ControlElementList.Listsize) then
+                    begin
+                        ctrl := ActiveCktElement.ControlElementList.Get(i);
+                        if ctrl <> NIL then
+                            Result := Pansichar(Ansistring(Format('%s.%s', [ctrl.ParentClass.Name, ctrl.Name])));
+                    end;
+                end;
+        end;
+        6:
+        begin                                          // CktElement.ActiveVariableName
+            Result := Ansistring('Error');  // Signifies an error; the variable doesn't exist
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                        with ActiveCktElement do
+                        begin
 
-           If (DSSObjType And BASECLASSMASK) = PC_ELEMENT Then
-            Begin
-                pPCElem := (ActiveCktElement as TPCElement);
-                VarIdx := pPCElem.LookupVariable(string(Arg));
-                If (VarIdx>0) and (VarIdx <= pPCElem.NumVariables) Then
-                  Result := AnsiString('OK');     // we are good, the variable seems
-            End;
+                            if (DSSObjType and BASECLASSMASK) = PC_ELEMENT then
+                            begin
+                                pPCElem := (ActiveCktElement as TPCElement);
+                                VarIdx := pPCElem.LookupVariable(String(Arg));
+                                if (VarIdx > 0) and (VarIdx <= pPCElem.NumVariables) then
+                                    Result := Ansistring('OK');     // we are good, the variable seems
+                            end;
 
            {Else zero-length array null string}
-       End
-     End;
-  end
-  else
-    Result:=pAnsiChar(AnsiString('Error'));
-  end;
+                        end
+                end;
+        end
+    else
+        Result := Pansichar(Ansistring('Error'));
+    end;
 end;
 //**************************Variant commands****************************************
-procedure CktElementV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
+procedure CktElementV(mode: Longint; var myPointer: Pointer; var myType, mySize: Longint); CDECL;
 
 var
-  VPh,
-  V012,
-  IPh,
-  I012        : Array[1..3] of Complex;
-  myInit,
-  myEnd,
-  j,
-  k,
-  i,
-  NValues     : Integer;
-  cValues     : pComplexArray;
-  myBuffer    : Array of Complex;
-  S           : String;
+    VPh,
+    V012,
+    IPh,
+    I012: array[1..3] of Complex;
+    myInit,
+    myEnd,
+    j,
+    k,
+    i,
+    NValues: Integer;
+    cValues: pComplexArray;
+    myBuffer: array of Complex;
+    S: String;
 
 begin
-  case mode of
-  0: begin                                          // CktElement.BusNames - read
-    myType  :=  4;        // String
-    setlength(myStrArray, 0);
-    If ActiveCircuit[ActiveActor] <> Nil Then
-    Begin
-      With ActiveCircuit[ActiveActor] Do
-      Begin
-        For i := 1 to  ActiveCktElement.Nterms Do
-        Begin
-           WriteStr2Array(ActiveCktElement.GetBus(i));
-           WriteStr2Array(Char(0));
-        End;
-      End;
-    End;
-    if (length(myStrArray) = 0) then
-      WriteStr2Array('None');
-    myPointer :=  @(myStrArray[0]);
-    mySize    :=  Length(myStrArray);
-  end;
-  1: begin                                          // CktElement.BusNames - Write
-    myType  :=  4;          // String
-    j     :=  0;
-    If ActiveCircuit[ActiveActor] <> Nil Then
-    Begin
-      With ActiveCircuit[ActiveActor] Do Begin
-        Count := ActiveCktElement.NTerms;
-        For i := 1 to Count Do
-        Begin
-          S := BArray2Str(myPointer, j);
-          if S = '' then
-            break
-          else
-            ActiveCktElement.SetBus(i, S);
-        End;
-      End;
-    End;
-    mySize  :=  j;
-  end;
-  2: begin                                          // CktElement.Voltages
-    myType  :=  3;        // Complex
-    setlength(myCmplxArray, 1);
-    myCmplxArray[0] := CZero;
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-      WITH ActiveCircuit[ActiveActor] DO
-      Begin
-        If ActiveCktElement<>Nil THEN
-        WITH ActiveCktElement DO
-        Begin
-          numcond := NConds*Nterms;
-          setlength(myCmplxArray, numcond);
+    case mode of
+        0:
+        begin                                          // CktElement.BusNames - read
+            myType := 4;        // String
+            setlength(myStrArray, 0);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    for i := 1 to ActiveCktElement.Nterms do
+                    begin
+                        WriteStr2Array(ActiveCktElement.GetBus(i));
+                        WriteStr2Array(Char(0));
+                    end;
+                end;
+            end;
+            if (length(myStrArray) = 0) then
+                WriteStr2Array('None');
+            myPointer := @(myStrArray[0]);
+            mySize := Length(myStrArray);
+        end;
+        1:
+        begin                                          // CktElement.BusNames - Write
+            myType := 4;          // String
+            j := 0;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    Count := ActiveCktElement.NTerms;
+                    for i := 1 to Count do
+                    begin
+                        S := BArray2Str(myPointer, j);
+                        if S = '' then
+                            break
+                        else
+                            ActiveCktElement.SetBus(i, S);
+                    end;
+                end;
+            end;
+            mySize := j;
+        end;
+        2:
+        begin                                          // CktElement.Voltages
+            myType := 3;        // Complex
+            setlength(myCmplxArray, 1);
+            myCmplxArray[0] := CZero;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                        with ActiveCktElement do
+                        begin
+                            numcond := NConds * Nterms;
+                            setlength(myCmplxArray, numcond);
           // k := (Terminal-1)*numcond;    // RCD 8-30-00 Changed
-          iV :=0;
-          FOR i := 1 to  numcond DO
-          Begin
-            n := ActiveCktElement.NodeRef^[i];
-            myCmplxArray[iV] := Solution.NodeV^[n]; // ok if =0
-            Inc(iV);
-          End;
-        End;
-      End;
-    End;
-    myPointer :=  @(myCmplxArray[0]);
-    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
-  end;
-  3: begin                                          // CktElement.Currents
-    myType  :=  3;        // Complex
-    setlength(myCmplxArray, 1);
-    myCmplxArray[0] := cmplx(0,0);
-    If ActiveCircuit[ActiveActor] <> Nil Then
-    Begin
-      WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
-      Begin
-         numcond := NConds*NTerms;
-         setlength(myCmplxArray, numcond);
-         cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
-         GetCurrents(cBuffer,ActiveActor);
-         iV :=0;
-         For i := 1 to  numcond DO
-         Begin
-            myCmplxArray[iV] := cBuffer^[i];
-            Inc(iV);
-         End;
-         Reallocmem(cBuffer,0);
-      End
-    End;
-    myPointer :=  @(myCmplxArray[0]);
-    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
-  end;
-  4: begin                                          // CktElement.Powers
-    myType  :=  3;        // Complex
-    setlength(myCmplxArray, 1);
-    myCmplxArray[0] := cmplx(0,0);
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-      WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
-      Begin
-        numcond := NConds*Nterms;
-        setlength(myCmplxArray,numcond);
-        cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
-        GetPhasePower(cBuffer, ActiveActor);
-        iV :=0;
-        For i := 1 to  numcond DO Begin
-         myCmplxArray[iV] := cmulreal(cBuffer^[i], 0.001);
-         Inc(iV);
-        End;
-        Reallocmem(cBuffer,0);
-      End
-    End;
-    myPointer :=  @(myCmplxArray[0]);
-    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
-  end;
-  5: begin                                          // CktElement.Losses
-    myType  :=  3;        // Complex
-    setlength(myCmplxArray, 1);
-    myCmplxArray[0] := cmplx(0,0);
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-      WITH ActiveCircuit[ActiveActor] DO
-      Begin
-        If ActiveCktElement<>Nil THEN
-        Begin
-         myCmplxArray[0] := ActiveCktElement.Losses[ActiveActor];
-        End;
-      End
-    End;
-    myPointer :=  @(myCmplxArray[0]);
-    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
-  end;
-  6: begin                                          // CktElement.Phaselosses
-    myType  :=  3;        // Complex
-    setlength(myCmplxArray, 1);
-    myCmplxArray[0] := cmplx(0,0);
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-      WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
-      Begin
-        numcond := NPhases;
-        setlength(myCmplxArray, numcond);
-        cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
-        GetPhaseLosses(numcond, cBuffer, ActiveActor);
-        iV :=0;
-        For i := 1 to  numcond DO Begin
-          myCmplxArray[iV] := cmulreal(cBuffer^[i], 0.001);
-          Inc(iV);
-        End;
-        Reallocmem(cBuffer,0);
-      End
-    End;
-    myPointer :=  @(myCmplxArray[0]);
-    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
-  end;
-  7: begin                                          // CktElement.SeqVoltages
-    myType  :=  2;        // Double
-    setlength(myDBLArray, 1);
-    myDBLArray[0] := 0;
-    IF   ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-      WITH ActiveCircuit[ActiveActor] DO
-      Begin
-        If ActiveCktElement <> Nil THEN
-        Begin
-          WITH ActiveCktElement DO
-          If Enabled Then
-          Begin
-            TRY
-              setlength(myDBLArray, 3 * NTerms);
+                            iV := 0;
+                            for i := 1 to numcond do
+                            begin
+                                n := ActiveCktElement.NodeRef^[i];
+                                myCmplxArray[iV] := Solution.NodeV^[n]; // ok if =0
+                                Inc(iV);
+                            end;
+                        end;
+                end;
+            end;
+            myPointer := @(myCmplxArray[0]);
+            mySize := SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
+        end;
+        3:
+        begin                                          // CktElement.Currents
+            myType := 3;        // Complex
+            setlength(myCmplxArray, 1);
+            myCmplxArray[0] := cmplx(0, 0);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor].ActiveCktElement do
+                begin
+                    numcond := NConds * NTerms;
+                    setlength(myCmplxArray, numcond);
+                    cBuffer := Allocmem(sizeof(cBuffer^[1]) * numcond);
+                    GetCurrents(cBuffer, ActiveActor);
+                    iV := 0;
+                    for i := 1 to numcond do
+                    begin
+                        myCmplxArray[iV] := cBuffer^[i];
+                        Inc(iV);
+                    end;
+                    Reallocmem(cBuffer, 0);
+                end
+            end;
+            myPointer := @(myCmplxArray[0]);
+            mySize := SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
+        end;
+        4:
+        begin                                          // CktElement.Powers
+            myType := 3;        // Complex
+            setlength(myCmplxArray, 1);
+            myCmplxArray[0] := cmplx(0, 0);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor].ActiveCktElement do
+                begin
+                    numcond := NConds * Nterms;
+                    setlength(myCmplxArray, numcond);
+                    cBuffer := Allocmem(sizeof(cBuffer^[1]) * numcond);
+                    GetPhasePower(cBuffer, ActiveActor);
+                    iV := 0;
+                    for i := 1 to numcond do
+                    begin
+                        myCmplxArray[iV] := cmulreal(cBuffer^[i], 0.001);
+                        Inc(iV);
+                    end;
+                    Reallocmem(cBuffer, 0);
+                end
+            end;
+            myPointer := @(myCmplxArray[0]);
+            mySize := SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
+        end;
+        5:
+        begin                                          // CktElement.Losses
+            myType := 3;        // Complex
+            setlength(myCmplxArray, 1);
+            myCmplxArray[0] := cmplx(0, 0);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                    begin
+                        myCmplxArray[0] := ActiveCktElement.Losses[ActiveActor];
+                    end;
+                end
+            end;
+            myPointer := @(myCmplxArray[0]);
+            mySize := SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
+        end;
+        6:
+        begin                                          // CktElement.Phaselosses
+            myType := 3;        // Complex
+            setlength(myCmplxArray, 1);
+            myCmplxArray[0] := cmplx(0, 0);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor].ActiveCktElement do
+                begin
+                    numcond := NPhases;
+                    setlength(myCmplxArray, numcond);
+                    cBuffer := Allocmem(sizeof(cBuffer^[1]) * numcond);
+                    GetPhaseLosses(numcond, cBuffer, ActiveActor);
+                    iV := 0;
+                    for i := 1 to numcond do
+                    begin
+                        myCmplxArray[iV] := cmulreal(cBuffer^[i], 0.001);
+                        Inc(iV);
+                    end;
+                    Reallocmem(cBuffer, 0);
+                end
+            end;
+            myPointer := @(myCmplxArray[0]);
+            mySize := SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
+        end;
+        7:
+        begin                                          // CktElement.SeqVoltages
+            myType := 2;        // Double
+            setlength(myDBLArray, 1);
+            myDBLArray[0] := 0;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                    begin
+                        with ActiveCktElement do
+                            if Enabled then
+                            begin
+                                try
+                                    setlength(myDBLArray, 3 * NTerms);
 
-              cbuffer := Allocmem(Sizeof(cbuffer^[1]) * 3 * Nterms);
+                                    cbuffer := Allocmem(Sizeof(cbuffer^[1]) * 3 * Nterms);
               // get complex seq voltages
-              CalcSeqVoltages(ActiveCktElement, cbuffer);
+                                    CalcSeqVoltages(ActiveCktElement, cbuffer);
               // return 0 based array
-              For i := 1 to (3 * Nterms) do myDBLArray[i-1] := Cabs(cbuffer^[i]);  // return mag only
-              Reallocmem(cbuffer, 0);  // throw away temp memory
-            EXCEPT
-              On E:Exception Do
-              Begin
-                S:= E.message + CRLF +
-                    'Element='+ ActiveCktElement.Name + CRLF+
-                    'Nphases=' + IntToStr(Nphases) + CRLF +
-                    'NTerms=' + IntToStr(NTerms) + CRLF +
-                    'NConds =' + IntToStr(NConds);
-                DoSimpleMsg(S, 5012);
-              End;
-            END;
-          End
-        End
-      End;
-    End;
-    myPointer :=  @(myDBLArray[0]);
-    mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
-  end;
-  8: begin                                          // CktElement.SeqCurrents
-    myType  :=  2;        // Double
-    setlength(myDBLArray, 1);
-    myDBLArray[0] := 0;
-    IF   ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-      WITH ActiveCircuit[ActiveActor] DO
-      Begin
-        If ActiveCktElement <> Nil THEN
-        Begin
-          WITH ActiveCktElement DO
-          If Enabled Then
-          Begin
-            TRY
-              setlength(myDBLArray, (3 * NTerms));
-              cbuffer := Allocmem(Sizeof(cbuffer^[1]) * 3 * Nterms);
+                                    for i := 1 to (3 * Nterms) do
+                                        myDBLArray[i - 1] := Cabs(cbuffer^[i]);  // return mag only
+                                    Reallocmem(cbuffer, 0);  // throw away temp memory
+                                except
+                                    On E: Exception do
+                                    begin
+                                        S := E.message + CRLF +
+                                            'Element=' + ActiveCktElement.Name + CRLF +
+                                            'Nphases=' + IntToStr(Nphases) + CRLF +
+                                            'NTerms=' + IntToStr(NTerms) + CRLF +
+                                            'NConds =' + IntToStr(NConds);
+                                        DoSimpleMsg(S, 5012);
+                                    end;
+                                end;
+                            end
+                    end
+                end;
+            end;
+            myPointer := @(myDBLArray[0]);
+            mySize := SizeOf(myDBLArray[0]) * Length(myDBLArray);
+        end;
+        8:
+        begin                                          // CktElement.SeqCurrents
+            myType := 2;        // Double
+            setlength(myDBLArray, 1);
+            myDBLArray[0] := 0;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                    begin
+                        with ActiveCktElement do
+                            if Enabled then
+                            begin
+                                try
+                                    setlength(myDBLArray, (3 * NTerms));
+                                    cbuffer := Allocmem(Sizeof(cbuffer^[1]) * 3 * Nterms);
               // get complex seq voltages
-              CalcSeqCurrents(ActiveCktElement, cbuffer);
+                                    CalcSeqCurrents(ActiveCktElement, cbuffer);
               // return 0 based array
-              For i := 1 to (3 * Nterms) do myDBLArray[i-1] := Cabs(cbuffer^[i]);  // return mag only
-                 Reallocmem(cbuffer, 0);  // throw away temp memory
-            EXCEPT
-              On E:Exception Do
-              Begin
-                S:= E.message + CRLF +
-                    'Element='+ ActiveCktElement.Name + CRLF+
-                    'Nphases=' + IntToStr(Nphases) + CRLF +
-                    'NTerms=' + IntToStr(NTerms) + CRLF +
-                    'NConds =' + IntToStr(NConds);
-                DoSimpleMsg(S, 5012);
-              End;
-            END;
-          End
-        End
-      End
-    End;
-    myPointer :=  @(myDBLArray[0]);
-    mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
-  end;
-  9: begin                                          // CktElement.Seqpowers
-    myType  :=  3;        // Complex
-    setlength(myCmplxArray, 1);
-    myCmplxArray[0] := CZero;
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-      WITH ActiveCircuit[ActiveActor] DO
-      Begin
-        If ActiveCktElement<>Nil THEN
-        Begin
-          WITH ActiveCktElement DO
-          Begin
-            setlength(myCmplxArray, (3 * NTerms)); // allocate for kW and kvar
-            IF NPhases <> 3 THEN
-            Begin
-              IF (Nphases = 1) and PositiveSequence THEN
-              Begin
-                numcond := NConds*NTerms;
-                cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
-                GetCurrents(cBuffer, ActiveActor);
-                For i := 0 to  ((3 * NTerms) - 1) DO myCmplxArray[i] := cmplx(0,0);   // Initialize Result
-                Count := 2;  // Start with kW1
+                                    for i := 1 to (3 * Nterms) do
+                                        myDBLArray[i - 1] := Cabs(cbuffer^[i]);  // return mag only
+                                    Reallocmem(cbuffer, 0);  // throw away temp memory
+                                except
+                                    On E: Exception do
+                                    begin
+                                        S := E.message + CRLF +
+                                            'Element=' + ActiveCktElement.Name + CRLF +
+                                            'Nphases=' + IntToStr(Nphases) + CRLF +
+                                            'NTerms=' + IntToStr(NTerms) + CRLF +
+                                            'NConds =' + IntToStr(NConds);
+                                        DoSimpleMsg(S, 5012);
+                                    end;
+                                end;
+                            end
+                    end
+                end
+            end;
+            myPointer := @(myDBLArray[0]);
+            mySize := SizeOf(myDBLArray[0]) * Length(myDBLArray);
+        end;
+        9:
+        begin                                          // CktElement.Seqpowers
+            myType := 3;        // Complex
+            setlength(myCmplxArray, 1);
+            myCmplxArray[0] := CZero;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                    begin
+                        with ActiveCktElement do
+                        begin
+                            setlength(myCmplxArray, (3 * NTerms)); // allocate for kW and kvar
+                            if NPhases <> 3 then
+                            begin
+                                if (Nphases = 1) and PositiveSequence then
+                                begin
+                                    numcond := NConds * NTerms;
+                                    cBuffer := Allocmem(sizeof(cBuffer^[1]) * numcond);
+                                    GetCurrents(cBuffer, ActiveActor);
+                                    for i := 0 to ((3 * NTerms) - 1) do
+                                        myCmplxArray[i] := cmplx(0, 0);   // Initialize Result
+                                    Count := 2;  // Start with kW1
                 {Put only phase 1 quantities in Pos seq}
-                FOR j := 1 to NTerms Do
-                Begin
-                    k := (j-1)*NConds;
-                    n := NodeRef^[k+1];
-                    Vph[1] := Solution.NodeV^[n];  // Get voltage at node
-                    myCmplxArray[count] := cmulreal(Cmul(Vph[1], conjg(cBuffer^[k+1])), 0.003);   // Compute power per phase
-                    inc(count);
-                End;
-                Reallocmem(cBuffer,0);
-              END
-              ELSE  For i := 0 to  ((3 * NTerms) - 1) DO myCmplxArray[i] := cmplx(-1.0, 0);  // Signify n/A
-            END
-            ELSE
-            Begin
-              numcond := NConds*NTerms;
-              cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
-              GetCurrents(cBuffer,ActiveActor);
-              count := 0;
-              FOR j := 1 to NTerms Do
-              Begin
-                k :=(j-1)*NConds;
-                FOR i := 1 to  3 DO Vph[i] := Solution.NodeV^[NodeRef^[i+k]];
-                For i := 1 to  3 DO Iph[i] := cBuffer^[k+i];
-                Phase2SymComp(@Iph, @I012);
-                Phase2SymComp(@Vph, @V012);
-                For i := 1 to 3 DO  Begin
-                  myCmplxArray[count] := cmulreal(Cmul(V012[i], conjg(I012[i])), 0.003);
-                  inc(count);
-                End;
-              End;
-              Reallocmem(cBuffer,0);
-            End;
-          End;
-        End;
-      End
-    End;
-    myPointer :=  @(myCmplxArray[0]);
-    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
-  end;
-  10: begin                                         // CktElement.AllpropertyNames
-    myType  :=  4;        // String
-    setlength(myStrArray, 0);
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-      WITH ActiveCircuit[ActiveActor] DO
-      Begin
-        If ActiveCktElement<>Nil THEN
-        WITH ActiveCktElement DO
-        Begin
-          WITH ParentClass Do
-          Begin
-            For k := 1 to NumProperties DO
-            Begin
-                WriteStr2Array(PropertyName^[k]);
-                WriteStr2Array(Char(0));
-            End;
-          End;
-        End
-      End;
-    End;
-    if (length(myStrArray) = 0) then
-      WriteStr2Array('None');
-    myPointer :=  @(myStrArray[0]);
-    mySize    :=  Length(myStrArray);
-  end;
-  11: begin                                         // CktElement.Residuals
-    myType  :=  3;        // Complex
-    setlength(myPolarArray, 1);
-    myPolarArray[0] := ctopolar(CZero);
-    If ActiveCircuit[ActiveActor] <> Nil Then
-    Begin
-      WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
-      Begin
-        setlength(myPolarArray, NTerms);    // 2 values per terminal
-        cBuffer := Allocmem(sizeof(cBuffer^[1])*Yorder);
-        GetCurrents(cBuffer,ActiveActor);
-        iV :=0;
-        For i := 1 to  NTerms DO
-        Begin
-          cResid := CZERO;
-          k :=(i-1)*Nconds;
-          For j := 1 to Nconds Do Begin
-            inc(k);
-            Caccum(cResid, CBuffer^[k]);
-          End;
-          myPolarArray[iV] := Ctopolardeg(cResid);
-          Inc(iV);
-        End;
-        Reallocmem(cBuffer,0);
-      End
-    End;
-    myPointer :=  @(myPolarArray[0]);
-    mySize    :=  SizeOf(myPolarArray[0]) * Length(myPolarArray);
-  end;
-  12: begin                                         // CktElement.YPrim
-    myType  :=  3;        // Complex
-    setlength(myCmplxArray, 1);
-    myCmplxArray[0] := CZero;
-    IF ActiveCircuit[ActiveActor] <> nil Then
-    Begin
-      With ActiveCircuit[ActiveActor] Do
-      If ActiveCktElement<>Nil THEN
-      Begin
-        WITH ActiveCktElement Do
-        Begin
-          NValues := SQR(Yorder);
-          cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
-          If cValues=Nil Then
-          Begin   // check for unassigned array
-            Exit;  // Get outta here
-          End;
-          setlength(myCmplxArray, NValues);  // Make  array
-          iV := 0;
-          FOR i := 1 to  NValues DO  Begin    // Plunk the values in the variant array
-            myCmplxArray[iV] := cValues^[i];
-            Inc(iV);
-          End;
-        End;
-      End
-    End;
-    myPointer :=  @(myCmplxArray[0]);
-    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
-  end;
-  13: begin                                         // CktElement.CplxSeqVoltages
-    myType  :=  3;        // Complex
-    setlength(myCmplxArray, 1);
-    myCmplxArray[0] := CZero;
-    IF   ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-      WITH ActiveCircuit[ActiveActor] DO
-      Begin
-        If ActiveCktElement <> Nil THEN
-        Begin
-          WITH ActiveCktElement DO
-          Begin
-            If Enabled Then
-            Begin
-              TRY
-                setlength(myCmplxArray,  (3 * NTerms));
-                cValues := Allocmem(Sizeof(cValues^[1]) * 3 * Nterms);
+                                    for j := 1 to NTerms do
+                                    begin
+                                        k := (j - 1) * NConds;
+                                        n := NodeRef^[k + 1];
+                                        Vph[1] := Solution.NodeV^[n];  // Get voltage at node
+                                        myCmplxArray[count] := cmulreal(Cmul(Vph[1], conjg(cBuffer^[k + 1])), 0.003);   // Compute power per phase
+                                        inc(count);
+                                    end;
+                                    Reallocmem(cBuffer, 0);
+                                end
+                                else
+                                    for i := 0 to ((3 * NTerms) - 1) do
+                                        myCmplxArray[i] := cmplx(-1.0, 0);  // Signify n/A
+                            end
+                            else
+                            begin
+                                numcond := NConds * NTerms;
+                                cBuffer := Allocmem(sizeof(cBuffer^[1]) * numcond);
+                                GetCurrents(cBuffer, ActiveActor);
+                                count := 0;
+                                for j := 1 to NTerms do
+                                begin
+                                    k := (j - 1) * NConds;
+                                    for i := 1 to 3 do
+                                        Vph[i] := Solution.NodeV^[NodeRef^[i + k]];
+                                    for i := 1 to 3 do
+                                        Iph[i] := cBuffer^[k + i];
+                                    Phase2SymComp(@Iph, @I012);
+                                    Phase2SymComp(@Vph, @V012);
+                                    for i := 1 to 3 do
+                                    begin
+                                        myCmplxArray[count] := cmulreal(Cmul(V012[i], conjg(I012[i])), 0.003);
+                                        inc(count);
+                                    end;
+                                end;
+                                Reallocmem(cBuffer, 0);
+                            end;
+                        end;
+                    end;
+                end
+            end;
+            myPointer := @(myCmplxArray[0]);
+            mySize := SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
+        end;
+        10:
+        begin                                         // CktElement.AllpropertyNames
+            myType := 4;        // String
+            setlength(myStrArray, 0);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                        with ActiveCktElement do
+                        begin
+                            with ParentClass do
+                            begin
+                                for k := 1 to NumProperties do
+                                begin
+                                    WriteStr2Array(PropertyName^[k]);
+                                    WriteStr2Array(Char(0));
+                                end;
+                            end;
+                        end
+                end;
+            end;
+            if (length(myStrArray) = 0) then
+                WriteStr2Array('None');
+            myPointer := @(myStrArray[0]);
+            mySize := Length(myStrArray);
+        end;
+        11:
+        begin                                         // CktElement.Residuals
+            myType := 3;        // Complex
+            setlength(myPolarArray, 1);
+            myPolarArray[0] := ctopolar(CZero);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor].ActiveCktElement do
+                begin
+                    setlength(myPolarArray, NTerms);    // 2 values per terminal
+                    cBuffer := Allocmem(sizeof(cBuffer^[1]) * Yorder);
+                    GetCurrents(cBuffer, ActiveActor);
+                    iV := 0;
+                    for i := 1 to NTerms do
+                    begin
+                        cResid := CZERO;
+                        k := (i - 1) * Nconds;
+                        for j := 1 to Nconds do
+                        begin
+                            inc(k);
+                            Caccum(cResid, CBuffer^[k]);
+                        end;
+                        myPolarArray[iV] := Ctopolardeg(cResid);
+                        Inc(iV);
+                    end;
+                    Reallocmem(cBuffer, 0);
+                end
+            end;
+            myPointer := @(myPolarArray[0]);
+            mySize := SizeOf(myPolarArray[0]) * Length(myPolarArray);
+        end;
+        12:
+        begin                                         // CktElement.YPrim
+            myType := 3;        // Complex
+            setlength(myCmplxArray, 1);
+            myCmplxArray[0] := CZero;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                    if ActiveCktElement <> NIL then
+                    begin
+                        with ActiveCktElement do
+                        begin
+                            NValues := SQR(Yorder);
+                            cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
+                            if cValues = NIL then
+                            begin   // check for unassigned array
+                                Exit;  // Get outta here
+                            end;
+                            setlength(myCmplxArray, NValues);  // Make  array
+                            iV := 0;
+                            for i := 1 to NValues do
+                            begin    // Plunk the values in the variant array
+                                myCmplxArray[iV] := cValues^[i];
+                                Inc(iV);
+                            end;
+                        end;
+                    end
+            end;
+            myPointer := @(myCmplxArray[0]);
+            mySize := SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
+        end;
+        13:
+        begin                                         // CktElement.CplxSeqVoltages
+            myType := 3;        // Complex
+            setlength(myCmplxArray, 1);
+            myCmplxArray[0] := CZero;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                    begin
+                        with ActiveCktElement do
+                        begin
+                            if Enabled then
+                            begin
+                                try
+                                    setlength(myCmplxArray, (3 * NTerms));
+                                    cValues := Allocmem(Sizeof(cValues^[1]) * 3 * Nterms);
                 // get complex seq voltages
-                CalcSeqVoltages(ActiveCktElement, cValues);
+                                    CalcSeqVoltages(ActiveCktElement, cValues);
                 // return 0 based array
-                iV := 0;
-                For i := 1 to (3  *Nterms) do
-                Begin
-                    myCmplxArray[iV] := cValues^[i];
-                    inc(iV);
-                End;
-                Reallocmem(cValues, 0);  // throw away temp memory
-              EXCEPT
-                On E:Exception Do
-                Begin
-                  S:= E.message + CRLF +
-                      'Element='+ ActiveCktElement.Name + CRLF+
-                      'Nphases=' + IntToStr(Nphases) + CRLF +
-                      'NTerms=' + IntToStr(NTerms) + CRLF +
-                      'NConds =' + IntToStr(NConds);
-                  DoSimpleMsg(S, 5012);
-                End;
-              END;
-            End
-          End;
-        End;
-      End;
-    End;
-    myPointer :=  @(myCmplxArray[0]);
-    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
-  end;
-  14: begin                                         // CktElement.CplxSeqCurrents
-    myType  :=  3;        // Complex
-    setlength(myCmplxArray, 1);
-    myCmplxArray[0] := CZero;
-    IF   ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-      WITH ActiveCircuit[ActiveActor] DO
-      Begin
-        If ActiveCktElement <> Nil THEN
-        Begin
-          WITH ActiveCktElement DO
-          Begin
-            If Enabled Then
-            Begin
-              TRY
-                setlength(myCmplxArray, (3 * NTerms));
-                cValues := Allocmem(Sizeof(cValues^[1]) * 3 * Nterms);
+                                    iV := 0;
+                                    for i := 1 to (3 * Nterms) do
+                                    begin
+                                        myCmplxArray[iV] := cValues^[i];
+                                        inc(iV);
+                                    end;
+                                    Reallocmem(cValues, 0);  // throw away temp memory
+                                except
+                                    On E: Exception do
+                                    begin
+                                        S := E.message + CRLF +
+                                            'Element=' + ActiveCktElement.Name + CRLF +
+                                            'Nphases=' + IntToStr(Nphases) + CRLF +
+                                            'NTerms=' + IntToStr(NTerms) + CRLF +
+                                            'NConds =' + IntToStr(NConds);
+                                        DoSimpleMsg(S, 5012);
+                                    end;
+                                end;
+                            end
+                        end;
+                    end;
+                end;
+            end;
+            myPointer := @(myCmplxArray[0]);
+            mySize := SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
+        end;
+        14:
+        begin                                         // CktElement.CplxSeqCurrents
+            myType := 3;        // Complex
+            setlength(myCmplxArray, 1);
+            myCmplxArray[0] := CZero;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                    begin
+                        with ActiveCktElement do
+                        begin
+                            if Enabled then
+                            begin
+                                try
+                                    setlength(myCmplxArray, (3 * NTerms));
+                                    cValues := Allocmem(Sizeof(cValues^[1]) * 3 * Nterms);
                 // get complex seq voltages
-                CalcSeqCurrents(ActiveCktElement, cValues);
+                                    CalcSeqCurrents(ActiveCktElement, cValues);
                 // return 0 based array
-                iV := 0;
-                For i := 1 to 3*Nterms do
-                Begin
-                    myCmplxArray[iV] := cValues^[i];
-                    inc(iV);
-                End;
-                Reallocmem(cValues, 0);  // throw away temp memory
-              EXCEPT
-                On E:Exception Do
-                Begin
-                  S:= E.message + CRLF +
-                      'Element='+ ActiveCktElement.Name + CRLF+
-                      'Nphases=' + IntToStr(Nphases) + CRLF +
-                      'NTerms=' + IntToStr(NTerms) + CRLF +
-                      'NConds =' + IntToStr(NConds);
-                  DoSimpleMsg(S, 5012);
-                End;
-              END;
-            End;
-          End;
-        End;
-      End;
-    End;
-    myPointer :=  @(myCmplxArray[0]);
-    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
-  end;
-  15: begin                                         // CktElement.AllVariableNames
-    myType  :=  4;        // String
-    setlength(myStrArray, 0);
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-      WITH ActiveCircuit[ActiveActor] DO
-      Begin
-        If ActiveCktElement<>Nil THEN
-        WITH ActiveCktElement DO
-        Begin
-          If (DSSObjType And BASECLASSMASK) = PC_ELEMENT Then
-          Begin
-            pPCElem := (ActiveCktElement as TPCElement);
-            For k := 1 to pPCElem.NumVariables DO
-            Begin
-                WriteStr2Array(pPCElem.VariableName(k));
-                WriteStr2Array(Char(0));
-            End;
-          End;
+                                    iV := 0;
+                                    for i := 1 to 3 * Nterms do
+                                    begin
+                                        myCmplxArray[iV] := cValues^[i];
+                                        inc(iV);
+                                    end;
+                                    Reallocmem(cValues, 0);  // throw away temp memory
+                                except
+                                    On E: Exception do
+                                    begin
+                                        S := E.message + CRLF +
+                                            'Element=' + ActiveCktElement.Name + CRLF +
+                                            'Nphases=' + IntToStr(Nphases) + CRLF +
+                                            'NTerms=' + IntToStr(NTerms) + CRLF +
+                                            'NConds =' + IntToStr(NConds);
+                                        DoSimpleMsg(S, 5012);
+                                    end;
+                                end;
+                            end;
+                        end;
+                    end;
+                end;
+            end;
+            myPointer := @(myCmplxArray[0]);
+            mySize := SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
+        end;
+        15:
+        begin                                         // CktElement.AllVariableNames
+            myType := 4;        // String
+            setlength(myStrArray, 0);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                        with ActiveCktElement do
+                        begin
+                            if (DSSObjType and BASECLASSMASK) = PC_ELEMENT then
+                            begin
+                                pPCElem := (ActiveCktElement as TPCElement);
+                                for k := 1 to pPCElem.NumVariables do
+                                begin
+                                    WriteStr2Array(pPCElem.VariableName(k));
+                                    WriteStr2Array(Char(0));
+                                end;
+                            end;
           {Else zero-length array null string}
-        End
-      End;
-    End;
-    if (length(myStrArray) = 0) then
-      WriteStr2Array('None');
-    myPointer :=  @(myStrArray[0]);
-    mySize    :=  Length(myStrArray);
-  end;
-  16: begin                                         // CktElement.AllVariableValues
-    myType  :=  2;        // Double
-    setlength(myDBLArray, 1);
-    myDBLArray[0] :=  0;
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-      WITH ActiveCircuit[ActiveActor] DO
-      Begin
-        If ActiveCktElement<>Nil THEN
-        WITH ActiveCktElement DO
-        Begin
-          If (DSSObjType And BASECLASSMASK) = PC_ELEMENT Then
-          Begin
-            pPCElem := (ActiveCktElement as TPCElement);
-            setlength(myDBLArray, pPCElem.NumVariables);
-            For k := 1 to pPCElem.NumVariables DO
-            Begin
-                myDBLArray[k - 1] := pPCElem.Variable[k];
-            End;
-          End;
+                        end
+                end;
+            end;
+            if (length(myStrArray) = 0) then
+                WriteStr2Array('None');
+            myPointer := @(myStrArray[0]);
+            mySize := Length(myStrArray);
+        end;
+        16:
+        begin                                         // CktElement.AllVariableValues
+            myType := 2;        // Double
+            setlength(myDBLArray, 1);
+            myDBLArray[0] := 0;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                        with ActiveCktElement do
+                        begin
+                            if (DSSObjType and BASECLASSMASK) = PC_ELEMENT then
+                            begin
+                                pPCElem := (ActiveCktElement as TPCElement);
+                                setlength(myDBLArray, pPCElem.NumVariables);
+                                for k := 1 to pPCElem.NumVariables do
+                                begin
+                                    myDBLArray[k - 1] := pPCElem.Variable[k];
+                                end;
+                            end;
          {Else zero-length array null string}
-        End
-      End;
-    End;
-    myPointer :=  @(myDBLArray[0]);
-    mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
-  end;
-  17: begin                                         // CktElement.Nodeorder
-    myType  :=  1;        // Integer
-    setlength(myIntArray, 1);
-    myIntArray[0] :=  0;
-    If ActiveCircuit[ActiveActor] <> Nil Then With ActiveCircuit[ActiveActor] Do
-    Begin
-      If ActiveCktElement<>Nil THEN
-      Begin
-        WITH ActiveCktElement DO
-        Begin
-          k := 0;
-          setlength(myIntArray, NTerms*Nconds);
-          for i := 1 to Nterms do
-          Begin
-            for j := (i-1)*NConds+1 to i*Nconds do
-            Begin
-                 myIntArray[k] := GetNodeNum(NodeRef^[j]);
-                 inc(k);
-            End;
-          End;
-        End;
-      End;
-    End;
-    myPointer :=  @(myIntArray[0]);
-    mySize    :=  SizeOf(myIntArray[0]) * Length(myIntArray);
-  end;
-  18: begin                                         // CktElement.CurrentsMagAng
-    myType  :=  3;        // Complex
-    setlength(myPolarArray, 1);
-    myPolarArray[0] := ctopolar(CZero);
-    If ActiveCircuit[ActiveActor] <> Nil Then
-    Begin
-       WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
-       Begin
-         NValues := NConds*NTerms;
-         setlength(myPolarArray, NValues);
-         cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
-         GetCurrents(cBuffer,ActiveActor);
-         iV :=0;
-         For i := 1 to  NValues DO
-         Begin
-            myPolarArray[iV] := ctopolardeg(cBuffer^[i]); // convert to mag/angle
-            Inc(iV);
-         End;
-         Reallocmem(cBuffer,0);
-       End
-    End;
-    myPointer :=  @(myPolarArray[0]);
-    mySize    :=  SizeOf(myPolarArray[0]) * Length(myPolarArray);
-  end;
-  19: begin
+                        end
+                end;
+            end;
+            myPointer := @(myDBLArray[0]);
+            mySize := SizeOf(myDBLArray[0]) * Length(myDBLArray);
+        end;
+        17:
+        begin                                         // CktElement.Nodeorder
+            myType := 1;        // Integer
+            setlength(myIntArray, 1);
+            myIntArray[0] := 0;
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                    begin
+                        with ActiveCktElement do
+                        begin
+                            k := 0;
+                            setlength(myIntArray, NTerms * Nconds);
+                            for i := 1 to Nterms do
+                            begin
+                                for j := (i - 1) * NConds + 1 to i * Nconds do
+                                begin
+                                    myIntArray[k] := GetNodeNum(NodeRef^[j]);
+                                    inc(k);
+                                end;
+                            end;
+                        end;
+                    end;
+                end;
+            myPointer := @(myIntArray[0]);
+            mySize := SizeOf(myIntArray[0]) * Length(myIntArray);
+        end;
+        18:
+        begin                                         // CktElement.CurrentsMagAng
+            myType := 3;        // Complex
+            setlength(myPolarArray, 1);
+            myPolarArray[0] := ctopolar(CZero);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor].ActiveCktElement do
+                begin
+                    NValues := NConds * NTerms;
+                    setlength(myPolarArray, NValues);
+                    cBuffer := Allocmem(sizeof(cBuffer^[1]) * NValues);
+                    GetCurrents(cBuffer, ActiveActor);
+                    iV := 0;
+                    for i := 1 to NValues do
+                    begin
+                        myPolarArray[iV] := ctopolardeg(cBuffer^[i]); // convert to mag/angle
+                        Inc(iV);
+                    end;
+                    Reallocmem(cBuffer, 0);
+                end
+            end;
+            myPointer := @(myPolarArray[0]);
+            mySize := SizeOf(myPolarArray[0]) * Length(myPolarArray);
+        end;
+        19:
+        begin
 // Return voltages for all terminals
-    myType  :=  3;        // Complex
-    setlength(myPolarArray, 1);
-    myPolarArray[0] := ctopolar(CZero);
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-      WITH ActiveCircuit[ActiveActor] DO
-      Begin
-        If ActiveCktElement<>Nil THEN
-        WITH ActiveCktElement DO
-        Begin
-          numcond := NConds*Nterms;
-          setlength(myPolarArray,numcond);
+            myType := 3;        // Complex
+            setlength(myPolarArray, 1);
+            myPolarArray[0] := ctopolar(CZero);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement <> NIL then
+                        with ActiveCktElement do
+                        begin
+                            numcond := NConds * Nterms;
+                            setlength(myPolarArray, numcond);
           // k := (Terminal-1)*numcond;    // RCD 8-30-00 Changed
-          iV :=0;
-          FOR i := 1 to  numcond DO
-          Begin
-            n := ActiveCktElement.NodeRef^[i];
-            myPolarArray[iV] := ctopolardeg(Solution.NodeV^[n]); // ok if =0
-            Inc(iV);
-          End;
-        End;
-      End;
-    End;
-    myPointer :=  @(myPolarArray[0]);
-    mySize    :=  SizeOf(myPolarArray[0]) * Length(myPolarArray);
-  end;
-  20: begin
+                            iV := 0;
+                            for i := 1 to numcond do
+                            begin
+                                n := ActiveCktElement.NodeRef^[i];
+                                myPolarArray[iV] := ctopolardeg(Solution.NodeV^[n]); // ok if =0
+                                Inc(iV);
+                            end;
+                        end;
+                end;
+            end;
+            myPointer := @(myPolarArray[0]);
+            mySize := SizeOf(myPolarArray[0]) * Length(myPolarArray);
+        end;
+        20:
+        begin
 // Return total powers for the active element at all terminals
-    myType  :=  3;        // Complex
-    setlength(myCmplxArray, 1);
-    myCmplxArray[0] := CZero;
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-      WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
-      Begin
-        NValues := NConds*Nterms;
-        setlength(myCmplxArray, Nterms);
-        cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
-        GetPhasePower(cBuffer, Activeactor);
-        iV :=0;
-        setlength(myBuffer,Nterms);
-        for j := 1 to Nterms do
-        Begin
-          myBuffer[j - 1] :=  cmplx(0.0, 0.0);
-          myInit          :=  (j - 1) * NConds + 1;
-          myEnd           :=  NConds * j;
-          For i := myInit to myEnd DO
-          Begin
-            myBuffer[j - 1] :=  cadd(myBuffer[j - 1], cBuffer^[i]);
-          End;
-          myCmplxArray[iV]  :=  cmulreal(myBuffer[j - 1], 0.001);
-          inc(iV);
-        End;
-        Reallocmem(cBuffer,0);
-      End;
-    End;
-    myPointer :=  @(myCmplxArray[0]);
-    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
-  end
-  else
-    myType  :=  4;        // String
-    setlength(myStrArray, 0);
-    WriteStr2Array('Error, parameter not recognized');
-    myPointer :=  @(myStrArray[0]);
-    mySize    :=  Length(myStrArray);
-  end;
+            myType := 3;        // Complex
+            setlength(myCmplxArray, 1);
+            myCmplxArray[0] := CZero;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor].ActiveCktElement do
+                begin
+                    NValues := NConds * Nterms;
+                    setlength(myCmplxArray, Nterms);
+                    cBuffer := Allocmem(sizeof(cBuffer^[1]) * NValues);
+                    GetPhasePower(cBuffer, Activeactor);
+                    iV := 0;
+                    setlength(myBuffer, Nterms);
+                    for j := 1 to Nterms do
+                    begin
+                        myBuffer[j - 1] := cmplx(0.0, 0.0);
+                        myInit := (j - 1) * NConds + 1;
+                        myEnd := NConds * j;
+                        for i := myInit to myEnd do
+                        begin
+                            myBuffer[j - 1] := cadd(myBuffer[j - 1], cBuffer^[i]);
+                        end;
+                        myCmplxArray[iV] := cmulreal(myBuffer[j - 1], 0.001);
+                        inc(iV);
+                    end;
+                    Reallocmem(cBuffer, 0);
+                end;
+            end;
+            myPointer := @(myCmplxArray[0]);
+            mySize := SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
+        end
+    else
+        myType := 4;        // String
+        setlength(myStrArray, 0);
+        WriteStr2Array('Error, parameter not recognized');
+        myPointer := @(myStrArray[0]);
+        mySize := Length(myStrArray);
+    end;
 end;
 
 end.

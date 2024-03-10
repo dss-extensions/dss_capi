@@ -3,20 +3,27 @@ unit ReportForm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls;
+    Windows,
+    Messages,
+    SysUtils,
+    Classes,
+    Graphics,
+    Controls,
+    Forms,
+    Dialogs,
+    StdCtrls;
 
 type
-  TReport = class(TForm)
-    Memo1: TMemo;
-  private
+    TReport = class(TForm)
+        Memo1: TMemo;
+    PRIVATE
     { Private declarations }
-  public
+    PUBLIC
     { Public declarations }
-  end;
+    end;
 
 var
-  Report: TReport;
+    Report: TReport;
 
 implementation
 
