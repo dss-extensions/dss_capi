@@ -126,6 +126,7 @@ procedure Batch_CreateByClass(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; Re
 procedure Batch_CreateByRegExp(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; clsIdx: Integer; re: PAnsiChar); CDECL;
 procedure Batch_CreateByIndex(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; Value: PInteger; ValueCount: Integer); CDECL;
 procedure Batch_CreateByInt32Property(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; propidx: Integer; value: Integer); CDECL;
+procedure Batch_CreateByFloat64PropertyRange(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; propidx: Integer; valueMin: Double; valueMax: Double); CDECL;
 
 function Batch_ToJSON(batch: TDSSObjectPtr; batchSize: Integer; joptions: Integer): PAnsiChar; CDECL;
 
@@ -159,6 +160,7 @@ procedure Batch_CreateByClassS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; R
 procedure Batch_CreateByRegExpS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; clsname: PAnsiChar; re: PAnsiChar); CDECL;
 procedure Batch_CreateByIndexS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; clsname: PAnsiChar; Value: PInteger; ValueCount: Integer); CDECL;
 procedure Batch_CreateByInt32PropertyS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; clsname: PAnsiChar; propname: PAnsiChar; value: Integer); CDECL;
+procedure Batch_CreateByFloat64PropertyRangeS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; clsname: PAnsiChar; propname: PAnsiChar; valueMin: Double; valueMax: Double); CDECL;
 
 procedure Batch_GetFloat64S(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; Name: PChar); CDECL;
 procedure Batch_GetInt32S(var ResultPtr: PInteger; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; Name: PChar); CDECL;
@@ -1060,6 +1062,70 @@ begin
     for i := 1 to cls.ElementList.Count do
     begin
         if cls.GetObjInteger(objList^, propIdx) = value then
+        begin
+            outptr^ := objlist^;
+            inc(outptr);
+            inc(ResultCount[0]);
+        end;
+        inc(objlist);
+    end;
+end;
+
+procedure Batch_CreateByFloat64PropertyRange(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; propidx: Integer; valueMin: Double; valueMax: Double); CDECL;
+var
+    cls: TDSSClass;
+    objlist: TDSSObjectPtr;
+    outptr: TDSSObjectPtr;
+    propOffset: PtrUint;
+    i: Integer;
+    propFlags: TPropertyFlags;
+    ptype: TPropertyType;
+    v: Double;
+begin
+    if DSS = NIL then DSS := DSSPrime;
+    cls := DSS.DSSClassList.At(clsIdx);
+    if cls = NIL then
+    begin
+        Exit;
+    end;
+
+    ptype := cls.PropertyType[propidx];
+    if not (ptype in [
+        TPropertyType.DoubleProperty,
+        TPropertyType.DoubleOnStructArrayProperty,
+        TPropertyType.DoubleOnArrayProperty
+    ]) then
+    begin
+        Exit;
+    end;
+
+    propFlags := cls.PropertyFlags[propIdx];
+    propOffset := cls.PropertyOffset[propIdx];
+    objlist := TDSSObjectPtr(cls.ElementList.InternalPointer);
+    ensureBatchSize(cls.ElementList.Count, ResultPtr, ResultCount);
+    outptr := ResultPtr;
+    if (ptype = TPropertyType.DoubleProperty) and
+        (propFlags = []) and
+        (cls.PropertyScale[propIdx] = 1) then
+    begin
+        for i := 1 to cls.ElementList.Count do
+        begin
+            v := PDouble(PtrUint(objlist^) + propoffset)^;
+            if (v >= valueMin) and (v <= valueMax) then
+            begin
+                outptr^ := objlist^;
+                inc(outptr);
+                inc(ResultCount[0]);
+            end;
+            inc(objlist);
+        end;
+        Exit;
+    end;
+
+    for i := 1 to cls.ElementList.Count do
+    begin
+        v := cls.GetObjDouble(objList^, propIdx);
+        if (v >= valueMin) and (v <= valueMax) then
         begin
             outptr^ := objlist^;
             inc(outptr);
@@ -2089,6 +2155,33 @@ begin
     Batch_CreateByInt32Property(DSS, ResultPtr, ResultCount, clsIdx, propidx, value);
 end;
 
+procedure Batch_CreateByFloat64PropertyRangeS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; clsname: PAnsiChar; propname: PAnsiChar; valueMin: Double; valueMax: Double); CDECL;
+var
+    i, clsIdx: Integer;
+    propIdx: Integer = 0;
+    cls: TDSSClass;
+    spropname: String;
+begin
+    if DSS = NIL then DSS := DSSPrime;
+    clsIdx := DSS.ClassNames.Find(clsname);
+    if clsIdx = 0 then
+        Exit;
+
+    cls := DSS.DSSClassList.At(clsIdx);
+    spropname := propname;
+    for i := 1 to cls.NumProperties do
+    begin
+        if CompareText(spropname, cls.PropertyName[i]) = 0 then
+        begin
+            propIdx := i;
+            break;
+        end;
+    end;
+    if propIdx = 0 then
+        Exit;
+
+    Batch_CreateByFloat64PropertyRange(DSS, ResultPtr, ResultCount, clsIdx, propidx, valueMin, valueMax);
+end;
 
 //------------------------------------------------------------------------------
 
