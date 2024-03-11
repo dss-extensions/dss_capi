@@ -212,6 +212,22 @@ extern "C" {
         GeneratorRegisters_Price = 5
     };
 
+    /*!
+    \brief Generator variables
+
+    Enumeration of the generator state variables by index.
+    This is the implicit list and there can be more variables used by user-models
+    and DynamicExp objects.
+    */
+    enum GeneratorVariables {
+        GeneratorVariables_Frequency = 1, ///< Frequency (Hz)
+        GeneratorVariables_Theta = 2, ///< Theta (degrees)
+        GeneratorVariables_Vd = 3, ///< Vd (pu)
+        GeneratorVariables_PShaft = 4, ///< PShaft (W)
+        GeneratorVariables_dSpeed = 5, ///< dSpeed (degrees/second)
+        GeneratorVariables_dTheta = 6 ///< dTheta (degrees)
+    };
+
     /// EXPERIMENTAL: For message/write callbacks
     enum DSSMessageType {
         DSSMessageType_Error = -1,
