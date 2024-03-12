@@ -2055,6 +2055,8 @@ exports
     Batch_CreateByIndex,
     Batch_CreateByInt32Property,
     Batch_CreateByFloat64PropertyRange,
+    Batch_FilterByInt32Property,
+    Batch_FilterByFloat64PropertyRange,
     Batch_CreateByClass,
     Batch_Dispose,
     Batch_BeginEdit,

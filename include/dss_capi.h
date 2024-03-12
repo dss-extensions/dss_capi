@@ -7772,6 +7772,8 @@ extern "C" {
     DSS_CAPI_DLL void Batch_CreateByIndex(const void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t clsidx, int32_t* Value, int32_t ValueCount);
     DSS_CAPI_DLL void Batch_CreateByInt32Property(const void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t ClsIdx, int32_t idx, int32_t value);
     DSS_CAPI_DLL void Batch_CreateByFloat64PropertyRange(const void* ctx, void*** ResultPtr, int32_t* ResultDims, int32_t ClsIdx, int32_t idx, double valueMin, double valueMax);
+    DSS_CAPI_DLL void Batch_FilterByInt32Property(const void* ctx, void*** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, int32_t idx, int32_t value);
+    DSS_CAPI_DLL void Batch_FilterByFloat64PropertyRange(const void* ctx, void*** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, int32_t idx, double valueMin, double valueMax);
 
     DSS_CAPI_DLL void Batch_GetFloat64(double** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, int32_t Index);
     DSS_CAPI_DLL void Batch_GetFloat64FromFunc(double** ResultPtr, int32_t* ResultDims, void** batch, int32_t batchSize, dss_obj_float64_func_t func);

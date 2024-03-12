@@ -29,10 +29,11 @@
     - Fix logic for `DisplayName`
     - Fix 13+ old bug in `Open`/`Close`/`IsOpen` -- the terminal parameters was being effectively ignored, applying the operations to the active terminal; also add check for valid terminal index.
 - API/Capacitors: fix `Close` (same issue as CE).
-- API/Batch: 
+- API/Batch:
     - Implement `BatchOperation_Divide`; needed for integers, and could be slightly better for floats, even though it's a tiny bit slower in modern processors.
     - Generalize `Batch_SetFloat64Array`/`Batch_SetIn32Array` to `Batch_Float64Array`/`Batch_In32Array`. This allows dropping the basic batch operations to the engine for array values, and allow for future optimizations in C++. In the current Pascal codebase, this is still better than running the operations on user-side due to memory layout and potential extra memory allocations when running on user-side.
     - Add `Batch_CreateByFloat64PropertyRange` to allow creating batches based on the value of a `float64` property.
+    - Add `Batch_FilterByFloat64PropertyRange` and `Batch_FilterByInt32Property` to allow filtering existing batches into new batches.
 
 ## Version 0.14.2 (2024-02-26)
 

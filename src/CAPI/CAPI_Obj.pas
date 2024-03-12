@@ -56,10 +56,10 @@ type
     );
 
     ExtraClassIDs = (
-        DSSObjs = -1,
-        CktElements = -2,
+        PDElements = -4,
         PCElements = -3,
-        PDElements = -4
+        CktElements = -2,
+        DSSObjs = -1
     );
 {$POP}    
 {$SCOPEDENUMS OFF}
@@ -127,6 +127,9 @@ procedure Batch_CreateByRegExp(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; R
 procedure Batch_CreateByIndex(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; Value: PInteger; ValueCount: Integer); CDECL;
 procedure Batch_CreateByInt32Property(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; propidx: Integer; value: Integer); CDECL;
 procedure Batch_CreateByFloat64PropertyRange(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; propidx: Integer; valueMin: Double; valueMax: Double); CDECL;
+procedure Batch_FilterByInt32Property(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; propidx: Integer; value: Integer); CDECL;
+procedure Batch_FilterByFloat64PropertyRange(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; propidx: Integer; valueMin: Double; valueMax: Double); CDECL;
+
 
 function Batch_ToJSON(batch: TDSSObjectPtr; batchSize: Integer; joptions: Integer): PAnsiChar; CDECL;
 
@@ -832,6 +835,7 @@ var
     i, N: Integer;
     // propFlags: TPropertyFlags;
 begin
+    ResultCount[0] := 0;
     if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
     begin
         Exit;
@@ -1000,6 +1004,19 @@ end;
 procedure Batch_CreateByInt32Property(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; propidx: Integer; value: Integer); CDECL;
 var
     cls: TDSSClass;
+begin
+    if DSS = NIL then DSS := DSSPrime;
+    cls := DSS.DSSClassList.At(clsIdx);
+    if cls = NIL then
+    begin
+        Exit;
+    end;
+    Batch_FilterByInt32Property(DSS, ResultPtr, ResultCount, TDSSObjectPtr(cls.ElementList.InternalPointer), cls.ElementList.Count, propidx, value);
+end;
+
+procedure Batch_FilterByInt32Property(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; propidx: Integer; value: Integer); CDECL;
+var
+    cls: TDSSClass;
     objlist: TDSSObjectPtr;
     outptr: TDSSObjectPtr;
     propOffset: PtrUint;
@@ -1008,7 +1025,11 @@ var
     ptype: TPropertyType;
 begin
     if DSS = NIL then DSS := DSSPrime;
-    cls := DSS.DSSClassList.At(clsIdx);
+    ResultCount[0] := 0;
+    if (batch = NIL) or (batchSize = 0) then
+        Exit;
+
+    cls := batch^.ParentClass;
     if cls = NIL then
     begin
         Exit;
@@ -1033,8 +1054,8 @@ begin
 
     propFlags := cls.PropertyFlags[propIdx];
     propOffset := cls.PropertyOffset[propIdx];
-    objlist := TDSSObjectPtr(cls.ElementList.InternalPointer);
-    ensureBatchSize(cls.ElementList.Count, ResultPtr, ResultCount);
+    objlist := batch;
+    ensureBatchSize(batchSize, ResultPtr, ResultCount);
     outptr := ResultPtr;
     if (ptype in [
         TPropertyType.IntegerProperty,
@@ -1046,7 +1067,7 @@ begin
         (not (TPropertyFlag.ScaledByFunction in propFlags)) then
     begin
         // 40-50% faster than calling the function
-        for i := 1 to cls.ElementList.Count do
+        for i := 1 to batchSize do
         begin
             if (PInteger(PtrUint(objlist^) + propoffset))^ = value then
             begin
@@ -1059,7 +1080,7 @@ begin
         Exit;
     end;
 
-    for i := 1 to cls.ElementList.Count do
+    for i := 1 to batchSize do
     begin
         if cls.GetObjInteger(objList^, propIdx) = value then
         begin
@@ -1074,6 +1095,19 @@ end;
 procedure Batch_CreateByFloat64PropertyRange(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; propidx: Integer; valueMin: Double; valueMax: Double); CDECL;
 var
     cls: TDSSClass;
+begin
+    if DSS = NIL then DSS := DSSPrime;
+    cls := DSS.DSSClassList.At(clsIdx);
+    if cls = NIL then
+    begin
+        Exit;
+    end;
+    Batch_FilterByFloat64PropertyRange(DSS, ResultPtr, ResultCount, TDSSObjectPtr(cls.ElementList.InternalPointer), cls.ElementList.Count, propidx, valueMin, valueMax);
+end;
+
+procedure Batch_FilterByFloat64PropertyRange(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; propidx: Integer; valueMin: Double; valueMax: Double); CDECL;
+var
+    cls: TDSSClass;
     objlist: TDSSObjectPtr;
     outptr: TDSSObjectPtr;
     propOffset: PtrUint;
@@ -1083,7 +1117,11 @@ var
     v: Double;
 begin
     if DSS = NIL then DSS := DSSPrime;
-    cls := DSS.DSSClassList.At(clsIdx);
+    ResultCount[0] := 0;
+    if (batch = NIL) or (batchSize = 0) then
+        Exit;
+
+    cls := batch^.ParentClass;
     if cls = NIL then
     begin
         Exit;
@@ -1101,14 +1139,14 @@ begin
 
     propFlags := cls.PropertyFlags[propIdx];
     propOffset := cls.PropertyOffset[propIdx];
-    objlist := TDSSObjectPtr(cls.ElementList.InternalPointer);
-    ensureBatchSize(cls.ElementList.Count, ResultPtr, ResultCount);
+    objlist := batch;
+    ensureBatchSize(batchSize, ResultPtr, ResultCount);
     outptr := ResultPtr;
     if (ptype = TPropertyType.DoubleProperty) and
         (propFlags = []) and
         (cls.PropertyScale[propIdx] = 1) then
     begin
-        for i := 1 to cls.ElementList.Count do
+        for i := 1 to batchSize do
         begin
             v := PDouble(PtrUint(objlist^) + propoffset)^;
             if (v >= valueMin) and (v <= valueMax) then
@@ -1122,7 +1160,7 @@ begin
         Exit;
     end;
 
-    for i := 1 to cls.ElementList.Count do
+    for i := 1 to batchSize do
     begin
         v := cls.GetObjDouble(objList^, propIdx);
         if (v >= valueMin) and (v <= valueMax) then
@@ -1197,6 +1235,7 @@ var
     presult: PDouble;
     i: Integer;
 begin
+    ResultCount[0] := 0;
     if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
@@ -1227,6 +1266,7 @@ var
     presult: PDouble;
     i: Integer;
 begin
+    ResultCount[0] := 0;
     if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) or ((@func) = NIL) then
         Exit;
 
@@ -1246,6 +1286,7 @@ var
     presult: PDouble;
     i: Integer;
 begin
+    ResultCount[0] := 0;
     if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) or ((@func) = NIL) then
         Exit;
 
@@ -1268,6 +1309,7 @@ var
     i: Integer;
     propFlags: TPropertyFlags;
 begin
+    ResultCount[0] := 0;
     if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
     begin
         Exit;
@@ -1323,6 +1365,7 @@ var
     presult: PInteger;
     i: Integer;
 begin
+    ResultCount[0] := 0;
     if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) or ((@func) = NIL) then
     begin
         Exit;
@@ -1344,6 +1387,7 @@ var
     presult: PPAnsiChar;
     i: Integer;
 begin
+    ResultCount[0] := 0;
     if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
@@ -1380,6 +1424,7 @@ var
     i: Integer;
     s: String;
 begin
+    ResultCount[0] := 0;
     if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
@@ -1402,6 +1447,7 @@ var
     presult: TDSSObjectPtr;
     i: Integer;
 begin
+    ResultCount[0] := 0;
     if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) then
         Exit;
 
