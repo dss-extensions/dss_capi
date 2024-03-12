@@ -215,7 +215,7 @@ extern "C" {
     /*!
     \brief Generator variables
 
-    Enumeration of the generator state variables by index.
+    Enumeration of the generator state variables by (1-based) index.
     This is the implicit list and there can be more variables used by user-models
     and DynamicExp objects.
     */
@@ -226,6 +226,161 @@ extern "C" {
         GeneratorVariables_PShaft = 4, ///< PShaft (W)
         GeneratorVariables_dSpeed = 5, ///< dSpeed (degrees/second)
         GeneratorVariables_dTheta = 6 ///< dTheta (degrees)
+    };
+
+    /*!
+    \brief IndMach012 variables
+
+    Enumeration of the IndMach012 state variables by (1-based) index.
+    */
+    enum IndMach012Variables {
+        IndMach012Variables_Frequency = 1, ///< Frequency
+        IndMach012Variables_Theta = 2, ///< Theta (deg)
+        IndMach012Variables_E1 = 3, ///< E1
+        IndMach012Variables_Pshaft = 4, ///< Pshaft
+        IndMach012Variables_dSpeed = 5, ///< dSpeed (deg/sec)
+        IndMach012Variables_dTheta = 6, ///< dTheta (deg)
+        IndMach012Variables_Slip = 7, ///< Slip
+        IndMach012Variables_puRs = 8, ///< puRs
+        IndMach012Variables_puXs = 9, ///< puXs
+        IndMach012Variables_puRr = 10, ///< puRr
+        IndMach012Variables_puXr = 11, ///< puXr
+        IndMach012Variables_puXm = 12, ///< puXm
+        IndMach012Variables_MaxSlip = 13, ///< Maxslip
+        IndMach012Variables_Is1 = 14, ///< Is1
+        IndMach012Variables_Is2 = 15, ///< Is2
+        IndMach012Variables_Ir1 = 16, ///< Ir1
+        IndMach012Variables_Ir2 = 17, ///< Ir2
+        IndMach012Variables_StatorLosses = 18, ///< Stator Losses
+        IndMach012Variables_RotorLosses = 19, ///< Rotor Losses
+        IndMach012Variables_ShaftPowerHP = 20, ///< Shaft Power (hp)
+        IndMach012Variables_PowerFactor = 21, ///< Power Factor
+        IndMach012Variables_Efficiency = 22 ///< Efficiency (%)
+    };
+
+    /*!
+    \brief PVSystem variables
+
+    Enumeration of the PVSystem state variables by (1-based) index.
+    This is the implicit list and there can be more variables used by user-models
+    and DynamicExp objects.
+    */
+    enum PVSystemVariables {
+        PVSystemVariables_Irradiance = 1, ///< Irradiance
+        PVSystemVariables_PanelkW = 2, ///< PanelkW
+        PVSystemVariables_P_TFactor = 3, ///< P_TFactor
+        PVSystemVariables_Efficiency = 4, ///< Efficiency
+        PVSystemVariables_Vreg = 5, ///< Vreg
+        PVSystemVariables_Vavg_DRC = 6, ///< Vavg (DRC)
+        PVSystemVariables_volt_var = 7, ///< volt-var
+        PVSystemVariables_volt_watt = 8, ///< volt-watt
+        PVSystemVariables_DRC = 9, ///< DRC
+        PVSystemVariables_VV_DRC = 10, ///< VV_DRC
+        PVSystemVariables_watt_pf = 11, ///< watt-pf
+        PVSystemVariables_watt_var = 12, ///< watt-var
+        PVSystemVariables_kW_out_desired = 13, ///< kW_out_desired
+        PVSystemVariables_GridVoltage = 14, ///< Grid voltage
+        PVSystemVariables_di_dt = 15, ///< di/dt
+        PVSystemVariables_it = 16, ///< it
+        PVSystemVariables_itHistory = 17, ///< it History
+        PVSystemVariables_RatedVDC = 18, ///< Rated VDC
+        PVSystemVariables_AvgDutyCycle = 19, ///< Avg duty cycle
+        PVSystemVariables_Target_Amps = 20, ///< Target (Amps)
+        PVSystemVariables_SeriesL = 21, ///< Series L
+        PVSystemVariables_MaxAmps_phase = 22 ///< Max. Amps (phase)
+    };
+
+    /*!
+    \brief Storage variables
+
+    Enumeration of the Storage state variables by (1-based) index.
+    This is the implicit list and there can be more variables used by user-models
+    and DynamicExp objects.
+    */
+    enum StorageVariables {
+        StorageVariables_kWh = 1, ///< kWh
+        StorageVariables_State = 2, ///< State
+        StorageVariables_kWOut = 3, ///< kWOut
+        StorageVariables_kWIn = 4, ///< kWIn
+        StorageVariables_kvarOut = 5, ///< kvarOut
+        StorageVariables_DCkW = 6, ///< DCkW
+        StorageVariables_kWTotalLosses = 7, ///< kWTotalLosses
+        StorageVariables_kWInvLosses = 8, ///< kWInvLosses
+        StorageVariables_kWIdlingLosses = 9, ///< kWIdlingLosses
+        StorageVariables_kWChDchLosses = 10, ///< kWChDchLosses
+        StorageVariables_kWhChng = 11, ///< kWh Chng
+        StorageVariables_InvEff = 12, ///< InvEff
+        StorageVariables_InverterON = 13, ///< InverterON
+        StorageVariables_Vref = 14, ///< Vref
+        StorageVariables_Vavg_DRC = 15, ///< Vavg (DRC)
+        StorageVariables_VV_Oper = 16, ///< VV Oper
+        StorageVariables_VW_Oper = 17, ///< VW Oper
+        StorageVariables_DRC_Oper = 18, ///< DRC Oper
+        StorageVariables_VV_DRC_Oper = 19, ///< VV_DRC Oper
+        StorageVariables_WP_Oper = 20, ///< WP Oper
+        StorageVariables_WV_Oper = 21, ///< WV Oper
+        StorageVariables_kWDesired = 22, ///< kWDesired
+        StorageVariables_kW_VW_Limit = 23, ///< kW VW Limit
+        StorageVariables_Limit_kWOut_Function = 24, ///< Limit kWOut Function
+        StorageVariables_kVA_Exceeded = 25, ///< kVA Exceeded
+        StorageVariables_GridVoltage = 26, ///< Grid voltage
+        StorageVariables_di_dt = 27, ///< di/dt
+        StorageVariables_it = 28, ///< it
+        StorageVariables_itHistory = 29, ///< it History
+        StorageVariables_RatedVDC = 30, ///< Rated VDC
+        StorageVariables_AvgDutyCycle = 31, ///< Avg duty cycle
+        StorageVariables_Target_Amps = 32, ///< Target (Amps)
+        StorageVariables_SeriesL = 33, ///< Series L
+        StorageVariables_MaxAmps_phase = 34 ///< Max. Amps (phase)
+    };
+
+
+    /*!
+    \brief UPFC variables
+
+    Enumeration of the UPFC state variables by (1-based) index.
+    */
+    enum UPFCVariables {
+        UPFCVariables_ModeUPFC = 1, ///< ModeUPFC
+        UPFCVariables_IUPFC = 2, ///< IUPFC
+        UPFCVariables_Re_Vbin = 3, ///< Re{Vbin}
+        UPFCVariables_Im_Vbin = 4, ///< Im{Vbin}
+        UPFCVariables_Re_Vbout = 5, ///< Re{Vbout}
+        UPFCVariables_Im_Vbout = 6, ///< Im{Vbout}
+        UPFCVariables_Loses= 7, ///< Losses
+        UPFCVariables_P_UPFC = 8, ///< P_UPFC
+        UPFCVariables_Q_UPFC = 9, ///< Q_UPFC
+        UPFCVariables_Qideal = 10, ///< Qideal
+        UPFCVariables_Re_Sr0_1 = 11, ///< Re{Sr0^[1]}
+        UPFCVariables_Im_Sr0_1 = 12, ///< Im{Sr0^[1]}
+        UPFCVariables_Re_Sr1_1 = 13, ///< Re{Sr1^[1]}
+        UPFCVariables_Im_Sr1_1 = 14 ///< Im{Sr1^[1]}
+    };
+
+    /*!
+    \brief VCCS RMS variables
+
+    Enumeration of the VCCS state variables by (1-based) index, when used in RMS mode (`RMSMode=true`).
+    */
+    enum VCCSRMSVariables {
+        VCCSRMSVariables_Vrms = 1, ///< Vrms
+        VCCSRMSVariables_Ipwr = 2, ///< Ipwr
+        VCCSRMSVariables_Hout = 3, ///< Hout
+        VCCSRMSVariables_Irms = 4 ///< Irms
+    };
+
+    /*!
+    \brief VCCS non-RMS variables
+
+    Enumeration of the VCCS state variables by (1-based) index, when used in non-RMS mode (`RMSMode=false`).
+    */
+    enum VCCSNonRMSVariables {
+        VCCSNonRMSVariables_Vwave = 1, ///< Vwave
+        VCCSNonRMSVariables_Iwave = 2, ///< Iwave
+        VCCSNonRMSVariables_Irms = 3, ///< Irms
+        VCCSNonRMSVariables_Ipeak = 4, ///< Ipeak
+        VCCSNonRMSVariables_BP1out = 5, ///< BP1out
+        VCCSNonRMSVariables_Hout = 6 ///< Hout
     };
 
     /// EXPERIMENTAL: For message/write callbacks

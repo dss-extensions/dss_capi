@@ -17,18 +17,18 @@
 
 # Versions 0.14.x
 
-## Version 0.14.3 (2024-03-11)
+## Version 0.14.3 (2024-03-12)
 
+- Header/Alt: fix `dss_obj_float64_int32_func_t` (returns `double`, not `int32_t`).
+- Header: add enums for (state) variables for several components (Generator, IndMach012, PVSystem, Storage, UPFC, VCCS).
 - API/YMatrix: check for valid circuit in a few more functions.
 - API/Circuit: adjust `SetActiveElement` to be more conformant with the official version, i.e., returns -1 for non-circuit elements.
+- API/CircuitElement: in the classic API, call the Alt implementations for `Open`/`Close`/`IsOpen` to reduce code duplication.
 - Alt/CircuitElement:
     - Fix error message
     - Fix logic for `DisplayName`
     - Fix 13+ old bug in `Open`/`Close`/`IsOpen` -- the terminal parameters was being effectively ignored, applying the operations to the active terminal; also add check for valid terminal index.
-
-- API/CircuitElement: in the classic API, call the Alt implementations for `Open`/`Close`/`IsOpen` to reduce code duplication.
 - API/Capacitors: fix `Close` (same issue as CE).
-- Header/Alt: fix `dss_obj_float64_int32_func_t` (returns `double`, not `int32_t`).
 - API/Batch: 
     - Implement `BatchOperation_Divide`; needed for integers, and could be slightly better for floats, even though it's a tiny bit slower in modern processors.
     - Generalize `Batch_SetFloat64Array`/`Batch_SetIn32Array` to `Batch_Float64Array`/`Batch_In32Array`. This allows dropping the basic batch operations to the engine for array values, and allow for future optimizations in C++. In the current Pascal codebase, this is still better than running the operations on user-side due to memory layout and potential extra memory allocations when running on user-side.
