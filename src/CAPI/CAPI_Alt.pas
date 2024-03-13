@@ -1113,8 +1113,8 @@ var
     j,
     i,
     iV: Integer;
-    buffer: Array of Complex;
     Result: PDoubleArray0;
+    total: Complex;
 begin
     if MissingSolution(elem) or (elem.NodeRef = NIL) then
     begin
@@ -1126,18 +1126,17 @@ begin
     cBuffer := Allocmem(2 * SizeOf(Double) * elem.NConds * elem.Nterms);
     elem.GetPhasePower(cBuffer);
     iV := 0;
-    SetLength(buffer, elem.Nterms);
     for j := 1 to elem.Nterms do
     Begin
-        buffer[j - 1] := 0;
+        total := 0;
         myInit := (j - 1) * elem.NConds + 1;
         myEnd := elem.NConds * j;
         for i := myInit to myEnd do
         begin
-            buffer[j - 1] += cBuffer[i];
+            total += cBuffer[i];
         end;
-        Result[iV + 0] := buffer[j - 1].re * 0.001;
-        Result[iV + 1] := buffer[j - 1].im * 0.001; 
+        Result[iV + 0] := total.re * 0.001;
+        Result[iV + 1] := total.im * 0.001; 
         Inc(iV, 2);
     End;
     Reallocmem(cBuffer,0);
@@ -2881,7 +2880,7 @@ procedure Alt_CEBatch_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPIS
 var
     cBuffer: pComplexArray;
     myInit, myEnd, maxSize, NTermsTotal, idx, j, i, iV: Integer;
-    buffer: Array of Complex;
+    total: Complex;
     Result: PDoubleArray0;
     pElem: TDSSCktElementPtr;
 begin
@@ -2903,7 +2902,6 @@ begin
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NTermsTotal);
     cBuffer := Allocmem(2 * SizeOf(Double) * maxSize);
-    SetLength(buffer, maxSize);
     iV := 0;
     pElem := TDSSCktElementPtr(batch);
     dec(pElem);
@@ -2915,18 +2913,19 @@ begin
             Inc(iV, 2 * pElem^.NTerms);
             continue
         end;
+        FillByte(cBuffer^, pElem^.Yorder * (SizeOf(Double) * 2), 0);
         pElem^.GetPhasePower(cBuffer);    
         for j := 1 to pElem^.Nterms do
         Begin
-            buffer[j - 1] := 0;
+            total := 0;
             myInit := (j - 1) * pElem^.NConds + 1;
             myEnd := pElem^.NConds * j;
             for i := myInit to myEnd do
             begin
-                buffer[j - 1] += cBuffer[i];
+                total += cBuffer[i];
             end;
-            Result[iV + 0] := buffer[j - 1].re * 0.001;
-            Result[iV + 1] := buffer[j - 1].im * 0.001; 
+            Result[iV + 0] := total.re * 0.001;
+            Result[iV + 1] := total.im * 0.001; 
             Inc(iV, 2);
         end;
     end;
@@ -3060,11 +3059,10 @@ begin
     for idx := 1 to batchSize do
     begin
         inc(pElem);
+        FillByte(cBuffer^, SizeOf(Complex) * maxSize, 0);
         if pElem^.Enabled then
-            pElem^.GetCurrents(cBuffer)
-        else
-            FillByte(cBuffer^, SizeOf(Complex) * maxSize, 0);
-
+            pElem^.GetCurrents(cBuffer);
+            
         // _CalcSeqCurrents(pElem, i012);
         if pElem^.NPhases = 3 then
         begin    // for 3-phase elements
@@ -3139,6 +3137,7 @@ var
     idx, i, NTermsTotal, maxTerms: Integer;
     V012: pComplex;
     pElem: TDSSCktElementPtr;
+    V012Bytes: Integer;
 begin
     if (batch = NIL) or (batch^ = NIL) or (batchSize = 0) or MissingSolution(TDSSCktElement(batch^)) then
     begin
@@ -3161,10 +3160,12 @@ begin
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 3 * NTermsTotal, 3, NTermsTotal);
         outPtr := PDouble(ResultPtr);
-        V012 := Allocmem(sizeof(Complex) * 3 * maxTerms);
+        V012Bytes := sizeof(Complex) * 3 * maxTerms;
+        V012 := Allocmem(V012Bytes);
         pElem := TDSSCktElementPtr(batch);
         for idx := 1 to batchSize do
         begin
+            FillByte(V012^, V012Bytes, 0);
             CalcSeqVoltages(pElem^, pComplexArray(V012));
             for i := 1 to 3 * pElem^.Nterms do
                 outPtr[i - 1] := Cabs(V012[i - 1]);  // return mag only
@@ -3182,6 +3183,7 @@ begin
     pElem := TDSSCktElementPtr(batch);
     for idx := 1 to batchSize do
     begin
+        // No need to zero the buffer since it's the result vector, already zeroed.
         CalcSeqVoltages(pElem^, pComplexArray(V012));
         inc(V012, 3 * pElem^.NTerms);
         inc(pElem);
@@ -3473,6 +3475,7 @@ begin
             begin
                 if pElem^.Enabled then
                 begin
+                    FillByte(cBuffer^, sizeof(Complex) * maxSize, 0);
                     pElem^.GetCurrents(cBuffer);
                     Result[k] := _Alt_PDElements_Get_pctCapacity_for(AllNodes, What, RatingIdx, pElem^, cBuffer);
                 end;

@@ -34,6 +34,7 @@
     - Generalize `Batch_SetFloat64Array`/`Batch_SetIn32Array` to `Batch_Float64Array`/`Batch_In32Array`. This allows dropping the basic batch operations to the engine for array values, and allow for future optimizations in C++. In the current Pascal codebase, this is still better than running the operations on user-side due to memory layout and potential extra memory allocations when running on user-side.
     - Add `Batch_CreateByFloat64PropertyRange` to allow creating batches based on the value of a `float64` property.
     - Add `Batch_FilterByFloat64PropertyRange` and `Batch_FilterByInt32Property` to allow filtering existing batches into new batches.
+    - Make sure to zero all elements in intermediate buffers to avoid potential issues, especially with disabled elements grabbing values from the previous element.
 
 ## Version 0.14.2 (2024-02-26)
 
