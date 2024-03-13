@@ -17,7 +17,7 @@
 
 # Versions 0.14.x
 
-## Version 0.14.3 (2024-03-12)
+## Version 0.14.3 (2024-03-13)
 
 - Header/Alt: fix `dss_obj_float64_int32_func_t` (returns `double`, not `int32_t`).
 - Header: add enums for (state) variables for several components (Generator, IndMach012, PVSystem, Storage, UPFC, VCCS).
