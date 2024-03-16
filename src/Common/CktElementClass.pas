@@ -76,6 +76,7 @@ begin
     end;
 
     inherited Create(dssContext, DSSClsType, DSSClsName);
+    RequiresCircuit := true;
     ClassParents.Add('CktElement');
 end;
 

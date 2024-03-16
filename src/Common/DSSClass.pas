@@ -479,6 +479,7 @@ type
         ElementNamesOutOfSynch: Boolean;     // When device gets renamed
 
         Saved: Boolean;
+        RequiresCircuit: Boolean;
 
         constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
         destructor Destroy; override;
@@ -1493,6 +1494,8 @@ begin
 
     ElementNameList := THashListType.Create(100);
     ElementNamesOutOfSynch := FALSE;
+
+    RequiresCircuit := false;
 
     DefineProperties();
 end;

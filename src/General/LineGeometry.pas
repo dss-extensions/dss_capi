@@ -203,6 +203,7 @@ begin
     end;
 
     inherited Create(dssContext, DSS_OBJECT, 'LineGeometry');
+    RequiresCircuit := true;
 end;
 
 destructor TLineGeometry.Destroy;

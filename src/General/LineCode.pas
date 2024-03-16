@@ -181,6 +181,7 @@ begin
     end;
 
     inherited Create(dssContext, DSS_OBJECT, 'LineCode');
+    RequiresCircuit := true;
 end;
 
 destructor TLineCode.Destroy;

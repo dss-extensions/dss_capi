@@ -226,6 +226,9 @@ begin
     Result := NIL;
     if DSS = NIL then DSS := DSSPrime;
     Obj := Cls.NewObject(Name, Activate);
+    if Obj = NIL then
+        Exit;
+
     if BeginEdit then
         Cls.BeginEdit(Obj, False);
 
@@ -240,25 +243,26 @@ end;
 
 function Obj_New(DSS: TDSSContext; ClsIdx: Integer; Name: PAnsiChar; Activate: TAltAPIBoolean; BeginEdit: TAltAPIBoolean): Pointer; CDECL;
 var
-    Obj: TDSSObject;
     Cls: TDSSClass;
+    checkDups: Boolean;
 begin
     Result := NIL;
     if DSS = NIL then DSS := DSSPrime;
     Cls := DSS.DSSClassList.At(ClsIdx);
-    if Cls = NIL then
+    if (Cls = NIL) or (Cls.RequiresCircuit and InvalidCircuit(DSS)) then
         Exit;
 
-    Obj := Cls.NewObject(Name, Activate);
-    if BeginEdit then
-        Cls.BeginEdit(Obj, False);
+    checkDups := (cls.DSSClassType <> DSS_OBJECT) and (not DSS.ActiveCircuit.DuplicatesAllowed);
 
-    if Cls.DSSClassType = DSS_OBJECT then
-        DSS.DSSObjs.Add(Obj)
-    else
-        DSS.ActiveCircuit.AddCktElement(TDSSCktElement(Obj));
-
-    Result := Obj;
+    if checkDups then
+    begin
+        if cls.Find(Name, true) <> NIL then
+        begin
+            DoSimpleMsg(DSS, 'Warning: Duplicate new element definition: "%s.%s". Element being redefined.', [Cls.Name, Name], 266);
+            Exit;
+        end;
+    end;
+    Result := obj_NewFromClass(DSS, cls, name, Activate, BeginEdit);
 end;
 
 function Obj_GetHandleByName(DSS: TDSSContext; ClsIdx: Integer; Name: PAnsiChar): Pointer; CDECL;
@@ -858,18 +862,21 @@ var
     Cls: TDSSClass;
     outptr: TDSSObjectPtr;
     i: Integer;
-    prefix: String;
+    Name, prefix: String;
+    checkDups: Boolean;
 begin
     if DSS = NIL then DSS := DSSPrime;
     Cls := DSS.DSSClassList.At(ClsIdx);
-    if Cls = NIL then
+    if (Cls = NIL) or (Cls.RequiresCircuit and InvalidCircuit(DSS)) then
         Exit;
+
+    checkDups := (cls.DSSClassType <> DSS_OBJECT) and (not DSS.ActiveCircuit.DuplicatesAllowed);
     ensureBatchSize(Count, ResultPtr, ResultCount);
     outptr := ResultPtr;
 
     if Names = NIL then
     begin
-        // Use a random batch prefix to avoid collisions
+        // Use a random batch prefix to avoid collisions; we won't check for existing objects here
         prefix := Format('%09d_', [Random(1000000000)]);
         for i := 1 to Count do
         begin
@@ -886,7 +893,13 @@ begin
     begin
         for i := 1 to Count do
         begin
-            outptr^ := Cls.NewObject(Names^, False);
+            Name := Names^;
+            if checkDups and (cls.Find(Name, true) <> NIL) then
+            begin
+                DoSimpleMsg(DSS, 'Warning: Duplicate new element definition: "%s.%s". Element being redefined.', [Cls.Name, Name], 266);
+                Exit;
+            end;
+            outptr^ := Cls.NewObject(Name, False);
             if Cls.DSSClassType = DSS_OBJECT then
                 DSS.DSSObjs.Add(outptr^)
             else

@@ -127,7 +127,7 @@ type
         procedure GetObjClassAndName(var ObjClass, ObjName: String);
 
         function AddObject(ObjType: String; const Name: String): Integer; overload;
-        function AddObject(ObjCls: TDSSClass; const Name: String): Integer; overload;
+        function AddObject(Cls: TDSSClass; const Name: String): Integer; overload;
         function EditObject(const ObjType, name: String): Integer;
 
         procedure SetActiveCircuit(const cktname: String);
@@ -1853,7 +1853,7 @@ begin
     Result := AddObject(DSS.ActiveDSSClass, Name);
 end;
 
-function TExecHelper.AddObject(ObjCls: TDSSClass; const Name: String): Integer;
+function TExecHelper.AddObject(Cls: TDSSClass; const Name: String): Integer;
 var
     Obj: TDSSObject = NIL;
 begin
@@ -1873,7 +1873,7 @@ begin
 
     // intrinsic and user Defined models
     // Make a new circuit element
-    DSS.ActiveDSSClass := ObjCls;
+    DSS.ActiveDSSClass := Cls;
 
     // Name must be supplied
     if Length(Name) = 0 then
@@ -1882,53 +1882,47 @@ begin
         Exit;
     end;
 
-    // now let's make a new object or set an existing one active, whatever the case
-    if DSS.ActiveDSSClass.DSSClassType = DSS_OBJECT then
+    if Cls.RequiresCircuit and (DSS.ActiveCircuit = NIL) then
     begin
-        if (DSS.ActiveCircuit = NIL) and ((DSS.ActiveDSSClass = DSS.LineCodeClass) or (DSS.ActiveDSSClass = DSS.LineGeometryClass)) then
-        begin
-            DoSimpleMsg(DSS, _('You Must Create a circuit first: "new circuit.yourcktname"'), 279);
-            Exit;
-        end;
+        DoSimpleMsg(DSS, _('You Must Create a circuit first: "new circuit.yourcktname"'), 265);
+        Exit;
+    end;
 
+    // now let's make a new object or set an existing one active, whatever the case
+    if Cls.DSSClassType = DSS_OBJECT then
+    begin
         // These can be added WITHout having an active circuit
         // Duplicates not allowed in general DSS objects;
-        if not DSS.ActiveDSSClass.SetActive(Name) then
+        if not Cls.SetActive(Name) then
         begin
-            Obj := DSS.ActiveDSSClass.NewObject(Name, TRUE, Result);
+            Obj := Cls.NewObject(Name, TRUE, Result);
             DSS.DSSObjs.Add(Obj);  // Stick in pointer list to keep track of it
         end;
     end
     else
     begin
         // These are circuit elements
-        if DSS.ActiveCircuit = NIL then
-        begin
-            DoSimpleMsg(DSS, _('You Must Create a circuit first: "new circuit.yourcktname"'), 265);
-            Exit;
-        end;
-
         // IF Object already exists.  Treat as an Edit IF dulicates not allowed
         if DSS.ActiveCircuit.DuplicatesAllowed then
         begin
-            Obj := DSS.ActiveDSSClass.NewObject(Name, TRUE, Result); // Returns index into this class
+            Obj := Cls.NewObject(Name, TRUE, Result); // Returns index into this class
             DSS.ActiveCircuit.AddCktElement(TDSSCktElement(Obj));   // Adds active object to active circuit
         end
         else
         begin // Check to see if we can set it active first
-            if not DSS.ActiveDSSClass.SetActive(Name) then
+            if not Cls.SetActive(Name) then
             begin
-                Obj := DSS.ActiveDSSClass.NewObject(Name, TRUE, Result);   // Returns index into this class
+                Obj := Cls.NewObject(Name, TRUE, Result);   // Returns index into this class
                 DSS.ActiveCircuit.AddCktElement(TDSSCktElement(Obj));   // Adds active object to active circuit
             end
             else
             begin
-                DoSimpleMsg(DSS, 'Warning: Duplicate new element definition: "%s.%s". Element being redefined.', [DSS.ActiveDSSClass.Name, Name], 266);
+                DoSimpleMsg(DSS, 'Warning: Duplicate new element definition: "%s.%s". Element being redefined.', [Cls.Name, Name], 266);
                 Exit;
             end;
         end;
     end;
-    DSS.ActiveDSSClass.Edit(DSS.Parser);    // Process remaining instructions on the command line
+    Cls.Edit(DSS.Parser);    // Process remaining instructions on the command line
 end;
 
 function TExecHelper.EditObject(const ObjType, Name: String): Integer;
