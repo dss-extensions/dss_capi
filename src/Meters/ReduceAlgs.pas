@@ -290,7 +290,7 @@ begin
     end;
 
     DSS.ActiveCircuit.ReprocessBusDefs();  // to get new load added and account for disabled devices
-    DSS.ActiveCircuit.DoResetMeterZones();  // without eliminated devices
+    // DSS.ActiveCircuit.DoResetMeterZones();  // without eliminated devices -- already called in ReprocessBusDefs
     DSS.ActiveCircuit.Solution.SystemYChanged := TRUE; // force rebuild of Y
 end;
 
@@ -442,7 +442,7 @@ begin
     end;
 
     DSS.ActiveCircuit.ReprocessBusDefs();  // to get new load added and account for disabled devices
-    DSS.ActiveCircuit.DoResetMeterZones();  // without eliminated devices
+    // DSS.ActiveCircuit.DoResetMeterZones();  // without eliminated devices -- already called in ReprocessBusDefs
     DSS.ActiveCircuit.Solution.SystemYChanged := TRUE; // force rebuild of Y
 end;
 
@@ -533,7 +533,7 @@ begin
     end;
 
     DSS.ActiveCircuit.ReprocessBusDefs();  // to get new load added and account for disabled devices
-    DSS.ActiveCircuit.DoResetMeterZones();  // without eliminated devices
+    // DSS.ActiveCircuit.DoResetMeterZones();  // without eliminated devices -- already called in ReprocessBusDefs
     DSS.ActiveCircuit.Solution.SystemYChanged := TRUE; // force rebuild of Y
 end;
 
