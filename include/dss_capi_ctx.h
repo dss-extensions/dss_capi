@@ -984,7 +984,7 @@ extern "C" {
 
     (API Extension)
     */
-    DSS_CAPI_DLL const char* ctx_Circuit_Save(const void* ctx, const char* dirOrFilePath, int32_t saveFlags);
+    DSS_CAPI_DLL const char* ctx_Circuit_Save(const void* ctx, const char* dirOrFilePath, uint32_t saveFlags);
 
     /*
     EXPERIMENTAL: Loads a full circuit from a JSON-encoded string. The data must 

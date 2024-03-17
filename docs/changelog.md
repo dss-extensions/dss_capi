@@ -17,9 +17,13 @@
 
 # Versions 0.14.x
 
-## Version 0.14.4 (dev, next release)
+## Version 0.14.4 (2024-03-18)
 
-- Alt/Obj,Batch: adjust checks for new elements. Refactored some other internal code to simplify this kind of check.
+Minor release, relevant changes only in the Alt API, i.e. no need to upgrade if you don't use it.
+
+- Alt/Obj, Batch: adjust checks for new elements. Refactored some other internal code to simplify this kind of check.
+- ReduceAlgs: Very minor code clean-up.
+- Header: Where possible, use uint32_t for bit sets (flags, options).
 
 ## Version 0.14.3 (2024-03-13)
 
