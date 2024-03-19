@@ -143,13 +143,13 @@ type
         IsIsolated,
         HasControl,
         IsMonitored, // indicates some control is monitoring this element
-        // IsPartofFeeder,  -- UNUSED
-        // Drawn,  // Flag used in tree searches etc  -- UNUSED
         HasOCPDevice, // Fuse, Relay, or Recloser
         HasAutoOCPDevice, // Relay or Recloser only
-        // HasSwtControl // Has a remotely-controlled Switch -- UNUSED
         NeedsRecalc, // Used for Edit command loops
-        NeedsYprim // Used for Edit command loops + setter flags
+        NeedsYPrim // Used for Edit command loops + setter flags
+        // IsPartofFeeder,  -- UNUSED
+        // Drawn,  // Flag used in tree searches etc  -- UNUSED
+        // HasSwtControl // Has a remotely-controlled Switch -- UNUSED
     );
     TDSSObjectFlags = set of TDSSObjectFlag;
     Flg = TDSSObjectFlag;

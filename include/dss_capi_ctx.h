@@ -7152,6 +7152,14 @@ extern "C" {
     (API Extension)
     */
 
+    /*!
+    Copy of the internal flags (bitset from DSSObjectFlags) of a DSS object -- for expert users
+    */
+
+    /*!
+    Replace the internal flags of a DSS object -- for expert users
+    */
+
     
 
 

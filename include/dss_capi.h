@@ -515,6 +515,28 @@ extern "C" {
     };
 
     /*!
+    Object flags are bit flags used by various of the internal processes of the DSS engine.
+
+    Most are internal state, but advanced/expert users can manipulate them for some interesting uses.
+    */
+    enum DSSObjectFlags {
+        DSSObjectFlags_Editing = 0x0001,
+        DSSObjectFlags_HasBeenSaved = 0x0002,
+        DSSObjectFlags_DefaultAndUnedited = 0x0004,
+        DSSObjectFlags_Checked = 0x0008,
+        DSSObjectFlags_Flag = 0x0010, ///< General purpose flag for each object
+        DSSObjectFlags_HasEnergyMeter = 0x0020,
+        DSSObjectFlags_HasSensorObj = 0x0040,
+        DSSObjectFlags_IsIsolated = 0x0080,
+        DSSObjectFlags_HasControl = 0x0100,
+        DSSObjectFlags_IsMonitored = 0x0200, ///< Indicates some control is monitoring this element
+        DSSObjectFlags_HasOCPDevice = 0x0400, ///< Fuse, Relay, or Recloser
+        DSSObjectFlags_HasAutoOCPDevice = 0x0800, ///< Relay or Recloser only
+        DSSObjectFlags_NeedsRecalc = 0x1000, ///< Used for Edit command loops
+        DSSObjectFlags_NeedsYPrim = 0x2000 ///< Used for Edit command loops + setter flags
+    };
+
+    /*!
     Setter flags customize down how the update of DSS properties are handled by the
     engine and parts of the API. Use especially in the `Obj` and `Batch` APIs
     */
@@ -7733,6 +7755,16 @@ extern "C" {
     (API Extension)
     */
     DSS_CAPI_DLL int32_t* Obj_GetPropSeqPtr(void *obj);
+
+    /*!
+    Copy of the internal flags (bitset from DSSObjectFlags) of a DSS object -- for expert users
+    */
+    DSS_CAPI_DLL uint32_t Obj_GetFlags(void *obj);
+
+    /*!
+    Replace the internal flags of a DSS object -- for expert users
+    */
+    DSS_CAPI_DLL void Obj_SetFlags(void *obj, uint32_t flags);
 
     DSS_CAPI_DLL double Obj_GetFloat64(void *obj, int32_t Index);
     DSS_CAPI_DLL int32_t Obj_GetInt32(void *obj, int32_t Index);

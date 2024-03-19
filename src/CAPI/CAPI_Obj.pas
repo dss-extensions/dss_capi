@@ -87,6 +87,8 @@ procedure Obj_BeginEdit(obj: TDSSObject); CDECL;
 procedure Obj_EndEdit(obj: TDSSObject; NumChanges: Integer); CDECL;
 procedure Obj_Activate(obj: TDSSObject; AllLists: TAltAPIBoolean); CDECL;
 function Obj_GetPropSeqPtr(obj: TDSSObject): PInteger; CDECL;
+function Obj_GetFlags(obj: TDSSObject): TDSSObjectFlags; CDECL;
+procedure Obj_SetFlags(obj: TDSSObject; flags: TDSSObjectFlags) CDECL;
 
 function Obj_GetFloat64(obj: TDSSObject; Index: Integer): Double; CDECL;
 function Obj_GetInt32(obj: TDSSObject; Index: Integer): Integer; CDECL;
@@ -411,6 +413,16 @@ end;
 function Obj_GetPropSeqPtr(obj: TDSSObject): PInteger; CDECL;
 begin
     Result := PInteger(obj.PrpSequence);
+end;
+
+function Obj_GetFlags(obj: TDSSObject): TDSSObjectFlags; CDECL;
+begin
+    Result := obj.Flags;
+end;
+
+procedure Obj_SetFlags(obj: TDSSObject; flags: TDSSObjectFlags) CDECL;
+begin
+    obj.Flags := flags;
 end;
 
 function Obj_GetName(obj: TDSSObject): PAnsiChar; CDECL;

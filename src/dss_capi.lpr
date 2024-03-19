@@ -2020,6 +2020,8 @@ exports
     Obj_PropertySideEffects,
     Obj_BeginEdit,
     Obj_EndEdit,
+    Obj_GetFlags,
+    Obj_SetFlags,
     Obj_Activate,
     Obj_GetPropSeqPtr,
     Obj_GetFloat64,

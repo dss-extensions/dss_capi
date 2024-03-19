@@ -22,6 +22,7 @@
 Minor release, relevant changes only in the Alt API, i.e. no need to upgrade if you don't use it.
 
 - Alt/Obj, Batch: adjust checks for new elements. Refactored some other internal code to simplify this kind of check.
+- Obj: expose internal object flags.
 - ReduceAlgs: Very minor code clean-up.
 - Header: Where possible, use uint32_t for bit sets (flags, options).
 
