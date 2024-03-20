@@ -6987,19 +6987,19 @@ extern "C" {
     /*! 
     Edit String for RemoveBranches functions
     */
-    DSS_CAPI_DLL char *ReduceCkt_Get_EditString(void);
+    DSS_CAPI_DLL const char* ReduceCkt_Get_EditString(void);
     DSS_CAPI_DLL void ReduceCkt_Set_EditString(const char* Value);
 
     /*! 
     Start element for Remove Branch function
     */
-    DSS_CAPI_DLL char *ReduceCkt_Get_StartPDElement(void);
+    DSS_CAPI_DLL const char* ReduceCkt_Get_StartPDElement(void);
     DSS_CAPI_DLL void ReduceCkt_Set_StartPDElement(const char* Value);
 
     /*! 
     Name of EnergyMeter to use for reduction
     */
-    DSS_CAPI_DLL char *ReduceCkt_Get_EnergyMeter(void);
+    DSS_CAPI_DLL const char* ReduceCkt_Get_EnergyMeter(void);
     DSS_CAPI_DLL void ReduceCkt_Set_EnergyMeter(const char* Value);
 
     /*! 
@@ -7140,7 +7140,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t CNData_Get_Count(void);
     DSS_CAPI_DLL int32_t CNData_Get_First(void);
     DSS_CAPI_DLL int32_t CNData_Get_Next(void);
-    DSS_CAPI_DLL char *CNData_Get_Name(void);
+    DSS_CAPI_DLL const char* CNData_Get_Name(void);
     DSS_CAPI_DLL void CNData_Set_Name(const char* Value);
     DSS_CAPI_DLL void CNData_Get_AllNames(char*** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void CNData_Get_AllNames_GR(void);
@@ -7299,7 +7299,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t TSData_Get_Count(void);
     DSS_CAPI_DLL int32_t TSData_Get_First(void);
     DSS_CAPI_DLL int32_t TSData_Get_Next(void);
-    DSS_CAPI_DLL char *TSData_Get_Name(void);
+    DSS_CAPI_DLL const char* TSData_Get_Name(void);
     DSS_CAPI_DLL void TSData_Set_Name(const char* Value);
     DSS_CAPI_DLL void TSData_Get_AllNames(char*** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void TSData_Get_AllNames_GR(void);

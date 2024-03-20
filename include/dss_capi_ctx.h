@@ -6404,19 +6404,19 @@ extern "C" {
     /*! 
     Edit String for RemoveBranches functions
     */
-    DSS_CAPI_DLL char *ctx_ReduceCkt_Get_EditString(const void* ctx);
+    DSS_CAPI_DLL const char* ctx_ReduceCkt_Get_EditString(const void* ctx);
     DSS_CAPI_DLL void ctx_ReduceCkt_Set_EditString(const void* ctx, const char* Value);
 
     /*! 
     Start element for Remove Branch function
     */
-    DSS_CAPI_DLL char *ctx_ReduceCkt_Get_StartPDElement(const void* ctx);
+    DSS_CAPI_DLL const char* ctx_ReduceCkt_Get_StartPDElement(const void* ctx);
     DSS_CAPI_DLL void ctx_ReduceCkt_Set_StartPDElement(const void* ctx, const char* Value);
 
     /*! 
     Name of EnergyMeter to use for reduction
     */
-    DSS_CAPI_DLL char *ctx_ReduceCkt_Get_EnergyMeter(const void* ctx);
+    DSS_CAPI_DLL const char* ctx_ReduceCkt_Get_EnergyMeter(const void* ctx);
     DSS_CAPI_DLL void ctx_ReduceCkt_Set_EnergyMeter(const void* ctx, const char* Value);
 
     /*! 
@@ -6557,7 +6557,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t ctx_CNData_Get_Count(const void* ctx);
     DSS_CAPI_DLL int32_t ctx_CNData_Get_First(const void* ctx);
     DSS_CAPI_DLL int32_t ctx_CNData_Get_Next(const void* ctx);
-    DSS_CAPI_DLL char *ctx_CNData_Get_Name(const void* ctx);
+    DSS_CAPI_DLL const char* ctx_CNData_Get_Name(const void* ctx);
     DSS_CAPI_DLL void ctx_CNData_Set_Name(const void* ctx, const char* Value);
     DSS_CAPI_DLL void ctx_CNData_Get_AllNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void ctx_CNData_Get_AllNames_GR(const void* ctx);
@@ -6716,7 +6716,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t ctx_TSData_Get_Count(const void* ctx);
     DSS_CAPI_DLL int32_t ctx_TSData_Get_First(const void* ctx);
     DSS_CAPI_DLL int32_t ctx_TSData_Get_Next(const void* ctx);
-    DSS_CAPI_DLL char *ctx_TSData_Get_Name(const void* ctx);
+    DSS_CAPI_DLL const char* ctx_TSData_Get_Name(const void* ctx);
     DSS_CAPI_DLL void ctx_TSData_Set_Name(const void* ctx, const char* Value);
     DSS_CAPI_DLL void ctx_TSData_Get_AllNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void ctx_TSData_Get_AllNames_GR(const void* ctx);
