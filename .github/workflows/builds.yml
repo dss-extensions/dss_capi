@@ -13,6 +13,7 @@ jobs:
       image: 'docker://pmeira/manylinux_wheel_fpc322_x86_64'
     env:
       KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_linux_x64.tar.gz'
+      DSS_CAPI_BUILD_ODDIE: '1'
     steps: 
       - name: 'Checkout'
         run: |
@@ -117,6 +118,8 @@ jobs:
   build_win_x64:
     name: 'Windows x64'
     runs-on: windows-2019
+    env: 
+      DSS_CAPI_BUILD_ODDIE: '1'
     steps:
       - uses: actions/checkout@v3
         with: 

@@ -262,7 +262,7 @@ extern "C" {
     The user is responsible for handling the potential disposal of the 
     previous prime instance returned by ctx_Set_Prime, if required.
     */
-    DSS_CAPI_DLL const void *ctx_Set_Prime(const void *ctx);
+    DSS_CAPI_DLL const void* ctx_Set_Prime(const void *ctx);
 
 ''')
     fo.write(functions)

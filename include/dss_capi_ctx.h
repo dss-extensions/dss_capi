@@ -47,7 +47,7 @@ extern "C" {
     The user is responsible for handling the potential disposal of the 
     previous prime instance returned by ctx_Set_Prime, if required.
     */
-    DSS_CAPI_DLL const void *ctx_Set_Prime(const void *ctx);
+    DSS_CAPI_DLL const void* ctx_Set_Prime(const void *ctx);
 
 
     DSS_CAPI_DLL void ctx_DSS_ResetStringBuffer(const void* ctx);
@@ -6658,7 +6658,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_LineSpacings_Get_AllNames_GR(const void* ctx);
 
     DSS_CAPI_DLL int32_t ctx_Loads_Get_Phases(const void* ctx);
-    DSS_CAPI_DLL void ctx_Loads_Set_Phases(const void* ctx, int32_t Integer);
+    DSS_CAPI_DLL void ctx_Loads_Set_Phases(const void* ctx, int32_t Value);
 
     DSS_CAPI_DLL void ctx_Reactors_Get_AllNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void ctx_Reactors_Get_AllNames_GR(const void* ctx);

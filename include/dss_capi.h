@@ -7241,7 +7241,7 @@ extern "C" {
     DSS_CAPI_DLL void LineSpacings_Get_AllNames_GR(void);
 
     DSS_CAPI_DLL int32_t Loads_Get_Phases(void);
-    DSS_CAPI_DLL void Loads_Set_Phases(int32_t Integer);
+    DSS_CAPI_DLL void Loads_Set_Phases(int32_t Value);
 
     DSS_CAPI_DLL void Reactors_Get_AllNames(char*** ResultPtr, int32_t* ResultDims);
     DSS_CAPI_DLL void Reactors_Get_AllNames_GR(void);

@@ -78,6 +78,15 @@ if exist lib\win_x64\dss_capid.dll (
 
 SETLOCAL ENABLEEXTENSIONS
 
+IF DEFINED DSS_CAPI_BUILD_ODDIE (
+    rd /s /q build\oddie
+    mkdir build\oddie
+    cd build\oddie
+    cmake -DCMAKE_BUILD_TYPE=Release ..\..\src\altdss_oddie
+    cmake --build . --config Release
+    cd ..\..
+)
+
 IF DEFINED CI (
     mkdir release
     mkdir dss_capi
