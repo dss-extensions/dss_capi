@@ -139,7 +139,7 @@ begin
     if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
 
-    Result := pLineGeometry.Nconds;
+    Result := pLineGeometry.FNconds;
 end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Set_Nconds(Value: Integer); CDECL;
@@ -391,9 +391,9 @@ var
 begin
     if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
-    if pLineGeometry.Nconds <> ValueCount then
+    if pLineGeometry.FNconds <> ValueCount then
     begin
-        DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, pLineGeometry.NConds], 183);
+        DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, pLineGeometry.FNConds], 183);
         Exit;
     end;
     Move(ValuePtr[0], pLineGeometry.FUnits[1], ValueCount * SizeOf(Double));
@@ -410,8 +410,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    DSS_RecreateArray_PInteger(Result, ResultPtr, ResultCount, pLineGeometry.Nconds);
-    Move(pLineGeometry.FUnits[1], ResultPtr[0], pLineGeometry.Nconds * SizeOf(Integer));
+    DSS_RecreateArray_PInteger(Result, ResultPtr, ResultCount, pLineGeometry.FNconds);
+    Move(pLineGeometry.FUnits[1], ResultPtr[0], pLineGeometry.FNconds * SizeOf(Integer));
 end;
 
 procedure LineGeometries_Get_Units_GR(); CDECL;
@@ -427,9 +427,9 @@ var
 begin
     if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
-    if pLineGeometry.Nconds <> ValueCount then
+    if pLineGeometry.FNconds <> ValueCount then
     begin
-        DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, pLineGeometry.NConds], 188);
+        DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, pLineGeometry.FNConds], 188);
         Exit;
     end;
     Move(ValuePtr[0], pLineGeometry.FY[1], ValueCount * SizeOf(Double));
@@ -446,8 +446,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pLineGeometry.Nconds);
-    Move(pLineGeometry.FY[1], ResultPtr[0], pLineGeometry.Nconds * SizeOf(Double));
+    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pLineGeometry.FNconds);
+    Move(pLineGeometry.FY[1], ResultPtr[0], pLineGeometry.FNconds * SizeOf(Double));
 end;
 
 procedure LineGeometries_Get_Ycoords_GR(); CDECL;
@@ -463,9 +463,9 @@ var
 begin
     if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
-    if pLineGeometry.Nconds <> ValueCount then
+    if pLineGeometry.FNconds <> ValueCount then
     begin
-        DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, pLineGeometry.NConds], 187);
+        DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, pLineGeometry.FNConds], 187);
         Exit;
     end;
     Move(ValuePtr[0], pLineGeometry.FX[1], ValueCount * SizeOf(Double));
@@ -482,8 +482,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pLineGeometry.Nconds);
-    Move(pLineGeometry.FX[1], ResultPtr[0], pLineGeometry.Nconds * SizeOf(Double));
+    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pLineGeometry.FNconds);
+    Move(pLineGeometry.FX[1], ResultPtr[0], pLineGeometry.FNconds * SizeOf(Double));
 end;
 
 procedure LineGeometries_Get_Xcoords_GR(); CDECL;
@@ -505,8 +505,8 @@ begin
         Exit;
     end;
     
-    DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pLineGeometry.Nconds);
-    for i := 1 to pLineGeometry.Nconds do
+    DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pLineGeometry.FNconds);
+    for i := 1 to pLineGeometry.FNconds do
         Result[i - 1] := DSS_CopyStringAsPChar(pLineGeometry.ConductorName[i]);
 end;
 
