@@ -17,6 +17,12 @@
 
 # Versions 0.14.x
 
+## Version 0.14.5 (2024-03-29)
+
+Minor release:
+
+- Address issue with the classic LineGeometries API. Instead of using the number of input conductors, the API was using the number of effective conductors if `reduce=yes`. That doesn't make sense since the original conductors are not modified, hence the original number of conductors is now used throughout this API.
+
 ## Version 0.14.4 (2024-03-18)
 
 Minor release, relevant changes only in the Alt API, i.e. no need to upgrade if you don't use it.
