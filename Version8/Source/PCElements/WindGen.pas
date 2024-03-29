@@ -1,7 +1,7 @@
 unit WindGen;
 {
   ----------------------------------------------------------
-  Copyright (c) 2022, Electric Power Research Institute, Inc.
+  Copyright (c) 2024, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -26,10 +26,11 @@ unit WindGen;
 
 interface
 
-USES WindGenVars, WindGenUserModel, DSSClass,  PCClass, PCElement, ucmatrix, ucomplex, LoadShape, GrowthShape, Spectrum, ArrayDef, Dynamics;
+USES WindGenVars, WindGenUserModel, DSSClass,  PCClass, PCElement, ucmatrix, ucomplex, LoadShape, GrowthShape,
+    Spectrum, ArrayDef, Dynamics, WTG3_Model, XYCurve;
 
 Const  NumGenRegisters = 6;    // Number of energy meter registers
-       NumGenVariables = 6;
+       NumGenVariables = 22;
 
 TYPE
 
@@ -114,6 +115,8 @@ TYPE
         ShapeIsActual   :Boolean;
         ForceBalanced   :Boolean;
 
+        WindModelDyn    : TGE_WTG3_Model;
+
         PROCEDURE CalcDailyMult(Hr:double);
         PROCEDURE CalcDutyMult(Hr:double);  // now incorporates DutyStart offset
         Procedure CalcGenModelContribution(ActorID : Integer);
@@ -177,6 +180,9 @@ TYPE
         Vpu             :Double;   // per unit Target voltage for WindGen with voltage control
         Vmaxpu          :Double;
         Vminpu          :Double;
+        VV_Curve        :String;
+        VV_CurveObj     :TXYcurveObj;
+        Loss_CurveObj   :TXYcurveObj;
 
         GenActive: Boolean;
 // Fuel variables from Generator model removed
@@ -248,7 +254,7 @@ implementation
 
 USES  ParserDel, Circuit,  Sysutils, Command, Math, MathUtil, DSSClassDefs, DSSGlobals, Utilities, Classes;
 
-Const NumPropsThisClass = 41;  // removed Fuel variables
+Const NumPropsThisClass = 44;  // removed junk variables
   // Dispatch modes
       DEFAULT = 0;
       LOADMODE = 1;
@@ -256,7 +262,7 @@ Const NumPropsThisClass = 41;  // removed Fuel variables
 Var cBuffer:Array[1..24] of Complex;  // Temp buffer for calcs  24-phase WindGen?
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TWindGen.Create;  // Creates superstructure for all Line objects
+constructor TWindGen.Create;  // Creates superstructure for all objects
 Begin
      Inherited Create;
      Class_Name := 'WindGen';
@@ -335,14 +341,14 @@ Begin
 
 
      PropertyName^[7] := 'yearly';
-     PropertyHelp^[7] := 'Dispatch shape to use for yearly-mode simulations.  Must be previously defined '+
+     PropertyHelp^[7] := 'Wind speed shape to use for yearly-mode simulations.  Must be previously defined '+
                     'as a Loadshape object. If this is not specified, a constant value is assumed (no variation). '+
                     'Set to NONE to reset to no loadahape. ' +
                     'Nominally for 8760 simulations.  If there are fewer points in the designated shape than '+
                     'the number of points in the solution, the curve is repeated.';
 
      PropertyName^[8] := 'daily';
-     PropertyHelp^[8] := 'Dispatch shape to use for daily-mode simulations.  Must be previously defined '+
+     PropertyHelp^[8] := 'Wind speed shape to use for daily-mode simulations.  Must be previously defined '+
                     'as a Loadshape object of 24 hrs, typically.' +
                     'Set to NONE to reset to no loadahape. ' ; // daily dispatch (hourly)
 
@@ -354,116 +360,121 @@ Begin
                     'Designate the number of points to solve using the Set Number=xxxx command. '+
                     'If there are fewer points in the actual shape, the shape is assumed to repeat.';  // as for wind generation
 
-      PropertyName^[10] := ' ';
-      PropertyHelp^[10] := ' '; // = 0 | >0
+      PropertyName^[10] := 'conn';
+      PropertyHelp^[10] := '={wye|LN|delta|LL}.  Default is wye.';
 
-      PropertyName^[11] := ' ';
-      PropertyHelp^[11] := ' ';  // = 0 | >0
-
-      PropertyName^[12] := 'conn';
-      PropertyHelp^[12] := '={wye|LN|delta|LL}.  Default is wye.';
-
-      PropertyName^[13] := 'kvar';
-      PropertyHelp^[13] := 'Specify the base kvar.  Alternative to specifying the power factor.  Side effect: '+
+      PropertyName^[11] := 'kvar';
+      PropertyHelp^[11] := 'Specify the base kvar.  Alternative to specifying the power factor.  Side effect: '+
                           ' the power factor value is altered to agree based on present value of kW.';
 
-      PropertyName^[16] := 'status';
-      PropertyHelp^[16] := '={Fixed | Variable*}.  If Fixed, then dispatch multipliers do not apply. '+
-                         'The WindGen is always at full power when it is ON. '+
-                         ' Default is Variable  (follows curves or windspeed).';  // fixed or variable
-
-      PropertyName^[17] := 'class';
-      PropertyHelp^[17] := 'An arbitrary integer number representing the class of WindGen so that WindGen values may '+
+      PropertyName^[12] := 'class';
+      PropertyHelp^[12] := 'An arbitrary integer number representing the class of WindGen so that WindGen values may '+
                           'be segregated by class.'; // integer
 
-      PropertyName^[18] := 'Vpu';
-      PropertyHelp^[18] := 'Per Unit voltage set point for Model = 3  (Regulated voltage model).  Default is 1.0 pu. '; // per unit set point voltage for power flow model
-
-      PropertyName^[19] := 'maxkvar';
-      PropertyHelp^[19] := 'Maximum kvar limit for Model = 3.  Defaults to twice the specified load kvar.  '+
-                          'Always reset this if you change PF or kvar properties.';
-
-      PropertyName^[20] := 'minkvar';
-      PropertyHelp^[20] := 'Minimum kvar limit for Model = 3. Enter a negative number if WindGen can absorb vars.'+
-                          ' Defaults to negative of Maxkvar.  Always reset this if you change PF or kvar properties.';
-
-      PropertyName^[21] := 'pvfactor';
-      PropertyHelp^[21] := 'Deceleration factor for P-V WindGen model (Model=3).  Default is 0.1. ' +
-                          'If the circuit converges easily, you may want to use a higher number such as 1.0. ' +
-                          'Use a lower number if solution diverges. Use Debugtrace=yes to create a file that will ' +
-                          'trace the convergence of a WindGen model.';
-
-      PropertyName^[22] := 'debugtrace';
-      PropertyHelp^[22] := '{Yes | No }  Default is no.  Turn this on to capture the progress of the WindGen model ' +
+      PropertyName^[13] := 'debugtrace';
+      PropertyHelp^[13] := '{Yes | No }  Default is no.  Turn this on to capture the progress of the WindGen model ' +
                           'for each iteration.  Creates a separate file for each WindGen named "GEN_name.CSV".' ;
 
-      PropertyName^[23] := 'Vminpu';
-      PropertyHelp^[23] := 'Default = 0.90.  Minimum per unit voltage for which the Model is assumed to apply. ' +
+      PropertyName^[14] := 'Vminpu';
+      PropertyHelp^[14] := 'Default = 0.90.  Minimum per unit voltage for which the Model is assumed to apply. ' +
                           'Below this value, the Windgen model reverts to a constant impedance model. For model 7, the current is ' +
                           'limited to the value computed for constant power at Vminpu.';
 
-      PropertyName^[24] := 'Vmaxpu';
-      PropertyHelp^[24] := 'Default = 1.10.  Maximum per unit voltage for which the Model is assumed to apply. ' +
+      PropertyName^[15] := 'Vmaxpu';
+      PropertyHelp^[15] := 'Default = 1.10.  Maximum per unit voltage for which the Model is assumed to apply. ' +
                           'Above this value, the Windgen model reverts to a constant impedance model.';
 
-      PropertyName^[25] := 'forceon';
-      PropertyHelp^[25] := '{Yes | No}  Forces WindGen ON despite requirements of other dispatch modes. ' +
-                         'Stays ON until this property is set to NO, or an internal algorithm cancels the forced ON state.';
+      PropertyName^[16] := 'kVA';
+      PropertyHelp^[16] := 'kVA rating of electrical machine. Defaults to 1.2* kW if not specified. Applied to machine or inverter definition for Dynamics mode solutions. ';
 
-      PropertyName^[26] := 'kVA';
-      PropertyHelp^[26] := 'kVA rating of electrical machine. Defaults to 1.2* kW if not specified. Applied to machine or inverter definition for Dynamics mode solutions. ';
+      PropertyName^[17] := 'MVA';
+      PropertyHelp^[17] := 'MVA rating of electrical machine.  Alternative to using kVA=.';
 
-      PropertyName^[27] := 'MVA';
-      PropertyHelp^[27] := 'MVA rating of electrical machine.  Alternative to using kVA=.';
-
-      PropertyName^[28] := 'Xd';
-      PropertyHelp^[28] := 'Per unit synchronous reactance of machine. Presently used only for Thevinen impedance for power flow calcs of user models (model=6). ' +
-                             'Typically use a value 0.4 to 1.0. Default is 1.0';
-
-      PropertyName^[29] := 'Xdp';
-      PropertyHelp^[29] := 'Per unit transient reactance of the machine.  Used for Dynamics mode and Fault studies.  Default is 0.27.' +
-                              'For user models, this value is used for the Thevinen/Norton impedance for Dynamics Mode.';
-
-      PropertyName^[30] := 'Xdpp';
-      PropertyHelp^[30] := 'Per unit subtransient reactance of the machine.  Used for Harmonics. Default is 0.20.';
-
-      PropertyName^[31] := 'H';
-      PropertyHelp^[31] := 'Per unit mass constant of the machine.  MW-sec/MVA.  Default is 1.0.';
-
-      PropertyName^[32] := 'D';
-      PropertyHelp^[32] := 'Damping constant.  Usual range is 0 to 4. Default is 1.0.  Adjust to get damping';
-
-      PropertyName^[33] := 'UserModel';
-      PropertyHelp^[33] := 'Name of DLL containing user-written model, which computes the terminal currents for Dynamics studies, ' +
+      PropertyName^[18] := 'UserModel';
+      PropertyHelp^[18] := 'Name of DLL containing user-written model, which computes the terminal currents for Dynamics studies, ' +
                                   'overriding the default model.  Set to "none" to negate previous setting.';
-      PropertyName^[34] := 'UserData';
-      PropertyHelp^[34] := 'String (in quotes or parentheses) that gets passed to user-written model for defining the data required for that model.';
+      PropertyName^[19] := 'UserData';
+      PropertyHelp^[19] := 'String (in quotes or parentheses) that gets passed to user-written model for defining the data required for that model.';
 
-      PropertyName^[35] := 'ShaftModel';
-      PropertyHelp^[35] := 'Name of user-written DLL containing a Shaft model, which models the prime mover and determines the power on the shaft for Dynamics studies. '+
-                                    'Models additional mass elements other than the single-mass model in the DSS default model. Set to "none" to negate previous setting.';
-      PropertyName^[36] := 'ShaftData';
-      PropertyHelp^[36] := 'String (in quotes or parentheses) that gets passed to user-written shaft dynamic model for defining the data for that model.';
+      PropertyName^[20] := 'DutyStart';
+      PropertyHelp^[20] := 'Starting time offset [hours] into the duty cycle shape for this WindGen, defaults to 0';
 
-      PropertyName^[37] := 'DutyStart';
-      PropertyHelp^[37] := 'Starting time offset [hours] into the duty cycle shape for this WindGen, defaults to 0';
-
-      PropertyName^[38] := 'Balanced';
-      PropertyHelp^[38] := '{Yes | No*} Default is No.  For Model=7, force balanced current only for 3-phase WindGens. Force zero- and negative-sequence to zero.';
-
-      PropertyName^[39] := 'XRdp';
-      PropertyHelp^[39] := 'Default is 20. X/R ratio for Xdp property for FaultStudy and Dynamic modes.';
-
-      PropertyName^[40] := 'DynamicEq';
-      PropertyHelp^[40] := 'The name of the dynamic equation (DinamicExp) that will be used for defining the dynamic behavior of the generator. ' +
+      PropertyName^[21] := 'DynamicEq';
+      PropertyHelp^[21] := 'The name of the dynamic equation (DinamicExp) that will be used for defining the dynamic behavior of the generator. ' +
                                  'if not defined, the generator dynamics will follow the built-in dynamic equation.';
 
-      PropertyName^[41] := 'DynOut';
-      PropertyHelp^[41] := 'The name of the variables within the Dynamic equation that will be used to govern the generator dynamics.' +
+      PropertyName^[22] := 'DynOut';
+      PropertyHelp^[22] := 'The name of the variables within the Dynamic equation that will be used to govern the generator dynamics.' +
                                  'This generator model requires 2 outputs from the dynamic equation: ' + CRLF + CRLF +
                                  '1. Shaft speed (velocity) relative to synchronous speed.' + CRLF +
                                  '2. Shaft, or power, angle (relative to synchronous reference frame).' + CRLF + CRLF +
                                  'The output variables need to be defined in the same order.';
+
+      PropertyName^[23] := 'Rthev';
+      PropertyHelp^[23] := 'per unit Thevenin equivalent R.';;
+
+      PropertyName^[24] := 'Xthev';
+      PropertyHelp^[24] := 'per unit Thevenin equivalent X.';
+
+      PropertyName^[25] := 'Vss';
+      PropertyHelp^[25] := 'Steady state voltage magnitude.';
+
+      PropertyName^[26] := 'Pss';
+      PropertyHelp^[26] := 'Steady state output real power.';
+
+      PropertyName^[27] := 'Qss';
+      PropertyHelp^[27] := 'Steady state output reactive power.';
+
+      PropertyName^[28] := 'vwind';
+      PropertyHelp^[28] := 'Wind speed in m/s';
+
+      PropertyName^[29] := 'QMode';
+      PropertyHelp^[29] := 'Q control mode (0:Q, 1:PF, 2:VV).';
+
+      PropertyName^[30] := 'SimMechFlg';
+      PropertyHelp^[30] := '1 to simulate mechanical system. Otherwise (0) only uses the electrical system. For dynamics simulation purposes.';
+
+      PropertyName^[31] := 'APCFlg';
+      PropertyHelp^[31] := '1 to enable active power control.';
+
+      PropertyName^[32] := 'QFlg';
+      PropertyHelp^[32] := '1 to enable reactive power and voltage control.';
+
+      PropertyName^[33] := 'delt0';
+      PropertyHelp^[33] := 'User defined internal simulation step.';
+
+      PropertyName^[34] := 'N_WTG';
+      PropertyHelp^[34] := 'Number of WTG in aggregation.';
+
+      PropertyName^[35] := 'VV_Curve';
+      PropertyHelp^[35] := 'Name of the XY curve defining the control curve for implementing Vol-var control with this inverter.';
+
+      PropertyName^[36] := 'Ag';
+      PropertyHelp^[36] := 'Gearbox ratio (Default 1/90).';
+
+      PropertyName^[37] := 'Cp';
+      PropertyHelp^[37] := 'Turbine performance coefficient (deafult 0.41).';
+
+      PropertyName^[38] := 'Lamda';
+      PropertyHelp^[38] := 'Tip speed ratio (Default 7.95).';
+
+      PropertyName^[39] := 'P';
+      PropertyHelp^[39] := 'Number of pole pairs of the induction generator (Default 2).';
+
+      PropertyName^[40] := 'pd';
+      PropertyHelp^[40] := 'Air density in kg/m3 (Default 1.225).';
+
+      PropertyName^[41] := 'PLoss';
+      PropertyHelp^[41] := 'Name of the XYCurve object describing the active power losses in pct versus the wind speed.';
+
+      PropertyName^[42] := 'Rad';
+      PropertyHelp^[42] := 'Rotor radius in meters (Default 40).';
+
+      PropertyName^[43] := 'VCutIn';
+      PropertyHelp^[43] := 'Cut-in speed for the wind generator (m/s - default 5).';
+
+      PropertyName^[44] := 'VCutOut';
+      PropertyHelp^[44] := 'Cut-out speed for the wind generator (m/s - default 23).';
 
       {Removed Fuel-related variables 40-44 from Generator model}
       {Added 40-41 to make Windgen comaptible with DynamicExp}
@@ -572,7 +583,7 @@ VAR
    ParamName:String;
    Param:String;
 
-   
+
 
 Begin
   // continue parsing with contents of Parser
@@ -589,122 +600,159 @@ Begin
      Param := Parser[ActorID].StrValue;
      While Length(Param)>0 Do
      Begin
-         If  (Length(ParamName) = 0)
-         Then Inc(ParamPointer)
-         ELSE ParamPointer := CommandList.GetCommand(ParamName);
+       If  (Length(ParamName) = 0)
+       Then Inc(ParamPointer)
+       ELSE ParamPointer := CommandList.GetCommand(ParamName);
 
-         If  (ParamPointer>0) and (ParamPointer<=NumProperties)
-         Then PropertyValue[PropertyIdxMap^[ParamPointer]] := Param
-         ELSE
-         Begin
-           // first, checks if there is a dynamic eq assigned, then
-           // checks if the new property edit the state variables within
-           VarIdx   :=  CheckIfDynVar(ParamName, ActorID);
-           if VarIdx < 0 then
-             DoSimpleMsg('Unknown parameter "'+ParamName+'" for WindGen "'+Name+'"', 560);
-         End;
+       If  (ParamPointer>0) and (ParamPointer<=NumProperties)
+       Then PropertyValue[PropertyIdxMap^[ParamPointer]] := Param
+       ELSE
+       Begin
+         // first, checks if there is a dynamic eq assigned, then
+         // checks if the new property edit the state variables within
+         VarIdx   :=  CheckIfDynVar(ParamName, ActorID);
+         if VarIdx < 0 then
+           DoSimpleMsg('Unknown parameter "'+ParamName+'" for WindGen "'+Name+'"', 560);
+       End;
 
-         If ParamPointer > 0 Then
-         CASE PropertyIdxMap^[ParamPointer] OF
-            0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 561);
-            1: NPhases              :=  Parser[ActorID].Intvalue; // num phases
-            2: SetBus(1, param);
-            3: PresentkV            :=  Parser[ActorID].DblValue;
-            4: kWBase               :=  Parser[ActorID].DblValue;
-            5: PFNominal            :=  Parser[ActorID].DblValue;
-            6: GenModel             :=  Parser[ActorID].IntValue;
-            7: YearlyShape          :=  Param;
-            8: DailyDispShape       :=  Param;
-            9: DutyShape            :=  Param;
-           10: ;
-           11: ;
-           12: InterpretConnection(Param);
-           13: Presentkvar          := Parser[ActorID].DblValue;
-           14: ;
-           15: ;
-           16: If lowercase(Param[1])='f' Then IsFixed := TRUE ELSE IsFixed := FALSE;
-           17: GenClass             :=  Parser[ActorID].IntValue;
-           18: Vpu                  :=  Parser[ActorID].DblValue;
-           19: kvarMax              :=  Parser[ActorID].DblValue;
-           20: kvarMin              :=  Parser[ActorID].DblValue;
-           21: PVFactor             :=  Parser[ActorID].DblValue;  //decelaration factor
-           22: DebugTrace           :=  InterpretYesNo(Param);
-           23: VMinPu               :=  Parser[ActorID].DblValue;
-           24: VMaxPu               :=  Parser[ActorID].DblValue;
-           25: FForcedON            :=  InterpretYesNo(Param);
-           26: WindGenVars.kVArating    :=  Parser[ActorID].DblValue;
-           27: WindGenVars.kVArating    :=  Parser[ActorID].DblValue * 1000.0;  // 'MVA';
-           28: WindGenVars.puXd         :=  Parser[ActorID].DblValue;
-           29: WindGenVars.puXdp        :=  Parser[ActorID].DblValue;
-           30: WindGenVars.puXdpp       :=  Parser[ActorID].DblValue;
-           31: WindGenVars.Hmass        :=  Parser[ActorID].DblValue;
-           32: WindGenVars.Dpu          :=  Parser[ActorID].DblValue;
-           33: UserModel.Name       :=  Parser[ActorID].StrValue;  // Connect to user written models
-           34: UserModel.Edit       :=  Parser[ActorID].StrValue;  // Send edit string to user model
-           35: ShaftModel.Name      :=  Parser[ActorID].StrValue;
-           36: ShaftModel.Edit      :=  Parser[ActorID].StrValue;
-           37: DutyStart            :=  Parser[ActorID].DblValue;
-           38: ForceBalanced        :=  InterpretYesNo(Param);
-           39: WindGenVars.XRdp         :=  Parser[ActorID].DblValue;  // X/R for dynamics model
-           40: DynamicEq            :=  Param;
-           41: SetDynOutput(Param);
+       If ParamPointer > 0 Then
+       CASE PropertyIdxMap^[ParamPointer] OF
+          0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 561);
+          1: NPhases              :=  Parser[ActorID].Intvalue; // num phases
+          2: SetBus(1, param);
+          3: PresentkV            :=  Parser[ActorID].DblValue;
+          4: kWBase               :=  Parser[ActorID].DblValue;
+          5: PFNominal            :=  Parser[ActorID].DblValue;
+          6: GenModel             :=  Parser[ActorID].IntValue;
+          7: YearlyShape          :=  Param;
+          8: DailyDispShape       :=  Param;
+          9: DutyShape            :=  Param;
+         10: InterpretConnection(Param);
+         11: Presentkvar          := Parser[ActorID].DblValue;
+         12: GenClass             :=  Parser[ActorID].IntValue;
+         14: VMinPu               :=  Parser[ActorID].DblValue;
+         15: VMaxPu               :=  Parser[ActorID].DblValue;
+         16: Begin
+              WindModelDyn.EditProp(13,Param);
+              WindGenVars.kVArating    :=  Parser[ActorID].DblValue;
+             End;
+         17: Begin
+              WindGenVars.kVArating    :=  Parser[ActorID].DblValue * 1000.0;  // 'MVA';
+              WindModelDyn.EditProp(13,FloatToStr(WindGenVars.kVArating));
+             End;
+         18: UserModel.Name       :=  Parser[ActorID].StrValue;  // Connect to user written models
+         19: UserModel.Edit       :=  Parser[ActorID].StrValue;  // Send edit string to user model
+         20: DutyStart            :=  Parser[ActorID].DblValue;
+         21: DynamicEq            :=  Param;
+         22: SetDynOutput(Param);
+         23: WindModelDyn.EditProp(1,Param);
+         24: WindModelDyn.EditProp(2,Param);
+         25: WindModelDyn.EditProp(3,Param);
+         26: WindModelDyn.EditProp(4,Param);
+         27: WindModelDyn.EditProp(5,Param);
+         28: WindModelDyn.EditProp(6,Param);
+         29: WindModelDyn.EditProp(7,Param);
+         30: WindModelDyn.EditProp(8,Param);
+         31: WindModelDyn.EditProp(9,Param);
+         32: WindModelDyn.EditProp(10,Param);
+         33: WindModelDyn.EditProp(12,Param);
+         34: WindModelDyn.EditProp(22,Param);
+         35: VV_Curve := Param;
+         36: WindgenVars.ag     :=  Parser[ActorID].DblValue;
+         37: WindgenVars.Cp     :=  Parser[ActorID].DblValue;
+         38: WindgenVars.Lamda  :=  Parser[ActorID].DblValue;
+         39: WindgenVars.Poles  :=  Parser[ActorID].DblValue;
+         40: WindgenVars.pd     :=  Parser[ActorID].DblValue;
+         41: WindgenVars.PLoss  :=  Parser[ActorID].StrValue;
+         42: WindgenVars.Rad    :=  Parser[ActorID].DblValue;
+         43: WindgenVars.VCutin :=  Parser[ActorID].DblValue;
+         44: WindgenVars.VCutout:=  Parser[ActorID].DblValue;
 
+       ELSE
+         // Inherited parameters
+           ClassEdit(ActiveWindGenObj, ParamPointer - NumPropsThisClass)
+       End;
 
-         ELSE
-           // Inherited parameters
-             ClassEdit(ActiveWindGenObj, ParamPointer - NumPropsThisClass)
-         End;
+       If ParamPointer > 0 Then
+       CASE PropertyIdxMap^[ParamPointer] OF
+          1: SetNcondsForConnection;  // Force Reallocation of terminal info
 
-         If ParamPointer > 0 Then
-         CASE PropertyIdxMap^[ParamPointer] OF
-            1: SetNcondsForConnection;  // Force Reallocation of terminal info
+          // keep kvar nominal up to date with kW and PF
+          4,5: SyncUpPowerQuantities;
 
-            // keep kvar nominal up to date with kW and PF
-            4,5: SyncUpPowerQuantities;
+          // if a model 3 WindGen added, force calc of dQdV
+          6: If GenModel=3 Then ActiveCircuit[ActorID].Solution.SolutionInitialized := FALSE;
 
-            // if a model 3 WindGen added, force calc of dQdV
-            6: If GenModel=3 Then ActiveCircuit[ActorID].Solution.SolutionInitialized := FALSE;
+  {Set shape objects;  returns nil if not valid}
+   {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
+          7: Begin
+                YearlyShapeObj := LoadShapeClass[ActorID].Find(YearlyShape);
+                If Assigned(YearlyShapeObj) then With YearlyShapeObj Do
+                      If UseActual then SetkWkvar(MaxP, MaxQ);
+             End;
+          8: Begin
+              DailyDispShapeObj := LoadShapeClass[ActorID].Find(DailyDispShape);
+                If Assigned(DailyDispShapeObj) then With DailyDispShapeObj Do
+                      If UseActual then SetkWkvar(MaxP, MaxQ);
+             End;
+          9: Begin
+                  DutyShapeObj := LoadShapeClass[ActorID].Find(DutyShape);
+                  If Assigned(DutyShapeObj) then With DutyShapeObj Do
+                      If UseActual then SetkWkvar(MaxP, MaxQ);
+             End;
 
-    {Set shape objects;  returns nil if not valid}
-     {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
-            7: Begin
-                  YearlyShapeObj := LoadShapeClass[ActorID].Find(YearlyShape);
-                  If Assigned(YearlyShapeObj) then With YearlyShapeObj Do
-                        If UseActual then SetkWkvar(MaxP, MaxQ);
-               End;
-            8: Begin
-                DailyDispShapeObj := LoadShapeClass[ActorID].Find(DailyDispShape);
-                  If Assigned(DailyDispShapeObj) then With DailyDispShapeObj Do
-                        If UseActual then SetkWkvar(MaxP, MaxQ);
-               End;
-            9: Begin
-                    DutyShapeObj := LoadShapeClass[ActorID].Find(DutyShape);
-                    If Assigned(DutyShapeObj) then With DutyShapeObj Do
-                        If UseActual then SetkWkvar(MaxP, MaxQ);
-               End;
-
-            22: IF DebugTrace
-                THEN Begin
-                   AssignFile(TraceFile, GetOutputDirectory + 'WINDGEN_'+Name+'.CSV');
-                   ReWrite(TraceFile);
-                   Write(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, GenModel, dQdV, Avg_Vpu, Vdiff, MQnominalperphase, MPnominalperphase, CurrentType');
-                   For i := 1 to nphases Do Write(Tracefile,  ', |Iinj'+IntToStr(i)+'|');
-                   For i := 1 to nphases Do Write(Tracefile,  ', |Iterm'+IntToStr(i)+'|');
-                   For i := 1 to nphases Do Write(Tracefile,  ', |Vterm'+IntToStr(i)+'|');
-                   Write(TraceFile, ',Vthev, Theta');
-                   Writeln(TraceFile);
-                   CloseFile(Tracefile);
+          13: IF DebugTrace
+              THEN Begin
+                 WindModelDyn.EditProp(11,'1');
+                 AssignFile(TraceFile, GetOutputDirectory + 'WINDGEN_'+Name+'.CSV');
+                 ReWrite(TraceFile);
+                 Write(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, GenModel, dQdV, Avg_Vpu, Vdiff, MQnominalperphase, MPnominalperphase, CurrentType');
+                 For i := 1 to nphases Do Write(Tracefile,  ', |Iinj'+IntToStr(i)+'|');
+                 For i := 1 to nphases Do Write(Tracefile,  ', |Iterm'+IntToStr(i)+'|');
+                 For i := 1 to nphases Do Write(Tracefile,  ', |Vterm'+IntToStr(i)+'|');
+                 Write(TraceFile, ',Vthev, Theta');
+                 Writeln(TraceFile);
+                 CloseFile(Tracefile);
+              End;
+          16, 17: kVANotSet := FALSE;
+          21: Begin
+                DynamicEqObj :=  TDynamicExpClass[ActorID].Find(DynamicEq);
+                If Assigned(DynamicEqObj) then With DynamicEqObj Do
+                  setlength(DynamicEqVals, NumVars);
+              End;
+          35: Begin     // get the Volt-var control curve
+                VV_CurveObj := XYCurveClass[ActorID].Find(VV_Curve);
+                If Assigned(VV_CurveObj) then
+                Begin
+                  With VV_CurveObj Do
+                  Begin
+                    WindModelDyn.EditProp(14,FloatToStr(XValue_pt[1]));
+                    WindModelDyn.EditProp(15,FloatToStr(XValue_pt[2]));
+                    WindModelDyn.EditProp(16,FloatToStr(XValue_pt[3]));
+                    WindModelDyn.EditProp(17,FloatToStr(XValue_pt[4]));
+                    WindModelDyn.EditProp(18,FloatToStr(YValue_pt[1]));
+                    WindModelDyn.EditProp(19,FloatToStr(YValue_pt[2]));
+                    WindModelDyn.EditProp(20,FloatToStr(YValue_pt[3]));
+                    WindModelDyn.EditProp(21,FloatToStr(YValue_pt[4]));
+                  End;
+                End
+                Else
+                Begin
+                  DoSimpleMsg('Volt-var control curve "'+VV_Curve+'" not found, make sure that it was not defined before this element', 565);
                 End;
-            26, 27: kVANotSet := FALSE;
-            40: Begin
-                  DynamicEqObj :=  TDynamicExpClass[ActorID].Find(DynamicEq);
-                  If Assigned(DynamicEqObj) then With DynamicEqObj Do
-                    setlength(DynamicEqVals, NumVars);
+              End;
+          41: Begin     // get the Volt-var control curve
+                Loss_CurveObj := XYCurveClass[ActorID].Find(WindgenVars.PLoss);
+                If not Assigned(Loss_CurveObj) then
+                Begin
+                  DoSimpleMsg('Losses curve "'+ WindgenVars.PLoss +'" not found, make sure that it was not defined before this element', 566);
+                  WindgenVars.PLoss := '';
                 End;
-         End;
+              End;
+       End;
 
-         ParamName := Parser[ActorID].NextParam;
-         Param     := Parser[ActorID].StrValue;
+       ParamName := Parser[ActorID].NextParam;
+       Param     := Parser[ActorID].StrValue;
      End;
 
      RecalcElementData(ActorID);
@@ -905,23 +953,40 @@ Begin
      WindGenVars.kVArating  := kWBase *1.2;
      kVANotSet   := TRUE;  // Flag for default value for kVA
 
-
+     NumStateVars := NumGenVariables;
 
      With WindGenVars Do
      Begin
-         puXd       := 1.0;
-         puXdp      := 0.28;
-         puXdpp     := 0.20;
-         Xd         :=  puXd   * SQR(kVWindGenBase) * 1000.0 / kVARating;
-         Xdp        :=  puXdp  * SQR(kVWindGenBase) * 1000.0 / kVARating;
-         Xdpp       :=  puXdpp * SQR(kVWindGenBase) * 1000.0 / kVARating;
-         Hmass      := 1.0;       //  W-sec/VA rating
-         Theta      := 0.0;
-         w0         := TwoPi * Basefrequency;
-         Speed      := 0.0;
-         dSpeed     := 0.0;
-         D          := 1.0;
-         XRdp       := 20.0;
+
+        // These are inherited from the generator object, it is uncertain if needed
+        puXd        := 1.0;
+        puXdp       := 0.28;
+        puXdpp      := 0.20;
+        Xd          :=  puXd   * SQR(kVWindGenBase) * 1000.0 / kVARating;
+        Xdp         :=  puXdp  * SQR(kVWindGenBase) * 1000.0 / kVARating;
+        Xdpp        :=  puXdpp * SQR(kVWindGenBase) * 1000.0 / kVARating;
+        Hmass       := 1.0;       //  W-sec/VA rating
+        Theta       := 0.0;
+        w0          := TwoPi * Basefrequency;
+        Speed       := 0.0;
+        dSpeed      := 0.0;
+        D           := 1.0;
+        XRdp        := 20.0;
+        // Added for the wind generator specifically
+        PLoss       := '';
+        ag          := 1/90;
+        Cp          := 0.41;
+        Lamda       := 7.95;
+        Poles       := 2;
+        pd          := 1.225;
+        Rad         := 40;
+        VCutin      := 5;
+        VCutout     := 23;
+        Pm          := 0;
+        Ps          := 0;
+        Pr          := 0;
+        Pg          := 0;
+        s           := 0;
      End;
 
      {Advertise Genvars struct as public}
@@ -951,6 +1016,10 @@ Begin
 
      GenActive      :=  True;   // variable to use if needed
 
+     // Creates the Dynamic model for the Wind Turbine
+     WindModelDyn  :=  TGE_WTG3_Model.Create(WindGenVars, ActiveCircuit[Activeactor].Solution.DynaVars);
+     WindModelDyn.EditProp(6,'12');
+     WindModelDyn.QMode := 0;
      InitPropertyValues(0);
 
      RecalcElementData(ActiveActor);
@@ -1072,7 +1141,7 @@ Begin
          ShapeFactor := DailyDispShapeObj.GetMult(Hr);
          ShapeIsActual := DailyDispShapeObj.UseActual;
        End
-     ELSE ShapeFactor := CDOUBLEONE;  // Default to no daily variation
+     ELSE ShapeFactor := cmplx(WindModelDyn.vwind,0);  // Default to no daily variation
 End;
 
 
@@ -1098,7 +1167,7 @@ Begin
       ShapeIsActual := YearlyShapeObj.UseActual;
  End
  ELSE
-      ShapeFactor := CDOUBLEONE;  // Defaults to no variation
+      ShapeFactor := cmplx(WindModelDyn.vwind,0);  // Defaults to no variation
 
 End;
 
@@ -1107,123 +1176,179 @@ End;
 //----------------------------------------------------------------------------
 Procedure TWindGenObj.SetNominalGeneration(ActorID : Integer);
 VAR
-   Factor      : Double;
-   GenOn_Saved : Boolean;
+   myV          : complex;
+   VMag,
+   VMagTmp,
+   LeadLag,
+   kVATmp,
+   kvarCalc,
+   myLosses,
+   Factor       : Double;
+   GenOn_Saved  : Boolean;
+   i            : integer;
 
 Begin
-   GenOn_Saved := GenON;
-   ShapeFactor := CDOUBLEONE;
-    // Check to make sure the generation is ON
-   With ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
-   Begin
-    IF NOT (IsDynamicModel or IsHarmonicModel) THEN     // Leave WindGen in whatever state it was prior to entering Dynamic mode
+  VMag    := 0.0;
+  VMagTmp := 0.0;
+  myV     := CZero;
+  GenOn_Saved := GenON;
+  ShapeFactor := cmplx(WindModelDyn.vwind,0);
+  // Check to make sure the generation is ON
+  With ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
+  Begin
+
+    kvarCalc  :=  0.0;
+    GenON := TRUE;   // The first assumption is that the generator is ON
+
+    // first, get wind speed (Factor)
+    If IsFixed Then
+    Begin
+       Factor := 1.0;   // for fixed WindGens, set constant
+    End
+    ELSE
+    Begin
+      CASE Mode OF
+          SNAPSHOT:     Factor := GenMultiplier;
+          DAILYMODE:    Begin
+                             Factor := GenMultiplier  ;
+                             CalcDailyMult(DynaVars.dblHour) // Daily dispatch curve
+                        End;
+          YEARLYMODE:   Begin Factor := GenMultiplier; CalcYearlyMult(DynaVars.dblHour);  End;
+          DUTYCYCLE:    Begin Factor := GenMultiplier; CalcDutyMult(DynaVars.dblHour) ; End;
+          GENERALTIME,   // General sequential time simulation
+          DYNAMICMODE:  Begin
+                           Factor := GenMultiplier;
+                           // This mode allows use of one class of load shape
+                           case ActiveLoadShapeClass of
+                                USEDAILY:  CalcDailyMult(DynaVars.dblHour);
+                                USEYEARLY: CalcYearlyMult(DynaVars.dblHour);
+                                USEDUTY:   CalcDutyMult(DynaVars.dblHour);
+                           else
+                                ShapeFactor := cmplx(WindModelDyn.vwind,0);     // default to the wind speed set by default
+                           end;
+                        End;
+          MONTECARLO1,
+          MONTEFAULT,
+          FAULTSTUDY:  Factor := GenMultiplier * 1.0;
+          MONTECARLO2,
+          MONTECARLO3,
+          LOADDURATION1,
+          LOADDURATION2:Begin Factor := GenMultiplier; CalcDailyMult(DynaVars.dblHour); End;
+          PEAKDAY:      Begin Factor := GenMultiplier; CalcDailyMult(DynaVars.dblHour); End;
+          AUTOADDFLAG:  Factor := 1.0;
+      ELSE
+          Factor := GenMultiplier;
+      End;
+    End;
+    WindModelDyn.vwind := ShapeFactor.re;
+    if (ShapeFactor.re > WindgenVars.VCutout) or (ShapeFactor.re < WindgenVars.VCutin) then
+    Begin
+       WindGenvars.Pnominalperphase   := 0.001* kWBase;
+       WindGenvars.Qnominalperphase   := 0.0;
+       WindGenvars.Pm := 0.0;
+       WindGenvars.Pg := 0.0;
+       WindGenvars.Ps := 0.0;
+       WindGenvars.Pr := 0.0;
+       WindGenvars.s := 0.0;
+    End
+    Else
+    Begin
+      IF NOT (IsDynamicModel or IsHarmonicModel) THEN         //******
       Begin
-        GenON := TRUE;   // Init to on then check if it should be off
- //       IF NOT FForcedON
- //       THEN CASE DispatchMode of
- //****          LOADMODE: IF (DispatchValue > 0.0)   AND (WindGenDispatchReference < DispatchValue)  THEN GenON := FALSE;
- //****          PRICEMODE:IF (DispatchValue > 0.0)   AND (PriceSignal < DispatchValue) THEN GenON := FALSE;
- //       END;
+        // start by getting the losses from the provided curve (if any)
+        if Assigned(Loss_CurveObj) then
+          myLosses :=  Loss_CurveObj.GetYValue(WindModelDyn.vwind)
+        else
+          myLosses := 0.0;  // no losses given that the curve was not provided
+
+        LeadLag := 1;
+        With WindgenVars Do
+        Begin
+          Pm    := 0.5 * pd * PI * math.Power(Rad,2) * math.Power(Shapefactor.re,3) * Cp;
+          myLosses  := Pm * myLosses / 100;
+          Pg    := (Pm - myLosses) / 1e3;     // in kW
+          if Pg > kWBase then
+            Pg  := kWBase;                    // Generation limits
+          s     := 1 - ( (Poles * Shapefactor.re * Lamda) / (w0 * ag* Rad) );
+          Ps    := Pg / (1 - s);
+          Pr    := Ps * s;
+
+          Pnominalperphase   := ( 1e3 * Factor * Pg ) / Fnphases;
+          // Now check for Q depending on QMode
+          case WindModelDyn.QMode of
+            1: // PF
+                Begin
+                  kvarCalc  := math.Power(Pg / Abs(PFNominal), 2) - math.Power(Pg, 2);
+                  kvarCalc := sqrt(kvarCalc);
+                  kVATmp := sqrt(math.Power(Pg,2) + math.Power(kvarCalc,2));
+
+                  if kVATmp > KVARating then        // Check saturation
+                    kvarCalc := kvarBase;
+
+                  if PFNominal < 0 then
+                    LeadLag := -1.0;
+                End;
+            2: // Volt-var ctrl
+                Begin
+                  if Assigned(NodeRef) then
+                  Begin
+                    // get the highest voltage done locally given with whatever is on memory
+                    for i := 1 to NumPhases do
+                    Begin
+                      myV     := NodeV[NodeRef[i]];
+                      VMagTmp := ctopolar(myV).mag;
+                      if VMagTmp > VMag then
+                        VMag := VmagTmp;
+                    End;
+                    Vmag := Vmag / VBase;   // in pu
+
+                    // start by getting the losses from the provided curve (if any)
+                    if Assigned(VV_CurveObj) then
+                      VmagTmp :=  VV_CurveObj.GetYValue(Vmag)
+                    else
+                      VmagTmp := 0.0;  // no losses given that the curve was not provided
+                  End
+                  Else
+                    VmagTmp := 0.0;
+
+                  // Calculates Q based on the
+                  kvarCalc := kvarBase * VmagTmp;
+                  if Abs(kvarCalc) > kvarBase then
+                  Begin
+                    kvarCalc := kvarBase;
+                    if VmagTmp < 0 then  LeadLag := -1.0;
+                  End;
+                End
+            Else
+              kvarCalc := 0;
+          end;
+
+
+          Qnominalperphase := 1e3 * kvarCalc * LeadLag * Factor / Fnphases;
+        End;
+
       End;
 
+    End;
 
-    IF NOT GenON  THEN
-      Begin
-         // If WindGen is OFF enter as tiny resistive load (.0001 pu) so we don't get divide by zero in matrix
-          WindGenvars.Pnominalperphase   := -0.1 * kWBase / Fnphases;
-          // Pnominalperphase   := 0.0;
-          WindGenvars.Qnominalperphase := 0.0;
-      End
-    ELSE
-      Begin    // WindGen is on, compute it's nominal watts and vars
-        With Solution Do
-          If IsFixed Then
-            Begin
-               Factor := 1.0;   // for fixed WindGens, set constant
-            End
-          ELSE
-            Begin
-                CASE Mode OF
-                    SNAPSHOT:     Factor := ActiveCircuit[ActorID].GenMultiplier * 1.0;
-                    DAILYMODE:    Begin
-                                       Factor := ActiveCircuit[ActorID].GenMultiplier  ;
-                                       CalcDailyMult(DynaVars.dblHour) // Daily dispatch curve
-                                  End;
-                    YEARLYMODE:   Begin Factor := ActiveCircuit[ActorID].GenMultiplier; CalcYearlyMult(DynaVars.dblHour);  End;
-                    DUTYCYCLE:    Begin Factor := ActiveCircuit[ActorID].GenMultiplier; CalcDutyMult(DynaVars.dblHour) ; End;
-                    GENERALTIME,   // General sequential time simulation
-                    DYNAMICMODE:  Begin
-                                       Factor := ActiveCircuit[ActorID].GenMultiplier;
-                                       // This mode allows use of one class of load shape
-                                       case ActiveCircuit[ActorID].ActiveLoadShapeClass of
-                                            USEDAILY:  CalcDailyMult(DynaVars.dblHour);
-                                            USEYEARLY: CalcYearlyMult(DynaVars.dblHour);
-                                            USEDUTY:   CalcDutyMult(DynaVars.dblHour);
-                                       else
-                                            ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
-                                       end;
-                                  End;
-                    MONTECARLO1,
-                    MONTEFAULT,
-                    FAULTSTUDY:  Factor := ActiveCircuit[ActorID].GenMultiplier * 1.0;
-                    MONTECARLO2,
-                    MONTECARLO3,
-                    LOADDURATION1,
-                    LOADDURATION2:Begin Factor := ActiveCircuit[ActorID].GenMultiplier; CalcDailyMult(DynaVars.dblHour); End;
-                    PEAKDAY:      Begin Factor := ActiveCircuit[ActorID].GenMultiplier; CalcDailyMult(DynaVars.dblHour); End;
-                    AUTOADDFLAG:  Factor := 1.0;
-                ELSE
-                    Factor := 1.0
-                End;
-            End;
+    IF NOT (IsDynamicModel or IsHarmonicModel) THEN         //******
+    Begin
+      // build the Y primitive eq
+      CASE GenModel  of
+           6: Yeq := Cinv(cmplx(0.0, -WindGenvars.Xd))  ;  // Gets negated in CalcYPrim
+      ELSE
+          With WindGenvars Do Yeq  := CDivReal(Cmplx(Pnominalperphase, -Qnominalperphase), Sqr(Vbase));   // Vbase must be L-N for 3-phase
+          If   (Vminpu <> 0.0) Then Yeq95 := CDivReal(Yeq, sqr(Vminpu))  // at 95% voltage
+                               Else Yeq95 := Yeq; // Always a constant Z model
 
-        IF NOT (IsDynamicModel or IsHarmonicModel) THEN         //******
-          Begin
-              If ShapeIsActual then
-                    WindGenvars.Pnominalperphase   := 1000.0* ShapeFactor.re / Fnphases
-              else  WindGenvars.Pnominalperphase   := 1000.0* kWBase * Factor * ShapeFactor.re / Fnphases;
-
-              With WindGenvars Do
-                If GenModel=3 Then
-                  Begin   { Just make sure present value is reasonable}
-                      If      Qnominalperphase > varMax Then Qnominalperphase := varMax
-                      Else If Qnominalperphase < varMin Then Qnominalperphase := varMin;
-                  End
-                Else Begin
-                   { for other WindGen models}
-                   If ShapeIsActual then
-                        Qnominalperphase := 1000.0 * ShapeFactor.im / Fnphases
-                   else Qnominalperphase := 1000.0 * kvarBase * Factor * ShapeFactor.im / Fnphases;
-                End;
-          End;
-      End; {ELSE GenON}
-
-      IF NOT (IsDynamicModel or IsHarmonicModel) THEN  Begin       //******
-
-          CASE GenModel  of
-               6: Yeq := Cinv(cmplx(0.0, -WindGenvars.Xd))  ;  // Gets negated in CalcYPrim
-          ELSE
-              With WindGenvars Do Yeq  := CDivReal(Cmplx(Pnominalperphase, -Qnominalperphase), Sqr(Vbase));   // Vbase must be L-N for 3-phase
-              If   (Vminpu <> 0.0) Then Yeq95 := CDivReal(Yeq, sqr(Vminpu))  // at 95% voltage
-                                   Else Yeq95 := Yeq; // Always a constant Z model
-
-              If   (Vmaxpu <> 0.0) Then  Yeq105 := CDivReal(Yeq, Sqr(Vmaxpu))   // at 105% voltage
-                                   Else  Yeq105 := Yeq;
-          END;
-
-          { When we leave here, all the Yeq's are in L-N values}
-
-          If GenModel=7 Then With WindGenvars Do
-          Begin
-              PhaseCurrentLimit  := Cdivreal( Cmplx(Pnominalperphase, -Qnominalperphase), VBase95);
-              Model7MaxPhaseCurr := Cabs(PhaseCurrentLimit);
-          End;
-
+          If   (Vmaxpu <> 0.0) Then  Yeq105 := CDivReal(Yeq, Sqr(Vmaxpu))   // at 105% voltage
+                               Else  Yeq105 := Yeq;
       END;
-   End;  {With ActiveCircuit[ActiveActor]}
+    End;
 
-   // If WindGen state changes, force re-calc of Y matrix
-   If GenON <> GenON_Saved Then YprimInvalid[ActorID] := True;
+     // If WindGen state changes, force re-calc of Y matrix
+     If GenON <> GenON_Saved Then YprimInvalid[ActorID] := True;
+  End;
 
 End;
 
@@ -1242,12 +1367,23 @@ Begin
     {Populate data structures used for interchange with user-written models.}
     With WindGenvars Do
       Begin
-          Xd    :=  puXd   * 1000.0 * SQR(kVWindGenBase)/kVARating;
-          Xdp   :=  puXdp  * 1000.0 * SQR(kVWindGenBase)/kVArating;
-          Xdpp  :=  puXdpp * 1000.0 * SQR(kVWindGenBase)/kVArating;
-          Conn := connection;
-          NumPhases := Fnphases;
-          NumConductors := Fnconds;
+        Xd    :=  puXd   * 1000.0 * SQR(kVWindGenBase)/kVARating;
+        Xdp   :=  puXdp  * 1000.0 * SQR(kVWindGenBase)/kVArating;
+        Xdpp  :=  puXdpp * 1000.0 * SQR(kVWindGenBase)/kVArating;
+        Conn := connection;
+        NumPhases := Fnphases;
+        NumConductors := Fnconds;
+
+        if not (kVANotSet) then
+        Begin
+          kWBase    :=  (kVArating * Abs(PFNominal));
+          kvarbase  :=  sqrt(sqr(kVArating) - sqr(kWBase));
+        End
+        Else
+        Begin
+          kVArating :=  kWBase / Abs(PFNominal);
+          WindModelDyn.EditProp(13,FloatToStr(kVArating));
+        End;
       End;
 
     SetNominalGeneration(ActorID);
@@ -1284,15 +1420,19 @@ Begin
     If Usermodel.Exists  Then UserModel.FUpdateModel;
     If Shaftmodel.Exists Then Shaftmodel.FUpdateModel;
 
+    if (WindModelDyn <> nil) then
+        WindModelDyn.ReCalcElementData;
+
 End;
 
 //----------------------------------------------------------------------------
 Procedure TWindGenObj.CalcYPrimMatrix(Ymatrix:TcMatrix;ActorID : Integer);
 
 Var
-   Y , Yij  :Complex;
-   i,j :Integer;
-   FreqMultiplier :Double;
+   Y , Yij        : Complex;
+   i,j            : Integer;
+   FreqMultiplier : Double;
+   WTGZLV         : Double;
 
 Begin
 
@@ -1301,74 +1441,81 @@ Begin
 
    With  ActiveCircuit[ActorID].solution  Do
    IF IsDynamicModel or IsHarmonicModel Then
+   Begin
+     IF GenON Then
      Begin
-       IF GenON Then   Y  := Yeq   // L-N value computed in initial condition routines
-       ELSE Y := Cmplx(EPSILON, 0.0);
-
-       IF Connection=1 Then Y := CDivReal(Y, 3.0); // Convert to delta impedance
-       Y.im := Y.im / FreqMultiplier;
-       Yij := Cnegate(Y);
-       FOR i := 1 to Fnphases Do
-         Begin
-           Case Connection of
-           0: Begin
-                   Ymatrix.SetElement(i, i, Y);
-                   Ymatrix.AddElement(Fnconds, Fnconds, Y);
-                   Ymatrix.SetElemsym(i, Fnconds, Yij);
-              End;
-           1: Begin   {Delta connection}
-                   Ymatrix.SetElement(i, i, Y);
-                   Ymatrix.AddElement(i, i, Y);  // put it in again
-                   For j := 1 to i-1 Do Ymatrix.SetElemsym(i, j, Yij);
-              End;
-           End;
-         End;
-
-      (**** Removed Neutral / Neutral may float
-
-       IF Connection = 0 Then   With Ymatrix Do  // Take care of neutral issues
-         Begin
-           AddElement(Fnconds, Fnconds, YNeut);  // Add in user specified Neutral Z, if any
-           // Bump up neutral-ground in case neutral ends up floating
-           SetElement(Fnconds, Fnconds, CmulReal(GetElement(Fnconds, Fnconds), 1.000001));
-         End;
-
-      *)
+      With  WindModelDyn Do
+      Begin
+        WTGZLV :=  sqr(PresentkV) * 1e3 / WindGenVars.kVArating;
+        Y  := Cmplx(EPSILON,  -N_WTG / (Xthev*WTGZLV)) //Yeq  // L-N value computed in initial condition routines
+      End;
      End
+     ELSE Y := Cmplx(EPSILON, 0.0);
 
-   ELSE Begin  //  Regular power flow WindGen model
+     IF Connection=1 Then Y := CDivReal(Y, 3.0); // Convert to delta impedance
+     Y.im := Y.im / FreqMultiplier;
+     Yij := Cnegate(Y);
+     FOR i := 1 to Fnphases Do
+     Begin
+       Case Connection of
+       0: Begin
+               Ymatrix.SetElement(i, i, Y);
+               Ymatrix.AddElement(Fnconds, Fnconds, Y);
+               Ymatrix.SetElemsym(i, Fnconds, Yij);
+          End;
+       1: Begin   {Delta connection}
+               Ymatrix.SetElement(i, i, Y);
+               Ymatrix.AddElement(i, i, Y);  // put it in again
+               For j := 1 to i-1 Do Ymatrix.SetElemsym(i, j, Yij);
+          End;
+       End;
+     End;
 
-       {Yeq is always expected as the equivalent line-neutral admittance}
+    (**** Removed Neutral / Neutral may float
 
-       Y := cnegate(Yeq);  // negate for generation    Yeq is L-N quantity
+     IF Connection = 0 Then   With Ymatrix Do  // Take care of neutral issues
+       Begin
+         AddElement(Fnconds, Fnconds, YNeut);  // Add in user specified Neutral Z, if any
+         // Bump up neutral-ground in case neutral ends up floating
+         SetElement(Fnconds, Fnconds, CmulReal(GetElement(Fnconds, Fnconds), 1.000001));
+       End;
 
-       // ****** Need to modify the base admittance for real harmonics calcs
-       Y.im           := Y.im / FreqMultiplier;
+    *)
+   End
 
-         CASE Connection OF
+   ELSE
+   Begin  //  Regular power flow WindGen model
 
-           0: With YMatrix Do
-              Begin // WYE
-                     Yij := Cnegate(Y);
-                     FOR i := 1 to Fnphases Do Begin
-                       SetElement(i, i, Y);
-                       AddElement(Fnconds, Fnconds, Y);
-                       SetElemsym(i, Fnconds, Yij);
-                     End;
-              End;
-           1: With YMatrix Do
-              Begin  // Delta  or L-L
-                  Y    := CDivReal(Y, 3.0); // Convert to delta impedance
-                  Yij  := Cnegate(Y);
-                  FOR i := 1 to Fnphases Do Begin
-                     j := i+1;
-                     If j>Fnconds Then j := 1;  // wrap around for closed connections
-                     AddElement(i,i, Y);
-                     AddElement(j,j, Y);
-                     AddElemSym(i,j, Yij);
-                  End;
-              End;
-         End;
+     {Yeq is always expected as the equivalent line-neutral admittance}
+
+     Y := cnegate(Yeq);  // negate for generation    Yeq is L-N quantity
+     // ****** Need to modify the base admittance for real harmonics calcs
+     Y.im           := Y.im / FreqMultiplier;
+
+       CASE Connection OF
+
+         0: With YMatrix Do
+            Begin // WYE
+                   Yij := Cnegate(Y);
+                   FOR i := 1 to Fnphases Do Begin
+                     SetElement(i, i, Y);
+                     AddElement(Fnconds, Fnconds, Y);
+                     SetElemsym(i, Fnconds, Yij);
+                   End;
+            End;
+         1: With YMatrix Do
+            Begin  // Delta  or L-L
+                Y    := CDivReal(Y, 3.0); // Convert to delta impedance
+                Yij  := Cnegate(Y);
+                FOR i := 1 to Fnphases Do Begin
+                   j := i+1;
+                   If j>Fnconds Then j := 1;  // wrap around for closed connections
+                   AddElement(i,i, Y);
+                   AddElement(j,j, Y);
+                   AddElemSym(i,j, Yij);
+                End;
+            End;
+       End;
      End;  {ELSE IF Solution.mode}
 
 End;
@@ -1496,98 +1643,55 @@ Procedure TWindGenObj.DoConstantPQGen(ActorID : Integer);
 {Compute total terminal current for Constant PQ}
 
 VAR
-   i:Integer;
-   Curr, V:Complex;
-   Vmag: Double;
-//   V012,I012 :Array[0..2] of Complex;
-//   Iabc :Array[1..3] of Complex;
+   i    : Integer;
+   Curr,
+   V    : Complex;
+   Vmag : Double;
+
 Begin
      //Treat this just like the Load model
 
     CalcYPrimContribution(InjCurrent, ActorID);  // Init InjCurrent Array
+    FOR i := 1 to FnConds Do InjCurrent^[i] := CZero;
     ZeroITerminal;
 
-    (*****   Tried this but couldn't get it to work
-    CASE Fnphases of
+    CalcVTerminalPhase(ActorID); // get actual voltage across each phase of the load
 
-    3:With Genvars Do Begin     // Use Symmetrical Components
-          Phase2SymComp(Vterminal, @V012);   // Vterminal is L-N voltages here
-                         // Phase2SymComp(InjCurrent, @I012);   // Vterminal is L-G voltages here
-          V := V012[1]; // Positive sequence L-N voltage
-          Vmag := Cabs(V012[1]);
+    FOR i := 1 to Fnphases Do Begin
+        V    := Vterminal^[i];
+        VMag := Cabs(V);
 
-           { IF   VMag <= VBase95
-            THEN Curr := Cnegate(Cmul(Yeq95, V))  // Below 95% (Vminpu) use an impedance model
-            ELSE If VMag > VBase105
-            THEN Curr := Cnegate(Cmul(Yeq105, V))  // above 105% (Vmaxpu) use an impedance model
-            }
-            IF   (VMag <= VBase95) or (VMag > VBase105) THEN    Curr := Conjg( Cdiv( CurrentLimit, CDivReal(V, -Vmag)) )
-            ELSE With Genvars Do Curr := Conjg(Cdiv(Cmplx(-Pnominalperphase, -Qnominalperphase), V));    // Current INTO pos seq model
+        CASE Connection of
+          0: Begin  //Wye
 
-         I012[1] := Curr;  // Pos sequence current into the terminal
+              IF   VMag <= VBase95
+              THEN Curr := Cmul(Yeq95, V)  // Below 95% use an impedance model
+              ELSE If VMag > VBase105
+              THEN Curr := Cmul(Yeq105, V)  // above 105% use an impedance model
+              ELSE
+                With WindGenvars Do Curr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), V));  // Between 95% -105%, constant PQ
+             End;
+          1: Begin  //Delta
+                case Fnphases of
+                     2, 3: VMag := VMag/SQRT3;  // L-N magnitude
+                else
+                    //leave Vmag as is
+                end;
 
-          If Connection=1 Then I012[0] := CZERO  Else I012[0] := Cdiv(V012[0], cmplx(0.0, xdpp));
-          I012[2] := Cdiv(V012[2], cmplx(0.0, xdpp));
+                IF   VMag <= VBase95
+                THEN Curr := Cmul(CdivReal(Yeq95, 3.0), V)  // Below 95% use an impedance model
+                ELSE If VMag > VBase105
+                THEN Curr := Cmul(CdivReal(Yeq105, 3.0), V)  // above 105% use an impedance model
+                ELSE With WindGenvars Do Curr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), V));  // Between 95% -105%, constant PQ
+             End;
+         END;
 
-          // Negative and Zero Sequence Contributions
-         SymComp2Phase(@Iabc, @I012);    // Iabc now desired terminal current
-         IF DebugTrace Then Begin
-             Append(TraceFile);
-             Write(TraceFile,Format('V1=%-.5g, /_%-.5g, ',[Cabs(V), CDang(V)]));
-             Write(TraceFile,Format('I1=%-.5g, /_%-.5g, ',[Cabs(Curr), CDang(Curr)]));
-             Write(TraceFile,'Iabc=');
-             For i := 1 to 3 Do Write(TraceFile,Format('%-.5g, /_%-.5g, ',[ Cabs(Iabc[i]), CDang(Iabc[i])]));
-             Writeln(TraceFile);
-             CloseFile(TraceFile);
-         End;
-
-          For i := 1 to 3 Do Begin
-            ITerminal^[i] := Iabc[i];  // Put into Terminal array directly because we have computed line current above
-            Caccum(InjCurrent^[i], Cnegate(Iabc[i]));  // subtract in
-            If Connection=0 Then Begin
-               Caccum(Iterminal^[Fnconds], Cnegate(Iabc[i]));  // Neutral
-               Caccum(InjCurrent^[Fnconds], Iabc[i]);  // Neutral
-            End;
-          End;
-          IterminalUpdated := TRUE;  // so that we con't have to recompute for a report
-      End
-    ELSE
-    ****)
+        StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
+        set_ITerminalUpdated(TRUE, ActorID);
+        StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
+    End;
 
 
-        CalcVTerminalPhase(ActorID); // get actual voltage across each phase of the load
-        FOR i := 1 to Fnphases Do Begin
-            V    := Vterminal^[i];
-            VMag := Cabs(V);
-
-            CASE Connection of
-              0: Begin  {Wye}
-                    IF   VMag <= VBase95
-                    THEN Curr := Cmul(Yeq95, V)  // Below 95% use an impedance model
-                    ELSE If VMag > VBase105
-                    THEN Curr := Cmul(Yeq105, V)  // above 105% use an impedance model
-                    ELSE With WindGenvars Do Curr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), V));  // Between 95% -105%, constant PQ
-                 End;
-              1: Begin  {Delta}
-                    case Fnphases of
-                         2, 3: VMag := VMag/SQRT3;  // L-N magnitude
-                    else
-                        {leave Vmag as is}
-                    end;
-
-                    IF   VMag <= VBase95
-                    THEN Curr := Cmul(CdivReal(Yeq95, 3.0), V)  // Below 95% use an impedance model
-                    ELSE If VMag > VBase105
-                    THEN Curr := Cmul(CdivReal(Yeq105, 3.0), V)  // above 105% use an impedance model
-                    ELSE With WindGenvars Do Curr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), V));  // Between 95% -105%, constant PQ
-                 End;
-             END;
-
-            StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
-            set_ITerminalUpdated(TRUE, ActorID);
-            StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
-        End;
-    {END;}
 End;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
@@ -1879,8 +1983,9 @@ Var
 
 Begin
 
-   CalcYPrimContribution(InjCurrent, ActorID);  // Init InjCurrent Array  and computes VTerminal L-N
-
+   //CalcYPrimContribution(InjCurrent, ActorID);  // Init InjCurrent Array  and computes VTerminal L-N
+   ComputeVTerminal(ActorID);
+   FOR i := 1 to FnConds Do InjCurrent^[i] := CZero;
    {Inj = -Itotal (in) - Yprim*Vtemp}
 
    CASE GenModel of
@@ -1894,77 +1999,7 @@ Begin
                   SolutionAbort := TRUE;
               End;
    ELSE
-
-        CASE Fnphases of  {No user model, use default Thevinen equivalent for standard WindGen model}
-              1: With WindGenvars Do
-                 Begin
-                   // 1-phase WindGens have 2 conductors
-                      CASE Genmodel of
-                           7: Begin  // simple inverter model
-                                  // Assume inverter stays in phase with terminal voltage
-                                  CalcVthev_Dyn_Mod7(CSub(VTerminal^[1], VTerminal^[2]));
-                              End;
-                      ELSE
-                           CalcVthev_Dyn;  // Update for latest phase angle
-                      END;
-
-
-                      ITerminal^[1] := CDiv(CSub(Csub(VTerminal^[1], Vthev), VTerminal^[2]), Zthev);  // ZThev is based on Xd'
-                      If Genmodel=7 Then
-                      Begin
-                         If Cabs(Iterminal^[1]) > Model7MaxPhaseCurr Then   // Limit the current but keep phase angle
-                            ITerminal^[1] := ptocomplex(topolar(Model7MaxPhaseCurr, cang(Iterminal^[1])));
-                      End;
-
-                      ITerminal^[2] := Cnegate(ITerminal^[1]);
-                End;
-
-              3: With WindGenvars Do
-                 Begin
-                      Phase2SymComp(Vterminal, @V012);
-
-                      CASE GenModel of
-                          7: Begin  // simple inverter model
-                                // Positive Sequence Contribution to Iterminal
-                                // Assume inverter stays in phase with pos seq voltage
-                                // and pos seq current is limited
-                                CalcVthev_Dyn_Mod7(V012[1]);
-
-                                // Positive Sequence Contribution to Iterminal
-                                // Ref Frame here is all L-N
-
-                                I012[1] := CDiv(Csub(V012[1], Vthev), Zthev); // ZThev is based on Xd'
-                                If Cabs(I012[1]) > Model7MaxPhaseCurr  // Limit the current but keep phase angle
-                                   Then I012[1] := ptocomplex(topolar(Model7MaxPhaseCurr, cang(I012[1])));
-                                If ForceBalanced  // set the negative sequence current
-                                   Then I012[2] := CZERO
-                                   Else I012[2] := Cdiv(V012[2], Zthev);  // for inverter ZThev is  (Xd' + j0)
-
-                             End
-                      ELSE
-                            // Positive Sequence Contribution to Iterminal
-                            CalcVthev_Dyn;  // Update for latest phase angle
-
-                            // Positive Sequence Contribution to Iterminal
-                            I012[1] := CDiv(Csub(V012[1], Vthev), Zthev);  // ZThev is based on Xd'
-                            I012[2] := Cdiv(V012[2], Cmplx(0.0, Xdpp));  // machine use Xd"
-                      END;
-
-                      {Adjust for WindGen connection}
-                      If (Connection=1) or  ForceBalanced
-                         Then I012[0] := CZERO
-                         Else I012[0] := Cdiv(V012[0], Cmplx(0.0, Xdpp));
-
-                      SymComp2Phase(ITerminal, @I012);  // Convert back to phase components
-
-                      // Neutral current
-                      If Connection=0 Then ITerminal^[FnConds] := Cnegate(CmulReal(I012[0], 3.0));
-                End;
-        Else
-                DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase WindGens. WindGen.%s has %d phases.', [name, Fnphases]), 5671);
-                SolutionAbort := TRUE;
-        END;
-
+      WindModelDyn.CalcDynamic(Vterminal, Iterminal);
    END;
 
    set_ITerminalUpdated(TRUE, ActorID);
@@ -2093,81 +2128,33 @@ End;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 Procedure TWindGenObj.CalcInjCurrentArray(ActorID : Integer);
-
-
 // Difference between currents in YPrim and total current
-
-
 Begin
-      
-
 // Now Get Injection Currents
-       If GenSwitchOpen Then ZeroInjCurrent
-                        Else CalcGenModelContribution(ActorID);
-
-(*  We're not going to mess with this logic here -- too complicated: Use an open line in series
-    to look at open phase conditions.
-
-  ELSE Begin
-
-   // some terminals not closed  use admittance model for injection
-      If OpenWindGenSolutionCount <> ActiveCircuit[ActiveActor].Solution.SolutionCount Then Begin
-
-      // Rebuild the Yprimopencond if a new solution because values may have changed.
-
-        // only reallocate when necessary
-        If YPrimOpenCond=nil Then YPrimOpenCond := TcMatrix.CreateMatrix(Yorder)
-        ELSE YPrimOpenCond.Clear;
-        If YPrimOpenCond.Order <> Yorder Then Begin
-           YPrimOpenCond.Free;
-           YPrimOpenCond := TcMatrix.CreateMatrix(Yorder);
-        End;
-        CalcYPrimMatrix(YPrimOpenCond);
-
-        {Now Account for the Open Conductors}
-        {For any conductor that is open, zero out row and column}
-         With YPrimOpenCond Do Begin
-           k := 0;
-           FOR i := 1 TO Fnterms Do Begin
-             FOR j := 1 TO Fnconds Do Begin
-                 If Not Terminals^[i].Conductors^[j].Closed Then Begin
-                    ZeroRow(j+k);
-                    ZeroCol(j+k);
-                    SetElement(j+k, j+k, Cmplx(1.0e-12,0.0));  // In case node gets isolated
-                 End;
-             End;
-             k := k+Fnconds;
-           End;
-         End;
-         OpenWindGenSolutionCount := ActiveCircuit[ActiveActor].Solution.SolutionCount;
-         
-      End;
-
-      With ActiveCircuit[ActiveActor].Solution Do
-      FOR i := 1 TO Yorder Do Begin
-          Ref := NodeRef^[i];
-          If Ref=0 Then Vterminal^[i] := cZero
-          ELSE  Vterminal^[i] := V^[ref];
-      End;
-      YPrimOpenCond.MVmult(InjTemp, Vterminal);
-      For i := 1 to Yorder Do InjTemp^[i] := Cnegate(InjTemp^[i]);
-   End;
- *)
+  If GenSwitchOpen Then
+    ZeroInjCurrent
+  Else
+    CalcGenModelContribution(ActorID);
 End;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 Procedure TWindGenObj.GetTerminalCurrents(Curr:pComplexArray; ActorID : Integer);
 
 // Compute total Currents
-
+Var
+  i   : integer;
 
 Begin
    WITH ActiveCircuit[ActorID].Solution  DO
      Begin
         If IterminalSolutionCount[ActorID] <> ActiveCircuit[ActorID].Solution.SolutionCount Then Begin     // recalc the contribution
           IF Not GenSwitchOpen Then CalcGenModelContribution(ActorID);  // Adds totals in Iterminal as a side effect
+        End
+        Else
+        Begin
+          inherited GetTerminalCurrents(Curr,ActorID);
         End;
-        Inherited GetTerminalCurrents(Curr,ActorID);
+
      End;
 
    If (DebugTrace) Then WriteTraceRecord('TotalCurrent',ActorID);
@@ -2448,47 +2435,50 @@ procedure TWindGenObj.InitPropertyValues(ArrayOffset: Integer);
 
 begin
 
-     PropertyValue[1]      := '3';     //'phases';
-     PropertyValue[2]      := Getbus(1);         //'bus1';
-     PropertyValue[3]      := '12.47';
-     PropertyValue[4]      := '100';
-     PropertyValue[5]      := '.80';
-     PropertyValue[6]      := '1';
-     PropertyValue[7]      := '';
-     PropertyValue[8]      := '';
-     PropertyValue[9]      := '';
-     PropertyValue[10]     := 'Default';
-     PropertyValue[11]     := '0.0';
-     PropertyValue[12]     := 'wye';
-     PropertyValue[13]     := '60';
-     PropertyValue[14]     := '0'; // 'rneut'; // if entered -, assume open
-     PropertyValue[15]     := '0';  //'xneut';
-     PropertyValue[16]     := 'variable'; //'status'  fixed or variable
-     PropertyValue[17]     := '1'; //'class'
-     PropertyValue[18]     := '1.0';
-     PropertyValue[19]     := Str_Real(kvarMax,3);
-     PropertyValue[20]     := Str_Real(kvarMin,3);
-     PropertyValue[21]     := '0.1';
-     PropertyValue[22]     := 'no';
-     PropertyValue[23]     := '0.90';
-     PropertyValue[24]     := '1.10';
-     PropertyValue[25]     := 'No';
-     PropertyValue[26]     := Format('%-g', [WindGenvars.kVARating]);
-     PropertyValue[27]     := Format('%-g', [WindGenvars.kVARating*0.001]);
-     PropertyValue[28]     := Format('%-g', [WindGenvars.puXd]);
-     PropertyValue[29]     := Format('%-g', [WindGenvars.puXdp]);
-     PropertyValue[30]     := Format('%-g', [WindGenvars.puXdpp]);
-     PropertyValue[31]     := Format('%-g', [WindGenvars.Hmass]);
-     PropertyValue[32]     := Format('%-g', [WindGenvars.Dpu]);
-     PropertyValue[33]     := '';
-     PropertyValue[34]     := '';
-     PropertyValue[35]     := '';
-     PropertyValue[36]     := '';
-     PropertyValue[37]     := '0';
-     PropertyValue[38]     := 'No';
-     PropertyValue[39]     := '20';
-     PropertyValue[40]     := '';
-     PropertyValue[41]     := '[]';
+     PropertyValue[1]      := '3';        //'phases';
+     PropertyValue[2]      := Getbus(1);  //'bus1';
+     PropertyValue[3]      := '12.47';    // kV
+     PropertyValue[4]      := '100';      // kW
+     PropertyValue[5]      := '.80';      // PF
+     PropertyValue[6]      := '1';        // model
+     PropertyValue[7]      := '';         // yearly
+     PropertyValue[8]      := '';         // daily
+     PropertyValue[9]      := '';         // duty
+     PropertyValue[10]     := 'wye';      // conn
+     PropertyValue[11]     := '60';       // kvar
+     PropertyValue[12]     := '100';      // class
+     PropertyValue[13]     := 'no';       // debugtrace;
+     PropertyValue[14]     := '0.90';     // VMinPu
+     PropertyValue[15]     := '1.1';      // VMaxPu
+     PropertyValue[16]     := Format('%-g', [WindGenvars.kVARating]);           // kVA
+     PropertyValue[17]     := Format('%-g', [WindGenvars.kVARating*0.001]);     // MVA
+     PropertyValue[18]     := '';         // UserModel
+     PropertyValue[19]     := '';         // UserData
+     PropertyValue[20]     := '0.0';      // DutyStart
+     PropertyValue[21]     := '';         // DynamicEq
+     PropertyValue[22]     := '';         // DynOut
+     PropertyValue[23]     := Format('%-g', [WindModelDyn.Rthev]);              // RThev
+     PropertyValue[24]     := Format('%-g', [WindModelDyn.Xthev]);              // XThev
+     PropertyValue[25]     := Format('%-g', [WindModelDyn.Vss]);                // Vss
+     PropertyValue[26]     := Format('%-g', [WindModelDyn.Pss]);                // Pss
+     PropertyValue[27]     := Format('%-g', [WindModelDyn.Qss]);                // Wss
+     PropertyValue[28]     := Format('%-g', [WindModelDyn.vwind]);              // VWind
+     PropertyValue[29]     := Format('%d', [WindModelDyn.QMode]);              // QMode
+     PropertyValue[30]     := Format('%d', [WindModelDyn.SimMechFlg]);         // SimMechFlg
+     PropertyValue[31]     := Format('%d', [WindModelDyn.APCFLG]);             // APCFlg
+     PropertyValue[32]     := Format('%d', [WindModelDyn.QFlg]);               // QFlg
+     PropertyValue[33]     := Format('%-g', [WindModelDyn.delt0]);              // delt0
+     PropertyValue[34]     := Format('%d', [WindModelDyn.N_WTG]);              // N_WTG
+     PropertyValue[35]     := '';                                               // VVCurve
+     PropertyValue[36]     := Format('%-g', [WindgenVars.ag]);                  // Ag
+     PropertyValue[37]     := Format('%-g', [WindgenVars.Cp]);                  // Cp
+     PropertyValue[38]     := Format('%-g', [WindgenVars.Lamda]);               // Lamda
+     PropertyValue[39]     := Format('%-g', [WindgenVars.Poles]);               // P
+     PropertyValue[40]     := Format('%-g', [WindgenVars.pd]);                  // pd
+     PropertyValue[41]     := WindgenVars.PLoss;                                // PLoss
+     PropertyValue[42]     := Format('%-g', [WindgenVars.Rad]);                 // Rad
+     PropertyValue[43]     := Format('%-g', [WindgenVars.VCutin]);              // VCutIn
+     PropertyValue[44]     := Format('%-g', [WindgenVars.VCutout]);             // VCutOut
 
   inherited  InitPropertyValues(NumPropsThisClass);
 
@@ -2505,7 +2495,8 @@ Var
 
 begin
   YprimInvalid[ActorID] := TRUE;  // Force rebuild of YPrims
-  With WindGenvars Do Begin
+  With WindGenvars Do
+  Begin
 
      CASE Genmodel of
          7: Zthev := Cmplx(Xdp, 0.0); // use Xd' as an equivalent R for the inverter
@@ -2572,11 +2563,18 @@ begin
 
            // Init User-written models
            //Ncond:Integer; V, I:pComplexArray; const X,Pshaft,Theta,Speed,dt,time:Double
-           With ActiveCircuit[ActorID].Solution Do If GenModel=6 then Begin
-             If UserModel.Exists  Then UserModel.FInit(  Vterminal, Iterminal);
-             If ShaftModel.Exists Then ShaftModel.Finit( Vterminal, Iterminal);
+           With ActiveCircuit[ActorID].Solution Do
+           Begin
+             If GenModel=6 then
+             Begin
+               If UserModel.Exists  Then UserModel.FInit(  Vterminal, Iterminal);
+               If ShaftModel.Exists Then ShaftModel.Finit( Vterminal, Iterminal);
+             End
+             else
+             Begin
+               WindModelDyn.Init(Vterminal, Iterminal);
+             End;
            End;
-
          End
          else
          Begin
@@ -2663,10 +2661,14 @@ begin
              CloseFile(TraceFile);
          End;
 
-       If GenModel=6 then Begin
-         If UserModel.Exists    Then UserModel.Integrate;
-         If ShaftModel.Exists   Then ShaftModel.Integrate;
-       End;
+      If GenModel=6 then Begin
+       If UserModel.Exists    Then UserModel.Integrate;
+       If ShaftModel.Exists   Then ShaftModel.Integrate;
+      End
+      else
+      Begin
+        WindModelDyn.Integrate;
+      End;
 
     End
     else
@@ -2714,37 +2716,40 @@ Var
       N, k:Integer;
 
 begin
-     N := 0;
-    Result := -9999.99;  // error return value
-    If i < 1 Then Exit;  // Someone goofed
+  N := 0;
+  Result := -9999.99;  // error return value
+  If i < 1 Then Exit;  // Someone goofed
 
-    With WindGenvars Do
-    Case i of
-       1: Result := (w0+Speed)/TwoPi;  // Frequency, Hz
-       2: Result := (Theta ) * RadiansToDegrees;  // Report in Deg
-       3: Result := Cabs(Vthev)/vbase;      // Report in pu
-       4: Result := Pshaft;
-       5: Result := dSpeed * RadiansToDegrees; // Report in Deg      57.29577951
-       6: Result := dTheta ;
-     Else
-        Begin
-           If UserModel.Exists Then Begin
-              N := UserModel.FNumVars;
-              k := (i-NumGenVariables);
-              If k <= N Then Begin
-                  Result := UserModel.FGetVariable(k);
-                  Exit;
-              End;
-           End;
+  if i < 19 then
+    Result := WindModelDyn.Variable[i]
+  else
+  Begin
+    case i of
+      19 : Result := WindGenVars.Pg;
+      20 : Result := WindGenVars.Ps;
+      21 : Result := WindGenVars.Pr;
+      22 : Result := WindGenVars.s;
+      else
+       Result := -9999.99;
+    end;
+  End;
 
-           {If we get here, must be in the Shaft Model if anywhere}
-           If ShaftModel.Exists Then
-           Begin
-            k := i-(NumGenVariables+N);
-            If k > 0 Then Result := ShaftModel.FGetVariable( k );
-           End;
-        End;
-     End;
+  If UserModel.Exists Then
+  Begin
+    N := UserModel.FNumVars;
+    k := (i-NumGenVariables);
+    If k <= N Then Begin
+        Result := UserModel.FGetVariable(k);
+        Exit;
+    End;
+  End;
+
+  {If we get here, must be in the Shaft Model if anywhere}
+  If ShaftModel.Exists Then
+  Begin
+    k := i-(NumGenVariables+N);
+    If k > 0 Then Result := ShaftModel.FGetVariable( k );
+  End;
 
 end;
 
@@ -2755,15 +2760,22 @@ begin
   N := 0;
   If i<1 Then Exit;  // Someone goofed
   With WindGenvars Do
-    Case i of
-       1: Speed := (Value-w0)*TwoPi;
-       2: Theta := Value/RadiansToDegrees; // deg to rad
-       3: ;// meaningless to set Vd := Value * vbase; // pu to volts
-       4: Pshaft := Value;
-       5: dSpeed := Value / RadiansToDegrees;
-       6: dTheta := Value ;
-     Else
-       Begin
+  Begin
+      if i < 19 then
+        WindModelDyn.Variable[i] := Value
+      else
+      Begin
+        case i of
+            19 : WindGenVars.Pg := Value;
+            20 : WindGenVars.Ps := Value;
+            21 : WindGenVars.Pr := Value;
+            22 : WindGenVars.s := Value;
+            else
+            Begin
+              //Do nothing
+            End;
+        end;
+      End;
          If UserModel.Exists Then Begin
             N := UserModel.FNumVars;
             k := (i-NumGenVariables) ;
@@ -2777,7 +2789,6 @@ begin
             k := (i-(NumGenVariables+N)) ;
             If  k > 0 Then ShaftModel.FSetVariable( k, Value );
           End;
-       End;
      End;
 end;
 
@@ -2822,35 +2833,52 @@ begin
     n:=0;
     If i<1 Then Exit;  // Someone goofed
     Case i of
-        1:Result := 'Frequency';
-        2:Result := 'Theta (Deg)';
-        3:Result := 'Vd';
-        4:Result := 'PShaft';
-        5:Result := 'dSpeed (Deg/sec)';
-        6:Result := 'dTheta (Deg)';
-    Else Begin
-          If UserModel.Exists Then  // Checks for existence and Selects
-            Begin
-              pName := @Buff;
-              n := UserModel.FNumVars;
-              i2 := i-NumGenVariables;
-              If i2 <= n Then
-                Begin
-                 // DLL functions require AnsiString (AnsiString) type
-                 UserModel.FGetVarName(i2, pName, BuffSize);
-                 Result := String(pName);
-                 Exit;
-                End;
-            End;
+        1:  Result := 'userTrip';
+        2:  Result := 'wtgTrip';
+        3:  Result := 'Pcurtail';
+        4:  Result := 'Pcmd';
+        5:  Result := 'Pgen';
+        6:  Result := 'Qcmd';
+        7:  Result := 'Qgen';
+        8:  Result := 'Vref';
+        9:  Result := 'Vmag';
+        10: Result := 'vwind';
+        11: Result := 'WtRef';
+        12: Result := 'WtAct';
+        13: Result := 'dOmg';
+        14: Result := 'dFrqPuTest';
+        15: Result := 'QMode';
+        16: Result := 'Qref';
+        17: Result := 'PFref';
+        18: Result := 'thetaPitch';
+        19: Result := 'Pg';
+        20: Result := 'Ps';
+        21: Result := 'Pr';
+        22: Result := 's';
+    Else
+      Begin
+        If UserModel.Exists Then  // Checks for existence and Selects
+          Begin
+            pName := @Buff;
+            n := UserModel.FNumVars;
+            i2 := i-NumGenVariables;
+            If i2 <= n Then
+              Begin
+               // DLL functions require AnsiString (AnsiString) type
+               UserModel.FGetVarName(i2, pName, BuffSize);
+               Result := String(pName);
+               Exit;
+              End;
+          End;
 
-          If ShaftModel.Exists Then
-            Begin
-              pName := @Buff;
-              i2 := i-NumGenVariables-n;
-              If i2>0 Then UserModel.FGetVarName(i2, pName, BuffSize);
-              Result := String(pName);
-            End;
-        End;
+        If ShaftModel.Exists Then
+          Begin
+            pName := @Buff;
+            i2 := i-NumGenVariables-n;
+            If i2>0 Then UserModel.FGetVarName(i2, pName, BuffSize);
+            Result := String(pName);
+          End;
+      End;
     End;
 
 end;

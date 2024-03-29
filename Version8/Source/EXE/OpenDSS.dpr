@@ -209,7 +209,8 @@ uses
   GenController in '..\Controls\GenController.pas',
   Vcl.Themes,
   Vcl.Styles,
-  ExceptionTrace in '..\Shared\ExceptionTrace.pas';
+  ExceptionTrace in '..\Shared\ExceptionTrace.pas',
+  WTG3_Model in '..\PCElements\WTG3_Model.pas';
 
 {$R *.RES}
 

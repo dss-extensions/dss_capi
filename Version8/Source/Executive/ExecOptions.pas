@@ -12,7 +12,7 @@ interface
 Uses Command;
 
 CONST
-        NumExecOptions = 139;
+        NumExecOptions = 140;
 
 VAR
          ExecOption,
@@ -28,7 +28,7 @@ FUNCTION DoGetCmd_NoCircuit:Boolean;  // Get Commands that do not require a circ
 implementation
 
 Uses DSSClassDefs, DSSGlobals, ParserDel, Math,     Executive,  ExecHelper,
-     LoadShape,    Utilities,  Sysutils, Line,
+     LoadShape,    Utilities,  Sysutils, Line, PCElement,
      {$IFNDEF FPC}
      {$IFNDEF CONSOLE}
      ScriptEdit,
@@ -180,6 +180,7 @@ Begin
      ExecOption[136] := 'EventLogDefault';
      ExecOption[137] := 'LongLineCorrection';
      ExecOption[138] := 'ShowReports';
+     ExecOption[139] := 'StateVar';
 
      {Deprecated
       ExecOption[130] := 'MarkPVSystems2';
@@ -479,6 +480,17 @@ Begin
      OptionHelp[136] := '{YES/TRUE | NO/FALSE*} Sets/gets the default for the eventlog. After changing this flags the model needs to be recompiled to take effect.';
      OptionHelp[137] := '{YES/TRUE | NO/FALSE*} Defines whether the long-line correctlion is applied or not. Long-line correction only affects lines modelled with sequence components.';
      OptionHelp[138] := '{YES/TRUE | NO/FALSE} Default = TRUE. If YES/TRUE will automatically show the results of a Show Command after it is written.';
+     OptionHelp[139] := 'Reads or Writes the value of the given state variable for the given PCE. Depending on the access mode (read/write) the syntax may vary. For writing the variable use the following syntax:' + CRLF +
+                        CRLF +
+                        'set StateVar = myObjName myVarName myValue' + CRLF +
+                        CRLF +
+                        'Where myObjName corresponds to the class and object name, for example, if you want to refer to generator Gen1, then myObjName will be Generator.Gen1. myVarName is the name of the state variable and myValue is the value to assign.' + CRLF +
+                        CRLF +
+                        'For reading the state variable use the following syntax:' + CRLF +
+                        CRLF +
+                        'get StateVar myObjName myVarName' + CRLF +
+                        CRLF +
+                        'The reading structure will return the value in the results tab.';
 
 End;
 //----------------------------------------------------------------------------
@@ -587,10 +599,14 @@ VAR
    ParamPointer     : Integer;
    ParamName        : String;
    Param            : String;
+   TmpStr           : String;
    TestLoadShapeObj : TLoadShapeObj;
    myList           : TStringList;
    LineObj          : TLineObj;
+   ValidObj         : Boolean;
 
+   const
+   VarPCE           : array[0..2] of string =  ('generator', 'windgen', 'storage');
 
 Begin
 
@@ -875,6 +891,48 @@ Begin
                   ActiveCircuit[ActiveActor].LongLineCorrection  :=  InterpretYesNo(Param);
                 end;
           138: AutoDisplayShowReport := InterpretYesNo(Param);
+          139:  begin
+                  with  ActiveCircuit[ActiveActor] do
+                  Begin
+                    TmpStr := Parser[ActiveActor].StrValue;
+                    i := SetElementActive(TmpStr);
+                    if i = 0 then
+                      DoSimpleMsg('Object ' + TmpStr + ' not found',7100)
+                    Else
+                    Begin
+                      TmpStr := LowerCase(StripExtension(TmpStr));
+                      ValidObj := False;
+                      for i := 0 to High(VarPCE) do
+                        ValidObj := ValidObj or (VarPCE[i] = TmpStr);
+
+                      if ValidObj then
+                      Begin
+                        Parser[ActiveActor].NextParam;
+                        TmpStr :=  LowerCase(Parser[ActiveActor].StrValue);
+                        // Search for the variable within the object
+                        ValidObj := False;
+                        for i := 1 to TPCElement(ActiveCktElement).NumStateVars do
+                        Begin
+                          if LowerCase(TPCElement(ActiveCktElement).VariableName(i)) = TmpStr then
+                          Begin
+                            ValidObj := True;
+                            break;
+                          End;
+                        End;
+                        if ValidObj then
+                        Begin
+                          // Once found, modifies the value
+                          Parser[ActiveActor].NextParam;
+                          TPCElement(ActiveCktElement).Variable[i] := Parser[ActiveActor].DblValue;
+                        End
+                        Else
+                          DoSimpleMsg('State variable ' + TmpStr + ' not found.',7102)
+                      End
+                      Else
+                        DoSimpleMsg('Object ' + TmpStr + ' is not a valid element for this command. Only generators, storage and WindGen.',7101);
+                    End;
+                  End;
+                end
          ELSE
            // Ignore excess parameters
          End;
@@ -913,11 +971,16 @@ FUNCTION DoGetCmd:Integer;
 VAR
    ParamPointer, i:Integer;
    TempString,
+   TmpStr,
    ParamName:String;
    Param:String;
    {$IFNDEF FPC} {$IFNDEF CONSOLE}
    ScriptEd : TScriptEdit;
    {$ENDIF} {$ENDIF}
+   ValidObj         : Boolean;
+
+   const
+   VarPCE           : array[0..2] of string =  ('generator', 'windgen', 'storage');
 
 Begin
 
@@ -1105,6 +1168,47 @@ Begin
           136: if EventLogDefault then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           137: if ActiveCircuit[ActiveActor].LongLineCorrection then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           138: If AutoDisplayShowReport Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+          139: Begin
+                  with  ActiveCircuit[ActiveActor] do
+                  Begin
+                    Parser[ActiveActor].NextParam;
+                    TmpStr := Parser[ActiveActor].StrValue;
+                    i := SetElementActive(TmpStr);
+                    if i = 0 then
+                      DoSimpleMsg('Object ' + TmpStr + ' not found',7100)
+                    Else
+                    Begin
+                      TmpStr := LowerCase(StripExtension(TmpStr));
+                      ValidObj := False;
+                      for i := 0 to High(VarPCE) do
+                        ValidObj := ValidObj or (VarPCE[i] = TmpStr);
+
+                      if ValidObj then
+                      Begin
+                        Parser[ActiveActor].NextParam;
+                        TmpStr :=  LowerCase(Parser[ActiveActor].StrValue);
+                        // Search for the variable within the object
+                        ValidObj := False;
+                        for i := 1 to TPCElement(ActiveCktElement).NumStateVars do
+                        Begin
+                          if LowerCase(TPCElement(ActiveCktElement).VariableName(i)) = TmpStr then
+                          Begin
+                            ValidObj := True;
+                            break;
+                          End;
+                        End;
+                        if ValidObj then
+                        Begin
+                          AppendGlobalResult(Format('%-g',[TPCElement(ActiveCktElement).Variable[i]]));
+                        End
+                        Else
+                          DoSimpleMsg('State variable ' + TmpStr + ' not found.',7102)
+                      End
+                      Else
+                        DoSimpleMsg('Object ' + TmpStr + ' is not a valid element for this command. Only generators, storage and WindGen.',7101);
+                    End;
+                  End;
+                End
          ELSE
            // Ignore excess parameters
          End;

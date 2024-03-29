@@ -1322,7 +1322,7 @@ Begin
 
      ForceBalanced        := FALSE;
      CurrentLimited       := FALSE;
-
+     NumStateVars         := NumStorageVariables;
      With StorageVars, myDynVars Do Begin
         kWRating          :=  25.0;
         FkVArating        :=  kWRating;

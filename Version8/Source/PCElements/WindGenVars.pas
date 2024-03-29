@@ -55,6 +55,21 @@ TYPE
         VTarget   : Double;   // Target voltage for WindGen with voltage control
         Zthev     : Complex;
         XRdp      : Double;  // Assumed X/R for Xd'
+
+        PLoss     : string;     // Name of the XY curve describing the active power losses for the turbine
+        ag,                     // Garbox ratio
+        Cp,                     // Turbine performance coefficient
+        Lamda,                  // Tip speed ratio
+        Poles,                  // Number of poles of the induction generator
+        pd,                     // Air density
+        Rad,                    // Rotor radius
+        VCutin,                 // Cut-in speed for the wind generator
+        VCutout,                // Cut-out speed for the wind generator
+        Pm,                     // mechanical power (steady-state)
+        Ps,                     // Stator active power
+        Pr,                     // Rotor active power
+        Pg,                     // Total power output
+        s         : Double;     // generator pitch
    End;
 
 implementation
