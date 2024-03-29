@@ -1002,6 +1002,7 @@ Constructor TPVsystemObj.Create(ParClass:TDSSClass; const SourceName:String);
     FVarFollowInverter            := FALSE;
     ForceBalanced                 := FALSE;
     CurrentLimited                := FALSE;
+    NumStateVars                  := NumPVSystemVariables;
     With PVSystemVars, myDynVars Do
     Begin
       FTemperature              :=  25.0;

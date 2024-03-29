@@ -39,6 +39,7 @@ TYPE
        FMonObj2       : TFMonitorObj;
        cluster_num2   : integer;
        NdNumInCluster2: integer;
+       NumStateVars   : integer;
 
        InjCurrent     : pComplexArray;
        DynamicEqObj   : TDynamicExpObj;           // Reference to the local Dynamic equation (if any)
@@ -125,6 +126,7 @@ Begin
     setlength(DynamicEqPair,0);
     setlength(DynOut,0);
     FIterminalUpdated := FALSE;
+    NumStateVars := 0;
     
     DSSObjType := PC_ELEMENT;
 End;

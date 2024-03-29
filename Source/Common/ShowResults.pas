@@ -1067,7 +1067,6 @@ Begin
 
      WHILE p_Elem<>nil DO Begin
       IF p_Elem.Enabled THEN Begin
-
         NCond := p_Elem.NConds;
         Nterm := p_Elem.Nterms;
         p_Elem.GetCurrents(c_Buffer, ActiveActor);
@@ -1273,7 +1272,6 @@ Procedure ShowBusPowers(FileNm, BusName:String; opt, ShowOptionCode :Integer);
 Var
 
     F :TextFile;
-
     j, Ncond, Nterm  :Integer;
     p_Elem :TDSSCktElement;
     PDElem :TPDElement;
@@ -1548,11 +1546,13 @@ Begin
      // PCELEMENTS next
      p_Elem := ActiveCircuit[ActiveActor].PCElements.First;
 
-     WHILE p_Elem<>nil DO Begin
-      IF p_Elem.Enabled THEN  If CheckBusReference(p_Elem, BusReference, jTerm) Then Begin
-         WriteTerminalPower(F, p_Elem, jTerm, opt);
-         Writeln(F);
-       End;
+     WHILE p_Elem<>nil DO
+     Begin
+        IF p_Elem.Enabled THEN  If CheckBusReference(p_Elem, BusReference, jTerm) Then
+        Begin
+          WriteTerminalPower(F, p_Elem, jTerm, opt);
+          Writeln(F);
+        End;
 
       p_Elem := ActiveCircuit[ActiveActor].PCElements.Next;
      End;
