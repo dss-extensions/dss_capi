@@ -2,559 +2,635 @@ unit DMonitors;
 
 interface
 
-function MonitorsI(mode:longint; arg: longint):longint; cdecl;
-function MonitorsS(mode:longint; arg: pAnsiChar):pAnsiChar; cdecl;
-procedure MonitorsV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
+function MonitorsI(mode: Longint; arg: Longint): Longint; CDECL;
+function MonitorsS(mode: Longint; arg: Pansichar): Pansichar; CDECL;
+procedure MonitorsV(mode: Longint; var myPointer: Pointer; var myType, mySize: Longint); CDECL;
 
 implementation
 
-uses Monitor,
-     DSSGlobals,
-     SysUtils,
-     Classes,
-     Variants,
-     Math;
+uses
+    Monitor,
+    DSSGlobals,
+    SysUtils,
+    Classes,
+    Variants,
+    Math;
 
-Type THeaderRec = Record
-        Signature  : Integer;
-        Version    : Integer;
-        RecordSize : Integer;
-        Mode       : Integer;
-        dummyRec   : TMonitorStrBuffer;
-      End;
+type
+    THeaderRec = record
+        Signature: Integer;
+        Version: Integer;
+        RecordSize: Integer;
+        Mode: Integer;
+        dummyRec: TMonitorStrBuffer;
+    end;
 
-     SingleArray  = Array[1..100] of Single;
-     pSingleArray = ^SingleArray;
+    SingleArray = array[1..100] of Single;
+    pSingleArray = ^SingleArray;
 
-Procedure ReadMonitorHeader(Var HeaderRec:THeaderRec; Opt:Boolean);
-VAR
-    mypMon : TMonitorObj;
-
-Begin
-   mypMon := ActiveCircuit[ActiveActor].Monitors.Active;
-   TRY
-       With mypmon.MonitorStream, HeaderRec Do
-         Begin
-           Seek(0,           classes.soFromBeginning  );
-           Read( signature,  Sizeof(signature));    // Signature   (32 bit Integer )
-           Read( version,    Sizeof(version));        // Version     (32 bit Integer )
-           Read( RecordSize, Sizeof(RecordSize));    // RecordSize  (32 bit Integer )
-           Read( Mode,       Sizeof(Mode));                // Mode        (32 bit Integer )
-           Read( dummyRec,   Sizeof(TMonitorStrBuffer)); // String      (255 char string)
-         End;
-
-   FINALLY
-          // If opt is false leave monitorstream at end of header record
-          If Opt Then mypmon.MonitorStream.Seek(0, soFromEnd);    // put monitor stream pointer back where it was
-   END;
-
-
-End;
-
-function MonitorsI(mode:longint; arg: longint):longint; cdecl;
-
-Var
-   pMon       : TMonitorObj;
-   Header     : THeaderRec;
+procedure ReadMonitorHeader(var HeaderRec: THeaderRec; Opt: Boolean);
+var
+    mypMon: TMonitorObj;
 
 begin
-  Result:=0;  // Default return value
-  case mode of
-  0: begin  // Monitors.First
-     Result := 0;
-     If ActiveCircuit[ActiveActor] <> Nil Then
-       Begin
-            pMon := ActiveCircuit[ActiveActor].Monitors.First;
-            If pMon <> Nil Then
-            Begin
-              Repeat
-                If pMon.enabled
-                then Begin
-                  ActiveCircuit[ActiveActor].ActiveCktElement := pMon;
-                  Result := 1;
-                End
-                Else  pMon := ActiveCircuit[ActiveActor].Monitors.Next;
-              Until (Result = 1) or (pMon = nil);
-            End
-            Else
-                Result := 0;  // signify no more
-       End;
-  end;
-  1: begin  // Monitors.Next
-      Result := 0;
-       If ActiveCircuit[ActiveActor] <> Nil Then
-       Begin
-            pMon := ActiveCircuit[ActiveActor].Monitors.Next;
-            If pMon <> Nil Then
-            Begin
-              Repeat
-                If pMon.Enabled
-                Then Begin
-                  ActiveCircuit[ActiveActor].ActiveCktElement := pMon;
-                  Result := 1;
-                End
-                Else  pMon := ActiveCircuit[ActiveActor].Monitors.Next;
-              Until (Result > 0) or (pMon = nil);
-            End
-            Else
-                Result := 0;  // signify no more
-       End;
-  end;
-  2: begin  // Monitors.Reset
-       If ActiveCircuit[ActiveActor] <> Nil Then
-       Begin
-            pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-            If PMon <> Nil Then PMon.ResetIt(ActiveActor);
-       End;
-       Result := 0;
-  end;
-  3: begin  // Monitors.ResetAll
-         If ActiveCircuit[ActiveActor] <> Nil Then Begin
-            MonitorClass[ActiveActor].ResetAll(ActiveActor);
-         End;
-         Result := 0;
-  end;
-  4: begin  // Monitors.Sample
-       If ActiveCircuit[ActiveActor] <> Nil Then
-       Begin
-            pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-            If PMon <> Nil Then PMon.TakeSample(ActiveActor);
-       End;
-       Result := 0;
-  end;
-  5: begin  // Monitors.Save
-       If ActiveCircuit[ActiveActor] <> Nil Then
-       Begin
-            pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-            If PMon <> Nil Then PMon.Save;  // TranslateToCSV(False);
-       End;
-       Result := 0;
-  end;
-  6: begin  // Monitors.Show
-       If ActiveCircuit[ActiveActor] <> Nil Then
-       Begin
-            pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-            If PMon <> Nil Then PMon.TranslateToCSV(True,ActiveActor);
-       End;
-       Result := 0;
-  end;
-  7: begin  // Monitors.Mode read
-       If ActiveCircuit[ActiveActor] <> Nil Then
-       Begin
-            pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-            If PMon <> Nil Then Result := PMon.Mode
-            Else Result := 0;
-       End;
-  end;
-  8: begin  // Monitors.Mode Write
-      If ActiveCircuit[ActiveActor] <> Nil Then
-       Begin
-            pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-            If PMon <> Nil Then
-            Begin
-              PMon.Mode := arg;
-              PMon.ResetIt(ActiveActor);  // Always reset the monitor after a Mode change
-            End;
-       End;
-       Result := 0;
-  end;
-  9: begin  // Monitors.SampleCount
-       If ActiveCircuit[ActiveActor] <> Nil Then Begin
-           pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-           Result := pMon.SampleCount;
-       End;
-  end;
-  10: begin  // Monitors.SampleAll
-       If ActiveCircuit[ActiveActor] <> Nil Then Begin
-           MonitorClass[ActiveActor].SampleAll(ActiveActor);
-       End;
-       Result:=0;
-  end;
-  11: begin  // Monitor.SaveAll
-       If ActiveCircuit[ActiveActor] <> Nil Then Begin
-           MonitorClass[ActiveActor].SaveAll(ActiveActor);
-       End;
-  end;
-  12: begin  // Monitor.Count
-      If ActiveCircuit[ActiveActor] <> Nil Then Begin
-           Result := ActiveCircuit[ActiveActor].Monitors.ListSize;
-       End;
-  end;
-  13: begin  // Monitor.Process
-      if ActiveCircuit[ActiveActor] <> Nil then begin
-        pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-        if PMon <> Nil then pMon.PostProcess(ActiveActor);
-      end;
-      Result:=0;
-  end;
-  14: begin  // Monitor.ProcessAll
-      If ActiveCircuit[ActiveActor] <> Nil Then Begin
-        MonitorClass[ActiveActor].PostProcessAll(ActiveActor);
-      End;
-      Result:=0;
-  end;
-  15: begin  // Monitor.FileVersion
-      If ActiveCircuit[ActiveActor] <> Nil Then Begin
-         ReadMonitorHeader(Header, TRUE);
-         Result := Header.Version;
-      End;
-  end;
-  16: begin // Monitor.RecordSize
-    If ActiveCircuit[ActiveActor] <> Nil Then Begin
-        ReadMonitorHeader(Header, TRUE);
-        Result := Header.RecordSize;
-    End;
-  end;
-  17: begin  // Monitor.NumChannels
-    If ActiveCircuit[ActiveActor] <> Nil Then Begin
-        ReadMonitorHeader(Header, TRUE);
-        Result := Header.RecordSize;
-    End;
-  end;
-  18: begin  // Monitor.Terminal read
-      if ActiveCircuit[ActiveActor] <> Nil then begin
-        pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-        if PMon <> Nil then Result := pMon.MeteredTerminal ;
-      end;
-  end;
-  19: begin  // Monitor.Terminal Write
-      if ActiveCircuit[ActiveActor] <> Nil then begin
-        pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-        if PMon <> Nil then Begin
-           pMon.MeteredTerminal  := arg ;
-           pMon.RecalcElementData(ActiveActor) ;
-        End;
-        Result:=0;
-  end;
-  end
-  else
-      Result:=-1; // The parameter is not valid
-  end;
+    mypMon := ActiveCircuit[ActiveActor].Monitors.Active;
+    try
+        with mypmon.MonitorStream, HeaderRec do
+        begin
+            Seek(0, classes.soFromBeginning);
+            Read(signature, Sizeof(signature));    // Signature   (32 bit Integer )
+            Read(version, Sizeof(version));        // Version     (32 bit Integer )
+            Read(RecordSize, Sizeof(RecordSize));    // RecordSize  (32 bit Integer )
+            Read(Mode, Sizeof(Mode));                // Mode        (32 bit Integer )
+            Read(dummyRec, Sizeof(TMonitorStrBuffer)); // String      (255 char string)
+        end;
+
+    finally
+          // If opt is false leave monitorstream at end of header record
+        if Opt then
+            mypmon.MonitorStream.Seek(0, soFromEnd);    // put monitor stream pointer back where it was
+    end;
+
+
+end;
+
+function MonitorsI(mode: Longint; arg: Longint): Longint; CDECL;
+
+var
+    pMon: TMonitorObj;
+    Header: THeaderRec;
+
+begin
+    Result := 0;  // Default return value
+    case mode of
+        0:
+        begin  // Monitors.First
+            Result := 0;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.First;
+                if pMon <> NIL then
+                begin
+                    repeat
+                        if pMon.enabled then
+                        begin
+                            ActiveCircuit[ActiveActor].ActiveCktElement := pMon;
+                            Result := 1;
+                        end
+                        else
+                            pMon := ActiveCircuit[ActiveActor].Monitors.Next;
+                    until (Result = 1) or (pMon = NIL);
+                end
+                else
+                    Result := 0;  // signify no more
+            end;
+        end;
+        1:
+        begin  // Monitors.Next
+            Result := 0;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Next;
+                if pMon <> NIL then
+                begin
+                    repeat
+                        if pMon.Enabled then
+                        begin
+                            ActiveCircuit[ActiveActor].ActiveCktElement := pMon;
+                            Result := 1;
+                        end
+                        else
+                            pMon := ActiveCircuit[ActiveActor].Monitors.Next;
+                    until (Result > 0) or (pMon = NIL);
+                end
+                else
+                    Result := 0;  // signify no more
+            end;
+        end;
+        2:
+        begin  // Monitors.Reset
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if PMon <> NIL then
+                    PMon.ResetIt(ActiveActor);
+            end;
+            Result := 0;
+        end;
+        3:
+        begin  // Monitors.ResetAll
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                MonitorClass[ActiveActor].ResetAll(ActiveActor);
+            end;
+            Result := 0;
+        end;
+        4:
+        begin  // Monitors.Sample
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if PMon <> NIL then
+                    PMon.TakeSample(ActiveActor);
+            end;
+            Result := 0;
+        end;
+        5:
+        begin  // Monitors.Save
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if PMon <> NIL then
+                    PMon.Save;  // TranslateToCSV(False);
+            end;
+            Result := 0;
+        end;
+        6:
+        begin  // Monitors.Show
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if PMon <> NIL then
+                    PMon.TranslateToCSV(TRUE, ActiveActor);
+            end;
+            Result := 0;
+        end;
+        7:
+        begin  // Monitors.Mode read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if PMon <> NIL then
+                    Result := PMon.Mode
+                else
+                    Result := 0;
+            end;
+        end;
+        8:
+        begin  // Monitors.Mode Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if PMon <> NIL then
+                begin
+                    PMon.Mode := arg;
+                    PMon.ResetIt(ActiveActor);  // Always reset the monitor after a Mode change
+                end;
+            end;
+            Result := 0;
+        end;
+        9:
+        begin  // Monitors.SampleCount
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                Result := pMon.SampleCount;
+            end;
+        end;
+        10:
+        begin  // Monitors.SampleAll
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                MonitorClass[ActiveActor].SampleAll(ActiveActor);
+            end;
+            Result := 0;
+        end;
+        11:
+        begin  // Monitor.SaveAll
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                MonitorClass[ActiveActor].SaveAll(ActiveActor);
+            end;
+        end;
+        12:
+        begin  // Monitor.Count
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                Result := ActiveCircuit[ActiveActor].Monitors.ListSize;
+            end;
+        end;
+        13:
+        begin  // Monitor.Process
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if PMon <> NIL then
+                    pMon.PostProcess(ActiveActor);
+            end;
+            Result := 0;
+        end;
+        14:
+        begin  // Monitor.ProcessAll
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                MonitorClass[ActiveActor].PostProcessAll(ActiveActor);
+            end;
+            Result := 0;
+        end;
+        15:
+        begin  // Monitor.FileVersion
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                ReadMonitorHeader(Header, TRUE);
+                Result := Header.Version;
+            end;
+        end;
+        16:
+        begin // Monitor.RecordSize
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                ReadMonitorHeader(Header, TRUE);
+                Result := Header.RecordSize;
+            end;
+        end;
+        17:
+        begin  // Monitor.NumChannels
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                ReadMonitorHeader(Header, TRUE);
+                Result := Header.RecordSize;
+            end;
+        end;
+        18:
+        begin  // Monitor.Terminal read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if PMon <> NIL then
+                    Result := pMon.MeteredTerminal;
+            end;
+        end;
+        19:
+        begin  // Monitor.Terminal Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if PMon <> NIL then
+                begin
+                    pMon.MeteredTerminal := arg;
+                    pMon.RecalcElementData(ActiveActor);
+                end;
+                Result := 0;
+            end;
+        end
+    else
+        Result := -1; // The parameter is not valid
+    end;
 end;
 
 //***********************String Type properties*********************************
-function MonitorsS(mode:longint; arg: pAnsiChar):pAnsiChar; cdecl;
+function MonitorsS(mode: Longint; arg: Pansichar): Pansichar; CDECL;
 
-Var
-   pMon       : TMonitorObj;
-   activesave : integer;
-   S          : String;
-   Found      : Boolean;
+var
+    pMon: TMonitorObj;
+    activesave: Integer;
+    S: String;
+    Found: Boolean;
 
 begin
-  Result := pAnsiChar(AnsiString('0')); // Default return value
-  case mode of
-  0: begin  // Monitors.FIleName
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
-          pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-          If PMon <> Nil Then Result := pAnsiChar(AnsiString(PMon.Get_FileName(ActiveActor)))
-          Else Result := pAnsiChar(AnsiString(''));
-     End;
-  end;
-  1: begin // Monitors.Name read
-       If ActiveCircuit[ActiveActor] <> Nil Then
-       Begin
-            pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-            If PMon <> Nil Then Result := pAnsiChar(AnsiString(PMon.Name))
-            Else Result := pAnsiChar(AnsiString(''));
-   End;
-  end;
-  2: begin  // Monitors.Nme Write
-      IF ActiveCircuit[ActiveActor] <> NIL
-      THEN Begin      // Search list of monitors in active circuit for name
-           WITH ActiveCircuit[ActiveActor].Monitors DO
-           Begin
-             S := string(arg);  // Convert to Pascal String
-             Found := FALSE;
-             ActiveSave := ActiveIndex;
-             pMon := First;
-             While pMon <> NIL Do Begin
-                IF (CompareText(pMon.Name, S) = 0) THEN Begin
-                    ActiveCircuit[ActiveActor].ActiveCktElement := pMon;
-                    Found := TRUE;
-                    Break;
-                End;
-                pMon := Next;
-             End;
-             IF NOT Found THEN Begin
-                 DoSimpleMsg('Monitor "'+S+'" Not Found in Active Circuit.', 5004);
-                 pMon := Get(ActiveSave);    // Restore active Monerator
-                 ActiveCircuit[ActiveActor].ActiveCktElement := pMon;
-             End;
-           End;
-      End;
-  end;
-  3: begin  // Monitors.Element read
-      if ActiveCircuit[ActiveActor] <> Nil then begin
-        pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-        if PMon <> Nil then Result := pAnsiChar(AnsiString(pMon.ElementName)) ;
-      end;
-  end;
-  4: begin  // Monitors.Element Write
-     if ActiveCircuit[ActiveActor] <> Nil then begin
-        pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-        if PMon <> Nil then Begin
-           s := string(arg);
-           pMon.ElementName := s;
-           pMon.PropertyValue [1] := s;
-           pMon.RecalcElementData(ActiveActor) ;
-        End;
-     end;
-  end
-  else
-      Result:=pAnsiChar(AnsiString('Error, parameter not valid'));
-  end;
+    Result := Pansichar(Ansistring('0')); // Default return value
+    case mode of
+        0:
+        begin  // Monitors.FIleName
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if PMon <> NIL then
+                    Result := Pansichar(Ansistring(PMon.Get_FileName(ActiveActor)))
+                else
+                    Result := Pansichar(Ansistring(''));
+            end;
+        end;
+        1:
+        begin // Monitors.Name read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if PMon <> NIL then
+                    Result := Pansichar(Ansistring(PMon.Name))
+                else
+                    Result := Pansichar(Ansistring(''));
+            end;
+        end;
+        2:
+        begin  // Monitors.Nme Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin      // Search list of monitors in active circuit for name
+                with ActiveCircuit[ActiveActor].Monitors do
+                begin
+                    S := String(arg);  // Convert to Pascal String
+                    Found := FALSE;
+                    ActiveSave := ActiveIndex;
+                    pMon := First;
+                    while pMon <> NIL do
+                    begin
+                        if (CompareText(pMon.Name, S) = 0) then
+                        begin
+                            ActiveCircuit[ActiveActor].ActiveCktElement := pMon;
+                            Found := TRUE;
+                            Break;
+                        end;
+                        pMon := Next;
+                    end;
+                    if not Found then
+                    begin
+                        DoSimpleMsg('Monitor "' + S + '" Not Found in Active Circuit.', 5004);
+                        pMon := Get(ActiveSave);    // Restore active Monerator
+                        ActiveCircuit[ActiveActor].ActiveCktElement := pMon;
+                    end;
+                end;
+            end;
+        end;
+        3:
+        begin  // Monitors.Element read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if PMon <> NIL then
+                    Result := Pansichar(Ansistring(pMon.ElementName));
+            end;
+        end;
+        4:
+        begin  // Monitors.Element Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if PMon <> NIL then
+                begin
+                    s := String(arg);
+                    pMon.ElementName := s;
+                    pMon.PropertyValue[1] := s;
+                    pMon.RecalcElementData(ActiveActor);
+                end;
+            end;
+        end
+    else
+        Result := Pansichar(Ansistring('Error, parameter not valid'));
+    end;
 end;
 
 //****************************Variant type properties***************************
-procedure MonitorsV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
+procedure MonitorsV(mode: Longint; var myPointer: Pointer; var myType, mySize: Longint); CDECL;
 
-Var
-  MonitorElem     : TMonitorObj;
-  AllocSize,
-  i , k , index,
-  ListSize        : Integer;
-  pMon            : TMonitorObj;
-  p               : Pointer;
-  Header          : THeaderRec;
-  TempStr,
-  SaveDelims,
-  SaveWhiteSpace,
-  FirstCol        : String;
-  hr,
-  s,
-  freq            : Single;
-  SngBuffer       : pSingleArray;
-  PInt            : ^Integer;
+var
+    MonitorElem: TMonitorObj;
+    AllocSize,
+    i, k, index,
+    ListSize: Integer;
+    pMon: TMonitorObj;
+    p: Pointer;
+    Header: THeaderRec;
+    TempStr,
+    SaveDelims,
+    SaveWhiteSpace,
+    FirstCol: String;
+    hr,
+    s,
+    freq: Single;
+    SngBuffer: pSingleArray;
+    PInt: ^Integer;
 
 begin
-  {$IFDEF FPC_DLL}initialize(SngBuffer);{$ENDIF}
-  case mode of
-  0:begin  // Monitors.AllNames
-      myType  :=  4;        // String
-      setlength(myStrArray,0);
-      IF ActiveCircuit[ActiveActor] <> Nil THEN
-      Begin
-        WITH ActiveCircuit[ActiveActor] DO
-        Begin
-          If Monitors.ListSize>0 Then
-          Begin
-            MonitorElem := Monitors.First;
-            WHILE MonitorElem<>Nil DO Begin
-              WriteStr2Array(MonitorElem.Name);
-              WriteStr2Array(Char(0));
-              MonitorElem := Monitors.Next;
-            End;
-          End;
-        End;
-      End;
-      if (length(myStrArray) = 0) then
-        WriteStr2Array('None');
-      myPointer :=  @(myStrArray[0]);
-      mySize    :=  Length(myStrArray);
-    end;
-  1:begin  // Monitor.ByteStream
-      myType  :=  5;        // NOT a String
-      setlength(myStrArray,0);
-      If ActiveCircuit[ActiveActor] <> Nil Then
-      Begin
-        pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-        If PMon <> Nil Then Begin
-          setlength(myStrArray, pmon.MonitorStream.Size);
-          pmon.MonitorStream.Seek(0, soFromBeginning);
-          p := @(myStrArray[0]);
-          pmon.MonitorStream.Read(p^, pmon.MonitorStream.Size);   // Move it all over
-        End
-      End;
-      if (length(myStrArray) = 0) then
-        WriteStr2Array('None');
-      myPointer :=  @(myStrArray[0]);
-      mySize    :=  Length(myStrArray);
-    end;
-  2:begin  // Monitors.Header
-      myType  :=  4;        // String
-      setlength(myStrArray,0);
-      IF ActiveCircuit[ActiveActor] <> Nil THEN
-      Begin
-        WITH ActiveCircuit[ActiveActor] DO
-        Begin
-          pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-          ReadMonitorHeader(Header, TRUE);
-          If length(pMon.StrBuffer) > 0 Then
-          Begin
-            ListSize := Header.RecordSize;
-            SaveDelims := AuxParser[ActiveActor].Delimiters;
-            AuxParser[ActiveActor].Delimiters  :=  ',';
-            SaveWhiteSpace := AuxParser[ActiveActor].Whitespace;
-            AuxParser[ActiveActor].Whitespace  :=  '';
-            TempStr                            :=  '';
-            for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
-            TempStr   :=  TempStr + string(pMon.StrBuffer[i]); // For some reason needed for DLL
+  {$IFDEF FPC_DLL}
+    initialize(SngBuffer);
+{$ENDIF}
+    case mode of
+        0:
+        begin  // Monitors.AllNames
+            myType := 4;        // String
+            setlength(myStrArray, 0);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if Monitors.ListSize > 0 then
+                    begin
+                        MonitorElem := Monitors.First;
+                        while MonitorElem <> NIL do
+                        begin
+                            WriteStr2Array(MonitorElem.Name);
+                            WriteStr2Array(Char(0));
+                            MonitorElem := Monitors.Next;
+                        end;
+                    end;
+                end;
+            end;
+            if (length(myStrArray) = 0) then
+                WriteStr2Array('None');
+            myPointer := @(myStrArray[0]);
+            mySize := Length(myStrArray);
+        end;
+        1:
+        begin  // Monitor.ByteStream
+            myType := 5;        // NOT a String
+            setlength(myStrArray, 0);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if PMon <> NIL then
+                begin
+                    setlength(myStrArray, pmon.MonitorStream.Size);
+                    pmon.MonitorStream.Seek(0, soFromBeginning);
+                    p := @(myStrArray[0]);
+                    pmon.MonitorStream.Read(p^, pmon.MonitorStream.Size);   // Move it all over
+                end
+            end;
+            if (length(myStrArray) = 0) then
+                WriteStr2Array('None');
+            myPointer := @(myStrArray[0]);
+            mySize := Length(myStrArray);
+        end;
+        2:
+        begin  // Monitors.Header
+            myType := 4;        // String
+            setlength(myStrArray, 0);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                    ReadMonitorHeader(Header, TRUE);
+                    if length(pMon.StrBuffer) > 0 then
+                    begin
+                        ListSize := Header.RecordSize;
+                        SaveDelims := AuxParser[ActiveActor].Delimiters;
+                        AuxParser[ActiveActor].Delimiters := ',';
+                        SaveWhiteSpace := AuxParser[ActiveActor].Whitespace;
+                        AuxParser[ActiveActor].Whitespace := '';
+                        TempStr := '';
+                        for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
+                            TempStr := TempStr + String(pMon.StrBuffer[i]); // For some reason needed for DLL
 
-            AuxParser[ActiveActor].CmdString := TempStr;
-            AuxParser[ActiveActor].AutoIncrement := TRUE;
-            AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
-            AuxParser[ActiveActor].StrValue;
-            k :=  0;
-            WHILE k < ListSize DO
-            Begin
-              WriteStr2Array(AuxParser[ActiveActor].StrValue);
-              WriteStr2Array(Char(0));
-              inc(k);
-            End;
-            AuxParser[ActiveActor].AutoIncrement := FALSE; // be a good citizen
-            AuxParser[ActiveActor].Delimiters := SaveDelims;
-            AuxParser[ActiveActor].Whitespace := SaveWhiteSpace;
-          End;
-        End;
-      End;
-      if (length(myStrArray) = 0) then
-        WriteStr2Array('None');
-      myPointer :=  @(myStrArray[0]);
-      mySize    :=  Length(myStrArray);
-    end;
-  3:begin  // Monitors.dblHour
-      myType  :=  2;        // Double
-      setlength(myDBLArray, 1);
-      myDBLArray[0] := 0;
-      If ActiveCircuit[ActiveActor] <> Nil Then Begin
-        pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-        If pMon.SampleCount >0 Then Begin
-          setlength(myDBLArray, pMon.SampleCount);
-          ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
+                        AuxParser[ActiveActor].CmdString := TempStr;
+                        AuxParser[ActiveActor].AutoIncrement := TRUE;
+                        AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
+                        AuxParser[ActiveActor].StrValue;
+                        k := 0;
+                        while k < ListSize do
+                        begin
+                            WriteStr2Array(AuxParser[ActiveActor].StrValue);
+                            WriteStr2Array(Char(0));
+                            inc(k);
+                        end;
+                        AuxParser[ActiveActor].AutoIncrement := FALSE; // be a good citizen
+                        AuxParser[ActiveActor].Delimiters := SaveDelims;
+                        AuxParser[ActiveActor].Whitespace := SaveWhiteSpace;
+                    end;
+                end;
+            end;
+            if (length(myStrArray) = 0) then
+                WriteStr2Array('None');
+            myPointer := @(myStrArray[0]);
+            mySize := Length(myStrArray);
+        end;
+        3:
+        begin  // Monitors.dblHour
+            myType := 2;        // Double
+            setlength(myDBLArray, 1);
+            myDBLArray[0] := 0;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if pMon.SampleCount > 0 then
+                begin
+                    setlength(myDBLArray, pMon.SampleCount);
+                    ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
 
-          TempStr                            :=  '';
-          for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
-          TempStr   :=  TempStr + string(pMon.StrBuffer[i]); // For some reason needed for DLL
+                    TempStr := '';
+                    for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
+                        TempStr := TempStr + String(pMon.StrBuffer[i]); // For some reason needed for DLL
 
-          AuxParser[ActiveActor].CmdString := string(TempStr);
-          AuxParser[ActiveActor].AutoIncrement := TRUE;
-          FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
-          AuxParser[ActiveActor].AutoIncrement := FALSE;
+                    AuxParser[ActiveActor].CmdString := String(TempStr);
+                    AuxParser[ActiveActor].AutoIncrement := TRUE;
+                    FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
+                    AuxParser[ActiveActor].AutoIncrement := FALSE;
           // check first col to see if it is "Hour"
-          If CompareText(FirstCol, 'hour') = 0  Then
-          Begin
-            AllocSize :=  Sizeof(SngBuffer^[1]) * Header.RecordSize;
-            SngBuffer := Allocmem(AllocSize);
-            k := 0;
-            for i := 1 to pMon.SampleCount  do
-            Begin
-              With pMon.MonitorStream Do
-              Begin
-                Read( hr, SizeOf(hr) );  // Hour
-                Read( s,  SizeOf(s) );   // Seconds past the hour
-                Read( sngBuffer^[1], AllocSize);  // read rest of record
-              End;
-              myDBLArray[k] := hr + s / 3600.0;
-              inc(k);
-            End;
-            Reallocmem(SngBuffer, 0);  // Dispose of buffer
-          End
-          Else
-          Begin   // Not time solution, so return nil array
-            pMon.MonitorStream.Seek(0, soFromEnd) ; // leave stream at end
-          End;
-        End
-      End;
-      myPointer :=  @(myDBLArray[0]);
-      mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
-    end;
-  4:begin  // Monitors.dblFreq
-      myType  :=  2;        // Double
-      setlength(myDBLArray, 1);
-      myDBLArray[0] := 0;
-      If ActiveCircuit[ActiveActor] <> Nil Then
-      Begin
-        pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-        If pMon.SampleCount >0 Then
-        Begin
-          setlength(myDBLArray, pMon.SampleCount);
-          ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-          TempStr                            :=  '';
-          for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
-          TempStr   :=  TempStr + string(pMon.StrBuffer[i]); // For some reason needed for DLL
+                    if CompareText(FirstCol, 'hour') = 0 then
+                    begin
+                        AllocSize := Sizeof(SngBuffer^[1]) * Header.RecordSize;
+                        SngBuffer := Allocmem(AllocSize);
+                        k := 0;
+                        for i := 1 to pMon.SampleCount do
+                        begin
+                            with pMon.MonitorStream do
+                            begin
+                                Read(hr, SizeOf(hr));  // Hour
+                                Read(s, SizeOf(s));   // Seconds past the hour
+                                Read(sngBuffer^[1], AllocSize);  // read rest of record
+                            end;
+                            myDBLArray[k] := hr + s / 3600.0;
+                            inc(k);
+                        end;
+                        Reallocmem(SngBuffer, 0);  // Dispose of buffer
+                    end
+                    else
+                    begin   // Not time solution, so return nil array
+                        pMon.MonitorStream.Seek(0, soFromEnd); // leave stream at end
+                    end;
+                end
+            end;
+            myPointer := @(myDBLArray[0]);
+            mySize := SizeOf(myDBLArray[0]) * Length(myDBLArray);
+        end;
+        4:
+        begin  // Monitors.dblFreq
+            myType := 2;        // Double
+            setlength(myDBLArray, 1);
+            myDBLArray[0] := 0;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if pMon.SampleCount > 0 then
+                begin
+                    setlength(myDBLArray, pMon.SampleCount);
+                    ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
+                    TempStr := '';
+                    for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
+                        TempStr := TempStr + String(pMon.StrBuffer[i]); // For some reason needed for DLL
 
-          AuxParser[ActiveActor].CmdString := string(TempStr);
-          AuxParser[ActiveActor].AutoIncrement := TRUE;
-          FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
-          AuxParser[ActiveActor].AutoIncrement := FALSE;
+                    AuxParser[ActiveActor].CmdString := String(TempStr);
+                    AuxParser[ActiveActor].AutoIncrement := TRUE;
+                    FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
+                    AuxParser[ActiveActor].AutoIncrement := FALSE;
           // check first col to see if it is "Freq" for harmonics solution
-          If CompareText(FirstCol, 'freq') = 0  Then
-          Begin
-            AllocSize :=  Sizeof(SngBuffer^[1]) * Header.RecordSize;
-            SngBuffer := Allocmem(AllocSize);
-            k := 0;
-            for i := 1 to pMon.SampleCount  do Begin
-              With pMon.MonitorStream Do
-              Begin
-                  Read( freq, SizeOf(freq) );  // frequency
-                  Read( s,  SizeOf(s) );   // harmonic
-                  Read( sngBuffer^[1], AllocSize);  // read rest of record
-              End;
-              myDBLArray[k] := freq;
-              inc(k);
-            End;
-            Reallocmem(SngBuffer, 0);  // Dispose of buffer
-          End
-          Else
-          Begin   // Not harmonic solution, so return nil array
-            pMon.MonitorStream.Seek(0, soFromEnd) ; // leave stream at end
-          End;
-        End
-      End;
-      myPointer :=  @(myDBLArray[0]);
-      mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
-    end;
-  5:begin    // Monitors.Channel
-      myType  :=  2;        // Double
-      setlength(myDBLArray, 1);
-      myDBLArray[0] := 0;
-      If ActiveCircuit[ActiveActor] <> Nil Then
-      Begin
-        pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-        If pMon.SampleCount >0 Then
-        Begin
-          PInt :=  myPointer;
-          index:=integer(PInt^);
-          setlength(myDBLArray, pMon.SampleCount);
-          ReadMonitorHeader(Header, FALSE);   // FALSE = leave at beginning of data
-          TempStr                            :=  '';
-          for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
-          TempStr   :=  TempStr + string(pMon.StrBuffer[i]); // For some reason needed for DLL
+                    if CompareText(FirstCol, 'freq') = 0 then
+                    begin
+                        AllocSize := Sizeof(SngBuffer^[1]) * Header.RecordSize;
+                        SngBuffer := Allocmem(AllocSize);
+                        k := 0;
+                        for i := 1 to pMon.SampleCount do
+                        begin
+                            with pMon.MonitorStream do
+                            begin
+                                Read(freq, SizeOf(freq));  // frequency
+                                Read(s, SizeOf(s));   // harmonic
+                                Read(sngBuffer^[1], AllocSize);  // read rest of record
+                            end;
+                            myDBLArray[k] := freq;
+                            inc(k);
+                        end;
+                        Reallocmem(SngBuffer, 0);  // Dispose of buffer
+                    end
+                    else
+                    begin   // Not harmonic solution, so return nil array
+                        pMon.MonitorStream.Seek(0, soFromEnd); // leave stream at end
+                    end;
+                end
+            end;
+            myPointer := @(myDBLArray[0]);
+            mySize := SizeOf(myDBLArray[0]) * Length(myDBLArray);
+        end;
+        5:
+        begin    // Monitors.Channel
+            myType := 2;        // Double
+            setlength(myDBLArray, 1);
+            myDBLArray[0] := 0;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+                if pMon.SampleCount > 0 then
+                begin
+                    PInt := myPointer;
+                    index := Integer(PInt^);
+                    setlength(myDBLArray, pMon.SampleCount);
+                    ReadMonitorHeader(Header, FALSE);   // FALSE = leave at beginning of data
+                    TempStr := '';
+                    for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
+                        TempStr := TempStr + String(pMon.StrBuffer[i]); // For some reason needed for DLL
 
-          AuxParser[ActiveActor].CmdString := string(TempStr);
-          AuxParser[ActiveActor].AutoIncrement := TRUE;
-          FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
-          AuxParser[ActiveActor].AutoIncrement := FALSE;
-          AllocSize :=  Sizeof(SngBuffer^[1]) * Header.RecordSize;
-          SngBuffer := Allocmem(AllocSize);
-          k := 0;
-          for i := 1 to pMon.SampleCount  do Begin
-               With pMon.MonitorStream Do
-                Begin
-                    Read( hr, SizeOf(hr) );
-                    Read( s,  SizeOf(s) );
-                    Read( sngBuffer^[1], AllocSize);  // read rest of record
-                End;
-                myDBLArray[k] := sngBuffer^[index];
-                inc(k);
-          End;
-          Reallocmem(SngBuffer, 0);  // Dispose of buffer
-        End
-      End;
-      myPointer :=  @(myDBLArray[0]);
-      mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
-    end
-  else
-    Begin
-      myType  :=  4;        // String
-      setlength(myStrArray, 0);
-      WriteStr2Array('Error, parameter not recognized');
-      myPointer :=  @(myStrArray[0]);
-      mySize    :=  Length(myStrArray);
-    End;
-  end;
+                    AuxParser[ActiveActor].CmdString := String(TempStr);
+                    AuxParser[ActiveActor].AutoIncrement := TRUE;
+                    FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
+                    AuxParser[ActiveActor].AutoIncrement := FALSE;
+                    AllocSize := Sizeof(SngBuffer^[1]) * Header.RecordSize;
+                    SngBuffer := Allocmem(AllocSize);
+                    k := 0;
+                    for i := 1 to pMon.SampleCount do
+                    begin
+                        with pMon.MonitorStream do
+                        begin
+                            Read(hr, SizeOf(hr));
+                            Read(s, SizeOf(s));
+                            Read(sngBuffer^[1], AllocSize);  // read rest of record
+                        end;
+                        myDBLArray[k] := sngBuffer^[index];
+                        inc(k);
+                    end;
+                    Reallocmem(SngBuffer, 0);  // Dispose of buffer
+                end
+            end;
+            myPointer := @(myDBLArray[0]);
+            mySize := SizeOf(myDBLArray[0]) * Length(myDBLArray);
+        end
+    else
+    begin
+        myType := 4;        // String
+        setlength(myStrArray, 0);
+        WriteStr2Array('Error, parameter not recognized');
+        myPointer := @(myStrArray[0]);
+        mySize := Length(myStrArray);
+    end;
+    end;
 end;
 
 end.

@@ -1,4 +1,5 @@
 unit StackDef;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -8,138 +9,146 @@ unit StackDef;
 
 interface
 
-uses ArrayDef;
+uses
+    ArrayDef;
 
-Type
-    TStackBase  = class(TObject)
-       private
+type
+    TStackBase = class(TObject)
+    PRIVATE
 
-       protected
-          NumItems,
-          Increment,
-          MaxItems:Integer;
+    PROTECTED
+        NumItems,
+        Increment,
+        MaxItems: Integer;
 
-       public
-          constructor Create(initSize:Integer);
-          destructor Destroy; override;
-          Procedure Clear;
-          Function  Size:Integer;
-    END;
-
-
-    TPstack = Class(TStackBase)  // simple pointer stack
-        Private
-          Items:pPointerArray;
-        Public
-          Constructor Create(initSize:Integer);
-          Destructor Destroy;  Override;
-
-          Procedure Push(p:Pointer);
-          Function  Pop:Pointer;
-    End;
-
-    TiStack = Class(TStackBase)  // simple integer stack
-        Private
-          Items:pIntegerArray;
-        Public
-          Constructor Create(initSize:Integer);
-          Destructor Destroy; Override;
-
-          Procedure Push(p:Integer);
-          Function Pop:Integer;
-    End;
+    PUBLIC
+        constructor Create(initSize: Integer);
+        destructor Destroy; OVERRIDE;
+        procedure Clear;
+        function Size: Integer;
+    end;
 
 
-IMPLEMENTATION
+    TPstack = class(TStackBase)  // simple pointer stack
+    PRIVATE
+        Items: pPointerArray;
+    PUBLIC
+        constructor Create(initSize: Integer);
+        destructor Destroy; OVERRIDE;
 
-Uses Sysutils;
+        procedure Push(p: Pointer);
+        function Pop: Pointer;
+    end;
 
-Constructor TStackBase.Create(initSize:Integer);
-BEGIN
-     Inherited Create;
-     MaxItems := InitSize;
-     Increment := InitSize;
-     NumItems := 0;
-END;
+    TiStack = class(TStackBase)  // simple integer stack
+    PRIVATE
+        Items: pIntegerArray;
+    PUBLIC
+        constructor Create(initSize: Integer);
+        destructor Destroy; OVERRIDE;
 
-Destructor TStackBase.Destroy;
-BEGIN
-     Inherited Destroy;
-END;
+        procedure Push(p: Integer);
+        function Pop: Integer;
+    end;
 
-Procedure TStackBase.Clear;
-BEGIN
+
+implementation
+
+uses
+    Sysutils;
+
+constructor TStackBase.Create(initSize: Integer);
+begin
+    inherited Create;
+    MaxItems := InitSize;
+    Increment := InitSize;
     NumItems := 0;
-END;
+end;
 
-Function TStackBase.Size:Integer;
-BEGIN
+destructor TStackBase.Destroy;
+begin
+    inherited Destroy;
+end;
+
+procedure TStackBase.Clear;
+begin
+    NumItems := 0;
+end;
+
+function TStackBase.Size: Integer;
+begin
     Result := NumItems;
-END;
+end;
 
 
-Constructor TPstack.Create(initSize:Integer);
-BEGIN
-     Inherited Create(InitSize);
-     Items := AllocMem(SizeOf(Items^[1])*MaxItems);
-END;
+constructor TPstack.Create(initSize: Integer);
+begin
+    inherited Create(InitSize);
+    Items := AllocMem(SizeOf(Items^[1]) * MaxItems);
+end;
 
-Destructor TPstack.Destroy;
-BEGIN
-     Reallocmem(Items,0);
-     Inherited Destroy;
-END;
+destructor TPstack.Destroy;
+begin
+    Reallocmem(Items, 0);
+    inherited Destroy;
+end;
 
-Procedure TPstack.Push(p:Pointer);
-BEGIN
+procedure TPstack.Push(p: Pointer);
+begin
     Inc(NumItems);
-    If NumItems>MaxItems THEN BEGIN
-        Inc(MaxItems,Increment);
-        Reallocmem(Items,SizeOf(Items^[1])*MaxItems);
-    END;
+    if NumItems > MaxItems then
+    begin
+        Inc(MaxItems, Increment);
+        Reallocmem(Items, SizeOf(Items^[1]) * MaxItems);
+    end;
     Items^[NumItems] := p;
-END;
+end;
 
-Function TPstack.Pop:Pointer;
-BEGIN
-  If NumItems>0 Then Begin
-    Result := Items^[NumItems];
-    Dec(NumItems);
-  End Else Result := nil;
-END;
+function TPstack.Pop: Pointer;
+begin
+    if NumItems > 0 then
+    begin
+        Result := Items^[NumItems];
+        Dec(NumItems);
+    end
+    else
+        Result := NIL;
+end;
 
 
+constructor TiStack.Create(initSize: Integer);
+begin
+    inherited Create(initSize);
+    Items := AllocMem(SizeOf(Items^[1]) * MaxItems);
+end;
 
+destructor TiStack.Destroy;
+begin
+    Reallocmem(Items, 0);
+    inherited Destroy;
+end;
 
-Constructor TiStack.Create(initSize:Integer);
-BEGIN
-     Inherited Create(initSize);
-     Items := AllocMem(SizeOf(Items^[1])*MaxItems);
-END;
-
-Destructor TiStack.Destroy;
-BEGIN
-     Reallocmem(Items,0);
-     Inherited Destroy;
-END;
-
-Procedure TiStack.Push(p:Integer);
-BEGIN
+procedure TiStack.Push(p: Integer);
+begin
     Inc(NumItems);
-    If NumItems>MaxItems THEN BEGIN
-        Inc(MaxItems,Increment);
-        Reallocmem(Items,SizeOf(Items^[1])*MaxItems);
-    END;
+    if NumItems > MaxItems then
+    begin
+        Inc(MaxItems, Increment);
+        Reallocmem(Items, SizeOf(Items^[1]) * MaxItems);
+    end;
     Items^[NumItems] := p;
-END;
+end;
 
-Function TiStack.Pop:Integer;
-BEGIN
-  If NumItems>0 Then Begin
-    Result := Items^[NumItems];
-    Dec(NumItems);
-  End Else Result := 0;
-END;
+function TiStack.Pop: Integer;
+begin
+    if NumItems > 0 then
+    begin
+        Result := Items^[NumItems];
+        Dec(NumItems);
+    end
+    else
+        Result := 0;
+end;
 
 
 end.

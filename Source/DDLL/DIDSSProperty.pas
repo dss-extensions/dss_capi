@@ -1,50 +1,59 @@
 unit DIDSSProperty;
 
 interface
-function DSSProperties(mode:longint; arg:pAnsiChar):pAnsiChar; cdecl;
+
+function DSSProperties(mode: Longint; arg: Pansichar): Pansichar; CDECL;
 
 implementation
 
-uses DSSClass, DSSGlobals, Executive, SysUtils;
+uses
+    DSSClass,
+    DSSGlobals,
+    Executive,
+    SysUtils;
 
 var
-  FPropIndex   :Integer;
+    FPropIndex: Integer;
 
-function DSSProperties(mode:longint; arg:pAnsiChar):pAnsiChar; cdecl;
+function DSSProperties(mode: Longint; arg: Pansichar): Pansichar; CDECL;
 begin
-  Result := pAnsiChar(AnsiString('')); // Default return value
-  FPropIndex := StrToInt(string(arg));
-  case mode of
-    0: begin                                           // DSSProperties.Name
-      If (ActiveCircuit[ActiveActor]<> Nil) and (FPropIndex <> 0) {and (FPropClass <> Nil)} Then
-        With  ActiveDSSObject[ActiveActor].ParentClass   Do
-        If FPropIndex <= NumProperties Then
-          Result := pAnsiChar(AnsiString(PropertyName^[FPropIndex]));
-    end;
-    1: begin                                           // DSSProperties.Description
-      If (ActiveCircuit[ActiveActor]<> Nil) and (FPropIndex <> 0) {and (FPropClass <> Nil)} Then
-      With  ActiveDSSObject[ActiveActor].ParentClass Do
-        If FPropIndex <= NumProperties Then
-          Result := pAnsiChar(AnsiString(PropertyHelp^[FPropIndex]));
-    end;
-    2: begin                                           // DSSProperties.Value - read
-      If (ActiveCircuit[ActiveActor]<> Nil)
-      THEN  With ActiveDSSObject[ActiveActor] Do
-        If FPropIndex <= ParentClass.NumProperties Then
-              Result := pAnsiChar(AnsiString(PropertyValue[ParentClass.PropertyIdxMap^[FPropIndex]]));
-    end;
-    3: begin                                           // DSSProperties.Value - Write
-       If (ActiveCircuit[ActiveActor]<> Nil)
-        THEN  With ActiveDSSObject[ActiveActor] Do
-          If FPropIndex <= ParentClass.NumProperties Then
-                DSSExecutive[ActiveActor].Command := 'Edit ' + ParentClass.Name + '.' + Name + ' ' +
-                       ParentClass.PropertyName^[FPropIndex] + '=' +
-                       string(arg);
-                Result:=pAnsiChar(AnsiString(''));
-    end
+    Result := Pansichar(Ansistring('')); // Default return value
+    FPropIndex := StrToInt(String(arg));
+    case mode of
+        0:
+        begin                                           // DSSProperties.Name
+            if (ActiveCircuit[ActiveActor] <> NIL) and (FPropIndex <> 0) {and (FPropClass <> Nil)} then
+                with  ActiveDSSObject[ActiveActor].ParentClass do
+                    if FPropIndex <= NumProperties then
+                        Result := Pansichar(Ansistring(PropertyName^[FPropIndex]));
+        end;
+        1:
+        begin                                           // DSSProperties.Description
+            if (ActiveCircuit[ActiveActor] <> NIL) and (FPropIndex <> 0) {and (FPropClass <> Nil)} then
+                with  ActiveDSSObject[ActiveActor].ParentClass do
+                    if FPropIndex <= NumProperties then
+                        Result := Pansichar(Ansistring(PropertyHelp^[FPropIndex]));
+        end;
+        2:
+        begin                                           // DSSProperties.Value - read
+            if (ActiveCircuit[ActiveActor] <> NIL) then
+                with ActiveDSSObject[ActiveActor] do
+                    if FPropIndex <= ParentClass.NumProperties then
+                        Result := Pansichar(Ansistring(PropertyValue[ParentClass.PropertyIdxMap^[FPropIndex]]));
+        end;
+        3:
+        begin                                           // DSSProperties.Value - Write
+            if (ActiveCircuit[ActiveActor] <> NIL) then
+                with ActiveDSSObject[ActiveActor] do
+                    if FPropIndex <= ParentClass.NumProperties then
+                        DSSExecutive[ActiveActor].Command := 'Edit ' + ParentClass.Name + '.' + Name + ' ' +
+                            ParentClass.PropertyName^[FPropIndex] + '=' +
+                            String(arg);
+            Result := Pansichar(Ansistring(''));
+        end
     else
-      Result:=pAnsiChar(ansistring(''));
-  end;
+        Result := Pansichar(Ansistring(''));
+    end;
 end;
 
 end.

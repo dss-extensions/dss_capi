@@ -2,258 +2,320 @@ unit DPDELements;
 
 interface
 
-function PDElementsI(mode:longint; arg:longint):longint;cdecl;
-function PDElementsF(mode:longint; arg:double):double;cdecl;
-function PDElementsS(mode:longint; arg:pAnsiChar):pAnsiChar;cdecl;
+function PDElementsI(mode: Longint; arg: Longint): Longint; CDECL;
+function PDElementsF(mode: Longint; arg: Double): Double; CDECL;
+function PDElementsS(mode: Longint; arg: Pansichar): Pansichar; CDECL;
 
 implementation
 
-uses DSSGlobals, PDElement, PDClass, SysUtils, Bus;
+uses
+    DSSGlobals,
+    PDElement,
+    PDClass,
+    SysUtils,
+    Bus;
 
-function PDElementsI(mode:longint; arg:longint):longint;cdecl;
+function PDElementsI(mode: Longint; arg: Longint): Longint; CDECL;
 
-Var
-   ActivePDElement :TPDElement;
+var
+    ActivePDElement: TPDElement;
 
 begin
-  Result:=0; // Default return value
-  case mode of
-  0: begin  // PDElements.Count
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          Result := PDElements.ListSize ;
-      End;
-  end;
-  1: begin  // PDElements.First
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-           ActivePDElement := PDElements.First;
-           IF ActivePDElement <> Nil THEN
-             Begin
-                  Repeat
-                    If ActivePDElement.enabled  Then
-                    Begin
-                        Result := 1;
-                        ActiveCktElement := ActivePDElement;
-                    end
-                    Else  ActivePDElement := PDElements.Next;
-                  Until (Result = 1) or (ActivePDELement = nil);
-             End;
-      End;
-  end;
-  2: begin  // PDElements.Next
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-           ActivePDElement := PDElements.Next;
-           IF ActivePDElement <> Nil THEN
-             Begin
-                  Repeat
-                    If ActivePDElement.enabled  Then
-                    Begin
-                        Result := 1;
-                        ActiveCktElement := ActivePDElement;
-                    end
-                    Else  ActivePDElement := PDElements.Next;
-                  Until (Result = 1) or (ActivePDELement = nil);
-             End;
-      End;
-  end;
-  3: begin  // PDElements.IsShunt
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              if ActivePDElement.IsShunt then Result:=1;
-          End;
-      End;
-  end;
-  4: begin  // PDElements.NumCustomers
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.BranchNumCustomers;
-          End;
-      End;
-  end;
-  5: begin  // PDElements.TotalCustomers
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.BranchTotalCustomers;
-          End;
-      End;
-  end;
-  6: begin  // PDElements.ParentPDElement
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              If ActivePDElement.ParentPDElement <> Nil Then    // leaves ActiveCktElement as is
-              Begin
-                  ActiveCktElement := ActivePDElement.ParentPDElement;
-                  Result := ActivecktElement.ClassIndex ;
-              End;
-          End;
-      End;
-  end;
-  7: begin   // PDElements.FromTerminal
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.FromTerminal ;
-          End;
-      End;
-  end;
-  8: begin  // PDElements.SectionID
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.BranchSectionID ;
-          End;
-      End;
-  end
-  else
-      Result:=-1;
-  end;
+    Result := 0; // Default return value
+    case mode of
+        0:
+        begin  // PDElements.Count
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    Result := PDElements.ListSize;
+                end;
+        end;
+        1:
+        begin  // PDElements.First
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    ActivePDElement := PDElements.First;
+                    if ActivePDElement <> NIL then
+                    begin
+                        repeat
+                            if ActivePDElement.enabled then
+                            begin
+                                Result := 1;
+                                ActiveCktElement := ActivePDElement;
+                            end
+                            else
+                                ActivePDElement := PDElements.Next;
+                        until (Result = 1) or (ActivePDELement = NIL);
+                    end;
+                end;
+        end;
+        2:
+        begin  // PDElements.Next
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    ActivePDElement := PDElements.Next;
+                    if ActivePDElement <> NIL then
+                    begin
+                        repeat
+                            if ActivePDElement.enabled then
+                            begin
+                                Result := 1;
+                                ActiveCktElement := ActivePDElement;
+                            end
+                            else
+                                ActivePDElement := PDElements.Next;
+                        until (Result = 1) or (ActivePDELement = NIL);
+                    end;
+                end;
+        end;
+        3:
+        begin  // PDElements.IsShunt
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement is TPDElement then
+                    begin
+                        ActivePDElement := ActiveCktelement as TPDElement;
+                        if ActivePDElement.IsShunt then
+                            Result := 1;
+                    end;
+                end;
+        end;
+        4:
+        begin  // PDElements.NumCustomers
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement is TPDElement then
+                    begin
+                        ActivePDElement := ActiveCktelement as TPDElement;
+                        Result := ActivePDElement.BranchNumCustomers;
+                    end;
+                end;
+        end;
+        5:
+        begin  // PDElements.TotalCustomers
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement is TPDElement then
+                    begin
+                        ActivePDElement := ActiveCktelement as TPDElement;
+                        Result := ActivePDElement.BranchTotalCustomers;
+                    end;
+                end;
+        end;
+        6:
+        begin  // PDElements.ParentPDElement
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement is TPDElement then
+                    begin
+                        ActivePDElement := ActiveCktelement as TPDElement;
+                        if ActivePDElement.ParentPDElement <> NIL then    // leaves ActiveCktElement as is
+                        begin
+                            ActiveCktElement := ActivePDElement.ParentPDElement;
+                            Result := ActivecktElement.ClassIndex;
+                        end;
+                    end;
+                end;
+        end;
+        7:
+        begin   // PDElements.FromTerminal
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement is TPDElement then
+                    begin
+                        ActivePDElement := ActiveCktelement as TPDElement;
+                        Result := ActivePDElement.FromTerminal;
+                    end;
+                end;
+        end;
+        8:
+        begin  // PDElements.SectionID
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement is TPDElement then
+                    begin
+                        ActivePDElement := ActiveCktelement as TPDElement;
+                        Result := ActivePDElement.BranchSectionID;
+                    end;
+                end;
+        end
+    else
+        Result := -1;
+    end;
 end;
 
 //**************************Floating point type properties***********************
-function PDElementsF(mode:longint; arg:double):double;cdecl;
+function PDElementsF(mode: Longint; arg: Double): Double; CDECL;
 
-Var
-   ActivePDElement :TPDElement;
+var
+    ActivePDElement: TPDElement;
 
 begin
-  Result:=0.0; // Default return value
-  case mode of
-  0: begin  // PDElements.FaultRate read
-      Result := 0.0;
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.Faultrate;
-          End;
-      End;
-  end;
-  1: begin  // PDElements.FaultRate write
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              ActivePDElement.FaultRate := arg;
-          End;
-      End;
-  end;
-  2: begin  // PDElements.PctPermanent read
-      Result := 0.0;
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.PctPerm;
-          End;
-      End;
-  end;
-  3: begin  // PDElements.PctPermanent write
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              ActivePDElement.PctPerm := arg;
-          End;
-      End;
-  end;
-  4: begin  // PDElements.Lambda
-      Result := 0.0;
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.BranchFltRate;
-          End;
-      End;
-  end;
-  5: begin  // PDElements.AccumulatedL
-      Result := 0.0;
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.AccumulatedBrFltRate ;
-          End;
-      End;
-  end;
-  6: begin  // PDElements.RepairTime
-      Result := 0.0;
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.HrsToRepair;
-          End;
-      End;
-  end;
-  7: begin  // PDElements.TotalMiles
-      Result := 0.0;
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.AccumulatedMilesDownStream;
-          End;
-      End;
-  end
-  else
-      Result:=-1.0;
-  end;
+    Result := 0.0; // Default return value
+    case mode of
+        0:
+        begin  // PDElements.FaultRate read
+            Result := 0.0;
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement is TPDElement then
+                    begin
+                        ActivePDElement := ActiveCktelement as TPDElement;
+                        Result := ActivePDElement.Faultrate;
+                    end;
+                end;
+        end;
+        1:
+        begin  // PDElements.FaultRate write
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement is TPDElement then
+                    begin
+                        ActivePDElement := ActiveCktelement as TPDElement;
+                        ActivePDElement.FaultRate := arg;
+                    end;
+                end;
+        end;
+        2:
+        begin  // PDElements.PctPermanent read
+            Result := 0.0;
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement is TPDElement then
+                    begin
+                        ActivePDElement := ActiveCktelement as TPDElement;
+                        Result := ActivePDElement.PctPerm;
+                    end;
+                end;
+        end;
+        3:
+        begin  // PDElements.PctPermanent write
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement is TPDElement then
+                    begin
+                        ActivePDElement := ActiveCktelement as TPDElement;
+                        ActivePDElement.PctPerm := arg;
+                    end;
+                end;
+        end;
+        4:
+        begin  // PDElements.Lambda
+            Result := 0.0;
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement is TPDElement then
+                    begin
+                        ActivePDElement := ActiveCktelement as TPDElement;
+                        Result := ActivePDElement.BranchFltRate;
+                    end;
+                end;
+        end;
+        5:
+        begin  // PDElements.AccumulatedL
+            Result := 0.0;
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement is TPDElement then
+                    begin
+                        ActivePDElement := ActiveCktelement as TPDElement;
+                        Result := ActivePDElement.AccumulatedBrFltRate;
+                    end;
+                end;
+        end;
+        6:
+        begin  // PDElements.RepairTime
+            Result := 0.0;
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement is TPDElement then
+                    begin
+                        ActivePDElement := ActiveCktelement as TPDElement;
+                        Result := ActivePDElement.HrsToRepair;
+                    end;
+                end;
+        end;
+        7:
+        begin  // PDElements.TotalMiles
+            Result := 0.0;
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement is TPDElement then
+                    begin
+                        ActivePDElement := ActiveCktelement as TPDElement;
+                        Result := ActivePDElement.AccumulatedMilesDownStream;
+                    end;
+                end;
+        end
+    else
+        Result := -1.0;
+    end;
 end;
 
 //*************************String type properties*******************************
-function PDElementsS(mode:longint; arg:pAnsiChar):pAnsiChar;cdecl;
+function PDElementsS(mode: Longint; arg: Pansichar): Pansichar; CDECL;
 
-Var
-   ActivePDElement :TPDElement;
-   TestString : String;
+var
+    ActivePDElement: TPDElement;
+    TestString: String;
 
 begin
-  Result:=pAnsiChar(AnsiString('0')); // Default return value
-  case mode of
-  0: begin  // PDElements.Name read
-     Result := '';   // return null if not a PD element
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-        With ActiveCircuit[ActiveActor] Do Begin
-            If ActiveCktElement is TPDElement Then Begin
-                ActivePDElement := ActiveCktelement as TPDElement;
-                With ActivePDElement Do
-                     Result := pAnsiChar(AnsiString(Format('%s.%s',[Parentclass.Name, Name])));  // full name
-            End;
-        End;
-  end;
-  1: begin  // PDElements.Name write
-      If Assigned(ActiveCircuit[ActiveActor]) Then
-      With ActiveCircuit[ActiveActor] Do Begin
-          TestString := string(arg);
+    Result := Pansichar(Ansistring('0')); // Default return value
+    case mode of
+        0:
+        begin  // PDElements.Name read
+            Result := '';   // return null if not a PD element
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    if ActiveCktElement is TPDElement then
+                    begin
+                        ActivePDElement := ActiveCktelement as TPDElement;
+                        with ActivePDElement do
+                            Result := Pansichar(Ansistring(Format('%s.%s', [Parentclass.Name, Name])));  // full name
+                    end;
+                end;
+        end;
+        1:
+        begin  // PDElements.Name write
+            if Assigned(ActiveCircuit[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    TestString := String(arg);
           // Search through list of PD Elements until we find this one
-          ActivePDElement := PDElements.First;
-          While Assigned(ActivePDElement) do
-          With ActivePDelement Do
-          Begin
-              If (CompareText(TestString, Format('%s.%s',[Parentclass.Name, Name]) ) = 0)  Then Begin
-                 ActiveCktElement := ActivePDElement;
-                 Break;
-              End;
-              ActivePDElement := PDElements.Next;
-          End;
-      End;
-  end
-  else
-      Result:=pAnsiChar(AnsiString('Error, parameter not valid'));
-  end;
+                    ActivePDElement := PDElements.First;
+                    while Assigned(ActivePDElement) do
+                        with ActivePDelement do
+                        begin
+                            if (CompareText(TestString, Format('%s.%s', [Parentclass.Name, Name])) = 0) then
+                            begin
+                                ActiveCktElement := ActivePDElement;
+                                Break;
+                            end;
+                            ActivePDElement := PDElements.Next;
+                        end;
+                end;
+        end
+    else
+        Result := Pansichar(Ansistring('Error, parameter not valid'));
+    end;
 end;
 
 end.

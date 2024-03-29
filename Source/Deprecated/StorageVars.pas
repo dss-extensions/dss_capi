@@ -11,42 +11,43 @@ unit StorageVars;
 
 interface
 
-Uses Ucomplex;
+uses
+    Ucomplex;
 
-Type
+type
 
 {Struct to pass basic data to user-written DLLs}
-   TStorageVars = Packed Record
+    TStorageVars = packed record
 
-        kWrating        :double;
-        kWhRating       :Double;
-        kWhStored       :Double;
-        kWhReserve      :Double;
-        ChargeEff       :Double;
-        DisChargeEff    :Double;
-        kVArating       :Double;
-        kVStorageBase   :Double;
-        kvarRequested   :Double;
-        RThev           :Double;
-        XThev           :Double;
+        kWrating: Double;
+        kWhRating: Double;
+        kWhStored: Double;
+        kWhReserve: Double;
+        ChargeEff: Double;
+        DisChargeEff: Double;
+        kVArating: Double;
+        kVStorageBase: Double;
+        kvarRequested: Double;
+        RThev: Double;
+        XThev: Double;
         // Dynamics variables
-        Vthev           :Complex;  {Thevenin equivalent voltage (complex) for dynamic model}
-        ZThev           :Complex;
-        Vthevharm       :Double;  {Thevenin equivalent voltage mag and angle reference for Harmonic model}
-        Thetaharm       :Double;  {Thevenin equivalent voltage mag and angle reference for Harmonic model}
-        VthevMag        :Double;    {Thevenin equivalent voltage for dynamic model}
-        Theta           :Double;   {Power angle between voltage and current}
-        w_grid          :Double;   {Grid frequency}
-        TotalLosses     :Double;
-        IdlingLosses    :Double;
+        Vthev: Complex;  {Thevenin equivalent voltage (complex) for dynamic model}
+        ZThev: Complex;
+        Vthevharm: Double;  {Thevenin equivalent voltage mag and angle reference for Harmonic model}
+        Thetaharm: Double;  {Thevenin equivalent voltage mag and angle reference for Harmonic model}
+        VthevMag: Double;    {Thevenin equivalent voltage for dynamic model}
+        Theta: Double;   {Power angle between voltage and current}
+        w_grid: Double;   {Grid frequency}
+        TotalLosses: Double;
+        IdlingLosses: Double;
 
                 {32-bit integers}
         NumPhases,       {Number of phases}
         NumConductors,   {Total Number of conductors (wye-connected will have 4)}
-        Conn           :Integer;   // 0 = wye; 1 = Delta
+        Conn: Integer;   // 0 = wye; 1 = Delta
 
 
-   End;
+    end;
 
 
 implementation

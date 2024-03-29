@@ -2,22 +2,23 @@ unit DError;
 
 interface
 
-function ErrorDesc():pAnsiChar;cdecl;
-function ErrorCode():longint;cdecl;
+function ErrorDesc(): Pansichar; CDECL;
+function ErrorCode(): Longint; CDECL;
 
 implementation
 
-uses DSSGlobals;
+uses
+    DSSGlobals;
 
-function ErrorCode():longint;cdecl;
+function ErrorCode(): Longint; CDECL;
 begin
     Result := ErrorNumber;
     ErrorNumber := 0;  // Reset after retrieving ErrorNumber
 end;
 
-function ErrorDesc():pAnsiChar;cdecl;
+function ErrorDesc(): Pansichar; CDECL;
 begin
-    Result := pAnsiChar(AnsiString(LastErrorMessage));
+    Result := Pansichar(Ansistring(LastErrorMessage));
     LastErrorMessage := ''; // Reset after retrieving message
 end;
 

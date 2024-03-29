@@ -2,81 +2,92 @@ unit RCDList;
 
 interface
 
-Uses Classes;
+uses
+    Classes;
 
-Type
-    TRCDList = Class(TList)
+type
+    TRCDList = class(TList)
 
-    Private
-           PresentItem:SmallInt;
+    PRIVATE
+        PresentItem: Smallint;
 
-    Public
-        Constructor Create;
-        Destructor Destroy; Override;
+    PUBLIC
+        constructor Create;
+        destructor Destroy; OVERRIDE;
 
-        Function FirstItem:Pointer;
-        Function NextItem(PrevItem:Pointer):Pointer;
-        Function ItemIndex:Integer;
+        function FirstItem: Pointer;
+        function NextItem(PrevItem: Pointer): Pointer;
+        function ItemIndex: Integer;
 
-    End;
+    end;
 
 
 implementation
 
-Constructor TRCDList.Create;
+constructor TRCDList.Create;
 
-Begin
-     Inherited Create;
+begin
+    inherited Create;
 
-     PresentItem := -1;
+    PresentItem := -1;
 
-End;
+end;
 
-Destructor TRCDList.Destroy;
+destructor TRCDList.Destroy;
 
-Begin
+begin
 
-     Inherited Destroy;
-End;
+    inherited Destroy;
+end;
 
-Function TRCDList.FirstItem:Pointer;
-Begin
-     If Count>0 Then  Begin
+function TRCDList.FirstItem: Pointer;
+begin
+    if Count > 0 then
+    begin
         Result := Items[0];
         PresentItem := 0;
-     End Else Begin
-         Result := Nil;
-         PresentItem := -1;
-     End;
+    end
+    else
+    begin
+        Result := NIL;
+        PresentItem := -1;
+    end;
 
-End;
+end;
 
-Function TRCDList.NextItem(PrevItem:Pointer):Pointer;
-Var i:Integer;
-Begin
-     If PrevItem<>Items[PresentItem] Then Begin
+function TRCDList.NextItem(PrevItem: Pointer): Pointer;
+var
+    i: Integer;
+begin
+    if PrevItem <> Items[PresentItem] then
+    begin
         {List has been used by someone after it was initiated.. Reset list to match PreviousItem}
-        PresentItem := Count-1;
-        For i := 0 to Count-1 Do
-            If Items[i]=PrevItem Then Begin
-              PresentItem := i;
-              Break;
-            End;
+        PresentItem := Count - 1;
+        for i := 0 to Count - 1 do
+            if Items[i] = PrevItem then
+            begin
+                PresentItem := i;
+                Break;
+            end;
         {If we can't make it match, PresentItem will point to last Item and
          the next operation (below) will return nil}
-     End;
+    end;
 
-     Inc(PresentItem);
-     If Count>PresentItem Then  Begin
+    Inc(PresentItem);
+    if Count > PresentItem then
+    begin
         Result := Items[PresentItem]
-     End Else Begin
-         Result := Nil;
-         PresentItem := Count-1;
-     End;
-End;
+    end
+    else
+    begin
+        Result := NIL;
+        PresentItem := Count - 1;
+    end;
+end;
 
-Function TRCDList.ItemIndex:Integer;
-Begin
-     Result := PresentItem;
-End;
+function TRCDList.ItemIndex: Integer;
+begin
+    Result := PresentItem;
+end;
+
 end.
