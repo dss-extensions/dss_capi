@@ -92,7 +92,9 @@ TYPE
         FUNCTION  GetPropertyValue(Index:Integer):String;Override;
         PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
         PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
-        Function GetMult(Yr:Integer):double;  // Get multiplier for Specified Year
+        Function GetMult(Yr:Integer):double;      // Get multiplier for Specified Year
+        Function GetYear(Idx:Integer):double;     // Get year for Specified Index
+        Function GetMultIdx(Idx:Integer):double;  // Get multiplier by Index
    end;
 
 VAR
@@ -491,6 +493,47 @@ BEGIN
 
 END;
 
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Function TGrowthShapeObj.GetYear(Idx:Integer):double;
+
+// This function returns the year stored in memory for this object using the given Index (Idx).
+
+VAR
+   Index:Integer;
+
+BEGIN
+
+  Result := 0.0;    // default return value if no points in curve
+
+  IF NPts > 0 THEN BEGIN         // Handle Exceptional cases
+    Index := Idx;
+    IF (Index >= 0) and (Index < Nyears) THEN
+    BEGIN     // Returns whatever we have in there
+      Result := Year^[Index];
+    END;
+  END;
+END;
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Function TGrowthShapeObj.GetMultIdx(Idx:Integer):double;
+
+// This function returns the multiplier stored in memory for this object using the given Index (Idx).
+
+VAR
+   Index:Integer;
+
+BEGIN
+
+  Result := 0.0;    // default return value if no points in curve
+
+  IF NPts > 0 THEN BEGIN         // Handle Exceptional cases
+    Index := Idx;
+    IF (Index >= 0) and (Index < NPts) THEN
+    BEGIN     // Returns whatever we have in there
+      Result := YearMult^[Index];
+    END;
+  END;
+END;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Procedure TGrowthShapeObj.ReCalcYearMult;
