@@ -231,7 +231,8 @@ uses
   DynamicExp in '..\General\DynamicExp.pas',
   InvDynamics in '..\Shared\InvDynamics.pas',
   GenController in '..\Controls\GenController.pas',
-  ExceptionTrace in '..\Shared\ExceptionTrace.pas';
+  ExceptionTrace in '..\Shared\ExceptionTrace.pas',
+  WTG3_Model in '..\PCElements\WTG3_Model.pas';
 
 //**************************end of the functions*************************************
 exports

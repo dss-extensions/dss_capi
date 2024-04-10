@@ -968,17 +968,40 @@ End;
 
 //----------------------------------------------------------------------------
 FUNCTION TLoadObj.GrowthFactor(Year:Integer; ActorID : Integer):Double;
+var
+  CalcYear,
+  FirstY : double;
 
 Begin
     IF Year = 0 Then
-        LastGrowthFactor := 1.0  // default all to 1 in year 0 ; use base values
-    ELSE
+    Begin
+      LastGrowthFactor := 1.0;  // default all to 1 in year 0 ; use base values
+      IF (GrowthShapeObj <> Nil) THEN
+      Begin
+        {This modification was made to avoid modifying the entire program structure
+        when using the global Year, which will also modify the name of the folder
+        storing the demand interval reports. This one is intended to reflect the
+        yearly progression based on the number of hours simulated}
+        FirstY := GrowthShapeObj.GetYear(1);
+
+        CalcYear := ActiveCircuit[ActorID].Solution.DynaVars.dblHour / 8760; // Aprox year
+        if (CalcYear < 1) then
         Begin
-            IF GrowthShapeObj=Nil THEN
-                LastGrowthFactor := ActiveCircuit[ActorID].DefaultGrowthFactor
-            ELSE IF Year <> LastYear THEN    // Search growthcurve
-                LastGrowthFactor := GrowthShapeObj.GetMult(Year);
-        end;
+          if (FirstY = 0) then
+            LastGrowthFactor := GrowthShapeObj.GetMultIdx(1)
+        End
+        Else
+          LastGrowthFactor := GrowthShapeObj.GetMult(math.Ceil(CalcYear));
+
+      End;
+    End
+    ELSE
+    Begin
+      IF GrowthShapeObj=Nil THEN
+          LastGrowthFactor := ActiveCircuit[ActorID].DefaultGrowthFactor
+      ELSE IF Year <> LastYear THEN    // Search growthcurve
+          LastGrowthFactor := GrowthShapeObj.GetMult(Year);
+    end;
 
     Result := LastGrowthFactor;  // for Now
 End;

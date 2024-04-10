@@ -1,12 +1,15 @@
 The Open Distribution System Simulator, OpenDSS
 
-Copyright (c) 2008-2023, Electric Power Research Institute, Inc.
+Copyright (c) 2008-2024, Electric Power Research Institute, Inc.
 All rights reserved.
 
-Version 9.7.1.1
+Version 10.0.0.1 - Dugan
 
 Changes this version
 ====================
+- Provides better coupling between GrowthShapes for QSTS simulations based on the simulation time.
+- Includes a new option to read/write PCE state variables via text. 
+- Adds the wind generator (WindGen) object to the list of PCE in OpenDSS. This model is functional for QSTS and Dynamics simulations.
 - Includes an integrated help file that brings together all the information for users and developers in a single source.
 - Solves issues with the follwing interfaces for DirectDLL: BusV. 
 - Grid Forming Capabilities for PV/Storage.
