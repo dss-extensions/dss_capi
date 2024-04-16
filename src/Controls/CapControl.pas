@@ -367,7 +367,7 @@ end;
 procedure TCapControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     // PF Controller changes
-    if ControlType = PFCONTROL then // TODO: check -- is this correct for all below??
+    if ControlType = PFCONTROL then
         with ControlVars do
             case Idx of
                 ord(TProp.typ):
@@ -403,38 +403,39 @@ begin
                         DoSimpleMsg('Invalid PF OFF value for "%s"', [FullName], 35301);
                     end;
                 end;
-                ord(TProp.CTPhase):
-                    if FCTPhase > FNphases then
-                    begin
-                        DoSimpleMsg('Error: Monitored phase (%d) must be less than or equal to number of phases (%d). ', [FCTPhase, FNphases], 35302);
-                        FCTPhase := 1;
-                    end;
-                ord(TProp.PTPhase):
-                    if FPTPhase > FNphases then
-                    begin
-                        DoSimpleMsg('Error: Monitored phase (%d) must be less than or equal to number of phases (%d). ', [FPTPhase, FNphases], 35303);
-                        FPTPhase := 1;
-                    end;
             end;
 
-    case Idx of
-        ord(TProp.Capacitor):
-            if ControlledElement <> NIL then
-                ControlVars.CapacitorName := ControlledElement.FullName;
-        ord(TProp.VBus):
-        begin
-            ControlVars.VOverrideBusName := AnsiLowerCase(ControlVars.VOverrideBusName);
-            ControlVars.VoverrideBusSpecified := TRUE;
+    with ControlVars do
+        case Idx of
+            ord(TProp.CTPhase):
+                if FCTPhase > FNphases then
+                begin
+                    DoSimpleMsg('Error: Monitored phase (%d) must be less than or equal to number of phases (%d). ', [FCTPhase, FNphases], 35302);
+                    FCTPhase := 1;
+                end;
+            ord(TProp.PTPhase):
+                if FPTPhase > FNphases then
+                begin
+                    DoSimpleMsg('Error: Monitored phase (%d) must be less than or equal to number of phases (%d). ', [FPTPhase, FNphases], 35303);
+                    FPTPhase := 1;
+                end;
+            ord(TProp.Capacitor):
+                if ControlledElement <> NIL then
+                    ControlVars.CapacitorName := ControlledElement.FullName;
+            ord(TProp.VBus):
+            begin
+                ControlVars.VOverrideBusName := AnsiLowerCase(ControlVars.VOverrideBusName);
+                ControlVars.VoverrideBusSpecified := TRUE;
+            end;
+            ord(TProp.UserModel):
+            begin
+                UserModel.Name := UserModelNameStr;  // Connect to user written model
+                IsUserModel := UserModel.Exists;
+            end;
+            ord(TProp.UserData):
+                if UserModel.Exists then
+                    UserModel.Edit(UserModelEditStr);  // Send edit string to user model
         end;
-        ord(TProp.UserModel):
-        begin
-            UserModel.Name := UserModelNameStr;  // Connect to user written model
-            IsUserModel := UserModel.Exists;
-        end;
-        ord(TProp.UserData):
-            if UserModel.Exists then
-                UserModel.Edit(UserModelEditStr);  // Send edit string to user model
-    end;
 
     if IsUserModel then
         ControlType := USERCONTROL;

@@ -17,6 +17,12 @@
 
 # Versions 0.14.x
 
+## Version 0.14.6
+
+*not released*
+
+- CapControl: handle phase checks better in `PTPhase` and `CTPhase`.
+
 ## Version 0.14.5 (2024-03-29)
 
 Minor release:
