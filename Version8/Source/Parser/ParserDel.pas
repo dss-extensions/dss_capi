@@ -123,11 +123,12 @@ Type
 implementation
 
 {$IFDEF MSWINDOWS}
-{$IFNDEF CONSOLE}
 Uses
+{$IFNDEF CONSOLE}
 
-  Dialogs, ExceptionTrace;
+  Dialogs,
 {$ENDIF}
+  ExceptionTrace;
 {$ENDIF}
 
 CONST

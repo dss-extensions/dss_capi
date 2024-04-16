@@ -47,14 +47,14 @@ VAR
 implementation
 
 Uses ExecCommands, ExecOptions, ShowOptions, ExportOptions, 
-  {$IFDEF WINDOWS}Windows{$ELSE}dl{$ENDIF},
+  {$IFDEF MSWINDOWS}Windows{$ELSE}dl{$ENDIF},
   DSSGlobals, DSSClass, DSSClassDefs, ParserDel, Strutils, ArrayDef, ExceptionTrace;
 
 const colwidth = 25; numcols = 4;  // for listing commands to the console
 
 ////////////////////////////////////////////////////////
 // from https://forum.lazarus.freepascal.org/index.php?topic=46695.0
-{$IFNDEF WINDOWS}
+{$IFNDEF MSWINDOWS}
 function mbGetModuleName(Address: Pointer): String;
 const
   Dummy: Boolean = False;
@@ -102,9 +102,13 @@ End;
 Procedure ShowAboutBox;
 begin
 	writeln ('Console OpenDSS (Electric Power Distribution System Simulator)');
+  {$IFNDEF MSWINDOWS}
 	writeln ('Version: ' + VersionStringFpc + ' (Free Pascal)');
-	writeln ('Copyright (c) 2008-2023, Electric Power Research Institute, Inc.');
-	writeln ('Copyright (c) 2016-2023, Battelle Memorial Institute');
+  {$ELSE}
+  writeln ('Version: ' + VersionString);
+  {$ENDIF}
+	writeln ('Copyright (c) 2008-2024, Electric Power Research Institute, Inc.');
+	writeln ('Copyright (c) 2016-2024, Battelle Memorial Institute');
 	writeln ('All rights reserved.');
 End;
 
@@ -113,7 +117,7 @@ Begin
 end;
 
 FUNCTION GetDSSExeFile: String;
-{$IFDEF WINDOWS}
+{$IFDEF MSWINDOWS}
 Var
   TheFileName:Array[0..260] of char;
 Begin

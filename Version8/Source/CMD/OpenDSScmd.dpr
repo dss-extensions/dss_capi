@@ -204,7 +204,9 @@ uses
   CmdForms in 'CmdForms.pas',
   DynamicExp in '..\General\DynamicExp.pas',
   InvDynamics in '..\Shared\InvDynamics.pas',
-  GenController in '..\Controls\GenController.pas';
+  GenController in '..\Controls\GenController.pas',
+  ExceptionTrace in '..\Shared\ExceptionTrace.pas',
+  WTG3_Model in '..\PCElements\WTG3_Model.pas';
 
 {$R *.RES}
 

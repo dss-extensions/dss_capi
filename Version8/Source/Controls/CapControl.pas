@@ -350,44 +350,49 @@ Begin
 
          {PF Controller changes}
          If ControlType=PFCONTROL then
-         With ControlVars Do
-         Case ParamPointer of
-            1: PropertyValue[1]:= ElementName;  // Synch up with change
-            4: Begin
-                    PFON_Value := 0.95;     // defaults
-                    PFOFF_Value := 1.05;
-               End;
-
-            7: Begin
-                   If (ON_Value >= -1.0) and (ON_Value <= 1.0) then Begin
-                      If ON_Value < 0.0 then PFON_Value := 2.0 + ON_Value else PFON_Value := ON_Value;
-                   End Else Begin
-                      DoSimpleMsg('Invalid PF ON value for CapControl.'+ActiveCapControlObj.Name, 353);
+         Begin
+           With ControlVars Do
+           Begin
+             Case ParamPointer of
+                1: PropertyValue[1]:= ElementName;  // Synch up with change
+                4: Begin
+                        PFON_Value := 0.95;     // defaults
+                        PFOFF_Value := 1.05;
                    End;
-               End;
-            8: Begin
-                   If (OFF_Value >= -1.0) and (OFF_Value <= 1.0) then Begin
-                      If OFF_Value < 0.0 then PFOFF_Value := 2.0 + OFF_Value else PFOFF_Value :=  OFF_Value;
-                   End Else Begin
-                      DoSimpleMsg('Invalid PF OFF value for CapControl.'+ActiveCapControlObj.Name, 35301);
+
+                7: Begin
+                       If (ON_Value >= -1.0) and (ON_Value <= 1.0) then Begin
+                          If ON_Value < 0.0 then PFON_Value := 2.0 + ON_Value else PFON_Value := ON_Value;
+                       End Else Begin
+                          DoSimpleMsg('Invalid PF ON value for CapControl.'+ActiveCapControlObj.Name, 353);
+                       End;
                    End;
-               End;
-
-            15: If FCTPhase > FNphases Then Begin
-                     DoSimpleMsg(Format('Error: Monitored phase(%d) must be less than or equal to number of phases(%d). ', [FCTPhase, FNphases]), 35302);
-                     FCTPhase := 1;
-                End;
-
-            16: If FPTPhase > FNphases Then Begin
-                     DoSimpleMsg(Format('Error: Monitored phase(%d) must be less than or equal to number of phases(%d). ', [FPTPhase, FNphases]), 35303);
-                     FPTPhase := 1;
-                End;
+                8: Begin
+                       If (OFF_Value >= -1.0) and (OFF_Value <= 1.0) then Begin
+                          If OFF_Value < 0.0 then PFOFF_Value := 2.0 + OFF_Value else PFOFF_Value :=  OFF_Value;
+                       End Else Begin
+                          DoSimpleMsg('Invalid PF OFF value for CapControl.'+ActiveCapControlObj.Name, 35301);
+                       End;
+                   End;
+             End;
+           End;
          End;
 
-         case ParamPointer of
-            19: IsUserModel := UserModel.Exists;
-            23: myShapeObj := LoadShapeClass[ActorID].Find(myShapeName);
-         end;
+        With ControlVars Do
+        Begin
+          case ParamPointer of
+          15: If FCTPhase > FNphases Then Begin
+                DoSimpleMsg(Format('Error: Monitored phase(%d) must be less than or equal to number of phases(%d). ', [FCTPhase, FNphases]), 35302);
+                FCTPhase := 1;
+              End;
+          16: If FPTPhase > FNphases Then Begin
+                DoSimpleMsg(Format('Error: Monitored phase(%d) must be less than or equal to number of phases(%d). ', [FPTPhase, FNphases]), 35303);
+                FPTPhase := 1;
+              End;
+          19: IsUserModel := UserModel.Exists;
+          23: myShapeObj := LoadShapeClass[ActorID].Find(myShapeName);
+          end;
+        End;
 
          If IsUserModel Then  ControlType := USERCONTROL;
 
