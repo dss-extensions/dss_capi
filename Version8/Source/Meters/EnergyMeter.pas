@@ -271,7 +271,7 @@ Type
        FVBaseLosses           :Boolean;
 
        FeederObj              :TFeederObj;   // not used at present
-       DefinedZoneList        :pStringArray;
+       DefinedZoneList        :DynStringArray;
        DefinedZoneListSize    :Integer;
 
        {Limits on the entire load in the zone for networks where UE cannot be determined
@@ -636,7 +636,9 @@ Begin
             5: MaxZonekVA_Norm  := Parser[ActorID].DblValue;
             6: MaxZonekVA_Emerg := Parser[ActorID].DblValue;
             7: parser[ActorID].ParseAsVector(Fnphases, SensorCurrent);   // Inits to zero
-            8: InterpretAndAllocStrArray(Param, DefinedZoneListSize, DefinedZoneList);
+            8: Begin
+                DefinedZoneList := InterpretAndAllocStrArray(Param, DefinedZoneListSize);
+               End;
             9: LocalOnly := InterpretYesNo(Param);
            10: InterpretRegisterMaskArray(TotalsMask, ActorID);
            11: FLosses        := InterpretYesNo(Param);
@@ -702,11 +704,10 @@ Begin
        Source_NumInterruptions := OtherEnergyMeter.Source_NumInterruptions;
        Source_IntDuration := OtherEnergyMeter.Source_IntDuration;
 
-       FreeStringArray(DefinedZoneList, DefinedZoneListSize);
        DefinedZoneListSize    := OtherEnergyMeter.DefinedZoneListSize;
-       DefinedZoneList        := AllocStringArray(DefinedZoneListSize);
+       SetLength(DefinedZoneList, DefinedZoneListSize + 1);
        // Copy Strings over (actually incr ref count on string)
-       For i := 1 to DefinedZoneListSize Do  DefinedZoneList^[i] := OtherEnergyMeter.DefinedZoneList^[i];
+       For i := 1 to DefinedZoneListSize Do  DefinedZoneList[i] := OtherEnergyMeter.DefinedZoneList[i];
 
        LocalOnly       := OtherEnergyMeter.LocalOnly;
        VoltageUEOnly   := OtherEnergyMeter.VoltageUEOnly;
@@ -953,7 +954,7 @@ Begin
      ZoneIsRadial        := True;
      HasFeeder           := FALSE; // Not used; leave as False
      FeederObj           := Nil;  // initialize to not assigned
-     DefinedZoneList     := NIL;
+     SetLength(DefinedZoneList, 0);
      DefinedZoneListSize := 0;
 
      FLosses             := TRUE;   {Loss Reporting switches}
@@ -1087,7 +1088,8 @@ Begin
     If Assigned(BranchList)   Then BranchList.Free;
     If Assigned(SequenceList) Then SequenceList.Free;
     If Assigned(LoadList)     Then LoadList.Free;
-    FreeStringArray(DefinedZoneList, DefinedZoneListSize);
+    DefinedZoneListSize := 0;
+    SetLength(DefinedZoneList, DefinedZoneListSize);
 
     If Assigned (FeederSections) Then Reallocmem(FeederSections, 0);
 
@@ -1872,7 +1874,8 @@ Begin
         // Now find all branches connected to this bus that we haven't found already
         // Do not include in this zone if branch has open terminals or has another meter
 
-        IF DefinedZoneListSize = 0 THEN Begin  // Search tree for connected branches (default)
+        IF DefinedZoneListSize = 0 THEN
+        Begin  // Search tree for connected branches (default)
           IsFeederEnd := TRUE;
           adjLst := BusAdjPD[TestBusNum];
           for iPD := 0 to adjLst.Count - 1 do begin
@@ -1914,23 +1917,27 @@ Begin
           If IsFeederEnd then BranchList.ZoneEndsList.Add (BranchList.PresentBranch, TestBusNum);
              {This is an end of the feeder and testbusnum is the end bus}
         END
-        ELSE Begin   // Zone is manually specified; Just add next element in list as a child
+        ELSE
+        Begin   // Zone is manually specified; Just add next element in list as a child
             Inc(ZoneListCounter);
-            WHILE ZoneListCounter <= DefinedZoneListSize Do Begin
-                IF SetElementActive(DefinedZoneList^[ZoneListCounter]) = 0 THEN
-                      Inc(ZoneListCounter) // Not Found. Let's search for another
-                ELSE Begin
-                    TestElement := ActiveCktElement as TPDElement;
-                    IF Not TestElement.Enabled THEN
-                        Inc(ZoneListCounter)  // Lets ignore disabled devices
-                    ELSE Begin
-                        IF (TestElement.DSSObjType and BaseClassMask) <> PD_ELEMENT THEN
-                            Inc(ZoneListCounter)  // Lets ignore non-PD elements
-                        ELSE
-                            BranchList.AddNewChild(TestElement, 0, 0); // add it as a child to the previous element
-                        Break;                                         // Can't do reductions if manually spec'd
-                    END;
+            WHILE ZoneListCounter <= DefinedZoneListSize Do
+            Begin
+              IF SetElementActive(DefinedZoneList[ZoneListCounter]) = 0 THEN
+                    Inc(ZoneListCounter) // Not Found. Let's search for another
+              ELSE
+              Begin
+                TestElement := ActiveCktElement as TPDElement;
+                IF Not TestElement.Enabled THEN
+                    Inc(ZoneListCounter)  // Lets ignore disabled devices
+                ELSE
+                Begin
+                    IF (TestElement.DSSObjType and BaseClassMask) <> PD_ELEMENT THEN
+                        Inc(ZoneListCounter)  // Lets ignore non-PD elements
+                    ELSE
+                        BranchList.AddNewChild(TestElement,TDSSCktElement(TestElement).Terminals^[1].BusRef, 1); // add it as a child to the previous element
+                    Break;                                         // Can't do reductions if manually spec'd
                 END;
+              END;
             END; // while
         END;
       End;  {WITH Active Circuit}
