@@ -29,8 +29,8 @@ interface
 USES WindGenVars, WindGenUserModel, DSSClass,  PCClass, PCElement, ucmatrix, ucomplex, LoadShape, GrowthShape,
     Spectrum, ArrayDef, Dynamics, WTG3_Model, XYCurve;
 
-Const  NumGenRegisters = 6;    // Number of energy meter registers
-       NumGenVariables = 22;
+Const  NumWGenRegisters = 6;    // Number of energy meter registers
+       NumWGenVariables = 22;
 
 TYPE
 
@@ -44,7 +44,7 @@ TYPE
        Procedure DefineProperties;
        Function MakeLike(Const OtherWindGenName:STring):Integer;Override;
      public
-       RegisterNames:Array[1..NumGenregisters] of String;
+       RegisterNames:Array[1..NumWGenregisters] of String;
 
        constructor Create;
        destructor Destroy; override;
@@ -115,8 +115,6 @@ TYPE
         ShapeIsActual   :Boolean;
         ForceBalanced   :Boolean;
 
-        WindModelDyn    : TGE_WTG3_Model;
-
         PROCEDURE CalcDailyMult(Hr:double);
         PROCEDURE CalcDutyMult(Hr:double);  // now incorporates DutyStart offset
         Procedure CalcGenModelContribution(ActorID : Integer);
@@ -163,6 +161,7 @@ TYPE
 
       public
 
+        WindModelDyn    : TGE_WTG3_Model;
         Connection      :Integer;  {0 = line-neutral; 1=Delta}
         DailyDispShape  :String;  // Daily (24 HR) WindGen shape
         DailyDispShapeObj :TLoadShapeObj;  // Daily WindGen Shape for this load
@@ -191,7 +190,7 @@ TYPE
         YearlyShape     :String;  // ='fixed' means no variation  on all the time
         YearlyShapeObj  :TLoadShapeObj;  // Shape for this WindGen
 
-        Registers,  Derivatives         :Array[1..NumGenregisters] of Double;
+        Registers,  Derivatives         :Array[1..NumWGenregisters] of Double;
 
         constructor Create(ParClass :TDSSClass; const SourceName :String);
         destructor  Destroy; override;
@@ -246,7 +245,6 @@ TYPE
 
 VAR
     ActiveWindGenObj:TWindGenObj;
-    WinGenClass :  TWindGen;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
@@ -283,7 +281,7 @@ Begin
      CommandList := TCommandList.Create(PropertyName, NumProperties);
      CommandList.Abbrev := TRUE;
 
-     WinGenClass := Self;
+     WindGenClass[ActiveActor] := Self;
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -953,7 +951,7 @@ Begin
      WindGenVars.kVArating  := kWBase *1.2;
      kVANotSet   := TRUE;  // Flag for default value for kVA
 
-     NumStateVars := NumGenVariables;
+     NumStateVars := NumWGenVariables;
 
      With WindGenVars Do
      Begin
@@ -2219,8 +2217,8 @@ VAR
    i : Integer;
 
 Begin
-       For i := 1 to NumGenregisters Do Registers[i]   := 0.0;
-       For i := 1 to NumGenregisters Do Derivatives[i] := 0.0;
+       For i := 1 to NumWGenregisters Do Registers[i]   := 0.0;
+       For i := 1 to NumWGenregisters Do Derivatives[i] := 0.0;
        FirstSampleAfterReset := True;  // initialize for trapezoidal integration
 End;
 
@@ -2737,7 +2735,7 @@ begin
   If UserModel.Exists Then
   Begin
     N := UserModel.FNumVars;
-    k := (i-NumGenVariables);
+    k := (i-NumWGenVariables);
     If k <= N Then Begin
         Result := UserModel.FGetVariable(k);
         Exit;
@@ -2747,7 +2745,7 @@ begin
   {If we get here, must be in the Shaft Model if anywhere}
   If ShaftModel.Exists Then
   Begin
-    k := i-(NumGenVariables+N);
+    k := i-(NumWGenVariables+N);
     If k > 0 Then Result := ShaftModel.FGetVariable( k );
   End;
 
@@ -2778,7 +2776,7 @@ begin
       End;
          If UserModel.Exists Then Begin
             N := UserModel.FNumVars;
-            k := (i-NumGenVariables) ;
+            k := (i-NumWGenVariables) ;
             If  k<= N Then Begin
                 UserModel.FSetVariable( k, Value );
                 Exit;
@@ -2786,7 +2784,7 @@ begin
           End;
          // If we get here, must be in the shaft model
          If ShaftModel.Exists Then Begin
-            k := (i-(NumGenVariables+N)) ;
+            k := (i-(NumWGenVariables+N)) ;
             If  k > 0 Then ShaftModel.FSetVariable( k, Value );
           End;
      End;
@@ -2798,24 +2796,24 @@ Var  i, N:Integer;
 begin
   N := 0;
   if DynamiceqObj = nil then
-    For i := 1 to NumGenVariables Do States^[i] := Variable[i]
+    For i := 1 to NumWGenVariables Do States^[i] := Variable[i]
   else
     For i := 1 to DynamiceqObj.NumVars * length(DynamicEqVals[0]) Do
       States^[i] := DynamiceqObj.Get_DynamicEqVal(i - 1, DynamicEqVals);
 
   If UserModel.Exists Then Begin
     N := UserModel.FNumVars;
-    UserModel.FGetAllVars(@States^[NumGenVariables+1]);
+    UserModel.FGetAllVars(@States^[NumWGenVariables+1]);
   End;
 
   If ShaftModel.Exists Then Begin
-    ShaftModel.FGetAllVars(@States^[NumGenVariables+1+N]);
+    ShaftModel.FGetAllVars(@States^[NumWGenVariables+1+N]);
   End;
 end;
 
 function TWindGenObj.NumVariables: Integer;
 begin
-     Result  := NumGenVariables;
+     Result  := NumWGenVariables;
      If UserModel.Exists    then Result := Result + UserModel.FNumVars;
      If ShaftModel.Exists   then Result := Result + ShaftModel.FNumVars;
 end;
@@ -2861,7 +2859,7 @@ begin
           Begin
             pName := @Buff;
             n := UserModel.FNumVars;
-            i2 := i-NumGenVariables;
+            i2 := i-NumWGenVariables;
             If i2 <= n Then
               Begin
                // DLL functions require AnsiString (AnsiString) type
@@ -2874,7 +2872,7 @@ begin
         If ShaftModel.Exists Then
           Begin
             pName := @Buff;
-            i2 := i-NumGenVariables-n;
+            i2 := i-NumWGenVariables-n;
             If i2>0 Then UserModel.FGetVarName(i2, pName, BuffSize);
             Result := String(pName);
           End;

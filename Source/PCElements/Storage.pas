@@ -119,7 +119,7 @@ TYPE
         // Variables for Inverter functionalities
         FpctCutIn          :Double;
         FpctCutOut         :Double;
-        FVarFollowInverter :Boolean;
+
         CutInkW            :Double;
         CutOutkW           :Double;
 
@@ -234,6 +234,7 @@ TYPE
         PROCEDURE Set_StorageState(const Value: Integer);
         PROCEDURE Set_pctkWOut(const Value: Double);
         PROCEDURE Set_pctkWIn(const Value: Double);
+        PROCEDURE Set_CurrentLimited(const Value: Boolean);
 
         FUNCTION  Get_DCkW: Double;
         FUNCTION  Get_kWTotalLosses: Double;
@@ -294,6 +295,7 @@ TYPE
 
       public
 
+        FVarFollowInverter :Boolean;
         StorageVars     :TStorageVars;
         myDynVars       : TInvDynamicVars;    // Link to the dybamci variables record
 
@@ -423,6 +425,7 @@ TYPE
         Property kWInverterLosses   :Double  Read Get_InverterLosses;
         Property kWChDchLosses      :Double  Read Get_kWChDchLosses;
         Property DCkW               :Double  Read Get_DCkW;
+        Property IsCurrentLimited   :Boolean Read CurrentLimited              Write Set_CurrentLimited;
 
         Property MinModelVoltagePU  :Double Read VminPu;
         Property pf_wp_nominal      : Double                                  Write Set_pf_wp_nominal;
@@ -4154,6 +4157,14 @@ end;
 PROCEDURE TStorageObj.Set_pctkWIn(const Value: Double);
 begin
      FpctkWIn := Value;
+end;
+
+
+//----------------------------------------------------------------------------
+
+PROCEDURE TStorageObj.Set_CurrentLimited(const Value: Boolean);
+begin
+     CurrentLimited := Value;
 end;
 
 //----------------------------------------------------------------------------
