@@ -393,7 +393,7 @@ begin
   5: begin                                             // Circuit.AllBusVMag
     myType  :=  2;        // Double
     setlength(myDBLArray, 1);
-    myDBLArray := 0;
+    myDBLArray[0] := 0;
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
       WITH ActiveCircuit[ActiveActor] DO

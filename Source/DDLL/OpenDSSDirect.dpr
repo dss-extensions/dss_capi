@@ -2,7 +2,7 @@ library OpenDSSDirect;
 
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2023, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2024, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -233,7 +233,8 @@ uses
   GenController in '..\Controls\GenController.pas',
   ExceptionTrace in '..\Shared\ExceptionTrace.pas',
   WTG3_Model in '..\PCElements\WTG3_Model.pas',
-  DStorages in 'DStorages.pas';
+  DStorages in 'DStorages.pas',
+  DWindGens in 'DWindGens.pas';
 
 //**************************end of the functions*************************************
 exports
@@ -277,7 +278,8 @@ exports
    InitAndGetYparams,GetCompressedYMatrix,ZeroInjCurr,GetSourceInjCurrents,GetPCInjCurr,
    SystemYChanged,BuildYMatrixD,UseAuxCurrents,AddInAuxCurrents,getIpointer,
    getVpointer,SolveSystem,ParallelI,ParallelV,LineCodesI,LineCodesF,LineCodesS,
-   LineCodesV, GICSourcesI,GICSourcesF,GICSourcesS,GICSourcesV,ReduceCktI,ReduceCktF,ReduceCktS;
+   LineCodesV, GICSourcesI,GICSourcesF,GICSourcesS,GICSourcesV,ReduceCktI,ReduceCktF,ReduceCktS,
+   StoragesI,StoragesF,StoragesS,StoragesV,WindGensI,WindGensF,WindGensS,WindGensV;
 
    {$R *.RES}
 

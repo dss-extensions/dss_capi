@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 5/2/2024 5:24:13 PM (- $Rev: 12980 $, 14799765).
+// File generated on 5/3/2024 5:18:21 PM (- $Rev: 12980 $, 18826812).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -3364,9 +3364,9 @@ library OpenDSSengine
     [propput, id(0x000000E2), helpstring("Cut-in speed for the wind generator (m/s - default 5).")]
     HRESULT _stdcall VCutIn([in] double Value);
     [propget, id(0x000000E3), helpstring("Default = 1.10.  Maximum per unit voltage for which the Model is assumed to apply. ")]
-    HRESULT _stdcall VCoutOut([out, retval] double* Value);
+    HRESULT _stdcall VCutOut([out, retval] double* Value);
     [propput, id(0x000000E3), helpstring("Default = 1.10.  Maximum per unit voltage for which the Model is assumed to apply. ")]
-    HRESULT _stdcall VCoutOut([in] double Value);
+    HRESULT _stdcall VCutOut([in] double Value);
     [propget, id(0x000000E4), helpstring("Steady state voltage magnitude.")]
     HRESULT _stdcall Vss([out, retval] double* Value);
     [propput, id(0x000000E4), helpstring("Steady state voltage magnitude.")]
