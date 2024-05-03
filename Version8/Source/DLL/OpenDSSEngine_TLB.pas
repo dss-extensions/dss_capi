@@ -12,7 +12,7 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 98336 $
-// File generated on 5/2/2024 5:24:04 PM from Type Library described below.
+// File generated on 5/3/2024 5:16:36 PM from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
@@ -4137,8 +4137,8 @@ type
     procedure Set_RThev(Value: Double); safecall;
     function Get_VCutIn: Double; safecall;
     procedure Set_VCutIn(Value: Double); safecall;
-    function Get_VCoutOut: Double; safecall;
-    procedure Set_VCoutOut(Value: Double); safecall;
+    function Get_VCutOut: Double; safecall;
+    procedure Set_VCutOut(Value: Double); safecall;
     function Get_Vss: Double; safecall;
     procedure Set_Vss(Value: Double); safecall;
     function Get_WindSpeed: Double; safecall;
@@ -4172,7 +4172,7 @@ type
     property Rad: Double read Get_Rad write Set_Rad;
     property RThev: Double read Get_RThev write Set_RThev;
     property VCutIn: Double read Get_VCutIn write Set_VCutIn;
-    property VCoutOut: Double read Get_VCoutOut write Set_VCoutOut;
+    property VCutOut: Double read Get_VCutOut write Set_VCutOut;
     property Vss: Double read Get_Vss write Set_Vss;
     property WindSpeed: Double read Get_WindSpeed write Set_WindSpeed;
     property XThev: Double read Get_XThev write Set_XThev;
@@ -4211,7 +4211,7 @@ type
     property Rad: Double dispid 224;
     property RThev: Double dispid 225;
     property VCutIn: Double dispid 226;
-    property VCoutOut: Double dispid 227;
+    property VCutOut: Double dispid 227;
     property Vss: Double dispid 228;
     property WindSpeed: Double dispid 229;
     property XThev: Double dispid 230;
