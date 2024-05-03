@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 9/12/2023 10:19:46 AM (- $Rev: 12980 $, 6124250).
+// File generated on 5/2/2024 5:24:13 PM (- $Rev: 12980 $, 14799765).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -109,6 +109,8 @@ library OpenDSSengine
   coclass ReduceCkt;
   interface IStorages;
   coclass Storages;
+  interface IWindGens;
+  coclass WindGens;
 
 
   [
@@ -3177,6 +3179,210 @@ library OpenDSSengine
     HRESULT _stdcall puSOC([out, retval] double* Value);
     [propput, id(0x000000D2), helpstring("Per unit state of charge")]
     HRESULT _stdcall puSOC([in] double Value);
+    [propget, id(0x000000D3), helpstring("Percentage efficiency for CHARGING the Storage element. Default = 90.")]
+    HRESULT _stdcall EffCharge([out, retval] double* Value);
+    [propput, id(0x000000D3), helpstring("Percentage efficiency for CHARGING the Storage element. Default = 90.")]
+    HRESULT _stdcall EffCharge([in] double Value);
+    [propget, id(0x000000D4), helpstring("Percentage efficiency for DISCHARGING the Storage element. Default = 90.")]
+    HRESULT _stdcall EffDischarge([out, retval] double* Value);
+    [propput, id(0x000000D4), helpstring("Percentage efficiency for DISCHARGING the Storage element. Default = 90.")]
+    HRESULT _stdcall EffDischarge([in] double Value);
+    [propget, id(0x000000D5), helpstring("kW rating of power output. Base for Loadshapes when DispMode=Follow. Sets kVA property if it has not been specified yet. Defaults to 25.")]
+    HRESULT _stdcall kWRated([out, retval] double* Value);
+    [propput, id(0x000000D5), helpstring("kW rating of power output. Base for Loadshapes when DispMode=Follow. Sets kVA property if it has not been specified yet. Defaults to 25.")]
+    HRESULT _stdcall kWRated([in] double Value);
+    [propget, id(0x000000D6), helpstring("Defines the control mode for the inverter. It can be one of {GFM = 0| GFL* = 1}.")]
+    HRESULT _stdcall ControlMode([out, retval] long* Value);
+    [propput, id(0x000000D6), helpstring("Defines the control mode for the inverter. It can be one of {GFM = 0| GFL* = 1}.")]
+    HRESULT _stdcall ControlMode([in] long Value);
+    [propget, id(0x000000D7), helpstring("It is the proportional gain for the PI controller within the inverter. Use it to modify the controller response in dynamics simulation mode.")]
+    HRESULT _stdcall Kp([out, retval] double* Value);
+    [propput, id(0x000000D7), helpstring("It is the proportional gain for the PI controller within the inverter. Use it to modify the controller response in dynamics simulation mode.")]
+    HRESULT _stdcall Kp([in] double Value);
+    [propget, id(0x000000D8), helpstring("Nominal rated (1.0 per unit) voltage, kV, for Storage element. ")]
+    HRESULT _stdcall kV([out, retval] double* Value);
+    [propput, id(0x000000D8), helpstring("Nominal rated (1.0 per unit) voltage, kV, for Storage element. ")]
+    HRESULT _stdcall kV([in] double Value);
+    [propget, id(0x000000D9), helpstring("Indicates the inverter nameplate capability (in kVA). Used as the base for Dynamics mode and Harmonics mode values.")]
+    HRESULT _stdcall kVA([out, retval] double* Value);
+    [propput, id(0x000000D9), helpstring("Indicates the inverter nameplate capability (in kVA). Used as the base for Dynamics mode and Harmonics mode values.")]
+    HRESULT _stdcall kVA([in] double Value);
+    [propget, id(0x000000DA), helpstring("Get/set the requested kvar value. Final kvar is subjected to the inverter ratings. Sets inverter to operate in constant kvar mode.")]
+    HRESULT _stdcall kvar([out, retval] double* Value);
+    [propput, id(0x000000DA), helpstring("Get/set the requested kvar value. Final kvar is subjected to the inverter ratings. Sets inverter to operate in constant kvar mode.")]
+    HRESULT _stdcall kvar([in] double Value);
+    [propget, id(0x000000DB), helpstring("Rated Storage capacity in kWh. Default is 50.")]
+    HRESULT _stdcall kWhRated([out, retval] double* Value);
+    [propput, id(0x000000DB), helpstring("Rated Storage capacity in kWh. Default is 50.")]
+    HRESULT _stdcall kWhRated([in] double Value);
+    [propget, id(0x000000DC), helpstring("Limits current magnitude to Vminpu value for both 1-phase and 3-phase Storage similar to Generator Model 7. For 3-phase, limits the positive-sequence current but not the negative-sequence.")]
+    HRESULT _stdcall LimitCurrent([out, retval] double* Value);
+    [propput, id(0x000000DC), helpstring("Limits current magnitude to Vminpu value for both 1-phase and 3-phase Storage similar to Generator Model 7. For 3-phase, limits the positive-sequence current but not the negative-sequence.")]
+    HRESULT _stdcall LimitCurrent([in] double Value);
+    [propget, id(0x000000DD), helpstring("Get/set the requested PF value. ")]
+    HRESULT _stdcall PF([out, retval] double* Value);
+    [propput, id(0x000000DD), helpstring("Get/set the requested PF value. ")]
+    HRESULT _stdcall PF([in] double Value);
+    [propget, id(0x000000DE), helpstring("(Read only) Indicates whether the inverter entered (Yes) or not (No) into Safe Mode.")]
+    HRESULT _stdcall SafeMode([out, retval] long* Value);
+    [propget, id(0x000000DF), helpstring("Indicates the voltage level (%) respect to the base voltage level for which the Inverter will operate.")]
+    HRESULT _stdcall SafeVoltage([out, retval] double* Value);
+    [propput, id(0x000000DF), helpstring("Indicates the voltage level (%) respect to the base voltage level for which the Inverter will operate.")]
+    HRESULT _stdcall SafeVoltage([in] double Value);
+    [propget, id(0x000000E0)]
+    HRESULT _stdcall AmpLimit([out, retval] double* Value);
+    [propput, id(0x000000E0), helpstring("Is the current limiter per phase for the IBR when operating in GFM mode.")]
+    HRESULT _stdcall AmpLimit([in] double Value);
+    [propget, id(0x000000E1), helpstring("Use it for fine tunning the current limiter when active, by default is 0.8, ")]
+    HRESULT _stdcall AmpLimitGain([out, retval] double* Value);
+    [propput, id(0x000000E1), helpstring("Use it for fine tunning the current limiter when active, by default is 0.8, ")]
+    HRESULT _stdcall AmpLimitGain([in] double Value);
+    [propget, id(0x000000E2), helpstring("Indicates the rated voltage (kV) at the input of the inverter while the storage is discharging.")]
+    HRESULT _stdcall kVDC([out, retval] double* Value);
+    [propput, id(0x000000E2), helpstring("Indicates the rated voltage (kV) at the input of the inverter while the storage is discharging.")]
+    HRESULT _stdcall kVDC([in] double Value);
+    [propget, id(0x000000E3), helpstring("Get/set the requested kW value. Final kW is subjected to the inverter ratings.")]
+    HRESULT _stdcall kW([out, retval] double* Value);
+    [propput, id(0x000000E3), helpstring("Get/set the requested kW value. Final kW is subjected to the inverter ratings.")]
+    HRESULT _stdcall kW([in] double Value);
+    [propget, id(0x000000E4), helpstring("It is the tolerance (%) for the closed loop controller of the inverter.")]
+    HRESULT _stdcall PITol([out, retval] double* Value);
+    [propput, id(0x000000E4), helpstring("It is the tolerance (%) for the closed loop controller of the inverter.")]
+    HRESULT _stdcall PITol([in] double Value);
+    [propget, id(0x000000E5), helpstring("Dispatch trigger value for charging the Storage. ")]
+    HRESULT _stdcall ChargeTrigger([out, retval] double* Value);
+    [propput, id(0x000000E5), helpstring("Dispatch trigger value for charging the Storage. ")]
+    HRESULT _stdcall ChargeTrigger([in] double Value);
+    [propget, id(0x000000E6), helpstring("Dispatch trigger value for discharging the Storage. ")]
+    HRESULT _stdcall DischargeTrigger([out, retval] double* Value);
+    [propput, id(0x000000E6), helpstring("Dispatch trigger value for discharging the Storage. ")]
+    HRESULT _stdcall DischargeTrigger([in] double Value);
+    [propget, id(0x000000E7), helpstring("Time of day in fractional hours (0230 = 2.5) at which Storage element will automatically go into charge state. Default is 2.0. ")]
+    HRESULT _stdcall TimeChargeTrig([out, retval] double* Value);
+    [propput, id(0x000000E7), helpstring("Time of day in fractional hours (0230 = 2.5) at which Storage element will automatically go into charge state. Default is 2.0. ")]
+    HRESULT _stdcall TimeChargeTrig([in] double Value);
+    [propget, id(0x000000E8), helpstring("Boolean variable (Yes|No) or (True|False). Defaults to False, which indicates that the reactive power generation/absorption does not respect the inverter status.")]
+    HRESULT _stdcall VarFollowInverter([out, retval] long* Value);
+    [propput, id(0x000000E8), helpstring("Boolean variable (Yes|No) or (True|False). Defaults to False, which indicates that the reactive power generation/absorption does not respect the inverter status.")]
+    HRESULT _stdcall VarFollowInverter([in] long Value);
+  };
+
+  [
+    uuid(6DACB971-F9EE-4E4E-B0B9-7C16913BC83A),
+    helpstring("Interface for exposing the properties of WindGen objects"),
+    dual,
+    oleautomation
+  ]
+  interface IWindGens: IDispatch
+  {
+    [propget, id(0x000000C9), helpstring("Variant with the names of all the WindGen elements int he active model")]
+    HRESULT _stdcall AllNames([out, retval] VARIANT* Value);
+    [propget, id(0x000000CA), helpstring("Variant array containing the names of all the registers within the active windgen obj")]
+    HRESULT _stdcall RegisterNames([out, retval] VARIANT* Value);
+    [propget, id(0x000000CB), helpstring("Variant array containing the values for all the registers within the active windgen obj")]
+    HRESULT _stdcall RegisterValues([out, retval] VARIANT* Value);
+    [propget, id(0x000000CC), helpstring("Set first Storage element active; returns 0 if none.")]
+    HRESULT _stdcall First([out, retval] long* Value);
+    [propget, id(0x000000CD), helpstring("Set Next Storage element active; returns 0 if none.")]
+    HRESULT _stdcall Next([out, retval] long* Value);
+    [propget, id(0x000000CE), helpstring("Returns the number of WindGen objects defined in the active model")]
+    HRESULT _stdcall Count([out, retval] long* Value);
+    [propget, id(0x000000D0), helpstring("Gearbox ratio (Default 1/90).")]
+    HRESULT _stdcall Ag([out, retval] double* Value);
+    [propput, id(0x000000D0), helpstring("Gearbox ratio (Default 1/90).")]
+    HRESULT _stdcall Ag([in] double Value);
+    [propget, id(0x000000CF), helpstring("Get/Set Active WindGen element by index:  1.. Count")]
+    HRESULT _stdcall Idx([out, retval] long* Value);
+    [propput, id(0x000000CF), helpstring("Get/Set Active WindGen element by index:  1.. Count")]
+    HRESULT _stdcall Idx([in] long Value);
+    [propget, id(0x000000D1)]
+    HRESULT _stdcall Cp([out, retval] double* Value);
+    [propput, id(0x000000D1), helpstring("Turbine performance coefficient (deafult 0.41).")]
+    HRESULT _stdcall Cp([in] double Value);
+    [propget, id(0x000000D2), helpstring("Nominal rated (1.0 per unit) voltage, kV, for WindGen")]
+    HRESULT _stdcall kV([out, retval] double* Value);
+    [propput, id(0x000000D2), helpstring("Nominal rated (1.0 per unit) voltage, kV, for WindGen")]
+    HRESULT _stdcall kV([in] double Value);
+    [propget, id(0x000000D3), helpstring("kVA rating of electrical machine. Defaults to 1.2* kW if not specified")]
+    HRESULT _stdcall kVA([out, retval] double* Value);
+    [propput, id(0x000000D3), helpstring("kVA rating of electrical machine. Defaults to 1.2* kW if not specified")]
+    HRESULT _stdcall kVA([in] double Value);
+    [propget, id(0x000000D4), helpstring("Specify the base kvar.  Alternative to specifying the power factor.")]
+    HRESULT _stdcall kvar([out, retval] double* Value);
+    [propput, id(0x000000D4), helpstring("Specify the base kvar.  Alternative to specifying the power factor.")]
+    HRESULT _stdcall kvar([in] double Value);
+    [propget, id(0x000000D5), helpstring("Total base kW for the WindGen")]
+    HRESULT _stdcall kW([out, retval] double* Value);
+    [propput, id(0x000000D5), helpstring("Total base kW for the WindGen")]
+    HRESULT _stdcall kW([in] double Value);
+    [propget, id(0x000000D6), helpstring("Tip speed ratio (Default 7.95).")]
+    HRESULT _stdcall Lamda([out, retval] double* Value);
+    [propput, id(0x000000D6), helpstring("Tip speed ratio (Default 7.95).")]
+    HRESULT _stdcall Lamda([in] double Value);
+    [propget, id(0x000000D7), helpstring("Number of WTG in aggregation.")]
+    HRESULT _stdcall N_WTG([out, retval] long* Value);
+    [propput, id(0x000000D7), helpstring("Number of WTG in aggregation.")]
+    HRESULT _stdcall N_WTG([in] long Value);
+    [propget, id(0x000000D8), helpstring("Number of pole pairs of the induction generator (Default 2).")]
+    HRESULT _stdcall NPoles([out, retval] long* Value);
+    [propput, id(0x000000D8), helpstring("Number of pole pairs of the induction generator (Default 2).")]
+    HRESULT _stdcall NPoles([in] long Value);
+    [propget, id(0x000000D9), helpstring("Air density in kg/m3 (Default 1.225).")]
+    HRESULT _stdcall pd([out, retval] double* Value);
+    [propput, id(0x000000D9), helpstring("Air density in kg/m3 (Default 1.225).")]
+    HRESULT _stdcall pd([in] double Value);
+    [propget, id(0x000000DA), helpstring("WindGen power factor. Default is 0.80.")]
+    HRESULT _stdcall PF([out, retval] double* Value);
+    [propput, id(0x000000DA), helpstring("WindGen power factor. Default is 0.80.")]
+    HRESULT _stdcall PF([in] double Value);
+    [propget, id(0x000000DC), helpstring("Steady state output real power.")]
+    HRESULT _stdcall PSS([out, retval] double* Value);
+    [propput, id(0x000000DC), helpstring("Steady state output real power.")]
+    HRESULT _stdcall PSS([in] double Value);
+    [propget, id(0x000000DD)]
+    HRESULT _stdcall QFlag([out, retval] long* Value);
+    [propput, id(0x000000DD), helpstring("1 to enable reactive power and voltage control.")]
+    HRESULT _stdcall QFlag([in] long Value);
+    [propget, id(0x000000DE), helpstring("Q control mode (0:Q, 1:PF, 2:VV).")]
+    HRESULT _stdcall QMode([out, retval] long* Value);
+    [propput, id(0x000000DE), helpstring("Q control mode (0:Q, 1:PF, 2:VV).")]
+    HRESULT _stdcall QMode([in] long Value);
+    [propget, id(0x000000DF), helpstring("Steady state output reactive power.")]
+    HRESULT _stdcall QSS([out, retval] double* Value);
+    [propput, id(0x000000DF), helpstring("Steady state output reactive power.")]
+    HRESULT _stdcall QSS([in] double Value);
+    [propget, id(0x000000E0), helpstring("Rotor radius in meters (Default 40).")]
+    HRESULT _stdcall Rad([out, retval] double* Value);
+    [propput, id(0x000000E0), helpstring("Rotor radius in meters (Default 40).")]
+    HRESULT _stdcall Rad([in] double Value);
+    [propget, id(0x000000E1), helpstring("per unit Thevenin equivalent R.")]
+    HRESULT _stdcall RThev([out, retval] double* Value);
+    [propput, id(0x000000E1), helpstring("per unit Thevenin equivalent R.")]
+    HRESULT _stdcall RThev([in] double Value);
+    [propget, id(0x000000E2), helpstring("Cut-in speed for the wind generator (m/s - default 5).")]
+    HRESULT _stdcall VCutIn([out, retval] double* Value);
+    [propput, id(0x000000E2), helpstring("Cut-in speed for the wind generator (m/s - default 5).")]
+    HRESULT _stdcall VCutIn([in] double Value);
+    [propget, id(0x000000E3), helpstring("Default = 1.10.  Maximum per unit voltage for which the Model is assumed to apply. ")]
+    HRESULT _stdcall VCoutOut([out, retval] double* Value);
+    [propput, id(0x000000E3), helpstring("Default = 1.10.  Maximum per unit voltage for which the Model is assumed to apply. ")]
+    HRESULT _stdcall VCoutOut([in] double Value);
+    [propget, id(0x000000E4), helpstring("Steady state voltage magnitude.")]
+    HRESULT _stdcall Vss([out, retval] double* Value);
+    [propput, id(0x000000E4), helpstring("Steady state voltage magnitude.")]
+    HRESULT _stdcall Vss([in] double Value);
+    [propget, id(0x000000E5), helpstring("Wind speed in m/s")]
+    HRESULT _stdcall WindSpeed([out, retval] double* Value);
+    [propput, id(0x000000E5), helpstring("Wind speed in m/s")]
+    HRESULT _stdcall WindSpeed([in] double Value);
+    [propget, id(0x000000E6), helpstring("per unit Thevenin equivalent X.")]
+    HRESULT _stdcall XThev([out, retval] double* Value);
+    [propput, id(0x000000E6), helpstring("per unit Thevenin equivalent X.")]
+    HRESULT _stdcall XThev([in] double Value);
+    [propget, id(0x000000DB), helpstring("Get/Set the active windgen obj by name")]
+    HRESULT _stdcall Name([out, retval] BSTR* Value);
+    [propput, id(0x000000DB), helpstring("Get/Set the active windgen obj by name")]
+    HRESULT _stdcall Name([in] BSTR Value);
   };
 
   [
@@ -3614,6 +3820,15 @@ library OpenDSSengine
   coclass Storages
   {
     [default] interface IStorages;
+  };
+
+  [
+    uuid(347418F7-928D-458D-B32D-681C00F33DF0),
+    helpstring("WindGens Class interface")
+  ]
+  coclass WindGens
+  {
+    [default] interface IWindGens;
   };
 
 };

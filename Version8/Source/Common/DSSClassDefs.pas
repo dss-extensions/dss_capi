@@ -215,7 +215,8 @@ Begin
      DSSClasses.New               := TCapControl.Create;
      DSSClasses.New               := TFault.Create;
      DSSClasses.New               := TGenerator.Create;
-     DSSClasses.New               := TWindGen.Create;
+     WindGenClass[ActiveActor]    := TwindGen.Create;
+     DSSClasses.New               := WindGenClass[ActiveActor];
      DSSClasses.New               := TGenDispatcher.Create;
      DSSClasses.New               := TGenController.Create;
      StorageClass[ActiveActor]    := TStorage.Create;

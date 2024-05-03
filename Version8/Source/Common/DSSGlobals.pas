@@ -83,7 +83,8 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
 {$ENDIF}
      NumCPULib,
      Command,
-     ISource;
+     ISource,
+     WindGen;
 
 
 CONST
@@ -270,6 +271,7 @@ VAR
    LineSpacingClass   :Array of TLineSpacing;
    StorageClass       :Array of TStorage;
    PVSystemClass      :Array of TPVSystem;
+   WindGenClass         :Array of TWindGen;
    InvControlClass    :Array of TInvControl;
    ExpControlClass    :Array of TExpControl;
    ActiveVSource      :Array of TVsource;   // created on 01/14/2019 to facilitate actors to modify VSources while simulating
@@ -1518,6 +1520,7 @@ initialization
    setlength(LineSpacingClass,CPU_Cores + 1);
    setlength(StorageClass,CPU_Cores + 1);
    setlength(PVSystemClass,CPU_Cores + 1);
+   setlength(WindGenClass,CPU_Cores + 1);
    setlength(InvControlClass,CPU_Cores + 1);
    setlength(ExpControlClass,CPU_Cores + 1);
    setlength(EventStrings,CPU_Cores + 1);
