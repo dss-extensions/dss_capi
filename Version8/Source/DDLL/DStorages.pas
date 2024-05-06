@@ -396,7 +396,7 @@ Begin
             End;
           End;
     End;
-    24: Begin             // Storages.kVDC Write
+    23: Begin             // Storages.kVDC Write
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -406,7 +406,7 @@ Begin
             End;
           End;
     End;
-    25: Begin            // Storages.kW Read
+    24: Begin            // Storages.kW Read
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -416,7 +416,7 @@ Begin
             End;
           End;
     End;
-    26: Begin            // Storages.kW Write
+    25: Begin            // Storages.kW Write
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -426,7 +426,7 @@ Begin
             End;
           End;
     End;
-    27: Begin           // Storages.kWhRated Read
+    26: Begin           // Storages.kWhRated Read
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -436,7 +436,7 @@ Begin
             End;
           End;
     End;
-    28: Begin           // Storages.kWhRated Write
+    27: Begin           // Storages.kWhRated Write
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -446,7 +446,7 @@ Begin
             End;
           End;
     End;
-    29: Begin           // Storages.kWRated Read
+    28: Begin           // Storages.kWRated Read
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -456,7 +456,7 @@ Begin
             End;
           End;
     End;
-    30: Begin           // Storages.kWRated Write
+    29: Begin           // Storages.kWRated Write
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -466,7 +466,7 @@ Begin
             End;
           End;
     End;
-    31: Begin           // Storages.LimitCurrent Read
+    30: Begin           // Storages.LimitCurrent Read
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -477,7 +477,7 @@ Begin
             End;
           End;
     End;
-    32: Begin           // Storages.LimitCurrent Write
+    31: Begin           // Storages.LimitCurrent Write
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -489,7 +489,7 @@ Begin
             End;
           End;
     End;
-    33: Begin           // Storages.PF Read
+    32: Begin           // Storages.PF Read
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -499,7 +499,7 @@ Begin
             End;
           End;
     End;
-    34: Begin           // Storages.PF Write
+    33: Begin           // Storages.PF Write
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -509,7 +509,7 @@ Begin
             End;
           End;
     End;
-    35: Begin           // Storages.PITol Read
+    34: Begin           // Storages.PITol Read
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -519,7 +519,7 @@ Begin
             End;
           End;
     End;
-    36: Begin           // Storages.PITol Write
+    35: Begin           // Storages.PITol Write
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -529,7 +529,7 @@ Begin
             End;
           End;
     End;
-    37: Begin           // Storages.SafeVoltage Read
+    36: Begin           // Storages.SafeVoltage Read
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -539,7 +539,7 @@ Begin
             End;
           End;
     End;
-    38: Begin           // Storages.SafeVoltage Write
+    37: Begin           // Storages.SafeVoltage Write
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -549,7 +549,7 @@ Begin
             End;
           End;
     End;
-    39: Begin            // Storages.TimeChargeTrig Read
+    38: Begin            // Storages.TimeChargeTrig Read
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
@@ -559,7 +559,7 @@ Begin
             End;
           End;
     End;
-    40: Begin            // Storages.TimeChargeTrig Write
+    39: Begin            // Storages.TimeChargeTrig Write
           If ActiveCircuit[ActiveActor] <> Nil Then
           Begin
             pStorage := ActiveCircuit[ActiveActor].StorageElements.Active;
