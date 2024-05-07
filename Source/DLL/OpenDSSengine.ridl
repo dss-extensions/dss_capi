@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 5/7/2024 10:14:59 AM (- $Rev: 12980 $, 3740390).
+// File generated on 5/7/2024 12:11:00 PM (- $Rev: 12980 $, 10701718).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -3195,7 +3195,7 @@ library OpenDSSengine
     HRESULT _stdcall kWRated([out, retval] double* Value);
     [propput, id(0x000000D5), helpstring("kW rating of power output. Base for Loadshapes when DispMode=Follow. Sets kVA property if it has not been specified yet. Defaults to 25.")]
     HRESULT _stdcall kWRated([in] double Value);
-    [propget, id(0x000000D6), helpstring("Defines the control mode for the inverter. It can be one of {GFM = 0| GFL* = 1}.")]
+    [propget, id(0x000000D6), helpstring("Defines the control mode for the inverter. It can be one of {GFM = 1| GFL* = 0}.")]
     HRESULT _stdcall ControlMode([out, retval] long* Value);
     [propput, id(0x000000D6), helpstring("Defines the control mode for the inverter. It can be one of {GFM = 0| GFL* = 1}.")]
     HRESULT _stdcall ControlMode([in] long Value);
@@ -3237,7 +3237,7 @@ library OpenDSSengine
     HRESULT _stdcall AmpLimit([out, retval] double* Value);
     [propput, id(0x000000E0), helpstring("Is the current limiter per phase for the IBR when operating in GFM mode.")]
     HRESULT _stdcall AmpLimit([in] double Value);
-    [propget, id(0x000000E1), helpstring("Use it for fine tunning the current limiter when active, by default is 0.8, ")]
+    [propget, id(0x000000E1), helpstring("Use it for fine tuning the current limiter when active, by default is 0.8, ")]
     HRESULT _stdcall AmpLimitGain([out, retval] double* Value);
     [propput, id(0x000000E1), helpstring("Use it for fine tunning the current limiter when active, by default is 0.8, ")]
     HRESULT _stdcall AmpLimitGain([in] double Value);
