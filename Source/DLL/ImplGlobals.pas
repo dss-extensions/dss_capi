@@ -59,6 +59,8 @@ Uses
        ImplLineCodes,
        ImplGICSources,
        ImplReduce,
+       ImplStorages,
+       ImplWindgens,
        OpenDSSengine_TLB;
 
 
@@ -196,6 +198,8 @@ Begin
      FLineCodes   := TLineCodes.Create;
      FGICSources  := TGICSources.Create;
      FReduceCkt   := TReduceCkt.Create;
+     FStorages    := TStorages.Create;
+     FWindGens    := TWindGens.Create;
 
      FPropIndex := 0;
      FPropClass := Nil;
