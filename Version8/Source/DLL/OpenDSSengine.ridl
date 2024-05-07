@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 5/3/2024 5:18:21 PM (- $Rev: 12980 $, 18826812).
+// File generated on 5/7/2024 10:14:59 AM (- $Rev: 12980 $, 3740390).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -664,6 +664,10 @@ library OpenDSSengine
     HRESULT _stdcall GICsources([out, retval] IGICSources** Value);
     [propget, id(0x000000F1), helpstring("Connect to the Circuit Reduction Interface")]
     HRESULT _stdcall ReduceCkt([out, retval] IReduceCkt** Value);
+    [propget, id(0x000000F2), helpstring("Connect to Storages Interface")]
+    HRESULT _stdcall Storages([out, retval] IStorages** Value);
+    [propget, id(0x000000F3), helpstring("Connect to WindGens Interface")]
+    HRESULT _stdcall WindGens([out, retval] IWindGens** Value);
   };
 
   [
