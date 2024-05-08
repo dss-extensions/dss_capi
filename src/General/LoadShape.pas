@@ -959,7 +959,7 @@ begin
             LoadFileFeatures(TMMShapeType.P);
             mmFileCmd := 'file=' + FileName + ' column=2';      // Command for Q
             LoadFileFeatures(TMMShapeType.Q);
-            mmDataSize := NumPoints;
+            mmDataSizeQ := mmDataSize; // mmDataSizeQ is not used, only useful for debugging
             mmLineLenQ := mmLineLen;
             ReAllocmem(dP, sizeof(Double) * 2);
             ReAllocmem(dQ, sizeof(Double) * 2);
@@ -1032,7 +1032,7 @@ begin
         begin
             FreeAndNil(F);
             s := 'file=' + FileName;
-            if CreateMMF(s, TMMShapeType.P) then
+            if not CreateMMF(s, TMMShapeType.P) then
                 Exit; // CreateMMF throws an error message already
 
             LoadFileFeatures(TMMShapeType.P);
@@ -1327,9 +1327,9 @@ begin
         CloseHandle(mmQFile);
 {$ELSE}
         if (mmViewQ <> NIL) and (mmViewQ <> mmView) then
-            fpMUnMap(mmViewQ, mmFileSize);
+            fpMUnMap(mmViewQ, mmFileSizeQ);
         if (mmView <> NIL) then
-            fpMUnMap(mmView, mmFileSizeQ);
+            fpMUnMap(mmView, mmFileSize);
 
         if (mmQFile <> 0) and (mmQFile <> mmFile) then
             fpclose(mmQFile);
