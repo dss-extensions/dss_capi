@@ -964,6 +964,7 @@ Begin
          dSpeed     := 0.0;
          D          := 1.0;
          XRdp       := 20.0;
+         SetLength(deltaQNom, 0);
      End;
 
      {Advertise Genvars struct as public}
