@@ -1531,7 +1531,7 @@ Begin
      // Build a dummy Yprim Series so that CalcV does not fail
      If YprimInvalid[ActorID]
      Then  Begin
-         If YPrim_Shunt<>nil Then YPrim_Shunt.Free;
+         If YPrim_Shunt <> nil Then YPrim_Shunt.Free;
          YPrim_Shunt := TcMatrix.CreateMatrix(Yorder);
          IF YPrim_Series <> nil THEN Yprim_Series.Free;
          YPrim_Series := TcMatrix.CreateMatrix(Yorder);

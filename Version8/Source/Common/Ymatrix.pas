@@ -21,6 +21,7 @@ uses
   windows,
 {$ENDIF}
   DSSClass,
+  DSSClassDefs,
   DSSObject;
 
 
@@ -28,6 +29,7 @@ uses
 CONST
       SERIESONLY = 1;
       WHOLEMATRIX = 2;
+      PDE_ONLY = 3;
 
 TYPE
   EEsolv32Problem = class(Exception);
@@ -132,9 +134,10 @@ PROCEDURE BuildYMatrix(BuildOption :Integer; AllocateVI:Boolean; ActorID : Integ
 {Builds designated Y matrix for system and allocates solution arrays}
 
 VAR
-   YMatrixsize  :Integer;
+   YMatrixsize  : Integer;
 //   CmatArray    :pComplexArray;   Replaced with a global array for thread safe operation
-   pElem        :TDSSCktElement;
+   pElem        : TDSSCktElement;
+   ValidElm     : Boolean;
 
    //{****} FTrace: TextFile;
 
@@ -155,14 +158,21 @@ Begin
 
      YMatrixSize := NumNodes;
      Case BuildOption of
-         WHOLEMATRIX: begin
-           ResetSparseMatrix (hYsystem, YMatrixSize, ActorID);
-           hY := hYsystem;
-         end;
-         SERIESONLY: begin
-           ResetSparseMatrix (hYseries, YMatrixSize, ActorID);
-           hY := hYSeries;
-         end;
+         WHOLEMATRIX:
+           begin
+             ResetSparseMatrix (hYsystem, YMatrixSize, ActorID);
+             hY := hYsystem;
+           end;
+         SERIESONLY:
+           begin
+             ResetSparseMatrix (hYseries, YMatrixSize, ActorID);
+             hY := hYSeries;
+           end;
+         PDE_ONLY:
+          begin
+             ResetSparseMatrix (hYseries, YMatrixSize, ActorID);
+             hY := hYSeries;
+          end;
      End;
      // tune up the Yprims if necessary
      IF  (FrequencyChanged) THEN ReCalcAllYPrims(ActorID)
@@ -177,8 +187,9 @@ Begin
      FrequencyChanged := FALSE;
 
      If LogEvents Then  Case BuildOption of
-        WHOLEMATRIX: LogThisEvent('Building Whole Y Matrix',ActorID);
-        SERIESONLY: LogThisEvent('Building Series Y Matrix',ActorID);
+        WHOLEMATRIX : LogThisEvent('Building Whole Y Matrix',ActorID);
+        SERIESONLY  : LogThisEvent('Building Series Y Matrix',ActorID);
+        PDE_ONLY    : LogThisEvent('Building PDE only Y Matrix',ActorID);
      End;
           // Add in Yprims for all devices
      pElem := ActiveCircuit[ActorID].CktElements.First;
@@ -187,6 +198,16 @@ Begin
          WITH pElem Do
          IF  (Enabled) THEN Begin          // Add stuff only if enabled
            Case BuildOption of
+              PDE_ONLY    :
+                Begin
+                  ValidElm  := ((pElem.ParentClass.DSSClassType and BASECLASSMASK) = PD_ELEMENT);
+                  ValidElm := ValidElm or ((pElem.DSSObjType and CLASSMASK) = SOURCE);
+
+                  if ValidElm then
+                    ActiveYPrim[ActorID]  := GetYPrimValues(ALL_YPRIM)
+                  else
+                    ActiveYPrim[ActorID]  := Nil;
+                End;
               WHOLEMATRIX :   ActiveYPrim[ActorID]  := GetYPrimValues(ALL_YPRIM);
               SERIESONLY  :   ActiveYPrim[ActorID]  := GetYPrimValues(SERIES)
            End;
@@ -228,11 +249,15 @@ Begin
      End;
 
      Case BuildOption of
-          WHOLEMATRIX: Begin
+          WHOLEMATRIX : Begin
                            SeriesYInvalid := True;  // Indicate that the Series matrix may not match
                            SystemYChanged := False;
-                       End;
-          SERIESONLY: SeriesYInvalid := False;  // SystemYChange unchanged
+                        End;
+          SERIESONLY  : SeriesYInvalid := False;  // SystemYChange unchanged
+          PDE_ONLY    : Begin
+                          SeriesYInvalid := True;  // Indicate that the Series matrix may not match
+                          SystemYChanged := False;
+                        End;
      End;
     // Deleted RCD only done now on mode change
     // SolutionInitialized := False;  //Require new initial condition of voltages if Y changed
