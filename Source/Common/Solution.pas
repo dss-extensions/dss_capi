@@ -77,6 +77,7 @@ CONST
 
      NORMALSOLVE        = 0;
      NEWTONSOLVE        = 1;
+     NCIMSOLVE          = 2;
 // Constants for the actor's messaging
      SIMULATE           = 0;
      EXIT_ACTOR         = 1;
@@ -337,7 +338,7 @@ TYPE
       pNodeLimits             : Array of Complex;     // Stores the total Q limits for PV buses using all the nodes in the model
       InitGenQ                : Boolean;              // Used to initialize variables the first time the algorithm runs or needs to be reinitialized
       NCIMYRow,                                       // Rows index of the Non-zero values of the Y Bus matrix
-      NCIMYCol                : Array of Integer;     // Cols index of the Non-zero values of Y
+      NCIMYCol                : Array of LongWord;    // Cols index of the Non-zero values of Y
       pNodeType,                                      // Array with the node type (PQ/PV)
       pNodeNumGen             : Array of Integer;     // Stores the number of generators per node for further use
       pNodePVTarget           : Array of Double;      // Array with the target (voltage) of the PV Buses
@@ -369,7 +370,7 @@ TYPE
       PROCEDURE InitPQGen(ActorID : Integer);                                 // Initializes the generators declared as PQ type
       PROCEDURE DistGenClusters(ActorID : Integer);                           // Distributes the reactive power among clustered generators
       PROCEDURE ReversePQ2PV(ActorID : Integer);                              // Reverses the generators converted from PV 2 PQ for the next solution
-
+      FUNCTION FindInArray(myArr : pIntegerArray; mySize, myElm : Integer):Integer;   // Returns the index of an element in the array if found
 //=============================================================================================================================================================
        constructor Create(ParClass:TDSSClass; const solutionname:String);
        destructor  Destroy; override;
@@ -1168,40 +1169,405 @@ End;
 // --------------------*****************************************-------------------------------
 
 PROCEDURE TSolutionObj.GetNCIMPowers(ActorID : Integer);                             // Populate the total power vector before solving
+Var
+  pElem       : TDSSCktElement;
+  valid       : Boolean;
+  Idx,
+  NodeIdx     : Integer;
+  LdPower,
+  LdVolt,
+  GenS        : Complex;
+  pGen        : TGeneratorObj;
+
 Begin
+  NodeIdx := 0;
+  valid   := false;
+  With ActiveCircuit[ActorID] do
+  Begin
+    LdPower := CZero;
+    LdVolt  := CZero;
+    Gens    := CZero;
+
+    pElem := PCElements.First;
+    While (pElem <> nil) do
+    Begin
+      if (pElem.Enabled) then
+      Begin
+        for Idx := 1 to pElem.NPhases do
+        Begin
+          NodeIdx := pElem.NodeRef[idx];
+          case (pElem.DSSObjType and CLASSMASK) of
+            LOAD_ELEMENT :
+              Begin
+                LdPower := cmplx(TLoadObj(pElem).Get_WNominal, TLoadObj(pElem).Get_varNominal);
+                LdVolt  := Solution.NodeV[NodeIdx];
+
+                if (TLoadObj(pElem).FLoadModel = 2) then
+                  DoZBusNCIM(ActorID, NodeIdx, LdVolt, pElem.YPrim)
+                else
+                Begin
+                  if (pNodeType[NodeIdx] = PV_Node) then
+                    pNodePower[NodeIdx] := csub(pNodePower[NodeIdx], LdPower)
+                  else
+                    pNodePower[NodeIdx] := cadd(pNodePower[NodeIdx], LdPower);
+
+                  pElem.Iterminal[Idx] := conjg(cdiv(LdPower, LdVolt));
+                End;
+              End;
+            GEN_ELEMENT:
+              Begin
+                pGen := TGeneratorObj(pElem);
+
+                case pGen.GenModel of
+                  3 : Begin                                                               // Generator is a PV bus
+                        pGen.GenVars.Qnominalperphase :=  pGen.GenVars.deltaQNom[idx - 1];
+
+                        GenS := cmplx(pGen.GenVars.Pnominalperphase, pGen.GenVars.Qnominalperphase);
+                        if (pNodeType[NodeIdx] = PQ_Node) then
+                          pNodePower[NodeIdx]     := cnegate(pNodePower[NodeIdx]);
+
+                          pNodeType[NodeIdx]      := PV_Node;                             // Forces the node to be PV
+                          pNodePower[NodeIdx]     := cadd(GenS, pNodePower[NodeIdx]);
+                          pGenPower[NodeIdx]      := cadd(GenS, pGenPower[NodeIdx]);
+
+                          pNodePVTarget[NodeIdx]  :=  pGen.GenVars.VTarget;               // Updates the target for the Bus, just in case
+                          PVBusIdx[NodeIdx]       :=  pGen.NCIMIdx + idx;                 // Stores the generator IDX in the NCIM array
+                      End;
+                  4 : Begin                                                               // Generator acts like PQ bus
+                        LdVolt := Solution.NodeV[NodeIdx];
+                        if (Length(pGen.GenVars.deltaQNom) = 0) then
+                          GenS := cmplx(pGen.GenVars.Pnominalperphase, pGen.GenVars.Qnominalperphase)
+                        else
+                          GenS := cmplx(pGen.GenVars.Pnominalperphase, pGen.GenVars.deltaQNom[0]);
+
+                        if (pNodeType[NodeIdx] = PQ_Node) then
+                          pNodePower[NodeIdx]   := csub(pNodePower[NodeIdx], GenS)
+                        else
+                          pNodePower[NodeIdx]   := cadd(pNodePower[NodeIdx], GenS);
+
+                        pGenPower[NodeIdx]    := cadd(GenS, pGenPower[NodeIdx]);
+                      End
+                  Else                                                                    // Constant impedance
+                      Begin
+                        LdVolt    := Solution.NodeV[NodeIdx];
+                        DoZBusNCIM(ActorID, NodeIdx, LdVolt, pGen.YPrim);
+                      End;
+                end;
+
+              End;
+            FAULTOBJECT:
+              Begin
+                LdVolt    := Solution.NodeV[NodeIdx];
+                DoZBusNCIM(ActorID, NodeIdx, LdVolt, pElem.YPrim);
+              End;
+            Else
+              Begin
+                // Ignore the others
+              End;
+          end;
+        End;
+      End;
+      pElem := PCElements.Next;
+    End;
+
+  End;
 
 End;
 
 // --------------------*****************************************-------------------------------
 // Apply the PV bus current injection for NCIM
 PROCEDURE TSolutionObj.DoPVBusNCIM(ActorID, i : Integer; VTarget : Double; Power : Complex);
-Begin
+Var
+  Pow,
+  FaVr,
+  FaVm,
+  Temp,
+  Vc2,
+  V,
+  PowN,
+  Curr        : Complex;
+  Vmag,
+  VError,
+  den,
+  myVal       : Double;
+  GCoord,
+  GCoordY,
+  j           : Integer;
 
+const
+  LCoords     : Array [0..3] of Array [0..1] of Integer = ((0,0), (1,1), (0,1), (1,0));
+
+Begin
+  Temp  := CZero;
+  With ActiveCircuit[ActorID].Solution do
+  Begin
+    Pow     :=  conjg(Power);
+    V       :=  NodeV[i];
+    PowN    :=  Power;
+    Curr    :=  conjg(cdiv(PowN, V));
+    Vc2     :=  cmul(conjg(V), conjg(V));
+    FaVr    :=  cdiv(cmplx(-1, 0), Vc2);
+    FaVm    :=  cdiv(cmplx(0, 1), Vc2);
+    GCoord  :=  (i * 2) - 1;
+    // Updates the Jacobian
+    for j := 0 to 3 do
+    Begin
+      case j of
+        0 : Begin                                           // dImdVr
+              Temp.re := -1.0 * cmul(FaVr, Pow).im;
+            End;
+        1 : Begin                                           // dIrdVm
+              Temp.re := -1.0 * cmul(FaVm, Pow).re;
+            End;
+        2 : Begin                                           // dImdVm
+              Temp.re := -1.0 * cmul(FaVm, Pow).im;
+            End;
+        3 : Begin                                           // dIrdVr
+              Temp.re := -1.0 * cmul(FaVr, Pow).re;
+            End;
+      end;
+
+    End;
+    SetMatrixElement(Jacobian, GCoord + LCoords[j][0], GCoord + LCoords[j][1], @Temp);
+  End;
+
+  // Add current injection contributions to deltaF
+  dec(GCoord);                                                        // Removes the additional index added by DSS
+  deltaF[GCoord].re     := deltaF[GCoord].re - Curr.im;               // Respecting the decoupled distribution
+  deltaF[GCoord + 1].re := deltaF[GCoord + 1].re - Curr.re;           // Prioritizing reactive power over the diagonal
+
+  // Add delta V to deltaF in the voltage regulation subsection
+  VMag    := ctopolar(V).mag;
+  GCoord  :=  (ActiveCircuit[ActorID].NumNodes * 2) + PVBusIdx[i] - 1;
+  VError  :=  VTarget - VMag;
+  deltaF [GCoord - 1].re:= VError;
+
+  // Calculate the voltage regulation coefficients (Z)
+  GCoordY := (i * 2) - 1;
+  for j := 0 to 1 do
+  Begin
+    // Adds the regulation coefficients
+    if j = 0 then
+      myVal := -1 * V.re / VMag
+    else
+      myVal := -1 * V.im / VMag;
+
+    Temp := cmplx(myVal, 0);
+    SetMatrixElement(Jacobian, GCOord, GCoordY + j, @Temp);
+  End;
+  // Calculate the power regulation coefficients (X)
+  den := VMag * VMag;
+  for j := 0 to 1 do
+  Begin
+    // Adds the regulation coefficients
+    if j = 0 then
+      myVal := conjg(V).re / den
+    else
+      myVal := conjg(V).im / den;
+    Temp  := cmplx(myVal, 0);
+    SetMatrixElement(Jacobian, GCoordY + j, GCoord, @Temp);
+  End;
 End;
 
 // --------------------*****************************************-------------------------------
 // Apply the PQ bus current injection for NCIM
 PROCEDURE TSolutionObj.DoPQBusNCIM(ActorID, i : Integer; V : Complex; Power : Complex);
+Var
+  Pow,
+  FaVr,
+  FaVm,
+  Temp,
+  Curr,
+  Vc2         : Complex;
+  j,
+  GCoord      : Integer;
+
+const
+  LCoords     : Array [0..3] of Array [0..1] of Integer = ((0,0), (1,1), (0,1), (1,0));
+
 Begin
+  Temp  := CZero;
+  With ActiveCircuit[ActorID].Solution do
+  Begin
+    Pow     :=  conjg(Power);
+    Vc2     :=  cmul(conjg(V), conjg(V));
+    FaVr    :=  cdiv(cmplx(-1, 0), Vc2);
+    FaVm    :=  cdiv(cmplx(0, 1), Vc2);
+    Curr    :=  conjg(cdiv(Power, V));
+    GCoord  :=  (i * 2) - 1;
+    // Updates the Jacobian
+    for j := 0 to 3 do
+    Begin
+      case j of
+        0 : Begin                                           // dImdVr
+              Temp.re := cmul(FaVr, Pow).im;
+            End;
+        1 : Begin                                           // dIrdVm
+              Temp.re := cmul(FaVm, Pow).re;
+            End;
+        2 : Begin                                           // dImdVm
+              Temp.re := cmul(FaVm, Pow).im;
+            End;
+        3 : Begin                                           // dIrdVr
+              Temp.re := cmul(FaVr, Pow).re;
+            End;
+      end;
+
+    End;
+    SetMatrixElement(Jacobian, GCoord + LCoords[j][0], GCoord + LCoords[j][1], @Temp);
+  End;
+
+  // Add current injection contributions to deltaF
+  dec(GCoord);                                                        // Removes the additional index added by DSS
+  deltaF[GCoord].re     := deltaF[GCoord].re + Curr.im;               // Respecting the decoupled distribution
+  deltaF[GCoord + 1].re := deltaF[GCoord + 1].re + Curr.re;           // Prioritizing reactive power over the diagonal
 
 End;
 
 // --------------------*****************************************-------------------------------
 // Apply the COnstant impedance bus current injection for NCIM
 PROCEDURE TSolutionObj.DoZBusNCIM(ActorID, i : Integer; V : Complex; YPrim : TcMatrix);
-Begin
+Var
+  Curr,
+  Temp        : Complex;
+  pYMat       : pComplexArray;
+  MOrder,
+  j,
+  GCoord      : Integer;
 
+const
+  LCoords     : Array [0..3] of Array [0..1] of Integer = ((0,0), (1,1), (0,1), (1,0));
+
+Begin
+  Temp    :=  CZero;
+  GCoord  :=  (i * 2) - 1;
+  pYMat   :=  YPrim.GetValuesArrayPtr(MOrder);
+  Curr    :=  cmul(V, pYmat[1]);
+
+  // Updates the Jacobian
+  for j := 0 to 3 do
+  begin
+    case j of
+      0 : Begin                                             // dImdVr
+            Temp.re :=  pYMat[1].im;
+          End;
+      1 : Begin                                             // dIrdVm
+            Temp.re :=  -1 * pYMat[1].im;
+          End;
+      2 : Begin                                             // dImdVm
+            Temp.re :=  pYMat[1].re;
+          End;
+      3 : Begin                                             // dIrdVr
+            Temp.re :=  pYMat[1].re;
+          End;
+    end;
+    SetMatrixElement(Jacobian, GCoord + LCoords[j][0], GCoord + LCoords[j][1], @Temp);
+  end;
+
+  // Add current injection contributions to deltaF
+  dec(GCoord);                                                        // Removes the additional index added by DSS
+  deltaF[GCoord].re     := deltaF[GCoord].re + Curr.im;               // Respecting the decoupled distribution
+  deltaF[GCoord + 1].re := deltaF[GCoord + 1].re + Curr.re;           // Prioritizing reactive power over the diagonal
 End;
 
 // --------------------*****************************************-------------------------------
 PROCEDURE TSolutionObj.InitNCIMVectors(ActorID : Integer);                           // Initializes the vectors for the node total power in NCIM
+Var
+  myBName   : String;
+  j,
+  i         : Integer;
 Begin
+  SetLength(pNodePower, 1);
+  SetLength(pGenPower, 1);
+  SetLength(pNodeType, 1);
+  SetLength(pNodePVTarget, 1);
+  SetLength(PVBusIdx, 1);
+  SetLength(pNodeLimits, 1);
+  SetLength(pNodeNumGen, 1);
 
+  pNodePower[0]   :=  CZero;
+  pNodeType[0]    :=  -1;     // means ignore
+  myBName         :=  '';
+  With ActiveCircuit[ActorID] do
+  Begin
+    for i := 0 to (NumBuses - 1) do
+    Begin
+      myBName   := BusList.Get(i + 1);
+      With Buses[i] do
+      Begin
+        for j := 0 to (NumNodesThisBus - 1) do
+        Begin
+          SetLength(pNodePower, Length(pNodePower) + 1);
+          pNodePower[High(pNodePower)]  :=  CZero;
+
+          SetLength(pGenPower, Length(pGenPower) + 1);
+          pGenPower[High(pGenPower)]  :=  CZero;
+
+          SetLength(pNodeType, Length(pNodeType) + 1);
+          pNodeType[High(pNodeType)]  :=  PQ_Node;           // Initially, all the buses are PQ
+
+          SetLength(PVBusIdx, Length(PVBusIdx) + 1);
+          PVBusIdx[High(PVBusIdx)]  :=  0;
+
+          SetLength(pNodePVTarget, Length(pNodePVTarget) + 1);
+          pNodePVTarget[High(pNodePVTarget)]  :=  0;
+
+          SetLength(pNodeLimits, Length(pNodeLimits) + 1);
+          pNodeLimits[High(pNodeLimits)]  :=  CZero;
+
+          SetLength(pNodeNumGen, Length(pNodeNumGen) + 1);
+          pNodeNumGen[High(pNodeNumGen)]  :=  0;
+        End;
+      End;
+    End;
+  End;
 End;
 
 // --------------------*****************************************-------------------------------
 PROCEDURE TSolutionObj.DOForceFlatStart(ActorID : Integer);                          // Forces the voltage vector to a flat start (magnitude only).
+Var
+  TempPolar     : polar;
+  BaseAng,
+  mykVBase      : Double;
+  i,
+  SlackNumNodes,
+  AIdx          : Integer;
+  pElem         : TVSourceobj;
+
+const
+  myAng         : Array [0..2] of Double = (0.0, 4 * Pi / 3, 2 * Pi / 3);
+
 Begin
+  With ActiveCircuit[ActorID] do
+  Begin
+    // Sets the initial solution using the calculated angles and the buses voltage bases
+    TempPolar     :=  ctopolar(CZero);
+    mykVBase      :=  0.0;
+    Aidx          :=  0;
+
+    // Ignores the nodes attached to the slack bus
+    SlackNumNodes :=  1;
+    for i := SlackNumNodes to NumNodes do
+    Begin
+      mykVBase      :=  Buses[MapNodeToBus[i].BusRef].kVBase * 1e3;
+      TempPolar     :=  ctopolar(NodeV[i]);
+      TempPolar.mag :=  mykVBase;
+      TempPolar.ang :=  myAng[AIdx];
+      NodeV[i]      :=  ptocomplex(TempPolar);
+      inc(AIdx);
+      if AIdx >= 3 then
+        AIdx  :=  0;
+    End;
+    // Now add the slack bus data
+    pElem         :=  CktElements.First;
+    TempPolar.mag :=  ((pElem.kVBase * 1e3) / SQRT3) * pElem.PerUnit;
+    BaseAng       :=  pElem.Angle * Pi / 180;
+    for i := 1 to 3 do
+    Begin
+      TempPolar.ang :=  ((pElem.Angle * Pi) / 180) + myAng[i - 1];
+      NodeV[i]      :=  ptocomplex(TempPolar);
+    End;
+  End;
 
 End;
 
@@ -1209,48 +1575,232 @@ End;
 {  Initializes the registries for generators declared as PQ buses (Mode 4) by loading up their deltaQ
     with the q nominal per phase given at the generator's declaration}
 PROCEDURE TSolutionObj.InitPQGen(ActorID : Integer);                                 // Initializes the generators declared as PQ type
-Begin
+Var
+  pGen          : TGeneratorObj;
+  i,
+  NumGens       : Integer;
 
+Begin
+  With ActiveCircuit[ActorID] do
+  Begin
+    NumGens     :=  Generators.ListSize - 1;
+
+    pGen        :=  Generators.First;
+    for i := 0 to NumGens do
+    Begin
+      if (pGen.Enabled) and (pGen.GenModel <> 3) then
+      Begin
+        SetLength(pGen.GenVars.deltaQNom, 1);
+        pGen.GenVars.deltaQNom[0] :=  pGen.GenVars.Qnominalperphase;
+      End;
+      pGen        :=  Generators.Next;
+    End;
+  End;
 End;
 
 // --------------------*****************************************-------------------------------
 PROCEDURE TSolutionObj.DistGenClusters(ActorID : Integer);                           // Distributes the reactive power among clustered generators
-Begin
+Var
+  pGen      : TGeneratorObj;
+  j,
+  idx,
+  NumGens   : Integer;
+  Volt      : Complex;
+  Qlocal    : Double;
 
+Begin
+  With ActiveCircuit[ActorID] do
+  Begin
+    Numgens :=  Generators.ListSize;
+    pGen    :=  Generators.First;
+
+    for idx := 1 to Numgens do
+    Begin
+      if pGen.Enabled then
+      Begin
+        if (pNodeNumGen[pGen.NodeRef[1]] > 1) and ((pGen.GenModel = 3) or (pGen.GenModel = 4)) then
+        Begin
+          for j := 1 to pGen.NPhases do
+          Begin
+            Qlocal  := Abs(pGen.GenVars.Pnominalperphase / pGenPower[pGen.NodeRef[j]].re) * pGenPower[pgen.NodeRef[j]].im;
+
+            Volt    := NodeV[pGen.NodeRef[j]];
+            pGen.Iterminal[j] :=  cnegate(conjg(cdiv(cmplx(pGen.GenVars.Pnominalperphase, Qlocal), Volt)));
+          End;
+        End;
+      End;
+      pGen  := Generators.Next;
+    End;
+  End;
+End;
+
+FUNCTION TSolutionObj.FindInArray(myArr : pIntegerArray; mySize, myElm : Integer): Integer;
+Var
+  myIdx     : Integer;
+Begin
+  Result  :=  -1;
+  for myIdx := 0 to (mySize - 1) do
+  Begin
+    if myArr[myIdx] = myElm then
+    Begin
+      Result  := myIdx;
+      break;
+    End;
+  End;
 End;
 
 // --------------------*****************************************-------------------------------
+{  Reverses to model 3 all the gnerators turned into model 4 automatically when the option AvoidPV2PQ is
+    disabled, this to take the model back to its original values after these type of changes take place}
 PROCEDURE TSolutionObj.ReversePQ2PV(ActorID : Integer);                              // Reverses the generators converted from PV 2 PQ for the next solution
+Var
+  pGen    : TGeneratorObj;
+  it,
+  GenIdx,
+  i,
+  NumGens : Integer;
 Begin
+  With ActiveCircuit[ActorID] do
+  Begin
+    NumGens   :=  Generators.ListSize - 1;
+    GenIdx    :=  0;
+    pGen      :=  Generators.First;
+    for i := 0 to Numgens do
+    Begin
+      it    := FindInArray(@PV2PQList[0],Length(PV2PQList),GenIdx);
+      if it >= 0 then
+        pGen.GenModel := 3;           // Takes it back to model 3
+
+      inc(Genidx);
+      pGen      :=  Generators.Next;
+    End;
+
+  End;
 
 End;
 
 // --------------------*****************************************-------------------------------
 FUNCTION TSolutionObj.InitNCIM(ActorID : Integer; InitY : Boolean): Integer;         // Hosts all the initialization routines for NCIM
+Var
+  i         : Integer;
+  NNodes    : pLongWord;
 Begin
-  Result := 1;
+  With ActiveCircuit[ActorID] do
+  Begin
+    // 1. Calculate the Y Bus, PDE only
+    BuildYMatrix(PDE_ONLY, false, ActorID);             // Does not realloc V, I
+    InitNCIMVectors(ActorID);
+    // 2. Performs a flat solution to get the initial voltage estimation
+    ZeroInjCurr(ActorID);                               // All to 0
+    GetSourceInjCurrents(ActorID);                      // sources
+    // Solve for voltages                               {Note:NodeV[0] = 0 + j0 always}
+    if (LogEvents) then
+      LogThisEvent('Solve Sparse Set DoNCIMSolution ...', ActorID);
+
+    if InitY then
+    Begin
+      // Estimate the initial values for the solution
+      SolveSystem(NodeV, ActorID);
+      // 3. Move the Y bus matrix into its sparse lib equivalent for linear algebra ops
+      DOForceFlatStart(ActorID);
+    End;
+    // Gets the number of buses for the system
+    GetSize(hY, NNodes);
+
+    // 4. Setup the Y admittance matrix equivalent for lienar algebra orperations
+    LoadYBusNCIM(ActorID);
+    NCIMRdy :=  True;
+  End;
+  Result := NNodes^;
 
 End;
 
 // --------------------*****************************************-------------------------------
 PROCEDURE TSolutionObj.LoadYBusNCIM(ActorID : Integer);                              // Loads the Y bus admittance matrix into another structure for linear algebra purposes
+Var
+  NBus,
+  nNZ       : pLongWord;
+  ColPtr,
+  RowIdx    : array of Integer;
+  cVals     : array of Complex;
+  re,
+  im        : Double;
+  col,
+  Row,
+  myhY      : NativeUint;
+
 Begin
+  if ASSIGNED(ActiveCircuit[ActorID]) then
+  Begin
+    myhY  := hY;
+    if myhY = 0 then
+      DoSimpleMsg('Y Matrix not Built.', 222)
+    else
+    Begin
+      // this compresses the entries if necessary - no extra work if already solved
+      FactorSparseMatrix(myhY);
+      GetNNZ(myhY, nNZ);
+      GetSize(myhY, NBus); // we should already know this
+
+      SetLength(NCIMYCol, nNZ^);
+      SetLength(NCIMYRow, nNZ^);
+      SetLength(NCIMY, nNZ^);
+      GetTripletMatrix(myhY, nNZ^, @(NCIMYRow[0]), @(NCIMYCol[0]), @(NCIMY[0]));
+    End;
+
+  End;
 
 End;
 
 // --------------------*****************************************-------------------------------
+    { Calculates the injection currents based on the voltages at the nodes using
+       I = YE, this is later used for estimating the convergence in terms of power
+    }
 PROCEDURE TSolutionObj.CalcInjCurr(ActorID : Integer; InitGenQ : Boolean);           // Calculates the injection currents using the actual voltages ( I = Y * V )
-Begin
+Var
+  NBus    : LongInt;
+  myvalue : Complex;
+  i,
+  GSize   : Integer;
 
+Begin
+  GSize := (NCIMNodes * 2) + GetNumGenerators(ActorID, InitGenQ);
+
+  // 4. Resize the input/output vectors
+  SetLength(deltaF, GSize);                               // Resizes the InjCurr mismatch vector to host also voltage control
+  SetLength(deltaZ, GSize);                               // Resizes the voltage mismatch vector including delta Q spaces
+
+  for i := 0 to (GSize - 1) do
+    deltaF[i] := CZero;
+
+  // Multiplies the latest solution (V) by the Y Matrix
+  for i := 0 to (Length(NCIMY) - 1) do
+  Begin
+    // First the value found
+    myvalue   :=  cmul(NCIMY[i], NodeV[NCIMYCol[i] +1]);
+    deltaF[NCIMYRow[i] * 2].re        := deltaF[NCIMYRow[i] * 2].re       + myvalue.im;
+    deltaF[(NCIMYRow[i] * 2) + 1].re  := deltaF[(NCIMYRow[i] * 2) + 1].re + myvalue.re;
+  End;
+
+  // The first 6 elements are equal to 0
+  for i := 0 to 5 do
+    deltaF[i] := CZero;
 End;
 
 // --------------------*****************************************-------------------------------
+    {  Gets the number of generators in the modeland their number of phases
+    Returns the number of generators times their number of phases
+    This form allocating memory within the Jacobian matrix for voltage control (PV buses)
+    Use it ONLY for initializing the structures within the NCIM algorithm
+    }
 FUNCTION TSolutionObj.GetNumGenerators(ActorID : Integer; InitQ : Boolean): Integer; // Gets and initializes all the generators in the model as PV buses
 Begin
   Result := 1;
 End;
 
 // --------------------*****************************************-------------------------------
+    {  Updates the reactive power delivery for generators model 3,
+       this will be reflected in the next solution step. }
 PROCEDURE TSolutionObj.UpdateGenQ(ActorID : Integer);                                // Updates the reacitve power delta for all the generators in the model.
 Begin
 
@@ -1304,6 +1854,7 @@ Begin
 
    CASE Algorithm of
       NEWTONSOLVE : DoNewtonSolution(ActorID);
+      NCIMSOLVE   : //DoNCIMSolution(ActorID);   // Commented out for now
       else          DoNormalSolution(ActorID);
    End;
 
