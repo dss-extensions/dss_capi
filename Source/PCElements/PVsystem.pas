@@ -788,8 +788,9 @@ FUNCTION TPVsystem.Edit(ActorID : Integer):Integer;
                                       else
                                         GFM_mode  :=  False;
                                       YprimInvalid[ActorID] :=  True;
-                                    End
-
+                                    End;
+                propAmpsLimit   : myDynVars.ILimit            := Parser[ActorID].DblValue;
+                propAmpsError   : myDynVars.VError            := Parser[ActorID].DblValue
                 ELSE
                   // Inherited parameters
                   ClassEdit(ActivePVSystemObj, ParamPointer - NumPropsThisClass)
