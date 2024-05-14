@@ -3203,7 +3203,7 @@ begin
     else
       SeasonalRating  :=  False;    // The user didn't define the seasonal signal
   End;
-
+  Try
  { CHECK PDELEMENTS ONLY}
      PDelem :=  ActiveCircuit[ActorID].PDElements.First;
      WHILE PDelem<>nil DO Begin
@@ -3244,7 +3244,7 @@ begin
               // Gets the currents for the active Element
               cBuffer := Allocmem(sizeof(cBuffer^[1])*PDElem.NPhases*PDElem.NTerms);
               PDElem.Get_Current_Mags(cBuffer,ActorID);
-              cVector := Allocmem(sizeof(cBuffer^[1])*3); // for storing
+              cVector := Allocmem(sizeof(cBuffer^[1])*10); // for storing
               for i := 1 to 3 do cVector^[i]  :=  0.0;
               if PDElem.NPhases < 3 then
               Begin
@@ -3295,6 +3295,9 @@ begin
        End;
         PDelem := ActiveCircuit[ActorID].PDElements.Next;
      End;
+  Except
+    On E:Exception Do DoSimpleMsg('Error Writing the OV report in memory: "' + E.Message, 548)
+  End;
 end;
 
 procedure TEnergyMeter.ClearDI_Totals;
