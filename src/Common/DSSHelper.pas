@@ -108,6 +108,9 @@ type
         function GetCapControlClass: TCapControl; inline;
         function GetFaultClass: TFault; inline;
         function GetGeneratorClass: TGenerator; inline;
+        function GetWindGenClass: TWindGen; inline;
+        function GetFMonitorClass: TFMonitor; inline;
+        function GetGeneric5Class: TGeneric5; inline;
         function GetGenDispatcherClass: TGenDispatcher; inline;
         function GetStorageControllerClass: TStorageController; inline;
         function GetRelayClass: TRelay; inline;
@@ -165,6 +168,9 @@ type
         procedure SetCapControlClass(val: TCapControl); inline;
         procedure SetFaultClass(val: TFault); inline;
         procedure SetGeneratorClass(val: TGenerator); inline;
+        procedure SetWindGenClass(val: TWindGen); inline;
+        procedure SetFMonitorClass(val: TFMonitor); inline;
+        procedure SetGeneric5Class(val: TGeneric5); inline;
         procedure SetGenDispatcherClass(val: TGenDispatcher); inline;
         procedure SetStorageControllerClass(val: TStorageController); inline;
         procedure SetRelayClass(val: TRelay); inline;
@@ -235,6 +241,9 @@ type
         property CapControlClass: TCapControl read GetCapControlClass write SetCapControlClass;
         property FaultClass: TFault read GetFaultClass write SetFaultClass;
         property GeneratorClass: TGenerator read GetGeneratorClass write SetGeneratorClass;
+        property WindGenClass: TWindGen read GetWindGenClass write SetWindGenClass;
+        property FMonitorClass: TFMonitor read GetFMonitorClass write SetFMonitorClass;
+        property Generic5Class: TGeneric5 read GetGeneric5Class write SetGeneric5Class;
         property GenDispatcherClass: TGenDispatcher read GetGenDispatcherClass write SetGenDispatcherClass;
         property StorageControllerClass: TStorageController read GetStorageControllerClass write SetStorageControllerClass;
         property RelayClass: TRelay read GetRelayClass write SetRelayClass;
@@ -271,7 +280,7 @@ function TDSSGlobalHelper.GetXYCurveClass: TXYCurve; begin Result := TXYCurve(FX
 function TDSSGlobalHelper.GetGrowthShapeClass: TGrowthShape; begin Result := TGrowthShape(FGrowthShapeClass); end;
 function TDSSGlobalHelper.GetSpectrumClass: TSpectrum; begin Result := TSpectrum(FSpectrumClass); end;
 function TDSSGlobalHelper.GetEnergyMeterClass: TEnergyMeter; begin Result := TEnergyMeter(FEnergyMeterClass); end;
-function TDSSGlobalHelper.GetMonitorClass: TDSSMonitor; begin Result := TDSSMonitor(FMonitorClass); end;
+function TDSSGlobalHelper.GetMonitorClass: TDSSMonitor; begin Result := TDSSMonitor(FMonitorClass_); end;
 function TDSSGlobalHelper.GetSensorClass: TSensor; begin Result := TSensor(FSensorClass); end;
 function TDSSGlobalHelper.GetDynamicExpClass: TDynamicExp; begin Result := TDynamicExp(FDynamicExpClass); end;
 function TDSSGlobalHelper.GetTCC_CurveClass: TTCC_Curve; begin Result := TTCC_Curve(FTCC_CurveClass); end;
@@ -297,6 +306,9 @@ function TDSSGlobalHelper.GetReactorClass: TReactor; begin Result := TReactor(FR
 function TDSSGlobalHelper.GetCapControlClass: TCapControl; begin Result := TCapControl(FCapControlClass); end;
 function TDSSGlobalHelper.GetFaultClass: TFault; begin Result := TFault(FFaultClass); end;
 function TDSSGlobalHelper.GetGeneratorClass: TGenerator; begin Result := TGenerator(FGeneratorClass); end;
+function TDSSGlobalHelper.GetWindGenClass: TWindGen; begin Result := TWindGen(FWindGenClass); end;
+function TDSSGlobalHelper.GetFMonitorClass: TFMonitor; begin Result := TFMonitor(FFMonitorClass); end;
+function TDSSGlobalHelper.GetGeneric5Class: TGeneric5; begin Result := TGeneric5(FGeneric5Class); end;
 function TDSSGlobalHelper.GetGenDispatcherClass: TGenDispatcher; begin Result := TGenDispatcher(FGenDispatcherClass); end;
 function TDSSGlobalHelper.GetStorageControllerClass: TStorageController; begin Result := TStorageController(FStorageControllerClass); end;
 function TDSSGlobalHelper.GetRelayClass: TRelay; begin Result := TRelay(FRelayClass); end;
@@ -332,7 +344,7 @@ procedure TDSSGlobalHelper.SetXYCurveClass(val: TXYCurve); begin FXYCurveClass :
 procedure TDSSGlobalHelper.SetGrowthShapeClass(val: TGrowthShape); begin FGrowthShapeClass := val; end;
 procedure TDSSGlobalHelper.SetSpectrumClass(val: TSpectrum); begin FSpectrumClass := val; end;
 procedure TDSSGlobalHelper.SetEnergyMeterClass(val: TEnergyMeter); begin FEnergyMeterClass := val; end;
-procedure TDSSGlobalHelper.SetMonitorClass(val: TDSSMonitor); begin FMonitorClass := val; end;
+procedure TDSSGlobalHelper.SetMonitorClass(val: TDSSMonitor); begin FMonitorClass_ := val; end;
 procedure TDSSGlobalHelper.SetSensorClass(val: TSensor); begin FSensorClass := val; end;
 procedure TDSSGlobalHelper.SetDynamicExpClass(val: TDynamicExp); begin FDynamicExpClass := val; end;
 procedure TDSSGlobalHelper.SetTCC_CurveClass(val: TTCC_Curve); begin FTCC_CurveClass := val; end;
@@ -358,6 +370,9 @@ procedure TDSSGlobalHelper.SetReactorClass(val: TReactor); begin FReactorClass :
 procedure TDSSGlobalHelper.SetCapControlClass(val: TCapControl); begin FCapControlClass := val; end;
 procedure TDSSGlobalHelper.SetFaultClass(val: TFault); begin FFaultClass := val; end;
 procedure TDSSGlobalHelper.SetGeneratorClass(val: TGenerator); begin FGeneratorClass := val; end;
+procedure TDSSGlobalHelper.SetWindGenClass(val: TWindGen); begin FWindGenClass := val; end;
+procedure TDSSGlobalHelper.SetFMonitorClass(val: TFMonitor); begin FFMonitorClass := val; end;
+procedure TDSSGlobalHelper.SetGeneric5Class(val: TGeneric5); begin FGeneric5Class := val; end;
 procedure TDSSGlobalHelper.SetGenDispatcherClass(val: TGenDispatcher); begin FGenDispatcherClass := val; end;
 procedure TDSSGlobalHelper.SetStorageControllerClass(val: TStorageController); begin FStorageControllerClass := val; end;
 procedure TDSSGlobalHelper.SetRelayClass(val: TRelay); begin FRelayClass := val; end;

@@ -919,7 +919,14 @@ begin
         WriteintoMemStr(TDI_MHandle, Char(10));
         ClearDI_Totals;
         if OverLoadFileIsOpen then
-            WriteOverloadReport;
+        begin
+            try
+                WriteOverloadReport();
+            except
+                on E: Exception do
+                    DoSimpleMsg('Error Writing the OV report in memory: "%s"', [E.Message], 548);
+            end;
+        end;
         if VoltageFileIsOpen then
             WriteVoltageReport;
     end;
@@ -1780,6 +1787,7 @@ var
     iPC, iPD: Integer;
     ActiveBranch: TDSSCktElement;
     TestElement: TPDElement;
+    TestCE: TDSSCktElement;
     pPCelem: TPCElement;
     pLoad: TLoadObj;
     IsFeederEnd: Boolean;
@@ -1986,25 +1994,21 @@ begin
             end
             else
             begin   // Zone is manually specified; Just add next element in list as a child
-                Inc(ZoneListCounter);
-                while ZoneListCounter <= DefinedZoneList.Count do
+                while ZoneListCounter < DefinedZoneList.Count do
                 begin
-                    if ActiveCircuit.SetElementActive(DefinedZoneList[ZoneListCounter - 1]) = 0 then
+                    if ActiveCircuit.SetElementActive(DefinedZoneList[ZoneListCounter]) = 0 then
                         Inc(ZoneListCounter) // Not Found. Let's search for another
-                    else
-                    begin
-                        TestElement := ActiveCircuit.ActiveCktElement as TPDElement;
-                        if not TestElement.Enabled then
-                            Inc(ZoneListCounter)  // Lets ignore disabled devices
-                        else
-                        begin
-                            if (TestElement.DSSObjType and BaseClassMask) <> PD_ELEMENT then
-                                Inc(ZoneListCounter)  // Lets ignore non-PD elements
-                            else
-                                BranchList.AddNewChild(TestElement, 0, 0); // add it as a child to the previous element
-                            Break;                                         // Can't do reductions if manually spec'd
-                        end;
+                        continue;
                     end;
+
+                    TestCE := ActiveCircuit.ActiveCktElement;
+                    if (not TestCE.Enabled) or ((TestCE.DSSObjType and BaseClassMask) <> PD_ELEMENT) then
+                    begin
+                        Inc(ZoneListCounter)  // Lets ignore disabled devices and non-PD elements
+                        continue;
+                    end;
+                    BranchList.AddNewChild(TestElement, TestCE.Terminals[0].BusRef, 1); // add it as a child to the previous element
+                    break; // Can't do reductions if manually spec'd
                 end; // while
             end;
         end;  // FOR iTerm
@@ -3242,7 +3246,7 @@ begin
                 // Gets the currents for the active Element
                 dBuffer := Allocmem(sizeof(Double) * PDElem.NPhases * PDElem.NTerms);
                 PDElem.Get_Current_Mags(dBuffer);
-                dVector := Allocmem(sizeof(Double) * 3); // for storing
+                dVector := Allocmem(sizeof(Double) * 10); // for storing
                 for i := 1 to 3 do
                     dVector[i] := 0.0;
                 if PDElem.NPhases < 3 then

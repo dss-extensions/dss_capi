@@ -1,7 +1,8 @@
 unit Solution;
 
 // ----------------------------------------------------------
-// Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
+// Copyright (c) 2018-2024, DSS-Extensions contributors
+// Copyright (c) 2008-2024, Electric Power Research Institute, Inc.
 // All rights reserved.
 // ----------------------------------------------------------
 
@@ -39,11 +40,16 @@ uses
 const
     NORMALSOLVE = 0;
     NEWTONSOLVE = 1;
+    NCIMSOLVE = 2;
 
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
     AD_ACTORS = 1; // Wait flag to wait only for the A-Diakoptics actors
 {$ENDIF}
     ALL_ACTORS = 0; // Wait flag for all the actors
+
+     // Constants for the NCIM solution algorithm
+    NCIM_PQ_Node = 0; // For indicating if the node is PQ (NCIM solver)
+    NCIM_PV_Node = 1; // For indicating if the node is PV (NCIM solver)
 
 type
 {$SCOPEDENUMS ON}
@@ -247,7 +253,41 @@ type
         LocalBusIdx: array of Integer;
         AD_IBus: TList<Integer>;       // Location of the Current injection bus
         AD_ISrcIdx: TList<Integer>;       // Locator of the ISource bus in actor 1
+{$ENDIF}
 
+        // NCIM Variables
+        // DSS-Extensions: in constrast to the official OpenDSS, most of the functions
+        // related to NCIM are implemented in NCIMSolutionHelper. Everything was
+        // renamed to use the NCIM_ prefix, both variables and functions.
+
+        NCIM_deltaZ, // delta for Injection currents
+        NCIM_deltaF, // delta for Voltages
+        NCIM_NodePower, // Array of complex storing the total power per node
+        NCIM_GenPower, // Stores the total generation power per iteration
+        NCIM_Y, // Stores the Non-zero values of the YBus Marix for multiplication
+        NCIM_NodeLimits: array of Complex; // Stores the total Q limits for PV buses using all the nodes in the model
+        
+        NCIM_YRow, // Rows index of the Non-zero values of the Y Bus matrix
+        NCIM_YCol: array of Longword; // Cols index of the Non-zero values of Y
+        
+        NCIM_NodeType, // Array with the node type (PQ/PV)
+        NCIM_NodeNumGen: array of Integer; // Stores the number of generators per node for further use
+        
+        NCIM_NodePVTarget: array of Double; // Array with the target (voltage) of the PV Buses
+        NCIM_PVBusIdx: array of Integer; // Stores the PVBus current index when indexing the jacobian matrix
+
+        NCIM_Jacobian: Nativeuint; // Sparse Jacobian matrix
+
+        NCIM_InitGenQ, // Used to initialize variables the first time the algorithm runs or needs to be reinitialized
+        NCIM_Ready, // Indicates if the NCIM environment and structures are initialized
+        NCIM_IgnoreQLimit: Boolean; // To indicate if the user wants to ignore the Q limits for generators
+
+        NCIM_GenGain: Double; // Global gain for reactive power injection/absorption when using NCIM
+        NCIM_Nodes: Integer; // Stores the number of nodes within the YBus matrix with only PDE
+
+
+
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
         function SolveAD(Initialize: Boolean): Integer;    // solve one of the A-Diakoptics stages locally
         procedure SendCmd2Actors(Msg: Integer); // Sends a message to other actors different than 1
         procedure UpdateISrc; // Updates the local ISources using the data available at Ic for actor 1
@@ -356,7 +396,8 @@ uses
     Diakoptics,
 {$ENDIF}
     DSSHelper,
-    StrUtils;
+    StrUtils,
+    NCIMSolutionHelper;
 
 const
     NumPropsThisClass = 1;
@@ -503,6 +544,25 @@ begin
     ADiakoptics_Ready := FALSE; // A-Diakoptics needs to be initialized
     LockNodeV := SyncObjs.TCriticalSection.Create9);
 {$ENDIF}
+
+    // Initialize NCIM variables
+    SetLength(NCIM_deltaF, 0);
+    SetLength(NCIM_deltaZ, 0);
+    SetLength(NCIM_NodePower, 0);
+    SetLength(NCIM_GenPower, 0);
+    SetLength(NCIM_Y, 0);
+    SetLength(NCIM_NodeLimits, 0);
+    SetLength(NCIM_YRow, 0);
+    SetLength(NCIM_YCol, 0);
+    SetLength(NCIM_NodeNumGen, 0);
+    SetLength(NCIM_NodePVTarget, 0);
+    SetLength(NCIM_PVBusIdx, 0);
+    NCIM_Ready := false;
+    NCIM_IgnoreQLimit := false;
+    NCIM_GenGain := 1.0;
+    NCIM_InitGenQ := true;
+    NCIM_Jacobian := 0;
+    NCIM_Nodes := 0;
 end;
 
 destructor TSolutionObj.Destroy;
@@ -519,6 +579,8 @@ begin
         DeleteSparseSet(hYsystem);
     if hYseries <> 0 then
         DeleteSparseSet(hYseries);
+    if NCIM_Jacobian <> 0 then
+        DeleteSparseSet(NCIM_Jacobian);
 
 {$IFDEF DSS_CAPI_PM}    
     // Sends a message to the working actor
@@ -686,6 +748,12 @@ var
     i: Integer;
     VMag: Double;
 begin
+    if (ActiveCircuit[ActorID].Solution.Algorithm = NCIMSOLVE) then
+    begin
+        Result := NCIM_Converged();
+        Exit;
+    end;
+
     // base convergence on voltage magnitude
     MaxError := 0.0;
     for i := 1 to ckt.NumNodes do
@@ -808,37 +876,6 @@ begin
         if pGen.genModel = 3 then
         begin
             pGen.InitDQDVCalc();
-
-            // NOTE: The following was commented in https://sourceforge.net/p/electricdss/code/3534/
-            //       The Y matrix element is used since then.
-            //
-            //    // solve at base var setting
-            //     Iteration := 0;
-            //     repeat
-            //         Inc(Iteration);
-            //         ZeroInjCurr;
-            //         if DSS.SolutionAbort then
-            //             Exit;
-            //         GetSourceInjCurrents;
-            //         pGen.InjCurrents;   // get generator currents with nominal vars
-            //         SolveSystem(NodeV);
-            //     until Converged or (Iteration >= Maxiterations);
-            //
-            //     pGen.RememberQV;  // Remember Q and V
-            //     pGen.BumpUpQ;
-            //
-            //    // solve after changing vars
-            //     Iteration := 0;
-            //     repeat
-            //         Inc(Iteration);
-            //         ZeroInjCurr;
-            //         if DSS.SolutionAbort then
-            //             Exit;
-            //         GetSourceInjCurrents;
-            //         pGen.InjCurrents;   // get generator currents with nominal vars
-            //         SolveSystem(NodeV);
-            //     until Converged or (Iteration >= Maxiterations);
-
             pGen.CalcdQdV(); // bssed on remembered Q and V and present values of same
             pGen.ResetStartPoint();
 
@@ -1014,6 +1051,8 @@ begin
     case Algorithm of
         NEWTONSOLVE:
             DoNewtonSolution;
+        NCIMSOLVE:
+            DoNCIMSolution();
         else // was NORMALSOLVE:
             DoNormalSolution;
     end;
@@ -1152,6 +1191,11 @@ begin
                 ControlActionsDone := TRUE; // Stop solution process if failure to converge
         end;
 
+        if (SystemYChanged and (Algorithm = NCIMSOLVE)) then
+        begin
+            NCIM_Ready := false
+        end
+        else
         if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (ckt.IncrCktElements.Count <> 0){$ENDIF} then
         begin
             BuildYMatrix(DSS, WHOLEMATRIX, FALSE); // Rebuild Y matrix, but V stays same

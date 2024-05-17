@@ -94,7 +94,10 @@ type
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
-        function GetMult(Yr: Integer): Double;  // Get multiplier for Specified Year
+        function GetMult(Yr: Integer): Double; // Get multiplier for Specified Year
+        function GetMult(Yr: Integer): Double; // Get multiplier for Specified Year
+        function GetYear(Idx: Integer): Double; // Get year for Specified Index
+        function GetMultIdx(Idx: Integer): Double; // Get multiplier by Index
     end;
 
 implementation
@@ -277,20 +280,51 @@ var
     Index: Integer;
 begin
     Result := 1.0;    // default return value if no points in curve
+    if NPts <= 0 then 
+        Exit; // Handle Exceptional cases
 
-    if NPts > 0 then
-    begin         // Handle Exceptional cases
-        Index := Yr - Round(Year[1]);
-        if Index > 0 then
-        begin     // Returns 1.0 for base year or any year previous
-            if Index > Nyears then
-            begin  // Make some more space
-                NYears := Index + 10;
-                ReallocMem(YearMult, SizeOf(YearMult[1]) * NYears);
-                ReCalcYearMult;
-            end;
-            Result := YearMult[Index];
-        end;
+    Index := Yr - Round(Year[1]);
+    if Index <= 0 then 
+        Exit; // Returns 1.0 for base year or any year previous
+
+    if Index > Nyears then
+    begin  // Make some more space
+        NYears := Index + 10;
+        ReallocMem(YearMult, SizeOf(Double) * NYears);
+        ReCalcYearMult();
+    end;
+    Result := YearMult[Index];
+end;
+
+function TGrowthShapeObj.GetYear(Idx: Integer): Double;
+// This function returns the year stored in memory for this object using the given Index (Idx).
+var
+    Index: Integer;
+begin
+    Result := 0.0;    // default return value if no points in curve
+    if NPts <= 0 then
+        Exit; // Handle Exceptional cases
+
+    Index := Idx;
+    if (Index >= 0) and (Index < Nyears) then
+    begin     // Returns whatever we have in there
+        Result := Year[Index];
+    end;
+end;
+
+function TGrowthShapeObj.GetMultIdx(Idx: Integer): Double;
+// This function returns the multiplier stored in memory for this object using the given Index (Idx).
+var
+    Index: Integer;
+begin
+    Result := 0.0;    // default return value if no points in curve
+    if NPts <= 0 then
+        Exit; // Handle Exceptional cases
+
+    Index := Idx;
+    if (Index >= 0) and (Index < NPts) then
+    begin // Returns whatever we have in there
+        Result := YearMult[Index];
     end;
 end;
 

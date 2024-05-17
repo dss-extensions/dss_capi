@@ -147,15 +147,17 @@ type
         ActorProgress,
         Parallel,
         ConcatenateReports,
-        NUMANodes
+        NUMANodes,
 {$ENDIF}
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
-        ,
         Coverage,
         Num_SubCircuits,
         ADiakoptics,
-        LinkBranches
+        LinkBranches,
 {$ENDIF}
+        IgnoreGenQLimits,
+        NCIMQGain,
+        StateVar
     );
 {$SCOPEDENUMS OFF}
 
@@ -186,6 +188,8 @@ uses
     Dynamics,
     DSSHelper,
     StrUtils,
+    Circuit,
+    PCElement,
     TypInfo
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
     , Diakoptics
@@ -383,6 +387,8 @@ var
     Param: String;
     TestLoadShapeObj: TLoadShapeObj;
     LineObj: TLineObj;
+    TmpStr: String;
+    pce: TPCElement;
 {$IFDEF DSS_CAPI_PM}
     PMParent, DSS: TDSSContext;
 begin
@@ -512,7 +518,11 @@ begin
             39:
                 DSS.DSSExecutive.DoLegalVoltageBases;
             40:
+            begin
                 DSS.ActiveCircuit.Solution.Algorithm := DSS.SolveAlgEnum.StringToOrdinal(Param);
+                if ActiveCircuit.Solution.Algorithm = NCIMSOLVE then
+                    ActiveCircuit.Solution.NCIM_Ready := false;
+            end;
             41:
                 DSS.ActiveCircuit.TrapezoidalIntegration := InterpretYesNo(Param);
             42:
@@ -752,6 +762,48 @@ begin
                     DSS.ActiveCircuit.Solution.ADiakoptics := FALSE;
             end;
 {$ENDIF}
+            ord(Opt.IgnoreGenQLimits):
+                DSS.ActiveCircuit.Solution.NCIM_IgnoreQLimit := InterpretYesNo(Param);
+            ord(Opt.NCIMQGain):
+                DSS.ActiveCircuit.Solution.NCIM_GenGain := DSS.Parser.DblValue;
+            ord(Opt.StateVar):
+            begin
+                DSS.Parser.NextParam;
+                TmpStr := DSS.Parser.StrValue;
+                if ckt.SetElementActive(TmpStr) = 0 then
+                begin
+                    DoSimpleMsg(DSS, 'Object "%s" not found', [TmpStr], 7100);
+                    Exit;
+                end;
+
+                if not (ckt.ActiveCktElement is TPCElement) then
+                begin
+                    DoSimpleMsg(DSS, 'Object "%s" is not a valid PC element.', [ckt.ActiveCktElement.FullName], 7103);
+                    Exit;
+                end;
+                pce = ckt.ActiveCktElement as TPCElement;
+
+                if pce.NumVariables() = 0 then
+                begin
+                    DoSimpleMsg(DSS, 'Object "%s" is not a valid element for this command. Only a selection of PC elements have state variables.', [TmpStr], 7101);
+                    Exit;
+                end;
+
+                DSS.Parser.NextParam;
+                TmpStr := LowerCase(DSS.Parser.StrValue);
+
+                // Search for the variable within the object
+                i := pce.LookupVariable(TmpStr, true);
+                if i < 0 then
+                begin
+                    DoSimpleMsg(DSS, 'State variable "%s" not found in "%s".', [TmpStr, pce.FullName], 7102);
+                    Exit;
+                end;
+
+                // Once found, modifies the value
+                DSS.Parser.NextParam;
+                pce.Variable[i] := DSS.Parser.DblValue;
+            end;
         else
            // Ignore excess parameters
            //TODO: warn about excess parameters
@@ -786,8 +838,11 @@ var
     ParamPointer, i: Integer;
     ParamName: String;
     Param: String;
+    TmpStr: String;
+    pce: TPCElement;
 {$IFDEF DSS_CAPI_PM}
     PMParent, DSS: TDSSContext;
+    ckt: TDSSCircuit;
 begin
     PMParent := MainDSS.GetPrime();
     DSS := MainDSS.ActiveChild;
@@ -1115,6 +1170,47 @@ begin
                         AppendGlobalResult(DSS, 'Initialize A-Diakoptics first!');
                 end;
 {$ENDIF}
+                ord(Opt.IgnoreGenQLimits):
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.NCIM_IgnoreQLimit);
+                ord(Opt.NCIMQGain):
+                    AppendGlobalResult(DSS, Format('%g', [DSS.ActiveCircuit.Solution.NCIM_GenGain]));
+                ord(Opt.StateVar):
+                begin
+                    ckt := DSS.ActiveCircuit;
+
+                    DSS.Parser.NextParam;
+                    TmpStr := DSS.Parser.StrValue;
+                    if ckt.SetElementActive(TmpStr) = 0 then
+                    begin
+                        DoSimpleMsg(DSS, 'Object "%s" not found', [TmpStr], 7100);
+                        Exit;
+                    end;
+
+                    if not (ckt.ActiveCktElement is TPCElement) then
+                    begin
+                        DoSimpleMsg(DSS, 'Object "%s" is not a valid PC element.', [ckt.ActiveCktElement.FullName], 7103);
+                        Exit;
+                    end;
+                    pce = ckt.ActiveCktElement as TPCElement;
+
+                    if pce.NumVariables() = 0 then
+                    begin
+                        DoSimpleMsg(DSS, 'Object "%s" is not a valid element for this command. Only a selection of PC elements have state variables.', [TmpStr], 7101);
+                        Exit;
+                    end;
+
+                    DSS.Parser.NextParam;
+                    TmpStr := LowerCase(DSS.Parser.StrValue);
+
+                    // Search for the variable within the object
+                    i := pce.LookupVariable(TmpStr, true);
+                    if i < 0 then
+                    begin
+                        DoSimpleMsg(DSS, 'State variable "%s" not found in "%s".', [TmpStr, pce.FullName], 7102);
+                        Exit;
+                    end;
+                    AppendGlobalResult(DSS, Format('%g', [pce.Variable[i]]));
+                end;
             else
            // Ignore excess parameters
             end;

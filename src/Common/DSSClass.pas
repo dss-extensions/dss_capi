@@ -1,7 +1,7 @@
 
 unit DSSClass;
 // ----------------------------------------------------------
-// Copyright (c) 2018-2023, Paulo Meira, DSS-Extensions contributors
+// Copyright (c) 2018-2024 DSS-Extensions contributors
 // Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
 // All rights reserved.
 // ----------------------------------------------------------
@@ -146,10 +146,11 @@ type
         HasOCPDevice, // Fuse, Relay, or Recloser
         HasAutoOCPDevice, // Relay or Recloser only
         NeedsRecalc, // Used for Edit command loops
-        NeedsYPrim // Used for Edit command loops + setter flags
+        NeedsYPrim, // Used for Edit command loops + setter flags
         // IsPartofFeeder,  -- UNUSED
         // Drawn,  // Flag used in tree searches etc  -- UNUSED
         // HasSwtControl // Has a remotely-controlled Switch -- UNUSED
+        NCIM_ExPV
     );
     TDSSObjectFlags = set of TDSSObjectFlag;
     Flg = TDSSObjectFlag;
@@ -485,7 +486,7 @@ type
         Saved: Boolean;
         RequiresCircuit: Boolean;
 
-        constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
+        constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String; addToReg: Boolean = true);
         destructor Destroy; override;
         
         Procedure ReallocateElementNameList;
@@ -541,7 +542,7 @@ type
         FGrowthShapeClass: TDSSClass;
         FSpectrumClass: TDSSClass;
         FEnergyMeterClass: TDSSClass;
-        FMonitorClass: TDSSClass;
+        FMonitorClass_: TDSSClass;
         FSensorClass: TDSSClass;
         FTCC_CurveClass: TDSSClass;
         FWireDataClass: TDSSClass;
@@ -566,6 +567,7 @@ type
         FCapControlClass: TDSSClass;
         FFaultClass: TDSSClass;
         FGeneratorClass: TDSSClass;
+        FWindGenClass: TDSSClass;
         FGenDispatcherClass: TDSSClass;
         FStorageControllerClass: TDSSClass;
         FRelayClass: TDSSClass;
@@ -583,6 +585,8 @@ type
         FGICLineClass: TDSSClass;
         FGICTransformerClass: TDSSClass;
         FDynamicExpClass: TDSSClass;
+        FFMonitorClass: TDSSClass;
+        FGeneric5Class: TDSSClass;
 
         FActiveFeederObj: TObject;
         FActiveSolutionObj: TObject;
@@ -1158,8 +1162,8 @@ begin
     Enums.Add(SolveModeEnum);
 
     SolveAlgEnum := TDSSEnum.Create('Solution Algorithm', True, 2, 2,
-        ['Normal', 'Newton'],
-        [NORMALSOLVE, NEWTONSOLVE]);
+        ['Normal', 'Newton', 'NCIM'],
+        [NORMALSOLVE, NEWTONSOLVE, NCIMSOLVE]);
     SolveAlgEnum.DefaultValue := Ord(NORMALSOLVE);
     Enums.Add(SolveAlgEnum);
 
@@ -1453,7 +1457,7 @@ begin
         [ActiveCircuit.Solution.DynaVars.intHour, ActiveCircuit.Solution.Dynavars.t, ActiveCircuit.Solution.iteration, ActiveCircuit.Solution.ControlIteration, EventName]));
 end;
 
-constructor TDSSClass.Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
+constructor TDSSClass.Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String; addToReg: Boolean = true);
 begin
     if PropInfo = NIL then
     begin
@@ -1502,6 +1506,11 @@ begin
     RequiresCircuit := false;
 
     DefineProperties();
+
+    if (addToReg) then
+    begin
+        dssContext.NewDSSClass(self);
+    end;
 end;
 
 destructor TDSSClass.Destroy;
@@ -2560,7 +2569,7 @@ begin
     end;
     s := s + ')';
 
-    inherited Create(dssContext, 0, s);
+    inherited Create(dssContext, 0, s, false);
 end;
 
 function TProxyClass.Find(const ObjName: String; const ChangeActive: Boolean): Pointer;

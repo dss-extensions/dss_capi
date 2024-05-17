@@ -55,7 +55,7 @@ type
         procedure GetAllVariables(var States: ArrayOfDouble); VIRTUAL;
 
         function VariableName(i: Integer): String; VIRTUAL;
-        function LookupVariable(const s: String): Integer;
+        function LookupVariable(const s: String; const matchLength: Boolean = false): Integer;
 
         property Variable[i: Integer]: Double READ Get_Variable WRITE Set_Variable;
 
@@ -198,20 +198,36 @@ begin
     Result := '';
 end;
 
-function TPCElement.LookupVariable(const S: String): Integer;
+function TPCElement.LookupVariable(const S: String; const matchLength: Boolean = false): Integer;
 // Search through variable name list and return index if found
 // Compare up to length of S
 var
     i, TestLength: Integer;
+    sl: String;
 begin
     Result := -1;   // Returns -1 for error not found
+
+    if matchLength then
+    begin
+        sl := LowerCase(S);
+        for i := 1 to NumVariables do
+        begin
+            if s = LowerCase(VariableName(i)) then
+            begin
+                Result := i;
+                Exit;
+            end;
+        end;
+        Exit;
+    end;
+
     TestLength := Length(S);
     for i := 1 to NumVariables do
     begin
         if AnsiCompareText(Copy(VariableName(i), 1, TestLength), S) = 0 then
         begin
             Result := i;
-            Break;
+            Exit;
         end;
     end;
 end;

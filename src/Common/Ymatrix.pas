@@ -1,7 +1,8 @@
 unit Ymatrix;
 
 // ----------------------------------------------------------
-// Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
+// Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
+// Copyright (c) 2018-2024, DSS-Extensions contributors
 // All rights reserved.
 // ----------------------------------------------------------
 
@@ -20,6 +21,7 @@ uses
 const
     SERIESONLY = 1;
     WHOLEMATRIX = 2;
+    PDE_ONLY = 3;
 
 type
     EEsolv32Problem = class(Exception);
@@ -149,6 +151,12 @@ begin
     // Incremental Y update, only valid for BuildOption = WHOLEMATRIX.
     for pElem in Ckt.IncrCktElements do
     begin
+        if (BuildOption = PDE_ONLY) and not (
+            (((pElem.ParentClass.DSSClassType and BASECLASSMASK) = PD_ELEMENT) or
+             ((pElem.DSSObjType and CLASSMASK) = SOURCE))
+         ) then
+            continue;
+
         if (pElem.Enabled and (pElem.Yprim = NIL)) then
         begin
             abortIncremental := True;
@@ -327,7 +335,7 @@ begin
 {$ENDIF}
                 hY := hYsystem;
             end;
-            SERIESONLY:
+            SERIESONLY, PDE_ONLY:
             begin
                 ResetSparseMatrix(hYseries, YMatrixSize);
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}                
@@ -373,6 +381,8 @@ begin
 
                 SERIESONLY:
                     DSS.LogThisEvent(_('Building Series Y Matrix'));
+                PDE_ONLY:
+                    LogThisEvent(_('Building PDE only Y Matrix'));
             end;
           // Add in Yprims for all devices
           
@@ -393,6 +403,14 @@ begin
                         CmatArray := pElem.GetYPrimValues(ALL_YPRIM);
                     SERIESONLY:
                         CmatArray := pElem.GetYPrimValues(SERIES)
+                    PDE_ONLY:
+                    begin
+                        if (((pElem.ParentClass.DSSClassType and BASECLASSMASK) = PD_ELEMENT) or
+                            ((pElem.DSSObjType and CLASSMASK) = SOURCE)) then
+                            CmatArray := GetYPrimValues(ALL_YPRIM)
+                        else
+                            CmatArray := NIL;
+                    end;
                 end;
                 // new function adding primitive Y matrix to KLU system Y matrix
                 if CMatArray <> NIL then
@@ -442,6 +460,11 @@ begin
             end;
             SERIESONLY:
                 SeriesYInvalid := FALSE;  // SystemYChange unchanged
+            PDE_ONLY:
+            begin
+                SeriesYInvalid := TRUE;  // Indicate that the Series matrix may not match
+                SystemYChanged := FALSE;
+            end;
         end;
 
         // Deleted RCD only done now on mode change

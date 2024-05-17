@@ -74,14 +74,16 @@ type
         IncMatrixRows = 54,
         IncMatrixCols = 55,
         BusLevels = 56,
-        Laplacian = 57
+        Laplacian = 57,
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
-        ,
-        ZLL = 58,
-        ZCC = 59,
-        Contours = 60,
-        Y4 = 61
-{$ENDIF}        
+        ZLL,
+        ZCC,
+        Contours,
+        Y4,
+{$ENDIF}
+        Jacobian,
+        DeltaF, 
+        DeltaZ
     );
 {$SCOPEDENUMS OFF}
 
@@ -424,15 +426,21 @@ begin
             57:
                 FileName := 'Laplacian.csv';
 {$IFDEF DSS_CAPI_PM}                
-            58:
+            ord(TExportOption.ZLL):
                 FileName := 'ZLL.csv';
-            59:
+            ord(TExportOption.ZCC):
                 FileName := 'ZCC.csv';
-            60:
+            ord(TExportOption.Contours):
                 FileName := 'C.csv';
-            61:
+            ord(TExportOption.Y4):
                 FileName := 'Y4.csv';
 {$ENDIF}
+            ord(TExportOption.Jacobian):
+                FileName := 'Jacobian.csv';
+            ord(TExportOption.DeltaF):
+                FileName := 'deltaF.csv';
+            ord(TExportOption.DeltaZ):
+                FileName := 'deltaZ.csv';
         else
             FileName := 'EXP_VOLTAGES.csv';    // default
         end;
@@ -612,15 +620,21 @@ begin
         57:
             ExportLaplacian(DSS, FileName);
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
-        58:
+        ord(TExportOption.ZLL):
             ExportZLL(DSS, Filename);
-        59:
+        ord(TExportOption.ZCC):
             ExportZCC(DSS, Filename);
-        60:
+        ord(TExportOption.Contours):
             ExportC(DSS, Filename);
-        61:
+        ord(TExportOption.Y4):
             ExportY4(DSS, FileName);
 {$ENDIF}
+        ord(TExportOption.Jacobian):
+            ExportJacobian(DSS, FileName);
+        ord(TExportOption.DeltaF):
+            ExportdeltaF(DSS, FileName);
+        ord(TExportOption.DeltaZ):
+            ExportdeltaZ(DSS, FileName);
     else
         // ExportVoltages(DSS, Filename);    // default
         DoSimpleMsg(DSS, 'Error: Unknown Export command: "%s"', [parm1], 24713);

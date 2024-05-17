@@ -1,8 +1,8 @@
 unit VSource;
 
 // ----------------------------------------------------------
-// Copyright (c) 2017-2023, Paulo Meira, DSS-Extensions contributors
-// Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
+// Copyright (c) 2017-2024, Paulo Meira, DSS-Extensions contributors
+// Copyright (c) 2008-2024, Electric Power Research Institute, Inc.
 // All rights reserved.
 // ----------------------------------------------------------
 
@@ -168,6 +168,7 @@ type
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
+        procedure NCIM_CalcInjCurrAtBus(Curr: pComplexArray);
 
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
     end;
@@ -1105,6 +1106,12 @@ var
     i: Integer;
 begin
     try
+        if ((ActiveCircuit.Solution.Algorithm = NCIMSOLVE) and (NodeRef[1] = 1)) then
+        begin
+            NCIM_CalcInjCurrAtBus(Curr);
+            Exit;
+        end;
+
         for i := 1 to Yorder do
             Vterminal[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
 
@@ -1212,6 +1219,85 @@ begin
     SetDouble(ord(TProp.X1), X1new, []);
     EndEdit(4);
     inherited;
+end;
+
+procedure TVsourceObj.NCIM_CalcInjCurrAtBus(Curr: pComplexArray);
+var
+    ElmCurrents: array of Complex; // For storing the currents of the PDE
+    myName,
+    BusName: String; // Gets the name of the bus we are connected to
+    ActivePDE,
+    ActivePCE,
+    ActiveElem: TDSSCktElement;
+    id,
+    idx,
+    j,
+    myTerm: Integer; // saves whatever the active ckt element is
+    myList: ArrayOfString;
+begin
+    // Initialization
+    BusName := StripExtension(GetBus(1));
+    myName := LowerCase(ParentClass.Name + '.' + Name);
+    with ActiveCircuit do
+    begin
+        ActiveElem := ActiveCktElement; // saves whatever the active ckt element is
+        myList := getPDEatBus(BusName); // Obtains the list of PDE connected to the Bus
+        myTerm := 0; // The terminal of the PDE connected to the Bus
+
+        for idx := 1 to (Yorder) do
+            Curr[idx] := 0;
+
+        for idx := 0 to High(myList) do
+        begin
+            if myList[idx] = '' then
+                continue;
+
+            myTerm := 0;
+            SetElementActive(myList[idx]);
+            ActivePDE := ActiveCktElement;
+            SetLength(ElmCurrents, ActivePDE.Yorder + 1);
+            ActivePDE.GetCurrents(@(ElmCurrents[1]));
+
+            for j := 1 to ActivePDE.NPhases do
+            begin
+                if BusName = StripExtension(ActivePDE.GetBus(j)) then
+                    break;
+                inc(myTerm);
+            end;
+
+            for j := 1 to NPhases do
+                Curr[j] := Curr[j] - ElmCurrents[(myTerm * Round(ActivePDE.Yorder / 2)) + j];
+        end;
+
+        SetLength(ElmCurrents, 0);
+        SetLength(myList, 0);
+
+        // Now check the PCE at the same Bus
+        myList := getPCEatBus(BusName); // Obtains the list of PCE connected to the Bus
+        myTerm := 0; // The terminal of the PCE connected to the Bus
+
+        for idx := 0 to High(myList) do // We go through all the devices
+        begin
+            if ((LowerCase(myList[idx]) = myName) or (myList[idx] = '')) then
+                continue;
+
+            SetElementActive(myList[idx]);
+            ActivePCE := ActiveCktElement; // To prevent super long statements
+
+            SetLength(ElmCurrents, ActivePCE.Yorder + 1);
+            ActivePCE.GetCurrents(@(ElmCurrents[1]));
+
+            for j := 1 to ActivePCE.NPhases do
+            begin
+                if BusName = StripExtension(ActivePCE.GetBus(j)) then
+                    break;
+                inc(myTerm);
+            end;
+            for j := 1 to NPhases do
+                Curr[j] := Curr[j] + ElmCurrents[(myTerm * ActivePCE.NPhases) + j];
+        end;
+        ActiveCktElement := ActiveElem;
+    end;
 end;
 
 finalization

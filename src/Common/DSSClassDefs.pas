@@ -128,6 +128,9 @@ uses
     GICSource,
     AutoTrans,
     DynamicExp,
+    Generic5OrderMach,
+    fMonitor,
+    WindGen,
 
     DSSHelper;
 
@@ -144,155 +147,60 @@ begin
     // Generic Object classes first in case others refer to them
 
     DSS.LineCodeClass := TLineCode.Create(DSS);
-    DSS.NewDSSClass(DSS.LineCodeClass);
-
     DSS.LoadShapeClass := TLoadShape.Create(DSS);
-    DSS.NewDSSClass(DSS.LoadShapeClass);
-
     DSS.TShapeClass := TTShape.Create(DSS);
-    DSS.NewDSSClass(DSS.TShapeClass);
-
     DSS.PriceShapeClass := TPriceShape.Create(DSS);
-    DSS.NewDSSClass(DSS.PriceShapeClass);
-
     DSS.XYCurveClass := TXYCurve.Create(DSS);
-    DSS.NewDSSClass(DSS.XYCurveClass);
-
     DSS.GrowthShapeClass := TGrowthShape.Create(DSS);
-    DSS.NewDSSClass(DSS.GrowthShapeClass);
-
     DSS.TCC_CurveClass := TTCC_Curve.Create(DSS);
-    DSS.NewDSSClass(DSS.TCC_CurveClass);
-
     DSS.SpectrumClass := TSpectrum.Create(DSS);
-    DSS.NewDSSClass(DSS.SpectrumClass);
-
     DSS.WireDataClass := TWireData.Create(DSS);
-    DSS.NewDSSClass(DSS.WireDataClass);
-
     DSS.CNDataClass := TCNData.Create(DSS);
-    DSS.NewDSSClass(DSS.CNDataClass);
-
     DSS.TSDataClass := TTSData.Create(DSS);
-    DSS.NewDSSClass(DSS.TSDataClass);
-
     DSS.LineSpacingClass := TLineSpacing.Create(DSS);
-    DSS.NewDSSClass(DSS.LineSpacingClass);
-
     DSS.LineGeometryClass := TLineGeometry.Create(DSS);
-    DSS.NewDSSClass(DSS.LineGeometryClass);
-    
     DSS.XfmrCodeClass := TXfmrCode.Create(DSS);
-    DSS.NewDSSClass(DSS.XfmrCodeClass);
 
     // Circuit Element Classes
     DSS.LineClass := TLine.Create(DSS);
-    DSS.NewDSSClass(DSS.LineClass);
-
     DSS.VSourceClass := TVSource.Create(DSS);    // 2-terminal Vsource
-    DSS.NewDSSClass(DSS.VSourceClass);
-
-
-
 
     DSS.ISourceClass := TISource.Create(DSS);    // 2-terminal Isource
-    DSS.NewDSSClass(DSS.ISourceClass);
-
     DSS.VCSSClass := TVCCS.Create(DSS);
-    DSS.NewDSSClass(DSS.VCSSClass);
-
     DSS.LoadClass := TLoad.Create(DSS);
-    DSS.NewDSSClass(DSS.LoadClass);
-
     DSS.TransformerClass := TTransf.Create(DSS);
-    DSS.NewDSSClass(DSS.TransformerClass);
-
     DSS.RegControlClass := TRegControl.Create(DSS);
-    DSS.NewDSSClass(DSS.RegControlClass);
-
     DSS.CapacitorClass := TCapacitor.Create(DSS);
-    DSS.NewDSSClass(DSS.CapacitorClass);
-
     DSS.ReactorClass := TReactor.Create(DSS);
-    DSS.NewDSSClass(DSS.ReactorClass);
-
     DSS.CapControlClass := TCapControl.Create(DSS);
-    DSS.NewDSSClass(DSS.CapControlClass);
-
     DSS.FaultClass := TFault.Create(DSS);
-    DSS.NewDSSClass(DSS.FaultClass);
-
     DSS.DynamicExpClass := TDynamicExp.Create(DSS); // This needs to be before Generator, PVsystem, Storage
-    DSS.NewDSSClass(DSS.DynamicExpClass);
-
     DSS.GeneratorClass := TGenerator.Create(DSS);
-    DSS.NewDSSClass(DSS.GeneratorClass);
-
+    DSS.WindGenClass := TWindGen.Create(DSS);
     DSS.GenDispatcherClass := TGenDispatcher.Create(DSS);
-    DSS.NewDSSClass(DSS.GenDispatcherClass);
-
     DSS.StorageClass := TStorage.Create(DSS);
-    DSS.NewDSSClass(DSS.StorageClass);
-
     DSS.StorageControllerClass := TStorageController.Create(DSS);
-    DSS.NewDSSClass(DSS.StorageControllerClass);
-
     DSS.RelayClass := TRelay.Create(DSS);
-    DSS.NewDSSClass(DSS.RelayClass);
-
     DSS.RecloserClass := TRecloser.Create(DSS);
-    DSS.NewDSSClass(DSS.RecloserClass);
-
     DSS.FuseClass := TFuse.Create(DSS);
-    DSS.NewDSSClass(DSS.FuseClass);
-
     DSS.SwtControlClass := TSwtControl.Create(DSS);
-    DSS.NewDSSClass(DSS.SwtControlClass);
-
     DSS.PVSystemClass := TPVSystem.Create(DSS);
-    DSS.NewDSSClass(DSS.PVSystemClass);
-
     DSS.UPFCClass := TUPFC.Create(DSS);
-    DSS.NewDSSClass(DSS.UPFCClass);
-
     DSS.UPFCControlClass := TUPFCControl.Create(DSS);
-    DSS.NewDSSClass(DSS.UPFCControlClass);
-
     DSS.ESPVLControlClass := TESPVLControl.Create(DSS);
-    DSS.NewDSSClass(DSS.ESPVLControlClass);
-
     DSS.IndMach012Class := TIndMach012.Create(DSS);
-    DSS.NewDSSClass(DSS.IndMach012Class);
-
     DSS.GICsourceClass := TGICsource.Create(DSS); // GIC source
-    DSS.NewDSSClass(DSS.GICsourceClass);
-
     DSS.AutoTransClass := TAutoTrans.Create(DSS); // Auto Transformer
-    DSS.NewDSSClass(DSS.AutoTransClass);
-
     DSS.InvControlClass := TInvControl.Create(DSS);
-    DSS.NewDSSClass(DSS.InvControlClass);
-
     DSS.ExpControlClass := TExpControl.Create(DSS);
-    DSS.NewDSSClass(DSS.ExpControlClass);
-
     DSS.GICLineClass := TGICLine.Create(DSS);
-    DSS.NewDSSClass(DSS.GICLineClass);
-    
     DSS.GICTransformerClass := TGICTransformer.Create(DSS);
-    DSS.NewDSSClass(DSS.GICTransformerClass);
-
     DSS.VSConverterClass := TVSConverter.Create(DSS);
-    DSS.NewDSSClass(DSS.VSConverterClass);
-
     DSS.MonitorClass := TDSSMonitor.Create(DSS);  // Have to do this AFTER Generator
-    DSS.NewDSSClass(DSS.MonitorClass);
-
     DSS.EnergyMeterClass := TEnergyMeter.Create(DSS);  // Have to do this AFTER Generator
-    DSS.NewDSSClass(DSS.EnergyMeterClass);
-
     DSS.SensorClass := TSensor.Create(DSS);      // Create state estimation sensors
-    DSS.NewDSSClass(DSS.SensorClass);
+    DSS.FMonitorClass := TFMonitor.Create(DSS);
+    DSS.Generic5Class := TGeneric5.Create(DSS);
 
     DSS.NumIntrinsicClasses := DSS.DSSClassList.Count;
 

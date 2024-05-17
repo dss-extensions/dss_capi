@@ -51,7 +51,8 @@ type
         deltaV = 31,
         QueryLog = 32,
         Controlled = 33,
-        Result = 34
+        Result = 34,
+        PV2PQ_Conversions = 35
     );
 {$SCOPEDENUMS OFF}
 
@@ -430,6 +431,8 @@ begin
             ShowControlledElements(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'ControlledElements.csv');
         34:
             ShowResult(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Result.csv');
+        ord(TShowOption.PV2PQ_Conversions):
+            ShowPV2PQGen(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'PV2PQ_Generators.csv');
     end;
 
     DSS.InShowResults := FALSE;

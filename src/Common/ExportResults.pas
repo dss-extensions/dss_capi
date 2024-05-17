@@ -68,6 +68,9 @@ procedure ExportZCC(DSS: TDSSContext; FileNm: String);
 procedure ExportY4(DSS: TDSSContext; FileNm: String);
 procedure ExportC(DSS: TDSSContext; FileNm: String);
 {$ENDIF}
+procedure ExportJacobian(DSS: TDSSContext; FileNm: String);
+procedure ExportdeltaF(DSS: TDSSContext; FileNm: String);
+procedure ExportdeltaZ(DSS: TDSSContext; FileNm: String);
 
 implementation
 
@@ -3919,6 +3922,93 @@ begin
 
         DSS.GlobalResult := FileNm;
 
+    finally
+        FreeAndNil(F);
+    end;
+end;
+
+procedure ExportJacobian(DSS: TDSSContext; FileNm: String);
+// Exports the Jacobian matrix calculated when using NCIM solution algorithm
+var
+    F: TFileStream = nil;
+    i,
+    nNZ: Longword;
+    hY: Nativeuint;
+    ColPtr,
+    RowIdx: array of Longword;
+    cVals: array of Complex;
+begin
+    if DSS.ActiveCircuit = nil then
+        Exit;
+
+    hY := ActiveCircuit.Solution.NCIM_Jacobian;
+    if hY < 0 then
+    begin
+        DoSimpleMsg(DSS, _('Jacobian matrix not built.'), 222);
+        Exit;
+    end;
+    
+    // this compresses the entries if necessary - no extra work if already solved
+    FactorSparseMatrix(hY);
+    GetNNZ(hY, @nNZ);
+
+    try
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
+        SetLength(ColPtr, nNZ);
+        SetLength(RowIdx, nNZ);
+        SetLength(cVals, nNZ);
+        GetTripletMatrix(hY, nNZ, @RowIdx[0], @ColPtr[0], @cVals[0]);
+        FSWriteLn(F, 'Row,Col,Value');
+        for i := 0 to (nNZ - 1) do
+        begin
+            FSWriteLn(F, Format('%d,%d,%.10g', [RowIdx[i], ColPtr[i], cVals[i].re]));
+        end;
+        GlobalResult := FileNm;
+    finally
+        FreeAndNil(F);
+    end;
+end;
+
+procedure ExportdeltaF(DSS: TDSSContext; FileNm: String);
+// Exports the deltaF vector obtained in the last iteration of the NCIM solution algorithm (if used)
+var
+    F: TFileStream = nil;
+    re: Double;
+    i: Integer;
+begin
+    if (ActiveCircuit = nil) or (Length(ActiveCircuit.Solution.deltaF) = 0) then
+        Exit;
+    try
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
+        for i := 0 to High(ActiveCircuit.Solution.deltaF) do
+        begin
+            re := ActiveCircuit.Solution.deltaF[i].re;
+            FSWriteLn(F, Format('%.10g', [re]));
+        end;
+        GlobalResult := FileNm;
+    finally
+        FreeAndNil(F);
+    end;
+end;
+
+procedure ExportdeltaZ(DSS: TDSSContext; FileNm: String);
+// Exports the deltaZ vector obtained in the last iteration of the NCIM solution algorithm (if used)
+var
+    F: TFileStream = nil;
+    re: Double;
+    i: Integer;
+begin
+    if (DSS.ActiveCircuit = nil) or (Length(ActiveCircuit.Solution.deltaZ) = 0) then
+        Exit;
+
+    try
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
+        for i := 0 to High(ActiveCircuit.Solution.deltaZ) do
+        begin
+            re := ActiveCircuit.Solution.deltaZ[i].re;
+            FSWriteLn(F, Format('%.10g', [re]));
+        end;
+        GlobalResult := FileNm;
     finally
         FreeAndNil(F);
     end;
