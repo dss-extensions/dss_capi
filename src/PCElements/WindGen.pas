@@ -102,11 +102,11 @@ type
         DutyStart = 20,
         DynamicEq = 21,
         DynOut = 22,
-        Rthev = 23,
-        Xthev = 24,
-        Vss = 25,
-        Pss = 26,
-        Qss = 27,
+        RThev = 23,
+        XThev = 24,
+        VSS = 25,
+        PSS = 26,
+        QSS = 27,
         VWind = 28,
         QMode = 29,
         SimMechFlg = 30,
@@ -201,7 +201,6 @@ type
         Reg_MaxkVA: Integer;
         Reg_MaxkW: Integer;
         Reg_Price: Integer;
-        ShapeFactor: Complex;
         TraceFile: TFileStream;
         UserModel: TWindGenUserModel; // User-Written Models
         UserModelNameStr, UserModelEditStr: String;
@@ -237,7 +236,6 @@ type
 
         procedure WriteTraceRecord(const s: String);
 
-        procedure SyncUpPowerQuantities();
 
         procedure SetkWkvar(const PkW, Qkvar: Double);
 
@@ -245,6 +243,7 @@ type
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
 
     PUBLIC
+        ShapeFactor: Complex;
 
         WindModelDyn: TGE_WTG3_Model;
         Connection: Integer; // 0 = line-neutral; 1=Delta
@@ -287,6 +286,7 @@ type
         function Get_Variable(i: Integer): Double; OVERRIDE;
         procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
+        procedure SyncUpPowerQuantities();
 
 
         procedure SetNominalGeneration();
@@ -488,8 +488,8 @@ begin
     PropertyOffset[ord(TProp.kW)] := ptruint(@obj.kWBase);
     PropertyOffset[ord(TProp.pf)] := ptruint(@obj.PFNominal);
 
-    PropertyOffset[ord(TProp.Rthev)] := ptruint(@obj.WindModelDyn.Zthev.re);
-    PropertyOffset[ord(TProp.Xthev)] := ptruint(@obj.WindModelDyn.Zthev.im);
+    PropertyOffset[ord(TProp.RThev)] := ptruint(@obj.WindModelDyn.ZThev.re);
+    PropertyOffset[ord(TProp.XThev)] := ptruint(@obj.WindModelDyn.ZThev.im);
 
     PropertyOffset[ord(TProp.Vminpu)] := ptruint(@obj.VMinPu);
     PropertyOffset[ord(TProp.Vmaxpu)] := ptruint(@obj.VMaxPu);
@@ -502,11 +502,11 @@ begin
 
     PropertyOffset[ord(TProp.delt0)] := ptruint(@obj.WindModelDyn.delt0);
     
-    PropertyOffset[ord(TProp.Vss)] := ptruint(@obj.WindModelDyn.Vss);
-    PropertyFlags[ord(TProp.Vss)] := [TPropertyFlag.Units_pu_Voltage, TPropertyFlag.NonNegative];
+    PropertyOffset[ord(TProp.VSS)] := ptruint(@obj.WindModelDyn.VSS);
+    PropertyFlags[ord(TProp.VSS)] := [TPropertyFlag.Units_pu_Voltage, TPropertyFlag.NonNegative];
 
-    PropertyOffset[ord(TProp.Pss)] := ptruint(@obj.WindModelDyn.Pss);
-    PropertyOffset[ord(TProp.Qss)] := ptruint(@obj.WindModelDyn.Qss);
+    PropertyOffset[ord(TProp.PSS)] := ptruint(@obj.WindModelDyn.PSS);
+    PropertyOffset[ord(TProp.QSS)] := ptruint(@obj.WindModelDyn.QSS);
     
     PropertyOffset[ord(TProp.VWind)] := ptruint(@obj.WindModelDyn.vwind);
     PropertyFlags[ord(TProp.VWind)] := [TPropertyFlag.NonNegative, TPropertyFlag.Units_m_per_s];
@@ -682,6 +682,7 @@ begin
             //     if GenModel = 3 then
             //         ActiveCircuit.Solution.SolutionInitialized := FALSE;
 
+            //TODO: BUG: these are wrong, the shapes are wind speeds!
             // Sets the kW and kvar properties to match the peak kW demand from the Loadshape
             TProp.yearly:
                 if (YearlyShapeObj <> NIL) and YearlyShapeObj.UseActual then
@@ -742,6 +743,11 @@ begin
             TProp.PLoss:
                 if Loss_CurveObj <> NIL then
                     GenVars.PLoss := Loss_CurveObj.Name;
+
+            TProp.VWind:
+            begin
+                //TODO: save a copy so it doesn't get affected by the loadshapes
+            end;
         end;
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
@@ -950,7 +956,7 @@ begin
 
     // Creates the Dynamic model for the Wind Turbine
     WindModelDyn.Initialize(DSS);
-    WindModelDyn.vwind := 12;
+    WindModelDyn.VWind := 12;
     WindModelDyn.QMode := 0;
 
     RecalcElementData();
@@ -970,7 +976,7 @@ begin
         ShapeIsActual := DailyDispShapeObj.UseActual;
     end
     else
-        ShapeFactor := cmplx(WindModelDyn.vwind, 0); // Default to no daily variation
+        ShapeFactor := cmplx(WindModelDyn.VWind, 0); // Default to no daily variation
 end;
 
 procedure TWindGenObj.CalcDutyMult(Hr: Double);
@@ -993,7 +999,7 @@ begin
         ShapeIsActual := YearlyShapeObj.UseActual;
     end
     else
-        ShapeFactor := cmplx(WindModelDyn.vwind, 0); // Defaults to no variation
+        ShapeFactor := cmplx(WindModelDyn.VWind, 0); // Defaults to no variation
 end;
 
 procedure TWindGenObj.SetNominalGeneration();
@@ -1018,7 +1024,7 @@ begin
     VMagTmp := 0.0;
     myV := CZero;
     GenOn_Saved := GenON;
-    ShapeFactor := cmplx(WindModelDyn.vwind, 0);
+    ShapeFactor := cmplx(WindModelDyn.VWind, 0);
     
     // Check to make sure the generation is ON
     kvarCalc := 0.0;
@@ -1055,7 +1061,7 @@ begin
                 USEDUTY:
                     CalcDutyMult(dblHour);
             else
-                ShapeFactor := cmplx(WindModelDyn.vwind, 0); // default to the wind speed set by default
+                ShapeFactor := cmplx(WindModelDyn.VWind, 0); // default to the wind speed set by default
             end;
         end;
         TSolveMode.MONTECARLO1,
@@ -1081,7 +1087,7 @@ begin
         Factor := ActiveCircuit.GenMultiplier;
     end;
 
-    WindModelDyn.vwind := ShapeFactor.re;
+    WindModelDyn.VWind := ShapeFactor.re;
     if (ShapeFactor.re > GenVars.VCutout) or (ShapeFactor.re < GenVars.VCutin) then
     begin
         GenVars.Pnominalperphase := 0.001 * kWBase;
@@ -1262,7 +1268,7 @@ begin
         if GenON then
         begin
             WTGZLV := sqr(GenVars.kVWindGenBase) * 1e3 / GenVars.kVArating;
-            Y := Cmplx(EPSILON, -WindModelDyn.N_WTG / (WindModelDyn.Zthev.im * WTGZLV)) //Yeq  // L-N value computed in initial condition routines
+            Y := Cmplx(EPSILON, -WindModelDyn.N_WTG / (WindModelDyn.ZThev.im * WTGZLV)) //Yeq  // L-N value computed in initial condition routines
         end
         else
             Y := EPSILON;
@@ -1955,8 +1961,8 @@ begin
     YprimInvalid := true; // Force rebuild of YPrims
     with GenVars do
     begin
-        Zthev := Cmplx(Xdp / XRdp, Xdp);
-        Yeq := Cinv(Zthev);
+        ZThev := Cmplx(Xdp / XRdp, Xdp); //TODO: bug?
+        Yeq := Cinv(ZThev);
 
         // Compute nominal Positive sequence voltage behind transient reactance
         if not GenON then
@@ -1975,7 +1981,7 @@ begin
         case Fnphases of
             1:
             begin
-                Edp := NodeV[NodeRef[1]] - NodeV[NodeRef[2]] - ITerminal[1] * Zthev;
+                Edp := NodeV[NodeRef[1]] - NodeV[NodeRef[2]] - ITerminal[1] * ZThev;
                 VThevMag := Cabs(Edp);
             end;
 
@@ -1989,7 +1995,7 @@ begin
                     Vabc[i] := NodeV[NodeRef[i]]; // Wye Voltage
 
                 Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
-                Edp := V012[1] - I012[1] * Zthev; // Pos sequence
+                Edp := V012[1] - I012[1] * ZThev; // Pos sequence
                 VThevMag := Cabs(Edp);
             end;
         else

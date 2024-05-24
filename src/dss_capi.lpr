@@ -215,7 +215,6 @@ uses
     CAPI_DSSProperty in 'CAPI_DSSProperty.pas',
     CAPI_DSS_Executive in 'CAPI_DSS_Executive.pas',
     CAPI_Error in 'CAPI_Error.pas',
-    //CAPI_DSSEvents in 'CAPI_DSSEvents.pas',
     CAPI_Fuses in 'CAPI_Fuses.pas',
     CAPI_Generators in 'CAPI_Generators.pas',
     CAPI_GICSources in 'CAPI_GICSources.pas',
@@ -248,11 +247,12 @@ uses
     CAPI_Transformers in 'CAPI_Transformers.pas',
     CAPI_TSData in 'CAPI_TSData.pas', // API extension
     CAPI_Vsources in 'CAPI_Vsources.pas',
+    CAPI_WindGens in 'CAPI_WindGens.pas',
     CAPI_WireData in 'CAPI_WireData.pas', // API extension
     CAPI_XYCurves in 'CAPI_XYCurves.pas',
     CAPI_YMatrix in 'CAPI_YMatrix.pas',
-    CAPI_Obj in 'CAPI_Obj.pas', // new experimental API
-    CAPI_ZIP in 'CAPI_ZIP.pas', // new experimental API
+    CAPI_Obj in 'CAPI_Obj.pas', // API extension, whole new API
+    CAPI_ZIP in 'CAPI_ZIP.pas', // API extension, whole new API
     CAPI_Schema in 'CAPI_Schema.pas',
     
     DSSGlobals in 'src/Common/DSSGlobals.pas'
@@ -1467,6 +1467,80 @@ exports
     Vsources_Set_AngleDeg,
     Vsources_Set_Frequency,
     Vsources_Set_Phases,
+
+    WindGens_Get_AllNames,
+    WindGens_Get_AllNames_GR,
+    WindGens_Get_First,
+    WindGens_Get_Name,
+    WindGens_Get_Next,
+    WindGens_Get_RegisterNames,
+    WindGens_Get_RegisterNames_GR,
+    WindGens_Get_RegisterValues,
+    WindGens_Get_RegisterValues_GR,
+    WindGens_Set_Name,
+    WindGens_Get_Count,
+    WindGens_Get_idx,
+    WindGens_Set_idx,
+    WindGens_Set_PF,
+    WindGens_Get_PF,
+    WindGens_Set_kvar,
+    WindGens_Get_kvar,
+    WindGens_Set_kW,
+    WindGens_Get_kW,
+    WindGens_Set_kV,
+    WindGens_Get_kV,
+    WindGens_Get_kVA,
+    WindGens_Set_kVA,
+    WindGens_Get_Ag,
+    WindGens_Get_Cp,
+    WindGens_Get_Lamda,
+    WindGens_Get_N_WTG,
+    WindGens_Get_NPoles,
+    WindGens_Get_pd,
+    WindGens_Get_PSS,
+    WindGens_Get_QFlag,
+    WindGens_Get_QMode,
+    WindGens_Get_QSS,
+    WindGens_Get_Rad,
+    WindGens_Get_RThev,
+    WindGens_Get_VCutIn,
+    WindGens_Get_VCutOut,
+    WindGens_Get_Vss,
+    WindGens_Get_WindSpeed,
+    WindGens_Get_XThev,
+    WindGens_Set_Ag,
+    WindGens_Set_Cp,
+    WindGens_Set_Lamda,
+    WindGens_Set_N_WTG,
+    WindGens_Set_NPoles,
+    WindGens_Set_pd,
+    WindGens_Set_PSS,
+    WindGens_Set_QFlag,
+    WindGens_Set_QMode,
+    WindGens_Set_QSS,
+    WindGens_Set_Rad,
+    WindGens_Set_RThev,
+    WindGens_Set_VCutIn,
+    WindGens_Set_VCutOut,
+    WindGens_Set_Vss,
+    WindGens_Set_WindSpeed,
+    WindGens_Set_XThev,
+    WindGens_Get_Pointer, // API Extension
+    WindGens_Get_Phases, // API Extension
+    WindGens_Set_Phases, // API Extension
+    WindGens_Get_Class_, // API Extension
+    WindGens_Set_Class_, // API Extension
+    WindGens_Get_daily, // API Extension
+    WindGens_Get_duty, // API Extension
+    WindGens_Get_Yearly, // API Extension
+    WindGens_Set_daily, // API Extension
+    WindGens_Set_duty, // API Extension
+    WindGens_Set_Yearly, // API Extension
+    WindGens_Get_IsDelta, // API Extension
+    WindGens_Set_IsDelta, // API Extension
+    WindGens_Get_Bus1, // API Extension
+    WindGens_Set_Bus1, // API Extension
+
     XYCurves_Get_AllNames,
     XYCurves_Get_Count,
     XYCurves_Get_First,

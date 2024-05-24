@@ -153,7 +153,7 @@ type
         // number of WTG
         N_WTG: Integer;
         // terminal impedance
-        Zthev: Complex;
+        ZThev: Complex;
         // terminal voltage and current
         Vabc, Iabc, Eabc: TPhArray;
         V012, I012, E012: TSymCompArray;
@@ -163,9 +163,9 @@ type
         Pele, Qele: Double;
         Pgen, Qgen: Double;
         // steady state conditions for initialization
-        Vss, Pss, Qss: Double;
+        VSS, PSS, QSS: Double;
         // wind speed
-        vwind: Double;
+        VWind: Double;
 
         DSS: TDSSContext;
 
@@ -198,12 +198,12 @@ begin
     //
     N_WTG := 1;
     //
-    Vss := 1;
-    Pss := 1;
-    Qss := 0;
-    vwind := 14;
+    VSS := 1;
+    PSS := 1;
+    QSS := 0;
+    VWind := 14;
     //
-    Zthev := cmplx(0.0, 0.05);
+    ZThev := cmplx(0.0, 0.05);
     //
     SimMechFlg := 1;
     APCFLG := 0;
@@ -269,7 +269,7 @@ begin
     IqLimAsymFlt := 0.447;
     //
     TfltIcmdPos := 0.002;
-    // KpIregPos := 0.9*Zthev.im;
+    // KpIregPos := 0.9*ZThev.im;
     // KiIregPos := 100*KpIregPos;
     rrlIqCmd := 0.5;
     //
@@ -378,7 +378,7 @@ begin
     dOmgLim := 0.2 * ratedOmg;
 
     // current regulator parameters
-    KpIregPos := 0.9 * Zthev.im;
+    KpIregPos := 0.9 * ZThev.im;
     KiIregPos := 25. * KpIregPos;
     //
     KpIregNeg := KpIregPos * 1.5;
@@ -499,9 +499,9 @@ begin
     for ii := 1 to 3 do
     begin
         Vabc[ii] := MagLimiter(V[ii] / ratedVln, 0, VmeasMax);
-      // Iabc = -(I/AmpBase+Vabc/Zthev)
+        // Iabc = -(I/AmpBase+Vabc/ZThev)
         Iabc[ii] := MagLimiter(
-            (i[ii] / -ratedAmp * N_WTG) - (Vabc[ii] / Zthev), 
+            (i[ii] / -ratedAmp * N_WTG) - (Vabc[ii] / ZThev), 
             0, 
             ImeasMax
         );
@@ -512,7 +512,7 @@ begin
     abc2seq(Iabc, I012, Vang);
 
     // get rid of zero sequence component in voltage
-    V012[0] := cmplx(0, 0);
+    V012[0] := 0;
     seq2abc(Vabc, V012, Vang);
 
     // voltage magnitude
@@ -522,7 +522,7 @@ begin
     VmagMin := min(min(cabs(Vabc[1]), cabs(Vabc[2])), cabs(Vabc[3]));
 
     // calculate output power
-    Sele := cmplx(0, 0);
+    Sele := 0;
     for ii := 1 to 3 do
         Sele := Sele + (Vabc[ii] * cong(Iabc[ii])) / 3;
     Pele := Sele.re;
@@ -544,14 +544,14 @@ begin
     // solve Emag and Eang
     if nIterLF = 1 then
     begin
-        Vtemp := (V012[1] / max(0.000001, cabs(V012[1]))) * Vss;
+        Vtemp := (V012[1] / max(0.000001, cabs(V012[1]))) * VSS;
         Emag := cabs(Vtemp);
         Eang := cang(Vtemp);
     end
     else
         Vtemp := V012[1];
-    Itemp := cong(cmplx(Pss, Qss) / Vtemp);
-    Etemp := Vtemp + Zthev * Itemp;
+    Itemp := cong(cmplx(PSS, QSS) / Vtemp);
+    Etemp := Vtemp + ZThev * Itemp;
     if nIterLF < 10 then
     begin
         kCnvg := max(0.4, min(1.0, 1 - (nIterLF - 1) * 0.1));
@@ -561,9 +561,9 @@ begin
     nIterLF := nIterLF + 1;
 
     // update output
-    E012[0] := cmplx(0, 0);
+    E012[0] := 0;
     E012[1] := cmplx(Emag * cos(Eang), Emag * sin(Eang));
-    E012[2] := cmplx(0, 0);
+    E012[2] := 0;
     CalcCurrent(i);
 end;
 
@@ -577,14 +577,14 @@ var
 begin
     // check for available wind power and update initial power condition
     AeroMPPT();
-    if Pss > PmechMax then
-    // not enough wind power to support Pss, update Pss
+    if PSS > PmechMax then
+    // not enough wind power to support PSS, update PSS
     begin
-        Pss := PmechMax;
+        PSS := PmechMax;
         Wt := WtOpt;
     end
     else
-        Wt := CalcWtRef(Pss);
+        Wt := CalcWtRef(PSS);
     // run iteration to solve for thetaPitch
     thetaPitch := thetaPitchMax / 2;
     eIter := 0.01;
@@ -592,11 +592,11 @@ begin
     for ii := 1 to 10 do
     begin
         AeroDynamic;
-        if abs(Pmech - Pss) < eIter then
+        if abs(Pmech - PSS) < eIter then
             break
         else
         begin
-            thetaPitch := thetaPitch + kIter * (Pmech - Pss);
+            thetaPitch := thetaPitch + kIter * (Pmech - PSS);
             thetaPitch := min(thetaPitchMax, max(thetaPitchMin, thetaPitch));
         end;
     end;
@@ -606,7 +606,7 @@ begin
     CalcPFlow(V, i);
 
     // initialize control variables
-    VdFbkPos := Vss;
+    VdFbkPos := VSS;
     VqFbkPos := 0;
     VdFbkNeg := 0;
     VqFbkNeg := 0;
@@ -618,23 +618,23 @@ begin
     IqlvLim := I0LVQL;
     VmagLVPL := VdFbkPos;
     VmagLVQL := VdFbkPos;
-    Pord := Pss;
-    Pgen := Pss;
-    IdCmdPos := Pss / Vss;
+    Pord := PSS;
+    Pgen := PSS;
+    IdCmdPos := PSS / VSS;
     Iplv := IdCmdPos;
     if (QMode = 0) or (QMode = 1) then
-        Qcmd := Qss
+        Qcmd := QSS
     else
-        Qcmd := LinearInterp(VCurveVoltVar, QCurveVoltVar, Vss);
-    PFref := abs(Pss) / max(0.000001, sqrt(Pss * Pss + Qss * Qss));
-    if Qss < 0 then
+        Qcmd := LinearInterp(VCurveVoltVar, QCurveVoltVar, VSS);
+    PFref := abs(PSS) / max(0.000001, sqrt(PSS * PSS + QSS * QSS));
+    if QSS < 0 then
         PFref := -PFref;
     Qgen := Qcmd;
     errQgen := 0;
-    Vref := Vss;
-    IqCmdPos := -Qcmd / Vss;
+    Vref := VSS;
+    IqCmdPos := -Qcmd / VSS;
     Iqlv := IqCmdPos;
-    Iqmxv := QordMax / Vss;
+    Iqmxv := QordMax / VSS;
     errVmag := 0;
     errIdPos := 0;
     errIqPos := 0;
@@ -653,20 +653,20 @@ begin
     // torque regulator
     WtRef := Wt;
     errWt := 0;
-    Pinp1 := Pss;
-    Pinp := Pss;
-    TrqRef := Pss / Wt;
+    Pinp1 := PSS;
+    Pinp := PSS;
+    TrqRef := PSS / Wt;
     errPinp := 0;
     errPinpFlt := 0;
     // pitch control
     errPstl := 0;
     thetaPitch0 := thetaPitch;
     // active power control
-    // Pcurtail := Pss;
-    PavlAPC := Pss;
-    PsetAPC := Pss;
-    PadeAPC := Pss;
-    Pstl := Pss;
+    // Pcurtail := PSS;
+    PavlAPC := PSS;
+    PsetAPC := PSS;
+    PadeAPC := PSS;
+    Pstl := PSS;
     // wind inertia
     dFrqPuTest := 0;
     dFrqWindInertia := 0;
@@ -889,13 +889,13 @@ begin
     errIdPos := Iplv - IdPos;
     intg_d[2] := KiIregPos * errIdPos + KpIregPos * (errIdPos - errIdPosOld) / delt;
     intg_x[2] := max(dEmin, min(dEmax, intg_x[2]));
-    EdPos := intg_x[2] + Zthev.re * Iplv - Zthev.im * Iqlv + VdFbkPos;
+    EdPos := intg_x[2] + ZThev.re * Iplv - ZThev.im * Iqlv + VdFbkPos;
     // PI regulator for IqPos
     errIqPosOld := errIqPos;
     errIqPos := Iqlv - IqPos;
     intg_d[3] := KiIregPos * errIqPos + KpIregPos * (errIqPos - errIqPosOld) / delt;
     intg_x[3] := max(dEmin, min(dEmax, intg_x[3]));
-    EqPos := intg_x[3] + Zthev.re * Iqlv + Zthev.im * Iplv + VqFbkPos;
+    EqPos := intg_x[3] + ZThev.re * Iqlv + ZThev.im * Iplv + VqFbkPos;
 
     // negative sequence current regulator
     // be carefull with signs: E2=Ed-jEq, I2=Id-jIq
@@ -936,23 +936,23 @@ procedure TGE_WTG3_Model.CurrentLimiting();
 var
     I2Max: Double;
 begin
-    E012[0] := cmplx(0, 0);
+    E012[0] := 0;
     // current limit on positive sequence
     E012[1] := cmplx(EdPos, EqPos);
-    I012[1] := (E012[1] - V012[1]) / Zthev;
+    I012[1] := (E012[1] - V012[1]) / ZThev;
     if cabs(I012[1]) > ImaxTD then
     begin
         I012[1] := (I012[1] / max(0.000001, cabs(I012[1]))) * ImaxTD;
-        E012[1] := V012[1] + I012[1] * Zthev;
+        E012[1] := V012[1] + I012[1] * ZThev;
     end;
     // current limit on negative sequence
     E012[2] := cmplx(EdNeg, -EqNeg);
-    I012[2] := (E012[2] - V012[2]) / Zthev;
+    I012[2] := (E012[2] - V012[2]) / ZThev;
     I2Max := max(0, 1.1 - cabs(I012[1]));
     if cabs(I012[2]) > I2Max then
     begin
         I012[2] := (I012[2] / max(0.000001, cabs(I012[2]))) * I2Max;
-        E012[2] := V012[2] + I012[2] * Zthev;
+        E012[2] := V012[2] + I012[2] * ZThev;
     end;
 end;
 
@@ -1008,7 +1008,7 @@ begin
     begin
         tempWt := WtRefMin + ii * stepWt;
         WtList[ii] := tempWt;
-        PmechList[ii] := CalcPmech(0, tempWt, vwind);
+        PmechList[ii] := CalcPmech(0, tempWt, VWind);
     end;
     // find optimal Wt and maximum Pmech
     PmechMax := -100000;
@@ -1024,8 +1024,8 @@ end;
 
 procedure TGE_WTG3_Model.AeroDynamic();
 begin
-    Pmech := CalcPmech(thetaPitch, Wt, vwind);
-    PmechAvl := CalcPmech(0.001, Wt, vwind);
+    Pmech := CalcPmech(thetaPitch, Wt, VWind);
+    PmechAvl := CalcPmech(0.001, Wt, VWind);
 end;
 
 function TGE_WTG3_Model.CalcWtRef(elePwr: Double): Double;
@@ -1180,7 +1180,7 @@ begin
 
     // Thevenin to Norton (current injection)
     for ii := 1 to 3 do
-        i[ii] := (Eabc[ii] / Zthev) * (-ratedAmp * N_WTG);
+        i[ii] := (Eabc[ii] / ZThev) * (-ratedAmp * N_WTG);
 end;
 
 procedure TGE_WTG3_Model.CalcDynamic(var V, i: pComplexArray);
@@ -1210,7 +1210,7 @@ begin
                 PQPriority(0);
 
                 // real power regulation
-                RealPowerReg;
+                RealPowerReg();
 
                 // reactive power and voltage regulation
                 if QFlg = 0 then
@@ -1220,23 +1220,23 @@ begin
                 end
                 else
                 begin
-                    ReactivePowerReg;
-                    VoltageReg;
+                    ReactivePowerReg();
+                    VoltageReg();
                 end;
 
                 // Current regulator
-                LVPL;
-                LVQL;
-                CurrentReg;
+                LVPL();
+                LVQL();
+                CurrentReg();
 
                 if (SimMechFlg > 0) then
                 begin
-                    AeroDynamic;
-                    TorqueReg;
-                    PitchControl;
-                    APCLogic;
-                    WindInertia;
-                    SwingModel;
+                    AeroDynamic();
+                    TorqueReg();
+                    PitchControl();
+                    APCLogic();
+                    WindInertia();
+                    SwingModel();
                 end;
 
                 // perform integration
@@ -1267,7 +1267,7 @@ begin
     FreeAndNil(TraceFile);
     TraceFile := TBufferedFileStream.Create(DSS.OutputDirectory + 'GE_WTG3_Trace.csv', fmCreate);
     headerStr := 'Time,Iteration,delt,nRec,ratedVln,ratedAmp,' +
-        'vwind,thetaPitch,WtRef,Wt,Pmech,Pcmd,Pele,Pgen,Qcmd,Qele,Qgen,' +
+        'VWind,thetaPitch,WtRef,Wt,Pmech,Pcmd,Pele,Pgen,Qcmd,Qele,Qgen,' +
         'Vref,Vmag,VdPos,VqPos,VdNeg,VqNeg,IdPos,IqPos,IdNeg,IqNeg,dOmg,' +
         'debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9,debut10';
     FSWrite(TraceFile, headerStr);
@@ -1293,7 +1293,7 @@ begin
             nRec, ',',
             ratedVln, ',',
             ratedAmp, ',',
-            vwind, ',',
+            VWind, ',',
             thetaPitch, ',',
             WtRef, ',',
             Wt, ',',
