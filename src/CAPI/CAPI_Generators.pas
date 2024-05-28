@@ -294,7 +294,8 @@ begin
         Exit;
 
     pGen.kvarBase := Value;
-    pGen.PropertySideEffects(ord(TGeneratorProp.kvar), 0, [])
+    pGen.PropertySideEffects(ord(TGeneratorProp.kvar), 0, []);
+    pGen.RecalcElementData();
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_kW(Value: Double); CDECL;
