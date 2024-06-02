@@ -196,7 +196,6 @@ type
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model, reset nphases
         procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;    // Always Zero for a monitor
         procedure TakeSample; OVERRIDE; // Go add a sample to the buffer
         procedure ResetIt;
         procedure Save;     // Saves present buffer to file
@@ -208,7 +207,6 @@ type
 
         procedure TranslateToCSV(Show: Boolean);
 
-        procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
        //Property  MonitorFileName:String read BufferFile;
 
@@ -678,14 +676,6 @@ begin
         ValidMonitor := TRUE;
     end;
     inherited;
-end;
-
-procedure TMonitorObj.CalcYPrim;
-begin
-  // A Monitor is a zero current source; Yprim is always zero.
-
-  // leave YPrims as nil and they will be ignored
-  // Yprim is zeroed when created.  Leave it as is.
 end;
 
 procedure TMonitorObj.ClearMonitorStream;
@@ -1798,18 +1788,7 @@ begin
     DSS.GlobalResult := CSVName;
 end;
 
-procedure TMonitorObj.GetCurrents(Curr: pComplexArray);  //Get present value of terminal Curr for reports
-var
-    i: Integer;
-begin
-// Revised 12-7-99 to return Zero current instead of Monitored element current because
-// it was messing up Newton iteration.
-    for i := 1 to Fnconds do
-        Curr[i] := 0;
-end;
-
 procedure TMonitorObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
-
 var
     i, k: Integer;
     sout: String;

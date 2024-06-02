@@ -433,8 +433,6 @@ type
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model, reset nphases
         procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
-        procedure GetCurrents(Curr: pComplexArray); OVERRIDE; //Get present value of terminal Curr
         function CheckBranchList(code: Integer): Boolean;
         procedure ResetRegisters;
         procedure TakeSample; OVERRIDE;
@@ -1234,11 +1232,6 @@ begin
    // Removed .. open in solution loop See Solve Yearly If EnergyMeterClass.SaveDemandInterval Then OpenDemandIntervalFile;
 end;
 
-procedure TEnergyMeterObj.CalcYPrim;
-begin
-    // YPrim is all zeros.  Just leave as NIL so it is ignored.
-end;
-
 procedure TEnergyMeterObj.SaveRegisters;
 var
     CSVName: String;
@@ -2020,14 +2013,6 @@ begin
     TotalupDownstreamCustomers();
 
     AssignVoltBaseRegisterNames();
-end;
-
-procedure TEnergyMeterObj.GetCurrents(Curr: pComplexArray);  //Get present value of terminal Curr FOR reports
-var
-    i: Integer;
-begin
-    for i := 1 to Fnconds do
-        Curr[i] := 0;
 end;
 
 procedure TEnergyMeterObj.ZoneDump;

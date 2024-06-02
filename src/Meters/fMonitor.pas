@@ -331,7 +331,6 @@ type
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model, reset nphases
         procedure RecalcElementData(); OVERRIDE;
-        procedure CalcYPrim(); OVERRIDE;    // Always Zero for a monitor
         procedure ResetIt();
 
         // unified voltage (1-V_dg)^2
@@ -356,9 +355,6 @@ type
         procedure update_node_info_each_time_step(); //all nodes in the cluster
         procedure update_ld_dly(); // all nodes in this cluster with delay
         procedure Calc_P_freq_fm();// calculte frequency for each cluster
-
-        procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
     end;
 
 implementation
@@ -807,13 +803,6 @@ begin
         Nconds := MeteredElement.Nconds;
     end;
     inherited;
-end;
-
-procedure TFMonitorObj.CalcYPrim;
-begin
-  // A Monitor is a zero current source; Yprim is always zero.
-  // leave YPrims as nil and they will be ignored
-  // Yprim is zeroed when created.  Leave it as is.
 end;
 
 procedure TFMonitorObj.Set_nodes_for_fm(intNodes: Integer);
@@ -1570,22 +1559,6 @@ begin
         pNodeFMs[iTmp].vl_crnt_smp_time := ActiveCircuit.Solution.DynaVars.intHour * 3600 + ActiveCircuit.Solution.DynaVars.t;
         Init_delay_array(iTmp); // in DYNAMICMODE, init alpha array
     end;
-end;
-
-procedure TFMonitorObj.GetCurrents(Curr: pComplexArray);
-var
-    i: Integer;
-begin
-    for i := 1 to Fnconds do
-        Curr[i] := CZERO;
-end;
-
-procedure TFMonitorObj.GetInjCurrents(Curr: pComplexArray);
-var
-    i: Integer;
-begin
-    for i := 1 to Fnconds do
-        Curr[i] := CZERO;
 end;
 
 procedure TFMonitorObj.Calc_Alpha_for_PDNode(NodeNum: Integer);

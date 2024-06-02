@@ -35,6 +35,8 @@ type
         procedure TakeSample; VIRTUAL;    // Sample control quantities and set action times in Control Queue
         procedure AllocateSensorArrays;
         procedure CalcAllocationFactors;
+        procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Always Zero
+        procedure CalcYPrim(); OVERRIDE; // Always Zero 
     end;
 
 implementation
@@ -128,6 +130,19 @@ procedure TMeterElement.TakeSample;
 begin
   // virtual function - should be overridden
     DoSimpleMsg('Programming Error: Reached base Meterelement class for TakeSample.' + CRLF + 'Device: ' + Name, 723);
+end;
+
+procedure TMeterElement.GetCurrents(Curr: pComplexArray);
+var
+    i: Integer;
+begin
+    for i := 1 to Fnconds do
+        Curr[i] := 0;
+end;
+
+procedure TMeterElement.CalcYPrim(); OVERRIDE;
+begin
+    // YPrim is all zeros.  Just leave as NIL so it is ignored.
 end;
 
 end.

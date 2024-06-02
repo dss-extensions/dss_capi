@@ -112,12 +112,9 @@ type
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model, reset nphases
         procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;    // Always Zero for a Sensor
         procedure TakeSample; OVERRIDE; // Go add a sample to the buffer
         procedure ResetIt;
         procedure Save;  // Saves present buffer to file
-
-        procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
 
        // Properties to interpret input to the sensor
 
@@ -505,13 +502,6 @@ begin
     end;
 end;
 
-procedure TSensorObj.CalcYPrim;
-begin
-  // leave YPrims as nil and they will be ignored
-  // Yprim is zeroed when created.  Leave it as is.
-  //  IF YPrim=nil THEN YPrim := TcMatrix.CreateMatrix(Yorder);
-end;
-
 procedure TSensorObj.ResetIt;
 // What does it mean to reset a sensor?
 begin
@@ -556,15 +546,6 @@ begin
             CalculatedVoltage[i] := VTerminal[i];
     end;
     // NOTE: CalculatedVoltage is complex
-end;
-
-procedure TSensorObj.GetCurrents(Curr: pComplexArray);  //Get present value of terminal Curr for reports
-var
-    i: Integer;
-begin
-    // Return array of zero
-    for i := 1 to Fnconds do
-        Curr[i] := 0;
 end;
 
 procedure TSensorObj.UpdateCurrentVector;
