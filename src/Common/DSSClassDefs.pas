@@ -63,6 +63,12 @@ const
     INDMACH012_ELEMENT = 35 * 8;
     GIC_SOURCE = 36 * 8;
     AUTOTRANS_ELEMENT = 37 * 8;
+    FMON_ELEMENT = 38*8; // BY Dahei UCF
+    GENERIC5ORDERMACH_ELEMENT = 39 * 8; // BY Dahei UCF
+    
+    WINDGEN_ELEMENT = 43 * 8;
+    GEN_CONTROLLER = 44 * 8;
+
 
 procedure CreateDSSClasses(DSS: TDSSContext);
 procedure DisposeDSSClasses(DSS: TDSSContext);

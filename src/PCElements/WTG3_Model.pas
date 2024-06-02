@@ -3,6 +3,7 @@ unit WTG3_Model;
 interface
 
 uses
+    DSSClass,
     Dynamics,
     math,
     ucomplex,
@@ -10,7 +11,8 @@ uses
     ParserDel,
     Command,
     WindGenVars,
-    DSSCallBackRoutines;
+    DSSCallBackRoutines,
+    Classes;
 
 const
     NumProperties = 23; // motor model parameters
@@ -20,10 +22,7 @@ type
     TSymCompArray = array [0..2] of Complex;
     TPhArray = array [1..3] of Complex;
 
-    PDynamicsRec = ^TDynamicsRec;
-    PWindGenVars = ^TWindGenVars;
-
-    TGE_WTG3_Model = class(TObject)
+    TGE_WTG3_Model = object
     private
         // ratings
         ratedHz, ratedKVA, ratedOmg, ratedKVll, ratedVln, ratedAmp: Double;
@@ -109,17 +108,14 @@ type
         EdPos, EqPos, EdNeg, EqNeg: Double;
         // integrator
         intg_x, intg_d, intg_d_old: array [0..11] of Double;
-        // DebugTrace: Integer;
-        // TraceFile: TextFile;
+        DebugTrace: LongBool;
+        TraceFile: TFileStream;
         debugVar: array [1..10] of Double;
 
-        function Get_Variable(i: Integer): Double;
-        procedure Set_Variable(i: Integer; const Value: Double);
         procedure abc2seq(var abc: TPhArray; var seq: TSymCompArray; ang: Double);
         procedure seq2abc(var abc: TPhArray; var seq: TSymCompArray; ang: Double);
         function MagLimiter(x: Complex; magmin: Double; magMax: Double): Complex;
-        function LinearInterp(var xTable: array of Double;
-            var yTable: array of Double; x: Double): Double;
+        function LinearInterp(var xTable: ArrayOfDouble; var yTable: ArrayOfDouble; x: Double): Double;
         function CalcCp(theta: Double; lmbda: Double): Double;
         function CalcPmech(theta: Double; wrotor: Double; spdwind: Double): Double;
         function CalcWtRef(elePwr: Double): Double;
@@ -158,7 +154,6 @@ type
         // number of WTG
         N_WTG: Integer;
         // terminal impedance
-        Xthev, Rthev: Double;
         Zthev: Complex;
         // terminal voltage and current
         Vabc, Iabc, Eabc: TPhArray;
@@ -173,21 +168,15 @@ type
         // wind speed
         vwind: Double;
 
-        DynaData: PDynamicsRec;
-        GenData: PWindGenVars;
+        DSS: TDSSContext;
 
         procedure Init(var V, i: pComplexArray);
-        procedure EditProp(ParamPointer: Integer; StrVal: String);
         procedure Integrate;
         procedure CalcDynamic(var V, i: pComplexArray);
         procedure CalcPFlow(var V, i: pComplexArray);
         procedure ReCalcElementData;
 
-        property Variable[i: Integer]: Double READ Get_Variable WRITE Set_Variable;
-
-        constructor Create(var GenVars: TWindGenVars; var DynaVars: TDynamicsRec);
-        destructor Destroy; OVERRIDE;
-
+        constructor Initialize(dssContext: TDSSContext);
     end;
 
 implementation
@@ -195,8 +184,10 @@ implementation
 uses
     SysUtils;
 
-constructor TGE_WTG3_Model.Create(var GenVars: TWindGenVars; var DynaVars: TDynamicsRec);
+constructor TGE_WTG3_Model.Initialize(dssContext: TDSSContext);
 begin
+    DSS := dssContext;
+
     delt0 := 0.000050;
     ratedHz := 60;
     ratedKVA := 3600;
@@ -209,8 +200,7 @@ begin
     Qss := 0;
     vwind := 14;
     //
-    Xthev := 0.05;
-    Rthev := 0.0;
+    Zthev := cmplx(0.0, 0.05);
     //
     SimMechFlg := 1;
     APCFLG := 0;
@@ -276,7 +266,7 @@ begin
     IqLimAsymFlt := 0.447;
     //
     TfltIcmdPos := 0.002;
-    // KpIregPos := 0.9*Xthev;
+    // KpIregPos := 0.9*Zthev.im;
     // KiIregPos := 100*KpIregPos;
     rrlIqCmd := 0.5;
     //
@@ -368,89 +358,24 @@ begin
     Hwtg := 5.23;
     Dshaft := 0.0;
     //
-    // DebugTrace := 0;
-    //
-    GenData := @GenVars; // Make pointer to data in main DSS
-    DynaData := @DynaVars;
-
-    ReCalcElementData;
-end;
-
-destructor TGE_WTG3_Model.Destroy;
-begin
-    inherited;
-end;
-
-procedure TGE_WTG3_Model.EditProp(ParamPointer: Integer; StrVal: String);
-var
-    Param: String;
-begin
-    case ParamPointer of
-        // 0: DoSimpleMsg('Unknown parameter "'+ParamName+'" for Object "'+Name+'"');
-        1:
-            Rthev := StrToFloat(StrVal);
-        2:
-            Xthev := StrToFloat(StrVal);
-        3:
-            Vss := StrToFloat(StrVal);
-        4:
-            Pss := StrToFloat(StrVal);
-        5:
-            Qss := StrToFloat(StrVal);
-        6:
-            vwind := StrToFloat(StrVal);
-        7:
-            QMode := StrToInt(StrVal);
-        8:
-            SimMechFlg := StrToInt(StrVal);
-        9:
-            APCFLG := StrToInt(StrVal);
-        10:
-            QFlg := StrToInt(StrVal);
-        // 11:
-        //     DebugTrace := StrToInt(StrVal);
-        12:
-            delt0 := StrToFloat(StrVal);
-        13:
-            ratedKVA := StrToFloat(StrVal);
-        14:
-            V1_VoltVar := StrToFloat(StrVal);
-        15:
-            V2_VoltVar := StrToFloat(StrVal);
-        16:
-            V3_VoltVar := StrToFloat(StrVal);
-        17:
-            V4_VoltVar := StrToFloat(StrVal);
-        18:
-            Q1_VoltVar := StrToFloat(StrVal);
-        19:
-            Q2_VoltVar := StrToFloat(StrVal);
-        20:
-            Q3_VoltVar := StrToFloat(StrVal);
-        21:
-            Q4_VoltVar := StrToFloat(StrVal);
-        22:
-            N_WTG := StrToInt(StrVal);
-        // 23:
-        //     DoHelpCmd; // whatever the option, do help
-    else
-    end;
-
+    DebugTrace := false;
+    
     ReCalcElementData();
 end;
 
 procedure TGE_WTG3_Model.ReCalcElementData();
+var
+    h, t: Double;
 begin
     // execution order: Create(Recalc) -> CalcPFlow -> Init
     ratedOmg := 2 * PI * ratedHz;
     ratedVln := ratedKVll / sqrt(3.0) * 1000;
     ratedAmp := ratedKVA * 1000 / ratedVln / 3;
     MaxTrq := (ratedKVA * 1000 / 1454 / 2 / PI * 60) * 1.1931;
-    Zthev := cmplx(Rthev, Xthev);
     dOmgLim := 0.2 * ratedOmg;
 
     // current regulator parameters
-    KpIregPos := 0.9 * Xthev;
+    KpIregPos := 0.9 * Zthev.im;
     KiIregPos := 25. * KpIregPos;
     //
     KpIregNeg := KpIregPos * 1.5;
@@ -482,15 +407,19 @@ begin
     end;
 
     // time steps
-    deltSim := DynaData^.h;
-    nRec := trunc(int(DynaData^.h / delt0 / 2) * 2 + 1);
-    delt := DynaData^.h / nRec;
-    tsim := DynaData^.t;
+    h := DSS.ActiveCircuit.Solution.DynaVars.h;
+    t := DSS.ActiveCircuit.Solution.DynaVars.t;
+    deltSim := h;
+    nRec := trunc(int(h / delt0 / 2) * 2 + 1);
+    delt := h / nRec;
+    tsim := t;
     nIterLF := 100;
 
     // initialize trace file
-    // if DebugTrace = 1 then
-    //     InitTraceFile;
+    if DebugTrace then
+        InitTraceFile()
+    else
+        FreeAndNil(TraceFile);
 end;
 
 function TGE_WTG3_Model.MagLimiter(x: Complex; magmin: Double;
@@ -499,27 +428,33 @@ begin
     Result := pclx(max(magmin, min(magMax, cabs(x))), cang(x));
 end;
 
-function TGE_WTG3_Model.LinearInterp(var xTable: array of Double;
-    var yTable: array of Double; x: Double): Double;
+function TGE_WTG3_Model.LinearInterp(var xTable: ArrayOfDouble; var yTable: ArrayOfDouble; x: Double): Double;
 var
     iLeft, iRight, ii: Integer;
 begin
     iLeft := Low(xTable);
     iRight := High(xTable);
     Result := yTable[iLeft];
+
     if x < xTable[iLeft] then
-        Result := yTable[iLeft]
-    else
-    if x > xTable[iRight] then
-        Result := yTable[iRight]
-    else
     begin
-        for ii := iLeft to iRight - 1 do
-            if (x >= xTable[ii]) and (x <= xTable[ii + 1]) then
-            begin
-                Result := (yTable[ii + 1] - yTable[ii]) / (xTable[ii + 1] - xTable[ii]) * (x - xTable[ii]) + yTable[ii];
-                break;
-            end;
+        Result := yTable[iLeft]
+        Exit;
+    end;
+
+    if x > xTable[iRight] then
+    begin
+        Result := yTable[iRight]
+        Exit;
+    end;
+
+    for ii := iLeft to iRight - 1 do
+    begin
+        if (x >= xTable[ii]) and (x <= xTable[ii + 1]) then
+        begin
+            Result := (yTable[ii + 1] - yTable[ii]) / (xTable[ii + 1] - xTable[ii]) * (x - xTable[ii]) + yTable[ii];
+            break;
+        end;
     end;
 end;
 
@@ -950,17 +885,15 @@ begin
     // PI regulator for IdPos
     errIdPosOld := errIdPos;
     errIdPos := Iplv - IdPos;
-    intg_d[2] := KiIregPos * errIdPos + KpIregPos *
-        (errIdPos - errIdPosOld) / delt;
+    intg_d[2] := KiIregPos * errIdPos + KpIregPos * (errIdPos - errIdPosOld) / delt;
     intg_x[2] := max(dEmin, min(dEmax, intg_x[2]));
-    EdPos := intg_x[2] + Rthev * Iplv - Xthev * Iqlv + VdFbkPos;
+    EdPos := intg_x[2] + Zthev.re * Iplv - Zthev.im * Iqlv + VdFbkPos;
     // PI regulator for IqPos
     errIqPosOld := errIqPos;
     errIqPos := Iqlv - IqPos;
-    intg_d[3] := KiIregPos * errIqPos + KpIregPos *
-        (errIqPos - errIqPosOld) / delt;
+    intg_d[3] := KiIregPos * errIqPos + KpIregPos * (errIqPos - errIqPosOld) / delt;
     intg_x[3] := max(dEmin, min(dEmax, intg_x[3]));
-    EqPos := intg_x[3] + Rthev * Iqlv + Xthev * Iplv + VqFbkPos;
+    EqPos := intg_x[3] + Zthev.re * Iqlv + Zthev.im * Iplv + VqFbkPos;
 
     // negative sequence current regulator
     // be carefull with signs: E2=Ed-jEq, I2=Id-jIq
@@ -969,12 +902,10 @@ begin
     // PI regulator
     errIdNegOld := errIdNeg;
     errIdNeg := IdCmdNeg - IdNeg;
-    intg_d[4] := KiIregNeg * errIdNeg + KpIregNeg *
-        (errIdNeg - errIdNegOld) / delt;
+    intg_d[4] := KiIregNeg * errIdNeg + KpIregNeg * (errIdNeg - errIdNegOld) / delt;
     errIqNegOld := errIqNeg;
     errIqNeg := IqCmdNeg - IqNeg;
-    intg_d[5] := KiIregNeg * errIqNeg + KpIregNeg *
-        (errIqNeg - errIqNegOld) / delt;
+    intg_d[5] := KiIregNeg * errIqNeg + KpIregNeg * (errIqNeg - errIqNegOld) / delt;
     // limiter on integrator
     intg_x[4] := min(dE2Lim, max(-dE2Lim, intg_x[4]));
     intg_x[5] := min(dE2Lim, max(-dE2Lim, intg_x[5]));
@@ -1320,167 +1251,86 @@ begin
 
         CalcCurrent(i);
 
-        // if DebugTrace = 1 then
-        //     WriteTraceRecord;
+        if DebugTrace then
+            WriteTraceRecord();
     end;
 end;
 
-// procedure TGE_WTG3_Model.DoHelpCmd();
-// var
-//     HelpStr: String;
-//     AnsiHelpStr: Ansistring;
-// begin
-//     HelpStr := 'Rthev= per unit Thevenin equivalent R.' + CRLF;
-//     HelpStr := HelpStr + 'Xthev= per unit Thevenin equivalent X.' + CRLF;
-//     HelpStr := HelpStr + 'Vss= steady state voltage magnitude.' + CRLF;
-//     HelpStr := HelpStr + 'Pss= steady state output real power.' + CRLF;
-//     HelpStr := HelpStr + 'Qss= steady state output reactive power.' + CRLF;
-//     HelpStr := HelpStr + 'vwind= wind speed in m/s' + CRLF;
-//     HelpStr := HelpStr + 'QMOde= Q control mode (0:Q, 1:PF, 2:VV)' + CRLF;
-//     HelpStr := HelpStr + 'SimMechFlg= 1 to simulate mechanical system' + CRLF;
-//     HelpStr := HelpStr + 'APCFlg= 1 to enable active power control' + CRLF;
-//     HelpStr := HelpStr + 'QFlg= 1 to enable reactive power and voltage control' + CRLF;
-//     HelpStr := HelpStr + 'DebugTrace= 1 to save dynamic simulation result in csv file' + CRLF;
-//     HelpStr := HelpStr + 'delt0= user defined internal simulation step' + CRLF;
-//     HelpStr := HelpStr + 'ratedKVA= WTG power rating (either 3600 or 1500)' + CRLF;
-//     HelpStr := HelpStr + 'V#_VoltVar= V points on Volt-Var curve' + CRLF;
-//     HelpStr := HelpStr + 'Q#_VoltVar= Q points on Volt-Var curve' + CRLF;
-//     HelpStr := HelpStr + 'N_WTG= number of WTG in aggregation' + CRLF;
-//     HelpStr := HelpStr + 'Help: this help message.';
-
-//     AnsiHelpStr := Ansistring(HelpStr); // Implicit typecast
-// end;
-
-function TGE_WTG3_Model.Get_Variable(i: Integer): Double;
+procedure TGE_WTG3_Model.InitTraceFile();
+var
+    headerStr: String;
 begin
-    Result := -9999;
-    case i of
-        1:
-            Result := userTrip;
-        2:
-            Result := wtgTrip;
-        3:
-            Result := Pcurtail;
-        4:
-            Result := Pcmd;
-        5:
-            Result := Pgen;
-        6:
-            Result := Qcmd;
-        7:
-            Result := Qgen;
-        8:
-            Result := Vref;
-        9:
-            Result := Vmag;
-        10:
-            Result := vwind;
-        11:
-            Result := WtRef;
-        12:
-            Result := Wt;
-        13:
-            Result := dOmg;
-        14:
-            Result := dFrqPuTest;
-        15:
-            Result := QMode;
-        16:
-            Result := Qref;
-        17:
-            Result := PFref;
-        18:
-            Result := thetaPitch;
-    else
-
-    end;
+    FreeAndNil(TraceFile);
+    TraceFile := TBufferedFileStream.Create(DSS.OutputDirectory + 'GE_WTG3_Trace.csv', fmCreate);
+    headerStr := 'Time,Iteration,delt,nRec,ratedVln,ratedAmp,' +
+        'vwind,thetaPitch,WtRef,Wt,Pmech,Pcmd,Pele,Pgen,Qcmd,Qele,Qgen,' +
+        'Vref,Vmag,VdPos,VqPos,VdNeg,VqNeg,IdPos,IqPos,IdNeg,IqNeg,dOmg,' +
+        'debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9,debut10';
+    FSWrite(TraceFile, headerStr);
+    FSWriteLn(TraceFile);
+    FSFlush(Tracefile);
 end;
 
-procedure TGE_WTG3_Model.Set_Variable(i: Integer; const Value: Double);
+procedure TGE_WTG3_Model.WriteTraceRecord();
+var
+    sout: String;
 begin
-    case i of
-        1:
-            userTrip := round(Value);
-        3:
-            Pcurtail := Value;
-        10:
-            vwind := Value;
-        14:
-            dFrqPuTest := Value;
-        15:
-            QMode := round(Value);
-        16:
-            Qref := Value;
-        17:
-            PFref := Value;
-    else
-        // Do Nothing for other variables: they are read only
+    if TraceFile = NIL then 
+        Exit;
+    // if DSS.InShowResults then
+    //     Exit;
+    try
+        // AssignFile(TraceFile, 'GE_WTG3_Trace.csv');
+        // Append(TraceFile);
+        WriteStr(sout, 
+            DynaData^.t, ',',
+            DynaData^.IterationFlag, ',',
+            delt, ',',
+            nRec, ',',
+            ratedVln, ',',
+            ratedAmp, ',',
+            vwind, ',',
+            thetaPitch, ',',
+            WtRef, ',',
+            Wt, ',',
+            Pmech, ',',
+            Pcmd, ',',
+            Pele, ',',
+            Pgen, ',',
+            Qcmd, ',',
+            Qele, ',',
+            Qgen, ',',
+            Vref, ',',
+            Vmag, ',',
+            VdPos, ',',
+            VqPos, ',',
+            VdNeg, ',',
+            VqNeg, ',',
+            IdPos, ',',
+            IqPos, ',',
+            IdNeg, ',',
+            IqNeg, ',',
+            dOmg, ',',
+            debugVar[1], ',',
+            debugVar[2], ',',
+            debugVar[3], ',',
+            debugVar[4], ',',
+            debugVar[5], ',',
+            debugVar[6], ',',
+            debugVar[7], ',',
+            debugVar[8], ',',
+            debugVar[9], ',',
+            debugVar[10]
+        );
+        FSWrite(TraceFile, sout);
+        FSWriteln(Tracefile);
+        FSFlush(TraceFile);
+    except
+        On E: Exception do
+        begin
+        end;
     end;
+
 end;
-
-// procedure TGE_WTG3_Model.InitTraceFile();
-// var
-//     headerStr: String;
-// begin
-//     AssignFile(TraceFile, 'GE_WTG3_Trace.csv');
-//     Rewrite(TraceFile);
-
-//     headerStr := 'Time,Iteration,delt,nRec,ratedVln,ratedAmp,' +
-//         'vwind,thetaPitch,WtRef,Wt,Pmech,Pcmd,Pele,Pgen,Qcmd,Qele,Qgen,' +
-//         'Vref,Vmag,VdPos,VqPos,VdNeg,VqNeg,IdPos,IqPos,IdNeg,IqNeg,dOmg,' +
-//         'debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9,debut10';
-//     Write(TraceFile, headerStr);
-
-//     Writeln(TraceFile);
-
-//     CloseFile(TraceFile);
-// end;
-
-// procedure TGE_WTG3_Model.WriteTraceRecord();
-// begin
-//     // AssignFile(TraceFile, 'GE_WTG3_Trace.csv');
-//     Append(TraceFile);
-//     Write(TraceFile, DynaData^.t, ',');
-//     Write(TraceFile, DynaData^.IterationFlag, ',');
-//     Write(TraceFile, delt, ',');
-//     Write(TraceFile, nRec, ',');
-//     Write(TraceFile, ratedVln, ',');
-//     Write(TraceFile, ratedAmp, ',');
-//     Write(TraceFile, vwind, ',');
-//     Write(TraceFile, thetaPitch, ',');
-//     Write(TraceFile, WtRef, ',');
-//     Write(TraceFile, Wt, ',');
-//     Write(TraceFile, Pmech, ',');
-//     Write(TraceFile, Pcmd, ',');
-//     Write(TraceFile, Pele, ',');
-//     Write(TraceFile, Pgen, ',');
-//     Write(TraceFile, Qcmd, ',');
-//     Write(TraceFile, Qele, ',');
-//     Write(TraceFile, Qgen, ',');
-//     Write(TraceFile, Vref, ',');
-//     Write(TraceFile, Vmag, ',');
-//     Write(TraceFile, VdPos, ',');
-//     Write(TraceFile, VqPos, ',');
-//     Write(TraceFile, VdNeg, ',');
-//     Write(TraceFile, VqNeg, ',');
-//     Write(TraceFile, IdPos, ',');
-//     Write(TraceFile, IqPos, ',');
-//     Write(TraceFile, IdNeg, ',');
-//     Write(TraceFile, IqNeg, ',');
-//     Write(TraceFile, dOmg, ',');
-//     Write(TraceFile, debugVar[1], ',');
-//     Write(TraceFile, debugVar[2], ',');
-//     Write(TraceFile, debugVar[3], ',');
-//     Write(TraceFile, debugVar[4], ',');
-//     Write(TraceFile, debugVar[5], ',');
-//     Write(TraceFile, debugVar[6], ',');
-//     Write(TraceFile, debugVar[7], ',');
-//     Write(TraceFile, debugVar[8], ',');
-//     Write(TraceFile, debugVar[9], ',');
-//     Write(TraceFile, debugVar[10]);
-
-//     Writeln(TraceFile);
-//     CloseFile(TraceFile);
-// end;
 
 end.

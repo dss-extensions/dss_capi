@@ -1,119 +1,237 @@
 unit Generic5OrderMach;
 
-//  Copyright (c) 2008-2023, Electric Power Research Institute, Inc.
-//  Copyright (c) 2024 DSS-Extensions contributors
+// Copyright (c) 2024 DSS-Extensions contributors
+// Copyright (c) 2008-2023, Electric Power Research Institute, Inc.
 
-// November 3, 2017
+// **Heavily** modified (by Paulo Meira) for DSS-Extensions.
 //
+// Original notice:
+// November 3, 2017
 // Created by
 //    Darhey  Xu
 
 interface
 
 uses
-    DSSClass,   // Base class for most DSS objects
-    PCClass,    // Base class for collection manager for PC elements
-    PCElement,  // Base class for PC  Elements
-    ucmatrix,     // Unit for managing complex matrice (for Yprim, etc)
-    ucomplex,     // Complex math functions, type definitions
-    ArrayDef,     // definitions of basic DSS arrays
-
-    // common modules used in PC elements
-    LoadShape,    // class for supporting/representing loadshapes
-    GrowthShape,  // Class for holding growth shapes
-    Spectrum,     // Definitions for harmonic spectra
-    Dynamics,
-    GeneratorVars;     // for elements that interact with dynamics variables
+    DSSClass,
+    PCClass,
+    PCElement,
+    ucmatrix,
+    ucomplex,
+    ArrayDef,
+    // LoadShape,
+    Dynamics;
 
 type
+{$SCOPEDENUMS ON}
+    TGeneric5PropLegacy = (
+        INVALID = 0,
+        phases = 1,
+        bus1 = 2,
+        kv = 3,
+        kW = 4,
+        pf = 5,
+        conn = 6,
+        kVA = 7,
+        H = 8,
+        D = 9,
+        P_ref1kW = 10,
+        P_ref2kW = 11,
+        P_ref3kW = 12,
+        V_ref1kVLN = 13,
+        V_ref2kVLN = 14,
+        V_ref3kVLN = 15,
+        MaxSlip = 16,
+        SlipOption = 17,
+        Yearly = 18,
+        Daily = 19,
+        Duty = 20,
+        Debugtrace = 21,
+        P_refkW = 22,
+        V_refkVLN = 25,
+        Q_refkVAr = 23,
+        Cluster_num = 24,
+        ctrl_mode = 26,
+        QV_flag = 27,
+        kcd = 28,
+        kcq = 29,
+        kqi = 30,
+        Q_ref1kVAr = 31,
+        Q_ref2kVAr = 32,
+        Q_ref3kVAr = 33,
+        PmaxkW = 34,
+        PminkW = 35,
+        PQpriority = 36,
+        PmppkW = 37,
+        Pfctr1 = 38,
+        Pfctr2 = 39,
+        Pfctr3 = 40,
+        Pfctr4 = 41,
+        Pfctr5 = 42,
+        Pfctr6 = 43,
+        PbiaskW = 44,
+        CC_Switch = 45,
+        kcq_drp2 = 46,
+        Volt_Trhd = 47,
+        droop = 48
+    );
+    TGeneric5Prop = (
+        INVALID = 0,
+        Phases = 1,
+        Bus1 = 2,
+        kV = 3,
+        kW = 4,
+        PF = 5,
+        Conn = 6,
+        kVA = 7,
+        H = 8,
+        D = 9,
+        P_Ref1kW = 10,
+        P_Ref2kW = 11,
+        P_Ref3kW = 12,
+        V_Ref1kVLN = 13,
+        V_Ref2kVLN = 14,
+        V_Ref3kVLN = 15,
+        MaxSlip = 16,
+        SlipOption = 17,
+        Yearly = 18,
+        Daily = 19,
+        Duty = 20,
+        Debugtrace = 21,
+        P_RefkW = 22,
+        Q_RefkVAr = 23,
+        Cluster_Num = 24,
+        V_refkVLN = 25,
+        Ctrl_Mode = 26,
+        QV_flag = 27,
+        kcd = 28,
+        kcq = 29,
+        kqi = 30,
+        Q_ref1kvar = 31,
+        Q_ref2kvar = 32,
+        Q_ref3kvar = 33,
+        PMaxkW = 34,
+        PMinkW = 35,
+        PQPriority = 36,
+        PmppkW = 37,
+        Pfctr1 = 38,
+        Pfctr2 = 39,
+        Pfctr3 = 40,
+        Pfctr4 = 41,
+        Pfctr5 = 42,
+        Pfctr6 = 43,
+        PbiaskW = 44,
+        CC_Switch = 45,
+        kcq_drp2 = 46,
+        Volt_Trhd = 47,
+        Droop = 48
+    );
+
+    TGeneric5Variable = (
+        INVALID = 0,
+        V_DG = 1, //pos seq value
+        P_DG = 2,
+        Q_DG = 3,
+        V_DG1 = 4, //Phase A or the first phase if there are less than 3
+        P_DG1 = 5,
+        Q_DG1 = 6,
+        V_DG2 = 7, //Phase B if exists
+        P_DG2 = 8,
+        Q_DG2 = 9,
+        V_DG3 = 10, //phase C if exists
+        P_DG3 = 11,
+        Q_DG3 = 12,
+        Qmax = 13,
+        Qmax_Phase = 14,
+        Pmax = 15,
+        Pmax_Phase = 16,
+        Alpha = 17,
+        Alpha1 = 18,
+        Alpha2 = 19,
+        Alpha3 = 20,
+        AlphaP = 21,
+        AlphaP1 = 22,
+        AlphaP2 = 23,
+        AlphaP3 = 24,
+        V_ref = 25, //Voltage object
+        kVA = 26, //kVArating
+        kW = 27,
+        cluster_num = 28,
+        NdNumInCluster = 29,
+        ctrl_mode = 30,
+        Gradient = 31,
+        Id = 32,
+        Iq = 33,
+        P_set = 34,
+        Frequency = 35,
+        Defense = 36
+    );
+{$SCOPEDENUMS OFF}
+
     TGeneric5 = class(TPCClass)
-    PRIVATE
-        procedure SetNcondsForConnection;
-
     PROTECTED
-        procedure DefineProperties;    // Define the property names and help strings
-        function MakeLike(const OtherIndMach012Name: String): Integer; OVERRIDE;  // copy properties of another similar object
+        cBuffer: TCBuffer24;// Temp buffer for complex math calcs; allows up to 24-phase models.
 
+        procedure DefineProperties(); override;
     PUBLIC
+        varNames: ArrayOfString;
 
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
-        function Edit(): Integer; OVERRIDE;      // Definition of the main property editing function
-        function Init(Handle: Integer): Integer; OVERRIDE;  // Initialize by handle (index), if necessary
-
-        function NewObject(const ObjName: String): Integer; OVERRIDE; // This function is called by the DSS New command
+        function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
+        Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
     end;
 
-    TSymCompArray5 = array[0..2] of Complex;
+    TSymCompArray = array[0..2] of Complex;
 
     TGeneric5Obj = class(TPCElement)
     PRIVATE
+        Connection: Integer; // 0 = line-neutral; 1=Delta
+        Yeq: Complex; // Y at nominal voltage
 
-      {Private variables of this class}
-        Connection: Integer;  {0 = line-neutral; 1=Delta}
-        Yeq: Complex;   // Y at nominal voltage
-
-        puRs, puXs, puRr, puXr, puXm,
-        //S1,        // Pos seq slip
-        //S2,
-        MaxSlip,  // limit for slip to prevent solution blowing up
-        //dSdP,  // for power flow
-
-        {Dynamics variables}
-        Xopen,
+        // Dynamics variables
         Xp,
         T0p // Rotor time constant
         : Double;
-        //NOrder, //NOrder = 5 is defined as constant
-        NumOrderX, //  system order
-        NumOrderY: Integer; //  system output Y order
-        {X,V}
+
+        // X,V
         X_var: pdoubleArray;
         dX_vardt: pdoubleArray;
         X_varn: pdoubleArray;//for tropdize integrate
         dX_vardtn: pdoubleArray;
-        Y_out_var: pdoubleArray;
         V_in_var: pdoubleArray;
         pV_f_CC: pdoublearray;
-        CC_Switch: Boolean;
-        {A, B Matrix }
+        CC_Switch: LongBool;
+        // A, B Matrix
         Amm: pdoubleArray;
         Bmn: pdoubleArray;
-        Cnm: pdoubleArray;
-        Dnn: pdoubleArray;
 
         InDynamics: Boolean;
-        Zs, Zm, Zr: Complex;
-        Is1, Ir1, V1,    // Keep the last computed voltages and currents
+        Is1, Ir1, V1, // Keep the last computed voltages and currents
         Is2, Ir2, V2: Complex;
 
-        {Complex variables for dynamics}
-        //E1, E1n, dE1dt, dE1dtn,
-        //E2, E2n, dE2dt, dE2dtn,
+        // Complex variables for dynamics
         Zsp: Complex;
 
-        {}
         Id, Iq: Double; //Id related to P ; Iq related to Q
-        flag_dyna_Id_chg: Boolean;
+        // flag_dyna_Id_chg: Boolean;
 
-        dIddt, dIqdt: Double;
-        Idn, Iqn, dIddtn, dIqdtn: Double; //save last time step for integration.
-        {the input for control purpose}
+        dIqdt: Double;
+        Idn, Iqn: Double; //save last time step for integration.
+        // the input for control purpose
         kcd, kcq, kcq_drp2: Double; //the control gain in vi1, vi2
         Volt_Trhd: Double;
         droop: Integer;//droop type: 2, Q = kcq_drp2 * (1-v_dg). others: integral droop with kcq
         //flag_drp2 : integer; //if it is 1, drp2
         kqi: Double; //control gain for Q_ref
         vi1, vi2: Double; //the input of the control
-        vi1n, vi2n: Double; //the input of the control
-        dvi1dt, dvi2dt, dvi1dtn, dvi2dtn: Double;
         Id_ref, Iq_ref: Double; // The pursued value of Id related to P ; Iq related to Q
-        {}
-        P_ref, Q_ref, V_ref: Double;//Power and voltage goal of the machine
-        DPX: Double;
+
+        P_ref, P_RefTotal, Q_ref, Q_RefTotal, V_ref: Double;//Power and voltage goal of the machine
+        DPx: Double;
         ctrl_mode: Integer; //ctrl_mode 0-local droop  V_ref = V_DG_0, P_ref = P_DG_0
-        {}
+
         P_DG, Q_DG: Double; //power of all phases totally in one
         V_DG: Double;// the voltage magetitude of current bus
         Theta_DG: Double; //the voltage angel of DG bus to slack
@@ -122,10 +240,10 @@ type
         QV_flag: Integer; // 0 Q_ref; 1 V_ref
         //QV_flag_0 : integer;
         //QV_switch: integer; //if Q hits limits, PV to PQ, the QV_switch:= 1; each time Edit function runs, check this and set QV_flag back to user set.
-        {--for 3 phases--}
+        // --for 3 phases--
         //power, voltage, angle,
-        P_DG1, P_DG2, P_dg3,
-        Q_DG1, Q_dg2, Q_dg3,
+        P_DG1, P_DG2, P_DG3,
+        Q_DG1, Q_DG2, Q_DG3,
         V_DG1, V_DG2, V_DG3,
         V_theta1, V_theta2, V_theta3: Double;//operation values
         Id1, Iq1, Id2, Iq2, Id3, Iq3: Double; //currents
@@ -133,49 +251,38 @@ type
         P_ref1, P_ref2, P_ref3,
         Q_ref1, Q_ref2, Q_ref3,
         V_ref1, V_ref2, V_ref3: Double;// set values from outside
-        {------Max Check-------}
-          //SMax; //  MachineData.kVArating; // 'g1.kva=100'
+        // ------Max Check-------
+        //SMax; //  kVArating; // 'g1.kva=100'
         PMax, // Activity power output limit
         PMax_phase, //limit per phase
-        PMin,  //(0, default)   // 'g1.pmax=100'
+        PMin, //(0, default) // 'g1.pmax=100'
         Pmin_phase, //
         Qmax, //Reactive power output limit
         Qmax_phase,
         Qmin, //(-Qmax, default)
         Qmin_phase: Double; //
-        IdMax_phase,
-        IqMax_phase: Double;//phase current limit
+        // IdMax_phase,
+        // IqMax_phase: Double;//phase current limit
         PQpriority: Integer; //Active and reactive power control mode, control s
-                            //'g1.pqvflag=0 Q, 1 P;
-          ///////////////////
-            //equivalent frequency
+        //'g1.pqvflag=0 Q, 1 P;
+
+        //equivalent frequency
         freq: Double;
         z_dfs_plot: Double;
-        FirstIteration, FixedSlip: Boolean;
 
-        //var_Remembered  :Double; //Q remembered of last calc
-        DQDV: Double;  //for P_ref V_ref model
-
-        RandomMult: Double;
-        //Generic5SolutionCount : Integer;
         Generic5SwitchOpen: Boolean;
 
-        // Debugging
-        TraceFile: TextFile;
-        DebugTrace: Boolean;
+        kVArating: Double;
+        kVGeneratorBase: Double;
+        // Pnominalperphase, Qnominalperphase: Double;
 
-        MachineData: TGeneratorVars;    // Use generator variable structure
-
-        // Andres: NEW variables from generator
         MachineON: Boolean;
-        ShapeFactor: Complex;
-
-        ShapeIsActual: Boolean;
-        // Andres: end NEW variables from generator
+        // ShapeFactor: Complex;
+        // ShapeIsActual: Boolean;
 
         VBase: Double;
-        kWBase: Double;
-         {---deal with -Update_Pmax_by_Ftrs-}
+        WBase: Double;
+        // ---deal with -Update_Pmax_by_Ftrs-
         Pmpp,//Pmpp, default value is 1.0;
         Pbias, //Pbias, default value is 0.0;
         Pfctr1,//factors, default value all are 1.0;
@@ -185,126 +292,80 @@ type
         Pfctr5,
         Pfctr6: Double;
 
-         {----------------}
-                 //Gradient ; public
-        Alpha, // Alpha := Q_DG/Qmax;  //pos ctrl
-        dAlpha,
-        Gradient: Double;
-        Alpha1, Alpha2, Alpha3, // Alpha := Q_DG/Qmax;  //pos ctrl
-        dAlpha1, dAlpha2, dAlpha3,
-        Gradient1, Gradient2, Gradient3: Double;
+        // ----------------
+        //Gradient ; public
+        Alpha, Alpha1, Alpha2, Alpha3,
+        Gradient, 
+        Gradient1, Gradient2, Gradient3: Double; --- NONE OF THESE 3 ARE INITIALIZED
+
         AlphaP, AlphaP1, AlphaP2, AlphaP3: Double;// for active P control
-        GradientP, GradientP1, GradientP2, GradientP3: Double;
-//        Procedure InterpretOption(s:String);
+        GradientP: Double;
 
-        //procedure set_Localslip(const Value: Double);
+        FFMonObj, FFMonObj2: TDSSObject;
+        cluster_num, cluster_num2: Integer;
+        NdNumInCluster, NdNumInCluster2: Integer;
 
-        //Procedure Get_PFlowModelCurrent(Const V:Complex; Const S:Double; var Istator, Irotor:Complex);
-        procedure Get_DynamicModelCurrent;
-        //procedure Set_Slip(const Value: Double);
-
-        //Function  Compute_dSdP:Double;
-        procedure Randomize(Opt: Integer);
-        procedure InitModel(V012, I012: TSymCompArray5);
-        procedure InitModelVIabc();
+        procedure InitModel(V012, I012: TSymCompArray);
 
         procedure CalcYPrimMatrix(Ymatrix: TcMatrix);
         procedure CalcGeneric5ModelContribution();
         procedure CalcInjCurrentArray();
 
-        procedure DoGeneric5Model();
         procedure CalcModel(V, I: pComplexArray);
 
-        // Andres: NEW procedures from generator
-        procedure CalcDailyMult(Hr: Double);
-        procedure CalcYearlyMult(Hr: Double);
-        procedure CalcDutyMult(Hr: Double);
-        // Andres: NEW procedures from generator
-
-        procedure InitTraceFile;
-        procedure WriteTraceRecord();
-        function Get_PresentkV: Double;
-        procedure Set_PresentkV(const Value: Double);
-
-        procedure SetPowerkW(const PkW: Double);
+        // procedure CalcDailyMult(Hr: Double);
+        // procedure CalcYearlyMult(Hr: Double);
+        // procedure CalcDutyMult(Hr: Double);
+        
+        // procedure SetPowerkW(const PkW: Double);
 
         procedure update_controlinput();
-        procedure update_pV_f_CC();//  update cooperate control part, pV_f_CC
-        procedure update_pV_f_CC_M2();//  update cooperate control part, pV_f_CC
-        procedure Set_P_Ref(PrefkW: Double);
-        procedure Set_Q_Ref(QrefkVAr: Double);
-        procedure Set_V_Ref(VrefkV: Double);
+        procedure update_pV_f_CC(); // update cooperate control part, pV_f_CC
+        procedure update_pV_f_CC_M2(); // update cooperate control part, pV_f_CC
         procedure Update_kWbase_by_Fctrs;
-        procedure Update_PQlimits; //real time limits check
-                                    // can also be used in power flow and simulation
+        procedure Update_PQlimits(); // real time limits check; can also be used in power flow and simulation
         procedure InfoPublish();
-        procedure CalGradient;
     PROTECTED
         procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure DoDynamicMode();
-        procedure DoHarmonicMode();
 
     PUBLIC
+        // DailyDispShapeObj: TLoadShapeObj; // Daily Generator Shape for this load
+        // DutyShapeObj: TLoadShapeObj; // Shape for this generator
+        // YearlyShapeObj: TLoadShapeObj; // Shape for this Generator
 
-        // Variables and functions accessed by DSS and other objects
-
-        DailyDispShape: String;  // Daily (24 HR) Generator shape
-        DailyDispShapeObj: TLoadShapeObj;  // Daily Generator Shape for this load
-        DutyShapeObj: TLoadShapeObj;  // Shape for this generator
-        DutyShape: String;  //
-        YearlyShape: String;  // ='fixed' means no variation  on all the time
-        YearlyShapeObj: TLoadShapeObj;  // Shape for this Generator
-
-        constructor Create(ParClass: TDSSClass; const Generic5ObjName: String);
+        constructor Create(ParClass: TDSSClass; const SourceName: String);
         destructor Destroy; OVERRIDE;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
+        procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure RecalcElementData(); OVERRIDE;   // Generally called after Edit is complete to recompute variables
-        procedure CalcYPrim(); OVERRIDE;   // Calculate Primitive Y matrix
-        procedure Integrate();
+        procedure RecalcElementData(); OVERRIDE; // Generally called after Edit is complete to recompute variables
+        procedure CalcYPrim(); OVERRIDE; // Calculate Primitive Y matrix
         procedure IntegrateABCD();
-        procedure CalcDynamic(var V012, I012: TSymCompArray5);
-        procedure CalcPFlow(var V012, I012: TSymCompArray5);
+        procedure CalcDynamic(var V012, I012: TSymCompArray);
+        procedure CalcPFlow(var V012, I012: TSymCompArray);
         // for abc phases: the below 2
         procedure CalcDynamicVIabc(var Vabc, Iabc: pComplexArray);
         procedure CalcPFlowVIabc(var Vabc, Iabc: pComplexArray);
-
-        procedure SetNominalPower();
-        procedure UpdateAlpha_qi; // \alpha_qi := Q_DG/Qmax;
+        // procedure SetNominalPower();
 
         function InjCurrents(): Integer; OVERRIDE;
 
-          // State variable management functions, if any
-        // You can omit these if your PC element model is not using these
-        // Default behavior is to basically do nothing
         function NumVariables: Integer; OVERRIDE;
         procedure GetAllVariables(States: pDoubleArray); OVERRIDE;
         function Get_Variable(i: Integer): Double; OVERRIDE;
         procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
 
-        // Support for Dynamics Mode
         procedure InitStateVars(); OVERRIDE;
         procedure IntegrateStates(); OVERRIDE;
-
-        // Support for Harmonics Mode
         procedure InitHarmonics(); OVERRIDE;
-
-        procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model, if possible
-
-       // Functions required for managing values of properties
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure MakePosSequence(); OVERRIDE;
+        
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
-
-        property PresentkV: Double READ Get_PresentkV WRITE Set_PresentkV;
-
     end;
-
-var
-    Generic5Class: TGeneric5;
-    ActiveGeneric5Obj: TGeneric5Obj;
 
 implementation
 
@@ -317,38 +378,41 @@ uses
     Sysutils,
     Math,
     MathUtil,
-    Utilities;
+    Utilities,
+    Generic5Helper;
 
+type
+    TObj = TGeneric5Obj;
+    TProp = TGeneric5Prop;
+    TPropLegacy = TGeneric5PropLegacy;
+    TVar = TGeneric5Variable;
 const
-    NumPropsThisClass = 48;
-    NumGeneric5Variables = 36;
+    NumPropsThisClass = Ord(High(TProp));
+    NumGeneric5Variables = Ord(High(TGeneric5Variable));
     nOrder = 6;
-
+    NumOrderX = nOrder; //  system order
+    NumOrderY = nOrder; //  system output Y order
 var
-    cBuffer: array[1..24] of Complex;  // Temp buffer for complex math calcs; allows up to 24-phase models.
+    PropInfo: Pointer = NIL;
+    PropInfoLegacy: Pointer = NIL;
+    VarInfo: Pointer = NIL;
 
-constructor TGeneric5.Create;  // Creates main collection handler for all IndMach012 objects
+constructor TGeneric5.Create(dssContext: TDSSContext);
+var
+    i: Integer;
 begin
-    inherited Create;  // make the base class  and init DSSClassType
+    if PropInfo = NIL then
+    begin
+        PropInfo := TypeInfo(TProp);
+        PropInfoLegacy := TypeInfo(TPropLegacy);
+        VarInfo := TypeInfo(TGeneric5Variable);
+    end;
 
-     // Specify class name and bit mask ID for this class type
-     // IndMach012_ELEMENT must be defined in DSSClassDefs as nn*8
-     // First 3 bits are used for base class type (DSSClassType)
-    Class_Name := 'Generic5';
-    DSSClassType := DSSClassType + Generic5OrderMach_ELEMENT;
+    SetLength(varNames, NumGeneric5Variables);
+    for i := 1 to NumGeneric5Variables do
+        varNames[i - 1] := GetEnumName(VarInfo, i);
 
-    ActiveElement := 0;   // no active elements yet; init to 0
-
-     {Initialize any other special variables here}
-
-    DefineProperties;   // This is where the properties for this class are defined
-
-     // Use the Command processor to manage property names
-     // PropertyName is an array of String defined in DefineProperties
-    CommandList := TCommandList.Create(PropertyName, NumProperties);
-    CommandList.Abbrev := true;
-
-    Generic5Class := Self;
+    inherited Create(dssContext, GENERIC5ORDERMACH_ELEMENT, 'Generic5');
 end;
 
 destructor TGeneric5.Destroy;
@@ -356,498 +420,254 @@ begin
     inherited Destroy;
 end;
 
-procedure TGeneric5.DefineProperties;
-// This is where the properties are defined, assigned names, indexes, and help strings
-// The Help strings will automatically show up when the Help is invoked
+procedure TGeneric5.DefineProperties();
+var 
+    obj: TObj = NIL; // NIL (0) on purpose
 begin
     Numproperties := NumPropsThisClass;
-    CountProperties;   // Get inherited property count
-    AllocatePropertyArrays;   {see DSSClass}
+    CountPropertiesAndAllocate();
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
-     // Refer to other classes for alternative methods of assigning properties
-     // This example uses the AddProperty function to assign Name, Index, and Help string
-     // in one statement.
+    // PF: ; // Do nothing; read only power factor    := Parser.DblValue;
+    // H: MachineData.Hmass   := Parser.DblValue;
+    // D: MachineData.D       := Parser.DblValue;
+    // MaxSlip: MaxSlip := Parser.DblValue;
+    // SlipOption: ;//InterpretOption(Parser.StrValue);
+    // Debugtrace: DebugTrace := InterpretYesNo(Param);
+    // Yearly: YearlyShape := Param;
+    // Daily: DailyDispShapeObj := Param;
+    // Duty: DutyShapeObj := Param;
 
-     // First argument is string name of the property
-     // Second argument is the index for the CASE statement
-     // Third argument is help string
+    // bus properties
+    PropertyType[ord(TProp.Bus1)] := TPropertyType.BusProperty;
+    PropertyOffset[ord(TProp.Bus1)] := 1;
+    PropertyFlags[ord(TProp.Bus1)] := [TPropertyFlag.Required];
 
-     // DSS properties are accessed in sequence if the property name is not explicitly specified.
-     // The advantage of using the AddProperty function is that you may change the sequence simply
-     // by shuffling the order of the definitions and you do not have to change the index in the CASE
-     // statement in the EDIT function
+    // enum properties
+    PropertyType[ord(TProp.Conn)] := TPropertyType.MappedStringEnumProperty;
+    PropertyOffset[ord(TProp.Conn)] := ptruint(@obj.Connection);
+    PropertyOffset2[ord(TProp.Conn)] := PtrInt(DSS.ConnectionEnum);
 
-    PropertyName^[1] := 'phases';
-    PropertyName^[2] := 'bus1';
-    PropertyName^[3] := 'kv';
-    PropertyName^[4] := 'kW';
-    PropertyName^[5] := 'pf';
-    PropertyName^[6] := 'conn';
-    PropertyName^[7] := 'kVA';
-    PropertyName^[8] := 'H';
-    PropertyName^[9] := 'D';
-    PropertyName^[10] := 'P_ref1kW';
-    PropertyName^[11] := 'P_ref2kW';
-    PropertyName^[12] := 'P_ref3kW';
-    PropertyName^[13] := 'V_ref1kVLN';
-    PropertyName^[14] := 'V_ref2kVLN';
-    PropertyName^[15] := 'V_ref3kVLN';
-    PropertyName^[16] := 'MaxSlip';
-    PropertyName^[17] := 'SlipOption';
-    PropertyName^[18] := 'Yearly';
-    PropertyName^[19] := 'Daily';
-    PropertyName^[20] := 'Duty';
-    PropertyName^[21] := 'Debugtrace';
-    PropertyName^[22] := 'P_refkW';
-    PropertyName^[25] := 'V_refkVLN';
-    PropertyName^[23] := 'Q_refkVAr';
-    PropertyName^[24] := 'Cluster_num';
-    PropertyName^[26] := 'ctrl_mode';
-     ///////////////////////////////////////////
-     /// contrl mode
-     ///    ctrl_mode =0; phases = 3;  // pos avg control---p_ref, V_ref, Q_ref
-     ///    ctrl_mode =1; phases = 1; bus1 = 452.1;      ---p_ref1, V_ref1, Q_ref1
-     ///    ctrl_mode =2; phases = 1; bus1 = 452.2;      ---p_ref2, V_ref2, Q_ref2
-     ///    ctrl_mode =3; phases = 1; bus1 = 452.3;      ---p_ref3, V_ref3, Q_ref3
-     ///    ctrl_mode =4; phases = 3; bus1 = 452.2;      ---p_ref1,2,3, V_ref1,2,3, Q_ref1,2,3
-    PropertyName^[27] := 'QV_flag';
-    PropertyName^[28] := 'kcd';//Idi control gain
-    PropertyName^[29] := 'kcq';//Iqi control gain to delta V
-    PropertyName^[30] := 'kqi';//Iqi control gain to delta Q
-    PropertyName^[31] := 'Q_ref1kVAr';
-    PropertyName^[32] := 'Q_ref2kVAr';
-    PropertyName^[33] := 'Q_ref3kVAr';
-    PropertyName^[34] := 'PmaxkW'; //
-    PropertyName^[35] := 'PminkW';
-    PropertyName^[36] := 'PQpriority';
-    PropertyName^[37] := 'PmppkW';
-    PropertyName^[38] := 'Pfctr1';
-    PropertyName^[39] := 'Pfctr2';
-    PropertyName^[40] := 'Pfctr3';
-    PropertyName^[41] := 'Pfctr4';
-    PropertyName^[42] := 'Pfctr5';
-    PropertyName^[43] := 'Pfctr6';
-    PropertyName^[44] := 'PbiaskW';
-    PropertyName^[45] := 'CC_Switch';
-    PropertyName^[46] := 'kcq_drp2';
-    PropertyName^[47] := 'Volt_Trhd';
-    PropertyName^[48] := 'droop';
+    // Double properties, including adv. scaled ones
+    PropertyOffset[ord(TProp.kcd)] := ptruint(@obj.kcd);
+    PropertyOffset[ord(TProp.kcq)] := ptruint(@obj.kcq);
+    PropertyOffset[ord(TProp.kqi)] := ptruint(@obj.kqi);
+    PropertyOffset[ord(TProp.kV)] := ptruint(@obj.kVGeneratorBase);S
+    PropertyOffset[ord(TProp.Pfctr1)] := ptruint(@obj.Pfctr1); //for pmpp
+    PropertyOffset[ord(TProp.Pfctr2)] := ptruint(@obj.Pfctr2); //for pmpp
+    PropertyOffset[ord(TProp.Pfctr3)] := ptruint(@obj.Pfctr3); //for pmpp
+    PropertyOffset[ord(TProp.Pfctr4)] := ptruint(@obj.Pfctr4); //for pmpp
+    PropertyOffset[ord(TProp.Pfctr5)] := ptruint(@obj.Pfctr5); //for pmpp
+    PropertyOffset[ord(TProp.Pfctr6)] := ptruint(@obj.Pfctr6); //for pmpp
+    PropertyOffset[ord(TProp.kcq_drp2)] := ptruint(@obj.kcq_drp2);
+    PropertyOffset[ord(TProp.Volt_Trhd)] := ptruint(@obj.Volt_Trhd);
+    PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.kVArating);
 
-     //PropertyName^[46] := 'Num_in_Cluster. Num_in_Cluster = 1~33';
+    PropertyOffset[ord(TProp.MVA)] := ptruint(@obj.GenVars.kVArating);
+    PropertyScale[ord(TProp.MVA)] := 1000.0;
 
-    PropertyHelp^[1] := 'Number of Phases, this Induction Machine.  ';
-    PropertyHelp^[2] := 'Bus to which the Induction Machine is connected.  May include specific node specification.';
-    PropertyHelp^[3] := 'Nominal rated (1.0 per unit) voltage, kV. For 2- and 3-phase machines, specify phase-phase kV. ' +
-        'Otherwise, specify actual kV across each branch of the machine. ' +
-        'If wye (star), specify phase-neutral kV. ' +
-        'If delta or phase-phase connected, specify phase-phase kV.';  // line-neutral voltage//  base voltage
-    PropertyHelp^[4] := 'Shaft Power, kW, for the Induction Machine. Output limit of a DG';//A positive value denotes power for a //load. ';//+CRLF+
-                        //'Negative value denotes an induction generator. ';
-    PropertyHelp^[5] := '[Read Only] Present power factor for the machine. ';
-    PropertyHelp^[6] := 'Connection of stator: Delta or Wye. Default is Delta.';
-    PropertyHelp^[7] := 'Rated kVA for the machine.';
-    PropertyHelp^[8] := 'Per unit mass constant of the machine.  MW-sec/MVA.  Default is 1.0.';
-    PropertyHelp^[9] := 'Damping constant.  Usual range is 0 to 4. Default is 1.0.  Adjust to get damping in Dynamics mode,';
-    PropertyHelp^[10] := 'P_ref1kW = 10, goes to P_ref1, unit kW, 1st phase set power';
-    PropertyHelp^[11] := 'P_ref2kW = 10, goes to P_ref2, unit kW, 2nd phase set power';
-    PropertyHelp^[12] := 'P_ref3kW = 10, goes to P_ref3, unit kW, 3rd phase set power';
-    PropertyHelp^[13] := 'V_ref1kVLN = 2.16, 1st phase set V, (Unit kV, L-N value): V mode will work if QV_flag =1(by default) V_ref is set which is prior to Q_ref ';
-    PropertyHelp^[14] := 'V_ref2kVLN = 2.16, 2nd phase set V, (Unit kV, L-N value): V mode will work if QV_flag =1(by default) V_ref is set which is prior to Q_ref ';
-    PropertyHelp^[15] := 'V_ref3kVLN = 2.16, 3rd phase set V, (Unit kV, L-N value): V mode will work if QV_flag =1(by default) V_ref is set which is prior to Q_ref ';
-    PropertyHelp^[16] := 'Max slip value to allow. Default is 0.1. Set this before setting slip.';
-    PropertyHelp^[17] := 'Option for slip model. One of {fixedslip | variableslip*  }';
-    PropertyHelp^[18] := 'LOADSHAPE object to use for yearly simulations.  Must be previously defined ' +
-        'as a Loadshape object. Is set to the Daily load shape ' +
-        ' when Daily is defined.  The daily load shape is repeated in this case. ' +
-        'Set Status=Fixed to ignore Loadshape designation. ' +
-        'Set to NONE to reset to no loadahape. ' +
-        'The default is no variation.';
-    PropertyHelp^[19] := 'LOADSHAPE object to use for daily simulations.  Must be previously defined ' +
-        'as a Loadshape object of 24 hrs, typically. ' +
-        'Set Status=Fixed to ignore Loadshape designation. ' +
-        'Set to NONE to reset to no loadahape. ' +
-        'Default is no variation (constant) if not defined. ' +
-        'Side effect: Sets Yearly load shape if not already defined.';
-    PropertyHelp^[20] := 'LOADSHAPE object to use for duty cycle simulations.  Must be previously defined ' +
-        'as a Loadshape object.  Typically would have time intervals less than 1 hr. ' +
-        'Designate the number of points to solve using the Set Number=xxxx command. ' +
-        'If there are fewer points in the actual shape, the shape is assumed to repeat.' +
-        'Set to NONE to reset to no loadahape. ' +
-        'Set Status=Fixed to ignore Loadshape designation. ' +
-        ' Defaults to Daily curve If not specified.';
-    PropertyHelp^[21] := '[Yes | No*] Write DebugTrace file.';
-    PropertyHelp^[22] := 'P_refkW = 10, goes to P_ref. Ref P Value (kW). P_ref has prority to kW which is nomimal value. (Incide variable P_ref is W)';
-    PropertyHelp^[25] := 'V_refkVLN = 2.16, pos sequence set V. V_ref (Unit kV, L-N value): V mode will work if QV_flag =1(by default) V_ref is set which is prior to Q_ref';
-    PropertyHelp^[23] := 'Q_refkVAr=10. Unit Qvar. Ref Q kVAr Value: work only when V_ref is not set';
-    PropertyHelp^[24] := 'Cluster_num: has to be coincident with Fmonitor attached. Default value is 0';
-     { add properties here }
-    PropertyHelp^[26] := 'ctrl mode:     /// contrl mode    ' +
-        ' ///    ctrl_mode =0; phases = 3;  // pos avg control---p_ref, V_ref, Q_ref    \n ' + CRLF +
-        ' ///    ctrl_mode =1; phases = 1; bus1 = 452.1;      ---p_ref1, V_ref1, Q_ref1 \n' + CRLF +
-        '///    ctrl_mode =2; phases = 1; bus1 = 452.2;      ---p_ref2, V_ref2, Q_ref2 \n' + CRLF +
-        '///    ctrl_mode =3; phases = 1; bus1 = 452.3;      ---p_ref3, V_ref3, Q_ref3 \n' + CRLF +
-        '///    ctrl_mode =4; phases = 3; bus1 = 452.2;      ---p_ref1,2,3, V_ref1,2,3, Q_ref1,2,3';
-    PropertyHelp^[27] := 'QV_flag : 0-Q_ref mode; 1- V_ref mode';
-    PropertyHelp^[28] := 'kcd: Idi control gain';
-    PropertyHelp^[29] := 'kcq: Iqi control gain to delta V';
-    PropertyHelp^[30] := 'kqi: Iqi control gain to delta Q';
-    PropertyHelp^[31] := 'Q_ref1kVAr=10. Unit Qvar. Ref Q kVAr Value: work only when V_ref is not set';
-    PropertyHelp^[32] := 'Q_ref2kVAr=10. Unit Qvar. Ref Q kVAr Value: work only when V_ref is not set';
-    PropertyHelp^[33] := 'Q_ref3kVAr=10. Unit Qvar. Ref Q kVAr Value: work only when V_ref is not set';
-    PropertyHelp^[34] := 'PmaxkW = 100, goes to Pmax, unit kW, set max active power output; Operation limit of active power for DG' + CRLF + '  Pmax should be less than or equal to kW';
-    PropertyHelp^[35] := 'PminkW = 10, goes to Pmin, unit kW; Operation limit of active power for DG';
-    PropertyHelp^[36] := 'PQpriority, goes to PQpriority, define how to set Qmax. 0: Q,1: P ';
-    PropertyHelp^[37] := 'PmppkW = 100, goes to Pmpp, unit kW, input Pmpp to calculate kW;' + CRLF + '  kW := (Pmpp + Pbias)*Pfctr1*Pfctr2*Pfctr3*Pfctr4*Pfctr5*Pfctr6;' + CRLF + 'Pbias = 0 by default, Pfctr*=1 by default; These properties will overwrite kW.';
-    PropertyHelp^[38] := 'Pfctr1 = 0.16, see PmppkW';
-    PropertyHelp^[39] := 'Pfctr2 = 1, 1 by default, see PmppkW';
-    PropertyHelp^[40] := 'Pfctr3 = 1, 1 by default, see PmppkW';
-    PropertyHelp^[41] := 'Pfctr4= 1, 1 by default, see PmppkW';
-    PropertyHelp^[42] := 'Pfctr5 =1, 1 by default, see PmppkW';
-    PropertyHelp^[43] := 'Pfctr6 = 1, 1 by default, see PmppkW';
-    PropertyHelp^[44] := 'Pbias = -0.1, 0 by default, see PmppkW';
-    PropertyHelp^[45] := 'CC_Switch: default value is false.' + CRLF + 'CC_Switch = true --cooperate control on' + CRLF + 'CC_Switch = false -- cooperate control off';
-    PropertyHelp^[46] := 'kcq_drp2. the droop gain: 0.0~0.1';
-    PropertyHelp^[47] := 'Volt_Trhd. 0.~0.05. 0 means v has to follow v_ref';
-    PropertyHelp^[48] := 'droop type: integer: 2- Q = kcq_drp2 * (1-v_dg). others: integral droop with kcq.';
-     // Finally, we have to pick up any properties that were inherited
+    PropertyOffset[ord(TProp.kW)] := ptruint(@obj.WBase);
+    PropertyScale[ord(TProp.kW)] := 1000;
+
+    PropertyOffset[ord(TProp.P_Ref1kW)] := ptruint(@obj.P_ref1);
+    PropertyScale[ord(TProp.P_Ref1kW)] := 1000; //for phase ctrl unit kW to W
+
+    PropertyOffset[ord(TProp.P_Ref2kW)] := ptruint(@obj.P_ref2);
+    PropertyScale[ord(TProp.P_Ref2kW)] := 1000; //for phase ctrl
+
+    PropertyOffset[ord(TProp.P_Ref3kW)] := ptruint(@obj.P_ref3);
+    PropertyScale[ord(TProp.P_Ref3kW)] := 1000; //for phase ctrl
+
+    PropertyOffset[ord(TProp.V_Ref1kVLN)] := ptruint(@obj.V_ref1);
+    PropertyScale[ord(TProp.V_Ref1kVLN)] := 1000; //for phase ctrl unit kV to V
+
+    PropertyOffset[ord(TProp.V_Ref2kVLN)] := ptruint(@obj.V_ref2);
+    PropertyScale[ord(TProp.V_Ref2kVLN)] := 1000; //for phase ctrl
+
+    PropertyOffset[ord(TProp.V_Ref3kVLN)] := ptruint(@obj.V_ref3);
+    PropertyScale[ord(TProp.V_Ref3kVLN)] := 1000; //for phase ctrl
+
+    PropertyOffset[ord(TProp.P_RefkW)] := ptruint(@obj.P_RefTotal);
+    PropertyScale[ord(TProp.P_RefkW)] := 1000;//to norm value W from kW(in script)//for avg ctrl    1000*PrefKw/3;
+
+    PropertyOffset[ord(TProp.Q_RefkVAr)] := ptruint(@obj.Q_RefTotal);
+    PropertyScale[ord(TProp.Q_RefkVAr)] := 1000;//to VA from kVA(in script) //for avg ctrl 1000*QrefKVAr/3;
+
+    PropertyOffset[ord(TProp.V_refkVLN)] := ptruint(@obj.V_ref);
+    PropertyScale[ord(TProp.V_refkVLN)] := 1000;//kV  to V //for avg ctrl 1000*VrefkV;
+
+    PropertyOffset[ord(TProp.Q_ref1kvar)] := ptruint(@obj.Q_ref1);
+    PropertyScale[ord(TProp.Q_ref1kvar)] := 1000; //for phase ctrl unit kVar to Var
+
+    PropertyOffset[ord(TProp.Q_ref2kvar)] := ptruint(@obj.Q_ref2);
+    PropertyScale[ord(TProp.Q_ref2kvar)] := 1000; //for phase ctrl
+
+    PropertyOffset[ord(TProp.Q_ref3kvar)] := ptruint(@obj.Q_ref3);
+    PropertyScale[ord(TProp.Q_ref3kvar)] := 1000; //for phase ctrl
+
+    PropertyOffset[ord(TProp.PMaxkW)] := ptruint(@obj.Pmax);
+    PropertyScale[ord(TProp.PMaxkW)] := 1000; //Pmax has to be less then kW in script
+
+    PropertyOffset[ord(TProp.PMinkW)] := ptruint(@obj.Pmin);
+    PropertyScale[ord(TProp.PMinkW)] := 1000; //for phase ctrl
+
+    PropertyOffset[ord(TProp.PmppkW)] := ptruint(@obj.Pmpp);
+    PropertyScale[ord(TProp.PmppkW)] := 1000; //for pmpp kW
+
+    PropertyOffset[ord(TProp.PbiaskW)] := ptruint(@obj.Pbias);
+    PropertyScale[ord(TProp.PbiaskW)] := 1000; //for pmpp
+
+    // boolean properties
+    PropertyType[ord(TProp.CC_Switch)] := TPropertyType.BooleanProperty;
+    PropertyOffset[ord(TProp.CC_Switch)] := ptruint(@obj.CC_Switch);
+
+    // Integer properties
+    PropertyType[ord(TProp.Phases)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.Phases)] := ptruint(@obj.FNPhases);
+    PropertyFlags[ord(TProp.Phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
+
+    PropertyType[ord(TProp.Cluster_Num)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.Cluster_Num)] := ptruint(@obj.Cluster_Num);
+
+    PropertyType[ord(TProp.Ctrl_Mode)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.Ctrl_Mode)] := ptruint(@obj.Ctrl_Mode);
+
+    PropertyType[ord(TProp.QV_flag)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.QV_flag)] := ptruint(@obj.QV_flag);
+
+    PropertyType[ord(TProp.PQPriority)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.PQPriority)] := ptruint(@obj.PQPriority);
+
+    PropertyType[ord(TProp.Droop)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.Droop)] := ptruint(@obj.Droop);
+
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
-
-     // You can optionally override default help string of an inherited property, for example
-    PropertyHelp^[NumPropsThisClass + 1] := 'Name of harmonic voltage or current spectrum for this IndMach012. ' +
-        'Voltage behind Xd" for machine - default. Current injection for inverter. ' +
-        'Default value is "default", which is defined when the DSS starts.';
+    inherited DefineProperties;
 end;
 
-function TGeneric5.NewObject(const ObjName: String): Integer;
-begin
-    // Make a new IndMach012 and add it to IndMach012 class list
-    with ActiveCircuit do
-    begin
-        ActiveCktElement := TGeneric5Obj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
-end;
-
-procedure TGeneric5.SetNcondsForConnection;
-// This is a typical helper function found in many DSS circuit element class
-// for defining the number of conductors per terminal (Nconds) based on Y or delta connection
-begin
-    with ActiveGeneric5Obj do
-    begin
-        case Connection of
-            0:
-                NConds := Fnphases;  // Neutral is not connected for induction machine
-            1:
-                case Fnphases of        // Delta connection
-                    1, 2:
-                        NConds := Fnphases + 1; // L-L and Open-delta
-                else
-                    NConds := Fnphases;    // no neutral for this connection
-                end;
-        end;
-    end;
-end;
-
-function TGeneric5.Edit(): Integer;
+function TGeneric5.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    ParamPointer: Integer;
-    ParamName: String;
-    Param: String;
+    Obj: TObj;
 begin
-  // set the present element active
-  // and continue parsing with contents of Parser
-    ActiveGeneric5Obj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveGeneric5Obj;
-    Result := 0;
+    Obj := TObj.Create(Self, ObjName);
+    if Activate then 
+        ActiveCircuit.ActiveCktElement := Obj;
+    Obj.ClassIndex := AddObjectToList(Obj, Activate);
+    Result := Obj;
+end;
 
-    with ActiveGeneric5Obj do
-    begin
-     // peel off the next token on the edit line
-        ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+procedure SetNcondsForConnection(obj: TObj);
+begin
+    case obj.Connection of
+        0:
+            obj.NConds := obj.Fnphases; // Neutral is not connected for induction machine
+        1:
+            case obj.Fnphases of // Delta connection
+                1, 2:
+                    obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
+            else
+                obj.NConds := obj.Fnphases; // no neutral for this connection
+            end;
+    end;
+end;
 
-        while Length(Param) > 0 do
+procedure TGeneric5Obj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
+begin
+    case Idx of
+        ord(TProp.PmppkW),
+        ord(TProp.Pfctr1),
+        ord(TProp.Pfctr2),
+        ord(TProp.Pfctr3),
+        ord(TProp.Pfctr4),
+        ord(TProp.Pfctr5),
+        ord(TProp.Pfctr6),
+        ord(TProp.PbiaskW):
+            Update_kWbase_by_Fctrs();// Update Pmax; will cover direct Pmax input by these
+        ord(TProp.Phases):
+            TODO: Set_NPhases side-effects?
+            SetNcondsForConnection(self); // Force Reallocation of terminal info
+        ord(TProp.kV):
         begin
-         // Find the index for the CASE statement
-         // If property is not named, just increment the index to the next property
-            if (Length(ParamName) = 0) then
-                Inc(ParamPointer)
+            case FNphases of
+                2, 3:
+                    VBase := kVGeneratorBase * InvSQRT3x1000;
             else
-                ParamPointer := CommandList.GetCommand(ParamName);
+                VBase := kVGeneratorBase * 1000.0;
+            end;
+        end;
+        ord(TProp.kW):
+        begin
+            if (Pmax < 0) or (Pmax > WBase) then
+                Pmax := WBase;
+            if PQpriority = 1 then
+                Pmax := WBase;
+        end;
+        ord(TProp.PMaxkW):
+            PMax_phase := Pmax / fnphases;
+        ord(TProp.PMinkW):
+            PMin_phase := Pmax / fnphases;
+        ord(TProp.P_RefKW):
+        begin
+            P_ref := P_RefTotal / fnphases;
+            P_ref1 := P_ref;
+            P_ref2 := P_ref;
+            P_ref3 := P_ref;
 
-         // Update the PropertyValy for this property
-         // Actual index is mapped via PropertyIdxMap array for this class
-            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-                PropertyValue[PropertyIdxMap^[ParamPointer]] := Param
-            else
-                DoSimpleMsg('Unknown parameter "' + ParamName + '" for Generic5 "' + Name + '"', 560);
-
-         // --------------- MAIN CASE STATEMENT ----------------------
-            if ParamPointer > 0 then
-         // since we used AddProperty function to define properties, have to
-         // use PropertyIdxMap to map to the correct Case index
-                case PropertyIdxMap^[ParamPointer] of
-                    0:
-                        DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
-                    1:
-                        NPhases := Parser.Intvalue; // num phases
-                    2:
-                    begin
-                        SetBus(1, param);      //'bus1 = 8.1.2.3'
-                  //if True then
-
-                    end;
-
-                    3:
-                        PresentkV := Parser.DblValue;
-                    4:
-                    begin
-                        kWBase := Parser.DblValue;
-                        if (Pmax < 0) or (Pmax > kWBase * 1000) then
-                            Pmax := kWBase * 1000;
-                        if PQpriority = 1 then
-                            Pmax := kWBase * 1000;
-                    end;
-
-                    5: ; // Do nothing; read only power factor    := Parser.DblValue;
-                    6:
-                        InterpretConnection(Parser.StrValue);
-                    7:
-                        MachineData.kVArating := Parser.DblValue;
-            //8: MachineData.Hmass   := Parser.DblValue;
-            //9: MachineData.D       := Parser.DblValue;
-                    10:
-                        P_ref1 := 1000 * Parser.DblValue;  //for phase ctrl unit kW to W
-                    11:
-                        P_ref2 := 1000 * Parser.DblValue;  //for phase ctrl
-                    12:
-                        P_ref3 := 1000 * Parser.DblValue;  //for phase ctrl
-                    13:
-                        V_ref1 := 1000 * Parser.DblValue;  //for phase ctrl unit kV to V
-                    14:
-                        V_ref2 := 1000 * Parser.DblValue;  //for phase ctrl
-                    15:
-                        V_ref3 := 1000 * Parser.DblValue;  //for phase ctrl
-                    16:
-                        MaxSlip := Parser.DblValue;
-                    17: ;//InterpretOption(Parser.StrValue);
-                    18:
-                        YearlyShape := Param;
-                    19:
-                        DailyDispShape := Param;
-                    20:
-                        DutyShape := Param;
-                    21:
-                        DebugTrace := InterpretYesNo(Param);
-              {}
-                    22:
-                        Set_P_Ref(Parser.DblValue);//to norm value W from kW(in script)//for avg ctrl    1000*PrefKw/3;
-                    23:
-                        Set_Q_Ref(Parser.DblValue);//to VA from kVA(in script)         //for avg ctrl    1000*QrefKVAr/3;
-                    24:
-                        Cluster_Num := Parser.Intvalue;
-                    25:
-                        Set_V_Ref(Parser.Dblvalue);//kV  to V                          //for avg ctrl    1000*VrefkV;
-                    26:
-                        ctrl_mode := Parser.Intvalue;
-                ///////////////////////////////////////////
-    ///
-    ///////////////////////////////////////////
-                    27:
-                    begin
-                        QV_flag := Parser.Intvalue;
-                    end;  // QV_flag_0 :=QV_flag
-                    28:
-                        kcd := Parser.dblvalue;
-                    29:
-                        kcq := Parser.dblvalue;
-                    30:
-                        kqi := Parser.dblvalue;
-                    31:
-                        Q_ref1 := 1000 * Parser.DblValue; //for phase ctrl unit kVar to Var
-                    32:
-                        Q_ref2 := 1000 * Parser.DblValue; //for phase ctrl
-                    33:
-                        Q_ref3 := 1000 * Parser.DblValue; //for phase ctrl
-                    34:
-                    begin
-                        Pmax := 1000 * Parser.DblValue; //Pmax has to be less then kW in script
-                        PMax_phase := Pmax / fnphases;
-                    end;
-                    35:
-                    begin
-                        Pmin := 1000 * Parser.DblValue;  //for phase ctrl
-                        PMin_phase := Pmax / fnphases;
-                    end;
-                    36:
-                        PQpriority := Parser.intValue;  //
-                    37:
-                        Pmpp := 1000 * Parser.DblValue;  //for pmpp kW
-                    38:
-                        Pfctr1 := Parser.DblValue;  //for pmpp
-                    39:
-                        Pfctr2 := Parser.DblValue;  //for pmpp
-                    40:
-                        Pfctr3 := Parser.DblValue; //for pmpp
-                    41:
-                        Pfctr4 := Parser.DblValue; //for pmpp
-                    42:
-                        Pfctr5 := Parser.DblValue; //for  pmpp
-                    43:
-                        Pfctr6 := Parser.DblValue; //for pmpp
-                    44:
-                        Pbias := 1000 * Parser.DblValue; //for pmpp
-                    45:
-                        CC_switch := InterpretYesNo(parser.StrValue); //  yes, true, y ,t; or no, false, n, f
-                    46:
-                        kcq_drp2 := parser.DblValue; //cluster num
-                    47:
-                        Volt_Trhd := parser.DblValue;
-                    48:
-                        droop := Parser.intValue;
-                else
-           // Handle Inherited properties
-                    ClassEdit(ActiveGeneric5Obj, ParamPointer - NumPropsThisClass)
-                end;
-
-         // ---------------- SIDE EFFECTS CASE STATEMENT ---------------------
-         // This case statment handles any side effects from setting a property
-         // (for example, from Generator)
-            if ParamPointer > 0 then
-                case PropertyIdxMap^[ParamPointer] of
-                    1:
-                        SetNcondsForConnection;  // Force Reallocation of terminal info
-                    18:
-                    begin
-                        YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
-                        if Assigned(YearlyShapeObj) then
-                            with YearlyShapeObj do
-                                if UseActual then
-                                    SetPowerkW(MaxP);
-                    end;
-                    19:
-                    begin
-                        DailyDispShapeObj := LoadShapeClass.Find(DailyDispShape);
-                        if Assigned(DailyDispShapeObj) then
-                            with DailyDispShapeObj do
-                                if UseActual then
-                                    SetPowerkW(MaxP);
-                    end;
-                    20:
-                    begin
-                        DutyShapeObj := LoadShapeClass.Find(DutyShape);
-                        if Assigned(DutyShapeObj) then
-                            with DutyShapeObj do
-                                if UseActual then
-                                    SetPowerkW(MaxP);
-                    end;
-                else
-                end;
-
-          //if Pmpp and fctrs are defined
-            if ((ParamPointer >= 37) and (ParamPointer <= 44)) then
+            if P_RefTotal > WBase then
             begin
-                Update_kWbase_by_Fctrs;// Update Pmax
-                                    //will cover direct Pmax input by these
+                DoSimpleMsg('PRef should be less than or equal to kW.', 562);
             end;
 
-         // Get next token off Parser and continue editing properties
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+    // if ActiveCircuit.Solution.DynaVars.SolutionMode = DYNAMICMODE then 
+    // begin 
+    // //if P_ref changed in the dynamic simulation
+    // //The sudden change of Id has to be applied
+    // // flag_dyna_Id_chg := true;
+    // end;
+        end;
+        ord(TProp.Q_RefkVAr):
+        begin
+            Q_ref := Q_RefTotal / fnphases;
+            Q_ref1 := Q_ref;
+            Q_ref2 := Q_ref;
+            Q_ref3 := Q_ref;
+        end;
+        prd(TProp.V_refkVLN):
+        begin
+            V_ref1 := V_ref;
+            V_ref2 := V_ref;
+            V_ref3 := V_ref;
         end;
 
-        Update_PQlimits();
-        RecalcElementData();
-        YPrimInvalid := true; // Setting this flag notifies the DSS that something has changed
-                           // and the Yprim will have to be rebuilt
+    // ord(TProp.Yearly):
+    //     if (YearlyShapeObj <> NIL) and YearlyShapeObj.UseActual then
+    //         SetPowerkW(YearlyShapeObj.MaxP);
+    // ord(TProp.Daily):
+    //     if (DailyDispShapeObj <> NIL) and DailyDispShapeObj.UseActual then
+    //         SetPowerkW(DailyDispShapeObj.MaxP);
+    // ord(TProp.Duty):
+    //     if (DutyShapeObj <> NIL) and DutyShapeObj.UseActual then
+    //         SetPowerkW(DutyShapeObj.MaxP);
     end;
 end;
 
-// dont use this 0114-2018 by Ying
-function TGeneric5.MakeLike(const OtherIndMach012Name: String): Integer;
 
-// This function should be defined to handle the Like property inherited from
-// the base class.
-
-// The function copies the essential properties of another object of this class
-
+function TGeneric5.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
 var
-    OtherIndMach012: TGeneric5Obj;
-    i: Integer;
+    obj: TObj;
 begin
-    Result := 0;
-   {See if we can find this IndMach012 name in the present collection}
-    OtherIndMach012 := Find(OtherIndMach012Name);
-    if (OtherIndMach012 <> nil)   // skip if not found
-    then
-        with ActiveGeneric5Obj do
-        begin
-       // You should first set the basic circuit element properties, for example
-            if (Fnphases <> OtherIndMach012.Fnphases) then
-            begin
-                Nphases := OtherIndMach012.Fnphases;
-                NConds := Fnphases;  // Forces reallocation of terminal stuff
-
-                Yorder := Fnconds * Fnterms;
-                YPrimInvalid := true;
-            end;
-
-            PresentkV := OtherIndMach012.PresentkV;
-            kWBase := OtherIndMach012.kWBase;
-
-            puRs := OtherIndMach012.puRs;
-            puRr := OtherIndMach012.puRr;
-            puXr := OtherIndMach012.puXr;
-            puXm := OtherIndMach012.puXm;
-            puXs := OtherIndMach012.puXs;
-            MaxSlip := OtherIndMach012.MaxSlip;
-
-            MachineData.kVArating := OtherIndMach012.MachineData.kVArating;
-            MachineData.Hmass := OtherIndMach012.MachineData.Hmass;
-            MachineData.D := OtherIndMach012.MachineData.D;
-
-       // Do inherited properties
-            ClassMakeLike(OtherIndMach012);
-
-       // Finally initialize all the property value strings to be the same as
-       // the copied element
-            for i := 1 to ParentClass.NumProperties do
-                FPropertyValue[i] := OtherIndMach012.FPropertyValue[i];
-
-            Result := 1;
-        end
-    else
-        DoSimpleMsg('Error in Load MakeLike: "' + OtherIndMach012Name + '" Not Found.', 562);
+    obj:= TObj(ptr);
+    obj.Update_PQlimits();
+    obj.RecalcElementData();
+    obj.YPrimInvalid := true;
 end;
 
-function TGeneric5.Init(Handle: Integer): Integer;
-// Optional function if you want to do anything to initialize objects of this class
-var
-    p: TGeneric5Obj;
+procedure TGeneric5Obj.MakeLike(OtherPtr: Pointer);
 begin
-    if (Handle = 0) then
-    begin  // init all
-        p := elementList.First;
-        while (p <> nil) do
-        begin
-            p.Randomize(0);
-            p := elementlist.Next;
-        end;
-    end
-    else
-    begin
-        Active := Handle;
-        p := GetActiveObj;
-        p.Randomize(0);
-    end;
-
-    DoSimpleMsg('Need to implement TGeneric5.Init', -1);
-    Result := 0;
+    DoSimpleMsg('%s: TGeneric5Obj.MakeLike is not implemented. Aborting.', [FullName], 202406012);
+    DSS.SolutionAbort := true;
 end;
 
-//------------------------- MAIN OBJECT CONSTRUCTOR ---------------------
 constructor TGeneric5Obj.Create(ParClass: TDSSClass; const Generic5ObjName: String);
 var
     i, j: Integer;
@@ -856,116 +676,62 @@ begin
     Name := LowerCase(Generic5ObjName);
     DSSObjType := ParClass.DSSClassType; // Same as Parent Class
 
-     // Set some basic circuit element properties
-    Nphases := 3;  // typical DSS default for a circuit element
-    Fnconds := 3;  // defaults to delta
-    Yorder := 0;  // To trigger an initial allocation
-    Nterms := 1;  // forces allocations of terminal quantities
-    kWBase := -1;//00; // has to be set in DSS scripts
+    // Set some basic circuit element properties
+    Nphases := 3; // typical DSS default for a circuit element
+    Fnconds := 3; // defaults to delta
+    Yorder := 0; // To trigger an initial allocation
+    Nterms := 1; // forces allocations of terminal quantities
+    WBase := -1;//00; // has to be set in DSS scripts
 
-    YearlyShape := '';
-    YearlyShapeObj := nil;  // if YearlyShapeobj = nil then the load alway stays nominal * global multipliers
-    DailyDispShape := '';
-    DailyDispShapeObj := nil;  // if DaillyShapeobj = nil then the load alway stays nominal * global multipliers
-    DutyShape := '';
-    DutyShapeObj := nil;  // if DutyShapeobj = nil then the load alway stays nominal * global multipliers
+    // YearlyShapeObj := nil; // if YearlyShapeobj = nil then the load alway stays nominal * global multipliers
+    // DailyDispShapeObj := nil; // if DaillyShapeobj = nil then the load alway stays nominal * global multipliers
+    // DutyShapeObj := nil; // if DutyShapeobj = nil then the load alway stays nominal * global multipliers
 
-    Debugtrace := false;
-    FmonObj := nil;
+    FFMonObj := nil;
+    FFMonObj2 := nil;
     Yorder := Fnterms * Fnconds;
-    ShapeIsActual := false;
+    // ShapeIsActual := false;
     Generic5SwitchOpen := false;
 
-    Connection := 1;  // Delta Default
+    Connection := 1; // Delta Default
 
-    MachineData.kVGeneratorBase := 12.47;
+    kVGeneratorBase := 12.47;
 
-    MachineData.kVArating := kWBase * 1.2;
-    with MachineData do
-    begin
-        Hmass := 1.0;       //  W-sec/VA rating
-        Theta := 0.0;
-        w0 := TwoPi * Basefrequency;
-        Speed := 0.0;  // relative speed
-        dSpeed := 0.0;
-        D := 1.0;
-        XRdp := 20.0;   // not used for indmach
-
-           // newly added
-        Conn := connection;
-        NumPhases := Fnphases;
-        NumConductors := Fnconds;
-    end;
-
-    {---- end note Andres: from dll model ----}
-
-    {Typical machine impedance data}
-    puRs := 0.0053;
-    puXs := 0.106;
-    puRr := 0.007;
-    puXr := 0.12;
-    puXm := 4.0;
-
-      // Set slip local and make generator model agree
-    MaxSlip := 0.1;  // 10% slip limit     - set this before setting slip
-      //Slip := -0.007;   // About 1 pu power
-    FixedSlip := false;  // Allow Slip to float to match specified power
-
+    kVArating := WBase * 1.2e-3;
     InDynamics := false;
 
-     // call the procedure to set the initial property string values
-    InitPropertyValues(0);
-      //NumOrder := 2;
-    NumOrderX := nOrder;//2;// //  system order
-    NumOrderY := nOrder; //2;////  system output Y order
-      {A,B,C,D, X_var, Y_out_var, V_in_var matrix}
-    ReAllocMem(Amm, nOrder * nOrder * Sizeof(Amm^[1]));// dot X = Ax +Bu
-    ReAllocMem(Bmn, nOrder * nOrder * Sizeof(Bmn^[1]));// suppose Y and U have the same dimesion. Square
-    ReAllocMem(Cnm, nOrder * nOrder * Sizeof(Cnm^[1]));
-    ReAllocMem(Dnn, nOrder * nOrder * Sizeof(Dnn^[1]));
-    ReAllocMem(X_var, nOrder * Sizeof(X_var^[1]));
-    ReAllocMem(dX_vardt, nOrder * Sizeof(dX_vardt^[1]));
-    ReAllocMem(X_varn, nOrder * Sizeof(X_varn^[1]));   // for trapezoid integration
-    ReAllocMem(dX_vardtn, nOrder * Sizeof(dX_vardtn^[1]));  // for trapezoid integration
-    ReAllocMem(Y_out_var, nOrder * Sizeof(Y_out_var^[1]));
-    ReAllocMem(V_in_var, nOrder * Sizeof(V_in_var^[1]));
-    ReAllocMem(pV_f_cc, nOrder * Sizeof(pV_f_cc^[1]));
-    //Allocate ABCDXYV
-    {A,B matrix, X_var}  //5 order system
+    // A, B, X_var, V_in_var matrix
+    ReAllocMem(Amm, nOrder * nOrder * Sizeof(Double));// dot X = Ax +Bu
+    ReAllocMem(Bmn, nOrder * nOrder * Sizeof(Double));// suppose Y and U have the same dimesion. Square
+    ReAllocMem(X_var, nOrder * Sizeof(Double));
+    ReAllocMem(dX_vardt, nOrder * Sizeof(Double));
+    ReAllocMem(X_varn, nOrder * Sizeof(Double)); // for trapezoid integration
+    ReAllocMem(dX_vardtn, nOrder * Sizeof(Double)); // for trapezoid integration
+    ReAllocMem(V_in_var, nOrder * Sizeof(Double));
+    ReAllocMem(pV_f_cc, nOrder * Sizeof(Double));
+    //Allocate ABXYV
+    // A,B matrix, X_var //5 order system
     for i := 1 to nOrder do
     begin
         for j := 1 to nOrder do
         begin
-            Amm^[(i - 1) * nOrder + j] := 0.0;//CMPLX(0.0, 0.0);
-              //if j=i then
-              //     Amm^[(i-1)*nOrder +j] := 1;//Amm := 0;
+            Amm[(i - 1) * nOrder + j] := 0.0;
         end;
         for j := 1 to nOrder do
         begin
-            Bmn^[(i - 1) * nOrder + j] := 0.0;//CMPLX(0.0, 0.0);
+            Bmn[(i - 1) * nOrder + j] := 0.0;
             if j = i then
                 Bmn[(i - 1) * nOrder + j] := 1;
         end;
-        X_var^[i] := 0.0;//CMPLX(0.0, 0.0);
-        dX_vardt^[i] := 0.0;// derivatives
-        X_varn^[i] := 0.0;// for trapezoid
-        dX_vardtn^[i] := 0.0;// derivatives
+        X_var[i] := 0.0;
+        dX_vardt[i] := 0.0;// derivatives
+        X_varn[i] := 0.0;// for trapezoid
+        dX_vardtn[i] := 0.0;// derivatives
     end;
-    {C,D Matrix, Y, V}
+    // Y, V
     for i := 1 to nOrder do
     begin
-        for  j := 1 to nOrder do
-        begin
-            Dnn[(i - 1) * nOrder + j] := 0.0;//CMPLX(0.0, 0.0);
-        end;
-        for j := 1 to nOrder do
-        begin
-            Cnm[(i - 1) * nOrder + j] := 0.0;//CMPLX(0.0, 0.0);
-            if i = j then
-                Cnm[(i - 1) * nOrder + j] := 1;
-        end;
-        Y_out_var[i] := 0.0;//CMPLX(0.0, 0.0);
-        V_in_var[i] := 0.0;//CMPLX(0.0, 0.0);
+        V_in_var[i] := 0.0;
         pV_f_cc[i] := 0.0;
     end;
     P_ref := 0;
@@ -977,27 +743,23 @@ begin
     Id2 := 0;
     Iq2 := 0;
     Id3 := 0;
-    Iq3 := 0;//
-     {}
+    Iq3 := 0;
+
     kcd := 0.1;
     kcq := 0.1;
     kqi := 0.1; //for local control gain in vi1, vi2
     Volt_Trhd := 0.0;
-     //Id_ref := 1;
-     //Iq_ref := 0;
     Cluster_Num := 0;//by default.
-     // Update anything that has to be calculated from property values
-    DQDV := 1;//
+    // Update anything that has to be calculated from property values
     ctrl_mode := 0;// avg contrl by default
     QV_flag := 0;
-     //QV_flag_0 := QV_flag;
-     {------------------}
-     //PQ max
-    PMax := -1; // Activity power output limit  MachineData.kVArating :=  1.2*kWbase; Pmax, Smax
+
+    //PQ max
+    PMax := -1; // Activity power output limit
     PMax_phase := PMax / fnphases; //limit per phase
-    PMin := 0;  //(0, default)
+    PMin := 0; //(0, default)
     Pmin_phase := PMin / fnphases; //
-    Qmax := 1000 * MachineData.kVArating; //Reactive power output limit
+    Qmax := 1000 * kVArating; //Reactive power output limit
     Qmax_phase := Qmax / fnphases;
     Qmin := -Qmax; //(-Qmax, default)
     Qmin_phase := Qmin / fnphases; //
@@ -1010,10 +772,10 @@ begin
     Pfctr4 := 1;
     Pfctr5 := 1;
     Pfctr6 := 1;
-     {------------------}
+
     kcq_drp2 := 0;
     CC_switch := false;
-    flag_dyna_Id_chg := false;
+    // flag_dyna_Id_chg := false;
 
     z_dfs_plot := 0.0;
 
@@ -1027,10 +789,6 @@ begin
         ReallocMem(Amm, 0);
     if Assigned(Bmn) then
         Reallocmem(Bmn, 0);
-    if Assigned(Cnm) then
-        Reallocmem(Cnm, 0);
-    if Assigned(Dnn) then
-        Reallocmem(Dnn, 0);
     if Assigned(X_var) then
         Reallocmem(X_var, 0);
     if Assigned(dX_vardt) then
@@ -1039,17 +797,14 @@ begin
         Reallocmem(X_varn, 0);
     if Assigned(dX_vardtn) then
         Reallocmem(dX_vardtn, 0);
-    if Assigned(Y_out_var) then
-        Reallocmem(Y_out_var, 0);
     if Assigned(V_in_var) then
         Reallocmem(V_in_var, 0);
     ReAllocMem(pV_f_cc, 0);
 
-    inherited Destroy;   // This will take care of most common circuit element arrays, etc.
+    inherited Destroy; // This will take care of most common circuit element arrays, etc.
 end;
 
 procedure TGeneric5Obj.RecalcElementData();
-
 var
     Rs, Xs,
     Rr, Xr,
@@ -1058,52 +813,33 @@ var
     numPhase, DotPos: Integer;
     strtemp: String;
 begin
-    with MachineData do
-    begin
-        ZBase := Sqr(kVGeneratorBase) / kVArating * 1000.0;
-        Conn := connection;
-        NumPhases := Fnphases;
-        NumConductors := Fnconds;
-    end;
+    ZBase := Sqr(kVGeneratorBase) / kVArating * 1000.0;
+    Rs := 0.0053 * ZBase;
+    Xs := 0.106 * ZBase;
+    Rr := 0.007 * ZBase;
+    Xr := 0.12 * ZBase;
+    Xm := 4.0 * ZBase;
 
-    Rs := puRs * ZBase;
-    Xs := puXs * ZBase;
-    Rr := puRr * ZBase;
-    Xr := puXr * ZBase;
-    Xm := puXm * ZBase;
-    Zs := Cmplx(Rs, Xs);
-    Zm := Cmplx(0.0, Xm);
-    Zr := Cmplx(Rr, Xr);
-
-    Xopen := Xs + Xm;
     Xp := Xs + (Xr * Xm) / (Xr + Xm);
     Zsp := Cmplx(Rs, Xp);
-    //Yeq := Cinv(Zsp);   // for Yprim  for dynamics
-    //Yeq := Cmplx(1.0/ZBase, -0.5/Zbase);   // vars are half the watts
-    Yeq := Cmplx(0.0, -1.0 / ZBase);   // vars only for power flow
+    Yeq := Cmplx(0.0, -1.0 / ZBase); // vars only for power flow
     T0p := (Xr + Xm) / (MachineData.w0 * Rr);
+    Is1 := 0;
+    V1 := 0;
+    Is2 := 0;
+    V2 := 0;
 
- //   dSdP := Compute_dSdP;
-
-    Is1 := CZERO;
-    V1 := CZERO;
-    Is2 := CZERO;
-    V2 := CZERO;
-
-    FirstIteration := true;
-
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+    Reallocmem(InjCurrent, SizeOf(Complex) * Yorder);
 
     SetNominalPower();
-    ///////////////////////////////////////////
+
     /// contrl mode
-    ///    ctrl_mode =0; phases = 3;  // pos avg control---p_ref, V_ref, Q_ref
+    ///    ctrl_mode =0; phases = 3; // pos avg control---p_ref, V_ref, Q_ref
     ///    ctrl_mode =1; phases = 1; bus1 = 452.1;      ---p_ref1, V_ref1, Q_ref1
     ///    ctrl_mode =2; phases = 1; bus1 = 452.2;      ---p_ref2, V_ref2, Q_ref2
     ///    ctrl_mode =3; phases = 1; bus1 = 452.3;      ---p_ref3, V_ref3, Q_ref3
     ///    ctrl_mode =4; phases = 3; bus1 = 452.2;      ---p_ref1,2,3, V_ref1,2,3, Q_ref1,2,3
     ///
-    ///////////////////////////////////////////
     modetest := false;
     if (((ctrl_mode = 0) or (ctrl_mode = 4)) and (fnphases = 3)) then
         modetest := true
@@ -1112,7 +848,7 @@ begin
     begin
         if ((ctrl_mode = 1) or (ctrl_mode = 2) or (ctrl_mode = 3)) then
         begin
-            strtemp := FirstBus;  //only one
+            strtemp := FirstBus; //only one
             DotPos := Pos('.', strtemp);
             if DotPos <> 0 then
             begin
@@ -1122,106 +858,15 @@ begin
             end;
         end;
     end;
-    if modetest = false then
+    if not modetest then
         DoSimpleMsg('ctrl_mode and bus node connection dont match, see help for generic5.ctrl_mode', 561);
-    //////////////////////////////////////////////
-    //if cluster_num >= 1 then      // assign the virtue leader to this DG
-     //FMonObj := ActiveCircuit.Fmonitors.Get(cluster_num);
-     //if function 'get' fails , return nil
-    //////////////////////////////////////////////
-    if CompareText(YearlyShape, 'none') = 0 then
-        YearlyShape := '';
-    if CompareText(DailyDispShape, 'none') = 0 then
-        DailyDispShape := '';
-    if CompareText(DutyShape, 'none') = 0 then
-        DutyShape := '';
-
-    if YearlyShapeObj = nil then
-        if Length(YearlyShape) > 0 then
-            DoSimpleMsg('WARNING! Yearly load shape: "' + YearlyShape + '" Not Found.', 563);
-    if DailyDispShapeObj = nil then
-        if Length(DailyDispShape) > 0 then
-            DoSimpleMsg('WARNING! Daily load shape: "' + DailyDispShape + '" Not Found.', 564);
-    if DutyShapeObj = nil then
-        if Length(DutyShape) > 0 then
-            DoSimpleMsg('WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
-
-    SpectrumObj := SpectrumClass.Find(Spectrum);
-    if SpectrumObj = nil then
-        DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
-
-    if DebugTrace then
-        InitTraceFile;
 end;
 
-procedure TGeneric5Obj.SetPowerkW(const PkW: Double);
-begin
-    kWBase := PkW;
-end;
+// procedure TGeneric5Obj.SetPowerkW(const PkW: Double);
+// begin
+//     WBase := PkW * 1000;
+// end;
 
-procedure TGeneric5Obj.Set_PresentkV(const Value: Double);
-begin
-    with MachineData do
-    begin
-        kVGeneratorBase := Value;
-        case FNphases of
-            2, 3:
-                VBase := kVGeneratorBase * InvSQRT3x1000;
-        else
-            VBase := kVGeneratorBase * 1000.0;
-        end;
-    end;
-end;
-
-function TGeneric5Obj.Get_PresentkV: Double;
-begin
-    Result := MachineData.kVGeneratorBase;
-end;
-
-procedure TGeneric5Obj.Integrate();
-
-var
-    h2: Double;
-begin
-    if ctrl_mode = 0 then
-    begin
-        with  ActiveCircuit.Solution.Dynavars do
-        begin
-            if IterationFlag = 0 then
-            begin  // on predictor step
-                Idn := Id;
-                Iqn := Iq;
-                dIddtn := dIddt;
-                dIqdtn := dIqdt;
-                vi1n := vi1;
-                vi2n := vi2;
-                dvi1dtn := dvi1dt;
-                dvi2dtn := dvi2dt;
-            end;
-
-            h2 := h * 0.5;
-
-            Id_ref := kcd * P_ref / V_DG;//active
-
-            Iq_ref := Q_DG / V_DG; //V_ref ~= 1;  reactive
-            DPx := P_ref - P_DG;
-            vi1 := 1 * kcd * DPx / V_DG;//+ kcq* (Iq_ref - Iq);//+ //active + additional control
-            dvi1dt := kcd * (DPx);
-            if QV_flag = 1 then
-                vi2 := kcq * (V_ref - V_DG)     //voltage droop control
-            else
-                vi2 := kqi * (Q_ref - Q_DG);
-
-            dIddt := vi1;//1; //active P
-            dIqdt := vi2;//2; //reactive Q
-
-            Id := Idn + h2 * (dIddt + dIddtn);
-            Iq := Iqn + h2 * (dIqdt + dIqdtn);
-        end;
-    end;
-end;
-
-{integrate with ABCD}
 procedure TGeneric5Obj.IntegrateABCD();
 var
     h2: Double;
@@ -1229,47 +874,46 @@ var
 begin
     if ActiveCircuit.Solution.Dynavars.IterationFlag = 0 then
     begin
-        for i := 1 to numOrderX do
+        for i := 1 to NumOrderX do
         begin
-            X_varn^[i] := X_var^[i];
-            dX_vardtn^[i] := dX_vardt^[i];
+            X_varn[i] := X_var[i];
+            dX_vardtn[i] := dX_vardt[i];
         end;
     end;
 
-            // update_system_abcd; //Matrix ABCD calculation if they are state-dependant
+    // update_system_abcd; //Matrix ABCD calculation if they are state-dependant
     update_controlinput(); //vi1, vi2 calculation,
-                                // co control strategies from network vfi can be done here
-            //dX_vardt calculation
-    for i := 1 to numOrderX do //  numOrderX, numOrderY should be less than norder 5
+    // co control strategies from network vfi can be done here
+    //dX_vardt calculation
+    for i := 1 to NumOrderX do //  NumOrderX, NumOrderY should be less than norder 5
     begin
-        dX_vardt^[i] := 0.0;
-        for j := 1 to numOrderY do
+        dX_vardt[i] := 0.0;
+        for j := 1 to NumOrderY do
         begin
-            dX_vardt^[i] := dX_vardt^[i] + Amm^[norder * (i - 1) + j] * X_var^[j] + Bmn^[norder * (i - 1) + j] * V_in_var^[j];
-                                          //cooperate control if exist is involved in
+            dX_vardt[i] := dX_vardt[i] + Amm[norder * (i - 1) + j] * X_var[j] + Bmn[norder * (i - 1) + j] * V_in_var[j];
+            //cooperate control if exist is involved in
         end;
-
     end;
 
-            // Trapezoidal Integration
+    // Trapezoidal Integration
     h2 := ActiveCircuit.Solution.Dynavars.h * 0.5;
-    for i := 1 to numorderX do
+    for i := 1 to NumOrderX do
     begin
         X_var[i] := X_varn[i] + h2 * (dX_vardtn[i] + dX_vardt[i]);
     end;
-            {----------------}
-            //Y=CX to be added
-            {----------------}
-         ///
-         ///  the following is to connect with calcDynamic or CalcDynamicVIabc
-         ///  because Id, Iq; Id1, Iq1, Id2, Iq2, Id3, Iq3 will be used there
+
+    //Y=CX to be added
+    ///
+    ///  the following is to connect with calcDynamic or CalcDynamicVIabc
+    ///  because Id, Iq; Id1, Iq1, Id2, Iq2, Id3, Iq3 will be used there
     if ctrl_mode = 0 then //pos seq control
     begin
         Id := X_var[1];//can be put in calcdyna, so the integrate is just for X_var
         Iq := X_var[2];
     end
-    else   // all other ctrl_mode's are phase control modes
+    else
     begin
+        // all other ctrl_mode's are phase control modes
         Id1 := X_var[1];//1st phase, or the only phase if fnphases=1
         Iq1 := X_var[2];//can be put in calcdyna in futher, so the integrate is just for X_var
         Id2 := X_var[3];//2nd phase; zero if single phase
@@ -1288,37 +932,28 @@ begin
     temp_qref := 0.0;
     temp_pref := 0.0;
     temp_vref := 0.0;
-    //Update_PQlimits;
     ///////////////////////////////////
     //local control input and alpha gradient calculation
     ///////////////////////////////////
     //gradient, gradient1, gradient2, gradient3
     //   gradient will be calculated in FMonitor because of Bii, Q_Di etc
-    //calculate_gradient; //alpha, and gradients，
-                        //V_DG, Q_DG have been updated either in 'init' or in 'calcdynamic'
+    //V_DG, Q_DG have been updated either in 'init' or in 'calcdynamic'
 
     if ctrl_mode = 0 then //pos seq control mode
     begin
         //Id
         // P and Q control
-        {
-        //Iq
-        if QV_flag=1 then
-          vi2 := kcq* (V_ref - V_DG) //reactive V_ref control
-        else
-          vi2 := kqi* (Q_ref - Q_DG); //reactive Q_ref control
-        }
         // vi1, vi2 local gradient
         //  vi1, vi2 =0, local gradient calculated outside
         vi1 := 0;
-        vi2 := 0;    // local gradient calculated IN fMONITOR Node
-        {---if in curtailment P_ref has to be changed here-----}
-        if (ActiveCircuit.Solution.bCurtl = true) and (FmonObj.ld_fm_info[0].b_ctrl_hghst = true) then
-                        //if (ActiveCircuit.Solution.bCurtl=true) then // this will cause oscillation
+        vi2 := 0; // local gradient calculated IN fMONITOR Node
+        // ---if in curtailment P_ref has to be changed here-----
+        if (ActiveCircuit.Solution.bCurtl) and (FMonObj.ld_fm_info[0].b_ctrl_hghst) then
+        //if (ActiveCircuit.Solution.bCurtl=true) then // this will cause oscillation
         begin
             Pref3 := V_DG * Id; //Here, P_ref will never go out of limits.
-                                        //if cuitailment is needed, update P_ref here; then vi1 will be 0
-                 //check limits
+            //if cuitailment is needed, update P_ref here; then vi1 will be 0
+            //check limits
             if Pref3 > Pmax then
             begin
                 Pref3 := Pmax; //set real power change during the simulation
@@ -1330,34 +965,33 @@ begin
             end;
             P_ref := Pref3 / 3.0;
         end;
-        {--use vi1 to follow p_ref--}
+        // --use vi1 to follow p_ref--
 
         DPx := fnphases * P_ref - P_DG;
-        vi1 := 100 * kcd * DPx / V_DG;  //pref control is 100 times faster than Curtailment
+        vi1 := 100 * kcd * DPx / V_DG; //pref control is 100 times faster than Curtailment
         //update V_in_var
-        V_in_var^[1] := vi1;
-        V_in_var^[2] := vi2;
+        V_in_var[1] := vi1;
+        V_in_var[2] := vi2;
 
     end
     else
     begin //phases control mode
-
         if fnphases = 3 then
         begin
-        //12
             DPx := P_ref1 - P_DG1;
             vi1 := kcd * DPx / V_DG1;
-              //Iq
+            //Iq
             if QV_flag = 1 then
             begin
-                if cc_switch = false then    //droop
+                if not cc_switch then
+                    //droop
                     vi2 := kcq * (V_ref1 - V_DG1) //reactive V_ref control
-                  //gradient
                 else
+                    //gradient
                     vi2 := Qmax_phase / V_DG1 * (-kcq * Gradient1);
-                if ((Q_DG1 >= Qmax_phase) or (Q_DG1 <= Qmin_phase)) then  // switch control mode to Q_ref control
+                if ((Q_DG1 >= Qmax_phase) or (Q_DG1 <= Qmin_phase)) then // switch control mode to Q_ref control
                 begin
-                    //QV_flag := 0;
+                    // QV_flag := 0;
                     if (Q_DG1 >= Qmax_phase) then
                     begin
                         Q_ref1 := Qmax_phase; // set Q_ref
@@ -1375,23 +1009,23 @@ begin
             end
             else
                 vi2 := kqi * (Q_ref1 - Q_DG1); //reactive Q_ref control
-              //update V_in_var
-            V_in_var^[1] := vi1;
-            V_in_var^[2] := vi2;
-        //34
+            //update V_in_var
+            V_in_var[1] := vi1;
+            V_in_var[2] := vi2;
+
             DPx := P_ref2 - P_DG2;
             vi1 := kcd * DPx / V_DG2;
-              //Iq
+            //Iq
             if QV_flag = 1 then
             begin
-                if cc_switch = false then    //droop
+                if not cc_switch then 
+                    //droop
                     vi2 := kcq * (V_ref2 - V_DG2) //reactive V_ref control
-                  //gradient
                 else
+                    //gradient
                     vi2 := Qmax_phase / V_DG2 * (-kcq * Gradient2);
-                if ((Q_DG2 >= Qmax_phase) or (Q_DG2 <= Qmin_phase)) then  // switch control mode to Q_ref control
+                if ((Q_DG2 >= Qmax_phase) or (Q_DG2 <= Qmin_phase)) then // switch control mode to Q_ref control
                 begin
-                    //QV_flag:=0;
                     if (Q_DG2 >= Qmax_phase) then
                     begin
                         Q_ref1 := Qmax_phase; // set Q_ref
@@ -1409,21 +1043,22 @@ begin
             end
             else
                 vi2 := kqi * (Q_ref2 - Q_DG2); //reactive Q_ref control
-              //update V_in_var
-            V_in_var^[3] := vi1;
-            V_in_var^[4] := vi2;
-        //56
+            //update V_in_var
+            V_in_var[3] := vi1;
+            V_in_var[4] := vi2;
+
             DPx := P_ref3 - P_DG3;
             vi1 := kcd * DPx / V_DG3;
-              //Iq
+            //Iq
             if QV_flag = 1 then
             begin
-                if cc_switch = false then    //droop
+                if not cc_switch then
+                    //droop
                     vi2 := kcq * (V_ref3 - V_DG3) //reactive V_ref control
-                  //gradient
                 else
+                    //gradient
                     vi2 := Qmax_phase / V_DG3 * (-kcq * Gradient3);
-                if ((Q_DG3 >= Qmax_phase) or (Q_DG3 <= Qmin_phase)) then  // switch control mode to Q_ref control
+                if ((Q_DG3 >= Qmax_phase) or (Q_DG3 <= Qmin_phase)) then // switch control mode to Q_ref control
                 begin
                     //QV_flag := 0;
                     if (Q_DG3 >= Qmax_phase) then
@@ -1443,14 +1078,14 @@ begin
             end
             else
                 vi2 := kqi * (Q_ref3 - Q_DG3); //reactive Q_ref control
-              //update V_in_var
-            V_in_var^[5] := vi1;
-            V_in_var^[6] := vi2;
+            //update V_in_var
+            V_in_var[5] := vi1;
+            V_in_var[6] := vi2;
         end
         else
         if fnphases = 1 then
         begin
-              //choose ref
+            //choose ref
             case ctrl_mode of
                 1:
                 begin
@@ -1474,114 +1109,102 @@ begin
 
             DPx := temp_pref - P_DG1;
             vi1 := kcd * DPx / V_DG1;
-              //Iq
+            //Iq
             if QV_flag = 1 then
             begin
-                if cc_switch = false then    //droop
+                if not cc_switch then //droop
                     vi2 := kcq * (temp_vref - V_DG) //reactive V_ref control
                 else
                     vi2 := Qmax_phase / V_DG1 * (-kcq * Gradient1);
-                if ((Q_DG1 >= Qmax_phase) or (Q_DG1 <= Qmin_phase)) then  // switch control mode to Q_ref control
+                if ((Q_DG1 >= Qmax_phase) or (Q_DG1 <= Qmin_phase)) then // switch control mode to Q_ref control
                 begin
                     //QV_flag := 0;
                     if (Q_DG1 >= Qmax_phase) then
                         temp_qref := Qmax_phase // set Q_ref
                     else
                         temp_qref := Qmin_phase;
-                    //
+
                     vi2 := kqi * (temp_qref - Q_DG); //reactive Q_ref control
                     //send Qref back
-                    //q_ref1 := temp_qref;
-                    //q_ref2 := temp_qref;
-                    //q_ref3 := temp_qref;
                 end
             end
             else
                 vi2 := kqi * (temp_qref - Q_DG); //reactive Q_ref control
-              //update V_in_var
-            V_in_var^[1] := vi1;
-            V_in_var^[2] := vi2;
+            //update V_in_var
+            V_in_var[1] := vi1;
+            V_in_var[2] := vi2;
         end;
 
     end;
-    {--------------------------------}
+    // --------------------------------
     // cooperate part is done here
-    //pVinput^[j];
+    //pVinput[j];
     update_pV_f_CC(); //update pV_f_CC which is cooperate control
-    {--------------------------------}
-//implement cooperate control
-    for j := 1 to numOrderX do
-        V_in_var^[j] := V_in_var^[j] + pV_f_CC^[j];
+    // --------------------------------
+    //implement cooperate control
+    for j := 1 to NumOrderX do
+        V_in_var[j] := V_in_var[j] + pV_f_CC[j];
 end;
 
-procedure TGeneric5Obj.update_pV_f_CC_M2();  //for power flow
+procedure TGeneric5Obj.update_pV_f_CC_M2(); //for power flow
 var
     j: Integer;
     num_vleader: Integer;
     Bii: Double;
 begin
-    if cc_switch = false then
+    if not cc_switch then
     begin
-        for j := 1 to numOrderX do
-            pV_f_CC^[j] := 0.0;
+        for j := 1 to NumOrderX do
+            pV_f_CC[j] := 0.0;
         exit;
     end;
 
-            //avg ctrl, under V120, I120
-      //////////////////////////////////
-    if FmonObj <> nil then
+    if FMonObj = nil then
+        Exit;
+
+    //avg ctrl, under V120, I120
+
+    num_vleader := 1;
+    if ctrl_mode = 0 then
     begin
- //try
-        num_vleader := 1;
-            /////////////////////////////////
-        if ctrl_mode = 0 then
+        //u = gradient + pV_f_CC; pV_f_CC = -alpha + sum(alpha_j)
+        Bii := ActiveCircuit.Solution.NodeYii[NodeRef[1]].im;
+        // Q ctrl with v_ref
+        // pV_f_CC[2] := FMonObj.Calc_Alpha_M2(ndNumincluster,0,NodeRef[1],Bii,kcq,Volt_Trhd); // for dIddt, diqdt
+        // Q ctrl with loss
+        // pV_f_CC[2] := FMonObj.Calc_Alpha_L(ndNumincluster,0,NodeRef[1],Bii,kcq,Volt_Trhd);
+        pV_f_CC[2] := FMonObj.Calc_Alpha_LnM2(ndNumincluster, 0, NodeRef[1], Bii, kcq, Volt_Trhd);
+        // pV_f_CC[2] := alpha * Qmax / v ;
+        //P ctrl
+        // pV_f_CC[1] := FMonObj.Calc_AlphaP(ndNumincluster,0); // for dIddt, diqdt
+        pV_f_CC[1] := 0;
+    end
+    else
+    begin
+        // phases control
+        if fnphases = 3 then
         begin
-                       //u = gradient + pV_f_CC; pV_f_CC = -alpha + sum(alpha_j)
-            Bii := ActiveCircuit.Solution.NodeYii^[NodeRef^[1]].im;
-                        // Q ctrl with v_ref
-                      //  pV_f_CC^[2] := FmonObj.Calc_Alpha_M2(ndNumincluster,0,NodeRef^[1],Bii,kcq,Volt_Trhd); // for dIddt, diqdt
-                        // Q ctrl with loss
-                        //pV_f_CC^[2] := FmonObj.Calc_Alpha_L(ndNumincluster,0,NodeRef^[1],Bii,kcq,Volt_Trhd);
-            pV_f_CC^[2] := FmonObj.Calc_Alpha_LnM2(ndNumincluster, 0, NodeRef^[1], Bii, kcq, Volt_Trhd);
-                        // pV_f_CC^[2] := alpha * Qmax / v ;
-                        //P ctrl
-                        //pV_f_CC^[1] := FmonObj.Calc_AlphaP(ndNumincluster,0); // for dIddt, diqdt
-            pV_f_CC^[1] := 0;
+            pV_f_CC[6] := 0.0;
+            //u = gradient + pV_f_CC; pV_f_CC = -alpha + sum(alpha_j)
+            Bii := ActiveCircuit.Solution.NodeYii[NodeRef[1]].im;
+            pV_f_CC[2] := FMonObj.Calc_Alpha_M2(ndNumincluster, 1, NodeRef[1], Bii, kcq, Volt_Trhd);
+            pV_f_CC[1] := FMonObj.Calc_AlphaP(ndNumincluster, 1);
+            Bii := ActiveCircuit.Solution.NodeYii[NodeRef[2]].im;
+            pV_f_CC[4] := FMonObj.Calc_Alpha_M2(ndNumincluster, 2, NodeRef[2], Bii, kcq, Volt_Trhd);
+            pV_f_CC[3] := FMonObj.Calc_AlphaP(ndNumincluster, 2);
+            Bii := ActiveCircuit.Solution.NodeYii[NodeRef[3]].im;
+            pV_f_CC[6] := FMonObj.Calc_Alpha_M2(ndNumincluster, 3, NodeRef[3], Bii, kcq, Volt_Trhd);
+            pV_f_CC[5] := FMonObj.Calc_AlphaP(ndNumincluster, 3);
+            //pV_f_CC[1-6]； // for dIddt1, diqdt1,dIddt2, diqdt2,dIddt3, diqdt3
         end
-                  // phases control
         else
+        if fnphases = 1 then
         begin
-            if fnphases = 3 then
-            begin
-                pV_f_CC^[6] := 0.0;
-                        //u = gradient + pV_f_CC; pV_f_CC = -alpha + sum(alpha_j)
-                Bii := ActiveCircuit.Solution.NodeYii^[NodeRef^[1]].im;
-                pV_f_CC^[2] := FmonObj.Calc_Alpha_M2(ndNumincluster, 1, NodeRef^[1], Bii, kcq, Volt_Trhd);
-                        //pV_f_CC^[2] := FmonObj.Calc_Alpha_L(ndNumincluster,1,NodeRef^[1],Bii,kcq,Volt_Trhd);
-                        //pV_f_CC^[2] := FmonObj.Calc_Alpha_LnM2(ndNumincluster,1,NodeRef^[1],Bii,kcq,Volt_Trhd);
-                pV_f_CC^[1] := FmonObj.Calc_AlphaP(ndNumincluster, 1);
-                Bii := ActiveCircuit.Solution.NodeYii^[NodeRef^[2]].im;
-                pV_f_CC^[4] := FmonObj.Calc_Alpha_M2(ndNumincluster, 2, NodeRef^[2], Bii, kcq, Volt_Trhd);
-                        //pV_f_CC^[4] := FmonObj.Calc_Alpha_L(ndNumincluster,2,NodeRef^[2],Bii,kcq,Volt_Trhd);
-                        //pV_f_CC^[4] := FmonObj.Calc_Alpha_LnM2(ndNumincluster,2,NodeRef^[2],Bii,kcq,Volt_Trhd);
-                pV_f_CC^[3] := FmonObj.Calc_AlphaP(ndNumincluster, 2);
-                Bii := ActiveCircuit.Solution.NodeYii^[NodeRef^[3]].im;
-                pV_f_CC^[6] := FmonObj.Calc_Alpha_M2(ndNumincluster, 3, NodeRef^[3], Bii, kcq, Volt_Trhd);
-                        //pV_f_CC^[6] := FmonObj.Calc_Alpha_L(ndNumincluster,3,NodeRef^[3],Bii,kcq,Volt_Trhd);
-                        //pV_f_CC^[6] := FmonObj.Calc_Alpha_LnM2(ndNumincluster,3,NodeRef^[3],Bii,kcq,Volt_Trhd);
-                pV_f_CC^[5] := FmonObj.Calc_AlphaP(ndNumincluster, 3);
-                        //pV_f_CC[1-6]； // for dIddt1, diqdt1,dIddt2, diqdt2,dIddt3, diqdt3
-            end
-            else
-            if fnphases = 1 then
-            begin
-                        //if ctrl_mode=1 then
-                Bii := ActiveCircuit.Solution.NodeYii^[NodeRef^[1]].im;
-                pV_f_CC^[2] := FmonObj.Calc_Alpha_M2(ndNumincluster, ctrl_mode, NodeRef^[1], Bii, kcq, Volt_Trhd); // for dIddt1, diqdt1
-                        //pV_f_CC^[2] :=  FmonObj.Calc_Alpha_L(ndNumincluster,ctrl_mode,NodeRef^[1],Bii,kcq,Volt_Trhd); // for dIddt1, diqdt1
-                        //pV_f_CC^[2] :=  FmonObj.Calc_Alpha_LnM2(ndNumincluster,ctrl_mode,NodeRef^[1],Bii,kcq,Volt_Trhd);
-                pV_f_CC^[1] := FmonObj.Calc_AlphaP(ndNumincluster, ctrl_mode);
-            end;
+            //if ctrl_mode=1 then
+            Bii := ActiveCircuit.Solution.NodeYii[NodeRef[1]].im;
+            pV_f_CC[2] := FMonObj.Calc_Alpha_M2(ndNumincluster, ctrl_mode, NodeRef[1], Bii, kcq, Volt_Trhd);
+            // for dIddt1, diqdt1
+            pV_f_CC[1] := FMonObj.Calc_AlphaP(ndNumincluster, ctrl_mode);
         end;
     end;
 end;
@@ -1594,421 +1217,301 @@ var
     Bii,
     us_i, ul_i: Double;
 begin
-    if cc_switch = false then    //no control at all   //local gradient control will be set by communication matrix
+    if not cc_switch then
     begin
-        for j := 1 to numOrderX do
-            pV_f_CC^[j] := 0.0;
+        //no control at all
+        //local gradient control will be set by communication matrix
+        for j := 1 to NumOrderX do
+            pV_f_CC[j] := 0.0;
         exit;
     end;
 
-            //avg ctrl, under V120, I120
-      //////////////////////////////////
-    if FmonObj <> nil then
+    if FMonObj = nil then
+        Exit;
+
+    num_vleader := 1;
+    if ctrl_mode <> 0 then
+        Exit;
+
+    //avg ctrl, under V120, I120
+    p_mode := 0;
+    if FMonObj <> nil then
+        p_mode := FMonObj.Get_P_mode();
+    
+    //u = gradient + pV_f_CC; pV_f_CC = -alpha + sum(alpha_j)
+    
+    Bii := ActiveCircuit.Solution.NodeYii[NodeRef[1]].im;
+
+    if ActiveCircuit.Solution.DynaVars.SolutionMode = DYNAMICMODE then
     begin
- //try
-        num_vleader := 1;
-            /////////////////////////////////
-        if ctrl_mode = 0 then
+        //Ip control
+        if FMonObj.ld_fm_info[0].b_Curt_Ctrl then // curtailment algorithm
         begin
-            p_mode := 0;
-            if fmonobj <> nil then
-                p_mode := fmonobj.Get_P_mode();
-             //u = gradient + pV_f_CC; pV_f_CC = -alpha + sum(alpha_j)
-            Bii := ActiveCircuit.Solution.NodeYii^[NodeRef^[1]].im;
-
-            if ActiveCircuit.Solution.DynaVars.SolutionMode = DYNAMICMODE then
+            ul_i := FMonObj.Calc_ul_P(ndNumincluster, 0);
+            us_i := kcd * FMonObj.Calc_Gradient_ct_P(ndNumincluster, 0);
+            GradientP := us_i;
+            if not cc_switch then //local
+                pV_f_CC[1] := 0.0
+            else
             begin
-                    //Ip control
-                if FmonObj.ld_fm_info[0].b_Curt_Ctrl = true then // curtailment algorithm
-                begin
-                    ul_i := FmonObj.Calc_ul_P(ndNumincluster, 0);
-                    us_i := kcd * FmonObj.Calc_Gradient_ct_P(ndNumincluster, 0);
-                    GradientP := us_i;
-                    if cc_switch = false then   //local
-                        pV_f_CC^[1] := 0.0
-                    else
-                    begin
-                        pV_f_CC^[1] := ul_i + us_i;
-                        pV_f_CC^[1] := pV_f_CC^[1] * Pmax / v_DG;
-                    end;
-                end;
-
-                    //if pMode then
-
-                if (p_mode = 1) and (cc_switch = true) then //if delta P = p_trans_ref - p_trans
-                begin //balance p_trans
-                    pV_f_CC^[1] := FmonObj.Calc_AlphaP(ndNumincluster, 0);//new alfa_p
-                    pV_f_CC^[1] := pV_f_CC^[1] - AlphaP; //derivative of alfa_p
-                           //use us_i to calculate the frequncy
-                    us_i := -FmonObj.omg_fm; //frequency droop
-                    pV_f_CC^[1] := (pV_f_CC^[1] + us_i) * Pmax / v_DG; // derivative of Ip in dynamic mode,
-                           //use us_i to
-                end;
-
-                    //Iq control
-                ul_i := FmonObj.Calc_fm_ul_0(ndNumincluster, 0, NodeRef^[1], Bii, kcq, Volt_Trhd);
-                us_i := FmonObj.Calc_fm_us_0(ndNumincluster, 0, NodeRef^[1], Bii, kcq, Volt_Trhd);
-                Gradient := us_i;
-
-                if FmonObj.ld_fm_info[0].b_Curt_Ctrl = false then
-                begin // if curtailment for this cluster is off
-
-                end
-                else
-                begin // if curtailment for this cluster is on
-                        //Q will try to boost the voltage while P is decreasing
-                    if (ActiveCircuit.Solution.bCurtl = true) and (Gradient = 0.0) then
-                        us_i := -GradientP * Pmax / Qmax;
-                end;
-
-                if cc_switch = false then   //local
-                begin
-                    pV_f_CC^[2] := us_i;
-                end
-                else
-                begin  // cc_switch is on
-                    pV_f_CC^[2] := ul_i + us_i; //cc  //attack comes in ul_i (FmonObj.Calc_fm_ul_0)
-                end;
-                pV_f_CC^[2] := pV_f_CC^[2] * Qmax / v_DG;
-
-            end
-            else  //power flow
-            begin
-                    //alphaP: p ratio
-
-                    //if pMode then
-                if (p_mode = 1) or (FmonObj.ld_fm_info[0].b_Curt_Ctrl = true) then
-                    pV_f_CC^[1] := FmonObj.Calc_AlphaP(ndNumincluster, 0)
-                else
-                    pV_f_CC^[1] := 0.0;
-                    //alpha : q ratio
-                pV_f_CC^[2] := FmonObj.Calc_Alpha_M2(ndNumincluster, 0, NodeRef^[1], Bii, kcq, Volt_Trhd); // for dIddt, diqdt
-
+                pV_f_CC[1] := ul_i + us_i;
+                pV_f_CC[1] := pV_f_CC[1] * Pmax / v_DG;
             end;
         end;
+
+        if (p_mode = 1) and (cc_switch) then //if delta P = p_trans_ref - p_trans
+        begin //balance p_trans
+            pV_f_CC[1] := FMonObj.Calc_AlphaP(ndNumincluster, 0);//new alfa_p
+            pV_f_CC[1] := pV_f_CC[1] - AlphaP; //derivative of alfa_p
+            //use us_i to calculate the frequncy
+            us_i := -FMonObj.omg_fm; //frequency droop
+            pV_f_CC[1] := (pV_f_CC[1] + us_i) * Pmax / v_DG; // derivative of Ip in dynamic mode,
+            //use us_i to
+        end;
+
+        //Iq control
+        ul_i := FMonObj.Calc_fm_ul_0(ndNumincluster, 0, NodeRef[1], Bii, kcq, Volt_Trhd);
+        us_i := FMonObj.Calc_fm_us_0(ndNumincluster, 0, NodeRef[1], Bii, kcq, Volt_Trhd);
+        Gradient := us_i;
+
+        if FMonObj.ld_fm_info[0].b_Curt_Ctrl then
+        begin 
+            // if curtailment for this cluster is on
+            //Q will try to boost the voltage while P is decreasing
+            if (ActiveCircuit.Solution.bCurtl) and (Gradient = 0.0) then
+                us_i := -GradientP * Pmax / Qmax;
+        end;
+
+        if not cc_switch then //local
+        begin
+            pV_f_CC[2] := us_i;
+        end
+        else
+        begin // cc_switch is on
+            pV_f_CC[2] := ul_i + us_i; //cc //attack comes in ul_i (FMonObj.Calc_fm_ul_0)
+        end;
+        pV_f_CC[2] := pV_f_CC[2] * Qmax / v_DG;
+
+    end
+    else 
+    //power flow
+    begin
+        //alphaP: p ratio
+        if (p_mode = 1) or (FMonObj.ld_fm_info[0].b_Curt_Ctrl) then
+            pV_f_CC[1] := FMonObj.Calc_AlphaP(ndNumincluster, 0)
+        else
+            pV_f_CC[1] := 0.0;
+        
+        //alpha : q ratio
+        pV_f_CC[2] := FMonObj.Calc_Alpha_M2(ndNumincluster, 0, NodeRef[1], Bii, kcq, Volt_Trhd); // for dIddt, diqdt
     end;
 end;
 
 procedure TGeneric5Obj.InfoPublish();
-//var
-//  j : integer;
 begin
-    Update_PQlimits;
-    if FmonObj <> nil then
+    Update_PQlimits();
+    if FMonObj = nil then
+        Exit;
+
+    with FMonObj.pNodeFMs[NdNuminCluster] do
     begin
-        with FmonObj.pNodeFMs^[NdNuminCluster] do
-        begin
-            case ctrl_mode of
-                1:
-                begin
-                    vl_V1 := V_DG1;//Phase A or the first phase if there are less than 3 phases
-                    vl_P_DG1 := P_DG1;
-                    vl_Q_DG1 := Q_DG1;
-                    //vl_Alpha1_dg := Alpha1;
-                    //vl_AlphaP1_dg := AlphaP1;
-                    vl_V_ref1_dg := V_ref1;
-                end;
-                2:
-                begin
-                    vl_V2 := V_DG2;//Phase B if exists
-                    vl_P_DG2 := P_DG2;
-                    vl_Q_DG2 := Q_DG2;
-                    //vl_Alpha2_dg := Alpha2;
-                    //vl_AlphaP2_dg := AlphaP2;
-                    vl_V_ref2_dg := V_ref2;
-                end;
-                3:
-                begin
-                    vl_V3 := V_DG3;//Phase c if exists
-                    vl_P_DG3 := P_DG3;
-                    vl_Q_DG3 := Q_DG3;
-                    //vl_Alpha3_dg := Alpha3;
-                    //vl_AlphaP3_dg := AlphaP3;
-                    vl_V_ref3_dg := V_ref3;
+        case ctrl_mode of
+            1:
+            begin
+                vl_V1 := V_DG1;//Phase A or the first phase if there are less than 3 phases
+                vl_P_DG1 := P_DG1;
+                vl_Q_DG1 := Q_DG1;
+                vl_V_ref1_dg := V_ref1;
+            end;
+            2:
+            begin
+                vl_V2 := V_DG2;//Phase B if exists
+                vl_P_DG2 := P_DG2;
+                vl_Q_DG2 := Q_DG2;
+                vl_V_ref2_dg := V_ref2;
+            end;
+            3:
+            begin
+                vl_V3 := V_DG3;//Phase c if exists
+                vl_P_DG3 := P_DG3;
+                vl_Q_DG3 := Q_DG3;
+                vl_V_ref3_dg := V_ref3;
 
-                end;
-                0:
-                begin
-                    vl_V := V_DG;  //0 seq    , will be used in FmonObj.Agnt_smpl
-                    vl_P_DG := P_DG;
-                    vl_Q_DG := Q_DG;
-                    //
-                    alpha := Q_DG / Qmax;
-                    vl_alpha_dg := alpha;  // update first, will be used in FmonObj.Agnt_smpl
-                    //P control
-                    alphap := p_dg / Pmax;
-                    vl_alphaP_dg := alphaP;
-                    //
-                    vl_V_ref_dg := V_ref;
-                    if ActiveCircuit.Solution.DynaVars.SolutionMode = DYNAMICMODE then
-                    begin
-                        z_dfs_plot := z_dfs; // defense value
-                    end;
-                end;
-                4:
-                begin
-                    vl_V1 := V_DG1;//Phase A or the first phase if there are less than 3 phases
-                    vl_P_DG1 := P_DG1;
-                    vl_Q_DG1 := Q_DG1;
-                    vl_V2 := V_DG2;//Phase B if exists
-                    vl_P_DG2 := P_DG2;
-                    vl_Q_DG2 := Q_DG2;
-                    vl_V3 := V_DG3;//Phase c if exists
-                    vl_P_DG3 := P_DG3;
-                    vl_Q_DG3 := Q_DG3;
-                    vl_V_ref1_dg := V_ref1;
-                    vl_V_ref2_dg := V_ref2;
-                    vl_V_ref3_dg := V_ref3;
+            end;
+            0:
+            begin
+                vl_V := V_DG; //0 seq    , will be used in FMonObj.Agnt_smpl
+                vl_P_DG := P_DG;
+                vl_Q_DG := Q_DG;
+                alpha := Q_DG / Qmax;
+                vl_alpha_dg := alpha; // update first, will be used in FMonObj.Agnt_smpl
+                //P control
+                alphap := p_dg / Pmax;
+                vl_alphaP_dg := alphaP;
 
-                    //vl_Alpha1_dg := Alpha1;
-                    //vl_AlphaP1_dg := AlphaP1;
-                    //vl_V_ref1_dg := V_ref1;
-                    //vl_Alpha2_dg := Alpha2;
-                    //vl_AlphaP2_dg := AlphaP2;
-                    //vl_V_ref2_dg := V_ref2;
-                    //vl_Alpha3_dg := Alpha3;
-                    //vl_AlphaP3_dg := AlphaP3;
-                    //vl_V_ref3_dg := V_ref3;
+                vl_V_ref_dg := V_ref;
+                if ActiveCircuit.Solution.DynaVars.SolutionMode = DYNAMICMODE then
+                begin
+                    z_dfs_plot := z_dfs; // defense value
                 end;
             end;
-            vl_Qmax_dg := Qmax;
-            vl_Qmax_phase_dg := Qmax_Phase;
-            vl_Pmax_dg := Pmax;
-            vl_Pmax_phase_dg := Pmax_Phase;
-            vl_CC_switch_dg := CC_switch;
-            vl_QV_flag_dg := QV_flag;
-            vl_kcd_dg := kcd;
-            vl_kcq_dg := kcq;
-            vl_volt_thrd_dg := Volt_Trhd;
+            4:
+            begin
+                vl_V1 := V_DG1;//Phase A or the first phase if there are less than 3 phases
+                vl_P_DG1 := P_DG1;
+                vl_Q_DG1 := Q_DG1;
+                vl_V2 := V_DG2;//Phase B if exists
+                vl_P_DG2 := P_DG2;
+                vl_Q_DG2 := Q_DG2;
+                vl_V3 := V_DG3;//Phase c if exists
+                vl_P_DG3 := P_DG3;
+                vl_Q_DG3 := Q_DG3;
+                vl_V_ref1_dg := V_ref1;
+                vl_V_ref2_dg := V_ref2;
+                vl_V_ref3_dg := V_ref3;
+            end;
         end;
+        vl_Qmax_dg := Qmax;
+        vl_Qmax_phase_dg := Qmax_Phase;
+        vl_Pmax_dg := Pmax;
+        vl_Pmax_phase_dg := Pmax_Phase;
+        vl_CC_switch_dg := CC_switch;
+        vl_QV_flag_dg := QV_flag;
+        vl_kcd_dg := kcd;
+        vl_kcq_dg := kcq;
+        vl_volt_thrd_dg := Volt_Trhd;
     end;
-    if FmonObj2 <> nil then
-    begin
-         {with FmonObj2.pNodeFMs^[NdNuminCluster2] do
-         begin
-          vl_V := V_DG;
-          vl_P_DG := P_DG;
-          vl_Q_DG := Q_DG;
-          vl_V1 := V_DG1;//Phase A or the first phase if there are less than 3 phases
-          vl_P_DG1 := P_DG1;
-          vl_Q_DG1 := Q_DG1;
-          vl_V2 := V_DG2;//Phase B if exists
-          vl_P_DG2 := P_DG2;
-          vl_Q_DG2 := Q_DG2;
-          vl_V3 := V_DG3;//Phase c if exists
-          vl_P_DG3 := P_DG3;
-          vl_Q_DG3 := Q_DG3;
-          vl_Qmax_dg := Qmax;
-          vl_Qmax_phase_dg := Qmax_Phase;
-          vl_Pmax_dg := Pmax;
-          vl_Pmax_phase_dg := Pmax_Phase;
-          vl_Alpha_dg := alpha;
-          vl_Alpha1_dg := Alpha1;
-          vl_Alpha2_dg := Alpha2;
-          vl_Alpha3_dg := Alpha3;
-          vl_AlphaP_dg := alphaP;
-          vl_AlphaP1_dg := AlphaP1;
-          vl_AlphaP2_dg := AlphaP2;
-          vl_AlphaP3_dg := AlphaP3;
-          vl_V_ref_dg := V_ref;
-          vl_V_ref1_dg := V_ref1;
-          vl_V_ref2_dg := V_ref2;
-          vl_V_ref3_dg := V_ref3;
-          vl_CC_switch_dg := CC_switch;
-          vl_QV_flag_dg := QV_flag;
-
-          end; }
-    end;
-end;
-
-procedure TGeneric5Obj.Set_P_ref(PrefKw: Double);
-begin
-    P_ref := 1000 * prefKw / fnphases;   //nphases
-    P_ref1 := P_ref;
-    P_ref2 := P_ref;
-    P_ref3 := P_ref;
-    if prefKw > kWbase then
-        DoSimpleMsg('P ref should be leq than kW', 562);
-    if ActiveCircuit.Solution.DynaVars.SolutionMode = DYNAMICMODE then //if P_ref changed in the dynamic simulation
-    begin                                                              //The sudden change of Id has to be applied
-        flag_dyna_Id_chg := true;
-    end;
-    //
-end;
-
-procedure TGeneric5Obj.Set_Q_Ref(QrefkVAr: Double);
-begin
-    //
-    Q_ref := 1000 * QrefKVAr / fnphases;  //nphases
-    Q_ref1 := Q_ref;
-    Q_ref2 := Q_ref;
-    Q_ref3 := Q_ref;
-end;
-
-procedure TGeneric5Obj.Set_V_Ref(VrefkV: Double);
-begin
-    //
-    V_ref := 1000 * VrefkV;
-    V_ref1 := V_ref;
-    V_ref2 := V_ref;
-    V_ref3 := V_ref;
 end;
 
 procedure TGeneric5Obj.Update_kWbase_by_Fctrs;
 begin
-    kWbase := (Pmpp + Pbias) * Pfctr1 * Pfctr2 * Pfctr3 * Pfctr4 * Pfctr5 * Pfctr6;
-    kWbase := kWbase / 1000;
-    update_PQlimits;
+    Wbase := (Pmpp + Pbias) * Pfctr1 * Pfctr2 * Pfctr3 * Pfctr4 * Pfctr5 * Pfctr6;
+    update_PQlimits();
 end;
 
-procedure TGeneric5Obj.UpdateAlpha_qi;
+procedure TGeneric5Obj.Update_PQlimits();
 begin
-      //Update_PQlimits;
-    if Qmax > epsilon then
+    if PQpriority = 1 then //P prior by default
     begin
-          //pos control
-        Alpha := Q_DG / Qmax;
-          // phase control
-        Alpha1 := Q_DG1 / Qmax_phase;
-
-        if FNPhases = 3 then
-        begin
-            Alpha2 := Q_DG2 / Qmax_phase;
-            Alpha3 := Q_DG3 / Qmax_phase;
-        end;
-    end;
-end;
-
-procedure TGeneric5Obj.Update_PQlimits;
-begin
-    if PQpriority = 1 then //P prior  by default
-    begin
-        if (Pmax <= 0) or (pmax > kWbase) then
-            Pmax := kWbase * 1000;// first value is set to be kWbase;   when kWbase is set, Pmax will be update in edit;
-        Pmax := kWBase * 1000;//if PQpriority=1 then
-            //if (Pmax <0 )or (Pmax > kWBase*1000) then Pmax := kWBase*1000;
-            //Pmax
-            //Pmax; should be what it is
-            //P_DG
-        if 1000 * machinedata.kVArating >= P_DG then   //  Pmax P_DG
-            Qmax := sqrt(machinedata.kVArating * 1000 * machinedata.kVArating * 1000 - P_DG * P_DG) // PMax*PMax)//
+        TODO: the original comparison probably compares W and kW
+        if (Pmax <= 0) or (Pmax > Wbase) then
+            Pmax := WBase;// first value is set to be kWbase;   when kWbase is set, Pmax will be update in edit;
+        
+        TODO: why no conditional?
+        Pmax := WBase;//if PQpriority=1 then
+        if (1000 * kVArating) >= P_DG then //  Pmax P_DG
+            Qmax := sqrt(kVArating * 1000 * kVArating * 1000 - P_DG * P_DG) // PMax*PMax)//
         else
-            Qmax := epsilon;  //error when used as demoninator
+            Qmax := epsilon; //error when used as demoninator
         Qmin := -Qmax;
     end
     else
     if PQpriority = 0 then //Q prior
     begin
-        Qmax := machinedata.kVArating;
-        Qmin := -machinedata.kVArating;
+        Qmax := kVArating;
+        Qmin := -kVArating;
 
-        Pmax := min(sqrt(machinedata.kVArating * 1000 * machinedata.kVArating * 1000 - Q_DG * Q_DG), kWbase * 1000); //which one is smaller
+        Pmax := min(sqrt(kVArating * 1000 * kVArating * 1000 - Q_DG * Q_DG), Wbase); //which one is smaller
         Pmin := 0;
-             //Pmax_phase := Pmax / fnphases;
-             //Pmin_phase := Pmin / fnphases;
     end;
-        //if machinedata.kVArating <= 0 then
-        //begin
-        //  if fmonobj <> nil then
-        //    Qmax := fmonobj.CalcAvgQmax;     //if the node is without control, Qmax := cluster avg
-        //end;
 
     Pmax_phase := Pmax / fnphases;
     Pmin_phase := Pmin / fnphases;
     Qmax_phase := Qmax / fnphases;
     Qmin_phase := Qmin / fnphases;
-      //used for limit currents derivative
-    Idmax_phase := Pmax_phase / (Vbase);// vBase := kVGeneratorBase*InvSQRT31000
-    Iqmax_phase := Qmax_phase / (Vbase);
+    //used for limit currents derivative
+    // Idmax_phase := Pmax_phase / (Vbase);// vBase := kVGeneratorBase*InvSQRT31000
+    // Iqmax_phase := Qmax_phase / (Vbase);
 end;
 
-procedure TGeneric5Obj.CalcDynamic(var V012, I012: TSymCompArray5);
+procedure TGeneric5Obj.CalcDynamic(var V012, I012: TSymCompArray);
 var
     Pref3: Double;
+    temp: Double;
 begin
-      //Update_Pqlimits;// confirm P, Q limits
-    if ctrl_mode = 0 then
+    if ctrl_mode <> 0 then
+        Exit;
+
+    InDynamics := true;
+    V1 := V012[1]; // Save for variable calcs
+    V2 := V012[2];
+
+    V_DG := cabs(V1);
+    Theta_DG := cang(V1);
+
+    // P -- P_DG follows ref, and allows sudden change
+
+    P_DG := V_DG * Id; //update P_DG
+    // if P_DG, Q_DG exceed the limits
+    if P_DG > Pmax then
     begin
-        InDynamics := true;
-        V1 := V012[1];   // Save for variable calcs
-        V2 := V012[2];
-
-        V_DG := cabs(V1);
-        Theta_DG := cang(V1);
-
-      {P}  //P_DG follows ref, and allows sudden change
-
-        P_DG := V_DG * Id; //update P_DG
-           // if P_DG, Q_DG exceed the limits
-        if P_DG > Pmax then
-        begin
-            P_DG := Pmax; //set real power change during the simulation
-            Id := P_DG / V_DG;    //set Id
-            Idn := Id;
-            X_var[1] := Id;
-            X_varn[1] := Idn;
-            dX_vardtn[1] := 0.0;
-        end
-        else
-        if P_DG < Pmin then
-        begin
-            P_DG := Pmin;
-            Id := P_DG / V_DG;    //set Id
-            Idn := Id;
-            X_var[1] := Id;
-            X_varn[1] := Idn;
-            dX_vardtn[1] := 0.0;
-        end;
-
-                 {Q}
-        Q_DG := V_DG * Iq;
-
-        if Q_DG >= Qmax then
-        begin
-            Q_DG := Qmax;
-            Iq := Q_DG / V_DG;
-            Iqn := Iq;
-            X_var[2] := Iq;
-            X_varn[2] := Iqn;
-            dX_vardtn[1] := 0.0;
-        end
-        else
-        if Q_DG <= Qmin then
-        begin
-            Q_DG := Qmin;
-            Iq := Q_DG / V_DG;
-            Iqn := Iq;
-            X_var[2] := Iq;
-            X_varn[2] := Iqn;
-            dX_vardtn[1] := 0.0;
-        end;
-
-        Get_DynamicModelCurrent; //Iq Iq does not change, Is1 := cmplx(Id, Iq)*1<angle Is2 := CZERO
-               //Id and Iq are divided by/3.0 to be I012                     // Is2 is calculated here(In XY domain), will be used as I012
-                                    // sqrt(Iq*Iq +Id*Id),Theta_DG - arctan(Iq/Id)
-
-        AlphaP := p_DG / Pmax;
-        Alpha := Q_DG / Qmax;
-
-        I012[1] := Is1;    // Id and Iq /3.0
-        I012[2] := Is2;
-        I012[0] := cmplx(0.0, 0.0); //force balance
-           {change direction} //added by dahei  input should be negtive
-        I012[1] := cnegate(I012[1]);
-        I012[2] := cnegate(I012[2]);
-        I012[0] := cnegate(I012[0]);
-
-           //CalGradient: will be published into FMonitor
+        P_DG := Pmax; //set real power change during the simulation
+        Id := P_DG / V_DG; //set Id
+        Idn := Id;
+        X_var[1] := Id;
+        X_varn[1] := Idn;
+        dX_vardtn[1] := 0.0;
+    end
+    else
+    if P_DG < Pmin then
+    begin
+        P_DG := Pmin;
+        Id := P_DG / V_DG; //set Id
+        Idn := Id;
+        X_var[1] := Id;
+        X_varn[1] := Idn;
+        dX_vardtn[1] := 0.0;
     end;
-end;
 
-procedure TGeneric5Obj.CalGradient;   //failed, Q_Di and Bii are not available inside DD
-                                        // will be done in FMonitor
-var
-    den: Double;
-begin
-      //Gradient :=
-  // will be done in FMonitor
+    // Q
+    Q_DG := V_DG * Iq;
+
+    if Q_DG >= Qmax then
+    begin
+        Q_DG := Qmax;
+        Iq := Q_DG / V_DG;
+        Iqn := Iq;
+        X_var[2] := Iq;
+        X_varn[2] := Iqn;
+        dX_vardtn[1] := 0.0;
+    end
+    else
+    if Q_DG <= Qmin then
+    begin
+        Q_DG := Qmin;
+        Iq := Q_DG / V_DG;
+        Iqn := Iq;
+        X_var[2] := Iq;
+        X_varn[2] := Iqn;
+        dX_vardtn[1] := 0.0;
+    end;
+    
+    if Id = 0.0 then
+        temp := pi / 2
+    else
+        temp := arctan(Iq / Id);
+    Is1 := PCLX(sqrt(Iq * Iq + Id * Id), Theta_DG - temp);//with respect to Q_axis
+    Is1 := Is1 / 3.0; //here we need to divide all values back to Network
+    Is2 := 0; //force balance
+    // rotor current  Ir1= Is1-Vm/jXm
+    Ir1 := Is1;
+    Ir2 := cmplx(0, 0);
+
+    // Iq Iq does not change, Is1 := cmplx(Id, Iq)*1<angle Is2 := CZERO
+    // Id and Iq are divided by/3.0 to be I012
+    // Is2 is calculated here(In XY domain), will be used as I012
+    // sqrt(Iq*Iq +Id*Id),Theta_DG - arctan(Iq/Id)
+
+    AlphaP := p_DG / Pmax;
+    Alpha := Q_DG / Qmax;
+
+    I012[1] := Is1; // Id and Iq /3.0
+    I012[2] := Is2;
+    I012[0] := cmplx(0.0, 0.0); //force balance
+    // change direction //added by dahei  input should be negtive
+    I012[1] := -I012[1];
+    I012[2] := -I012[2];
+    I012[0] := -I012[0];
 end;
 
 procedure TGeneric5Obj.CalcDynamicVIabc(var Vabc, Iabc: pComplexArray);
@@ -2026,192 +1529,174 @@ var
     temp_pref, temp_qref, temp_vref: Double;
     tempAngleR: Double;
 begin
-    if ctrl_mode = 0 then
+    if ctrl_mode = 0 then // avg ctrl
     begin
-          //will never be used
-          //will be in CalcDynamic
-    end // avg ctrl
-    else //direct phase ctrl
-    begin
-        if fnphases = 3 then
-        begin
-               //3-phase ctrl
-            InDynamics := true;
-            tempV1 := Vabc[1];   // Save for variable calcs
-            tempV2 := Vabc[2];
-            tempV3 := Vabc[3];
-
-            V_DG1 := cabs(tempV1);
-            V_DG2 := cabs(tempV2);
-            V_DG3 := cabs(tempV3);
-            V_Theta1 := cang(tempV1);
-            V_Theta2 := cang(tempV2);
-            V_Theta3 := cang(tempV3);
-               ///
-               ///  Model currents Iabc injectted into network by Id1, Iq1, Id2, Iq2, Id3, Iq3, Vabc/////
-                //Id1, Iq1
-            if Id1 = 0.0 then
-                tempAngleR := pi / 2
-            else
-                tempAngleR := arctan(Iq1 / Id1);
-            curr1 := PCLX(sqrt(Iq1 * Iq1 + Id1 * Id1), V_Theta1 - tempAngleR);//with respect to Q_axis
-                //Id2, Iq2
-            if Id2 = 0.0 then
-                tempAngleR := pi / 2
-            else
-                tempAngleR := arctan(Iq2 / Id2);
-            curr2 := PCLX(sqrt(Iq2 * Iq2 + Id2 * Id2), V_Theta2 - tempAngleR);//with respect to Q_axis
-                //Id3, Iq3
-            if Id3 = 0.0 then
-                tempAngleR := pi / 2
-            else
-                tempAngleR := arctan(Iq3 / Id3);
-            curr3 := PCLX(sqrt(Iq3 * Iq3 + Id3 * Id3), V_Theta3 - tempAngleR);//with respect to Q_axis
-               //////////////////////////////////////////////////////
-               ///Update power at current time step
-            P_DG1 := V_DG1 * Id1;
-            Q_DG1 := V_DG1 * Iq1;
-            P_DG2 := V_DG2 * Id2;
-            Q_DG2 := V_DG2 * Iq2;
-            P_DG3 := V_DG3 * Id3;
-            Q_DG3 := V_DG3 * Iq3;
-                //sum
-            P_DG := P_DG1 + P_DG2 + P_DG3;  //element output
-            Q_DG := Q_DG1 + Q_DG2 + Q_DG3;
-               ////////////////////////////////
-             // inject into network
-            Iabc[1] := Curr1;
-            Iabc[2] := Curr2;
-            Iabc[3] := Curr3;
-               {change direction} //added by dahei  input should be negtive
-            Iabc[1] := cnegate(Iabc[1]);
-            Iabc[2] := cnegate(Iabc[2]);
-            Iabc[3] := cnegate(Iabc[3]);
-        end
-        else
-        if fnphases = 1 then
-        begin
-                //1-phase ctrl
-            InDynamics := true;
-            tempV1 := Vabc[1];   // Save for variable calcs
-
-            V_DG1 := cabs(tempV1);
-            V_Theta1 := cang(tempV1);
-               ///
-               ///  Model currents Iabc injectted into network by Id1, Iq1, Id2, Iq2, Id3, Iq3, Vabc/////
-                //Id1, Iq1
-            if Id1 = 0.0 then
-                tempAngleR := pi / 2
-            else
-                tempAngleR := arctan(Iq1 / Id1);
-            curr1 := PCLX(sqrt(Iq1 * Iq1 + Id1 * Id1), V_Theta1 - tempAngleR);//with respect to Q_axis
-
-               //////////////////////////////////////////////////////
-               ///Update power at current time step
-            P_DG1 := V_DG1 * Id1;
-            Q_DG1 := V_DG1 * Iq1;
-                //sum
-            P_DG := P_DG1;//
-            Q_DG := Q_DG1;
-               ////////////////////////////////
-             // inject into network
-            Iabc[1] := Curr1;
-               {change direction} //added by dahei  input should be negtive
-            Iabc[1] := cnegate(Iabc[1]);
-        end
-        else
-        begin
-            //no consideration for 2-phase DG
-        end;
+        //will never be used
+        //will be in CalcDynamic
+        Exit;
     end;
+
+    //direct phase ctrl
+    if fnphases = 3 then
+    begin
+        //3-phase ctrl
+        InDynamics := true;
+        tempV1 := Vabc[1]; // Save for variable calcs
+        tempV2 := Vabc[2];
+        tempV3 := Vabc[3];
+
+        V_DG1 := cabs(tempV1);
+        V_DG2 := cabs(tempV2);
+        V_DG3 := cabs(tempV3);
+        V_Theta1 := cang(tempV1);
+        V_Theta2 := cang(tempV2);
+        V_Theta3 := cang(tempV3);
+        ///
+        ///  Model currents Iabc injectted into network by Id1, Iq1, Id2, Iq2, Id3, Iq3, Vabc/////
+        //Id1, Iq1
+        if Id1 = 0.0 then
+            tempAngleR := pi / 2
+        else
+            tempAngleR := arctan(Iq1 / Id1);
+        curr1 := PCLX(sqrt(Iq1 * Iq1 + Id1 * Id1), V_Theta1 - tempAngleR);//with respect to Q_axis
+        //Id2, Iq2
+        if Id2 = 0.0 then
+            tempAngleR := pi / 2
+        else
+            tempAngleR := arctan(Iq2 / Id2);
+        curr2 := PCLX(sqrt(Iq2 * Iq2 + Id2 * Id2), V_Theta2 - tempAngleR);//with respect to Q_axis
+        //Id3, Iq3
+        if Id3 = 0.0 then
+            tempAngleR := pi / 2
+        else
+            tempAngleR := arctan(Iq3 / Id3);
+        curr3 := PCLX(sqrt(Iq3 * Iq3 + Id3 * Id3), V_Theta3 - tempAngleR);//with respect to Q_axis
+        //////////////////////////////////////////////////////
+        ///Update power at current time step
+        P_DG1 := V_DG1 * Id1;
+        Q_DG1 := V_DG1 * Iq1;
+        P_DG2 := V_DG2 * Id2;
+        Q_DG2 := V_DG2 * Iq2;
+        P_DG3 := V_DG3 * Id3;
+        Q_DG3 := V_DG3 * Iq3;
+        //sum
+        P_DG := P_DG1 + P_DG2 + P_DG3; //element output
+        Q_DG := Q_DG1 + Q_DG2 + Q_DG3;
+        ////////////////////////////////
+        // inject into network
+        Iabc[1] := Curr1;
+        Iabc[2] := Curr2;
+        Iabc[3] := Curr3;
+        // change direction //added by dahei  input should be negtive
+        Iabc[1] := -Iabc[1];
+        Iabc[2] := -Iabc[2];
+        Iabc[3] := -Iabc[3];
+
+        Exit;
+    end;
+    
+    if fnphases = 1 then
+    begin
+        //1-phase ctrl
+        InDynamics := true;
+        tempV1 := Vabc[1]; // Save for variable calcs
+
+        V_DG1 := cabs(tempV1);
+        V_Theta1 := cang(tempV1);
+        ///
+        ///  Model currents Iabc injectted into network by Id1, Iq1, Id2, Iq2, Id3, Iq3, Vabc/////
+        //Id1, Iq1
+        if Id1 = 0.0 then
+            tempAngleR := pi / 2
+        else
+            tempAngleR := arctan(Iq1 / Id1);
+        curr1 := PCLX(sqrt(Iq1 * Iq1 + Id1 * Id1), V_Theta1 - tempAngleR);//with respect to Q_axis
+
+        //////////////////////////////////////////////////////
+        ///Update power at current time step
+        P_DG1 := V_DG1 * Id1;
+        Q_DG1 := V_DG1 * Iq1;
+        //sum
+        P_DG := P_DG1;//
+        Q_DG := Q_DG1;
+        ////////////////////////////////
+        // inject into network
+        Iabc[1] := Curr1;
+        // change direction //added by dahei  input should be negtive
+        Iabc[1] := -Iabc[1];
+        Exit;
+    end;
+
+    //no consideration for 2-phase DG
 end;
 
-procedure TGeneric5Obj.CalcPFlow(var V012, I012: TSymCompArray5);
+procedure TGeneric5Obj.CalcPFlow(var V012, I012: TSymCompArray);
 var
     Curr: Complex;
     p_mode: Integer;
 begin
-    if ctrl_mode = 0 then   //duplicate all codes as avg ctrl, under V120, I120
+    if ctrl_mode <> 0 then
+        Exit;
+    
+    //duplicate all codes as avg ctrl, under V120, I120
+
+    V1 := V012[1]; // Save for variable calcs
+    V2 := V012[2];
+    if cabs(V1) = 0.0 then
+        V1 := 1; //in Case the first step
+    InDynamics := false;
+    // Guess at a new var output value
+    V_DG := cabs(V1);
+    Theta_DG := cang(V1);
+    //this should be the the online system index, has to be improved by
+
+    // ----real power is control by Pref in DG----
+    update_pV_f_CC(); //AlphaP, Alpha
+    p_mode := 0;
+    if FMonObj <> nil then
+        p_mode := FMonObj.Get_P_mode();
+    if (p_mode = 1) and (cc_switch) then //if delta P = p_trans_ref - p_trans
+    begin //balance p_trans
+        AlphaP := pV_f_CC[1]; //alpha_p
+        p_DG := Pmax * AlphaP;
+    end
+    else
     begin
-        V1 := V012[1];   // Save for variable calcs
-        V2 := V012[2];
-        if cabs(V1) = 0.0 then
-            V1 := Cmplx(1, 0);   //in Case the first step
-        InDynamics := false;
-             // Guess at a new var output value
-        V_DG := cabs(V1);
-        Theta_DG := cang(V1);
-             //this should be the the online system index, has to be improved by
-             //TGeneric5Obj.RememberQV
-             //TGeneric5Obj.CalcDQDV
-             //
+        P_DG := fnphases * P_ref; // local
 
-             {----real power is control by Pref in DG----}
-        update_pV_f_CC();  //AlphaP, Alpha
-        p_mode := 0;
-        if fmonobj <> nil then
-            p_mode := fmonobj.Get_P_mode();
-        if (p_mode = 1) and (cc_switch = true) then //if delta P = p_trans_ref - p_trans
-        begin //balance p_trans
-            AlphaP := pV_f_CC^[1]; //alpha_p
-            p_DG := Pmax * AlphaP;
-        end
-        else
-        begin
-            P_DG := fnphases * P_ref; // local
-
-        end;
-        if (p_DG > Pmax) then
-        begin
-            P_DG := Pmax;
-        end
-        else
-        if (P_DG < Pmin) then
-        begin
-            P_DG := Pmin;
-        end;
-        AlphaP := P_DG / Pmax;
-             {--- real power is controled above --}
-        if QV_flag = 0 then    //P_ref, Q_ref
-            Curr := cong(Cdiv(Cmplx(P_DG / 3.0, Q_ref), V1))
-        else                 //P_ref, V_ref
-        begin
-            if ActiveCircuit.Solution.Iteration = 1 then
-            begin
-                Iq := 0; //In power flow, start value of Iq for each power flow
-            end;
-
-                  //update_pV_f_CC();  //Alpha
-            Alpha := pV_f_CC^[2];  // only when not dynamode
-            Q_DG := Qmax * Alpha;
-            Curr := cong(Cdiv(Cmplx(P_DG / 3.0, Q_DG / 3.0), V1));
-                  {----------------}
-        end;
-
-        I012[1] := Curr;    // Save for variable calcs
-        I012[2] := cmplx(0.0, 0.0);//force to be balanced output DG
-        I012[0] := cmplx(0.0, 0.0);
-             {change direction}//added by dahei
-        I012[1] := cnegate(I012[1]);
-        I012[2] := cnegate(I012[2]);
-        I012[0] := cnegate(I012[0]);
-    end // avg ctrl
-    else //direct phase ctrl
-    begin
-        if fnphases = 3 then
-        begin
-                    //3-phase ctrl
-        end
-        else
-        if fnphases = 1 then
-        begin
-                    //1-phase ctrl
-        end
-        else
-        begin
-                //no consideration for 2-phase DG
-        end;
     end;
+    if (p_DG > Pmax) then
+    begin
+        P_DG := Pmax;
+    end
+    else
+    if (P_DG < Pmin) then
+    begin
+        P_DG := Pmin;
+    end;
+    AlphaP := P_DG / Pmax;
+    // --- real power is controled above --
+    if QV_flag = 0 then //P_ref, Q_ref
+        Curr := cong(Cmplx(P_DG / 3.0, Q_ref) / V1)
+    else
+    //P_ref, V_ref
+    begin
+        if ActiveCircuit.Solution.Iteration = 1 then
+        begin
+            Iq := 0; //In power flow, start value of Iq for each power flow
+        end;
+        Alpha := pV_f_CC[2]; // only when not dynamode
+        Q_DG := Qmax * Alpha;
+        Curr := cong(Cmplx(P_DG / 3.0, Q_DG / 3.0) / V1);
+    end;
+
+    I012[1] := Curr; // Save for variable calcs
+    I012[2] := cmplx(0.0, 0.0);//force to be balanced output DG
+    I012[0] := cmplx(0.0, 0.0);
+    // change direction //added by dahei
+    I012[1] := - I012[1];
+    I012[2] := - I012[2];
+    I012[0] := - I012[0];
 end;
 
 procedure TGeneric5Obj.CalcPFlowVIabc(var Vabc, Iabc: pComplexArray);
@@ -2228,78 +1713,73 @@ begin
     temp_pref := 0.0;
     temp_alpha := 0.0;
     flmt := 0.9;
-    Update_Pqlimits; //  Pmax_phase, Qmax_phase will be used in the following steps
-    update_pV_f_CC_M2();  // pV_f_CC, updated from virtual leader
-                          // Q ctrl: 3-phase,  pV_f_CC^[2], [4], [6]
-                          // 1-phase,  pV_f_CC^[2]
-                          // P ctrl: 3-phase,  pV_f_CC^[1], [3], [5]
-                          // 1-phase,  pV_f_CC^[1]
+    Update_Pqlimits(); //  Pmax_phase, Qmax_phase will be used in the following steps
+    update_pV_f_CC_M2();  
+    // pV_f_CC, updated from virtual leader
+    // Q ctrl: 3-phase,  pV_f_CC[2], [4], [6]
+    // 1-phase,  pV_f_CC[2]
+    // P ctrl: 3-phase,  pV_f_CC[1], [3], [5]
+    // 1-phase,  pV_f_CC[1]
 
     if fnphases = 3 then
     begin
-        tempV1 := Vabc[1];  // Save for variable calcs //assume Vabc[1][2][3] is ABC!
+        tempV1 := Vabc[1]; // Save for variable calcs //assume Vabc[1][2][3] is ABC!
         tempV2 := Vabc[2];
         tempV3 := Vabc[3];
         if cabs(tempV1) = 0 then
-            tempV1 := Cmplx(1, 0);
+            tempV1 := 1;
         if cabs(tempV2) = 0 then
-            tempV2 := Cmplx(1, 0);
+            tempV2 := 1;
         if cabs(tempV3) = 0 then
-            tempV3 := Cmplx(1, 0);
+            tempV3 := 1;
     end
     else
     if fnphases = 1 then
     begin
-        tempV1 := Vabc[1];  // Save for variable calcs //assume Vabc[1][2][3] is ABC!
-        tempV2 := Cmplx(1, 0);
-        tempV3 := Cmplx(1, 0);
+        tempV1 := Vabc[1]; // Save for variable calcs //assume Vabc[1][2][3] is ABC!
+        tempV2 := 1;
+        tempV3 := 1;
     end;
 
-    V_DG1 := cabs(tempV1);   // Save for variable calcs
+    V_DG1 := cabs(tempV1); // Save for variable calcs
     V_DG2 := cabs(tempV2);
     V_DG3 := cabs(tempV3);
-      {----real power is control by Pref in DG----}
+    // ----real power is control by Pref in DG----
     P_DG1 := P_ref1;
     P_DG2 := P_ref2;
     P_DG3 := P_ref3;
 
-      //calculate_gradient; //alpha, dalpha, and gradients
-      //alpha is implemented in M2
+    //alpha is implemented in M2
     p_mode := 0;
-    if fmonobj <> nil then
-        p_mode := fmonobj.Get_P_mode();
-    if (p_mode = 1) and (cc_switch = true) then //if delta P = p_trans_ref - p_trans
+    if FMonObj <> nil then
+        p_mode := FMonObj.Get_P_mode();
+
+    if (p_mode = 1) and cc_switch then //if delta P = p_trans_ref - p_trans
     begin
         case ctrl_mode of
             1:
             begin
-                AlphaP1 := pV_f_CC^[1];
+                AlphaP1 := pV_f_CC[1];
                 p_DG1 := p_DG1 + Pmax_phase * AlphaP1;
-                          //p_DG1 :=  Pmax_phase * AlphaP1;
             end;
             2:
             begin
-                AlphaP2 := pV_f_CC^[1];//if single phase only    pV_f_CC^[1] and pV_f_CC^[2]
+                AlphaP2 := pV_f_CC[1];//if single phase only pV_f_CC[1] and pV_f_CC[2]
                 p_DG2 := p_DG2 + Pmax_phase * AlphaP2;
-                          //p_DG2 :=  Pmax_phase * AlphaP2;
             end;
             3:
             begin
-                AlphaP3 := pV_f_CC^[1]; //if single phase only    pV_f_CC^[1] and pV_f_CC^[2]
+                AlphaP3 := pV_f_CC[1]; //if single phase only pV_f_CC[1] and pV_f_CC[2]
                 p_DG3 := p_DG3 + Pmax_phase * AlphaP3;
-                          //p_DG3 :=  Pmax_phase * AlphaP3;
             end;
             4:
             begin
-                AlphaP1 := pV_f_CC^[1];
+                AlphaP1 := pV_f_CC[1];
                 p_DG1 := p_DG1 + Pmax_phase * AlphaP1;
-                          //p_DG1 :=  Pmax_phase * AlphaP1;
-                AlphaP2 := pV_f_CC^[3];
+                AlphaP2 := pV_f_CC[3];
                 p_DG2 := p_DG2 + Pmax_phase * AlphaP2;
-                          //p_DG2 :=  Pmax_phase * AlphaP2;
-                AlphaP3 := pV_f_CC^[5];
+                AlphaP3 := pV_f_CC[5];
                 p_DG3 := p_DG3 + Pmax_phase * AlphaP3;
-                          //p_DG3 :=  Pmax_phase * AlphaP3;
             end;
         end;
         if (p_DG1 > Pmax_phase) then
@@ -2329,9 +1809,9 @@ begin
         begin
             P_DG3 := Pmin_phase;
         end;
-        Update_Pqlimits; //  Qmax_phase will be updated accordingly
+        Update_Pqlimits(); //  Qmax_phase will be updated accordingly
     end;
-            // calc P_DG
+    // calc P_DG
     case ctrl_mode of
         1:
         begin
@@ -2350,448 +1830,308 @@ begin
             P_DG := P_DG1 + P_DG2 + P_DG3;
         end;
     end;
-      {Q Control}
+
+    // Q Control
+
     if ctrl_mode = 0 then
     begin
-          //will never be used
-          //will be in CalcPFlow
+        //will never be used
+        //will be in CalcPFlow
+        Exit;
     end // avg ctrl
-    else //direct phase ctrl
+    
+    //direct phase ctrl
+    if fnphases = 3 then
     begin
-        if fnphases = 3 then
+        //3-phase ctrl
+        InDynamics := false;
+
+        //if (P_Mode = 1) and  then
+        //real power control
+
+        // Guess at a new var output value
+        if QV_flag = 0 then //P_ref, Q_ref
         begin
-                    //3-phase ctrl
-              // V_Theta1 := cang(V1);
-              // V_Theta2 := cang(V2);
-              // V_Theta3 := cang(V3);
-
-            InDynamics := false;
-
-               //if (P_Mode = 1) and  then
-               //real power control
-
-               // Guess at a new var output value
-            if QV_flag = 0 then    //P_ref, Q_ref
-            begin
-                Curr1 := cong(Cdiv(Cmplx(P_dg1, Q_ref1), tempV1));  //currents A,B,C
-                Curr2 := cong(Cdiv(Cmplx(P_dg2, Q_ref2), tempV2));
-                Curr3 := cong(Cdiv(Cmplx(P_dg3, Q_ref3), tempV3));
-            end
-            else                 //P_ref, V_ref
-            begin
-                  //phase A
-                  //1 st ireration Iq := 0;
-                if ActiveCircuit.Solution.Iteration = 1 then
-                begin
-                    Iq1 := 0; //In power flow, start value of Iq for each power flow
-                    Iq2 := 0;
-                    Iq3 := 0;
-                end;                                                      //should be taken care of here
-                if cc_switch = false then    //droop                                                   //Q_DG starts from 0
-                begin
-                      ///////////integral droop
-                    dIqdt := kcq * (V_ref1 - V_DG1) / ActiveCircuit.Solution.Iteration;
-                    if abs(V_ref1 - v_DG1) <= Volt_Trhd * V_ref1 then
-                        dIqdt := 0.0;
-
-                                        //if abs(dIqdt)> flmt*Iqmax_phase then dIqdt := sign(dIqdt)*flmt*Iqmax_phase;
-                    Iq1 := Iq1 + dIqdt;
-                    Q_DG1 := V_DG1 * Iq1;
-                    if droop = 2 then
-
-                        Q_DG1 := kcq_drp2 * (V_ref1 - V_DG1) * 1000 * machinedata.kVArating / 0.05 / V_ref1;
-                end
-                  {gradient control}
-                else
-                begin                       // cooperative control
-                    Alpha1 := pV_f_CC^[2];
-                    Q_DG1 := Qmax_phase * Alpha1;
-                end;
-                  {----------------}
-                  //if abs(dIqdt)> flmt*Iqmax_phase then dIqdt := sign(dIqdt)*flmt*Iqmax_phase;
-
-                  //If (Q_DG1 >= Qmax_phase) then Q_DG1 := Qmax_phase; //limit check only one phase
-                  //If Q_DG1 <= Qmin_phase then Q_DG1:= Qmin_phase;
-
-                  //phase B
-                if cc_switch = false then    //droop
-                begin
-                      ///////////integral droop
-                    dIqdt := kcq * (V_ref2 - V_DG2) / ActiveCircuit.Solution.Iteration;  // ref control
-                    if abs(V_ref2 - v_DG2) <= Volt_Trhd * V_ref2 then
-                        dIqdt := 0.0;
-                    Iq2 := Iq2 + dIqdt;     //In power flow, Iq starts from 0;
-                    Q_DG2 := V_DG2 * Iq2;
-                    if droop = 2 then
-
-                        Q_DG2 := kcq_drp2 * (V_ref2 - V_DG2) * 1000 * machinedata.kVArating / 0.05 / V_ref1;
-                end
-                  {gradient control}
-                else
-                begin
-                      //dIqdt := Qmax_phase/ V_DG2 * ( - kcq*gradient2); //self gradient
-                      //dIqdt := dIqdt / ActiveCircuit.Solution.Iteration;
-                      //dIqdt := dIqdt + Qmax_phase/ V_DG2 * (pV_f_CC[4]);//dIqdt2
-                      //Iq2 := Iq2 + dIqdt;     //In power flow, Iq starts from 0;
-                      //Q_DG2 :=  V_DG2 * Iq2;
-                    Alpha2 := pV_f_CC^[4];
-                    Q_DG2 := Qmax_phase * Alpha2;
-                end;
-                  //if abs(dIqdt)> flmt*Iqmax_phase then dIqdt := sign(dIqdt)*flmt*Iqmax_phase;
-                  {----------------}
-
-                  //If Q_DG2 >= Qmax_phase then Q_DG2:= Qmax_phase; //limit check only one phase
-                  //If Q_DG2 <= Qmin_phase then Q_DG2:= Qmin_phase;
-
-                  //phase C
-                if cc_switch = false then    //droop
-                begin
-                  ///////////integral droop
-                    dIqdt := kcq * (V_ref3 - V_DG3) / ActiveCircuit.Solution.Iteration;
-                    if abs(V_ref3 - v_DG3) <= Volt_Trhd * V_ref3 then
-                        dIqdt := 0.0;
-                    Iq3 := Iq3 + dIqdt;     //In power flow, Iq starts from 0;
-                    Q_DG3 := V_DG3 * Iq3;
-                    if droop = 2 then
-                        Q_DG3 := kcq_drp2 * (V_ref3 - V_DG3) * 1000 * machinedata.kVArating / 0.05 / V_ref1;
-                end
-                else
-                begin
-                   {gradient control}
-                      //dIqdt := Qmax_phase/ V_DG3 * ( - kcq*gradient3);
-                      //dIqdt := dIqdt / ActiveCircuit.Solution.Iteration;
-                      //dIqdt := dIqdt + Qmax_phase/ V_DG3 * (pV_f_CC[6]);//dIqdt3
-                      //Iq3 := Iq3 + dIqdt;     //In power flow, Iq starts from 0;
-                      //Q_DG3 :=  V_DG3 * Iq3;
-                    Alpha3 := pV_f_CC^[6];
-                    Q_DG3 := Qmax_phase * Alpha3;
-                end;
-
-                  /// code bellow is for each phase working seperately
-                if (Q_DG1 > Qmax_phase) then
-                begin
-                    Q_DG1 := Qmax_phase;
-                end
-                else
-                if (Q_DG1 < Qmin_phase) then
-                begin
-                    Q_DG1 := Qmin_phase;
-                end;
-                Curr1 := cong(Cdiv(Cmplx(P_dg1, Q_DG1), tempV1));
-                if (Q_DG2 > Qmax_phase) then
-                begin
-                    Q_DG2 := Qmax_phase;
-                end
-                else
-                if (Q_DG2 < Qmin_phase) then
-                begin
-                    Q_DG2 := Qmin_phase;
-                end;
-                Curr2 := cong(Cdiv(Cmplx(P_dg2, Q_DG2), tempV2));
-                if (Q_DG3 > Qmax_phase) then
-                begin
-                    Q_DG3 := Qmax_phase;
-                end
-                else
-                if (Q_DG3 < Qmin_phase) then
-                begin
-                    Q_DG3 := Qmin_phase;
-                end;
-                Curr3 := cong(Cdiv(Cmplx(P_dg3, Q_DG3), tempV3));
-                  /////////////////////////////////////////////////////
-            end;
-            Q_DG := Q_DG1 + Q_DG2 + Q_DG3;//
-
-            Iabc[1] := Curr1;    // Save for variable calcs
-            Iabc[2] := Curr2;
-            Iabc[3] := Curr3;
-               {change direction}//added by dahei
-            Iabc[1] := cnegate(Iabc[1]);
-            Iabc[2] := cnegate(Iabc[2]);
-            Iabc[3] := cnegate(Iabc[3]);
-
+            Curr1 := cong(Cmplx(P_dg1, Q_ref1) / tempV1); //currents A,B,C
+            Curr2 := cong(Cmplx(P_dg2, Q_ref2) / tempV2);
+            Curr3 := cong(Cmplx(P_dg3, Q_ref3) / tempV3);
         end
-        else
-        if fnphases = 1 then
+        else //P_ref, V_ref
         begin
-                //1-phase ctrl
+            //phase A
+            //1st ireration Iq := 0;
+            if ActiveCircuit.Solution.Iteration = 1 then
+            begin
+                Iq1 := 0; //In power flow, start value of Iq for each power flow
+                Iq2 := 0;
+                Iq3 := 0;
+            end; //should be taken care of here
+            if not cc_switch then
+            begin
+                //droop
+                //Q_DG starts from 0
+                ///////////integral droop
+                dIqdt := kcq * (V_ref1 - V_DG1) / ActiveCircuit.Solution.Iteration;
+                if abs(V_ref1 - v_DG1) <= Volt_Trhd * V_ref1 then
+                    dIqdt := 0.0;
 
-               //tempV1 := Vabc[1];  // Save for variable calcs //assume Vabc[1][2][3] is ABC!
+                Iq1 := Iq1 + dIqdt;
+                Q_DG1 := V_DG1 * Iq1;
+                if droop = 2 then
 
-            V_DG2 := V_DG1;   // Save for variable calcs, just in case of other use
-            V_DG3 := V_DG1;
-              // V_Theta1 := cang(V1);
+                    Q_DG1 := kcq_drp2 * (V_ref1 - V_DG1) * 1000 * kVArating / 0.05 / V_ref1;
+            end
+            // gradient control
+            else
+            begin
+                // cooperative control
+                Alpha1 := pV_f_CC[2];
+                Q_DG1 := Qmax_phase * Alpha1;
+            end;
+            // ----------------
+            //phase B
+            if not cc_switch then //droop
+            begin
+                ///////////integral droop
+                dIqdt := kcq * (V_ref2 - V_DG2) / ActiveCircuit.Solution.Iteration; // ref control
+                if abs(V_ref2 - v_DG2) <= Volt_Trhd * V_ref2 then
+                    dIqdt := 0.0;
+                Iq2 := Iq2 + dIqdt; //In power flow, Iq starts from 0;
+                Q_DG2 := V_DG2 * Iq2;
+                if droop = 2 then
+                    Q_DG2 := kcq_drp2 * (V_ref2 - V_DG2) * 1000 * kVArating / 0.05 / V_ref1;
+            end
+            // gradient control
+            else
+            begin
+                Alpha2 := pV_f_CC[4];
+                Q_DG2 := Qmax_phase * Alpha2;
+            end;
+            // ----------------
+            //phase C
+            if not cc_switch then //droop
+            begin
+                ///////////integral droop
+                dIqdt := kcq * (V_ref3 - V_DG3) / ActiveCircuit.Solution.Iteration;
+                if abs(V_ref3 - v_DG3) <= Volt_Trhd * V_ref3 then
+                    dIqdt := 0.0;
+                Iq3 := Iq3 + dIqdt; //In power flow, Iq starts from 0;
+                Q_DG3 := V_DG3 * Iq3;
+                if droop = 2 then
+                    Q_DG3 := kcq_drp2 * (V_ref3 - V_DG3) * 1000 * kVArating / 0.05 / V_ref1;
+            end
+            else
+            begin
+                // gradient control
+                Alpha3 := pV_f_CC[6];
+                Q_DG3 := Qmax_phase * Alpha3;
+            end;
 
-            InDynamics := false;
-               // Guess at a new var output value
+            /// code bellow is for each phase working seperately
+            if (Q_DG1 > Qmax_phase) then
+            begin
+                Q_DG1 := Qmax_phase;
+            end
+            else
+            if (Q_DG1 < Qmin_phase) then
+            begin
+                Q_DG1 := Qmin_phase;
+            end;
+            Curr1 := cong(Cdiv(Cmplx(P_dg1, Q_DG1), tempV1));
+            if (Q_DG2 > Qmax_phase) then
+            begin
+                Q_DG2 := Qmax_phase;
+            end
+            else
+            if (Q_DG2 < Qmin_phase) then
+            begin
+                Q_DG2 := Qmin_phase;
+            end;
+            Curr2 := cong(Cdiv(Cmplx(P_dg2, Q_DG2), tempV2));
+            if (Q_DG3 > Qmax_phase) then
+            begin
+                Q_DG3 := Qmax_phase;
+            end
+            else
+            if (Q_DG3 < Qmin_phase) then
+            begin
+                Q_DG3 := Qmin_phase;
+            end;
+            Curr3 := cong(Cdiv(Cmplx(P_dg3, Q_DG3), tempV3));
+        end;
+        Q_DG := Q_DG1 + Q_DG2 + Q_DG3;
+
+        Iabc[1] := Curr1; // Save for variable calcs
+        Iabc[2] := Curr2;
+        Iabc[3] := Curr3;
+        // change direction //added by dahei
+        Iabc[1] := -Iabc[1];
+        Iabc[2] := -Iabc[2];
+        Iabc[3] := -Iabc[3];
+    end
+    else
+    if fnphases = 1 then
+    begin
+        //1-phase ctrl
+
+        //tempV1 := Vabc[1]; // Save for variable calcs //assume Vabc[1][2][3] is ABC!
+
+        V_DG2 := V_DG1; // Save for variable calcs, just in case of other use
+        V_DG3 := V_DG1;
+
+        InDynamics := false;
+        // Guess at a new var output value
+        case ctrl_mode of
+            1:
+            begin
+                temp_pref := P_dg1;
+                temp_qref := q_ref1;
+                temp_vref := v_ref1;
+                Alpha1 := pV_f_CC[2]; //1 phase, only first one. coincident with dynamic calc
+                temp_alpha := alpha1;
+            end;
+            2:
+            begin
+                temp_pref := P_dg2;
+                temp_qref := q_ref2;
+                temp_vref := v_ref2;
+                Alpha2 := pV_f_CC[2];
+                temp_alpha := alpha2;
+            end;
+            3:
+            begin
+                temp_pref := P_dg3;
+                temp_qref := q_ref3;
+                temp_vref := v_ref3;
+                Alpha3 := pV_f_CC[2];
+                temp_alpha := alpha3;
+            end;
+        end;
+        if QV_flag = 0 then //P_ref, Q_ref
+        begin
+            Curr1 := cong(Cmplx(temp_pref, temp_qref) / tempV1); //currents A,B,C
+        end
+        else //P_ref, V_ref
+        begin // QV_flag=1
+            //phase 1
+            //1 st ireration Iq := 0;
+            if ActiveCircuit.Solution.Iteration = 1 then
+            begin
+                Iq1 := 0; //In power flow, start value of Iq for each power flow
+            end;
+            if not cc_switch then //droop
+            begin
+                ///////////integral droop
+                dIqdt := kcq * (temp_vref - V_DG1) / ActiveCircuit.Solution.Iteration;
+                if abs(V_ref1 - v_DG1) <= Volt_Trhd * V_ref1 then
+                    dIqdt := 0.0;
+                Iq1 := Iq1 + dIqdt; //In power flow, Iq starts from 0;
+                temp_qref := V_DG1 * Iq1;
+                if droop = 2 then
+                    temp_qref := kcq_drp2 * (temp_vref - V_DG1) * 1000 * kVArating / 0.05 / V_ref1;
+            end
+            else
+            begin
+                // gradient control
+                temp_qref := Qmax_phase * temp_alpha;
+            end;
+            // ----------------
+
+            if (temp_qref > Qmax_phase) then // switch control mode to Q_ref control
+                temp_qref := Qmax_phase
+            else
+            if (temp_qref < Qmin_phase) then
+                temp_qref := Qmin_phase;
+            Curr1 := cong(Cdiv(Cmplx(temp_pref, temp_qref), tempV1));
             case ctrl_mode of
                 1:
                 begin
-                    temp_pref := P_dg1;//
-                    temp_qref := q_ref1;
-                    temp_vref := v_ref1;
-                    Alpha1 := pV_f_CC^[2]; //1 phase, only first one. coincident with dynamic calc
-                    temp_alpha := alpha1;
+                    Q_DG1 := temp_qref;
+                    alpha1 := temp_alpha;
                 end;
                 2:
                 begin
-                    temp_pref := P_dg2;
-                    temp_qref := q_ref2;
-                    temp_vref := v_ref2;
-                    Alpha2 := pV_f_CC^[2];
-                    temp_alpha := alpha2;
+                    Q_DG2 := temp_qref;
+                    alpha2 := temp_alpha;
                 end;
                 3:
                 begin
-                    temp_pref := P_dg3;
-                    temp_qref := q_ref3;
-                    temp_vref := v_ref3;
-                    Alpha3 := pV_f_CC^[2];
-                    temp_alpha := alpha3;
+                    Q_DG3 := temp_qref;
+                    alpha3 := temp_alpha;
                 end;
             end;
-            if QV_flag = 0 then    //P_ref, Q_ref
-            begin
-                Curr1 := cong(Cdiv(Cmplx(temp_pref, temp_qref), tempV1));  //currents A,B,C
-            end
-            else                 //P_ref, V_ref
-            begin    // QV_flag=1
-
-                  //phase 1
-                  //1 st ireration Iq := 0;
-                if ActiveCircuit.Solution.Iteration = 1 then
-                begin
-                    Iq1 := 0; //In power flow, start value of Iq for each power flow
-                end;
-                if not cc_switch then    //droop
-                begin
-                    ///////////integral droop
-                    dIqdt := kcq * (temp_vref - V_DG1) / ActiveCircuit.Solution.Iteration;
-                    if abs(V_ref1 - v_DG1) <= Volt_Trhd * V_ref1 then
-                        dIqdt := 0.0;
-                    Iq1 := Iq1 + dIqdt;     //In power flow, Iq starts from 0;
-                    temp_qref := V_DG1 * Iq1;
-                    if droop = 2 then
-
-                        temp_qref := kcq_drp2 * (temp_vref - V_DG1) * 1000 * machinedata.kVArating / 0.05 / V_ref1;
-                end
-                else
-                begin
-                   {gradient control}
-
-                    temp_qref := Qmax_phase * temp_alpha;
-                end;
-                  {----------------}
-
-                if (temp_qref > Qmax_phase) then  // switch control mode to Q_ref control
-                    temp_qref := Qmax_phase
-                else
-                if (temp_qref < Qmin_phase) then
-                    temp_qref := Qmin_phase;
-                Curr1 := cong(Cdiv(Cmplx(temp_pref, temp_qref), tempV1));
-                case ctrl_mode of
-                    1:
-                    begin
-                              //P_ref1 := temp_pref ;
-                        Q_DG1 := temp_qref;
-                              //v_ref1 :=  temp_vref;
-                        alpha1 := temp_alpha;
-                    end;
-                    2:
-                    begin
-                              //P_ref2 :=  temp_pref;
-                        Q_DG2 := temp_qref;
-                              //v_ref2 := temp_vref ;
-                        alpha2 := temp_alpha;
-                    end;
-                    3:
-                    begin
-                              //P_ref3 :=  temp_pref  ;
-                        Q_DG3 := temp_qref;
-                              //v_ref3 :=  temp_vref  ;
-                        alpha3 := temp_alpha;
-                    end;
-                end;
-
-         // else
-         // begin
-            //no consideration for 2-phase DG
-            end;
-            Iabc[1] := Curr1;    // Save for variable calcs
-               {change direction}//added by dahei
-            Iabc[1] := cnegate(Iabc[1]);
-        end; //phase =1
-    end; //direct phase ctrl
-    //InfoPublish;    // publish data into fmonitor
+        //no consideration for 2-phase DG
+        end;
+        Iabc[1] := Curr1; // Save for variable calcs
+        // change direction //added by dahei
+        Iabc[1] := -Iabc[1];
+    end; //phase =1
+    //direct phase ctrl
 end;
 
-procedure TGeneric5Obj.Randomize(Opt: Integer);
-// typical proc for handling randomization in DSS fashion
-begin
-    case Opt of
-        0:
-            RandomMult := 1.0;
-    //   GAUSSIAN:  RandomMult := Gauss(YearlyShapeObj.Mean, YearlyShapeObj.StdDev);
-        UNIfORM:
-            RandomMult := Random;  // number between 0 and 1.0
-     //  LOGNORMAL: RandomMult := QuasiLognormal(YearlyShapeObj.Mean);
-    end;
-end;
-
-procedure TGeneric5Obj.InitModel(V012, I012: TSymCompArray5);
+procedure TGeneric5Obj.InitModel(V012, I012: TSymCompArray);
 // Init for Dynamics mode
 begin
-    if ctrl_mode = 0 then   //duplicate all codes as avg ctrl
-    begin
-        Id := P_DG / V_DG; //make sure V_DG has been calc beforehand
-        Iq := Q_DG / V_DG;   //change P_ref/Q_ref to P_DG/Q_DG dahei 1-16-18
-        Idn := Id;
-        Iqn := Iq;
-        Id_ref := Id;// local; may need to be changed in futher
-        Iq_ref := Iq;//
-         //  P_ref :=  Id_ref *v_DG;//local
-         //  V_ref := v_DG;//local
-           {-initiate ABCD XY-}
-        X_var^[1] := Id;
-        X_var^[2] := Iq;
+    if ctrl_mode <> 0 then
+        Exit;
 
-        dIddt := 0;
-        dIqdt := 0;
-        dIddtn := 0;
-        dIqdtn := 0;
-        dvi1dt := 0;
-        dvi1dtn := 0;
-        dvi2dt := 0;
-        dvi2dtn := 0;
-           // the global part
-    end;
-end;
+    //duplicate all codes as avg ctrl
+    Id := P_DG / V_DG; //make sure V_DG has been calc beforehand
+    Iq := Q_DG / V_DG;
+    Idn := Id;
+    Iqn := Iq;
+    Id_ref := Id;// local; may need to be changed in futher
+    Iq_ref := Iq;//
+    //  P_ref :=  Id_ref *v_DG;//local
+    //  V_ref := v_DG;//local
+    // -initiate ABCD XY-
+    X_var[1] := Id;
+    X_var[2] := Iq;
 
-procedure TGeneric5Obj.InitModelVIabc();
-var
-    cBuffer: pComplexArray;
-begin
-    cBuffer := Allocmem(sizeof(cBuffer^[1]) * fnPhases);//define cBuffer
-    GetPhasePower(cBuffer);
-
-    P_DG1 := cBuffer^[1].re; //first phase or the only one
-    Q_DG1 := cBuffer^[1].im;
-        ///
-        //InitModelVIabc(@Vabc, @Iabc); //
-    Id1 := P_DG1 / V_DG1;
-    Iq1 := Q_DG1 / V_DG1;
-         {-initiate ABCD XY-}
-    X_var^[1] := Id1;
-    X_var^[2] := Iq1;
-    if fnphases = 3 then //for 3 phase control the bellow is needed
-    begin
-        P_DG2 := cBuffer^[2].re;
-        Q_DG2 := cBuffer^[2].im;
-        P_DG3 := cBuffer^[3].re;
-        Q_DG3 := cBuffer^[3].im;
-        Id2 := P_DG2 / V_DG2; //
-        Iq2 := Q_DG2 / V_DG2;
-        Id3 := P_DG3 / V_DG3; //
-        Iq3 := Q_DG3 / V_DG3;
-        X_var^[3] := Id2;
-        X_var^[4] := Iq2;
-        X_var^[5] := Id3;
-        X_var^[6] := Iq3;
-    end;
-    Reallocmem(cBuffer, 0);//free cBuffer
+    dIqdt := 0;
 end;
 
 procedure TGeneric5Obj.InitStateVars();
-
 var
     i: Integer;
     V012,
-    I012: TSymCompArray5;
+    I012: TSymCompArray;
     Vabc, Iabc: array[1..3] of Complex;
     cBuffer: pComplexArray;
 begin
-    YPrimInvalid := true;  // Force rebuild of YPrims
+    YPrimInvalid := true; // Force rebuild of YPrims
 
-    with MachineData do
+    // Compute nominal Positive sequence voltage behind transient reactance
+
+    if MachineON then
     begin
-           {Compute nominal Positive sequence voltage behind transient reactance}
-
-        if MachineON then
-            with ActiveCircuit.Solution do
+        Yeq := Cinv(Zsp);
+        ComputeIterminal();
+        case Fnphases of
+            1:
             begin
-                Yeq := Cinv(Zsp);
+                for i := 1 to FNphases do
+                    Vabc[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]] // Wye Voltage
+            end;
+            3:
+            begin
+                // Calculate E1 based on Pos Seq only
+                Phase2SymComp(ITerminal, @I012); // terminal currents
 
-                ComputeIterminal();
-
-                case Fnphases of
-
-                    1:
-                    begin
-                            //E1      := Csub( CSub(NodeV^[NodeRef^[1]], NodeV^[NodeRef^[2]]) , Cmul(ITerminal^[1], Zsp));
-                        for i := 1 to FNphases do
-                            if not ADiakoptics or (ActorID = 1) then
-                                Vabc[i] := NodeV^[NodeRef^[i]]   // Wye Voltage
-                            else
-                                Vabc[i] := VoltInActor1(NodeRef^[i]);   // Wye Voltage
-                    end;
-
-                    3:
-                    begin
-                       // Calculate E1 based on Pos Seq only
-                        Phase2SymComp(ITerminal, @I012);   // terminal currents
-
-                           // Voltage behind Zsp  (transient reactance), volts
-
-                        for i := 1 to FNphases do
-                            if not ADiakoptics or (ActorID = 1) then
-                                Vabc[i] := NodeV^[NodeRef^[i]]   // Wye Voltage
-                            else
-                                Vabc[i] := VoltInActor1(NodeRef^[i]);
-                        Phase2SymComp(@Vabc, @V012);
-                           //E1  := Csub( V012[1] , Cmul(I012[1], Zsp));    // Pos sequence
-                    end;
-                else
-                    DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Motors. IndMach012.' + name + ' has %d phases.', [Fnphases]), 5672);
-                    SolutionAbort := true;
-                end;
-
-                dTheta := 0.0;
-                w0 := Twopi * ActiveCircuit.Solution.Frequency;
-               // recalc Mmass and D in case the frequency has changed
-                with MachineData do
-                begin
-                    Mmass := 2.0 * Hmass * kVArating * 1000.0 / (w0);   // M = W-sec
-                    D := Dpu * kVArating * 1000.0 / (w0);
-                end;
-                Pshaft := 0 - Power[1].re;//P_DG;//Power[1].re; // Initialize Pshaft to present power consumption of motor
-
-               //Speed := -LocalSlip * w0;    // relative to synch speed
-                dSpeed := 0.0;
-                if DebugTrace then     // Put in a separator record
-                begin
-                    Append(TraceFile);
-                    Writeln(TraceFile);
-                    Writeln(TraceFile, '*************** Entering Dynamics Mode ***********************');
-                    Writeln(TraceFile);
-                    Close(Tracefile);
-                end;
-
-            end
+                // Voltage behind Zsp  (transient reactance), volts
+                for i := 1 to FNphases do
+                    Vabc[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]] // Wye Voltage
+                Phase2SymComp(@Vabc, @V012);
+            end;
         else
-        begin
-            Theta := 0.0;
-            dTheta := 0.0;
-            w0 := 0;
-            Speed := 0.0;
-            dSpeed := 0.0;
-               {}
-               //Id
+            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Motors. %s has %d phases.', [FullName, Fnphases], 5672);
+            SolutionAbort := true;
         end;
-    end;  {With}
-  ///
-  ///  from here, let us deal with ctrl_mode and everything  related to control
+    end;
 
-    if ctrl_mode = 0 then   //Pos seq contrl
+    /// from here, let us deal with ctrl_mode and everything  related to control
+
+    if ctrl_mode = 0 then //Pos seq contrl
     begin
         V_DG := Cabs(V012[1]);// Pos Seq Control
         Theta_DG := Cang(V012[1]);
@@ -2803,146 +2143,131 @@ begin
         InitModel(V012, I012); // E2, etc , Id Iq etc
     end
     else
-    begin   //ctrl_mode <> 0   =1,2,3,4
+    begin //ctrl_mode <> 0   =1,2,3,4
         //Vabc
-        V_DG1 := cabs(Vabc[1]);   // Save for variable calcs
+        V_DG1 := cabs(Vabc[1]); // Save for variable calcs
         V_DG2 := cabs(Vabc[2]);
         V_DG3 := cabs(Vabc[3]);
-        cBuffer := Allocmem(sizeof(cBuffer^[1]) * fnPhases);//define cBuffer
+        cBuffer := Allocmem(sizeof(Complex) * fnPhases);//define cBuffer
         GetPhasePower(cBuffer);
 
-        P_DG1 := 0.0 - cBuffer^[1].re; //first phase or the only one
-        Q_DG1 := 0.0 - cBuffer^[1].im;
-        ///
-        //InitModelVIabc(@Vabc, @Iabc); //
+        P_DG1 := 0.0 - cBuffer[1].re; //first phase or the only one
+        Q_DG1 := 0.0 - cBuffer[1].im;
         Id1 := P_DG1 / V_DG1;
         Iq1 := Q_DG1 / V_DG1;
-         {-initiate ABCD XY-}
-        X_var^[1] := Id1;
-        X_var^[2] := Iq1;
+        // initiate ABCD XY
+        X_var[1] := Id1;
+        X_var[2] := Iq1;
         if fnphases = 3 then //for 3 phase control the bellow is needed
         begin
-            P_DG2 := 0.0 - cBuffer^[2].re;
-            Q_DG2 := 0.0 - cBuffer^[2].im;
-            P_DG3 := 0.0 - cBuffer^[3].re;
-            Q_DG3 := 0.0 - cBuffer^[3].im;
-            Id2 := P_DG2 / V_DG2; //
+            P_DG2 := 0.0 - cBuffer[2].re;
+            Q_DG2 := 0.0 - cBuffer[2].im;
+            P_DG3 := 0.0 - cBuffer[3].re;
+            Q_DG3 := 0.0 - cBuffer[3].im;
+            Id2 := P_DG2 / V_DG2;
             Iq2 := Q_DG2 / V_DG2;
-            Id3 := P_DG3 / V_DG3; //
+            Id3 := P_DG3 / V_DG3;
             Iq3 := Q_DG3 / V_DG3;
-            X_var^[3] := Id2;
-            X_var^[4] := Iq2;
-            X_var^[5] := Id3;
-            X_var^[6] := Iq3;
+            X_var[3] := Id2;
+            X_var[4] := Iq2;
+            X_var[5] := Id3;
+            X_var[6] := Iq3;
         end;
         Reallocmem(cBuffer, 0);//free cBuffer
     end;
-    Update_PQlimits;
+    Update_PQlimits();
 end;
 
 procedure TGeneric5Obj.CalcYPrimMatrix(Ymatrix: TcMatrix);
-{A typical helper function for PC elements to assist in the computation
- of Yprim
-}
 var
     Y, Yij, Yadder: Complex;
     i, j: Integer;
     FreqMultiplier: Double;
 begin
     FYprimFreq := ActiveCircuit.Solution.Frequency;
-    FreqMultiplier := FYprimFreq / BaseFrequency;  // ratio to adjust reactances for present solution frequency
+    FreqMultiplier := FYprimFreq / BaseFrequency; // ratio to adjust reactances for present solution frequency
 
-    with  ActiveCircuit.solution do
-        if IsDynamicModel or IsHarmonicModel then
-   // for Dynamics and Harmonics modes use constant equivalent Y
+    if ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel then
+    // for Dynamics and Harmonics modes use constant equivalent Y
+    begin
+        if MachineON then
+            Y := Yeq // L-N value computed in initial condition routines
+        else
+            Y := Cmplx(EPSILON, 0.0);
+
+        if Connection = 1 then
+            Y := CDivReal(Y, 3.0); // Convert to delta impedance
+        Y.im := Y.im / FreqMultiplier; // adjust for frequency
+        Yij := -Y;
+        for i := 1 to Fnphases do
         begin
-            if MachineON then
-                Y := Yeq   // L-N value computed in initial condition routines
-            else
-                Y := Cmplx(EPSILON, 0.0);
-
-            if Connection = 1 then
-                Y := CDivReal(Y, 3.0); // Convert to delta impedance
-            Y.im := Y.im / FreqMultiplier;  // adjust for frequency
-            Yij := Cnegate(Y);
-            for i := 1 to Fnphases do
-            begin
-                case Connection of
-                    0:
-                    begin
-                        Ymatrix.SetElement(i, i, Y);  // sets the element
-                    end;
-                    1:
-                    begin   {Delta connection}
-                        Yadder := CmulReal(Y, 1.000001);  // to prevent floating delta
-                        Ymatrix.SetElement(i, i, Cadd(Y, Yadder));   // add a little bit to diagonal
-                        Ymatrix.AddElement(i, i, Y);  // put it in again
-                        for j := 1 to i - 1 do
-                            Ymatrix.SetElemsym(i, j, Yij);
-                    end;
+            case Connection of
+                0:
+                begin
+                    Ymatrix.SetElement(i, i, Y); // sets the element
+                end;
+                1:
+                begin // Delta connection
+                    Yadder := Y * 1.000001; // to prevent floating delta
+                    Ymatrix.SetElement(i, i, Y + Yadder); // add a little bit to diagonal
+                    Ymatrix.AddElement(i, i, Y); // put it in again
+                    for j := 1 to i - 1 do
+                        Ymatrix.SetElemsym(i, j, Yij);
                 end;
             end;
-        end
+        end;
+        Exit;
+    end
 
-        else
-        begin
     //  Typical code for a regular power flow  model
     //  Borrowed from Generator object
 
-       {Yeq is typically expected as the equivalent line-neutral admittance}
+    // Yeq is typically expected as the equivalent line-neutral admittance
 
-            Y := Yeq;  //     Yeq is L-N quantity
+    Y := Yeq; // Yeq is L-N quantity
 
-       // ****** Need to modify the base admittance for real harmonics calcs
-            Y.im := Y.im / FreqMultiplier;
+    // ****** Need to modify the base admittance for real harmonics calcs
+    Y.im := Y.im / FreqMultiplier;
 
-            case Connection of
-
-                0:
-                    with YMatrix do
-                    begin // WYE
-                        for i := 1 to Fnphases do
-                        begin
-                            SetElement(i, i, Y);
-                        end;
-                    end;
-
-                1:
-                    with YMatrix do
-                    begin  // Delta  or L-L
-                        Y := CDivReal(Y, 3.0); // Convert to delta impedance
-                        Yij := Cnegate(Y);
-                        for i := 1 to Fnphases do
-                        begin
-                            j := i + 1;
-                            if j > Fnconds then
-                                j := 1;  // wrap around for closed connections
-                            AddElement(i, i, Y);
-                            AddElement(j, j, Y);
-                            AddElemSym(i, j, Yij);
-                        end;
-                    end;
+    case Connection of
+        0: // WYE
+            for i := 1 to Fnphases do
+            begin
+                YMatrix.SetElement(i, i, Y);
             end;
-        end;  {ELSE IF Solution.mode}
+        1: // Delta  or L-L
+        begin
+            Y := (Y / 3.0); // Convert to delta impedance
+            Yij := -Y;
+            for i := 1 to Fnphases do
+            begin
+                j := i + 1;
+                if j > Fnconds then
+                    j := 1; // wrap around for closed connections
+                YMatrix.AddElement(i, i, Y);
+                YMatrix.AddElement(j, j, Y);
+                YMatrix.AddElemSym(i, j, Yij);
+            end;
+        end;
+    end;
 end;
 
 procedure TGeneric5Obj.CalcYPrim();
 var
     i: Integer;
 begin
-    if YPrimInvalid then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) then // YPrimInvalid
     begin
-        if YPrim_Shunt <> nil then
+        if YPrim_Shunt <> NIL then
             YPrim_Shunt.Free;
         YPrim_Shunt := TcMatrix.CreateMatrix(Yorder);
-        if YPrim_Series <> nil then
+        if YPrim_Series <> NIL then
             Yprim_Series.Free;
         YPrim_Series := TcMatrix.CreateMatrix(Yorder);
-        if YPrim <> nil then
+        if YPrim <> NIL then
             YPrim.Free;
         YPrim := TcMatrix.CreateMatrix(Yorder);
     end
-
     else
     begin
         YPrim_Shunt.Clear;
@@ -2950,44 +2275,25 @@ begin
         YPrim.Clear;
     end;
 
-     // call helper routine to compute YPrim_Shunt
+    // call helper routine to compute YPrim_Shunt
     CalcYPrimMatrix(YPrim_Shunt);
 
-     // Set YPrim_Series based on a small fraction of the diagonals of YPrim_shunt
-     // so that CalcVoltages doesn't fail
-     // This is just one of a number of possible strategies but seems to work most of the time
+    // Set YPrim_Series based on a small fraction of the diagonals of YPrim_shunt
+    // so that CalcVoltages doesn't fail
+    // This is just one of a number of possible strategies but seems to work most of the time
     for i := 1 to Yorder do
         Yprim_Series.SetElement(i, i, CmulReal(Yprim_Shunt.Getelement(i, i), 1.0e-10));
 
-     // copy YPrim_shunt into YPrim; That's all that is needed for most PC Elements
+    // copy YPrim_shunt into YPrim; That's all that is needed for most PC Elements
     YPrim.CopyFrom(YPrim_Shunt);
 
-     // Account for Open Conductors -- done in base class
+    // Account for Open Conductors -- done in base class
     inherited CalcYPrim();
 end;
 
-procedure TGeneric5Obj.DoGeneric5Model();
-{Compute total terminal Current }
-var
-    i: Integer;
-begin
-    CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
-
-    CalcModel(Vterminal, Iterminal);
-
-   //IterminalUpdated := TRUE;
-    set_ITerminalUpdated(true);
-
-    for i := 1 to Nphases do
-        Caccum(InjCurrent^[i], Cnegate(Iterminal^[i]));
-    if (DebugTrace) then
-        WriteTraceRecord();
-end;
-
 procedure TGeneric5Obj.CalcModel(V, I: pComplexArray); // given voltages returns currents
-
 var
-    V012, I012: TSymCompArray5;
+    V012, I012: TSymCompArray;
 begin
     if ctrl_mode = 0 then
     begin
@@ -2995,209 +2301,108 @@ begin
         Phase2SymComp(V, @V012);
 
         // compute I012
+        if ActiveCircuit.Solution.DynaVars.SolutionMode = DYNAMICMODE then
+            CalcDynamic(V012, I012)
+        else // All other modes are power flow modes
+            CalcPFlow(V012, I012);
 
-        case ActiveCircuit.Solution.DynaVars.SolutionMode of
-            DYNAMICMODE:
-            begin
-                CalcDynamic(V012, I012);
-            end;
-        else  {All other modes are power flow modes}
-        begin
-            CalcPflow(V012, I012);
-        end;
-        end;
-
-        SymComp2Phase(I, @I012);       // convert back to I abc
+        SymComp2Phase(I, @I012); // convert back to I abc
     end // avg ctrl
     else //direct phase ctrl
     begin
         if fnphases = 3 then
         begin
-                //3-phase ctrl
-                        // use Vterminal Iterminal directly instead of computing 120
+            //3-phase ctrl
+            // use Vterminal Iterminal directly instead of computing 120
 
-            case ActiveCircuit.Solution.DynaVars.SolutionMode of
-                DYNAMICMODE:
-                begin
-                    CalcDynamicVIabc(V, I);  //if ((ctrl_mode=4)and (fnphases=3))
-                end;
-            else  {All other modes are power flow modes}
-            begin
-                CalcPflowVIabc(V, I);  // //if ((ctrl_mode=4)and (fnphases=3))
-            end;
-            end;
+            if ActiveCircuit.Solution.DynaVars.SolutionMode = DYNAMICMODE then
+                CalcDynamicVIabc(V, I) //if ((ctrl_mode=4)and (fnphases=3))
+            else 
+                //All other modes are power flow modes
+                CalcPflowVIabc(V, I); //if ((ctrl_mode=4)and (fnphases=3))
         end
         else
         if fnphases = 1 then
         begin
-                //1-phase ctrl
-                          // use Vterminal Iterminal directly instead of computing 120
-                          // actually there is no 120 for single phase
+            //1-phase ctrl
+            // use Vterminal Iterminal directly instead of computing 120
+            // actually there is no 120 for single phase
 
-            case ActiveCircuit.Solution.DynaVars.SolutionMode of
-                DYNAMICMODE:
-                begin
-                    CalcDynamicVIabc(V, I);  //if (fnphases=1)
-                end;
-            else  {All other modes are power flow modes}
-            begin
-                CalcPflowVIabc(V, I);  // //if (fnphases=1)
-            end;
-            end;
+            if ActiveCircuit.Solution.DynaVars.SolutionMode = DYNAMICMODE then
+                CalcDynamicVIabc(V, I) //if (fnphases=1)
+            else // All other modes are power flow modes
+                CalcPflowVIabc(V, I); // //if (fnphases=1)
         end
         else
         begin
             //no consideration for 2-phase DG
         end;
     end;
-    {--------pullish info--------}
-    if ActiveCircuit.Solution.DynaVars.SolutionMode = DYNAMICMODE then
-    begin
-                 //dynamode
-         //if ActiveCircuit.Issolved = true then
-        if fmonobj <> nil then
-            infoPublish();
-    end
-    else         //power flow
-    begin
-        if fmonobj <> nil then
-            infoPublish();
-    end;
 
-    {----------------------------}
+    if FMonObj <> nil then
+        infoPublish();
 end;
 
 procedure TGeneric5Obj.DoDynamicMode();
-
-{ This is an example taken from Generator illustrating how a PC element might
-  handle Dynamics mode with a Thevenin equivalent
-
-  Also illustrates the computation of symmetrical component values
-}
-
-{Compute Total Current and add into InjTemp}
-
 var
     i: Integer;
 begin
-   // Start off by getting the current in the admittance branch of the model
-    CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
-
-   {Inj = -Itotal (in) - Yprim*Vtemp}
-
+    // Start off by getting the current in the admittance branch of the model
+    CalcYPrimContribution(InjCurrent); // Init InjCurrent Array
+    // Inj = -Itotal (in) - Yprim*Vtemp
     CalcModel(Vterminal, Iterminal);
-
-   //IterminalUpdated := TRUE;
-    set_ITerminalUpdated(true);
+    IterminalUpdated := TRUE;
     for i := 1 to Nphases do
-        Caccum(InjCurrent^[i], Cnegate(ITerminal^[i]));
-end;
-
-{Do not support Harmonic for now}
-procedure TGeneric5Obj.DoHarmonicMode();
-
-{
-  Example taken from Generator illustrating how a PC element might handle
-  current calcs for Harmonics mode
-
-  Note: Generator objects assume a Thevenin model (voltage behind and impedance)
-        while Load objects assume the Spectrum applies to a Norton model injection current
-}
-
-{Compute Injection Current Only when in harmonics mode}
-
-{Assumes spectrum is a voltage source behind subtransient reactance and YPrim has been built}
-{Vd is the fundamental frequency voltage behind Xd" for phase 1}
-
-var
-    i: Integer;
-    E: Complex;
-    GenHarmonic: Double;
-begin
-    E := cZERO; // it's never assigned below, because of the ??? line commented out
-   // Set the VTerminal array
-    ComputeVterminal();
-
-    with ActiveCircuit.Solution do
-    begin
-        GenHarmonic := Frequency / BaseFrequency; // harmonic based on the fundamental for this object
-        // get the spectrum multiplier and multiply by the V thev (or Norton current for load objects)
-      // ???  E := CmulReal(SpectrumObj.GetMult(GenHarmonic), VThevHarm); // Get base harmonic magnitude
-      // ???  RotatePhasorRad(E, GenHarmonic, ThetaHarm);  // Time shift by fundamental frequency phase shift
-
-        // Put the values in a temp complex buffer
-        for i := 1 to Fnphases do
-        begin
-            cBuffer[i] := E;
-            if i < Fnphases then
-                RotatePhasorDeg(E, GenHarmonic, -120.0);  // Assume 3-phase IndMach012
-        end;
-    end;
-
-   {Handle Wye Connection}
-    if Connection = 0 then
-        cbuffer[Fnconds] := Vterminal^[Fnconds];  // assume no neutral injection voltage
-
-   // In this case the injection currents are simply Yprim(frequency) times the voltage buffer
-   // Refer to Load.Pas for load-type objects
-   {Inj currents = Yprim (E) }
-    YPrim.MVMult(InjCurrent, @cBuffer);
+        InjCurrent[i] -= ITerminal[i];
 end;
 
 procedure TGeneric5Obj.CalcGeneric5ModelContribution();
-
-// Main dispatcher for computing PC Element currnts
-
-// Calculates IndMach012 current and adds it properly into the injcurrent array
-// routines may also compute ITerminal  (ITerminalUpdated flag)
+var
+    i: Integer;
 begin
-  //IterminalUpdated := FALSE;
-    set_ITerminalUpdated(false);
-    with  ActiveCircuit, ActiveCircuit.Solution do
+    IterminalUpdated := FALSE;
+    if ActiveCircuit.Solution.IsDynamicModel then
     begin
-        if IsDynamicModel then
-            DoDynamicMode()
-        else
-        if IsHarmonicModel and (Frequency <> Fundamental) then
-            DoHarmonicMode()
-        else
-            DoGeneric5Model();
+        DoDynamicMode();
+        Exit;
+    end;
+    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
+    begin
+        DoSimpleMsg('%s: TGeneric5Obj.CalcGeneric5ModelContribution is not implemented for HarmonicMode. Aborting.', [FullName], 202406013);
+        DSS.SolutionAbort := true;
+        Exit;
+    end;
 
-    end; {WITH}
+    CalcYPrimContribution(InjCurrent); // Init InjCurrent Array
+    CalcModel(Vterminal, Iterminal);
+    IterminalUpdated := TRUE;
 
-   {When this is done, ITerminal is up to date}
+    for i := 1 to Nphases do
+        Caccum(InjCurrent[i], -Iterminal[i]);
+    // When this is done, ITerminal is up to date
 end;
 
 procedure TGeneric5Obj.CalcInjCurrentArray();
-
-// Main procedure for controlling computation of InjCurrent array
-
-// InjCurrent is difference between currents in YPrim and total terminal current
 begin
-// You usually will want some logic like this
-
-       // If the element is open, just zero the array and return
+    // If the element is open, just zero the array and return
     if Generic5SwitchOpen then
-        ZeroInjCurrent
-
-       // otherwise, go to a routine that manages the calculation
-    else
-        CalcGeneric5ModelContribution();
+    begin
+        ZeroInjCurrent();
+        Exit
+    end;
+    // otherwise, go to a routine that manages the calculation
+    CalcGeneric5ModelContribution();
 end;
 
 procedure TGeneric5Obj.GetTerminalCurrents(Curr: pComplexArray);
-// This function controls the calculation of the total terminal currents
-
-// Note that it only does something if the solution count has changed.
-// Otherwise, Iterminal array already contains the currents
 begin
     with ActiveCircuit.Solution do
     begin
         if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
-        begin     // recalc the contribution
-          // You will likely want some logic like this
+        begin
+            // recalc the contribution
             if not Generic5SwitchOpen then
-                CalcGeneric5ModelContribution();  // Adds totals in Iterminal as a side effect
+                CalcGeneric5ModelContribution(); // Adds totals in Iterminal as a side effect
         end;
         inherited GetTerminalCurrents(Curr); // add in inherited contribution
     end;
@@ -3206,612 +2411,359 @@ end;
 function TGeneric5Obj.InjCurrents(): Integer;
 // Required function for managing computing of InjCurrents
 begin
-    with ActiveCircuit.Solution do
-    begin
-      // Generators and Loads use logic like this:
-        if LoadsNeedUpdating then
-            SetNominalPower(); // Set the nominal kW, etc for the type of solution being done
+    // Generators and Loads use logic like this:
+    // if ActiveCircuit.Solution.LoadsNeedUpdating then
+    //     SetNominalPower(); // Set the nominal kW, etc for the type of solution being done
 
-       // call the main function for doing calculation
-        CalcInjCurrentArray();          // Difference between currents in YPrim and total terminal current
-
-      // If (DebugTrace) Then WriteTraceRecord;
-
-       // Add into System Injection Current Array
-        Result := inherited InjCurrents();
-
-    end;
+    // call the main function for doing calculation
+    CalcInjCurrentArray(); // Difference between currents in YPrim and total terminal current
+    // Add into System Injection Current Array
+    Result := inherited InjCurrents();
 end;
 
-procedure TGeneric5Obj.SetNominalPower();
-// Set shaft power
-var
-    Factor: Double;
-    MachineOn_Saved: Boolean;
-begin
-    MachineOn_Saved := MachineON;
-    ShapeFactor := CDOUBLEONE;
-    // Check to make sure the generation is ON
-    with ActiveCircuit, ActiveCircuit.Solution do
-    begin
-        if not (IsDynamicModel or IsHarmonicModel) then     // Leave machine in whatever state it was prior to entering Dynamic mode
-        begin
-            MachineON := true;   // Init to on then check if it should be off
-        end;
+// procedure TGeneric5Obj.SetNominalPower();
+// var
+//     Factor: Double;
+//     MachineOn_Saved: Boolean;
+//     dblHour: Double;
+// begin
+//     MachineOn_Saved := MachineON;
+//     ShapeFactor := CDOUBLEONE;
+// // Check to make sure the generation is ON
+//     if not (ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel) then // Leave machine in whatever state it was prior to entering Dynamic mode
+//     begin
+//         MachineON := true; // Init to on then check if it should be off
+//     end;
 
-        if not MachineON then
-        begin
-         // If Machine is OFF enter as tiny resistive load (.0001 pu) so we don't get divide by zero in matrix
-            MachineData.Pnominalperphase := -0.1 * kWBase / Fnphases;
-          // Pnominalperphase   := 0.0;
-            MachineData.Qnominalperphase := 0.0;   // This really doesn't matter
-        end
-        else
-        begin    // Generator is on, compute it's nominal watts and vars
-            with Solution do
+//     if not MachineON then
+//     begin
+// // If Machine is OFF enter as tiny resistive load (.0001 pu) so we don't get divide by zero in matrix
+//         Pnominalperphase := -0.1 * 1e-3 * WBase / Fnphases;
+//         Qnominalperphase := 0.0; // This really doesn't matter
+//     end
+//     else
+//     begin // Generator is on, compute it's nominal watts and vars
+//         dblHour := ActiveCircuit.Solution.DynaVars.dblHour;
+//         case ActiveCircuit.Solution.Mode of
+//             SNAPSHOT:
+//                 Factor := 1.0;
+//             DAILYMODE:
+//             begin
+//                 Factor := 1.0;
+//                 CalcDailyMult(dblHour) // Daily dispatch curve
+//             end;
+//             YEARLYMODE:
+//             begin
+//                 Factor := 1.0;
+//                 CalcYearlyMult(dblHour);
+//             end;
+//             DUTYCYCLE:
+//             begin
+//                 Factor := 1.0;
+//                 CalcDutyMult(dblHour);
+//             end;
+//             GENERALTIME, // General sequential time simulation
+//             DYNAMICMODE:
+//             begin
+//                 Factor := 1.0;
+//      // This mode allows use of one class of load shape
+//                 case ActiveCircuit.ActiveLoadShapeClass of
+//                     USEDAILY:
+//                         CalcDailyMult(dblHour);
+//                     USEYEARLY:
+//                         CalcYearlyMult(dblHour);
+//                     USEDUTY:
+//                         CalcDutyMult(dblHour);
+//                 else
+//                     ShapeFactor := CDOUBLEONE // default to 1 + j1 if not known
+//                 end;
+//             end;
+//             MONTECARLO1,
+//             MONTEFAULT,
+//             FAULTSTUDY:
+//                 Factor := 1.0;
+//             MONTECARLO2,
+//             MONTECARLO3,
+//             LOADDURATION1,
+//             LOADDURATION2:
+//             begin
+//                 Factor := 1.0;
+//                 CalcDailyMult(dblHour);
+//             end;
+//             PEAKDAY:
+//             begin
+//                 Factor := 1.0;
+//                 CalcDailyMult(dblHour);
+//             end;
+//             AUTOADDFLAG:
+//                 Factor := 1.0;
+//         else
+//             Factor := 1.0
+//         end;
 
-                case Mode of
-                    SNAPSHOT:
-                        Factor := 1.0;
-                    DAILYMODE:
-                    begin
-                        Factor := 1.0;
-                        CalcDailyMult(DynaVars.dblHour) // Daily dispatch curve
-                    end;
-                    YEARLYMODE:
-                    begin
-                        Factor := 1.0;
-                        CalcYearlyMult(DynaVars.dblHour);
-                    end;
-                    DUTYCYCLE:
-                    begin
-                        Factor := 1.0;
-                        CalcDutyMult(DynaVars.dblHour);
-                    end;
-                    GENERALTIME,   // General sequential time simulation
-                    DYNAMICMODE:
-                    begin
-                        Factor := 1.0;
-                                   // This mode allows use of one class of load shape
-                        case ActiveCircuit.ActiveLoadShapeClass of
-                            USEDAILY:
-                                CalcDailyMult(DynaVars.dblHour);
-                            USEYEARLY:
-                                CalcYearlyMult(DynaVars.dblHour);
-                            USEDUTY:
-                                CalcDutyMult(DynaVars.dblHour);
-                        else
-                            ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
-                        end;
-                    end;
-                    MONTECARLO1,
-                    MONTEFAULT,
-                    FAULTSTUDY:
-                        Factor := 1.0;
-                    MONTECARLO2,
-                    MONTECARLO3,
-                    LOADDURATION1,
-                    LOADDURATION2:
-                    begin
-                        Factor := 1.0;
-                        CalcDailyMult(DynaVars.dblHour);
-                    end;
-                    PEAKDAY:
-                    begin
-                        Factor := 1.0;
-                        CalcDailyMult(DynaVars.dblHour);
-                    end;
-                    AUTOADDFLAG:
-                        Factor := 1.0;
-                else
-                    Factor := 1.0
-                end;
+//         if not (ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel) then
+//         begin
+//             if ShapeIsActual then
+//                 Pnominalperphase := 1000.0 * ShapeFactor.re / Fnphases
+//             else
+//                 Pnominalperphase := WBase * Factor * ShapeFactor.re / Fnphases;
+//         end;
+//     end;
 
-            if not (IsDynamicModel or IsHarmonicModel) then         //******
-            begin
-                if ShapeIsActual then
-                    MachineData.Pnominalperphase := 1000.0 * ShapeFactor.re / Fnphases
-                else
-                    MachineData.Pnominalperphase := 1000.0 * kWBase * Factor * ShapeFactor.re / Fnphases;
+// // If machine state changes, force re-calc of Y matrix
+//     if MachineON <> MachineOn_Saved then
+//         YPrimInvalid := true;
+// end;
 
-                // cannot dispatch vars in induction machine
-                // you get what you get
+// procedure TGeneric5Obj.CalcDailyMult(Hr: Double);
+// begin
+//     if (DailyDispShapeObj <> nil) then
+//     begin
+//         ShapeFactor := DailyDispShapeObj.GetMult(Hr);
+//         ShapeIsActual := DailyDispShapeObj.UseActual;
+//         Exit;
+//     end;
+//     ShapeFactor := CDOUBLEONE; // Default to no daily variation
+// end;
 
-            end;
-        end; {ELSE GenON}
+// procedure TGeneric5Obj.CalcDutyMult(Hr: Double);
+// begin
+//     if DutyShapeObj <> nil then
+//     begin
+//         ShapeFactor := DutyShapeObj.GetMult(Hr);
+//         ShapeIsActual := DutyShapeObj.UseActual;
+//         Exit;
+//     end;
+//     CalcDailyMult(Hr); // Default to Daily Mult if no duty curve specified
+// end;
 
-    end;  {With ActiveCircuit}
-
-   // If machine state changes, force re-calc of Y matrix
-    if MachineON <> MachineOn_Saved then
-        YPrimInvalid := true;
-end;
-
-procedure TGeneric5Obj.CalcDailyMult(Hr: Double);
-begin
-    if (DailyDispShapeObj <> nil) then
-    begin
-        ShapeFactor := DailyDispShapeObj.GetMult(Hr);
-        ShapeIsActual := DailyDispShapeObj.UseActual;
-    end
-    else
-        ShapeFactor := CDOUBLEONE;  // Default to no daily variation
-end;
-
-procedure TGeneric5Obj.CalcDutyMult(Hr: Double);
-begin
-    if DutyShapeObj <> nil then
-    begin
-        ShapeFactor := DutyShapeObj.GetMult(Hr);
-        ShapeIsActual := DutyShapeObj.UseActual;
-    end
-    else
-        CalcDailyMult(Hr);  // Default to Daily Mult if no duty curve specified
-end;
-
-procedure TGeneric5Obj.CalcYearlyMult(Hr: Double);
-begin
-{Yearly curve is assumed to be hourly only}
-    if YearlyShapeObj <> nil then
-    begin
-        ShapeFactor := YearlyShapeObj.GetMult(Hr);
-        ShapeIsActual := YearlyShapeObj.UseActual;
-    end
-    else
-        ShapeFactor := CDOUBLEONE;  // Defaults to no variation
-end;
-
-procedure TGeneric5Obj.DumpProperties(var F: TextFile; Complete: Boolean);
-{
- This procedure is require to respond to various commands such as Dump that
- write all the device's property values to a file.
-}
-var
-    i, idx: Integer;
-begin
-    inherited DumpProperties(F, Complete);
-
-    {Write out any specials here, usually preceded by a "!"}
-
-    with ParentClass do
-        for i := 1 to NumProperties do
-        begin
-            idx := PropertyIdxMap^[i]; // Map to get proper index into property value array
-            case idx of
-          {Trap any specials here, such as values that are array properties, for example}
-                34, 36:
-                    Writeln(F, '~ ', PropertyName^[i], '=(', PropertyValue[idx], ')')
-            else
-                Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[idx]);
-            end;
-        end;
-
-    Writeln(F);
-end;
+// procedure TGeneric5Obj.CalcYearlyMult(Hr: Double);
+// begin
+// // Yearly curve is assumed to be hourly only
+//     if YearlyShapeObj <> nil then
+//     begin
+//         ShapeFactor := YearlyShapeObj.GetMult(Hr);
+//         ShapeIsActual := YearlyShapeObj.UseActual;
+//         Exit;
+//     end;
+//     ShapeFactor := CDOUBLEONE; // Defaults to no variation
+// end;
 
 procedure TGeneric5Obj.InitHarmonics;
-
-{Procedure to initialize for Harmonics solution}
-
-{This example is extracted from Generator and constructs a Thevinen equivalent.
- Refer to Load for how to do a Norton equivalent
- }
-
-//Var
-//  E, Va:complex;
 begin
-    YPrimInvalid := true;  // Force rebuild of YPrims
-end;
-
-// ******************* PROPERTY VALUES   *******************
-
-procedure TGeneric5Obj.InitPropertyValues(ArrayOffset: Integer);
-
-// required procedure to initialize the string value of the properties
-begin
-   // Some examples
-    PropertyValue[1] := '3';        //'phases';
-    PropertyValue[2] := Getbus(1);  //'bus1';
-    PropertyValue[3] := '12.47';
-    PropertyValue[4] := '100';
-    PropertyValue[5] := '.80';
-    PropertyValue[6] := 'Delta';
-    PropertyValue[7] := Format('%-g', [MachineData.kVARating]);
-    PropertyValue[8] := Format('%-g', [MachineData.Hmass]);
-    PropertyValue[9] := Format('%-g', [MachineData.D]);
-    PropertyValue[10] := '0.0053';
-    PropertyValue[11] := '0.106';
-    PropertyValue[12] := '0.007';
-    PropertyValue[13] := '0.12';
-    PropertyValue[14] := '4.0';
-
-    PropertyValue[15] := '0.007';
-    PropertyValue[16] := '0.1';
-    PropertyValue[17] := 'variable';
-
-    PropertyValue[18] := '';
-    PropertyValue[19] := '';
-    PropertyValue[20] := '';     {...}
-    PropertyValue[21] := 'NO';
-    PropertyValue[24] := '1';//GrpNum
-    PropertyValue[25] := '1';//V_ref
-    PropertyValue[26] := '0';//control mode
-
-{Call inherited function to init inherited property values}
-    inherited  InitPropertyValues(NumPropsThisClass);
+    YPrimInvalid := true; // Force rebuild of YPrims
 end;
 
 function TGeneric5Obj.GetPropertyValue(Index: Integer): String;
-
 // Return i-th property value as a string
 begin
-    Result := '';   // Init the string
-    case Index of
-         // Put special cases here
-         // often a good idea to convert numeric values to strings, for example
-        4:
-            Result := Format('%.6g', [kWBase]);
-        5:
-            Result := Format('%.6g', [PowerFactor(Power[1])]);
-        7:
-            Result := Format('%.6g', [MachineData.kVArating]);
-        8:
-            Result := Format('%.6g', [MachineData.Hmass]);
-        9:
-            Result := Format('%.6g', [MachineData.D]);
-         //15:  Result := Format('%.6g', [localslip]);
-        18:
-            Result := YearlyShape;
-        19:
-            Result := DailyDispShape;
-        20:
-            Result := DutyShape;
-         {}
-        24:
-            Result := Format('%d', [Cluster_Num]);
-         {...}
-    else
-
-         // The default is to just return the current string value of the property
-        Result := inherited GetPropertyValue(index);
-
+    if Index = ord(TProp.PF) then
+    begin
+        Result := Format('%.6g', [PowerFactor(Power[1])]);
+        Exit;
     end;
+    Result := inherited GetPropertyValue(Index);
 end;
 
-// ******************* END PROPERTY VALUES   *******************
-
 procedure TGeneric5Obj.IntegrateStates();
-
-{
-  This is a virtual function. You do not need to write this routine
-  if you are not integrating state variables in dynamics mode.
-}
-
-// Integrate state variables for Dynamics analysis
-// Example from Generator
-
-// Illustrates use of debug tracing
-
-// Present technique is a predictor-corrector trapezoidal rule
-
 var
     TracePower: Complex;
 begin
-   // Compute Derivatives and then integrate
+    // Compute Derivatives and then integrate
     ComputeIterminal();
-    with ActiveCircuit.Solution, MachineData do
-    begin
-        with DynaVars do
-      // Compute shaft dynamics
-            TracePower := TerminalPowerIn(Vterminal, Iterminal, FnPhases); // in watts
-        Pshaft := P_DG;  // P_DG is calculated in CalcDynamic or CalcDynamicVIabc
-        if DebugTrace then
-            WriteTraceRecord();
-        IntegrateABCD();
-      //Integrate;
-    end;
+    // Pshaft := P_DG; // P_DG is calculated in CalcDynamic or CalcDynamicVIabc
+    IntegrateABCD();
 end;
-
-procedure TGeneric5Obj.Get_DynamicModelCurrent;
-var
-    temp: Double;
-begin
-    if Id = 0.0 then
-        temp := pi / 2
-    else
-        temp := arctan(Iq / Id);
-    Is1 := PCLX(sqrt(Iq * Iq + Id * Id), Theta_DG - temp);//with respect to Q_axis
-    //Is1 := cmul(Is1,cmplex());// Put this into XY domine
-    Is1 := Cdivreal(Is1, 3.0);     //here we need to divide all values back to Network
-    //Is1 := Cdiv(Csub(V1, E1),Zsp); // I = (V-E')/Z'
-    //Is2 := Cdiv(Csub(V2, E2),Zsp); // I = (V-E')/Z'
-    Is2 := cmplx(0, 0); //force balance
-    // rotor current  Ir1= Is1-Vm/jXm
-    Ir1 := Is1;
-    //Ir1 := Csub(Is1 ,Cdiv( Csub(V1, cmul(Is1, Zsp)), Zm ));
-    //Ir2 := Csub(Is2 ,Cdiv( Csub(V2, cmul(Is2, Zsp)), Zm ));
-    Ir2 := cmplx(0, 0);
-end;
-
-// ********************** VARIABLES ***************************************
 
 function TGeneric5Obj.NumVariables: Integer;
-{
-  Return the number of state variables
-
-  This is a virtual function. You do not need to write this routine
-  if you are not defining state variables.
-  Note: it is not necessary to define any state variables
-}
 begin
     Result := NumGeneric5Variables;
 end;
 
 function TGeneric5Obj.VariableName(i: Integer): String;
-
-{
-  Returns the i-th state variable in a string
-
-  This is a virtual function. You do not need to write this routine
-  if you are not defining state variables.
-}
 begin
-    if i < 1 then
-        Exit;  // This means Someone goofed
-    case i of
-        1:
-            Result := 'V_DG';//pos seq value
-        2:
-            Result := 'P_DG';
-        3:
-            Result := 'Q_DG';
-        4:
-            Result := 'V_DG1';//Phase A or the first phase if there are less than 3
-        5:
-            Result := 'P_DG1';
-        6:
-            Result := 'Q_DG1';
-        7:
-            Result := 'V_DG2';//Phase B if exists
-        8:
-            Result := 'P_DG2';
-        9:
-            Result := 'Q_DG2';
-        10:
-            Result := 'V_DG3';//phase C if exists
-        11:
-            Result := 'P_DG3';
-        12:
-            Result := 'Q_DG3';
-        13:
-            Result := 'Qmax';
-        14:
-            Result := 'Qmax_Phase';
-        15:
-            Result := 'Pmax';
-        16:
-            Result := 'Pmax_Phase';
-        17:
-            Result := 'Alpha';
-        18:
-            Result := 'Alpha1';
-        19:
-            Result := 'Alpha2';
-        20:
-            Result := 'Alpha3';
-        21:
-            Result := 'AlphaP';
-        22:
-            Result := 'AlphaP1';
-        23:
-            Result := 'AlphaP2';
-        24:
-            Result := 'AlphaP3';
-        25:
-            Result := 'V_ref'; //Voltage object
-        26:
-            Result := 'kVA'; //kVArating
-        27:
-            Result := 'kW'; //kVArating
-        28:
-            Result := 'cluster_num';
-        29:
-            Result := 'NdNumInCluster';
-        30:
-            Result := 'ctrl_mode';
-        31:
-            Result := 'Gradient';
-        32:
-            Result := 'Id';
-        33:
-            Result := 'Iq';
-        34:
-            Result := 'P_set';
-        35:
-            Result := 'Frequency';
-        36:
-            Result := 'Defense';
-    else
-    end;
+    Result := 'ERROR';
+    if (i < 1) or (i > NumGeneric5Variables) then
+        Exit;
+    Result := TGeneric5(ParentClass).varNames[i - 1];
 end;
 
 function TGeneric5Obj.Get_Variable(i: Integer): Double;
 begin
-    Result := -9999.99;   // Error Value
+    Result := -9999.99; // Error Value
+    if (i < 1) or (i > NumGeneric5Variables) then
+    begin
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        Exit; // No variables to set
+    end;
 
-    //With MachineData Do
-    case i of
-        1:
+    case TVar(i) of
+        TVar.V_DG:
             Result := V_DG;
-        2:
+        TVar.P_DG:
             Result := P_DG / 1000;//kW
-        3:
+        TVar.Q_DG:
             Result := Q_DG / 1000;
-        4:
+        TVar.V_DG1:
             Result := V_DG1;//Phase A or the first phase if there are less than 3 phases
-        5:
+        TVar.P_DG1:
             Result := P_DG1 / 1000;
-        6:
+        TVar.Q_DG1:
             Result := Q_DG1 / 1000;
-        7:
+        TVar.V_DG2:
             Result := V_DG2;//Phase B if exists
-        8:
+        TVar.P_DG2:
             Result := P_DG2 / 1000;
-        9:
+        TVar.Q_DG2:
             Result := Q_DG2 / 1000;
-        10:
+        TVar.V_DG3:
             Result := V_DG3;//Phase c if exists
-        11:
+        TVar.P_DG3:
             Result := P_DG3 / 1000;
-        12:
+        TVar.Q_DG3:
             Result := Q_DG3 / 1000;
-        13:
+        TVar.Qmax:
             Result := Qmax / 1000;
-        14:
+        TVar.Qmax_Phase:
             Result := Qmax_Phase / 1000;
-        15:
+        TVar.Pmax:
             Result := Pmax / 1000;
-        16:
+        TVar.Pmax_Phase:
             Result := Pmax_Phase / 1000;
-        17:
-            Result := alpha;
-        18:
+        TVar.Alpha:
+            Result := Alpha;
+        TVar.Alpha1:
             Result := Alpha1;
-        19:
+        TVar.Alpha2:
             Result := Alpha2;
-        20:
+        TVar.Alpha3:
             Result := Alpha3;
-        21:
-            Result := alphaP;
-        22:
+        TVar.AlphaP:
+            Result := AlphaP;
+        TVar.AlphaP1:
             Result := AlphaP1;
-        23:
+        TVar.AlphaP2:
             Result := AlphaP2;
-        24:
+        TVar.AlphaP3:
             Result := AlphaP3;
-        25:
+        TVar.V_ref:
             Result := V_ref;
-        26:
-            Result := MachineData.kVArating / 1000;
-        27:
-            Result := kWbase / 1000;
-        28:
+        TVar.kVA:
+            TODO: probably wrong in the original version
+            Result := kVArating / 1000;
+        TVar.kW:
+            TODO: probably wrong in the original version
+            Result := Wbase / 1000;
+        TVar.cluster_num:
             Result := cluster_num;
-        29:
+        TVar.NdNumInCluster:
             Result := NdNumInCluster;
-        30:
+        TVar.ctrl_mode:
             Result := ctrl_mode;
-        31:
+        TVar.Gradient:
             Result := Gradient;
-        32:
+        TVar.Id:
             Result := Id;
-        33:
+        TVar.Iq:
             Result := Iq;
-        34:
+        TVar.P_set:
             Result := P_ref * 3.0;
-        35:
+        TVar.Frequency:
         begin
             freq := ActiveCircuit.solution.Frequency;
-            if fmonobj <> nil then
-                freq := freq + fmonobj.omg_fm;//fmonobj.comp_omg;//fmonobj.omg_fm;  //
+            if FMonObj <> nil then
+                freq := freq + FMonObj.omg_fm;
             Result := freq;
         end;
-        36:
+        TVar.Defense:
         begin
             result := 0.0;
-            if fmonobj <> nil then
+            if FMonObj <> nil then
                 Result := z_dfs_plot;
         end;
-    else
-
     end;
 end;
 
 procedure TGeneric5Obj.Set_Variable(i: Integer; Value: Double);
 begin
-    case i of
-        1:
-            V_DG := Value;
-        2:
-            P_DG := Value;
-        3:
-            Q_DG := Value;
-        4:
-            V_DG1 := Value;//Phase A or the first phase if there are less than 3 phases
-        5:
-            P_DG1 := Value;
-        6:
-            Q_DG1 := Value;
-        7:
-            V_DG2 := Value;//Phase B if exists
-        8:
-            P_DG2 := Value;
-        9:
-            Q_DG2 := Value;
-        10:
-            V_DG3 := Value;//Phase c if exists
-        11:
-            P_DG3 := Value;
-        12:
-            Q_DG3 := Value;
-        13:
-            Qmax := Value;
-        14:
-            Qmax_Phase := Value;
-        15:
-            Pmax := Value;
-        16:
-            Pmax_Phase := Value;
-        17:
-            alpha := Value;
-        18:
-            Alpha1 := Value;
-        19:
-            Alpha2 := Value;
-        20:
-            Alpha3 := Value;
-        21:
-            alphaP := Value;
-        22:
-            alphaP1 := Value;
-        23:
-            alphaP2 := Value;
-        24:
-            alphaP3 := Value;
-        25:
-            V_ref := Value;
-        26:
-            MachineData.kVArating := Value;
-        27:
-            kWbase := Value;
-        28:
-        begin
-            TPCElement(self).cluster_num := trunc(Value);
-
-          //if cluster_num >= 1 then      // assign the virtue leader to this DG
-          //begin
-              //FMonObj := ActiveCircuit.Fmonitors.Get(cluster_num); // it works only if cluster_num starts from 1 and being consecutively
-
-              // move this piece of codes to Fmonitor, InitFM
-              //ActiveCircuit.Fmonitors.First;
-              //FMonObj := ActiveCircuit.Fmonitors.Active;
-              //if FMonObj. then
-
-          //end;
-
-     //if function 'get' fails , return nil
-        end;
-        29:
-            TPCElement(self).NdNumInCluster := trunc(Value);
-        30:
-            TPCElement(self).nVLeaders := trunc(Value);
-        31:
-            TPCElement(self).cluster_num2 := trunc(Value);
-        32:
-            TPCElement(self).NdNumInCluster2 := trunc(Value);
-    else
-        {Do Nothing for other variables: they are read only}
+    if (i < 1) or (i > NumGeneric5Variables) then
+    begin
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        Exit; // No variables to set
     end;
+
+    case TVar(i) of
+        TVar.V_DG:
+            V_DG := Value;
+        TVar.P_DG:
+            P_DG := Value;
+        TVar.Q_DG:
+            Q_DG := Value;
+        TVar.V_DG1:
+            V_DG1 := Value;//Phase A or the first phase if there are less than 3 phases
+        TVar.P_DG1:
+            P_DG1 := Value;
+        TVar.Q_DG1:
+            Q_DG1 := Value;
+        TVar.V_DG2:
+            V_DG2 := Value;//Phase B if exists
+        TVar.P_DG2:
+            P_DG2 := Value;
+        TVar.Q_DG2:
+            Q_DG2 := Value;
+        TVar.V_DG3:
+            V_DG3 := Value;//Phase c if exists
+        TVar.P_DG3:
+            P_DG3 := Value;
+        TVar.Q_DG3:
+            Q_DG3 := Value;
+        TVar.Qmax:
+            Qmax := Value;
+        TVar.Qmax_Phase:
+            Qmax_Phase := Value;
+        TVar.Pmax:
+            Pmax := Value;
+        TVar.Pmax_Phase:
+            Pmax_Phase := Value;
+        TVar.Alpha:
+            Alpha := Value;
+        TVar.Alpha1:
+            Alpha1 := Value;
+        TVar.Alpha2:
+            Alpha2 := Value;
+        TVar.Alpha3:
+            Alpha3 := Value;
+        TVar.AlphaP:
+            AlphaP := Value;
+        TVar.AlphaP1:
+            AlphaP1 := Value;
+        TVar.AlphaP2:
+            AlphaP2 := Value;
+        TVar.AlphaP3:
+            AlphaP3 := Value;
+        TVar.V_ref:
+            V_ref := Value;
+        TVar.kVA:
+            kVArating := Value;
+        TVar.kW:
+            WBase := Value * 1000;
+        TVar.cluster_num:
+            cluster_num := trunc(Value);
+        TVar.NdNumInCluster:
+            NdNumInCluster := trunc(Value);
+        
+        
+        // The following block is kinda absurd and we do not use this in this version of the codebase on DSS-Extensions, 
+        // but it was left just in case... 
+
+        TVar.ctrl_mode: 
+            nVLeaders := trunc(Value);
+        TVar.Gradient:
+            cluster_num2 := trunc(Value);
+        TVar.Id:
+            NdNumInCluster2 := trunc(Value);
+    end;
+    // Do Nothing for other variables: they are read only
 end;
 
 procedure TGeneric5Obj.GetAllVariables(States: pDoubleArray);
@@ -3819,12 +2771,13 @@ var
     i: Integer;
 begin
     for i := 1 to NumGeneric5Variables do
-        States^[i] := Variable[i];
+        States[i] := Variable[i];
 end;
 
 procedure TGeneric5Obj.MakePosSequence;
 begin
-//TODO: throw not implemented warning
+    DoSimpleMsg('%s: TGeneric5Obj.MakePosSequence is not implemented. Aborting.', [FullName], 202406011);
+    DSS.SolutionAbort := true;
 end;
 
 procedure TGeneric5Obj.Set_ConductorClosed(Index: Integer; Value: Boolean);
@@ -3832,38 +2785,7 @@ procedure TGeneric5Obj.Set_ConductorClosed(Index: Integer; Value: Boolean);
 begin
     inherited;
 
-    if Value then
-        Generic5SwitchOpen := false
-    else
-        Generic5SwitchOpen := true;
-end;
-
-procedure TGeneric5Obj.InitTraceFile;
-begin
-    AssignFile(TraceFile, Format('%s_IndMach012_Trace.csv', [Name]));
-    Rewrite(TraceFile);
-
-    Write(TraceFile, 'Time, Iteration, S1, |IS1|, |IS2|, |E1|, |dE1dt|, |E2|, |dE2dt|, |V1|, |V2|, Pshaft, Pin, Speed, dSpeed');
-    Writeln(TraceFile);
-
-    CloseFile(TraceFile);
-end;
-
-procedure TGeneric5Obj.WriteTraceRecord();
-begin
-    Append(TraceFile);
-    with ActiveCircuit.Solution do
-      //Write(TraceFile, Format('%-.6g, %d, %-.6g, ',[Dynavars.dblHour*3600.0, Iteration, S1]));
-
-        Write(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(Is1), Cabs(Is2)]));
-      //Write(TraceFile, Format('%-.6g, %-.6g, %-.6g, %-.6g, ', [Cabs(E1), Cabs(dE1dt), Cabs(E2), Cabs(dE2dt)]));
-    Write(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(V1), Cabs(V2)]));
-    Write(TraceFile, Format('%-.6g, %-.6g, ', [MachineData.Pshaft, power[1].re]));
-    Write(TraceFile, Format('%-.6g, %-.6g, ', [MachineData.speed, MachineData.dSpeed]));
-
-    Writeln(TraceFile);
-
-    CloseFile(TraceFile);
+    Generic5SwitchOpen := Value;
 end;
 
 end.

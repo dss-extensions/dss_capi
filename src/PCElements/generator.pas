@@ -2756,9 +2756,9 @@ begin
     oldPhases := Fnphases;
     if Fnphases > 1 then
     begin
-        had_kVA := PrpSequence[26] > 0;
-        had_MVA := PrpSequence[27] > 0;
-        had_kvars := (PrpSequence[19] <> 0) or (PrpSequence[20] <> 0);
+        had_kVA := PrpSequence[ord(TProp.kVA)] <> 0;
+        had_MVA := PrpSequence[ord(TProp.MVA)] <> 0;
+        had_kvars := (PrpSequence[ord(TProp.Maxkvar)] <> 0) or (PrpSequence[ord(TProp.Minkvar)] <> 0);
         kW_new := kWbase / Fnphases;
         PF_new := PFNominal;
         if had_kvars then
