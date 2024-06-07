@@ -13,7 +13,7 @@ uses
 
 type
     // Structure for hosting data and solving for each inverter based element
-    TInvDynamicVars = packed record
+    TInvDynamicVars = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
         Vgrid: Array of Polar;     // Grid voltage at the point of connection per phase
         dit, // Current's first derivative per phase
         it, // Current's integration per phase

@@ -17,8 +17,8 @@ uses
 type
     pTWindGenVars = ^TWindGenVars;
 
-   {WindGen public data/state variable structure}
-    TWindGenVars = packed record
+    // WindGen public data/state variable structure
+    TWindGenVars = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
 
         Theta,      {Direct-Axis voltage magnitude & angle}
         Pshaft,
