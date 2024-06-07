@@ -7,26 +7,21 @@ uses
     Dynamics,
     math,
     ucomplex,
+    DSSUComplex,
     Mathutil,
     ParserDel,
     Command,
     WindGenVars,
     DSSCallBackRoutines,
-    Classes;
-
-const
-    NumProperties = 23; // motor model parameters
-    NumVariables = 18; // runtime variables
+    Classes,
+    ArrayDef;
 
 type
     TSymCompArray = array [0..2] of Complex;
     TPhArray = array [1..3] of Complex;
 
     TGE_WTG3_Model = object
-    private
-        // ratings
-        ratedHz, ratedKVA, ratedOmg, ratedKVll, ratedVln, ratedAmp: Double;
-
+    public
         // filter time constant
         TfltPQM: Double;
         TfltVfbk: Double;
@@ -41,15 +36,7 @@ type
         QordMax, QordMin, Iphl, Iqhl, ImaxTD: Double;
         TfltIqmxvUp, TfltIqmxvDn: Double;
         Iqmxv, Ipmx, Iqmx, Ipmn, Iqmn: Double;
-        // Active and reactive power regulator
 
-        V1_VoltVar, V2_VoltVar, V3_VoltVar, V4_VoltVar: Double;
-        Q1_VoltVar, Q2_VoltVar, Q3_VoltVar, Q4_VoltVar: Double;
-        VCurveVoltVar, QCurveVoltVar: array [0..5] of Double;
-        Qref, PFref, rrlQcmd: Double;
-        PordMax, PordMin, Pcurtail, Pord, Pcmd: Double;
-        KpQreg, KiQreg, VrefMin, VrefMax: Double;
-        Qcmd, errQgen: Double;
         // Voltage regulator
         KpVreg, KiVreg: Double;
         Vref, errVmag: Double;
@@ -108,14 +95,12 @@ type
         EdPos, EqPos, EdNeg, EqNeg: Double;
         // integrator
         intg_x, intg_d, intg_d_old: array [0..11] of Double;
-        DebugTrace: LongBool;
         TraceFile: TFileStream;
-        debugVar: array [1..10] of Double;
+        // debugVar: array [1..10] of Double;
 
         procedure abc2seq(var abc: TPhArray; var seq: TSymCompArray; ang: Double);
         procedure seq2abc(var abc: TPhArray; var seq: TSymCompArray; ang: Double);
         function MagLimiter(x: Complex; magmin: Double; magMax: Double): Complex;
-        function LinearInterp(var xTable: ArrayOfDouble; var yTable: ArrayOfDouble; x: Double): Double;
         function CalcCp(theta: Double; lmbda: Double): Double;
         function CalcPmech(theta: Double; wrotor: Double; spdwind: Double): Double;
         function CalcWtRef(elePwr: Double): Double;
@@ -143,6 +128,20 @@ type
         procedure WriteTraceRecord();
 
     public
+        DebugTrace: LongBool;
+
+        // ratings
+        ratedHz, ratedKVA, ratedOmg, ratedKVll, ratedVln, ratedAmp: Double;
+
+        // Active and reactive power regulator
+        V1_VoltVar, V2_VoltVar, V3_VoltVar, V4_VoltVar: Double;
+        Q1_VoltVar, Q2_VoltVar, Q3_VoltVar, Q4_VoltVar: Double;
+        VCurveVoltVar, QCurveVoltVar: array [0..5] of Double;
+        Qref, PFref, rrlQcmd: Double;
+        PordMax, PordMin, Pcurtail, Pord, Pcmd: Double;
+        KpQreg, KiQreg, VrefMin, VrefMax: Double;
+        Qcmd, errQgen: Double;
+
         // simulation time setup
         tsim, deltSim, delt0, delt: Double;
         nRec, nIterLF: Integer;
@@ -171,10 +170,10 @@ type
         DSS: TDSSContext;
 
         procedure Init(var V, i: pComplexArray);
-        procedure Integrate;
+        procedure Integrate();
         procedure CalcDynamic(var V, i: pComplexArray);
         procedure CalcPFlow(var V, i: pComplexArray);
-        procedure ReCalcElementData;
+        procedure ReCalcElementData();
 
         constructor Initialize(dssContext: TDSSContext);
     end;
@@ -182,11 +181,15 @@ type
 implementation
 
 uses
-    SysUtils;
+    SysUtils,
+    BufStream,
+    Utilities,
+    DSSHelper;
 
 constructor TGE_WTG3_Model.Initialize(dssContext: TDSSContext);
 begin
     DSS := dssContext;
+    TraceFile := NIL;
 
     delt0 := 0.000050;
     ratedHz := 60;
@@ -422,13 +425,12 @@ begin
         FreeAndNil(TraceFile);
 end;
 
-function TGE_WTG3_Model.MagLimiter(x: Complex; magmin: Double;
-    magMax: Double): Complex;
+function TGE_WTG3_Model.MagLimiter(x: Complex; magmin: Double; magMax: Double): Complex;
 begin
     Result := pclx(max(magmin, min(magMax, cabs(x))), cang(x));
 end;
 
-function TGE_WTG3_Model.LinearInterp(var xTable: ArrayOfDouble; var yTable: ArrayOfDouble; x: Double): Double;
+function LinearInterp(xTable: Array of Double; var yTable: Array of Double; x: Double): Double;
 var
     iLeft, iRight, ii: Integer;
 begin
@@ -438,13 +440,13 @@ begin
 
     if x < xTable[iLeft] then
     begin
-        Result := yTable[iLeft]
+        Result := yTable[iLeft];
         Exit;
     end;
 
     if x > xTable[iRight] then
     begin
-        Result := yTable[iRight]
+        Result := yTable[iRight];
         Exit;
     end;
 
@@ -464,7 +466,7 @@ var
     temp: Complex;
 begin
     // phase to sequence conversion
-    Phase2SymComp(@abc, @seq);
+    Phase2SymComp(pComplexArray(@abc), pComplexArray(@seq));
     // rotation of the sequence components
     temp := cmplx(cos(-ang), sin(-ang));
     for ii := 0 to 2 do
@@ -479,7 +481,7 @@ var
     temp: Complex;
 begin
     // sequence to phase conversion
-    SymComp2Phase(@abc, @seq);
+    SymComp2Phase(pComplexArray(@abc), pComplexArray(@seq));
     // rotation of the sequence components
     temp := cmplx(cos(ang), sin(ang));
     for ii := 1 to 3 do
@@ -716,7 +718,7 @@ begin
     IdNeg := I012[2].re;
     IqNeg := -I012[2].im;
     // LPF on voltage feedback
-    kFltTemp := min(1, DynaData^.h / TfltVfbk);
+    kFltTemp := min(1, DSS.ActiveCircuit.Solution.DynaVars.h / TfltVfbk);
     VdFbkPos := VdFbkPos + (VdPos - VdFbkPos) * kFltTemp;
     VqFbkPos := VqFbkPos + (VqPos - VqFbkPos) * kFltTemp;
     VdFbkNeg := VdFbkNeg + (VdNeg - VdFbkNeg) * kFltTemp;
@@ -1098,7 +1100,9 @@ end;
 
 procedure TGE_WTG3_Model.APCLogic();
 var
-    y1, y2, y3, y4, temp, gridFrq, PmechMax, PmechMin: Double;
+    y1, y2, y3, y4, temp, gridFrq, 
+    PmechMax_, //TODO: BUG: PmechMax local vs class
+    PmechMin: Double;
 begin
     y1 := min(1, max(0.000001, PmechAvl));
     // low pass filter on available power
@@ -1122,15 +1126,15 @@ begin
         y4 := PsetAPC;
     // enforce user-defined PmechMax in normal condition
     if (gridFrq >= FrqTableAPC[1]) and (gridFrq <= FrqTableAPC[2]) then
-        PmechMax := 1.0
+        PmechMax_ := 1.0
     else
-        PmechMax := 1.2;
+        PmechMax_ := 1.2;
     PmechMin := 0.2;
-    y4 := min(PmechMax, max(PmechMin, y4));
+    y4 := min(PmechMax_, max(PmechMin, y4));
     // Pade delay function
     temp := min(1, delt / TdelayAPC * 2);
     PadeAPC := PadeAPC + (y4 - PadeAPC) * temp;
-    Pstl := min(PmechMax, max(PmechMin, 2 * PadeAPC - y4));
+    Pstl := min(PmechMax_, max(PmechMin, 2 * PadeAPC - y4));
 end;
 
 procedure TGE_WTG3_Model.WindInertia();
@@ -1183,7 +1187,7 @@ procedure TGE_WTG3_Model.CalcDynamic(var V, i: pComplexArray);
 var
     ii: Integer;
 begin
-    deltSim := DynaData^.h;
+    deltSim := DSS.ActiveCircuit.Solution.DynaVars.h;
 
     // instrumentation
     Instrumentation(V, i);
@@ -1193,11 +1197,11 @@ begin
     FaultDetection();
 
     // start small time step iteration on when time proceeds
-    if (DynaData.t > tsim) and (DynaData.IterationFlag = 1) then
+    if (DSS.ActiveCircuit.Solution.DynaVars.t > tsim) and (DSS.ActiveCircuit.Solution.DynaVars.IterationFlag = 1) then
     begin
-        nRec := trunc(int(DynaData^.h / delt0 / 2) * 2 + 1);
-        delt := DynaData^.h / nRec;
-        tsim := DynaData^.t;
+        nRec := trunc(int(DSS.ActiveCircuit.Solution.DynaVars.h / delt0 / 2) * 2 + 1);
+        delt := DSS.ActiveCircuit.Solution.DynaVars.h / nRec;
+        tsim := DSS.ActiveCircuit.Solution.DynaVars.t;
         if (wtgTrip = 0) then
         begin
             for ii := 1 to nRec do
@@ -1283,8 +1287,8 @@ begin
         // AssignFile(TraceFile, 'GE_WTG3_Trace.csv');
         // Append(TraceFile);
         WriteStr(sout, 
-            DynaData^.t, ',',
-            DynaData^.IterationFlag, ',',
+            DSS.ActiveCircuit.Solution.DynaVars.t, ',',
+            DSS.ActiveCircuit.Solution.DynaVars.IterationFlag, ',',
             delt, ',',
             nRec, ',',
             ratedVln, ',',
@@ -1311,16 +1315,16 @@ begin
             IdNeg, ',',
             IqNeg, ',',
             dOmg, ',',
-            debugVar[1], ',',
-            debugVar[2], ',',
-            debugVar[3], ',',
-            debugVar[4], ',',
-            debugVar[5], ',',
-            debugVar[6], ',',
-            debugVar[7], ',',
-            debugVar[8], ',',
-            debugVar[9], ',',
-            debugVar[10]
+            '0,', // debugVar[1], ',',
+            '0,', // debugVar[2], ',',
+            '0,', // debugVar[3], ',',
+            '0,', // debugVar[4], ',',
+            '0,', // debugVar[5], ',',
+            '0,', // debugVar[6], ',',
+            '0,', // debugVar[7], ',',
+            '0,', // debugVar[8], ',',
+            '0,', // debugVar[9], ',',
+            '0' // debugVar[10]
         );
         FSWrite(TraceFile, sout);
         FSWriteln(Tracefile);

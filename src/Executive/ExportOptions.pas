@@ -425,7 +425,7 @@ begin
                 FileName := 'Bus_Levels.csv';
             57:
                 FileName := 'Laplacian.csv';
-{$IFDEF DSS_CAPI_PM}                
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
             ord(TExportOption.ZLL):
                 FileName := 'ZLL.csv';
             ord(TExportOption.ZCC):

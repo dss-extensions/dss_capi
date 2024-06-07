@@ -177,6 +177,8 @@ implementation
 
 uses
     Circuit,
+    CktElement,    
+    Solution,
     DSSClassDefs,
     DSSGlobals,
     Dynamics,
@@ -1229,7 +1231,6 @@ var
     ActivePDE,
     ActivePCE,
     ActiveElem: TDSSCktElement;
-    id,
     idx,
     j,
     myTerm: Integer; // saves whatever the active ckt element is
@@ -1256,7 +1257,7 @@ begin
             SetElementActive(myList[idx]);
             ActivePDE := ActiveCktElement;
             SetLength(ElmCurrents, ActivePDE.Yorder + 1);
-            ActivePDE.GetCurrents(@(ElmCurrents[1]));
+            ActivePDE.GetCurrents(ElmCurrents);
 
             for j := 1 to ActivePDE.NPhases do
             begin
@@ -1285,7 +1286,7 @@ begin
             ActivePCE := ActiveCktElement; // To prevent super long statements
 
             SetLength(ElmCurrents, ActivePCE.Yorder + 1);
-            ActivePCE.GetCurrents(@(ElmCurrents[1]));
+            ActivePCE.GetCurrents(ElmCurrents);
 
             for j := 1 to ActivePCE.NPhases do
             begin

@@ -382,6 +382,7 @@ function DoSetCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext; So
 // Set DSS Options
 // Solve Command is re-routed here first to set options beFORe solving
 var
+    i: Integer;
     ParamPointer: Integer;
     ParamName: String;
     Param: String;
@@ -520,8 +521,8 @@ begin
             40:
             begin
                 DSS.ActiveCircuit.Solution.Algorithm := DSS.SolveAlgEnum.StringToOrdinal(Param);
-                if ActiveCircuit.Solution.Algorithm = NCIMSOLVE then
-                    ActiveCircuit.Solution.NCIM_Ready := false;
+                if DSS.ActiveCircuit.Solution.Algorithm = NCIMSOLVE then
+                    DSS.ActiveCircuit.Solution.NCIM_Ready := false;
             end;
             41:
                 DSS.ActiveCircuit.TrapezoidalIntegration := InterpretYesNo(Param);
@@ -770,18 +771,18 @@ begin
             begin
                 DSS.Parser.NextParam;
                 TmpStr := DSS.Parser.StrValue;
-                if ckt.SetElementActive(TmpStr) = 0 then
+                if DSS.ActiveCircuit.SetElementActive(TmpStr) = 0 then
                 begin
                     DoSimpleMsg(DSS, 'Object "%s" not found', [TmpStr], 7100);
                     Exit;
                 end;
 
-                if not (ckt.ActiveCktElement is TPCElement) then
+                if not (DSS.ActiveCircuit.ActiveCktElement is TPCElement) then
                 begin
-                    DoSimpleMsg(DSS, 'Object "%s" is not a valid PC element.', [ckt.ActiveCktElement.FullName], 7103);
+                    DoSimpleMsg(DSS, 'Object "%s" is not a valid PC element.', [DSS.ActiveCircuit.ActiveCktElement.FullName], 7103);
                     Exit;
                 end;
-                pce = ckt.ActiveCktElement as TPCElement;
+                pce := DSS.ActiveCircuit.ActiveCktElement as TPCElement;
 
                 if pce.NumVariables() = 0 then
                 begin
@@ -1180,18 +1181,18 @@ begin
 
                     DSS.Parser.NextParam;
                     TmpStr := DSS.Parser.StrValue;
-                    if ckt.SetElementActive(TmpStr) = 0 then
+                    if DSS.ActiveCircuit.SetElementActive(TmpStr) = 0 then
                     begin
                         DoSimpleMsg(DSS, 'Object "%s" not found', [TmpStr], 7100);
                         Exit;
                     end;
 
-                    if not (ckt.ActiveCktElement is TPCElement) then
+                    if not (DSS.ActiveCircuit.ActiveCktElement is TPCElement) then
                     begin
-                        DoSimpleMsg(DSS, 'Object "%s" is not a valid PC element.', [ckt.ActiveCktElement.FullName], 7103);
+                        DoSimpleMsg(DSS, 'Object "%s" is not a valid PC element.', [DSS.ActiveCircuit.ActiveCktElement.FullName], 7103);
                         Exit;
                     end;
-                    pce = ckt.ActiveCktElement as TPCElement;
+                    pce := DSS.ActiveCircuit.ActiveCktElement as TPCElement;
 
                     if pce.NumVariables() = 0 then
                     begin

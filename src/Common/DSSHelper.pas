@@ -60,7 +60,10 @@ uses
     Executive,
     ControlProxy,
     ExportCIMXML,
-    DynamicExp;
+    DynamicExp,
+    WindGen,
+    fMonitor,
+    Generic5OrderMach;
     
 type
    

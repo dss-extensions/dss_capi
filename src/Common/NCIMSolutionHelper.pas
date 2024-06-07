@@ -6,6 +6,7 @@ uses
     Solution,
     UComplex,
     DSSUcomplex,
+    ucmatrix,
     ArrayDef;
 
 type
@@ -35,6 +36,20 @@ end;
 
 implementation
 
+uses
+    SolutionAlgs,
+    Bus,
+    CktElement,
+    Load,
+    Generator,
+    VSource,
+    YMatrix,
+    DSSGlobals,
+    DSSClassDefs,
+    DSSClass,
+    DSSHelper,
+    KLUSolve;
+
 procedure TNCIMSolutionHelper.NCIM_ApplyCurr();
 // Apply the current injections before solving NCIM
 var
@@ -45,7 +60,7 @@ begin
         if (NCIM_NodePower[i].re = 0) and (NCIM_NodePower[i].im = 0) then
             continue;
 
-        if NCIM_NodeType[i] = PV_Node then
+        if NCIM_NodeType[i] = NCIM_PV_Node then
             NCIM_DoPVBus(i, NCIM_NodePVTarget[i], NCIM_NodePower[i])
         else
             NCIM_DoPQBus(i, NodeV[i], NCIM_NodePower[i]);
@@ -56,7 +71,7 @@ procedure TNCIMSolutionHelper.NCIM_GetPowers();
 // Populate the total power vector before solving
 var
     pElem: TDSSCktElement;
-    valid: Boolean;
+    // valid: Boolean;
     Idx,
     NodeIdx: Integer;
     LdPower,
@@ -65,12 +80,12 @@ var
     pGen: TGeneratorObj;
 begin
     NodeIdx := 0;
-    valid := false;
-    LdPower := CZero;
-    LdVolt := CZero;
-    Gens := CZero;
+    // valid := false;
+    LdPower := 0;
+    LdVolt := 0;
+    Gens := 0;
 
-    for pElem in PCElements do
+    for pElem in DSS.ActiveCircuit.PCElements do
     begin
         if (not pElem.Enabled) then
             continue;
@@ -81,14 +96,14 @@ begin
             case (pElem.DSSObjType and CLASSMASK) of
                 LOAD_ELEMENT:
                 begin
-                    LdPower := cmplx(TLoadObj(pElem).Get_WNominal, TLoadObj(pElem).Get_varNominal);
-                    LdVolt := Solution.NodeV[NodeIdx];
+                    LdPower := cmplx(TLoadObj(pElem).WNominal, TLoadObj(pElem).varNominal);
+                    LdVolt := NodeV[NodeIdx];
 
-                    if (TLoadObj(pElem).FLoadModel = 2) then
+                    if (TLoadObj(pElem).FLoadModel = TLoadModel.ConstZ) then
                         NCIM_DoZBus(NodeIdx, LdVolt, pElem.YPrim)
                     else
                     begin
-                        if (NCIM_NodeType[NodeIdx] = PV_Node) then
+                        if (NCIM_NodeType[NodeIdx] = NCIM_PV_Node) then
                             NCIM_NodePower[NodeIdx] := NCIM_NodePower[NodeIdx] - LdPower
                         else
                             NCIM_NodePower[NodeIdx] := NCIM_NodePower[NodeIdx] + LdPower;
@@ -106,10 +121,10 @@ begin
                             pGen.GenVars.Qnominalperphase := pGen.GenVars.deltaQNom[idx - 1];
 
                             GenS := cmplx(pGen.GenVars.Pnominalperphase, pGen.GenVars.Qnominalperphase);
-                            if (NCIM_NodeType[NodeIdx] = PQ_Node) then
-                                NCIM_NodePower[NodeIdx] := cnegate(NCIM_NodePower[NodeIdx]);
+                            if (NCIM_NodeType[NodeIdx] = NCIM_PQ_Node) then
+                                NCIM_NodePower[NodeIdx] := -NCIM_NodePower[NodeIdx];
 
-                            NCIM_NodeType[NodeIdx] := PV_Node; // Forces the node to be PV
+                            NCIM_NodeType[NodeIdx] := NCIM_PV_Node; // Forces the node to be PV
                             NCIM_NodePower[NodeIdx] := GenS + NCIM_NodePower[NodeIdx];
                             NCIM_GenPower[NodeIdx] := GenS + NCIM_GenPower[NodeIdx];
 
@@ -118,13 +133,13 @@ begin
                         end;
                         4:
                         begin // Generator acts like PQ bus
-                            LdVolt := Solution.NodeV[NodeIdx];
+                            LdVolt := NodeV[NodeIdx];
                             if (Length(pGen.GenVars.deltaQNom) = 0) then
                                 GenS := cmplx(pGen.GenVars.Pnominalperphase, pGen.GenVars.Qnominalperphase)
                             else
                                 GenS := cmplx(pGen.GenVars.Pnominalperphase, pGen.GenVars.deltaQNom[0]);
 
-                            if (NCIM_NodeType[NodeIdx] = PQ_Node) then
+                            if (NCIM_NodeType[NodeIdx] = NCIM_PQ_Node) then
                                 NCIM_NodePower[NodeIdx] := NCIM_NodePower[NodeIdx] - GenS
                             else
                                 NCIM_NodePower[NodeIdx] := NCIM_NodePower[NodeIdx] + GenS;
@@ -133,7 +148,7 @@ begin
                         end
                     else // Constant impedance
                         begin
-                            LdVolt := Solution.NodeV[NodeIdx];
+                            LdVolt := NodeV[NodeIdx];
                             NCIM_DoZBus(NodeIdx, LdVolt, pGen.YPrim);
                         end;
                     end;
@@ -141,7 +156,7 @@ begin
                 end;
                 FAULTOBJECT:
                 begin
-                    LdVolt := Solution.NodeV[NodeIdx];
+                    LdVolt := NodeV[NodeIdx];
                     NCIM_DoZBus(NodeIdx, LdVolt, pElem.YPrim);
                 end;
             else
@@ -175,7 +190,7 @@ const
     LCoords: array [0..3] of array [0..1] of Integer = ((0, 0), (1, 1), (0, 1), (1, 0));
 
 begin
-    Temp := CZero;
+    Temp := 0;
     Pow := cong(Power);
     V := NodeV[i];
     PowN := Power;
@@ -206,7 +221,7 @@ begin
 
     // Add delta V to NCIM_deltaF in the voltage regulation subsection
     VMag := ctopolar(V).mag;
-    GCoord := (ActiveCircuit.NumNodes * 2) + NCIM_PVBusIdx[i] - 1;
+    GCoord := (DSS.ActiveCircuit.NumNodes * 2) + NCIM_PVBusIdx[i] - 1;
     VError := VTarget - VMag;
     NCIM_deltaF[GCoord - 1].re := VError;
 
@@ -214,7 +229,7 @@ begin
     GCoordY := (i * 2) - 1;
     
     // Adds the regulation coefficients
-    Temp := -1 * V.re / VMag
+    Temp := -1 * V.re / VMag;
     SetMatrixElement(NCIM_Jacobian, GCOord, GCoordY + 0, @Temp);
     Temp := -1 * V.im / VMag;
     SetMatrixElement(NCIM_Jacobian, GCOord, GCoordY + 1, @Temp);
@@ -242,7 +257,7 @@ var
 const
     LCoords: array [0..3] of array [0..1] of Integer = ((0, 0), (1, 1), (0, 1), (1, 0));
 begin
-    Temp := CZero;
+    Temp := 0;
     Pow := cong(Power);
     Vc2 := cong(V) * cong(V);
     FaVr := cmplx(-1, 0) / Vc2;
@@ -311,9 +326,10 @@ end;
 procedure TNCIMSolutionHelper.NCIM_InitVectors();
 // Initializes the vectors for the node total power in NCIM
 var
-    myBName: String;
+    // myBName: String;
     j,
     i: Integer;
+    bus: TDSSBus;
 begin
     SetLength(NCIM_NodePower, 1);
     SetLength(NCIM_GenPower, 1);
@@ -323,40 +339,35 @@ begin
     SetLength(NCIM_NodeLimits, 1);
     SetLength(NCIM_NodeNumGen, 1);
 
-    NCIM_NodePower[0] := CZero;
+    NCIM_NodePower[0] := 0;
     NCIM_NodeType[0] := -1; // means ignore
-    myBName := '';
-    with ActiveCircuit do
+    // myBName := '';
+    for i := 0 to (DSS.ActiveCircuit.NumBuses - 1) do
     begin
-        for i := 0 to (NumBuses - 1) do
+        // myBName := DSS.ActiveCircuit.BusList.Get(i + 1);
+        bus := DSS.ActiveCircuit.Buses[i + 1];
+        for j := 0 to (bus.NumNodesThisBus - 1) do // TODO: BUG: j is not used
         begin
-            myBName := BusList.Get(i + 1);
-            with Buses[i + 1] do
-            begin
-                for j := 0 to (NumNodesThisBus - 1) do
-                begin
-                    SetLength(NCIM_NodePower, Length(NCIM_NodePower) + 1);
-                    NCIM_NodePower[High(NCIM_NodePower)] := 0;
+            SetLength(NCIM_NodePower, Length(NCIM_NodePower) + 1);
+            NCIM_NodePower[High(NCIM_NodePower)] := 0;
 
-                    SetLength(NCIM_GenPower, Length(NCIM_GenPower) + 1);
-                    NCIM_GenPower[High(NCIM_GenPower)] := 0;
+            SetLength(NCIM_GenPower, Length(NCIM_GenPower) + 1);
+            NCIM_GenPower[High(NCIM_GenPower)] := 0;
 
-                    SetLength(NCIM_NodeType, Length(NCIM_NodeType) + 1);
-                    NCIM_NodeType[High(NCIM_NodeType)] := PQ_Node; // Initially, all the buses are PQ
+            SetLength(NCIM_NodeType, Length(NCIM_NodeType) + 1);
+            NCIM_NodeType[High(NCIM_NodeType)] := NCIM_PQ_Node; // Initially, all the buses are PQ
 
-                    SetLength(NCIM_PVBusIdx, Length(NCIM_PVBusIdx) + 1);
-                    NCIM_PVBusIdx[High(NCIM_PVBusIdx)] := 0;
+            SetLength(NCIM_PVBusIdx, Length(NCIM_PVBusIdx) + 1);
+            NCIM_PVBusIdx[High(NCIM_PVBusIdx)] := 0;
 
-                    SetLength(NCIM_NodePVTarget, Length(NCIM_NodePVTarget) + 1);
-                    NCIM_NodePVTarget[High(NCIM_NodePVTarget)] := 0;
+            SetLength(NCIM_NodePVTarget, Length(NCIM_NodePVTarget) + 1);
+            NCIM_NodePVTarget[High(NCIM_NodePVTarget)] := 0;
 
-                    SetLength(NCIM_NodeLimits, Length(NCIM_NodeLimits) + 1);
-                    NCIM_NodeLimits[High(NCIM_NodeLimits)] := 0;
+            SetLength(NCIM_NodeLimits, Length(NCIM_NodeLimits) + 1);
+            NCIM_NodeLimits[High(NCIM_NodeLimits)] := 0;
 
-                    SetLength(NCIM_NodeNumGen, Length(NCIM_NodeNumGen) + 1);
-                    NCIM_NodeNumGen[High(NCIM_NodeNumGen)] := 0;
-                end;
-            end;
+            SetLength(NCIM_NodeNumGen, Length(NCIM_NodeNumGen) + 1);
+            NCIM_NodeNumGen[High(NCIM_NodeNumGen)] := 0;
         end;
     end;
 end;
@@ -377,15 +388,15 @@ const
 
 begin
     // Sets the initial solution using the calculated angles and the buses voltage bases
-    TempPolar := ctopolar(CZero);
+    TempPolar := ctopolar(0);
     mykVBase := 0.0;
     Aidx := 0;
 
     // Ignores the nodes attached to the slack bus
     SlackNumNodes := 1;
-    for i := SlackNumNodes to ActiveCircuit.NumNodes do
+    for i := SlackNumNodes to DSS.ActiveCircuit.NumNodes do
     begin
-        mykVBase := Buses[MapNodeToBus[i].BusRef].kVBase * 1e3;
+        mykVBase := DSS.ActiveCircuit.Buses[DSS.ActiveCircuit.MapNodeToBus[i].BusRef].kVBase * 1e3;
         TempPolar := ctopolar(NodeV[i]);
         TempPolar.mag := mykVBase;
         TempPolar.ang := myAng[AIdx];
@@ -395,7 +406,7 @@ begin
             AIdx := 0;
     end;
     // Now add the slack bus data
-    pElem := CktElements.First;
+    pElem := DSS.ActiveCircuit.CktElements.First();
     TempPolar.mag := ((pElem.kVBase * 1e3) / SQRT3) * pElem.PerUnit;
     BaseAng := pElem.Angle * Pi / 180;
     for i := 1 to 3 do
@@ -413,7 +424,7 @@ procedure TNCIMSolutionHelper.NCIM_InitPQGen();
 var
     pGen: TGeneratorObj;
 begin
-    for pGen in ActiveCircuit.Generators do
+    for pGen in DSS.ActiveCircuit.Generators do
     begin
         if (pGen.Enabled) and (pGen.GenModel <> 3) then
         begin
@@ -431,7 +442,7 @@ var
     Volt: Complex;
     Qlocal: Double;
 begin
-    for pGen in ActiveCircuit.Generators do
+    for pGen in DSS.ActiveCircuit.Generators do
     begin
         if not pGen.Enabled then
             continue;
@@ -457,12 +468,12 @@ procedure TNCIMSolutionHelper.NCIM_ReversePQ2PV();
 var
     pGen: TGeneratorObj;
 begin
-    for pGen in ActiveCircuit.Generators do
+    for pGen in DSS.ActiveCircuit.Generators do
     begin
         if (Flg.NCIM_ExPV in pGen.Flags) then
         begin
             pGen.GenModel := 3;
-            Exclude(Flg.NCIM_ExPV, pGen.Flags);
+            Exclude(pGen.Flags, Flg.NCIM_ExPV);
         end;
     end;
 end;
@@ -473,18 +484,18 @@ var
     i: Integer;
     NNodes: Longword;
 begin
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         // 1. Calculate the Y Bus, PDE only
-        BuildYMatrix(PDE_ONLY, false); // Does not realloc V, I
+        BuildYMatrix(DSS, PDE_ONLY, false); // Does not realloc V, I
         NCIM_InitVectors();
         // 2. Performs a flat solution to get the initial voltage estimation
         ZeroInjCurr(); // All to 0
         GetSourceInjCurrents(); // sources
         // Solve for voltages 
         // Note:NodeV[0] = 0 + j0 always
-        if (LogEvents) then
-            LogThisEvent('Solve Sparse Set DoNCIMSolution ...');
+        if DSS.ActiveCircuit.LogEvents then
+            DSS.LogThisEvent('Solve Sparse Set DoNCIMSolution ...');
 
         if InitY then
         begin
@@ -514,27 +525,23 @@ var
     re,
     im: Double;
     col,
-    Row,
-    myhY: Nativeuint;
+    Row: Nativeuint;
 begin
-    if ASSIGNED(ActiveCircuit) then
+    if hY = 0 then
     begin
-        myhY := hY;
-        if myhY = 0 then
-            DoSimpleMsg('Y Matrix not Built.', 222)
-        else
-        begin
-            // this compresses the entries if necessary - no extra work if already solved
-            FactorSparseMatrix(myhY);
-            GetNNZ(myhY, @nNZ);
-            GetSize(myhY, @NBus); // we should already know this
-
-            SetLength(NCIM_YCol, nNZ);
-            SetLength(NCIM_YRow, nNZ);
-            SetLength(NCIM_Y, nNZ);
-            GetTripletMatrix(myhY, nNZ, @(NCIM_YRow[0]), @(NCIM_YCol[0]), @(NCIM_Y[0]));
-        end;
+        DoSimpleMsg(DSS, 'Y Matrix not Built.', 222);
+        Exit;
     end;
+
+    // this compresses the entries if necessary - no extra work if already solved
+    FactorSparseMatrix(hY);
+    GetNNZ(hY, @nNZ);
+    GetSize(hY, @NBus); // we should already know this
+
+    SetLength(NCIM_YCol, nNZ);
+    SetLength(NCIM_YRow, nNZ);
+    SetLength(NCIM_Y, nNZ);
+    GetTripletMatrix(hY, nNZ, @(NCIM_YRow[0]), @(NCIM_YCol[0]), @(NCIM_Y[0]));
 end;
 
 procedure TNCIMSolutionHelper.NCIM_CalcInjCurr(NCIM_InitGenQ: Boolean);
@@ -555,7 +562,7 @@ begin
     SetLength(NCIM_deltaZ, GSize); // Resizes the voltage mismatch vector including delta Q spaces
 
     for i := 0 to (GSize - 1) do
-        NCIM_deltaF[i] := CZero;
+        NCIM_deltaF[i] := 0;
 
     // Multiplies the latest solution (V) by the Y Matrix
     for i := 0 to (Length(NCIM_Y) - 1) do
@@ -568,7 +575,7 @@ begin
 
     // The first 6 elements are equal to 0
     for i := 0 to 5 do
-        NCIM_deltaF[i] := CZero;
+        NCIM_deltaF[i] := 0;
 end;
 
 function TNCIMSolutionHelper.NCIM_GetNumGenerators(InitQ: Boolean): Integer;
@@ -601,14 +608,11 @@ begin
     for Idx := 0 to High(NCIM_NodeNumGen) do
     begin
         NCIM_NodeNumGen[Idx] := 0;
-        NCIM_NodeLimits[Idx] := CZero;
+        NCIM_NodeLimits[Idx] := 0;
     end;
 
-    if (NumGens <= 0) then
-        Exit;
-
     i := -1;
-    for pGen in ActiveCircuit.Generators do
+    for pGen in DSS.ActiveCircuit.Generators do
     begin
         inc(i);
         if not pGen.Enabled then
@@ -636,7 +640,7 @@ begin
                 // We could remove it later for a cleaner implementation (we need to update the checks elsewhere too)
                 pGen.GenModel := 4;
 
-                Include(Flg.NCIM_ExPV, pGen.Flags);
+                Include(pGen.Flags, Flg.NCIM_ExPV);
                 continue;
             end;
 
@@ -708,10 +712,10 @@ var
     IdxTmp: array of Integer;
     PQChecked: array of Integer;
 begin
-    if ActiveCircuit.Generators.ListSize = 0 then
+    if DSS.ActiveCircuit.Generators.Count = 0 then
         Exit;
 
-    GenIdx := ActiveCircuit.NumNodes * 2;
+    GenIdx := DSS.ActiveCircuit.NumNodes * 2;
     SetLength(QDelta, 1);
     QDelta[High(QDelta)] := 0; // leaves the first one as zero, to avoid subtractions in the below
 
@@ -724,9 +728,8 @@ begin
     SetLength(qNodeRef, 0);
     SetLength(qNodeRefPQ, 0);
     SetLength(PQChecked, 0);
-    pGen := Generators.First;
 
-    for pGen in ActiveCircuit.Generators do
+    for pGen in DSS.ActiveCircuit.Generators do
     begin
         if not pGen.Enabled then
             continue;
@@ -783,7 +786,7 @@ begin
             if not myPVOK then
             begin
                 pGen.GenModel := 4; // If exceeds the limits changes the generator to model 4 (PQ bus)
-                Include(Flg.NCIM_ExPV, pGen.Flags);
+                Include(pGen.Flags, Flg.NCIM_ExPV);
 
                 with pGen.GenVars do
                 begin
@@ -845,7 +848,7 @@ begin
 
                     if Checked < 0 then
                     begin
-                        myVMax := pGen.Get_VBase * pGen.Vpu;
+                        myVMax := pGen.VBase * pGen.Vpu;
                         for j := 0 to (pGen.NPhases - 1) do
                         begin
                             Volt := NodeV[pGen.NodeRef[j + 1]];
@@ -890,7 +893,7 @@ begin
 
                     if (Flg.NCIM_ExPV in pGen.Flags) then
                     begin
-                        Exclude(Flg.NCIM_ExPV, pGen.Flags);
+                        Exclude(pGen.Flags, Flg.NCIM_ExPV);
                     end;
                 end;
             end;
@@ -921,7 +924,7 @@ begin
     //Initialization
     for i := 0 to High(Values) do
         Values[i] := 0;
-    myValue := CZero;
+    myValue := 0;
     GRow := 0;
     GCol := 0;
 
@@ -966,19 +969,18 @@ begin
 
     // Add the Voltage regulation cells to the Jacobian for later use by PV buses
     // Update 03/05/2024 - not needed any more
-    NumGens := ActiveCircuit.Generators.ListSize;
-    for pGen in ActiveCircuit.Generators do
+    for pGen in DSS.ActiveCircuit.Generators do
     begin
         if ((pGen.Enabled) and (pGen.GenModel = 3)) then
-            pGen.InitPVBusJac();
+            pGen.NCIM_InitPVBusJac();
     end;
 
     // Clears the total power vector
     for j := 0 to High(NCIM_NodePower) do
     begin
-        NCIM_NodePower[j] := CZero;
-        NCIM_GenPower[j] := CZero;
-        NCIM_NodeType[j] := PQ_Node;
+        NCIM_NodePower[j] := 0;
+        NCIM_GenPower[j] := 0;
+        NCIM_NodeType[j] := NCIM_PQ_Node;
     end;
 end;
 
@@ -1000,9 +1002,7 @@ begin
     if NCIM_InitGenQ then 
     begin
         // If the system needs to be initialized
-        
         NCIM_InitPQGen(); // Initialize PQ like generators
-        setLength(PV2PQList, 0);
     end;
 
     if (SystemYChanged or not NCIM_Ready) then
@@ -1016,14 +1016,14 @@ begin
         NCIM_GetPowers(); // Populate the total power vector
         NCIM_ApplyCurr(); // Adjust Jacobian and populate the currents vector
 
-        if ActiveCircuit.LogEvents then
-            LogThisEvent('Solve Power flow DoNCIMSolution ...');
+        if DSS.ActiveCircuit.LogEvents then
+            DSS.LogThisEvent('Solve Power flow DoNCIMSolution ...');
 
         // Solves the Jacobian
-        SolveSparseSet(NCIM_Jacobian, @NCIM_deltaZ[0], @NCIM_deltaF[0]);
+        SolveSparseSet(NCIM_Jacobian, pComplexArray(@NCIM_deltaZ[0]), pComplexArray(@NCIM_deltaF[0]));
 
         //Updates the Voltage vector
-        for i := 1 to ActiveCircuit.NumNodes do
+        for i := 1 to DSS.ActiveCircuit.NumNodes do
         begin
             dVIdx := (i - 1) * 2;
             dV := cmplx(NCIM_deltaZ[dvIdx].re, NCIM_deltaZ[dVIdx + 1].re);
@@ -1038,6 +1038,8 @@ begin
 end;
 
 function TNCIMSolutionHelper.NCIM_Converged(): Boolean;
+var
+    i: Integer;
 begin
     Result := false; // DSS-Extensions: this should match the original (non-init'ed) behavior
     for i := 0 to High(NCIM_deltaF) do

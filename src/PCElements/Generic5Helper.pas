@@ -12,14 +12,14 @@ uses
 
 type
     TGeneric5ObjHelper = class helper for TGeneric5Obj
-    private:
+    private
         function Get_FMonObj(): TFMonitorObj;
         function Get_FMonObj2(): TFMonitorObj;
         procedure Set_FMonObj(value: TFMonitorObj);
         procedure Set_FMonObj2(value: TFMonitorObj);
-    public:
-        property FMonObj read Get_FMonObj write Set_FMonObj;
-        property FMonObj2 read Get_FMonObj2 write Set_FMonObj2;
+    public
+        property FMonObj: TFMonitorObj read Get_FMonObj write Set_FMonObj;
+        property FMonObj2: TFMonitorObj read Get_FMonObj2 write Set_FMonObj2;
     end;
 
 implementation

@@ -2323,6 +2323,7 @@ exports
    SolveSparseSet,
    DeleteSparseSet,
    AddMatrixElement,
+   SetMatrixElement,
    GetSize,
    GetNNZ,
    GetSparseNNZ,

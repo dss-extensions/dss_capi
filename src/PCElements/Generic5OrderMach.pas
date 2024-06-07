@@ -17,10 +17,11 @@ uses
     PCClass,
     PCElement,
     ucmatrix,
-    ucomplex,
+    ucomplex, DSSUComplex,
     ArrayDef,
     // LoadShape,
-    Dynamics;
+    Dynamics,
+    DSSObject;
 
 type
 {$SCOPEDENUMS ON}
@@ -48,9 +49,9 @@ type
         Duty = 20,
         Debugtrace = 21,
         P_refkW = 22,
-        V_refkVLN = 25,
         Q_refkVAr = 23,
         Cluster_num = 24,
+        V_refkVLN = 25,
         ctrl_mode = 26,
         QV_flag = 27,
         kcd = 28,
@@ -191,9 +192,8 @@ type
         Yeq: Complex; // Y at nominal voltage
 
         // Dynamics variables
-        Xp,
-        T0p // Rotor time constant
-        : Double;
+        Xp: Double;
+        // T0p: Double // Rotor time constant
 
         // X,V
         X_var: pdoubleArray;
@@ -230,7 +230,6 @@ type
 
         P_ref, P_RefTotal, Q_ref, Q_RefTotal, V_ref: Double;//Power and voltage goal of the machine
         DPx: Double;
-        ctrl_mode: Integer; //ctrl_mode 0-local droop  V_ref = V_DG_0, P_ref = P_DG_0
 
         P_DG, Q_DG: Double; //power of all phases totally in one
         V_DG: Double;// the voltage magetitude of current bus
@@ -296,14 +295,10 @@ type
         //Gradient ; public
         Alpha, Alpha1, Alpha2, Alpha3,
         Gradient, 
-        Gradient1, Gradient2, Gradient3: Double; --- NONE OF THESE 3 ARE INITIALIZED
+        Gradient1, Gradient2, Gradient3: Double;
 
         AlphaP, AlphaP1, AlphaP2, AlphaP3: Double;// for active P control
         GradientP: Double;
-
-        FFMonObj, FFMonObj2: TDSSObject;
-        cluster_num, cluster_num2: Integer;
-        NdNumInCluster, NdNumInCluster2: Integer;
 
         procedure InitModel(V012, I012: TSymCompArray);
 
@@ -326,35 +321,43 @@ type
         procedure Update_PQlimits(); // real time limits check; can also be used in power flow and simulation
         procedure InfoPublish();
     PROTECTED
-        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
+        FFMonObj, FFMonObj2: TDSSObject;
+
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure DoDynamicMode();
 
     PUBLIC
+        ctrl_mode: Integer; //ctrl_mode 0-local droop  V_ref = V_DG_0, P_ref = P_DG_0
+        cluster_num: Integer;
+        NdNumInCluster: Integer;
+        // cluster_num2: Integer;
+        // NdNumInCluster2: Integer;
+
         // DailyDispShapeObj: TLoadShapeObj; // Daily Generator Shape for this load
         // DutyShapeObj: TLoadShapeObj; // Shape for this generator
         // YearlyShapeObj: TLoadShapeObj; // Shape for this Generator
 
-        constructor Create(ParClass: TDSSClass; const SourceName: String);
+        constructor Create(ParClass: TDSSClass; const Generic5ObjName: String);
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure RecalcElementData(); OVERRIDE; // Generally called after Edit is complete to recompute variables
         procedure CalcYPrim(); OVERRIDE; // Calculate Primitive Y matrix
+        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure IntegrateABCD();
         procedure CalcDynamic(var V012, I012: TSymCompArray);
         procedure CalcPFlow(var V012, I012: TSymCompArray);
         // for abc phases: the below 2
         procedure CalcDynamicVIabc(var Vabc, Iabc: pComplexArray);
         procedure CalcPFlowVIabc(var Vabc, Iabc: pComplexArray);
-        // procedure SetNominalPower();
+        procedure SetNominalPower();
 
         function InjCurrents(): Integer; OVERRIDE;
 
         function NumVariables: Integer; OVERRIDE;
-        procedure GetAllVariables(States: pDoubleArray); OVERRIDE;
+        procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
         function Get_Variable(i: Integer): Double; OVERRIDE;
         procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
@@ -379,7 +382,10 @@ uses
     Math,
     MathUtil,
     Utilities,
-    Generic5Helper;
+    Generic5Helper,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 type
     TObj = TGeneric5Obj;
@@ -452,7 +458,7 @@ begin
     PropertyOffset[ord(TProp.kcd)] := ptruint(@obj.kcd);
     PropertyOffset[ord(TProp.kcq)] := ptruint(@obj.kcq);
     PropertyOffset[ord(TProp.kqi)] := ptruint(@obj.kqi);
-    PropertyOffset[ord(TProp.kV)] := ptruint(@obj.kVGeneratorBase);S
+    PropertyOffset[ord(TProp.kV)] := ptruint(@obj.kVGeneratorBase);
     PropertyOffset[ord(TProp.Pfctr1)] := ptruint(@obj.Pfctr1); //for pmpp
     PropertyOffset[ord(TProp.Pfctr2)] := ptruint(@obj.Pfctr2); //for pmpp
     PropertyOffset[ord(TProp.Pfctr3)] := ptruint(@obj.Pfctr3); //for pmpp
@@ -463,8 +469,8 @@ begin
     PropertyOffset[ord(TProp.Volt_Trhd)] := ptruint(@obj.Volt_Trhd);
     PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.kVArating);
 
-    PropertyOffset[ord(TProp.MVA)] := ptruint(@obj.GenVars.kVArating);
-    PropertyScale[ord(TProp.MVA)] := 1000.0;
+    // PropertyOffset[ord(TProp.MVA)] := ptruint(@obj.GenVars.kVArating);
+    // PropertyScale[ord(TProp.MVA)] := 1000.0;
 
     PropertyOffset[ord(TProp.kW)] := ptruint(@obj.WBase);
     PropertyScale[ord(TProp.kW)] := 1000;
@@ -584,7 +590,7 @@ begin
         ord(TProp.PbiaskW):
             Update_kWbase_by_Fctrs();// Update Pmax; will cover direct Pmax input by these
         ord(TProp.Phases):
-            TODO: Set_NPhases side-effects?
+            // TODO: Set_NPhases side-effects?
             SetNcondsForConnection(self); // Force Reallocation of terminal info
         ord(TProp.kV):
         begin
@@ -632,7 +638,7 @@ begin
             Q_ref2 := Q_ref;
             Q_ref3 := Q_ref;
         end;
-        prd(TProp.V_refkVLN):
+        ord(TProp.V_refkVLN):
         begin
             V_ref1 := V_ref;
             V_ref2 := V_ref;
@@ -660,6 +666,7 @@ begin
     obj.Update_PQlimits();
     obj.RecalcElementData();
     obj.YPrimInvalid := true;
+    Result := True;    
 end;
 
 procedure TGeneric5Obj.MakeLike(OtherPtr: Pointer);
@@ -676,9 +683,15 @@ begin
     Name := LowerCase(Generic5ObjName);
     DSSObjType := ParClass.DSSClassType; // Same as Parent Class
 
+    // TODO: BUG: These three are neither initialized nor modified at all in the original code,
+    //       but used later on
+    Gradient1 := 0;
+    Gradient2 := 0;
+    Gradient3 := 0;
+
     // Set some basic circuit element properties
-    Nphases := 3; // typical DSS default for a circuit element
-    Fnconds := 3; // defaults to delta
+    Connection := 1; // Delta Default
+    FNphases := 3; // typical DSS default for a circuit element
     Yorder := 0; // To trigger an initial allocation
     Nterms := 1; // forces allocations of terminal quantities
     WBase := -1;//00; // has to be set in DSS scripts
@@ -693,7 +706,6 @@ begin
     // ShapeIsActual := false;
     Generic5SwitchOpen := false;
 
-    Connection := 1; // Delta Default
 
     kVGeneratorBase := 12.47;
 
@@ -779,6 +791,7 @@ begin
 
     z_dfs_plot := 0.0;
 
+    // SetNcondsForConnection(self);
     RecalcElementData();
 end;
 
@@ -807,7 +820,8 @@ end;
 procedure TGeneric5Obj.RecalcElementData();
 var
     Rs, Xs,
-    Rr, Xr,
+    // Rr, 
+    Xr,
     Xm, ZBase: Double;
     modetest: Boolean;
     numPhase, DotPos: Integer;
@@ -816,14 +830,14 @@ begin
     ZBase := Sqr(kVGeneratorBase) / kVArating * 1000.0;
     Rs := 0.0053 * ZBase;
     Xs := 0.106 * ZBase;
-    Rr := 0.007 * ZBase;
+    // Rr := 0.007 * ZBase;
     Xr := 0.12 * ZBase;
     Xm := 4.0 * ZBase;
 
     Xp := Xs + (Xr * Xm) / (Xr + Xm);
     Zsp := Cmplx(Rs, Xp);
     Yeq := Cmplx(0.0, -1.0 / ZBase); // vars only for power flow
-    T0p := (Xr + Xm) / (MachineData.w0 * Rr);
+    // T0p := (Xr + Xm) / (MachineData.w0 * Rr);
     Is1 := 0;
     V1 := 0;
     Is2 := 0;
@@ -1149,7 +1163,7 @@ end;
 procedure TGeneric5Obj.update_pV_f_CC_M2(); //for power flow
 var
     j: Integer;
-    num_vleader: Integer;
+    // num_vleader: Integer;
     Bii: Double;
 begin
     if not cc_switch then
@@ -1164,7 +1178,7 @@ begin
 
     //avg ctrl, under V120, I120
 
-    num_vleader := 1;
+    // num_vleader := 1;
     if ctrl_mode = 0 then
     begin
         //u = gradient + pV_f_CC; pV_f_CC = -alpha + sum(alpha_j)
@@ -1212,8 +1226,8 @@ end;
 procedure TGeneric5Obj.update_pV_f_CC(); //used in dynamic mode to update alpha
 var
     p_mode,
-    j,
-    num_vleader: Integer;
+    j: Integer;
+    // num_vleader: Integer;
     Bii,
     us_i, ul_i: Double;
 begin
@@ -1229,20 +1243,20 @@ begin
     if FMonObj = nil then
         Exit;
 
-    num_vleader := 1;
+    // num_vleader := 1;
     if ctrl_mode <> 0 then
         Exit;
 
     //avg ctrl, under V120, I120
     p_mode := 0;
     if FMonObj <> nil then
-        p_mode := FMonObj.Get_P_mode();
+        p_mode := FMonObj.p_mode;
     
     //u = gradient + pV_f_CC; pV_f_CC = -alpha + sum(alpha_j)
     
     Bii := ActiveCircuit.Solution.NodeYii[NodeRef[1]].im;
 
-    if ActiveCircuit.Solution.DynaVars.SolutionMode = DYNAMICMODE then
+    if ActiveCircuit.Solution.DynaVars.SolutionMode = TSolveMode.DYNAMICMODE then
     begin
         //Ip control
         if FMonObj.ld_fm_info[0].b_Curt_Ctrl then // curtailment algorithm
@@ -1350,7 +1364,7 @@ begin
                 vl_alphaP_dg := alphaP;
 
                 vl_V_ref_dg := V_ref;
-                if ActiveCircuit.Solution.DynaVars.SolutionMode = DYNAMICMODE then
+                if ActiveCircuit.Solution.DynaVars.SolutionMode = TSolveMode.DYNAMICMODE then
                 begin
                     z_dfs_plot := z_dfs; // defense value
                 end;
@@ -1393,11 +1407,11 @@ procedure TGeneric5Obj.Update_PQlimits();
 begin
     if PQpriority = 1 then //P prior by default
     begin
-        TODO: the original comparison probably compares W and kW
+        // TODO: BUG: the original comparison probably compares W and kW
         if (Pmax <= 0) or (Pmax > Wbase) then
             Pmax := WBase;// first value is set to be kWbase;   when kWbase is set, Pmax will be update in edit;
         
-        TODO: why no conditional?
+        // TODO: BUG: why no conditional?
         Pmax := WBase;//if PQpriority=1 then
         if (1000 * kVArating) >= P_DG then //  Pmax P_DG
             Qmax := sqrt(kVArating * 1000 * kVArating * 1000 - P_DG * P_DG) // PMax*PMax)//
@@ -1426,7 +1440,6 @@ end;
 
 procedure TGeneric5Obj.CalcDynamic(var V012, I012: TSymCompArray);
 var
-    Pref3: Double;
     temp: Double;
 begin
     if ctrl_mode <> 0 then
@@ -1526,7 +1539,6 @@ var
     Curr1,
     Curr2,
     Curr3: Complex;
-    temp_pref, temp_qref, temp_vref: Double;
     tempAngleR: Double;
 begin
     if ctrl_mode = 0 then // avg ctrl
@@ -1654,7 +1666,7 @@ begin
     update_pV_f_CC(); //AlphaP, Alpha
     p_mode := 0;
     if FMonObj <> nil then
-        p_mode := FMonObj.Get_P_mode();
+        p_mode := FMonObj.p_mode;
     if (p_mode = 1) and (cc_switch) then //if delta P = p_trans_ref - p_trans
     begin //balance p_trans
         AlphaP := pV_f_CC[1]; //alpha_p
@@ -1752,7 +1764,7 @@ begin
     //alpha is implemented in M2
     p_mode := 0;
     if FMonObj <> nil then
-        p_mode := FMonObj.Get_P_mode();
+        p_mode := FMonObj.p_mode;
 
     if (p_mode = 1) and cc_switch then //if delta P = p_trans_ref - p_trans
     begin
@@ -1838,7 +1850,7 @@ begin
         //will never be used
         //will be in CalcPFlow
         Exit;
-    end // avg ctrl
+    end; // avg ctrl
     
     //direct phase ctrl
     if fnphases = 3 then
@@ -1937,7 +1949,7 @@ begin
             begin
                 Q_DG1 := Qmin_phase;
             end;
-            Curr1 := cong(Cdiv(Cmplx(P_dg1, Q_DG1), tempV1));
+            Curr1 := cong(Cmplx(P_dg1, Q_DG1) / tempV1);
             if (Q_DG2 > Qmax_phase) then
             begin
                 Q_DG2 := Qmax_phase;
@@ -1947,7 +1959,7 @@ begin
             begin
                 Q_DG2 := Qmin_phase;
             end;
-            Curr2 := cong(Cdiv(Cmplx(P_dg2, Q_DG2), tempV2));
+            Curr2 := cong(Cmplx(P_dg2, Q_DG2) / tempV2);
             if (Q_DG3 > Qmax_phase) then
             begin
                 Q_DG3 := Qmax_phase;
@@ -1957,7 +1969,7 @@ begin
             begin
                 Q_DG3 := Qmin_phase;
             end;
-            Curr3 := cong(Cdiv(Cmplx(P_dg3, Q_DG3), tempV3));
+            Curr3 := cong(Cmplx(P_dg3, Q_DG3) / tempV3);
         end;
         Q_DG := Q_DG1 + Q_DG2 + Q_DG3;
 
@@ -2042,7 +2054,7 @@ begin
             else
             if (temp_qref < Qmin_phase) then
                 temp_qref := Qmin_phase;
-            Curr1 := cong(Cdiv(Cmplx(temp_pref, temp_qref), tempV1));
+            Curr1 := cong(Cmplx(temp_pref, temp_qref) / tempV1);
             case ctrl_mode of
                 1:
                 begin
@@ -2116,16 +2128,16 @@ begin
             3:
             begin
                 // Calculate E1 based on Pos Seq only
-                Phase2SymComp(ITerminal, @I012); // terminal currents
+                Phase2SymComp(ITerminal, pComplexArray(@I012));   // terminal currents
 
                 // Voltage behind Zsp  (transient reactance), volts
                 for i := 1 to FNphases do
-                    Vabc[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]] // Wye Voltage
-                Phase2SymComp(@Vabc, @V012);
+                    Vabc[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]]; // Wye Voltage
+                Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
             end;
         else
             DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Motors. %s has %d phases.', [FullName, Fnphases], 5672);
-            SolutionAbort := true;
+            DSS.SolutionAbort := TRUE;
         end;
     end;
 
@@ -2196,7 +2208,7 @@ begin
             Y := Cmplx(EPSILON, 0.0);
 
         if Connection = 1 then
-            Y := CDivReal(Y, 3.0); // Convert to delta impedance
+            Y := Y / 3.0; // Convert to delta impedance
         Y.im := Y.im / FreqMultiplier; // adjust for frequency
         Yij := -Y;
         for i := 1 to Fnphases do
@@ -2217,7 +2229,7 @@ begin
             end;
         end;
         Exit;
-    end
+    end;
 
     //  Typical code for a regular power flow  model
     //  Borrowed from Generator object
@@ -2282,7 +2294,7 @@ begin
     // so that CalcVoltages doesn't fail
     // This is just one of a number of possible strategies but seems to work most of the time
     for i := 1 to Yorder do
-        Yprim_Series.SetElement(i, i, CmulReal(Yprim_Shunt.Getelement(i, i), 1.0e-10));
+        Yprim_Series.SetElement(i, i, Yprim_Shunt.Getelement(i, i) * 1.0e-10);
 
     // copy YPrim_shunt into YPrim; That's all that is needed for most PC Elements
     YPrim.CopyFrom(YPrim_Shunt);
@@ -2298,15 +2310,15 @@ begin
     if ctrl_mode = 0 then
     begin
         // Convert abc voltages to 012
-        Phase2SymComp(V, @V012);
+        Phase2SymComp(V, pComplexArray(@V012));
 
         // compute I012
-        if ActiveCircuit.Solution.DynaVars.SolutionMode = DYNAMICMODE then
+        if ActiveCircuit.Solution.DynaVars.SolutionMode = TSolveMode.DYNAMICMODE then
             CalcDynamic(V012, I012)
         else // All other modes are power flow modes
             CalcPFlow(V012, I012);
 
-        SymComp2Phase(I, @I012); // convert back to I abc
+        SymComp2Phase(I, pComplexArray(@I012));       // convert back to I abc
     end // avg ctrl
     else //direct phase ctrl
     begin
@@ -2315,7 +2327,7 @@ begin
             //3-phase ctrl
             // use Vterminal Iterminal directly instead of computing 120
 
-            if ActiveCircuit.Solution.DynaVars.SolutionMode = DYNAMICMODE then
+            if ActiveCircuit.Solution.DynaVars.SolutionMode = TSolveMode.DYNAMICMODE then
                 CalcDynamicVIabc(V, I) //if ((ctrl_mode=4)and (fnphases=3))
             else 
                 //All other modes are power flow modes
@@ -2328,7 +2340,7 @@ begin
             // use Vterminal Iterminal directly instead of computing 120
             // actually there is no 120 for single phase
 
-            if ActiveCircuit.Solution.DynaVars.SolutionMode = DYNAMICMODE then
+            if ActiveCircuit.Solution.DynaVars.SolutionMode = TSolveMode.DYNAMICMODE then
                 CalcDynamicVIabc(V, I) //if (fnphases=1)
             else // All other modes are power flow modes
                 CalcPflowVIabc(V, I); // //if (fnphases=1)
@@ -2378,8 +2390,7 @@ begin
     IterminalUpdated := TRUE;
 
     for i := 1 to Nphases do
-        Caccum(InjCurrent[i], -Iterminal[i]);
-    // When this is done, ITerminal is up to date
+        InjCurrent[i] -= ITerminal[i];
 end;
 
 procedure TGeneric5Obj.CalcInjCurrentArray();
@@ -2421,7 +2432,10 @@ begin
     Result := inherited InjCurrents();
 end;
 
-// procedure TGeneric5Obj.SetNominalPower();
+procedure TGeneric5Obj.SetNominalPower();
+begin
+    // Pnominalperphase and Qnominalperphase were not used!
+end;
 // var
 //     Factor: Double;
 //     MachineOn_Saved: Boolean;
@@ -2566,8 +2580,6 @@ begin
 end;
 
 procedure TGeneric5Obj.IntegrateStates();
-var
-    TracePower: Complex;
 begin
     // Compute Derivatives and then integrate
     ComputeIterminal();
@@ -2649,10 +2661,10 @@ begin
         TVar.V_ref:
             Result := V_ref;
         TVar.kVA:
-            TODO: probably wrong in the original version
-            Result := kVArating / 1000;
+            // TODO: BUG: probably wrong in the original version (26: Result := MachineData.kVArating/1000 ;)
+            Result := kVArating;
         TVar.kW:
-            TODO: probably wrong in the original version
+            // TODO: BUG: probably wrong in the original version (27: Result := kWbase/1000;)
             Result := Wbase / 1000;
         TVar.cluster_num:
             Result := cluster_num;
@@ -2751,27 +2763,30 @@ begin
             cluster_num := trunc(Value);
         TVar.NdNumInCluster:
             NdNumInCluster := trunc(Value);
-        
-        
+
+        // TODO: BUG: unused variables (write-only), variable name doesn't match
         // The following block is kinda absurd and we do not use this in this version of the codebase on DSS-Extensions, 
         // but it was left just in case... 
 
-        TVar.ctrl_mode: 
-            nVLeaders := trunc(Value);
-        TVar.Gradient:
-            cluster_num2 := trunc(Value);
-        TVar.Id:
-            NdNumInCluster2 := trunc(Value);
+        // TVar.ctrl_mode: 
+        //     nVLeaders := trunc(Value);
+        // TVar.Gradient:
+        //     cluster_num2 := trunc(Value);
+        // TVar.Id:
+        //     NdNumInCluster2 := trunc(Value);
+    else
+        DoSimpleMsg('%s: variable %d is read-only.', [FullName, i], 568);
+        Exit; // No variables to set
     end;
     // Do Nothing for other variables: they are read only
 end;
 
-procedure TGeneric5Obj.GetAllVariables(States: pDoubleArray);
+procedure TGeneric5Obj.GetAllVariables(var States: ArrayOfDouble);
 var
     i: Integer;
 begin
     for i := 1 to NumGeneric5Variables do
-        States[i] := Variable[i];
+        States[i - 1] := Variable[i];
 end;
 
 procedure TGeneric5Obj.MakePosSequence;

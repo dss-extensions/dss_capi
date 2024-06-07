@@ -1990,14 +1990,15 @@ begin
                 while ZoneListCounter < DefinedZoneList.Count do
                 begin
                     if ActiveCircuit.SetElementActive(DefinedZoneList[ZoneListCounter]) = 0 then
-                        Inc(ZoneListCounter) // Not Found. Let's search for another
+                    begin
+                        Inc(ZoneListCounter); // Not Found. Let's search for another
                         continue;
                     end;
 
                     TestCE := ActiveCircuit.ActiveCktElement;
                     if (not TestCE.Enabled) or ((TestCE.DSSObjType and BaseClassMask) <> PD_ELEMENT) then
                     begin
-                        Inc(ZoneListCounter)  // Lets ignore disabled devices and non-PD elements
+                        Inc(ZoneListCounter);  // Lets ignore disabled devices and non-PD elements
                         continue;
                     end;
                     BranchList.AddNewChild(TestElement, TestCE.Terminals[0].BusRef, 1); // add it as a child to the previous element

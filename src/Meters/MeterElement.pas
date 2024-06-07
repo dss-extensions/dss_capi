@@ -140,7 +140,7 @@ begin
         Curr[i] := 0;
 end;
 
-procedure TMeterElement.CalcYPrim(); OVERRIDE;
+procedure TMeterElement.CalcYPrim();
 begin
     // YPrim is all zeros.  Just leave as NIL so it is ignored.
 end;

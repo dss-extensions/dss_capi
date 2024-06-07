@@ -183,17 +183,9 @@ type
         ppm_FloatFactor: Double; //  parts per million winding float factor
         XRConst: LongBool;
 
-        function Get_PresentTap(i: Integer): Double; override;
-        procedure Set_PresentTap(i: Integer; const Value: Double); override;
-        function Get_MinTap(i: Integer): Double; override;
-        function Get_MaxTap(i: Integer): Double; override;
-        function Get_TapIncrement(i: Integer): Double; override;
-        function Get_BaseVoltage(i: Integer): Double; override;
         function Get_BasekVLL(i: Integer): Double;
         // CIM accessors
-        function Get_NumTaps(i: Integer): Integer; override;
         function Get_WdgResistance(i: Integer): Double;
-        function Get_WdgConnection(i: Integer): Integer; override;
         function Get_WdgkVA(i: Integer): Double;
         function Get_Xsc(i: Integer): Double;
 
@@ -234,6 +226,15 @@ type
         XHXChanged: Boolean;
 
         procedure SetTermRef;
+        function Get_PresentTap(i: Integer): Double; override;
+        procedure Set_PresentTap(i: Integer; const Value: Double); override;
+        function Get_MinTap(i: Integer): Double; override;
+        function Get_MaxTap(i: Integer): Double; override;
+        function Get_TapIncrement(i: Integer): Double; override;
+        function Get_BaseVoltage(i: Integer): Double; override;
+        function Get_NumTaps(i: Integer): Integer; override;
+        function Get_WdgConnection(i: Integer): Integer; override;
+
     PUBLIC
         ActiveWinding: Integer;  // public for COM interface
 

@@ -271,7 +271,6 @@ type
         varBase: Double; // Base vars per phase
         varMax: Double;
         varMin: Double;
-        VBase: Double;  // Base volts suitable for computing currents
         VBase105: Double;
         VBase95: Double;
         Vthev: Complex; // Thevenin equivalent voltage (complex) for dynamic model
@@ -323,6 +322,7 @@ type
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
 
     PUBLIC
+        VBase: Double;  // Base volts suitable for computing currents
         IsFixed: LongBool;   // if Fixed, always at base value
         Connection: Integer;  // 0 = line-neutral; 1=Delta
         DailyDispShapeObj: TLoadShapeObj;  // Daily Generator Shape for this load
@@ -2266,7 +2266,7 @@ var
 begin
     inherited DumpProperties(F, Complete);
 
-    FSWriteLn(F, Format('!DQDV=%10.2g', DQDV));
+    FSWriteLn(F, Format('!DQDV=%10.2g', [DQDV]));
 
     for i := 1 to ParentClass.NumProperties do
         FSWriteLn(F, '~ ' + ParentClass.PropertyName[i] + '=' + GetPropertyValue(i));

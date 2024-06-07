@@ -3977,12 +3977,9 @@ procedure ShowPV2PQGen(DSS: TDSSContext; FileNm: String);
 // Shows the list of generators converted from PV to PQ bus during an NCIM solution step
 var
     pGen: TGeneratorobj;
-    i,
-    j: Integer;
+    i: Integer;
     F: TFileStream = nil;
-    solution: TSolutionObj;
 begin
-    solution := DSS.ActiveCircuit.Solution;
     F := TBufferedFileStream.Create(FileNm, fmCreate);
     FSWriteLn(F, '------------------------------------------------------------------------------');
     FSWriteLn(F, 'LIST OF GENERATORS CONVERTED FROM PV TO PQ BUS DURING THE LAST SOLUTION (NCIM)');
@@ -4000,7 +3997,7 @@ begin
             if (Flg.NCIM_ExPV in pGen.Flags) then
                 FSWriteLn(F, pGen.FullName);
         end;
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
     finally
         FreeAndNil(F);
         ShowResultFile(DSS, FileNm);

@@ -9,10 +9,10 @@ unit SolutionAlgs;
 
 interface
 
-uses DSSClass, ArrayDef, PCElement, Solution, Circuit, Bus;
+uses DSSClass, ArrayDef, PCElement, Solution, Circuit, Bus, NCIMSolutionHelper;
 
 type
-    TSolutionAlgs = class helper for TSolutionObj
+    TSolutionAlgs = class helper(TNCIMSolutionHelper) for TSolutionObj
     private
         function get_ckt(): TDSSCircuit; inline;
     public

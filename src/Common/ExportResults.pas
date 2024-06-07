@@ -3941,7 +3941,7 @@ begin
     if DSS.ActiveCircuit = nil then
         Exit;
 
-    hY := ActiveCircuit.Solution.NCIM_Jacobian;
+    hY := DSS.ActiveCircuit.Solution.NCIM_Jacobian;
     if hY < 0 then
     begin
         DoSimpleMsg(DSS, _('Jacobian matrix not built.'), 222);
@@ -3963,7 +3963,7 @@ begin
         begin
             FSWriteLn(F, Format('%d,%d,%.10g', [RowIdx[i], ColPtr[i], cVals[i].re]));
         end;
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
     finally
         FreeAndNil(F);
     end;
@@ -3976,16 +3976,16 @@ var
     re: Double;
     i: Integer;
 begin
-    if (ActiveCircuit = nil) or (Length(ActiveCircuit.Solution.deltaF) = 0) then
+    if (DSS.ActiveCircuit = nil) or (Length(DSS.ActiveCircuit.Solution.NCIM_deltaF) = 0) then
         Exit;
     try
         F := TBufferedFileStream.Create(FileNm, fmCreate);
-        for i := 0 to High(ActiveCircuit.Solution.deltaF) do
+        for i := 0 to High(DSS.ActiveCircuit.Solution.NCIM_deltaF) do
         begin
-            re := ActiveCircuit.Solution.deltaF[i].re;
+            re := DSS.ActiveCircuit.Solution.NCIM_deltaF[i].re;
             FSWriteLn(F, Format('%.10g', [re]));
         end;
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
     finally
         FreeAndNil(F);
     end;
@@ -3998,17 +3998,17 @@ var
     re: Double;
     i: Integer;
 begin
-    if (DSS.ActiveCircuit = nil) or (Length(ActiveCircuit.Solution.deltaZ) = 0) then
+    if (DSS.ActiveCircuit = nil) or (Length(DSS.ActiveCircuit.Solution.NCIM_deltaZ) = 0) then
         Exit;
 
     try
         F := TBufferedFileStream.Create(FileNm, fmCreate);
-        for i := 0 to High(ActiveCircuit.Solution.deltaZ) do
+        for i := 0 to High(DSS.ActiveCircuit.Solution.NCIM_deltaZ) do
         begin
-            re := ActiveCircuit.Solution.deltaZ[i].re;
+            re := DSS.ActiveCircuit.Solution.NCIM_deltaZ[i].re;
             FSWriteLn(F, Format('%.10g', [re]));
         end;
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
     finally
         FreeAndNil(F);
     end;

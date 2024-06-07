@@ -79,7 +79,9 @@ FUNCTION GetTripletMatrix(id:NativeUInt; nNZ:LongWord; pRows, pCols: pLongWord; 
 FUNCTION FindIslands(id:NativeUInt; nOrder:LongWord; pNodes: pLongWord):LongWord;KLUSOLVEX_CALL;
 
 // AddMatrixElement is deprecated, use AddPrimitiveMatrix instead
-FUNCTION AddMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;KLUSOLVEX_CALL;
+FUNCTION AddMatrixElement(id:NativeUInt; i, j: LongWord; Value: pComplex):LongWord;KLUSOLVEX_CALL;
+
+FUNCTION SetMatrixElement(id: NativeUInt; i, j: LongWord; Value: pComplex): LongWord;KLUSOLVEX_CALL;
 
 // GetMatrixElement is deprecated, use GetCompressedMatrix or GetTripletMatrix
 FUNCTION GetMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;KLUSOLVEX_CALL;

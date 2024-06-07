@@ -1,28 +1,20 @@
 unit WindGenUserModel;
 
 {$M+}
-{
-  ----------------------------------------------------------
-  Copyright (c) 2021, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-
-
-
-}
+// Copyright (c) 2021, Electric Power Research Institute, Inc.
+// All rights reserved.
 
 interface
 
 uses
-    WindGenVars,
     Dynamics,
     DSSCallBackRoutines,
     ucomplex,
-    Arraydef;
+    Arraydef,
+    DSSUComplex,
+    DSSClass;
 
 type
-
-
     TWindGenUserModel = class(TObject)
     PRIVATE
         FHandle: Nativeuint;  // Handle to DLL containing user model
@@ -32,23 +24,18 @@ type
         FuncError: Boolean;
 
 
-         {These functions should only be called by the object itself}
-        FNew:
-        function(var GenVars: TWindGenVars; var DynaData: TDynamicsRec; var CallBacks: TDSSCallBacks): Integer; STDCALL;// Make a new instance
-        FDelete:
-        procedure(var x: Integer); STDCALL;  // deletes specified instance
-        FSelect:
-        function(var x: Integer): Integer; STDCALL;    // Select active instance
+        // These functions should only be called by the object itself
+        FNew: function(GenVars: Pointer; var DynaData: TDynamicsRec; var CallBacks: TDSSCallBacks): Integer; STDCALL;// Make a new instance
+        FDelete: procedure(var x: Integer); STDCALL;  // deletes specified instance
+        FSelect: function(var x: Integer): Integer; STDCALL;    // Select active instance
 
         procedure Set_Name(const Value: String);
         function CheckFuncError(Addr: Pointer; FuncName: String): Pointer;
 
-        procedure Set_Edit(const Value: String);
-        function Get_Exists: Boolean;
-
     PROTECTED
 
     PUBLIC
+        DSS: TDSSContext;
 
         FEdit:
         procedure(s: Pansichar; Maxlen: Cardinal); STDCALL; // send string to user model to handle
@@ -61,15 +48,13 @@ type
         FUpdateModel:
         procedure; STDCALL; // Called when props of WindGen updated
 
-        FActiveWindGenVars: pTWindGenVars;
+        FActiveWindGenVars: Pointer;
 
-        {Save and restore data}
-        FSave:
-        procedure; STDCALL;
-        FRestore:
-        procedure; STDCALL;
+        // Save and restore data
+        FSave: procedure; STDCALL;
+        FRestore: procedure; STDCALL;
 
-        {Monitoring functions}
+        // Monitoring functions
         FNumVars:
         function: Integer; STDCALL;
         FGetAllVars:
@@ -85,42 +70,39 @@ type
         // old reference is freed first
         // Wide string OK here
         property Name: String READ Fname WRITE Set_Name;
-        property Edit: String WRITE Set_Edit;  // Converted to Ansi string  in Set_Edit
-        property Exists: Boolean READ Get_Exists;
 
-        procedure Select;
-        procedure Integrate;
+        procedure Select();
+        procedure Integrate();
 
-        constructor Create(ActiveWindGenVars: pTWindGenVars);
+        constructor Create(dssContext: TDSSContext; ActiveWindGenVars: Pointer);
         destructor Destroy; OVERRIDE;
-    PUBLISHED
-
+        procedure Edit(const Value: String);
+        function Exists(): Boolean;
     end;
 
 
 implementation
 
-uses
+Uses 
     WindGen,
-    DSSGlobals,
-    Windows,
-    Sysutils;
-
-{ TGenUserModel }
+    DSSGlobals, 
+    dynlibs, 
+    Sysutils,
+    DSSHelper;
 
 function TWindGenUserModel.CheckFuncError(Addr: Pointer; FuncName: String): Pointer;
 begin
     if Addr = nil then
     begin
-        DoSimpleMsg('WindGen User Model Does Not Have Required Function: ' + FuncName, 569);
+        DoSimpleMsg(DSS, 'WindGen User Model Does Not Have Required Function: ' + FuncName, 569);
         FuncError := true;
     end;
     Result := Addr;
 end;
 
-constructor TWindGenUserModel.Create(ActiveWindGenVars: pTWindGenVars);
+constructor TWindGenUserModel.Create(dssContext: TDSSContext; ActiveWindGenVars: Pointer);
 begin
-
+    DSS := dssContext;
     FID := 0;
     Fhandle := 0;
     FName := '';
@@ -141,7 +123,7 @@ begin
 
 end;
 
-function TWindGenUserModel.Get_Exists: Boolean;
+function TWindGenUserModel.Exists(): Boolean;
 begin
     if FID <> 0 then
     begin
@@ -163,7 +145,7 @@ begin
     Fselect(FID);
 end;
 
-procedure TWindGenUserModel.Set_Edit(const Value: String);
+procedure TWindGenUserModel.Edit(const Value: String);
 begin
     if FID <> 0 then
         FEdit(Pansichar(Ansistring(Value)), Length(Value));
@@ -201,7 +183,7 @@ begin
     end;
 
     if FHandle = 0 then
-        DoSimpleMsg('WindGen User Model ' + Value + ' Not Loaded. DSS Directory = ' + DSSDirectory, 570)
+        DoSimpleMsg(DSS, 'WindGen User Model ' + Value + ' Not Loaded. DSS Directory = ' + DSSDirectory, 570)
     else
     begin
         FName := Value;
@@ -247,7 +229,7 @@ begin
         end
         else
         begin
-            FID := FNew(FActiveWindGenVars^, ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
+            FID := FNew(FActiveWindGenVars, DSS.ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
         end;
     end;
 end;

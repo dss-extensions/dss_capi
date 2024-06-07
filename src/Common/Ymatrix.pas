@@ -382,7 +382,7 @@ begin
                 SERIESONLY:
                     DSS.LogThisEvent(_('Building Series Y Matrix'));
                 PDE_ONLY:
-                    LogThisEvent(_('Building PDE only Y Matrix'));
+                    DSS.LogThisEvent(_('Building PDE only Y Matrix'));
             end;
           // Add in Yprims for all devices
           
@@ -402,12 +402,12 @@ begin
                     WHOLEMATRIX:
                         CmatArray := pElem.GetYPrimValues(ALL_YPRIM);
                     SERIESONLY:
-                        CmatArray := pElem.GetYPrimValues(SERIES)
+                        CmatArray := pElem.GetYPrimValues(SERIES);
                     PDE_ONLY:
                     begin
                         if (((pElem.ParentClass.DSSClassType and BASECLASSMASK) = PD_ELEMENT) or
                             ((pElem.DSSObjType and CLASSMASK) = SOURCE)) then
-                            CmatArray := GetYPrimValues(ALL_YPRIM)
+                            CmatArray := pElem.GetYPrimValues(ALL_YPRIM)
                         else
                             CmatArray := NIL;
                     end;

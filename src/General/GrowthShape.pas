@@ -95,7 +95,6 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
         function GetMult(Yr: Integer): Double; // Get multiplier for Specified Year
-        function GetMult(Yr: Integer): Double; // Get multiplier for Specified Year
         function GetYear(Idx: Integer): Double; // Get year for Specified Index
         function GetMultIdx(Idx: Integer): Double; // Get multiplier by Index
     end;
