@@ -276,9 +276,16 @@ begin
 
     PropertyOffset[ord(TProp.normamps)] := ptruint(@obj.NormAmps);
     PropertyOffset[ord(TProp.emergamps)] := ptruint(@obj.EmergAmps);
+
     PropertyOffset[ord(TProp.faultrate)] := ptruint(@obj.FaultRate);
     PropertyOffset[ord(TProp.pctperm)] := ptruint(@obj.PctPerm);
     PropertyOffset[ord(TProp.repair)] := ptruint(@obj.HrsToRepair);
+    PropertyFlags[ord(TProp.faultrate)] := [TPropertyFlag.Unused, TPropertyFlag.Deprecated];
+    PropertyFlags[ord(TProp.pctperm)] := [TPropertyFlag.Unused, TPropertyFlag.Deprecated];
+    PropertyFlags[ord(TProp.repair)] := [TPropertyFlag.Unused, TPropertyFlag.Deprecated];
+    PropertyDeprecatedMessage[ord(TProp.FaultRate)] := 'In LineCode objects, "FaultRate" is not used in the DSS engine since 2014. Be sure to fill the values in each Line individually since they are not propagated from the LineCode!';
+    PropertyDeprecatedMessage[ord(TProp.PctPerm)] := 'In LineCode objects, "PctPerm" is not used in the DSS engine since 2014. Be sure to fill the values in each Line individually since they are not propagated from the LineCode!';
+    PropertyDeprecatedMessage[ord(TProp.Repair)] := 'In LineCode objects, "Repair" is not used in the DSS engine since 2014. Be sure to fill the values in each Line individually since they are not propagated from the LineCode!';
 
     PropertyOffset[ord(TProp.Rg)] := ptruint(@obj.Rg);
     PropertyFlags[ord(TProp.Rg)] := [TPropertyFlag.Units_ohm_per_length];
@@ -489,6 +496,7 @@ begin
     EmergAmps := 600.0;
     PctPerm := 20.0;
     FaultRate := 0.1;
+    HrsToRepair := 3;
     FLineType := 1;  // Default to OH Line
 
     Rg := 0.01805;  // ohms per 1000'
