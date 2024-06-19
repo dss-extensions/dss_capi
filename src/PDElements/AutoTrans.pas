@@ -391,7 +391,7 @@ begin
     PropertyType[ord(TProp.Xscarray)] := TPropertyType.DoubleVArrayProperty;
     PropertyOffset[ord(TProp.Xscarray)] := ptruint(@obj.puXSC);
     PropertyOffset3[ord(TProp.Xscarray)] := ptruint(@XscSize);
-    PropertyFlags[ord(TProp.Xscarray)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.Xscarray)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NonZero];
     PropertyScale[ord(TProp.Xscarray)] := 0.01;
 
     // enums
@@ -522,8 +522,9 @@ begin
     PropertyTrapZero[ord(TProp.XHX)] := 7.0;
     PropertyTrapZero[ord(TProp.XHT)] := 35.0;
     PropertyTrapZero[ord(TProp.XXT)] := 30.0;
-
-    PropertyFlags[ord(TProp.XHX)] := [TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.XHX)] := [TPropertyFlag.TrapZero, TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.XHT)] := [TPropertyFlag.TrapZero];
+    PropertyFlags[ord(TProp.XXT)] := [TPropertyFlag.TrapZero];
 
     // double arrays via struct array
     PropertyType[ord(TProp.pctRs)] := TPropertyType.DoubleArrayOnStructArrayProperty;

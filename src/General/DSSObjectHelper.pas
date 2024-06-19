@@ -659,6 +659,24 @@ begin
                 end;
             end;
 
+            if (TPropertyFlag.NonZero in flags) then
+            begin
+                doublePtr := PPDouble(dataPtr)^;
+                for i := 1 to integerPtr^ do
+                begin
+                    if doublePtr^ = 0 then
+                    begin
+                        DoSimpleMsg(
+                            '%s.%s: Elements cannot be zero.', 
+                            [TDSSObject(obj).FullName, PropertyName[Index]],
+                        2020038);
+                        Result := False;
+                        Exit;
+                    end;
+                    Inc(doublePtr);
+                end;
+            end;
+
             Result := True;
             scale := PropertyScale[Index];
 

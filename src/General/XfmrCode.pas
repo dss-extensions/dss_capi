@@ -233,7 +233,7 @@ begin
     PropertyType[ord(TProp.Xscarray)] := TPropertyType.DoubleVArrayProperty;
     PropertyOffset[ord(TProp.Xscarray)] := ptruint(@obj.Xsc);
     PropertyOffset3[ord(TProp.Xscarray)] := ptruint(@XscSize);
-    PropertyFlags[ord(TProp.Xscarray)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.DynamicDefault];
+    PropertyFlags[ord(TProp.Xscarray)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.DynamicDefault, TPropertyFlag.NonZero];
     PropertyScale[ord(TProp.Xscarray)] := 0.01;
 
     // integer properties
@@ -315,10 +315,12 @@ begin
     PropertyOffset[ord(TProp.X12)] := ptruint(@obj.XHL);
     PropertyOffset[ord(TProp.X13)] := ptruint(@obj.XHT);
     PropertyOffset[ord(TProp.X23)] := ptruint(@obj.XLT);
-    PropertyFlags[ord(TProp.X12)] := [TPropertyFlag.RequiredInSpecSet];
-    PropertyFlags[ord(TProp.XHL)] := [TPropertyFlag.Redundant];
-    PropertyFlags[ord(TProp.XHT)] := [TPropertyFlag.Redundant];
-    PropertyFlags[ord(TProp.XLT)] := [TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.X12)] := [TPropertyFlag.NonZero, TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.X23)] := [TPropertyFlag.NonZero];
+    PropertyFlags[ord(TProp.X13)] := [TPropertyFlag.NonZero];
+    PropertyFlags[ord(TProp.XHL)] := [TPropertyFlag.NonZero, TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.XHT)] := [TPropertyFlag.NonZero, TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.XLT)] := [TPropertyFlag.NonZero, TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.XHL)] := ord(TProp.X12);
     PropertyRedundantWith[ord(TProp.XHT)] := ord(TProp.X13);
     PropertyRedundantWith[ord(TProp.XLT)] := ord(TProp.X23);

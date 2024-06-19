@@ -80,6 +80,7 @@ begin
     if TPropertyFlag.InverseValue in flags then Result.Add('InverseValue');
     if TPropertyFlag.SuppressJSON in flags then Result.Add('SuppressJSON');
     if TPropertyFlag.PowerFactorLimits in flags then Result.Add('PowerFactorLimits');
+    if TPropertyFlag.TrapZero in flags then Result.Add('TrapZero');
 end;
 
 function prepareEnum(e: TDSSEnum; enumIds: TClassNamesHashListType): TJSONObject;

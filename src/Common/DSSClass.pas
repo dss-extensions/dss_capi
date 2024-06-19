@@ -211,6 +211,7 @@ type
         RequiredInSpecSet,
         NoDefault,
         DynamicDefault,
+        TrapZero,
 
         Ordering_First,
         Ordering_Last,

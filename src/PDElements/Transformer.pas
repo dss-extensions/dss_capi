@@ -410,7 +410,7 @@ begin
     PropertyType[ord(TProp.Xscarray)] := TPropertyType.DoubleVArrayProperty;
     PropertyOffset[ord(TProp.Xscarray)] := ptruint(@obj.Xsc);
     PropertyOffset3[ord(TProp.Xscarray)] := ptruint(@XscSize); // (NumWindings - 1) * NumWindings div 2
-    PropertyFlags[ord(TProp.Xscarray)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.DynamicDefault];
+    PropertyFlags[ord(TProp.Xscarray)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.DynamicDefault, TPropertyFlag.NonZero];
     PropertyScale[ord(TProp.Xscarray)] := 0.01;
 
     // enums
@@ -587,10 +587,12 @@ begin
     PropertyTrapZero[ord(TProp.X12)] := 7.0;
     PropertyTrapZero[ord(TProp.X13)] := 35.0;
     PropertyTrapZero[ord(TProp.X23)] := 30.0;
-    PropertyFlags[ord(TProp.X12)] := [TPropertyFlag.RequiredInSpecSet];
-    PropertyFlags[ord(TProp.XHL)] := [TPropertyFlag.Redundant];
-    PropertyFlags[ord(TProp.XHT)] := [TPropertyFlag.Redundant];
-    PropertyFlags[ord(TProp.XLT)] := [TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.X12)] := [TPropertyFlag.TrapZero, TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.X23)] := [TPropertyFlag.TrapZero];
+    PropertyFlags[ord(TProp.X13)] := [TPropertyFlag.TrapZero];
+    PropertyFlags[ord(TProp.XHL)] := [TPropertyFlag.TrapZero, TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.XHT)] := [TPropertyFlag.TrapZero, TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.XLT)] := [TPropertyFlag.TrapZero, TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.XHL)] := ord(TProp.X12);
     PropertyRedundantWith[ord(TProp.XHT)] := ord(TProp.X13);
     PropertyRedundantWith[ord(TProp.XLT)] := ord(TProp.X23);
