@@ -115,7 +115,7 @@ type
         FCapSpecified: Boolean; // To make sure user specifies C in some form
         SymComponentsChanged: Boolean;
         SymComponentsModel: LongBool;
-        RatingsSpecified: Boolean; // TODO: remove, use PrpSpecified? 
+        gotRatingsAfterSpacingConds: Boolean;
         IsSwitch: LongBool;
 
         FLineType: Integer; // Pointer to code for type of line
@@ -538,10 +538,15 @@ begin
     // PctPerm   := LineCodeObj.PctPerm;
     // HrsToRepair := LineCodeObj.HrsToRepair;
 
-    SetAsNextSeq(ord(TProp.Ratings));
-    SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
-    SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
-    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) <> 0 then
+    begin
+        // Equivalent to UpdatePDProperties in the original code
+        SetAsNextSeq(ord(TProp.Seasons));
+        SetAsNextSeq(ord(TProp.Ratings));
+        SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
+        SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
+    end
+    else
     begin
         PrpSequence[ord(TProp.spacing)] := 0;
         PrpSequence[ord(TProp.geometry)] := 0;
@@ -553,6 +558,10 @@ begin
         PrpSequence[ord(TProp.C0)] := 0;
         PrpSequence[ord(TProp.B1)] := 0;
         PrpSequence[ord(TProp.B0)] := 0;
+        PrpSequence[(ord(TProp.Seasons))] := 0;
+        PrpSequence[(ord(TProp.Ratings))] := 0;
+        PrpSequence[(NumPropsThisClass + ord(TPDElementProp.NormAmps))] := 0;
+        PrpSequence[(NumPropsThisClass + ord(TPDElementProp.EmergAmps))] := 0;
     end;
 
     if Fnphases <> LineCodeObj.FNphases then
@@ -716,7 +725,7 @@ begin
                 SymComponentsModel := FALSE;
                 SymComponentsChanged := FALSE;
                 KillGeometrySpecified;
-                RatingsSpecified := FALSE;
+                gotRatingsAfterSpacingConds := FALSE;
                 if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
                 begin
                     PrpSequence[ord(TProp.Seasons)] := 0;
@@ -732,7 +741,6 @@ begin
                     PrpSequence[ord(TProp.B1)] := 0;
                     PrpSequence[ord(TProp.B0)] := 0;
                 end;
-
             end;
             YprimInvalid := TRUE;
         end;
@@ -774,7 +782,7 @@ begin
         ord(TProp.Ratings),
         (NumPropsThisClass + ord(TPDElementProp.NormAmps)),
         (NumPropsThisClass + ord(TPDElementProp.EmergAmps)):
-            RatingsSpecified := TRUE;
+            gotRatingsAfterSpacingConds := TRUE;
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -980,7 +988,7 @@ begin
 
     SymComponentsChanged := FALSE;
     SymComponentsModel := TRUE;
-    RatingsSpecified := FALSE;
+    gotRatingsAfterSpacingConds := FALSE;
 
     LineGeometryObj := NIL;
     LengthUnits := UNITS_NONE; // Assume everything matches
@@ -1540,9 +1548,16 @@ begin
     begin
         BeginEdit(True);
         // Kill certain propertyvalue elements to get a cleaner looking save
-        PrpSequence[3] := 0;
-        for i := 6 to 14 do
-            PrpSequence[i] := 0;
+        PrpSequence[ord(TProp.LineCode)] := 0;
+        PrpSequence[ord(TProp.R1)] := 0;
+        PrpSequence[ord(TProp.X1)] := 0;
+        PrpSequence[ord(TProp.R0)] := 0;
+        PrpSequence[ord(TProp.X0)] := 0;
+        PrpSequence[ord(TProp.C1)] := 0;
+        PrpSequence[ord(TProp.C0)] := 0;
+        PrpSequence[ord(TProp.RMatrix)] := 0;
+        PrpSequence[ord(TProp.XMatrix)] := 0;
+        PrpSequence[ord(TProp.CMatrix)] := 0;
 
         // If GeometrySpecified Or SpacingSpecified then length is embedded in Z and Yc    4-9-2020
         if (LineGeometryObj <> NIL) or SpacingSpecified then
@@ -1869,11 +1884,16 @@ begin
 
     NormAmps := LineGeometryObj.NormAmps;
     EmergAmps := LineGeometryObj.EmergAmps;
-    SetAsNextSeq(ord(TProp.Ratings));
-    SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
-    SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
 
-    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) <> 0 then
+    begin
+        // Equivalent to UpdatePDProperties in the original code
+        SetAsNextSeq(ord(TProp.Seasons));
+        SetAsNextSeq(ord(TProp.Ratings));
+        SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
+        SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
+    end
+    else
     begin
         PrpSequence[ord(TProp.linecode)] := 0;
         PrpSequence[ord(TProp.r1)] := 0;
@@ -1884,6 +1904,10 @@ begin
         PrpSequence[ord(TProp.C0)] := 0;
         PrpSequence[ord(TProp.B1)] := 0;
         PrpSequence[ord(TProp.B0)] := 0;
+        PrpSequence[(ord(TProp.Seasons))] := 0;
+        PrpSequence[(ord(TProp.Ratings))] := 0;
+        PrpSequence[(NumPropsThisClass + ord(TPDElementProp.NormAmps))] := 0;
+        PrpSequence[(NumPropsThisClass + ord(TPDElementProp.EmergAmps))] := 0;
     end;
 
     FNPhases := LineGeometryObj.Nconds;
@@ -1967,13 +1991,18 @@ begin
     if PrpSpecified(ord(TProp.rho)) then
         pGeo.rhoearth := rho;
 
-    if not RatingsSpecified then
+    if not gotRatingsAfterSpacingConds then
     begin
         NormAmps := pGeo.NormAmps;
         EmergAmps := pGeo.EmergAmps;
-        SetAsNextSeq(ord(TProp.Ratings));
-        SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
-        SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
+        if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) <> 0 then
+        begin
+            // Equivalent to UpdatePDProperties in the original code
+            SetAsNextSeq(ord(TProp.Seasons));
+            SetAsNextSeq(ord(TProp.Ratings));
+            SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
+            SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
+        end;
     end;
 
     DSS.ActiveEarthModel := FEarthModel;
