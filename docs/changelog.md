@@ -21,7 +21,10 @@
 
 *not released*
 
+- Introduce a new subproject: **AltDSS Oddie**. Oddie wraps the official OpenDSS binaries (i.e. the official OpenDSS Engine), exposing them with the same API as AltDSS/DSS C-API. There is, Oddie is a thing compatibility layer that allows consuming EPRI's OpenDSSDirect.DLL (and in the future `libOpenDSSDirect.so` on Linux etc.) through the projects on DSS-Extensions downstream to AltDSS/DSS C-API. Check its [README](https://github.com/dss-extensions/dss_capi/blob/master/src/altdss_oddie/README.md) for some more info.
 - CapControl: handle phase checks better in `PTPhase` and `CTPhase`.
+- API/Generators: port SVN r3746, "Fixing issue when updating kvar for generator in modes 4 and 5 through the generators interface" by davismont. Effectively, call `RecalcElementData` in `Generators_Set_kvar`.
+
 
 ## Version 0.14.5 (2024-03-29)
 
