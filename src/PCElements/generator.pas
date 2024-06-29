@@ -303,6 +303,7 @@ type
         procedure Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
         procedure SetDragHandRegister(Reg: Integer; const Value: Double);
         procedure StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
+        procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure WriteTraceRecord(const s: String);
 
@@ -1418,6 +1419,20 @@ begin
 
     // Account for Open Conductors
     inherited CalcYPrim;
+end;
+
+procedure TGeneratorObj.GetCurrents(Curr: pComplexArray);
+var
+    i : Integer;
+begin
+    if ActiveCircuit.Solution.Algorithm = NCIMSOLVE then
+    begin
+        for i := 1 to NPhases do
+            Curr[i] := ITerminal[i];
+
+        Exit;
+    end;
+    inherited GetCurrents(Curr);
 end;
 
 procedure TGeneratorObj.StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
