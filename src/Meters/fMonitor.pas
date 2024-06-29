@@ -86,6 +86,25 @@ type
    //value ot save communication delay
     TDelays = array [0..99] of Double; //max 99
 
+     // define LD_FM_Arry-by dahei
+    TLDs_sys_fms = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF}  record
+     //properties for Nodes
+           // highest voltage node
+        clstr_num_hghst: Integer;
+        ndnum_hghst: Integer;
+        b_ctrl_hghst: Boolean; //can contribute more to the high volt problem
+        volt_hghst: Double;    //p.u.
+        volt_hgh_lmt: Double;  //p.u.
+        Pinjec_hghst: Double; //net P injection on this node
+           // lowest voltage node
+        clstr_num_lwst: Integer;
+        ndnum_lwst: Integer;
+        b_ctrl_lwst: Boolean; //can contribute more to the high volt problem
+        volt_lwst: Double;   //p.u.
+        volt_lw_lmt: Double;  //p.u.
+        Pinjec_lwst: Double; // net P injection on this node
+    end;
+
     TVLNodeVars = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
         
         //properties for Node
@@ -173,6 +192,9 @@ type
     PROTECTED
         procedure DefineProperties(); OVERRIDE;
     PUBLIC
+        LD_FM: array [0..3] of TLDs_sys_fms;
+        bCurtl: Boolean;
+
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
@@ -309,6 +331,7 @@ type
 
         function Coef_Phi(x: Double): Double;  // a coeffient
     PUBLIC
+        FMonClass: TFMonitor;
         pNodeFMs: pVLNodeArray;
         p_mode: Integer;
 
@@ -401,6 +424,8 @@ begin
         PropInfoLegacy := TypeInfo(TPropLegacy);
     end;
     inherited Create(dssContext, FMON_ELEMENT, 'FMonitor');
+
+    bCurtl := false;
 end;
 
 destructor TFMonitor.Destroy;
@@ -513,8 +538,8 @@ var
     FMon: TFMonitorObj;
     dv_lwst: Double;
 begin
-    ActiveCircuit.Solution.LD_FM[0].volt_hghst := -999999;
-    ActiveCircuit.Solution.LD_FM[0].volt_lwst := 9999999;
+    LD_FM[0].volt_hghst := -999999;
+    LD_FM[0].volt_lwst := 9999999;
     for FMon in ElementList do
     begin
         //update all agents information:
@@ -527,21 +552,21 @@ begin
         end;
 
         // Update cluster info to center
-        if ActiveCircuit.Solution.LD_FM[0].volt_hghst < FMon.ld_fm_info[0].volt_hghst then
+        if LD_FM[0].volt_hghst < FMon.ld_fm_info[0].volt_hghst then
         begin
-            ActiveCircuit.Solution.LD_FM[0].volt_hghst := FMon.ld_fm_info[0].volt_hghst;
-            ActiveCircuit.Solution.LD_FM[0].ndnum_hghst := FMon.ld_fm_info[0].ndnum_hghst;
-            ActiveCircuit.Solution.LD_FM[0].clstr_num_hghst := FMon.Cluster_num;
-            ActiveCircuit.Solution.LD_FM[0].volt_hgh_lmt := fmon.ld_fm_info[0].volt_hgh_lmt;
-            ActiveCircuit.Solution.LD_FM[0].b_ctrl_hghst := FMon.ld_fm_info[0].b_ctrl_hghst;
+            LD_FM[0].volt_hghst := FMon.ld_fm_info[0].volt_hghst;
+            LD_FM[0].ndnum_hghst := FMon.ld_fm_info[0].ndnum_hghst;
+            LD_FM[0].clstr_num_hghst := FMon.Cluster_num;
+            LD_FM[0].volt_hgh_lmt := fmon.ld_fm_info[0].volt_hgh_lmt;
+            LD_FM[0].b_ctrl_hghst := FMon.ld_fm_info[0].b_ctrl_hghst;
         end;
-        if ActiveCircuit.Solution.LD_FM[0].volt_lwst > FMon.ld_fm_info[0].volt_lwst then
+        if LD_FM[0].volt_lwst > FMon.ld_fm_info[0].volt_lwst then
         begin
-            ActiveCircuit.Solution.LD_FM[0].volt_lwst := FMon.ld_fm_info[0].volt_lwst;
-            ActiveCircuit.Solution.LD_FM[0].ndnum_lwst := FMon.ld_fm_info[0].ndnum_lwst;
-            ActiveCircuit.Solution.LD_FM[0].clstr_num_lwst := FMon.Cluster_num;
-            ActiveCircuit.Solution.LD_FM[0].volt_lw_lmt := fmon.ld_fm_info[0].volt_lw_lmt;
-            ActiveCircuit.Solution.LD_FM[0].b_ctrl_lwst := FMon.ld_fm_info[0].b_ctrl_lwst;
+            LD_FM[0].volt_lwst := FMon.ld_fm_info[0].volt_lwst;
+            LD_FM[0].ndnum_lwst := FMon.ld_fm_info[0].ndnum_lwst;
+            LD_FM[0].clstr_num_lwst := FMon.Cluster_num;
+            LD_FM[0].volt_lw_lmt := fmon.ld_fm_info[0].volt_lw_lmt;
+            LD_FM[0].b_ctrl_lwst := FMon.ld_fm_info[0].b_ctrl_lwst;
         end;
 
         // ---- curtailment ----- bCurtl := t/f for overall system ------
@@ -553,15 +578,15 @@ begin
         // ---- each cluster may have their own ---
     end;
       //curtailment is needed or not
-    // vtemp := (ActiveCircuit.Solution.LD_FM[0].volt_hghst - ActiveCircuit.Solution.LD_FM[0].volt_lwst);//p.u.
-    dv_lwst := ActiveCircuit.Solution.LD_FM[0].volt_lwst - ActiveCircuit.Solution.LD_FM[0].volt_lw_lmt;//0.95; // must greater than 0.0
+    // vtemp := (LD_FM[0].volt_hghst - LD_FM[0].volt_lwst);//p.u.
+    dv_lwst := LD_FM[0].volt_lwst - LD_FM[0].volt_lw_lmt;//0.95; // must greater than 0.0
     if (dv_lwst < 0.0) then
     begin
-        ActiveCircuit.Solution.bCurtl := true;  //curtailment
+        bCurtl := true;  //curtailment
     end
     else
     begin
-        ActiveCircuit.Solution.bCurtl := false;//dont need curtailment
+        bCurtl := false;//dont need curtailment
     end;
 end;
 
@@ -616,6 +641,8 @@ var
 begin
     inherited Create(ParClass);
     Name := LowerCase(MonitorName);
+
+    FMonClass := TFMonitor(ParClass);
 
     FNphases := 3;  // Directly set conds and phases
     Fnconds := 3;
@@ -2753,11 +2780,11 @@ begin
     //tempCplx
     // dvDGtemp := (pNodeFMs[NodeNuminClstr].vl_V - pNodeFMs[NodeNuminClstr].vl_V_ref_dg) / pNodeFMs[NodeNuminClstr].vl_V_ref_dg;
     // if this DG is above 1.05, then it should have P curtail gradient
-    //if ( ActiveCircuit.Solution.bCurtl=true ) and (dvDGtemp>0.0) then //overall system need control
-    if (ActiveCircuit.Solution.bCurtl = true) then
+    //if ( FMonClass.bCurtl ) and (dvDGtemp>0.0) then //overall system need control
+    if (FMonClass.bCurtl) then
     begin
         if ld_fm_info[0].b_Curt_Ctrl = true then // if false, the curtailment will be zero for any node in this cluster
-            Grdnt_P := (ActiveCircuit.Solution.LD_FM[0].volt_lwst - 1.0)
+            Grdnt_P := (FMonClass.LD_FM[0].volt_lwst - 1.0)
     end
     else
         Grdnt_P := 0.0;

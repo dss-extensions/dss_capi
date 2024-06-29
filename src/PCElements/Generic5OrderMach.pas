@@ -962,8 +962,8 @@ begin
         vi1 := 0;
         vi2 := 0; // local gradient calculated IN fMONITOR Node
         // ---if in curtailment P_ref has to be changed here-----
-        if (ActiveCircuit.Solution.bCurtl) and (FMonObj.ld_fm_info[0].b_ctrl_hghst) then
-        //if (ActiveCircuit.Solution.bCurtl=true) then // this will cause oscillation
+        if (FMonObj.FMonClass.bCurtl) and (FMonObj.ld_fm_info[0].b_ctrl_hghst) then
+        //if (FMonObj.FMonClass.bCurtl) then // this will cause oscillation
         begin
             Pref3 := V_DG * Id; //Here, P_ref will never go out of limits.
             //if cuitailment is needed, update P_ref here; then vi1 will be 0
@@ -1182,7 +1182,7 @@ begin
     if ctrl_mode = 0 then
     begin
         //u = gradient + pV_f_CC; pV_f_CC = -alpha + sum(alpha_j)
-        Bii := ActiveCircuit.Solution.NodeYii[NodeRef[1]].im;
+        Bii := ActiveCircuit.Solution.Bii(NodeRef[1]);
         // Q ctrl with v_ref
         // pV_f_CC[2] := FMonObj.Calc_Alpha_M2(ndNumincluster,0,NodeRef[1],Bii,kcq,Volt_Trhd); // for dIddt, diqdt
         // Q ctrl with loss
@@ -1200,13 +1200,13 @@ begin
         begin
             pV_f_CC[6] := 0.0;
             //u = gradient + pV_f_CC; pV_f_CC = -alpha + sum(alpha_j)
-            Bii := ActiveCircuit.Solution.NodeYii[NodeRef[1]].im;
+            Bii := ActiveCircuit.Solution.Bii(NodeRef[1]);
             pV_f_CC[2] := FMonObj.Calc_Alpha_M2(ndNumincluster, 1, NodeRef[1], Bii, kcq, Volt_Trhd);
             pV_f_CC[1] := FMonObj.Calc_AlphaP(ndNumincluster, 1);
-            Bii := ActiveCircuit.Solution.NodeYii[NodeRef[2]].im;
+            Bii := ActiveCircuit.Solution.Bii(NodeRef[2]);
             pV_f_CC[4] := FMonObj.Calc_Alpha_M2(ndNumincluster, 2, NodeRef[2], Bii, kcq, Volt_Trhd);
             pV_f_CC[3] := FMonObj.Calc_AlphaP(ndNumincluster, 2);
-            Bii := ActiveCircuit.Solution.NodeYii[NodeRef[3]].im;
+            Bii := ActiveCircuit.Solution.Bii(NodeRef[3]);
             pV_f_CC[6] := FMonObj.Calc_Alpha_M2(ndNumincluster, 3, NodeRef[3], Bii, kcq, Volt_Trhd);
             pV_f_CC[5] := FMonObj.Calc_AlphaP(ndNumincluster, 3);
             //pV_f_CC[1-6]； // for dIddt1, diqdt1,dIddt2, diqdt2,dIddt3, diqdt3
@@ -1215,7 +1215,7 @@ begin
         if fnphases = 1 then
         begin
             //if ctrl_mode=1 then
-            Bii := ActiveCircuit.Solution.NodeYii[NodeRef[1]].im;
+            Bii := ActiveCircuit.Solution.Bii(NodeRef[1]);
             pV_f_CC[2] := FMonObj.Calc_Alpha_M2(ndNumincluster, ctrl_mode, NodeRef[1], Bii, kcq, Volt_Trhd);
             // for dIddt1, diqdt1
             pV_f_CC[1] := FMonObj.Calc_AlphaP(ndNumincluster, ctrl_mode);
@@ -1254,7 +1254,7 @@ begin
     
     //u = gradient + pV_f_CC; pV_f_CC = -alpha + sum(alpha_j)
     
-    Bii := ActiveCircuit.Solution.NodeYii[NodeRef[1]].im;
+    Bii := ActiveCircuit.Solution.Bii(NodeRef[1]);
 
     if ActiveCircuit.Solution.DynaVars.SolutionMode = TSolveMode.DYNAMICMODE then
     begin
@@ -1292,7 +1292,7 @@ begin
         begin 
             // if curtailment for this cluster is on
             //Q will try to boost the voltage while P is decreasing
-            if (ActiveCircuit.Solution.bCurtl) and (Gradient = 0.0) then
+            if (FMonObj.FMonClass.bCurtl) and (Gradient = 0.0) then
                 us_i := -GradientP * Pmax / Qmax;
         end;
 

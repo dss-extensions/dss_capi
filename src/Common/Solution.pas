@@ -133,27 +133,6 @@ type
     end;
 {$ENDIF}
 
-//********  Code additions by dahei (UCF) ***********************
-     // define LD_FM_Arry-by dahei
-    TLDs_sys_fms = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF}  record
-     //properties for Nodes
-           // highest voltage node
-        clstr_num_hghst: Integer;
-        ndnum_hghst: Integer;
-        b_ctrl_hghst: Boolean; //can contribute more to the high volt problem
-        volt_hghst: Double;    //p.u.
-        volt_hgh_lmt: Double;  //p.u.
-        Pinjec_hghst: Double; //net P injection on this node
-           // lowest voltage node
-        clstr_num_lwst: Integer;
-        ndnum_lwst: Integer;
-        b_ctrl_lwst: Boolean; //can contribute more to the high volt problem
-        volt_lwst: Double;   //p.u.
-        volt_lw_lmt: Double;  //p.u.
-        Pinjec_lwst: Double; // net P injection on this node
-    end;
-//****************************************************************
-
     TSolutionObj = class(TObject)
     PRIVATE
         dV: pNodeVArray;   // Array of delta V for Newton iteration
@@ -228,16 +207,6 @@ type
 // ******************************************************************************
         IncMat: Tsparse_matrix; // Incidence sparse matrix
         Laplacian: Tsparse_matrix; // Laplacian sparse matrix
-
-       //********  Code additions by dahei (UCF) ******
-        // by Dahei for FMonitor
-        NodeYii: pNodeVArray;         // Main System Y = G + jB, Bii for all nodes
-
-        NodeYiiEmpty: Boolean;
-        // Leaders of all FMonitors
-        clstr_num_hghst, clstr_num_lwst: Integer;
-        LD_FM: array [0..3] of TLDs_sys_fms;
-        bCurtl: Boolean;
 
 // ****************************Timing variables**********************************
         SolveStartTime: Int64;
@@ -355,6 +324,8 @@ type
 
         function VDiff(i, j: Integer): Complex;  // Difference between two node voltages
         function Yij(i, j: Integer): Complex;
+        function Yii(i: Integer): Complex;
+        function Bii(i: Integer): Double;
 
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False);
         procedure WriteConvergenceReport(F: TStream);
@@ -1985,6 +1956,22 @@ begin
     end;
     GetMatrixElement(hY, i, j, @Result);
 end;
+
+function TSolutionObj.Yii(i: Integer): Complex;
+begin
+    if hY = 0 then
+    begin
+        DoSimpleMsg(DSS, _('Yii: Y matrix has not been initialized yet.'), 11003);
+        DSS.SolutionAbort := true;
+    end;
+    GetMatrixElement(hY, i, i, @Result);
+end;
+
+function TSolutionObj.Bii(i: Integer): Double;
+begin
+    Result := Yii(i).im;
+end;
+
 
 procedure TSolutionObj.WriteConvergenceReport(F: TStream);
 var
