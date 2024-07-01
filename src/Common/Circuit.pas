@@ -265,12 +265,9 @@ type
         Buses_Covered: array of Integer;   //Stores the number of buses (estimated - 1 quadrant) per path
         Path_Size: array of Integer;   //Stores the estimated size of each path
         New_Graph: array of Integer;   //Stores the latest weighted graph
-        Num_SubCkts: Integer;            // Stores the number of subcircuits for tearing the circuit when executing the "tear_Circuit" command
         Link_Branches: array of String;    // Stores the names of the Link branches for Diakoptics
         PConn_Names: array of String;    // Stores the names of the buses (bus1) of the link branches
         PConn_Voltages: array of Double;    // Stores the voltages at the point of connection of the subcircuits
-        Locations: array of Integer;   // Stores the indexes of the locations
-        BusZones: array of String;
 
         // Variables for Diakoptics
         //TODO: migrate TSparse_Complex to KLUSolveX (most functionality already present in Eigen)
@@ -282,13 +279,19 @@ type
         Y4: TSparse_Complex; //  The inverse of the interconnections matrix
         // V_0: TSparse_Complex; //  The voltages of the partial solutions
         Ic: TSparse_Complex; //  The complementary Currents vector
-        MeTISZones: TStringList; // The list for assigning a zone to a bus after tearing
+{$ENDIF}
 
-        procedure AggregateProfiles(const UseActual: Boolean);
-        procedure Disable_All_DER();
-        function Tear_Circuit(): Integer; // Tears the circuit considering the number of Buses of the original Circuit
+        Num_SubCkts: Integer;            // Stores the number of subcircuits for tearing the circuit when executing the "tear_Circuit" command
+        Locations: array of Integer;   // Stores the indexes of the locations
+        BusZones: array of String;
+        MeTISZones: TStringList; // The list for assigning a zone to a bus after tearing
         function Create_MeTIS_graph(): String; // Generates the graph dscribing the model for MeTiS
         function Create_MeTIS_Zones(Filename: String): String; // Executes MeTiS and loads the zones into memory for further use
+        procedure Disable_All_DER();
+
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+        procedure AggregateProfiles(const UseActual: Boolean);
+        function Tear_Circuit(): Integer; // Tears the circuit considering the number of Buses of the original Circuit
         procedure Save_SubCircuits(AddISrc: Boolean);
                                                                                         // To guarantee the desired coverage when tearing the system
         procedure Format_SubCircuits(Path: String; NumCkts: Integer; AddISrc: Boolean); // Arrange the files of the subcircuits to make them independent
@@ -557,11 +560,11 @@ begin
     BusAdjPC := NIL;
     BusAdjPD := NIL;
 
+    Num_SubCkts := CPU_Cores - 1;
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
    // tearing algorithm vars initialization
     Coverage := 0.9;      // 90% coverage expected by default
     Actual_coverage := -1;       // No coverage
-    Num_SubCkts := CPU_Cores - 1;
 
     // Diakoptics variables
     Contours := TSparse_Complex.Create;
@@ -1076,6 +1079,7 @@ begin
     // This routine extracts and modifies the file content to separate the subsystems as OpenDSS projects indepedently
     Format_SubCircuits(FileRoot, length(Locations), AddISrc);
 end;
+{$ENDIF}
 
 // Generates the graph file for MeTIS within the project's folder
 function TDSSCircuit.Create_MeTIS_graph(): String;
@@ -1108,7 +1112,7 @@ begin
         setlength(myIdx, 1);
         MyName := Solution.Inc_Mat_Cols[i];
         // first, get the name of all PDE conencted to this Bus
-        for jj := 0 to (IncMat.NZero - 1) do
+        for jj := 0 to (Solution.IncMat.NZero - 1) do
         begin
             if Solution.IncMat.data[jj][1] = i then
             begin
@@ -1232,27 +1236,27 @@ begin
 {$ENDIF}
     if fileexists(Pchar(FileName + '.part.' + inttostr(Num_pieces))) then // Checks if the file exists before
         deletefile(Pchar(FileName + '.part.' + inttostr(Num_pieces)));
-    repeat
-        Process.ParseCommand(DSSDirectory + MeTISCmd, [Filename, inttostr(Num_pieces)], TextCmd); // Executes MeTIS
-        Flag := ANSIContainsText(TextCmd, 'I detected an error');
-        if Flag then // The # of edges was wrong, use the one proposed by MeTIS
-        begin
-            TextCmd := GetNumEdges(TextCmd); // Gest the # of edges proposed by MeTIS
-            jj := length(inttostr(length(Solution.Inc_Mat_Cols))) + 2;// Caculates the index for replacing the number in the Graph File
-            // Replaces the old data with the new at the file header
-            Replacer := TFileSearchReplace.Create(FileName);
-            try
-                Replacer.Replace(inttostr(length(Solution.Inc_Mat_Cols)) + ' ' + inttostr(length(Solution.Inc_Mat_Cols) - 1),
-                    inttostr(length(Solution.Inc_Mat_Cols)) + ' ' + TextCmd, [rfIgnoreCase]);
-            finally
-                Replacer.Free;
-            end;
-        end;
-    until not flag;
+    // repeat
+    //     Process.ParseCommand(DSSDirectory + MeTISCmd, [Filename, inttostr(Num_pieces)], TextCmd); // Executes MeTIS
+    //     Flag := ANSIContainsText(TextCmd, 'I detected an error');
+    //     if Flag then // The # of edges was wrong, use the one proposed by MeTIS
+    //     begin
+    //         TextCmd := GetNumEdges(TextCmd); // Gest the # of edges proposed by MeTIS
+    //         jj := length(inttostr(length(Solution.Inc_Mat_Cols))) + 2;// Caculates the index for replacing the number in the Graph File
+    //         // Replaces the old data with the new at the file header
+    //         Replacer := TFileSearchReplace.Create(FileName);
+    //         try
+    //             Replacer.Replace(inttostr(length(Solution.Inc_Mat_Cols)) + ' ' + inttostr(length(Solution.Inc_Mat_Cols) - 1),
+    //                 inttostr(length(Solution.Inc_Mat_Cols)) + ' ' + TextCmd, [rfIgnoreCase]);
+    //         finally
+    //             Replacer.Free;
+    //         end;
+    //     end;
+    // until not flag;
 
     // Verifies if there was no error executing MeTIS and the zones file was created
-    if (TextCmd <> '**Error**') and fileexists(Pchar(FileName + '.part.' + inttostr(Num_pieces))) then
-    begin
+    //if (TextCmd <> '**Error**') and fileexists(Pchar(FileName + '.part.' + inttostr(Num_pieces))) then
+    //begin
         MeTISZones := TStringList.Create; // Opens the file containing the tearing results
         MeTISZones.LoadFromFile(FileName + '.part.' + inttostr(Num_pieces));
         TextCmd := MeTISZones.Strings[1];
@@ -1297,7 +1301,7 @@ begin
             end;
         end;
 
-    end;
+    // end;
     for j := 0 to High(Locations) do
         inc(Locations[j]); //Adjust the location coords
 
@@ -1331,7 +1335,7 @@ begin
         end;
     end;
 end;
-
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
 // Aggregates profiles using the number of zones defined by the user
 procedure TDSSCircuit.AggregateProfiles(const UseActual: Boolean);
 var
