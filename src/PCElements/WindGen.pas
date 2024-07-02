@@ -236,9 +236,6 @@ type
 
         procedure WriteTraceRecord(const s: String);
 
-
-        procedure SetkWkvar(const PkW, Qkvar: Double);
-
     PROTECTED
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
 
@@ -676,23 +673,6 @@ begin
             TProp.UserData:
                 if UserModel.Exists then
                     UserModel.Edit(UserModelEditStr); // Send edit string to user model
-
-            // if a model 3 generator added, force calc of dQdV
-            // TProp.model:
-            //     if GenModel = 3 then
-            //         ActiveCircuit.Solution.SolutionInitialized := FALSE;
-
-            //TODO: BUG: these are wrong, the shapes are wind speeds!
-            // Sets the kW and kvar properties to match the peak kW demand from the Loadshape
-            TProp.yearly:
-                if (YearlyShapeObj <> NIL) and YearlyShapeObj.UseActual then
-                    SetkWkvar(YearlyShapeObj.MaxP, YearlyShapeObj.MaxQ);
-            TProp.daily:
-                if (DailyDispShapeObj <> NIL) and DailyDispShapeObj.UseActual then
-                    SetkWkvar(DailyDispShapeObj.MaxP, DailyDispShapeObj.MaxQ);
-            TProp.duty:
-                if (DutyShapeObj <> NIL) and DutyShapeObj.UseActual then
-                    SetkWkvar(DutyShapeObj.MaxP, DutyShapeObj.MaxQ);
 
             TProp.DebugTrace:
                 if WindModelDyn.DebugTrace then
@@ -2466,13 +2446,6 @@ procedure TWindGenObj.SetDragHandRegister(Reg: Integer;
 begin
     if Value > Registers[reg] then
         Registers[Reg] := Value;
-end;
-
-procedure TWindGenObj.SetkWkvar(const PkW, Qkvar: Double);
-begin
-    kWBase := PkW;
-    kvarBase := Qkvar;
-    PropertySideEffects(ord(TProp.kvar), 0, []);
 end;
 
 finalization
