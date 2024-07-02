@@ -7,8 +7,6 @@ unit WindGen;
 interface
 
 uses
-    WindGenVars,
-    WindGenUserModel,
     DSSClass,
     PCClass,
     PCElement,
@@ -32,98 +30,96 @@ type
 {$SCOPEDENUMS ON}
     TWindGenPropLegacy = (
         INVALID = 0,
-        phases = 1,
-        bus1 = 2,
-        kv = 3,
-        kW = 4,
-        PF = 5,
-        model = 6,
-        yearly = 7,
-        daily = 8,
-        duty = 9,
-        conn = 10,
-        kvar = 11,
-        cls = 12,
-        debugtrace = 13,
-        Vminpu = 14,
-        Vmaxpu = 15,
-        kVA = 16,
-        MVA = 17,
-        UserModel = 18,
-        UserData = 19,
-        DutyStart = 20,
-        DynamicEq = 21,
-        DynOut = 22,
-        Rthev = 23,
-        Xthev = 24,
-        Vss = 25,
-        Pss = 26,
-        Qss = 27,
-        vwind = 28,
-        QMode = 29,
-        SimMechFlg = 30,
-        APCFlg = 31,
-        QFlg = 32,
-        delt0 = 33,
-        N_WTG = 34,
-        VV_Curve = 35,
-        Ag = 36,
-        Cp = 37,
-        Lamda = 38,
-        P = 39,
-        pd = 40,
-        PLoss = 41,
-        Rad = 42,
-        VCutIn = 43,
-        VCutOut = 44
+        phases, // 1
+        bus1, // 2
+        kv, // 3
+        kW, // 4
+        PF, // 5
+        model, // 6
+        yearly, // 7
+        daily, // 8
+        duty, // 9
+        conn, // 10
+        kvar, // 11
+        cls, // 12
+        debugtrace, // 13
+        Vminpu, // 14
+        Vmaxpu, // 15
+        kVA, // 16
+        MVA, // 17
+        // UserModel, // 18
+        // UserData, // 19
+        DutyStart, // 20
+        DynamicEq, // 21
+        DynOut, // 22
+        Rthev, // 23
+        Xthev, // 24
+        Vss, // 25
+        Pss, // 26
+        Qss, // 27
+        vwind, // 28
+        QMode, // 29
+        SimMechFlg, // 30
+        APCFlg, // 31
+        QFlg, // 32
+        delt0, // 33
+        N_WTG, // 34
+        VV_Curve, // 35
+        Ag, // 36
+        Cp, // 37
+        Lamda, // 38
+        P, // 39
+        pd, // 40
+        PLoss, // 41
+        Rad, // 42
+        VCutIn, // 43
+        VCutOut // 44
     );
 
     TWindGenProp = (
         INVALID = 0,
-        Phases = 1,
-        Bus1 = 2,
-        kV = 3,
-        kW = 4,
-        PF = 5,
-        Model = 6,
-        Yearly = 7,
-        Daily = 8,
-        Duty = 9,
-        Conn = 10,
-        kvar = 11,
-        cls = 12,
-        DebugTrace = 13,
-        Vminpu = 14,
-        Vmaxpu = 15,
-        kVA = 16,
-        MVA = 17,
-        UserModel = 18,
-        UserData = 19,
-        DutyStart = 20,
-        DynamicEq = 21,
-        DynOut = 22,
-        RThev = 23,
-        XThev = 24,
-        VSS = 25,
-        PSS = 26,
-        QSS = 27,
-        VWind = 28,
-        QMode = 29,
-        SimMechFlg = 30,
-        APCFlg = 31,
-        QFlg = 32,
-        delt0 = 33,
-        N_WTG = 34,
-        VV_Curve = 35,
-        Ag = 36,
-        Cp = 37,
-        Lamda = 38,
-        P = 39,
-        pd = 40,
-        PLoss = 41,
-        Rad = 42,
-        VCutIn = 43,
-        VCutOut = 44
+        Phases,
+        Bus1,
+        kV,
+        kW,
+        PF,
+        Model,
+        Yearly,
+        Daily,
+        Duty,
+        Conn,
+        kvar,
+        cls,
+        DebugTrace,
+        Vminpu,
+        Vmaxpu,
+        kVA,
+        MVA,
+        DutyStart,
+        DynamicEq,
+        DynOut,
+        RThev,
+        XThev,
+        VSS,
+        PSS,
+        QSS,
+        VWind,
+        QMode,
+        SimMechFlg,
+        APCFlg,
+        QFlg,
+        delt0,
+        N_WTG,
+        VV_Curve,
+        Ag,
+        Cp,
+        Lamda,
+        P,
+        pd,
+        PLoss,
+        Rad,
+        VCutIn,
+        VCutOut
     );
 
     TWindGenVariable = (
@@ -152,6 +148,60 @@ type
         s = 22
     );    
 {$SCOPEDENUMS OFF}
+
+    // WindGen public data/state variable structure
+    TWindGenVars = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
+
+        Theta, // Direct-Axis voltage magnitude & angle
+        Pshaft,
+        Speed,
+        w0, // present Shaft Power and relative Speed, rad/sec, difference from Synchronous speed, w0
+        // actual speed = Speed + w0
+        Hmass, // Per unit mass constant
+        Mmass, // Mass constant actual values (Joule-sec/rad
+        D, Dpu, // Actual and per unit damping factors
+        kVArating,
+        kVWindGenBase,
+        Xd, Xdp, Xdpp, // machine Reactances, ohms
+        puXd, puXdp, puXdpp, // machine Reactances, per unit
+        dTheta,
+        dSpeed, // Derivatives of Theta and Speed
+        ThetaHistory,
+        SpeedHistory, // history variables for integration
+        Pnominalperphase,
+        Qnominalperphase: Double; // Target P and Q for power flow solution, watts, vars}: Double;    { All Doubles 
+
+        // 32-bit integers
+        NumPhases, // Number of phases
+        NumConductors, // Total Number of conductors (wye-connected will have 4)
+        Conn: Integer;   // 0 = wye; 1 = Delta
+
+        // Revisions (additions) to structure ...
+        // Later additions are appended to end of the structure so that
+        // previously compiled DLLs do not break
+
+        VthevMag: Double; // Thevinen equivalent voltage for dynamic model
+        VThevHarm: Double; // Thevinen equivalent voltage mag reference for Harmonic model
+        ThetaHarm: Double; // Thevinen equivalent voltage angle reference for Harmonic model
+        VTarget: Double;   // Target voltage for WindGen with voltage control
+        Zthev: Complex;
+        XRdp: Double;  // Assumed X/R for Xd'
+
+        PLoss: String;     // Name of the XY curve describing the active power losses for the turbine
+        ag, // Garbox ratio
+        Cp, // Turbine performance coefficient
+        Lamda, // Tip speed ratio
+        Poles, // Number of poles of the induction generator
+        pd, // Air density
+        Rad, // Rotor radius
+        VCutin, // Cut-in speed for the wind generator
+        VCutout, // Cut-out speed for the wind generator
+        Pm, // mechanical power (steady-state)
+        Ps, // Stator active power
+        Pr, // Rotor active power
+        Pg, // Total power output
+        s: Double;     // generator pitch
+    end;
 
     TWindGen = class(TDynEqPCEClass)
     PROTECTED
@@ -202,8 +252,6 @@ type
         Reg_MaxkW: Integer;
         Reg_Price: Integer;
         TraceFile: TFileStream;
-        UserModel: TWindGenUserModel; // User-Written Models
-        UserModelNameStr, UserModelEditStr: String;
         V_Avg: Double;
         varBase: Double; // Base vars per phase
         varMax: Double;
@@ -217,9 +265,10 @@ type
 
         procedure CalcDailyMult(Hr: Double);
         procedure CalcDutyMult(Hr: Double); // now incorporates DutyStart offset
+        procedure CalcYearlyMult(Hr: Double);
+
         procedure CalcGenModelContribution();
         procedure CalcVTerminalPhase();
-        procedure CalcYearlyMult(Hr: Double);
         procedure CalcYPrimMatrix(Ymatrix: TcMatrix);
 
         procedure DoConstantPQGen();
@@ -228,7 +277,6 @@ type
         procedure DoFixedQGen();
         procedure DoFixedQZGen();
         procedure DoHarmonicMode();
-        procedure DoUserModel();
 
         procedure Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
         procedure SetDragHandRegister(Reg: Integer; const Value: Double);
@@ -352,9 +400,9 @@ begin
         // - The help **string** in WindGen.pas still list the original 1, 2, 3, 4, 5, 6 from generator.pas
         WindGenModelEnum := TDSSEnum.Create('WindGen: Model', True, 0, 0, [
             'Constant PQ', 'Constant Z', 'Constant P, fixed Q', 
-            'Constant P, fixed X', 'User model'],
+            'Constant P, fixed X'],
             [1, 2, 4, 5, 6],
-            ['ConstantPQ', 'ConstantZ', 'ConstantP_FixedQ', 'ConstantP_FixedX', 'UserModel']);
+            ['ConstantPQ', 'ConstantZ', 'ConstantP_FixedQ', 'ConstantP_FixedX']);
         WindGenModelEnum.JSONUseNumbers := true;
 
     end;
@@ -404,14 +452,6 @@ begin
     PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.conn)] := ptruint(@obj.Connection);
     PropertyOffset2[ord(TProp.conn)] := PtrInt(DSS.ConnectionEnum);
-
-    // string properties
-    PropertyType[ord(TProp.UserModel)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.UserModel)] := ptruint(@obj.UserModelNameStr);
-    PropertyFlags[ord(TProp.UserModel)] := [TPropertyFlag.IsFilename];
-
-    PropertyType[ord(TProp.UserData)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.UserData)] := ptruint(@obj.UserModelEditStr);
 
     PropertyType[ord(TProp.DynOut)] := TPropertyType.StringListProperty;
     PropertyOffset[ord(TProp.DynOut)] := 1; // dummy
@@ -668,11 +708,6 @@ begin
                     end;
                 end;
             end;
-            TProp.UserModel:
-                UserModel.Name := UserModelNameStr; // Connect to user written models
-            TProp.UserData:
-                if UserModel.Exists then
-                    UserModel.Edit(UserModelEditStr); // Send edit string to user model
 
             TProp.DebugTrace:
                 if WindModelDyn.DebugTrace then
@@ -789,8 +824,6 @@ begin
     GenVars.D := Other.GenVars.D;
     GenVars.Dpu := Other.GenVars.Dpu;
     GenVars.XRdp := Other.GenVars.Xrdp;
-
-    UserModel.Name := Other.UserModel.Name; // Connect to user written models
 
     SetNCondsForConnection(self);
     RecalcElementData();
@@ -914,8 +947,6 @@ begin
     PublicDataStruct := pointer(@GenVars);
     PublicDataSize := SizeOf(TWindGenVars);
 
-    UserModel := TWindGenUserModel.Create(DSS, @GenVars);
-
     // Register values inherited from Generator model
     Reg_kWh := 1;
     Reg_kvarh := 2;
@@ -944,7 +975,6 @@ end;
 
 destructor TWindGenObj.Destroy;
 begin
-    UserModel.Free;
     inherited Destroy;
 end;
 
@@ -1157,22 +1187,16 @@ begin
 
     if not (ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel) then
     begin
-        case GenModel of
-            6:
-                Yeq := Cinv(cmplx(0.0, -GenVars.Xd)); // Gets negated in CalcYPrim
+        Yeq := Cmplx(GenVars.Pnominalperphase, -GenVars.Qnominalperphase) / Sqr(Vbase); // Vbase must be L-N for 3-phase
+        if (Vminpu <> 0.0) then
+            Yeq95 := Yeq / sqr(Vminpu)  // at 95% voltage
         else
-            with GenVars do
-                Yeq := Cmplx(Pnominalperphase, -Qnominalperphase) / Sqr(Vbase); // Vbase must be L-N for 3-phase
-            if (Vminpu <> 0.0) then
-                Yeq95 := Yeq / sqr(Vminpu)  // at 95% voltage
-            else
-                Yeq95 := Yeq; // Always a constant Z model
+            Yeq95 := Yeq; // Always a constant Z model
 
-            if (Vmaxpu <> 0.0) then
-                Yeq105 := Yeq / Sqr(Vmaxpu)   // at 105% voltage
-            else
-                Yeq105 := Yeq;
-        end;
+        if (Vmaxpu <> 0.0) then
+            Yeq105 := Yeq / Sqr(Vmaxpu)   // at 105% voltage
+        else
+            Yeq105 := Yeq;
     end;
 
     // If WindGen state changes, force re-calc of Y matrix
@@ -1225,10 +1249,6 @@ begin
     // DeltaQMax := (varMax - varMin) * 0.10; // Limit to 10% of range
 
     Reallocmem(InjCurrent, SizeOf(Complex) * Yorder);
-
-    // Update any user-written models
-    if Usermodel.Exists then
-        UserModel.FUpdateModel();
 
     WindModelDyn.ReCalcElementData();
 end;
@@ -1638,30 +1658,6 @@ begin
     end;
 end;
 
-procedure TWindGenObj.DoUserModel();
-// Compute total terminal Current from User-written model
-var
-    i: Integer;
-begin
-    CalcYPrimContribution(InjCurrent); // Init InjCurrent Array
-
-    if UserModel.Exists then    // Check automatically selects the usermodel if true
-    begin
-         //AppendToEventLog('Wnominal=', Format('%-.5g',[Pnominalperphase]));
-        UserModel.FCalc(Vterminal, Iterminal);
-        IterminalUpdated := TRUE;
-        with ActiveCircuit.Solution do
-        begin          // Negate currents from user model for power flow WindGen model
-            for i := 1 to FnConds do
-                InjCurrent[i] -= Iterminal[i];
-        end;
-    end
-    else
-    begin
-        DoSimpleMsg('%s model designated to use user-written model, but user-written model is not defined.', [FullName], 567);
-    end;
-end;
-
 procedure TWindGenObj.DoDynamicMode();
 // Compute Total Current and add into InjTemp
 var
@@ -1674,20 +1670,7 @@ begin
 
     // Inj = -Itotal (in) - Yprim*Vtemp
 
-    case GenModel of
-        6:
-            if UserModel.Exists then       // auto selects model
-            begin // We have total currents in Iterminal
-                UserModel.FCalc(Vterminal, Iterminal); // returns terminal currents in Iterminal
-            end
-            else
-            begin
-                DoSimpleMsg(Format('Dynamics model missing for %s ', [FullName]), 5671);
-                DSS.SolutionAbort := true;
-            end;
-    else
-        WindModelDyn.CalcDynamic(Vterminal, Iterminal);
-    end;
+    WindModelDyn.CalcDynamic(Vterminal, Iterminal);
 
     IterminalUpdated := TRUE;
 
@@ -1781,8 +1764,6 @@ begin
             DoFixedQGen();
         5:
             DoFixedQZGen();
-        6:
-            DoUserModel();
     else
         DoConstantPQGen(); // for now, until we implement the other models.
     end;
@@ -1998,15 +1979,6 @@ begin
             Speed := 0.0; // relative to synch speed
             dSpeed := 0.0;
 
-            // Init User-written models
-            if GenModel = 6 then
-            begin
-                if UserModel.Exists then
-                    UserModel.FInit(Vterminal, Iterminal);
-
-                Exit;
-            end;
-
             WindModelDyn.Init(Vterminal, Iterminal);
             Exit;
         end;
@@ -2084,15 +2056,7 @@ begin
                 FSFlush(TraceFile);
             end;
 
-            if GenModel = 6 then
-            begin
-                if UserModel.Exists then
-                    UserModel.Integrate();
-            end
-            else
-            begin
-                WindModelDyn.Integrate();
-            end;
+            WindModelDyn.Integrate();
             Exit;
         end;
     
@@ -2207,17 +2171,6 @@ begin
         end;
         Exit;
     end;
-    
-    if UserModel.Exists then
-    begin
-        N := UserModel.FNumVars;
-        k := (i - NumWGenVariables);
-        if k <= N then
-        begin
-            Result := UserModel.FGetVariable(k);
-            Exit;
-        end;
-    end;
 end;
 
 procedure TWindGenObj.Set_Variable(i: Integer; Value: Double);
@@ -2263,17 +2216,6 @@ begin
 
     if i <= NumWGenVariables then
         Exit;
-
-    if UserModel.Exists then
-    begin
-        N := UserModel.FNumVars;
-        i -= NumWGenVariables;
-        if i <= N then
-        begin
-            UserModel.FSetVariable(i, Value);
-            Exit;
-        end;
-    end;
 end;
 
 procedure TWindGenObj.GetAllVariables(var States: ArrayOfDouble);
@@ -2291,12 +2233,6 @@ begin
 
     for i := 1 to NumWGenVariables do
         States[i - 1] := Variable[i];
-
-    if UserModel.Exists then
-    begin
-        N := UserModel.FNumVars;
-        UserModel.FGetAllVars(pDoubleArray(@States[NumWGenVariables]));
-    end;
 end;
 
 function TWindGenObj.NumVariables(): Integer;
@@ -2308,8 +2244,6 @@ begin
 
     // Fallback to the classic
     Result := NumWGenVariables;
-    if UserModel.Exists then
-        Result := Result + UserModel.FNumVars;
 end;
 
 function TWindGenObj.VariableName(i: Integer): String;
@@ -2336,19 +2270,6 @@ begin
     begin
         Result := TWindGen(ParentClass).varNames[i - 1];
         Exit;
-    end;
-
-    if UserModel.Exists then  // Checks for existence and Selects
-    begin
-        pName := PAnsiChar(@Buff);
-        n := UserModel.FNumVars;
-        i2 := i - NumWGenVariables;
-        if i2 <= n then
-        begin
-            UserModel.FGetVarName(i2, pName, BuffSize);
-            Result := String(pName);
-            Exit;
-        end;
     end;
 end;
 

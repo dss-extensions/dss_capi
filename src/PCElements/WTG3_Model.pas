@@ -9,12 +9,7 @@ uses
     ucomplex,
     DSSUComplex,
     Mathutil,
-    ParserDel,
-    Command,
-    WindGenVars,
-    DSSCallBackRoutines,
-    Classes,
-    ArrayDef;
+    Classes;
 
 type
     TSymCompArray = array [0..2] of Complex;
