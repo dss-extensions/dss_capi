@@ -1014,7 +1014,6 @@ end;
 
 procedure TWindGenObj.SetNominalGeneration();
 var
-    myV: complex;
     VMag,
     VMagTmp,
     LeadLag,
@@ -1032,7 +1031,6 @@ begin
 
     VMag := 0.0;
     VMagTmp := 0.0;
-    myV := CZero;
     GenOn_Saved := GenON;
     ShapeFactor := cmplx(WindModelDyn.VWind, 0);
     
@@ -1151,8 +1149,7 @@ begin
                             // get the highest voltage done locally given with whatever is on memory
                             for i := 1 to NumPhases do
                             begin
-                                myV := ActiveCircuit.Solution.NodeV[NodeRef[i]];
-                                VMagTmp := ctopolar(myV).mag;
+                                VMagTmp := cabs(ActiveCircuit.Solution.NodeV[NodeRef[i]]);
                                 if VMagTmp > VMag then
                                     VMag := VmagTmp;
                             end;
