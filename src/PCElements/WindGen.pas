@@ -241,12 +241,6 @@ type
         GenSwitchOpen: Boolean;
         kVANotSet: Boolean;
         PVFactor: Double; // deceleration Factor for computing vars for PV WindGens
-        Reg_Hours: Integer;
-        Reg_kvarh: Integer;
-        Reg_kWh: Integer;
-        Reg_MaxkVA: Integer;
-        Reg_MaxkW: Integer;
-        Reg_Price: Integer;
         TraceFile: TFileStream;
         V_Avg: Double;
         varBase: Double; // Base vars per phase
@@ -365,6 +359,13 @@ type
 const
     NumPropsThisClass = Ord(High(TProp));
     NumWGenVariables = ord(High(TVar));
+    // Register values inherited from Generator model
+    Reg_kWh = 1;
+    Reg_kvarh = 2;
+    Reg_MaxkW = 3;
+    Reg_MaxkVA = 4;
+    Reg_Hours = 5;
+    Reg_Price = 6;
 var
     PropInfo: Pointer = NIL;
     PropInfoLegacy: Pointer = NIL;
@@ -928,14 +929,6 @@ begin
 
     PublicDataStruct := pointer(@GenVars);
     PublicDataSize := SizeOf(TWindGenVars);
-
-    // Register values inherited from Generator model
-    Reg_kWh := 1;
-    Reg_kvarh := 2;
-    Reg_MaxkW := 3;
-    Reg_MaxkVA := 4;
-    Reg_Hours := 5;
-    Reg_Price := 6;
 
     PVFactor := 0.1;
     WindModelDyn.DebugTrace := false;
