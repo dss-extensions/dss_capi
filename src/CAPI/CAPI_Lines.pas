@@ -970,14 +970,9 @@ end;
 procedure Lines_Set_IsSwitch(Value: TAPIBoolean); CDECL;
 var
     elem: TLineObj;
-    prev: Integer = 0;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-        
-    if elem.IsSwitch then
-        prev := Integer(True);
-
     elem.SetInteger(ord(TLineProp.Switch), Integer(Value), []);
 end;
 //------------------------------------------------------------------------------

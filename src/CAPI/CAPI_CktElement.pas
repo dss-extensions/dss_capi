@@ -409,10 +409,6 @@ procedure CktElement_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISi
 // returns a set of seq voltages (3) for each terminal
 // 0, 1, 2 sequence  (0, +, -)
 var
-    Result: PDoubleArray0;
-    i: Integer;
-    V012: pComplexArray;
-    S: String;
     elem: TDSSCktElement;
 begin
     DefaultResult(ResultPtr, ResultCount);
