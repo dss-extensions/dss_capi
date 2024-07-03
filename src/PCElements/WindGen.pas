@@ -232,13 +232,9 @@ type
 
         Edp: Complex;
         PhaseCurrentLimit: Complex;
-        // DeltaQMax: Double; // Max allowable var change on Model=3 per iteration
 
-        // DQDV: Double;
-        // DQDVSaved: Double;
         FForcedON: Boolean;
         FirstSampleAfterReset: Boolean;
-        // IsFixed: Boolean; // if Fixed, always at base value
         WindGenSolutionCount: Integer;
         GenFundamental: Double; // Thevinen equivalent voltage mag and angle reference for Harmonic model
         GenON: Boolean; // Indicates whether WindGen is currently on
@@ -254,8 +250,6 @@ type
         TraceFile: TFileStream;
         V_Avg: Double;
         varBase: Double; // Base vars per phase
-        varMax: Double;
-        varMin: Double;
         VBase: Double; // Base volts suitable for computing currents
         VBase105: Double;
         VBase95: Double;
@@ -299,8 +293,6 @@ type
         GenModel: Integer; // Variation with voltage
         GenVars: TWindGenVars; // State Variables
         kvarBase: Double;
-        // kvarMax: Double;
-        // kvarMin: Double;
         kWBase: Double;
         PFNominal: Double;
         
@@ -685,9 +677,6 @@ begin
                 if (kWBase * kvarBase) < 0.0 then
                     PFNominal := -PFNominal;
 
-                // kvarMax := 2.0 * kvarBase;
-                // kvarMin := -kvarMax;
-
                 if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
                 begin
                     PrpSequence[ord(TProp.PF)] := 0;
@@ -795,8 +784,6 @@ begin
     GenVars.Pnominalperphase := Other.GenVars.Pnominalperphase;
     PFNominal := Other.PFNominal;
     GenVars.Qnominalperphase := Other.GenVars.Qnominalperphase;
-    // varMin := Other.varMin;
-    // varMax := Other.varMax;
     Connection := Other.Connection;
     YearlyShapeObj := Other.YearlyShapeObj;
     DailyDispShapeObj := Other.DailyDispShapeObj;
@@ -806,9 +793,6 @@ begin
     GenModel := Other.GenModel;
     // IsFixed := Other.IsFixed;
     GenVars.VTarget := Other.GenVars.VTarget;
-    // Vpu := Other.Vpu;
-    // kvarMax := Other.kvarMax;
-    // kvarMin := Other.kvarMin;
     FForcedON := Other.FForcedON;
     kVANotSet := Other.kVANotSet;
 
@@ -880,8 +864,6 @@ begin
     kWBase := 1000.0;
     kvarBase := 60.0;
 
-    // kvarMax := kvarBase * 2.0;
-    // kvarMin := -kvarmax;
     PFNominal := 0.88;
     YearlyShapeObj := nil; // if YearlyShapeobj = nil then the load alway stays nominal * global multipliers
     DailyDispShapeObj := nil; // if DaillyShapeobj = nil then the load alway stays nominal * global multipliers
@@ -1207,8 +1189,6 @@ begin
     VBase105 := VMaxPu * VBase;
 
     varBase := 1000.0 * kvarBase / Fnphases;
-    // varMin := 1000.0 * kvarMin / Fnphases;
-    // varMax := 1000.0 * kvarMax / Fnphases;
 
     // Populate data structures used for interchange with user-written models.
     with GenVars do
@@ -1243,7 +1223,6 @@ begin
 
     // Initialize to Zero - defaults to PQ WindGen
     // Solution object will reset after circuit modifications
-    // DeltaQMax := (varMax - varMin) * 0.10; // Limit to 10% of range
 
     Reallocmem(InjCurrent, SizeOf(Complex) * Yorder);
 
@@ -2275,8 +2254,6 @@ var
     V: Double;
     had_kVA, had_MVA: Boolean;
     kW_new, PF_new, new_kVA, new_MVA: Double;
-    // had_kvars: Boolean;
-    // new_minkvar, new_maxkvar: Double;
     oldPhases, changes: Integer;
 begin
     // Make sure voltage is line-neutral
@@ -2292,15 +2269,8 @@ begin
     begin
         had_kVA := PrpSequence[ord(TProp.kVA)] <> 0;
         had_MVA := PrpSequence[ord(TProp.MVA)] <> 0;
-        // had_kvars := (PrpSequence[ord(TProp.Maxkvar)] <> 0) or (PrpSequence[ord(TProp.Minkvar)] <> 0);
         kW_new := kWbase / Fnphases;
         PF_new := PFNominal;
-        // if had_kvars then
-        // begin
-        //     new_minkvar := kvarmin / Fnphases;
-        //     new_maxkvar := kvarmax / Fnphases;
-        //     Inc(changes);
-        // end;
         if had_kVA then
         begin
             new_kVA := GenVars.kvarating / Fnphases;
@@ -2349,8 +2319,6 @@ begin
     begin
         kvarBase := kWBase * sqrt(1.0 / Sqr(PFNominal) - 1.0);
         GenVars.Qnominalperphase := 1000.0 * kvarBase / Fnphases;
-        // kvarMax := 2.0 * kvarBase;
-        // kvarMin := -kvarMax;
         if PFNominal < 0.0 then
             kvarBase := -kvarBase;
 
