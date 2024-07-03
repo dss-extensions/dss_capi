@@ -162,8 +162,8 @@ type
         D, Dpu, // Actual and per unit damping factors
         kVArating,
         kVWindGenBase,
-        Xd, Xdp, Xdpp, // machine Reactances, ohms
-        puXd, puXdp, puXdpp, // machine Reactances, per unit
+        Xdp, Xdpp, // machine Reactances, ohms
+        puXdp, puXdpp, // machine Reactances, per unit
         dTheta,
         dSpeed, // Derivatives of Theta and Speed
         ThetaHistory,
@@ -794,7 +794,6 @@ begin
     kVANotSet := Other.kVANotSet;
 
     GenVars.kVArating := Other.GenVars.kVArating;
-    GenVars.puXd := Other.GenVars.puXd;
     GenVars.puXdp := Other.GenVars.puXdp;
     GenVars.puXdpp := Other.GenVars.puXdpp;
     GenVars.Hmass := Other.GenVars.Hmass;
@@ -891,10 +890,8 @@ begin
     with GenVars do
     begin
         // These are inherited from the generator object, it is uncertain if needed
-        puXd := 1.0;
         puXdp := 0.28;
         puXdpp := 0.20;
-        Xd := puXd * SQR(kVWindGenBase) * 1000.0 / kVARating;
         Xdp := puXdp * SQR(kVWindGenBase) * 1000.0 / kVARating;
         Xdpp := puXdpp * SQR(kVWindGenBase) * 1000.0 / kVARating;
         Hmass := 1.0; //  W-sec/VA rating
@@ -1182,7 +1179,6 @@ begin
     // Populate data structures used for interchange with user-written models.
     with GenVars do
     begin
-        Xd := puXd * 1000.0 * SQR(kVWindGenBase) / kVARating;
         Xdp := puXdp * 1000.0 * SQR(kVWindGenBase) / kVArating;
         Xdpp := puXdpp * 1000.0 * SQR(kVWindGenBase) / kVArating;
         Conn := connection;
