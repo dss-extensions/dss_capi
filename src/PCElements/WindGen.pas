@@ -388,13 +388,9 @@ begin
             ['Q', 'PF', 'VoltVar']);
         WindGenQModeEnum.JSONUseNumbers := true;
 
-        // TODO: the docs in the official version conflict here:
-        // - The help **file** say 1, 2, 3, 4, 5
-        // - The help **string** in WindGen.pas still list the original 1, 2, 3, 4, 5, 6 from generator.pas
         WindGenModelEnum := TDSSEnum.Create('WindGen: Model', True, 0, 0, [
-            'Constant PQ', 'Constant Z', 'Constant P, fixed Q', 
-            'Constant P, fixed X'],
-            [1, 2, 4, 5, 6],
+            'Constant PQ', 'Constant Z', 'Constant P, fixed Q', 'Constant P, fixed X'],
+            [1, 2, 4, 5],
             ['ConstantPQ', 'ConstantZ', 'ConstantP_FixedQ', 'ConstantP_FixedX']);
         WindGenModelEnum.JSONUseNumbers := true;
 
