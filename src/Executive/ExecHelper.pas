@@ -4454,7 +4454,7 @@ begin
         iBus := DSS.ActiveCircuit.BusList.Find(sBus);
         pBus := DSS.ActiveCircuit.Buses[iBus];
         kvln := pBus.kVBase;
-        if (pGen.Connection = 1) or (pGen.NPhases > 1) then
+        if (pGen.Connection = TGeneralConnection.Delta) or (pGen.NPhases > 1) then
             pGen.PresentKV := kvln * sqrt(3.0)
         else
             pGen.PresentKV := kvln;

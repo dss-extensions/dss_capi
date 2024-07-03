@@ -70,7 +70,8 @@ uses
     SysUtils,
     DSSClass,
     DSSHelper,
-    DSSObjectHelper;
+    DSSObjectHelper,
+    ArrayDef;
 type
     TObj = TGeneratorObj;
 //------------------------------------------------------------------------------
@@ -511,7 +512,7 @@ begin
     Result := FALSE;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := (elem.Connection = 1);
+    Result := (elem.Connection = TGeneralConnection.Delta);
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_kva(): Double; CDECL;
@@ -595,9 +596,9 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if Value then
-        elem.Connection := 1
+        elem.Connection := TGeneralConnection.Delta
     else
-        elem.Connection := 0;
+        elem.Connection := TGeneralConnection.Wye;
 
     elem.PropertySideEffects(ord(TGeneratorProp.Conn), 0, []);
     elem.RecalcElementData();

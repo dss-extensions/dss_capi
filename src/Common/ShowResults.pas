@@ -3789,7 +3789,7 @@ begin
             BusName := DSS.ActiveCircuit.BusList.NameOfIndex(pGen.Terminals[0].BusRef);
             if pBus.kVBase <> 0.0 then
             begin
-                if (pGen.Nphases = 1) and (pGen.Connection = 0) then
+                if (pGen.Nphases = 1) and (pGen.Connection = TGeneralConnection.Wye) then
                 begin
                     if abs(pGen.Genvars.kVGeneratorBase - pBus.kVBase) > 0.10 * pBus.kVBase then
                     begin

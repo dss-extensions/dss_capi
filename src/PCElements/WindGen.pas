@@ -235,7 +235,6 @@ type
 
         FForcedON: Boolean;
         FirstSampleAfterReset: Boolean;
-        WindGenSolutionCount: Integer;
         GenFundamental: Double; // Thevinen equivalent voltage mag and angle reference for Harmonic model
         GenON: Boolean; // Indicates whether WindGen is currently on
         GenSwitchOpen: Boolean;
@@ -256,7 +255,6 @@ type
         procedure CalcYearlyMult(Hr: Double);
 
         procedure CalcGenModelContribution();
-        procedure CalcVTerminalPhase();
         procedure CalcYPrimMatrix(Ymatrix: TcMatrix);
 
         procedure DoConstantPQGen();
@@ -268,7 +266,6 @@ type
 
         procedure Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
         procedure SetDragHandRegister(Reg: Integer; const Value: Double);
-        procedure StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
 
         procedure WriteTraceRecord(const s: String);
 
@@ -279,7 +276,6 @@ type
         ShapeFactor: Complex;
 
         WindModelDyn: TGE_WTG3_Model;
-        Connection: Integer; // 0 = line-neutral; 1=Delta
         DailyDispShapeObj: TLoadShapeObj; // Daily (24 HR) WindGen shape
         DutyShapeObj: TLoadShapeObj; // Duty cycle load shape for changes typically less than one hour
         DutyStart: Double; // starting time offset into the DutyShape [hrs] for this WindGen
@@ -588,9 +584,9 @@ end;
 procedure SetNcondsForConnection(obj: TObj);
 begin
     case obj.Connection of
-        0:
+        TGeneralConnection.Wye:
             obj.NConds := obj.Fnphases + 1;
-        1:
+        TGeneralConnection.Delta:
             case obj.Fnphases of
                 1, 2:
                     obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
@@ -865,11 +861,9 @@ begin
     DailyDispShapeObj := nil; // if DaillyShapeobj = nil then the load alway stays nominal * global multipliers
     DutyShapeObj := nil; // if DutyShapeobj = nil then the load alway stays nominal * global multipliers
     DutyStart := 0.0;
-    Connection := 0; // Wye (star)
+    // Connection := 0; // Wye (star) -- now done in PCE
     GenModel := 1; // Typical fixed kW negative load
     GenClass := 1;
-
-    WindGenSolutionCount := -1; // For keep track of the present solution in Injcurrent calcs
 
     GenVars.kVWindGenBase := 12.47;
     // Vpu := 1.0;
@@ -1181,7 +1175,7 @@ begin
     begin
         Xdp := puXdp * 1000.0 * SQR(kVWindGenBase) / kVArating;
         Xdpp := puXdpp * 1000.0 * SQR(kVWindGenBase) / kVArating;
-        Conn := connection;
+        Conn := ord(connection);
         NumPhases := Fnphases;
         NumConductors := Fnconds;
 
@@ -1234,22 +1228,22 @@ begin
         else
             Y := EPSILON;
 
-        if Connection = 1 then
+        if Connection = TGeneralConnection.Delta then
             Y := Y / 3.0; // Convert to delta impedance
         Y.im := Y.im / FreqMultiplier;
         Yij := -Y;
         for i := 1 to Fnphases do
         begin
             case Connection of
-                0:
+                TGeneralConnection.Wye:
                 begin
                     Ymatrix[i, i] := Y;
                     Ymatrix.AddElement(Fnconds, Fnconds, Y);
                     Ymatrix[i, Fnconds] := Yij;
                     Ymatrix[Fnconds, i] := Yij;
                 end;
-                1:
-                begin   // Delta connection}
+                TGeneralConnection.Delta:
+                begin
                     Ymatrix[i, i] := Y;
                     Ymatrix.AddElement(i, i, Y); // put it in again
                     for j := 1 to i - 1 do
@@ -1269,8 +1263,8 @@ begin
         Y.im := Y.im / FreqMultiplier;
 
         case Connection of
-            0:
-                begin // WYE
+            TGeneralConnection.Wye:
+                begin
                     Yij := -Y;
                     for i := 1 to Fnphases do
                     begin
@@ -1280,8 +1274,8 @@ begin
                         YMatrix[Fnconds, i] := Yij;
                     end;
                 end;
-            1:
-                begin  // Delta or L-L
+            TGeneralConnection.Delta:
+                begin
                     Y := Y / 3.0; // Convert to delta impedance
                     Yij := -Y;
                     for i := 1 to Fnphases do
@@ -1345,30 +1339,6 @@ begin
 
      // Account for Open Conductors
     inherited CalcYPrim();
-end;
-
-procedure TWindGenObj.StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
-// Add the current into the proper location according to connection
-// 
-// Reverse of similar routine in load  (Cnegates are switched)
-var
-    j: Integer;
-begin
-    case Connection of
-        0:
-        begin  //Wye
-            TermArray[i] += Curr;
-            TermArray[Fnconds] -= Curr; // Neutral
-        end;
-        1:
-        begin //DELTA
-            TermArray[i] += Curr;
-            j := i + 1;
-            if j > Fnconds then
-                j := 1;
-            TermArray[j] -= Curr;
-        end;
-    end;
 end;
 
 procedure TWindGenObj.WriteTraceRecord(const s: String);
@@ -1446,8 +1416,8 @@ begin
         VMag := Cabs(V);
 
         case Connection of
-            0:
-            begin  //Wye
+            TGeneralConnection.Wye:
+            begin
                 if VMag <= VBase95 then
                     Curr := Yeq95 * V  // Below 95% use an impedance model
                 else
@@ -1456,8 +1426,8 @@ begin
                 else
                     Curr := cong(Cmplx(GenVars.Pnominalperphase, GenVars.Qnominalperphase) / V); // Between 95% -105%, constant PQ
             end;
-            1:
-            begin  //Delta
+            TGeneralConnection.Delta:
+            begin
                 case Fnphases of
                     2, 3:
                         VMag := VMag / SQRT3; // L-N magnitude
@@ -1491,7 +1461,7 @@ begin
     CalcYPrimContribution(InjCurrent); // Init InjCurrent Array
     CalcVTerminalPhase(); // get actual voltage across each phase of the load
     ZeroITerminal();
-    if Connection = 0 then
+    if Connection = TGeneralConnection.Wye then
         Yeq2 := Yeq
     else
         Yeq2 := Yeq / 3.0;
@@ -1525,7 +1495,7 @@ begin
         VMag := Cabs(V);
 
         case Connection of
-            0:
+            TGeneralConnection.Wye:
             begin
                 if VMag <= VBase95 then
                     Curr := Cmplx(Yeq95.re, YQfixed) * V  // Below 95% use an impedance model
@@ -1535,7 +1505,7 @@ begin
                 else
                     Curr := cong(Cmplx(GenVars.Pnominalperphase, varBase) / V);
             end;
-            1:
+            TGeneralConnection.Delta:
             begin
                 case Fnphases of
                     2, 3:
@@ -1578,7 +1548,7 @@ begin
         Vmag := Cabs(V);
 
         case Connection of
-            0:
+            TGeneralConnection.Wye:
             begin
                 if Vmag <= VBase95 then
                     Curr := Cmplx(Yeq95.re, YQfixed) * V  // Below 95% use an impedance model
@@ -1591,7 +1561,7 @@ begin
                     Curr += Cmplx(0.0, YQFixed) * V; // add in Q component of current
                 end;
             end;
-            1:
+            TGeneralConnection.Delta:
             begin
                 case Fnphases of
                     2, 3:
@@ -1665,37 +1635,11 @@ begin
     end;
 
     // Handle Wye Connection
-    if Connection = 0 then
+    if Connection = TGeneralConnection.Wye then
         pBuffer[Fnconds] := Vterminal[Fnconds]; // assume no neutral injection voltage
 
     // Inj currents = Yprim (E)
     YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
-end;
-
-procedure TWindGenObj.CalcVTerminalPhase();
-var
-    i, j: Integer;
-begin
-    // Establish phase voltages and stick in Vterminal
-    case Connection of
-        0:
-        begin
-            for i := 1 to Fnphases do
-                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[Fnconds]);
-        end;
-        1:
-        begin
-            for i := 1 to Fnphases do
-            begin
-                j := i + 1;
-                if j > Fnconds then
-                    j := 1;
-                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[j]);
-            end;
-        end;
-    end;
-
-    WindGenSolutionCount := ActiveCircuit.Solution.SolutionCount;
 end;
 
 procedure TWindGenObj.CalcGenModelContribution();
@@ -1858,9 +1802,9 @@ begin
         ComputeIterminal(); // Get present value of current
         NodeV := ActiveCircuit.Solution.NodeV;
         case Connection of
-            0:// wye - neutral is explicit
+            TGeneralConnection.Wye:// wye - neutral is explicit
                 Va := NodeV[NodeRef[1]] - NodeV[NodeRef[Fnconds]];
-            1:// delta -- assume neutral is at zero
+            TGeneralConnection.Delta:// delta -- assume neutral is at zero
                 Va := NodeV[NodeRef[1]];
         end;
 
@@ -2242,7 +2186,7 @@ var
     oldPhases, changes: Integer;
 begin
     // Make sure voltage is line-neutral
-    if (Fnphases > 1) or (connection <> 0) then
+    if (Fnphases > 1) or (connection <> TGeneralConnection.Wye) then
         V := GenVars.kVWindGenBase / SQRT3
     else
         V := GenVars.kVWindGenBase;

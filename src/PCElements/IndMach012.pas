@@ -104,7 +104,6 @@ type
     TIndMach012Obj = class(TPCElement)
     PRIVATE
         // Private variables of this class
-        Connection: Integer;  // 0 = line-neutral; 1=Delta
         Yeq: Complex;   // Y at nominal voltage
 
         puRs, puXs, puRr, puXr, puXm,
@@ -359,10 +358,10 @@ end;
 procedure SetNcondsForConnection(Obj: TObj);
 begin
     case obj.Connection of
-        0:
+        TGeneralConnection.Wye:
             obj.NConds := obj.Fnphases;  // Neutral is not connected for induction machine
-        1:
-            case obj.Fnphases of        // Delta connection
+        TGeneralConnection.Delta:
+            case obj.Fnphases of
                 1, 2:
                     obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
             else
@@ -462,7 +461,7 @@ begin
     ShapeIsActual := FALSE;
     IndMach012SwitchOpen := FALSE;
 
-    Connection := 1;  // Delta Default
+    Connection := TGeneralConnection.Delta;  // Delta Default -- override default from PCE (Wye)
 
     MachineData.kVGeneratorBase := 12.47;
 
@@ -478,7 +477,7 @@ begin
         XRdp := 20.0;   // not used for indmach
 
            // newly added
-        Conn := connection;
+        Conn := Ord(connection);
         NumPhases := Fnphases;
         NumConductors := Fnconds;
     end;
@@ -520,7 +519,7 @@ begin
     with MachineData do
     begin
         ZBase := Sqr(kVGeneratorBase) / kVArating * 1000.0;
-        Conn := connection;
+        Conn := Ord(connection);
         NumPhases := Fnphases;
         NumConductors := Fnconds;
     end;
@@ -745,18 +744,18 @@ begin
         else
             Y := EPSILON;
 
-        if Connection = 1 then
+        if Connection = TGeneralConnection.Delta then
             Y := Y / 3.0; // Convert to delta impedance
         Y.im := Y.im / FreqMultiplier;  // adjust for frequency
         Yij := -Y;
         for i := 1 to Fnphases do
         begin
             case Connection of
-                0:
+                TGeneralConnection.Wye:
                 begin
                     Ymatrix[i, i] := Y;  // sets the element
                 end;
-                1:
+                TGeneralConnection.Delta:
                 begin   // Delta connection
                     Yadder := Y * 1.000001;  // to prevent floating delta
                     Ymatrix[i, i] := Y + Yadder;   // add a little bit to diagonal //TODO: check
@@ -784,7 +783,7 @@ begin
 
     case Connection of
 
-        0:
+        TGeneralConnection.Wye:
             begin // WYE
                 for i := 1 to Fnphases do
                 begin
@@ -792,7 +791,7 @@ begin
                 end;
             end;
 
-        1:
+        TGeneralConnection.Delta:
             begin  // Delta  or L-L
                 Y := Y / 3.0; // Convert to delta impedance
                 Yij := -Y;
@@ -981,7 +980,7 @@ begin
     end;
 
     // Handle Wye Connection
-    if Connection = 0 then
+    if Connection = TGeneralConnection.Wye then
         pBuffer[Fnconds] := Vterminal[Fnconds];  // assume no neutral injection voltage
 
     // In this case the injection currents are simply Yprim(frequency) times the voltage buffer

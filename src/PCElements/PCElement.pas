@@ -24,13 +24,17 @@ type
         procedure GetTerminalCurrents(Curr: pComplexArray); VIRTUAL;
         function Get_Variable(i: Integer): Double; VIRTUAL;
         procedure Set_Variable(i: Integer; Value: Double); VIRTUAL;
+        procedure CalcVTerminalPhase();
+        procedure StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer); // This base version uses the Generator convention (the version in Load.pas negates Curr)
     PUBLIC
+        Connection: TGeneralConnection;
         SpectrumObj: TSpectrumObj;
 
         MeterObj,  // Upline Energymeter
         SensorObj: TMeterElement; // Upline Sensor for this element
 
         InjCurrent: pComplexArray;
+        elementSolutionCount: Integer;
 
 
         constructor Create(ParClass: TDSSClass);
@@ -83,6 +87,11 @@ begin
     MeterObj := NIL;
     InjCurrent := NIL;
     FIterminalUpdated := FALSE;
+    Connection := TGeneralConnection.Wye;
+
+    // elementSolutionCount is used only in Load, but many PCEs did fill the value before
+    // we moved it here with CalcVTerminalPhase
+    elementSolutionCount := -1; // For keeping track of the present solution in Injcurrent calcs
 
     DSSObjType := PC_ELEMENT;
 end;
@@ -306,6 +315,57 @@ begin
     Other := TPCElement(OtherObj);
 
     SpectrumObj := Other.SpectrumObj;
+end;
+
+procedure TPCElement.CalcVTerminalPhase();
+var
+    i, j: Integer;
+begin
+    // Establish phase voltages and stick in Vterminal
+    case Connection of
+
+        TGeneralConnection.Wye:
+        begin
+            for i := 1 to Fnphases do
+                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[Fnconds]);
+        end;
+
+        TGeneralConnection.Delta:
+        begin
+            for i := 1 to Fnphases do
+            begin
+                j := i + 1;
+                if j > Fnconds then
+                    j := 1;
+                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[j]);
+            end;
+        end;
+    end;
+    elementSolutionCount := ActiveCircuit.Solution.SolutionCount;
+end;
+
+procedure TPCElement.StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
+// Add the current into the proper location according to connection
+// 
+// Reverse of similar routine in load  (Cnegates are switched)
+var
+    j: Integer;
+begin
+    case Connection of
+        TGeneralConnection.Wye:
+        begin
+            TermArray[i] += Curr;
+            TermArray[Fnconds] -= Curr; // Neutral
+        end;
+        TGeneralConnection.Delta:
+        begin
+            TermArray[i] += Curr;
+            j := i + 1;
+            if j > Fnconds then
+                j := 1;
+            TermArray[j] -= Curr;
+        end;
+    end;
 end;
 
 end.

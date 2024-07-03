@@ -17,7 +17,8 @@ uses
     mathutil,
     Classes,
     Ucmatrix,
-    DSSUcomplex;
+    DSSUcomplex,
+    ArrayDef;
 
 type
     TInvBasedPCEClass = class(TDynEqPCEClass)
@@ -53,8 +54,6 @@ type
         Qnominalperphase: Double;
 
         ShapeFactor: Complex;
-
-        Connection: Integer;  // 0 = line-neutral; 1=Delta
 
         DailyShapeObj: TLoadShapeObj;  // Daily Storage element Shape for this load
         DutyShapeObj: TLoadShapeObj;  // Shape for this Storage element
@@ -110,7 +109,6 @@ type
         function UsingCIMDynamics(): Boolean;
         function CheckAmpsLimit(): Boolean;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
-        procedure StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
         function Get_Presentkvar: Double;
     end;
 
@@ -235,29 +233,6 @@ begin
     except
         On E: Exception do
             DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName]), E.Message, _('Inadequate storage allotted for circuit element.'), 327);
-    end;
-end;
-
-procedure TInvBasedPCE.StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
- // Add the current into the proper location according to connection
- // Reverse of similar routine in load  (Cnegates are switched)
-var
-    j: Integer;
-begin
-    case Connection of
-        0:
-        begin  //Wye
-            TermArray[i] += Curr;
-            TermArray[Fnconds] -= Curr; // Neutral
-        end;
-        1:
-        begin //DELTA
-            TermArray[i] += Curr;
-            j := i + 1;
-            if j > Fnconds then
-                j := 1;
-            TermArray[j] -= Curr;
-        end;
     end;
 end;
 

@@ -92,7 +92,9 @@ uses
     SysUtils,
     DSSClass,
     DSSHelper,
-    DSSObjectHelper;
+    DSSObjectHelper,
+    ArrayDef;
+
 type
     TObj = TWindGenObj;
 //------------------------------------------------------------------------------
@@ -466,7 +468,7 @@ begin
     Result := FALSE;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := (elem.Connection = 1);
+    Result := (elem.Connection = TGeneralConnection.Delta);
 end;
 //------------------------------------------------------------------------------
 function WindGens_Get_Yearly(): PAnsiChar; CDECL; // API Extension
@@ -529,9 +531,9 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if Value then
-        elem.Connection := 1
+        elem.Connection := TGeneralConnection.Delta
     else
-        elem.Connection := 0;
+        elem.Connection := TGeneralConnection.Wye;
 
     elem.PropertySideEffects(ord(TWindGenProp.conn), 0, []);
     elem.RecalcElementData();

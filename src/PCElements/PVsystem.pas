@@ -213,7 +213,6 @@ type
 
         LastThevAngle: Double;
 
-        PVSystemSolutionCount: Integer;
         PVSystemFundamental: Double;  // Thevinen equivalent voltage mag and angle reference for Harmonic model
         PVsystemObjSwitchOpen: Boolean;
 
@@ -243,7 +242,6 @@ type
 
         procedure CalcPVSystemModelContribution();   // This is where the power gets computed
         procedure CalcInjCurrentArray();
-        procedure CalcVTerminalPhase();
 
         procedure CalcYPrimMatrix(Ymatrix: TcMatrix);
 
@@ -605,9 +603,9 @@ end;
 procedure SetNcondsForConnection(obj: TObj);
 begin
     case obj.Connection of
-        0:
+        TGeneralConnection.Wye:
             obj.NConds := obj.Fnphases + 1;
-        1:
+        TGeneralConnection.Delta:
             case obj.Fnphases of
                 1, 2:
                     obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
@@ -888,11 +886,9 @@ begin
 
     Power_TempCurveObj := NIL;
 
-    Connection := 0;    // Wye (star, L-N)
+    // Connection := 0;    // Wye (star, L-N) -- now done in PCE
     VoltageModel := 1;  // Typical fixed kW negative load
     FClass := 1;
-
-    PVSystemSolutionCount := -1;  // For keep track of the present solution in Injcurrent calcs
 
     PVSystemVars.kVPVSystemBase := 12.47;
     VBase := 7200.0;
@@ -1266,7 +1262,7 @@ begin
         // YEQ is computed from %R and %X -- inverse of Rthev + j Xthev
         Y := YEQ;   // L-N value computed in initialization routines
 
-        if Connection = 1 then
+        if Connection = TGeneralConnection.Delta then
             Y := Y / 3.0; // Convert to delta impedance
         Y.im := Y.im / FreqMultiplier;
         Yij := -Y;
@@ -1274,7 +1270,7 @@ begin
         for i := 1 to Fnphases do
         begin
             case Connection of
-                0:
+                TGeneralConnection.Wye:
                 begin
                     Ymatrix[i, i] := Y;
                     Ymatrix.AddElement(Fnconds, Fnconds, Y);
@@ -1282,8 +1278,8 @@ begin
                     Ymatrix[Fnconds, i] := Yij;
                 end;
 
-                1:
-                begin   // Delta connection
+                TGeneralConnection.Delta:
+                begin
                     Ymatrix[i, i] := Y;
                     Ymatrix.AddElement(i, i, Y);  // put it in again
                     for j := 1 to i - 1 do
@@ -1319,8 +1315,8 @@ begin
     Y.im := Y.im / FreqMultiplier;
 
     case Connection of
-        0:
-            begin // WYE
+        TGeneralConnection.Wye:
+            begin
                 Yij := -Y;
                 for i := 1 to Fnphases do
                 begin
@@ -1331,8 +1327,8 @@ begin
                 end;
             end;
 
-        1:
-            begin  // Delta  or L-L
+        TGeneralConnection.Delta:
+            begin
                 Y := Y / 3.0; // Convert to delta impedance
                 Yij := -Y;
                 for i := 1 to Fnphases do
@@ -1708,8 +1704,8 @@ begin
     begin
         case Connection of
 
-            0:
-            begin  // Wye
+            TGeneralConnection.Wye:
+            begin
                 VLN := Vterminal[i];
                 VMagLN := Cabs(VLN);
 
@@ -1737,8 +1733,8 @@ begin
                 StickCurrInTerminalArray(InjCurrent, PhaseCurr, i);  // Put into Terminal array taking into account connection
             end;
 
-            1:
-            begin  // Delta
+            TGeneralConnection.Delta:
+            begin
                 VLL := Vterminal[i];
                 VMagLL := Cabs(VLL);
 
@@ -1801,7 +1797,7 @@ begin
 
     ZeroITerminal;
 
-    if (Connection = 0) then
+    if (Connection = TGeneralConnection.Wye) then
         YEQ2 := YEQ        // YEQ is always line to neutral
     else
         YEQ2 := YEQ / 3.0;          // YEQ for delta connection
@@ -1954,41 +1950,11 @@ begin
     end;
 
     // Handle Wye Connection
-    if Connection = 0 then
+    if Connection = TGeneralConnection.Wye then
         pBuffer[Fnconds] := Vterminal[Fnconds];  // assume no neutral injection voltage
 
     // Inj currents = Yprim (E) 
     YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
-end;
-
-procedure TPVsystemObj.CalcVTerminalPhase();
-
-var
-    i, j: Integer;
-
-begin
-    // Establish phase voltages and stick in Vterminal
-    case Connection of
-
-        0:
-        begin
-            for i := 1 to Fnphases do
-                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[Fnconds]);
-        end;
-
-        1:
-        begin
-            for i := 1 to Fnphases do
-            begin
-                j := i + 1;
-                if j > Fnconds then
-                    j := 1;
-                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[j]);
-            end;
-        end;
-    end;
-
-    PVSystemSolutionCount := ActiveCircuit.Solution.SolutionCount;
 end;
 
 procedure TPVsystemObj.CalcPVSystemModelContribution();
@@ -2147,12 +2113,12 @@ begin
     ComputeIterminal();  // Get present value of current
 
     case Connection of
-        0:
+        TGeneralConnection.Wye:
         begin // wye - neutral is explicit
             Va := ActiveCircuit.Solution.NodeV[NodeRef[1]] - ActiveCircuit.Solution.NodeV[NodeRef[Fnconds]];
         end;
 
-        1:
+        TGeneralConnection.Delta:
         begin  // delta -- assume neutral is at zero
             Va := ActiveCircuit.Solution.NodeV[NodeRef[1]];
         end;
@@ -2212,7 +2178,7 @@ begin
         ComputePanelPower();
         NumPhases := Fnphases; // set Publicdata vars
         NumConductors := Fnconds;
-        Conn := Connection;
+        Conn := ord(Connection);
         // Sets the length of State vars to cover the num of phases
         InitDynArrays(NumPhases);
 
@@ -2644,7 +2610,7 @@ begin
     begin
         BeginEdit(True);
         // Make sure voltage is line-neutral
-        if (Fnphases > 1) or (connection <> 0) then
+        if (Fnphases > 1) or (connection <> TGeneralConnection.Wye) then
             V := kVPVSystemBase / SQRT3
         else
             V := kVPVSystemBase;

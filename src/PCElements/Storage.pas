@@ -267,7 +267,6 @@ type
         MaxDynPhaseCurrent: Double;
 
         FState: Integer;
-        StorageSolutionCount: Integer;
         StorageFundamental: Double; // Thevenin equivalent voltage mag and angle reference for Harmonic model
         StorageObjSwitchOpen: Boolean;
 
@@ -296,7 +295,6 @@ type
         procedure ComputeDCkW; // For Storage Update
         procedure CalcStorageModelContribution();
         procedure CalcInjCurrentArray();
-        procedure CalcVTerminalPhase();
 
         procedure CalcYPrimMatrix(Ymatrix: TcMatrix);
 
@@ -746,9 +744,9 @@ end;
 procedure SetNcondsForConnection(obj: TObj);
 begin
     case obj.Connection of
-        0:
+        TGeneralConnection.Wye:
             obj.NConds := obj.Fnphases + 1;
-        1:
+        TGeneralConnection.Delta:
             case obj.Fnphases of
                 1, 2:
                     obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
@@ -1065,11 +1063,9 @@ begin
     Yorder := 0;  // To trigger an initial allocation
     Nterms := 1;  // forces allocations
 
-    Connection := 0;    // Wye (star)
+    // Connection := 0;    // Wye (star) -- now done in PCE
     VoltageModel := 1;  // Typical fixed kW negative load
     StorageClass := 1;
-
-    StorageSolutionCount := -1;  // For keep track of the present solution in Injcurrent calcs
 
     StorageVars.kVStorageBase := 12.47;
     VBase := 7200.0;
@@ -1751,22 +1747,22 @@ begin
         // Yeq is computed from %R and %X -- inverse of Rthev + j Xthev
         Y := Yeq;
 
-        if Connection = 1 then
+        if Connection = TGeneralConnection.Delta then
             Y := Y / 3.0; // Convert to delta impedance
         Y.im := Y.im / FreqMultiplier;
         Yij := -Y;
         for i := 1 to Fnphases do
         begin
             case Connection of
-                0:
+                TGeneralConnection.Wye:
                 begin
                     Ymatrix[i, i] := Y;
                     Ymatrix.AddElement(Fnconds, Fnconds, Y);
                     Ymatrix[i, Fnconds] := Yij;
                     Ymatrix[Fnconds, i] := Yij;
                 end;
-                1:
-                begin   // Delta connection
+                TGeneralConnection.Delta:
+                begin
                     Ymatrix[i, i] := Y;
                     Ymatrix.AddElement(i, i, Y);  // put it in again
                     for j := 1 to i - 1 do
@@ -1806,8 +1802,8 @@ begin
         Exit;
 
     case Connection of
-        0:
-            begin // WYE
+        TGeneralConnection.Wye:
+            begin
                 Yij := -Y;
                 for i := 1 to Fnphases do
                 begin
@@ -1817,8 +1813,8 @@ begin
                     YMatrix[Fnconds, i] := Yij;
                 end;
             end;
-        1:
-            begin  // Delta  or L-L
+        TGeneralConnection.Delta:
+            begin
                 Y := Y / 3.0; // Convert to delta impedance
                 Yij := -Y;
                 for i := 1 to Fnphases do
@@ -2017,8 +2013,8 @@ begin
     for i := 1 to Fnphases do
     begin
         case Connection of
-            0:
-            begin  // Wye
+            TGeneralConnection.Wye:
+            begin
                 VLN := Vterminal[i];
                 VMagLN := Cabs(VLN);
                 if VMagLN <= VBaseMin then
@@ -2034,8 +2030,8 @@ begin
                         Curr := cong(PhaseCurrentLimit / (VLN / VMagLN));
             end;
 
-            1:
-            begin  // Delta
+            TGeneralConnection.Delta:
+            begin
                 VLL := Vterminal[i];
                 VMagLL := Cabs(VLL);
                 if Fnphases > 1 then
@@ -2073,7 +2069,7 @@ begin
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
     CalcVTerminalPhase(); // get actual voltage across each phase of the load
     ZeroITerminal;
-    if Connection = 0 then
+    if Connection = TGeneralConnection.Wye then
         Yeq2 := Yeq
     else
         Yeq2 := Yeq / 3.0;
@@ -2257,37 +2253,11 @@ begin
     end;
 
     // Handle Wye Connection
-    if Connection = 0 then
+    if Connection = TGeneralConnection.Wye then
         pBuffer[Fnconds] := Vterminal[Fnconds];  // assume no neutral injection voltage
 
     // Inj currents = Yprim (E)
     YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
-end;
-
-procedure TStorageObj.CalcVTerminalPhase();
-var
-    i, j: Integer;
-begin
-    // Establish phase voltages and stick in Vterminal
-    case Connection of
-        0:
-        begin
-            for i := 1 to Fnphases do
-                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[Fnconds]);
-        end;
-        1:
-        begin
-            for i := 1 to Fnphases do
-            begin
-                j := i + 1;
-                if j > Fnconds then
-                    j := 1;
-                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[j]);
-            end;
-        end;
-    end;
-
-    StorageSolutionCount := ActiveCircuit.Solution.SolutionCount;
 end;
 
 procedure TStorageObj.CalcStorageModelContribution();
@@ -2724,11 +2694,11 @@ begin
     ComputeIterminal();  // Get present value of current
 
     case Connection of
-        0:
+        TGeneralConnection.Wye:
         begin // wye - neutral is explicit
             Va := ActiveCircuit.Solution.NodeV[NodeRef[1]] - ActiveCircuit.Solution.NodeV[NodeRef[Fnconds]];
         end;
-        1:
+        TGeneralConnection.Delta:
         begin  // delta -- assume neutral is at zero
             Va := ActiveCircuit.Solution.NodeV[NodeRef[1]];
         end;
@@ -2791,7 +2761,7 @@ begin
     begin
         NumPhases := Fnphases;     // set Publicdata vars
         NumConductors := Fnconds;
-        Conn := Connection;
+        Conn := ord(Connection);
 
         // Sets the length of State vars to cover the num of phases
         InitDynArrays(NumPhases);
@@ -3323,7 +3293,7 @@ var
     oldPhases, changes: Integer;
 begin
     // Make sure voltage is line-neutral
-    if (Fnphases > 1) or (connection <> 0) then
+    if (Fnphases > 1) or (connection <> TGeneralConnection.Wye) then
         V := StorageVars.kVStorageBase / SQRT3
     else
         V := StorageVars.kVStorageBase;

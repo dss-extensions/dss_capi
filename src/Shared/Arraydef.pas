@@ -18,10 +18,10 @@ type
 {$Z4} // keep enums as int32 values
     TGeneralConnection = (
         Wye = 0, // wye, star, line-neutral connection
-        Y = 0, // wye, star, line-neutral connection
-        LN = 0, // wye, star, line-neutral connection
-        Delta = 1, // delta, line-line connection
-        LL = 1 // delta, line-line connection
+        // Y = 0, // wye, star, line-neutral connection
+        // LN = 0, // wye, star, line-neutral connection
+        Delta = 1 // delta, line-line connection
+        // LL = 1 // delta, line-line connection
     );
 {$SCOPEDENUMS OFF}
 {$POP}

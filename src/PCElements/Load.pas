@@ -176,7 +176,6 @@ type
         LastGrowthFactor: Double;
         LastYear: Integer;   // added FOR speedup so we don't have to search FOR growth factor a lot
         LoadFundamental: Double;
-        LoadSolutionCount: Integer;
         OpenLoadSolutionCount: Integer;
         RandomMult: Double;
         ShapeFactor: Complex;
@@ -224,7 +223,6 @@ type
         procedure CalcDutyMult(Hr: Double);
         procedure CalcInjCurrentArray;
         procedure CalcLoadModelContribution;
-        procedure CalcVTerminalPhase;
         procedure CalcYearlyMult(Hr: Double);
         procedure CalcCVRMult(Hr: Double);
         procedure CalcYPrimMatrix(Ymatrix: TcMatrix);
@@ -255,8 +253,6 @@ type
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
 
     PUBLIC
-
-        Connection: TLoadConnection; 
         DailyShapeObj: TLoadShapeObj;  // Daily load Shape FOR this load
         DutyShapeObj: TLoadShapeObj;  // Shape for this load
         EEN_Factor: Double;         // is overloaded  Factor is the amount of overload
@@ -823,7 +819,7 @@ begin
     DutyShapeObj := NIL;  // IF DutyShapeobj = nil THEN the load alway stays nominal * global multipliers
     GrowthShapeObj := NIL;  // IF grwothshapeobj = nil THEN the load alway stays nominal * global multipliers
     CVRShapeObj := NIL;
-    Connection := TLoadConnection.Wye;    // Wye (star)
+    // Connection := TLoadConnection.Wye;    // Wye (star) -- now done in PCE
     FLoadModel := TLoadModel.ConstPQ;  // changed from 2 RCD // easiest to solve
     LoadClass := 1;
     NumCustomers := 1;
@@ -840,7 +836,6 @@ begin
     ShapeIsActual := FALSE;
     PFSpecified := FALSE;  // default to not specified by PF property
 
-    LoadSolutionCount := -1;  // for keeping track of the present solution in Injcurrent calcs
     OpenLoadSolutionCount := -1;
     YPrimOpenCond := NIL;
 
@@ -1400,7 +1395,7 @@ var
     Vmag: Double;
 begin
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
-    CalcVTerminalPhase; // get actual voltage across each phase of the load
+    CalcVTerminalPhase(); // get actual voltage across each phase of the load
     ZeroITerminal;
 
     for i := 1 to Fnphases do
@@ -1436,7 +1431,7 @@ begin
     // Assume Yeq is kept up to date
 
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
-    CalcVTerminalPhase; // get actual voltage across each phase of the load
+    CalcVTerminalPhase(); // get actual voltage across each phase of the load
     ZeroITerminal;
 
     for i := 1 to Fnphases do
@@ -1461,7 +1456,7 @@ var
     VMag: Double;
 begin
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
-    CalcVTerminalPhase; // get actual voltage across each phase of the load
+    CalcVTerminalPhase(); // get actual voltage across each phase of the load
     ZeroITerminal;
 
     for i := 1 to Fnphases do
@@ -1505,7 +1500,7 @@ begin
 
     // Injection = [s/v]* = [ (P+jQ)/(Vbase * V/|V|)]*
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
-    CalcVTerminalPhase; // get actual voltage across each phase of the load
+    CalcVTerminalPhase(); // get actual voltage across each phase of the load
     ZeroITerminal;
 
     for i := 1 to Fnphases do
@@ -1560,7 +1555,7 @@ begin
 
 {$IFDEF NO_ZIPV_MANUAL_OPT}
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
-    CalcVTerminalPhase; // get actual voltage across each phase of the load
+    CalcVTerminalPhase(); // get actual voltage across each phase of the load
 {$ELSE}
     //->CalcYPrimContribution
     ComputeVTerminal;
@@ -1590,7 +1585,7 @@ begin
             end;
         end;
     end;
-    LoadSolutionCount := ActiveCircuit.Solution.SolutionCount;
+    elementSolutionCount := ActiveCircuit.Solution.SolutionCount;
     //<- CalcVTerminalPhase
 {$ENDIF}
 
@@ -1690,7 +1685,7 @@ var
     VRatio: Double;
 begin
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
-    CalcVTerminalPhase; // get actual voltage across each phase of the load
+    CalcVTerminalPhase(); // get actual voltage across each phase of the load
     ZeroITerminal;
     try
         for i := 1 to Fnphases do
@@ -1771,7 +1766,7 @@ var
     Vmag: Double;
 begin
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
-    CalcVTerminalPhase; // get actual voltage across each phase of the load
+    CalcVTerminalPhase(); // get actual voltage across each phase of the load
     ZeroITerminal;
 
     for i := 1 to Fnphases do
@@ -1809,7 +1804,7 @@ var
     Vmag: Double;
 begin
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
-    CalcVTerminalPhase; // get actual voltage across each phase of the load
+    CalcVTerminalPhase(); // get actual voltage across each phase of the load
     ZeroITerminal;
 
     for i := 1 to Fnphases do
@@ -1864,35 +1859,6 @@ begin
         // NOTE: This is the value of ITerminal a Monitor will capture in Harmonics mode .. it captures the harmonic injection
         IterminalUpdated := TRUE;
     end;
-end;
-
-procedure TLoadObj.CalcVTerminalPhase;
-var
-    i, j: Integer;
-begin
-    // Establish phase voltages and stick in Vtemp
-    case Connection of
-
-        TLoadConnection.Wye:
-        begin
-            for i := 1 to Fnphases do
-                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[Fnconds]);
-        end;
-
-        TLoadConnection.Delta:
-        begin
-            for i := 1 to Fnphases do
-            begin
-                j := i + 1;
-                if j > Fnconds then
-                    j := 1;
-                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[j]);
-            end;
-        end;
-
-    end;
-
-    LoadSolutionCount := ActiveCircuit.Solution.SolutionCount;
 end;
 
 procedure TLoadObj.CalcLoadModelContribution;
@@ -2042,8 +2008,8 @@ begin
     end;
 
      // ELSE Check Voltages
-    if LoadSolutionCount <> ActiveCircuit.Solution.SolutionCount then
-        CalcVTerminalPhase;
+    if elementSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+        CalcVTerminalPhase();
 
      // Get the lowest of the Phase voltages
     Vpu := Vbase;
@@ -2098,8 +2064,8 @@ begin
         Exit;
     end;   // Check line overload
 
-    if LoadSolutionCount <> ActiveCircuit.Solution.SolutionCount then
-        CalcVTerminalPhase;
+    if elementSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+        CalcVTerminalPhase();
 
      // Get the lowest of the Phase voltages
     Vpu := Vbase;

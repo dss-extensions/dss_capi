@@ -188,7 +188,6 @@ type
 
     TGeneric5Obj = class(TPCElement)
     PRIVATE
-        Connection: Integer; // 0 = line-neutral; 1=Delta
         Yeq: Complex; // Y at nominal voltage
 
         // Dynamics variables
@@ -565,10 +564,10 @@ end;
 procedure SetNcondsForConnection(obj: TObj);
 begin
     case obj.Connection of
-        0:
+        TGeneralConnection.Wye:
             obj.NConds := obj.Fnphases; // Neutral is not connected for induction machine
-        1:
-            case obj.Fnphases of // Delta connection
+        TGeneralConnection.Delta:
+            case obj.Fnphases of
                 1, 2:
                     obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
             else
@@ -690,7 +689,7 @@ begin
     Gradient3 := 0;
 
     // Set some basic circuit element properties
-    Connection := 1; // Delta Default
+    Connection := TGeneralConnection.Delta; // Delta Default -- override the default in PCE (Wye)
     FNphases := 3; // typical DSS default for a circuit element
     Yorder := 0; // To trigger an initial allocation
     Nterms := 1; // forces allocations of terminal quantities
@@ -2108,7 +2107,7 @@ var
     i: Integer;
     V012,
     I012: TSymCompArray;
-    Vabc, Iabc: array[1..3] of Complex;
+    Vabc: array[1..3] of Complex;
     cBuffer: pComplexArray;
 begin
     YPrimInvalid := true; // Force rebuild of YPrims
@@ -2207,18 +2206,18 @@ begin
         else
             Y := Cmplx(EPSILON, 0.0);
 
-        if Connection = 1 then
+        if Connection = TGeneralConnection.Delta then
             Y := Y / 3.0; // Convert to delta impedance
         Y.im := Y.im / FreqMultiplier; // adjust for frequency
         Yij := -Y;
         for i := 1 to Fnphases do
         begin
             case Connection of
-                0:
+                TGeneralConnection.Wye:
                 begin
                     Ymatrix.SetElement(i, i, Y); // sets the element
                 end;
-                1:
+                TGeneralConnection.Delta:
                 begin // Delta connection
                     Yadder := Y * 1.000001; // to prevent floating delta
                     Ymatrix.SetElement(i, i, Y + Yadder); // add a little bit to diagonal
@@ -2242,12 +2241,12 @@ begin
     Y.im := Y.im / FreqMultiplier;
 
     case Connection of
-        0: // WYE
+        TGeneralConnection.Wye:
             for i := 1 to Fnphases do
             begin
                 YMatrix.SetElement(i, i, Y);
             end;
-        1: // Delta  or L-L
+        TGeneralConnection.Delta:
         begin
             Y := (Y / 3.0); // Convert to delta impedance
             Yij := -Y;

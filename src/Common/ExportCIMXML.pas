@@ -199,6 +199,7 @@ type
 implementation
 
 uses
+    ArrayDef,
     BufStream,
     SysUtils,
     Utilities,
@@ -1827,7 +1828,7 @@ begin
         exit;
     p := 1000.0 * pGen.Presentkw / pGen.NPhases;
     q := 1000.0 * pGen.Presentkvar / pGen.NPhases;
-    if pGen.Connection = 1 then
+    if pGen.Connection = TGeneralConnection.Delta then
         s := DeltaPhaseString(pGen)
     else
         s := PhaseString(pGen, 1);
@@ -1891,7 +1892,7 @@ begin
         exit;
     p := 1000.0 * pPV.Presentkw / pPV.NPhases;
     q := 1000.0 * pPV.Presentkvar / pPV.NPhases;
-    if pPV.Connection = 1 then
+    if pPV.Connection = TGeneralConnection.Delta then
         s := DeltaPhaseString(pPV)
     else
         s := PhaseString(pPV, 1);
@@ -1955,7 +1956,7 @@ begin
         exit;
     p := 1000.0 * pBat.Presentkw / pBat.NPhases;
     q := 1000.0 * pBat.Presentkvar / pBat.NPhases;
-    if pBat.Connection = 1 then
+    if pBat.Connection = TGeneralConnection.Delta then
         s := DeltaPhaseString(pBat)
     else
         s := PhaseString(pBat, 1);
