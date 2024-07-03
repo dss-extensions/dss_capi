@@ -212,7 +212,7 @@ begin
         sl := LowerCase(S);
         for i := 1 to NumVariables do
         begin
-            if s = LowerCase(VariableName(i)) then
+            if sl = LowerCase(VariableName(i)) then
             begin
                 Result := i;
                 Exit;
