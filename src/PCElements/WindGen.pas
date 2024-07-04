@@ -2169,7 +2169,7 @@ begin
 
     // Fallback to the classic
     n := 0;
-    if (i > 0) and (i < NumWGenVariables) then
+    if (i > 0) and (i <= NumWGenVariables) then
     begin
         Result := TWindGen(ParentClass).varNames[i - 1];
         Exit;
