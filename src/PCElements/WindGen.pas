@@ -1826,7 +1826,7 @@ begin
     YprimInvalid := true; // Force rebuild of YPrims
     with GenVars do
     begin
-        ZThev := Cmplx(Xdp / XRdp, Xdp); // TODO: ZThev := WindModelDyn.Zthev;?
+        ZThev := WindModelDyn.Zthev;
         Yeq := Cinv(ZThev);
 
         // Compute nominal Positive sequence voltage behind transient reactance
