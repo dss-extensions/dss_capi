@@ -1402,10 +1402,9 @@ var
     V: Complex;
     Vmag: Double;
 begin
-    // Since neither InjCurrent nor VTerminal are used, CalcYPrimContribution is not required
-    // CalcYPrimContribution(InjCurrent); // Init InjCurrent Array
-    for i := 1 to FnConds do
-        InjCurrent[i] := 0;
+    CalcYPrimContribution(InjCurrent); // Init InjCurrent Array
+    // for i := 1 to FnConds do
+    //     InjCurrent[i] := 0;
 
     ZeroITerminal();
 
