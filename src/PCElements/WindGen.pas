@@ -1254,41 +1254,42 @@ begin
                 end;
             end;
         end;
-    end
-    else
-    begin  //  Regular power flow WindGen model
-        // Yeq is always expected as the equivalent line-neutral admittance
-        Y := -Yeq; // negate for generation    Yeq is L-N quantity
-        // ****** Need to modify the base admittance for real harmonics calcs
-        Y.im := Y.im / FreqMultiplier;
 
-        case Connection of
-            TGeneralConnection.Wye:
+        Exit;
+    end;
+
+    //  Regular power flow WindGen model
+    // Yeq is always expected as the equivalent line-neutral admittance
+    Y := -Yeq; // negate for generation    Yeq is L-N quantity
+    // ****** Need to modify the base admittance for real harmonics calcs
+    Y.im := Y.im / FreqMultiplier;
+
+    case Connection of
+        TGeneralConnection.Wye:
+            begin
+                Yij := -Y;
+                for i := 1 to Fnphases do
                 begin
-                    Yij := -Y;
-                    for i := 1 to Fnphases do
-                    begin
-                        YMatrix[i, i] := Y;
-                        YMatrix.AddElement(Fnconds, Fnconds, Y);
-                        YMatrix[i, Fnconds] := Yij;
-                        YMatrix[Fnconds, i] := Yij;
-                    end;
+                    YMatrix[i, i] := Y;
+                    YMatrix.AddElement(Fnconds, Fnconds, Y);
+                    YMatrix[i, Fnconds] := Yij;
+                    YMatrix[Fnconds, i] := Yij;
                 end;
-            TGeneralConnection.Delta:
+            end;
+        TGeneralConnection.Delta:
+            begin
+                Y := Y / 3.0; // Convert to delta impedance
+                Yij := -Y;
+                for i := 1 to Fnphases do
                 begin
-                    Y := Y / 3.0; // Convert to delta impedance
-                    Yij := -Y;
-                    for i := 1 to Fnphases do
-                    begin
-                        j := i + 1;
-                        if j > Fnconds then
-                            j := 1; // wrap around for closed connections
-                        YMatrix.AddElement(i, i, Y);
-                        YMatrix.AddElement(j, j, Y);
-                        YMatrix.AddElemSym(i, j, Yij);
-                    end;
+                    j := i + 1;
+                    if j > Fnconds then
+                        j := 1; // wrap around for closed connections
+                    YMatrix.AddElement(i, i, Y);
+                    YMatrix.AddElement(j, j, Y);
+                    YMatrix.AddElemSym(i, j, Yij);
                 end;
-        end;
+            end;
     end;
 end;
 

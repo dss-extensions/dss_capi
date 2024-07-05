@@ -1314,58 +1314,56 @@ begin
                 end;
             end;
         end;
+        // Removed Neutral / Neutral may float
+        //
+        // IF Connection = TGeneralConnection.Wye Then   With Ymatrix Do  // Take care of neutral issues
+        // Begin
+        //     AddElement(Fnconds, Fnconds, YNeut);  // Add in user specified Neutral Z, if any
+        //     // Bump up neutral-ground in case neutral ends up floating
+        //     SetElement(Fnconds, Fnconds, GetElement(Fnconds, Fnconds) * 1.000001);
+        // End;
+    
+        Exit;
+    end;
+    
+    //  Regular power flow generator model
+    // Yeq is always expected as the equivalent line-neutral admittance
+    Y := -Yeq;  // negate for generation    Yeq is L-N quantity
 
-//       Removed Neutral / Neutral may float
-//
-//       IF Connection = TGeneralConnection.Wye Then   With Ymatrix Do  // Take care of neutral issues
-//         Begin
-//           AddElement(Fnconds, Fnconds, YNeut);  // Add in user specified Neutral Z, if any
-//           // Bump up neutral-ground in case neutral ends up floating
-//           SetElement(Fnconds, Fnconds, GetElement(Fnconds, Fnconds) * 1.000001);
-//         End;
-//
-//      
-    end
-    else
-    begin  //  Regular power flow generator model
-        // Yeq is always expected as the equivalent line-neutral admittance
-        Y := -Yeq;  // negate for generation    Yeq is L-N quantity
+    // if Type 3 generator, only put a little (1%) in Yprim
+    if GenModel = 3 then 
+        Y := Y / 100.0;
 
-        // if Type 3 generator, only put a little (1%) in Yprim
-        if GenModel = 3 then 
-            Y := Y / 100.0;
+    // ****** Need to modify the base admittance for real harmonics calcs
+    Y.im := Y.im / FreqMultiplier;
 
-        // ****** Need to modify the base admittance for real harmonics calcs
-        Y.im := Y.im / FreqMultiplier;
-
-        case Connection of
-            TGeneralConnection.Wye:
+    case Connection of
+        TGeneralConnection.Wye:
+            begin
+                Yij := -Y;
+                for i := 1 to Fnphases do
                 begin
-                    Yij := -Y;
-                    for i := 1 to Fnphases do
-                    begin
-                        YMatrix[i, i] := Y;
-                        YMatrix.AddElement(Fnconds, Fnconds, Y);
-                        YMatrix[i, Fnconds] := Yij;
-                        YMatrix[Fnconds, i] := Yij;
-                    end;
+                    YMatrix[i, i] := Y;
+                    YMatrix.AddElement(Fnconds, Fnconds, Y);
+                    YMatrix[i, Fnconds] := Yij;
+                    YMatrix[Fnconds, i] := Yij;
                 end;
-            TGeneralConnection.Delta:
+            end;
+        TGeneralConnection.Delta:
+            begin
+                Y := Y / 3.0; // Convert to delta impedance
+                Yij := -Y;
+                for i := 1 to Fnphases do
                 begin
-                    Y := Y / 3.0; // Convert to delta impedance
-                    Yij := -Y;
-                    for i := 1 to Fnphases do
-                    begin
-                        j := i + 1;
-                        if j > Fnconds then
-                            j := 1;  // wrap around for closed connections
-                        YMatrix.AddElement(i, i, Y);
-                        YMatrix.AddElement(j, j, Y);
-                        YMatrix.AddElemSym(i, j, Yij);
-                    end;
+                    j := i + 1;
+                    if j > Fnconds then
+                        j := 1;  // wrap around for closed connections
+                    YMatrix.AddElement(i, i, Y);
+                    YMatrix.AddElement(j, j, Y);
+                    YMatrix.AddElemSym(i, j, Yij);
                 end;
-        end;
-    end; // ELSE IF Solution.mode
+            end;
+    end;
 end;
 
 procedure TGeneratorObj.CalcYPrim;
