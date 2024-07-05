@@ -162,8 +162,10 @@ type
         D, Dpu, // Actual and per unit damping factors
         kVArating,
         kVWindGenBase,
-        Xdp, Xdpp, // machine Reactances, ohms
-        puXdp, puXdpp, // machine Reactances, per unit
+        // Xdp, 
+        // Xdpp, // machine Reactances, ohms
+        // puXdp, 
+        // puXdpp, // machine Reactances, per unit
         dTheta,
         dSpeed, // Derivatives of Theta and Speed
         ThetaHistory,
@@ -181,10 +183,10 @@ type
         // previously compiled DLLs do not break
 
         VthevMag: Double; // Thevinen equivalent voltage for dynamic model
-        VThevHarm: Double; // Thevinen equivalent voltage mag reference for Harmonic model
-        ThetaHarm: Double; // Thevinen equivalent voltage angle reference for Harmonic model
-        VTarget: Double;   // Target voltage for WindGen with voltage control
-        Zthev: Complex;
+        // VThevHarm: Double; // Thevinen equivalent voltage mag reference for Harmonic model
+        // ThetaHarm: Double; // Thevinen equivalent voltage angle reference for Harmonic model
+        // VTarget: Double;   // Target voltage for WindGen with voltage control
+        // Zthev: Complex;
         XRdp: Double;  // Assumed X/R for Xd'
 
         PLoss: String;     // Name of the XY curve describing the active power losses for the turbine
@@ -785,13 +787,13 @@ begin
     GenClass := Other.GenClass;
     GenModel := Other.GenModel;
     // IsFixed := Other.IsFixed;
-    GenVars.VTarget := Other.GenVars.VTarget;
+    // GenVars.VTarget := Other.GenVars.VTarget;
     FForcedON := Other.FForcedON;
     kVANotSet := Other.kVANotSet;
 
     GenVars.kVArating := Other.GenVars.kVArating;
-    GenVars.puXdp := Other.GenVars.puXdp;
-    GenVars.puXdpp := Other.GenVars.puXdpp;
+    // GenVars.puXdp := Other.GenVars.puXdp;
+    // GenVars.puXdpp := Other.GenVars.puXdpp;
     GenVars.Hmass := Other.GenVars.Hmass;
     GenVars.Theta := Other.GenVars.Theta;
     GenVars.Speed := Other.GenVars.Speed;
@@ -868,7 +870,7 @@ begin
     GenVars.kVWindGenBase := 12.47;
     // Vpu := 1.0;
     // GenVars.VTarget := 1000.0 * Vpu * GenVars.kVWindGenBase / SQRT3; // Line-to-Neutral target
-    GenVars.VTarget := 1000.0 * GenVars.kVWindGenBase / SQRT3; // Line-to-Neutral target
+    // GenVars.VTarget := 1000.0 * GenVars.kVWindGenBase / SQRT3; // Line-to-Neutral target
     VBase := 7200.0;
     Vminpu := 0.90;
     Vmaxpu := 1.10;
@@ -884,10 +886,10 @@ begin
     with GenVars do
     begin
         // These are inherited from the generator object, it is uncertain if needed
-        puXdp := 0.28;
-        puXdpp := 0.20;
-        Xdp := puXdp * SQR(kVWindGenBase) * 1000.0 / kVARating;
-        Xdpp := puXdpp * SQR(kVWindGenBase) * 1000.0 / kVARating;
+        // puXdp := 0.28;
+        // puXdpp := 0.20;
+        // Xdp := puXdp * SQR(kVWindGenBase) * 1000.0 / kVARating;
+        // Xdpp := puXdpp * SQR(kVWindGenBase) * 1000.0 / kVARating;
         Hmass := 1.0; //  W-sec/VA rating
         Theta := 0.0;
         w0 := TwoPi * Basefrequency;
@@ -1173,8 +1175,8 @@ begin
     // Populate data structures used for interchange with user-written models.
     with GenVars do
     begin
-        Xdp := puXdp * 1000.0 * SQR(kVWindGenBase) / kVArating;
-        Xdpp := puXdpp * 1000.0 * SQR(kVWindGenBase) / kVArating;
+        // Xdp := puXdp * 1000.0 * SQR(kVWindGenBase) / kVArating;
+        // Xdpp := puXdpp * 1000.0 * SQR(kVWindGenBase) / kVArating;
         Conn := ord(connection);
         NumPhases := Fnphases;
         NumConductors := Fnconds;
@@ -1195,10 +1197,10 @@ begin
 
     YQFixed := -varBase / Sqr(VBase); //10-17-02  Fixed negative sign
     // GenVars.Vtarget := Vpu * 1000.0 * GenVars.kVWindGenBase;
-    GenVars.Vtarget := 1000.0 * GenVars.kVWindGenBase;
+    // GenVars.Vtarget := 1000.0 * GenVars.kVWindGenBase;
 
-    if Fnphases > 1 then
-        GenVars.VTarget := GenVars.VTarget / SQRT3;
+    // if Fnphases > 1 then
+    //     GenVars.VTarget := GenVars.VTarget / SQRT3;
 
     // Initialize to Zero - defaults to PQ WindGen
     // Solution object will reset after circuit modifications
@@ -1360,7 +1362,7 @@ begin
             GenModel: 0, ', ',
             0.0: 10: 4, ', ',
             (V_Avg * 0.001732 / GenVars.kVWindGenBase): 10: 5, ', ',
-            (GenVars.Vtarget - V_Avg): 9: 1, ', ',
+            ((1000.0 * 1.0 * GenVars.kVWindGenBase / SQRT3) - V_Avg): 9: 1, ', ', // first term was Vtarget
             (Genvars.Qnominalperphase * 3.0 / 1.0e6): 8: 3, ', ',
             (Genvars.Pnominalperphase * 3.0 / 1.0e6): 8: 3, ', ',
             s, ', '
@@ -1623,31 +1625,34 @@ procedure TWindGenObj.DoHarmonicMode();
 // 
 // Assumes spectrum is a voltage source behind subtransient reactance and YPrim has been built
 // Vd is the fundamental frequency voltage behind Xd" for phase 1
-var
-    i: Integer;
-    E: Complex;
-    GenHarmonic: Double;
-    pBuffer: PCBuffer24;
+// var
+//     i: Integer;
+//     E: Complex;
+//     GenHarmonic: Double;
+//     pBuffer: PCBuffer24;
 begin
-    pBuffer := @TWindGen(ParentClass).cBuffer;
-    ComputeVterminal();
+    DSS.SolutionAbort := true;
+    DoSimpleMsg('%s: WindGen harmonics model is not fully implemented. Please use the Generator model instead.', [FullName], 5674);
 
-    GenHarmonic := ActiveCircuit.Solution.Frequency / GenFundamental;
-    E := SpectrumObj.GetMult(GenHarmonic) * GenVars.VThevHarm; // Get base harmonic magnitude
-    RotatePhasorRad(E, GenHarmonic, GenVars.ThetaHarm); // Time shift by fundamental frequency phase shift
-    for i := 1 to Fnphases do
-    begin
-        pBuffer[i] := E;
-        if i < Fnphases then
-            RotatePhasorDeg(E, GenHarmonic, -120.0); // Assume 3-phase WindGen
-    end;
+    // pBuffer := @TWindGen(ParentClass).cBuffer;
+    // ComputeVterminal();
 
-    // Handle Wye Connection
-    if Connection = TGeneralConnection.Wye then
-        pBuffer[Fnconds] := Vterminal[Fnconds]; // assume no neutral injection voltage
+    // GenHarmonic := ActiveCircuit.Solution.Frequency / GenFundamental;
+    // E := SpectrumObj.GetMult(GenHarmonic) * GenVars.VThevHarm; // Get base harmonic magnitude
+    // RotatePhasorRad(E, GenHarmonic, GenVars.ThetaHarm); // Time shift by fundamental frequency phase shift
+    // for i := 1 to Fnphases do
+    // begin
+    //     pBuffer[i] := E;
+    //     if i < Fnphases then
+    //         RotatePhasorDeg(E, GenHarmonic, -120.0); // Assume 3-phase WindGen
+    // end;
 
-    // Inj currents = Yprim (E)
-    YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
+    // // Handle Wye Connection
+    // if Connection = TGeneralConnection.Wye then
+    //     pBuffer[Fnconds] := Vterminal[Fnconds]; // assume no neutral injection voltage
+
+    // // Inj currents = Yprim (E)
+    // YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
 end;
 
 procedure TWindGenObj.CalcGenModelContribution();
@@ -1788,38 +1793,42 @@ begin
 end;
 
 procedure TWindGenObj.InitHarmonics();
-var
-    E, Va: complex;
-    NodeV: pNodeVarray;
+// var
+//     E, Va: complex;
+//     NodeV: pNodeVarray;
 begin
-    YprimInvalid := true; // Force rebuild of YPrims
-    GenFundamental := ActiveCircuit.Solution.Frequency; // Whatever the frequency is when we enter here.
+    DSS.SolutionAbort := true;
+    DoSimpleMsg('%s: WindGen harmonics model is not fully implemented. Please use the Generator model instead.', [FullName], 5673);
 
-    with GenVars do
-    begin
-        Yeq := Cinv(Cmplx(0.0, Xdpp)); // used for current calcs  Always L-N
+    // YprimInvalid := true; // Force rebuild of YPrims
+    // GenFundamental := ActiveCircuit.Solution.Frequency; // Whatever the frequency is when we enter here.
 
-        // Compute reference Thevinen voltage from phase 1 current
-        if not GenON then
-        begin
-            Vthevharm := 0.0;
-            ThetaHarm := 0.0;
-            Exit;
-        end;
+    // with GenVars do
+    // begin
+    //     Yeq := Cinv(Cmplx(0.0, Xdpp)); // used for current calcs  Always L-N
 
-        ComputeIterminal(); // Get present value of current
-        NodeV := ActiveCircuit.Solution.NodeV;
-        case Connection of
-            TGeneralConnection.Wye:// wye - neutral is explicit
-                Va := NodeV[NodeRef[1]] - NodeV[NodeRef[Fnconds]];
-            TGeneralConnection.Delta:// delta -- assume neutral is at zero
-                Va := NodeV[NodeRef[1]];
-        end;
+    //     // Compute reference Thevinen voltage from phase 1 current
+    //     if not GenON then
+    //     begin
+    //         Vthevharm := 0.0;
+    //         ThetaHarm := 0.0;
+    //         Exit;
+    //     end;
 
-        E := Va - Iterminal[1] * cmplx(0.0, Xdpp);
-        Vthevharm := Cabs(E); // establish base mag and angle
-        ThetaHarm := Cang(E);
-    end;
+    //     ComputeIterminal(); // Get present value of current
+    //     NodeV := ActiveCircuit.Solution.NodeV;
+    //     case Connection of
+    //         TGeneralConnection.Wye:// wye - neutral is explicit
+    //             Va := NodeV[NodeRef[1]] - NodeV[NodeRef[Fnconds]];
+    //         TGeneralConnection.Delta:// delta -- assume neutral is at zero
+    //             Va := NodeV[NodeRef[1]];
+    //     end;
+
+    //     E := Va - Iterminal[1] * cmplx(0.0, Xdpp);
+    //     Vthevharm := Cabs(E); // establish base mag and angle
+    //     ThetaHarm := Cang(E);
+    // end;
+
 end;
 
 procedure TWindGenObj.InitStateVars();
@@ -1835,8 +1844,7 @@ begin
     YprimInvalid := true; // Force rebuild of YPrims
     with GenVars do
     begin
-        ZThev := WindModelDyn.Zthev;
-        Yeq := Cinv(ZThev);
+        Yeq := Cinv(WindModelDyn.Zthev);
 
         // Compute nominal Positive sequence voltage behind transient reactance
         if not GenON then
@@ -1855,7 +1863,7 @@ begin
         case Fnphases of
             1:
             begin
-                Edp := NodeV[NodeRef[1]] - NodeV[NodeRef[2]] - ITerminal[1] * ZThev;
+                Edp := NodeV[NodeRef[1]] - NodeV[NodeRef[2]] - ITerminal[1] * WindModelDyn.Zthev;
                 VThevMag := Cabs(Edp);
             end;
 
@@ -1869,7 +1877,7 @@ begin
                     Vabc[i] := NodeV[NodeRef[i]]; // Wye Voltage
 
                 Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
-                Edp := V012[1] - I012[1] * ZThev; // Pos sequence
+                Edp := V012[1] - I012[1] * WindModelDyn.Zthev; // Pos sequence
                 VThevMag := Cabs(Edp);
             end;
         else
