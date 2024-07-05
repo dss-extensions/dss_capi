@@ -1595,10 +1595,19 @@ var
 begin
     //CalcYPrimContribution(InjCurrent); // Init InjCurrent Array  and computes VTerminal L-N
     ComputeVTerminal();
-    for i := 1 to FnConds do
-        InjCurrent[i] := 0;
+    // for i := 1 to FnConds do
+    //     InjCurrent[i] := 0;
 
+    // NOTE: while Generator does:
+    //
     // Inj = -Itotal (in) - Yprim*Vtemp
+    //
+    // WindGen does only:
+    //
+    // Inj = -Itotal (in)
+    //
+    // As such, no need to clear previous values since InjCurrent elements are 
+    // replaced (no sum or subtraction involved).
 
     WindModelDyn.CalcDynamic(Vterminal, Iterminal);
 
@@ -1606,7 +1615,7 @@ begin
 
     // Add it into inj current array
     for i := 1 to FnConds do
-        InjCurrent[i] -= Iterminal[i];
+        InjCurrent[i] := -Iterminal[i];
 end;
 
 procedure TWindGenObj.DoHarmonicMode();
