@@ -3,8 +3,9 @@ unit Generic5OrderMach;
 // Copyright (c) 2024 DSS-Extensions contributors
 // Copyright (c) 2008-2023, Electric Power Research Institute, Inc.
 
-// **Heavily** modified (by Paulo Meira) for DSS-Extensions.
-//
+// **Heavily** modified (by Paulo Meira) for DSS-Extensions. 
+// The original file had a lot of leftover code from IndMach012.pas.
+
 // Original notice:
 // November 3, 2017
 // Created by
@@ -192,12 +193,11 @@ type
 
         // Dynamics variables
         Xp: Double;
-        // T0p: Double // Rotor time constant
 
         // X,V
         X_var: pdoubleArray;
         dX_vardt: pdoubleArray;
-        X_varn: pdoubleArray;//for tropdize integrate
+        X_varn: pdoubleArray; // for trapezoidal integration
         dX_vardtn: pdoubleArray;
         V_in_var: pdoubleArray;
         pV_f_CC: pdoublearray;
@@ -233,8 +233,6 @@ type
         P_DG, Q_DG: Double; //power of all phases totally in one
         V_DG: Double;// the voltage magetitude of current bus
         Theta_DG: Double; //the voltage angel of DG bus to slack
-        //Cluster_Num : integer; //the cluster define         --move to PCElement
-        //Num_in_Cluster : integer; // node num in cluster;   --move to PCElement
         QV_flag: Integer; // 0 Q_ref; 1 V_ref
         //QV_flag_0 : integer;
         //QV_switch: integer; //if Q hits limits, PV to PQ, the QV_switch:= 1; each time Edit function runs, check this and set QV_flag back to user set.
@@ -304,15 +302,7 @@ type
         procedure CalcYPrimMatrix(Ymatrix: TcMatrix);
         procedure CalcGeneric5ModelContribution();
         procedure CalcInjCurrentArray();
-
         procedure CalcModel(V, I: pComplexArray);
-
-        // procedure CalcDailyMult(Hr: Double);
-        // procedure CalcYearlyMult(Hr: Double);
-        // procedure CalcDutyMult(Hr: Double);
-        
-        // procedure SetPowerkW(const PkW: Double);
-
         procedure update_controlinput();
         procedure update_pV_f_CC(); // update cooperate control part, pV_f_CC
         procedure update_pV_f_CC_M2(); // update cooperate control part, pV_f_CC
@@ -351,7 +341,6 @@ type
         // for abc phases: the below 2
         procedure CalcDynamicVIabc(var Vabc, Iabc: pComplexArray);
         procedure CalcPFlowVIabc(var Vabc, Iabc: pComplexArray);
-        procedure SetNominalPower();
 
         function InjCurrents(): Integer; OVERRIDE;
 
@@ -433,16 +422,6 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
-    // PF: ; // Do nothing; read only power factor    := Parser.DblValue;
-    // H: MachineData.Hmass   := Parser.DblValue;
-    // D: MachineData.D       := Parser.DblValue;
-    // MaxSlip: MaxSlip := Parser.DblValue;
-    // SlipOption: ;//InterpretOption(Parser.StrValue);
-    // Debugtrace: DebugTrace := InterpretYesNo(Param);
-    // Yearly: YearlyShape := Param;
-    // Daily: DailyDispShapeObj := Param;
-    // Duty: DutyShapeObj := Param;
-
     // bus properties
     PropertyType[ord(TProp.Bus1)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.Bus1)] := 1;
@@ -467,9 +446,6 @@ begin
     PropertyOffset[ord(TProp.kcq_drp2)] := ptruint(@obj.kcq_drp2);
     PropertyOffset[ord(TProp.Volt_Trhd)] := ptruint(@obj.Volt_Trhd);
     PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.kVArating);
-
-    // PropertyOffset[ord(TProp.MVA)] := ptruint(@obj.GenVars.kVArating);
-    // PropertyScale[ord(TProp.MVA)] := 1000.0;
 
     PropertyOffset[ord(TProp.kW)] := ptruint(@obj.WBase);
     PropertyScale[ord(TProp.kW)] := 1000;
@@ -643,16 +619,6 @@ begin
             V_ref2 := V_ref;
             V_ref3 := V_ref;
         end;
-
-    // ord(TProp.Yearly):
-    //     if (YearlyShapeObj <> NIL) and YearlyShapeObj.UseActual then
-    //         SetPowerkW(YearlyShapeObj.MaxP);
-    // ord(TProp.Daily):
-    //     if (DailyDispShapeObj <> NIL) and DailyDispShapeObj.UseActual then
-    //         SetPowerkW(DailyDispShapeObj.MaxP);
-    // ord(TProp.Duty):
-    //     if (DutyShapeObj <> NIL) and DutyShapeObj.UseActual then
-    //         SetPowerkW(DutyShapeObj.MaxP);
     end;
 end;
 
@@ -694,10 +660,6 @@ begin
     Yorder := 0; // To trigger an initial allocation
     Nterms := 1; // forces allocations of terminal quantities
     WBase := -1;//00; // has to be set in DSS scripts
-
-    // YearlyShapeObj := nil; // if YearlyShapeobj = nil then the load alway stays nominal * global multipliers
-    // DailyDispShapeObj := nil; // if DaillyShapeobj = nil then the load alway stays nominal * global multipliers
-    // DutyShapeObj := nil; // if DutyShapeobj = nil then the load alway stays nominal * global multipliers
 
     FFMonObj := nil;
     FFMonObj2 := nil;
@@ -818,10 +780,7 @@ end;
 
 procedure TGeneric5Obj.RecalcElementData();
 var
-    Rs, Xs,
-    // Rr, 
-    Xr,
-    Xm, ZBase: Double;
+    Rs, Xs, Xr, Xm, ZBase: Double;
     modetest: Boolean;
     numPhase, DotPos: Integer;
     strtemp: String;
@@ -829,22 +788,18 @@ begin
     ZBase := Sqr(kVGeneratorBase) / kVArating * 1000.0;
     Rs := 0.0053 * ZBase;
     Xs := 0.106 * ZBase;
-    // Rr := 0.007 * ZBase;
     Xr := 0.12 * ZBase;
     Xm := 4.0 * ZBase;
 
     Xp := Xs + (Xr * Xm) / (Xr + Xm);
     Zsp := Cmplx(Rs, Xp);
     Yeq := Cmplx(0.0, -1.0 / ZBase); // vars only for power flow
-    // T0p := (Xr + Xm) / (MachineData.w0 * Rr);
     Is1 := 0;
     V1 := 0;
     Is2 := 0;
     V2 := 0;
 
     Reallocmem(InjCurrent, SizeOf(Complex) * Yorder);
-
-    SetNominalPower();
 
     /// contrl mode
     ///    ctrl_mode =0; phases = 3; // pos avg control---p_ref, V_ref, Q_ref
@@ -874,11 +829,6 @@ begin
     if not modetest then
         DoSimpleMsg('ctrl_mode and bus node connection dont match, see help for generic5.ctrl_mode', 561);
 end;
-
-// procedure TGeneric5Obj.SetPowerkW(const PkW: Double);
-// begin
-//     WBase := PkW * 1000;
-// end;
 
 procedure TGeneric5Obj.IntegrateABCD();
 var
@@ -2421,146 +2371,11 @@ end;
 function TGeneric5Obj.InjCurrents(): Integer;
 // Required function for managing computing of InjCurrents
 begin
-    // Generators and Loads use logic like this:
-    // if ActiveCircuit.Solution.LoadsNeedUpdating then
-    //     SetNominalPower(); // Set the nominal kW, etc for the type of solution being done
-
     // call the main function for doing calculation
     CalcInjCurrentArray(); // Difference between currents in YPrim and total terminal current
     // Add into System Injection Current Array
     Result := inherited InjCurrents();
 end;
-
-procedure TGeneric5Obj.SetNominalPower();
-begin
-    // Pnominalperphase and Qnominalperphase were not used!
-end;
-// var
-//     Factor: Double;
-//     MachineOn_Saved: Boolean;
-//     dblHour: Double;
-// begin
-//     MachineOn_Saved := MachineON;
-//     ShapeFactor := CDOUBLEONE;
-// // Check to make sure the generation is ON
-//     if not (ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel) then // Leave machine in whatever state it was prior to entering Dynamic mode
-//     begin
-//         MachineON := true; // Init to on then check if it should be off
-//     end;
-
-//     if not MachineON then
-//     begin
-// // If Machine is OFF enter as tiny resistive load (.0001 pu) so we don't get divide by zero in matrix
-//         Pnominalperphase := -0.1 * 1e-3 * WBase / Fnphases;
-//         Qnominalperphase := 0.0; // This really doesn't matter
-//     end
-//     else
-//     begin // Generator is on, compute it's nominal watts and vars
-//         dblHour := ActiveCircuit.Solution.DynaVars.dblHour;
-//         case ActiveCircuit.Solution.Mode of
-//             SNAPSHOT:
-//                 Factor := 1.0;
-//             DAILYMODE:
-//             begin
-//                 Factor := 1.0;
-//                 CalcDailyMult(dblHour) // Daily dispatch curve
-//             end;
-//             YEARLYMODE:
-//             begin
-//                 Factor := 1.0;
-//                 CalcYearlyMult(dblHour);
-//             end;
-//             DUTYCYCLE:
-//             begin
-//                 Factor := 1.0;
-//                 CalcDutyMult(dblHour);
-//             end;
-//             GENERALTIME, // General sequential time simulation
-//             DYNAMICMODE:
-//             begin
-//                 Factor := 1.0;
-//      // This mode allows use of one class of load shape
-//                 case ActiveCircuit.ActiveLoadShapeClass of
-//                     USEDAILY:
-//                         CalcDailyMult(dblHour);
-//                     USEYEARLY:
-//                         CalcYearlyMult(dblHour);
-//                     USEDUTY:
-//                         CalcDutyMult(dblHour);
-//                 else
-//                     ShapeFactor := CDOUBLEONE // default to 1 + j1 if not known
-//                 end;
-//             end;
-//             MONTECARLO1,
-//             MONTEFAULT,
-//             FAULTSTUDY:
-//                 Factor := 1.0;
-//             MONTECARLO2,
-//             MONTECARLO3,
-//             LOADDURATION1,
-//             LOADDURATION2:
-//             begin
-//                 Factor := 1.0;
-//                 CalcDailyMult(dblHour);
-//             end;
-//             PEAKDAY:
-//             begin
-//                 Factor := 1.0;
-//                 CalcDailyMult(dblHour);
-//             end;
-//             AUTOADDFLAG:
-//                 Factor := 1.0;
-//         else
-//             Factor := 1.0
-//         end;
-
-//         if not (ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel) then
-//         begin
-//             if ShapeIsActual then
-//                 Pnominalperphase := 1000.0 * ShapeFactor.re / Fnphases
-//             else
-//                 Pnominalperphase := WBase * Factor * ShapeFactor.re / Fnphases;
-//         end;
-//     end;
-
-// // If machine state changes, force re-calc of Y matrix
-//     if MachineON <> MachineOn_Saved then
-//         YPrimInvalid := true;
-// end;
-
-// procedure TGeneric5Obj.CalcDailyMult(Hr: Double);
-// begin
-//     if (DailyDispShapeObj <> nil) then
-//     begin
-//         ShapeFactor := DailyDispShapeObj.GetMult(Hr);
-//         ShapeIsActual := DailyDispShapeObj.UseActual;
-//         Exit;
-//     end;
-//     ShapeFactor := CDOUBLEONE; // Default to no daily variation
-// end;
-
-// procedure TGeneric5Obj.CalcDutyMult(Hr: Double);
-// begin
-//     if DutyShapeObj <> nil then
-//     begin
-//         ShapeFactor := DutyShapeObj.GetMult(Hr);
-//         ShapeIsActual := DutyShapeObj.UseActual;
-//         Exit;
-//     end;
-//     CalcDailyMult(Hr); // Default to Daily Mult if no duty curve specified
-// end;
-
-// procedure TGeneric5Obj.CalcYearlyMult(Hr: Double);
-// begin
-// // Yearly curve is assumed to be hourly only
-//     if YearlyShapeObj <> nil then
-//     begin
-//         ShapeFactor := YearlyShapeObj.GetMult(Hr);
-//         ShapeIsActual := YearlyShapeObj.UseActual;
-//         Exit;
-//     end;
-//     ShapeFactor := CDOUBLEONE; // Defaults to no variation
-// end;
 
 procedure TGeneric5Obj.InitHarmonics;
 begin
@@ -2762,17 +2577,6 @@ begin
             cluster_num := trunc(Value);
         TVar.NdNumInCluster:
             NdNumInCluster := trunc(Value);
-
-        // TODO: BUG: unused variables (write-only), variable name doesn't match
-        // The following block is kinda absurd and we do not use this in this version of the codebase on DSS-Extensions, 
-        // but it was left just in case... 
-
-        // TVar.ctrl_mode: 
-        //     nVLeaders := trunc(Value);
-        // TVar.Gradient:
-        //     cluster_num2 := trunc(Value);
-        // TVar.Id:
-        //     NdNumInCluster2 := trunc(Value);
     else
         DoSimpleMsg('%s: variable %d is read-only.', [FullName, i], 568);
         Exit; // No variables to set

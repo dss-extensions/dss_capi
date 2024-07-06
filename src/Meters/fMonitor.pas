@@ -4,6 +4,9 @@ unit fMonitor;
 //  Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
 //  All rights reserved.
 
+// **Heavily** modified (by Paulo Meira) for DSS-Extensions.
+// The original file had a lot of leftover code from Monitor.pas.
+
 interface
 
 uses
@@ -83,20 +86,20 @@ type
     );
 {$SCOPEDENUMS OFF}
 
-   //value ot save communication delay
-    TDelays = array [0..99] of Double; //max 99
+    //value ot save communication delay
+    TFMonDelays = array [0..99] of Double;
 
-     // define LD_FM_Arry-by dahei
-    TLDs_sys_fms = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF}  record
-     //properties for Nodes
-           // highest voltage node
+    // define LD_FM_Arry-by dahei
+    TLDs_sys_fms = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
+        //properties for Nodes
+        // highest voltage node
         clstr_num_hghst: Integer;
         ndnum_hghst: Integer;
         b_ctrl_hghst: Boolean; //can contribute more to the high volt problem
         volt_hghst: Double;    //p.u.
         volt_hgh_lmt: Double;  //p.u.
         Pinjec_hghst: Double; //net P injection on this node
-           // lowest voltage node
+        // lowest voltage node
         clstr_num_lwst: Integer;
         ndnum_lwst: Integer;
         b_ctrl_lwst: Boolean; //can contribute more to the high volt problem
@@ -148,7 +151,7 @@ type
         vl_Gradient_dg, vl_Gradient1_dg, vl_Gradient2_dg, vl_Gradient3_dg: Double;
 
         // communication array for alpha and others can be improved
-        vl_smpl_dg: array [1..6] of TDelays; //1: alpha; 2: alphaP; 3, bus voltage 0 seq. ; 4,5,6: bus voltage ABC
+        vl_smpl_dg: array [1..6] of TFMonDelays; //1: alpha; 2: alphaP; 3, bus voltage 0 seq. ; 4,5,6: bus voltage ABC
 
         //
         vl_SmplCnt: Integer;  //sample count for this agent
@@ -643,28 +646,16 @@ begin
     Name := LowerCase(MonitorName);
 
     FMonClass := TFMonitor(ParClass);
-
     FNphases := 3;  // Directly set conds and phases
     Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors
-                         // in base class
-
+    Nterms := 1;  // this forces allocation of terminals and conductors in base class
     pNodeFMs := nil;
-
     // Current Buffer has to be big enough to hold all terminals
     Hour := 0;
     Sec := 0.0;
-
-    // Mode := 0;  // Standard Mode: V & I, complex values
-
     MeteredElement := TDSSCktElement(ActiveCircuit.CktElements.Get(1)); // Default to first circuit element (source)
-
-     //MonitorStream := TMemoryStream.Create; // Create memory stream
-
     MeteredTerminal := 1;
-
     DSSObjType := ParClass.DSSClassType; //MON_ELEMENT;
-
     Nodes := 33;//default Nodes in one cluster
 
     ReAllocMem(pCommMatrix, Nodes * Nodes * sizeof(pCommMatrix[1]));
@@ -680,16 +671,15 @@ begin
     // leader information
     for i := 0 to 3 do
     begin
-
         ld_fm_info[i].ndnum_hghst := 0;
-        ld_fm_info[i].b_ctrl_hghst := false;        //small number that can never be true
-        ld_fm_info[i].volt_hghst := -1.0;
+        ld_fm_info[i].b_ctrl_hghst := false;
+        ld_fm_info[i].volt_hghst := -1.0; //small number that can never be true
         ld_fm_info[i].volt_hgh_lmt := 1.05;
         ld_fm_info[i].Pinjec_hghst := 0.0;
         ld_fm_info[i].ndnum_lwst := 0;
         ld_fm_info[i].b_ctrl_lwst := false;
         ld_fm_info[i].volt_lw_lmt := 0.95;
-        ld_fm_info[i].volt_lwst := 9999999999.0;   //large nunber can never be true
+        ld_fm_info[i].volt_lwst := 9999999999.0; //large nunber can never be true
         ld_fm_info[i].Pinjec_lwst := 0.0;
         ld_fm_info[i].volt_avg := 0.0;
         ld_fm_info[i].total_pg := 0.0;
@@ -853,9 +843,7 @@ var
 begin
 
     DSS.AuxParser.CmdString := strParam;  // Load up Parser
-    //iMin := min(Nodes, )
     // Loop for no more than the expected number of windings;  Ignore omitted values
-
     DSS.AuxParser.NextParam(); // the first entry is the No. of iNode
     iNodeNum := DSS.AuxParser.IntValue; //node number defined in cluster
     for i := 2 to Nodes + 1 do
@@ -879,9 +867,7 @@ var
 begin
 
     DSS.AuxParser.CmdString := strParam;  // Load up Parser
-    //iMin := min(Nodes, )
     // Loop for no more than the expected number of windings;  Ignore omitted values
-
     DSS.AuxParser.NextParam(); // the first entry is the No. of iNode
     iNodeNum := DSS.AuxParser.IntValue; //node number defined in cluster
     for i := 2 to Nodes + 1 do
@@ -901,10 +887,7 @@ var
 begin
 
     DSS.AuxParser.CmdString := strParam;  // Load up Parser
-    //iMin := min(Nodes, )
-
     // Loop for no more than the expected number of windings;  Ignore omitted values
-
     DSS.AuxParser.NextParam(); // the first entry is the No. of iNode
     iNodeNum := DSS.AuxParser.IntValue; //node number defined in cluster
     for i := 2 to Nodes + 1 do
@@ -923,11 +906,8 @@ var
     i,
     iNodeNum: Integer;
 begin
-
     DSS.AuxParser.CmdString := strParam;  // Load up Parser
-    //iMin := min(Nodes, )
     // Loop for no more than the expected number of windings;  Ignore omitted values
-
     DSS.AuxParser.NextParam(); // the first entry is the No. of iNode
     iNodeNum := DSS.AuxParser.IntValue; //node number defined in cluster
     for i := 2 to (Nodes + 1) do
@@ -1361,18 +1341,15 @@ var
     tempTerminal: TPowerTerminal;
     i, Devindex, j: Integer;
     tempElement: TDSSCktElement;
-    //VAR
-   //pElem:TDSSCktElement;
     phase_num: Integer;
     vabs: Double;
-    //V012 :TSymCompArray5;
     V012: array[0..2] of Complex;
     VaVbVc: array[1..3] of Complex;
 begin
     tempElement := nil;
-    Devindex := GetCktElementIndex(DSS, devName);                   // Global function
+    Devindex := GetCktElementIndex(DSS, devName); // Global function
     if DevIndex > 0 then
-    begin                                       // Monitored element must already exist
+    begin  // Monitored element must already exist
         tempElement := ActiveCircuit.CktElements.Get(DevIndex);
     end;
 
@@ -1456,7 +1433,7 @@ begin
     if ActiveCircuit.Solution.DynaVars.SolutionMode <> TSolveMode.DYNAMICMODE then
         Exit;
 
-        //calc Delay_stps for sampling
+    // calc Delay_stps for sampling
     if T_intvl_smpl = 0.0 then
         Smpl_stps := 0  //No delay.
     else
@@ -1578,15 +1555,16 @@ begin
     begin                                       // Monitored element must already exist
         pElem := ActiveCircuit.CktElements.Get(DevIndex);
     end;
-    if pElem <> nil //want to get voltages from the other side of the device
-    then
+    if pElem <> nil then //want to get voltages from the other side of the device
     begin
         with ActiveCircuit.solution do
             for i := 1 to pElem.Yorder do
                 pElem.Vterminal[i] := NodeV[pElem.NodeRef[i]]
     end
     else
+    begin
         result := 0.0;
+    end;
     //k is the terminal number of this end
     k := pNodeFMs[NodeNuminClstr].vl_terminalNum;
     //this is the other end jTempTerminal
@@ -1721,8 +1699,7 @@ begin
     begin // Monitored element must already exist
         pElem := ActiveCircuit.CktElements.Get(DevIndex);
     end;
-    if pElem <> nil //want to get voltages from the other side of the device
-    then
+    if pElem <> nil then //want to get voltages from the other side of the device
     begin
         with ActiveCircuit.solution do
             for i := 1 to pElem.Yorder do
@@ -1743,7 +1720,7 @@ begin
         j := pElem.Terminals[jTempTerminal].TermNodeRef[i];
         if ActiveCircuit.MapNodeToBus[j].NodeNum = phase_num then
         begin
-            nodeRefj := j;                                   // node ref of the other end of this element and this phase
+            nodeRefj := j; // node ref of the other end of this element and this phase
             vTemp := ActiveCircuit.Solution.NodeV[nodeRefj];
             nodeRefi := pElem.Terminals[k].TermNodeRef[i]; // node ref of this node
         end;
@@ -1846,7 +1823,7 @@ var
     den_dij, TempAlpha: Double;
 begin
     Result := 0.0;
-     //alphaP = avg (alphaP) + Beta * Gp
+    // alphaP = avg (alphaP) + Beta * Gp
     nn := NodeNuminClstr;
     case phase_num of //pos seq
         0:
