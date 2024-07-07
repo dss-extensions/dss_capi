@@ -7533,6 +7533,351 @@ extern "C" {
     */
     DSS_CAPI_DLL double LoadShapes_Get_MaxQ(void);
 
+    /*! 
+    Array of names of all WindGen objects.
+    */
+    DSS_CAPI_DLL void WindGens_Get_AllNames(char*** ResultPtr, int32_t* ResultDims);
+    /*! 
+    Same as WindGens_Get_AllNames but using the global buffer interface for results
+    */
+    DSS_CAPI_DLL void WindGens_Get_AllNames_GR(void);
+
+    /*! 
+    Sets first WindGen to be active.  Returns 0 if none.
+    */
+    DSS_CAPI_DLL int32_t WindGens_Get_First(void);
+
+    /*! 
+    Sets a WindGen active by name.
+    */
+    DSS_CAPI_DLL const char* WindGens_Get_Name(void);
+
+    /*! 
+    Sets next WindGen to be active.  Returns 0 if no more.
+    */
+    DSS_CAPI_DLL int32_t WindGens_Get_Next(void);
+
+    /*! 
+    Array of Names of all WindGen energy meter registers
+    
+    See also the enum `GeneratorRegisters`.
+    */
+    DSS_CAPI_DLL void WindGens_Get_RegisterNames(char*** ResultPtr, int32_t* ResultDims);
+    /*! 
+    Same as WindGens_Get_RegisterNames but using the global buffer interface for results
+    */
+    DSS_CAPI_DLL void WindGens_Get_RegisterNames_GR(void);
+
+    /*! 
+    Array of values in WindGen energy meter registers.
+    */
+    DSS_CAPI_DLL void WindGens_Get_RegisterValues(double** ResultPtr, int32_t* ResultDims);
+    /*! 
+    Same as WindGens_Get_RegisterValues but using the global buffer interface for results
+    */
+    DSS_CAPI_DLL void WindGens_Get_RegisterValues_GR(void);
+
+    /*! 
+    Sets a WindGen active by name.
+    */
+    DSS_CAPI_DLL void WindGens_Set_Name(const char* Value);
+
+    /*! 
+    Nominal rated (1.0 per unit) voltage for the active WindGen, in kV.
+    */
+    DSS_CAPI_DLL double WindGens_Get_kV(void);
+
+    /*! 
+    Base kvar for the active WindGen.
+    */
+    DSS_CAPI_DLL double WindGens_Get_kvar(void);
+
+    /*! 
+    Total base kW for the active WindGen.
+    */
+    DSS_CAPI_DLL double WindGens_Get_kW(void);
+
+    /*! 
+    WindGen power factor. Power factor (pos. = producing vars).
+    */
+    DSS_CAPI_DLL double WindGens_Get_PF(void);
+
+    /*! 
+    Nominal rated (1.0 per unit) voltage for the active WindGen, in kV.
+    */
+    DSS_CAPI_DLL void WindGens_Set_kV(double Value);
+
+    /*! 
+    Base kvar for the active WindGen.
+    */
+    DSS_CAPI_DLL void WindGens_Set_kvar(double Value);
+
+    /*! 
+    Total base kW for the active WindGen.
+    */
+    DSS_CAPI_DLL void WindGens_Set_kW(double Value);
+
+    /*! 
+    WindGen power factor. Power factor (pos. = producing vars).
+    */
+    DSS_CAPI_DLL void WindGens_Set_PF(double Value);
+
+    /*! 
+    Number of WindGen Objects in Active Circuit
+    */
+    DSS_CAPI_DLL int32_t WindGens_Get_Count(void);
+
+    /*! 
+    Get/Set active WindGen by index into the list of wind generators.  1..Count
+    */
+    DSS_CAPI_DLL int32_t WindGens_Get_idx(void);
+
+    /*! 
+    Get/Set active WindGen by index into the list of wind generators. 1..Count
+    */
+    DSS_CAPI_DLL void WindGens_Set_idx(int32_t Value);
+
+    /*! 
+    KVA rating of the electrical machine in the WindGen.
+    */
+    DSS_CAPI_DLL double WindGens_Get_kVA(void);
+
+    /*! 
+    KVA rating of the electrical machine in the WindGen.
+    */
+    DSS_CAPI_DLL void WindGens_Set_kVA(double Value);
+
+    /*! 
+    Gearbox ratio
+    */
+    DSS_CAPI_DLL double WindGens_Get_Ag(void);
+
+    /*! 
+    Gearbox ratio
+    */
+    DSS_CAPI_DLL void WindGens_Set_Ag(double Value);
+
+    /*! 
+    Turbine performance coefficient.
+    */
+    DSS_CAPI_DLL double WindGens_Get_Cp(void);
+
+    /*! 
+    Turbine performance coefficient.
+    */
+    DSS_CAPI_DLL void WindGens_Set_Cp(double Value);
+
+    /*! 
+    Tip speed ratio
+    */
+    DSS_CAPI_DLL double WindGens_Get_Lamda(void);
+
+    /*! 
+    Tip speed ratio
+    */
+    DSS_CAPI_DLL void WindGens_Set_Lamda(double Value);
+
+    /*! 
+    Number of WTG in aggregation
+    */
+    DSS_CAPI_DLL int32_t WindGens_Get_N_WTG(void);
+
+    /*! 
+    Number of WTG in aggregation
+    */
+    DSS_CAPI_DLL void WindGens_Set_N_WTG(int32_t Value);
+
+    /*! 
+    Number of pole pairs of the induction generator
+    */
+    DSS_CAPI_DLL int32_t WindGens_Get_NPoles(void);
+
+    /*! 
+    Number of pole pairs of the induction generator
+    */
+    DSS_CAPI_DLL void WindGens_Set_NPoles(int32_t Value);
+
+    /*! 
+    Air density in kg/m3
+    */
+    DSS_CAPI_DLL double WindGens_Get_pd(void);
+
+    /*! 
+    Air density in kg/m3
+    */
+    DSS_CAPI_DLL void WindGens_Set_pd(double Value);
+
+    /*! 
+    Steady state output real power.
+    */
+    DSS_CAPI_DLL double WindGens_Get_PSS(void);
+
+    /*! 
+    Steady state output real power.
+    */
+    DSS_CAPI_DLL void WindGens_Set_PSS(double Value);
+
+    /*! 
+    Non-zero values enable reactive power and voltage control in the dynamic model.
+    */
+    DSS_CAPI_DLL int32_t WindGens_Get_QFlag(void);
+
+    /*! 
+    Non-zero values enable reactive power and voltage control in the dynamic model.
+    */
+    DSS_CAPI_DLL void WindGens_Set_QFlag(int32_t Value);
+
+    /*! 
+    Q control mode (0:Q, 1:PF, 2:VV).
+    */
+    DSS_CAPI_DLL int32_t WindGens_Get_QMode(void);
+
+    /*! 
+    Q control mode (0:Q, 1:PF, 2:VV).
+    */
+    DSS_CAPI_DLL void WindGens_Set_QMode(int32_t Value);
+
+    /*! 
+    Steady state output reactive power.
+    */
+    DSS_CAPI_DLL double WindGens_Get_QSS(void);
+
+    /*! 
+    Steady state output reactive power.
+    */
+    DSS_CAPI_DLL void WindGens_Set_QSS(double Value);
+
+    /*! 
+    Rotor radius in meters
+    */
+    DSS_CAPI_DLL double WindGens_Get_Rad(void);
+
+    /*! 
+    Rotor radius in meters
+    */
+    DSS_CAPI_DLL void WindGens_Set_Rad(double Value);
+
+    /*! 
+    Per unit Thevenin equivalent resistance (R).
+    */
+    DSS_CAPI_DLL double WindGens_Get_RThev(void);
+
+    /*! 
+    Per unit Thevenin equivalent resistance (R).
+    */
+    DSS_CAPI_DLL void WindGens_Set_RThev(double Value);
+
+    /*! 
+    Cut-in speed for the wind generator
+    */
+    DSS_CAPI_DLL double WindGens_Get_VCutIn(void);
+
+    /*! 
+    Cut-in speed for the wind generator
+    */
+    DSS_CAPI_DLL void WindGens_Set_VCutIn(double Value);
+
+    /*! 
+    Cut-out speed for the wind generator
+    */
+    DSS_CAPI_DLL double WindGens_Get_VCutOut(void);
+
+    /*! 
+    Cut-out speed for the wind generator
+    */
+    DSS_CAPI_DLL void WindGens_Set_VCutOut(double Value);
+
+    /*! 
+    Steady state voltage magnitude.
+    */
+    DSS_CAPI_DLL double WindGens_Get_Vss(void);
+
+    /*! 
+    Steady state voltage magnitude.
+    */
+    DSS_CAPI_DLL void WindGens_Set_Vss(double Value);
+
+    /*! 
+    Wind speed in m/s
+    */
+    DSS_CAPI_DLL double WindGens_Get_WindSpeed(void);
+
+    /*! 
+    Wind speed in m/s
+    */
+    DSS_CAPI_DLL void WindGens_Set_WindSpeed(double Value);
+
+    /*! 
+    Per unit Thevenin equivalent reactance (X).
+    */
+    DSS_CAPI_DLL double WindGens_Get_XThev(void);
+    
+    /*! 
+    Per unit Thevenin equivalent reactance (X).
+    */
+    DSS_CAPI_DLL void WindGens_Set_XThev(double Value);
+
+    /*! 
+    Number of phases
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL int32_t WindGens_Get_Phases(void);
+
+    /*! 
+    Number of phases
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void WindGens_Set_Phases(int32_t Value);
+
+    /*! 
+    Name of the loadshape for daily wind speed
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL const char* WindGens_Get_daily(void);
+    DSS_CAPI_DLL void WindGens_Set_daily(const char* Value);
+
+    /*! 
+    Name of the loadshape for a duty cycle simulation.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL const char* WindGens_Get_duty(void);
+    DSS_CAPI_DLL void WindGens_Set_duty(const char* Value);
+
+    /*! 
+    Name of yearly loadshape
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL const char* WindGens_Get_Yearly(void);
+    DSS_CAPI_DLL void WindGens_Set_Yearly(const char* Value);
+
+    /*! 
+    WindGen connection. True/1 if delta connection, False/0 if wye.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL uint16_t WindGens_Get_IsDelta(void);
+    DSS_CAPI_DLL void WindGens_Set_IsDelta(uint16_t Value);
+
+    /*! 
+    An arbitrary integer number representing the class of WindGen so that WindGen values may be segregated by class.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL int32_t WindGens_Get_Class_(void);
+    DSS_CAPI_DLL void WindGens_Set_Class_(int32_t Value);
+
+    /*! 
+    Bus to which the WindGen is connected. May include specific node specification.
+    
+    (API Extension)
+    */
+    DSS_CAPI_DLL const char* WindGens_Get_Bus1(void);
+    DSS_CAPI_DLL void WindGens_Set_Bus1(const char* Value);
 
     /*! 
     Array of integers, a copy of the internal NodeRef of the CktElement.
@@ -7661,6 +8006,7 @@ extern "C" {
     DSS_CAPI_DLL void* Vsources_Get_Pointer(void);
     DSS_CAPI_DLL void* WireData_Get_Pointer(void);
     DSS_CAPI_DLL void* XYCurves_Get_Pointer(void);
+    DSS_CAPI_DLL void* WindGens_Get_Pointer(void);
 
     /*! 
     Extract the current properties as a JSON encoded string.

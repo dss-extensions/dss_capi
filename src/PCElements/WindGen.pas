@@ -478,6 +478,7 @@ begin
     PropertyType[ord(TProp.APCFlg)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.APCFlg)] := ptruint(@obj.WindModelDyn.APCFLG);
 
+    //TODO: QFlg should be a boolean; left as int for compatibility
     PropertyType[ord(TProp.QFlg)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.QFlg)] := ptruint(@obj.WindModelDyn.QFlg);
 
