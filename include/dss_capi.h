@@ -7136,7 +7136,227 @@ extern "C" {
     */
     DSS_CAPI_DLL void Storages_Set_State(int32_t Value);
 
-    // Experimental API extensions
+    /*! 
+    Current limit per phase for the IBR when operating in GFM mode.
+    */
+    DSS_CAPI_DLL double Storages_Get_AmpLimit(void);
+
+    /*! 
+    Current limit per phase for the IBR when operating in GFM mode.
+    */
+    DSS_CAPI_DLL void Storages_Set_AmpLimit(double Value);
+
+    /*! 
+    Use it for fine tuning the current limiter when active.
+    */
+    DSS_CAPI_DLL double Storages_Get_AmpLimitGain(void);
+
+    /*! 
+    Use it for fine tuning the current limiter when active.
+    */
+    DSS_CAPI_DLL void Storages_Set_AmpLimitGain(double Value);
+
+    /*! 
+    Dispatch trigger value for charging the Storage.
+    */
+    DSS_CAPI_DLL double Storages_Get_ChargeTrigger(void);
+
+    /*! 
+    Dispatch trigger value for charging the Storage.
+    */
+    DSS_CAPI_DLL void Storages_Set_ChargeTrigger(double Value);
+
+    /*! 
+    Control mode for the inverter. It can be one of {GFM = 1 | GFL* = 0}.
+    */
+    DSS_CAPI_DLL int32_t Storages_Get_ControlMode(void);
+
+    /*! 
+    Control mode for the inverter. It can be one of {GFM = 1 | GFL* = 0}.
+    */
+    DSS_CAPI_DLL void Storages_Set_ControlMode(int32_t Value);
+
+    /*! 
+    Dispatch trigger value for discharging the Storage.
+    */
+    DSS_CAPI_DLL double Storages_Get_DischargeTrigger(void);
+
+    /*! 
+    Dispatch trigger value for discharging the Storage.
+    */
+    DSS_CAPI_DLL void Storages_Set_DischargeTrigger(double Value);
+
+    /*! 
+    Percentage efficiency for CHARGING the Storage element.
+    */
+    DSS_CAPI_DLL double Storages_Get_EffCharge(void);
+
+    /*! 
+    Percentage efficiency for CHARGING the Storage element.
+    */
+    DSS_CAPI_DLL void Storages_Set_EffCharge(double Value);
+
+    /*! 
+    Percentage efficiency for DISCHARGING the Storage element.
+    */
+    DSS_CAPI_DLL double Storages_Get_EffDischarge(void);
+
+    /*! 
+    Percentage efficiency for DISCHARGING the Storage element.
+    */
+    DSS_CAPI_DLL void Storages_Set_EffDischarge(double Value);
+
+    /*! 
+    Proportional gain for the PI controller within the inverter.
+    Use it to modify the controller response in dynamics simulation mode.
+    */
+    DSS_CAPI_DLL double Storages_Get_Kp(void);
+
+    /*! 
+    Proportional gain for the PI controller within the inverter.
+    Use it to modify the controller response in dynamics simulation mode.
+    */
+    DSS_CAPI_DLL void Storages_Set_Kp(double Value);
+
+    /*! 
+    Nominal rated (1.0 per unit) voltage, kV, for Storage element.
+    */
+    DSS_CAPI_DLL double Storages_Get_kV(void);
+
+    /*! 
+    Nominal rated (1.0 per unit) voltage, kV, for Storage element.
+    */
+    DSS_CAPI_DLL void Storages_Set_kV(double Value);
+
+    /*! 
+    Inverter nameplate capability (in kVA). Used as the base for Dynamics mode and Harmonics mode values.
+    */
+    DSS_CAPI_DLL double Storages_Get_kVA(void);
+
+    /*! 
+    Inverter nameplate capability (in kVA). Used as the base for Dynamics mode and Harmonics mode values.
+    */
+    DSS_CAPI_DLL void Storages_Set_kVA(double Value);
+
+    /*! 
+    Get/set the requested kvar value. Final kvar is subjected to the inverter ratings. Sets inverter to operate in constant kvar mode.
+    */
+    DSS_CAPI_DLL double Storages_Get_kvar(void);
+
+    /*! 
+    Get/set the requested kvar value. Final kvar is subjected to the inverter ratings. Sets inverter to operate in constant kvar mode.
+    */
+    DSS_CAPI_DLL void Storages_Set_kvar(double Value);
+
+    /*! 
+    Rated voltage (kV) at the input of the inverter while the storage is discharging
+    */
+    DSS_CAPI_DLL double Storages_Get_kVDC(void);
+
+    /*! 
+    Rated voltage (kV) at the input of the inverter while the storage is discharging
+    */
+    DSS_CAPI_DLL void Storages_Set_kVDC(double Value);
+
+    /*! 
+    Get/set the requested kW value. Final kW is subjected to the inverter ratings.
+    */
+    DSS_CAPI_DLL double Storages_Get_kW(void);
+
+    /*! 
+    Get/set the requested kW value. Final kW is subjected to the inverter ratings.
+    */
+    DSS_CAPI_DLL void Storages_Set_kW(double Value);
+
+    /*! 
+    Rated Storage capacity in kWh.
+    */
+    DSS_CAPI_DLL double Storages_Get_kWhRated(void);
+
+    /*! 
+    Rated Storage capacity in kWh.
+    */
+    DSS_CAPI_DLL void Storages_Set_kWhRated(double Value);
+
+    /*! 
+    kW rating of power output. Base for Loadshapes when DispMode=Follow. Sets kVA property if it has not been specified yet.
+    */
+    DSS_CAPI_DLL double Storages_Get_kWRated(void);
+
+    /*! 
+    kW rating of power output. Base for Loadshapes when DispMode=Follow. Sets kVA property if it has not been specified yet.
+    */
+    DSS_CAPI_DLL void Storages_Set_kWRated(double Value);
+
+    /*! 
+    Limits current magnitude to Vminpu value for both 1-phase and 3-phase Storage similar to Generator Model 7.
+    For 3-phase, limits the positive-sequence current but not the negative-sequence."
+    */
+    DSS_CAPI_DLL uint16_t Storages_Get_LimitCurrent(void);
+
+    /*! 
+    Limits current magnitude to Vminpu value for both 1-phase and 3-phase Storage similar to Generator Model 7.
+    For 3-phase, limits the positive-sequence current but not the negative-sequence."
+    */
+    DSS_CAPI_DLL void Storages_Set_LimitCurrent(uint16_t Value);
+
+    /*! 
+    Get/set the requested PF value.
+    */
+    DSS_CAPI_DLL double Storages_Get_PF(void);
+
+    /*! 
+    Get/set the requested PF value.
+    */
+    DSS_CAPI_DLL void Storages_Set_PF(double Value);
+
+    /*! 
+    Tolerance (%) for the closed loop controller of the inverter
+    */
+    DSS_CAPI_DLL double Storages_Get_PITol(void);
+
+    /*! 
+    Tolerance (%) for the closed loop controller of the inverter
+    */
+    DSS_CAPI_DLL void Storages_Set_PITol(double Value);
+
+    /*! 
+    (Read only) Indicates whether the inverter entered (Yes) or not (No) into Safe Mode.
+    */
+    DSS_CAPI_DLL int32_t Storages_Get_SafeMode(void);
+
+    /*! 
+    Indicates the voltage level (%) respect to the base voltage level for which the Inverter will operate.
+    */
+    DSS_CAPI_DLL double Storages_Get_SafeVoltage(void);
+
+    /*! 
+    Indicates the voltage level (%) respect to the base voltage level for which the Inverter will operate.
+    */
+    DSS_CAPI_DLL void Storages_Set_SafeVoltage(double Value);
+
+    /*! 
+    Time of day in fractional hours (0230 = 2.5) at which Storage element will automatically go into charge state.
+    */
+    DSS_CAPI_DLL double Storages_Get_TimeChargeTrig(void);
+
+    /*! 
+    Time of day in fractional hours (0230 = 2.5) at which Storage element will automatically go into charge state.
+    */
+    DSS_CAPI_DLL void Storages_Set_TimeChargeTrig(double Value);
+
+    /*! 
+    Indicates if the reactive power generation/absorption does not respect the inverter status
+    */
+    DSS_CAPI_DLL int32_t Storages_Get_VarFollowInverter(void);
+
+    /*! 
+    Indicates if the reactive power generation/absorption does not respect the inverter status
+    */
+    DSS_CAPI_DLL void Storages_Set_VarFollowInverter(int32_t Value);
+
+
+    // API extensions
     DSS_CAPI_DLL int32_t CNData_Get_Count(void);
     DSS_CAPI_DLL int32_t CNData_Get_First(void);
     DSS_CAPI_DLL int32_t CNData_Get_Next(void);

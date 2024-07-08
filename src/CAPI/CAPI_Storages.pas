@@ -22,6 +22,50 @@ procedure Storages_Set_puSOC(Value: Double); CDECL;
 function Storages_Get_State(): Integer; CDECL;
 procedure Storages_Set_State(Value: Integer); CDECL;
 
+function Storages_Get_AmpLimit(): Double; CDECL;
+function Storages_Get_AmpLimitGain(): Double; CDECL;
+function Storages_Get_ChargeTrigger(): Double; CDECL;
+function Storages_Get_ControlMode(): Integer; CDECL;
+function Storages_Get_DischargeTrigger(): Double; CDECL;
+function Storages_Get_EffCharge(): Double; CDECL;
+function Storages_Get_EffDischarge(): Double; CDECL;
+function Storages_Get_Kp(): Double; CDECL;
+function Storages_Get_kV(): Double; CDECL;
+function Storages_Get_kVA(): Double; CDECL;
+function Storages_Get_kvar(): Double; CDECL;
+function Storages_Get_kVDC(): Double; CDECL;
+function Storages_Get_kW(): Double; CDECL;
+function Storages_Get_kWhRated(): Double; CDECL;
+function Storages_Get_kWRated(): Double; CDECL;
+function Storages_Get_LimitCurrent(): TAPIBoolean; CDECL;
+function Storages_Get_PF(): Double; CDECL;
+function Storages_Get_PITol(): Double; CDECL;
+function Storages_Get_SafeMode(): Integer; CDECL;
+function Storages_Get_SafeVoltage(): Double; CDECL;
+function Storages_Get_TimeChargeTrig(): Double; CDECL;
+function Storages_Get_VarFollowInverter(): Integer; CDECL;
+procedure Storages_Set_AmpLimit(Value: Double); CDECL;
+procedure Storages_Set_AmpLimitGain(Value: Double); CDECL;
+procedure Storages_Set_ChargeTrigger(Value: Double); CDECL;
+procedure Storages_Set_ControlMode(Value: Integer); CDECL;
+procedure Storages_Set_DischargeTrigger(Value: Double); CDECL;
+procedure Storages_Set_EffCharge(Value: Double); CDECL;
+procedure Storages_Set_EffDischarge(Value: Double); CDECL;
+procedure Storages_Set_Kp(Value: Double); CDECL;
+procedure Storages_Set_kV(Value: Double); CDECL;
+procedure Storages_Set_kVA(Value: Double); CDECL;
+procedure Storages_Set_kvar(Value: Double); CDECL;
+procedure Storages_Set_kVDC(Value: Double); CDECL;
+procedure Storages_Set_kW(Value: Double); CDECL;
+procedure Storages_Set_kWhRated(Value: Double); CDECL;
+procedure Storages_Set_kWRated(Value: Double); CDECL;
+procedure Storages_Set_LimitCurrent(Value: TAPIBoolean); CDECL;
+procedure Storages_Set_PF(Value: Double); CDECL;
+procedure Storages_Set_PITol(Value: Double); CDECL;
+procedure Storages_Set_SafeVoltage(Value: Double); CDECL;
+procedure Storages_Set_TimeChargeTrig(Value: Double); CDECL;
+procedure Storages_Set_VarFollowInverter(Value: Integer); CDECL;
+
 function Storages_Get_Pointer(): Pointer; CDECL;
 
 implementation
@@ -34,6 +78,7 @@ uses
     DSSPointerlist,
     DSSGlobals,
     DSSClass,
+    DSSObjectHelper,
     DSSHelper;
 
 
@@ -231,6 +276,427 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
     Result := DSSPrime.ActiveCircuit.StorageElements.Active
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_AmpLimit(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.dynVars.ILimit;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_AmpLimitGain(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.dynVars.VError;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_ChargeTrigger(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.ChargeTrigger;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_ControlMode(): Integer; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    if elem.GFM_mode then
+        Result := 1
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_DischargeTrigger(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.DischargeTrigger;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_EffCharge(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.pctChargeEff;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_EffDischarge(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.pctDischargeEff;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_Kp(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.dynVars.kP * 1000;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_kV(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.StorageVars.kVStorageBase;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_kVA(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.StorageVars.FkVArating;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_kvar(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.kvarRequested;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_kVDC(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.dynVars.RatedVDC / 1000;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_kW(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.kW;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_kWhRated(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.StorageVars.kWhrating;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_kWRated(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.StorageVars.kWrating;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_LimitCurrent(): TAPIBoolean; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := false;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    if elem.CurrentLimited then
+        Result := true;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_PF(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.PFnominal;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_PITol(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.dynVars.CtrlTol * 100;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_SafeMode(): Integer; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    if elem.dynVars.SafeMode then
+        Result := 1;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_SafeVoltage(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.dynVars.SMThreshold;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_TimeChargeTrig(): Double; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.ChargeTime;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_VarFollowInverter(): Integer; CDECL;
+var
+    elem: TStorageObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    if elem.VarFollowInverter then
+        Result := 1;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_AmpLimit(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.dynVars.ILimit := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_AmpLimitGain(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.dynVars.VError := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_ChargeTrigger(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.ChargeTrigger := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_ControlMode(Value: Integer); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.GFM_mode := (Value <> 0);
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_DischargeTrigger(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.DischargeTrigger := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_EffCharge(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.pctChargeEff := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_EffDischarge(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.pctDischargeEff := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_Kp(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.dynVars.kP := Value / 1000;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_kV(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.kV), Value, []);
+    end
+    else
+    begin
+        elem.ParentClass.SetObjDouble(elem, ord(TStorageProp.kV), Value, []);
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_kVA(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.StorageVars.FkVArating := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_kvar(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.kvarRequested := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_kVDC(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.dynVars.RatedVDC := Value * 1000;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_kW(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.kW := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_kWhRated(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.StorageVars.kWhrating := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_kWRated(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.StorageVars.kWrating := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_LimitCurrent(Value: TAPIBoolean); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.CurrentLimited := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_PF(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.PFnominal := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_PITol(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.dynVars.CtrlTol := Value / 100;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_SafeVoltage(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.dynVars.SMThreshold := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_TimeChargeTrig(Value: Double); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.ChargeTime := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Storages_Set_VarFollowInverter(Value: Integer); CDECL;
+var
+    elem: TStorageObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.VarFollowInverter := (Value <> 0);
 end;
 //------------------------------------------------------------------------------
 end.

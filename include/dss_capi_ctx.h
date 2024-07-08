@@ -6553,7 +6553,227 @@ extern "C" {
     */
     DSS_CAPI_DLL void ctx_Storages_Set_State(const void* ctx, int32_t Value);
 
-    // Experimental API extensions
+    /*! 
+    Current limit per phase for the IBR when operating in GFM mode.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_AmpLimit(const void* ctx);
+
+    /*! 
+    Current limit per phase for the IBR when operating in GFM mode.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_AmpLimit(const void* ctx, double Value);
+
+    /*! 
+    Use it for fine tuning the current limiter when active.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_AmpLimitGain(const void* ctx);
+
+    /*! 
+    Use it for fine tuning the current limiter when active.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_AmpLimitGain(const void* ctx, double Value);
+
+    /*! 
+    Dispatch trigger value for charging the Storage.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_ChargeTrigger(const void* ctx);
+
+    /*! 
+    Dispatch trigger value for charging the Storage.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_ChargeTrigger(const void* ctx, double Value);
+
+    /*! 
+    Control mode for the inverter. It can be one of {GFM = 1 | GFL* = 0}.
+    */
+    DSS_CAPI_DLL int32_t ctx_Storages_Get_ControlMode(const void* ctx);
+
+    /*! 
+    Control mode for the inverter. It can be one of {GFM = 1 | GFL* = 0}.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_ControlMode(const void* ctx, int32_t Value);
+
+    /*! 
+    Dispatch trigger value for discharging the Storage.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_DischargeTrigger(const void* ctx);
+
+    /*! 
+    Dispatch trigger value for discharging the Storage.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_DischargeTrigger(const void* ctx, double Value);
+
+    /*! 
+    Percentage efficiency for CHARGING the Storage element.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_EffCharge(const void* ctx);
+
+    /*! 
+    Percentage efficiency for CHARGING the Storage element.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_EffCharge(const void* ctx, double Value);
+
+    /*! 
+    Percentage efficiency for DISCHARGING the Storage element.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_EffDischarge(const void* ctx);
+
+    /*! 
+    Percentage efficiency for DISCHARGING the Storage element.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_EffDischarge(const void* ctx, double Value);
+
+    /*! 
+    Proportional gain for the PI controller within the inverter.
+    Use it to modify the controller response in dynamics simulation mode.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_Kp(const void* ctx);
+
+    /*! 
+    Proportional gain for the PI controller within the inverter.
+    Use it to modify the controller response in dynamics simulation mode.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_Kp(const void* ctx, double Value);
+
+    /*! 
+    Nominal rated (1.0 per unit) voltage, kV, for Storage element.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_kV(const void* ctx);
+
+    /*! 
+    Nominal rated (1.0 per unit) voltage, kV, for Storage element.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_kV(const void* ctx, double Value);
+
+    /*! 
+    Inverter nameplate capability (in kVA). Used as the base for Dynamics mode and Harmonics mode values.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_kVA(const void* ctx);
+
+    /*! 
+    Inverter nameplate capability (in kVA). Used as the base for Dynamics mode and Harmonics mode values.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_kVA(const void* ctx, double Value);
+
+    /*! 
+    Get/set the requested kvar value. Final kvar is subjected to the inverter ratings. Sets inverter to operate in constant kvar mode.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_kvar(const void* ctx);
+
+    /*! 
+    Get/set the requested kvar value. Final kvar is subjected to the inverter ratings. Sets inverter to operate in constant kvar mode.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_kvar(const void* ctx, double Value);
+
+    /*! 
+    Rated voltage (kV) at the input of the inverter while the storage is discharging
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_kVDC(const void* ctx);
+
+    /*! 
+    Rated voltage (kV) at the input of the inverter while the storage is discharging
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_kVDC(const void* ctx, double Value);
+
+    /*! 
+    Get/set the requested kW value. Final kW is subjected to the inverter ratings.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_kW(const void* ctx);
+
+    /*! 
+    Get/set the requested kW value. Final kW is subjected to the inverter ratings.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_kW(const void* ctx, double Value);
+
+    /*! 
+    Rated Storage capacity in kWh.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_kWhRated(const void* ctx);
+
+    /*! 
+    Rated Storage capacity in kWh.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_kWhRated(const void* ctx, double Value);
+
+    /*! 
+    kW rating of power output. Base for Loadshapes when DispMode=Follow. Sets kVA property if it has not been specified yet.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_kWRated(const void* ctx);
+
+    /*! 
+    kW rating of power output. Base for Loadshapes when DispMode=Follow. Sets kVA property if it has not been specified yet.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_kWRated(const void* ctx, double Value);
+
+    /*! 
+    Limits current magnitude to Vminpu value for both 1-phase and 3-phase Storage similar to Generator Model 7.
+    For 3-phase, limits the positive-sequence current but not the negative-sequence."
+    */
+    DSS_CAPI_DLL uint16_t ctx_Storages_Get_LimitCurrent(const void* ctx);
+
+    /*! 
+    Limits current magnitude to Vminpu value for both 1-phase and 3-phase Storage similar to Generator Model 7.
+    For 3-phase, limits the positive-sequence current but not the negative-sequence."
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_LimitCurrent(const void* ctx, uint16_t Value);
+
+    /*! 
+    Get/set the requested PF value.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_PF(const void* ctx);
+
+    /*! 
+    Get/set the requested PF value.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_PF(const void* ctx, double Value);
+
+    /*! 
+    Tolerance (%) for the closed loop controller of the inverter
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_PITol(const void* ctx);
+
+    /*! 
+    Tolerance (%) for the closed loop controller of the inverter
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_PITol(const void* ctx, double Value);
+
+    /*! 
+    (Read only) Indicates whether the inverter entered (Yes) or not (No) into Safe Mode.
+    */
+    DSS_CAPI_DLL int32_t ctx_Storages_Get_SafeMode(const void* ctx);
+
+    /*! 
+    Indicates the voltage level (%) respect to the base voltage level for which the Inverter will operate.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_SafeVoltage(const void* ctx);
+
+    /*! 
+    Indicates the voltage level (%) respect to the base voltage level for which the Inverter will operate.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_SafeVoltage(const void* ctx, double Value);
+
+    /*! 
+    Time of day in fractional hours (0230 = 2.5) at which Storage element will automatically go into charge state.
+    */
+    DSS_CAPI_DLL double ctx_Storages_Get_TimeChargeTrig(const void* ctx);
+
+    /*! 
+    Time of day in fractional hours (0230 = 2.5) at which Storage element will automatically go into charge state.
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_TimeChargeTrig(const void* ctx, double Value);
+
+    /*! 
+    Indicates if the reactive power generation/absorption does not respect the inverter status
+    */
+    DSS_CAPI_DLL int32_t ctx_Storages_Get_VarFollowInverter(const void* ctx);
+
+    /*! 
+    Indicates if the reactive power generation/absorption does not respect the inverter status
+    */
+    DSS_CAPI_DLL void ctx_Storages_Set_VarFollowInverter(const void* ctx, int32_t Value);
+
+
+    // API extensions
     DSS_CAPI_DLL int32_t ctx_CNData_Get_Count(const void* ctx);
     DSS_CAPI_DLL int32_t ctx_CNData_Get_First(const void* ctx);
     DSS_CAPI_DLL int32_t ctx_CNData_Get_Next(const void* ctx);
