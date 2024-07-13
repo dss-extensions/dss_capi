@@ -98,10 +98,12 @@ typedef struct
     oddie_str_func_t SensorsS;
     oddie_str_func_t SettingsS;
     oddie_str_func_t SolutionS;
+    oddie_str_func_t StoragesS;
     oddie_str_func_t SwtControlsS;
     oddie_str_func_t TopologyS;
     oddie_str_func_t TransformersS;
     oddie_str_func_t VsourcesS;
+    oddie_str_func_t WindGensS;
     oddie_str_func_t XYCurvesS;
 
     oddie_float64_func_t BUSF;
@@ -126,9 +128,11 @@ typedef struct
     oddie_float64_func_t SensorsF;
     oddie_float64_func_t SettingsF;
     oddie_float64_func_t SolutionF;
+    oddie_float64_func_t StoragesF;
     oddie_float64_func_t SwtControlsF;
     oddie_float64_func_t TransformersF;
     oddie_float64_func_t VsourcesF;
+    oddie_float64_func_t WindGensF;
     oddie_float64_func_t XYCurvesF;
 
     oddie_float64_func2_t CircuitF;
@@ -166,10 +170,12 @@ typedef struct
     oddie_int32_func_t SensorsI;
     oddie_int32_func_t SettingsI;
     oddie_int32_func_t SolutionI;
+    oddie_int32_func_t StoragesI;
     oddie_int32_func_t SwtControlsI;
     oddie_int32_func_t TopologyI;
     oddie_int32_func_t TransformersI;
     oddie_int32_func_t VsourcesI;
+    oddie_int32_func_t WindGensI;
     oddie_int32_func_t XYCurvesI;
 
     oddie_variant_func_t ActiveClassV;
@@ -201,10 +207,12 @@ typedef struct
     oddie_variant_func_t SensorsV;
     oddie_variant_func_t SettingsV;
     oddie_variant_func_t SolutionV;
+    oddie_variant_func_t StoragesV;
     oddie_variant_func_t SwtControlsV;
     oddie_variant_func_t TopologyV;
     oddie_variant_func_t TransformersV;
     oddie_variant_func_t VsourcesV;
+    oddie_variant_func_t WindGensV;
     oddie_variant_func_t XYCurvesV;
 } OddieContext;
 
@@ -220,3 +228,4 @@ const int32_t ODDIE_PTR_VAR_TYPE_INTEGER = 1;
 const int32_t ODDIE_PTR_VAR_TYPE_DOUBLE = 2;
 const int32_t ODDIE_PTR_VAR_TYPE_COMPLEX = 3;
 const int32_t ODDIE_PTR_VAR_TYPE_STRING = 4;
+const int32_t ODDIE_PTR_VAR_TYPE_BYTES = 5;

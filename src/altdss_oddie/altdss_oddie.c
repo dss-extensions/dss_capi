@@ -11,9 +11,9 @@
 #endif
 
 #ifdef WIN32
-#define ODDIE_LOAD_FUNC(FUNCNAME) ctx->FUNCNAME = GetProcAddress(ctx->dll_handle, #FUNCNAME); if (ctx->FUNCNAME == NULL) goto CTX_NEW_ERROR;
+#define ODDIE_LOAD_FUNC(FUNCNAME, FUNCTYPE) ctx->FUNCNAME = (FUNCTYPE) GetProcAddress(ctx->dll_handle, #FUNCNAME); if (ctx->FUNCNAME == NULL) goto CTX_NEW_ERROR;
 #else
-#define ODDIE_LOAD_FUNC(FUNCNAME) ctx->FUNCNAME = dlsym(ctx->dll_handle, #FUNCNAME); if (ctx->FUNCNAME == NULL) goto CTX_NEW_ERROR;
+#define ODDIE_LOAD_FUNC(FUNCNAME, FUNCTYPE) ctx->FUNCNAME = (FUNCTYPE) dlsym(ctx->dll_handle, #FUNCNAME); if (ctx->FUNCNAME == NULL) goto CTX_NEW_ERROR;
 #endif
 
 #define CTX_OR_PRIME if (!ctx) ctx = ctxPrime;
@@ -36,6 +36,26 @@ static uint32_t ODDIE_LIB_OPTIONS = LOAD_WITH_ALTERED_SEARCH_PATH;
 #else
 static uint32_t ODDIE_LIB_OPTIONS = RTLD_NOW;
 #endif
+
+/*
+Internal functions
+*/
+void oddie_map_error(const void* ctx_);
+int32_t oddie_check_vararray_complex(OddieContext* ctx, void *ptr, int32_t ptrType, int32_t *ptrSize);
+int32_t oddie_check_vararray_float64(OddieContext* ctx, void *ptr, int32_t ptrType, int32_t *ptrSize);
+int32_t oddie_check_vararray_int32(OddieContext* ctx, void *ptr, int32_t ptrType, int32_t *ptrSize);
+int32_t oddie_check_vararray_string(OddieContext* ctx, void *ptr, int32_t ptrType, int32_t *ptrSize);
+int32_t oddie_check_vararray_int8(OddieContext* ctx, void *ptr, int32_t ptrType, int32_t *ptrSize);
+int32_t oddie_get_int_property(const void* ctx, const char* className, const char* name, const char* queryCmd, const bool firstChar);
+const char *oddie_get_str_property(const void* ctx, const char* className, const char* name, const char* queryCmd);
+void oddie_set_char_property(const void* ctx, const char* className, const char* name, const char* prop, const char ch);
+void oddie_set_str_property(const void* ctx, const char* className, const char* name, const char* prop, const char* value);
+int32_t oddie_join_to_char_buffer(const void* ctx, const char** ValuePtr, int32_t ValueCount, int32_t* total_chars);
+int32_t oddie_map_ctrl_state(const char* state);
+int32_t oddie_command_to_int(const void* ctx, const char* cmd, const bool firstChar);
+double oddie_command_to_dbl(const void* ctx, const char* cmd);
+void oddie_set_int_command(const void* ctx, const char* cmd_fmt, int32_t value);
+double oddie_get_dbl_property(const void* ctx, const char* className, const char* name, const char* queryCmd);
 
 ALTDSS_ODDIE_DLL const void* ctx_Get_Prime(void)
 {
@@ -76,156 +96,164 @@ ALTDSS_ODDIE_DLL void* ctx_New(void)
         goto CTX_NEW_ERROR;
     }
 
-    ODDIE_LOAD_FUNC(GetPCInjCurr)
-    ODDIE_LOAD_FUNC(GetSourceInjCurrents)
-    ODDIE_LOAD_FUNC(ZeroInjCurr)
-    ODDIE_LOAD_FUNC(getIpointer)
-    ODDIE_LOAD_FUNC(getVpointer)
-    ODDIE_LOAD_FUNC(SolveSystem)
-    ODDIE_LOAD_FUNC(GetCompressedYMatrix)
-    ODDIE_LOAD_FUNC(AddInAuxCurrents)
-    ODDIE_LOAD_FUNC(BuildYMatrixD)
-    ODDIE_LOAD_FUNC(InitAndGetYparams)
-    ODDIE_LOAD_FUNC(SystemYChanged)
-    ODDIE_LOAD_FUNC(UseAuxCurrents)
-    ODDIE_LOAD_FUNC(ErrorCode)
-    ODDIE_LOAD_FUNC(ErrorDesc)
-    ODDIE_LOAD_FUNC(DSSPut_Command)
-    ODDIE_LOAD_FUNC(ActiveClassS)
-    ODDIE_LOAD_FUNC(BUSS)
-    ODDIE_LOAD_FUNC(CapacitorsS)
-    ODDIE_LOAD_FUNC(CapControlsS)
-    ODDIE_LOAD_FUNC(CircuitS)
-    ODDIE_LOAD_FUNC(CktElementS)
-    ODDIE_LOAD_FUNC(DSSElementS)
-    ODDIE_LOAD_FUNC(DSSExecutiveS)
-    ODDIE_LOAD_FUNC(DSSLoadsS)
-    ODDIE_LOAD_FUNC(DSSProgressS)
-    ODDIE_LOAD_FUNC(DSSProperties)
-    ODDIE_LOAD_FUNC(DSSS)
-    ODDIE_LOAD_FUNC(FusesS)
-    ODDIE_LOAD_FUNC(GeneratorsS)
-    ODDIE_LOAD_FUNC(GICSourcesS)
-    ODDIE_LOAD_FUNC(IsourceS)
-    ODDIE_LOAD_FUNC(LineCodesS)
-    ODDIE_LOAD_FUNC(LinesS)
-    ODDIE_LOAD_FUNC(LoadShapeS)
-    ODDIE_LOAD_FUNC(MetersS)
-    ODDIE_LOAD_FUNC(MonitorsS)
-    ODDIE_LOAD_FUNC(ParserS)
-    ODDIE_LOAD_FUNC(PDElementsS)
-    ODDIE_LOAD_FUNC(PVsystemsS)
-    ODDIE_LOAD_FUNC(ReclosersS)
-    ODDIE_LOAD_FUNC(ReduceCktS)
-    ODDIE_LOAD_FUNC(RegControlsS)
-    ODDIE_LOAD_FUNC(RelaysS)
-    ODDIE_LOAD_FUNC(SensorsS)
-    ODDIE_LOAD_FUNC(SettingsS)
-    ODDIE_LOAD_FUNC(SolutionS)
-    ODDIE_LOAD_FUNC(SwtControlsS)
-    ODDIE_LOAD_FUNC(TopologyS)
-    ODDIE_LOAD_FUNC(TransformersS)
-    ODDIE_LOAD_FUNC(VsourcesS)
-    ODDIE_LOAD_FUNC(XYCurvesS)
-    ODDIE_LOAD_FUNC(BUSF)
-    ODDIE_LOAD_FUNC(CapacitorsF)
-    ODDIE_LOAD_FUNC(CapControlsF)
-    ODDIE_LOAD_FUNC(CktElementF)
-    ODDIE_LOAD_FUNC(DSSLoadsF)
-    ODDIE_LOAD_FUNC(FusesF)
-    ODDIE_LOAD_FUNC(GeneratorsF)
-    ODDIE_LOAD_FUNC(GICSourcesF)
-    ODDIE_LOAD_FUNC(IsourceF)
-    ODDIE_LOAD_FUNC(LineCodesF)
-    ODDIE_LOAD_FUNC(LinesF)
-    ODDIE_LOAD_FUNC(LoadShapeF)
-    ODDIE_LOAD_FUNC(MetersF)
-    ODDIE_LOAD_FUNC(ParserF)
-    ODDIE_LOAD_FUNC(PDElementsF)
-    ODDIE_LOAD_FUNC(PVsystemsF)
-    ODDIE_LOAD_FUNC(ReclosersF)
-    ODDIE_LOAD_FUNC(ReduceCktF)
-    ODDIE_LOAD_FUNC(RegControlsF)
-    ODDIE_LOAD_FUNC(SensorsF)
-    ODDIE_LOAD_FUNC(SettingsF)
-    ODDIE_LOAD_FUNC(SolutionF)
-    ODDIE_LOAD_FUNC(SwtControlsF)
-    ODDIE_LOAD_FUNC(TransformersF)
-    ODDIE_LOAD_FUNC(VsourcesF)
-    ODDIE_LOAD_FUNC(XYCurvesF)
-    ODDIE_LOAD_FUNC(CircuitF)
-    ODDIE_LOAD_FUNC(CmathLibF)
-    ODDIE_LOAD_FUNC(ActiveClassI)
-    ODDIE_LOAD_FUNC(BUSI)
-    ODDIE_LOAD_FUNC(CapacitorsI)
-    ODDIE_LOAD_FUNC(CapControlsI)
-    ODDIE_LOAD_FUNC(CircuitI)
-    ODDIE_LOAD_FUNC(CktElementI)
-    ODDIE_LOAD_FUNC(CtrlQueueI)
-    ODDIE_LOAD_FUNC(DSSElementI)
-    ODDIE_LOAD_FUNC(DSSExecutiveI)
-    ODDIE_LOAD_FUNC(DSSI)
-    ODDIE_LOAD_FUNC(DSSLoads)
-    ODDIE_LOAD_FUNC(DSSProgressI)
-    ODDIE_LOAD_FUNC(FusesI)
-    ODDIE_LOAD_FUNC(GeneratorsI)
-    ODDIE_LOAD_FUNC(GICSourcesI)
-    ODDIE_LOAD_FUNC(IsourceI)
-    ODDIE_LOAD_FUNC(LineCodesI)
-    ODDIE_LOAD_FUNC(LinesI)
-    ODDIE_LOAD_FUNC(LoadShapeI)
-    ODDIE_LOAD_FUNC(MetersI)
-    ODDIE_LOAD_FUNC(MonitorsI)
-    ODDIE_LOAD_FUNC(ParallelI)
-    ODDIE_LOAD_FUNC(ParserI)
-    ODDIE_LOAD_FUNC(PDElementsI)
-    ODDIE_LOAD_FUNC(PVsystemsI)
-    ODDIE_LOAD_FUNC(ReclosersI)
-    ODDIE_LOAD_FUNC(ReduceCktI)
-    ODDIE_LOAD_FUNC(RegControlsI)
-    ODDIE_LOAD_FUNC(RelaysI)
-    ODDIE_LOAD_FUNC(SensorsI)
-    ODDIE_LOAD_FUNC(SettingsI)
-    ODDIE_LOAD_FUNC(SolutionI)
-    ODDIE_LOAD_FUNC(SwtControlsI)
-    ODDIE_LOAD_FUNC(TopologyI)
-    ODDIE_LOAD_FUNC(TransformersI)
-    ODDIE_LOAD_FUNC(VsourcesI)
-    ODDIE_LOAD_FUNC(XYCurvesI)
-    ODDIE_LOAD_FUNC(ActiveClassV)
-    ODDIE_LOAD_FUNC(BUSV)
-    ODDIE_LOAD_FUNC(CapacitorsV)
-    ODDIE_LOAD_FUNC(CapControlsV)
-    ODDIE_LOAD_FUNC(CircuitV)
-    ODDIE_LOAD_FUNC(CktElementV)
-    ODDIE_LOAD_FUNC(CmathLibV)
-    ODDIE_LOAD_FUNC(CtrlQueueV)
-    ODDIE_LOAD_FUNC(DSSElementV)
-    ODDIE_LOAD_FUNC(DSSLoadsV)
-    ODDIE_LOAD_FUNC(DSSV)
-    ODDIE_LOAD_FUNC(FusesV)
-    ODDIE_LOAD_FUNC(GeneratorsV)
-    ODDIE_LOAD_FUNC(GICSourcesV)
-    ODDIE_LOAD_FUNC(IsourceV)
-    ODDIE_LOAD_FUNC(LineCodesV)
-    ODDIE_LOAD_FUNC(LinesV)
-    ODDIE_LOAD_FUNC(LoadShapeV)
-    ODDIE_LOAD_FUNC(MetersV)
-    ODDIE_LOAD_FUNC(MonitorsV)
-    ODDIE_LOAD_FUNC(ParallelV)
-    ODDIE_LOAD_FUNC(ParserV)
-    ODDIE_LOAD_FUNC(PVsystemsV)
-    ODDIE_LOAD_FUNC(ReclosersV)
-    ODDIE_LOAD_FUNC(RegControlsV)
-    ODDIE_LOAD_FUNC(RelaysV)
-    ODDIE_LOAD_FUNC(SensorsV)
-    ODDIE_LOAD_FUNC(SettingsV)
-    ODDIE_LOAD_FUNC(SolutionV)
-    ODDIE_LOAD_FUNC(SwtControlsV)
-    ODDIE_LOAD_FUNC(TopologyV)
-    ODDIE_LOAD_FUNC(TransformersV)
-    ODDIE_LOAD_FUNC(VsourcesV)
-    ODDIE_LOAD_FUNC(XYCurvesV)
+    ODDIE_LOAD_FUNC(GetPCInjCurr, oddie_void_void_func_t)
+    ODDIE_LOAD_FUNC(GetSourceInjCurrents, oddie_void_void_func_t)
+    ODDIE_LOAD_FUNC(ZeroInjCurr, oddie_void_void_func_t)
+    ODDIE_LOAD_FUNC(getIpointer, oddie_void_ppdouble_func_t)
+    ODDIE_LOAD_FUNC(getVpointer, oddie_void_ppdouble_func_t)
+    ODDIE_LOAD_FUNC(SolveSystem, oddie_int32_ppdouble_func_t)
+    ODDIE_LOAD_FUNC(GetCompressedYMatrix, oddie_get_y_csc_func_t)
+    ODDIE_LOAD_FUNC(AddInAuxCurrents, oddie_add_in_aux_currents_func_t)
+    ODDIE_LOAD_FUNC(BuildYMatrixD, oddie_build_y_matrix_func_t)
+    ODDIE_LOAD_FUNC(InitAndGetYparams, oddie_y_params_func_t)
+    ODDIE_LOAD_FUNC(SystemYChanged, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(UseAuxCurrents, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(ErrorCode, oddie_int32_void_func_t)
+    ODDIE_LOAD_FUNC(ErrorDesc, oddie_str_void_func_t)
+    ODDIE_LOAD_FUNC(DSSPut_Command, oddie_str_str_func_t)
+    ODDIE_LOAD_FUNC(ActiveClassS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(BUSS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(CapacitorsS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(CapControlsS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(CircuitS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(CktElementS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(DSSElementS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(DSSExecutiveS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(DSSLoadsS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(DSSProgressS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(DSSProperties, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(DSSS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(FusesS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(GeneratorsS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(GICSourcesS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(IsourceS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(LineCodesS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(LinesS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(LoadShapeS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(MetersS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(MonitorsS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(ParserS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(PDElementsS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(PVsystemsS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(ReclosersS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(ReduceCktS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(RegControlsS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(RelaysS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(SensorsS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(SettingsS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(SolutionS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(StoragesS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(SwtControlsS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(TopologyS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(TransformersS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(VsourcesS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(WindGensS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(XYCurvesS, oddie_str_func_t)
+    ODDIE_LOAD_FUNC(BUSF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(CapacitorsF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(CapControlsF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(CktElementF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(DSSLoadsF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(FusesF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(GeneratorsF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(GICSourcesF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(IsourceF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(LineCodesF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(LinesF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(LoadShapeF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(MetersF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(ParserF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(PDElementsF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(PVsystemsF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(ReclosersF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(ReduceCktF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(RegControlsF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(SensorsF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(SettingsF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(SolutionF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(StoragesF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(SwtControlsF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(TransformersF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(VsourcesF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(WindGensF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(XYCurvesF, oddie_float64_func_t)
+    ODDIE_LOAD_FUNC(CircuitF, oddie_float64_func2_t)
+    ODDIE_LOAD_FUNC(CmathLibF, oddie_float64_func2_t)
+    ODDIE_LOAD_FUNC(ActiveClassI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(BUSI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(CapacitorsI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(CapControlsI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(CircuitI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(CktElementI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(CtrlQueueI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(DSSElementI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(DSSExecutiveI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(DSSI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(DSSLoads, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(DSSProgressI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(FusesI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(GeneratorsI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(GICSourcesI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(IsourceI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(LineCodesI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(LinesI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(LoadShapeI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(MetersI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(MonitorsI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(ParallelI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(ParserI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(PDElementsI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(PVsystemsI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(ReclosersI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(ReduceCktI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(RegControlsI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(RelaysI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(SensorsI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(SettingsI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(SolutionI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(SwtControlsI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(StoragesI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(TopologyI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(TransformersI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(VsourcesI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(WindGensI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(XYCurvesI, oddie_int32_func_t)
+    ODDIE_LOAD_FUNC(ActiveClassV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(BUSV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(CapacitorsV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(CapControlsV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(CircuitV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(CktElementV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(CmathLibV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(CtrlQueueV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(DSSElementV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(DSSLoadsV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(DSSV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(FusesV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(GeneratorsV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(GICSourcesV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(IsourceV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(LineCodesV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(LinesV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(LoadShapeV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(MetersV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(MonitorsV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(ParallelV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(ParserV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(PVsystemsV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(ReclosersV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(RegControlsV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(RelaysV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(SensorsV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(SettingsV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(SolutionV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(StoragesV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(SwtControlsV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(TopologyV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(TransformersV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(VsourcesV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(WindGensV, oddie_variant_func_t)
+    ODDIE_LOAD_FUNC(XYCurvesV, oddie_variant_func_t)
 
     ctx->error_number = 0;
     ctx->error_desc[0] = '\0';
@@ -324,7 +352,7 @@ ALTDSS_ODDIE_DLL void ctx_Error_Set_Description(const void* ctx, const char* Val
 void oddie_error_not_implemented(OddieContext* ctx, const char* funcname)
 {
     ctx->error_number = 2;
-    strncpy(ctx->error_desc, "Not implemented: ", DSS_ERR_NUM_CHR);
+    strncpy(ctx->error_desc, "(Oddie) Not implemented: ", DSS_ERR_NUM_CHR);
     strncat(ctx->error_desc, funcname, DSS_ERR_NUM_CHR - 20);
 }
 
@@ -333,14 +361,14 @@ int32_t oddie_check_vararray_complex(OddieContext* ctx, void *ptr, int32_t ptrTy
     if (NULL == ptr)
     {
         // ctx->error_number = 10;
-        // ctx_Error_Set_Description(ctx, "Variant array error, null pointer returned.");
+        // ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, null pointer returned.");
         return 1;
     }
 
     if (ptrType != ODDIE_PTR_VAR_TYPE_COMPLEX)
     {
         ctx->error_number = 11;
-        ctx_Error_Set_Description(ctx, "Variant array error, expected complex");
+        ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, expected complex");
         return 1;
     }
 
@@ -353,14 +381,14 @@ int32_t oddie_check_vararray_float64(OddieContext* ctx, void *ptr, int32_t ptrTy
     if (NULL == ptr)
     {
         // ctx->error_number = 12;
-        // ctx_Error_Set_Description(ctx, "Variant array error, null pointer returned.");
+        // ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, null pointer returned.");
         return 1;
     }
 
     if (ptrType != ODDIE_PTR_VAR_TYPE_DOUBLE && ptrType != ODDIE_PTR_VAR_TYPE_COMPLEX)
     {
         ctx->error_number = 13;
-        ctx_Error_Set_Description(ctx, "Variant array error, expected complex or double");
+        ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, expected complex or double");
         return 1;
     }
 
@@ -397,14 +425,14 @@ int32_t oddie_check_vararray_int32(OddieContext* ctx, void *ptr, int32_t ptrType
     if (NULL == ptr)
     {
         // ctx->error_number = 14;
-        // ctx_Error_Set_Description(ctx, "Variant array error, null pointer returned.");
+        // ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, null pointer returned.");
         return 1;
     }
 
     if (ptrType != ODDIE_PTR_VAR_TYPE_INTEGER)
     {
         ctx->error_number = 15;
-        ctx_Error_Set_Description(ctx, "Variant array error, expected integer");
+        ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, expected integer");
         return 1;
     }
 
@@ -440,14 +468,14 @@ int32_t oddie_check_vararray_string(OddieContext* ctx, void *ptr, int32_t ptrTyp
     if (NULL == ptr)
     {
         // ctx->error_number = 16;
-        // ctx_Error_Set_Description(ctx, "Variant array error, null pointer returned.");
+        // ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, null pointer returned.");
         return 1;
     }
 
     if (ptrType != ODDIE_PTR_VAR_TYPE_STRING)
     {
         ctx->error_number = 17;
-        ctx_Error_Set_Description(ctx, "Variant array error, expected string");
+        ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, expected string");
         return 1;
     }
 
@@ -510,14 +538,14 @@ int32_t oddie_check_vararray_int8(OddieContext* ctx, void *ptr, int32_t ptrType,
     if (NULL == ptr)
     {
         // ctx->error_number = 18;
-        // ctx_Error_Set_Description(ctx, "Variant array error, null pointer returned.");
+        // ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, null pointer returned.");
         return 1;
     }
 
-    if (ptrType != ODDIE_PTR_VAR_TYPE_STRING)
+    if ((ptrType != ODDIE_PTR_VAR_TYPE_STRING) && (ptrType != ODDIE_PTR_VAR_TYPE_BYTES))
     {
         ctx->error_number = 19;
-        ctx_Error_Set_Description(ctx, "Variant array error, expected string/bytes");
+        ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, expected string/bytes");
         return 1;
     }
 
@@ -556,10 +584,6 @@ int32_t oddie_get_int_property(const void* ctx, const char* className, const cha
     {
         return 0;
     }
-    if (oddie_ctx->error_number)
-    {
-        return 0;
-    }
     ctx_DSS_SetActiveClass(ctx, className);
     if (oddie_ctx->error_number)
     {
@@ -582,6 +606,95 @@ int32_t oddie_get_int_property(const void* ctx, const char* className, const cha
     return atoi(res);
 }
 
+double oddie_command_to_dbl(const void* ctx, const char* cmd)
+{
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    const char *res;
+    if (oddie_ctx->error_number)
+    {
+        return 0;
+    }
+    ctx_Text_Set_Command(ctx, cmd);
+    if (oddie_ctx->error_number)
+    {
+        return 0;
+    }
+    res = ctx_Text_Get_Result(ctx);
+    if (oddie_ctx->error_number || res == NULL || res[0] == 0)
+    {
+        return 0;
+    }
+    return atof(res);
+}
+
+int32_t oddie_command_to_int(const void* ctx, const char* cmd, const bool firstChar)
+{
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    const char *res;
+    if (oddie_ctx->error_number)
+    {
+        return 0;
+    }
+    ctx_Text_Set_Command(ctx, cmd);
+    if (oddie_ctx->error_number)
+    {
+        return 0;
+    }
+    res = ctx_Text_Get_Result(ctx);
+    if (oddie_ctx->error_number || res == NULL || res[0] == 0)
+    {
+        return 0;
+    }
+    if (firstChar) 
+    {
+        return res[0];
+    }
+    return atoi(res);
+}
+
+void oddie_set_int_command(const void* ctx, const char* cmd_fmt, int32_t value)
+{
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    const char *res;
+    if (oddie_ctx->error_number)
+    {
+        return;
+    }
+    if (snprintf(oddie_ctx->char_buffer, DSS_STR_BUFFER_NUM_CHR, cmd_fmt, value) <= 0)
+    {
+        oddie_ctx->error_number = 28;
+        ctx_Error_Set_Description(ctx, "(Oddie) Could not format string for command.");
+        return;
+    }
+    ctx_Text_Set_Command(ctx, oddie_ctx->char_buffer);    
+}
+
+const char *oddie_get_str_property(const void* ctx, const char* className, const char* name, const char* queryCmd)
+{
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    const char *res;
+    if (oddie_ctx->error_number || name == NULL || name[0] == 0)
+    {
+        return NULL;
+    }
+    ctx_DSS_SetActiveClass(ctx, className);
+    if (oddie_ctx->error_number)
+    {
+        return NULL;
+    }
+    ctx_Text_Set_Command(ctx, queryCmd);
+    if (oddie_ctx->error_number)
+    {
+        return NULL;
+    }
+    res = ctx_Text_Get_Result(ctx);
+    if (oddie_ctx->error_number || res == NULL || res[0] == 0)
+    {
+        return NULL;
+    }
+    return res;
+}
+
 void oddie_set_char_property(const void* ctx, const char* className, const char* name, const char* prop, const char ch)
 {
     OddieContext* oddie_ctx = (OddieContext*) ctx;
@@ -592,10 +705,52 @@ void oddie_set_char_property(const void* ctx, const char* className, const char*
     if (snprintf(oddie_ctx->char_buffer, DSS_STR_BUFFER_NUM_CHR, "%s.%s.%s=%c", className, name, prop, ch) <= 0)
     {
         oddie_ctx->error_number = 25;
-        ctx_Error_Set_Description(ctx, "Oddie ERROR: could not format string for command.");
+        ctx_Error_Set_Description(ctx, "(Oddie) ERROR: could not format string for command.");
         return;
     }
     ctx_Text_Set_Command(ctx, oddie_ctx->char_buffer);    
+}
+
+void oddie_set_str_property(const void* ctx, const char* className, const char* name, const char* prop, const char* value)
+{
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    if (oddie_ctx->error_number || name == NULL || name[0] == 0)
+    {
+        return;
+    }
+    if (snprintf(oddie_ctx->char_buffer, DSS_STR_BUFFER_NUM_CHR, "%s.%s.%s=%s", className, name, prop, value) <= 0)
+    {
+        oddie_ctx->error_number = 26;
+        ctx_Error_Set_Description(ctx, "(Oddie) ERROR: could not format string for command.");
+        return;
+    }
+    ctx_Text_Set_Command(ctx, oddie_ctx->char_buffer);    
+}
+
+double oddie_get_dbl_property(const void* ctx, const char* className, const char* name, const char* queryCmd)
+{
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    const char *res;
+    if (oddie_ctx->error_number || name == NULL || name[0] == 0)
+    {
+        return 0;
+    }
+    ctx_DSS_SetActiveClass(ctx, className);
+    if (oddie_ctx->error_number)
+    {
+        return 0;
+    }
+    ctx_Text_Set_Command(ctx, queryCmd);
+    if (oddie_ctx->error_number)
+    {
+        return 0;
+    }
+    res = ctx_Text_Get_Result(ctx);
+    if (oddie_ctx->error_number || res == NULL || res[0] == 0)
+    {
+        return 0;
+    }
+    return atof(res);
 }
 
 
@@ -633,7 +788,7 @@ ALTDSS_ODDIE_DLL void ctx_Text_CommandArray(const void* ctx, const char** ValueP
 
 ALTDSS_ODDIE_DLL void ctx_Text_CommandBlock(const void* ctx, const char* Value)
 {
-    // Ported from an older version DSS C-API
+    // Ported from an older version of AltDSS/DSS C-API
     const char* posCurrent = Value;
     char* posNext0 = NULL;
     char* posEnd = NULL;
@@ -746,7 +901,10 @@ ALTDSS_ODDIE_DLL void DSS_Dispose_PPointer(void*** p)
 
 ALTDSS_ODDIE_DLL void DSS_Dispose_String(char* S)
 {
-    // free(S); // NOTE: this is not really the safest alternative, but it's what we have.
+    /* 
+    free(S); 
+    TODO: implement when there is a way to handle this.
+    */
 }
 
 ALTDSS_ODDIE_DLL void ctx_DSS_DisposeGRData(const void* ctx)
@@ -985,12 +1143,13 @@ ALTDSS_ODDIE_DLL double ctx_CktElement_Get_Variablei(const void* ctx, int32_t Id
     // if (ec != 0)
     // {
     //     oddie_ctx->error_number = 100002;
-    //     strncpy(oddie_ctx->error_desc, "Invalid variable or not a PC element.", DSS_ERR_NUM_CHR);
+    //     strncpy(oddie_ctx->error_desc, "(Oddie) Invalid variable or not a PC element.", DSS_ERR_NUM_CHR);
     //     *Code = 1;
     //     return;
     // }
     double res = oddie_ctx->CktElementF(4, (double) Idx);
     oddie_map_error(ctx);
+    return res;
 }
 
 ALTDSS_ODDIE_DLL double ctx_CktElement_Get_Variable(const void* ctx, const char* MyVarName, int32_t *Code)
@@ -1039,7 +1198,7 @@ ALTDSS_ODDIE_DLL void ctx_CktElement_Set_Variable(const void* ctx, const char* M
     if (res != 0)
     {
         oddie_ctx->error_number = 100002;
-        strncpy(oddie_ctx->error_desc, "Invalid variable or not a PC element.", DSS_ERR_NUM_CHR);
+        strncpy(oddie_ctx->error_desc, "(Oddie) Invalid variable or not a PC element.", DSS_ERR_NUM_CHR);
         *Code = 1;
         return;
     }
@@ -1055,7 +1214,7 @@ ALTDSS_ODDIE_DLL void ctx_CktElement_Set_VariableName(const void* ctx, const cha
     if (!oddie_ctx->error_number && res != NULL && res[0] != 0 && res[0] == 'O' && res[1] == 'K' && res[2] == 0)
     {
         oddie_ctx->error_number = 100002;
-        strncpy(oddie_ctx->error_desc, "Invalid variable name.", DSS_ERR_NUM_CHR);
+        strncpy(oddie_ctx->error_desc, "(Oddie) Invalid variable name.", DSS_ERR_NUM_CHR);
     }
 }
 
@@ -1093,7 +1252,7 @@ int32_t oddie_join_to_char_buffer(const void* ctx, const char** ValuePtr, int32_
         if (*total_chars > DSS_STR_BUFFER_NUM_CHR)
         {
             oddie_ctx->error_number = 3;
-            strncpy(oddie_ctx->error_desc, "Cannot copy string data to internal buffer.", DSS_ERR_NUM_CHR);
+            strncpy(oddie_ctx->error_desc, "(Oddie) Could not copy string data to internal buffer.", DSS_ERR_NUM_CHR);
             return 1; // cannot handle this
         }
         strncpy(buffer, ValuePtr[i], str_chars);
@@ -1276,7 +1435,15 @@ ALTDSS_ODDIE_DLL void Oddie_SetLibOptions(const char* libname, uint32_t* libopti
 
 ALTDSS_ODDIE_DLL void Oddie_SetOptions(const void *ctx, uint32_t flags)
 {
+    // oddie_allow_incomplete_api = flags & 0x02;
+
     CTX_OR_PRIME
+
+    if (ctx == NULL)
+    {
+        return;
+    }
+
     ((OddieContext*) ctx)->map_errors = flags & 0x01;
 }
 
@@ -1302,7 +1469,7 @@ ALTDSS_ODDIE_DLL int32_t ctx_Lines_New(const void* ctx, const char* Name)
     if (snprintf(oddie_ctx->char_buffer, DSS_STR_BUFFER_NUM_CHR, "New Line.\"%s\"", Name) <= 0)
     {
         oddie_ctx->error_number = 20;
-        ctx_Error_Set_Description(ctx, "Oddie ERROR: could not format string for command.");
+        ctx_Error_Set_Description(ctx, "(Oddie) Could not format string for command.");
         return 0;
     }
     ctx_Text_Set_Command(ctx, oddie_ctx->char_buffer);
@@ -1320,7 +1487,7 @@ ALTDSS_ODDIE_DLL int32_t ctx_LoadShapes_New(const void* ctx, const char* Name)
     if (snprintf(oddie_ctx->char_buffer, DSS_STR_BUFFER_NUM_CHR, "New LoadShape.\"%s\"", Name) <= 0)
     {
         oddie_ctx->error_number = 21;
-        ctx_Error_Set_Description(ctx, "Oddie ERROR: could not format string for command.");
+        ctx_Error_Set_Description(ctx, "(Oddie) Could not format string for command.");
         return 0;
     }
     ctx_Text_Set_Command(ctx, oddie_ctx->char_buffer);
@@ -1343,7 +1510,7 @@ ALTDSS_ODDIE_DLL void ctx_Lines_Set_IsSwitch(const void* ctx, uint16_t Value)
 {
     CTX_OR_PRIME
     OddieContext* oddie_ctx = (OddieContext*) ctx;
-    ctx_Lines_Get_Units(ctx);
+    (void) ctx_Lines_Get_Units(ctx);
     if (oddie_ctx->error_number)
     {
         return;
@@ -1356,7 +1523,11 @@ ALTDSS_ODDIE_DLL uint16_t ctx_Lines_Get_IsSwitch(const void* ctx)
     CTX_OR_PRIME
     OddieContext* oddie_ctx = (OddieContext*) ctx;
     char r;
-    ctx_Lines_Get_Units(ctx);
+    (void) ctx_Lines_Get_Units(ctx);
+    if (oddie_ctx->error_number)
+    {
+        return 0;
+    }
     r = (char) oddie_get_int_property(ctx, "Line", ctx_Lines_Get_Name(ctx), "? Switch", true);
     return (r == 't') || (r == 'y') || (r == 'T') || (r == 'Y');
 }
@@ -1379,7 +1550,31 @@ ALTDSS_ODDIE_DLL void ctx_Loads_Set_Phases(const void* ctx, int32_t Value)
     if (snprintf(oddie_ctx->char_buffer, DSS_STR_BUFFER_NUM_CHR, "Load.%s.Phases=%d", name, Value) <= 0)
     {
         oddie_ctx->error_number = 23;
-        ctx_Error_Set_Description(ctx, "Oddie ERROR: could not format string for command.");
+        ctx_Error_Set_Description(ctx, "(Oddie) Could not format string for command.");
+        return;
+    }
+    ctx_Text_Set_Command(ctx, oddie_ctx->char_buffer);    
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_WindGens_Get_Phases(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_int_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "? Phases", false);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_Phases(const void* ctx, int32_t Value)
+{
+    CTX_OR_PRIME
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    const char *name = ctx_WindGens_Get_Name(ctx);
+    if (oddie_ctx->error_number || name == NULL || name[0] == 0)
+    {
+        return;
+    }
+    if (snprintf(oddie_ctx->char_buffer, DSS_STR_BUFFER_NUM_CHR, "WindGen.%s.Phases=%d", name, Value) <= 0)
+    {
+        oddie_ctx->error_number = 23;
+        ctx_Error_Set_Description(ctx, "(Oddie) Could not format string for command.");
         return;
     }
     ctx_Text_Set_Command(ctx, oddie_ctx->char_buffer);    
@@ -1432,7 +1627,6 @@ ALTDSS_ODDIE_DLL void ctx_SwtControls_Set_NormalState(const void* ctx, int32_t V
 ALTDSS_ODDIE_DLL void ctx_DSSProperty_Set_Index(const void* ctx, int32_t Value)
 {
     CTX_OR_PRIME
-    const char* res;
     int32_t numProps = ctx_DSSElement_Get_NumProperties(ctx);
     OddieContext* oddie_ctx = (OddieContext*) ctx;
     if (oddie_ctx->error_number)
@@ -1444,14 +1638,13 @@ ALTDSS_ODDIE_DLL void ctx_DSSProperty_Set_Index(const void* ctx, int32_t Value)
     if (Value <= 0 || Value > numProps)
     {
         oddie_ctx->error_number = 33;
-        strncpy(oddie_ctx->error_desc, "Invalid property index.", DSS_ERR_NUM_CHR);
+        strncpy(oddie_ctx->error_desc, "(Oddie) Invalid property index.", DSS_ERR_NUM_CHR);
     }
 }
 
 ALTDSS_ODDIE_DLL void ctx_DSSProperty_Set_Name(const void* ctx, const char* Value)
 {
     CTX_OR_PRIME
-    const char* all_names;
     OddieContext* oddie_ctx = (OddieContext*) ctx;
     char** ResultPtr = NULL;
     int32_t ResultDims[4] = {0, 0, 0, 0};
@@ -1487,7 +1680,7 @@ ALTDSS_ODDIE_DLL void ctx_DSSProperty_Set_Name(const void* ctx, const char* Valu
     if (found == 0)
     {
         oddie_ctx->error_number = 34;
-        strncpy(oddie_ctx->error_desc, "Invalid property name.", DSS_ERR_NUM_CHR);
+        strncpy(oddie_ctx->error_desc, "(Oddie) Invalid property name.", DSS_ERR_NUM_CHR);
     }
 }
 
@@ -1526,6 +1719,444 @@ ALTDSS_ODDIE_DLL void ctx_DSSProperty_Set_Val(const void* ctx, const char* Value
     CTX_OR_PRIME
     ((OddieContext*) ctx)->DSSProperties(3, Value);
     oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_CktElement_Close(const void* ctx, int32_t Term, int32_t Phs)
+{
+    CTX_OR_PRIME
+    /*
+    TODO: This is a custom impl. since DDLL affects only phase 3; COM works OK.
+    ((OddieContext*) ctx)->CktElementI(4, Term);
+    */
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    const char *name = ctx_CktElement_Get_Name(ctx);
+    if (oddie_ctx->error_number || name == NULL || name[0] == 0)
+    {
+        return;
+    }
+    if (snprintf(oddie_ctx->char_buffer, DSS_STR_BUFFER_NUM_CHR, "Close %s %d %d", name, Term, Phs) <= 0)
+    {
+        oddie_ctx->error_number = 24;
+        ctx_Error_Set_Description(ctx, "(Oddie) Could not format string for command.");
+        return;
+    }
+    ctx_Text_Set_Command(ctx, oddie_ctx->char_buffer);
+}
+
+ALTDSS_ODDIE_DLL void ctx_CktElement_Open(const void* ctx, int32_t Term, int32_t Phs)
+{
+    CTX_OR_PRIME
+    /* 
+    TODO: This is a custom impl. since DDLL affects only phase 3; COM works OK.
+    ((OddieContext*) ctx)->CktElementI(3, Term);
+    */
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    const char *name = ctx_CktElement_Get_Name(ctx);
+    if (oddie_ctx->error_number || name == NULL || name[0] == 0)
+    {
+        return;
+    }
+    if (snprintf(oddie_ctx->char_buffer, DSS_STR_BUFFER_NUM_CHR, "Open %s %d %d", name, Term, Phs) <= 0)
+    {
+        oddie_ctx->error_number = 24;
+        ctx_Error_Set_Description(ctx, "(Oddie) Could not format string for command.");
+        return;
+    }
+    ctx_Text_Set_Command(ctx, oddie_ctx->char_buffer);
+}
+
+ALTDSS_ODDIE_DLL uint16_t ctx_CktElement_IsOpen(const void* ctx, int32_t Term, int32_t Phs)
+{
+    CTX_OR_PRIME
+    uint16_t res;
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    if (Phs <= 0)
+    {
+        res = ((OddieContext*) ctx)->CktElementI(5, Term);
+        oddie_map_error(ctx);
+    }
+    else
+    {
+        oddie_ctx->error_number = 24;
+        ctx_Error_Set_Description(ctx, "(Oddie) OpenDSSDirect.DLL's CktElementI cannot check individual phases.");
+        return 0;
+    }
+    return res;
+}
+
+ALTDSS_ODDIE_DLL void ctx_Generators_Set_IsDelta(const void* ctx, uint16_t Value)
+{
+    CTX_OR_PRIME
+    oddie_set_char_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "Conn", Value ? 'd' : 'y');
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_IsDelta(const void* ctx, uint16_t Value)
+{
+    CTX_OR_PRIME
+    oddie_set_char_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "Conn", Value ? 'd' : 'y');
+}
+
+ALTDSS_ODDIE_DLL uint16_t ctx_Generators_Get_IsDelta(const void* ctx)
+{
+    CTX_OR_PRIME
+    const char *res = oddie_get_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "? Conn");
+    const char r0 = res[0];
+    const char r1 = r0 != 0 ? res[1] : 0;
+    return (r0 == 'd' || r0 == 'D' || ( (r0 == 'l' || r0 == 'L') && (r1 == 'l' || r1 == 'L') ));
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_Generators_Get_Class_(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_int_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "? class", false);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Generators_Set_Class_(const void* ctx, int32_t Value)
+{
+    CTX_OR_PRIME
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    const char *name = ctx_Generators_Get_Name(ctx);
+    if (oddie_ctx->error_number || name == NULL || name[0] == 0)
+    {
+        return;
+    }
+    if (snprintf(oddie_ctx->char_buffer, DSS_STR_BUFFER_NUM_CHR, "Generator.%s.Class=%d", name, Value) <= 0)
+    {
+        oddie_ctx->error_number = 27;
+        ctx_Error_Set_Description(ctx, "(Oddie) Could not format string for command.");
+        return;
+    }
+    ctx_Text_Set_Command(ctx, oddie_ctx->char_buffer);    
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_Generators_Get_Bus1(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "Bus1");
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_Generators_Get_duty(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "duty");
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_Generators_Get_daily(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "daily");
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_Generators_Get_Yearly(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "Yearly");
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_WindGens_Get_Class_(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_int_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "? class", false);
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_WindGens_Get_Bus1(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "Bus1");
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_WindGens_Get_duty(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "duty");
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_WindGens_Get_daily(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "daily");
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_WindGens_Get_Yearly(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "Yearly");
+}
+
+ALTDSS_ODDIE_DLL uint16_t ctx_WindGens_Get_IsDelta(const void* ctx)
+{
+    CTX_OR_PRIME
+    const char *res = oddie_get_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "? Conn");
+    const char r0 = res[0];
+    const char r1 = r0 != 0 ? res[1] : 0;
+    return (r0 == 'd' || r0 == 'D' || ( (r0 == 'l' || r0 == 'L') && (r1 == 'l' || r1 == 'L') ));
+}
+
+ALTDSS_ODDIE_DLL void ctx_Generators_Set_Bus1(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    oddie_set_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "Bus1", Value);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Generators_Set_daily(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    oddie_set_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "daily", Value);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Generators_Set_duty(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    oddie_set_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "duty", Value);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Generators_Set_Yearly(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    oddie_set_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "Yearly", Value);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_Class_(const void* ctx, int32_t Value)
+{
+    CTX_OR_PRIME
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    const char *name = ctx_WindGens_Get_Name(ctx);
+    if (oddie_ctx->error_number || name == NULL || name[0] == 0)
+    {
+        return;
+    }
+    if (snprintf(oddie_ctx->char_buffer, DSS_STR_BUFFER_NUM_CHR, "WindGen.%s.Class=%d", name, Value) <= 0)
+    {
+        oddie_ctx->error_number = 27;
+        ctx_Error_Set_Description(ctx, "(Oddie) Could not format string for command.");
+        return;
+    }
+    ctx_Text_Set_Command(ctx, oddie_ctx->char_buffer);    
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_Bus1(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    oddie_set_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "Bus1", Value);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_daily(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    oddie_set_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "daily", Value);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_duty(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    oddie_set_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "duty", Value);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_Yearly(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    oddie_set_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "Yearly", Value);
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_daily(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "daily");
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_duty(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "duty");
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_Tdaily(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "Tdaily");
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_Tduty(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "Tduty");
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_Tyearly(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "TYearly");
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_yearly(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "Yearly");
+}
+
+ALTDSS_ODDIE_DLL void ctx_PVSystems_Set_daily(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    oddie_set_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "daily", Value);
+}
+
+ALTDSS_ODDIE_DLL void ctx_PVSystems_Set_duty(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    oddie_set_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "duty", Value);
+}
+
+ALTDSS_ODDIE_DLL void ctx_PVSystems_Set_Tdaily(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    oddie_set_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "Tdaily", Value);
+}
+
+ALTDSS_ODDIE_DLL void ctx_PVSystems_Set_Tduty(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    oddie_set_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "Tduty", Value);
+}
+
+ALTDSS_ODDIE_DLL void ctx_PVSystems_Set_Tyearly(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    oddie_set_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "TYearly", Value);
+}
+
+ALTDSS_ODDIE_DLL void ctx_PVSystems_Set_yearly(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    oddie_set_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "Yearly", Value);
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_Solution_Get_MinIterations(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_command_to_int(ctx, "get MinIterations", false);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Solution_Set_MinIterations(const void* ctx, int32_t Value)
+{
+    CTX_OR_PRIME
+    oddie_set_int_command(ctx, "set MinIterations=%d", Value);
+}
+
+ALTDSS_ODDIE_DLL uint16_t ctx_Settings_Get_ControlTrace(const void* ctx)
+{
+    CTX_OR_PRIME
+    const char r = (char) oddie_command_to_int(ctx, "Get TraceControl", true);
+    return (r == 't') || (r == 'y') || (r == 'T') || (r == 'Y');
+}
+
+ALTDSS_ODDIE_DLL void ctx_Settings_Set_ControlTrace(const void* ctx, uint16_t Value)
+{
+    CTX_OR_PRIME
+    if (Value != 0)
+    {
+        ctx_Text_Set_Command(ctx, "Set TraceControl=Y");
+        return;
+    }
+    ctx_Text_Set_Command(ctx, "Set TraceControl=N");
+}
+
+ALTDSS_ODDIE_DLL double ctx_CmathLib_Get_cdang(const void* ctx, double RealPart, double ImagPart)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->CmathLibF(1, RealPart, ImagPart);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_LoadShapes_Get_MaxP(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_dbl_property(ctx, "LoadShape", ctx_LoadShapes_Get_Name(ctx), "? PMax");
+}
+
+ALTDSS_ODDIE_DLL double ctx_LoadShapes_Get_MaxQ(const void* ctx)
+{
+    CTX_OR_PRIME
+    return oddie_get_dbl_property(ctx, "LoadShape", ctx_LoadShapes_Get_Name(ctx), "? QMax");
+}
+
+ALTDSS_ODDIE_DLL void ctx_LoadShapes_Set_MaxP(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    const char *name = ctx_LoadShapes_Get_Name(ctx);
+    if (oddie_ctx->error_number || name == NULL || name[0] == 0)
+    {
+        return;
+    }
+    if (snprintf(oddie_ctx->char_buffer, DSS_STR_BUFFER_NUM_CHR, "LoadShape.%s.PMax=%g", name, Value) <= 0)
+    {
+        oddie_ctx->error_number = 29;
+        ctx_Error_Set_Description(ctx, "(Oddie) Could not format string for command.");
+        return;
+    }
+    ctx_Text_Set_Command(ctx, oddie_ctx->char_buffer);
+}
+
+ALTDSS_ODDIE_DLL void ctx_LoadShapes_Set_MaxQ(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    const char *name = ctx_LoadShapes_Get_Name(ctx);
+    if (oddie_ctx->error_number || name == NULL || name[0] == 0)
+    {
+        return;
+    }
+    if (snprintf(oddie_ctx->char_buffer, DSS_STR_BUFFER_NUM_CHR, "LoadShape.%s.QMax=%g", name, Value) <= 0)
+    {
+        oddie_ctx->error_number = 30;
+        ctx_Error_Set_Description(ctx, "(Oddie) Could not format string for command.");
+        return;
+    }
+    ctx_Text_Set_Command(ctx, oddie_ctx->char_buffer);
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_Generators_Get_Status(const void* ctx)
+{
+    CTX_OR_PRIME
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    char r;
+    (void) ctx_Lines_Get_Units(ctx);
+    if (oddie_ctx->error_number)
+    {
+        return 0;
+    }
+    r = (char) oddie_get_int_property(ctx, "Line", ctx_Lines_Get_Name(ctx), "? Switch", true);
+    return ((r == 'F') || (r == 'f')) ? 1 : 0;
+}
+
+ALTDSS_ODDIE_DLL void ctx_Generators_Set_Status(const void* ctx, int32_t Value)
+{
+    CTX_OR_PRIME
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    const char *name = ctx_Generators_Get_Name(ctx);
+    if (oddie_ctx->error_number || name == NULL || name[0] == 0)
+    {
+        return;
+    }
+    if (snprintf(oddie_ctx->char_buffer, DSS_STR_BUFFER_NUM_CHR, "Generator.%s.Status=%c", name, Value ? 'F' : 'V') <= 0)
+    {
+        oddie_ctx->error_number = 31;
+        ctx_Error_Set_Description(ctx, "(Oddie) Could not format string for command.");
+        return;
+    }
+    ctx_Text_Set_Command(ctx, oddie_ctx->char_buffer);
+}
+
+ALTDSS_ODDIE_DLL double ctx_Generators_Get_kva(const void* ctx)
+{
+    return ctx_Generators_Get_kVArated(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Generators_Set_kva(const void* ctx, double Value)
+{
+    ctx_Generators_Set_kVArated(ctx, Value);
 }
 
 ALTDSS_ODDIE_DLL const char* ctx_ActiveClass_Get_ActiveClassName(const void* ctx)
@@ -2815,13 +3446,6 @@ ALTDSS_ODDIE_DLL void ctx_Circuit_UpdateStorage(const void* ctx)
     oddie_map_error(ctx);
 }
 
-ALTDSS_ODDIE_DLL void ctx_CktElement_Close(const void* ctx, int32_t Term, int32_t Phs)
-{
-    CTX_OR_PRIME
-    ((OddieContext*) ctx)->CktElementI(4, Phs);
-    oddie_map_error(ctx);
-}
-
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_AllPropertyNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims)
 {
     CTX_OR_PRIME
@@ -3213,22 +3837,6 @@ ALTDSS_ODDIE_DLL void ctx_CktElement_Get_Yprim_GR(const void* ctx)
 {  
     CTX_OR_PRIME
     oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->CktElementV, 12, &((OddieContext*) ctx)->GR_DataPtr_PDouble, &((OddieContext*) ctx)->GR_Counts_PDouble[0], NULL);
-}
-
-ALTDSS_ODDIE_DLL uint16_t ctx_CktElement_IsOpen(const void* ctx, int32_t Term, int32_t Phs)
-{
-    CTX_OR_PRIME
-    uint16_t res;
-    res = ((OddieContext*) ctx)->CktElementI(5, Phs);
-    oddie_map_error(ctx);
-    return res;
-}
-
-ALTDSS_ODDIE_DLL void ctx_CktElement_Open(const void* ctx, int32_t Term, int32_t Phs)
-{
-    CTX_OR_PRIME
-    ((OddieContext*) ctx)->CktElementI(3, Phs);
-    oddie_map_error(ctx);
 }
 
 ALTDSS_ODDIE_DLL void ctx_CktElement_Set_DisplayName(const void* ctx, const char* Value)
@@ -9481,6 +10089,466 @@ ALTDSS_ODDIE_DLL void ctx_Solution_SolvePlusControl(const void* ctx)
     oddie_map_error(ctx);
 }
 
+ALTDSS_ODDIE_DLL void ctx_Storages_Get_AllNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims)
+{
+    CTX_OR_PRIME
+    oddie_vararray_stringarray_func((OddieContext*) ctx, ((OddieContext*) ctx)->StoragesV, 0, ResultPtr, ResultDims, NULL);
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_AmpLimit(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(2, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_AmpLimitGain(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(4, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_ChargeTrigger(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(6, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_Storages_Get_ControlMode(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->StoragesI(7, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_Storages_Get_Count(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->StoragesI(2, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_DischargeTrigger(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(8, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_EffCharge(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(10, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_EffDischarge(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(12, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_Storages_Get_First(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->StoragesI(0, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_Kp(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(14, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL uint16_t ctx_Storages_Get_LimitCurrent(const void* ctx)
+{
+    CTX_OR_PRIME
+    uint16_t res;
+    res = ((OddieContext*) ctx)->StoragesF(30, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_Storages_Get_Name(const void* ctx)
+{
+    CTX_OR_PRIME
+    const char* res;
+    res = ((OddieContext*) ctx)->StoragesS(0, NULL);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_Storages_Get_Next(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->StoragesI(1, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_PF(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(32, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_PITol(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(34, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Get_RegisterNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims)
+{
+    CTX_OR_PRIME
+    oddie_vararray_stringarray_func((OddieContext*) ctx, ((OddieContext*) ctx)->StoragesV, 1, ResultPtr, ResultDims, NULL);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Get_RegisterValues(const void* ctx, double** ResultPtr, int32_t* ResultDims)
+{
+    CTX_OR_PRIME
+    oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->StoragesV, 2, ResultPtr, ResultDims, NULL);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Get_RegisterValues_GR(const void* ctx)
+{  
+    CTX_OR_PRIME
+    oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->StoragesV, 2, &((OddieContext*) ctx)->GR_DataPtr_PDouble, &((OddieContext*) ctx)->GR_Counts_PDouble[0], NULL);
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_Storages_Get_SafeMode(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->StoragesI(9, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_SafeVoltage(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(36, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_Storages_Get_State(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->StoragesI(5, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_TimeChargeTrig(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(38, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_Storages_Get_VarFollowInverter(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->StoragesI(10, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_Storages_Get_idx(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->StoragesI(3, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_kV(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(16, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_kVA(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(18, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_kVDC(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(22, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_kW(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(24, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_kWRated(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(28, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_kWhRated(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(26, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_kvar(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(20, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Storages_Get_puSOC(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->StoragesF(0, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_AmpLimit(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(3, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_AmpLimitGain(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(5, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_ChargeTrigger(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(7, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_ControlMode(const void* ctx, int32_t Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesI(8, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_DischargeTrigger(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(9, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_EffCharge(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(11, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_EffDischarge(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(13, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_Kp(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(15, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_LimitCurrent(const void* ctx, uint16_t Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(31, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_Name(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesS(1, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_PF(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(33, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_PITol(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(35, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_SafeVoltage(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(37, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_State(const void* ctx, int32_t Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesI(6, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_TimeChargeTrig(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(39, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_VarFollowInverter(const void* ctx, int32_t Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesI(11, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_idx(const void* ctx, int32_t Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesI(4, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_kV(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(17, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_kVA(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(19, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_kVDC(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(23, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_kW(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(25, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_kWRated(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(29, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_kWhRated(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(27, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_kvar(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(21, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Storages_Set_puSOC(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->StoragesF(1, Value);
+    oddie_map_error(ctx);
+}
+
 ALTDSS_ODDIE_DLL int32_t ctx_SwtControls_Get_Action(const void* ctx)
 {
     CTX_OR_PRIME
@@ -10276,6 +11344,441 @@ ALTDSS_ODDIE_DLL void ctx_Vsources_Set_pu(const void* ctx, double Value)
     oddie_map_error(ctx);
 }
 
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_Ag(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(0, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Get_AllNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims)
+{
+    CTX_OR_PRIME
+    oddie_vararray_stringarray_func((OddieContext*) ctx, ((OddieContext*) ctx)->WindGensV, 0, ResultPtr, ResultDims, NULL);
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_WindGens_Get_Count(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->WindGensI(2, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_Cp(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(2, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_WindGens_Get_First(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->WindGensI(0, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_Lamda(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(12, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_WindGens_Get_NPoles(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->WindGensI(7, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_WindGens_Get_N_WTG(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->WindGensI(5, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL const char* ctx_WindGens_Get_Name(const void* ctx)
+{
+    CTX_OR_PRIME
+    const char* res;
+    res = ((OddieContext*) ctx)->WindGensS(0, NULL);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_WindGens_Get_Next(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->WindGensI(1, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_PF(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(16, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_PSS(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(18, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_WindGens_Get_QFlag(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->WindGensI(9, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_WindGens_Get_QMode(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->WindGensI(11, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_QSS(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(20, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_RThev(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(24, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_Rad(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(22, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Get_RegisterNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims)
+{
+    CTX_OR_PRIME
+    oddie_vararray_stringarray_func((OddieContext*) ctx, ((OddieContext*) ctx)->WindGensV, 1, ResultPtr, ResultDims, NULL);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Get_RegisterValues(const void* ctx, double** ResultPtr, int32_t* ResultDims)
+{
+    CTX_OR_PRIME
+    oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->WindGensV, 2, ResultPtr, ResultDims, NULL);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Get_RegisterValues_GR(const void* ctx)
+{  
+    CTX_OR_PRIME
+    oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->WindGensV, 2, &((OddieContext*) ctx)->GR_DataPtr_PDouble, &((OddieContext*) ctx)->GR_Counts_PDouble[0], NULL);
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_VCutIn(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(28, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_VCutOut(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(26, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_Vss(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(30, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_WindSpeed(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(32, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_XThev(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(34, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_WindGens_Get_idx(const void* ctx)
+{
+    CTX_OR_PRIME
+    int32_t res;
+    res = ((OddieContext*) ctx)->WindGensI(3, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_kV(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(4, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_kVA(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(6, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_kW(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(10, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_kvar(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(8, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_WindGens_Get_pd(const void* ctx)
+{
+    CTX_OR_PRIME
+    double res;
+    res = ((OddieContext*) ctx)->WindGensF(14, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_Ag(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(1, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_Cp(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(3, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_Lamda(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(13, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_NPoles(const void* ctx, int32_t Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensI(8, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_N_WTG(const void* ctx, int32_t Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensI(6, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_Name(const void* ctx, const char* Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensS(1, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_PF(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(17, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_PSS(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(19, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_QFlag(const void* ctx, int32_t Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensI(10, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_QMode(const void* ctx, int32_t Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensI(12, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_QSS(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(21, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_RThev(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(25, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_Rad(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(23, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_VCutIn(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(29, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_VCutOut(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(27, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_Vss(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(31, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_WindSpeed(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(33, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_XThev(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(35, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_idx(const void* ctx, int32_t Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensI(4, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_kV(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(5, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_kVA(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(7, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_kW(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(11, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_kvar(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(9, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_WindGens_Set_pd(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ((OddieContext*) ctx)->WindGensF(15, Value);
+    oddie_map_error(ctx);
+}
+
 ALTDSS_ODDIE_DLL int32_t ctx_XYCurves_Get_Count(const void* ctx)
 {
     CTX_OR_PRIME
@@ -10567,13 +12070,6 @@ ALTDSS_ODDIE_DLL int32_t ctx_CktElement_Get_VariableIdx(const void* ctx)
     return 0;
 }
 
-ALTDSS_ODDIE_DLL double ctx_CmathLib_Get_cdang(const void* ctx, double RealPart, double ImagPart)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "CmathLib_Get_cdang");
-    return 0;
-}
-
 ALTDSS_ODDIE_DLL void ctx_CmathLib_Get_cdiv(const void* ctx, double** ResultPtr, int32_t* ResultDims, double a1, double b1, double a2, double b2)
 {
     CTX_OR_PRIME
@@ -10687,110 +12183,6 @@ ALTDSS_ODDIE_DLL void ctx_Error_Set_ExtendedErrors(const void* ctx, uint16_t Val
     oddie_error_not_implemented((OddieContext*) ctx, "Error_Set_ExtendedErrors");
 }
 
-ALTDSS_ODDIE_DLL const char* ctx_Generators_Get_Bus1(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Get_Bus1");
-    return NULL;
-}
-
-ALTDSS_ODDIE_DLL int32_t ctx_Generators_Get_Class_(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Get_Class_");
-    return 0;
-}
-
-ALTDSS_ODDIE_DLL const char* ctx_Generators_Get_daily(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Get_daily");
-    return NULL;
-}
-
-ALTDSS_ODDIE_DLL const char* ctx_Generators_Get_duty(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Get_duty");
-    return NULL;
-}
-
-ALTDSS_ODDIE_DLL uint16_t ctx_Generators_Get_IsDelta(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Get_IsDelta");
-    return 0;
-}
-
-ALTDSS_ODDIE_DLL double ctx_Generators_Get_kva(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Get_kva");
-    return 0;
-}
-
-ALTDSS_ODDIE_DLL int32_t ctx_Generators_Get_Status(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Get_Status");
-    return 0;
-}
-
-ALTDSS_ODDIE_DLL const char* ctx_Generators_Get_Yearly(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Get_Yearly");
-    return NULL;
-}
-
-ALTDSS_ODDIE_DLL void ctx_Generators_Set_Bus1(const void* ctx, const char* Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Set_Bus1");
-}
-
-ALTDSS_ODDIE_DLL void ctx_Generators_Set_Class_(const void* ctx, int32_t Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Set_Class_");
-}
-
-ALTDSS_ODDIE_DLL void ctx_Generators_Set_daily(const void* ctx, const char* Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Set_daily");
-}
-
-ALTDSS_ODDIE_DLL void ctx_Generators_Set_duty(const void* ctx, const char* Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Set_duty");
-}
-
-ALTDSS_ODDIE_DLL void ctx_Generators_Set_IsDelta(const void* ctx, uint16_t Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Set_IsDelta");
-}
-
-ALTDSS_ODDIE_DLL void ctx_Generators_Set_kva(const void* ctx, double Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Set_kva");
-}
-
-ALTDSS_ODDIE_DLL void ctx_Generators_Set_Status(const void* ctx, int32_t Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Set_Status");
-}
-
-ALTDSS_ODDIE_DLL void ctx_Generators_Set_Yearly(const void* ctx, const char* Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Generators_Set_Yearly");
-}
-
 ALTDSS_ODDIE_DLL int32_t ctx_GICSources_Get_idx(const void* ctx)
 {
     CTX_OR_PRIME
@@ -10857,36 +12249,10 @@ ALTDSS_ODDIE_DLL int32_t ctx_LoadShapes_Get_idx(const void* ctx)
     return 0;
 }
 
-ALTDSS_ODDIE_DLL double ctx_LoadShapes_Get_MaxP(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "LoadShapes_Get_MaxP");
-    return 0;
-}
-
-ALTDSS_ODDIE_DLL double ctx_LoadShapes_Get_MaxQ(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "LoadShapes_Get_MaxQ");
-    return 0;
-}
-
 ALTDSS_ODDIE_DLL void ctx_LoadShapes_Set_idx(const void* ctx, int32_t Value)
 {
     CTX_OR_PRIME
     oddie_error_not_implemented((OddieContext*) ctx, "LoadShapes_Set_idx");
-}
-
-ALTDSS_ODDIE_DLL void ctx_LoadShapes_Set_MaxP(const void* ctx, double Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "LoadShapes_Set_MaxP");
-}
-
-ALTDSS_ODDIE_DLL void ctx_LoadShapes_Set_MaxQ(const void* ctx, double Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "LoadShapes_Set_MaxQ");
 }
 
 ALTDSS_ODDIE_DLL int32_t ctx_Meters_Get_idx(const void* ctx)
@@ -11071,20 +12437,6 @@ ALTDSS_ODDIE_DLL void ctx_PDElements_Get_AllSeqPowers_GR(const void* ctx)
     oddie_error_not_implemented((OddieContext*) ctx, "PDElements_Get_AllSeqPowers");
 }
 
-ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_daily(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "PVSystems_Get_daily");
-    return NULL;
-}
-
-ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_duty(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "PVSystems_Get_duty");
-    return NULL;
-}
-
 ALTDSS_ODDIE_DLL void ctx_PVSystems_Get_RegisterNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims)
 {
     CTX_OR_PRIME
@@ -11107,70 +12459,6 @@ ALTDSS_ODDIE_DLL void ctx_PVSystems_Get_RegisterValues_GR(const void* ctx)
 {
     CTX_OR_PRIME
     oddie_error_not_implemented((OddieContext*) ctx, "PVSystems_Get_RegisterValues");
-}
-
-ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_Tdaily(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "PVSystems_Get_Tdaily");
-    return NULL;
-}
-
-ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_Tduty(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "PVSystems_Get_Tduty");
-    return NULL;
-}
-
-ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_Tyearly(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "PVSystems_Get_Tyearly");
-    return NULL;
-}
-
-ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_yearly(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "PVSystems_Get_yearly");
-    return NULL;
-}
-
-ALTDSS_ODDIE_DLL void ctx_PVSystems_Set_daily(const void* ctx, const char* Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "PVSystems_Set_daily");
-}
-
-ALTDSS_ODDIE_DLL void ctx_PVSystems_Set_duty(const void* ctx, const char* Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "PVSystems_Set_duty");
-}
-
-ALTDSS_ODDIE_DLL void ctx_PVSystems_Set_Tdaily(const void* ctx, const char* Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "PVSystems_Set_Tdaily");
-}
-
-ALTDSS_ODDIE_DLL void ctx_PVSystems_Set_Tduty(const void* ctx, const char* Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "PVSystems_Set_Tduty");
-}
-
-ALTDSS_ODDIE_DLL void ctx_PVSystems_Set_Tyearly(const void* ctx, const char* Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "PVSystems_Set_Tyearly");
-}
-
-ALTDSS_ODDIE_DLL void ctx_PVSystems_Set_yearly(const void* ctx, const char* Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "PVSystems_Set_yearly");
 }
 
 ALTDSS_ODDIE_DLL int32_t ctx_RegControls_Get_idx(const void* ctx)
@@ -11217,13 +12505,6 @@ ALTDSS_ODDIE_DLL void ctx_Sensors_Set_kVS(const void* ctx, const double* ValuePt
     oddie_error_not_implemented((OddieContext*) ctx, "Sensors_Set_kVS");
 }
 
-ALTDSS_ODDIE_DLL uint16_t ctx_Settings_Get_ControlTrace(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Settings_Get_ControlTrace");
-    return 0;
-}
-
 ALTDSS_ODDIE_DLL int32_t ctx_Settings_Get_IterateDisabled(const void* ctx)
 {
     CTX_OR_PRIME
@@ -11236,12 +12517,6 @@ ALTDSS_ODDIE_DLL uint16_t ctx_Settings_Get_LoadsTerminalCheck(const void* ctx)
     CTX_OR_PRIME
     oddie_error_not_implemented((OddieContext*) ctx, "Settings_Get_LoadsTerminalCheck");
     return 0;
-}
-
-ALTDSS_ODDIE_DLL void ctx_Settings_Set_ControlTrace(const void* ctx, uint16_t Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Settings_Set_ControlTrace");
 }
 
 ALTDSS_ODDIE_DLL void ctx_Settings_Set_IterateDisabled(const void* ctx, int32_t Value)
@@ -11269,13 +12544,6 @@ ALTDSS_ODDIE_DLL double ctx_Solution_Get_IntervalHrs(const void* ctx)
     return 0;
 }
 
-ALTDSS_ODDIE_DLL int32_t ctx_Solution_Get_MinIterations(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Solution_Get_MinIterations");
-    return 0;
-}
-
 ALTDSS_ODDIE_DLL double ctx_Solution_Get_Time_of_Step(const void* ctx)
 {
     CTX_OR_PRIME
@@ -11287,12 +12555,6 @@ ALTDSS_ODDIE_DLL void ctx_Solution_Set_IntervalHrs(const void* ctx, double Value
 {
     CTX_OR_PRIME
     oddie_error_not_implemented((OddieContext*) ctx, "Solution_Set_IntervalHrs");
-}
-
-ALTDSS_ODDIE_DLL void ctx_Solution_Set_MinIterations(const void* ctx, int32_t Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Solution_Set_MinIterations");
 }
 
 ALTDSS_ODDIE_DLL void ctx_Solution_SolveSnap(const void* ctx)

@@ -2756,6 +2756,8 @@ extern "C" {
     /*! 
     kVA rating of electrical machine. Applied to machine or inverter definition for Dynamics mode solutions.
 
+    (Same as kVArated, added for consistency)
+
     (API Extension)
     */
     DSS_CAPI_DLL double Generators_Get_kva(void);
