@@ -96,9 +96,13 @@ function Obj_GetString(obj: TDSSObject; Index: Integer): PAnsiChar; CDECL;
 function Obj_GetObject(obj: TDSSObject; Index: Integer): Pointer; CDECL;
 function Obj_GetAsString(obj: TDSSObject; Index: Integer): PAnsiChar; CDECL;
 procedure Obj_GetFloat64Array(var ResultPtr: PDouble; ResultCount: PAPISize; obj: TDSSObject; Index: Integer); CDECL;
+function Obj_GetFloat64ArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer): Double; CDECL;
 procedure Obj_GetInt32Array(var ResultPtr: PInteger; ResultCount: PAPISize; obj: TDSSObject; Index: Integer); CDECL;
+function Obj_GetInt32ArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer): Integer; CDECL;
 procedure Obj_GetStringArray(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; obj: TDSSObject; Index: Integer); CDECL;
+function Obj_GetStringArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer): PAnsiChar; CDECL;
 procedure Obj_GetObjectArray(var ResultPtr: PPointer; ResultCount: PAPISize; obj: TDSSObject; Index: Integer); CDECL;
+function Obj_GetObjectArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer): Pointer; CDECL;
 function Obj_ToJSON(obj: TDSSObject; joptions: Integer): PAnsiChar; CDECL;
 
 procedure Obj_SetAsString(obj: TDSSObject; Index: Integer; Value: PAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
@@ -108,9 +112,13 @@ procedure Obj_SetString(obj: TDSSObject; Index: Integer; Value: PAnsiChar; sette
 procedure Obj_SetObject(obj: TDSSObject; Index: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags); CDECL;
 
 procedure Obj_SetFloat64Array(obj: TDSSObject; Index: Integer; Value: PDouble; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Obj_SetFloat64ArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
 procedure Obj_SetInt32Array(obj: TDSSObject; Index: Integer; Value: PInteger; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Obj_SetInt32ArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
 procedure Obj_SetStringArray(obj: TDSSObject; Index: Integer; Value: PPAnsiChar; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Obj_SetStringArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer; Value: PAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
 procedure Obj_SetObjectArray(obj: TDSSObject; Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+procedure Obj_SetObjectArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags); CDECL;
 
 // internal functions
 function Obj_ToJSON_(obj: TDSSObject; joptions: Integer): String;
@@ -588,9 +596,19 @@ begin
     obj.SetDoubles(Index, Value, ValueCount, setterFlags);
 end;
 
+procedure Obj_SetFloat64ArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags); CDECL;
+begin
+//TODO: implement
+end;
+
 procedure Obj_SetInt32Array(obj: TDSSObject; Index: Integer; Value: PInteger; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
 begin
     obj.SetIntegers(Index, Value, ValueCount, setterFlags);
+end;
+
+procedure Obj_SetInt32ArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
+begin
+//TODO: implement
 end;
 
 procedure Obj_SetStringArray(obj: TDSSObject; Index: Integer; Value: PPAnsiChar; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
@@ -598,9 +616,19 @@ begin
     obj.SetStrings(Index, Value, ValueCount, setterFlags);
 end;
 
+procedure Obj_SetStringArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer; Value: PAnsiChar; setterFlags: TDSSPropertySetterFlags); CDECL;
+begin
+//TODO: implement
+end;
+
 procedure Obj_SetObjectArray(obj: TDSSObject; Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); CDECL;
 begin
     obj.SetObjects(Index, Value, ValueCount, setterFlags);
+end;
+
+procedure Obj_SetObjectArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags); CDECL;
+begin
+//TODO: implement
 end;
 
 procedure Obj_GetFloat64Array(var ResultPtr: PDouble; ResultCount: PAPISize; obj: TDSSObject; Index: Integer); CDECL;
@@ -608,9 +636,19 @@ begin
     obj.GetDoubles(Index, ResultPtr, ResultCount);
 end;
 
+function Obj_GetFloat64ArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer): Double; CDECL;
+begin
+//TODO: implement
+end;
+
 procedure Obj_GetInt32Array(var ResultPtr: PInteger; ResultCount: PAPISize; obj: TDSSObject; Index: Integer); CDECL;
 begin
     obj.GetIntegers(Index, ResultPtr, ResultCount);
+end;
+
+function Obj_GetInt32ArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer): Integer; CDECL;
+begin
+//TODO: implement
 end;
 
 procedure Obj_GetStringArray(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; obj: TDSSObject; Index: Integer); CDECL;
@@ -618,9 +656,19 @@ begin
     obj.GetStrings(Index, ResultPtr, ResultCount);
 end;
 
+function Obj_GetStringArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer): PAnsiChar; CDECL;
+begin
+//TODO: implement
+end;
+
 procedure Obj_GetObjectArray(var ResultPtr: PPointer; ResultCount: PAPISize; obj: TDSSObject; Index: Integer); CDECL;
 begin
     obj.GetObjects(Index, ResultPtr, ResultCount);
+end;
+
+function Obj_GetObjectArrayElement(obj: TDSSObject; Index: Integer; ElementIndex: Integer): Pointer; CDECL;
+begin
+//TODO: implement
 end;
 
 function Obj_ToJSONData(obj: TDSSObject; joptions: Integer): TJSONData;

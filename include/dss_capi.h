@@ -8343,9 +8343,13 @@ extern "C" {
     DSS_CAPI_DLL const char* Obj_GetAsString(void *obj, int32_t Index);
 
     DSS_CAPI_DLL void Obj_GetFloat64Array(double** ResultPtr, int32_t* ResultDims, void *obj, int32_t Index);
+    DSS_CAPI_DLL double Obj_GetFloat64ArrayElement(void *obj, int32_t Index, int32_t ElementIndex);
     DSS_CAPI_DLL void Obj_GetInt32Array(int32_t** ResultPtr, int32_t* ResultDims, void *obj, int32_t Index);
+    DSS_CAPI_DLL int32_t Obj_GetInt32ArrayElement(void *obj, int32_t Index, int32_t ElementIndex);
     DSS_CAPI_DLL void Obj_GetStringArray(char*** ResultPtr, int32_t* ResultDims, void *obj, int32_t Index);
+    DSS_CAPI_DLL const char* Obj_GetStringArrayElement(void *obj, int32_t Index, int32_t ElementIndex);
     DSS_CAPI_DLL void Obj_GetObjectArray(void*** ResultPtr, int32_t* ResultDims, void *obj, int32_t Index);
+    DSS_CAPI_DLL void* Obj_GetObjectArrayElement(void *obj, int32_t Index, int32_t ElementIndex);
 
     DSS_CAPI_DLL void Obj_SetAsString(void *obj, int32_t Index, const char* Value, uint32_t setterFlags);
     DSS_CAPI_DLL void Obj_SetFloat64(void *obj, int32_t Index, double Value, uint32_t setterFlags);
@@ -8354,9 +8358,13 @@ extern "C" {
     DSS_CAPI_DLL void Obj_SetObject(void *obj, int32_t Index, void* Value, uint32_t setterFlags);
     
     DSS_CAPI_DLL void Obj_SetFloat64Array(void *obj, int32_t Index, double* Value, int32_t ValueCount, uint32_t setterFlags);
+    DSS_CAPI_DLL void Obj_SetFloat64ArrayElement(void *obj, int32_t Index, double ElementIndex, double Value, uint32_t setterFlags);
     DSS_CAPI_DLL void Obj_SetInt32Array(void *obj, int32_t Index, int32_t* Value, int32_t ValueCount, uint32_t setterFlags);
+    DSS_CAPI_DLL void Obj_SetInt32ArrayElement(void *obj, int32_t Index, int32_t ElementIndex, int32_t Value, uint32_t setterFlags);
     DSS_CAPI_DLL void Obj_SetStringArray(void *obj, int32_t Index, const char** Value, int32_t ValueCount, uint32_t setterFlags);
+    DSS_CAPI_DLL void Obj_SetStringArrayElement(void *obj, int32_t Index, int32_t ElementIndex, const char* Value, uint32_t setterFlags);
     DSS_CAPI_DLL void Obj_SetObjectArray(void *obj, int32_t Index, void **Value, int32_t ValueCount, uint32_t setterFlags);
+    DSS_CAPI_DLL void Obj_SetObjectArrayElement(void *obj, int32_t Index, int32_t ElementIndex, void *Value, uint32_t setterFlags);
 
     DSS_CAPI_DLL double Obj_CktElement_MaxCurrent(void *obj, int32_t terminalIdx);
     DSS_CAPI_DLL void Obj_Circuit_Set_ActiveCktElement(void *obj);
