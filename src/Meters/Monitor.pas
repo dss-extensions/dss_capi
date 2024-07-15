@@ -482,6 +482,8 @@ begin
 
     MonitorStream := TMemoryStream.Create; // Create memory stream
     Header := TStringList.Create;
+    Header.Delimiter := ',';
+    Header.StrictDelimiter := TRUE;
     RecordSize := 0;
 
     IsFileOpen := FALSE;
@@ -1743,7 +1745,8 @@ begin
 {$IFDEF DSS_CAPI_PM}
     if not PMParent.ConcatenateReports or (PMParent = DSS) then
 {$ENDIF}
-        FSWriteln(F, Header.CommaText);
+        // Quotes are ommited from the header for backwards compatibility.
+        FSWriteln(F, Header.DelimitedText);
     RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
 
     try
