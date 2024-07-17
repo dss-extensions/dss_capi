@@ -351,18 +351,27 @@ begin
             ReAllocmem(XValues, Sizeof(XValues[1]) * FNumPoints);
         end;
         ord(TProp.Yarray):
-            Y := YValues[1];
+            if (YValues <> NIL) then
+                Y := YValues[1];
         ord(TProp.Xarray):
-            X := XValues[1];
+            if (XValues <> NIL) then
+                X := XValues[1];
         ord(TProp.csvfile), ord(TProp.sngfile), ord(TProp.dblfile): 
         begin
-            X := XValues[1];
-            Y := YValues[1];
+            if (XValues <> NIL) then
+                X := XValues[1];
+            if (YValues <> NIL) then
+                Y := YValues[1];
         end;
     end;
 
     case Idx of
-        2..7:
+        ord(TProp.Points),
+        ord(TProp.Yarray),
+        ord(TProp.Xarray),
+        ord(TProp.csvfile),
+        ord(TProp.sngfile),
+        ord(TProp.dblfile):
         begin
             LastValueAccessed := 1;
         end;
