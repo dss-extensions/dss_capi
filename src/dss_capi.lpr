@@ -2110,6 +2110,7 @@ exports
     YMatrix_Get_Handle,
     YMatrix_Set_SolverOptions,
     YMatrix_Get_SolverOptions,
+    YMatrix_SaveAsMarketFiles,
 
     Text_CommandBlock,
     Text_CommandArray,
@@ -2467,6 +2468,7 @@ exports
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
    , IncrementMatrixElement
    , ZeroiseMatrixElement
+   , SaveAsMarketFiles
 {$ENDIF}
     ;
 

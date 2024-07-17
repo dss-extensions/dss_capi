@@ -8129,7 +8129,8 @@ extern "C" {
 
     DSS_CAPI_DLL void YMatrix_Set_SolverOptions(uint64_t opts);
     DSS_CAPI_DLL uint64_t YMatrix_Get_SolverOptions(void);
-    
+    DSS_CAPI_DLL void YMatrix_SaveAsMarketFiles(const char* baseFileName);
+
     DSS_CAPI_DLL void Text_CommandBlock(const char* Value);
     DSS_CAPI_DLL void Text_CommandArray(const char** ValuePtr, int32_t ValueCount);
 

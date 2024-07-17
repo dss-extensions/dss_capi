@@ -90,6 +90,7 @@ FUNCTION GetMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;
 FUNCTION IncrementMatrixElement(id:NativeUInt; i,j:LongWord; re: Double; im: Double):LongWord;KLUSOLVEX_CALL;
 FUNCTION ZeroiseMatrixElement(id:NativeUInt; i,j:LongWord):LongWord;KLUSOLVEX_CALL;
 FUNCTION SetOptions(id:NativeUInt; options: UInt64):LongWord;KLUSOLVEX_CALL;
+FUNCTION SaveAsMarketFiles(id:NativeUInt; fileNameMatrix: pChar; b: PDouble; fileNameVector: pChar):LongWord;KLUSOLVEX_CALL;
 {$ENDIF}
 
 implementation

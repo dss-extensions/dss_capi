@@ -36,6 +36,7 @@ procedure YMatrix_SetGeneratordQdV(); CDECL;
 function YMatrix_Get_Handle(): NativeUInt; CDECL;
 procedure YMatrix_Set_SolverOptions(opts: UInt64); CDECL;
 function YMatrix_Get_SolverOptions(): UInt64; CDECL;
+procedure YMatrix_SaveAsMarketFiles(baseFileName: PAnsiChar); CDECL;
 
 implementation
 
@@ -270,5 +271,54 @@ begin
     Result := DSSPrime.ActiveCircuit.Solution.SolverOptions;
 end;
 
+procedure YMatrix_SaveAsMarketFiles(baseFileName: PAnsiChar); CDECL;
+var
+    baseFn: String;
+    B: PDouble;
+    solution: TSolutionObj;
+begin
+    if InvalidCircuit(DSSPrime) then Exit;
+
+    solution := DSSPrime.ActiveCircuit.Solution;
+    baseFn := baseFileName;
+    B := nil;
+
+    if solution.Algorithm = NCIMSOLVE then
+    begin
+        if (solution.hY = 0) then
+        begin
+            DoSimpleMsg(DSSPrime, _('SystemY is empty.'), 7075);
+            Exit;
+        end;
+        if (solution.Currents <> NIL) then
+        begin
+            B := PDouble(@solution.Currents[1]);
+        end;
+        KLUSolve.SaveAsMarketFiles(
+            solution.hY,
+            PChar(baseFn + '_J.mtx'),
+            B,
+            PChar(baseFn + '_X.mtx')
+        );
+        Exit;
+    end;
+
+    if (solution.hY = 0) then
+    begin
+        DoSimpleMsg(DSSPrime, _('SystemY is empty.'), 7075);
+        Exit;
+    end;
+    if (solution.Currents <> NIL) then
+    begin
+        B := PDouble(@solution.Currents[1]);
+    end;
+    KLUSolve.SaveAsMarketFiles(
+        solution.hY,
+        PChar(baseFn + '_Y.mtx'),
+        B,
+        PChar(baseFn + '_I.mtx')
+    );
+    Exit;
+end;
 //---------------------------------------------------------------------------------
 end.

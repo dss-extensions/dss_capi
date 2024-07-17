@@ -7546,7 +7546,8 @@ extern "C" {
 
     DSS_CAPI_DLL void ctx_YMatrix_Set_SolverOptions(const void* ctx, uint64_t opts);
     DSS_CAPI_DLL uint64_t ctx_YMatrix_Get_SolverOptions(const void* ctx);
-    
+    DSS_CAPI_DLL void ctx_YMatrix_SaveAsMarketFiles(const void* ctx, const char* baseFileName);
+
     DSS_CAPI_DLL void ctx_Text_CommandBlock(const void* ctx, const char* Value);
     DSS_CAPI_DLL void ctx_Text_CommandArray(const void* ctx, const char** ValuePtr, int32_t ValueCount);
 
