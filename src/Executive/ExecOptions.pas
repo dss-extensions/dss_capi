@@ -128,7 +128,7 @@ type
         StepTime = 108,
         SampleEnergyMeters = 109,
         MinIterations = 110, // default is 2
-        DSSVisualizationTool = 111,
+        OpenDSSViewer = 111,
         KeepLoad = 112,
         Zmag = 113,
         SeasonRating = 114,
