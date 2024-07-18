@@ -12,6 +12,9 @@ interface
 uses
     UComplex, DSSUcomplex;
 
+const 
+    MatrixFormat_DoublePrecisionReal = 32;
+
 {$IFDEF DSS_CAPI_MVMULT}
 procedure mvmult(N: integer; b, A, x: pComplexArray);KLUSOLVEX_CALL;
 {$ENDIF}

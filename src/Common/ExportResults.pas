@@ -3982,7 +3982,7 @@ begin
         F := TBufferedFileStream.Create(FileNm, fmCreate);
         for i := 0 to High(DSS.ActiveCircuit.Solution.NCIM_deltaF) do
         begin
-            re := DSS.ActiveCircuit.Solution.NCIM_deltaF[i].re;
+            re := DSS.ActiveCircuit.Solution.NCIM_deltaF[i];
             FSWriteLn(F, Format('%.10g', [re]));
         end;
         DSS.GlobalResult := FileNm;
@@ -4005,7 +4005,7 @@ begin
         F := TBufferedFileStream.Create(FileNm, fmCreate);
         for i := 0 to High(DSS.ActiveCircuit.Solution.NCIM_deltaZ) do
         begin
-            re := DSS.ActiveCircuit.Solution.NCIM_deltaZ[i].re;
+            re := DSS.ActiveCircuit.Solution.NCIM_deltaZ[i];
             FSWriteLn(F, Format('%.10g', [re]));
         end;
         DSS.GlobalResult := FileNm;

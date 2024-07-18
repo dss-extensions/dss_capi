@@ -261,7 +261,7 @@ type
         // renamed to use the NCIM_ prefix, both variables and functions.
 
         NCIM_deltaZ, // delta for Injection currents
-        NCIM_deltaF, // delta for Voltages
+        NCIM_deltaF: array of Double; // delta for Voltages
         NCIM_NodePower, // Array of complex storing the total power per node
         NCIM_GenPower, // Stores the total generation power per iteration
         NCIM_Y, // Stores the Non-zero values of the YBus Marix for multiplication

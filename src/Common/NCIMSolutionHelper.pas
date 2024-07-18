@@ -216,14 +216,14 @@ begin
 
     // Add current injection contributions to NCIM_deltaF
     dec(GCoord); // Removes the additional index added by DSS
-    NCIM_deltaF[GCoord].re := NCIM_deltaF[GCoord].re - Curr.im; // Respecting the decoupled distribution
-    NCIM_deltaF[GCoord + 1].re := NCIM_deltaF[GCoord + 1].re - Curr.re; // Prioritizing reactive power over the diagonal
+    NCIM_deltaF[GCoord] := NCIM_deltaF[GCoord] - Curr.im; // Respecting the decoupled distribution
+    NCIM_deltaF[GCoord + 1] := NCIM_deltaF[GCoord + 1] - Curr.re; // Prioritizing reactive power over the diagonal
 
     // Add delta V to NCIM_deltaF in the voltage regulation subsection
     VMag := ctopolar(V).mag;
     GCoord := (DSS.ActiveCircuit.NumNodes * 2) + NCIM_PVBusIdx[i] - 1;
     VError := VTarget - VMag;
-    NCIM_deltaF[GCoord - 1].re := VError;
+    NCIM_deltaF[GCoord - 1] := VError;
 
     // Calculate the voltage regulation coefficients (Z)
     GCoordY := (i * 2) - 1;
@@ -282,8 +282,8 @@ begin
 
     // Add current injection contributions to NCIM_deltaF
     dec(GCoord); // Removes the additional index added by DSS
-    NCIM_deltaF[GCoord].re := NCIM_deltaF[GCoord].re + Curr.im; // Respecting the decoupled distribution
-    NCIM_deltaF[GCoord + 1].re := NCIM_deltaF[GCoord + 1].re + Curr.re; // Prioritizing reactive power over the diagonal
+    NCIM_deltaF[GCoord] := NCIM_deltaF[GCoord] + Curr.im; // Respecting the decoupled distribution
+    NCIM_deltaF[GCoord + 1] := NCIM_deltaF[GCoord + 1] + Curr.re; // Prioritizing reactive power over the diagonal
 end;
 
 procedure TNCIMSolutionHelper.NCIM_DoZBus(i: Integer; V: Complex; YPrim: TcMatrix);
@@ -319,8 +319,8 @@ begin
 
     // Add current injection contributions to NCIM_deltaF
     dec(GCoord); // Removes the additional index added by DSS
-    NCIM_deltaF[GCoord].re := NCIM_deltaF[GCoord].re + Curr.im; // Respecting the decoupled distribution
-    NCIM_deltaF[GCoord + 1].re := NCIM_deltaF[GCoord + 1].re + Curr.re; // Prioritizing reactive power over the diagonal
+    NCIM_deltaF[GCoord] := NCIM_deltaF[GCoord] + Curr.im; // Respecting the decoupled distribution
+    NCIM_deltaF[GCoord + 1] := NCIM_deltaF[GCoord + 1] + Curr.re; // Prioritizing reactive power over the diagonal
 end;
 
 procedure TNCIMSolutionHelper.NCIM_InitVectors();
@@ -569,8 +569,8 @@ begin
     begin
     // First the value found
         myvalue := NCIM_Y[i] * NodeV[NCIM_YCol[i] + 1];
-        NCIM_deltaF[NCIM_YRow[i] * 2].re := NCIM_deltaF[NCIM_YRow[i] * 2].re + myvalue.im;
-        NCIM_deltaF[(NCIM_YRow[i] * 2) + 1].re := NCIM_deltaF[(NCIM_YRow[i] * 2) + 1].re + myvalue.re;
+        NCIM_deltaF[NCIM_YRow[i] * 2] := NCIM_deltaF[NCIM_YRow[i] * 2] + myvalue.im;
+        NCIM_deltaF[(NCIM_YRow[i] * 2) + 1] := NCIM_deltaF[(NCIM_YRow[i] * 2) + 1] + myvalue.re;
     end;
 
     // The first 6 elements are equal to 0
@@ -722,7 +722,7 @@ begin
     for i := GenIdx to High(NCIM_deltaZ) do
     begin
         SetLength(QDelta, Length(QDelta) + 1);
-        QDelta[High(QDelta)] := -1 * NCIM_deltaZ[i].re; // Moves NCIM_deltaZ (only delta Q section) into the backup vector
+        QDelta[High(QDelta)] := -1 * NCIM_deltaZ[i]; // Moves NCIM_deltaZ (only delta Q section) into the backup vector
     end;
 
     SetLength(qNodeRef, 0);
@@ -935,6 +935,7 @@ begin
     end;
 
     NCIM_Jacobian := NewSparseSet(Length(NCIM_deltaF));
+    KLUSolve.SetOptions(NCIM_Jacobian, MatrixFormat_DoublePrecisionReal);
     for i := 0 to High(NCIM_Y) do
     begin
         GRow := NCIM_YRow[i] * 2;
@@ -1026,7 +1027,7 @@ begin
         for i := 1 to DSS.ActiveCircuit.NumNodes do
         begin
             dVIdx := (i - 1) * 2;
-            dV := cmplx(NCIM_deltaZ[dvIdx].re, NCIM_deltaZ[dVIdx + 1].re);
+            dV := cmplx(NCIM_deltaZ[dvIdx], NCIM_deltaZ[dVIdx + 1]);
             NodeV[i] := NodeV[i] - dV;
         end;
 
@@ -1044,7 +1045,7 @@ begin
     Result := false; // DSS-Extensions: this should match the original (non-init'ed) behavior
     for i := 0 to High(NCIM_deltaF) do
     begin
-        Result := Abs(NCIM_deltaF[i].re) <= ConvergenceTolerance;
+        Result := Abs(NCIM_deltaF[i]) <= ConvergenceTolerance;
         if not Result then
             break;
     end;
