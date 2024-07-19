@@ -24,10 +24,10 @@ type
         INVALID = 0,
         bus1,
         bus2,
-        refkV,
-        PF,
-        Frequency,
-        Phases,
+        refkv,
+        pf,
+        frequency,
+        phases,
         Xs,
         Tol1,
         Mode,
@@ -36,7 +36,7 @@ type
         VHLimit,
         VLLimit,
         CLimit,
-        refkV2,
+        refkv2,
         kvarLimit,
         Element
     );
