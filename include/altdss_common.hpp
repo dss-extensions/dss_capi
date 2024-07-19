@@ -1,9 +1,9 @@
 /*!
 
-dss_common.hpp: a C++ layer for DSS-Extensions/C-API, common structs
-Copyright (c) 2020-2022 Paulo Meira
+altdss_common.hpp: a C++ layer for DSS-Extensions/C-API, common structs
+Copyright (c) 2020-2024 Paulo Meira
 
-Version: 0.5.0 (2022-07)
+Version: 0.5.1 (2024-07)
 
 **POTENTIAL BREAKING CHANGES UNTIL VERSION 1.0**
 
@@ -57,7 +57,7 @@ struct APIUtil
         if (!*error_ptr) return;
 
         int32_t error = *error_ptr;
-        char* error_msg = ctx_Error_Get_Description(ctx);
+        const char* error_msg = ctx_Error_Get_Description(ctx);
         *error_ptr = 0;
         throw std::runtime_error(error_msg);
     }
@@ -80,13 +80,13 @@ struct APIUtil
     {
         if (create_ctx)
         {
-            ctx = ctx_New();
+            ctx = (void *) ctx_New();
             owns_ctx = true;
         }
         else
         {
             owns_ctx = false;
-            ctx = ctx_Get_Prime();
+            ctx = (void *) ctx_Get_Prime();
         }
         ctx_DSS_Start(ctx, 0);
         error_ptr = ctx_Error_Get_NumberPtr(ctx);

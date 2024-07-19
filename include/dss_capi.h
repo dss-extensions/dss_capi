@@ -8239,7 +8239,7 @@ extern "C" {
     */
     DSS_CAPI_DLL const char* DSS_ExtractSchema(void *ctx, uint16_t jsonSchema);
 
-    DSS_CAPI_DLL void DSS_Dispose_String(char* S);
+    DSS_CAPI_DLL void DSS_Dispose_String(const char* S);
     DSS_CAPI_DLL void DSS_Dispose_PPointer(void*** p);
 
     DSS_CAPI_DLL void* Obj_New(const void* ctx, int32_t ClsIdx, const char* Name, uint16_t Activate, uint16_t BeginEdit);

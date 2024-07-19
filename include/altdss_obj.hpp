@@ -1,9 +1,9 @@
 /*!
 
-dss_obj.hpp: a C++ layer for DSS-Extensions/C-API, Obj interface
-Copyright (c) 2021-2022 Paulo Meira
+altdss_obj.hpp: a C++ layer for DSS-Extensions/C-API, Obj interface
+Copyright (c) 2021-2024 Paulo Meira
 
-Version: 0.5.0 (2022-07)
+Version: 0.5.1 (2024-07)
 
 **POTENTIAL BREAKING CHANGES UNTIL VERSION 1.0**
 
@@ -12,7 +12,8 @@ Version: 0.5.0 (2022-07)
 #pragma once
 #ifndef DSS_CPP_OBJ_API
 #define DSS_CPP_OBJ_API
-#include "dss_common.hpp"
+#include "altdss_common.hpp"
+#include "altdss_obj_enums.hpp"
 
 namespace dss { namespace obj {
 
@@ -21,29 +22,29 @@ using namespace dss::capi;
 #endif
 
 namespace detail {
-    void obj_set_val(void *ptr, int32_t idx, int32_t value)
+    void obj_set_val(void *ptr, int32_t idx, int32_t value, uint32_t flags=0)
     {
-        Obj_SetInt32(ptr, idx, value);
+        Obj_SetInt32(ptr, idx, value, flags);
     }
 
-    void obj_set_val(void *ptr, int32_t idx, double value)
+    void obj_set_val(void *ptr, int32_t idx, double value, uint32_t flags=0)
     {
-        Obj_SetFloat64(ptr, idx, value);
+        Obj_SetFloat64(ptr, idx, value, flags);
     }
 
-    void obj_set_val(void *ptr, int32_t idx, bool value)
+    void obj_set_val(void *ptr, int32_t idx, bool value, uint32_t flags=0)
     {
-        Obj_SetInt32(ptr, idx, value);
+        Obj_SetInt32(ptr, idx, value, flags);
     }
 
-    void obj_set_val(void *ptr, int32_t idx, const string &value)
+    void obj_set_val(void *ptr, int32_t idx, const string &value, uint32_t flags=0)
     {
-        Obj_SetString(ptr, idx, value.c_str());
+        Obj_SetString(ptr, idx, value.c_str(), flags);
     }
 
-    void obj_set_val(void *ptr, int32_t idx, const char* value)
+    void obj_set_val(void *ptr, int32_t idx, const char* value, uint32_t flags=0)
     {
-        Obj_SetString(ptr, idx, value);
+        Obj_SetString(ptr, idx, value, flags);
     }
 
     void obj_get_array(double** ResultPtr, int32_t* ResultCount, void *obj, int32_t Index)
@@ -86,75 +87,75 @@ namespace detail {
         DSS_Dispose_PPointer(ptr);
     }
 
-    void obj_set_array(void *obj, int32_t Index, double* Value, int32_t ValueCount)
+    void obj_set_array(void *obj, int32_t Index, double* Value, int32_t ValueCount, uint32_t flags=0)
     {
-        Obj_SetFloat64Array(obj, Index, Value, ValueCount);
+        Obj_SetFloat64Array(obj, Index, Value, ValueCount, flags);
     }
 
-    void obj_set_array(void *obj, int32_t Index, int32_t* Value, int32_t ValueCount)
+    void obj_set_array(void *obj, int32_t Index, int32_t* Value, int32_t ValueCount, uint32_t flags=0)
     {
-        Obj_SetInt32Array(obj, Index, Value, ValueCount);
+        Obj_SetInt32Array(obj, Index, Value, ValueCount, flags);
     }
 
-    void obj_set_array(void *obj, int32_t Index, const char** Value, int32_t ValueCount)
+    void obj_set_array(void *obj, int32_t Index, const char** Value, int32_t ValueCount, uint32_t flags=0)
     {
-        Obj_SetStringArray(obj, Index, Value, ValueCount);
+        Obj_SetStringArray(obj, Index, Value, ValueCount, flags);
     }
 
-    void obj_set_array(void *obj, int32_t Index, void **Value, int32_t ValueCount)
+    void obj_set_array(void *obj, int32_t Index, void **Value, int32_t ValueCount, uint32_t flags=0)
     {
-        Obj_SetObjectArray(obj, Index, Value, ValueCount);
+        Obj_SetObjectArray(obj, Index, Value, ValueCount, flags);
     }
 
-    void obj_set_val(void *obj, int32_t Index, complex Value)
+    void obj_set_val(void *obj, int32_t Index, complex Value, uint32_t flags=0)
     {
-        Obj_SetFloat64Array(obj, Index, (double*)&Value, 2);
+        Obj_SetFloat64Array(obj, Index, (double*)&Value, 2, flags);
     }
 
 
-    void batch_set_val(void **ptr, int32_t cnt, int32_t idx, int32_t value)
+    void batch_set_val(void **ptr, int32_t cnt, int32_t idx, int32_t value, uint32_t flags=0)
     {
-        Batch_Int32(ptr, cnt, idx, BatchOperation_Set, value);
+        Batch_Int32(ptr, cnt, idx, BatchOperation_Set, value, flags);
     }
 
-    void batch_set_val(void **ptr, int32_t cnt, int32_t idx, double value)
+    void batch_set_val(void **ptr, int32_t cnt, int32_t idx, double value, uint32_t flags=0)
     {
-        Batch_Float64(ptr, cnt, idx, BatchOperation_Set, value);
+        Batch_Float64(ptr, cnt, idx, BatchOperation_Set, value, flags);
     }
 
-    void batch_set_val(void **ptr, int32_t cnt, int32_t idx, bool value)
+    void batch_set_val(void **ptr, int32_t cnt, int32_t idx, bool value, uint32_t flags=0)
     {
-        Batch_Int32(ptr, cnt, idx, BatchOperation_Set, value);
+        Batch_Int32(ptr, cnt, idx, BatchOperation_Set, value, flags);
     }
 
-    void batch_set_val(void **ptr, int32_t cnt, int32_t idx, const string &value)
+    void batch_set_val(void **ptr, int32_t cnt, int32_t idx, const string &value, uint32_t flags=0)
     {
-        Batch_SetString(ptr, cnt, idx, value.c_str());
+        Batch_SetString(ptr, cnt, idx, value.c_str(), flags);
     }
 
-    void batch_set_val(void **ptr, int32_t cnt, int32_t idx, const char* value)
+    void batch_set_val(void **ptr, int32_t cnt, int32_t idx, const char* value, uint32_t flags=0)
     {
-        Batch_SetString(ptr, cnt, idx, value);
+        Batch_SetString(ptr, cnt, idx, value, flags);
     }
 
-    void batch_set_val(void **ptr, int32_t cnt, int32_t idx, complex value)
+    void batch_set_val(void **ptr, int32_t cnt, int32_t idx, complex value, uint32_t flags=0)
     {
         void **ptr_end = ptr + cnt;
         while (ptr != ptr_end)
         {
-            obj_set_val(*ptr, idx, value);
+            obj_set_val(*ptr, idx, value, flags);
             ++ptr;
         }
     }
 
-    void batch_op(void **ptr, int32_t cnt, int32_t idx, int32_t op, double value)
+    void batch_op(void **ptr, int32_t cnt, int32_t idx, int32_t op, double value, uint32_t flags=0)
     {
-        Batch_Float64(ptr, cnt, idx, op, value);
+        Batch_Float64(ptr, cnt, idx, op, value, flags);
     }
 
-    void batch_op(void **ptr, int32_t cnt, int32_t idx, int32_t op, int32_t value)
+    void batch_op(void **ptr, int32_t cnt, int32_t idx, int32_t op, int32_t value, uint32_t flags=0)
     {
-        Batch_Int32(ptr, cnt, idx, op, value);
+        Batch_Int32(ptr, cnt, idx, op, value, flags);
     }
 
     void batch_get_val(double** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index)
@@ -198,19 +199,19 @@ protected:
         api_util->check_for_error();
     }
 
-    void set_string(int32_t index, const string &value)
+    void set_string(int32_t index, const string &value, uint32_t flags)
     {
-        Obj_SetString(ptr, index, value.c_str());
+        Obj_SetString(ptr, index, value.c_str(), flags);
     }
 
-    void set_string(int32_t index, const char *value)
+    void set_string(int32_t index, const char *value, uint32_t flags)
     {
-        Obj_SetString(ptr, index, value);
+        Obj_SetString(ptr, index, value, flags);
     }
 
     string get_prop_string(int32_t index)
     {
-        char* sc = Obj_GetString(ptr, index);
+        const char* sc = Obj_GetString(ptr, index);
         string res(sc);
         DSS_Dispose_String(sc);
         return res;
@@ -229,25 +230,25 @@ protected:
         return cres;
     }
 
-    void set_complex(int32_t index, complex value)
+    void set_complex(int32_t index, complex value, uint32_t flags=0)
     {
-        Obj_SetFloat64Array(ptr, index, (double*)(&value), 2);
+        Obj_SetFloat64Array(ptr, index, (double*)(&value), 2, flags);
     }
 
-    void set_string_array(int32_t index, strings &value)
+    void set_string_array(int32_t index, strings &value, uint32_t flags=0)
     {
         std::vector<const char*> ptrs(value.size(), nullptr);
         for (size_t i = 0; i < value.size(); ++i)
         {
             ptrs[i] = value[i].c_str();
         }
-        Obj_SetStringArray(ptr, index, &ptrs[0], int32_t(value.size()));
+        Obj_SetStringArray(ptr, index, &ptrs[0], int32_t(value.size()), flags);
         check_for_error();
     }
 
-    void set_obj(int32_t index, DSSObj &value)
+    void set_obj(int32_t index, DSSObj &value, uint32_t flags)
     {
-        Obj_SetObject(ptr, index, value.ptr);
+        Obj_SetObject(ptr, index, value.ptr, flags);
     }
 
     template <typename T>
@@ -313,7 +314,7 @@ protected:
     }
 
     template <typename T = VectorXd>
-    static void set_array(void* ptr, int32_t index, T value)
+    static void set_array(void* ptr, int32_t index, T value, uint32_t flags)
     {
         if constexpr (std::is_same<string, typename T::value_type>::value)
         {
@@ -322,7 +323,7 @@ protected:
             {
                 prepvalue[i] = value[i].c_str();
             }
-            detail::obj_set_array(ptr, index, &prepvalue[0], value.size());
+            detail::obj_set_array(ptr, index, &prepvalue[0], value.size(), flags);
         }
         else if constexpr (std::is_convertible<typename T::value_type*, DSSObj*>::value)
         {
@@ -331,15 +332,15 @@ protected:
             {
                 prepvalue[i] = value[i].ptr;
             }
-            detail::obj_set_array(ptr, index, &prepvalue[0], value.size());
+            detail::obj_set_array(ptr, index, &prepvalue[0], value.size(), flags);
         }
         else if constexpr (std::is_enum<typename T::value_type>::value)
         {
-            detail::obj_set_array(ptr, index, (int32_t*)&value[0], value.size());
+            detail::obj_set_array(ptr, index, (int32_t*)&value[0], value.size(), flags);
         }
         else
         {
-            detail::obj_set_array(ptr, index, &value[0], value.size());
+            detail::obj_set_array(ptr, index, &value[0], value.size(), flags);
         }
     }
 
@@ -676,55 +677,55 @@ public:
 
     BatchArrayProxy<T>& operator+(T other)
     {
-        batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Increment, other);
+        detail::batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Increment, other);
         return *this;
     }
 
     BatchArrayProxy<T>& operator-(T other)
     {
-        batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Increment, -other);
+        detail::batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Increment, -other);
         return *this;
     }
 
     BatchArrayProxy<T>& operator*(T other)
     {
-        batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Multiply, other);
+        detail::batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Multiply, other);
         return *this;
     }
 
     BatchArrayProxy<T>& operator/(T other)
     {
-        batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Multiply, 1 / other);
+        detail::batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Multiply, 1 / other);
         return *this;
     }
 
     BatchArrayProxy<T>& operator=(T other)
     {
-        batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Set, other);
+        detail::batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Set, other);
         return *this;
     }
 
     BatchArrayProxy<T>& operator+=(T other)
     {
-        batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Increment, other);
+        detail::batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Increment, other);
         return *this;
     }
 
     BatchArrayProxy<T>& operator-=(T other)
     {
-        batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Increment, -other);
+        detail::batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Increment, -other);
         return *this;
     }
 
     BatchArrayProxy<T>& operator*=(T other)
     {
-        batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Multiply, other);
+        detail::batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Multiply, other);
         return *this;
     }
 
     BatchArrayProxy<T>& operator/=(T other)
     {
-        batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Multiply, 1 / other);
+        detail::batch_op(batch.pointer, batch.count[0], idx, BatchOperation_Multiply, 1 / other);
         return *this;
     }
 };
@@ -965,40 +966,8 @@ class LineCode: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 1;
-    struct Properties
-    {
-        enum {
-            nphases = 1,
-            r1 = 2,
-            x1 = 3,
-            r0 = 4,
-            x0 = 5,
-            C1 = 6,
-            C0 = 7,
-            units = 8,
-            rmatrix = 9,
-            xmatrix = 10,
-            cmatrix = 11,
-            baseFreq = 12,
-            normamps = 13,
-            emergamps = 14,
-            faultrate = 15,
-            pctperm = 16,
-            repair = 17,
-            Kron = 18,
-            Rg = 19,
-            Xg = 20,
-            rho = 21,
-            neutral = 22,
-            B1 = 23,
-            B0 = 24,
-            Seasons = 25,
-            Ratings = 26,
-            LineType = 27,
-            like = 28,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::LineCode;
+    typedef dss::obj::enums::properties::LineCode Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -1574,34 +1543,8 @@ class LoadShape: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 2;
-    struct Properties
-    {
-        enum {
-            npts = 1,
-            interval = 2,
-            mult = 3,
-            hour = 4,
-            mean = 5,
-            stddev = 6,
-            csvfile = 7,
-            sngfile = 8,
-            dblfile = 9,
-            action = 10,
-            qmult = 11,
-            UseActual = 12,
-            Pmax = 13,
-            Qmax = 14,
-            sinterval = 15,
-            minterval = 16,
-            Pbase = 17,
-            Qbase = 18,
-            Pmult = 19,
-            PQCSVFile = 20,
-            MemoryMapping = 21,
-            like = 22,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::LoadShape;
+    typedef dss::obj::enums::properties::LoadShape Properties;
 
     // Class-specific enumerations
 
@@ -2103,25 +2046,8 @@ class TShape: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 3;
-    struct Properties
-    {
-        enum {
-            npts = 1,
-            interval = 2,
-            temp = 3,
-            hour = 4,
-            mean = 5,
-            stddev = 6,
-            csvfile = 7,
-            sngfile = 8,
-            dblfile = 9,
-            sinterval = 10,
-            minterval = 11,
-            action = 12,
-            like = 13,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::TShape;
+    typedef dss::obj::enums::properties::TShape Properties;
 
     // Class-specific enumerations
 
@@ -2461,25 +2387,8 @@ class PriceShape: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 4;
-    struct Properties
-    {
-        enum {
-            npts = 1,
-            interval = 2,
-            price = 3,
-            hour = 4,
-            mean = 5,
-            stddev = 6,
-            csvfile = 7,
-            sngfile = 8,
-            dblfile = 9,
-            sinterval = 10,
-            minterval = 11,
-            action = 12,
-            like = 13,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::PriceShape;
+    typedef dss::obj::enums::properties::PriceShape Properties;
 
     // Class-specific enumerations
 
@@ -2819,26 +2728,8 @@ class XYcurve: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 5;
-    struct Properties
-    {
-        enum {
-            npts = 1,
-            Points = 2,
-            Yarray = 3,
-            Xarray = 4,
-            csvfile = 5,
-            sngfile = 6,
-            dblfile = 7,
-            x = 8,
-            y = 9,
-            Xshift = 10,
-            Yshift = 11,
-            Xscale = 12,
-            Yscale = 13,
-            like = 14,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::XYcurve;
+    typedef dss::obj::enums::properties::XYcurve Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -3157,19 +3048,8 @@ class GrowthShape: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 6;
-    struct Properties
-    {
-        enum {
-            npts = 1,
-            year = 2,
-            mult = 3,
-            csvfile = 4,
-            sngfile = 5,
-            dblfile = 6,
-            like = 7,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::GrowthShape;
+    typedef dss::obj::enums::properties::GrowthShape Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -3376,16 +3256,8 @@ class TCC_Curve: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 7;
-    struct Properties
-    {
-        enum {
-            npts = 1,
-            C_array = 2,
-            T_array = 3,
-            like = 4,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::TCC_Curve;
+    typedef dss::obj::enums::properties::TCC_Curve Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -3528,18 +3400,8 @@ class Spectrum: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 8;
-    struct Properties
-    {
-        enum {
-            NumHarm = 1,
-            harmonic = 2,
-            pctmag = 3,
-            angle = 4,
-            CSVFile = 5,
-            like = 6,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Spectrum;
+    typedef dss::obj::enums::properties::Spectrum Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -3721,26 +3583,8 @@ class WireData: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 9;
-    struct Properties
-    {
-        enum {
-            Rdc = 1,
-            Rac = 2,
-            Runits = 3,
-            GMRac = 4,
-            GMRunits = 5,
-            radius = 6,
-            radunits = 7,
-            normamps = 8,
-            emergamps = 9,
-            diam = 10,
-            Seasons = 11,
-            Ratings = 12,
-            Capradius = 13,
-            like = 14,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::WireData;
+    typedef dss::obj::enums::properties::WireData Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -4139,34 +3983,8 @@ class CNData: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 10;
-    struct Properties
-    {
-        enum {
-            k = 1,
-            DiaStrand = 2,
-            GmrStrand = 3,
-            Rstrand = 4,
-            EpsR = 5,
-            InsLayer = 6,
-            DiaIns = 7,
-            DiaCable = 8,
-            Rdc = 9,
-            Rac = 10,
-            Runits = 11,
-            GMRac = 12,
-            GMRunits = 13,
-            radius = 14,
-            radunits = 15,
-            normamps = 16,
-            emergamps = 17,
-            diam = 18,
-            Seasons = 19,
-            Ratings = 20,
-            Capradius = 21,
-            like = 22,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::CNData;
+    typedef dss::obj::enums::properties::CNData Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -4685,33 +4503,8 @@ class TSData: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 11;
-    struct Properties
-    {
-        enum {
-            DiaShield = 1,
-            TapeLayer = 2,
-            TapeLap = 3,
-            EpsR = 4,
-            InsLayer = 5,
-            DiaIns = 6,
-            DiaCable = 7,
-            Rdc = 8,
-            Rac = 9,
-            Runits = 10,
-            GMRac = 11,
-            GMRunits = 12,
-            radius = 13,
-            radunits = 14,
-            normamps = 15,
-            emergamps = 16,
-            diam = 17,
-            Seasons = 18,
-            Ratings = 19,
-            Capradius = 20,
-            like = 21,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::TSData;
+    typedef dss::obj::enums::properties::TSData Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -5215,18 +5008,8 @@ class LineSpacing: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 12;
-    struct Properties
-    {
-        enum {
-            nconds = 1,
-            nphases = 2,
-            x = 3,
-            h = 4,
-            units = 5,
-            like = 6,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::LineSpacing;
+    typedef dss::obj::enums::properties::LineSpacing Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -5430,32 +5213,8 @@ class LineGeometry: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 13;
-    struct Properties
-    {
-        enum {
-            nconds = 1,
-            nphases = 2,
-            cond = 3,
-            wire = 4,
-            x = 5,
-            h = 6,
-            units = 7,
-            normamps = 8,
-            emergamps = 9,
-            reduce = 10,
-            spacing = 11,
-            wires = 12,
-            cncable = 13,
-            tscable = 14,
-            cncables = 15,
-            tscables = 16,
-            Seasons = 17,
-            Ratings = 18,
-            LineType = 19,
-            like = 20,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::LineGeometry;
+    typedef dss::obj::enums::properties::LineGeometry Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -6093,52 +5852,8 @@ class XfmrCode: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 14;
-    struct Properties
-    {
-        enum {
-            phases = 1,
-            windings = 2,
-            wdg = 3,
-            conn = 4,
-            kV = 5,
-            kVA = 6,
-            tap = 7,
-            pctR = 8,
-            Rneut = 9,
-            Xneut = 10,
-            conns = 11,
-            kVs = 12,
-            kVAs = 13,
-            taps = 14,
-            Xhl = 15,
-            Xht = 16,
-            Xlt = 17,
-            Xscarray = 18,
-            thermal = 19,
-            n = 20,
-            m = 21,
-            flrise = 22,
-            hsrise = 23,
-            pctloadloss = 24,
-            pctnoloadloss = 25,
-            normhkVA = 26,
-            emerghkVA = 27,
-            MaxTap = 28,
-            MinTap = 29,
-            NumTaps = 30,
-            pctimag = 31,
-            ppm_antifloat = 32,
-            pctRs = 33,
-            X12 = 34,
-            X13 = 35,
-            X23 = 36,
-            RdcOhms = 37,
-            Seasons = 38,
-            Ratings = 39,
-            like = 40,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::XfmrCode;
+    typedef dss::obj::enums::properties::XfmrCode Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -6874,50 +6589,8 @@ class Line: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 15;
-    struct Properties
-    {
-        enum {
-            bus1 = 1,
-            bus2 = 2,
-            linecode = 3,
-            length = 4,
-            phases = 5,
-            r1 = 6,
-            x1 = 7,
-            r0 = 8,
-            x0 = 9,
-            C1 = 10,
-            C0 = 11,
-            rmatrix = 12,
-            xmatrix = 13,
-            cmatrix = 14,
-            Switch = 15,
-            Rg = 16,
-            Xg = 17,
-            rho = 18,
-            geometry = 19,
-            units = 20,
-            spacing = 21,
-            wires = 22,
-            EarthModel = 23,
-            cncables = 24,
-            tscables = 25,
-            B1 = 26,
-            B0 = 27,
-            Seasons = 28,
-            Ratings = 29,
-            LineType = 30,
-            normamps = 31,
-            emergamps = 32,
-            faultrate = 33,
-            pctperm = 34,
-            repair = 35,
-            basefreq = 36,
-            enabled = 37,
-            like = 38,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Line;
+    typedef dss::obj::enums::properties::Line Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -7851,47 +7524,8 @@ class Vsource: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 16;
-    struct Properties
-    {
-        enum {
-            bus1 = 1,
-            basekv = 2,
-            pu = 3,
-            angle = 4,
-            frequency = 5,
-            phases = 6,
-            MVAsc3 = 7,
-            MVAsc1 = 8,
-            x1r1 = 9,
-            x0r0 = 10,
-            Isc3 = 11,
-            Isc1 = 12,
-            R1 = 13,
-            X1 = 14,
-            R0 = 15,
-            X0 = 16,
-            ScanType = 17,
-            Sequence = 18,
-            bus2 = 19,
-            Z1 = 20,
-            Z0 = 21,
-            Z2 = 22,
-            puZ1 = 23,
-            puZ0 = 24,
-            puZ2 = 25,
-            baseMVA = 26,
-            Yearly = 27,
-            Daily = 28,
-            Duty = 29,
-            Model = 30,
-            puZideal = 31,
-            spectrum = 32,
-            basefreq = 33,
-            enabled = 34,
-            like = 35,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Vsource;
+    typedef dss::obj::enums::properties::Vsource Properties;
 
     // Class-specific enumerations
 
@@ -8763,27 +8397,8 @@ class Isource: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 17;
-    struct Properties
-    {
-        enum {
-            bus1 = 1,
-            amps = 2,
-            angle = 3,
-            frequency = 4,
-            phases = 5,
-            scantype = 6,
-            sequence = 7,
-            Yearly = 8,
-            Daily = 9,
-            Duty = 10,
-            Bus2 = 11,
-            spectrum = 12,
-            basefreq = 13,
-            enabled = 14,
-            like = 15,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Isource;
+    typedef dss::obj::enums::properties::Isource Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -9286,29 +8901,8 @@ class VCCS: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 18;
-    struct Properties
-    {
-        enum {
-            bus1 = 1,
-            phases = 2,
-            prated = 3,
-            vrated = 4,
-            ppct = 5,
-            bp1 = 6,
-            bp2 = 7,
-            filter = 8,
-            fsample = 9,
-            rmsmode = 10,
-            imaxpu = 11,
-            vrmstau = 12,
-            irmstau = 13,
-            spectrum = 14,
-            basefreq = 15,
-            enabled = 16,
-            like = 17,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::VCCS;
+    typedef dss::obj::enums::properties::VCCS Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -9732,54 +9326,8 @@ class Load: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 19;
-    struct Properties
-    {
-        enum {
-            phases = 1,
-            bus1 = 2,
-            kV = 3,
-            kW = 4,
-            pf = 5,
-            model = 6,
-            yearly = 7,
-            daily = 8,
-            duty = 9,
-            growth = 10,
-            conn = 11,
-            kvar = 12,
-            Rneut = 13,
-            Xneut = 14,
-            status = 15,
-            cls = 16,
-            Vminpu = 17,
-            Vmaxpu = 18,
-            Vminnorm = 19,
-            Vminemerg = 20,
-            xfkVA = 21,
-            allocationfactor = 22,
-            kVA = 23,
-            pctmean = 24,
-            pctstddev = 25,
-            CVRwatts = 26,
-            CVRvars = 27,
-            kwh = 28,
-            kwhdays = 29,
-            Cfactor = 30,
-            CVRcurve = 31,
-            NumCust = 32,
-            ZIPV = 33,
-            pctSeriesRL = 34,
-            RelWeight = 35,
-            Vlowpu = 36,
-            puXharm = 37,
-            XRharm = 38,
-            spectrum = 39,
-            basefreq = 40,
-            enabled = 41,
-            like = 42,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Load;
+    typedef dss::obj::enums::properties::Load Properties;
 
     // Class-specific enumerations
 
@@ -10768,69 +10316,8 @@ class Transformer: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 20;
-    struct Properties
-    {
-        enum {
-            phases = 1,
-            windings = 2,
-            wdg = 3,
-            bus = 4,
-            conn = 5,
-            kV = 6,
-            kVA = 7,
-            tap = 8,
-            pctR = 9,
-            Rneut = 10,
-            Xneut = 11,
-            buses = 12,
-            conns = 13,
-            kVs = 14,
-            kVAs = 15,
-            taps = 16,
-            XHL = 17,
-            XHT = 18,
-            XLT = 19,
-            Xscarray = 20,
-            thermal = 21,
-            n = 22,
-            m = 23,
-            flrise = 24,
-            hsrise = 25,
-            pctloadloss = 26,
-            pctnoloadloss = 27,
-            normhkVA = 28,
-            emerghkVA = 29,
-            sub = 30,
-            MaxTap = 31,
-            MinTap = 32,
-            NumTaps = 33,
-            subname = 34,
-            pctimag = 35,
-            ppm_antifloat = 36,
-            pctRs = 37,
-            bank = 38,
-            XfmrCode = 39,
-            XRConst = 40,
-            X12 = 41,
-            X13 = 42,
-            X23 = 43,
-            LeadLag = 44,
-            WdgCurrents = 45,
-            Core = 46,
-            RdcOhms = 47,
-            Seasons = 48,
-            Ratings = 49,
-            normamps = 50,
-            emergamps = 51,
-            faultrate = 52,
-            pctperm = 53,
-            repair = 54,
-            basefreq = 55,
-            enabled = 56,
-            like = 57,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Transformer;
+    typedef dss::obj::enums::properties::Transformer Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -11926,33 +11413,8 @@ class Capacitor: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 22;
-    struct Properties
-    {
-        enum {
-            bus1 = 1,
-            bus2 = 2,
-            phases = 3,
-            kvar = 4,
-            kv = 5,
-            conn = 6,
-            cmatrix = 7,
-            cuf = 8,
-            R = 9,
-            XL = 10,
-            Harm = 11,
-            Numsteps = 12,
-            states = 13,
-            normamps = 14,
-            emergamps = 15,
-            faultrate = 16,
-            pctperm = 17,
-            repair = 18,
-            basefreq = 19,
-            enabled = 20,
-            like = 21,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Capacitor;
+    typedef dss::obj::enums::properties::Capacitor Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -12404,39 +11866,8 @@ class Reactor: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 23;
-    struct Properties
-    {
-        enum {
-            bus1 = 1,
-            bus2 = 2,
-            phases = 3,
-            kvar = 4,
-            kv = 5,
-            conn = 6,
-            Rmatrix = 7,
-            Xmatrix = 8,
-            Parallel = 9,
-            R = 10,
-            X = 11,
-            Rp = 12,
-            Z1 = 13,
-            Z2 = 14,
-            Z0 = 15,
-            Z = 16,
-            RCurve = 17,
-            LCurve = 18,
-            LmH = 19,
-            normamps = 20,
-            emergamps = 21,
-            faultrate = 22,
-            pctperm = 23,
-            repair = 24,
-            basefreq = 25,
-            enabled = 26,
-            like = 27,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Reactor;
+    typedef dss::obj::enums::properties::Reactor Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -13031,37 +12462,8 @@ class CapControl: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 24;
-    struct Properties
-    {
-        enum {
-            element = 1,
-            terminal = 2,
-            capacitor = 3,
-            type = 4,
-            PTratio = 5,
-            CTratio = 6,
-            ONsetting = 7,
-            OFFsetting = 8,
-            Delay = 9,
-            VoltOverride = 10,
-            Vmax = 11,
-            Vmin = 12,
-            DelayOFF = 13,
-            DeadTime = 14,
-            CTPhase = 15,
-            PTPhase = 16,
-            VBus = 17,
-            EventLog = 18,
-            UserModel = 19,
-            UserData = 20,
-            pctMinkvar = 21,
-            Reset = 22,
-            basefreq = 23,
-            enabled = 24,
-            like = 25,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::CapControl;
+    typedef dss::obj::enums::properties::CapControl Properties;
 
     // Class-specific enumerations
 
@@ -13707,29 +13109,8 @@ class Fault: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 25;
-    struct Properties
-    {
-        enum {
-            bus1 = 1,
-            bus2 = 2,
-            phases = 3,
-            r = 4,
-            pctstddev = 5,
-            Gmatrix = 6,
-            ONtime = 7,
-            temporary = 8,
-            MinAmps = 9,
-            normamps = 10,
-            emergamps = 11,
-            faultrate = 12,
-            pctperm = 13,
-            repair = 14,
-            basefreq = 15,
-            enabled = 16,
-            like = 17,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Fault;
+    typedef dss::obj::enums::properties::Fault Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -14080,58 +13461,8 @@ class Generator: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 26;
-    struct Properties
-    {
-        enum {
-            phases = 1,
-            bus1 = 2,
-            kv = 3,
-            kW = 4,
-            pf = 5,
-            kvar = 6,
-            model = 7,
-            Vminpu = 8,
-            Vmaxpu = 9,
-            yearly = 10,
-            daily = 11,
-            duty = 12,
-            dispmode = 13,
-            dispvalue = 14,
-            conn = 15,
-            status = 16,
-            cls = 17,
-            Vpu = 18,
-            maxkvar = 19,
-            minkvar = 20,
-            pvfactor = 21,
-            forceon = 22,
-            kVA = 23,
-            MVA = 24,
-            Xd = 25,
-            Xdp = 26,
-            Xdpp = 27,
-            H = 28,
-            D = 29,
-            UserModel = 30,
-            UserData = 31,
-            ShaftModel = 32,
-            ShaftData = 33,
-            DutyStart = 34,
-            debugtrace = 35,
-            Balanced = 36,
-            XRdp = 37,
-            UseFuel = 38,
-            FuelkWh = 39,
-            pctFuel = 40,
-            pctReserve = 41,
-            Refuel = 42,
-            spectrum = 43,
-            basefreq = 44,
-            enabled = 45,
-            like = 46,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Generator;
+    typedef dss::obj::enums::properties::Generator Properties;
 
     // Class-specific enumerations
 
@@ -15156,22 +14487,8 @@ class GenDispatcher: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 27;
-    struct Properties
-    {
-        enum {
-            Element = 1,
-            Terminal = 2,
-            kWLimit = 3,
-            kWBand = 4,
-            kvarlimit = 5,
-            GenList = 6,
-            Weights = 7,
-            basefreq = 8,
-            enabled = 9,
-            like = 10,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::GenDispatcher;
+    typedef dss::obj::enums::properties::GenDispatcher Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -15419,66 +14736,8 @@ class Storage: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 28;
-    struct Properties
-    {
-        enum {
-            phases = 1,
-            bus1 = 2,
-            kv = 3,
-            conn = 4,
-            kW = 5,
-            kvar = 6,
-            pf = 7,
-            kVA = 8,
-            pctCutin = 9,
-            pctCutout = 10,
-            EffCurve = 11,
-            VarFollowInverter = 12,
-            kvarMax = 13,
-            kvarMaxAbs = 14,
-            WattPriority = 15,
-            PFPriority = 16,
-            pctPminNoVars = 17,
-            pctPminkvarMax = 18,
-            kWrated = 19,
-            pctkWrated = 20,
-            kWhrated = 21,
-            kWhstored = 22,
-            pctstored = 23,
-            pctreserve = 24,
-            State = 25,
-            pctDischarge = 26,
-            pctCharge = 27,
-            pctEffCharge = 28,
-            pctEffDischarge = 29,
-            pctIdlingkW = 30,
-            pctR = 31,
-            pctX = 32,
-            model = 33,
-            Vminpu = 34,
-            Vmaxpu = 35,
-            Balanced = 36,
-            LimitCurrent = 37,
-            yearly = 38,
-            daily = 39,
-            duty = 40,
-            DispMode = 41,
-            DischargeTrigger = 42,
-            ChargeTrigger = 43,
-            TimeChargeTrig = 44,
-            cls = 45,
-            DynaDLL = 46,
-            DynaData = 47,
-            UserModel = 48,
-            UserData = 49,
-            debugtrace = 50,
-            spectrum = 51,
-            basefreq = 52,
-            enabled = 53,
-            like = 54,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Storage;
+    typedef dss::obj::enums::properties::Storage Properties;
 
     // Class-specific enumerations
 
@@ -16689,52 +15948,8 @@ class StorageController: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 29;
-    struct Properties
-    {
-        enum {
-            Element = 1,
-            Terminal = 2,
-            MonPhase = 3,
-            kWTarget = 4,
-            kWTargetLow = 5,
-            pctkWBand = 6,
-            kWBand = 7,
-            pctkWBandLow = 8,
-            kWBandLow = 9,
-            ElementList = 10,
-            Weights = 11,
-            ModeDischarge = 12,
-            ModeCharge = 13,
-            TimeDischargeTrigger = 14,
-            TimeChargeTrigger = 15,
-            pctRatekW = 16,
-            pctRateCharge = 17,
-            pctReserve = 18,
-            kWhTotal = 19,
-            kWTotal = 20,
-            kWhActual = 21,
-            kWActual = 22,
-            kWneed = 23,
-            Yearly = 24,
-            Daily = 25,
-            Duty = 26,
-            EventLog = 27,
-            InhibitTime = 28,
-            Tup = 29,
-            TFlat = 30,
-            Tdn = 31,
-            kWThreshold = 32,
-            DispFactor = 33,
-            ResetLevel = 34,
-            Seasons = 35,
-            SeasonTargets = 36,
-            SeasonTargetsLow = 37,
-            basefreq = 38,
-            enabled = 39,
-            like = 40,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::StorageController;
+    typedef dss::obj::enums::properties::StorageController Properties;
 
     // Class-specific enumerations
 
@@ -17704,64 +16919,8 @@ class Relay: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 30;
-    struct Properties
-    {
-        enum {
-            MonitoredObj = 1,
-            MonitoredTerm = 2,
-            SwitchedObj = 3,
-            SwitchedTerm = 4,
-            type = 5,
-            Phasecurve = 6,
-            Groundcurve = 7,
-            PhaseTrip = 8,
-            GroundTrip = 9,
-            TDPhase = 10,
-            TDGround = 11,
-            PhaseInst = 12,
-            GroundInst = 13,
-            Reset = 14,
-            Shots = 15,
-            RecloseIntervals = 16,
-            Delay = 17,
-            Overvoltcurve = 18,
-            Undervoltcurve = 19,
-            kvbase = 20,
-            pctPickup47 = 21,
-            BaseAmps46 = 22,
-            pctPickup46 = 23,
-            isqt46 = 24,
-            Variable = 25,
-            overtrip = 26,
-            undertrip = 27,
-            Breakertime = 28,
-            action = 29,
-            Z1mag = 30,
-            Z1ang = 31,
-            Z0mag = 32,
-            Z0ang = 33,
-            Mphase = 34,
-            Mground = 35,
-            EventLog = 36,
-            DebugTrace = 37,
-            DistReverse = 38,
-            Normal = 39,
-            State = 40,
-            DOC_TiltAngleLow = 41,
-            DOC_TiltAngleHigh = 42,
-            DOC_TripSettingLow = 43,
-            DOC_TripSettingHigh = 44,
-            DOC_TripSettingMag = 45,
-            DOC_DelayInner = 46,
-            DOC_PhaseCurveInner = 47,
-            DOC_PhaseTripInner = 48,
-            DOC_TDPhaseInner = 49,
-            basefreq = 50,
-            enabled = 51,
-            like = 52,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Relay;
+    typedef dss::obj::enums::properties::Relay Properties;
 
     // Class-specific enumerations
 
@@ -18994,39 +18153,8 @@ class Recloser: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 31;
-    struct Properties
-    {
-        enum {
-            MonitoredObj = 1,
-            MonitoredTerm = 2,
-            SwitchedObj = 3,
-            SwitchedTerm = 4,
-            NumFast = 5,
-            PhaseFast = 6,
-            PhaseDelayed = 7,
-            GroundFast = 8,
-            GroundDelayed = 9,
-            PhaseTrip = 10,
-            GroundTrip = 11,
-            PhaseInst = 12,
-            GroundInst = 13,
-            Reset = 14,
-            Shots = 15,
-            RecloseIntervals = 16,
-            Delay = 17,
-            Action = 18,
-            TDPhFast = 19,
-            TDGrFast = 20,
-            TDPhDelayed = 21,
-            TDGrDelayed = 22,
-            Normal = 23,
-            State = 24,
-            basefreq = 25,
-            enabled = 26,
-            like = 27,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Recloser;
+    typedef dss::obj::enums::properties::Recloser Properties;
 
     // Class-specific enumerations
 
@@ -19770,25 +18898,8 @@ class Fuse: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 32;
-    struct Properties
-    {
-        enum {
-            MonitoredObj = 1,
-            MonitoredTerm = 2,
-            SwitchedObj = 3,
-            SwitchedTerm = 4,
-            FuseCurve = 5,
-            RatedCurrent = 6,
-            Delay = 7,
-            Action = 8,
-            Normal = 9,
-            State = 10,
-            basefreq = 11,
-            enabled = 12,
-            like = 13,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Fuse;
+    typedef dss::obj::enums::properties::Fuse Properties;
 
     // Class-specific enumerations
 
@@ -20213,23 +19324,8 @@ class SwtControl: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 33;
-    struct Properties
-    {
-        enum {
-            SwitchedObj = 1,
-            SwitchedTerm = 2,
-            Action = 3,
-            Lock = 4,
-            Delay = 5,
-            Normal = 6,
-            State = 7,
-            Reset = 8,
-            basefreq = 9,
-            enabled = 10,
-            like = 11,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::SwtControl;
+    typedef dss::obj::enums::properties::SwtControl Properties;
 
     // Class-specific enumerations
 
@@ -20621,56 +19717,8 @@ class PVSystem: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 34;
-    struct Properties
-    {
-        enum {
-            phases = 1,
-            bus1 = 2,
-            kv = 3,
-            irradiance = 4,
-            Pmpp = 5,
-            pctPmpp = 6,
-            Temperature = 7,
-            pf = 8,
-            conn = 9,
-            kvar = 10,
-            kVA = 11,
-            pctCutin = 12,
-            pctCutout = 13,
-            EffCurve = 14,
-            PTCurve = 15,
-            pctR = 16,
-            pctX = 17,
-            model = 18,
-            Vminpu = 19,
-            Vmaxpu = 20,
-            Balanced = 21,
-            LimitCurrent = 22,
-            yearly = 23,
-            daily = 24,
-            duty = 25,
-            Tyearly = 26,
-            Tdaily = 27,
-            Tduty = 28,
-            cls = 29,
-            UserModel = 30,
-            UserData = 31,
-            debugtrace = 32,
-            VarFollowInverter = 33,
-            DutyStart = 34,
-            WattPriority = 35,
-            PFPriority = 36,
-            pctPminNoVars = 37,
-            pctPminkvarMax = 38,
-            kvarMax = 39,
-            kvarMaxAbs = 40,
-            spectrum = 41,
-            basefreq = 42,
-            enabled = 43,
-            like = 44,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::PVSystem;
+    typedef dss::obj::enums::properties::PVSystem Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -21657,32 +20705,8 @@ class UPFC: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 35;
-    struct Properties
-    {
-        enum {
-            bus1 = 1,
-            bus2 = 2,
-            refkv = 3,
-            pf = 4,
-            frequency = 5,
-            phases = 6,
-            Xs = 7,
-            Tol1 = 8,
-            Mode = 9,
-            VpqMax = 10,
-            LossCurve = 11,
-            VHLimit = 12,
-            VLLimit = 13,
-            CLimit = 14,
-            refkv2 = 15,
-            kvarLimit = 16,
-            spectrum = 17,
-            basefreq = 18,
-            enabled = 19,
-            like = 20,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::UPFC;
+    typedef dss::obj::enums::properties::UPFC Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -22129,16 +21153,8 @@ class UPFCControl: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 36;
-    struct Properties
-    {
-        enum {
-            UPFCList = 1,
-            basefreq = 2,
-            enabled = 3,
-            like = 4,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::UPFCControl;
+    typedef dss::obj::enums::properties::UPFCControl Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -22275,26 +21291,8 @@ class ESPVLControl: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 37;
-    struct Properties
-    {
-        enum {
-            Element = 1,
-            Terminal = 2,
-            Type = 3,
-            kWBand = 4,
-            kvarlimit = 5,
-            LocalControlList = 6,
-            LocalControlWeights = 7,
-            PVSystemList = 8,
-            PVSystemWeights = 9,
-            StorageList = 10,
-            StorageWeights = 11,
-            basefreq = 12,
-            enabled = 13,
-            like = 14,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::ESPVLControl;
+    typedef dss::obj::enums::properties::ESPVLControl Properties;
 
     // Class-specific enumerations
 
@@ -22652,37 +21650,8 @@ class IndMach012: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 38;
-    struct Properties
-    {
-        enum {
-            phases = 1,
-            bus1 = 2,
-            kv = 3,
-            kW = 4,
-            pf = 5,
-            conn = 6,
-            kVA = 7,
-            H = 8,
-            D = 9,
-            puRs = 10,
-            puXs = 11,
-            puRr = 12,
-            puXr = 13,
-            puXm = 14,
-            Slip = 15,
-            MaxSlip = 16,
-            SlipOption = 17,
-            Yearly = 18,
-            Daily = 19,
-            Duty = 20,
-            Debugtrace = 21,
-            spectrum = 22,
-            basefreq = 23,
-            enabled = 24,
-            like = 25,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::IndMach012;
+    typedef dss::obj::enums::properties::IndMach012 Properties;
 
     // Class-specific enumerations
 
@@ -23312,26 +22281,8 @@ class GICsource: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 39;
-    struct Properties
-    {
-        enum {
-            Volts = 1,
-            angle = 2,
-            frequency = 3,
-            phases = 4,
-            EN = 5,
-            EE = 6,
-            Lat1 = 7,
-            Lon1 = 8,
-            Lat2 = 9,
-            Lon2 = 10,
-            spectrum = 11,
-            basefreq = 12,
-            enabled = 13,
-            like = 14,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::GICsource;
+    typedef dss::obj::enums::properties::GICsource Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -23647,60 +22598,8 @@ class AutoTrans: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 40;
-    struct Properties
-    {
-        enum {
-            phases = 1,
-            windings = 2,
-            wdg = 3,
-            bus = 4,
-            conn = 5,
-            kV = 6,
-            kVA = 7,
-            tap = 8,
-            pctR = 9,
-            Rdcohms = 10,
-            Core = 11,
-            buses = 12,
-            conns = 13,
-            kVs = 14,
-            kVAs = 15,
-            taps = 16,
-            XHX = 17,
-            XHT = 18,
-            XXT = 19,
-            XSCarray = 20,
-            thermal = 21,
-            n = 22,
-            m = 23,
-            flrise = 24,
-            hsrise = 25,
-            pctloadloss = 26,
-            pctnoloadloss = 27,
-            normhkVA = 28,
-            emerghkVA = 29,
-            sub = 30,
-            MaxTap = 31,
-            MinTap = 32,
-            NumTaps = 33,
-            subname = 34,
-            pctimag = 35,
-            ppm_antifloat = 36,
-            pctRs = 37,
-            XRConst = 38,
-            LeadLag = 39,
-            WdgCurrents = 40,
-            normamps = 41,
-            emergamps = 42,
-            faultrate = 43,
-            pctperm = 44,
-            repair = 45,
-            basefreq = 46,
-            enabled = 47,
-            like = 48,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::AutoTrans;
+    typedef dss::obj::enums::properties::AutoTrans Properties;
 
     // Class-specific enumerations
 
@@ -24654,47 +23553,8 @@ class RegControl: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 21;
-    struct Properties
-    {
-        enum {
-            transformer = 1,
-            winding = 2,
-            vreg = 3,
-            band = 4,
-            ptratio = 5,
-            CTprim = 6,
-            R = 7,
-            X = 8,
-            bus = 9,
-            delay = 10,
-            reversible = 11,
-            revvreg = 12,
-            revband = 13,
-            revR = 14,
-            revX = 15,
-            tapdelay = 16,
-            debugtrace = 17,
-            maxtapchange = 18,
-            inversetime = 19,
-            tapwinding = 20,
-            vlimit = 21,
-            PTphase = 22,
-            revThreshold = 23,
-            revDelay = 24,
-            revNeutral = 25,
-            EventLog = 26,
-            RemotePTRatio = 27,
-            TapNum = 28,
-            Reset = 29,
-            LDC_Z = 30,
-            rev_Z = 31,
-            Cogen = 32,
-            basefreq = 33,
-            enabled = 34,
-            like = 35,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::RegControl;
+    typedef dss::obj::enums::properties::RegControl Properties;
 
     // Class-specific enumerations
 
@@ -25376,47 +24236,8 @@ class InvControl: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 41;
-    struct Properties
-    {
-        enum {
-            DERList = 1,
-            Mode = 2,
-            CombiMode = 3,
-            vvc_curve1 = 4,
-            hysteresis_offset = 5,
-            voltage_curvex_ref = 6,
-            avgwindowlen = 7,
-            voltwatt_curve = 8,
-            DbVMin = 9,
-            DbVMax = 10,
-            ArGraLowV = 11,
-            ArGraHiV = 12,
-            DynReacavgwindowlen = 13,
-            deltaQ_Factor = 14,
-            VoltageChangeTolerance = 15,
-            VarChangeTolerance = 16,
-            VoltwattYAxis = 17,
-            RateofChangeMode = 18,
-            LPFTau = 19,
-            RiseFallLimit = 20,
-            deltaP_Factor = 21,
-            EventLog = 22,
-            RefReactivePower = 23,
-            ActivePChangeTolerance = 24,
-            monVoltageCalc = 25,
-            monBus = 26,
-            MonBusesVbase = 27,
-            voltwattCH_curve = 28,
-            wattpf_curve = 29,
-            wattvar_curve = 30,
-            PVSystemList = 31,
-            Vsetpoint = 32,
-            basefreq = 33,
-            enabled = 34,
-            like = 35,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::InvControl;
+    typedef dss::obj::enums::properties::InvControl Properties;
 
     // Class-specific enumerations
 
@@ -26773,29 +25594,8 @@ class ExpControl: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 42;
-    struct Properties
-    {
-        enum {
-            PVSystemList = 1,
-            Vreg = 2,
-            Slope = 3,
-            VregTau = 4,
-            Qbias = 5,
-            VregMin = 6,
-            VregMax = 7,
-            QmaxLead = 8,
-            QmaxLag = 9,
-            EventLog = 10,
-            DeltaQ_factor = 11,
-            PreferQ = 12,
-            Tresponse = 13,
-            DERList = 14,
-            basefreq = 15,
-            enabled = 16,
-            like = 17,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::ExpControl;
+    typedef dss::obj::enums::properties::ExpControl Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -27149,31 +25949,8 @@ class GICLine: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 43;
-    struct Properties
-    {
-        enum {
-            bus1 = 1,
-            bus2 = 2,
-            Volts = 3,
-            Angle = 4,
-            frequency = 5,
-            phases = 6,
-            R = 7,
-            X = 8,
-            C = 9,
-            EN = 10,
-            EE = 11,
-            Lat1 = 12,
-            Lon1 = 13,
-            Lat2 = 14,
-            Lon2 = 15,
-            spectrum = 16,
-            basefreq = 17,
-            enabled = 18,
-            like = 19,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::GICLine;
+    typedef dss::obj::enums::properties::GICLine Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -27582,35 +26359,8 @@ class GICTransformer: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 44;
-    struct Properties
-    {
-        enum {
-            BusH = 1,
-            BusNH = 2,
-            BusX = 3,
-            BusNX = 4,
-            phases = 5,
-            Type = 6,
-            R1 = 7,
-            R2 = 8,
-            KVLL1 = 9,
-            KVLL2 = 10,
-            MVA = 11,
-            VarCurve = 12,
-            pctR1 = 13,
-            pctR2 = 14,
-            K = 15,
-            normamps = 16,
-            emergamps = 17,
-            faultrate = 18,
-            pctperm = 19,
-            repair = 20,
-            basefreq = 21,
-            enabled = 22,
-            like = 23,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::GICTransformer;
+    typedef dss::obj::enums::properties::GICTransformer Properties;
 
     // Class-specific enumerations
 
@@ -28138,35 +26888,8 @@ class VSConverter: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 45;
-    struct Properties
-    {
-        enum {
-            phases = 1,
-            Bus1 = 2,
-            kVac = 3,
-            kVdc = 4,
-            kW = 5,
-            Ndc = 6,
-            Rac = 7,
-            Xac = 8,
-            m0 = 9,
-            d0 = 10,
-            Mmin = 11,
-            Mmax = 12,
-            Iacmax = 13,
-            Idcmax = 14,
-            Vacref = 15,
-            Pacref = 16,
-            Qacref = 17,
-            Vdcref = 18,
-            VscMode = 19,
-            spectrum = 20,
-            basefreq = 21,
-            enabled = 22,
-            like = 23,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::VSConverter;
+    typedef dss::obj::enums::properties::VSConverter Properties;
 
     // Class-specific enumerations
 
@@ -28674,22 +27397,8 @@ class Monitor: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 46;
-    struct Properties
-    {
-        enum {
-            element = 1,
-            terminal = 2,
-            mode = 3,
-            action = 4,
-            residual = 5,
-            VIPolar = 6,
-            PPolar = 7,
-            basefreq = 8,
-            enabled = 9,
-            like = 10,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Monitor;
+    typedef dss::obj::enums::properties::Monitor Properties;
 
     // Class-specific enumerations
 
@@ -29022,39 +27731,8 @@ class EnergyMeter: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 47;
-    struct Properties
-    {
-        enum {
-            element = 1,
-            terminal = 2,
-            action = 3,
-            option = 4,
-            kVAnormal = 5,
-            kVAemerg = 6,
-            peakcurrent = 7,
-            Zonelist = 8,
-            LocalOnly = 9,
-            Mask = 10,
-            Losses = 11,
-            LineLosses = 12,
-            XfmrLosses = 13,
-            SeqLosses = 14,
-            threePaseLosses = 15,
-            VbaseLosses = 16,
-            PhaseVoltageReport = 17,
-            Int_Rate = 18,
-            Int_Duration = 19,
-            SAIFI = 20,
-            SAIFIkW = 21,
-            SAIDI = 22,
-            CAIDI = 23,
-            CustInterrupts = 24,
-            basefreq = 25,
-            enabled = 26,
-            like = 27,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::EnergyMeter;
+    typedef dss::obj::enums::properties::EnergyMeter Properties;
 
     // Class-specific enumerations
 
@@ -29441,14 +28119,14 @@ public:
     ///
     /// DSS property name: 3phaseLosses, DSS property index: 15
     ///
-    bool threePaseLosses()
+    bool threePhaseLosses()
     {
-        return Obj_GetInt32(ptr, Properties::threePaseLosses) != 0;
+        return Obj_GetInt32(ptr, Properties::ThreePhaseLosses) != 0;
     }
 
-    EnergyMeter& threePaseLosses(bool value)
+    EnergyMeter& threePhaseLosses(bool value)
     {
-        Obj_SetInt32(ptr, Properties::threePaseLosses, value);
+        Obj_SetInt32(ptr, Properties::ThreePhaseLosses, value);
         return *this;
     }
 
@@ -29647,27 +28325,8 @@ class Sensor: public DSSObj
 {
 public:
     const static char dss_cls_name[];
-    const static int32_t dss_cls_idx = 48;
-    struct Properties
-    {
-        enum {
-            element = 1,
-            terminal = 2,
-            kvbase = 3,
-            clear = 4,
-            kVs = 5,
-            currents = 6,
-            kWs = 7,
-            kvars = 8,
-            conn = 9,
-            Deltadirection = 10,
-            pctError = 11,
-            Weight = 12,
-            basefreq = 13,
-            enabled = 14,
-            like = 15,
-        };
-    };
+    const static int32_t dss_cls_idx = dss::obj::enums::ClassIndices::Sensor;
+    typedef dss::obj::enums::properties::Sensor Properties;
 
     ///
     /// Create wrapper directly by a given object handle/pointer
@@ -66031,20 +64690,20 @@ public:
     ///
     /// DSS property name: 3phaseLosses, DSS property index: 15
     ///
-    bools threePaseLosses()
+    bools threePhaseLosses()
     {
-        return get_batch_val<bools>(Properties::threePaseLosses);
+        return get_batch_val<bools>(Properties::ThreePhaseLosses);
     }
 
-    EnergyMeterBatch& threePaseLosses(bool value)
+    EnergyMeterBatch& threePhaseLosses(bool value)
     {
-        set_batch_val(Properties::threePaseLosses, int32_t(value));
+        set_batch_val(Properties::ThreePhaseLosses, int32_t(value));
         return *this;
     }
 
-    EnergyMeterBatch& threePaseLosses(bools &value)
+    EnergyMeterBatch& threePhaseLosses(bools &value)
     {
-        set_batch_val_for_each<std::vector<int32_t>>(Properties::threePaseLosses, value.begin(), value.end());
+        set_batch_val_for_each<std::vector<int32_t>>(Properties::ThreePhaseLosses, value.begin(), value.end());
         return *this;
     }
 
@@ -66873,60 +65532,3 @@ const char Sensor::dss_cls_name[] = "Sensor";
 
 }} // namespace dss::obj
 #endif // DSS_CPP_OBJ_API
-
-/*
-sample.cpp -- Minimal sample
-
-compile with something like
-g++ --std=c++17 -I../dss_capi/include -I../klusolve/build/eigen-3.3.9/ -l../dss_capi/lib/linux_x64 -ldss_capi -o sample sample.cpp
-
-#include <iostream>
-#include "dss_cpp_obj.h"
-int main()
-{
-    using std::cout;
-    using std::endl;
-    using dss::obj::Load;
-    using dss::obj::LoadBatch;
-    using dss::obj::LineGeometry;
-
-    dss::APIUtil util;
-
-    Text_Set_Command("redirect '../electricdss-tst/Version8/Distrib/IEEETestCases/NEVTestCase/NEVMASTER.DSS'");
-    util.check_for_error();
-    Load load(&util, 1);
-    LineGeometry line_geo(&util, "quadcircuit");
-
-    cout <<
-        load.name() << endl <<
-        load.bus1() << endl <<
-        load.kW() << endl <<
-        load.kvar() << endl <<
-    endl;
-
-    load.kW(1500).kvar(200).bus1("blabla.1.2");
-    cout << load.name() << " " << load.kW() << " " << load.kvar() << endl << endl;
-
-    LoadBatch(&util).kW() *= 5;
-
-    cout << load.name() << " " << load.kW() << " " << load.kvar() << endl << endl;
-
-    cout <<
-        line_geo.name() << endl <<
-        line_geo.nconds() << endl <<
-        line_geo.x() << endl <<
-    endl;
-
-    auto wires = line_geo.wires_obj();
-    for (auto &w: wires)
-    {
-        cout << w.name() << ": " << w.radius() << " " << w.radunits_str() << endl;
-    }
-
-    LoadBatch new_batch = util.create<LoadBatch>("myload", 25);
-    new_batch.kW(1200.0).kvar(900.0).model(Load::LoadModel::ZIPV).end_edit();
-
-    return 0;
-}
-*/
-

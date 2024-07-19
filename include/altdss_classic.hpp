@@ -1,10 +1,10 @@
 /*!
 
 dss_classic.hpp: a C++ layer for the DSS-Extensions/C-API, classic API
-Copyright (c) 2021-2022 Paulo Meira
-Copyright (c) 2021-2022 DSS-Extensions contributors
+Copyright (c) 2021-2024 Paulo Meira
+Copyright (c) 2021-2024 DSS-Extensions contributors
 
-Version: 0.5.0 (2022-07)
+Version: 0.5.1 (2024-07)
 
 **POTENTIAL BREAKING CHANGES UNTIL VERSION 1.0**
 
@@ -14,8 +14,8 @@ Version: 0.5.0 (2022-07)
 #ifndef DSS_CPP_CLASSIC_API
 #define DSS_CPP_CLASSIC_API
 
-#include "dss_common.hpp"
-#include "dss_obj.hpp"
+#include "altdss_common.hpp"
+#include "altdss_obj.hpp"
 
 namespace dss { namespace classic {
 
