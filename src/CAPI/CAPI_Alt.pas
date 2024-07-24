@@ -1124,6 +1124,7 @@ begin
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * elem.Nterms);
     cBuffer := Allocmem(2 * SizeOf(Double) * elem.NConds * elem.Nterms);
+    //TODO: Array dimensions
     elem.GetPhasePower(cBuffer);
     iV := 0;
     for j := 1 to elem.Nterms do
