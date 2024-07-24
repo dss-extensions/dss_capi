@@ -2210,7 +2210,7 @@ extern "C" {
     For complex matrices, the sizes are referred to the number of complex elements, not the primary the float64 elements.
 
     Defaults to False/0 in the 0.13.x versions of DSS C-API. 
-    This might change to false in future versions.
+    This might change to true in future versions.
 
     (API Extension)
     */
