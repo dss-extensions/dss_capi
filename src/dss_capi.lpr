@@ -2041,6 +2041,7 @@ exports
     WireData_Set_CapRadius,
 
     Bus_Get_Next,
+    Bus_Get_idx,
     CNData_Get_idx,
     CNData_Set_idx,
     CapControls_Get_idx,

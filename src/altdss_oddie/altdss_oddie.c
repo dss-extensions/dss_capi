@@ -12212,6 +12212,13 @@ ALTDSS_ODDIE_DLL void ctx_XYCurves_Set_y(const void* ctx, double Value)
     oddie_map_error(ctx);
 }
 
+ALTDSS_ODDIE_DLL int32_t ctx_Bus_Get_idx(const void* ctx)
+{
+    CTX_OR_PRIME
+    oddie_error_not_implemented((OddieContext*) ctx, "Bus_Get_idx");
+    return -1;
+}
+
 ALTDSS_ODDIE_DLL int32_t ctx_Bus_Get_Next(const void* ctx)
 {
     CTX_OR_PRIME

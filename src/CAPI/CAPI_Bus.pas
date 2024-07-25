@@ -55,7 +55,6 @@ procedure Bus_Get_VMagAngle(var ResultPtr: PDouble; ResultCount: PAPISize); CDEC
 procedure Bus_Get_VMagAngle_GR(); CDECL;
 function Bus_Get_TotalMiles(): Double; CDECL;
 function Bus_Get_SectionID(): Integer; CDECL;
-function Bus_Get_Next(): Integer; CDECL; // API Extension
 procedure Bus_Get_LineList(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_LineList_GR(); CDECL;
 procedure Bus_Get_LoadList(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -64,6 +63,10 @@ procedure Bus_Get_ZSC012Matrix(var ResultPtr: PDouble; ResultCount: PAPISize); C
 procedure Bus_Get_ZSC012Matrix_GR(); CDECL;
 procedure Bus_Get_AllPCEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_AllPDEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+
+// Extensions
+function Bus_Get_Next(): Integer; CDECL;
+function Bus_Get_idx(): Integer; CDECL;
 
 implementation
 
@@ -802,6 +805,20 @@ begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(pdes));
     for i := 0 to High(pdes) do
         Result[i] := DSS_CopyStringAsPChar(pdes[i]);
+end;
+//------------------------------------------------------------------------------
+function Bus_Get_idx(): Integer; CDECL;
+// BusIndex is Zero Based
+begin
+    Result := -1;   // Signifies Error
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+
+    Result := DSSPrime.ActiveCircuit.ActiveBusIndex - 1;
+    if (Result < 0) and (Result >= DSSPrime.ActiveCircuit.Numbuses) then
+    begin
+        Result := -1;
+    end;
 end;
 //------------------------------------------------------------------------------
 end.

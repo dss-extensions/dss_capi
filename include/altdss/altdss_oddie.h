@@ -1458,6 +1458,7 @@ ALTDSS_ODDIE_DLL void ctx_XYCurves_Set_y(const void* ctx, double Value);
 /* The following may need to be implemented and will give an error when called. */
 
 #ifndef ALTDSS_ODDIE_OMIT_NOT_IMPL
+ALTDSS_ODDIE_DLL int32_t ctx_Bus_Get_idx(const void* ctx);
 ALTDSS_ODDIE_DLL int32_t ctx_Bus_Get_Next(const void* ctx);
 ALTDSS_ODDIE_DLL int32_t ctx_Capacitors_Get_idx(const void* ctx);
 ALTDSS_ODDIE_DLL void ctx_Capacitors_Set_idx(const void* ctx, int32_t Value);

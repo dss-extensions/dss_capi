@@ -7591,6 +7591,13 @@ extern "C" {
     DSS_CAPI_DLL void WireData_Set_CapRadius(double Value);
 
     /*! 
+    Gets the index for the current active bus. Returns -1 if no active bus.
+    
+    (API Extension)
+    */
+    DSS_CAPI_DLL int32_t Bus_Get_idx(void);
+
+    /*! 
     Set the next bus as active. Returns -1 if no more buses, 0 otherwise.
     
     (API Extension)
