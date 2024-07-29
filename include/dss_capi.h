@@ -2210,8 +2210,9 @@ extern "C" {
     the dimension of the vector.
     For complex matrices, the sizes are referred to the number of complex elements, not the primary the float64 elements.
 
-    Defaults to False/0 in the 0.13.x versions of DSS C-API. 
-    This might change to true in future versions.
+    Defaults to true/1 starting in the 0.15.x versions of DSS C-API.
+
+    **Deprecated: this will be removed in a future version; be sure that `ResultDims` values can always accomodate 4 int32 values**
 
     (API Extension)
     */

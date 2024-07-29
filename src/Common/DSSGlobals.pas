@@ -138,7 +138,7 @@ VAR
     DSS_CAPI_EXT_ERRORS: Boolean = True;
     DSS_CAPI_ALLOW_CHANGE_DIR: Boolean = True;
     DSS_CAPI_COM_DEFAULTS: Boolean = True;
-    DSS_EXTENSIONS_ARRAY_DIMS: Boolean = False;
+    DSS_EXTENSIONS_ARRAY_DIMS: Boolean = True;
     DSS_EXTENSIONS_COMPAT: LongWord = 0;
     GlobalDefaultBaseFreq: Double = 60.0;
     CPU_Freq           : int64;   // Used to store the CPU performance counter frequency (not the actual CPU frequency)
