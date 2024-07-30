@@ -2249,7 +2249,7 @@ extern "C" {
     - In the enabled state (COMErrorResults=True), the function will return "[0.0]" instead. This should
       be compatible with the return value of the official COM interface.
     
-    Defaults to True/1 (enabled state) in the v0.13.x series. This will change to false in future series.
+    Defaults to false/0 (enabled state) since v0.15.x series. This will change to false in future series.
     
     This can also be set through the environment variable DSS_CAPI_COM_DEFAULTS. Setting it to 0 disables
     the legacy/COM behavior. The value can be toggled through the API at any time.

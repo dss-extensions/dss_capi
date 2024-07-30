@@ -26,6 +26,7 @@
 - CapControl: handle phase checks better in `PTPhase` and `CTPhase`.
 - API/Generators: port SVN r3746, "Fixing issue when updating kvar for generator in modes 4 and 5 through the generators interface" by davismont. Effectively, call `RecalcElementData` in `Generators_Set_kvar`.
 - Deprecated `DSS_Set_EnableArrayDimensions`. It will be removed in a future version, and all array size pointers will be required to be a 4-int32 array (current size, allocated size, and matrix rows/columns).
+- **`COMErrorResults` now defaults to false.** In case of errors, for array results, the behavior of the COM API was kept as the default for a number of functions, typically returning `[0]` or `[-1]` instead of an empty array. Since the recommendation has been to use the Error
 
 
 # Versions 0.14.x

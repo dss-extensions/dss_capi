@@ -787,9 +787,9 @@ initialization
     // Default is False, enable at initialization when DSS_CAPI_ALLOW_DOSCMD = 1
     DSS_CAPI_ALLOW_DOSCMD := (SysUtils.GetEnvironmentVariable('DSS_CAPI_ALLOW_DOSCMD') = '1');
 
-    // For the 0.12.x branch, default is True, disable at initialization when DSS_CAPI_COM_DEFAULTS = 0
-    DSS_CAPI_COM_DEFAULTS := (GetEnvironmentVariable('DSS_CAPI_COM_DEFAULTS') <> '0');;
-    // For the 0.12.x branch, default is True, disable at initialization when DSS_CAPI_ALLOW_CHANGE_DIR = 0
+    // For the 0.15.x branch and later, default is False, enable at initialization when DSS_CAPI_COM_DEFAULTS = 1
+    DSS_CAPI_COM_DEFAULTS := (GetEnvironmentVariable('DSS_CAPI_COM_DEFAULTS') = '1');;
+    // For the 0.15.x branch, default is True, disable at initialization when DSS_CAPI_ALLOW_CHANGE_DIR = 0
     DSS_CAPI_ALLOW_CHANGE_DIR := (SysUtils.GetEnvironmentVariable('DSS_CAPI_ALLOW_CHANGE_DIR') <> '0');
 
 try
