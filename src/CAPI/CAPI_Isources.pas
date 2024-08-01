@@ -1,4 +1,4 @@
-unit CAPI_ISources;
+unit CAPI_Isources;
 
 interface
 

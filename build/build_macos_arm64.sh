@@ -7,13 +7,15 @@ python3 src/classic_to_ctx.py
 
 export LDFLAGS=-L`pwd`/lib/darwin_arm64/
 
+FPC_FLAGS=
 if [[ "x${DSS_CAPI_BUILD_INC}" != "x1" ]]; then
     rm -rf build/units_arm64 build/units_arm64_dbg
+    FPC_FLAGS=-B
 fi
 
 if [[ "x${DSS_CAPI_BUILD_DBG}" != "x1" ]]; then
     mkdir -p build/units_arm64
-    fpc -Paarch64 @src/darwin-arm64.cfg -B src/dss_capi.lpr
+    fpc -Paarch64 @src/darwin-arm64.cfg ${FPC_FLAGS} src/dss_capi.lpr
     # Make the lib look in the same folder for KLUSolveX
     DSS_CAPI_LIB="lib/darwin_arm64/libdss_capi.dylib"
     CURRENT_LIBKLUSOLVE=`otool -L "$DSS_CAPI_LIB" | grep libklusolvex | cut -f 1 -d ' ' | sed $'s/^[ \t]*//'`
@@ -23,7 +25,7 @@ if [[ "x${DSS_CAPI_BUILD_DBG}" != "x1" ]]; then
 fi
 
 mkdir -p build/units_arm64_dbg
-fpc -Paarch64 @src/darwin-arm64-dbg.cfg -B src/dss_capid.lpr
+fpc -Paarch64 @src/darwin-arm64-dbg.cfg ${FPC_FLAGS} src/dss_capid.lpr
 
 # Make the lib look in the same folder for KLUSolveX
 DSS_CAPI_LIB="lib/darwin_arm64/libdss_capid.dylib"

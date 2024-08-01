@@ -6,17 +6,19 @@ set -e -x
 mkdir  -p lib/linux_arm64/
 python3 src/classic_to_ctx.py
 
+FPC_FLAGS=
 if [[ "x${DSS_CAPI_BUILD_INC}" != "x1" ]]; then
     rm -rf build/units_arm64 build/units_arm64_dbg
+    FPC_FLAGS=-B
 fi
 
 if [[ "x${DSS_CAPI_BUILD_DBG}" != "x1" ]]; then
     mkdir -p build/units_arm64
-    fpc @src/linux-arm64.cfg -B src/dss_capi.lpr
+    fpc @src/linux-arm64.cfg ${FPC_FLAGS} src/dss_capi.lpr
 fi
 
 mkdir -p build/units_arm64_dbg
-fpc @src/linux-arm64-dbg.cfg -B src/dss_capid.lpr
+fpc @src/linux-arm64-dbg.cfg ${FPC_FLAGS} src/dss_capid.lpr
 
 if [[ "x${DSS_CAPI_BUILD_DBG}" != "x1" ]]; then
     mkdir -p release/dss_capi/lib
