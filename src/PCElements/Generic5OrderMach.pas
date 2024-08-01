@@ -4,7 +4,10 @@ unit Generic5OrderMach;
 // Copyright (c) 2008-2023, Electric Power Research Institute, Inc.
 
 // **Heavily** modified (by Paulo Meira) for DSS-Extensions. 
-// The original file had a lot of leftover code from IndMach012.pas.
+// The original file had a lot of leftover code from IndMach012.pas,
+// and many of the DSS properties could mislead users. At the moment,
+// consider this component experimental, and it might be modified in
+// the future.
 
 // Original notice:
 // November 3, 2017
@@ -28,105 +31,89 @@ type
 {$SCOPEDENUMS ON}
     TGeneric5PropLegacy = (
         INVALID = 0,
-        phases = 1,
-        bus1 = 2,
-        kv = 3,
-        kW = 4,
-        pf = 5,
-        conn = 6,
-        kVA = 7,
-        H = 8,
-        D = 9,
-        P_ref1kW = 10,
-        P_ref2kW = 11,
-        P_ref3kW = 12,
-        V_ref1kVLN = 13,
-        V_ref2kVLN = 14,
-        V_ref3kVLN = 15,
-        MaxSlip = 16,
-        SlipOption = 17,
-        Yearly = 18,
-        Daily = 19,
-        Duty = 20,
-        Debugtrace = 21,
-        P_refkW = 22,
-        Q_refkVAr = 23,
-        Cluster_num = 24,
-        V_refkVLN = 25,
-        ctrl_mode = 26,
-        QV_flag = 27,
-        kcd = 28,
-        kcq = 29,
-        kqi = 30,
-        Q_ref1kVAr = 31,
-        Q_ref2kVAr = 32,
-        Q_ref3kVAr = 33,
-        PmaxkW = 34,
-        PminkW = 35,
-        PQpriority = 36,
-        PmppkW = 37,
-        Pfctr1 = 38,
-        Pfctr2 = 39,
-        Pfctr3 = 40,
-        Pfctr4 = 41,
-        Pfctr5 = 42,
-        Pfctr6 = 43,
-        PbiaskW = 44,
-        CC_Switch = 45,
-        kcq_drp2 = 46,
-        Volt_Trhd = 47,
-        droop = 48
+        phases,
+        bus1,
+        kv,
+        kW,
+        pf,
+        conn,
+        kVA,
+        P_ref1kW,
+        P_ref2kW,
+        P_ref3kW,
+        V_ref1kVLN,
+        V_ref2kVLN,
+        V_ref3kVLN,
+        P_refkW,
+        Q_refkVAr,
+        Cluster_num,
+        V_refkVLN,
+        ctrl_mode,
+        QV_flag,
+        kcd,
+        kcq,
+        kqi,
+        Q_ref1kVAr,
+        Q_ref2kVAr,
+        Q_ref3kVAr,
+        PmaxkW,
+        PminkW,
+        PQpriority,
+        PmppkW,
+        Pfctr1,
+        Pfctr2,
+        Pfctr3,
+        Pfctr4,
+        Pfctr5,
+        Pfctr6,
+        PbiaskW,
+        CC_Switch,
+        kcq_drp2,
+        Volt_Trhd,
+        droop
     );
     TGeneric5Prop = (
         INVALID = 0,
-        Phases = 1,
-        Bus1 = 2,
-        kV = 3,
-        kW = 4,
-        PF = 5,
-        Conn = 6,
-        kVA = 7,
-        H = 8,
-        D = 9,
-        P_Ref1kW = 10,
-        P_Ref2kW = 11,
-        P_Ref3kW = 12,
-        V_Ref1kVLN = 13,
-        V_Ref2kVLN = 14,
-        V_Ref3kVLN = 15,
-        MaxSlip = 16,
-        SlipOption = 17,
-        Yearly = 18,
-        Daily = 19,
-        Duty = 20,
-        Debugtrace = 21,
-        P_RefkW = 22,
-        Q_RefkVAr = 23,
-        Cluster_Num = 24,
-        V_refkVLN = 25,
-        Ctrl_Mode = 26,
-        QV_flag = 27,
-        kcd = 28,
-        kcq = 29,
-        kqi = 30,
-        Q_ref1kvar = 31,
-        Q_ref2kvar = 32,
-        Q_ref3kvar = 33,
-        PMaxkW = 34,
-        PMinkW = 35,
-        PQPriority = 36,
-        PmppkW = 37,
-        Pfctr1 = 38,
-        Pfctr2 = 39,
-        Pfctr3 = 40,
-        Pfctr4 = 41,
-        Pfctr5 = 42,
-        Pfctr6 = 43,
-        PbiaskW = 44,
-        CC_Switch = 45,
-        kcq_drp2 = 46,
-        Volt_Trhd = 47,
-        Droop = 48
+        Phases,
+        Bus1,
+        kV,
+        kW,
+        PF,
+        Conn,
+        kVA,
+        P_Ref1kW,
+        P_Ref2kW,
+        P_Ref3kW,
+        V_Ref1kVLN,
+        V_Ref2kVLN,
+        V_Ref3kVLN,
+        P_RefkW,
+        Q_RefkVAr,
+        Cluster_Num,
+        V_refkVLN,
+        Ctrl_Mode,
+        QV_flag,
+        kcd,
+        kcq,
+        kqi,
+        Q_ref1kvar,
+        Q_ref2kvar,
+        Q_ref3kvar,
+        PMaxkW,
+        PMinkW,
+        PQPriority,
+        PmppkW,
+        Pfctr1,
+        Pfctr2,
+        Pfctr3,
+        Pfctr4,
+        Pfctr5,
+        Pfctr6,
+        PbiaskW,
+        CC_Switch,
+        kcq_drp2,
+        Volt_Trhd,
+        Droop
     );
 
     TGeneric5Variable = (
@@ -206,7 +193,7 @@ type
         Amm: pdoubleArray;
         Bmn: pdoubleArray;
 
-        InDynamics: Boolean;
+        // InDynamics: Boolean; // NOTE: commented since it's not used
         Is1, Ir1, V1, // Keep the last computed voltages and currents
         Is2, Ir2, V2: Complex;
 
@@ -272,7 +259,7 @@ type
         kVGeneratorBase: Double;
         // Pnominalperphase, Qnominalperphase: Double;
 
-        MachineON: Boolean;
+        // MachineON: Boolean; NOTE: this was left unmodified and was also not initialized, so left as "false". Commented the "true" branches in the code
         // ShapeFactor: Complex;
         // ShapeIsActual: Boolean;
 
@@ -354,8 +341,6 @@ type
         procedure IntegrateStates(); OVERRIDE;
         procedure InitHarmonics(); OVERRIDE;
         procedure MakePosSequence(); OVERRIDE;
-        
-        function GetPropertyValue(Index: Integer): String; OVERRIDE;
     end;
 
 implementation
@@ -412,6 +397,11 @@ end;
 destructor TGeneric5.Destroy;
 begin
     inherited Destroy;
+end;
+
+function getPF(obj: TObj): Double;
+begin
+    Result := PowerFactor(obj.Power[1]);
 end;
 
 procedure TGeneric5.DefineProperties();
@@ -521,6 +511,12 @@ begin
 
     PropertyType[ord(TProp.Droop)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.Droop)] := ptruint(@obj.Droop);
+
+    // double
+    PropertyType[ord(TProp.PF)] := TPropertyType.DoubleProperty;
+    PropertyOffset[ord(TProp.PF)] := 1;  // dummy
+    PropertyFlags[ord(TProp.PF)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.SilentReadOnly];
+    PropertyReadFunction[ord(TProp.PF)] := @getPF;
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;
@@ -671,7 +667,7 @@ begin
     kVGeneratorBase := 12.47;
 
     kVArating := WBase * 1.2e-3;
-    InDynamics := false;
+    // InDynamics := false;
 
     // A, B, X_var, V_in_var matrix
     ReAllocMem(Amm, nOrder * nOrder * Sizeof(Double));// dot X = Ax +Bu
@@ -1304,7 +1300,7 @@ begin
             0:
             begin
                 vl_V := V_DG; //0 seq    , will be used in FMonObj.Agnt_smpl
-                vl_P_DG := P_DG;
+                // vl_P_DG := P_DG;
                 vl_Q_DG := Q_DG;
                 alpha := Q_DG / Qmax;
                 vl_alpha_dg := alpha; // update first, will be used in FMonObj.Agnt_smpl
@@ -1338,11 +1334,11 @@ begin
         vl_Qmax_phase_dg := Qmax_Phase;
         vl_Pmax_dg := Pmax;
         vl_Pmax_phase_dg := Pmax_Phase;
-        vl_CC_switch_dg := CC_switch;
-        vl_QV_flag_dg := QV_flag;
+        // vl_CC_switch_dg := CC_switch;
+        // vl_QV_flag_dg := QV_flag;
         vl_kcd_dg := kcd;
         vl_kcq_dg := kcq;
-        vl_volt_thrd_dg := Volt_Trhd;
+        // vl_volt_thrd_dg := Volt_Trhd;
     end;
 end;
 
@@ -1394,7 +1390,7 @@ begin
     if ctrl_mode <> 0 then
         Exit;
 
-    InDynamics := true;
+    // InDynamics := true;
     V1 := V012[1]; // Save for variable calcs
     V2 := V012[2];
 
@@ -1501,7 +1497,7 @@ begin
     if fnphases = 3 then
     begin
         //3-phase ctrl
-        InDynamics := true;
+        // InDynamics := true;
         tempV1 := Vabc[1]; // Save for variable calcs
         tempV2 := Vabc[2];
         tempV3 := Vabc[3];
@@ -1559,7 +1555,7 @@ begin
     if fnphases = 1 then
     begin
         //1-phase ctrl
-        InDynamics := true;
+        // InDynamics := true;
         tempV1 := Vabc[1]; // Save for variable calcs
 
         V_DG1 := cabs(tempV1);
@@ -1605,7 +1601,7 @@ begin
     V2 := V012[2];
     if cabs(V1) = 0.0 then
         V1 := 1; //in Case the first step
-    InDynamics := false;
+    // InDynamics := false;
     // Guess at a new var output value
     V_DG := cabs(V1);
     Theta_DG := cang(V1);
@@ -1667,13 +1663,13 @@ var
     Curr2,
     Curr3: Complex;
     temp_pref, temp_qref, temp_vref, temp_alpha: Double;
-    flmt: Double;
+    // flmt: Double;
     p_mode: Integer;
 begin
     temp_qref := 0.0;
     temp_pref := 0.0;
     temp_alpha := 0.0;
-    flmt := 0.9;
+    // flmt := 0.9;
     Update_Pqlimits(); //  Pmax_phase, Qmax_phase will be used in the following steps
     update_pV_f_CC_M2();  
     // pV_f_CC, updated from virtual leader
@@ -1805,7 +1801,7 @@ begin
     if fnphases = 3 then
     begin
         //3-phase ctrl
-        InDynamics := false;
+        // InDynamics := false;
 
         //if (P_Mode = 1) and  then
         //real power control
@@ -1940,7 +1936,7 @@ begin
         V_DG2 := V_DG1; // Save for variable calcs, just in case of other use
         V_DG3 := V_DG1;
 
-        InDynamics := false;
+        // InDynamics := false;
         // Guess at a new var output value
         case ctrl_mode of
             1:
@@ -2054,7 +2050,7 @@ end;
 
 procedure TGeneric5Obj.InitStateVars();
 var
-    i: Integer;
+    // i: Integer;
     V012,
     I012: TSymCompArray;
     Vabc: array[1..3] of Complex;
@@ -2064,31 +2060,31 @@ begin
 
     // Compute nominal Positive sequence voltage behind transient reactance
 
-    if MachineON then
-    begin
-        Yeq := Cinv(Zsp);
-        ComputeIterminal();
-        case Fnphases of
-            1:
-            begin
-                for i := 1 to FNphases do
-                    Vabc[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]] // Wye Voltage
-            end;
-            3:
-            begin
-                // Calculate E1 based on Pos Seq only
-                Phase2SymComp(ITerminal, pComplexArray(@I012));   // terminal currents
+    // if MachineON then
+    // begin
+    //     Yeq := Cinv(Zsp);
+    //     ComputeIterminal();
+    //     case Fnphases of
+    //         1:
+    //         begin
+    //             for i := 1 to FNphases do
+    //                 Vabc[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]] // Wye Voltage
+    //         end;
+    //         3:
+    //         begin
+    //             // Calculate E1 based on Pos Seq only
+    //             Phase2SymComp(ITerminal, pComplexArray(@I012));   // terminal currents
 
-                // Voltage behind Zsp  (transient reactance), volts
-                for i := 1 to FNphases do
-                    Vabc[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]]; // Wye Voltage
-                Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
-            end;
-        else
-            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Motors. %s has %d phases.', [FullName, Fnphases], 5672);
-            DSS.SolutionAbort := TRUE;
-        end;
-    end;
+    //             // Voltage behind Zsp  (transient reactance), volts
+    //             for i := 1 to FNphases do
+    //                 Vabc[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]]; // Wye Voltage
+    //             Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
+    //         end;
+    //     else
+    //         DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Motors. %s has %d phases.', [FullName, Fnphases], 5672);
+    //         DSS.SolutionAbort := TRUE;
+    //     end;
+    // end;
 
     /// from here, let us deal with ctrl_mode and everything  related to control
 
@@ -2151,10 +2147,10 @@ begin
     if ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel then
     // for Dynamics and Harmonics modes use constant equivalent Y
     begin
-        if MachineON then
-            Y := Yeq // L-N value computed in initial condition routines
-        else
-            Y := Cmplx(EPSILON, 0.0);
+        // if MachineON then
+        //     Y := Yeq // L-N value computed in initial condition routines
+        // else
+        Y := Cmplx(EPSILON, 0.0);
 
         if Connection = TGeneralConnection.Delta then
             Y := Y / 3.0; // Convert to delta impedance
@@ -2380,17 +2376,6 @@ end;
 procedure TGeneric5Obj.InitHarmonics;
 begin
     YPrimInvalid := true; // Force rebuild of YPrims
-end;
-
-function TGeneric5Obj.GetPropertyValue(Index: Integer): String;
-// Return i-th property value as a string
-begin
-    if Index = ord(TProp.PF) then
-    begin
-        Result := Format('%.6g', [PowerFactor(Power[1])]);
-        Exit;
-    end;
-    Result := inherited GetPropertyValue(Index);
 end;
 
 procedure TGeneric5Obj.IntegrateStates();

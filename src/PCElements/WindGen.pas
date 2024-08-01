@@ -233,11 +233,11 @@ type
         Yeq105: Complex; // at 105%
 
         Edp: Complex;
-        PhaseCurrentLimit: Complex;
+        // PhaseCurrentLimit: Complex;
 
         FForcedON: Boolean;
         FirstSampleAfterReset: Boolean;
-        GenFundamental: Double; // Thevinen equivalent voltage mag and angle reference for Harmonic model
+        // GenFundamental: Double; // Thevinen equivalent voltage mag and angle reference for Harmonic model
         GenON: Boolean; // Indicates whether WindGen is currently on
         GenSwitchOpen: Boolean;
         kVANotSet: Boolean;
@@ -2023,10 +2023,7 @@ end;
 
 function TWindGenObj.Get_Variable(i: Integer): Double;
 // Return variables one at a time
-var
-    N, k: Integer;
 begin
-    N := 0;
     Result := -9999.99; // error return value
     if i < 1 then
     begin
@@ -2095,10 +2092,7 @@ begin
 end;
 
 procedure TWindGenObj.Set_Variable(i: Integer; Value: Double);
-var
-    N: Integer;
 begin
-    N := 0;
     if i < 1 then
     begin
         DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
@@ -2168,13 +2162,6 @@ begin
 end;
 
 function TWindGenObj.VariableName(i: Integer): String;
-const
-    BuffSize = 255;
-var
-    n,
-    i2: Integer;
-    Buff: array[0..BuffSize] of Ansichar;
-    pName: Pansichar;
 begin
     Result := 'ERROR';
     if i < 1 then
@@ -2186,7 +2173,6 @@ begin
         Exit;
 
     // Fallback to the classic
-    n := 0;
     if (i > 0) and (i <= NumWGenVariables) then
     begin
         Result := TWindGen(ParentClass).varNames[i - 1];

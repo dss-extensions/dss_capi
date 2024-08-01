@@ -170,7 +170,7 @@ type
     
     TPropertyFlag = (
         CustomSet, // Implemented only for a few types -- parse and pass value to the object.
-        CustomSetRaw, // Only for some LoadShape props -- pass string instead of parsing first.
+        CustomSetRaw, // Only for some LoadShape props, and FMonitor -- pass string instead of parsing first.
         CustomGet,
         IsFilename, // for strings
         IgnoreInvalid,

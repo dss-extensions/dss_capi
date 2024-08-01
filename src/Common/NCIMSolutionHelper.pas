@@ -181,8 +181,8 @@ var
     Curr: Complex;
     Vmag,
     VError,
-    den,
-    myVal: Double;
+    den: Double;
+    // myVal: Double;
     GCoord,
     GCoordY: Integer;
 
@@ -252,7 +252,7 @@ var
     Temp,
     Curr,
     Vc2: Complex;
-    j,
+    // j,
     GCoord: Integer;
 const
     LCoords: array [0..3] of array [0..1] of Integer = ((0, 0), (1, 1), (0, 1), (1, 0));
@@ -376,7 +376,7 @@ procedure TNCIMSolutionHelper.NCIM_DoForceFlatStart();
 // Forces the voltage vector to a flat start (magnitude only).
 var
     TempPolar: polar;
-    BaseAng,
+    // BaseAng,
     mykVBase: Double;
     i,
     SlackNumNodes,
@@ -408,7 +408,7 @@ begin
     // Now add the slack bus data
     pElem := DSS.ActiveCircuit.CktElements.First();
     TempPolar.mag := ((pElem.kVBase * 1e3) / SQRT3) * pElem.PerUnit;
-    BaseAng := pElem.Angle * Pi / 180;
+    // BaseAng := pElem.Angle * Pi / 180;
     for i := 1 to 3 do
     begin
         TempPolar.ang := ((pElem.Angle * Pi) / 180) + myAng[i - 1];
@@ -481,7 +481,7 @@ end;
 function TNCIMSolutionHelper.NCIM_Init(InitY: Boolean): Integer;
 // Hosts all the initialization routines for NCIM
 var
-    i: Integer;
+    // i: Integer;
     NNodes: Longword;
 begin
     with DSS.ActiveCircuit do
@@ -519,13 +519,6 @@ procedure TNCIMSolutionHelper.NCIM_LoadYBus();
 var
     NBus,
     nNZ: Longword;
-    ColPtr,
-    RowIdx: array of Integer;
-    cVals: array of Complex;
-    re,
-    im: Double;
-    col,
-    Row: Nativeuint;
 begin
     if hY = 0 then
     begin
@@ -550,7 +543,7 @@ procedure TNCIMSolutionHelper.NCIM_CalcInjCurr(NCIM_InitGenQ: Boolean);
 // Calculates the injection currents based on the voltages at the nodes using
 // I = YE, this is later used for estimating the convergence in terms of power
 var
-    NBus: Longint;
+    // NBus: Longint;
     myvalue: Complex;
     i,
     GSize: Integer;
@@ -708,8 +701,8 @@ var
     myPVOK,
     isPQOK: Boolean;
     qNodeRef,
-    qNodeRefPQ,
-    IdxTmp: array of Integer;
+    qNodeRefPQ: array of Integer;
+    // IdxTmp: array of Integer;
     PQChecked: array of Integer;
 begin
     if DSS.ActiveCircuit.Generators.Count = 0 then
