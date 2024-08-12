@@ -425,7 +425,7 @@ type
 
     TDSSClass = class(TObject)
     type 
-        THashListType = {$IFDEF DSS_CAPI_HASHLIST}TAltHashList;{$ELSE}THashList;{$ENDIF}
+        THashListType = TAltHashList;
      private
 
         procedure Set_Active(value:Integer);
