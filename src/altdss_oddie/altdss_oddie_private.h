@@ -50,6 +50,8 @@ typedef struct
     int32_t GR_Counts_PInteger[4];
     int32_t GR_Counts_PByte[4];
 
+    uint32_t compat_flags;
+
     oddie_void_void_func_t GetPCInjCurr;
     oddie_void_void_func_t GetSourceInjCurrents;
     oddie_void_void_func_t ZeroInjCurr;

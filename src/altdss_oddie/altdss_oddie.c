@@ -30,6 +30,10 @@ enum ControlActions {
     CTRL_TAP_DOWN = 7
 };
 
+enum DSSCompatFlags {
+    DSSCompatFlags_MonitorHeader = 0x80
+};
+
 static const void* ctxPrime = NULL;
 static const char* ODDIE_LIB_NAME = NULL;
 #ifdef WIN32
@@ -91,6 +95,7 @@ ALTDSS_ODDIE_DLL void* ctx_New(void)
     {
         return NULL;
     }
+    ctx->compat_flags = 0;
 
 #ifdef WIN32
     ctx->dll_handle = LoadLibraryEx(ODDIE_LIB_NAME != NULL ? ODDIE_LIB_NAME : "OpenDSSDirect.dll", NULL, ODDIE_LIB_OPTIONS);
@@ -795,6 +800,26 @@ ALTDSS_ODDIE_DLL void ctx_Text_CommandArray(const void* ctx, const char** ValueP
     {
         strncpy(((OddieContext*) ctx)->char_buffer, output, DSS_STR_BUFFER_NUM_CHR);
     }
+}
+
+ALTDSS_ODDIE_DLL uint32_t ctx_DSS_Get_CompatFlags(const void* ctx)
+{
+    CTX_OR_PRIME
+    return ((OddieContext*) ctx)->compat_flags;
+}
+
+ALTDSS_ODDIE_DLL void ctx_DSS_Set_CompatFlags(const void* ctx, uint32_t Value)
+{
+    CTX_OR_PRIME
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+
+    if (Value && Value != DSSCompatFlags_MonitorHeader)
+    {
+        oddie_ctx->error_number = 32;
+        ctx_Error_Set_Description(ctx, "(Oddie) ERROR: only the MonitorHeader flag is allowed with Oddie.");
+        return;
+    }
+    oddie_ctx->compat_flags = Value;
 }
 
 ALTDSS_ODDIE_DLL void ctx_Text_CommandBlock(const void* ctx, const char* Value)
@@ -7371,7 +7396,19 @@ ALTDSS_ODDIE_DLL int32_t ctx_Monitors_Get_First(const void* ctx)
 ALTDSS_ODDIE_DLL void ctx_Monitors_Get_Header(const void* ctx, char*** ResultPtr, int32_t* ResultDims)
 {
     CTX_OR_PRIME
-    oddie_vararray_stringarray_func((OddieContext*) ctx, ((OddieContext*) ctx)->MonitorsV, 2, ResultPtr, ResultDims, NULL);
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    char* s;
+    oddie_vararray_stringarray_func(oddie_ctx, ((OddieContext*) ctx)->MonitorsV, 2, ResultPtr, ResultDims, NULL);
+
+    if ((!(oddie_ctx->compat_flags & DSSCompatFlags_MonitorHeader)) && (ResultDims[0] > 0))
+    {
+        s = (*ResultPtr)[0];
+        while (*s == ' ')
+        {
+            ++s;
+        }
+        (*ResultPtr)[0] = s; // no need to copy/reallocate in the current implementation
+    }
 }
 
 ALTDSS_ODDIE_DLL int32_t ctx_Monitors_Get_Mode(const void* ctx)
@@ -12354,13 +12391,6 @@ ALTDSS_ODDIE_DLL uint16_t ctx_DSS_Get_COMErrorResults(const void* ctx)
     return 0;
 }
 
-ALTDSS_ODDIE_DLL uint32_t ctx_DSS_Get_CompatFlags(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "DSS_Get_CompatFlags");
-    return 0;
-}
-
 ALTDSS_ODDIE_DLL uint16_t ctx_DSS_Get_EnableArrayDimensions(const void* ctx)
 {
     CTX_OR_PRIME
@@ -12379,12 +12409,6 @@ ALTDSS_ODDIE_DLL void ctx_DSS_Set_COMErrorResults(const void* ctx, uint16_t Valu
 {
     CTX_OR_PRIME
     oddie_error_not_implemented((OddieContext*) ctx, "DSS_Set_COMErrorResults");
-}
-
-ALTDSS_ODDIE_DLL void ctx_DSS_Set_CompatFlags(const void* ctx, uint32_t Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "DSS_Set_CompatFlags");
 }
 
 ALTDSS_ODDIE_DLL void ctx_DSS_Set_EnableArrayDimensions(const void* ctx, uint16_t Value)
