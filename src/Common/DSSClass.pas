@@ -52,7 +52,8 @@ type
         SaveCalcVoltageBases = 8,
         ActiveLine = 16,
         NoPropertyTracking = 32,
-        SkipSideEffects = 64
+        SkipSideEffects = 64,
+        MonitorHeader = 128
     );
 
     DSSSaveFlag = (

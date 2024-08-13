@@ -690,7 +690,26 @@ var
     IsPower: Boolean;
     NumVI: Integer;
     tr: TControlledTransformerObj;
+    compatSpace: Boolean;
+    addSpace: Boolean;
+
+    procedure addHeaderColumn(s: String; addNext: Boolean = true; trailing: Boolean = false);
+    // Handle compatibility of extra empty spaces with the official version
+    begin
+        if addSpace then
+        begin
+            if trailing then
+                s := ' ' + s + ' '
+            else
+                s := ' ' + s;
+        end;
+        Header.Add(s);
+        addSpace := compatSpace and addNext;
+    end;
+
 begin
+    compatSpace := (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.MonitorHeader)) <> 0;
+    addSpace := false;
     try
         MonitorStream.Clear;
         Header.Clear;
@@ -700,13 +719,13 @@ begin
         
         if ActiveCircuit.Solution.IsHarmonicModel then
         begin
-            Header.Add('Freq');
-            Header.Add('Harmonic');
+            addHeaderColumn('Freq');
+            addHeaderColumn('Harmonic');
         end
         else
         begin
-            Header.Add('hour');
-            Header.Add('t(sec)');
+            addHeaderColumn('hour');
+            addHeaderColumn('t(sec)');
         end;
 
         case (Mode and MODEMASK) of
@@ -714,53 +733,65 @@ begin
             2:
             begin
                 RecordSize := 1; // Transformer Taps
-                Header.Add('Tap (pu)');
+                addHeaderColumn('Tap (pu)', false);
             end;
             3:
             begin
                 RecordSize := Length(StateBuffer); // Statevariabes
                 for i := 1 to RecordSize do
-                    Header.Add(TpcElement(MeteredElement).VariableName(i));
+                    addHeaderColumn(TpcElement(MeteredElement).VariableName(i), false);
+
+                addSpace := false;
+                if compatSpace then
+                    Header.Add(''); // empty "column" for compatibility (trailing comma)
             end;
             4:
             begin
                 RecordSize := 2 * FnPhases;
                 for i := 1 to FnPhases do
                 begin
-                    Header.Add('Flk' + IntToStr(i));
-                    Header.Add('Pst' + IntToStr(i));
+                    addHeaderColumn('Flk' + IntToStr(i));
+                    addHeaderColumn('Pst' + IntToStr(i), (i < FnPhases));
                 end;
             end;
             5:
             begin
                 RecordSize := NumSolutionVars;
-                Header.Add('TotalIterations');
-                Header.Add('ControlIteration');
-                Header.Add('MaxIterations');
-                Header.Add('MaxControlIterations');
-                Header.Add('Converged');
-                Header.Add('IntervalHrs');
-                Header.Add('SolutionCount');
-                Header.Add('Mode');
-                Header.Add('Frequency');
-                Header.Add('Year');
-                Header.Add('SolveSnap_uSecs');
-                Header.Add('TimeStep_uSecs');
+                addHeaderColumn('TotalIterations');
+                addHeaderColumn('ControlIteration');
+                addHeaderColumn('MaxIterations');
+                addHeaderColumn('MaxControlIterations');
+                addHeaderColumn('Converged');
+                addHeaderColumn('IntervalHrs');
+                addHeaderColumn('SolutionCount');
+                addHeaderColumn('Mode');
+                addHeaderColumn('Frequency');
+                addHeaderColumn('Year');
+                addHeaderColumn('SolveSnap_uSecs');
+                addHeaderColumn('TimeStep_uSecs', false);
+
+                addSpace := false;
+                if compatSpace then
+                    Header.Add(''); // empty "column" for compatibility (trailing comma)
             end;
             6:
             begin
                 RecordSize := TCapacitorObj(MeteredElement).NumSteps;     // Capacitor Taps
                 for i := 1 to RecordSize do
                     Header.Add('Step_' + inttostr(i));
+
+                addSpace := false;
+                if compatSpace then
+                    Header.Add(''); // empty "column" for compatibility (trailing comma)
             end;
             7:
             begin
                 RecordSize := 5;     // Storage state vars
-                Header.Add('kW output');
-                Header.Add('kvar output');
-                Header.Add('kW Stored');
-                Header.Add('%kW Stored');
-                Header.Add('State');
+                addHeaderColumn('kW output');
+                addHeaderColumn('kvar output');
+                addHeaderColumn('kW Stored');
+                addHeaderColumn('%kW Stored');
+                addHeaderColumn('State');
             end;
             8:
             begin   // All winding Currents
@@ -769,15 +800,15 @@ begin
                 for i := 1 to tr.Nphases do
                     for j := 1 to tr.NumWindings do
                     begin
-                        Header.Add(Format('P%dW%d', [i, j]));
-                        Header.Add('Deg');
+                        addHeaderColumn(Format('P%dW%d', [i, j]), false);
+                        addHeaderColumn('Deg');
                     end;
             end;
             9:
             begin // watts vars of meteredElement
                 RecordSize := 2;
-                Header.Add('watts');
-                Header.Add('vars');
+                addHeaderColumn('watts');
+                addHeaderColumn('vars', false);
             end;
             10:
             begin // All Winding Voltages
@@ -786,8 +817,8 @@ begin
                 for i := 1 to tr.Nphases do
                     for j := 1 to tr.NumWindings do
                     begin
-                        Header.Add(Format('P%dW%d', [i, j]));
-                        Header.Add('Deg');
+                        addHeaderColumn(Format('P%dW%d', [i, j]), false);
+                        addHeaderColumn('Deg');
                     end;
             end;
             11: // All terminal voltages and currents  *****
@@ -798,16 +829,16 @@ begin
                 for j := 1 to MeteredElement.NTerms do
                     for i := 1 to MeteredElement.NConds do
                     begin
-                        Header.Add(Format('V%dT%d', [i, j]));
-                        Header.Add('Deg');
+                        addHeaderColumn(Format('V%dT%d', [i, j]), false);
+                        addHeaderColumn('Deg');
                     end;
 
                 // Currents
                 for j := 1 to MeteredElement.NTerms do
                     for i := 1 to MeteredElement.NConds do
                     begin
-                        Header.Add(Format('I%dT%d', [i, j]));
-                        Header.Add('Deg');
+                        addHeaderColumn(Format('I%dT%d', [i, j]), false);
+                        addHeaderColumn('Deg');
                     end;
             end;
             12: // All terminal voltages LL and currents  *****
@@ -825,16 +856,16 @@ begin
                 for j := 1 to MeteredElement.NTerms do
                     for i := 1 to MeteredElement.NPhases do
                     begin
-                        Header.Add(Format('V%d-%dT%d', [PhaseLoc[i-1], PhaseLoc[i], j]));
-                        Header.Add('Deg');
+                        addHeaderColumn(Format('V%d-%dT%d', [PhaseLoc[i-1], PhaseLoc[i], j]), false);
+                        addHeaderColumn('Deg');
                     end;
 
                 // Currents
                 for j := 1 to MeteredElement.NTerms do
                     for i := 1 to MeteredElement.NConds do
                     begin
-                        Header.Add(Format('I%dT%d', [i, j]));
-                        Header.Add('Deg');
+                        addHeaderColumn(Format('I%dT%d', [i, j]), false);
+                        addHeaderColumn('Deg');
                     end;
             end
         else
@@ -871,13 +902,13 @@ begin
                         if IncludeResidual then
                             Inc(RecordSize, 2);
                         for i := 1 to NumVI do
-                            Header.Add(Format('|V|%d (volts)', [i]));
+                            addHeaderColumn(Format('|V|%d (volts)', [i]));
 
                         if IncludeResidual then
-                            Header.Add('|VN| (volts)');
+                            addHeaderColumn('|VN| (volts)');
 
                         for i := 1 to NumVI do
-                            Header.Add('|I|' + IntToStr(i) + ' (amps)');
+                            addHeaderColumn('|I|' + IntToStr(i) + ' (amps)', (i < NumVI));
 
                         if IncludeResidual then
                             Header.Add('|IN| (amps)');
@@ -887,9 +918,9 @@ begin
                         for i := 1 to NumVI do
                         begin
                             if PPolar then
-                                Header.Add('S' + IntToStr(i) + ' (kVA)')
+                                addHeaderColumn('S' + IntToStr(i) + ' (kVA)', (i < NumVI))
                             else
-                                Header.Add('P' + IntToStr(i) + ' (kW)');
+                                addHeaderColumn('P' + IntToStr(i) + ' (kW)', (i < NumVI));
                         end;
                     end;
                 end;
@@ -901,30 +932,30 @@ begin
                         RecordSize := RecordSize + 2;
                         if VIPolar then
                         begin
-                            Header.Add('V1');
-                            Header.Add('V1ang');
-                            Header.Add('I1');
-                            Header.Add('I1ang');
+                            addHeaderColumn('V1');
+                            addHeaderColumn('V1ang');
+                            addHeaderColumn('I1');
+                            addHeaderColumn('I1ang', false);
                         end
                         else
                         begin
-                            Header.Add('V1.re');
-                            Header.Add('V1.im');
-                            Header.Add('I1.re');
-                            Header.Add('I1.im');
+                            addHeaderColumn('V1.re');
+                            addHeaderColumn('V1.im');
+                            addHeaderColumn('I1.re');
+                            addHeaderColumn('I1.im', false);
                         end;
                     end
                     else
                     begin
                         if Ppolar then
                         begin
-                            Header.Add('S1 (kVA)');
-                            Header.Add('Ang');
+                            addHeaderColumn('S1 (kVA)');
+                            addHeaderColumn('Ang', false, true);
                         end
                         else
                         begin
-                            Header.Add('P1 (kW)');
-                            Header.Add('Q1 (kvar)');
+                            addHeaderColumn('P1 (kW)');
+                            addHeaderColumn('Q1 (kvar)', false);
                         end;
                     end;
                 end;
@@ -934,15 +965,15 @@ begin
                     if not IsPower then
                     begin
                         RecordSize := RecordSize + 1;
-                        Header.Add('V');
-                        Header.Add('I');
+                        addHeaderColumn('V');
+                        addHeaderColumn('I', false, true);
                     end
                     else
                     begin  // Power
                         if Ppolar then
-                            Header.Add('S1 (kVA)')
+                            addHeaderColumn('S1 (kVA)', false)
                         else
-                            Header.Add('P1 (kW)');
+                            addHeaderColumn('P1 (kW)', false);
                     end;
                 end;
 
@@ -967,52 +998,53 @@ begin
                     begin
                         if VIPolar then
                         begin
-                            Header.Add('V' + IntToStr(i));
-                            Header.Add('VAngle' + IntToStr(i));
+                            addHeaderColumn('V' + IntToStr(i));
+                            addHeaderColumn('VAngle' + IntToStr(i));
                         end
                         else
                         begin
-                            Header.Add('V' + IntToStr(i) + '.re');
-                            Header.Add('V' + IntToStr(i) + '.im');
+                            addHeaderColumn('V' + IntToStr(i) + '.re');
+                            addHeaderColumn('V' + IntToStr(i) + '.im');
                         end;
                     end;
                     if IncludeResidual then
                     begin
                         if VIPolar then
                         begin
-                            Header.Add('VN');
-                            Header.Add('VNAngle');
+                            addHeaderColumn('VN');
+                            addHeaderColumn('VNAngle');
                         end
                         else
                         begin
-                            Header.Add('VN.re');
-                            Header.Add('VN.im');
+                            addHeaderColumn('VN.re');
+                            addHeaderColumn('VN.im');
                         end;
                     end;
                     for i := iMin to iMax do
                     begin
                         if VIPolar then
                         begin
-                            Header.Add('I' + IntToStr(i));
-                            Header.Add('IAngle' + IntToStr(i));
+                            addHeaderColumn('I' + IntToStr(i));
+                            addHeaderColumn('IAngle' + IntToStr(i), (i < NumVI));
                         end
                         else
                         begin
-                            Header.Add('I' + IntToStr(i) + '.re');
-                            Header.Add('I' + IntToStr(i) + '.im');
+                            addHeaderColumn('I' + IntToStr(i) + '.re');
+                            addHeaderColumn('I' + IntToStr(i) + '.im', (i < NumVI));
                         end;
                     end;
                     if IncludeResidual then
                     begin
+                        addSpace := true;
                         if VIPolar then
                         begin
-                            Header.Add('IN');
-                            Header.Add('INAngle');
+                            addHeaderColumn('IN');
+                            addHeaderColumn('INAngle', false);
                         end
                         else
                         begin
-                            Header.Add('IN.re');
-                            Header.Add('IN.im');
+                            addHeaderColumn('IN.re');
+                            addHeaderColumn('IN.im', false);
                         end;
                     end;
                 end
@@ -1032,13 +1064,13 @@ begin
                     begin
                         if Ppolar then
                         begin
-                            Header.Add('S' + IntToStr(i) + ' (kVA)');
-                            Header.Add('Ang' + IntToStr(i));
+                            addHeaderColumn('S' + IntToStr(i) + ' (kVA)');
+                            addHeaderColumn('Ang' + IntToStr(i), (i < NumVI));
                         end
                         else
                         begin
-                            Header.Add('P' + IntToStr(i) + ' (kW)');
-                            Header.Add('Q' + IntToStr(i) + ' (kvar)');
+                            addHeaderColumn('P' + IntToStr(i) + ' (kW)');
+                            addHeaderColumn('Q' + IntToStr(i) + ' (kvar)', (i < NumVI));
                         end;
                     end;
                 end;
@@ -1046,6 +1078,8 @@ begin
         end;
         end; // CASE
 
+        if compatSpace and addSpace then
+            Header.Add(' ');
 
         // RecordSize is the number of singles in the sample (after the hour and sec)
 
