@@ -53,7 +53,8 @@ type
         ActiveLine = 16,
         NoPropertyTracking = 32,
         SkipSideEffects = 64,
-        MonitorHeader = 128
+        MonitorHeader = 128,
+        InvControlDeltaV = 256
     );
 
     DSSSaveFlag = (

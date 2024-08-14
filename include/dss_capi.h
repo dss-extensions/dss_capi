@@ -505,7 +505,7 @@ extern "C" {
             and will be further developed for future versions.
         */
 
-       DSSCompatFlags_SkipSideEffects = 0x00000040 /*!< 
+       DSSCompatFlags_SkipSideEffects = 0x00000040, /*!< 
             Some specific functions on the official OpenDSS APIs and internal code skip important side-effects.
             By default, on DSS-Extensions/AltDSS, those side-effects are enabled. Use this flag
             to try to follow the behavior of the official APIs. Beware that some side-effects are
@@ -514,7 +514,7 @@ extern "C" {
             as well as the behavior of some DSS properties (Line: Rg, Xg, rho, Transformer/AutoTrans: XscArray).
         */
 
-       DSSCompatFlags_MonitorHeader = 0x00000080 /*!< 
+       DSSCompatFlags_MonitorHeader = 0x00000080, /*!< 
             Add extra spaces (and trailing comma) to the monitor headers to match the official OpenDSS implementation.
             This affects both the Header function/property in the API, and the exported CSVs.
 
@@ -522,6 +522,14 @@ extern "C" {
             an extra empty column for monitor exports, and keeps the spaces in the column names.
             This typically requires extra steps to both remove the spaces in the column names, and 
             discard the extra column.
+        */
+
+        DSSCompatFlags_InvControlDeltaV = 0x00000100 /*!<
+            An issue with the voltage delta across iterations was found and fixed in AltDSS/DSS C-API 0.15.0.
+            Use this flag to restore the previous behavior, which also matches the official OpenDSS.
+
+            The issue affects situations where an InvControl object tracks multiple DERs, while using one of the volt-var modes.
+            It is not always apparent and does not always affect the end results.
         */
     };
 

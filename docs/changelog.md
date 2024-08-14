@@ -24,10 +24,16 @@
 
 - Introduce a new subproject: **AltDSS Oddie**. Oddie wraps the official OpenDSS binaries (i.e. the official OpenDSS Engine), exposing them with the same API as AltDSS/DSS C-API. There is, Oddie is a thing compatibility layer that allows consuming EPRI's OpenDSSDirect.DLL (and in the future `libOpenDSSDirect.so` on Linux etc.) through the projects on DSS-Extensions downstream to AltDSS/DSS C-API. Check its [README](https://github.com/dss-extensions/dss_capi/blob/master/src/altdss_oddie/README.md) for some more info.
 - CapControl: handle phase checks better in `PTPhase` and `CTPhase`.
+- InvControl: 
+    - When multiple InvControl objects and DERs are in the circuit, use the correct base voltage for each DER. 
+    - Fix voltage change calcs across iterations; see the compatibility flag `InvControlDeltaV`.
 - API/Generators: port SVN r3746, "Fixing issue when updating kvar for generator in modes 4 and 5 through the generators interface" by davismont. Effectively, call `RecalcElementData` in `Generators_Set_kvar`.
 - Deprecated `DSS_Set_EnableArrayDimensions`. It will be removed in a future version, and all array size pointers will be required to be a 4-int32 array (current size, allocated size, and matrix rows/columns).
 - **`COMErrorResults` now defaults to false.** In case of errors, for array results, the behavior of the COM API was kept as the default for a number of functions, typically returning `[0]` or `[-1]` instead of an empty array. Since the recommendation has been to use the Error
-- Compatibility flags: add `MonitorHeader` flag. This flag instructs the monitor objects to keep some extra spaces and trailing comma in the monitor headers, affecting both the exported CSVs and the `Header` function/property in the Monitors API.
+- Compatibility flags: 
+    - `InvControl9611` is not required to match current versions of the official OpenDSS (i.e., it was confirmed as a bug). The flag effects are available but they will be removed in a future release.
+    - Add `InvControlDeltaV` flag. A bug was found with how the voltage change across iterations was tracked for some configurations; this flag enables the previous behavior, which matches the current and most previous versions of OpenDSS in the past 9 or so years.
+    - Add `MonitorHeader` flag. This flag instructs the monitor objects to keep some extra spaces and trailing comma in the monitor headers, affecting both the exported CSVs and the `Header` function/property in the Monitors API.
 
 # Versions 0.14.x
 

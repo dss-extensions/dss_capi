@@ -208,7 +208,7 @@ type
         FdeltaQFactor: Double;
         FdeltaPFactor: Double;
         DeltaV_old: Double;
-        FVpuSolution: array of Double;
+        FVpuSolution: array[0..1] of Double;
         FRollAvgWindow: TRollAvgWindow;
         FDRCRollAvgWindowpu: Double;
         FDRCRollAvgWindow: TRollAvgWindow;
@@ -813,7 +813,7 @@ begin
     CombiMode := NONE_COMBMODE;
     ControlledElement := NIL;
 
-    FVpuSolutionIdx := 0;
+    FVpuSolutionIdx := -1;
 
     // Variables for convergence process
     FdeltaQ_factor := FLAGDELTAQ;
@@ -2324,7 +2324,6 @@ begin
         begin
             with CtrlVars[i] do
             begin
-                SetLength(FVpuSolution, 3);
                 SetLength(cBuffer, 7);
 
                 if StripExtension(AnsiLowerCase(DERNameList.Strings[i - 1])) = 'pvsystem' then
@@ -2399,7 +2398,6 @@ begin
             PICtrl := TPICtrl.Create();
             PICtrl.Kp := 1; // Uses deltaQ-factor as sample time for tunning the controller
 
-            SetLength(FVpuSolution, 3);
             SetLength(cBuffer, 7);
             for j := 1 to 6 do
                 cBuffer[j] := 0;
@@ -2479,8 +2477,8 @@ begin
             FWVOperation := 0.0;
             FAVROperation := 0.0;
 
-            for j := 1 to 2 do
-                FVpuSolution[j] := 0.0;
+            FVpuSolution[0] := 0.0;
+            FVpuSolution[1] := 0.0;
 
             FPendingChange := NONE;
 
@@ -2525,28 +2523,38 @@ procedure TInvControlObj.UpdateInvControl(i: Integer);
 var
     j, k: Integer;
     solnvoltage: Double;
-    tempVbuffer: pComplexArray;
     BasekV: Double;
     DERElem: TInvBasedPCE;
 begin
-    tempVbuffer := NIL;   // Initialize for Reallocmem
+    // only update solution idx one time through this routine
+    
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.InvControlDeltaV)) = 0 then
+    begin
+        // this is the behavior we expect to be correct
+        if FVpuSolutionIdx = 1 then
+            FVpuSolutionIdx := 0
+        else
+            FVpuSolutionIdx := FVpuSolutionIdx + 1;
+    end;
 
     for j := 1 to FDERPointerList.Count do
     begin
-          // only update solution idx one time through this routine
-        if (j = 1) and (i = 1) then
+        if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.InvControlDeltaV)) <> 0 then
         begin
-              //update solution voltage in per-unit for hysteresis
-            if FVpuSolutionIdx = 2 then
-                FVpuSolutionIdx := 1
-            else
-                FVpuSolutionIdx := FVpuSolutionIdx + 1;
+            // this is the behavior we expect to be incorrect
+            if (j = 1) and (i = 1) then
+            begin
+                if FVpuSolutionIdx = 1 then
+                    FVpuSolutionIdx := 0
+                else
+                    FVpuSolutionIdx := FVpuSolutionIdx + 1;
+            end;
         end;
 
         DERElem := ControlledElement[j];
         with CtrlVars[j] do
         begin
-            BasekV := CtrlVars[i].FVBase / 1000.0; //TODO: check (i, j)
+            BasekV := FVBase / 1000.0;
 
             FPriorPLimitOptionpu := PLimitOptionpu;
             FPriorQDesireOptionpu := QDesireOptionpu;
@@ -2575,10 +2583,6 @@ begin
             FdeltaPFactor := DELTAPDEFAULT;
 
             // allocated enough memory to buffer to hold voltages and initialize to 0
-            Reallocmem(tempVbuffer, Sizeof(Complex) * DERElem.NConds);
-            for k := 1 to DERElem.NConds do
-                tempVbuffer[k] := 0;
-
             priorRollAvgWindow := FRollAvgWindow.AvgVal;
             priorDRCRollAvgWindow := FDRCRollAvgWindow.AvgVal;
 
@@ -2587,7 +2591,6 @@ begin
             //PVSys.Set_Variable(5,FDRCRollAvgWindow.AvgVal); // save rolling average voltage in monitor
 
             solnvoltage := 0.0;
-
             GetMonVoltage(solnvoltage, j, BasekV);
 
             // add present power flow solution voltage to the rolling average window
@@ -2595,8 +2598,6 @@ begin
             FDRCRollAvgWindow.Add(solnvoltage, ActiveCircuit.Solution.DynaVars.h, FDRCRollAvgWindowLength);
 
             FVpuSolution[FVpuSolutionIdx] := solnvoltage / ((ActiveCircuit.Buses[DERElem.terminals[0].busRef].kVBase) * 1000.0);
-
-            Reallocmem(tempVbuffer, 0);   // Clean up memory
         end;
     end;
 end;
@@ -3001,11 +3002,11 @@ begin
         if ((ActiveCircuit.Solution.DynaVars.dblHour * 3600.0 / ActiveCircuit.Solution.DynaVars.h) < 3.0) then
             voltagechangesolution := 0.0
         else
-        if (FVpuSolutionIdx = 1) then
-            voltagechangesolution := FVpuSolution[1] - FVpuSolution[2]
+        if (FVpuSolutionIdx = 0) then
+            voltagechangesolution := FVpuSolution[0] - FVpuSolution[1]
         else
-        if (FVpuSolutionIdx = 2) then
-            voltagechangesolution := FVpuSolution[2] - FVpuSolution[1];
+        if (FVpuSolutionIdx = 1) then
+            voltagechangesolution := FVpuSolution[1] - FVpuSolution[0];
 
         // if no hysteresis (Fvvc_curveOffset == 0), then just look up the value
         // from the volt-var curve
@@ -3568,11 +3569,14 @@ end;
 procedure TInvControl.UpdateAll();
 var
     i: Integer;
+    obj: TObj;
 begin
     for i := 1 to ElementList.Count do
-        with TInvControlObj(ElementList.Get(i)) do
-            if Enabled then
-                UpdateInvControl(i);
+    begin
+        obj := TInvControlObj(ElementList.Get(i));
+        if obj.Enabled then
+            obj.UpdateInvControl(i);
+    end;
 end;
 
 finalization
