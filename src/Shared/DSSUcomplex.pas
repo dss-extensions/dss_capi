@@ -55,7 +55,7 @@ begin
     Result := (A.RE * A.RE + A.IM * A.IM)
 end;
 
-function ATAN2(x, iy: Double): Double;
+function DSS_ATAN2(x, iy: Double): Double;
 const
     PI = 3.14159265359; // 180 DEGREES  // TODO: remove for 0.13 -- only used for RPN calc and DynamicExp
 begin
@@ -79,12 +79,12 @@ end;
 
 function CANG(const a: complex): Double;
 begin
-    Result := ATAN2(A.RE, A.IM)
+    Result := DSS_ATAN2(A.RE, A.IM)
 end;
 
 function CDANG(const a: complex): Double;
 begin
-    Result := ATAN2(A.RE, A.IM) * 57.29577951; // TODO: better precision
+    Result := DSS_ATAN2(A.RE, A.IM) * 57.29577951; // TODO: better precision
 end;
 
 function CtoPOLAR(const a: complex): polar;
