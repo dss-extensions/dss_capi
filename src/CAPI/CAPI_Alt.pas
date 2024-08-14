@@ -2671,11 +2671,11 @@ begin
                 found := False;
                 for t := 0 to Min(High(elem.Terminals), maxTerm) do
                 begin
-                    for n := 0 to High(elem.Terminals[0].TermNodeRef) do
+                    for n := 0 to High(elem.Terminals[t].TermNodeRef) do
                     begin
                         for nbus in nodes do
                         begin
-                            found := (elem.Terminals[0].TermNodeRef[n] = nbus);
+                            found := (elem.Terminals[t].TermNodeRef[n] = nbus);
                             if not found then
                                 continue;
 
