@@ -326,7 +326,6 @@ function prepareClassJsonSchema(cls: TDSSClass; enumIds: TClassNamesHashListType
 const 
     PropertyTypeJson: array[TPropertyType] of string = (
         'number', // DoubleProperty
-        'boolean', // EnabledProperty
         'string', // MakeLikeProperty
         'boolean', // BooleanActionProperty
         '-', // StringEnumActionProperty

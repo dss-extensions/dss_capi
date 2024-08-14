@@ -57,7 +57,7 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure Set_Enabled(Value: Boolean); OVERRIDE;
+        procedure Set_Enabled(Value: WordBool); OVERRIDE;
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
         procedure RecalcElementData; OVERRIDE;
 
@@ -382,7 +382,7 @@ begin
     end;
 end;
 
-procedure TSwtControlObj.Set_Enabled(Value: Boolean);
+procedure TSwtControlObj.Set_Enabled(Value: WordBool);
 begin
     // Do nothing else besides toggling the flag,
     // we don't need BusNameRedefined from CktElement.pas

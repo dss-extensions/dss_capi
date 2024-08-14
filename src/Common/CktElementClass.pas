@@ -80,6 +80,11 @@ begin
     ClassParents.Add('CktElement');
 end;
 
+procedure CE_Set_Enabled(obj: TObj; value: WordBool);
+begin
+    obj.Set_Enabled(value);
+end;
+
 procedure TCktElementClass.DefineProperties;
 var
     obj: TObj = NIL; // NIL (0) on purpose
@@ -89,8 +94,10 @@ begin
     PropertyOffset_CktElementClass := ActiveProperty;
 
     // Special boolean property
-    PropertyType[ActiveProperty + ord(TProp.enabled)] := TPropertyType.EnabledProperty;
-    PropertyOffset[ActiveProperty + ord(TProp.enabled)] := 1; // dummy value
+    PropertyType[ActiveProperty + ord(TProp.enabled)] := TPropertyType.BooleanProperty;
+    PropertyOffset[ActiveProperty + ord(TProp.enabled)] := ptruint(@obj.FEnabled);
+    PropertyFlags[ActiveProperty + ord(TProp.enabled)] := [TPropertyFlag.WriteByFunction];
+    PropertyWriteFunction[ActiveProperty + ord(TProp.enabled)] := @CE_Set_Enabled;
 
     // double properties (default type)
     PropertyOffset[ActiveProperty + ord(TProp.basefreq)] := ptruint(@obj.BaseFrequency);

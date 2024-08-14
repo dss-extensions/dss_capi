@@ -38,6 +38,7 @@
 
 - Alt API:
     - Fix `Bus_Get_Lines`/`Bus_Get_PDElements`. Only one terminal was being checked due to a typo.
+    - Fix `Batch_Int32Array` when used to set the `Enabled` property.
 
 # Versions 0.14.x
 

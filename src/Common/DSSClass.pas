@@ -259,7 +259,6 @@ type
 
     TPropertyType = (
         DoubleProperty = 0,
-        EnabledProperty,
         MakeLikeProperty,
         BooleanActionProperty,
         StringEnumActionProperty,
@@ -352,6 +351,7 @@ type
     TObjRefsPropertyFunction = procedure (obj: Pointer; var ResultPtr: PPointer; ResultCount: PAPISize);
 
     // TDoubleArrayPropertyFunction = function (obj: Pointer): ArrayOfDouble;
+    TWriteBooleanPropertyFunction = procedure (obj: Pointer; Value: WordBool);
     TWriteDoublePropertyFunction = procedure (obj: Pointer; Value: double);
     TWriteObjRefPropertyFunction = procedure (obj: Pointer; Value: Pointer);
     TWriteIntegerPropertyFunction = procedure (obj: Pointer; Value: Integer);

@@ -127,7 +127,7 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); OVERRIDE;
         procedure MakeLike(OtherPtr: Pointer); OVERRIDE;
 
-            // PROCEDURE Set_Enabled(Value: Boolean);Override;
+        // PROCEDURE Set_Enabled(Value: WordBool);Override;
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
         procedure RecalcElementData; OVERRIDE;
 
@@ -683,7 +683,7 @@ begin
   // inherited;
 end;
 
-//procedure TExpControlObj.Set_Enabled(Value: Boolean);
+//procedure TExpControlObj.Set_Enabled(Value: WordBool);
 //begin
 //    inherited;
 //    // Reset controlled PVSystems to original PF

@@ -388,7 +388,6 @@ begin
             SetObjInteger(Obj, Index, intVal, @prevInt, setterFlags);
             Result := True;
         end;
-        TPropertyType.EnabledProperty,
         TPropertyType.BooleanActionProperty,
         TPropertyType.BooleanProperty:
         begin
@@ -1077,7 +1076,6 @@ begin
             Exit;
         end;
         TPropertyType.BooleanActionProperty,
-        TPropertyType.EnabledProperty,
         TPropertyType.BooleanProperty:
         begin        
             val := TJSONBoolean.Create(GetObjInteger(obj, Index) <> 0);
@@ -1864,7 +1862,6 @@ begin
 
     case ptype of
         TPropertyType.BooleanActionProperty,
-        TPropertyType.EnabledProperty,
         TPropertyType.BooleanProperty:
         begin
             boolVal := val.AsBoolean;
@@ -2243,7 +2240,6 @@ begin
                 PropStr := IntToStr(GetObjInteger(obj, Index));
 
             TPropertyType.BooleanActionProperty,
-            TPropertyType.EnabledProperty,
             TPropertyType.BooleanProperty:
                 PropStr := StrYOrN(Boolean(GetObjInteger(obj, Index) <> 0));
 
@@ -2867,7 +2863,7 @@ begin
     if (TPropertyFlag.ConditionalReadOnly in flags) and (PLongBool(PByte(obj) + PropertyOffset3[Index])^) then
         Exit;
 
-    if ptype in [TPropertyType.BooleanProperty, TPropertyType.EnabledProperty, TPropertyType.BooleanActionProperty] then
+    if ptype in [TPropertyType.BooleanProperty, TPropertyType.BooleanActionProperty] then
     begin
         Value := Integer(LongBool(value <> 0));
     end;
@@ -2947,11 +2943,6 @@ begin
         Value := Value + Round(PropertyValueOffset[Index]);
 
     case ptype of
-        TPropertyType.EnabledProperty:
-        begin
-            TDSSCktElement(obj).Enabled := Value <> 0;
-            Exit
-        end;
         TPropertyType.BooleanActionProperty:
         begin
             if Value <> 0 then
@@ -2999,7 +2990,12 @@ begin
         end;
         TPropertyType.BooleanProperty:
         begin
-            boolPtr := PLongBool(PByte(obj) + PropertyOffset[Index]);    
+            if TPropertyFlag.WriteByFunction in flags then
+            begin
+                TWriteBooleanPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, Value <> 0);
+                Exit;
+            end;
+            boolPtr := PLongBool(PByte(obj) + PropertyOffset[Index]);
             if prevInt <> NIL then
                 prevInt^ := Integer(boolPtr^);
             boolPtr^ := Value <> 0;
@@ -4349,9 +4345,6 @@ begin
 
             Result := Result - Round(PropertyValueOffset[Index]);
         end;
-
-        TPropertyType.EnabledProperty:
-            Result := Integer(LongBool(TDSSCktElement(obj).Enabled));
 
         TPropertyType.BooleanProperty:
             Result := Integer(PLongBool(PByte(obj) + PropertyOffset[Index])^);

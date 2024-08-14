@@ -126,7 +126,7 @@ type
 
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
         procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE; 
-//        procedure Set_Enabled(Value: Boolean); OVERRIDE;
+//        procedure Set_Enabled(Value: WordBool); OVERRIDE;
 {$ENDIF}
 
     PUBLIC
@@ -1089,7 +1089,7 @@ begin
     end;
 end;
 
-// procedure TCapacitorObj.Set_Enabled(Value: Boolean);
+// procedure TCapacitorObj.Set_Enabled(Value: WordBool);
 // begin
 //     if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and 
 //        (not ActiveCircuit.Solution.SystemYChanged) and 

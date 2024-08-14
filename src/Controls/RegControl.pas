@@ -155,7 +155,7 @@ type
 
         VBuffer, CBuffer: pComplexArray;
 
-        procedure Set_Enabled(Value: Boolean); OVERRIDE;
+        procedure Set_Enabled(Value: WordBool); OVERRIDE;
 
         function Get_Winding: Integer;
         function Get_MinTap: Double;
@@ -1297,7 +1297,7 @@ begin
         Result := TimeDelay;
 end;
 
-procedure TRegControlObj.Set_Enabled(Value: Boolean);
+procedure TRegControlObj.Set_Enabled(Value: WordBool);
 begin
     // Do nothing else besides toggling the flag,
     // we don't need BusNameRedefined from CktElement.pas

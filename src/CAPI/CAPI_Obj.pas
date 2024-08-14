@@ -1114,13 +1114,12 @@ begin
         TPropertyType.MappedIntEnumProperty,
         TPropertyType.MappedStringEnumProperty,
         TPropertyType.BooleanProperty,
-        TPropertyType.IntegerOnStructArrayProperty,
-        TPropertyType.EnabledProperty
+        TPropertyType.IntegerOnStructArrayProperty
     ]) then
     begin
         Exit;
     end;
-    if (ptype in [TPropertyType.BooleanProperty, TPropertyType.EnabledProperty]) or (ptype = TPropertyType.EnabledProperty) then
+    if (ptype = TPropertyType.BooleanProperty) then
     begin
         value := Integer(LongBool(value <> 0));
     end;
@@ -1400,7 +1399,6 @@ begin
         TPropertyType.MappedIntEnumProperty,
         TPropertyType.MappedStringEnumProperty,
         TPropertyType.BooleanProperty,
-        TPropertyType.EnabledProperty,
         TPropertyType.IntegerOnStructArrayProperty
     ]) then
     begin
@@ -1854,12 +1852,11 @@ begin
         TPropertyType.MappedIntEnumProperty,
         TPropertyType.MappedStringEnumProperty,
         TPropertyType.BooleanProperty,
-        TPropertyType.EnabledProperty,
         TPropertyType.IntegerOnStructArrayProperty
     ]) then
         Exit;
 
-    if (ptype in [TPropertyType.BooleanProperty, TPropertyType.EnabledProperty, TPropertyType.BooleanActionProperty]) and not (Operation in [BatchOp.Increment]) then
+    if (ptype in [TPropertyType.BooleanProperty, TPropertyType.BooleanActionProperty]) and not (Operation in [BatchOp.Increment]) then
     begin
         Value := Integer(LongBool(value <> 0));
     end;
@@ -2023,12 +2020,11 @@ begin
         TPropertyType.MappedIntEnumProperty,
         TPropertyType.MappedStringEnumProperty,
         TPropertyType.BooleanProperty,
-        TPropertyType.EnabledProperty,
         TPropertyType.IntegerOnStructArrayProperty
     ]) then
         Exit;
 
-    if (ptype in [TPropertyType.BooleanProperty, TPropertyType.EnabledProperty, TPropertyType.BooleanActionProperty]) and not (Operation in [BatchOp.Increment]) then
+    if (ptype in [TPropertyType.BooleanProperty, TPropertyType.BooleanActionProperty]) and not (Operation in [BatchOp.Increment]) then
     begin
         ValueCursor := Value;
         for i := 0 to batchSize - 1 do

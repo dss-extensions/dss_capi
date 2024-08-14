@@ -21,8 +21,8 @@ uses
 type
 
     TDSSCktElement = class(TDSSObject)
-    PROTECTED
-        FEnabled: Boolean;
+    PUBLIC
+        FEnabled: WordBool;
     PRIVATE
         FBusNames: pStringArray; // Bus + Nodes (a.1.2.3.0)
         FYPrimInvalid: Boolean;
@@ -62,7 +62,7 @@ type
         YPrim: TCMatrix;   // Order will be NTerms * Ncond
         FYprimFreq: Double;     // Frequency at which YPrim has been computed
 
-        procedure Set_Enabled(Value: Boolean); VIRTUAL;
+        procedure Set_Enabled(Value: WordBool); VIRTUAL;
         procedure Set_ConductorClosed(Index: Integer; Value: Boolean); VIRTUAL;
         procedure Set_NTerms(Value: Int8);
     PUBLIC
@@ -123,7 +123,7 @@ type
 
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
-        property Enabled: Boolean READ FEnabled WRITE Set_Enabled;
+        property Enabled: WordBool READ FEnabled WRITE Set_Enabled;
         property YPrimInvalid: Boolean READ FYPrimInvalid WRITE set_YprimInvalid;
         property YPrimFreq: Double READ FYprimFreq WRITE Set_Freq;
         property NTerms: Int8 READ Fnterms WRITE Set_NTerms;
@@ -394,7 +394,7 @@ begin
         Terminals[i - 1].Init(Fnconds);
 end;
 
-procedure TDSSCktElement.Set_Enabled(Value: Boolean);
+procedure TDSSCktElement.Set_Enabled(Value: WordBool);
 //  If disabled, but defined, just have to processBusDefs.  Adding a bus OK
 // If being removed from circuit, could remove a node or bus so have to rebuild
 begin

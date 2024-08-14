@@ -154,7 +154,7 @@ type
 
     TCapControlObj = class(TControlElem)
     PUBLIC
-        procedure Set_Enabled(Value: Boolean); OVERRIDE;
+        procedure Set_Enabled(Value: WordBool); OVERRIDE;
     PRIVATE
         ControlType: ECapControlType;
         ControlVars: TCapControlVars;
@@ -1233,7 +1233,7 @@ begin
     DblTraceParameter := Integer(Value);
 end;
 
-procedure TCapControlObj.Set_Enabled(Value: Boolean);
+procedure TCapControlObj.Set_Enabled(Value: WordBool);
 begin
     // Do nothing else besides toggling the flag,
     // we don't need BusNameRedefined from CktElement.pas
