@@ -29,7 +29,6 @@ procedure PDElements_Set_RepairTime(Value: Double); CDECL;
 
 // Extensions below
 procedure PDElements_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure PDElements_Get_AllNames_GR(); CDECL;
 procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; const AllNodes: TAPIBoolean); CDECL;
 procedure PDElements_Get_AllMaxCurrents_GR(const AllNodes: TAPIBoolean); CDECL;
 procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PAPISize; const AllNodes: TAPIBoolean); CDECL;
@@ -362,13 +361,6 @@ begin
     if (idx_before > 0) and (idx_before <= pList.Count) then
         pList.Get(idx_before);
 end;
-
-procedure PDElements_Get_AllNames_GR(); CDECL;
-// Same as PDElements_Get_AllNames but uses global result (GR) pointers
-begin
-    PDElements_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0]);
-end;
-
 //------------------------------------------------------------------------------
 procedure _PDElements_Get_x(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; const What: integer; const AllNodes: Boolean);
 // Internal helper function to calculate for all PDElements

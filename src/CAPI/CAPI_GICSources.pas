@@ -7,7 +7,6 @@ uses
     CAPI_Types;
 
 procedure GICSources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure GICSources_Get_AllNames_GR(); CDECL;
 function GICSources_Get_Count(): Integer; CDECL;
 function GICSources_Get_First(): Integer; CDECL;
 function GICSources_Get_Next(): Integer; CDECL;
@@ -77,12 +76,6 @@ begin
         Exit;
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.GICsourceClass.ElementList, True);
-end;
-
-procedure GICSources_Get_AllNames_GR(); CDECL;
-// Same as GICSources_Get_AllNames but uses global result (GR) pointers
-begin
-    GICSources_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Count(): Integer; CDECL;

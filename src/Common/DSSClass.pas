@@ -684,12 +684,10 @@ type
         _Name: String;
     
         // C-API pointer data (GR mode)
-        GR_DataPtr_PPAnsiChar: PPAnsiChar;
         GR_DataPtr_PDouble: PDouble;
         GR_DataPtr_PInteger: PInteger;
         GR_DataPtr_PByte: PByte;
 
-        GR_Counts_PPAnsiChar: Array[0..3] of TAPISize;
         GR_Counts_PDouble: Array[0..3] of TAPISize;
         GR_Counts_PInteger: Array[0..3] of TAPISize;
         GR_Counts_PByte: Array[0..3] of TAPISize;
@@ -1033,13 +1031,11 @@ var
 begin
     inherited Create;
 
-    GR_DataPtr_PPAnsiChar := NIL;
     GR_DataPtr_PDouble := NIL;
     GR_DataPtr_PInteger := NIL;
     GR_DataPtr_PByte := NIL;
     for i := 0 to 3 do
     begin
-        GR_Counts_PPAnsiChar[i] := 0;
         GR_Counts_PDouble[i] := 0;
         GR_Counts_PInteger[i] := 0;
         GR_Counts_PByte[i] := 0;
@@ -1201,7 +1197,6 @@ begin
     ProfilePhasesEnum.HybridMin := 0;
     Enums.Add(ProfilePhasesEnum);
     // GR (global result) counters: Initialize to zero
-    FillByte(GR_Counts_PPAnsiChar, sizeof(TAPISize) * 2, 0);
     FillByte(GR_Counts_PDouble, sizeof(TAPISize) * 2, 0);
     FillByte(GR_Counts_PInteger, sizeof(TAPISize) * 2, 0);
     FillByte(GR_Counts_PByte, sizeof(TAPISize) * 2, 0);
@@ -1336,7 +1331,6 @@ begin
     DSS_Dispose_PByte(GR_DataPtr_PByte);
     DSS_Dispose_PDouble(GR_DataPtr_PDouble);
     DSS_Dispose_PInteger(GR_DataPtr_PInteger);
-    DSS_Dispose_PPAnsiChar(GR_DataPtr_PPAnsiChar, GR_Counts_PPAnsiChar[1]);
     if unzipper <> NIL then
         unzipper.Free;
 

@@ -7,7 +7,6 @@ uses
     CAPI_Types;
 
 procedure DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure DSSElement_Get_AllPropertyNames_GR(); CDECL;
 function DSSElement_Get_Name(): PAnsiChar; CDECL;
 function DSSElement_Get_NumProperties(): Integer; CDECL;
 function DSSElement_ToJSON(Options: Integer): PAnsiChar; CDECL;
@@ -42,13 +41,6 @@ begin
         Result[k - 1] := DSS_CopyStringAsPChar(cls.PropertyName[k]);
     end;
 end;
-
-procedure DSSElement_Get_AllPropertyNames_GR(); CDECL;
-// Same as DSSElement_Get_AllPropertyNames but uses global result (GR) pointers
-begin
-    DSSElement_Get_AllPropertyNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function DSSElement_Get_Name(): PAnsiChar; CDECL;
 begin

@@ -7,7 +7,6 @@ uses
     CAPI_Types;
 
 procedure Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Reclosers_Get_AllNames_GR(); CDECL;
 function Reclosers_Get_Count(): Integer; CDECL;
 function Reclosers_Get_First(): Integer; CDECL;
 function Reclosers_Get_Name(): PAnsiChar; CDECL;
@@ -124,13 +123,6 @@ begin
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Reclosers, False);
 end;
-
-procedure Reclosers_Get_AllNames_GR(); CDECL;
-// Same as Reclosers_Get_AllNames but uses global result (GR) pointers
-begin
-    Reclosers_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function Reclosers_Get_Count(): Integer; CDECL;
 begin

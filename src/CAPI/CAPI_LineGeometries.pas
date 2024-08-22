@@ -34,7 +34,6 @@ procedure LineGeometries_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PAPISi
 procedure LineGeometries_Get_Ycoords_GR(); CDECL;
 procedure LineGeometries_Set_Ycoords(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 procedure LineGeometries_Get_Conductors(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure LineGeometries_Get_Conductors_GR(); CDECL;
 function LineGeometries_Get_Reduce(): TAPIBoolean; CDECL;
 procedure LineGeometries_Set_Reduce(Value: TAPIBoolean); CDECL;
 function LineGeometries_Get_RhoEarth(): Double; CDECL;
@@ -44,7 +43,6 @@ procedure LineGeometries_Set_NormAmps(Value: Double); CDECL;
 function LineGeometries_Get_EmergAmps(): Double; CDECL;
 procedure LineGeometries_Set_EmergAmps(Value: Double); CDECL;
 procedure LineGeometries_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure LineGeometries_Get_AllNames_GR(); CDECL;
 
 function LineGeometries_Get_idx(): Integer; CDECL;
 procedure LineGeometries_Set_idx(Value: Integer); CDECL;
@@ -509,13 +507,6 @@ begin
     for i := 1 to pLineGeometry.FNconds do
         Result[i - 1] := DSS_CopyStringAsPChar(pLineGeometry.ConductorName[i]);
 end;
-
-procedure LineGeometries_Get_Conductors_GR(); CDECL;
-// Same as LineGeometries_Get_Conductors but uses global result (GR) pointers
-begin
-    LineGeometries_Get_Conductors(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 procedure LineGeometries_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
@@ -526,13 +517,6 @@ begin
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.LineGeometryClass.ElementList, False);
 end;
-
-procedure LineGeometries_Get_AllNames_GR(); CDECL;
-// Same as LineGeometries_Get_AllNames but uses global result (GR) pointers
-begin
-    LineGeometries_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function LineGeometries_Get_idx(): Integer; CDECL;
 begin

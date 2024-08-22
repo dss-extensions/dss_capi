@@ -15,7 +15,6 @@ function TSData_Get_Next(): Integer; CDECL;
 function TSData_Get_Name(): PAnsiChar; CDECL;
 procedure TSData_Set_Name(const Value: PAnsiChar); CDECL;
 procedure TSData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure TSData_Get_AllNames_GR(); CDECL;
 function TSData_Get_idx(): Integer; CDECL;
 procedure TSData_Set_idx(Value: Integer); CDECL;
 
@@ -154,12 +153,6 @@ begin
         Exit;
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.TSDataClass.ElementList, False);
-end;
-
-procedure TSData_Get_AllNames_GR(); CDECL;
-// Same as TSData_Get_AllNames but uses global result (GR) pointers
-begin
-    TSData_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_NormAmps(): Double; CDECL;

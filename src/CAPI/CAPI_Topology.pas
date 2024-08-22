@@ -9,9 +9,7 @@ uses
 function Topology_Get_NumLoops(): Integer; CDECL;
 function Topology_Get_ActiveBranch(): Integer; CDECL;
 procedure Topology_Get_AllIsolatedBranches(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Topology_Get_AllIsolatedBranches_GR(); CDECL;
 procedure Topology_Get_AllLoopedPairs(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Topology_Get_AllLoopedPairs_GR(); CDECL;
 function Topology_Get_BackwardBranch(): Integer; CDECL;
 function Topology_Get_BranchName(): PAnsiChar; CDECL;
 function Topology_Get_First(): Integer; CDECL;
@@ -22,7 +20,6 @@ function Topology_Get_NumIsolatedBranches(): Integer; CDECL;
 function Topology_Get_ParallelBranch(): Integer; CDECL;
 procedure Topology_Set_BranchName(const Value: PAnsiChar); CDECL;
 procedure Topology_Get_AllIsolatedLoads(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Topology_Get_AllIsolatedLoads_GR(); CDECL;
 function Topology_Get_FirstLoad(): Integer; CDECL;
 function Topology_Get_NextLoad(): Integer; CDECL;
 function Topology_Get_NumIsolatedLoads(): Integer; CDECL;
@@ -149,13 +146,6 @@ begin
     end;
     SetLength(Result, 0);
 end;
-
-procedure Topology_Get_AllIsolatedBranches_GR(); CDECL;
-// Same as Topology_Get_AllIsolatedBranches but uses global result (GR) pointers
-begin
-    Topology_Get_AllIsolatedBranches(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 procedure Topology_Get_AllLoopedPairs(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
@@ -214,13 +204,6 @@ begin
     end;
     SetLength(Result, 0);
 end;
-
-procedure Topology_Get_AllLoopedPairs_GR(); CDECL;
-// Same as Topology_Get_AllLoopedPairs but uses global result (GR) pointers
-begin
-    Topology_Get_AllLoopedPairs(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function Topology_Get_BackwardBranch(): Integer; CDECL;
 var
@@ -404,13 +387,6 @@ begin
     end;
     SetLength(Result, 0);
 end;
-
-procedure Topology_Get_AllIsolatedLoads_GR(); CDECL;
-// Same as Topology_Get_AllIsolatedLoads but uses global result (GR) pointers
-begin
-    Topology_Get_AllIsolatedLoads(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function Topology_Get_FirstLoad(): Integer; CDECL;
 var

@@ -12,7 +12,6 @@ function LoadShapes_Get_Count(): Integer; CDECL;
 function LoadShapes_Get_First(): Integer; CDECL;
 function LoadShapes_Get_Next(): Integer; CDECL;
 procedure LoadShapes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure LoadShapes_Get_AllNames_GR(); CDECL;
 function LoadShapes_Get_Npts(): Integer; CDECL;
 procedure LoadShapes_Get_Pmult(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure LoadShapes_Get_Pmult_GR(); CDECL;
@@ -136,13 +135,6 @@ begin
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.LoadShapeClass.ElementList, False);
 end;
-
-procedure LoadShapes_Get_AllNames_GR(); CDECL;
-// Same as LoadShapes_Get_AllNames but uses global result (GR) pointers
-begin
-    LoadShapes_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function LoadShapes_Get_Npts(): Integer; CDECL;
 var

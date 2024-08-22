@@ -876,11 +876,9 @@ ALTDSS_ODDIE_DLL const char* DSS_Get_PAnsiChar(void *p, int32_t index)
 }
 
 ALTDSS_ODDIE_DLL void ctx_DSS_GetGRPointers(const void* ctx, 
-    char**** DataPtr_PPAnsiChar,
     double*** DataPtr_PDouble,
     int32_t*** DataPtr_PInteger,
     int8_t*** DataPtr_PByte,
-    int32_t** CountPtr_PPAnsiChar,
     int32_t** CountPtr_PDouble,
     int32_t** CountPtr_PInteger,
     int32_t** CountPtr_PByte
@@ -888,11 +886,9 @@ ALTDSS_ODDIE_DLL void ctx_DSS_GetGRPointers(const void* ctx,
 {
     OddieContext* oddie_ctx = (OddieContext*) (ctx ? ctx : ctxPrime);
 
-    *DataPtr_PPAnsiChar = NULL;
     *DataPtr_PDouble = &oddie_ctx->GR_DataPtr_PDouble;
     *DataPtr_PInteger = &oddie_ctx->GR_DataPtr_PInteger;
     *DataPtr_PByte = &oddie_ctx->GR_DataPtr_PByte;
-    *CountPtr_PPAnsiChar = NULL;
     *CountPtr_PDouble = &oddie_ctx->GR_Counts_PDouble[0];
     *CountPtr_PInteger = &oddie_ctx->GR_Counts_PInteger[0];
     *CountPtr_PByte = &oddie_ctx->GR_Counts_PByte[0];
@@ -12607,12 +12603,6 @@ ALTDSS_ODDIE_DLL void ctx_PDElements_Get_AllMaxCurrents_GR(const void* ctx, uint
 }
 
 ALTDSS_ODDIE_DLL void ctx_PDElements_Get_AllNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "PDElements_Get_AllNames");
-}
-
-ALTDSS_ODDIE_DLL void ctx_PDElements_Get_AllNames_GR(const void* ctx)
 {
     CTX_OR_PRIME
     oddie_error_not_implemented((OddieContext*) ctx, "PDElements_Get_AllNames");

@@ -7,7 +7,6 @@ uses
     CAPI_Types;
 
 procedure CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure CapControls_Get_AllNames_GR(); CDECL;
 function CapControls_Get_Capacitor(): PAnsiChar; CDECL;
 function CapControls_Get_CTratio(): Double; CDECL;
 function CapControls_Get_DeadTime(): Double; CDECL;
@@ -126,13 +125,6 @@ begin
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.CapControls, False);
 end;
-
-procedure CapControls_Get_AllNames_GR(); CDECL;
-// Same as CapControls_Get_AllNames but uses global result (GR) pointers
-begin
-    CapControls_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function CapControls_Get_Capacitor(): PAnsiChar; CDECL;
 var

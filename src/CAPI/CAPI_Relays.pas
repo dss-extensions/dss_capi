@@ -7,7 +7,6 @@ uses
     CAPI_Types;
 
 procedure Relays_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Relays_Get_AllNames_GR(); CDECL;
 function Relays_Get_Count(): Integer; CDECL;
 function Relays_Get_First(): Integer; CDECL;
 function Relays_Get_Name(): PAnsiChar; CDECL;
@@ -110,13 +109,6 @@ begin
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Relays, False);
 end;
-
-procedure Relays_Get_AllNames_GR(); CDECL;
-// Same as Relays_Get_AllNames but uses global result (GR) pointers
-begin
-    Relays_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function Relays_Get_Count(): Integer; CDECL;
 begin

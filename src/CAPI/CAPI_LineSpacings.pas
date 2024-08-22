@@ -25,7 +25,6 @@ procedure LineSpacings_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PAPISize
 procedure LineSpacings_Get_Ycoords_GR(); CDECL;
 procedure LineSpacings_Set_Ycoords(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 procedure LineSpacings_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure LineSpacings_Get_AllNames_GR(); CDECL;
 
 function LineSpacings_Get_idx(): Integer; CDECL;
 procedure LineSpacings_Set_idx(Value: Integer); CDECL;
@@ -270,12 +269,6 @@ begin
         Exit;
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.LineSpacingClass.ElementList, False);
-end;
-
-procedure LineSpacings_Get_AllNames_GR(); CDECL;
-// Same as LineSpacings_Get_AllNames but uses global result (GR) pointers
-begin
-    LineSpacings_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_idx(): Integer; CDECL;

@@ -15,7 +15,6 @@ function CNData_Get_Next(): Integer; CDECL;
 function CNData_Get_Name(): PAnsiChar; CDECL;
 procedure CNData_Set_Name(const Value: PAnsiChar); CDECL;
 procedure CNData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure CNData_Get_AllNames_GR(); CDECL;
 function CNData_Get_idx(): Integer; CDECL;
 procedure CNData_Set_idx(Value: Integer); CDECL;
 
@@ -158,12 +157,6 @@ begin
     end;
 
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.CNDataClass.ElementList, False);
-end;
-
-procedure CNData_Get_AllNames_GR(); CDECL;
-// Same as CNData_Get_AllNames but uses global result (GR) pointers
-begin
-    CNData_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_NormAmps(): Double; CDECL;

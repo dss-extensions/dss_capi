@@ -7,7 +7,6 @@ uses
     CAPI_Types;
 
 procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Capacitors_Get_AllNames_GR(); CDECL;
 function Capacitors_Get_First(): Integer; CDECL;
 function Capacitors_Get_IsDelta(): TAPIBoolean; CDECL;
 function Capacitors_Get_kV(): Double; CDECL;
@@ -112,13 +111,6 @@ begin
 
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.ShuntCapacitors, False);
 end;
-
-procedure Capacitors_Get_AllNames_GR(); CDECL;
-// Same as Capacitors_Get_AllNames but uses global result (GR) pointers
-begin
-    Capacitors_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function Capacitors_Get_First(): Integer; CDECL;
 begin

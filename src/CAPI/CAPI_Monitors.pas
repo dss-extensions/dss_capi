@@ -7,7 +7,6 @@ uses
     CAPI_Types;
 
 procedure Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Monitors_Get_AllNames_GR(); CDECL;
 function Monitors_Get_FileName(): PAnsiChar; CDECL;
 function Monitors_Get_First(): Integer; CDECL;
 function Monitors_Get_Mode(): Integer; CDECL;
@@ -36,7 +35,6 @@ procedure Monitors_Get_dblHour(var ResultPtr: PDouble; ResultCount: PAPISize); C
 procedure Monitors_Get_dblHour_GR(); CDECL;
 function Monitors_Get_FileVersion(): Integer; CDECL;
 procedure Monitors_Get_Header(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Monitors_Get_Header_GR(); CDECL;
 function Monitors_Get_NumChannels(): Integer; CDECL;
 function Monitors_Get_RecordSize(): Integer; CDECL;
 function Monitors_Get_Element(): PAnsiChar; CDECL;
@@ -97,13 +95,6 @@ begin
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Monitors, False);
 end;
-
-procedure Monitors_Get_AllNames_GR(); CDECL;
-// Same as Monitors_Get_AllNames but uses global result (GR) pointers
-begin
-    Monitors_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function Monitors_Get_FileName(): PAnsiChar; CDECL;
 var
@@ -415,13 +406,6 @@ begin
         Inc(k);
     end;
 end;
-
-procedure Monitors_Get_Header_GR(); CDECL;
-// Same as Monitors_Get_Header but uses global result (GR) pointers
-begin
-    Monitors_Get_Header(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function Monitors_Get_NumChannels(): Integer; CDECL;
 var

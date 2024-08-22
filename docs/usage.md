@@ -128,21 +128,17 @@ It is important to note that the GR mode can be used in conjunction with the IR 
 
 Its usage is simple: call `DSS_GetGRPointers()` once to get the pointer references. There pointers passed as parameters will then be updated with pointers to the global result strucutures created in the Pascal code.
 ```c
-    char*** data_PPAnsiChar;
     double** data_PDouble;
     int32_t** data_PInteger;
     int8_t** data_PByte;
-    int32_t* count_PPAnsiChar;
     int32_t* count_PDouble;
     int32_t* count_PInteger;
     int32_t* count_PByte;
 
     DSS_GetGRPointers(
-        &data_PPAnsiChar,
         &data_PDouble,
         &data_PInteger,
         &data_PByte,
-        &count_PPAnsiChar,
         &count_PDouble,
         &count_PInteger,
         &count_PByte
@@ -196,13 +192,13 @@ These functions are implemented in `CAPI_Utils.pas` and represent direct memory 
 - `DSS_GetGRPointers`: Get references to the global result (GR) pointers, used in the `*_GR` variations of most getter functions. The returned values in the DataPtrs will contain pointers to the global variables that contains the actual pointers, hence all the indirections here. Full signature:
 ```c
 void DSS_GetGRPointers(
-    char**** DataPtr_PPAnsiChar,
     double*** DataPtr_PDouble,
     int32_t*** DataPtr_PInteger,
     int8_t*** DataPtr_PByte,
-    int32_t** CountPtr_PPAnsiChar,
     int32_t** CountPtr_PDouble,
     int32_t** CountPtr_PInteger,
     int32_t** CountPtr_PByte
 );
 ```
+
+(*changed in 0.15: GR is not used anymore for arrays of strings since it doesn't bring performance benefits*)

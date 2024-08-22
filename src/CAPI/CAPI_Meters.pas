@@ -7,12 +7,10 @@ uses
     CAPI_Types;
 
 procedure Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Meters_Get_AllNames_GR(); CDECL;
 function Meters_Get_First(): Integer; CDECL;
 function Meters_Get_Name(): PAnsiChar; CDECL;
 function Meters_Get_Next(): Integer; CDECL;
 procedure Meters_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Meters_Get_RegisterNames_GR(); CDECL;
 procedure Meters_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Meters_Get_RegisterValues_GR(); CDECL;
 procedure Meters_Reset(); CDECL;
@@ -41,11 +39,9 @@ procedure Meters_OpenAllDIFiles(); CDECL;
 procedure Meters_SampleAll(); CDECL;
 procedure Meters_SaveAll(); CDECL;
 procedure Meters_Get_AllEndElements(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Meters_Get_AllEndElements_GR(); CDECL;
 function Meters_Get_CountEndElements(): Integer; CDECL;
 function Meters_Get_Count(): Integer; CDECL;
 procedure Meters_Get_AllBranchesInZone(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Meters_Get_AllBranchesInZone_GR(); CDECL;
 function Meters_Get_CountBranches(): Integer; CDECL;
 function Meters_Get_SAIFI(): Double; CDECL;
 function Meters_Get_SequenceIndex(): Integer; CDECL;
@@ -142,13 +138,6 @@ begin
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.EnergyMeters, False);
 end;
-
-procedure Meters_Get_AllNames_GR(); CDECL;
-// Same as Meters_Get_AllNames but uses global result (GR) pointers
-begin
-    Meters_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function Meters_Get_First(): Integer; CDECL;
 begin
@@ -195,13 +184,6 @@ begin
         Result[k] := DSS_CopyStringAsPChar(pMeterObj.RegisterNames[k]);
     end;
 end;
-
-procedure Meters_Get_RegisterNames_GR(); CDECL;
-// Same as Meters_Get_RegisterNames but uses global result (GR) pointers
-begin
-    Meters_Get_RegisterNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 procedure Meters_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
@@ -524,13 +506,6 @@ begin
         Result[k] := DSS_CopyStringAsPChar(elem.FullName);
     end;
 end;
-
-procedure Meters_Get_AllEndElements_GR(); CDECL;
-// Same as Meters_Get_AllEndElements but uses global result (GR) pointers
-begin
-    Meters_Get_AllEndElements(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function Meters_Get_CountEndElements(): Integer; CDECL;
 var
@@ -595,13 +570,6 @@ begin
         pElem := pMeterObj.BranchList.GoForward();
     end;
 end;
-
-procedure Meters_Get_AllBranchesInZone_GR(); CDECL;
-// Same as Meters_Get_AllBranchesInZone but uses global result (GR) pointers
-begin
-    Meters_Get_AllBranchesInZone(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function Meters_Get_CountBranches(): Integer; CDECL;
 var

@@ -7,9 +7,7 @@ uses
     CAPI_Types;
 
 procedure PVSystems_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure PVSystems_Get_AllNames_GR(); CDECL;
 procedure PVSystems_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure PVSystems_Get_RegisterNames_GR(); CDECL;
 procedure PVSystems_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure PVSystems_Get_RegisterValues_GR(); CDECL;
 function PVSystems_Get_First(): Integer; CDECL;
@@ -105,13 +103,6 @@ begin
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.PVSystems, False);
 end;
-
-procedure PVSystems_Get_AllNames_GR(); CDECL;
-// Same as PVSystems_Get_AllNames but uses global result (GR) pointers
-begin
-    PVSystems_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 procedure PVSystems_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
@@ -124,13 +115,6 @@ begin
         Result[k] := DSS_CopyStringAsPChar(DSSPrime.PVSystemClass.RegisterNames[k]);
     end;
 end;
-
-procedure PVSystems_Get_RegisterNames_GR(); CDECL;
-// Same as PVSystems_Get_RegisterNames but uses global result (GR) pointers
-begin
-    PVSystems_Get_RegisterNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 procedure PVSystems_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var

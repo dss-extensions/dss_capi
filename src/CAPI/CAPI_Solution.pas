@@ -56,7 +56,6 @@ function Solution_Get_DefaultYearly(): PAnsiChar; CDECL;
 procedure Solution_Set_DefaultDaily(const Value: PAnsiChar); CDECL;
 procedure Solution_Set_DefaultYearly(const Value: PAnsiChar); CDECL;
 procedure Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Solution_Get_EventLog_GR(); CDECL;
 function Solution_Get_dblHour(): Double; CDECL;
 procedure Solution_Set_dblHour(Value: Double); CDECL;
 procedure Solution_Set_StepsizeHr(Value: Double); CDECL;
@@ -102,9 +101,7 @@ procedure Solution_Get_Laplacian_GR(); CDECL;
 procedure Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Solution_Get_BusLevels_GR(); CDECL;
 procedure Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Solution_Get_IncMatrixRows_GR(); CDECL;
 procedure Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Solution_Get_IncMatrixCols_GR(); CDECL;
 
 implementation
 
@@ -538,13 +535,6 @@ begin
         Result[i] := DSS_CopyStringAsPChar(DSSPrime.EventStrings.Strings[i]);
     end;
 end;
-
-procedure Solution_Get_EventLog_GR(); CDECL;
-// Same as Solution_Get_EventLog but uses global result (GR) pointers
-begin
-    Solution_Get_EventLog(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function Solution_Get_dblHour(): Double; CDECL;
 begin
@@ -968,13 +958,6 @@ begin
         Result[IMIdx] := DSS_CopyStringAsPChar(DSSPrime.ActiveCircuit.Solution.Inc_Mat_Rows[IMIdx]);
     end;
 end;
-
-procedure Solution_Get_IncMatrixRows_GR(); CDECL;
-// Same as Solution_Get_IncMatrixRows but uses global result (GR) pointers
-begin
-    Solution_Get_IncMatrixRows(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 procedure Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
@@ -1018,12 +1001,5 @@ begin
         end;
     end;
 end;
-
-procedure Solution_Get_IncMatrixCols_GR(); CDECL;
-// Same as Solution_Get_IncMatrixCols but uses global result (GR) pointers
-begin
-    Solution_Get_IncMatrixCols(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 end.

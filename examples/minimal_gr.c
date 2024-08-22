@@ -4,11 +4,9 @@
 
 int main(void)
 {
-    char*** data_PPAnsiChar;
     double** data_PDouble;
     int32_t** data_PInteger;
     int8_t** data_PByte;
-    int32_t* dims_PPAnsiChar;
     int32_t* dims_PDouble;
     int32_t* dims_PInteger;
     int32_t* dims_PByte;
@@ -19,11 +17,9 @@ int main(void)
     
     DSS_Start(0);
     DSS_GetGRPointers(
-        &data_PPAnsiChar,
         &data_PDouble,
         &data_PInteger,
         &data_PByte,
-        &dims_PPAnsiChar,
         &dims_PDouble,
         &dims_PInteger,
         &dims_PByte

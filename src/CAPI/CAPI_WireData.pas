@@ -14,7 +14,6 @@ function WireData_Get_Next(): Integer; CDECL;
 function WireData_Get_Name(): PAnsiChar; CDECL;
 procedure WireData_Set_Name(const Value: PAnsiChar); CDECL;
 procedure WireData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure WireData_Get_AllNames_GR(); CDECL;
 function WireData_Get_Rdc(): Double; CDECL;
 procedure WireData_Set_Rdc(Value: Double); CDECL;
 function WireData_Get_Rac(): Double; CDECL;
@@ -130,12 +129,6 @@ begin
         Exit;
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.WireDataClass.ElementList, False);
-end;
-
-procedure WireData_Get_AllNames_GR(); CDECL;
-// Same as WireData_Get_AllNames but uses global result (GR) pointers
-begin
-    WireData_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_NormAmps(): Double; CDECL;

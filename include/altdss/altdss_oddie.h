@@ -34,11 +34,9 @@ ALTDSS_ODDIE_DLL const void* ctx_Get_Prime(void);
 ALTDSS_ODDIE_DLL const void* ctx_Set_Prime(const void *ctx);
 
 ALTDSS_ODDIE_DLL void ctx_DSS_GetGRPointers(const void* ctx, 
-    char**** DataPtr_PPAnsiChar,
     double*** DataPtr_PDouble,
     int32_t*** DataPtr_PInteger,
     int8_t*** DataPtr_PByte,
-    int32_t** CountPtr_PPAnsiChar,
     int32_t** CountPtr_PDouble,
     int32_t** CountPtr_PInteger,
     int32_t** CountPtr_PByte

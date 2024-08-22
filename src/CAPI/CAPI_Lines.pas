@@ -7,7 +7,6 @@ uses
     CAPI_Types;
 
 procedure Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Lines_Get_AllNames_GR(); CDECL;
 function Lines_Get_Bus1(): PAnsiChar; CDECL;
 function Lines_Get_Bus2(): PAnsiChar; CDECL;
 function Lines_Get_First(): Integer; CDECL;
@@ -155,13 +154,6 @@ begin
         (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.ActiveLine)) = 0
     );
 end;
-
-procedure Lines_Get_AllNames_GR(); CDECL;
-// Same as Lines_Get_AllNames but uses global result (GR) pointers
-begin
-    Lines_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function Lines_Get_Bus1(): PAnsiChar; CDECL;
 var

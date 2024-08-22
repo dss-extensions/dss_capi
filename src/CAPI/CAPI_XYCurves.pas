@@ -34,7 +34,6 @@ procedure XYCurves_Set_Xshift(Value: Double); CDECL;
 procedure XYCurves_Set_Yscale(Value: Double); CDECL;
 procedure XYCurves_Set_Yshift(Value: Double); CDECL;
 procedure XYCurves_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure XYCurves_Get_AllNames_GR(); CDECL;
 
 // API Extensions
 function XYCurves_Get_idx(): Integer; CDECL;
@@ -435,12 +434,6 @@ begin
         Exit;
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.XYCurveClass.ElementList, False);
-end;
-
-procedure XYCurves_Get_AllNames_GR(); CDECL;
-// Same as XYCurves_Get_AllNames but uses global result (GR) pointers
-begin
-    XYCurves_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 //------------------------------------------------------------------------------
 function XYCurves_Get_Pointer(): Pointer; CDECL;

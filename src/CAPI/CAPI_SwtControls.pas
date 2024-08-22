@@ -8,7 +8,6 @@ uses
 
 function SwtControls_Get_Action(): Integer; CDECL;
 procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure SwtControls_Get_AllNames_GR(); CDECL;
 function SwtControls_Get_Delay(): Double; CDECL;
 function SwtControls_Get_First(): Integer; CDECL;
 function SwtControls_Get_IsLocked(): TAPIBoolean; CDECL;
@@ -88,13 +87,6 @@ begin
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.SwtControls, False);
 end;
-
-procedure SwtControls_Get_AllNames_GR(); CDECL;
-// Same as SwtControls_Get_AllNames but uses global result (GR) pointers
-begin
-    SwtControls_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function SwtControls_Get_Delay(): Double; CDECL;
 var

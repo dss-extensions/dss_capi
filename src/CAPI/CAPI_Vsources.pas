@@ -7,7 +7,6 @@ uses
     CAPI_Types;
 
 procedure Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Vsources_Get_AllNames_GR(); CDECL;
 function Vsources_Get_Count(): Integer; CDECL;
 function Vsources_Get_First(): Integer; CDECL;
 function Vsources_Get_Next(): Integer; CDECL;
@@ -70,13 +69,6 @@ begin
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.VsourceClass.ElementList, False);
 end;
-
-procedure Vsources_Get_AllNames_GR(); CDECL;
-// Same as Vsources_Get_AllNames but uses global result (GR) pointers
-begin
-    Vsources_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function Vsources_Get_Count(): Integer; CDECL;
 begin

@@ -16,9 +16,7 @@ procedure DSS_ClearAll(); CDECL;
 function DSS_Get_Version(): PAnsiChar; CDECL;
 function DSS_Start(code: Integer): TAPIBoolean; CDECL;
 procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure DSS_Get_Classes_GR(); CDECL;
 procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure DSS_Get_UserClasses_GR(); CDECL;
 function DSS_Get_NumClasses(): Integer; CDECL;
 function DSS_Get_NumUserClasses(): Integer; CDECL;
 function DSS_Get_DataPath(): PAnsiChar; CDECL;
@@ -146,25 +144,11 @@ begin
     end;
 
 end;
-
-procedure DSS_Get_Classes_GR(); CDECL;
-// Same as DSS_Get_Classes but uses global result (GR) pointers
-begin
-    DSS_Get_Classes(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount, '');
 end;
-
-procedure DSS_Get_UserClasses_GR(); CDECL;
-// Same as DSS_Get_UserClasses but uses global result (GR) pointers
-begin
-    DSS_Get_UserClasses(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function DSS_Get_NumClasses(): Integer; CDECL;
 begin
@@ -253,8 +237,6 @@ begin
     if not Value then
     begin
         // Clean-up any previous values to avoid issues in the consumers
-        DSSPrime.GR_Counts_PPAnsiChar[2] := 0;
-        DSSPrime.GR_Counts_PPAnsiChar[3] := 0;
         DSSPrime.GR_Counts_PDouble[2] := 0;
         DSSPrime.GR_Counts_PDouble[3] := 0;
         DSSPrime.GR_Counts_PInteger[2] := 0;

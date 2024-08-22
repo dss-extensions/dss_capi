@@ -7,7 +7,6 @@ uses
     CAPI_Types;
 
 procedure Reactors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Reactors_Get_AllNames_GR(); CDECL;
 function Reactors_Get_Name(): PAnsiChar; CDECL;
 procedure Reactors_Set_Name(const Value: PAnsiChar); CDECL;
 function Reactors_Get_First(): Integer; CDECL;
@@ -107,13 +106,6 @@ begin
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Reactors, False);
 end;
-
-procedure Reactors_Get_AllNames_GR(); CDECL;
-// Same as Reactors_Get_AllNames but uses global result (GR) pointers
-begin
-    Reactors_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function Reactors_Get_First(): Integer; CDECL;
 begin

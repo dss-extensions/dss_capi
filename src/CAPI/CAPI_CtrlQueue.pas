@@ -20,7 +20,6 @@ procedure CtrlQueue_Set_Action(Param1: Integer); CDECL;
 function CtrlQueue_Get_QueueSize(): Integer; CDECL;
 procedure CtrlQueue_DoAllQueue(); CDECL;
 procedure CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure CtrlQueue_Get_Queue_GR(); CDECL;
 
 implementation
 
@@ -169,12 +168,6 @@ begin
         end;
     end;
     DefaultResult(ResultPtr, ResultCount, 'No events');
-end;
-
-procedure CtrlQueue_Get_Queue_GR(); CDECL;
-// Same as CtrlQueue_Get_Queue but uses global result (GR) pointers
-begin
-    CtrlQueue_Get_Queue(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 end.

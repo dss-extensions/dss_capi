@@ -18,13 +18,11 @@ procedure ctx_DSS_GetGRPointers(
     DSS: TDSSContext;
 
     // Pointers to the global variables that contains the actual pointers.
-    var DataPtr_PPAnsiChar: PPPAnsiChar;
     var DataPtr_PDouble: PPDouble;
     var DataPtr_PInteger: PPInteger;
     var DataPtr_PByte: PPByte;
 
     // These are not reallocated during the execution, can return the actual pointer values
-    var CountPtr_PPAnsiChar: PAPISize;
     var CountPtr_PDouble: PAPISize;
     var CountPtr_PInteger: PAPISize;
     var CountPtr_PByte: PAPISize
@@ -32,13 +30,11 @@ procedure ctx_DSS_GetGRPointers(
 
 procedure DSS_GetGRPointers(
     // Pointers to the global variables that contains the actual pointers.
-    var DataPtr_PPAnsiChar: PPPAnsiChar;
     var DataPtr_PDouble: PPDouble;
     var DataPtr_PInteger: PPInteger;
     var DataPtr_PByte: PPByte;
 
     // These are not reallocated during the execution, can return the actual pointer values
-    var CountPtr_PPAnsiChar: PAPISize;
     var CountPtr_PDouble: PAPISize;
     var CountPtr_PInteger: PAPISize;
     var CountPtr_PByte: PAPISize
@@ -561,11 +557,9 @@ end;
 procedure ctx_DSS_GetGRPointers(
     DSS: TDSSContext;
     
-    var DataPtr_PPAnsiChar: PPPAnsiChar;
     var DataPtr_PDouble: PPDouble;
     var DataPtr_PInteger: PPInteger;
     var DataPtr_PByte: PPByte;
-    var CountPtr_PPAnsiChar: PAPISize;
     var CountPtr_PDouble: PAPISize;
     var CountPtr_PInteger: PAPISize;
     var CountPtr_PByte: PAPISize
@@ -574,11 +568,9 @@ begin
     if DSS = NIL then DSS := DSSPrime;
     with DSS do
     begin
-        if (@DataPtr_PPAnsiChar <> nil) then DataPtr_PPAnsiChar := @GR_DataPtr_PPAnsiChar;
         if (@DataPtr_PDouble <> nil) then DataPtr_PDouble := @GR_DataPtr_PDouble;
         if (@DataPtr_PInteger <> nil) then DataPtr_PInteger := @GR_DataPtr_PInteger;
         if (@DataPtr_PByte <> nil) then DataPtr_PByte := @GR_DataPtr_PByte;
-        CountPtr_PPAnsiChar := @GR_Counts_PPAnsiChar[0];
         CountPtr_PDouble := @GR_Counts_PDouble[0];
         CountPtr_PInteger := @GR_Counts_PInteger[0];
         CountPtr_PByte := @GR_Counts_PByte[0];
@@ -586,11 +578,9 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure DSS_GetGRPointers(
-    var DataPtr_PPAnsiChar: PPPAnsiChar;
     var DataPtr_PDouble: PPDouble;
     var DataPtr_PInteger: PPInteger;
     var DataPtr_PByte: PPByte;
-    var CountPtr_PPAnsiChar: PAPISize;
     var CountPtr_PDouble: PAPISize;
     var CountPtr_PInteger: PAPISize;
     var CountPtr_PByte: PAPISize
@@ -598,11 +588,9 @@ procedure DSS_GetGRPointers(
 begin
     ctx_DSS_GetGRPointers(
         DSSPrime,
-        DataPtr_PPAnsiChar,
         DataPtr_PDouble,
         DataPtr_PInteger,
         DataPtr_PByte,
-        CountPtr_PPAnsiChar,
         CountPtr_PDouble,
         CountPtr_PInteger,
         CountPtr_PByte
@@ -677,11 +665,9 @@ begin
     DSS_Dispose_PByte(DSS.GR_DataPtr_PByte);
     DSS_Dispose_PDouble(DSS.GR_DataPtr_PDouble);
     DSS_Dispose_PInteger(DSS.GR_DataPtr_PInteger);
-    DSS_Dispose_PPAnsiChar(DSS.GR_DataPtr_PPAnsiChar, DSS.GR_Counts_PPAnsiChar[1]);
 
     for i := 0 to 3 do
     begin
-        DSS.GR_Counts_PPAnsiChar[i] := 0;
         DSS.GR_Counts_PDouble[i] := 0;
         DSS.GR_Counts_PInteger[i] := 0;
         DSS.GR_Counts_PByte[i] := 0;

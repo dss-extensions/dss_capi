@@ -56,9 +56,7 @@ procedure Bus_Get_VMagAngle_GR(); CDECL;
 function Bus_Get_TotalMiles(): Double; CDECL;
 function Bus_Get_SectionID(): Integer; CDECL;
 procedure Bus_Get_LineList(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Bus_Get_LineList_GR(); CDECL;
 procedure Bus_Get_LoadList(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure Bus_Get_LoadList_GR(); CDECL;
 procedure Bus_Get_ZSC012Matrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_ZSC012Matrix_GR(); CDECL;
 procedure Bus_Get_AllPCEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -698,13 +696,6 @@ begin
         end;
     end;
 end;
-
-procedure Bus_Get_LineList_GR(); CDECL;
-// Same as Bus_Get_LineList but uses global result (GR) pointers
-begin
-    Bus_Get_LineList(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 procedure Bus_Get_LoadList(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 // Returns list of LOAD elements connected to this bus
@@ -747,12 +738,6 @@ begin
             Inc(k);
         end;
     end;
-end;
-
-procedure Bus_Get_LoadList_GR(); CDECL;
-// Same as Bus_Get_LoadList but uses global result (GR) pointers
-begin
-    Bus_Get_LoadList(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 //------------------------------------------------------------------------------
 procedure Bus_Get_ZSC012Matrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL; //TODO: remove duplication between this and DoZsc012Cmd

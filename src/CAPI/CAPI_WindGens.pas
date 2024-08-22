@@ -7,12 +7,10 @@ uses
     CAPI_Types;
 
 procedure WindGens_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure WindGens_Get_AllNames_GR(); CDECL;
 function WindGens_Get_First(): Integer; CDECL;
 function WindGens_Get_Name(): PAnsiChar; CDECL;
 function WindGens_Get_Next(): Integer; CDECL;
 procedure WindGens_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-procedure WindGens_Get_RegisterNames_GR(); CDECL;
 procedure WindGens_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure WindGens_Get_RegisterValues_GR(); CDECL;
 procedure WindGens_Set_Name(const Value: PAnsiChar); CDECL;
@@ -127,13 +125,6 @@ begin
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.WindGenClass.ElementList, False);
 end;
-
-procedure WindGens_Get_AllNames_GR(); CDECL;
-// Same as WindGens_Get_AllNames but uses global result (GR) pointers
-begin
-    WindGens_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 function WindGens_Get_First(): Integer; CDECL;
 begin
@@ -175,13 +166,6 @@ begin
         Result[k] := DSS_CopyStringAsPChar(WindGenCls.RegisterNames[k]);
     end;
 end;
-
-procedure WindGens_Get_RegisterNames_GR(); CDECL;
-// Same as WindGens_Get_RegisterNames but uses global result (GR) pointers
-begin
-    WindGens_Get_RegisterNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
-end;
-
 //------------------------------------------------------------------------------
 procedure WindGens_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
