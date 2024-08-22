@@ -1,7 +1,7 @@
 /*! \file dss_capi.h */
 #ifndef DSS_CAPI_DLL_H
 #define DSS_CAPI_DLL_H
-#define DSS_CAPI_VERSION "0.14.0-dev"
+#define DSS_CAPI_VERSION "0.15.0-dev"
 #ifndef DSS_CAPI_DLL
 //#define DSS_CAPI_DLL __declspec(dllimport)
 #define DSS_CAPI_DLL
