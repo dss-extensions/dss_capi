@@ -1864,25 +1864,25 @@ ALTDSS_ODDIE_DLL void ctx_Generators_Set_Class_(const void* ctx, int32_t Value)
 ALTDSS_ODDIE_DLL const char* ctx_Generators_Get_Bus1(const void* ctx)
 {
     CTX_OR_PRIME
-    return oddie_get_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "Bus1");
+    return oddie_get_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "? Bus1");
 }
 
 ALTDSS_ODDIE_DLL const char* ctx_Generators_Get_duty(const void* ctx)
 {
     CTX_OR_PRIME
-    return oddie_get_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "duty");
+    return oddie_get_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "? duty");
 }
 
 ALTDSS_ODDIE_DLL const char* ctx_Generators_Get_daily(const void* ctx)
 {
     CTX_OR_PRIME
-    return oddie_get_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "daily");
+    return oddie_get_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "? daily");
 }
 
 ALTDSS_ODDIE_DLL const char* ctx_Generators_Get_Yearly(const void* ctx)
 {
     CTX_OR_PRIME
-    return oddie_get_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "Yearly");
+    return oddie_get_str_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "? Yearly");
 }
 
 ALTDSS_ODDIE_DLL int32_t ctx_WindGens_Get_Class_(const void* ctx)
@@ -1894,25 +1894,25 @@ ALTDSS_ODDIE_DLL int32_t ctx_WindGens_Get_Class_(const void* ctx)
 ALTDSS_ODDIE_DLL const char* ctx_WindGens_Get_Bus1(const void* ctx)
 {
     CTX_OR_PRIME
-    return oddie_get_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "Bus1");
+    return oddie_get_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "? Bus1");
 }
 
 ALTDSS_ODDIE_DLL const char* ctx_WindGens_Get_duty(const void* ctx)
 {
     CTX_OR_PRIME
-    return oddie_get_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "duty");
+    return oddie_get_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "? duty");
 }
 
 ALTDSS_ODDIE_DLL const char* ctx_WindGens_Get_daily(const void* ctx)
 {
     CTX_OR_PRIME
-    return oddie_get_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "daily");
+    return oddie_get_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "? daily");
 }
 
 ALTDSS_ODDIE_DLL const char* ctx_WindGens_Get_Yearly(const void* ctx)
 {
     CTX_OR_PRIME
-    return oddie_get_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "Yearly");
+    return oddie_get_str_property(ctx, "WindGen", ctx_WindGens_Get_Name(ctx), "? Yearly");
 }
 
 ALTDSS_ODDIE_DLL uint16_t ctx_WindGens_Get_IsDelta(const void* ctx)
@@ -1993,37 +1993,37 @@ ALTDSS_ODDIE_DLL void ctx_WindGens_Set_Yearly(const void* ctx, const char* Value
 ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_daily(const void* ctx)
 {
     CTX_OR_PRIME
-    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "daily");
+    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "? daily");
 }
 
 ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_duty(const void* ctx)
 {
     CTX_OR_PRIME
-    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "duty");
+    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "? duty");
 }
 
 ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_Tdaily(const void* ctx)
 {
     CTX_OR_PRIME
-    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "Tdaily");
+    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "? Tdaily");
 }
 
 ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_Tduty(const void* ctx)
 {
     CTX_OR_PRIME
-    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "Tduty");
+    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "? Tduty");
 }
 
 ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_Tyearly(const void* ctx)
 {
     CTX_OR_PRIME
-    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "TYearly");
+    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "? TYearly");
 }
 
 ALTDSS_ODDIE_DLL const char* ctx_PVSystems_Get_yearly(const void* ctx)
 {
     CTX_OR_PRIME
-    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "Yearly");
+    return oddie_get_str_property(ctx, "PVSystem", ctx_PVSystems_Get_Name(ctx), "? Yearly");
 }
 
 ALTDSS_ODDIE_DLL void ctx_PVSystems_Set_daily(const void* ctx, const char* Value)
@@ -2154,12 +2154,12 @@ ALTDSS_ODDIE_DLL int32_t ctx_Generators_Get_Status(const void* ctx)
     CTX_OR_PRIME
     OddieContext* oddie_ctx = (OddieContext*) ctx;
     char r;
-    (void) ctx_Lines_Get_Units(ctx);
+    (void) ctx_Generators_Get_kva(ctx);
     if (oddie_ctx->error_number)
     {
         return 0;
     }
-    r = (char) oddie_get_int_property(ctx, "Line", ctx_Lines_Get_Name(ctx), "? Switch", true);
+    r = (char) oddie_get_int_property(ctx, "Generator", ctx_Generators_Get_Name(ctx), "? Status", true);
     return ((r == 'F') || (r == 'f')) ? 1 : 0;
 }
 
