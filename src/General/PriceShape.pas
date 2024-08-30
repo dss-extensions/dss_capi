@@ -97,7 +97,6 @@ type
         FMean,
         FStdDev: Double;
 
-        function Get_Interval: Double;
         procedure SaveToDblFile;
         procedure SaveToSngFile;
         procedure CalcMeanandStdDev;
@@ -114,12 +113,10 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        function GetPrice(hr: Double): Double;  // Get Prices at specified time, hr
-        function Price(i: Integer): Double;  // get Prices by index
-        function Hour(i: Integer): Double;  // get hour corresponding to point index
+        function PriceAtHour(hr: Double): Double;  // Get Prices at specified time, hr
+        function PriceAtIndex(i: Integer): Double;  // get Prices by index
 
         property NumPoints: Integer READ FNumPoints;
-        property PresentInterval: Double READ Get_Interval;
         property Mean: Double READ Get_Mean;
         property StdDev: Double READ Get_StdDev;
     end;
@@ -406,7 +403,7 @@ begin
     inherited destroy;
 end;
 
-function TPriceShapeObj.GetPrice(hr: Double): Double;
+function TPriceShapeObj.PriceAtHour(hr: Double): Double;
 // This FUNCTION returns the Price for the given hour.
 // If no points exist in the curve, the result is  0.0
 // If there are fewer points than requested, the curve is simply assumed to repeat
@@ -487,19 +484,6 @@ begin
     FStdDevCalculated := TRUE;
 end;
 
-function TPriceShapeObj.Get_Interval: Double;
-begin
-    if Interval > 0.0 then
-        Result := Interval
-    else
-    begin
-        if LastValueAccessed > 1 then
-            Result := Hours[LastValueAccessed] - Hours[LastValueAccessed - 1]
-        else
-            Result := 0.0;
-    end;
-end;
-
 function TPriceShapeObj.Get_Mean: Double;
 begin
     if not FStdDevCalculated then
@@ -514,7 +498,7 @@ begin
     Result := FStdDev;
 end;
 
-function TPriceShapeObj.Price(i: Integer): Double;
+function TPriceShapeObj.PriceAtIndex(i: Integer): Double;
 begin
     if (i <= FNumPoints) and (i > 0) then
     begin
@@ -523,25 +507,6 @@ begin
     end
     else
         Result := 0.0;
-end;
-
-function TPriceShapeObj.Hour(i: Integer): Double;
-begin
-    if Interval = 0 then
-    begin
-        if (i <= FNumPoints) and (i > 0) then
-        begin
-            Result := Hours[i];
-            LastValueAccessed := i;
-        end
-        else
-            Result := 0.0;
-    end
-    else
-    begin
-        Result := Hours[i] * Interval;
-        LastValueAccessed := i;
-    end;
 end;
 
 procedure TPriceShapeObj.SaveToDblFile;

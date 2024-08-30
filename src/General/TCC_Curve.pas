@@ -64,8 +64,6 @@ type
         function GetTCCTime(const C_Value: Double): Double;  // Return operating time for a particular time value
         function GetUVTime(const V_Value: Double): Double;  // Return operating time for undervoltage relay
         function GetOVTime(const V_Value: Double): Double;  // Return operating time for overvoltage relay
-        function Value(i: Integer): Double;  // get C_Value by index
-        function Time(i: Integer): Double;  // get time value (sec) corresponding to point index
 
         property NumPoints: Integer READ Npts;
     end;
@@ -323,28 +321,6 @@ begin
             Result := T_Values[i + 1];
         end;
     end;
-end;
-
-function TTCC_CurveObj.Value(i: Integer): Double;
-begin
-    if (i <= Npts) and (i > 0) then
-    begin
-        Result := C_Values[i];
-        LastValueAccessed := i;
-    end
-    else
-        Result := 0.0;
-end;
-
-function TTCC_CurveObj.Time(i: Integer): Double;
-begin
-    if (i <= Npts) and (i > 0) then
-    begin
-        Result := T_Values[i];
-        LastValueAccessed := i;
-    end
-    else
-        Result := 0.0;
 end;
 
 end.

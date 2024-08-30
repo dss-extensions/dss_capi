@@ -130,6 +130,9 @@ procedure DelFilesFromDir(DSS: TDSSContext; Directory: String; FileMask: String 
 function NameIfNotNil(obj: TDSSObject): String;
 function FullNameIfNotNil(obj: TDSSObject): String;
 
+function LowerBound(data: PSingleArray0; npts: Integer; Stride: Integer; value: Single): Integer; overload;
+function LowerBound(data: PDoubleArray0; npts: Integer; Stride: Integer; value: Single): Integer; overload;
+
 implementation
 
 uses
@@ -2401,6 +2404,56 @@ begin
         Result := ''
     else
         Result := obj.FullName;
+end;
+
+function LowerBound(data: PSingleArray0; npts: Integer; Stride: Integer; value: Single): Integer; overload;
+var
+    l, r, m: Integer;
+    moffset: Int64;
+begin
+    l := 0;
+    r := npts - 1;
+
+    while l <= r do
+    begin
+        m := (l + r) div 2;
+        moffset := m * Stride;
+
+        if data[moffset] < value then
+        begin
+            l := m + 1
+        end
+        else
+        begin
+            r := m - 1;
+        end;
+    end;
+    Result := l;
+end;
+
+function LowerBound(data: PDoubleArray0; npts: Integer; Stride: Integer; value: Single): Integer; overload;
+var
+    l, r, m: Integer;
+    moffset: Int64;
+begin
+    l := 0;
+    r := npts - 1;
+
+    while l <= r do
+    begin
+        m := (l + r) div 2;
+        moffset := m * Stride;
+
+        if data[moffset] < value then
+        begin
+            l := m + 1
+        end
+        else
+        begin
+            r := m - 1;
+        end;
+    end;
+    Result := l;
 end;
 
 end.

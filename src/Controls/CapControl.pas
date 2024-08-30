@@ -1157,7 +1157,7 @@ begin
                         Exit;
                     end;
 
-                    nextState := ctrlSignalShape.GetMultAtHour(ActiveCircuit.Solution.DynaVars.dblHour).re;
+                    nextState := ctrlSignalShape.MultAtHour(ActiveCircuit.Solution.DynaVars.dblHour).re;
                     if not ((nextState <> 0) xor (PresentState = CTRL_OPEN)) then
                     begin
                         if PresentState = CTRL_OPEN then

@@ -996,7 +996,7 @@ begin
             // Uses same logic as LOAD
             TSolveMode.DAILYMODE:
             begin
-                CalcDailyMult(dblHour); // set Shapefactor.re = Pmult(t) or PerUnit
+                CalcDailyMult(dblHour); // set Shapefactor.re = PMultAtIndex(t) or PerUnit
             end;
             TSolveMode.YEARLYMODE:
             begin
@@ -1009,7 +1009,7 @@ begin
             TSolveMode.DYNAMICMODE:
             begin
                 // This mode allows use of one class of load shape in DYNAMIC mode
-                // Sets Shapefactor.re = pmult(t) or PerUnit value
+                // Sets Shapefactor.re = PMultAtIndex(t) or PerUnit value
                 case ActiveCircuit.ActiveLoadShapeClass of
                     USEDAILY:
                         CalcDailyMult(dblHour);
@@ -1177,7 +1177,7 @@ procedure TVSourceObj.CalcDailyMult(Hr: Double);
 begin
     if DailyShapeObj <> NIL then
     begin
-        ShapeFactor := DailyShapeObj.GetMultAtHour(Hr);
+        ShapeFactor := DailyShapeObj.MultAtHour(Hr);
         ShapeIsActual := DailyShapeObj.UseActual;
     end
     else
@@ -1188,7 +1188,7 @@ procedure TVSourceObj.CalcDutyMult(Hr: Double);
 begin
     if DutyShapeObj <> NIL then
     begin
-        ShapeFactor := DutyShapeObj.GetMultAtHour(Hr);
+        ShapeFactor := DutyShapeObj.MultAtHour(Hr);
         ShapeIsActual := DutyShapeObj.UseActual;
     end
     else
@@ -1200,7 +1200,7 @@ begin
     // Yearly curve is assumed to be hourly only
     if YearlyShapeObj <> NIL then
     begin
-        ShapeFactor := YearlyShapeObj.GetMultAtHour(Hr);
+        ShapeFactor := YearlyShapeObj.MultAtHour(Hr);
         ShapeIsActual := YearlyShapeObj.UseActual;
     end
     else

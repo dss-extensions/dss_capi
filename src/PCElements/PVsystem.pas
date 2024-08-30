@@ -987,7 +987,7 @@ procedure TPVsystemObj.CalcDailyMult(Hr: Double);
 begin
     if (DailyShapeObj <> NIL) then
     begin
-        ShapeFactor := DailyShapeObj.GetMultAtHour(Hr);
+        ShapeFactor := DailyShapeObj.MultAtHour(Hr);
     end
     else
         ShapeFactor := CDOUBLEONE;  // Default to no  variation
@@ -997,7 +997,7 @@ procedure TPVsystemObj.CalcDailyTemperature(Hr: Double);
 begin
     if (DailyTShapeObj <> NIL) then
     begin
-        TShapeValue := DailyTShapeObj.GetTemperature(Hr);
+        TShapeValue := DailyTShapeObj.GetTemperatureAtHour(Hr);
     end
     else
         TShapeValue := PVSystemVars.FTemperature;
@@ -1008,7 +1008,7 @@ procedure TPVsystemObj.CalcDutyMult(Hr: Double);
 begin
     if DutyShapeObj <> NIL then
     begin
-        ShapeFactor := DutyShapeObj.GetMultAtHour(Hr + DutyStart);
+        ShapeFactor := DutyShapeObj.MultAtHour(Hr + DutyStart);
     end
     else
         CalcDailyMult(Hr);  // Default to Daily Mult If no duty curve specified
@@ -1018,7 +1018,7 @@ procedure TPVsystemObj.CalcDutyTemperature(Hr: Double);
 begin
     if DutyTShapeObj <> NIL then
     begin
-        TShapeValue := DutyTShapeObj.GetTemperature(Hr);
+        TShapeValue := DutyTShapeObj.GetTemperatureAtHour(Hr);
     end
     else
         CalcDailyTemperature(Hr);  // Default to Daily Mult If no duty curve specified
@@ -1028,7 +1028,7 @@ procedure TPVsystemObj.CalcYearlyMult(Hr: Double);
 begin
     if YearlyShapeObj <> NIL then
     begin
-        ShapeFactor := YearlyShapeObj.GetMultAtHour(Hr + DutyStart);
+        ShapeFactor := YearlyShapeObj.MultAtHour(Hr + DutyStart);
     end
     else
         CalcDailyMult(Hr);  // Defaults to Daily curve
@@ -1038,7 +1038,7 @@ procedure TPVsystemObj.CalcYearlyTemperature(Hr: Double);
 begin
     if YearlyTShapeObj <> NIL then
     begin
-        TShapeValue := YearlyTShapeObj.GetTemperature(Hr);
+        TShapeValue := YearlyTShapeObj.GetTemperatureAtHour(Hr);
     end
     else
         CalcDailyTemperature(Hr);  // Defaults to Daily curve

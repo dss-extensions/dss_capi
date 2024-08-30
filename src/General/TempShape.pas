@@ -98,7 +98,6 @@ type
         FMean,
         FStdDev: Double;
 
-        function Get_Interval: Double;
         procedure SaveToDblFile;
         procedure SaveToSngFile;
         procedure CalcMeanandStdDev;
@@ -118,12 +117,9 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        function GetTemperature(hr: Double): Double;  // Get Temperatures at specified time, hr
-        function Temperature(i: Integer): Double;  // get Temperatures by index
-        function Hour(i: Integer): Double;  // get hour corresponding to point index
+        function GetTemperatureAtHour(hr: Double): Double;  // Get Temperatures at specified time, hr
 
         property NumPoints: Integer READ FNumPoints;
-        property PresentInterval: Double READ Get_Interval;
         property Mean: Double READ Get_Mean WRITE Set_Mean;
         property StdDev: Double READ Get_StdDev WRITE Set_StdDev;
     end;
@@ -388,7 +384,7 @@ begin
     inherited destroy;
 end;
 
-function TTShapeObj.GetTemperature(hr: Double): Double;
+function TTShapeObj.GetTemperatureAtHour(hr: Double): Double;
 // This FUNCTION returns the Temperature for the given hour.
 // If no points exist in the curve, the result is  0.0
 // If there are fewer points than requested, the curve is simply assumed to repeat
@@ -468,19 +464,6 @@ begin
     FStdDevCalculated := TRUE;
 end;
 
-function TTShapeObj.Get_Interval: Double;
-begin
-    if Interval > 0.0 then
-        Result := Interval
-    else
-    begin
-        if LastValueAccessed > 1 then
-            Result := Hours[LastValueAccessed] - Hours[LastValueAccessed - 1]
-        else
-            Result := 0.0;
-    end;
-end;
-
 function TTShapeObj.Get_Mean: Double;
 begin
     if not FStdDevCalculated then
@@ -493,36 +476,6 @@ begin
     if not FStdDevCalculated then
         CalcMeanandStdDev;
     Result := FStdDev;
-end;
-
-function TTShapeObj.Temperature(i: Integer): Double;
-begin
-    if (i <= FNumPoints) and (i > 0) then
-    begin
-        Result := TValues[i];
-        LastValueAccessed := i;
-    end
-    else
-        Result := 0.0;
-end;
-
-function TTShapeObj.Hour(i: Integer): Double;
-begin
-    if Interval = 0 then
-    begin
-        if (i <= FNumPoints) and (i > 0) then
-        begin
-            Result := Hours[i];
-            LastValueAccessed := i;
-        end
-        else
-            Result := 0.0;
-    end
-    else
-    begin
-        Result := Hours[i] * Interval;
-        LastValueAccessed := i;
-    end;
 end;
 
 procedure TTShapeObj.SaveToDblFile;

@@ -1679,7 +1679,7 @@ procedure TStorageControllerObj.CalcDailyMult(Hr: Double);
 begin
     if (DailyShapeObj <> NIL) then
     begin
-        LoadShapeMult := DailyShapeObj.GetMultAtHour(Hr);
+        LoadShapeMult := DailyShapeObj.MultAtHour(Hr);
     end
     else
         LoadShapeMult := CDoubleOne;  // Default to no  variation
@@ -1691,7 +1691,7 @@ procedure TStorageControllerObj.CalcDutyMult(Hr: Double);
 begin
     if DutyShapeObj <> NIL then
     begin
-        LoadShapeMult := DutyShapeObj.GetMultAtHour(Hr);
+        LoadShapeMult := DutyShapeObj.MultAtHour(Hr);
     end
     else
         CalcDailyMult(Hr);  // Default to Daily Mult If no duty curve specified
@@ -1702,7 +1702,7 @@ procedure TStorageControllerObj.CalcYearlyMult(Hr: Double);
 begin
     if YearlyShapeObj <> NIL then
     begin
-        LoadShapeMult := YearlyShapeObj.GetMultAtHour(Hr);
+        LoadShapeMult := YearlyShapeObj.MultAtHour(Hr);
     end
     else
         CalcDailyMult(Hr);  // Defaults to Daily curve

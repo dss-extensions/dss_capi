@@ -1462,16 +1462,16 @@ begin
                     DSS.ActiveDSSObject := DSS.LoadshapeClass.ElementList.Active;
                     for iElem := 0 to High(myLoadShape) do
                     begin
-                        myLoadShape[iElem] := myLoadShape[iElem] + TLoadshapeObj(DSS.ActiveDSSObject).PMult(iElem);
+                        myLoadShape[iElem] := myLoadShape[iElem] + TLoadshapeObj(DSS.ActiveDSSObject).PMultAtIndex(iElem);
 
-                        if TLoadshapeObj(DSS.ActiveDSSObject).QMult(iElem, qmult) then
+                        if TLoadshapeObj(DSS.ActiveDSSObject).QMultAtIndex(iElem, qmult) then
                         begin
                             myWeight := qmult;
                             if myWeight = 0 then
                             begin
                                 if PFSpecified and (myPF <> 1.0) then  // Qmult not specified but PF was
                                 begin  // user specified the PF for this load
-                                    myWeight := TLoadshapeObj(DSS.ActiveDSSObject).PMult(iElem) * SQRT((1.0 / SQR(myPF) - 1));
+                                    myWeight := TLoadshapeObj(DSS.ActiveDSSObject).PMultAtIndex(iElem) * SQRT((1.0 / SQR(myPF) - 1));
                                     if myPF < 0.0 then // watts and vare are in opposite directions
                                         myWeight := -myWeight;
                                 end
@@ -1482,7 +1482,7 @@ begin
                             myWeight := 0.0;
                             if PFSpecified and (myPF <> 1.0) then  // Qmult not specified but PF was
                             begin  // user specified the PF for this load
-                                myWeight := TLoadshapeObj(DSS.ActiveDSSObject).PMult(iElem) * SQRT((1.0 / SQR(myPF) - 1));
+                                myWeight := TLoadshapeObj(DSS.ActiveDSSObject).PMultAtIndex(iElem) * SQRT((1.0 / SQR(myPF) - 1));
                                 if myPF < 0.0 then // watts and vare are in opposite directions
                                     myWeight := -myWeight;
                             end

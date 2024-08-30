@@ -132,9 +132,9 @@ begin
                 with Dynavars do
                 begin
                     IncrementTime();
-                    ckt.DefaultHourMult := ckt.DefaultYearlyShapeObj.GetMultAtHour(dblHour);
+                    ckt.DefaultHourMult := ckt.DefaultYearlyShapeObj.MultAtHour(dblHour);
                     if ckt.PriceCurveObj <> NIL then
-                        ckt.PriceSignal := ckt.PriceCurveObj.GetPrice(dblHour);
+                        ckt.PriceSignal := ckt.PriceCurveObj.PriceAtHour(dblHour);
                     SolveSnap();
                     DSS.MonitorClass.SampleAll();  // Make all monitors take a sample
                     if SampleTheMeters then
@@ -180,9 +180,9 @@ begin
                 with DynaVars do
                 begin
                     IncrementTime();
-                    ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.GetMultAtHour(dblHour);
+                    ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.MultAtHour(dblHour);
                     if ckt.PriceCurveObj <> NIL then
-                        ckt.PriceSignal := ckt.PriceCurveObj.GetPrice(dblHour);
+                        ckt.PriceSignal := ckt.PriceCurveObj.PriceAtHour(dblHour);
                     SolveSnap();
                     DSS.MonitorClass.SampleAll();  // Make all monitors take a sample
                     if SampleTheMeters then
@@ -228,9 +228,9 @@ begin
                 with DynaVars do
                 begin
                     IncrementTime();
-                    ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.GetMultAtHour(dblHour);
+                    ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.MultAtHour(dblHour);
                     if ckt.PriceCurveObj <> NIL then
-                        ckt.PriceSignal := ckt.PriceCurveObj.GetPrice(dblHour);
+                        ckt.PriceSignal := ckt.PriceCurveObj.PriceAtHour(dblHour);
                     SolveSnap();
                     DSS.MonitorClass.SampleAll();  // Make all monitors take a sample
                     if SampleTheMeters then
@@ -270,7 +270,7 @@ begin
                 with DynaVars do
                 begin
                     IncrementTime();
-                    ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.GetMultAtHour(dblHour);
+                    ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.MultAtHour(dblHour);
                     // Assume pricesignal stays constant for dutycycle calcs
                     SolveSnap();
                     DSS.MonitorClass.SampleAll();  // Make all monitors take a sample
@@ -307,7 +307,7 @@ begin
             with DynaVars do
             begin
                 // Compute basic multiplier from Default loadshape to use in generator dispatch, if any
-                ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.GetMultAtHour(dblHour);
+                ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.MultAtHour(dblHour);
 
                 SolveSnap();
 
@@ -344,7 +344,7 @@ begin
                 with DynaVars do
                 begin
                     IncrementTime();
-                    ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.GetMultAtHour(dblHour);
+                    ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.MultAtHour(dblHour);
                     // Assume price signal stays constant for dynamic calcs
                     // Predictor
                     IterationFlag := 0;
@@ -456,7 +456,7 @@ begin
                     for i := 1 to Ndaily do
                     begin
                         IncrementTime();
-                        ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.GetMultAtHour(dblHour);
+                        ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.MultAtHour(dblHour);
                         SolveSnap();
 
                         DSS.MonitorClass.SampleAll();  // Make all monitors take a sample
@@ -509,9 +509,9 @@ begin
 {$ENDIF}
         ProgressCount := 0;
 
-        ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.GetMultAtHour(DynaVars.dblHour);
+        ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.MultAtHour(DynaVars.dblHour);
         if ckt.PriceCurveObj <> NIL then
-            ckt.PriceSignal := ckt.PriceCurveObj.GetPrice(DynaVars.dblHour);
+            ckt.PriceSignal := ckt.PriceCurveObj.PriceAtHour(DynaVars.dblHour);
 
         for N := 1 to NumberOfTimes do
             if not DSS.SolutionAbort then
@@ -591,19 +591,19 @@ begin
                 // Set the time
                 IncrementTime();
 
-                ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.GetMultAtHour(dblHour);
+                ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.MultAtHour(dblHour);
 
                 if not DSS.SolutionAbort then
                 begin
                     for N := 1 to ckt.LoadDurCurveObj.NumPoints do
                     begin
-                        ckt.LoadMultiplier := ckt.LoadDurCurveObj.Mult(N);  // Always set LoadMultiplier with prop in case matrix must be rebuilt
+                        ckt.LoadMultiplier := ckt.LoadDurCurveObj.MultAtIndex(N);  // Always set LoadMultiplier with prop in case matrix must be rebuilt
                         // Adjust meter interval to interval on value of present Load-Duration Curve
-                        IntervalHrs := ckt.LoadDurCurveObj.PresentInterval;
+                        IntervalHrs := ckt.LoadDurCurveObj.IntervalAtIndex(N);
 
                         // Price curve must correspond to load-duration curve
                         if ckt.PriceCurveObj <> NIL then
-                            ckt.PriceSignal := ckt.PriceCurveObj.Price(N);
+                            ckt.PriceSignal := ckt.PriceCurveObj.PriceAtIndex(N);
 
                         SolveSnap();
 
@@ -658,7 +658,7 @@ begin
 
     // DSS.MonitorClass.ResetAll;
     // DSS.EnergyMeterClass.ResetAll;
-    ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.GetMultAtHour(DynaVars.dblHour);
+    ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.MultAtHour(DynaVars.dblHour);
     if not DSS.DIFilesAreOpen then
         DSS.EnergyMeterClass.OpenAllDIFiles;   // Open Demand Interval Files, if desired
 
@@ -675,12 +675,12 @@ begin
         for N := 1 to ckt.LoadDurCurveObj.NumPoints do
         begin
             // Adjust meter interval to interval on value of present Load-Duration Curve
-            ckt.LoadMultiplier := ckt.LoadDurCurveObj.Mult(N);     // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
-            IntervalHrs := ckt.LoadDurCurveObj.PresentInterval;
+            ckt.LoadMultiplier := ckt.LoadDurCurveObj.MultAtIndex(N);     // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
+            IntervalHrs := ckt.LoadDurCurveObj.IntervalAtIndex(N);
 
             // Price curve must correspond to load-duration curve
             if ckt.PriceCurveObj <> NIL then
-                ckt.PriceSignal := ckt.PriceCurveObj.Price(N);
+                ckt.PriceSignal := ckt.PriceCurveObj.PriceAtIndex(N);
 
             SolveSnap();
 
@@ -1087,7 +1087,7 @@ begin
     with DynaVars do
     begin
         // Compute basic multiplier from Default loadshape to use in generator dispatch, if any
-        ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.GetMultAtHour(dblHour);
+        ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.MultAtHour(dblHour);
 
         SolveSnap();
         // IncrementTime;  // This function is handled from SolveHarmonics (04-10-2013)
@@ -1110,7 +1110,7 @@ begin
             if not RetrieveSavedVoltages(DSS) then
                 Exit; // Get Saved fundamental frequency solution
         end;
-        // DefaultHourMult := DefaultDailyShapeObj.GetMultAtHour(DynaVars.dblHour);
+        // DefaultHourMult := DefaultDailyShapeObj.MultAtHour(DynaVars.dblHour);
         // IF Load_Changed THEN Begin    //Added to update the current sources of all frequencies any time
         if not InitializeForHarmonics(DSS) then  //the value of a load changes in a proportional way
         begin
@@ -1139,7 +1139,7 @@ begin
             Frequency := FrequencyList[i]; // forces rebuild of SystemY
             if Abs(Harmonic - 1.0) > EPSILON then
             begin  // Skip fundamental
-                // DefaultHourMult := DefaultDailyShapeObj.GetMultAtHour(DynaVars.dblHour);
+                // DefaultHourMult := DefaultDailyShapeObj.MultAtHour(DynaVars.dblHour);
                 SolveHarmTime();
                 DSS.MonitorClass.SampleAll();
                 EndOfTimeStepCleanup();

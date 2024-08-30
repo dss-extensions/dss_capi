@@ -143,15 +143,10 @@ type
 
     TLoadShapeObj = class(TDSSObject)
     PRIVATE
-        LastValueAccessed: Integer;
-
         FStdDevCalculated: Boolean;
         FMean,
         FStdDev: Double;
 
-        // Function Get_FirstMult:Double;
-        // Function Get_NextMult :Double;
-        function Get_Interval: Double;
         procedure SaveToDblFile();
         procedure SaveToSngFile();
         procedure CalcMeanandStdDev;
@@ -206,11 +201,10 @@ type
         procedure CustomSetRaw(Idx: Integer; Value: String); override;
         procedure SaveWrite(F: TStream); override;
 
-        function GetMultAtHour(hr: Double): Complex;  // Get multiplier at specified time
-        function Mult(i: Integer): Double;  // get multiplier by index -- used in SolutionAlgs, updates LastValueAccessed
-        function PMult(i: Integer): Double;  // get multiplier by index -- used in SolutionAlgs, doesn't update LastValueAccessed 
-        function QMult(i: Integer; var m: Double): Boolean;  // get multiplier by index
-        function Hour(i: Integer): Double;  // get hour corresponding to point index
+        function MultAtHour(hr: Double): Complex;  // Get multiplier at specified time
+        function MultAtIndex(i: Integer): Double;  // get multiplier by index
+        function PMultAtIndex(i: Integer): Double;  // get multiplier by index
+        function QMultAtIndex(i: Integer; var m: Double): Boolean;  // get multiplier by index
         procedure Normalize;
         procedure SetMaxPandQ;
 
@@ -219,7 +213,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
-        property PresentInterval: Double READ Get_Interval;
+        function IntervalAtIndex(i: Integer): Double;
         property Mean: Double READ Get_Mean WRITE Set_Mean;
         property StdDev: Double READ Get_StdDev WRITE Set_StdDev;
 
@@ -1256,7 +1250,6 @@ begin
 
     ExternalMemory := False;
     Stride := 1;
-    LastValueAccessed := 1;
 
     NumPoints := 0;
     Interval := 1.0;  // hr
@@ -1418,7 +1411,7 @@ begin
     end;
 end;
 
-function TLoadShapeObj.GetMultAtHour(hr: Double): Complex;
+function TLoadShapeObj.MultAtHour(hr: Double): Complex;
 // This function returns a multiplier for the given hour.
 // If no points exist in the curve, the result is  1.0
 // If there are fewer points than requested, the curve is simply assumed to repeat
@@ -1430,8 +1423,8 @@ var
     i, k: Integer;
     koffset, 
     offset, // index including stride
-    poffset: Int64; // previous index including stride
-    
+    prevOffset: Int64; // previous index including stride
+    hFrac, prevValue: Double;
     function Set_Result_im(const realpart: Double): Double;
     // Set imaginary part of Result when Qmultipliers not defined
     begin
@@ -1513,11 +1506,11 @@ begin
         offset := Stride * (NumPoints - 1);
         Hr := Hr - Trunc(Hr / dH[offset]) * dH[offset];
     end;
+
+    // TODO/AltDSS: Change "i := 1" to "i := 0"; left as 1 for compat with upstream.
     
-    if dH[Stride * LastValueAccessed] > Hr then
-        LastValueAccessed := 0;  // Start over from beginning
-        
-    for i := LastValueAccessed to NumPoints - 1 do
+    i := LowerBound(PDoubleArray0(@dH[Stride]), NumPoints - 1, Stride, Hr) + 1; // Skip first point to mirror upstream
+    // for i := 1 to NumPoints - 1 do
     begin
         offset := Stride * i;
         if Abs(dH[offset] - Hr) < 0.00001 then  // If close to an actual point, just use it.
@@ -1530,7 +1523,6 @@ begin
                 else
                     Result.im := Set_Result_im(Result.re);
             
-                LastValueAccessed := i;
                 Exit;
             end;
             
@@ -1539,7 +1531,6 @@ begin
                 Result.im := dQ[offset]
             else
                 Result.im := Set_Result_im(Result.re);
-            LastValueAccessed := i;
             Exit;
         end;
         
@@ -1550,9 +1541,9 @@ begin
                 // Use the edge values
                 Result := 0;
                 //TODO: after we have more tests, rewrite this to walk back from i instead of this loop
-                for k := 1 to NumPoints do
+                for k := 0 to NumPoints - 1 do
                 begin
-                    koffset := Stride * (k - 1);
+                    koffset := Stride * k;
                     if dH[koffset] <= Hr then
                     begin
                         Result.re := dP[koffset];
@@ -1566,40 +1557,52 @@ begin
             else
             begin
                 // Interpolate for multiplier
-                LastValueAccessed := i - 1;
-                poffset := offset - Stride;
                 if UseMMF then
                 begin
-                    Result.re := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, LastValueAccessed, mmLineLen) +
-                        (Hr - dH[LastValueAccessed]) / (dH[i] - dH[LastValueAccessed]) *
-                        (InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i - 1, mmLineLen) -
-                        InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, LastValueAccessed - 1, mmLineLen));
+                    hFrac := (Hr - dH[i - 1]) / (dH[i] - dH[i - 1]);
+                    prevValue := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i - 1, mmLineLen);
+                    Result.re := prevValue + hFrac * (InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen) - prevValue);
                     if Assigned(dQ) then
-                        Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, LastValueAccessed, mmLineLenQ) +
-                            (Hr - dH[LastValueAccessed]) / (dH[i] - dH[LastValueAccessed]) *
-                            (InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i - 1, mmLineLenQ) -
-                            InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, LastValueAccessed - 1, mmLineLenQ))
+                    begin
+                        Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i - 1, mmLineLenQ) + hFrac * 
+                            (InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ) - 
+                             InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i - 1, mmLineLenQ))
+                    end
                     else
+                    begin
                         Result.im := Set_Result_im(Result.re);
-                        
+                    end;
                     Exit;
                 end;
 
-                Result.re := dP[poffset] + (Hr - dH[poffset]) / (dH[i] - dH[poffset]) * (dP[i] - dP[poffset]);
+                prevOffset := offset - Stride;
+                hFrac := (Hr - dH[prevOffset]) / (dH[offset] - dH[prevOffset]);
+                prevValue := dP[prevOffset];
+                Result.re := prevValue + hFrac * (dP[offset] - prevValue);
                 if Assigned(dQ) then
-                    Result.im := dQ[poffset] + (Hr - dH[poffset]) / (dH[i] - dH[poffset]) * (dQ[i] - dQ[poffset])
+                begin
+                    prevValue := dQ[prevOffset];
+                    Result.im := prevValue + hFrac * (dQ[offset] - prevValue)
+                end
                 else
+                begin
                     Result.im := Set_Result_im(Result.re);
+                end;
                 Exit;
             end;
         end;
     end;
 
     // If we fall through the loop, just use last value
-    LastValueAccessed := NumPoints - 2;
-    Result.re := dP[Stride * LastValueAccessed];
+
+    // TODO/AltDSS: Change 2 to 1
+    // We use -2 instead of -1 to mirror the upstream OpenDSS code.
+    // Technically that's not the last value. Here we have 0-based arrays, while
+    // upstream (Delphi) it's 1-based.
+    i := NumPoints - 2;
+    Result.re := dP[Stride * i];
     if Assigned(dQ) then
-        Result.im := dQ[Stride * LastValueAccessed]
+        Result.im := dQ[Stride * i]
     else
         Result.im := Set_Result_im(Result.re);
 end;
@@ -1721,18 +1724,19 @@ begin
     // No Action is taken on Q multipliers
 end;
 
-function TLoadShapeObj.Get_Interval: Double;
+function TLoadShapeObj.IntervalAtIndex(i: Integer): Double;
 begin
+    dec(i);
     if Interval > 0.0 then
         Result := Interval
     else
     begin
-        if LastValueAccessed > 1 then
+        if i > 0 then
         begin
             if dH <> nil then
-                Result := dH[Stride * LastValueAccessed] - dH[(LastValueAccessed - 1) * Stride]
+                Result := dH[Stride * (i + 1)] - dH[i * Stride]
             else
-                Result := sH[Stride * LastValueAccessed] - sH[(LastValueAccessed - 1) * Stride]
+                Result := sH[Stride * (i + 1)] - sH[i * Stride]
         end
         else
             Result := 0.0;
@@ -1753,25 +1757,7 @@ begin
     Result := FStdDev;
 end;
 
-function TLoadShapeObj.Mult(i: Integer): Double;
-begin
-    dec(i);
-    if (i < NumPoints) and (i >= 0) then
-    begin
-        if UseMMF then
-            Result := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen)
-        else if dP <> nil then
-            Result := dP[Stride * i]
-        else
-            Result := sP[Stride * i];
-
-        LastValueAccessed := i;
-    end
-    else
-        Result := 0.0;
-end;
-
-function TLoadShapeObj.PMult(i: Integer): Double;
+function TLoadShapeObj.MultAtIndex(i: Integer): Double;
 begin
     dec(i);
     if (i < NumPoints) and (i >= 0) then
@@ -1787,7 +1773,23 @@ begin
         Result := 0.0;
 end;
 
-function TLoadShapeObj.QMult(i: Integer; var m: Double): Boolean;
+function TLoadShapeObj.PMultAtIndex(i: Integer): Double;
+begin
+    dec(i);
+    if (i < NumPoints) and (i >= 0) then
+    begin
+        if UseMMF then
+            Result := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen)
+        else if dP <> nil then
+            Result := dP[Stride * i]
+        else
+            Result := sP[Stride * i];
+    end
+    else
+        Result := 0.0;
+end;
+
+function TLoadShapeObj.QMultAtIndex(i: Integer; var m: Double): Boolean;
 begin
     dec(i);
     Result := False;
@@ -1806,34 +1808,6 @@ begin
     end
     else
         m := 0.0;
-end;
-
-function TLoadShapeObj.Hour(i: Integer): Double;
-begin
-    dec(i);
-    if Interval = 0 then
-    begin
-        if (i < NumPoints) and (i >= 0) then
-        begin
-            if dH <> nil then
-                Result := dH[Stride * i]
-            else
-                Result := sH[Stride * i];
-
-            LastValueAccessed := i;
-        end
-        else
-            Result := 0.0;
-    end
-    else
-    begin
-        if dH <> nil then
-            Result := dH[Stride * i] * Interval
-        else
-            Result := sH[Stride * i] * Interval;
-
-        LastValueAccessed := i;
-    end;
 end;
 
 function TLoadShapeObj.GetPropertyValue(Index: Integer): String;
@@ -2250,7 +2224,8 @@ var
     i, k: Integer;
     koffset, 
     offset, // index including stride
-    poffset: Int64; // previous index including stride
+    prevOffset: Int64; // previous index including stride
+    hFrac, prevValue: Double;
     
     function Set_Result_im(const realpart: Double): Double;
     // Set imaginary part of Result when Qmultipliers not defined
@@ -2313,10 +2288,10 @@ begin
         Hr := Hr - Trunc(Hr / sH[offset]) * sH[offset];
     end;
 
-    if sH[Stride * LastValueAccessed] > Hr then
-        LastValueAccessed := 0;  // Start over from beginning
-    
-    for i := LastValueAccessed to NumPoints - 1 do
+    // TODO/AltDSS: Change "i := 1" to "i := 0"; left as 1 for compat with upstream.
+
+    i := LowerBound(PSingleArray0(@sH[Stride]), NumPoints - 1, Stride, Hr) + 1; // Skip first point to mirror upstream
+    // for i := 1 to NumPoints - 1 do
     begin
         offset := Stride * i;
         if Abs(sH[offset] - Hr) < 0.00001 then  // If close to an actual point, just use it.
@@ -2326,24 +2301,24 @@ begin
                 Result.im := sQ[offset]
             else
                 Result.im := Set_Result_im(Result.re);
-            LastValueAccessed := i;
             Exit;
         end;
         
-        if sH[offset] > Hr then      // Interpolate for multiplier
+        if sH[offset] > Hr then
         begin
+            // Interpolate for multiplier
             if Interpolation = TLoadShapeInterp.Edge then
             begin
                 // Use the edge values
                 Result := 0;
                 //TODO: after we have more tests, rewrite this to walk back from i instead of this loop
-                for k := 1 to NumPoints do
+                for k := 0 to NumPoints - 1 do
                 begin
-                    koffset := Stride * (k - 1);
+                    koffset := Stride * k;
                     if sH[koffset] <= Hr then
                     begin
                         Result.re := sP[koffset];
-                        if dQ <> NIL then
+                        if sQ <> NIL then
                             Result.im := sQ[koffset];
                     end
                     else
@@ -2352,23 +2327,33 @@ begin
             end
             else
             begin
-                LastValueAccessed := i - 1;
-                poffset := offset - Stride;
-                Result.re := sP[poffset] + (Hr - sH[poffset]) / (sH[offset] - sH[poffset]) * (sP[offset] - sP[poffset]);
+                hFrac := (Hr - sH[prevOffset]) / (sH[offset] - sH[prevOffset]);
+                prevValue := sP[prevOffset];
+                Result.re := prevValue + hFrac * (sP[offset] - prevValue);
                 if Assigned(sQ) then
-                    Result.im := sQ[poffset] + (Hr - sH[poffset]) / (sH[offset] - sH[poffset]) * (sQ[offset] - sQ[poffset])
+                begin
+                    prevValue := sQ[prevOffset];
+                    Result.im := prevValue + hFrac * (sQ[offset] - prevValue)
+                end
                 else
+                begin
                     Result.im := Set_Result_im(Result.re);
+                end;
                 Exit;
             end;
         end;
     end;
 
     // If we fall through the loop, just use last value
-    LastValueAccessed := NumPoints - 2;
-    Result.re := sP[Stride * LastValueAccessed];
+
+    // TODO/AltDSS: Change 2 to 1
+    // We use -2 instead of -1 to mirror the upstream OpenDSS code.
+    // Technically that's not the last value. Here we have 0-based arrays, while
+    // upstream (Delphi) it's 1-based.
+    i := NumPoints - 2;
+    Result.re := sP[Stride * i];
     if Assigned(sQ) then
-        Result.im := sQ[Stride * LastValueAccessed]
+        Result.im := sQ[Stride * i]
     else
         Result.im := Set_Result_im(Result.re);
 end;

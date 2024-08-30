@@ -947,7 +947,7 @@ procedure TWindGenObj.CalcDailyMult(Hr: Double);
 begin
     if (DailyDispShapeObj <> nil) then
     begin
-        ShapeFactor := DailyDispShapeObj.GetMultAtHour(Hr);
+        ShapeFactor := DailyDispShapeObj.MultAtHour(Hr);
         ShapeIsActual := DailyDispShapeObj.UseActual;
     end
     else
@@ -958,7 +958,7 @@ procedure TWindGenObj.CalcDutyMult(Hr: Double);
 begin
     if DutyShapeObj <> nil then
     begin
-        ShapeFactor := DutyShapeObj.GetMultAtHour(Hr + DutyStart);
+        ShapeFactor := DutyShapeObj.MultAtHour(Hr + DutyStart);
         ShapeIsActual := DutyShapeObj.UseActual;
     end
     else
@@ -970,7 +970,7 @@ begin
     // Yearly curve is assumed to be hourly only
     if YearlyShapeObj <> nil then
     begin
-        ShapeFactor := YearlyShapeObj.GetMultAtHour(Hr);
+        ShapeFactor := YearlyShapeObj.MultAtHour(Hr);
         ShapeIsActual := YearlyShapeObj.UseActual;
     end
     else
