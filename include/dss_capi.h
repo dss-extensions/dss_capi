@@ -1554,6 +1554,28 @@ extern "C" {
     */
     DSS_CAPI_DLL void Circuit_FromJSON(const char *circ, int32_t options);
 
+    /*
+    Flatten the circuit structures
+
+    Copy the relevant data from some of the general DSS classes like LineCode, LineGeometry, LineSpacing, and XfmrCode,
+    removing the unused items afterwards. For example, if a certain LineCode is used for a selection of Line objects, 
+    all the Line data is propagated to the input properties of the Line objects, and the referenced LineCode object is
+    removed from the circuit.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void Circuit_Flatten(int32_t options);
+
+    /*
+    Share general objects
+
+    Share general DSS objects (e.g. LineCode, LineGeomtry, LoadShapes) from one DSS context to another.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void ctx_ShareGeneral(void* ctxFrom, void *ctxTo);
+
+
     /*! 
     Array of strings. Get  Bus definitions to which each terminal is connected. 0-based array.
     */
