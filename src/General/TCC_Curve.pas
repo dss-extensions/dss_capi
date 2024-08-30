@@ -48,7 +48,6 @@ type
 
     TTCC_CurveObj = class(TDSSObject)
     PRIVATE
-        LastValueAccessed,
         Npts: Integer;  // Number of points in curve
 
         Logt, LogC,        // Logarithms of t_values and c_values
@@ -201,7 +200,6 @@ begin
     Name := AnsiLowerCase(TCC_CurveName);
     DSSObjType := ParClass.DSSClassType;
 
-    LastValueAccessed := 1;
     Npts := 0;
     C_Values := NIL;
     T_Values := NIL;
@@ -238,37 +236,29 @@ begin
             Result := T_Values[1]
         else
         begin
-            // Start with previous value accessed under the assumption that most
-            // of the time, this function will be called sequentially
-
-            if C_Values[LastValueAccessed] > C_Value then
-                LastValueAccessed := 1;  // Start over from beginning
-            for i := LastValueAccessed + 1 to Npts do
+            for i := 1 to Npts do
             begin
                 if C_Values[i] = C_Value then
                 begin
                     Result := T_Values[i];        // direct hit!
-                    LastValueAccessed := i;
                     Exit;
                 end
 
                 else
                 if C_Values[i] > C_Value then
                 begin   // Log-Log interpolation
-                    LastValueAccessed := i - 1;
                     if C_value > 0.0 then
                         LogTest := Ln(C_Value)
                     else
                         LogTest := Ln(0.001);
-                    Result := exp(LogT[LastValueAccessed] +
-                        (LogTest - LogC[LastValueAccessed]) / (LogC[i] - LogC[LastValueAccessed]) *
-                        (LogT[i] - LogT[LastValueAccessed]));
+                    Result := exp(LogT[i - 1] +
+                        (LogTest - LogC[i - 1]) / (LogC[i] - LogC[i - 1]) *
+                        (LogT[i] - LogT[i - 1]));
                     Exit;
                 end;
             end;
 
             // If we fall through the loop, just use last value
-            LastValueAccessed := Npts - 1;
             Result := T_Values[Npts];
         end;
 end;

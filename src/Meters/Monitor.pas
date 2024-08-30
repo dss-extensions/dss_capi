@@ -1632,7 +1632,7 @@ var
     RecordSize: Cardinal;
     RecordBytes: Cardinal;
     SngBuffer: array[1..100] of Single;
-    hr: Single;
+    Hr: Single;
     s: Single;
     N: Integer;
     Npst: Integer;
@@ -1664,10 +1664,10 @@ begin
         i := 1;
         while not (MonitorStream.Position >= MonitorStream.Size) do
         begin
-            MonitorStream.Read(hr, SizeOf(hr));
+            MonitorStream.Read(Hr, SizeOf(Hr));
             MonitorStream.Read(s, SizeOf(s));
             MonitorStream.Read(SngBuffer, RecordBytes);
-            data[0][i] := s + 3600.0 * hr;
+            data[0][i] := s + 3600.0 * Hr;
             for p := 1 to FnPhases do
                 data[p][i] := SngBuffer[2 * p - 1];
             i := i + 1;
@@ -1695,7 +1695,7 @@ begin
                 inc(ipst);
                 tpst := data[0][i];
             end;
-            MonitorStream.Position := MonitorStream.Position + 2 * SizeOf(hr); // don't alter the time
+            MonitorStream.Position := MonitorStream.Position + 2 * SizeOf(Hr); // don't alter the time
             for p := 1 to FnPhases do
             begin
                 MonitorStream.Write(data[p][i], sizeof(data[p][i]));
@@ -1719,7 +1719,7 @@ var
     F: TStream = nil;
     FSignature: Integer;
     Fversion: Integer;
-    hr: Single;
+    Hr: Single;
     i: Cardinal;
     Mode: Integer;
     Nread: Cardinal;
@@ -1787,13 +1787,13 @@ begin
         try
             while not (MonitorStream.Position >= MonitorStream.Size) do
             begin
-                MonitorStream.Read(hr, SizeOF(hr));
+                MonitorStream.Read(Hr, SizeOF(Hr));
                 MonitorStream.Read(s, SizeOf(s));
                 Nread := MonitorStream.Read(sngBuffer, RecordBytes);
                 if Nread < RecordBytes then
                     Break;
                 
-                WriteStr(sout, hr: 0: 0, ', ', s: 0: 5);
+                WriteStr(sout, Hr: 0: 0, ', ', s: 0: 5);
                 FSWrite(F, sout);
                 
                 for i := 1 to RecordSize do

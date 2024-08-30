@@ -154,7 +154,7 @@ type
         function Get_StdDev: Double;
         procedure Set_Mean(const Value: Double);
         procedure Set_StdDev(const Value: Double);  // Normalize the curve presently in memory
-        function GetMultAtHourSingle(hr: Double): Complex;
+        function GetMultAtHourSingle(Hr: Double): Complex;
         function HasData(): Boolean;
     PUBLIC
         NumPoints: Integer;  // Number of points in curve -- TODO: int64
@@ -201,7 +201,7 @@ type
         procedure CustomSetRaw(Idx: Integer; Value: String); override;
         procedure SaveWrite(F: TStream); override;
 
-        function MultAtHour(hr: Double): Complex;  // Get multiplier at specified time
+        function MultAtHour(Hr: Double): Complex;  // Get multiplier at specified time
         function MultAtIndex(i: Integer): Double;  // get multiplier by index
         function PMultAtIndex(i: Integer): Double;  // get multiplier by index
         function QMultAtIndex(i: Integer; var m: Double): Boolean;  // get multiplier by index
@@ -1411,7 +1411,7 @@ begin
     end;
 end;
 
-function TLoadShapeObj.MultAtHour(hr: Double): Complex;
+function TLoadShapeObj.MultAtHour(Hr: Double): Complex;
 // This function returns a multiplier for the given hour.
 // If no points exist in the curve, the result is  1.0
 // If there are fewer points than requested, the curve is simply assumed to repeat
@@ -1437,7 +1437,7 @@ var
 begin
     if Assigned(sP) then
     begin
-        Result := GetMultAtHourSingle(hr);
+        Result := GetMultAtHourSingle(Hr);
         exit;
     end;
 
@@ -1460,9 +1460,9 @@ begin
     if Interval > 0.0 then
     begin
         if interpolation = TLoadShapeInterp.Edge then
-            i := floor(hr / Interval)
+            i := floor(Hr / Interval)
         else
-            i := round(hr / Interval);
+            i := round(Hr / Interval);
 
         if UseMMF then
         begin
@@ -1497,9 +1497,6 @@ begin
 
     // For random interval
 
-    // Start with previous value accessed under the assumption that most
-    //  of the time, this function will be called sequentially
-
     // Normalize Hr to max hour in curve to get wraparound
     if Hr > dH[Stride * (NumPoints - 1)] then
     begin
@@ -1511,78 +1508,62 @@ begin
     
     i := LowerBound(PDoubleArray0(@dH[Stride]), NumPoints - 1, Stride, Hr) + 1; // Skip first point to mirror upstream
     // for i := 1 to NumPoints - 1 do
+    // begin
+    offset := Stride * i;
+    if Abs(dH[offset] - Hr) < 0.00001 then  // If close to an actual point, just use it.
     begin
-        offset := Stride * i;
-        if Abs(dH[offset] - Hr) < 0.00001 then  // If close to an actual point, just use it.
+        if UseMMF then
         begin
-            if UseMMF then
-            begin
-                Result.re := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen);
-                if Assigned(dQ) then
-                    Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ)
-                else
-                    Result.im := Set_Result_im(Result.re);
-            
-                Exit;
-            end;
-            
-            Result.re := dP[offset];
+            Result.re := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen);
             if Assigned(dQ) then
-                Result.im := dQ[offset]
+                Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ)
             else
                 Result.im := Set_Result_im(Result.re);
+        
             Exit;
         end;
         
-        if dH[offset] > Hr then
+        Result.re := dP[offset];
+        if Assigned(dQ) then
+            Result.im := dQ[offset]
+        else
+            Result.im := Set_Result_im(Result.re);
+        Exit;
+    end;
+    
+    if dH[offset] > Hr then
+    begin
+        if Interpolation = TLoadShapeInterp.Edge then
         begin
-            if Interpolation = TLoadShapeInterp.Edge then
+            // Use the edge values
+            Result := 0;
+            //TODO: after we have more tests, rewrite this to walk back from i instead of this loop
+            for k := 0 to NumPoints - 1 do
             begin
-                // Use the edge values
-                Result := 0;
-                //TODO: after we have more tests, rewrite this to walk back from i instead of this loop
-                for k := 0 to NumPoints - 1 do
+                koffset := Stride * k;
+                if dH[koffset] <= Hr then
                 begin
-                    koffset := Stride * k;
-                    if dH[koffset] <= Hr then
-                    begin
-                        Result.re := dP[koffset];
-                        if dQ <> NIL then
-                            Result.im := dQ[koffset];
-                    end
-                    else
-                        Exit;
-                end;
-            end
-            else
-            begin
-                // Interpolate for multiplier
-                if UseMMF then
-                begin
-                    hFrac := (Hr - dH[i - 1]) / (dH[i] - dH[i - 1]);
-                    prevValue := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i - 1, mmLineLen);
-                    Result.re := prevValue + hFrac * (InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen) - prevValue);
-                    if Assigned(dQ) then
-                    begin
-                        Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i - 1, mmLineLenQ) + hFrac * 
-                            (InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ) - 
-                             InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i - 1, mmLineLenQ))
-                    end
-                    else
-                    begin
-                        Result.im := Set_Result_im(Result.re);
-                    end;
+                    Result.re := dP[koffset];
+                    if dQ <> NIL then
+                        Result.im := dQ[koffset];
+                end
+                else
                     Exit;
-                end;
-
-                prevOffset := offset - Stride;
-                hFrac := (Hr - dH[prevOffset]) / (dH[offset] - dH[prevOffset]);
-                prevValue := dP[prevOffset];
-                Result.re := prevValue + hFrac * (dP[offset] - prevValue);
+            end;
+        end
+        else
+        begin
+            // Interpolate for multiplier
+            if UseMMF then
+            begin
+                hFrac := (Hr - dH[i - 1]) / (dH[i] - dH[i - 1]);
+                prevValue := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i - 1, mmLineLen);
+                Result.re := prevValue + hFrac * (InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen) - prevValue);
                 if Assigned(dQ) then
                 begin
-                    prevValue := dQ[prevOffset];
-                    Result.im := prevValue + hFrac * (dQ[offset] - prevValue)
+                    Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i - 1, mmLineLenQ) + hFrac * 
+                        (InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ) - 
+                            InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i - 1, mmLineLenQ))
                 end
                 else
                 begin
@@ -1590,8 +1571,24 @@ begin
                 end;
                 Exit;
             end;
+
+            prevOffset := offset - Stride;
+            hFrac := (Hr - dH[prevOffset]) / (dH[offset] - dH[prevOffset]);
+            prevValue := dP[prevOffset];
+            Result.re := prevValue + hFrac * (dP[offset] - prevValue);
+            if Assigned(dQ) then
+            begin
+                prevValue := dQ[prevOffset];
+                Result.im := prevValue + hFrac * (dQ[offset] - prevValue)
+            end
+            else
+            begin
+                Result.im := Set_Result_im(Result.re);
+            end;
+            Exit;
         end;
     end;
+    // end;
 
     // If we fall through the loop, just use last value
 
@@ -2219,7 +2216,7 @@ begin
     end;
 end;
 
-function TLoadShapeObj.GetMultAtHourSingle(hr: Double): Complex;
+function TLoadShapeObj.GetMultAtHourSingle(Hr: Double): Complex;
 var
     i, k: Integer;
     koffset, 
@@ -2256,9 +2253,9 @@ begin
     if Interval > 0.0 then
     begin
         if interpolation = TLoadShapeInterp.Edge then
-            i := floor(hr / Interval)
+            i := floor(Hr / Interval)
         else
-            i := round(hr / Interval);
+            i := round(Hr / Interval);
 
         if i > NumPoints then 
             i := i mod NumPoints;  // Wrap around using remainder
@@ -2278,9 +2275,6 @@ begin
 
     // For random interval
 
-    // Start with previous value accessed under the assumption that most
-    //  of the time, this function will be called sequentially
-
     // Normalize Hr to max hour in curve to get wraparound
     if Hr > sH[Stride * (NumPoints - 1)] then
     begin
@@ -2289,6 +2283,7 @@ begin
     end;
 
     // TODO/AltDSS: Change "i := 1" to "i := 0"; left as 1 for compat with upstream.
+    // Similar issue in PriceShape, TempShape, 
 
     i := LowerBound(PSingleArray0(@sH[Stride]), NumPoints - 1, Stride, Hr) + 1; // Skip first point to mirror upstream
     // for i := 1 to NumPoints - 1 do

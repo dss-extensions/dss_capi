@@ -131,7 +131,7 @@ function NameIfNotNil(obj: TDSSObject): String;
 function FullNameIfNotNil(obj: TDSSObject): String;
 
 function LowerBound(data: PSingleArray0; npts: Integer; Stride: Integer; value: Single): Integer; overload;
-function LowerBound(data: PDoubleArray0; npts: Integer; Stride: Integer; value: Single): Integer; overload;
+function LowerBound(data: PDoubleArray0; npts: Integer; Stride: Integer; value: Double): Integer; overload;
 
 implementation
 
@@ -2431,7 +2431,7 @@ begin
     Result := l;
 end;
 
-function LowerBound(data: PDoubleArray0; npts: Integer; Stride: Integer; value: Single): Integer; overload;
+function LowerBound(data: PDoubleArray0; npts: Integer; Stride: Integer; value: Double): Integer; overload;
 var
     l, r, m: Integer;
     moffset: Int64;

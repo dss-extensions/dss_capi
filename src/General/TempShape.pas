@@ -91,7 +91,6 @@ type
 
     TTShapeObj = class(TDSSObject)
     PRIVATE
-        LastValueAccessed,
         FNumPoints: Integer;  // Number of points in curve
 
         FStdDevCalculated: Boolean;
@@ -117,7 +116,7 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        function GetTemperatureAtHour(hr: Double): Double;  // Get Temperatures at specified time, hr
+        function GetTemperatureAtHour(Hr: Double): Double;  // Get Temperatures at specified time, hr
 
         property NumPoints: Integer READ FNumPoints;
         property Mean: Double READ Get_Mean WRITE Set_Mean;
@@ -363,8 +362,6 @@ begin
     Name := AnsiLowerCase(TShapeName);
     DSSObjType := ParClass.DSSClassType;
 
-    LastValueAccessed := 1;
-
     FNumPoints := 0;
     Interval := 1.0;  // hr
     Hours := NIL;
@@ -384,7 +381,7 @@ begin
     inherited destroy;
 end;
 
-function TTShapeObj.GetTemperatureAtHour(hr: Double): Double;
+function TTShapeObj.GetTemperatureAtHour(Hr: Double): Double;
 // This FUNCTION returns the Temperature for the given hour.
 // If no points exist in the curve, the result is  0.0
 // If there are fewer points than requested, the curve is simply assumed to repeat
@@ -408,7 +405,7 @@ begin
 
     if Interval > 0.0 then
     begin
-        Index := round(hr / Interval);
+        Index := round(Hr / Interval);
         if Index > FNumPoints then
             Index := Index mod FNumPoints;  // Wrap around using remainder
         if Index = 0 then
@@ -419,37 +416,29 @@ begin
 
     // For random interval
 
-    // Start with previous value accessed under the assumption that most
-    // of the time, this FUNCTION will be called sequentially
-
     // Normalize Hr to max hour in curve to get wraparound
     if (Hr > Hours[FNumPoints]) then
     begin
         Hr := Hr - Trunc(Hr / Hours[FNumPoints]) * Hours[FNumPoints];
     end;
 
-    if (Hours[LastValueAccessed] > Hr) then
-        LastValueAccessed := 1;  // Start over from Beginning
-    for i := LastValueAccessed + 1 to FNumPoints do
+    for i := 1 to FNumPoints do
     begin
         if (Abs(Hours[i] - Hr) < 0.00001) then  // If close to an actual point, just use it.
         begin
             Result := TValues[i];
-            LastValueAccessed := i;
             Exit;
         end
         else
         if (Hours[i] > Hr) then      // Interpolate for temperature
         begin
-            LastValueAccessed := i - 1;
-            Result := TValues[LastValueAccessed] +
-                (Hr - Hours[LastValueAccessed]) / (Hours[i] - Hours[LastValueAccessed]) *
-                (TValues[i] - TValues[LastValueAccessed]);
+            Result := TValues[i - 1] +
+                (Hr - Hours[i - 1]) / (Hours[i] - Hours[i - 1]) *
+                (TValues[i] - TValues[i - 1]);
             Exit;
         end;
     end;
     // If we fall through the loop, just use last value
-    LastValueAccessed := FNumPoints - 1;
     Result := TValues[FNumPoints];
 end;
 

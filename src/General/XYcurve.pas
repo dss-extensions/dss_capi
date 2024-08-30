@@ -86,7 +86,6 @@ type
         XValues,
         YValues: pDoubleArray;
     PRIVATE
-        LastValueAccessed: Integer;
         FX,
         FY: Double;
 
@@ -364,18 +363,6 @@ begin
                 Y := YValues[1];
         end;
     end;
-
-    case Idx of
-        ord(TProp.Points),
-        ord(TProp.Yarray),
-        ord(TProp.Xarray),
-        ord(TProp.csvfile),
-        ord(TProp.sngfile),
-        ord(TProp.dblfile):
-        begin
-            LastValueAccessed := 1;
-        end;
-    end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
@@ -413,8 +400,6 @@ begin
     inherited Create(ParClass);
     Name := AnsiLowerCase(XYCurveName);
     DSSObjType := ParClass.DSSClassType;
-
-    LastValueAccessed := 1;
 
     FNumPoints := 0;
     XValues := NIL;
@@ -460,40 +445,32 @@ begin
         Exit;
     end;
 
-    // Start with previous value accessed under the assumption that most
-    // of the time, the values won't change much
-    if (XValues[LastValueAccessed] > X) then
-        LastValueAccessed := 1; // Start over from Beginning
-
     // if off the curve for the first point, extrapolate from the first two points
-    if (LastValueAccessed = 1) and (XValues[1] > X) then
+    if XValues[1] > X then
     begin
         Result := InterpolatePoints(1, 2, X, XValues, YValues);
         Exit;
     end;
 
     // In the middle of the arrays
-    for i := LastValueAccessed + 1 to FNumPoints do
+    for i := 1 to FNumPoints do
     begin
         if (Abs(XValues[i] - X) < 0.00001) then  // If close to an actual point, just use it.
         begin
             Result := YValues[i];
-            LastValueAccessed := i;
             Exit;
         end
         else
         if (XValues[i] > X) then
         // INTERPOLATE between two values
         begin
-            LastValueAccessed := i - 1;
-            Result := InterpolatePoints(i, LastValueAccessed, X, XValues, YValues);
+            Result := InterpolatePoints(i, i - 1, X, XValues, YValues);
             Exit;
         end;
     end;
 
     // If we fall through the loop, Extrapolate from last two points
-    LastValueAccessed := FNumPoints - 1;
-    Result := InterpolatePoints(FNumPoints, LastValueAccessed, X, XValues, YValues);
+    Result := InterpolatePoints(FNumPoints, FNumPoints - 1, X, XValues, YValues); //TODO: check -1
 end;
 
 function TXYcurveObj.GetCoefficients(X: Double): TCoeff;
@@ -520,34 +497,29 @@ begin
         Exit;
     end;
 
-    // Start with previous value accessed under the assumption that most
-    // of the time, the values won't change much
-    if (XValues[LastValueAccessed] > X) then
-        LastValueAccessed := 1; // Start over from Beginning
-
     // if off the curve for the first point, extrapolate from the first two points
-    if (LastValueAccessed = 1) and (XValues[1] > X) then
+    if XValues[1] > X then
     begin
         // Assume the same coefficients determined by the first two points. Necessary to keep
         // consistency with TXYcurveObj.GetYValue function.
         coef[1] := (YValues[2] - YValues[1]) / (XValues[2] - XValues[1]);
         coef[2] := YValues[2] - coef[1] * XValues[2];
-
         Result := coef;
         Exit;
     end;
 
     // In the middle of the arrays
-    for i := LastValueAccessed + 1 to FNumPoints do
+    for i := 1 to FNumPoints do
+    begin
         if (XValues[i] > X) then
         // INTERPOLATE between two values
         begin
-            LastValueAccessed := i - 1;
             coef[1] := (YValues[i] - YValues[i - 1]) / (XValues[i] - XValues[i - 1]);
             coef[2] := YValues[i] - coef[1] * XValues[i];
             Result := coef;
             Exit;
         end;
+    end;
 
     // Assume the same coefficients determined by the last two points. Necessary to keep
     // consistency with TXYcurveObj.GetYValue function.
@@ -566,7 +538,6 @@ begin
     if (i <= FNumPoints) and (i > 0) then
     begin
         Result := YValues[i];
-        LastValueAccessed := i;
     end
     else
         Result := 0.0;
@@ -582,7 +553,6 @@ begin
     if (i <= FNumPoints) and (i > 0) then
     begin
         Result := XValues[i];
-        LastValueAccessed := i;
     end
     else
         Result := 0.0;

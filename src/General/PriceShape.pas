@@ -90,7 +90,6 @@ type
 
     TPriceShapeObj = class(TDSSObject)
     PRIVATE
-        LastValueAccessed,
         FNumPoints: Integer;  // Number of points in curve
 
         FStdDevCalculated: Boolean;
@@ -113,7 +112,7 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        function PriceAtHour(hr: Double): Double;  // Get Prices at specified time, hr
+        function PriceAtHour(Hr: Double): Double;  // Get Prices at specified time, hr
         function PriceAtIndex(i: Integer): Double;  // get Prices by index
 
         property NumPoints: Integer READ FNumPoints;
@@ -382,8 +381,6 @@ begin
     Name := AnsiLowerCase(PriceShapeName);
     DSSObjType := ParClass.DSSClassType;
 
-    LastValueAccessed := 1;
-
     FNumPoints := 0;
     Interval := 1.0;  // hr
     Hours := NIL;
@@ -403,7 +400,7 @@ begin
     inherited destroy;
 end;
 
-function TPriceShapeObj.PriceAtHour(hr: Double): Double;
+function TPriceShapeObj.PriceAtHour(Hr: Double): Double;
 // This FUNCTION returns the Price for the given hour.
 // If no points exist in the curve, the result is  0.0
 // If there are fewer points than requested, the curve is simply assumed to repeat
@@ -427,7 +424,7 @@ begin
 
     if Interval > 0.0 then
     begin
-        Index := round(hr / Interval);
+        Index := round(Hr / Interval);
         if Index > FNumPoints then
             Index := Index mod FNumPoints;  // Wrap around using remainder
         if Index = 0 then
@@ -438,38 +435,31 @@ begin
 
     // For random interval
 
-    // Start with previous value accessed under the assumption that most
-    // of the time, this FUNCTION will be called sequentially
-
     // Normalize Hr to max hour in curve to get wraparound
     if (Hr > Hours[FNumPoints]) then
     begin
         Hr := Hr - Trunc(Hr / Hours[FNumPoints]) * Hours[FNumPoints];
     end;
 
-    if (Hours[LastValueAccessed] > Hr) then
-        LastValueAccessed := 1;  // Start over from Beginning
-    for i := LastValueAccessed + 1 to FNumPoints do
+    i := LowerBound(PDoubleArray0(Hours), FNumPoints, 1, Hr) + 1;
+    // for i := 1 to FNumPoints do
+    // begin
+    if (Abs(Hours[i] - Hr) < 0.00001) then  // If close to an actual point, just use it.
     begin
-        if (Abs(Hours[i] - Hr) < 0.00001) then  // If close to an actual point, just use it.
-        begin
-            Result := PriceValues[i];
-            LastValueAccessed := i;
-            Exit;
-        end
-        else
-        if (Hours[i] > Hr) then      // Interpolate for Price
-        begin
-            LastValueAccessed := i - 1;
-            Result := PriceValues[LastValueAccessed] +
-                (Hr - Hours[LastValueAccessed]) / (Hours[i] - Hours[LastValueAccessed]) *
-                (PriceValues[i] - PriceValues[LastValueAccessed]);
-            Exit;
-        end;
+        Result := PriceValues[i];
+        Exit;
+    end
+    else
+    if (Hours[i] > Hr) then      // Interpolate for Price
+    begin
+        Result := PriceValues[i - 1] +
+            (Hr - Hours[i - 1]) / (Hours[i] - Hours[i - 1]) *
+            (PriceValues[i] - PriceValues[i - 1]);
+        Exit;
     end;
+    // end;
 
     // If we fall through the loop, just use last value
-    LastValueAccessed := FNumPoints - 1;
     Result := PriceValues[FNumPoints];
 end;
 
@@ -503,7 +493,6 @@ begin
     if (i <= FNumPoints) and (i > 0) then
     begin
         Result := PriceValues[i];
-        LastValueAccessed := i;
     end
     else
         Result := 0.0;
