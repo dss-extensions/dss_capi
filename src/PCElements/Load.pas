@@ -1638,7 +1638,7 @@ begin
                     CurrZ := Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4]) * V;
                 
                 if (ZIPV[2] <> 0) or (ZIPV[5] <> 0) then
-                    CurrI := cong(Cmplx(WNominal * ZIPV[2], varNominal * ZIPV[5]) / ((V / Cabs(V)) * Vbase));
+                    CurrI := cong(Cmplx(WNominal * ZIPV[2], varNominal * ZIPV[5]) / ((V / VMag) * Vbase));
                 
                 if (ZIPV[3] <> 0) or (ZIPV[6] <> 0) then
                     CurrP := cong(Cmplx(WNominal * ZIPV[3], varNominal * ZIPV[6]) / V);
