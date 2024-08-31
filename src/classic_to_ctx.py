@@ -51,6 +51,7 @@ funcnames = [
     'ctx_Dispose',
     'ctx_Get_Prime',
     'ctx_Set_Prime',
+    'ctx_ShareGeneral',
 ]
 
 usefns = [

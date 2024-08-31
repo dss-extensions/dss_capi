@@ -75,6 +75,7 @@ procedure Circuit_Get_ElementLosses_GR(ElementsPtr: PInteger; ElementsCount: TAP
 function Circuit_ToJSON(options: Integer): PAnsiChar; CDECL;
 procedure Circuit_FromJSON(circStr: PAnsiChar; options: Integer); CDECL;
 function Circuit_Save(dirfilepath: PAnsiChar; saveFlags: DSSSaveFlags): PAnsiChar; CDECL;
+procedure Circuit_Flatten(options: Integer); CDECL;
 
 implementation
 
@@ -1106,6 +1107,11 @@ begin
         Exit;
     if DSSPrime.ActiveCircuit.Save(dirfilepath, @saveFlags, @res) then
         Result := DSS_GetAsPAnsiChar(DSSPrime, res);
+end;
+//------------------------------------------------------------------------------
+procedure Circuit_Flatten(options: Integer); CDECL;
+begin
+    DoSimpleMsg(DSSPrime, _('Not implemented yet!'), 20240701);
 end;
 //------------------------------------------------------------------------------
 end.

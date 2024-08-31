@@ -517,6 +517,7 @@ type
 
         function GetEnumerator: TDSSPointerEnumerator;
         procedure SetPropertyNameStyle(style: TDSSPropertyNameStyle);
+        procedure CopySharedItems(other: TDSSClass);
     protected
         // DSSContext convenience functions
         procedure DoErrorMsg(Const S, Emsg, ProbCause: String; ErrNum: Integer);inline;
@@ -2597,6 +2598,17 @@ end;
 destructor TProxyClass.Destroy;
 begin
     inherited Destroy;
+end;
+
+procedure TDSSClass.CopySharedItems(other: TDSSClass);
+var
+    obj: TDSSObject;
+begin
+    for obj in other do
+    begin
+        if not (Flg.DefaultAndUnedited in obj.Flags) then
+            AddObjectToList(obj, False);
+    end;
 end;
 
 end.

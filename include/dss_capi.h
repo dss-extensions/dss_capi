@@ -1569,12 +1569,15 @@ extern "C" {
     /*
     Share general objects
 
-    Share general DSS objects (e.g. LineCode, LineGeomtry, LoadShapes) from one DSS context to another.
+    Share general DSS objects (e.g. LineCode, LineGeometry, LoadShape) from one DSS context to another.
 
+    Default items are skipped! Use with caution.
+
+    ***EXPERIMENTAL***
+    
     (API Extension)
     */
     DSS_CAPI_DLL void ctx_ShareGeneral(void* ctxFrom, void *ctxTo);
-
 
     /*! 
     Array of strings. Get  Bus definitions to which each terminal is connected. 0-based array.

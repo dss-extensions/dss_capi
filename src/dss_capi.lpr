@@ -2041,6 +2041,7 @@ exports
     Circuit_ToJSON,
     Circuit_FromJSON,
     Circuit_Save,
+    Circuit_Flatten,
     
     YMatrix_Set_LoadsNeedUpdating,
     YMatrix_Get_LoadsNeedUpdating,
