@@ -1252,6 +1252,12 @@ exports
     Settings_Get_IterateDisabled, // API extension
     Settings_Set_IterateDisabled, // API extension
     Settings_SetPropertyNameStyle, // API extension
+    Settings_Set_SkipFileRegExp, // API extension
+    Settings_Get_SkipFileRegExp, // API extension
+    Settings_Set_SkipCommands, // API extension
+    Settings_Get_SkipCommands, // API extension
+    Settings_Get_SkipCommands_GR, // API extension
+
     Solution_Get_Frequency,
     Solution_Get_Hour,
     Solution_Get_Iterations,

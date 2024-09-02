@@ -23,7 +23,8 @@ USES
     contnrs,
     CAPI_Types,
     gettext,
-    fpjson;
+    fpjson,
+    RegExpr;
 
 type
 {$SCOPEDENUMS ON}
@@ -71,6 +72,11 @@ type
     );
     DSSSaveFlags = set of DSSSaveFlag;
     PDSSSaveFlags = ^DSSSaveFlags;
+
+    DSSCommandFlag = (
+        Skip = 0
+    );
+    DSSCommandFlags = set of DSSCommandFlag;
 
     TDSSPropertyNameStyle = (
         Modern = 0,
@@ -783,6 +789,12 @@ type
         unzipper: TObject;
         inZipPath: String;
 
+        // Command flags
+        commandFlags: Array of DSSCommandFlags;
+        
+        // Expression to skip files in Redirect/Compile commands
+        skipFileRegExp: TRegExpr;
+
         constructor Create(_Parent: TDSSContext = nil; _IsPrime: Boolean = False);
         destructor Destroy; override;
         function GetPrime(): TDSSContext;
@@ -810,7 +822,7 @@ type
         procedure ShowPctProgress(Count: Integer);
         procedure ProgressCaption(const S: String);
         procedure ProgressFormCaption(const S: String);
-        procedure ProgressHide;        
+        procedure ProgressHide;
     end;
 
 VAR
@@ -1314,6 +1326,7 @@ begin
     CIMExporter := TCIMExporter.Create(self);
 
     unzipper := NIL;
+    skipFileRegExp := NIL;
 end;
 
 destructor TDSSContext.Destroy;
@@ -1363,6 +1376,8 @@ begin
 {$IFDEF DSS_CAPI_PM}
     ConcatenateReportsLock.Free();
 {$ENDIF}
+
+    FreeAndNil(skipFileRegExp);
     inherited Destroy;
 end;
 

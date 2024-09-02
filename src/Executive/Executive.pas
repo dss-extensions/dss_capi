@@ -111,7 +111,9 @@ begin
 end;
 
 Constructor TExecutive.Create(dssContext: TDSSContext);
-Begin
+var
+    i: Integer;
+begin
      Inherited Create;
 
      ExecOptions.DefineOptions(ExecOption);
@@ -127,6 +129,12 @@ Begin
      PlotCommands := TCommandList.Create(PlotOption);
      ShowCommands := TCommandList.Create(ShowOption);
      ExportCommands := TCommandList.Create(ExportOption);
+
+     SetLength(DSS.commandFlags, NumExecCommands + 1);
+     for i := 0 to High(DSS.commandFlags) do
+     begin
+        DSS.commandFlags[i] := [];
+     end;
 
      // Instantiate All DSS Classe Definitions, Intrinsic and User-defined
      CreateDSSClasses(DSS);     // in DSSGlobals

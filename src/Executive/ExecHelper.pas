@@ -373,11 +373,22 @@ begin
         wasProvidedStrings := true;
     end;
 
-    if (not gotTheFile) and InZip then
+    if (not gotTheFile) then
     begin
         // Get next parm and try to interpret as a file name
         DSS.Parser.NextParam;
+    end;
 
+    if (not gotTheFile) and (DSS.skipFileRegExp <> NIL) then
+    begin
+        if DSS.skipFileRegExp.Exec(DSS.Parser.StrValue) then
+        begin
+            Exit;
+        end;
+    end;
+
+    if (not gotTheFile) and InZip then
+    begin
         if DSS.Parser.StrValue = '' then
             exit;  // ignore altogether IF null filename
 
@@ -403,9 +414,6 @@ begin
     else 
     if (not gotTheFile) then
     begin
-        // Get next parm and try to interpret as a file name
-        DSS.Parser.NextParam;
-
         // Expanded path is required later as other Free Pascal functions 
         // may fail with relative paths
         ReDirFileExp := ExpandFileName(DSS.Parser.StrValue);

@@ -972,7 +972,7 @@ extern "C" {
     Default items are skipped! Use with caution.
 
     ***EXPERIMENTAL***
-    
+
     (API Extension)
     */
 
@@ -5135,6 +5135,41 @@ extern "C" {
     (API Extension)
     */
     DSS_CAPI_DLL void ctx_Settings_SetPropertyNameStyle(const void* ctx, int32_t style);
+
+
+    /*!
+    Regular expression pattern to skip files
+
+    If a file name as provided in the input for the `Redirect` and `Compile` commands
+    matches the regular expression pattern, it is skipped (the file is not read nor
+    commands contained in the file are executed).
+
+    Set to an empty string to reset/disable the filter.
+
+    Case-insensitive.
+    See https://regex.sorokin.engineer/en/latest/regular_expressions.html for information on 
+    the expression syntax and options.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void ctx_Settings_Set_SkipFileRegExp(const void* ctx, const char* Value);
+    DSS_CAPI_DLL const char* ctx_Settings_Get_SkipFileRegExp(const void* ctx);
+
+    /*!
+    List of command codes to skip
+
+    List of integer command codes representing the command to skip when processing DSS text commands or files.
+    
+    **Do not hardcore** the integers since they change very frequenty.
+
+    `DSS_Executive_Get_Command` and `DSS_Executive_Get_NumCommands` can be used to list the available commands.
+    Use the integer provided to `DSS_Executive_Get_Command` matching the command name returned.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void ctx_Settings_Set_SkipCommands(const void* ctx, const int32_t* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_DLL void ctx_Settings_Get_SkipCommands(const void* ctx, int32_t** ResultPtr, int32_t* ResultDims);
+    DSS_CAPI_DLL void ctx_Settings_Get_SkipCommands_GR(const void* ctx);
 
     /*! 
     Set the Frequency for next solution

@@ -252,6 +252,11 @@ begin
         if Length(ParamName) = 0 then
             ParamPointer := CommandList.GetCommand(Param);
 
+        if (ParamPointer > 0) and (ParamPointer < NumExecCommands) and (DSSCommandFlag.Skip in DSS.commandFlags[ParamPointer]) then
+        begin
+            Exit;
+        end;
+
         // Check first for Compile or Redirect and get outta here
         case ParamPointer of
             ord(Cmd.Compile), ord(Cmd.Redirect):

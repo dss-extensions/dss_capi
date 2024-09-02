@@ -51,6 +51,11 @@ procedure Settings_Set_LoadsTerminalCheck(Value: TAPIBoolean); CDECL;
 procedure Settings_Set_IterateDisabled(Value: Integer); CDECL;
 function Settings_Get_IterateDisabled(): Integer; CDECL;
 procedure Settings_SetPropertyNameStyle(style: Integer); CDECL;
+procedure Settings_Set_SkipFileRegExp(const Value: PAnsiChar); CDECL;
+function Settings_Get_SkipFileRegExp(): PAnsiChar; CDECL;
+procedure Settings_Set_SkipCommands(ValuePtr: PInteger; ValueCount: TAPISize); CDECL;
+procedure Settings_Get_SkipCommands(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
+procedure Settings_Get_SkipCommands_GR(); CDECL;
 
 implementation
 
@@ -62,7 +67,8 @@ uses
     DSSClass,
     DSSHelper,
     HashList,
-    SysUtils;
+    SysUtils,
+    RegExpr;
 
 function Settings_Get_AllowDuplicates(): TAPIBoolean; CDECL;
 begin
@@ -409,6 +415,75 @@ begin
         style := 0;
 
     DSSPrime.SetPropertyNameStyle(TDSSPropertyNameStyle(style));
+end;
+//------------------------------------------------------------------------------
+procedure Settings_Set_SkipFileRegExp(const Value: PAnsiChar); CDECL;
+begin
+    FreeAndNil(DSSPrime.skipFileRegExp);
+    if (Value = NIL) or (Value^ = #0) then
+        Exit;
+    DSSPrime.skipFileRegExp := TRegExpr.Create();
+    DSSPrime.skipFileRegExp.ModifierI := True;
+    DSSPrime.skipFileRegExp.Expression:= Value;
+end;
+//------------------------------------------------------------------------------
+function Settings_Get_SkipFileRegExp(): PAnsiChar; CDECL;
+begin
+    if DSSPrime.skipFileRegExp = NIL then
+        Result := NIL
+    else
+        Result := PChar(DSSPrime.skipFileRegExp.Expression);
+end;
+//------------------------------------------------------------------------------
+procedure Settings_Set_SkipCommands(ValuePtr: PInteger; ValueCount: TAPISize); CDECL;
+var
+    i, c: Integer;
+begin
+    for i := 1 to High(DSSPrime.commandFlags) do
+    begin
+        Exclude(DSSPrime.commandFlags[i], DSSCommandFlag.Skip);
+    end;
+    for i := 0 to ValueCount - 1 do
+    begin
+        c := ValuePtr^;
+        inc(ValuePtr);
+        if (c > 0) and (c <= High(DSSPrime.commandFlags)) then
+        begin
+            Include(DSSPrime.commandFlags[c], DSSCommandFlag.Skip);
+        end;
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure Settings_Get_SkipCommands(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
+var
+    i, n: Integer;
+    Result: PIntegerArray0;
+begin
+    n := 0;
+    for i := 1 to High(DSSPrime.commandFlags) do
+    begin
+        if DSSCommandFlag.Skip in DSSPrime.commandFlags[i] then
+        begin
+            inc(n);
+        end;
+    end;
+
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, n);
+    n := 0;
+
+    for i := 1 to High(DSSPrime.commandFlags) do
+    begin
+        if DSSCommandFlag.Skip in DSSPrime.commandFlags[i] then
+        begin
+            Result[n] := i;
+            inc(n);
+        end;
+    end;
+end;
+
+procedure Settings_Get_SkipCommands_GR(); CDECL;
+begin
+    Settings_Get_SkipCommands(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0])
 end;
 //------------------------------------------------------------------------------
 end.
