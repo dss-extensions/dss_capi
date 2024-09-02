@@ -1459,6 +1459,13 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t ctx_DSS_Get_NumCircuits(const void* ctx);
 
+    /*!
+
+    Clear the current circuit and any related actor.
+
+    On the AltDSS engine, also clears `SkipFileRegEx` and `SkipCommands`.
+
+    */
     DSS_CAPI_DLL void ctx_DSS_ClearAll(const void* ctx);
 
     /*! 
@@ -5144,11 +5151,14 @@ extern "C" {
     matches the regular expression pattern, it is skipped (the file is not read nor
     commands contained in the file are executed).
 
-    Set to an empty string to reset/disable the filter.
+    Set to an empty string to reset/disable the filter. A `clear` command, or the DSS_ClearAll` 
+    function also resets the value of this setting.
 
     Case-insensitive.
     See https://regex.sorokin.engineer/en/latest/regular_expressions.html for information on 
     the expression syntax and options.
+
+    
 
     (API Extension)
     */
@@ -5160,6 +5170,10 @@ extern "C" {
 
     List of integer command codes representing the command to skip when processing DSS text commands or files.
     
+    A `clear` command, or the DSS_ClearAll` function resets the value to include all commands. The user can
+    also pass an empty list of commands to reset it manually, enabling the execution of all commands, besides
+    DOSCmd and others that have dedicated toggles.
+
     **Do not hardcore** the integers since they change very frequenty.
 
     `DSS_Executive_Get_Command` and `DSS_Executive_Get_NumCommands` can be used to list the available commands.

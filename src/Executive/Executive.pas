@@ -274,8 +274,16 @@ begin
 end;
 
 procedure TExecutive.Clear(Resetting: Boolean = True);
+var
+    i: Integer;
 begin
     DSS.SignalEvent(TAltDSSEvent.Clear, 0);
+    FreeAndNil(DSS.skipFileRegExp);
+    for i := 1 to High(DSS.commandFlags) do
+    begin
+        Exclude(DSS.commandFlags[i], DSSCommandFlag.Skip);
+    end;
+
     if (DSS.NumCircuits > 0) then
 	begin
 {$IFDEF DSS_CAPI_PM}
