@@ -55,7 +55,8 @@ procedure ctx_ShareGeneral(ctxFrom: TDSSContext; ctxTo: TDSSContext); CDECL;
 const
     clsNames: Array of String = [
         'LoadShape', 'PriceShape', 'TCC_Curve', 'TShape', 'XYCurve', 'LineSpacing',
-        'WireData', 'CNData', 'TSData', 'LineCode', 'LineGeometry'
+        'WireData', 'CNData', 'TSData', 'LineCode', 'LineGeometry', 'Spectrum',
+        'GrowthShape', 'XfmrCode'
     ];
 var
     clsFrom, clsTo: TDSSClass;
