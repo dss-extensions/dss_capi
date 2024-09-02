@@ -539,9 +539,16 @@ end;
 //------------------------------------------------------------------------------
 function Circuit_SetActiveBus(const BusName: PAnsiChar): Integer; CDECL;
 begin
-    DSSGlobals.SetActiveBus(DSSPrime, StripExtension(BusName));
+    if (DSS_CAPI_EXT_ERRORS) then
+    begin
+        if InvalidCircuit(DSSPrime) then
+            Exit;
+    end;
     if Assigned(DSSPrime.ActiveCircuit) then
+    begin
+        DSSGlobals.SetActiveBus(DSSPrime, StripExtension(BusName));    
         Result := DSSPrime.ActiveCircuit.ActiveBusIndex - 1
+    end
     else
         Result := -1;
 end;
