@@ -793,7 +793,7 @@ begin
         Exit;
 
     DSS_RecreateArray_PPointer(ResultPtr, ResultCount, elem.ControlElementList.Count);
-    Move(elem.ControlElementList.InternalPointer^, ResultPtr^, ResultCount^ * SizeOf(Pointer));
+    Move(elem.ControlElementList.listPtr^, ResultPtr^, ResultCount^ * SizeOf(Pointer));
 end;
 //------------------------------------------------------------------------------
 function Alt_PCE_Get_EnergyMeterName(elem: TPCElement): PAnsiChar; CDECL;
@@ -946,7 +946,7 @@ begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NumVariables);
     for k := 1 to elem.NumVariables do
     begin
-        Result[k - 1] := elem.Variable[k];
+        Result[k - 1] := elem.GetVariable(k);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -1220,7 +1220,7 @@ begin
         DoSimpleMsg(elem.DSS, 'Invalid variable index %d for "%s"', [varIdx, elem.FullName], 100002);
         Exit;
     end;
-    Result := elem.Variable[varIdx];
+    Result := elem.GetVariable(varIdx);
 end;
 //------------------------------------------------------------------------------
 procedure Alt_PCE_Set_VariableValue(elem: TPCElement; varIdx: Integer; value: Double); CDECL;
@@ -1231,7 +1231,7 @@ begin
             DoSimpleMsg(elem.DSS, 'Invalid variable index %d for "%s"', [varIdx, elem.FullName], 100002);
         Exit;
     end;
-    elem.Variable[varIdx] := value;
+    elem.SetVariable(varIdx, value);
 end;
 //------------------------------------------------------------------------------
 function Alt_PCE_Get_VariableSValue(elem: TPCElement; varName: PAnsiChar): Double; CDECL;
@@ -1247,7 +1247,7 @@ begin
         DoSimpleMsg(elem.DSS, 'Invalid variable name %s for "%s"', [sname, elem.FullName], 100002);
         Exit;
     end;
-    Result := elem.Variable[varIdx];
+    Result := elem.GetVariable(varIdx);
 end;
 //------------------------------------------------------------------------------
 procedure Alt_PCE_Set_VariableSValue(elem: TPCElement; varName: PAnsiChar; value: Double); CDECL;
@@ -1262,7 +1262,7 @@ begin
         DoSimpleMsg(elem.DSS, 'Invalid variable name %s for "%s"', [sname, elem.FullName], 100002);
         Exit;
     end;
-    elem.Variable[varIdx] := value;
+    elem.SetVariable(varIdx, value);
 end;
 //------------------------------------------------------------------------------
 function Alt_CE_Get_NumPhases(elem: TDSSCktElement): Integer; CDECL;
@@ -1483,7 +1483,7 @@ end;
 //------------------------------------------------------------------------------
 function Alt_Monitor_Get_FileName(pmon: TMonitorObj): PAnsiChar; CDECL;
 begin
-    Result := PAnsiChar(pmon.CSVFileName);
+    Result := DSS_CopyStringAsPChar(pmon.GetCSVFileName());
 end;
 //------------------------------------------------------------------------------
 function Alt_Monitor_Get_NumChannels(pmon: TMonitorObj): Integer; CDECL;
@@ -1942,7 +1942,7 @@ begin
         Exit;
 
     DSS_RecreateArray_PPointer(ResultPtr, ResultCount, elem.SequenceList.Count);
-    Move(elem.SequenceList.InternalPointer^, ResultPtr^, ResultCount^ * SizeOf(Pointer));
+    Move(elem.SequenceList.listPtr^, ResultPtr^, ResultCount^ * SizeOf(Pointer));
 end;
 //------------------------------------------------------------------------------
 procedure Alt_Meter_Get_Loads(var ResultPtr: PPointer; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
@@ -1952,7 +1952,7 @@ begin
         Exit;
 
     DSS_RecreateArray_PPointer(ResultPtr, ResultCount, elem.LoadList.Count);
-    Move(elem.LoadList.InternalPointer^, ResultPtr^, ResultCount^ * SizeOf(Pointer));
+    Move(elem.LoadList.listPtr^, ResultPtr^, ResultCount^ * SizeOf(Pointer));
 end;
 //------------------------------------------------------------------------------
 procedure Alt_CEBatch_Get_Losses(var resultPtr: PDouble; resultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: TAPISize); CDECL;
@@ -2037,7 +2037,7 @@ begin
 end;
 function Alt_Bus_Get_NumNodes(DSS: TDSSContext; pBus: TDSSBus): Integer; CDECL;
 begin
-    Result := pBus.NumNodesThisBus;
+    Result := pBus.numNodesThisBus;
 end;
 function Alt_Bus_Get_kVBase(DSS: TDSSContext; pBus: TDSSBus): Double; CDECL;
 begin
@@ -2121,7 +2121,7 @@ var
     Nvalues, i, iV, NodeIdx, jj: Integer;
     Volts: Complex;
 begin
-    Nvalues := pBus.NumNodesThisBus;
+    Nvalues := pBus.numNodesThisBus;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
     iV := 0;
     jj := 1;
@@ -2147,7 +2147,7 @@ var
     Result: PIntegerArray0;
     Nvalues, i, iV, NodeIdx, jj: Integer;
 begin
-    Nvalues := pBus.NumNodesThisBus;
+    Nvalues := pBus.numNodesThisBus;
     Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, NValues);
     iV := 0;
     jj := 1;
@@ -2172,7 +2172,7 @@ var
     Nvalues, i, iV: Integer;
     VPh, V012: Complex3;
 begin
-    Nvalues := pBus.NumNodesThisBus;
+    Nvalues := pBus.numNodesThisBus;
     if Nvalues > 3 then
         Nvalues := 3;
 
@@ -2212,7 +2212,7 @@ begin
         Exit;
     end;
 
-    NValues := pBus.NumNodesThisBus;
+    NValues := pBus.numNodesThisBus;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
     iV := 0;
     for i := 1 to NValues do
@@ -2236,7 +2236,7 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    NValues := pBus.NumNodesThisBus;
+    NValues := pBus.numNodesThisBus;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
     iV := 0;
     for i := 1 to NValues do
@@ -2256,7 +2256,7 @@ var
     Volts: Complex;
     BaseFactor: Double;
 begin
-    Nvalues := pBus.NumNodesThisBus;
+    Nvalues := pBus.numNodesThisBus;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
     iV := 0;
     jj := 1;
@@ -2286,7 +2286,7 @@ var
     Result: PDoubleArray0;
     Z: Complex;
 begin
-    Z := pBus.Zsc0;
+    Z := pBus.GetZsc0();
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
     Result[0] := Z.Re;
     Result[1] := Z.Im;
@@ -2297,7 +2297,7 @@ var
     Result: PDoubleArray0;
     Z: Complex;
 begin
-    Z := pBus.Zsc1;
+    Z := pBus.GetZsc1();
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
     Result[0] := Z.Re;
     Result[1] := Z.Im;
@@ -2314,7 +2314,7 @@ begin
         if pBus.Zsc = NIL then
             Exit;
 
-        Nelements := pBus.Zsc.Order;
+        Nelements := pBus.Zsc.order;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Nelements * Nelements, Nelements, Nelements);
         iV := 0;
         for i := 1 to Nelements do
@@ -2345,7 +2345,7 @@ begin
         if pBus.Ysc = NIL then
             Exit;
 
-        Nelements := pBus.Ysc.Order;
+        Nelements := pBus.Ysc.order;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Nelements * Nelements, Nelements, Nelements);
         iV := 0;
         for i := 1 to Nelements do
@@ -2371,7 +2371,7 @@ var
     Nvalues, i, iV: Integer;
     VPh, V012: Complex3;
 begin
-    Nvalues := pBus.NumNodesThisBus;
+    Nvalues := pBus.numNodesThisBus;
     if Nvalues > 3 then
         Nvalues := 3;
 
@@ -2407,7 +2407,7 @@ var
     NodeV: pNodeVArray;
 begin
     NodeV := DSS.ActiveCircuit.Solution.NodeV;
-    Nvalues := pBus.NumNodesThisBus;
+    Nvalues := pBus.numNodesThisBus;
     if Nvalues > 3 then
         Nvalues := 3;
 
@@ -2479,7 +2479,7 @@ var
     NodeV: pNodeVArray;
 begin
     NodeV := DSS.ActiveCircuit.Solution.NodeV;
-    Nvalues := pBus.NumNodesThisBus;
+    Nvalues := pBus.numNodesThisBus;
     if Nvalues > 3 then
         Nvalues := 3;
 
@@ -2545,7 +2545,7 @@ var
     Volts: polar;
     Basefactor: Double;
 begin
-    Nvalues := pBus.NumNodesThisBus;
+    Nvalues := pBus.numNodesThisBus;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
     iV := 0;
     jj := 1;
@@ -2577,7 +2577,7 @@ var
     Nvalues, i, iV, NodeIdx, jj: Integer;
     Volts: polar;
 begin
-    Nvalues := pBus.NumNodesThisBus;
+    Nvalues := pBus.numNodesThisBus;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
     iV := 0;
     jj := 1;
@@ -2603,13 +2603,13 @@ var
     NValues: Integer;
     Norder: Integer;
 begin
-    if (pBus.NumNodesThisBus <> 3) or (pBus.Zsc = NIL) then
+    if (pBus.numNodesThisBus <> 3) or (pBus.Zsc = NIL) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
-    Nvalues := pBus.NumNodesThisBus * pBus.NumNodesThisBus * 2;  // Should be 9 complex numbers
+    Nvalues := pBus.numNodesThisBus * pBus.numNodesThisBus * 2;  // Should be 9 complex numbers
     // Compute ZSC012 for 3-phase buses else leave it zeros
     // ZSC012 = Ap2s Zsc As2p
     Zsc012Temp := pBus.Zsc.MtrxMult(As2p);  // temp for intermediate result
@@ -2620,7 +2620,7 @@ begin
     Zsc012Temp.Free;
 
     // Return all the elements of ZSC012
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValues, pBus.NumNodesThisBus, pBus.NumNodesThisBus);
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValues, pBus.numNodesThisBus, pBus.numNodesThisBus);
     Move(pBus.ZSC012.GetValuesArrayPtr(Norder)[1], ResultPtr[0], NValues * SizeOf(Double));
 end;
 
@@ -2638,8 +2638,8 @@ begin
     // Initially allocate a buffer for 10 elements.
     Result := DSS_RecreateArray_PPointer(ResultPtr, ResultCount, 10);
     ResultCount[0] := 0;
-    SetLength(nodes, pBus.NumNodesThisBus);
-    for i := 1 to pBus.NumNodesThisBus do
+    SetLength(nodes, pBus.numNodesThisBus);
+    for i := 1 to pBus.numNodesThisBus do
         nodes[i - 1] := pBus.GetRef(i);
 
     if pdes or lines then

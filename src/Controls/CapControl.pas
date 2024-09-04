@@ -156,8 +156,6 @@ type
     PUBLIC
         procedure Set_Enabled(Value: WordBool); OVERRIDE;
     PRIVATE
-        ControlType: ECapControlType;
-        ControlVars: TCapControlVars;
         ControlledCapacitor: TCapacitorObj;
         cBuffer: pComplexArray;    // Complexarray buffer
 
@@ -168,13 +166,15 @@ type
         FpctMinkvar: Double;
         ctrlSignalShape: TLoadShapeObj;        
 
-        function Get_Capacitor: TCapacitorObj;
         procedure Set_PendingChange(const Value: EControlAction);
         function Get_PendingChange: EControlAction;
         procedure GetControlVoltage(var ControlVoltage: Double);
         procedure GetControlCurrent(var ControlCurrent: Double);
         procedure GetBusVoltages(pBus: TDSSBus; Buff: pComplexArray);
     PUBLIC
+        ControlType: ECapControlType;
+        ControlVars: TCapControlVars;
+
         constructor Create(ParClass: TDSSClass; const CapControlName: String);
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
@@ -187,24 +187,7 @@ type
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
         procedure Reset; OVERRIDE;  // Reset to initial defined state
 
-        property This_Capacitor: TCapacitorObj READ Get_Capacitor;  // Pointer to controlled Capacitor
         property PendingChange: EControlAction READ Get_PendingChange WRITE Set_PendingChange;
-
-        // for CIM export, which doesn't yet use the delays, CT, PT, and voltage override
-        property CapControlType: ECapControlType READ ControlType WRITE ControlType;
-        property OnValue: Double READ ControlVars.ON_Value;
-        property OffValue: Double READ ControlVars.OFF_Value;
-        property PFOnValue: Double READ ControlVars.PFON_Value;
-        property PFOffValue: Double READ ControlVars.PFOFF_Value;
-        property PTRatioVal: Double READ ControlVars.PTratio;
-        property CTRatioVal: Double READ ControlVars.CTratio;
-        property OnDelayVal: Double READ ControlVars.OnDelay;
-        property OffDelayVal: Double READ ControlVars.OffDelay;
-        property VminVal: Double READ ControlVars.Vmin;
-        property VmaxVal: Double READ ControlVars.Vmax;
-        property UseVoltageOverride: LongBool READ ControlVars.Voverride;
-        property DeadTimeVal: Double READ ControlVars.DeadTime;
-        property PTPhase: Integer READ ControlVars.FPTPhase;
     end;
 
 implementation
@@ -581,7 +564,7 @@ begin
         raise Exception.Create(Format(_('"%s": Capacitor is not set, aborting.'), [FullName]));
 
     // Both capacitor and monitored element must already exist
-    ControlledCapacitor := This_Capacitor;
+    ControlledCapacitor := ControlledElement as TCapacitorObj;
     FNphases := ControlledElement.NPhases;  // Force number of phases to be same   Added 5/21/01  RCD
     Nconds := FNphases;
     ControlledElement.ActiveTerminalIdx := 1;  // Make the 1 st terminal active
@@ -1197,12 +1180,6 @@ begin
         end;
     end;  // With
 end;
-
-function TCapControlObj.Get_Capacitor: TCapacitorObj;
-begin
-    Result := ControlledElement as TCapacitorObj;
-end;
-
 
 function TCapControlObj.Get_PendingChange: EControlAction;
 begin

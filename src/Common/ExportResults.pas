@@ -201,12 +201,12 @@ begin
         begin
             for i := 1 to NumBuses do
             begin
-                if Buses^[i].NumNodesThisBus < 3 then
+                if Buses^[i].numNodesThisBus < 3 then
                 begin
                     V0 := 0.0;
                     V2 := 0.0;
                     V_NEMA := 0.0;
-                    if (Buses^[i].NumNodesThisBus = 1) and PositiveSequence then
+                    if (Buses^[i].numNodesThisBus = 1) and PositiveSequence then
                     begin // first node
                         nref := Buses^[i].GetRef(1);
                         Vph[1] := DSS.ActiveCircuit.Solution.NodeV^[nref];
@@ -255,7 +255,7 @@ begin
 
                 Vresidual := CZERO;
                 with DSS.ActiveCircuit.Solution do
-                    for j := 1 to Buses^[i].NumNodesThisBus do
+                    for j := 1 to Buses^[i].numNodesThisBus do
                         Vresidual += NodeV^[Buses^[i].GetRef(j)];
 
                 FSWriteln(F,
@@ -298,7 +298,7 @@ begin
     MaxNumNodes := 0;
     with DSS.ActiveCircuit do
         for i := 1 to NumBuses do
-            MaxNumNodes := max(MaxNumNodes, Buses^[i].NumNodesThisBus);
+            MaxNumNodes := max(MaxNumNodes, Buses^[i].numNodesThisBus);
 
     try
         F := TBufferedFileStream.Create(FileNm, fmCreate);
@@ -317,7 +317,7 @@ begin
 
                 jj := 1;
                 with Buses^[i] do
-                    for j := 1 to NumNodesThisBus do
+                    for j := 1 to numNodesThisBus do
                     begin
                         repeat
                             NodeIdx := FindIdx(jj);     // Try to find nodes in order
@@ -336,7 +336,7 @@ begin
                             [GetNum(NodeIdx), Vmag, cdang(Volts), Vpu]));
                     end;
            {Zero Fill row}
-                for j := Buses^[i].NumNodesThisBus + 1 to MaxNumNodes do
+                for j := Buses^[i].numNodesThisBus + 1 to MaxNumNodes do
                     FSWrite(F, ', 0, 0, 0, 0');
                 FSWriteln(F);
             end;
@@ -1127,14 +1127,14 @@ begin
                     if j = 1 then
                     begin
              //----PDelem.ActiveTerminalIdx := 1;
-                        S := PDElem.ExcesskVANorm[1];
+                        S := PDElem.GetExcesskVANorm(1);
                         if Opt = 1 then
                             S := S * 0.001;
                         WriteStr(sout, Separator, Abs(S.re): 11: 1);
                         FSWrite(F, sout);
                         WriteStr(sout, Separator, Abs(S.im): 11: 1);
                         FSWrite(F, sout);
-                        S := PDElem.ExcesskVAEmerg[1];
+                        S := PDElem.GetExcesskVAEmerg(1);
                         if Opt = 1 then
                             S := S * 0.001;
                         WriteStr(sout, Separator, Abs(S.re): 11: 1);
@@ -1418,14 +1418,14 @@ begin
                     if j = 1 then
                     begin
                  //----PDelem.ActiveTerminalIdx := 1;
-                        S := PDElem.ExcesskVANorm[1];
+                        S := PDElem.GetExcesskVANorm(1);
                         if Opt = 1 then
                             S := S * 0.001;
                         WriteStr(sout, Separator, Abs(S.re): 11: 1);
                         FSWrite(F, sout);
                         WriteStr(sout, Separator, Abs(S.im): 11: 1);
                         FSWrite(F, sout);
-                        S := PDElem.ExcesskVAEmerg[1];
+                        S := PDElem.GetExcesskVAEmerg(1);
                         if Opt = 1 then
                             S := S * 0.001;
                         WriteStr(sout, Separator, Abs(S.re): 11: 1);
@@ -1557,7 +1557,7 @@ begin
                     begin
                         FSWrite(F, Pad(AnsiUpperCase(BusList.NameOfIndex(iBus)), 12));
                         MaxCurr := 0.0;
-                        for i := 1 to NumNodesThisBus do
+                        for i := 1 to numNodesThisBus do
                         begin
                             if MaxCurr < Cabs(BusCurrent^[i]) then
                                 MaxCurr := Cabs(BusCurrent^[i]);
@@ -1569,8 +1569,8 @@ begin
 
                         // Solve for Fault Injection Currents
 
-                        YFault := TcMatrix.CreateMatrix(NumNodesThisBus);
-                        Getmem(VFault, Sizeof(Complex) * NumNodesThisBus);
+                        YFault := TcMatrix.CreateMatrix(numNodesThisBus);
+                        Getmem(VFault, Sizeof(Complex) * numNodesThisBus);
 
                         // Build YscTemp
 
@@ -1578,7 +1578,7 @@ begin
 
                         MaxCurr := 0.0;
 
-                        for iphs := 1 to NumNodesThisBus do
+                        for iphs := 1 to numNodesThisBus do
                         begin
                             YFault.CopyFrom(Ysc);
                             YFault.AddElement(iphs, iphs, GFault);
@@ -1602,17 +1602,17 @@ begin
 
                         // Bus Norton Equivalent Current, Isc has been previously computed
 
-                        YFault := TcMatrix.CreateMatrix(NumNodesThisBus);
-                        Getmem(VFault, Sizeof(VFault^[1]) * NumNodesThisBus);
+                        YFault := TcMatrix.CreateMatrix(numNodesThisBus);
+                        Getmem(VFault, Sizeof(VFault^[1]) * numNodesThisBus);
 
                         GFault := Cmplx(10000.0, 0.0);
 
                         MaxCurr := 0.0;
 
-                        for iphs := 1 to NumNodesThisBus do
+                        for iphs := 1 to numNodesThisBus do
                         begin
                             YFault.CopyFrom(Ysc);
-                            if iphs = NumNodesThisBus then
+                            if iphs = numNodesThisBus then
                                 iphs2 := 1
                             else
                                 iphs2 := iphs + 1;
@@ -2842,8 +2842,8 @@ begin
         begin
             for i := 1 to NumBuses do
             begin
-                Z1 := Buses^[i].Zsc1;
-                Z0 := Buses^[i].Zsc0;
+                Z1 := Buses^[i].GetZsc1();
+                Z0 := Buses^[i].GetZsc0();
                 if Z1.re <> 0.0 then
                     X1R1 := Z1.im / Z1.re
                 else
@@ -2855,7 +2855,7 @@ begin
 
                 FSWriteln(F,
                     Format('"%s", %d, %10.6g, %10.6g, %10.6g, %10.6g, %10.6g, %10.6g, %8.4g, %8.4g',
-                    [AnsiUpperCase(BusList.NameOfIndex(i)), Buses^[i].NumNodesThisBus,
+                    [AnsiUpperCase(BusList.NameOfIndex(i)), Buses^[i].numNodesThisBus,
                     Z1.re, Z1.im, Z0.Re, Z0.im, Cabs(Z1), Cabs(Z0), X1R1, X0R0]
                     ));
 
@@ -3512,7 +3512,7 @@ begin
 //    MaxNumNodes := 0;
 //    With DSS.ActiveCircuit Do
 //    For j := 1 to NumBuses Do
-//       MaxNumNodes := max(MaxNumNodes, Buses^[j].NumNodesThisBus);
+//       MaxNumNodes := max(MaxNumNodes, Buses^[j].numNodesThisBus);
 
     try
         F := TBufferedFileStream.Create(FileNm, fmCreate);
@@ -3715,7 +3715,7 @@ begin
             begin
                 BusName := BusList.NameOfIndex(i);
                 with Buses^[i] do
-                    for j := 1 to NumNodesThisBus do
+                    for j := 1 to numNodesThisBus do
                     begin
                         FSWriteln(F, Format('%s.%d ', [BusName, GetNum(j)]));
                     end;

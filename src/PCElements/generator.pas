@@ -306,14 +306,6 @@ type
 
         procedure SyncUpPowerQuantities;
 
-
-        function Get_PresentkW: Double;
-        function Get_Presentkvar: Double;
-        function Get_PresentkV: Double;
-        procedure Set_PresentkV(const Value: Double);
-        procedure Set_PresentkW(const Value: Double);
-        procedure Set_PowerFactor(const Value: Double);
-
         procedure SetkWkvar(const PkW, Qkvar: Double);
 
     PROTECTED
@@ -363,8 +355,8 @@ type
         function InjCurrents: Integer; OVERRIDE;
         function NumVariables(): Integer; OVERRIDE;
         procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
-        function Get_Variable(i: Integer): Double; OVERRIDE;
-        procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
+        function GetVariable(i: Integer): Double; OVERRIDE;
+        procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
 
         procedure SetNominalGeneration;
@@ -373,16 +365,16 @@ type
         procedure TakeSample;
 
         // Procedures for setting the DQDV used by the Solution Object
-        procedure InitDQDVCalc;
-        procedure CalcDQDV;
-        procedure ResetStartPoint;
+        procedure InitDQDVCalc();
+        procedure CalcDQDV();
+        procedure ResetStartPoint();
 
         // Support for Dynamics Mode
-        procedure InitStateVars; OVERRIDE;
-        procedure IntegrateStates; OVERRIDE;
+        procedure InitStateVars(); OVERRIDE;
+        procedure IntegrateStates(); OVERRIDE;
 
         // Support for Harmonics Mode
-        procedure InitHarmonics; OVERRIDE;
+        procedure InitHarmonics(); OVERRIDE;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
@@ -390,12 +382,14 @@ type
         procedure NCIM_InitPVBusJac();
 
 
-        property PresentkW: Double READ Get_PresentkW WRITE Set_PresentkW;
-        property PowerFactor: Double READ PFNominal WRITE Set_PowerFactor;
+        function PresentkW(): Double;
+        procedure SetPresentkW(const Value: Double);
+        function Presentkvar(): Double;
+        function PresentkV(): Double;
+        procedure SetPresentkV(const Value: Double);
+        function PowerFactor(): Double;
+        procedure SetPowerFactor(const Value: Double);
 
-        //TODO: remove?
-        property PresentkV: Double READ Get_PresentkV WRITE Set_PresentkV;
-        property Presentkvar: Double READ Get_Presentkvar;
 
     end;
 
@@ -2141,7 +2135,7 @@ begin
     IntervalHrs := ActiveCircuit.Solution.IntervalHrs;
     if GenON then
     begin
-        S := cmplx(Get_PresentkW, Get_Presentkvar);
+        S := cmplx(PresentkW(), Presentkvar());
         Smag := Cabs(S);
         HourValue := 1.0;
     end
@@ -2173,28 +2167,28 @@ begin
     end;
 end;
 
-function TGeneratorObj.Get_PresentkW: Double;
+function TGeneratorObj.PresentkW(): Double;
 begin
     Result := Genvars.Pnominalperphase * 0.001 * Fnphases;
 end;
 
-function TGeneratorObj.Get_PresentkV: Double;
+function TGeneratorObj.PresentkV(): Double;
 begin
     Result := Genvars.kVGeneratorBase;
 end;
 
-function TGeneratorObj.Get_Presentkvar: Double;
+function TGeneratorObj.Presentkvar(): Double;
 begin
     Result := Genvars.Qnominalperphase * 0.001 * Fnphases;
 end;
 
-procedure TGeneratorObj.InitDQDVCalc;
+procedure TGeneratorObj.InitDQDVCalc();
 begin
     DQDV := 0.0;
     Genvars.Qnominalperphase := 0.5 * (varmax + varmin);   // avg of the limits
 end;
 
-procedure TGeneratorObj.CalcDQDV;
+procedure TGeneratorObj.CalcDQDV();
 var
     i: Integer;
     cYii: Complex;
@@ -2209,7 +2203,7 @@ begin
     DQDVSaved := DQDV;  //Save for next time  Allows generator to be enabled/disabled during simulation
 end;
 
-procedure TGeneratorObj.ResetStartPoint;
+procedure TGeneratorObj.ResetStartPoint();
 begin
     Genvars.Qnominalperphase := 1000.0 * kvarBase / Fnphases;
 end;
@@ -2481,7 +2475,7 @@ begin
     end;
 end;
 
-function TGeneratorObj.Get_Variable(i: Integer): Double;
+function TGeneratorObj.GetVariable(i: Integer): Double;
 // Return variables one at a time
 var
     N, k: Integer;
@@ -2540,7 +2534,7 @@ begin
         end;
 end;
 
-procedure TGeneratorObj.Set_Variable(i: Integer; Value: Double);
+procedure TGeneratorObj.SetVariable(i: Integer; Value: Double);
 var
     N, k: Integer;
 begin
@@ -2605,7 +2599,7 @@ begin
     end;
 
     for i := 1 to NumGenVariables do
-        States[i - 1] := Variable[i];
+        States[i - 1] := GetVariable(i);
 
     if UserModel.Exists then
     begin
@@ -2764,13 +2758,18 @@ begin
     GenSwitchOpen := Value;
 end;
 
-procedure TGeneratorObj.Set_PowerFactor(const Value: Double);
+function TGeneratorObj.PowerFactor(): Double;
+begin
+    result := PFNominal;
+end;
+
+procedure TGeneratorObj.SetPowerFactor(const Value: Double);
 begin
     PFNominal := Value;
     SyncUpPowerQuantities;
 end;
 
-procedure TGeneratorObj.Set_PresentkV(const Value: Double);
+procedure TGeneratorObj.SetPresentkV(const Value: Double);
 begin
     Genvars.kVGeneratorBase := Value;
     PropertySideEffects(ord(TProp.kV), 0, []);
@@ -2780,7 +2779,7 @@ begin
     // end;
 end;
 
-procedure TGeneratorObj.Set_PresentkW(const Value: Double);
+procedure TGeneratorObj.SetPresentkW(const Value: Double);
 begin
     kWBase := Value;
     SyncUpPowerQuantities;

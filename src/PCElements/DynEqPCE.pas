@@ -129,7 +129,7 @@ begin
             // Otherwise, move the value to the values array
             Parser.CmdString := '[' + varValueStr + ']';
             Parser.NextParam();
-            DynamicEqVals[varIdx][0] := Parser.DblValue;
+            DynamicEqVals[varIdx][0] := Parser.MakeDouble();
         end;
     end;
     Result := True;
@@ -156,7 +156,7 @@ begin
     if UserDynInit = NIL then
         UserDynInit := TJSONObject.Create();
 
-    varValue := Parser.StrValue;
+    varValue := Parser.MakeString();
 
     UserDynInit.Delete(variable);
     if (DynamicEqObj.Check_If_CalcValue(varValue, op)) then

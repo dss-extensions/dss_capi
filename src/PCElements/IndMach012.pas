@@ -197,8 +197,8 @@ type
         function InjCurrents: Integer; OVERRIDE;
         function NumVariables: Integer; OVERRIDE;
         procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
-        function Get_Variable(i: Integer): Double; OVERRIDE;
-        procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
+        function GetVariable(i: Integer): Double; OVERRIDE;
+        procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
 
         // Support for Dynamics Mode
@@ -1322,7 +1322,7 @@ begin
     end;
 end;
 
-function TIndMach012Obj.Get_Variable(i: Integer): Double;
+function TIndMach012Obj.GetVariable(i: Integer): Double;
 begin
     Result := -9999.99;   // Error Value
     with MachineData do
@@ -1376,7 +1376,7 @@ begin
         end;
 end;
 
-procedure TIndMach012Obj.Set_Variable(i: Integer; Value: Double); // TODO: remove -- this is completely redundant with the properties but doesn't call RecalcElementData
+procedure TIndMach012Obj.SetVariable(i: Integer; Value: Double); // TODO: remove -- this is completely redundant with the properties but doesn't call RecalcElementData
 begin
     case i of
         7:
@@ -1407,7 +1407,7 @@ var
     i: Integer;
 begin
     for i := 1 to NumIndMach012Variables do
-        States[i - 1] := Variable[i];
+        States[i - 1] := GetVariable(i);
 end;
 
 function TIndMach012Obj.GetRotorLosses: Double;

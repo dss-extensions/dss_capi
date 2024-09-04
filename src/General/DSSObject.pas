@@ -60,7 +60,7 @@ type
 
         property PropertyValue[Index: Integer]: String READ GetPropertyValue;
 
-        property Name: String READ LName WRITE Set_Name;
+        property Name: String READ LocalName WRITE Set_Name;
         function FullName: String;
         function DSSClassName: String;
     end;

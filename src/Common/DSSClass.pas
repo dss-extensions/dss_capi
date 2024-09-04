@@ -453,7 +453,7 @@ type
      public
         DSS: TDSSContext;
         ClassParents: TStringList;
-        Class_Name: String;
+        Name: String;
         CommandList: TCommandlist;
         NumProperties: Integer;
 
@@ -519,7 +519,6 @@ type
         function ElementCount(): Integer;
         function First(): Integer;
         function Next(): Integer;
-        Property Name:String read Class_Name;
 
         function GetEnumerator: TDSSPointerEnumerator;
         procedure SetPropertyNameStyle(style: TDSSPropertyNameStyle);
@@ -1482,7 +1481,7 @@ begin
     DSSClassType := DSSClsType;
     DSSClassIndex := -1; // Not initialized, will be filled  by NewDSSClass
     ClassParents := TStringList.Create(); // for easier property help with inheritance
-    Class_Name := DSSClsName;
+    Name := DSSClsName;
     ClassParents.Add('DSSClass');
     DSS := dssContext;
     ElementList := TDSSPointerList.Create(20);  // Init size and increment
@@ -1663,7 +1662,7 @@ begin
     // Previous Edit loop
     ParamPointer := 0;
     ParamName := Parser.NextParam();
-    Param := Parser.StrValue;
+    Param := Parser.MakeString();
     while Length(Param) > 0 do
     begin
         if Length(ParamName) = 0 then
@@ -1690,7 +1689,7 @@ begin
             end;
 
             ParamName := Parser.NextParam();
-            Param := Parser.StrValue;
+            Param := Parser.MakeString();
             continue;
         end;
 
@@ -1706,7 +1705,7 @@ begin
             end;
 
             ParamName := Parser.NextParam();
-            Param := Parser.StrValue;
+            Param := Parser.MakeString();
             continue;
         end;
         
@@ -1719,7 +1718,7 @@ begin
 //            WriteLn(TDSSObject(Obj).FullName, '.', PropertyName[ParamPointer], ' = ', tmp);
 
         ParamName := Parser.NextParam();
-        Param := Parser.StrValue;
+        Param := Parser.MakeString();
     end;
 
     // Finalize it
@@ -2125,7 +2124,7 @@ var
     propName, propNameJSON: String;
 begin
     if Length(PropSource) = 0 then
-        PropSource := Class_Name;
+        PropSource := Name;
     for i := 1 to NumProps do
     begin
         propName := GetEnumName(EnumInfo, i);
@@ -2195,7 +2194,7 @@ begin
         Exit;
     end;
 
-    key := Class_Name + '.' + PropertyNameLowercase[idx];
+    key := Name + '.' + PropertyNameLowercase[idx];
 
     if DSSPropertyHelp = NIL then
     begin

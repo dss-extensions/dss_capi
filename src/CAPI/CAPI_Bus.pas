@@ -137,7 +137,7 @@ begin
         Exit;
 
     
-    Result := pBus.NumNodesThisBus;
+    Result := pBus.numNodesThisBus;
 end;
 //------------------------------------------------------------------------------
 procedure Bus_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -285,7 +285,7 @@ begin
         Exit;
     end;
 
-        Z := pBus.Zsc0;
+        Z := pBus.GetZsc0();
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
         Result[0] := Z.Re;
         Result[1] := Z.Im;
@@ -310,7 +310,7 @@ begin
         Exit;
     end;
 
-    Z := pBus.Zsc1;
+    Z := pBus.GetZsc1();
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
     Result[0] := Z.Re;
     Result[1] := Z.Im;

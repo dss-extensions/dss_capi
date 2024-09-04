@@ -433,7 +433,7 @@ Begin
         // DSS.ActiveDSSObject := DSS.ActiveCircuit.Solution;
         DSS.Circuits.Add(DSS.ActiveCircuit);
         Inc(DSS.NumCircuits);
-        S := DSS.Parser.Remainder;    // Pass remainder of string on to vsource.
+        S := DSS.Parser.Remainder();    // Pass remainder of string on to vsource.
         // Create a default Circuit
         DSS.SolutionAbort := False;
         // Voltage source named "source" connected to SourceBus
@@ -646,7 +646,7 @@ begin
 
     Ref_Ckt := MainDSS.LastFileCompiled;
     DSS.Parser.NextParam();
-    NumClones := DSS.Parser.IntValue;
+    NumClones := DSS.Parser.MakeInteger();
     PMParent.Parallel_enabled := False;
     if ((PMParent.NumOfActors + NumClones) <= CPU_Cores) and (NumClones > 0) then
     begin

@@ -18,16 +18,13 @@ uses
 type
     TDSSBus = class(TNamedObject)
     PRIVATE
-        FNumNodesThisBus: SmallInt;
-
         Nodes: pIntegerArray;
         Allocation: SmallInt;
 
         procedure AddANode;
-        function Get_Zsc0: Complex;
-        function Get_Zsc1: Complex;
 
     PUBLIC
+        numNodesThisBus: SmallInt;
         RefNo: pIntegerArray;
 
         VBus,
@@ -67,11 +64,10 @@ type
         function GetRef(NodeIndex: Integer): Integer; // Returns reference Num for node by node index
         function GetNum(NodeIndex: Integer): SmallInt; // Returns ith node number designation
 
-        property NumNodesThisBus: SmallInt READ FNumNodesThisBus;
-        property Zsc1: Complex READ Get_Zsc1;
-        property Zsc0: Complex READ Get_Zsc0;
+        function GetZsc0(): Complex;
+        function GetZsc1(): Complex;
 
-        property Name: String READ LName WRITE LName; // Reuse LocalName/LName
+        property Name: String READ LocalName WRITE LocalName; // Reuse LocalName
     end;
 
     // Bus Collection
@@ -100,7 +96,7 @@ begin
     Allocation := 4;
     Nodes := AllocMem(Sizeof(Nodes[1]) * Allocation);
     RefNo := AllocMem(Sizeof(RefNo[1]) * Allocation);
-    FNumNodesThisBus := 0;
+    numNodesThisBus := 0;
     Ysc := NIL;
     Zsc := NIL;
     Zsc012 := NIL;
@@ -136,8 +132,8 @@ end;
 
 procedure TDSSBus.AddANode;
 begin
-    Inc(FNumNodesThisBus);
-    if FNumNodesThisBus > Allocation then
+    Inc(numNodesThisBus);
+    if numNodesThisBus > Allocation then
     begin
         Allocation := Allocation + 1;
         ReallocMem(Nodes, Sizeof(Nodes[1]) * Allocation);
@@ -158,11 +154,11 @@ begin
         begin
              // Add a node to the bus
             AddANode;
-            Nodes[FNumNodesThisBus] := NodeNum;
+            Nodes[numNodesThisBus] := NodeNum;
 
             circ := TDSSCircuit(Circuit);
             Inc(circ.NumNodes);  // Global node number for circuit
-            RefNo[FNumNodesThisBus] := circ.NumNodes;
+            RefNo[numNodesThisBus] := circ.NumNodes;
             Result := circ.NumNodes;  // Return global node number
         end;
     end;
@@ -173,7 +169,7 @@ function TDSSBus.Find(NodeNum: SmallInt): Integer;
 var
     i: Integer;
 begin
-    for i := 1 to FNumNodesThisBus do
+    for i := 1 to numNodesThisBus do
     begin
         if Nodes[i] = NodeNum then
         begin
@@ -187,14 +183,14 @@ end;
 function TDSSBus.GetRef(NodeIndex: Integer): Integer;
 begin
     Result := 0;
-    if (NodeIndex > 0) and (NodeIndex <= FNumNodesThisBus) then
+    if (NodeIndex > 0) and (NodeIndex <= numNodesThisBus) then
         Result := RefNo[NodeIndex];
 end;
 
 function TDSSBus.GetNum(NodeIndex: Integer): SmallInt;
 begin
     Result := 0;
-    if (NodeIndex > 0) and (NodeIndex <= FNumNodesThisBus) then
+    if (NodeIndex > 0) and (NodeIndex <= numNodesThisBus) then
         Result := Nodes[NodeIndex];
 end;
 
@@ -207,13 +203,13 @@ begin
         Zsc.Free;
     if Assigned(Zsc012) then
         Zsc012.Free;
-    Ysc := Tcmatrix.CreateMatrix(FNumNodesThisBus);
-    Zsc := Tcmatrix.CreateMatrix(FNumNodesThisBus);
+    Ysc := Tcmatrix.CreateMatrix(numNodesThisBus);
+    Zsc := Tcmatrix.CreateMatrix(numNodesThisBus);
     Zsc012 := Tcmatrix.CreateMatrix(3); //  can only be 3x3  -- 0, 1, 2
     AllocateBusState;
 end;
 
-function TDSSBus.Get_Zsc0: Complex;
+function TDSSBus.GetZsc0(): Complex;
 // = Zs + 2 Zm
 begin
     if Assigned(Zsc) then
@@ -222,7 +218,7 @@ begin
         Result := 0;
 end;
 
-function TDSSBus.Get_Zsc1: Complex;
+function TDSSBus.GetZsc1(): Complex;
 // = Zs-Zm
 begin
     if Assigned(Zsc) then
@@ -236,7 +232,7 @@ function TDSSBus.FindIdx(NodeNum: SmallInt): Integer;
 var
     i: Integer;
 begin
-    for i := 1 to FNumNodesThisBus do
+    for i := 1 to numNodesThisBus do
     begin
         if Nodes[i] = NodeNum then
         begin
@@ -251,8 +247,8 @@ procedure TDSSBus.AllocateBusState;
 begin
     FreeMem(VBus);
     FreeMem(BusCurrent);
-    VBus := AllocMem(Sizeof(Complex) * FNumNodesThisBus);
-    BusCurrent := AllocMem(Sizeof(Complex) * FNumNodesThisBus);
+    VBus := AllocMem(Sizeof(Complex) * numNodesThisBus);
+    BusCurrent := AllocMem(Sizeof(Complex) * numNodesThisBus);
 end;
 
 procedure TDSSBus.ZeroReliabilityAccums();

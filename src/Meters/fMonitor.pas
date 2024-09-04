@@ -584,134 +584,134 @@ begin
     case TProp(Idx) of
         TProp.Attack_Defense: 
         begin
-            atk := InterpretYesNo(DSS.AuxParser.StrValue);
+            atk := InterpretYesNo(DSS.AuxParser.MakeString());
             
             DSS.AuxParser.NextParam();
-            dfs := InterpretYesNo(DSS.AuxParser.StrValue);
+            dfs := InterpretYesNo(DSS.AuxParser.MakeString());
             
             DSS.AuxParser.NextParam();
-            atk_time := DSS.AuxParser.DblValue;
+            atk_time := DSS.AuxParser.MakeDouble();
             
             DSS.AuxParser.NextParam();
-            atk_node_num := DSS.AuxParser.intValue - 1; // TODO: validate atk_node_num?
+            atk_node_num := DSS.AuxParser.MakeInteger() - 1; // TODO: validate atk_node_num?
             
             DSS.AuxParser.NextParam();
-            nodeFMs[atk_node_num].d_atk0 := DSS.AuxParser.DblValue;
+            nodeFMs[atk_node_num].d_atk0 := DSS.AuxParser.MakeDouble();
             
             DSS.AuxParser.NextParam();
-            beta_dfs := DSS.AuxParser.DblValue;
+            beta_dfs := DSS.AuxParser.MakeDouble();
             
             DSS.AuxParser.NextParam();
-            D_beta := DSS.AuxParser.DblValue;
+            D_beta := DSS.AuxParser.MakeDouble();
             
             DSS.AuxParser.NextParam(); // direction of gradient control
-            D_p := DSS.AuxParser.DblValue;
+            D_p := DSS.AuxParser.MakeDouble();
         end;
         TProp.Comm_Hide:
         begin
-            iNodeNum := DSS.AuxParser.IntValue - 1; //node number defined in cluster
+            iNodeNum := DSS.AuxParser.MakeInteger() - 1; //node number defined in cluster
 
             for i := 0 to Nodes - 1 do
             begin
                 DSS.AuxParser.NextParam(); // ignore any parameter name  not expecting any
-                if Length(DSS.AuxParser.StrValue) > 0 then
-                    pCommHide[iNodeNum, i] := DSS.AuxParser.intValue;
+                if Length(DSS.AuxParser.MakeString()) > 0 then
+                    pCommHide[iNodeNum, i] := DSS.AuxParser.MakeInteger();
             end;
         end;
         TProp.Comm_Node_Hide:
         begin
-            iNodeNum := DSS.AuxParser.IntValue - 1; //node number defined in cluster
+            iNodeNum := DSS.AuxParser.MakeInteger() - 1; //node number defined in cluster
 
             for i := 0 to Nodes - 1 do
             begin
                 DSS.AuxParser.NextParam(); // ignore any parameter name  not expecting any
-                if Length(DSS.AuxParser.StrValue) > 0 then
-                    pCommNode_Hide[iNodeNum, i] := DSS.AuxParser.intValue;
+                if Length(DSS.AuxParser.MakeString()) > 0 then
+                    pCommNode_Hide[iNodeNum, i] := DSS.AuxParser.MakeInteger();
             end;
         end;
         TProp.CommDelayVector:
         begin
-            iNodeNum := DSS.AuxParser.IntValue - 1; //node number defined in cluster
+            iNodeNum := DSS.AuxParser.MakeInteger() - 1; //node number defined in cluster
 
             for i := 0 to Nodes - 1 do
             begin
                 DSS.AuxParser.NextParam(); // ignore any parameter name  not expecting any
-                if Length(DSS.AuxParser.StrValue) > 0 then
-                    pCommDelayMatrix[iNodeNum, i] := DSS.AuxParser.DblValue;
+                if Length(DSS.AuxParser.MakeString()) > 0 then
+                    pCommDelayMatrix[iNodeNum, i] := DSS.AuxParser.MakeDouble();
             end;
             ResetDelaySteps(iNodeNum);  //Use pCommDelayMatrix to calculate pCommDelaySteps
         end;
         TProp.CommVector:
         begin
-            iNodeNum := DSS.AuxParser.IntValue - 1; //node number defined in cluster
+            iNodeNum := DSS.AuxParser.MakeInteger() - 1; //node number defined in cluster
 
             for i := 0 to Nodes - 1 do //TODO: check -- out of bounds?
             begin
                 DSS.AuxParser.NextParam(); // ignore any parameter name  not expecting any
-                if Length(DSS.AuxParser.StrValue) = 0 then
+                if Length(DSS.AuxParser.MakeString()) = 0 then
                     continue;
 
-                pCommMatrix[iNodeNum, i] := DSS.AuxParser.intValue;
-                pCommHide[iNodeNum, i] := DSS.AuxParser.intValue;       //default
-                pCommNode_Hide[iNodeNum, i] := DSS.AuxParser.intValue;  //default
+                pCommMatrix[iNodeNum, i] := DSS.AuxParser.MakeInteger();
+                pCommHide[iNodeNum, i] := DSS.AuxParser.MakeInteger();       //default
+                pCommNode_Hide[iNodeNum, i] := DSS.AuxParser.MakeInteger();  //default
             end;
         end;
         TProp.EGen:
         begin
-            kVA_fm := DSS.AuxParser.DblValue;
+            kVA_fm := DSS.AuxParser.MakeDouble();
             
             DSS.AuxParser.NextParam();
-            M_fm := DSS.AuxParser.DblValue;
+            M_fm := DSS.AuxParser.MakeDouble();
             
             DSS.AuxParser.NextParam();
-            D_fm := DSS.AuxParser.DblValue;
+            D_fm := DSS.AuxParser.MakeDouble();
             
             DSS.AuxParser.NextParam();
-            Tau_fm := DSS.AuxParser.DblValue;
+            Tau_fm := DSS.AuxParser.MakeDouble();
             
             DSS.AuxParser.NextParam();
-            Ki_fm := DSS.AuxParser.DblValue;
+            Ki_fm := DSS.AuxParser.MakeDouble();
             
             DSS.AuxParser.NextParam(); // init_time
-            init_time := DSS.AuxParser.DblValue;
+            init_time := DSS.AuxParser.MakeDouble();
             
             DSS.AuxParser.NextParam(); // k_dltP is the coordinator
-            k_dltP := DSS.AuxParser.DblValue;
+            k_dltP := DSS.AuxParser.MakeDouble();
             
             eg_defed := (kVA_fm * M_fm * D_fm * Tau_fm * Ki_fm <> 0.0); //eg_defed := false by default
         end;
         TProp.ElemTableLine:
         begin
-            iNodeNum := DSS.AuxParser.IntValue - 1; //node number defined in the cluster
+            iNodeNum := DSS.AuxParser.MakeInteger() - 1; //node number defined in the cluster
 
             DSS.AuxParser.NextParam(); // the first entry is the number of the iNode
-            nodeFMs[iNodeNum].vl_strBusName := DSS.AuxParser.strValue; //node number defined in the cluster
+            nodeFMs[iNodeNum].vl_strBusName := DSS.AuxParser.MakeString(); //node number defined in the cluster
 
             DSS.AuxParser.NextParam();
-            nodeFMs[iNodeNum].vl_strMeasuredName := DSS.AuxParser.StrValue; //Element name load into data str
+            nodeFMs[iNodeNum].vl_strMeasuredName := DSS.AuxParser.MakeString(); //Element name load into data str
 
             // nodeFMs[iNodeNum].vl_strName_dg := nodeFMs[iNodeNum].vl_strMeasuredName;
 
             DSS.AuxParser.NextParam();
-            nodeFMs[iNodeNum].vl_terminalNum := DSS.AuxParser.IntValue;  //Terminal number load into data str
+            nodeFMs[iNodeNum].vl_terminalNum := DSS.AuxParser.MakeInteger();  //Terminal number load into data str
 
             DSS.AuxParser.NextParam();
-            nodeFMs[iNodeNum].vl_V_ref_dg := 1000 * DSS.AuxParser.dblValue;
+            nodeFMs[iNodeNum].vl_V_ref_dg := 1000 * DSS.AuxParser.MakeDouble();
 
             DSS.AuxParser.NextParam();
-            nodeFMs[iNodeNum].vl_kc_ul_dg := DSS.AuxParser.dblValue;
+            nodeFMs[iNodeNum].vl_kc_ul_dg := DSS.AuxParser.MakeDouble();
 
             Init_nodeFM(iNodeNum);
         end;
         TProp.Volt_Limits_pu:
         begin
-            iPhasenum := DSS.AuxParser.IntValue; //node number defined in cluster
+            iPhasenum := DSS.AuxParser.MakeInteger(); //node number defined in cluster
             if iPhaseNum = 0 then
             begin
                 DSS.AuxParser.NextParam(); // high limit
-                ld_fm_info[0].volt_hgh_lmt := DSS.AuxParser.DblValue; // NOTE: Not used
+                ld_fm_info[0].volt_hgh_lmt := DSS.AuxParser.MakeDouble(); // NOTE: Not used
                 DSS.AuxParser.NextParam(); // low limit
-                ld_fm_info[0].volt_lw_lmt := DSS.AuxParser.DblValue;
+                ld_fm_info[0].volt_lw_lmt := DSS.AuxParser.MakeDouble();
             end;
         end;
     end;

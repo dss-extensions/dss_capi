@@ -196,7 +196,7 @@ var
         begin
             PropParser.CmdString := '(' + Value + ')';
             PropParser.NextParam();
-            Result := PropParser.DblValue;
+            Result := PropParser.MakeDouble();
         end;
     end;
     function GetInteger(Value: String): Integer;
@@ -206,7 +206,7 @@ var
         begin
             PropParser.CmdString := '(' + Value + ')';
             PropParser.NextParam();
-            Result := PropParser.IntValue;
+            Result := PropParser.MakeInteger();
         end;
     end;
     function GetComplex(const s: String): Complex;
@@ -214,9 +214,9 @@ var
     begin
         PropParser.CmdString := S;
         PropParser.NextParam();
-        Result.re := PropParser.dblvalue;
+        Result.re := PropParser.MakeDouble();
         PropParser.NextParam();
-        Result.im := PropParser.dblvalue;
+        Result.im := PropParser.MakeDouble();
     end;
 begin
     Result := False;
@@ -445,7 +445,7 @@ begin
             for i := 1 to intVal do
             begin
                 PropParser.NextParam(); // ignore any parameter name  not expecting any
-                DataStr := PropParser.StrValue;
+                DataStr := PropParser.MakeString();
                 if Length(DataStr) > 0 then
                     TDSSCktElement(obj).SetBus(i, DataStr);
             end;
@@ -483,10 +483,10 @@ begin
             for i := 1 to maxSize do
             begin
                 PropParser.NextParam(); // ignore any parameter name  not expecting any
-                DataStr := PropParser.StrValue;
+                DataStr := PropParser.MakeString();
 
                 if Length(DataStr) > 0 then
-                    integerPtr^ := TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(PropParser.StrValue);
+                    integerPtr^ := TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(PropParser.MakeString());
 
                 Inc(integerPtr);
             end;
@@ -511,10 +511,10 @@ begin
             for i := 1 to intVal do
             begin
                 PropParser.NextParam(); // ignore any parameter name  not expecting any
-                DataStr := PropParser.StrValue;
+                DataStr := PropParser.MakeString();
 
                 if Length(DataStr) > 0 then
-                    integerPtr^ := TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(PropParser.StrValue);
+                    integerPtr^ := TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(PropParser.MakeString());
 
                 // Move to the next position
                 integerPtr := PInteger(ptruint(integerPtr) + PropertyStructArrayStep);
@@ -530,7 +530,7 @@ begin
             Norder := PInteger(PByte(obj) + PropertyOffset3[Index])^; // e.g. Fnphases
             dataPtr := PByte(obj) + PropertyOffset[Index];
             darray := Allocmem(Sizeof(Double) * Norder * Norder);
-            PropParser.Token := Value;
+            PropParser.tokenBuffer := Value;
             OrderFound := PropParser.ParseAsSymMatrix(Norder, darray, 1, scale);
             if OrderFound = Norder then
             begin
@@ -561,7 +561,7 @@ begin
             matbak := TCMatrix.CreateMatrix(Norder);
             matbak.CopyFrom(mat);
 
-            PropParser.Token := Value;
+            PropParser.tokenBuffer := Value;
             OrderFound := PropParser.ParseAsSymMatrix(Norder, PDoubleArray(doublePtr), 2, scale);
             if OrderFound <> Norder then
             begin
@@ -638,18 +638,18 @@ begin
                     if TPropertyFlag.ArrayMaxSize in flags then
                     begin
                         maxSize := PropertyOffset3[Index];
-                        PropParser.Token := Value;
+                        PropParser.tokenBuffer := Value;
                         integerPtr^ := PropParser.ParseAsVector(maxSize, pDoubleArray(PPDouble(dataPtr)^));
                     end
                     else
                     begin
-                        PropParser.Token := Value;
+                        PropParser.tokenBuffer := Value;
                         PropParser.ParseAsVector(integerPtr^, pDoubleArray(PPDouble(dataPtr)^));                        
                     end;
                 end;
                 TPropertyType.DoubleFArrayProperty:
                 begin
-                    PropParser.Token := Value;
+                    PropParser.tokenBuffer := Value;
                     prevInt := PropParser.ParseAsVector(PropertyOffset2[Index], pDoubleArray(PDouble(dataPtr)));
                     if prevInt <> PropertyOffset2[Index] then
                     begin
@@ -716,10 +716,10 @@ begin
             for i := 1 to intVal do
             begin
                 PropParser.NextParam(); // ignore any parameter name  not expecting any
-                DataStr := PropParser.StrValue;
+                DataStr := PropParser.MakeString();
 
                 if Length(DataStr) > 0 then
-                    doublePtr^ := PropParser.Dblvalue * scale;
+                    doublePtr^ := PropParser.MakeDouble() * scale;
 
                 // Move to the next position
                 doublePtr := PDouble(ptruint(doublePtr) + PropertyStructArrayStep);
@@ -807,9 +807,9 @@ begin
                 PropParser.NextParam();
                 if cls <> NIL then
                 begin
-                    while Length(PropParser.StrValue) > 0 do
+                    while Length(PropParser.MakeString()) > 0 do
                     begin
-                        ElemName := PropParser.StrValue;
+                        ElemName := PropParser.MakeString();
                         if TPropertyFlag.CheckForVar in flags then
                             PropParser.CheckforVar(ElemName);
 
@@ -818,7 +818,7 @@ begin
                         begin
                             DoSimpleMsg(
                                 Format('%s.%s: %s object "%s" not found.',
-                                    [TDSSObject(obj).FullName, PropertyName[Index], cls.Name, PropParser.StrValue]
+                                    [TDSSObject(obj).FullName, PropertyName[Index], cls.Name, PropParser.MakeString()]
                                 ), 40303);
                             Exit;
                         end;
@@ -829,9 +829,9 @@ begin
                 end
                 else
                 begin
-                    while Length(PropParser.StrValue) > 0 do
+                    while Length(PropParser.MakeString()) > 0 do
                     begin
-                        ElemName := constructElemName(DSS, AnsiLowerCase(PropParser.StrValue));
+                        ElemName := constructElemName(DSS, AnsiLowerCase(PropParser.MakeString()));
                         intVal := GetCktElementIndex(DSS, ElemName);
                         otherObj := NIL;
                         if intVal > 0 then
@@ -885,15 +885,15 @@ begin
             for i := 1 to intVal do
             begin
                 PropParser.NextParam();
-                if Length(PropParser.StrValue) = 0 then
+                if Length(PropParser.MakeString()) = 0 then
                     break;
 
-                otherObj := cls.Find(PropParser.StrValue, False);
+                otherObj := cls.Find(PropParser.MakeString(), False);
                 if otherObj = NIL then
                 begin
                     DoSimpleMsg(
                         Format('%s.%s: %s object "%s" not found.',
-                            [TDSSObject(obj).FullName, PropertyName[Index], cls.Name, PropParser.StrValue]
+                            [TDSSObject(obj).FullName, PropertyName[Index], cls.Name, PropParser.MakeString()]
                         ), 40305);
                     //TODO: stop?
                 end
@@ -1554,7 +1554,7 @@ begin
                 begin
                     SetLength(Result, Length(Result) * 3 div 2); // 100, 150, 225, 337, 505, 757, 1135, 1702...
                 end;
-                Result[numRead] := DSS.AuxParser.dblValue;
+                Result[numRead] := DSS.AuxParser.MakeDouble();
                 inc(numRead);
             end;
         except
@@ -1697,7 +1697,7 @@ begin
             FSReadln(F, Param);
             DSS.AuxParser.CmdString := Param;
             DSS.AuxParser.NextParam();
-            NextParam := DSS.AuxParser.StrValue;
+            NextParam := DSS.AuxParser.MakeString();
             if Length(NextParam) <= 0 then
                 continue; // Ignore Blank Lines in File
 
@@ -4478,22 +4478,22 @@ begin
             if mat = NIL then
                 Exit;
 
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.Order * mat.Order, mat.Order, mat.Order);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.order * mat.order, mat.order, mat.order);
             outPtr := @Result[0];
 
             if TPropertyFlag.ImagPart in PropertyFlags[Index] then
-                for i := 1 to mat.Order do
+                for i := 1 to mat.order do
                 begin
-                    for j := 1 to mat.Order do
+                    for j := 1 to mat.order do
                     begin
                         outPtr^ := mat[i, j].im / scale;
                         Inc(outPtr);
                     end;
                 end
             else
-                for i := 1 to mat.Order do
+                for i := 1 to mat.order do
                 begin
-                    for j := 1 to mat.Order do
+                    for j := 1 to mat.order do
                     begin
                         outPtr^ := mat[i, j].re / scale;
                         Inc(outPtr);

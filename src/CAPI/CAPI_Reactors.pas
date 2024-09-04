@@ -227,7 +227,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    Result := pReactor.kvrating;
+    Result := pReactor.kVRating;
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_kvar(): Double; CDECL;
@@ -378,7 +378,7 @@ var
 begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    pReactor.kvrating := Value;
+    pReactor.kVRating := Value;
     pReactor.PropertySideEffects(ord(TReactorProp.kv), 0, []);
 end;
 //------------------------------------------------------------------------------

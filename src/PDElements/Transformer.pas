@@ -1926,7 +1926,7 @@ begin
             Format(_('Matrix Inversion Error for Transformer "%s"'), [Name]),
             _('Invalid impedance specified. Replaced with tiny conductance to ground.'), 117);
         ZB.Clear;
-        for i := 1 to ZB.Order do
+        for i := 1 to ZB.order do
             ZB[i, i] := EPSILON;
     end;
 

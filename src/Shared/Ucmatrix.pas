@@ -15,11 +15,11 @@ type
     TcMatrix = class(TObject)
 
     PRIVATE
-        Norder: Integer;
         Values: pComplexArray;
         OwnsData: Boolean;
 
     PUBLIC
+        order: Integer;
         InvertError: Integer;
 
         constructor CreateMatrix(N: Integer);
@@ -40,7 +40,7 @@ type
         function GetElement(i, j: Integer): Complex;
         function GetErrorCode: Integer;
         procedure MVmult(b, x: pComplexArray); inline; // b = Ax
-        function GetValuesArrayPtr(var Order: Integer): pComplexArray;
+        function GetValuesArrayPtr(var orderOut: Integer): pComplexArray;
         procedure ZeroRow(iRow: Integer);
         procedure ZeroCol(iCol: Integer);
         function AvgDiagonal: Complex;   // Average of Diagonal Elements
@@ -48,8 +48,6 @@ type
         function MtrxMult(B: TcMatrix): TcMatrix; // Multiply two square matrices of same order.  Result = A*B
 
         function Kron(EliminationRow: Integer): TcMatrix;  // Perform Kron reduction on last row/col and return new matrix
-
-        property Order: Integer READ Norder;
 
         property GetSetElement[i, j: Integer]: Complex Read GetElement Write SetElement; Default; 
     end;
@@ -63,9 +61,9 @@ constructor TcMatrix.CreateMatrix(N: Integer);
 begin
     try
         inherited Create;
-        Norder := N;
+        order := N;
         InvertError := 0;
-        Values := Allocmem(Sizeof(Complex) * Norder * Norder); // alloc and fill with 0
+        Values := Allocmem(Sizeof(Complex) * order * order); // alloc and fill with 0
         OwnsData := True;
     except
         Destroy;
@@ -76,7 +74,7 @@ constructor TcMatrix.CreateMatrixInplace(N: Integer; pValues: pComplex);
 begin
     try
         inherited Create;
-        Norder := N;
+        order := N;
         InvertError := 0;
         Values := pComplexArray(pValues); // assume zeroed
         OwnsData := False;
@@ -89,13 +87,13 @@ end;
 destructor TcMatrix.Destroy;
 begin
     if OwnsData then
-        Freemem(Values, Sizeof(Complex) * Norder * Norder);
+        Freemem(Values, Sizeof(Complex) * order * order);
     inherited Destroy;
 end;
 
 procedure TcMatrix.Clear; inline;
 begin
-    FillByte(Values^, Sizeof(Complex) * Norder * Norder, 0);
+    FillByte(Values^, Sizeof(Complex) * order * order, 0);
 end;
 
 function TcMatrix.IsZero: Boolean; // This only check for exactly zero, no epsilon is used on purpose
@@ -105,7 +103,7 @@ var
 begin
     Result := True;
     v := @Values[1];
-    for i := 1 to Norder * Norder do
+    for i := 1 to order * order do
     begin
         if (v^.re <> 0) or (v^.im <> 0) then
         begin
@@ -125,16 +123,16 @@ begin
     
     i := n;
     
-    for j := 1 to Norder do
+    for j := 1 to order do
     begin
-        e := Values[((j - 1) * Norder + i)];
+        e := Values[((j - 1) * order + i)];
         if (e.re <> 0) or (e.im <> 0) then
         begin
             Result := False;
             Exit;
         end;
         
-        e := Values[((i - 1) * Norder + j)];
+        e := Values[((i - 1) * order + j)];
         if (e.re <> 0) or (e.im <> 0) then
         begin
             Result := False;
@@ -146,19 +144,19 @@ end;
 procedure TcMatrix.MvMult(b, x: pComplexArray); inline;
 {$IFDEF DSS_CAPI_MVMULT}
 begin
-    KLUSolve.mvmult(Norder, b, values, x);
+    KLUSolve.mvmult(order, b, values, x);
 end;
 {$ELSE}
 var
     Sum: Complex;
     i, j: Integer;
 begin
-    for i := 1 to Norder do
+    for i := 1 to order do
     begin
         Sum := Cmplx(0.0, 0.0);
-        for j := 1 to Norder do
+        for j := 1 to order do
         begin
-            Sum += (Values[((j - 1) * Norder + i)]) * x[j]);
+            Sum += (Values[((j - 1) * order + i)]) * x[j]);
         end;
         b[i] := Sum;
     end;
@@ -168,7 +166,7 @@ end;
 procedure TcMatrix.Negate;
 var i: integer;
 begin
-    for i := 1 to Norder * Norder do
+    for i := 1 to order * order do
         Values[i] := -Values[i];
 end;
 
@@ -192,7 +190,7 @@ var
 
 
 begin
-    L := Norder;
+    L := order;
     InvertError := 0;
 
     A := Values;  //  Assign pointer to something we can use
@@ -266,31 +264,31 @@ end;
 
 procedure TcMatrix.SetElement(i, j: Integer; Value: Complex);
 begin
-    Values[((j - 1) * Norder + i)] := Value;
+    Values[((j - 1) * order + i)] := Value;
 end;
 
 procedure TcMatrix.AddElement(i, j: Integer; Value: Complex);
 begin
-    Values[((j - 1) * Norder + i)] += Value;
+    Values[((j - 1) * order + i)] += Value;
 end;
 
 procedure TcMatrix.SetElemsym(i, j: Integer; Value: Complex);
 begin
-    Values[((j - 1) * Norder + i)] := Value;
+    Values[((j - 1) * order + i)] := Value;
     if i <> j then
-        Values[((i - 1) * Norder + j)] := Value; // ensure symmetry
+        Values[((i - 1) * order + j)] := Value; // ensure symmetry
 end;
    
 procedure TcMatrix.AddElemsym(i, j: Integer; Value: Complex);
 begin
-    Values[((j - 1) * Norder + i)] += Value;
+    Values[((j - 1) * order + i)] += Value;
     if i <> j then
-        Values[((i - 1) * Norder + j)] += Value; // ensure symmetry
+        Values[((i - 1) * order + j)] += Value; // ensure symmetry
 end;
 
 function TcMatrix.GetElement(i, j: Integer): Complex;
 begin
-    Result := Values[((j - 1) * Norder + i)];
+    Result := Values[((j - 1) * order + i)];
 end;
 
 function TcMatrix.GetErrorCode: Integer;
@@ -302,10 +300,10 @@ procedure TcMatrix.CopyFrom(OtherMatrix: TcMatrix);
 var
     i, j: Integer;
 begin
-    if Norder = OtherMatrix.Norder then
-        for i := 1 to Norder do
+    if order = OtherMatrix.order then
+        for i := 1 to order do
         begin
-            for j := 1 to Norder do
+            for j := 1 to order do
                 SetElement(i, j, OtherMatrix.GetElement(i, j));
         end;
 end;
@@ -314,18 +312,18 @@ procedure TcMatrix.AddFrom(OtherMatrix: TcMatrix);
 var
     i, j: Integer;
 begin
-    if Norder = OtherMatrix.Norder then
-        for i := 1 to Norder do
+    if order = OtherMatrix.order then
+        for i := 1 to order do
         begin
-            for j := 1 to Norder do
+            for j := 1 to order do
                 AddElement(i, j, OtherMatrix.GetElement(i, j));
         end;
 end;
 
-function TcMatrix.GetValuesArrayPtr(var Order: Integer): pComplexArray;
+function TcMatrix.GetValuesArrayPtr(var orderOut: Integer): pComplexArray;
 begin
     Result := Values;
-    Order := Norder;
+    orderOut := order;
 end;
 
 procedure TcMatrix.ZeroRow(iRow: Integer);
@@ -336,10 +334,10 @@ begin
     Zero := Cmplx(0.0, 0.0);
 
     j := iRow;
-    for i := 1 to Norder do
+    for i := 1 to order do
     begin
         Values[j] := Zero;
-        Inc(j, Norder);
+        Inc(j, order);
     end;
 end;
 
@@ -349,7 +347,7 @@ var
     Zero: Complex;
 begin
     Zero := Cmplx(0.0, 0.0);
-    for i := ((iCol - 1) * Norder + 1) to (iCol * Norder) do
+    for i := ((iCol - 1) * order + 1) to (iCol * order) do
     begin
         Values[i] := Zero;
     end;
@@ -360,13 +358,13 @@ var
     i: Integer;
 begin
     Result := Cmplx(0.0, 0.0);
-    for i := 1 to Norder do
+    for i := 1 to order do
     begin
-        Result += Values[((i - 1) * Norder + i)];
+        Result += Values[((i - 1) * order + i)];
     end;
 
-    if Norder > 0 then
-        Result := Result / Norder;
+    if order > 0 then
+        Result := Result / order;
 end;
 
 function TcMatrix.AvgOffDiagonal: Complex;
@@ -376,11 +374,11 @@ var
 begin
     Result := Cmplx(0.0, 0.0);
     Ntimes := 0;
-    for i := 1 to Norder do
-        for j := i + 1 to Norder do
+    for i := 1 to order do
+        for j := i + 1 to order do
         begin
             Inc(Ntimes);
-            Result += Values[((j - 1) * Norder + i)];
+            Result += Values[((j - 1) * order + i)];
         end;
 
     if Ntimes > 0 then
@@ -396,19 +394,19 @@ var
     NNElement: Complex;
 begin
     Result := NIL;   // Nil result means it failed
-    if (Norder > 1) and (EliminationRow <= Norder) and (EliminationRow > 0) then
+    if (order > 1) and (EliminationRow <= order) and (EliminationRow > 0) then
     begin
-        Result := TCMatrix.CreateMatrix(Norder - 1);
+        Result := TCMatrix.CreateMatrix(order - 1);
         N := EliminationRow;
         NNElement := GetElement(N, N);
 
         ii := 0;
-        for i := 1 to Norder do
+        for i := 1 to order do
             if i <> N then
             begin    // skip elimination row
                 Inc(ii);
                 jj := 0;
-                for j := 1 to Norder do
+                for j := 1 to order do
                     if j <> N then
                     begin
                         Inc(jj);
@@ -426,17 +424,17 @@ var
     cTemp1, cTemp2: pComplexArray;
 begin
     Result := NIL;   // returns Nil pointer if illegal operation
-    if B.Norder = Norder then
+    if B.order = order then
     begin
-        Result := TcMatrix.CreateMatrix(Norder);
-        cTemp1 := Allocmem(Sizeof(Complex) * Norder);   // Temp array to hold column
-        cTemp2 := Allocmem(Sizeof(Complex) * Norder);   // Temp array
-        for j := 1 to Norder do   // Column j
+        Result := TcMatrix.CreateMatrix(order);
+        cTemp1 := Allocmem(Sizeof(Complex) * order);   // Temp array to hold column
+        cTemp2 := Allocmem(Sizeof(Complex) * order);   // Temp array
+        for j := 1 to order do   // Column j
         begin
-            for i := 1 to Norder do
+            for i := 1 to order do
                 cTemp2[i] := B[i, j]; // Row i
             MVmult(cTemp1, cTemp2);
-            for i := 1 to Norder do
+            for i := 1 to order do
                 Result[i, j] := cTemp1[i];
         end;
         Reallocmem(cTemp1, 0);    // Discard temp arrays

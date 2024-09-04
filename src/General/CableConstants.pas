@@ -64,9 +64,9 @@ begin
             FZreduced.Free;
         if Assigned(FYCreduced) then
             FYCReduced.Free;
-        while Ztemp.Order > Norder do
+        while Ztemp.order > Norder do
         begin
-            FZReduced := Ztemp.Kron(ZTemp.Order);    // Eliminate last row
+            FZReduced := Ztemp.Kron(ZTemp.order);    // Eliminate last row
             if not FirstTime then
                 Ztemp.Free;  // Ztemp points to intermediate matrix
             Ztemp := FZReduced;

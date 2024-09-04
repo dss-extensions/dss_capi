@@ -15,19 +15,18 @@ type
     // TODO: remove TNamedObject as a whole. Use an extra structure to track the data here.
     PROTECTED
         pUuid: ^TUuid;  // compliant to RFC 4122, v4
-        LName: String;  // localName is unique within a class, like the old FName
     PRIVATE
         function Get_UUID: TUuid;
         function Get_ID: String;
         function Get_CIM_ID: String;
         procedure Set_UUID(const Value: TUuid);
     PUBLIC
+        LocalName: String;  // localName is unique within a class, like the old FName
         DisplayName: String;
 
         constructor Create(ClassName_: String);
         destructor Destroy; OVERRIDE;
         
-        property LocalName: String READ LName WRITE LName;
         property UUID: TUuid READ Get_UUID WRITE Set_UUID;
         property ID: String READ Get_ID;
         property CIM_ID: String READ Get_CIM_ID;
@@ -72,7 +71,7 @@ end;
 constructor TNamedObject.Create(ClassName_: String);
 begin
     inherited Create;
-    LName := '';
+    LocalName := '';
     DisplayName := '';
     pUuid := NIL;
 end;

@@ -123,7 +123,7 @@ type
         Rp, Gp,
         L,
         kvarrating,
-        kvrating: Double;
+        kVRating: Double;
         Z, Z1, Z2, Z0: Complex;
         Rmatrix, Gmatrix,
         XMatrix, Bmatrix: pDoubleArray;  // If not nil then overrides C
@@ -284,7 +284,7 @@ begin
     PropertyOffset[ord(TProp.kvar)] := ptruint(@obj.kvarRating);
     PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kvar];
 
-    PropertyOffset[ord(TProp.kv)] := ptruint(@obj.kvRating);
+    PropertyOffset[ord(TProp.kv)] := ptruint(@obj.kVRating);
     PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
     PropertyOffset[ord(TProp.R)] := ptruint(@obj.Z.re);
@@ -536,7 +536,7 @@ begin
     IsParallel := Other.IsParallel;
 
     kvarrating := Other.kvarrating;
-    kvrating := Other.kvrating;
+    kVRating := Other.kVRating;
     Connection := Other.Connection;
     SpecType := Other.SpecType;
 
@@ -589,8 +589,8 @@ begin
     Bmatrix := NIL;
 
     kvarrating := 100.0;
-    kvrating := 12.47;
-    Z := cmplx(0.0, SQR(kvrating) * 1000.0 / kvarrating);
+    kVRating := 12.47;
+    Z := cmplx(0.0, SQR(kVRating) * 1000.0 / kvarrating);
     Rp := 0.0;  // Indicates it has not been set to a proper value
     IsParallel := FALSE;
     RpSpecified := FALSE;
@@ -599,7 +599,7 @@ begin
     Z0Specified := FALSE;
     Connection := TReactorConnection.Wye;   // 0 or 1 for wye (default) or delta, respectively
     SpecType := 1; // 1=kvar, 2=Cuf, 3=Cmatrix
-    NormAmps := kvarRating * SQRT3 / kvrating;
+    NormAmps := kvarRating * SQRT3 / kVRating;
     EmergAmps := NormAmps * 1.35;
     FaultRate := 0.0005;
     PctPerm := 100.0;

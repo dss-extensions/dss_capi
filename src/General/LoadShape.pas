@@ -560,13 +560,13 @@ begin
 
         // Look for other options  (may be in either order)
         ParmName := DSS.AuxParser.NextParam();
-        Param := DSS.AuxParser.StrValue;
+        Param := DSS.AuxParser.MakeString();
         while Length(Param) > 0 do
         begin
             if CompareTextShortest(ParmName, 'column') = 0 then
-                LocalCol := DSS.AuxParser.IntValue;
+                LocalCol := DSS.AuxParser.MakeInteger();
             ParmName := DSS.AuxParser.NextParam();
-            Param := DSS.AuxParser.StrValue;
+            Param := DSS.AuxParser.MakeString();
         end;
     end
     else if CompareText(Parmname, 'dblfile') = 0 then
@@ -645,7 +645,7 @@ begin
     try
         DSS.AuxParser.CmdString := S;
         ParmName := DSS.AuxParser.NextParam();
-        Param := AdjustInputFilePath(DSS.AuxParser.StrValue);
+        Param := AdjustInputFilePath(DSS.AuxParser.MakeString());
         if not FileExists(Param) then
         begin
             DoSimpleMsg('The file "%s" does not exist. Process cancelled.', [Param], 800002);
@@ -976,12 +976,12 @@ begin
             if Interval = 0.0 then
             begin
                 DSS.AuxParser.NextParam();
-                dH[i] := DSS.AuxParser.DblValue;
+                dH[i] := DSS.AuxParser.MakeDouble();
             end;
             DSS.AuxParser.NextParam();
-            dP[i] := DSS.AuxParser.DblValue;  // first parm
+            dP[i] := DSS.AuxParser.MakeDouble();  // first parm
             DSS.AuxParser.NextParam();
-            dQ[i] := DSS.AuxParser.DblValue;  // second parm
+            dQ[i] := DSS.AuxParser.MakeDouble();  // second parm
         end;
         FreeAndNil(F);
         inc(i);
@@ -1049,10 +1049,10 @@ begin
             if Interval = 0.0 then
             begin
                 DSS.AuxParser.NextParam();
-                dH[i] := DSS.AuxParser.DblValue;
+                dH[i] := DSS.AuxParser.MakeDouble();
             end;
             DSS.AuxParser.NextParam();
-            dP[i] := DSS.AuxParser.DblValue;
+            dP[i] := DSS.AuxParser.MakeDouble();
         end;
         FreeAndNil(F);
         inc(i);

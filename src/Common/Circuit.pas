@@ -92,9 +92,6 @@ type
 
         procedure ReallocDeviceList;
         procedure Set_CaseName(const Value: String);
-
-        function Get_Name: String;
-
     PUBLIC
         DSS: TDSSContext;
         MaxBusNameLength, MaxDeviceNameLength: Integer;
@@ -338,7 +335,7 @@ type
         function ReportPCEatBus(BusName: String): String;
         function ReportPDEatBus(BusName: String): String;
 
-        property Name: String READ Get_Name;
+        property Name: String READ LocalName;
         property CaseName: String READ FCaseName WRITE Set_CaseName;
         property ActiveCktElement: TDSSCktElement READ FActiveCktElement WRITE Set_ActiveCktElement;
         property Losses: Complex READ Get_Losses;  // Total Circuit PD Element losses
@@ -853,7 +850,7 @@ begin
 
     SetActiveBus(DSS, BusName);
     pBus := Buses[ActiveBusIndex];
-    for kk := 1 to pBus.NumNodesThisBus do
+    for kk := 1 to pBus.numNodesThisBus do
     begin
         text := 'New ISource.' + inttostr(BusNum) + '_' + inttostr(kk) + ' phases=1 bus1=' + BusName + '.' + inttostr(kk) + ' amps=0.000001 angle=0';
         FSWriteLn(F, text);
@@ -1730,8 +1727,8 @@ begin
     if busIdx <= 0 then
         Exit;
 
-    SetLength(nodes, Buses[busIdx].NumNodesThisBus);
-    for i := 1 to Buses[busIdx].NumNodesThisBus do
+    SetLength(nodes, Buses[busIdx].numNodesThisBus);
+    for i := 1 to Buses[busIdx].numNodesThisBus do
         nodes[i - 1] := Buses[busIdx].GetRef(i);
 
     for Dss_Class in DSS.DSSClassList do
@@ -1816,8 +1813,8 @@ begin
     if busIdx <= 0 then
         Exit;
 
-    SetLength(nodes, Buses[busIdx].NumNodesThisBus);
-    for i := 1 to Buses[busIdx].NumNodesThisBus do
+    SetLength(nodes, Buses[busIdx].numNodesThisBus);
+    for i := 1 to Buses[busIdx].numNodesThisBus do
         nodes[i - 1] := Buses[busIdx].GetRef(i);
 
     for i := 1 to DSS.DSSClassList.Count do
@@ -1932,7 +1929,7 @@ begin
             if NodeBuffer[j] < 0 then
             begin
                 retval := DSS.MessageDlg('Error in Node specification for Element: "' + element.FullName + '"' + CRLF +
-                    'Bus Spec: "' + DSS.Parser.Token + '"', FALSE);
+                    'Bus Spec: "' + DSS.Parser.tokenBuffer + '"', FALSE);
                 NodesOK := FALSE;
                 if retval = -1 then
                 begin
@@ -2230,7 +2227,7 @@ begin
         // Restore Voltages in new bus def that existed in old bus def
         if savedBus.VBus <> NIL then
         begin
-            for j := 1 to savedBus.NumNodesThisBus do
+            for j := 1 to savedBus.numNodesThisBus do
             begin
                 jdx := bus.FindIdx(savedBus.GetNum(j));  // Find index in new bus for j-th node  in old bus
                 if jdx > 0 then
@@ -2298,8 +2295,8 @@ begin
     for i := 1 to NumBuses do
     begin
         FSWrite(F, '  ', Pad(BusList.NameOfIndex(i), 12));
-        FSWrite(F, ' (', IntToStr(Buses[i].NumNodesThisBus), ' Nodes)');
-        for j := 1 to Buses[i].NumNodesThisBus do
+        FSWrite(F, ' (', IntToStr(Buses[i].numNodesThisBus), ' Nodes)');
+        for j := 1 to Buses[i].numNodesThisBus do
             FSWrite(F, ' ', IntToStr(Buses[i].Getnum(j)));
         FSWriteln(F);
     end;
@@ -3014,11 +3011,6 @@ procedure TDSSCircuit.Set_CaseName(const Value: String);
 begin
     FCaseName := Value;
     DSS.CircuitName_ := Value + '_';
-end;
-
-function TDSSCircuit.Get_Name: String;
-begin
-    Result := LocalName;
 end;
 
 function TDSSCircuit.GetBusAdjacentPDLists: TAdjArray;

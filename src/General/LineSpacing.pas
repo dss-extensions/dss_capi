@@ -51,27 +51,19 @@ type
     PUBLIC
         FX: pDoubleArray;
         FY: pDoubleArray;
-        FNConds: Integer;
+        NConds: Integer;
         NPhases: Integer;
         Units: Integer;
 
         // CIM Accessors
-        function Get_FX(i: Integer): Double;
-        function Get_FY(i: Integer): Double;
-        procedure Set_FX(i: Integer; Value: Double);
-        procedure Set_FY(i: Integer; Value: Double);
+        function GetXCoord(i: Integer): Double;
+        function GetYCoord(i: Integer): Double;
     PUBLIC
         DataChanged: Boolean;
         constructor Create(ParClass: TDSSClass; const LineSpacingName: String);
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
-
-        // CIM XML accessors
-        // TODO: remove
-        property Xcoord[i: Integer]: Double READ Get_FX WRITE Set_FX;
-        property Ycoord[i: Integer]: Double READ Get_FY WRITE Set_FY;
-        property NWires: Integer READ FNConds;
     end;
 
 implementation
@@ -130,17 +122,17 @@ begin
     PropertyOffset[ord(TProp.nphases)] := ptruint(@obj.Nphases);
 
     PropertyType[ord(TProp.nconds)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.nconds)] := ptruint(@obj.FNconds);
+    PropertyOffset[ord(TProp.nconds)] := ptruint(@obj.NConds);
     PropertyFlags[ord(TProp.nconds)] := [TPropertyFlag.SuppressJSON];
 
     // arrays
     PropertyType[ord(TProp.X)] := TPropertyType.DoubleVArrayProperty;
     PropertyOffset[ord(TProp.X)] := ptruint(@obj.FX);
-    PropertyOffset2[ord(TProp.X)] := ptruint(@obj.FNconds);
+    PropertyOffset2[ord(TProp.X)] := ptruint(@obj.NConds);
 
     PropertyType[ord(TProp.H)] := TPropertyType.DoubleVArrayProperty;
     PropertyOffset[ord(TProp.H)] := ptruint(@obj.FY);
-    PropertyOffset2[ord(TProp.H)] := ptruint(@obj.FNconds);
+    PropertyOffset2[ord(TProp.H)] := ptruint(@obj.NConds);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;
@@ -162,8 +154,8 @@ begin
     case Idx of
         ord(TProp.nconds):
         begin
-            ReAllocmem(FX, Sizeof(FX[1]) * FNconds);
-            ReAllocmem(FY, Sizeof(FY[1]) * FNconds);
+            ReAllocmem(FX, Sizeof(FX[1]) * NConds);
+            ReAllocmem(FY, Sizeof(FY[1]) * NConds);
             Units := UNITS_FT;
             DataChanged := TRUE;
         end;
@@ -180,12 +172,12 @@ var
 begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
-    FNConds := Other.FNConds;
+    NConds := Other.NConds;
     PropertySideEffects(ord(TProp.NConds), 0, []);
     NPhases := Other.NPhases;
-    for i := 1 to FNConds do
+    for i := 1 to NConds do
         FX[i] := Other.FX[i];
-    for i := 1 to FNConds do
+    for i := 1 to NConds do
         FY[i] := Other.FY[i];
     Units := Other.Units;
     DataChanged := TRUE;
@@ -203,10 +195,10 @@ begin
     FX := NIL;
     FY := NIL;
     units := UNITS_FT;
-    FNConds := 3;
+    NConds := 3;
     PropertySideEffects(ord(TProp.NConds), 0, []);
     // TODO: consider using NaN to indicate that the user left invalid data
-    for i := 1 to FNConds do
+    for i := 1 to NConds do
     begin
         FX[i] := 0;
         FY[i] := 0;
@@ -234,32 +226,20 @@ begin
     Result := r + ']';
 end;
 
-function TLineSpacingObj.Get_FX(i: Integer): Double;
+function TLineSpacingObj.GetXCoord(i: Integer): Double;
 begin
-    if i <= FNConds then
+    if i <= NConds then
         Result := FX[i]
     else
         Result := 0.0;
 end;
 
-function TLineSpacingObj.Get_FY(i: Integer): Double;
+function TLineSpacingObj.GetYCoord(i: Integer): Double;
 begin
-    if i <= FNConds then
+    if i <= NConds then
         Result := FY[i]
     else
         Result := 0.0;
-end;
-
-procedure TLineSpacingObj.Set_FX(i: Integer; Value: Double);
-begin
-    if (i > 0) and (i <= FNConds) then
-        FX[i] := Value;
-end;
-
-procedure TLineSpacingObj.Set_FY(i: Integer; Value: Double);
-begin
-    if (i > 0) and (i <= FNConds) then
-        FY[i] := Value;
 end;
 
 end.

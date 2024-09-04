@@ -251,7 +251,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.StorageState;
+    Result := elem.StorageState();
 end;
 //------------------------------------------------------------------------------
 procedure Storages_Set_State(Value: Integer); CDECL;
@@ -267,7 +267,7 @@ begin
     begin
         DoSimpleMsg(DSSPrime, 'Invalid Storage state: "%d".', [Value], 656568);
     end;
-    elem.StorageState := Value;
+    elem.SetStorageState(Value);
 end;
 //------------------------------------------------------------------------------
 function Storages_Get_Pointer(): Pointer; CDECL;
@@ -624,7 +624,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.kW := Value;
+    elem.SetkW(Value);
 end;
 //------------------------------------------------------------------------------
 procedure Storages_Set_kWhRated(Value: Double); CDECL;

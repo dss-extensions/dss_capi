@@ -219,7 +219,7 @@ begin
     // Get next parameter on command line
     ParamPointer := 0;
     ParamName := AnsiUpperCase(Parser.NextParam);
-    ParamOriginal := Parser.StrValue;
+    ParamOriginal := Parser.MakeString();
     Param := AnsiUpperCase(ParamOriginal);
     while Length(Param) > 0 do
     begin
@@ -328,11 +328,11 @@ begin
                             ;
                     else
                         Quantity := 'None';
-                        Valueindex := Parser.IntValue;
+                        Valueindex := Parser.MakeInteger();
                     end;
                 3:
                 begin
-                    MaxScale := Parser.DblValue;
+                    MaxScale := Parser.MakeDouble();
                     if MaxScale > 0.0 then
                         MaxScaleIsSpecified := TRUE    // Indicate the user wants a particular value
                     else
@@ -343,7 +343,7 @@ begin
                 5:
                     Labels := InterpretYesNo(Param);
                 6:
-                    ObjectName := Parser.StrValue;
+                    ObjectName := Parser.MakeString();
                 7:
                 begin
                     ShowLoops := InterpretYesNo(Param);
@@ -351,9 +351,9 @@ begin
                         PlotType := 'MeterZones';
                 end;
                 8:
-                    TriColorMax := Parser.DblValue;
+                    TriColorMax := Parser.MakeDouble();
                 9:
-                    TriColorMid := Parser.DblValue;
+                    TriColorMid := Parser.MakeDouble();
                 10:
                     Color1 := InterpretColorName(DSS, Param);
                 11:
@@ -387,19 +387,19 @@ begin
                 15:
                     ShowSubs := InterpretYesNo(Param);
                 16:
-                    if Parser.IntValue > 0 then
-                        MaxLineThickness := Parser.IntValue;
+                    if Parser.MakeInteger() > 0 then
+                        MaxLineThickness := Parser.MakeInteger();
                 17:
                     InterpretTStringListArray(DSS, ParamOriginal, DaisyBusList); // read in Bus list
                 18:
                 begin
-                    MinScale := Parser.DblValue;
+                    MinScale := Parser.MakeDouble();
                     MinScaleIsSpecified := TRUE;    // Indicate the user wants a particular value
                 end;
                 19:
-                    ThreePhLineStyle := Parser.IntValue;
+                    ThreePhLineStyle := Parser.MakeInteger();
                 20:
-                    SinglePhLineStyle := Parser.IntValue;
+                    SinglePhLineStyle := Parser.MakeInteger();
                 21:
                 begin  // Parse off phase(s) to plot
                     PhasesToPlot := ord(TPlotPhases.ThreePhase); // the default
@@ -422,7 +422,7 @@ begin
                         PhasesToPlot := ord(TPlotPhases.LLPrimary)
                     else
                     if Length(Param) = 1 then
-                        PhasesToPlot := Parser.IntValue;
+                        PhasesToPlot := Parser.MakeInteger();
                 end;
                 22:
                 begin
@@ -431,13 +431,13 @@ begin
                         ProfileScale := '120kft';
                 end;
                 23:
-                    PlotID := Parser.StrValue;
+                    PlotID := Parser.MakeString();
             else
             end;
 
 
         ParamName := AnsiUpperCase(Parser.NextParam);
-        ParamOriginal := Parser.StrValue;
+        ParamOriginal := Parser.MakeString();
         Param := AnsiUpperCase(ParamOriginal);
     end;
 

@@ -239,7 +239,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.R1 / elem.UnitsConvert;
+    Result := elem.R1 / elem.unitsFactor;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_X1(): Double; CDECL;
@@ -249,7 +249,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.X1 / elem.UnitsConvert;
+    Result := elem.X1 / elem.unitsFactor;
 end;
 //------------------------------------------------------------------------------
 function Lines_New(const Name: PAnsiChar): Integer; CDECL;
@@ -342,7 +342,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.R1 := Value * elem.UnitsConvert;
+    elem.R1 := Value * elem.unitsFactor;
     elem.SymComponentsChanged := TRUE;
     elem.YprimInvalid := TRUE;
 end;
@@ -353,7 +353,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.X1 := Value * elem.UnitsConvert;
+    elem.X1 := Value * elem.unitsFactor;
     elem.SymComponentsChanged := TRUE;
     elem.YprimInvalid := TRUE;
 end;
@@ -365,7 +365,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.C0 / elem.UnitsConvert * 1.0e9;
+    Result := elem.C0 / elem.unitsFactor * 1.0e9;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_C1(): Double; CDECL;
@@ -375,7 +375,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.C1 / elem.UnitsConvert * 1.0e9;
+    Result := elem.C1 / elem.unitsFactor * 1.0e9;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -392,7 +392,7 @@ begin
         Exit;
     end;
     nph := elem.Nphases;
-    Factor := TwoPi * elem.BaseFrequency * 1.0e-9 * elem.UnitsConvert;  // corrected 2.9.2018 RCD
+    Factor := TwoPi * elem.BaseFrequency * 1.0e-9 * elem.unitsFactor;  // corrected 2.9.2018 RCD
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, nph * nph, nph, nph);
     k := 0;
     for i := 1 to nph do
@@ -421,7 +421,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.R0 / elem.UnitsConvert;
+    Result := elem.R0 / elem.unitsFactor;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -445,7 +445,7 @@ begin
             if (elem.LineGeometryObj <> NIL) Or elem.SpacingSpecified then
                 Result[k] := elem.Z[i, j].Re / elem.Len
             else 
-                Result[k] := elem.Z[i, j].Re / elem.UnitsConvert;
+                Result[k] := elem.Z[i, j].Re / elem.unitsFactor;
 
             Inc(k);
         end;
@@ -465,7 +465,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.X0 / elem.UnitsConvert;
+    Result := elem.X0 / elem.unitsFactor;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -489,7 +489,7 @@ begin
             if (elem.LineGeometryObj <> NIL) Or elem.SpacingSpecified then
                 Result[k] := elem.Z[i, j].im / elem.Len
             else
-                Result[k] := elem.Z[i, j].im / elem.UnitsConvert;
+                Result[k] := elem.Z[i, j].im / elem.unitsFactor;
 
             Inc(k);
         end;
@@ -507,7 +507,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.C0 := Value * 1.0e-9 * elem.UnitsConvert;
+    elem.C0 := Value * 1.0e-9 * elem.unitsFactor;
     elem.SymComponentsChanged := TRUE;
     elem.YprimInvalid := TRUE;
 end;
@@ -518,7 +518,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.C1 := Value * 1.0e-9 * elem.UnitsConvert;
+    elem.C1 := Value * 1.0e-9 * elem.unitsFactor;
     elem.SymComponentsChanged := TRUE;
     elem.YprimInvalid := TRUE;
 end;
@@ -562,7 +562,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.R0 := Value * elem.UnitsConvert;
+    elem.R0 := Value * elem.unitsFactor;
     elem.SymComponentsChanged := TRUE;
     elem.YprimInvalid := TRUE;
 end;
@@ -605,7 +605,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.X0 := Value * elem.UnitsConvert;
+    elem.X0 := Value * elem.unitsFactor;
     elem.SymComponentsChanged := TRUE;
     elem.YprimInvalid := TRUE;
 end;

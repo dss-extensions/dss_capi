@@ -240,7 +240,7 @@ begin
      // Continue parsing command line
     ParamPointer := 0;
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     while Length(Param) > 0 do
     begin
         if Length(ParamName) = 0 then
@@ -258,14 +258,14 @@ begin
             67:
                 DSS.DSSExecutive.RecorderOn := InterpretYesNo(Param);
             73:
-                DSS.DefaultBaseFreq := DSS.Parser.DblValue;
+                DSS.DefaultBaseFreq := DSS.Parser.MakeDouble();
             102:
                 DoSimpleMsg(DSS, _('This is not supported in DSS-Extensions.'), 302);
             111:
                 DoSimpleMsg(DSS, _('This is not supported in DSS-Extensions.'), 302);
 {$IFDEF DSS_CAPI_PM}
             ord(Opt.ActiveActor):
-                if DSS.Parser.StrValue = '*' then
+                if DSS.Parser.MakeString() = '*' then
                 begin
                     PMParent.AllActors := TRUE;
                     PMParent.ActiveChildIndex := 0;
@@ -273,9 +273,9 @@ begin
                 end
                 else
                 begin
-                    if (DSS.Parser.IntValue > 0) and (DSS.Parser.IntValue <= PMParent.NumOfActors) then
+                    if (DSS.Parser.MakeInteger() > 0) and (DSS.Parser.MakeInteger() <= PMParent.NumOfActors) then
                     begin
-                        PMParent.ActiveChildIndex := DSS.Parser.IntValue - 1;
+                        PMParent.ActiveChildIndex := DSS.Parser.MakeInteger() - 1;
                         PMParent.ActiveChild := PMParent.Children[PMParent.ActiveChildIndex];
                         PMParent.AllActors := FALSE;
                     end
@@ -285,9 +285,9 @@ begin
                     end;
                 end;
             ord(Opt.CPU):
-                if DSS.Parser.IntValue < CPU_Cores then
+                if DSS.Parser.MakeInteger() < CPU_Cores then
                 begin
-                    DSS.CPU := DSS.Parser.IntValue;
+                    DSS.CPU := DSS.Parser.MakeInteger();
                     if DSS.ActorThread <> NIL then
                         DSS.ActorThread.CPU := DSS.CPU;
                 end
@@ -311,7 +311,7 @@ begin
         end;
 
         ParamName := DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
     end; {WHILE}
 
 end;
@@ -361,7 +361,7 @@ begin
     count := 0;
     repeat
         DSS.AuxParser.NextParam();
-        Param := DSS.AuxParser.StrValue;
+        Param := DSS.AuxParser.MakeString();
         if Length(Param) > 0 then
             Inc(count);
     until Length(Param) = 0;
@@ -374,7 +374,7 @@ begin
     for i := 0 to count - 1 do
     begin
         DSS.AuxParser.NextParam();
-        iarray[i] := DSS.AuxParser.IntValue;
+        iarray[i] := DSS.AuxParser.MakeInteger();
     end;
 end;
 
@@ -411,7 +411,7 @@ begin
      // Continue parsing command line
     ParamPointer := 0;
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     while Length(Param) > 0 do
     begin
         if Length(ParamName) = 0 then
@@ -427,17 +427,17 @@ begin
             2, 13:
                 SetObject(DSS, Param);
             3:
-                DSS.ActiveCircuit.solution.DynaVars.intHour := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.solution.DynaVars.intHour := DSS.Parser.MakeInteger();
             4:
-                DSS.ActiveCircuit.solution.DynaVars.t := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.solution.DynaVars.t := DSS.Parser.MakeDouble();
             5:
                 with DSS.ActiveCircuit do
                 begin
-                    Solution.Year := DSS.Parser.IntValue;
+                    Solution.Year := DSS.Parser.MakeInteger();
                     DefaultGrowthFactor := IntPower(DefaultGrowthRate, (Solution.Year - 1));
                 end;
             6:
-                DSS.ActiveCircuit.solution.Frequency := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.solution.Frequency := DSS.Parser.MakeDouble();
             7, 18:
                 with DSS.ActiveCircuit do
                 begin
@@ -449,7 +449,7 @@ begin
             9:
                 DSS.ActiveCircuit.solution.RandomType := DSS.RandomModeEnum.StringToOrdinal(Param);
             10:
-                DSS.ActiveCircuit.solution.NumberOfTimes := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.solution.NumberOfTimes := DSS.Parser.MakeInteger();
             11:
                 DSS.DSSExecutive.Set_Time;
             14:
@@ -457,9 +457,9 @@ begin
             15:
                 DefaultEditor := Param;     // 'Editor='
             16:
-                DSS.ActiveCircuit.solution.ConvergenceTolerance := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.solution.ConvergenceTolerance := DSS.Parser.MakeDouble();
             17:
-                DSS.ActiveCircuit.solution.MaxIterations := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.solution.MaxIterations := DSS.Parser.MakeInteger();
             19:
                 with DSS.ActiveCircuit.solution do
                 begin
@@ -468,21 +468,21 @@ begin
                 end;
             ord(TExecOption.Loadmult):
             begin
-                DSS.ActiveCircuit.LoadMultiplier := DSS.Parser.DblValue;  // Set using LoadMultiplier property
+                DSS.ActiveCircuit.LoadMultiplier := DSS.Parser.MakeDouble();  // Set using LoadMultiplier property
                 DSS.ActiveCircuit.Solution.SystemYChanged := True;
             end;
             21:
-                DSS.ActiveCircuit.NormalMinVolts := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.NormalMinVolts := DSS.Parser.MakeDouble();
             22:
-                DSS.ActiveCircuit.NormalMaxVolts := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.NormalMaxVolts := DSS.Parser.MakeDouble();
             23:
-                DSS.ActiveCircuit.EmergMinVolts := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.EmergMinVolts := DSS.Parser.MakeDouble();
             24:
-                DSS.ActiveCircuit.EmergMaxVolts := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.EmergMaxVolts := DSS.Parser.MakeDouble();
             25:
-                DSS.ActiveCircuit.DefaultDailyShapeObj.Mean := DSS.Parser.DblValue / 100.0;
+                DSS.ActiveCircuit.DefaultDailyShapeObj.Mean := DSS.Parser.MakeDouble() / 100.0;
             26:
-                DSS.ActiveCircuit.DefaultDailyShapeObj.StdDev := DSS.Parser.DblValue / 100.0;
+                DSS.ActiveCircuit.DefaultDailyShapeObj.StdDev := DSS.Parser.MakeDouble() / 100.0;
             27:
                 with DSS.ActiveCircuit do
                 begin
@@ -493,15 +493,15 @@ begin
             28:
                 with DSS.ActiveCircuit do
                 begin
-                    DefaultGrowthRate := 1.0 + DSS.Parser.DblValue / 100.0;
+                    DefaultGrowthRate := 1.0 + DSS.Parser.MakeDouble() / 100.0;
                     DefaultGrowthFactor := IntPower(DefaultGrowthRate, (Solution.Year - 1));
                 end;
             29:
-                DSS.ActiveCircuit.AutoAddObj.GenkW := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.AutoAddObj.GenkW := DSS.Parser.MakeDouble();
             30:
-                DSS.ActiveCircuit.AutoAddObj.GenPF := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.AutoAddObj.GenPF := DSS.Parser.MakeDouble();
             31:
-                DSS.ActiveCircuit.AutoAddObj.CapkVAR := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.AutoAddObj.CapkVAR := DSS.Parser.MakeDouble();
             32:
                 DSS.ActiveCircuit.AutoAddObj.AddType := DSS.AddTypeEnum.StringToOrdinal(Param);
             33:
@@ -509,9 +509,9 @@ begin
             34:
                 DSS.ActiveCircuit.ZonesLocked := InterpretYesNo(Param);
             35:
-                DSS.ActiveCircuit.UEWeight := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.UEWeight := DSS.Parser.MakeDouble();
             36:
-                DSS.ActiveCircuit.LossWeight := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.LossWeight := DSS.Parser.MakeDouble();
             37:
                 parseIntArray(DSS, DSS.ActiveCircuit.UERegs, Param);
             38:
@@ -537,7 +537,7 @@ begin
             44:
                 DSS.ActiveCircuit.ControlQueue.TraceLog := InterpretYesNo(Param);
             45:
-                DSS.ActiveCircuit.GenMultiplier := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.GenMultiplier := DSS.Parser.MakeDouble();
             46:
             begin
                 TestLoadShapeObj := DSS.LoadShapeClass.Find(Param);
@@ -551,11 +551,11 @@ begin
                     DSS.ActiveCircuit.DefaultYearlyShapeObj := TestLoadShapeObj;
             end;
             48:
-                DSS.DSSExecutive.DoSetAllocationFactors(DSS.Parser.DblValue);
+                DSS.DSSExecutive.DoSetAllocationFactors(DSS.Parser.MakeDouble());
             49:
                 DSS.ActiveCircuit.PositiveSequence := Boolean(DSS.CktModelEnum.StringToOrdinal(Param));
             50:
-                DSS.ActiveCircuit.PriceSignal := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.PriceSignal := DSS.Parser.MakeDouble();
             51:
                 with DSS.ActiveCircuit do
                 begin
@@ -568,18 +568,18 @@ begin
                     if ActiveCktElement <> NIL then
                         with ActiveCktElement do
                         begin
-                            ActiveTerminalIdx := DSS.Parser.IntValue;
+                            ActiveTerminalIdx := DSS.Parser.MakeInteger();
                             SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx)));   // bus connected to terminal
                         end;
             53:
             begin
-                DSS.ActiveCircuit.Fundamental := DSS.Parser.DblValue;     // Set Base Frequency for system (used henceforth)
-                DSS.ActiveCircuit.Solution.Frequency := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.Fundamental := DSS.Parser.MakeDouble();     // Set Base Frequency for system (used henceforth)
+                DSS.ActiveCircuit.Solution.Frequency := DSS.Parser.MakeDouble();
             end;
             54:
                 DSS.DSSExecutive.DoHarmonicsList(Param);
             55:
-                DSS.ActiveCircuit.Solution.MaxControlIterations := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.Solution.MaxControlIterations := DSS.Parser.MakeInteger();
             56:
                 Result := SetActiveBus(DSS, Param);   // See DSSGlobals
             57:
@@ -592,17 +592,17 @@ begin
                 DSS.EnergyMeterClass.SaveDemandInterval := InterpretYesNo(Param);
             61:
             begin
-                DSS.ActiveCircuit.PctNormalFactor := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.PctNormalFactor := DSS.Parser.MakeDouble();
                 DSS.DSSExecutive.DoSetNormal(DSS.ActiveCircuit.PctNormalFactor);
             end;
             62:
                 DSS.EnergyMeterClass.DI_Verbose := InterpretYesNo(Param);
             63:
-                DSS.ActiveCircuit.CaseName := DSS.Parser.StrValue;
+                DSS.ActiveCircuit.CaseName := DSS.Parser.MakeString();
             64:
-                DSS.ActiveCircuit.NodeMarkerCode := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.NodeMarkerCode := DSS.Parser.MakeInteger();
             65:
-                DSS.ActiveCircuit.NodeMarkerWidth := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.NodeMarkerWidth := DSS.Parser.MakeInteger();
             66:
                 DSS.ActiveCircuit.LogEvents := InterpretYesNo(Param);
             67:
@@ -612,29 +612,29 @@ begin
             ord(Opt.Voltexceptionreport):
                 DSS.EnergyMeterClass.Do_VoltageExceptionReport := InterpretYesNo(Param);
             70:
-                DSS.DSSExecutive.DoSetCFactors(DSS.Parser.DblValue);
+                DSS.DSSExecutive.DoSetCFactors(DSS.Parser.MakeDouble());
             71:
                 DSS.AutoShowExport := InterpretYesNo(Param);
             72:
-                DSS.MaxAllocationIterations := DSS.Parser.IntValue;
+                DSS.MaxAllocationIterations := DSS.Parser.MakeInteger();
             73:
             begin
-                DSS.DefaultBaseFreq := DSS.Parser.DblValue;
-                DSS.ActiveCircuit.Fundamental := DSS.Parser.DblValue;     // Set Base Frequency for system (used henceforth)
-                DSS.ActiveCircuit.Solution.Frequency := DSS.Parser.DblValue;
+                DSS.DefaultBaseFreq := DSS.Parser.MakeDouble();
+                DSS.ActiveCircuit.Fundamental := DSS.Parser.MakeDouble();     // Set Base Frequency for system (used henceforth)
+                DSS.ActiveCircuit.Solution.Frequency := DSS.Parser.MakeDouble();
             end;
             74:
                 DSS.ActiveCircuit.MarkSwitches := InterpretYesNo(Param);
             75:
-                DSS.ActiveCircuit.SwitchMarkerCode := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.SwitchMarkerCode := DSS.Parser.MakeInteger();
             76:
-                DSS.DaisySize := DSS.Parser.DblValue;
+                DSS.DaisySize := DSS.Parser.MakeDouble();
             77:
                 DSS.ActiveCircuit.MarkTransformers := InterpretYesNo(Param);
             78:
-                DSS.ActiveCircuit.TransMarkerCode := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.TransMarkerCode := DSS.Parser.MakeInteger();
             79:
-                DSS.ActiveCircuit.TransMarkerSize := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.TransMarkerSize := DSS.Parser.MakeInteger();
             80:
                 DSS.ActiveCircuit.ActiveLoadShapeClass := DSS.LoadShapeClassEnum.StringToOrdinal(Param);
             81:
@@ -654,62 +654,62 @@ begin
             86:
                 DSS.ActiveCircuit.MarkStorage := InterpretYesNo(Param);
             87:
-                DSS.ActiveCircuit.CapMarkerCode := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.CapMarkerCode := DSS.Parser.MakeInteger();
             88:
-                DSS.ActiveCircuit.RegMarkerCode := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.RegMarkerCode := DSS.Parser.MakeInteger();
             89:
-                DSS.ActiveCircuit.PVMarkerCode := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.PVMarkerCode := DSS.Parser.MakeInteger();
             90:
-                DSS.ActiveCircuit.StoreMarkerCode := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.StoreMarkerCode := DSS.Parser.MakeInteger();
             91:
-                DSS.ActiveCircuit.CapMarkerSize := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.CapMarkerSize := DSS.Parser.MakeInteger();
             92:
-                DSS.ActiveCircuit.RegMarkerSize := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.RegMarkerSize := DSS.Parser.MakeInteger();
             93:
-                DSS.ActiveCircuit.PVMarkerSize := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.PVMarkerSize := DSS.Parser.MakeInteger();
             94:
-                DSS.ActiveCircuit.StoreMarkerSize := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.StoreMarkerSize := DSS.Parser.MakeInteger();
             95:
                 DSS.ActiveCircuit.NeglectLoadY := InterpretYesNo(Param);
             96:
                 DSS.ActiveCircuit.MarkFuses := InterpretYesNo(Param);
             97:
-                DSS.ActiveCircuit.FuseMarkerCode := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.FuseMarkerCode := DSS.Parser.MakeInteger();
             98:
-                DSS.ActiveCircuit.FuseMarkerSize := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.FuseMarkerSize := DSS.Parser.MakeInteger();
             99:
                 DSS.ActiveCircuit.MarkReclosers := InterpretYesNo(Param);
             100:
-                DSS.ActiveCircuit.RecloserMarkerCode := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.RecloserMarkerCode := DSS.Parser.MakeInteger();
             101:
-                DSS.ActiveCircuit.RecloserMarkerSize := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.RecloserMarkerSize := DSS.Parser.MakeInteger();
             102:
                 DoSimpleMsg(DSS, _('This is not supported in DSS-Extensions.'), 309);
             103:
                 DSS.ActiveCircuit.MarkRelays := InterpretYesNo(Param);
             104:
-                DSS.ActiveCircuit.RelayMarkerCode := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.RelayMarkerCode := DSS.Parser.MakeInteger();
             105:
-                DSS.ActiveCircuit.RelayMarkerSize := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.RelayMarkerSize := DSS.Parser.MakeInteger();
             107:
-                DSS.ActiveCircuit.Solution.Total_Time_Elapsed := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.Solution.Total_Time_Elapsed := DSS.Parser.MakeDouble();
             109:
                 DSS.ActiveCircuit.Solution.SampleTheMeters := InterpretYesNo(Param);
             110:
-                DSS.ActiveCircuit.solution.MinIterations := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.solution.MinIterations := DSS.Parser.MakeInteger();
             111:
                 DoSimpleMsg(DSS, _('This is not supported in DSS-Extensions.'), 303);
             112:
                 DSS.ActiveCircuit.ReduceLateralsKeepLoad := InterpretYesNo(Param);
             113:
-                DSS.ActiveCircuit.ReductionZmag := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.ReductionZmag := DSS.Parser.MakeDouble();
             114:
                 DSS.SeasonalRating := InterpretYesNo(Param);
             115:
                 DSS.SeasonSignal := Param;
 {$IFDEF DSS_CAPI_PM}                
             ord(Opt.ActiveActor):
-                if DSS.Parser.StrValue = '*' then
+                if DSS.Parser.MakeString() = '*' then
                 begin
                     PMParent.AllActors := TRUE;
                     PMParent.ActiveChildIndex := 0;
@@ -717,9 +717,9 @@ begin
                 end
                 else
                 begin
-                    if (DSS.Parser.IntValue > 0) and (DSS.Parser.IntValue <= PMParent.NumOfActors) then
+                    if (DSS.Parser.MakeInteger() > 0) and (DSS.Parser.MakeInteger() <= PMParent.NumOfActors) then
                     begin
-                        PMParent.ActiveChildIndex := DSS.Parser.IntValue - 1;
+                        PMParent.ActiveChildIndex := DSS.Parser.MakeInteger() - 1;
                         PMParent.ActiveChild := PMParent.Children[PMParent.ActiveChildIndex];
                         PMParent.AllActors := FALSE;
                     end
@@ -729,9 +729,9 @@ begin
                     end;
                 end;
             ord(Opt.CPU):
-                if DSS.Parser.IntValue < CPU_Cores then
+                if DSS.Parser.MakeInteger() < CPU_Cores then
                 begin
-                    DSS.CPU := DSS.Parser.IntValue;
+                    DSS.CPU := DSS.Parser.MakeInteger();
                     if DSS.ActorThread <> NIL then
                         DSS.ActorThread.CPU := DSS.CPU;
                 end
@@ -752,9 +752,9 @@ begin
 {$ENDIF}
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
             ord(Opt.Coverage):
-                DSS.ActiveCircuit.Coverage := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.Coverage := DSS.Parser.MakeDouble();
             ord(Opt.Num_SubCircuits):
-                DSS.ActiveCircuit.Num_SubCkts := DSS.Parser.IntValue;
+                DSS.ActiveCircuit.Num_SubCkts := DSS.Parser.MakeInteger();
             ord(Opt.ADiakoptics):
             begin
                 if InterpretYesNo(Param) then
@@ -766,11 +766,11 @@ begin
             ord(Opt.IgnoreGenQLimits):
                 DSS.ActiveCircuit.Solution.NCIM_IgnoreQLimit := InterpretYesNo(Param);
             ord(Opt.NCIMQGain):
-                DSS.ActiveCircuit.Solution.NCIM_GenGain := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.Solution.NCIM_GenGain := DSS.Parser.MakeDouble();
             ord(Opt.StateVar):
             begin
                 DSS.Parser.NextParam;
-                TmpStr := DSS.Parser.StrValue;
+                TmpStr := DSS.Parser.MakeString();
                 if DSS.ActiveCircuit.SetElementActive(TmpStr) = 0 then
                 begin
                     DoSimpleMsg(DSS, 'Object "%s" not found', [TmpStr], 7100);
@@ -791,7 +791,7 @@ begin
                 end;
 
                 DSS.Parser.NextParam;
-                TmpStr := LowerCase(DSS.Parser.StrValue);
+                TmpStr := LowerCase(DSS.Parser.MakeString());
 
                 // Search for the variable within the object
                 i := pce.LookupVariable(TmpStr, true);
@@ -803,7 +803,7 @@ begin
 
                 // Once found, modifies the value
                 DSS.Parser.NextParam;
-                pce.Variable[i] := DSS.Parser.DblValue;
+                pce.SetVariable(i, DSS.Parser.MakeDouble());
             end;
         else
            // Ignore excess parameters
@@ -825,7 +825,7 @@ begin
         end;
 
         ParamName := DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
     end; {WHILE}
 
     if SolveOption = 1 then
@@ -857,7 +857,7 @@ begin
 
         // Continue parsing command line
         ParamName := DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
         // there will be no named paramters in this command and the params
         // themselves will be the parameter name to return
         while Length(Param) > 0 do
@@ -1180,7 +1180,7 @@ begin
                     ckt := DSS.ActiveCircuit;
 
                     DSS.Parser.NextParam;
-                    TmpStr := DSS.Parser.StrValue;
+                    TmpStr := DSS.Parser.MakeString();
                     if DSS.ActiveCircuit.SetElementActive(TmpStr) = 0 then
                     begin
                         DoSimpleMsg(DSS, 'Object "%s" not found', [TmpStr], 7100);
@@ -1201,7 +1201,7 @@ begin
                     end;
 
                     DSS.Parser.NextParam;
-                    TmpStr := LowerCase(DSS.Parser.StrValue);
+                    TmpStr := LowerCase(DSS.Parser.MakeString());
 
                     // Search for the variable within the object
                     i := pce.LookupVariable(TmpStr, true);
@@ -1210,14 +1210,14 @@ begin
                         DoSimpleMsg(DSS, 'State variable "%s" not found in "%s".', [TmpStr, pce.FullName], 7102);
                         Exit;
                     end;
-                    AppendGlobalResult(DSS, Format('%g', [pce.Variable[i]]));
+                    AppendGlobalResult(DSS, Format('%g', [pce.GetVariable(i)]));
                 end;
             else
            // Ignore excess parameters
             end;
 
             ParamName := DSS.Parser.NextParam;
-            Param := DSS.Parser.StrValue;
+            Param := DSS.Parser.MakeString();
         end; // WHILE
     except
         AppendGlobalResult(DSS, '***Error***');
@@ -1246,7 +1246,7 @@ begin
 
         // Continue parsing command line
         {ParamName :=} DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
         // there will be no named paramters in this command and the params
         // themselves will be the parameter name to return
         while Length(Param) > 0 do
@@ -1285,7 +1285,7 @@ begin
                 end;
             end;
             {ParamName :=} DSS.Parser.NextParam;
-            Param := DSS.Parser.StrValue;
+            Param := DSS.Parser.MakeString();
 {$ELSE} 
             DoSimpleMsg(DSS, _('You must create a new circuit object first: "new circuit.mycktname" to execute this Set command.'), 301);
             Result := FALSE;  // Indicate that we could not process all set command

@@ -219,9 +219,6 @@ type
         // PFSpecified: Boolean;
         // kvarSpecified: Boolean;
 
-        kvarRequested: Double;
-        kWRequested: Double;
-
         TShapeValue: Double;
 
         UserModel: TPVsystemUserModel;   // User-Written Models
@@ -259,10 +256,7 @@ type
 
         procedure UpdatePVSystem;    // Update PVSystem elements based on present kW and IntervalHrs variable
 
-        function Get_PresentkW: Double;
         function Get_PresentIrradiance: Double;
-
-        procedure Set_PowerFactor(const Value: Double);
 
         procedure Set_kVARating(const Value: Double);
         procedure Set_Pmpp(const Value: Double);
@@ -301,8 +295,8 @@ type
         function InjCurrents(): Integer; OVERRIDE;
         function NumVariables(): Integer; OVERRIDE;
         procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
-        function Get_Variable(i: Integer): Double; OVERRIDE;
-        procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
+        function GetVariable(i: Integer): Double; OVERRIDE;
+        procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
 
         procedure Set_Maxkvar(const Value: Double);
@@ -313,7 +307,7 @@ type
         procedure ResetRegisters;
         procedure TakeSample();
 
-      // Support for Dynamics Mode
+        // Support for Dynamics Mode
         procedure InitStateVars(); OVERRIDE;
         procedure IntegrateStates(); OVERRIDE;
 
@@ -328,10 +322,11 @@ type
         function CheckOLInverter(): Boolean; OVERRIDE;
 
         property PresentIrradiance: Double READ Get_PresentIrradiance WRITE PVSystemVars.FIrradiance;
-        property PresentkW: Double READ Get_PresentkW WRITE kWRequested;
-        property Presentkvar: Double READ Get_Presentkvar WRITE kvarRequested;
-        property PresentkV: Double READ PVSystemVars.kVPVSystemBase;
-        property PowerFactor: Double READ PFnominal WRITE Set_PowerFactor;
+        function PresentkW(): Double;
+        function PresentkV(): Double;
+        function PowerFactor(): Double;
+        procedure SetPowerFactor(const Value: Double);
+
         property kVARating: Double READ PVSystemVars.FkVARating WRITE Set_kVARating;
         property Pmpp: Double READ PVSystemVars.FPmpp WRITE Set_pmpp;
         property puPmpp: Double READ PVSystemVars.FpuPmpp WRITE PVSystemVars.FpuPmpp;
@@ -1109,8 +1104,8 @@ begin
     with PVSystemVars do
     begin
         // values in ohms for thevenin equivalents
-        RThev := pctR * 0.01 * SQR(PresentkV) / FkVArating * 1000.0;
-        XThev := pctX * 0.01 * SQR(PresentkV) / FkVArating * 1000.0;
+        RThev := pctR * 0.01 * SQR(PresentkV()) / FkVArating * 1000.0;
+        XThev := pctX * 0.01 * SQR(PresentkV()) / FkVArating * 1000.0;
 
         CutInkW := FpctCutin * FkVArating / 100.0;
         CutOutkW := FpctCutOut * FkVArating / 100.0;
@@ -1298,7 +1293,7 @@ begin
         // The inverter is in GFM control modem calculation changes
         with dynVars do
         begin
-            RatedkVLL := PresentkV;
+            RatedkVLL := PresentkV();
             mKVARating := PVSystemVars.FkVArating;
             CalcGFMYprim(NPhases, @YMatrix);
         end;
@@ -2066,7 +2061,7 @@ begin
     if not Enabled then
         Exit;
 
-    S := cmplx(Get_PresentkW, Get_Presentkvar);
+    S := cmplx(PresentkW(), Presentkvar());
     Smag := Cabs(S);
     HourValue := 1.0;
 
@@ -2090,7 +2085,12 @@ begin
     // Do Nothing
 end;
 
-function TPVsystemObj.Get_PresentkW: Double;
+function TPVsystemObj.PresentkV(): Double;
+begin
+    Result := PVSystemVars.kVPVSystemBase;
+end;
+
+function TPVsystemObj.PresentkW(): Double;
 begin
     Result := Pnominalperphase * 0.001 * Fnphases;
 end;
@@ -2360,7 +2360,7 @@ begin
     end;
 end;
 
-function TPVsystemObj.Get_Variable(i: Integer): Double;
+function TPVsystemObj.GetVariable(i: Integer): Double;
 // Return variables one at a time
 var
     N, k: Integer;
@@ -2452,7 +2452,7 @@ begin
     end;
 end;
 
-procedure TPVsystemObj.Set_Variable(i: Integer; Value: Double);
+procedure TPVsystemObj.SetVariable(i: Integer; Value: Double);
 var
     N, k: Integer;
 begin
@@ -2519,7 +2519,7 @@ begin
     end;
 
     for i := 1 to NumPVSystemVariables do
-        States[i - 1] := Variable[i];
+        States[i - 1] := GetVariable(i);
 
     if UserModel.Exists then
         UserModel.FGetAllVars(pDoubleArray(@States[NumPVSystemVariables]));
@@ -2669,7 +2669,12 @@ begin
     SetAsNextSeq(ord(TProp.Pmpp));
 end;
 
-procedure TPVsystemObj.Set_PowerFactor(const Value: Double);
+function TPVsystemObj.PowerFactor(): Double;
+begin 
+    result := PFnominal;
+end;
+
+procedure TPVsystemObj.SetPowerFactor(const Value: Double);
 begin
     PFnominal := Value;
     varMode := VARMODEPF;

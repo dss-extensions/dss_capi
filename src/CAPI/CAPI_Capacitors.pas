@@ -145,7 +145,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.NomKV;
+    Result := elem.kVRating;
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_kvar(): Double; CDECL;

@@ -112,7 +112,7 @@ procedure ParserIntValue(var i: Integer); STDCALL;
 
 begin
     CallBackParser.DSSCtx := DSSPrime;
-    i := CallBackParser.IntValue;
+    i := CallBackParser.MakeInteger();
 end;
 
 
@@ -121,7 +121,7 @@ procedure ParserDblValue(var x: Double); STDCALL;
 
 begin
     CallBackParser.DSSCtx := DSSPrime;
-    x := CallBackParser.DblValue;
+    x := CallBackParser.MakeDouble();
 end;
 
 
@@ -141,7 +141,7 @@ function ParserNextParam(ParamName: pAnsiChar; Maxlen: Cardinal): Integer; STDCA
 begin
     CallBackParser.DSSCtx := DSSPrime;
     CB_ParamName := CallBackParser.NextParam();
-    CB_Param := CallBackParser.StrValue;
+    CB_Param := CallBackParser.MakeString();
     StrlCopy(ParamName, pAnsiChar(Ansistring(CB_ParamName)), Maxlen); // Copies up to Maxlen
     Result := Length(CB_Param);
 end;

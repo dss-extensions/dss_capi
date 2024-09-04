@@ -312,8 +312,8 @@ type
         function InjCurrents(): Integer; OVERRIDE;
         function NumVariables(): Integer; OVERRIDE;
         procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
-        function Get_Variable(i: Integer): Double; OVERRIDE;
-        procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
+        function GetVariable(i: Integer): Double; OVERRIDE;
+        procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
         procedure SyncUpPowerQuantities();
 
@@ -2021,7 +2021,7 @@ begin
     end;
 end;
 
-function TWindGenObj.Get_Variable(i: Integer): Double;
+function TWindGenObj.GetVariable(i: Integer): Double;
 // Return variables one at a time
 begin
     Result := -9999.99; // error return value
@@ -2091,7 +2091,7 @@ begin
     end;
 end;
 
-procedure TWindGenObj.Set_Variable(i: Integer; Value: Double);
+procedure TWindGenObj.SetVariable(i: Integer; Value: Double);
 begin
     if i < 1 then
     begin
@@ -2147,7 +2147,7 @@ begin
     end;
 
     for i := 1 to NumWGenVariables do
-        States[i - 1] := Variable[i];
+        States[i - 1] := GetVariable(i);
 end;
 
 function TWindGenObj.NumVariables(): Integer;

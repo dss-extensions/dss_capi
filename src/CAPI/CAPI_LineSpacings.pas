@@ -119,7 +119,7 @@ begin
     if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
         
-    Result := pLineSpacing.NWires;
+    Result := pLineSpacing.NConds;
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Set_Nconds(Value: Integer); CDECL;
@@ -132,7 +132,7 @@ begin
     end;
     if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
-    pLineSpacing.FNConds := Value;
+    pLineSpacing.NConds := Value;
     pLineSpacing.PropertySideEffects(ord(TLineSpacingProp.NConds), 0, []);
 end;
 //------------------------------------------------------------------------------
@@ -188,11 +188,11 @@ begin
     if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
 
-    if pLineSpacing.NWires <> ValueCount then
+    if pLineSpacing.NConds <> ValueCount then
     begin
         DoSimpleMsg(DSSPrime,
             'The number of values provided (%d) does not match the number of wires (%d).', 
-            [ValueCount, pLineSpacing.NWires],
+            [ValueCount, pLineSpacing.NConds],
         183);
         Exit;
     end;
@@ -210,7 +210,7 @@ begin
         Exit;
     end;
     
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pLineSpacing.NWires);
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pLineSpacing.NConds);
     Move(pLineSpacing.FY[1], ResultPtr^, ResultCount^ * SizeOf(Double));
 end;
 
@@ -228,11 +228,11 @@ begin
     if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
 
-    if pLineSpacing.NWires <> ValueCount then
+    if pLineSpacing.NConds <> ValueCount then
     begin
         DoSimpleMsg(DSSPrime,
             'The number of values provided (%d) does not match the number of wires (%d).', 
-            [ValueCount, pLineSpacing.NWires],
+            [ValueCount, pLineSpacing.NConds],
         183);
         Exit;
     end;
@@ -250,7 +250,7 @@ begin
         Exit;
     end;
 
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pLineSpacing.NWires);
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pLineSpacing.NConds);
     Move(pLineSpacing.FX[1], ResultPtr^, ResultCount^ * SizeOf(Double));
 end;
 

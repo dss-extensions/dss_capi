@@ -1112,7 +1112,7 @@ begin
         end;
 
         Result := TJSONObject.Create([
-            'title', cls.Class_Name,
+            'title', cls.Name,
             'type', 'object',
             // 'dssIndex', clsidx,
             // 'dssParents', parents,
@@ -1237,7 +1237,7 @@ begin
         end;
 
         Result := TJSONObject.Create([
-            'name', cls.Class_Name,
+            'name', cls.Name,
             'index', clsidx,
             'parents', parents,
             'structArrayIndexOffset1', CreateJSON(PropertyStructArrayIndexOffset),

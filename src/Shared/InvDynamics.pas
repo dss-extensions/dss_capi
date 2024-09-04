@@ -250,7 +250,7 @@ var
     i,
     j: Integer;
 begin
-    Z := TCmatrix.CreateMatrix(YMatrix^.Order);
+    Z := TCmatrix.CreateMatrix(YMatrix^.order);
 
     X1 := (Sqr(RatedkVLL) / mKVARating) / Sqrt(1.0 + 0.0625);
     R1 := X1 / 4; // Uses defaults

@@ -18,11 +18,6 @@ uses
 type
 
     TPDElement = class(TDSSCktElement)
-    PRIVATE
-
-        function Get_ExcessKVANorm(idxTerm: Integer): Complex;
-        function Get_ExcessKVAEmerg(idxTerm: Integer): Complex;
-
     PUBLIC
 
         NormAmps,
@@ -71,8 +66,8 @@ type
         procedure CalcCustInterrupts;
         procedure ZeroReliabilityAccums; // Zero out reliability accumulators
 
-        property ExcesskVANorm[idxTerm: Integer]: Complex READ Get_ExcesskVANorm;
-        property ExcesskVAEmerg[idxTerm: Integer]: Complex READ Get_ExcesskVAEmerg;
+        function GetExcessKVANorm(idxTerm: Integer): Complex;
+        function GetExcessKVAEmerg(idxTerm: Integer): Complex;
     end;
 
 
@@ -227,7 +222,7 @@ begin
     end;
 end;
 
-function TPDElement.Get_ExcessKVANorm(idxTerm: Integer): Complex;
+function TPDElement.GetExcessKVANorm(idxTerm: Integer): Complex;
 var
     Factor: Double;
     kVA: Complex;
@@ -254,7 +249,7 @@ begin
     end;
 end;
 
-function TPDElement.Get_ExcessKVAEmerg(idxTerm: Integer): Complex;
+function TPDElement.GetExcessKVAEmerg(idxTerm: Integer): Complex;
 var
     Factor: Double;
     kVA: Complex;

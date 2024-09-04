@@ -133,7 +133,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.This_Capacitor.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ControlledElement.Name);
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_CTratio(): Double; CDECL;
@@ -143,7 +143,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.CTRatioVal;
+    Result := elem.ControlVars.CTratio;
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_DeadTime(): Double; CDECL;
@@ -153,7 +153,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.DeadTimeVal;
+    Result := elem.ControlVars.DeadTime;
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Delay(): Double; CDECL;
@@ -163,7 +163,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.OnDelayVal;
+    Result := elem.ControlVars.OnDelay;
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_DelayOff(): Double; CDECL;
@@ -173,7 +173,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.OffDelayVal;
+    Result := elem.ControlVars.OffDelay;
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_First(): Integer; CDECL;
@@ -200,7 +200,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    case elem.CapControlType of
+    case elem.ControlType of
         CURRENTCONTROL:
             Result := dssCapControlCurrent;
         VOLTAGECONTROL:
@@ -254,7 +254,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.OffValue;
+    Result := elem.ControlVars.OFF_Value;
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_ONSetting(): Double; CDECL;
@@ -264,7 +264,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.OnValue;
+    Result := elem.ControlVars.ON_Value;
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_PTratio(): Double; CDECL;
@@ -274,7 +274,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.PTRatioVal;
+    Result := elem.ControlVars.PTratio;
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_UseVoltOverride(): TAPIBoolean; CDECL;
@@ -284,7 +284,7 @@ begin
     Result := FALSE;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.UseVoltageOverride;
+    Result := elem.ControlVars.Voverride;
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Vmax(): Double; CDECL;
@@ -294,7 +294,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.VmaxVal;
+    Result := elem.ControlVars.Vmax;
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Vmin(): Double; CDECL;
@@ -304,7 +304,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.VminVal;
+    Result := elem.ControlVars.Vmin;
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Capacitor(const Value: PAnsiChar); CDECL;
@@ -340,15 +340,15 @@ begin
         Exit;
     case Value of
         dssCapControlCurrent:
-            elem.CapControlType := CURRENTCONTROL;
+            elem.ControlType := CURRENTCONTROL;
         dssCapControlVoltage:
-            elem.CapControlType := VOLTAGECONTROL;
+            elem.ControlType := VOLTAGECONTROL;
         dssCapControlKvar:
-            elem.CapControlType := KVARCONTROL;
+            elem.ControlType := KVARCONTROL;
         dssCapControlTime:
-            elem.CapControlType := TIMECONTROL;
+            elem.ControlType := TIMECONTROL;
         dssCapControlPF:
-            elem.CapControlType := PFCONTROL;
+            elem.ControlType := PFCONTROL;
     end;
 end;
 //------------------------------------------------------------------------------

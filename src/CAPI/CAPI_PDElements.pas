@@ -374,7 +374,7 @@ begin
         Exit;
     end;
     pList := DSS.ActiveCircuit.PDElements;
-    _Alt_PDEBatch_Get_x(ResultPtr, ResultCount, TDSSCktElementPtr(pList.InternalPointer), pList.Count, What, AllNodes);
+    _Alt_PDEBatch_Get_x(ResultPtr, ResultCount, TDSSCktElementPtr(pList.listPtr), pList.Count, What, AllNodes);
 end;
 
 //------------------------------------------------------------------------------
@@ -425,7 +425,7 @@ begin
         Exit;
     end;
     pList := DSS.ActiveCircuit.PDElements;
-    _Alt_CEBatch_Get_AllCurrentsVoltages_x(ResultPtr, ResultCount, TDSSCktElementPtr(pList.InternalPointer), pList.Count, What);
+    _Alt_CEBatch_Get_AllCurrentsVoltages_x(ResultPtr, ResultCount, TDSSCktElementPtr(pList.listPtr), pList.Count, What);
 end;
 
 //------------------------------------------------------------------------------
@@ -463,7 +463,7 @@ begin
     end;
     
     pList := DSS.ActiveCircuit.PDElements;
-    _Alt_CEBatch_Get_AllxSeqCurrents(ResultPtr, ResultCount, TDSSCktElementPtr(pList.InternalPointer), pList.Count, magnitude);
+    _Alt_CEBatch_Get_AllxSeqCurrents(ResultPtr, ResultCount, TDSSCktElementPtr(pList.listPtr), pList.Count, magnitude);
 end;
 
 //------------------------------------------------------------------------------
@@ -502,7 +502,7 @@ begin
         Exit;
     end;
     pList := DSSPrime.ActiveCircuit.PDElements;
-    Alt_CEBatch_Get_Powers(ResultPtr, ResultCount, TDSSCktElementPtr(pList.InternalPointer), pList.Count);
+    Alt_CEBatch_Get_Powers(ResultPtr, ResultCount, TDSSCktElementPtr(pList.listPtr), pList.Count);
 end;
 
 procedure PDElements_Get_AllPowers_GR(); CDECL;

@@ -24,9 +24,6 @@ type
         NumToBuses, ToBusPtr: Integer;
         ToBusList: pIntegerArray;
 
-        function Get_ToBusReference: Integer; inline;
-        procedure Set_ToBusReference(const Value: Integer); inline;
-
     PROTECTED
         ChildAdded: Boolean;
         LexicalLevel: Integer;
@@ -55,7 +52,8 @@ type
         function ParentBranch(): TCktTreeNode;
         function NumChildBranches(): Integer;  // Number of children at present node
         function NumShuntObjects(): Integer; // Number of objects at present node
-        property ToBusReference: Integer READ Get_ToBusReference WRITE Set_ToBusReference;
+        function GetToBusReference(): Integer; inline;
+        procedure SetToBusReference(const Value: Integer); inline;
     end;
 
 
@@ -419,7 +417,7 @@ begin
     Result := EndBuses[i];
 end;
 
-function TCktTreeNode.Get_ToBusReference: Integer;
+function TCktTreeNode.GetToBusReference(): Integer;
 // Sequentially access the To Bus list if more than one with each invocation of the property
 begin
     if NumToBuses = 1 then
@@ -439,7 +437,7 @@ begin
     end;
 end;
 
-procedure TCktTreeNode.Set_ToBusReference(const Value: Integer);
+procedure TCktTreeNode.SetToBusReference(const Value: Integer);
 begin
     Inc(NumToBuses);
     Reallocmem(ToBusList, Sizeof(ToBusList[1]) * NumToBuses);
@@ -659,7 +657,7 @@ begin
                 // Now find all pc Elements connected to the bus on this end of branch
                 // attach them as generic objects to cktTree node.
                 TestBusNum := TestBranch.Terminals[iTerm - 1].BusRef;
-                BranchList.PresentBranch.ToBusReference := TestBusNum;   // Add this as a "to" bus reference
+                BranchList.PresentBranch.SetToBusReference(TestBusNum);   // Add this as a "to" bus reference
                 if TestBusNum > 0 then
                 begin
                     Ckt.Buses[TestBusNum].BusChecked := TRUE;

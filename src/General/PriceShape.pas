@@ -90,7 +90,7 @@ type
 
     TPriceShapeObj = class(TDSSObject)
     PRIVATE
-        FNumPoints: Integer;  // Number of points in curve
+        numPoints: Integer;  // Number of points in curve
 
         FStdDevCalculated: Boolean;
         FMean,
@@ -115,7 +115,6 @@ type
         function PriceAtHour(Hr: Double): Double;  // Get Prices at specified time, hr
         function PriceAtIndex(i: Integer): Double;  // get Prices by index
 
-        property NumPoints: Integer READ FNumPoints;
         property Mean: Double READ Get_Mean;
         property StdDev: Double READ Get_StdDev;
     end;
@@ -213,7 +212,7 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
-    PropertyStructArrayCountOffset := ptruint(@obj.FNumPoints);
+    PropertyStructArrayCountOffset := ptruint(@obj.numPoints);
 
     SpecSetNames := ArrayOfString.Create(
         'Price, Hour',
@@ -245,7 +244,7 @@ begin
 
     // integer properties
     PropertyType[ord(TProp.Npts)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Npts)] := ptruint(@obj.FNumPoints);
+    PropertyOffset[ord(TProp.Npts)] := ptruint(@obj.numPoints);
     PropertyFlags[ord(TProp.Npts)] := [TPropertyFlag.SuppressJSON];
 
     // advanced doubles
@@ -276,12 +275,12 @@ begin
     // double arrays
     PropertyType[ord(TProp.price)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.price)] := ptruint(@obj.PriceValues);
-    PropertyOffset2[ord(TProp.price)] := ptruint(@obj.FNumPoints);
+    PropertyOffset2[ord(TProp.price)] := ptruint(@obj.numPoints);
     PropertyFlags[ord(TProp.price)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.hour)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.hour)] := ptruint(@obj.Hours);
-    PropertyOffset2[ord(TProp.hour)] := ptruint(@obj.FNumPoints);
+    PropertyOffset2[ord(TProp.hour)] := ptruint(@obj.numPoints);
     PropertyFlags[ord(TProp.hour)] := [TPropertyFlag.RequiredInSpecSet];
 
     // enum action
@@ -308,11 +307,11 @@ procedure TPriceShapeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integ
 begin
     case Idx of 
         ord(TProp.csvfile):
-            DoCSVFile(DSS, Hours, PriceValues, FNumPoints, (Interval <> 0.0), csvfile, ParentClass.Name);
+            DoCSVFile(DSS, Hours, PriceValues, numPoints, (Interval <> 0.0), csvfile, ParentClass.Name);
         ord(TProp.sngfile):
-            DoSngFile(DSS, Hours, PriceValues, FNumPoints, (Interval <> 0.0), sngfile, ParentClass.Name);
+            DoSngFile(DSS, Hours, PriceValues, numPoints, (Interval <> 0.0), sngfile, ParentClass.Name);
         ord(TProp.dblfile):
-            DoDblFile(DSS, Hours, PriceValues, FNumPoints, (Interval <> 0.0), dblfile, ParentClass.Name);
+            DoDblFile(DSS, Hours, PriceValues, numPoints, (Interval <> 0.0), dblfile, ParentClass.Name);
     end;
     case Idx of
         ord(TProp.npts):
@@ -320,11 +319,11 @@ begin
             // Force as the always first property when saving in a later point
             PrpSequence[Idx] := -10;
 
-            ReAllocmem(PriceValues, Sizeof(PriceValues[1]) * FNumPoints);
+            ReAllocmem(PriceValues, Sizeof(PriceValues[1]) * numPoints);
             if Interval > 0.0 then
                 ReallocMem(Hours, 0) //TODO: check if required
             else
-                ReAllocmem(Hours, Sizeof(Hours[1]) * FNumPoints);
+                ReAllocmem(Hours, Sizeof(Hours[1]) * numPoints);
         end;
         ord(TProp.interval):
             if Interval > 0.0 then
@@ -339,7 +338,7 @@ begin
         3, 7, 8, 9:
         begin
             FStdDevCalculated := FALSE;   // now calculated on demand
-            //TODO: check if needed after full migration: NumPoints := FNumPoints;  // Keep Properties in order for save command
+            //TODO: check if needed after full migration: NumPoints := numPoints;  // Keep Properties in order for save command
         end;
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
@@ -360,17 +359,17 @@ var
 begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
-    FNumPoints := Other.FNumPoints;
+    numPoints := Other.numPoints;
     Interval := Other.Interval;
-    ReallocMem(PriceValues, SizeOf(PriceValues[1]) * FNumPoints);
-    for i := 1 to FNumPoints do
+    ReallocMem(PriceValues, SizeOf(PriceValues[1]) * numPoints);
+    for i := 1 to numPoints do
         PriceValues[i] := Other.PriceValues[i];
     if Interval > 0.0 then
         ReallocMem(Hours, 0)
     else
     begin
-        ReallocMem(Hours, SizeOf(Hours[1]) * FNumPoints);
-        for i := 1 to FNumPoints do
+        ReallocMem(Hours, SizeOf(Hours[1]) * numPoints);
+        for i := 1 to numPoints do
             Hours[i] := Other.Hours[i];
     end;
 end;
@@ -381,7 +380,7 @@ begin
     Name := AnsiLowerCase(PriceShapeName);
     DSSObjType := ParClass.DSSClassType;
 
-    FNumPoints := 0;
+    numPoints := 0;
     Interval := 1.0;  // hr
     Hours := NIL;
     PriceValues := NIL;
@@ -413,10 +412,10 @@ var
 begin
     Result := 0.0;    // default return value if no points in curve
 
-    if FNumPoints <= 0 then         // Handle Exceptional cases
+    if numPoints <= 0 then         // Handle Exceptional cases
         Exit;
 
-    if FNumPoints = 1 then
+    if numPoints = 1 then
     begin
         Result := PriceValues[1];
         Exit;
@@ -425,10 +424,10 @@ begin
     if Interval > 0.0 then
     begin
         Index := round(Hr / Interval);
-        if Index > FNumPoints then
-            Index := Index mod FNumPoints;  // Wrap around using remainder
+        if Index > numPoints then
+            Index := Index mod numPoints;  // Wrap around using remainder
         if Index = 0 then
-            Index := FNumPoints;
+            Index := numPoints;
         Result := PriceValues[Index];
         Exit;
     end;
@@ -436,13 +435,13 @@ begin
     // For random interval
 
     // Normalize Hr to max hour in curve to get wraparound
-    if (Hr > Hours[FNumPoints]) then
+    if (Hr > Hours[numPoints]) then
     begin
-        Hr := Hr - Trunc(Hr / Hours[FNumPoints]) * Hours[FNumPoints];
+        Hr := Hr - Trunc(Hr / Hours[numPoints]) * Hours[numPoints];
     end;
 
-    i := LowerBound(PDoubleArray0(Hours), FNumPoints, 1, Hr) + 1;
-    // for i := 1 to FNumPoints do
+    i := LowerBound(PDoubleArray0(Hours), numPoints, 1, Hr) + 1;
+    // for i := 1 to numPoints do
     // begin
     if (Abs(Hours[i] - Hr) < 0.00001) then  // If close to an actual point, just use it.
     begin
@@ -460,16 +459,16 @@ begin
     // end;
 
     // If we fall through the loop, just use last value
-    Result := PriceValues[FNumPoints];
+    Result := PriceValues[numPoints];
 end;
 
 procedure TPriceShapeObj.CalcMeanandStdDev;
 begin
-    if FNumPoints > 0 then
+    if numPoints > 0 then
         if Interval > 0.0 then
-            RCDMeanandStdDev(PriceValues, FNumPoints, FMean, FStdDev)
+            RCDMeanandStdDev(PriceValues, numPoints, FMean, FStdDev)
         else
-            CurveMeanAndStdDev(PriceValues, Hours, FNumPoints, FMean, FStdDev);
+            CurveMeanAndStdDev(PriceValues, Hours, numPoints, FMean, FStdDev);
 
     FStdDevCalculated := TRUE;
 end;
@@ -490,7 +489,7 @@ end;
 
 function TPriceShapeObj.PriceAtIndex(i: Integer): Double;
 begin
-    if (i <= FNumPoints) and (i > 0) then
+    if (i <= numPoints) and (i > 0) then
     begin
         Result := PriceValues[i];
     end

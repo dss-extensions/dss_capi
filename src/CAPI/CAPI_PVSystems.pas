@@ -274,7 +274,7 @@ begin
     Result := 0.0;  // not set
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.PowerFactor;
+    Result := elem.PowerFactor();
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_kVArated(Value: Double); CDECL;
@@ -293,7 +293,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Varmode := 0;
-    elem.PowerFactor := Value;
+    elem.SetPowerFactor(Value);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_kvar(Value: Double); CDECL;
@@ -303,7 +303,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Varmode := VARMODEKVAR;
-    elem.Presentkvar := Value;
+    elem.kvarRequested := Value;
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_daily(): PAnsiChar; CDECL;

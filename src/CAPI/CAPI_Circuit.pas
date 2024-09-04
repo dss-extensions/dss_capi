@@ -205,7 +205,7 @@ begin
     k := 0;
     for i := 1 to DSSPrime.ActiveCircuit.NumBuses do
     begin
-        for j := 1 to buses[i].NumNodesThisBus do
+        for j := 1 to buses[i].numNodesThisBus do
         begin
             Result[k] := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV[buses[i].GetRef(j)]);
             Inc(k);
@@ -238,7 +238,7 @@ begin
     k := 0;
     for i := 1 to DSSPrime.ActiveCircuit.NumBuses do
     begin
-        for j := 1 to buses[i].NumNodesThisBus do
+        for j := 1 to buses[i].numNodesThisBus do
         begin
             Volts := DSSPrime.ActiveCircuit.Solution.NodeV[buses[i].GetRef(j)];
             Result[k] := Volts.re;
@@ -521,7 +521,7 @@ begin
             BaseFactor := 1000.0 * Buses[i].kVBase
         else
             BaseFactor := 1.0;
-        for j := 1 to Buses[i].NumNodesThisBus do
+        for j := 1 to Buses[i].numNodesThisBus do
         begin
             Volts := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV[Buses[i].GetRef(j)]);
             Result[k] := Volts / BaseFactor;
@@ -587,7 +587,7 @@ begin
     for i := 1 to DSSPrime.ActiveCircuit.NumBuses do
     begin
         BusName := buses[i].Name;
-        for j := 1 to buses[i].NumNodesThisBus do
+        for j := 1 to buses[i].numNodesThisBus do
         begin
             Result[k] := DSS_CopyStringAsPChar(BusName + '.' + IntToStr(buses[i].GetNum(j)));
             Inc(k);
@@ -694,7 +694,7 @@ begin
     k := 0;
     for i := 1 to DSSPrime.ActiveCircuit.NumBuses do
     begin
-        for j := 1 to buses[i].NumNodesThisBus do
+        for j := 1 to buses[i].numNodesThisBus do
         begin
             Result[k] := buses[i].DistFromMeter;
             Inc(k);

@@ -1531,21 +1531,21 @@ end;
 
 procedure TCIMExporterHelper.XfmrTankPhasesAndGround(fprf: ProfileChoice; eprf: ProfileChoice; pXf:TTransfObj; bus: Integer);
 var
-    ordered_phs, phs: String;
+    ordered_phs: String;
     j1, j2: Integer;
-    reverse_ground, wye_ground, delta, wye_unground: Boolean;
+    reverse_ground, wye_ground, wye_unground: Boolean;
 begin
     j1 := (bus-1) * pXf.NConds + 1;
     j2 := j1 + pXf.Nphases;
     reverse_ground := False;
     wye_ground := False;
     wye_unground := False;
-    delta := False;    
+    // delta := False;    
     //  writeln(Format('  Testing %d and %d', [j1, j2]));
     if (pXf.Winding[bus].Connection = 1) then 
     begin // delta
         BooleanNode(fprf, 'TransformerEnd.grounded', false);
-        delta := True;
+        // delta := True;
     end 
     else 
     if (pXf.NodeRef[j2] = 0) then 
@@ -1633,7 +1633,7 @@ var
 begin
     pPhase := TNamedObject.Create('dummy');
     s := PhaseOrderString(pLine, 1);
-    if pLine.NumConductorsAvailable > length(s) then
+    if pLine.CIM_NumConductorData() > length(s) then
         s := s + 'N'; // so we can specify the neutral conductor
     for i := 1 to length(s) do
     begin
@@ -1649,8 +1649,8 @@ begin
         StartInstance(FunPrf, 'ACLineSegmentPhase', pPhase);
         PhaseKindNode(FunPrf, 'ACLineSegmentPhase', phs);
         IntegerNode(FunPrf, 'ACLineSegmentPhase.sequenceNumber', i);
-        if i <= pLine.NumConductorsAvailable then
-            PhaseWireRefNode(CatPrf, pLine.ConductorData[i]);
+        if i <= pLine.CIM_NumConductorData() then
+            PhaseWireRefNode(CatPrf, pLine.CIM_GetConductorData(i));
         RefNode(FunPrf, 'ACLineSegmentPhase.ACLineSegment', pLine);
         UuidNode(GeoPrf, 'PowerSystemResource.Location',
             GetDevUuid(LineLoc, pLine.Name, 1));
@@ -1712,7 +1712,7 @@ begin
         exit;
     pPhase := TNamedObject.Create('dummy');
     s := PhaseString(pCap, 1);
-    bph := 0.001 * pCap.Totalkvar / pCap.NomKV / pCap.NomKV / pCap.NumSteps / pCap.NPhases;
+    bph := 0.001 * pCap.Totalkvar / pCap.kVRating / pCap.kVRating / pCap.NumSteps / pCap.NPhases;
     if (pCap.Connection = TCapacitorConnection.Delta) then
         s := DeltaPhaseString(pCap);
     for i := 1 to length(s) do
@@ -1826,8 +1826,8 @@ var
 begin
     if pGen.NPhases = 3 then
         exit;
-    p := 1000.0 * pGen.Presentkw / pGen.NPhases;
-    q := 1000.0 * pGen.Presentkvar / pGen.NPhases;
+    p := 1000.0 * pGen.Presentkw() / pGen.NPhases;
+    q := 1000.0 * pGen.Presentkvar() / pGen.NPhases;
     if pGen.Connection = TGeneralConnection.Delta then
         s := DeltaPhaseString(pGen)
     else
@@ -3581,7 +3581,7 @@ begin
             DoubleNode(EpPrf, 'PowerElectronicsUnit.minP', -pBat.StorageVars.kwRating * pBat.StorageVars.pctkWRated * 1000);
             DoubleNode(SshPrf, 'BatteryUnit.ratedE', pBat.StorageVars.kwhRating * 1000.0);
             DoubleNode(SshPrf, 'BatteryUnit.storedE', pBat.StorageVars.kwhStored * 1000.0);
-            BatteryStateEnum(SshPrf, pBat.StorageState);
+            BatteryStateEnum(SshPrf, pBat.StorageState());
             geoUUID := GetDevUuid(BatteryLoc, pBat.localName, 1);
             UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
             EndInstance(FunPrf, 'BatteryUnit');
@@ -3589,14 +3589,14 @@ begin
             CircuitNode(FunPrf, ActiveCircuit);
             RefNode(FunPrf, 'PowerElectronicsConnection.PowerElectronicsUnit', pName1);
             DoubleNode(EpPrf, 'PowerElectronicsConnection.maxIFault', 1.0 / pBat.VminPu);
-            DoubleNode(SshPrf, 'PowerElectronicsConnection.p', pBat.Presentkw * 1000.0);
-            DoubleNode(SshPrf, 'PowerElectronicsConnection.q', pBat.Presentkvar * 1000.0);
+            DoubleNode(SshPrf, 'PowerElectronicsConnection.p', pBat.PresentkW() * 1000.0);
+            DoubleNode(SshPrf, 'PowerElectronicsConnection.q', pBat.Presentkvar() * 1000.0);
             ConverterControlEnum(SshPrf, pBat.VarMode, pBat.UsingCIMDynamics);
             DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedS', pBat.kvarating * 1000.0);
             if pBat.nphases = 1 then
-                DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedU', pBat.Presentkv * 1000.0 * sqrt(3.0))
+                DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedU', pBat.PresentkV() * 1000.0 * sqrt(3.0))
             else
-                DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedU', pBat.Presentkv * 1000.0);
+                DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedU', pBat.PresentkV() * 1000.0);
 
             DoubleNode(EpPrf, 'PowerElectronicsConnection.maxQ', Math.Min(pBat.StorageVars.Fkvarlimit, pBat.StorageVars.FkVArating) * 1000.0);
             DoubleNode(EpPrf, 'PowerElectronicsConnection.minQ', -Math.Min(pBat.StorageVars.FkvarlimitNeg, pBat.StorageVars.FkVArating) * 1000.0);                
@@ -3690,8 +3690,8 @@ begin
             StartInstance(FunPrf, 'LinearShuntCompensator', pCap);
             CircuitNode(FunPrf, ActiveCircuit);
             VbaseNode(FunPrf, pCap);
-            val := 0.001 * pCap.Totalkvar / pCap.NomKV / pCap.NomKV / pCap.NumSteps;
-            DoubleNode(EpPrf, 'ShuntCompensator.nomU', 1000.0 * pCap.NomKV);
+            val := 0.001 * pCap.Totalkvar / pCap.kVRating / pCap.kVRating / pCap.NumSteps;
+            DoubleNode(EpPrf, 'ShuntCompensator.nomU', 1000.0 * pCap.kVRating);
             DoubleNode(EpPrf, 'LinearShuntCompensator.bPerSection', val);
             DoubleNode(EpPrf, 'LinearShuntCompensator.gPerSection', 0.0);
 
@@ -3714,8 +3714,8 @@ begin
             val := 0.0;
             for pCapC in ActiveCircuit.CapControls do
             begin
-                if pCapC.This_Capacitor = pCap then 
-                    val := pCapC.OnDelayVal;
+                if pCapC.ControlledElement = pCap then 
+                    val := pCapC.ControlVars.OnDelay;
             end;
             DoubleNode(EpPrf, 'ShuntCompensator.aVRDelay', val);
 
@@ -3734,33 +3734,33 @@ begin
         for pCapC in ActiveCircuit.CapControls do
         begin
             StartInstance(FunPrf, 'RegulatingControl', pCapC);
-            UuidNode(GeoPrf, 'PowerSystemResource.Location', GetDevUuid(CapLoc, pCapC.This_Capacitor.Name, 1));
-            RefNode(FunPrf, 'RegulatingControl.RegulatingCondEq', pCapC.This_Capacitor);
+            UuidNode(GeoPrf, 'PowerSystemResource.Location', GetDevUuid(CapLoc, pCapC.ControlledElement.Name, 1));
+            RefNode(FunPrf, 'RegulatingControl.RegulatingCondEq', pCapC.ControlledElement);
             i1 := GetCktElementIndex(DSS, FullNameIfNotNil(pCapC.MonitoredElement)); // Global function
             UuidNode(FunPrf, 'RegulatingControl.Terminal', GetTermUuid(DSS.ActiveCircuit.CktElements.Get(i1), pCapC.ElementTerminal));
             s := FirstPhaseString(DSS.ActiveCircuit.CktElements.Get(i1), 1);
-            if pCapC.PTPhase > 0 then
-                MonitoredPhaseNode(FunPrf, Char(Ord(s[1]) + pCapC.PTPhase - 1))
+            if pCapC.ControlVars.FPTPhase > 0 then
+                MonitoredPhaseNode(FunPrf, Char(Ord(s[1]) + pCapC.ControlVars.FPTPhase - 1))
             else
                 MonitoredPhaseNode(FunPrf, Char(Ord(s[1]))); // TODO - average, min and max unsupported in CIM
             val := 1.0;
-            if pCapC.CapControlType = PFCONTROL then
+            if pCapC.ControlType = PFCONTROL then
             begin
-                v1 := pCapC.PfOnValue;
-                v2 := pCapC.PfOffValue
+                v1 := pCapC.ControlVars.PFON_Value;
+                v2 := pCapC.ControlVars.PFOFF_Value
             end
             else
             begin
-                v1 := pCapC.OnValue;
-                v2 := pCapC.OffValue;
-                if pCapC.CapControlType = KVARCONTROL then
+                v1 := pCapC.ControlVars.ON_Value;
+                v2 := pCapC.ControlVars.OFF_Value;
+                if pCapC.ControlType = KVARCONTROL then
                     val := 1000.0;
-                if pCapC.CapControlType = CURRENTCONTROL then
-                    val := pCapC.CTRatioVal;
-                if pCapC.CapControlType = VOLTAGECONTROL then
-                    val := pCapC.PTRatioVal
+                if pCapC.ControlType = CURRENTCONTROL then
+                    val := pCapC.ControlVars.CTratio;
+                if pCapC.ControlType = VOLTAGECONTROL then
+                    val := pCapC.ControlVars.PTratio
             end;
-            case pCapC.CapControlType of
+            case pCapC.ControlType of
                 CURRENTCONTROL:
                     RegulatingControlEnum(EpPrf, 'currentFlow');
                 VOLTAGECONTROL:
@@ -4579,22 +4579,22 @@ begin
             ConductorUsageEnum(CatPrf, 'distribution');
             IntegerNode(CatPrf, 'WireSpacingInfo.phaseWireCount', 1);
             DoubleNode(CatPrf, 'WireSpacingInfo.phaseWireSpacing', 0.0);
-            if pGeom.PhaseChoice[1] = Overhead then   // decide this off the first conductor
+            if pGeom.phaseChoice[1] = Overhead then   // decide this off the first conductor
                 BooleanNode(CatPrf, 'WireSpacingInfo.isCable', FALSE)
             else
                 BooleanNode(CatPrf, 'WireSpacingInfo.isCable', TRUE);
             EndInstance(CatPrf, 'WireSpacingInfo');
 
-            for i := 1 to pGeom.NWires do
+            for i := 1 to pGeom.FNConds do // Using FNConds instead of the NConds property to read the number of conductors before a potential reduction
             begin
                 pName1.LocalName := 'WP_' + pGeom.Name + '_' + IntToStr(i);
                 pName1.UUID := GetDevUuid(WirePos, pName1.LocalName, 1);  // 1 for pGeom
                 StartInstance(CatPrf, 'WirePosition', pName1);
                 RefNode(CatPrf, 'WirePosition.WireSpacingInfo', pGeom);
                 IntegerNode(CatPrf, 'WirePosition.sequenceNumber', i);
-                v1 := To_Meters(pGeom.Units[i]);
-                DoubleNode(CatPrf, 'WirePosition.xCoord', pGeom.Xcoord[i] * v1);
-                DoubleNode(CatPrf, 'WirePosition.yCoord', pGeom.Ycoord[i] * v1);
+                v1 := To_Meters(pGeom.units[i]);
+                DoubleNode(CatPrf, 'WirePosition.xCoord', pGeom.xCoord[i] * v1);
+                DoubleNode(CatPrf, 'WirePosition.yCoord', pGeom.yCoord[i] * v1);
                 EndInstance(CatPrf, 'WirePosition')
             end;
         end;
@@ -4606,21 +4606,21 @@ begin
             ConductorUsageEnum(CatPrf, 'distribution');
             IntegerNode(CatPrf, 'WireSpacingInfo.phaseWireCount', 1);
             DoubleNode(CatPrf, 'WireSpacingInfo.phaseWireSpacing', 0.0);
-            if pSpac.Ycoord[1] > 0.0 then
+            if pSpac.GetYCoord(1) > 0.0 then
                 BooleanNode(CatPrf, 'WireSpacingInfo.isCable', FALSE)
             else
                 BooleanNode(CatPrf, 'WireSpacingInfo.isCable', TRUE);
             EndInstance(CatPrf, 'WireSpacingInfo');
 
-            for i := 1 to pSpac.NWires do
+            for i := 1 to pSpac.NConds do
             begin
                 pName1.LocalName := 'WP_' + pSpac.Name + '_' + IntToStr(i);
                 pName1.UUID := GetDevUuid(WirePos, pName1.LocalName, 2); // 2 for pSpac
                 StartInstance(CatPrf, 'WirePosition', pName1);
                 RefNode(CatPrf, 'WirePosition.WireSpacingInfo', pSpac);
                 IntegerNode(CatPrf, 'WirePosition.sequenceNumber', i);
-                DoubleNode(CatPrf, 'WirePosition.xCoord', pSpac.Xcoord[i] * v1);
-                DoubleNode(CatPrf, 'WirePosition.yCoord', pSpac.Ycoord[i] * v1);
+                DoubleNode(CatPrf, 'WirePosition.xCoord', pSpac.GetXCoord(i) * v1);
+                DoubleNode(CatPrf, 'WirePosition.yCoord', pSpac.GetYCoord(i) * v1);
                 EndInstance(CatPrf, 'WirePosition')
             end;
         end;

@@ -456,7 +456,7 @@ var
 begin
     DSS.AuxParser.CmdString := S;
     ParmName := DSS.AuxParser.NextParam();
-    Param := DSS.AuxParser.StrValue;
+    Param := DSS.AuxParser.MakeString();
     Result := MaxValues; // Default Return Value;
 
     // Syntax can be either a list of numeric values or a file specification:  File= ...
@@ -482,15 +482,15 @@ begin
 
         // Look for other options  (may be in either order)
         ParmName := DSS.AuxParser.NextParam();
-        Param := DSS.AuxParser.StrValue;
+        Param := DSS.AuxParser.MakeString();
         while Length(Param) > 0 do
         begin
             if CompareTextShortest(ParmName, 'column') = 0 then
-                CSVColumn := DSS.AuxParser.IntValue;
+                CSVColumn := DSS.AuxParser.MakeInteger();
             if CompareTextShortest(ParmName, 'header') = 0 then
                 CSVHeader := InterpretYesNo(param);
             ParmName := DSS.AuxParser.NextParam();
-            Param := DSS.AuxParser.StrValue;
+            Param := DSS.AuxParser.MakeString();
         end;
 
         // load the list from a file
@@ -508,7 +508,7 @@ begin
                         DSS.AuxParser.CmdString := InputLine;
                         for iskip := 1 to CSVColumn do
                             ParmName := DSS.AuxParser.NextParam();
-                        ResultArray[i] := DSS.AuxParser.dblValue;
+                        ResultArray[i] := DSS.AuxParser.MakeDouble();
                     end
                     else
                     begin
@@ -572,7 +572,7 @@ begin
          // Parse Values of array list
         for i := 1 to MaxValues do
         begin
-            ResultArray[i] := DSS.AuxParser.DblValue;    // Fills array with zeros if we run out of numbers
+            ResultArray[i] := DSS.AuxParser.MakeDouble();    // Fills array with zeros if we run out of numbers
             DSS.AuxParser.NextParam();
         end;
     end;
@@ -591,7 +591,7 @@ var
 begin
     DSS.AuxParser.CmdString := S;
     ParmName := DSS.AuxParser.NextParam();
-    Param := DSS.AuxParser.StrValue;
+    Param := DSS.AuxParser.MakeString();
     Result := Maxvalues;  // Default return value
 
     // Syntax can be either a list of numeric values or a file specification:  File= ...
@@ -630,7 +630,7 @@ begin
          // Parse Values of array list
         for i := 1 to MaxValues do
         begin
-            ResultArray[i] := DSS.AuxParser.IntValue;    // Fills array with zeros if we run out of numbers
+            ResultArray[i] := DSS.AuxParser.MakeInteger();    // Fills array with zeros if we run out of numbers
             DSS.AuxParser.NextParam();
         end;
     end;
@@ -654,7 +654,7 @@ begin
 
     DSS.AuxParser.CmdString := S;
     ParmName := DSS.AuxParser.NextParam();
-    Param := DSS.AuxParser.StrValue;
+    Param := DSS.AuxParser.MakeString();
 
     // Syntax can be either a list of string values or a file specification:  File= ...
     if CompareText(Parmname, 'file') = 0 then
@@ -667,7 +667,7 @@ begin
                 FSReadln(F, Param);
                 DSS.AuxParser.CmdString := Param;
                 ParmName := DSS.AuxParser.NextParam();
-                NextParam := DSS.AuxParser.StrValue;
+                NextParam := DSS.AuxParser.MakeString();
                 if Length(NextParam) > 0 then
                 begin // Ignore Blank Lines in File
                     if ApplyLower then
@@ -697,7 +697,7 @@ begin
                 ResultList.Add(Param);
 
             ParmName := DSS.AuxParser.NextParam();
-            Param := DSS.AuxParser.StrValue;
+            Param := DSS.AuxParser.MakeString();
         end;
     end;
 end;
@@ -1269,7 +1269,7 @@ begin
     begin
         if buses[i].kVBase > 0.0 then
         begin
-            for j := 1 to buses[i].NumNodesThisBus do
+            for j := 1 to buses[i].numNodesThisBus do
             begin
                 Nref := buses[i].GetRef(j);
                 if Nref > 0 then
@@ -1299,7 +1299,7 @@ begin
         if pBus.kVBase <= 0.0 then
             continue;
 
-        for j := 1 to pBus.NumNodesThisBus do
+        for j := 1 to pBus.numNodesThisBus do
         begin
             nref := pBus.GetRef(j);
             if nref <= 0 then
@@ -2284,9 +2284,9 @@ begin
                 // AuxParser allows commas or white space
                 DSS.AuxParser.CmdString := s;
                 DSS.AuxParser.NextParam();
-                pA[i] := DSS.AuxParser.DblValue;
+                pA[i] := DSS.AuxParser.MakeDouble();
                 DSS.AuxParser.NextParam();
-                pB[i] := DSS.AuxParser.DblValue;
+                pB[i] := DSS.AuxParser.MakeDouble();
             end;
         end
         else
@@ -2298,7 +2298,7 @@ begin
                 // AuxParser allows commas or white space
                 DSS.AuxParser.CmdString := s;
                 DSS.AuxParser.NextParam();
-                pB[i] := DSS.AuxParser.DblValue;
+                pB[i] := DSS.AuxParser.MakeDouble();
             end;
         end;
 

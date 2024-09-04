@@ -28,13 +28,14 @@ type
 
     TDSSPointerList = class(TObject)
     PRIVATE
-        NumInList: Integer;
         MaxAllocated: Integer;
-        ActiveItem: Integer;
-        List: pPointerArray;
         IncrementSize: Integer;
 
     PUBLIC
+        count: Integer;
+        activeIndex: Integer;
+        listPtr: pPointerArray;
+
         constructor Create(Size: Integer);
         destructor Destroy; OVERRIDE;
 
@@ -45,12 +46,9 @@ type
         function At(i: Integer): Pointer; // Does not change the active item
         function First(): Pointer;
         function Next(): Pointer;
-        property Count: Integer READ NumInList;
         function Active(): Pointer;
-        property ActiveIndex: Integer READ ActiveItem;
         procedure ResetActive();
 
-        property InternalPointer: pPointerArray read List;
         function GetEnumerator(): TDSSPointerEnumerator;
     end;
 
@@ -63,103 +61,103 @@ begin
     MaxAllocated := Size;
     if MaxAllocated <= 0 then
         MaxAllocated := 10;    // Default Size & Increment
-    List := AllocMem(SizeOf(Pointer) * MaxAllocated);
-    NumInList := 0;
-    ActiveItem := 0;
+    listPtr := AllocMem(SizeOf(Pointer) * MaxAllocated);
+    count := 0;
+    activeIndex := 0;
     IncrementSize := MaxAllocated;  // Increment is equal to original allocation
 end;
 
 destructor TDSSPointerList.Destroy;
 begin
-    Freemem(List, Sizeof(Pointer) * MaxAllocated);
+    Freemem(listPtr, Sizeof(Pointer) * MaxAllocated);
     inherited Destroy;
 end;
 
 function TDSSPointerList.Add(p: Pointer): Integer;
 begin
-    Inc(NumInList);
-    if NumInList > MaxAllocated then
+    Inc(count);
+    if count > MaxAllocated then
     begin
         MaxAllocated := MaxAllocated + IncrementSize;
-        ReallocMem(List, SizeOf(List[1]) * MaxAllocated);
+        ReallocMem(listPtr, SizeOf(listPtr[1]) * MaxAllocated);
     end;
-    List[NumInList] := p;
-    Result := NumInList;
-    ActiveItem := Result;
+    listPtr[count] := p;
+    Result := count;
+    activeIndex := Result;
 end;
 
 function TDSSPointerList.Active(): Pointer;
 begin
-    if (ActiveItem > 0) and (ActiveItem <= NumInList) then
-        Result := Get(ActiveItem)
+    if (activeIndex > 0) and (activeIndex <= count) then
+        Result := Get(activeIndex)
     else
         Result := NIL;
 end;
 
 function TDSSPointerList.First(): Pointer;
 begin
-    if NumInList > 0 then
+    if count > 0 then
     begin
-        ActiveItem := 1;
-        Result := List[ActiveItem];
+        activeIndex := 1;
+        Result := listPtr[activeIndex];
     end
     else
     begin
-        ActiveItem := 0;
+        activeIndex := 0;
         Result := NIL;
     end;
 end;
 
 function TDSSPointerList.Next(): Pointer;
 begin
-    if NumInList > 0 then
+    if count > 0 then
     begin
-        Inc(ActiveItem);
-        if ActiveItem > NumInList then
+        Inc(activeIndex);
+        if activeIndex > count then
         begin
-            ActiveItem := NumInList;
+            activeIndex := count;
             Result := NIL;
         end
         else
-            Result := List[ActiveItem];
+            Result := listPtr[activeIndex];
     end
     else
     begin
-        ActiveItem := 0;
+        activeIndex := 0;
         Result := NIL;
     end;
 end;
 
 function TDSSPointerList.Get(i: Integer): Pointer;
 begin
-    if (i < 1) or (i > NumInList) then
+    if (i < 1) or (i > count) then
         Result := NIL
     else
     begin
-        Result := List[i];
-        ActiveItem := i;
+        Result := listPtr[i];
+        activeIndex := i;
     end;
 end;
 
 function TDSSPointerList.At(i: Integer): Pointer;
 begin
-    if (i < 1) or (i > NumInList) then
+    if (i < 1) or (i > count) then
         Result := NIL
     else
     begin
-        Result := List[i];
+        Result := listPtr[i];
     end;
 end;
 
 procedure TDSSPointerList.Clear;
 begin
-    ActiveItem := 0;
-    NumInList := 0;
+    activeIndex := 0;
+    count := 0;
 end;
 
 procedure TDSSPointerList.ResetActive();
 begin
-    ActiveItem := 0;
+    activeIndex := 0;
 end;
 
 function TDSSPointerList.GetEnumerator(): TDSSPointerEnumerator;
@@ -181,10 +179,10 @@ begin
         begin
             currentIdx := lst.Count;
             currentPtr := NIL;
-            lst.ActiveItem := currentIdx; // for backwards compatibility
+            lst.activeIndex := currentIdx; // for backwards compatibility
         end
         else
-            currentPtr := lst.List[currentIdx];
+            currentPtr := lst.listPtr[currentIdx];
     end
     else
     begin

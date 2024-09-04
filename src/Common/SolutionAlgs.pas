@@ -794,7 +794,7 @@ var
     ref1: Integer;
 begin
     pBus.Zsc.Clear();
-    for i := 1 to pBus.NumNodesThisBus do
+    for i := 1 to pBus.numNodesThisBus do
     begin
         ref1 := pBus.RefNo[i];
         if ref1 > 0 then
@@ -804,7 +804,7 @@ begin
             if SolveSparseSet(hYsystem, pComplexArray(@NodeV[1]), pComplexArray(@Currents[1])) < 1 then
                 raise EEsolv32Problem.Create('Error Solving System Y Matrix in ComputeYsc. Problem with Sparse matrix solver.');
             // Extract Voltage Vector = column of Zsc
-            for j := 1 to pBus.NumNodesThisBus do
+            for j := 1 to pBus.numNodesThisBus do
             begin
                 pBus.Zsc[j, i] := NodeV[pBus.RefNo[j]];
             end;

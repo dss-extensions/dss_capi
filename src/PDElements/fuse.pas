@@ -71,7 +71,6 @@ type
         CondOffset: Integer; // Offset for monitored terminal
         cBuffer: pComplexArray; // Complexarray buffer
 
-        function get_States(Idx: Integer): EControlAction;
     PUBLIC
         FuseCurve: TTCC_CurveObj;
         RatedCurrent: Double;
@@ -94,7 +93,7 @@ type
         procedure Reset; OVERRIDE;  // Reset to initial defined state
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
-        property States[Idx: Integer]: EControlAction read get_States;
+        function GetState(Idx: Integer): EControlAction;
     end;
 
 implementation
@@ -518,7 +517,7 @@ begin
     end;
 end;
 
-function TFuseObj.get_States(Idx: Integer): EControlAction;
+function TFuseObj.GetState(Idx: Integer): EControlAction;
 begin
     //TODO: do we need to validate Idx?
     if ControlledElement <> NIL then

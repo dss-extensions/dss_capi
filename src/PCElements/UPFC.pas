@@ -114,8 +114,8 @@ type
         procedure GetInjCurrents(Curr: pComplexArray);
 
     PROTECTED
-        function Get_Variable(i: Integer): Double; OVERRIDE;
-        procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
+        function GetVariable(i: Integer): Double; OVERRIDE;
+        procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
 
     PUBLIC
         InCurr, OutCurr: Array of Complex; // for storing the input and output currents
@@ -1064,7 +1064,7 @@ begin
     Result := NumUPFCVariables;
 end;
 
-procedure TUPFCObj.Set_Variable(i: Integer; Value: Double);
+procedure TUPFCObj.SetVariable(i: Integer; Value: Double);
 begin
     if i < 1 then
     begin
@@ -1096,7 +1096,7 @@ begin
     end;
 end;
 
-function TUPFCObj.Get_Variable(i: Integer): Double;
+function TUPFCObj.GetVariable(i: Integer): Double;
 begin
     Result := -1.0;
     case i of
@@ -1136,7 +1136,7 @@ var
     i: Integer;
 begin
     for i := 1 to NumUPFCVariables do
-        States[i - 1] := Variable[i];
+        States[i - 1] := GetVariable(i);
 end;
 
 function TUPFCObj.VariableName(i: Integer): String;

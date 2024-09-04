@@ -107,7 +107,7 @@ begin
                 // If it is at the end of a section and has no load,cap, reactor, or coordinate, just throw it away
                 if IsDangling then
                 begin
-                    ToBusRef := ToBusReference;  // only access this property once!
+                    ToBusRef := GetToBusReference();  // only access this property once!
                     if ToBusRef > 0 then
                         if not (DSS.ActiveCircuit.Buses[ToBusRef].Keep) then
                             pLineElem1.Enabled := FALSE;
@@ -181,7 +181,7 @@ begin
                         with BranchList do
                         begin
                             if (PresentBranch.NumChildBranches() = 0) and (PresentBranch.NumShuntObjects() = 0) and 
-                                (not DSS.ActiveCircuit.Buses[PresentBranch.ToBusReference].Keep) then
+                                (not DSS.ActiveCircuit.Buses[PresentBranch.GetToBusReference()].Keep) then
                                 LineElement1.Enabled := FALSE     // just discard it
                             else
                             if (PresentBranch.NumChildBranches() = 0) then //Merge with Parent and move shunt elements to TO node on parent branch
@@ -190,7 +190,7 @@ begin
                                 if ParentNode <> NIL then
                                 begin
                                     if ParentNode.NumChildBranches() = 1 then   // only works for in-line
-                                        if not DSS.ActiveCircuit.Buses[PresentBranch.ToBusReference].Keep then
+                                        if not DSS.ActiveCircuit.Buses[PresentBranch.GetToBusReference()].Keep then
                                         begin     // Check Keeplist
                                             // Let's consider merging
                                             // First Check for any Capacitors. Skip if any
@@ -223,7 +223,7 @@ begin
                                                                 ShuntElement := ParentNode.FirstShuntObject();
                                                                 while ShuntElement <> NIL do
                                                                 begin
-                                                                    DSS.Parser.CmdString := 'bus1="' + DSS.ActiveCircuit.BusList.NameOfIndex(PresentBranch.ToBusReference) + GetNodeString(ShuntElement.GetBus(1)) + '"';
+                                                                    DSS.Parser.CmdString := 'bus1="' + DSS.ActiveCircuit.BusList.NameOfIndex(PresentBranch.GetToBusReference()) + GetNodeString(ShuntElement.GetBus(1)) + '"';
                                                                     ShuntElement.Edit(DSS.Parser);
                                                                     ShuntElement := ParentNode.NextShuntObject();
                                                                 end;
@@ -238,7 +238,7 @@ begin
 
                             if (PresentBranch.NumChildBranches() = 1) then // Merge with child
                             begin
-                                if not DSS.ActiveCircuit.Buses[PresentBranch.ToBusReference].Keep then    // check keeplist
+                                if not DSS.ActiveCircuit.Buses[PresentBranch.GetToBusReference()].Keep then    // check keeplist
                                 begin
                                     // Let's consider merging
                                     // First Check for any Capacitors. Skip if any
@@ -318,7 +318,7 @@ begin
 
                             1:
                                 if NumShuntObjects() = 0 then
-                                    if not DSS.ActiveCircuit.Buses[ToBusReference].Keep then
+                                    if not DSS.ActiveCircuit.Buses[GetToBusReference()].Keep then
                                     begin
                                         // Let's consider merging
                                         LineElement2 := FirstChildBranch().CktObject;
@@ -355,7 +355,7 @@ begin
                                 // see if eligible for merging
                                 if PresentBranch.NumChildBranches() = 1 then
                                     if PresentBranch.NumShuntObjects() = 0 then
-                                        if not DSS.ActiveCircuit.Buses[PresentBranch.ToBusReference].Keep then
+                                        if not DSS.ActiveCircuit.Buses[PresentBranch.GetToBusReference()].Keep then
                                         begin
                                             // Let's consider merging
                                             LineElement2 := PresentBranch.FirstChildBranch().CktObject;
@@ -469,9 +469,9 @@ begin
         begin
             // Check to see if this is a 1-phase switch or other branch in the middle of a 3-phase branch and go on
             // If the To bus has more than 1 phase, keep this branch else lump the load at the From node
-            pBus := DSS.ActiveCircuit.Buses[Branchlist.PresentBranch.ToBusReference];  //To Bus
+            pBus := DSS.ActiveCircuit.Buses[Branchlist.PresentBranch.GetToBusReference()];  //To Bus
 
-            if pBus.NumNodesThisBus = 1 then // Eliminate the lateral starting with this branch
+            if pBus.numNodesThisBus = 1 then // Eliminate the lateral starting with this branch
             begin
                 // If KeepLoad (ReduceLateralsKeepLoad), create a new Load object at upstream bus (from bus).
 

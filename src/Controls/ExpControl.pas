@@ -496,7 +496,7 @@ begin
                     if ShowEventLog then
                         AppendtoEventLog(Self.FullName + ',' + PVSys.Name,
                             Format(' curtailing %.3f to %.3f kW', [PVSys.PresentkW, Plimit]));
-                    PVSys.PresentkW := Plimit;
+                    PVSys.kWRequested := Plimit;
                     PVSys.puPmpp := Plimit / PVSys.Pmpp;
                 end;
             end;
@@ -513,8 +513,8 @@ begin
             DeltaQ := FTargetQ[i] - FLastIterQ[i];
             Qset := FLastIterQ[i] + DeltaQ * FdeltaQ_factor;
  //     Qset := FQbias * Qbase;
-            if PVSys.Presentkvar <> Qset then
-                PVSys.Presentkvar := Qset;
+            if PVSys.Presentkvar() <> Qset then
+                PVSys.kvarRequested := Qset;
             if ShowEventLog then
                 AppendtoEventLog(Self.FullName + ',' + PVSys.Name,
                     Format(' Setting PVSystem output kvar= %.5g',
@@ -719,7 +719,7 @@ begin
             FVregs[j] := VregMin;
         if FVregs[j] > VregMax then
             FVregs[j] := VregMax;
-        PVSys.Set_Variable(5, FVregs[j]);
+        PVSys.SetVariable(5, FVregs[j]);
         if ShowEventLog then
             AppendtoEventLog(Self.FullName + ',' + PVSys.Name,
                 Format(' Setting new Vreg= %.5g Vpu=%.5g Verr=%.5g',

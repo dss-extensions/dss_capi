@@ -53,6 +53,9 @@ type
         Pnominalperphase: Double;
         Qnominalperphase: Double;
 
+        kvarRequested: Double;
+        kWRequested: Double;
+
         ShapeFactor: Complex;
 
         DailyShapeObj: TLoadShapeObj;  // Daily Storage element Shape for this load
@@ -109,7 +112,7 @@ type
         function UsingCIMDynamics(): Boolean;
         function CheckAmpsLimit(): Boolean;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
-        function Get_Presentkvar: Double;
+        function Presentkvar(): Double; // Present kvar at inverter output
     end;
 
 implementation
@@ -150,6 +153,9 @@ begin
     DutyShapeObj := NIL;
 
     InverterCurveObj := NIL;
+
+    kvarRequested := 0;
+    kWRequested := 0;
 end;
 
 destructor TInvBasedPCE.Destroy;
@@ -236,7 +242,7 @@ begin
     end;
 end;
 
-function TInvBasedPCE.Get_Presentkvar: Double;
+function TInvBasedPCE.Presentkvar(): Double;
 begin
     Result := Qnominalperphase * 0.001 * Fnphases;
 end;

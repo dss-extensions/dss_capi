@@ -57,27 +57,27 @@ end;
 //------------------------------------------------------------------------------
 function Parser_Get_AutoIncrement(): TAPIBoolean; CDECL;
 begin
-    Result := DSSPrime.ComParser.AutoIncrement;
+    Result := DSSPrime.ComParser.autoIncrement;
 end;
 //------------------------------------------------------------------------------
 procedure Parser_Set_AutoIncrement(Value: TAPIBoolean); CDECL;
 begin
-    DSSPrime.ComParser.AutoIncrement := Value;
+    DSSPrime.ComParser.autoIncrement := Value;
 end;
 //------------------------------------------------------------------------------
 function Parser_Get_DblValue(): Double; CDECL;
 begin
-    Result := DSSPrime.ComParser.DblValue;
+    Result := DSSPrime.ComParser.MakeDouble();
 end;
 //------------------------------------------------------------------------------
 function Parser_Get_IntValue(): Integer; CDECL;
 begin
-    Result := DSSPrime.ComParser.IntValue;
+    Result := DSSPrime.ComParser.MakeInteger();
 end;
 //------------------------------------------------------------------------------
 function Parser_Get_StrValue(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ComParser.StrValue);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ComParser.MakeString());
 end;
 //------------------------------------------------------------------------------
 function Parser_Get_WhiteSpace(): PAnsiChar; CDECL;

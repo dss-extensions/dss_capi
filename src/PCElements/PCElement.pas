@@ -22,8 +22,6 @@ type
         FIterminalUpdated: Boolean;
     PROTECTED
         procedure GetTerminalCurrents(Curr: pComplexArray); VIRTUAL;
-        function Get_Variable(i: Integer): Double; VIRTUAL;
-        procedure Set_Variable(i: Integer; Value: Double); VIRTUAL;
         procedure CalcVTerminalPhase();
         procedure StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer); // This base version uses the Generator convention (the version in Load.pas negates Curr)
     PUBLIC
@@ -60,9 +58,8 @@ type
 
         function VariableName(i: Integer): String; VIRTUAL;
         function LookupVariable(const s: String; const matchLength: Boolean = false): Integer;
-
-        property Variable[i: Integer]: Double READ Get_Variable WRITE Set_Variable;
-
+        function GetVariable(i: Integer): Double; VIRTUAL;
+        procedure SetVariable(i: Integer; Value: Double); VIRTUAL;
         property ITerminalUpdated: Boolean READ FITerminalUpdated WRITE set_ITerminalUpdated;
     end;
 
@@ -252,7 +249,7 @@ begin
         FSWriteln(F, '! VARIABLES');
         for i := 1 to NumVariables do
         begin
-            FSWriteln(F, Format('! %2d: %s = %-.5g', [i, VariableName(i), Get_Variable(i)]));
+            FSWriteln(F, Format('! %2d: %s = %-.5g', [i, VariableName(i), GetVariable(i)]));
         end;
     end;
 
@@ -271,13 +268,13 @@ begin
     end;
 end;
 
-function TPCElement.Get_Variable(i: Integer): Double;
+function TPCElement.GetVariable(i: Integer): Double;
 begin
     // do Nothing here -- up to override function
     Result := -9999.99;
 end;
 
-procedure TPCElement.Set_Variable(i: Integer; Value: Double);
+procedure TPCElement.SetVariable(i: Integer; Value: Double);
 begin
     // Do Nothing
 end;

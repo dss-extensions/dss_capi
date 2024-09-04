@@ -104,8 +104,8 @@ type
         FHarm: pDoubleArray;  // single C per phase (line rating) if Cmatrix not specified
         FStates: pIntegerArray;
 
-        Ftotalkvar,
-        kvrating: Double;
+        totalkvar,
+        kVRating: Double;
         FNumSteps,
         FLastStepInService: Integer;
         Cmatrix: pDoubleArray;  // If not nil then overrides C
@@ -114,7 +114,6 @@ type
         Bus2Defined: Boolean;
 
         SpecType: Integer;
-        NumTerm: Integer;   // Flag used to indicate The number of terminals
 
         function get_States(Idx: Integer): Integer;
         procedure set_States(Idx: Integer; const Value: Integer);
@@ -131,6 +130,7 @@ type
 
     PUBLIC
         Connection: TCapacitorConnection;
+        NumTerm: Integer;   // Flag used to indicate The number of terminals
 
         constructor Create(ParClass: TDSSClass; const CapacitorName: String);
         destructor Destroy; OVERRIDE;
@@ -150,12 +150,7 @@ type
         procedure FindLastStepInService;
         property NumSteps: Integer READ FNumSteps WRITE set_NumSteps;
         property States[Idx: Integer]: Integer READ get_States WRITE set_States;
-        property Totalkvar: Double READ FTotalkvar;
-        property NomKV: Double READ kvrating;
         property LastStepInService: Integer READ FLastStepInService WRITE set_LastStepInService;
-
-        property NumTerminals: Integer READ NumTerm;   // Property to know if the capacitor has 2 terminals
-
     end;
 
 implementation
@@ -266,7 +261,7 @@ begin
     PropertyOffset[ord(TProp.bus2)] := 2;
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.kv)] := ptruint(@obj.kvrating);
+    PropertyOffset[ord(TProp.kv)] := ptruint(@obj.kVRating);
     PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
     // integer properties
@@ -392,7 +387,7 @@ begin
             if previousIntVal = 1 then
             begin
                 // Save total values to be divided up
-                FTotalkvar := Fkvarrating[1];
+                totalkvar := Fkvarrating[1];
                 Rstep := FR[1] * FNumSteps;
                 XLstep := FXL[1] * FNumSteps;
             end;
@@ -412,7 +407,7 @@ begin
 
                     1:
                     begin  // kvar        // We'll make a multi-step bank of same net size as at present
-                        StepSize := FTotalkvar / FNumSteps;
+                        StepSize := totalkvar / FNumSteps;
                         for i := 1 to FNumSteps do
                             FkvarRating[i] := StepSize;
                     end;
@@ -529,7 +524,7 @@ begin
         Fstates[i] := Other.Fstates[i];
     end;
 
-    kvrating := Other.kvrating;
+    kVRating := Other.kVRating;
     Connection := Other.Connection;
     SpecType := Other.SpecType;
 
@@ -577,13 +572,13 @@ begin
 
     Fstates[1] := 1;
 
-    kvrating := 12.47;
-    InitDblArray(FNumSteps, FC, 1.0 / (TwoPi * BaseFrequency * SQR(kvrating) * 1000.0 / Fkvarrating[1]));
+    kVRating := 12.47;
+    InitDblArray(FNumSteps, FC, 1.0 / (TwoPi * BaseFrequency * SQR(kVRating) * 1000.0 / Fkvarrating[1]));
 
     Connection := TCapacitorConnection.Wye;
     SpecType := 1; // 1=kvar, 2=Cuf, 3=Cmatrix
 
-    NormAmps := FkvarRating[1] * SQRT3 / kvrating * 1.35;   // 135%
+    NormAmps := FkvarRating[1] * SQRT3 / kVRating * 1.35;   // 135%
     EmergAmps := NormAmps * 1.8 / 1.35;   //180%
     FaultRate := 0.0005;
     PctPerm := 100.0;
@@ -617,7 +612,7 @@ var
     i: Integer;
 
 begin
-    Ftotalkvar := 0.0;
+    totalkvar := 0.0;
     PhasekV := 1.0;
     w := TwoPi * BaseFrequency;
     case SpecType of
@@ -641,7 +636,7 @@ begin
             for i := 1 to FNumSteps do
                 FC[i] := 1.0 / (w * SQR(PhasekV) * 1000.0 / (FkvarRating[1] / Fnphases));
             for i := 1 to FNumSteps do
-                Ftotalkvar := Ftotalkvar + FkvarRating[i];
+                totalkvar := totalkvar + FkvarRating[i];
         end;
         2:
         begin // Cuf
@@ -661,7 +656,7 @@ begin
                 end;
             end;
             for i := 1 to FNumSteps do
-                Ftotalkvar := Ftotalkvar + w * FC[i] * SQR(PhasekV) / 1000.0;
+                totalkvar := totalkvar + w * FC[i] * SQR(PhasekV) / 1000.0;
         end;
         3:
         begin // Cmatrix
@@ -681,7 +676,7 @@ begin
                 FR[i] := FXL[i] / 1000.0;
         end;
 
-    kvarPerPhase := Ftotalkvar / Fnphases;
+    kvarPerPhase := totalkvar / Fnphases;
 
     if not normAmpsSpecified then 
         NormAmps := kvarPerPhase / PhasekV * 1.35;

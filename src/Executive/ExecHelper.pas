@@ -211,7 +211,7 @@ begin
     ObjClass := '';
     ObjName := '';
     ParamName := AnsiLowerCase(DSS.Parser.NextParam);
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     if Length(ParamName) > 0 then
     begin   // IF specified, must be object or an abbreviation
         if ComparetextShortest(ParamName, 'object') <> 0 then
@@ -381,7 +381,7 @@ begin
 
     if (not gotTheFile) and (DSS.skipFileRegExp <> NIL) then
     begin
-        if DSS.skipFileRegExp.Exec(DSS.Parser.StrValue) then
+        if DSS.skipFileRegExp.Exec(DSS.Parser.MakeString()) then
         begin
             Exit;
         end;
@@ -389,15 +389,15 @@ begin
 
     if (not gotTheFile) and InZip then
     begin
-        if DSS.Parser.StrValue = '' then
+        if DSS.Parser.MakeString() = '' then
             exit;  // ignore altogether IF null filename
 
         try
-            Fstream := GetZipStream(DSS.Parser.StrValue);
+            Fstream := GetZipStream(DSS.Parser.MakeString());
         except
             on E: Exception do
             begin
-                DoSimpleMsg(DSS, 'Redirect File "%s" could not be read: %s', [DSS.Parser.StrValue, E.Message], 2202);
+                DoSimpleMsg(DSS, 'Redirect File "%s" could not be read: %s', [DSS.Parser.MakeString(), E.Message], 2202);
                 DSS.SolutionAbort := TRUE;
                 Exit;
             end;
@@ -407,7 +407,7 @@ begin
         strings := TStringList.Create;
         strings.LoadFromStream(Fstream);
         Fstream.Free;
-        ReDirFileExp := DSS.inZipPath + DSS.Parser.StrValue;
+        ReDirFileExp := DSS.inZipPath + DSS.Parser.MakeString();
         gotTheFile := TRUE;
         SaveDir := DSS.inZipPath;
     end
@@ -416,15 +416,15 @@ begin
     begin
         // Expanded path is required later as other Free Pascal functions 
         // may fail with relative paths
-        ReDirFileExp := ExpandFileName(DSS.Parser.StrValue);
+        ReDirFileExp := ExpandFileName(DSS.Parser.MakeString());
 
         // First check if we need to workaround the SetCurrentDir issues
         if (not DSS_CAPI_ALLOW_CHANGE_DIR) then
         begin
-            ReDirFileExp := ExpandFileName(AdjustInputFilePath(DSS, DSS.Parser.StrValue));
+            ReDirFileExp := ExpandFileName(AdjustInputFilePath(DSS, DSS.Parser.MakeString()));
         end;
 
-        DSS.ReDirFile := ReDirFileExp;// DSS.Parser.StrValue;
+        DSS.ReDirFile := ReDirFileExp;// DSS.Parser.MakeString();
         if DSS.ReDirFile = '' then
             exit;  // ignore altogether IF null filename
 
@@ -521,7 +521,7 @@ begin
                 AssignFile(Fin, DSS.ReDirFile);
                 Reset(Fin);
             except
-                DoSimpleMsg(DSS, 'Redirect file not found: "%s"', [DSS.Parser.StrValue], 242);
+                DoSimpleMsg(DSS, 'Redirect file not found: "%s"', [DSS.Parser.MakeString()], 242);
                 DSS.SolutionAbort := TRUE;
                 Exit;
             end;
@@ -531,7 +531,7 @@ begin
 
     if not gotTheFile then
     begin
-        DoSimpleMsg(DSS, 'Redirect file not found: "%s"', [DSS.Parser.StrValue], 243);
+        DoSimpleMsg(DSS, 'Redirect file not found: "%s"', [DSS.Parser.MakeString()], 243);
         DSS.SolutionAbort := TRUE;
         exit;  // Already had an extension, so just bail
     end;
@@ -720,9 +720,9 @@ begin
                         ActiveCktElement := DSS.ActiveDSSClass.GetActiveObj;
                    // Now check for active terminal designation
                         DSS.Parser.NextParam;
-                        Param := DSS.Parser.StrValue;
+                        Param := DSS.Parser.MakeString();
                         if Length(Param) > 0 then
-                            ActiveCktElement.ActiveTerminalIdx := DSS.Parser.Intvalue
+                            ActiveCktElement.ActiveTerminalIdx := DSS.Parser.MakeInteger()
                         else
                             ActiveCktElement.ActiveTerminalIdx := 1;  {default to 1}
                         with ActiveCktElement do
@@ -770,7 +770,7 @@ begin
     SaveFile := '';
     ParamPointer := 0;
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     while Length(Param) > 0 do
     begin
         if (Length(ParamName) = 0) then
@@ -780,17 +780,17 @@ begin
 
         case ParamPointer of
             1:
-                ObjClass := DSS.Parser.StrValue;
+                ObjClass := DSS.Parser.MakeString();
             2:
-                Savefile := DSS.Parser.StrValue;   // File name for saving  a class
+                Savefile := DSS.Parser.MakeString();   // File name for saving  a class
             3:
-                SaveDir := DSS.Parser.StrValue;
+                SaveDir := DSS.Parser.MakeString();
         else
 
         end;
 
         ParamName := DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
     end;
 
     DSS.InShowResults := TRUE;
@@ -1015,9 +1015,9 @@ var
     Param, OptName: String;
 begin
     DSS.Parser.NextParam;
-    Param := AnsiLowerCase(DSS.Parser.StrValue);
+    Param := AnsiLowerCase(DSS.Parser.MakeString());
     DSS.Parser.NextParam;
-    OptName := AnsiLowerCase(DSS.Parser.StrValue);
+    OptName := AnsiLowerCase(DSS.Parser.MakeString());
     
     if ANSIStartsStr('com', param) then
         ShowAnyHelp(DSS, DSS.DSSExecutive.ExecCommand, OptName, 'Command')
@@ -1218,7 +1218,7 @@ begin
 
  // Continue parsing command line - check for object name
     DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     if Length(Param) > 0 then
     begin
         if CompareText(Param, 'commands') = 0 then
@@ -1306,7 +1306,7 @@ begin
                 SingleObject := TRUE;
              // Check to see IF we want a debugdump on this object
                 DSS.Parser.NextParam;
-                Param2 := DSS.Parser.StrValue;
+                Param2 := DSS.Parser.MakeString();
                 if CompareText(Param2, 'debug') = 0 then
                     DebugDump := TRUE;
             // Set active Element to be value in Param
@@ -1470,9 +1470,9 @@ begin
     if retval > 0 then
     begin
         DSS.Parser.NextParam;
-        Terminal := DSS.Parser.IntValue;
+        Terminal := DSS.Parser.MakeInteger();
         DSS.Parser.NextParam;
-        Conductor := DSS.Parser.IntValue;
+        Conductor := DSS.Parser.MakeInteger();
 
         with DSS.ActiveCircuit do
         begin
@@ -1503,9 +1503,9 @@ begin
     if retval > 0 then
     begin
         DSS.Parser.NextParam;
-        Terminal := DSS.Parser.IntValue;
+        Terminal := DSS.Parser.MakeInteger();
         DSS.Parser.NextParam;
-        Conductor := DSS.Parser.IntValue;
+        Conductor := DSS.Parser.MakeInteger();
 
         with DSS.ActiveCircuit do
         begin
@@ -1539,7 +1539,7 @@ begin
     Result := 0;
     // Get next parm and try to interpret as a file name
     DSS.Parser.NextParam;
-    Param := AnsiUpperCase(DSS.Parser.StrValue);
+    Param := AnsiUpperCase(DSS.Parser.MakeString());
     if Length(Param) = 0 then
     begin
         DoResetMonitors;
@@ -1630,7 +1630,7 @@ begin
     Result := 0;
     // Get next parm and try to interpret as a file name
     DSS.Parser.NextParam;
-    Param := AnsiUpperCase(DSS.Parser.StrValue);
+    Param := AnsiUpperCase(DSS.Parser.MakeString());
 
     // Mark Capacitor and Reactor buses as Keep so we don't lose them
     MarkCapandReactorBuses;
@@ -1693,7 +1693,7 @@ begin
     Result := 0;
     // Get next parm and try to interpret as a file name
     DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
 
     if FileExists(Param) then
         FireOffEditor(DSS, Param)
@@ -1754,7 +1754,7 @@ var
 begin
     Result := 0;
     DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
 
     ParseObjName(Param, ObjName, PropName);
 
@@ -1799,7 +1799,7 @@ begin
 
     // Get next parm and try to interpret as a file name
     DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
 
     with DSS.ActiveCircuit.Solution do
         case UpCase(Param[1]) of
@@ -1961,10 +1961,10 @@ var
 begin
    // Parse off next two items on line
     ParamName := DSS.Parser.NextParam;
-    BusName := AnsiLowerCase(DSS.Parser.StrValue);
+    BusName := AnsiLowerCase(DSS.Parser.MakeString());
 
     ParamName := DSS.Parser.NextParam;
-    kVValue := DSS.Parser.DblValue;
+    kVValue := DSS.Parser.MakeDouble();
 
    // Now find the bus and set the value
 
@@ -2002,7 +2002,7 @@ begin
      // Load up auxiliary parser to reparse the array list or file name
     DSS.AuxParser.CmdString := S;
     ParmName := DSS.AuxParser.NextParam;
-    Param := DSS.AuxParser.StrValue;
+    Param := DSS.AuxParser.MakeString();
 
      // Syntax can be either a list of bus names or a file specification:  File= ...
 
@@ -2016,7 +2016,7 @@ begin
                 FSReadln(F, S2);
                 DSS.AuxParser.CmdString := S2;
                 ParmName := DSS.AuxParser.NextParam;
-                Param := DSS.AuxParser.StrValue;
+                Param := DSS.AuxParser.MakeString();
                 if Length(Param) > 0 then
                     DSS.ActiveCircuit.AutoAddBusList.Add(Param);
             end;
@@ -2034,7 +2034,7 @@ begin
         begin
             DSS.ActiveCircuit.AutoAddBusList.Add(Param);
             DSS.AuxParser.NextParam;
-            Param := DSS.AuxParser.StrValue;
+            Param := DSS.AuxParser.MakeString();
         end;
 
     end;
@@ -2052,7 +2052,7 @@ begin
      // Load up auxiliary parser to reparse the array list or file name
     DSS.AuxParser.CmdString := S;
     ParmName := DSS.AuxParser.NextParam;
-    Param := DSS.AuxParser.StrValue;
+    Param := DSS.AuxParser.MakeString();
 
      // Syntax can be either a list of bus names or a file specification:  File= ...
     if CompareText(Parmname, 'file') = 0 then
@@ -2065,7 +2065,7 @@ begin
                 FSReadln(F, S2);
                 DSS.AuxParser.CmdString := S2;
                 ParmName := DSS.AuxParser.NextParam;
-                Param := DSS.AuxParser.StrValue;
+                Param := DSS.AuxParser.MakeString();
                 if Length(Param) > 0 then
                     with DSS.ActiveCircuit do
                     begin
@@ -2096,7 +2096,7 @@ begin
             end;
 
             DSS.AuxParser.NextParam;
-            Param := DSS.AuxParser.StrValue;
+            Param := DSS.AuxParser.MakeString();
         end;
 
     end;
@@ -2152,7 +2152,7 @@ begin
     if DSS.ActiveCircuit <> NIL then
     begin
         DSS.Parser.NextParam;
-        CktElementName := DSS.Parser.StrValue;
+        CktElementName := DSS.Parser.MakeString();
 
         if Length(CktElementName) > 0 then
             SetObject(DSS, CktElementName);
@@ -2463,7 +2463,7 @@ begin
             begin
                 ActiveBus := Buses[ActiveBusIndex];
                 DSS.GlobalResult := '';
-                for i := 1 to ActiveBus.NumNodesThisBus do
+                for i := 1 to ActiveBus.numNodesThisBus do
                 begin
                     Volts := Solution.NodeV[ActiveBus.GetRef(i)];
                     Vmag := Cabs(Volts);
@@ -2503,9 +2503,9 @@ begin
                 if not assigned(ActiveBus.Zsc) then
                     Exit;
                 with ActiveBus do
-                    for i := 1 to NumNodesThisBus do
+                    for i := 1 to numNodesThisBus do
                     begin
-                        for j := 1 to NumNodesThisBus do
+                        for j := 1 to numNodesThisBus do
                         begin
                             if ZMatrix then
                                 Z := Zsc[i, j]
@@ -2550,7 +2550,7 @@ begin
     if not assigned(ActiveBus.Zsc) then
         Exit;
 
-    if ActiveBus.NumNodesThisBus <> 3 then
+    if ActiveBus.numNodesThisBus <> 3 then
     begin
         DSS.GlobalResult := 'Not a 3-phase bus. Cannot compute Symmetrical Component matrix.';
         Exit;
@@ -2594,10 +2594,10 @@ begin
                     Exit;
                 with ActiveBus do
                 begin
-                    Z := Zsc1;
+                    Z := GetZsc1();
                     DSS.GlobalResult := DSS.GlobalResult + Format('Z1, %-.5g, %-.5g, ', [Z.re, Z.im]) + CRLF;
 
-                    Z := Zsc0;
+                    Z := GetZsc0();
                     DSS.GlobalResult := DSS.GlobalResult + Format('Z0, %-.5g, %-.5g, ', [Z.re, Z.im]);
                 end;
 
@@ -2768,7 +2768,7 @@ begin
 
     ParamPointer := 0;
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     while Length(Param) > 0 do
     begin
         if Length(ParamName) = 0 then
@@ -2787,16 +2787,16 @@ begin
             0:
                 DoSimpleMsg(DSS, 'Unknown parameter "%s" for Capacity Command', [ParamName], 273);
             1:
-                DSS.ActiveCircuit.CapacityStart := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.CapacityStart := DSS.Parser.MakeDouble();
             2:
-                DSS.ActiveCircuit.CapacityIncrement := DSS.Parser.DblValue;
+                DSS.ActiveCircuit.CapacityIncrement := DSS.Parser.MakeDouble();
 
         else
 
         end;
 
         ParamName := DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
     end;
 
     with DSS.ActiveCircuit do
@@ -2875,7 +2875,7 @@ begin
                     with ActiveCktElement as TPCElement do
                     begin
                         for i := 1 to NumVariables do
-                            AppendGlobalResult(DSS, Format('%-.6g', [Variable[i]]));
+                            AppendGlobalResult(DSS, Format('%-.6g', [GetVariable(i)]));
                     end;
             else
                 AppendGlobalResult(DSS, 'Null');
@@ -2907,7 +2907,7 @@ begin
         // Get next parameter on command line
 
         ParamName := AnsiUpperCase(DSS.Parser.NextParam);
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
 
         PropIndex := 1;
         if Length(ParamName) > 0 then
@@ -2924,12 +2924,12 @@ begin
             1:
                 VarIndex := PCElem.LookupVariable(Param);  // Look up property index
             2:
-                VarIndex := DSS.Parser.IntValue;
+                VarIndex := DSS.Parser.MakeInteger();
         end;
 
         if (VarIndex > 0) and (VarIndex <= PCElem.NumVariables) then
 
-            DSS.GlobalResult := Format('%.8g', [PCElem.Variable[VarIndex]])
+            DSS.GlobalResult := Format('%.8g', [PCElem.GetVariable(VarIndex)])
 
         else
             DSS.GlobalResult := '';   {Invalid var name or index}
@@ -2982,7 +2982,7 @@ begin
     // Get next parameter on command line
 
     DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
 
     try
         iLine := -1;
@@ -2999,7 +2999,7 @@ begin
                 begin      // User Auxparser to parse line
                     CmdString := strings[stringIdx];
                     NextParam;
-                    BusName := StrValue;
+                    BusName := MakeString();
                     iB := DSS.ActiveCircuit.Buslist.Find(BusName);
                     if iB > 0 then
                     begin
@@ -3007,14 +3007,14 @@ begin
                         begin     // Returns TBus object
                             NextParam;
                             if SwapXY then
-                                y := DblValue
+                                y := MakeDouble()
                             else
-                                x := DblValue;
+                                x := MakeDouble();
                             NextParam;
                             if SwapXY then
-                                x := DblValue
+                                x := MakeDouble()
                             else
-                                y := DblValue;
+                                y := MakeDouble();
                             CoordDefined := TRUE;
                         end;
                     end;
@@ -3071,7 +3071,7 @@ begin
     if Length(S) = 0 then
         Exit;  {No option given}
 
-    DSS.AuxParser.CmdString := DSS.Parser.Remainder;  // so we don't mess up Set Command
+    DSS.AuxParser.CmdString := DSS.Parser.Remainder();  // so we don't mess up Set Command
 
     case AnsiUpperCase(S)[1] of
 
@@ -3091,7 +3091,7 @@ begin
        'T': Begin          removed 2-28-2018
               DSS.ActiveCircuit.ReductionStrategy := rsTapEnds;
               DSS.ActiveCircuit.ReductionMaxAngle := 15.0;  {default}
-              If Length(param2) > 0 Then  DSS.ActiveCircuit.ReductionMaxAngle := DSS.AuxParser.DblValue;
+              If Length(param2) > 0 Then  DSS.ActiveCircuit.ReductionMaxAngle := DSS.AuxParser.MakeDouble();
             End;
             *)
         'S':
@@ -3126,7 +3126,7 @@ begin
     Result := 0;
 
     DSS.Parser.NextParam;
-    Param := AnsiUpperCase(DSS.Parser.StrValue);
+    Param := AnsiUpperCase(DSS.Parser.MakeString());
 
     // initialize the Checked Flag FOR all circuit Elements
     with DSS.ActiveCircuit do
@@ -3223,7 +3223,7 @@ begin
             FieldNum := 0;
             repeat
                 DSS.AuxParser.NextParam;
-                Field := DSS.AuxParser.StrValue;
+                Field := DSS.AuxParser.MakeString();
                 FieldLen := Length(Field);
                 if pos(' ', Field) > 0 then
                     FieldLen := FieldLen + 2;
@@ -3255,7 +3255,7 @@ begin
             FieldNum := 0;
             repeat
                 DSS.AuxParser.NextParam;
-                Field := DSS.AuxParser.StrValue;
+                Field := DSS.AuxParser.MakeString();
                 if pos(' ', Field) > 0 then
                     Field := '"' + Field + '"';  // add quotes if a space in field
                 FieldLen := Length(Field);
@@ -3291,7 +3291,7 @@ var
 begin
     Result := 0;
     DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
 
 
     if FileExists(Param) then
@@ -3338,7 +3338,7 @@ begin
     if DSS.ActiveCircuit <> NIL then
     begin
         DSS.Parser.NextParam;
-        Angle := DSS.Parser.DblValue * PI / 180.0;   // Deg to rad
+        Angle := DSS.Parser.MakeDouble() * PI / 180.0;   // Deg to rad
 
         a := cmplx(cos(Angle), Sin(Angle));
         with DSS.ActiveCircuit do
@@ -3404,21 +3404,21 @@ begin
                     FSReadln(Fin, Line);
                     DSS.AuxParser.CmdString := Line;
                     DSS.AuxParser.NextParam;
-                    BusName := DSS.AuxParser.StrValue;
+                    BusName := DSS.AuxParser.MakeString();
                     if Length(BusName) > 0 then
                     begin
                         BusIndex := DSS.ActiveCircuit.BusList.Find(BusName);
                         if BusIndex > 0 then
                         begin
                             DSS.AuxParser.Nextparam;
-                            node := DSS.AuxParser.Intvalue;
+                            node := DSS.AuxParser.MakeInteger();
                             with DSS.ActiveCircuit.Buses[BusIndex] do
-                                for i := 1 to NumNodesThisBus do
+                                for i := 1 to numNodesThisBus do
                                 begin
                                     if GetNum(i) = node then
                                     begin
                                         DSS.AuxParser.Nextparam;
-                                        Vmag := DSS.AuxParser.Dblvalue;
+                                        Vmag := DSS.AuxParser.MakeDouble();
                                         Diff := Cabs(DSS.ActiveCircuit.Solution.NodeV[GetRef(i)]) - Vmag;
                                         if Vmag <> 0.0 then
                                         begin
@@ -3785,7 +3785,7 @@ begin
     DoGenerators := TRUE;
 
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     while Length(Param) > 0 do
     begin
         if (Length(ParamName) = 0) then
@@ -3795,17 +3795,17 @@ begin
 
         case ParamPointer of
             1:
-                kW := DSS.Parser.DblValue;
+                kW := DSS.Parser.MakeDouble();
             2:
-                How := DSS.Parser.StrValue;
+                How := DSS.Parser.MakeString();
             3:
-                Skip := DSS.Parser.IntValue;
+                Skip := DSS.Parser.MakeInteger();
             4:
-                PF := DSS.Parser.DblValue;
+                PF := DSS.Parser.MakeDouble();
             5:
-                FilName := DSS.Parser.StrValue;
+                FilName := DSS.Parser.MakeString();
             6:
-                kW := DSS.Parser.DblValue * 1000.0;
+                kW := DSS.Parser.MakeDouble() * 1000.0;
             7:
                 if (AnsiUpperCase(Param)[1] = 'L') then
                     DoGenerators := FALSE
@@ -3817,7 +3817,7 @@ begin
         end;
 
         ParamName := DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
     end;
 
     if not DoGenerators then
@@ -3856,7 +3856,7 @@ begin
 
     ParamPointer := 0;
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     while Length(Param) > 0 do
     begin
         if (Length(ParamName) = 0) then
@@ -3868,7 +3868,7 @@ begin
             1:
                 CaseName := Param;
             2:
-                CaseYear := DSS.Parser.Intvalue;
+                CaseYear := DSS.Parser.MakeInteger();
             3:
             begin
                 NumRegs := DSS.Parser.ParseAsVector(NumEMREgisters, pDoubleArray(@dRegisters));
@@ -3886,7 +3886,7 @@ begin
         end;
 
         ParamName := DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
     end;
 
     try
@@ -3937,7 +3937,7 @@ begin
 
     ParamPointer := 0;
     ParamName := AnsiUpperCase(DSS.Parser.NextParam);
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     while Length(Param) > 0 do
     begin
         Unknown := FALSE;
@@ -3969,7 +3969,7 @@ begin
                 2:
                     CaseName2 := Param;
                 3:
-                    Reg := DSS.Parser.IntValue;
+                    Reg := DSS.Parser.MakeInteger();
                 4:
                     WhichFile := Param;
             else
@@ -3977,7 +3977,7 @@ begin
             end;
 
         ParamName := AnsiUpperCase(DSS.Parser.NextParam);
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
     end;
 
     try
@@ -4027,7 +4027,7 @@ begin
 
     ParamPointer := 0;
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     while Length(Param) > 0 do
     begin
         Unknown := FALSE;
@@ -4052,12 +4052,12 @@ begin
                 begin  // List of case names
                     DSS.AuxParser.CmdString := Param;
                     DSS.AuxParser.NextParam;
-                    Param := DSS.AuxParser.StrValue;
+                    Param := DSS.AuxParser.MakeString();
                     while Length(Param) > 0 do
                     begin
                         jsonCaseNames.Add(Param);
                         DSS.AuxParser.NextParam;
-                        Param := DSS.AuxParser.StrValue;
+                        Param := DSS.AuxParser.MakeString();
                     end;
                 end;
                 2:
@@ -4074,7 +4074,7 @@ begin
             end;
 
         ParamName := DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
     end;
 
     try
@@ -4134,7 +4134,7 @@ begin
     // Parse rest of command line
     ParamPointer := 0;
     ParamName := AnsiUpperCase(DSS.Parser.NextParam);
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     while Length(Param) > 0 do
     begin
         Unknown := FALSE;
@@ -4167,7 +4167,7 @@ begin
             // ignore unnamed and extra parms
             end;
         ParamName := AnsiUpperCase(DSS.Parser.NextParam);
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
     end;
     // --------------------------------------------------------------
     Devindex := GetCktElementIndex(DSS, ElemName); // Global function
@@ -4215,7 +4215,7 @@ function TExecHelper.DoADOScmd: Integer;
 
 begin
     Result := 0;
-    DoDOScmd(DSS, DSS.Parser.Remainder);
+    DoDOScmd(DSS, DSS.Parser.Remainder());
 end;
 
 function TExecHelper.DoEstimateCmd: Integer;
@@ -4278,7 +4278,7 @@ begin
     MyEditString := '';
     NPhases := 0; // no filtering by number of phases
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     while Length(Param) > 0 do
     begin
         if Length(ParamName) = 0 then
@@ -4306,13 +4306,13 @@ begin
             5:
                 MyEditString := Param;
             6:
-                Nphases := DSS.Parser.IntValue;
+                Nphases := DSS.Parser.MakeInteger();
         else
             DoSimpleMsg(DSS, 'Error: Unknown Parameter on command line: %s', [Param], 28701);
         end;
 
         ParamName := DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
     end;
 
      {Check for Errors}
@@ -4402,7 +4402,7 @@ begin
     DSS.ActiveCircuit.BusMarkerList.Add(BusMarker);
 
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     while Length(Param) > 0 do
     begin
         if (Length(ParamName) = 0) then
@@ -4415,18 +4415,18 @@ begin
                 1:
                     BusName := Param;
                 2:
-                    AddMarkerCode := DSS.Parser.IntValue;
+                    AddMarkerCode := DSS.Parser.MakeInteger();
                 3:
                     AddMarkerColor := InterpretColorName(DSS, Param);
                 4:
-                    AddMarkerSize := DSS.Parser.IntValue;
+                    AddMarkerSize := DSS.Parser.MakeInteger();
 
             else
              // ignore unnamed and extra parms
             end;
 
         ParamName := DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
     end;
 end;
 
@@ -4463,9 +4463,9 @@ begin
         pBus := DSS.ActiveCircuit.Buses[iBus];
         kvln := pBus.kVBase;
         if (pGen.Connection = TGeneralConnection.Delta) or (pGen.NPhases > 1) then
-            pGen.PresentKV := kvln * sqrt(3.0)
+            pGen.SetPresentKV(kvln * sqrt(3.0))
         else
-            pGen.PresentKV := kvln;
+            pGen.SetPresentKV(kvln);
         pGen.RecalcElementData;
     end;
 end;
@@ -4480,7 +4480,7 @@ begin
     DSS.CIMExporter.StartUuidList(DSS.ActiveCircuit.NumBuses + 2 * DSS.ActiveCircuit.NumDevices);
     Result := 0;
     DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     if not FileExists(Param) then
     begin
         DoSimpleMsg(DSS, 'UUIDs file: %s does not exist', [Param], 242);
@@ -4497,9 +4497,9 @@ begin
                 pName := NIL;
                 CmdString := S;
                 NextParam;
-                NameVal := StrValue;
+                NameVal := MakeString();
                 NextParam;
-                UuidVal := StrValue;
+                UuidVal := MakeString();
         // format the UUID properly
                 if Pos('{', UuidVal) < 1 then
                     UuidVal := '{' + UuidVal + '}';
@@ -4554,7 +4554,7 @@ var
 
 begin
     DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
 
     if length(param) = 0 then
         Param := 's';
@@ -4603,13 +4603,13 @@ var
 begin
     Result := 0;
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     sNode1 := Param;
     if Pos('2', ParamName) > 0 then
         sNode2 := Param;
 
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     sNode2 := Param;
     if Pos('1', ParamName) > 0 then
         sNode1 := Param;
@@ -4671,7 +4671,7 @@ begin
     TransfStop := TRUE;  // Stop at Transformers
 
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     while Length(Param) > 0 do
     begin
         if Length(ParamName) = 0 then
@@ -4695,7 +4695,7 @@ begin
         end;
 
         ParamName := DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
     end;
 
     LineClass := DSS.DSSClassList.Get(DSS.ClassNames.Find('Line'));
@@ -4735,7 +4735,7 @@ var
 begin
     Result := 0;
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     ParamPointer := 0;
     Xval := 0.0;
     Yval := 0.0;
@@ -4750,9 +4750,9 @@ begin
             1:
                 BusName := Param;
             2:
-                Xval := DSS.Parser.DblValue;
+                Xval := DSS.Parser.MakeDouble();
             3:
-                Yval := DSS.Parser.DblValue;
+                Yval := DSS.Parser.MakeDouble();
         else
             DoSimpleMsg(DSS, 'Error: Unknown Parameter on command line: %s', [Param], 28721);
         end;
@@ -4773,7 +4773,7 @@ begin
         end;
 
         ParamName := DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
     end;
 end;
 
@@ -4808,7 +4808,7 @@ begin
     Freq := DSS.DefaultBaseFreq;
 
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
     ParamPointer := 0;
     while Length(Param) > 0 do
     begin
@@ -4820,23 +4820,23 @@ begin
         case ParamPointer of
             1:
             begin
-                Npts := DSS.Parser.IntValue;
+                Npts := DSS.Parser.MakeInteger();
                 SetLength(Varray, Npts);
             end;
             2:
                 Npts := InterpretDblArray(DSS, Param, Npts, PDoubleArray(@Varray[0]));
             3:
-                CyclesPerSample := Round(DSS.ActiveCircuit.Solution.Frequency * DSS.Parser.dblvalue);
+                CyclesPerSample := Round(DSS.ActiveCircuit.Solution.Frequency * DSS.Parser.MakeDouble());
             4:
-                Freq := DSS.Parser.DblValue;
+                Freq := DSS.Parser.MakeDouble();
             5:
-                Lamp := DSS.Parser.IntValue;
+                Lamp := DSS.Parser.MakeInteger();
         else
             DoSimpleMsg(DSS, 'Error: Unknown Parameter on command line: %s', [Param], 28722);
         end;
 
         ParamName := DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
     end;
 
     if Npts > 10 then
@@ -4871,7 +4871,7 @@ begin
     end;
 
     DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
 
     if Length(Param) > 0 then
         Assumerestoration := InterpretYesNo(param)
@@ -4905,19 +4905,19 @@ begin
     Result := 0;
 
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
 
     if Length(Param) = 0 then  // show all vars
     begin
           // MsgStrings := TStringList.Create;
           // MsgStrings.Add('Variable, Value');
           // for iVar := 1 to DSS.ParserVars.NumVariables  do
-          //     MsgStrings.Add(DSS.ParserVars.VarString[iVar] );
+          //     MsgStrings.Add(DSS.ParserVars.GetVarString(iVar) );
           // ShowMessageForm(MsgStrings);
           // MsgStrings.Free;
         Str := _('Variable, Value') + CRLF;
         for iVar := 1 to DSS.ParserVars.NumVariables do
-            Str := Str + DSS.ParserVars.VarString[iVar] + CRLF;
+            Str := Str + DSS.ParserVars.GetVarString(iVar) + CRLF;
 
         DSS.GlobalResult := Str;
     end
@@ -4938,7 +4938,7 @@ begin
                 Exit;
             end;
             ParamName := DSS.Parser.NextParam;
-            Param := DSS.Parser.StrValue;
+            Param := DSS.Parser.MakeString();
         end;
 
     end;
@@ -4973,7 +4973,7 @@ begin
     ParamPointer := 0;
 
     ParamName := DSS.Parser.NextParam;
-    Param := DSS.Parser.StrValue;
+    Param := DSS.Parser.MakeString();
 
     while Length(Param) > 0 do
     begin
@@ -4992,7 +4992,7 @@ begin
         end;
 
         ParamName := DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
     end;
 
     // Check for existence of FelementName

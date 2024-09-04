@@ -110,8 +110,8 @@ type
         procedure UpdateSequenceVoltage;
 
     PROTECTED
-        function Get_Variable(i: Integer): Double; OVERRIDE;
-        procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
+        function GetVariable(i: Integer): Double; OVERRIDE;
+        procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
     PUBLIC
         Ppct, Prated, Vrated: Double;
         constructor Create(ParClass: TDSSClass; const SourceName: String);
@@ -775,7 +775,7 @@ var
     i: Integer;
 begin
     for i := 1 to 6 do
-        States[i - 1] := Variable[i];  // property maps to Get_Variable below
+        States[i - 1] := GetVariable(i);  // property maps to GetVariable below
 end;
 
 function TVCCSObj.VariableName(i: Integer): String;
@@ -817,7 +817,7 @@ begin
     end;
 end;
 
-function TVCCSObj.Get_Variable(i: Integer): Double;
+function TVCCSObj.GetVariable(i: Integer): Double;
 begin
     Result := 0;
     case i of
@@ -836,7 +836,7 @@ begin
     end;
 end;
 
-procedure TVCCSObj.Set_Variable(i: Integer; Value: Double);
+procedure TVCCSObj.SetVariable(i: Integer; Value: Double);
 begin
     case i of
         1:

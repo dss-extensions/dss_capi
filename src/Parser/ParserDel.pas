@@ -24,9 +24,6 @@ type
 
         VarNames: THashList;
         VarValues: pStringArray;
-        function get_value: String;
-        procedure set_value(const Value: String);
-        function Get_VarString(Idx: Cardinal): String;
     PUBLIC
         NumVariables: Cardinal;
 
@@ -35,9 +32,8 @@ type
 
         function Add(const VarName, VarValue: String): Integer;      // returns number of variables
         function Lookup(const VarName: String): Integer;                  // returns index or 0
-        property Value: String READ get_value WRITE set_value;
-        property VarString[Idx: Cardinal]: String READ Get_VarString;
-
+        function Value(): String;
+        function GetVarString(Idx: Cardinal): String;
     end;
 
     TDSSParser = class(TObject)
@@ -46,20 +42,15 @@ type
         CmdBuffer: String;
         FPosition: Integer;
         ParameterBuffer: String;
-        TokenBuffer: String;
         DelimChars: String;
         WhiteSpaceChars: String;
         FBeginQuoteChars, FEndQuoteChars: String;
         LastDelimiter: Char;
         MatrixRowTerminator: Char;
-        FAutoIncrement: Boolean;
         ConvertError: Boolean;
         IsQuotedString: Boolean;
         RPNCalculator: TRPNCalc;
-        function Get_Remainder: String;
         procedure SetCmdString(const Value: String);
-        function MakeString: String;
-        function MakeInteger: Integer;
         procedure SkipWhiteSpace(const LineBuffer: String; var LinePos: Integer);
         function IsWhiteSpace(ch: Char): Boolean;
         function IsDelimiter(const LineBuffer: String; var LinePos: Integer): Boolean;
@@ -69,16 +60,17 @@ type
         function InterpretRPNString(var Code: Integer; requiredRPN: PBoolean = NIL): Double;
     PUBLIC
         DSSCtx: TObject;
-        function MakeDouble(requiredRPN: PBoolean): Double; overload;
-        function MakeDouble(): Double; overload;
+        tokenBuffer: String;
+        autoIncrement: Boolean;
 
         constructor Create(dssContext: TObject);
         destructor Destroy; OVERRIDE;
-        property DblValue: Double READ MakeDouble;
-        property IntValue: Integer READ MakeInteger;
-        property StrValue: String READ MakeString;
-        property Token: String READ TokenBuffer WRITE TokenBuffer;
-        property Remainder: String READ Get_Remainder;
+
+        function MakeDouble(requiredRPN: PBoolean): Double; overload;
+        function MakeDouble(): Double; overload;
+        function MakeString(): String;
+        function MakeInteger(): Integer;
+        function Remainder(): String;
         function NextParam(): String;
         function ParseAsBusName(Param: String; var NumNodes: Integer; NodeArray: pIntegerArray): String;//TODO: make it a separate function
         function ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray; DoRound: Boolean=False): Integer;
@@ -89,7 +81,7 @@ type
 
         function ParseAsSymMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray; Stride: Integer = 1; Scale: Double = 1): Integer;
         function ParseAsSymMatrix(var MatrixBuffer: ArrayOfDouble; Stride: Integer = 1; Scale: Double = 1): Integer;
-        procedure ResetDelims;   // resets delimiters to default
+        procedure ResetDelims();   // resets delimiters to default
         function CheckforVar(var TokenBuffer_: String): Boolean;
         procedure SetVars(vars: TParserVar);
 
@@ -99,7 +91,6 @@ type
         property Whitespace: String READ WhiteSpaceChars WRITE WhiteSpaceChars;
         property BeginQuoteChars: String READ FBeginQuoteChars WRITE FBeginQuoteChars;
         property EndQuoteChars: String READ FEndQuoteChars WRITE FEndQuoteChars;
-        property AutoIncrement: Boolean READ FAutoIncrement WRITE FAutoIncrement;
     end;
 
 implementation
@@ -115,7 +106,7 @@ const
     VariableDelimiter = '@';  // first character of a variable
 
 
-procedure ProcessRPNCommand(const TokenBuffer: String; RPN: TRPNCalc);
+procedure ProcessRPNCommand(const tokenBuffer: String; RPN: TRPNCalc);
 var
     S: String;
     Number: Double;
@@ -123,7 +114,7 @@ var
 begin
     // First Try to make a valid number. If that fails, check for RPN command
 
-    Val(TokenBuffer, Number, ErrorCode);
+    Val(tokenBuffer, Number, ErrorCode);
     if ErrorCode = 0 then
     begin
         RPN.X := Number;  // Enters number in X register
@@ -131,7 +122,7 @@ begin
     end;
 
     // Check for RPN command.
-    S := AnsiLowerCase(TokenBuffer);
+    S := AnsiLowerCase(tokenBuffer);
     if CompareStr(S, '+') = 0 then
         RPN.Add()
     else
@@ -199,7 +190,7 @@ begin
         RPN.inv()
     else
     begin
-        raise EParserProblem.Create('Invalid inline math entry: "' + TokenBuffer + '"');
+        raise EParserProblem.Create('Invalid inline math entry: "' + tokenBuffer + '"');
         // Result := 1;  // error -- REMOVED: never reached
     end;
 end;
@@ -271,7 +262,7 @@ begin
     FEndQuoteChars := ')"'']}';
     FPosition := 1;
     MatrixRowTerminator := '|';
-    FAutoIncrement := FALSE;
+    autoIncrement := FALSE;
     RPNCalculator := TRPNCalc.Create;
 end;
 
@@ -289,7 +280,7 @@ begin
     SkipWhiteSpace(CmdBuffer, FPosition);   // position at first non whitespace character
 end;
 
-procedure TDSSParser.ResetDelims;
+procedure TDSSParser.ResetDelims();
 begin
     DelimChars := ',=';
     WhiteSpaceChars := ' ' + #9;
@@ -390,7 +381,7 @@ var
             Inc(LinePos);  // Increment past endchar
     end;
 
-    procedure ParseToEndQuote;
+    procedure ParseToEndQuote();
     begin
         ParseToEndChar(FEndQuoteChars[QuoteIndex]);
         IsQuotedString := TRUE;
@@ -448,11 +439,11 @@ begin
     if FPosition <= Length(CmdBuffer) then
     begin
         LastDelimiter := ' ';
-        TokenBuffer := GetToken(CmdBuffer, FPosition); // Get entire token and put in token Buffer
+        tokenBuffer := GetToken(CmdBuffer, FPosition); // Get entire token and put in token Buffer
         if (LastDelimiter = '=') then
         begin
             Parameterbuffer := tokenBuffer;     // put first token in Parameterbuffer
-            TokenBuffer := Gettoken(CmdBuffer, FPosition);   // get token value after the =
+            tokenBuffer := Gettoken(CmdBuffer, FPosition);   // get token value after the =
         end
         else
         begin
@@ -462,47 +453,47 @@ begin
     else
     begin    // return null strings if none left
         ParameterBuffer := '';
-        TokenBuffer := '';
+        tokenBuffer := '';
     end;
 
-    CheckForVar(TokenBuffer);
+    CheckForVar(tokenBuffer);
 
     Result := ParameterBuffer;
 end;
 
 function TDSSParser.ParseAsBusName(Param: String; var NumNodes: Integer; NodeArray: pIntegerArray): String;
-// Looking for "BusName.1.2.3" in the TokenBuffer
+// Looking for "BusName.1.2.3" in the tokenBuffer
 // Assumes NodeArray is big enough to hold the numbers
 var
     DotPos, NodeBufferPos: Integer;
     NodeBuffer, DelimSave, TokenSave: String;
 begin
-    TokenBuffer := Param;
-    if FAutoIncrement then
+    tokenBuffer := Param;
+    if autoIncrement then
         NextParam();
     NumNodes := 0;
-    DotPos := Pos('.', TokenBuffer);
+    DotPos := Pos('.', tokenBuffer);
     if DotPos = 0 then
-        Result := TokenBuffer
+        Result := tokenBuffer
     else
     begin
-        Result := Trim(Copy(TokenBuffer, 1, DotPos - 1)); // Bus Name
-        TokenSave := TokenBuffer;
+        Result := Trim(Copy(tokenBuffer, 1, DotPos - 1)); // Bus Name
+        TokenSave := tokenBuffer;
         // now Get nodes
         NodeBuffer := Copy(tokenBuffer, DotPos + 1, Length(tokenBuffer) - DotPos) + ' ';
 
         NodeBufferPos := 1;
         DelimSave := DelimChars;
         DelimChars := '.';
-        TokenBuffer := GetToken(NodeBuffer, NodeBufferPos);
+        tokenBuffer := GetToken(NodeBuffer, NodeBufferPos);
         try
-            while Length(TokenBuffer) > 0 do
+            while Length(tokenBuffer) > 0 do
             begin
                 inc(NumNodes);
                 NodeArray[NumNodes] := MakeInteger;
                 if ConvertError then
                     NodeArray[NumNodes] := -1;  // Indicate an error
-                TokenBuffer := GetToken(NodeBuffer, NodeBufferPos);
+                tokenBuffer := GetToken(NodeBuffer, NodeBufferPos);
             end;
         except
             On E: Exception do
@@ -510,7 +501,7 @@ begin
         end;
 
         DelimChars := DelimSave;   //restore to original delimiters
-        TokenBuffer := TokenSave;
+        tokenBuffer := TokenSave;
     end;
 end;
 
@@ -524,7 +515,7 @@ var
     ParseBufferPos, NumElements, i: Integer;
     ParseBuffer, DelimSave: String;
 begin
-    if FAutoIncrement then
+    if autoIncrement then
         NextParam();
 
     NumElements := 0;
@@ -534,16 +525,16 @@ begin
             VectorBuffer[i] := 0.0;
 
         // now Get Vector values
-        ParseBuffer := TokenBuffer + ' ';
+        ParseBuffer := tokenBuffer + ' ';
 
         ParseBufferPos := 1;
         DelimSave := DelimChars;
         DelimChars := DelimChars + MatrixRowTerminator;
 
         SkipWhiteSpace(ParseBuffer, ParseBufferPos);
-        TokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
-        CheckForVar(TokenBuffer);
-        while Length(TokenBuffer) > 0 do
+        tokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
+        CheckForVar(tokenBuffer);
+        while Length(tokenBuffer) > 0 do
         begin
             inc(NumElements);
             if NumElements <= ExpectedSize then
@@ -551,8 +542,8 @@ begin
             //TODO: warn about extra elements
             if LastDelimiter = MatrixRowTerminator then
                 BREAK;
-            TokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
-            CheckForVar(TokenBuffer);
+            tokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
+            CheckForVar(tokenBuffer);
         end;
 
         Result := NumElements;
@@ -563,7 +554,7 @@ begin
     end;
 
     DelimChars := DelimSave;   //restore to original delimiters
-    TokenBuffer := copy(ParseBuffer, ParseBufferPos, Length(ParseBuffer));  // prepare for next trip
+    tokenBuffer := copy(ParseBuffer, ParseBufferPos, Length(ParseBuffer));  // prepare for next trip
     if DoRound then
         for i := 1 to Math.Min(NumElements, ExpectedSize) do
             VectorBuffer[i] := Round(VectorBuffer[i]);
@@ -575,7 +566,7 @@ var
     RowBuf: pDoubleArray;
 begin
     Result := 0;
-    if FAutoIncrement then
+    if autoIncrement then
         NextParam();
 
     RowBuf := Allocmem(Sizeof(Double) * ExpectedOrder);
@@ -620,7 +611,7 @@ var
     RowBuf: pDoubleArray;
 begin
     Result := 0;
-    if FAutoIncrement then
+    if autoIncrement then
         NextParam();
 
     RowBuf := Allocmem(Sizeof(Double) * ExpectedOrder);
@@ -662,25 +653,25 @@ begin
     end;
 end;
 
-function TDSSParser.MakeString: String;
+function TDSSParser.MakeString(): String;
 begin
-    if FAutoIncrement then
+    if autoIncrement then
         NextParam();
 
-    Result := TokenBuffer;
+    Result := tokenBuffer;
 end;
 
-function TDSSParser.MakeInteger: Integer;
+function TDSSParser.MakeInteger(): Integer;
  // Hex integers must be preceeded by "$"
 var
     Code: Integer;
     Temp: Double;
 begin
     ConvertError := FALSE;
-    if FAutoIncrement then
+    if autoIncrement then
         NextParam();
 
-    if Length(TokenBuffer) = 0 then
+    if Length(tokenBuffer) = 0 then
     begin
         Result := 0;
     end
@@ -692,17 +683,17 @@ begin
             Result := Round(Temp);
         end
         else
-            Val(TokenBuffer, Result, Code);  // Try direct conversion to integer
+            Val(tokenBuffer, Result, Code);  // Try direct conversion to integer
 
         if Code <> 0 then
         begin // on error for integer conversion
              // Try again with an double result in case value specified in decimal or some other technique
-            Val(Tokenbuffer, Temp, Code);
+            Val(tokenBuffer, Temp, Code);
             if Code <> 0 then
             begin
                // not needed with Raise ...  Result := 0;
                 ConvertError := TRUE;
-                raise EParserProblem.Create(Format('Integer number conversion error for string: "%s"', [TokenBuffer]));
+                raise EParserProblem.Create(Format('Integer number conversion error for string: "%s"', [tokenBuffer]));
             end
             else
                 Result := Round(Temp);
@@ -719,10 +710,10 @@ function TDSSParser.MakeDouble(requiredRPN: PBoolean): Double; overload;
 var
     Code: Integer;
 begin
-    if FAutoIncrement then
+    if autoIncrement then
         NextParam();
     ConvertError := FALSE;
-    if Length(TokenBuffer) = 0 then
+    if Length(tokenBuffer) = 0 then
         Result := 0.0
     else
     begin
@@ -734,19 +725,19 @@ begin
         begin
             if requiredRPN <> NIL then
                 requiredRPN^ := false;
-            Val(TokenBuffer, Result, Code);
+            Val(tokenBuffer, Result, Code);
         end;
 
         if Code <> 0 then
         begin
            // not needed with Raise ...  Result := 0.0;
             ConvertError := TRUE;
-            raise EParserProblem.Create('Floating point number conversion error for string: "' + TokenBuffer + '"');
+            raise EParserProblem.Create('Floating point number conversion error for string: "' + tokenBuffer + '"');
         end;
     end;
 end;
 
-function TDSSParser.Get_Remainder: String;
+function TDSSParser.Remainder(): String;
 begin
     Result := Copy(CmdBuffer, FPosition, Length(CmdBuffer) - FPosition + 1)
 end;
@@ -776,19 +767,19 @@ var
     cnt: Integer = 0;    
 begin
     Code := 0;
-    ParseBuffer := TokenBuffer + ' ';
+    ParseBuffer := tokenBuffer + ' ';
     ParseBufferPos := 1;
 
     SkipWhiteSpace(ParseBuffer, ParseBufferPos);
-    TokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
-    if CheckForVar(TokenBuffer) then
+    tokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
+    if CheckForVar(tokenBuffer) then
         inc(cnt);
 
-    while Length(TokenBuffer) > 0 do
+    while Length(tokenBuffer) > 0 do
     begin
-        ProcessRPNCommand(TokenBuffer, RPNCalculator);
-        TokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
-        CheckForVar(TokenBuffer);
+        ProcessRPNCommand(tokenBuffer, RPNCalculator);
+        tokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
+        CheckForVar(tokenBuffer);
         inc(cnt);
     end;
 
@@ -797,7 +788,7 @@ begin
 
     Result := RPNCalculator.X;
 
-    TokenBuffer := copy(ParseBuffer, ParseBufferPos, Length(ParseBuffer));  // prepare for next trip
+    tokenBuffer := copy(ParseBuffer, ParseBufferPos, Length(ParseBuffer));  // prepare for next trip
 end;
 
 procedure ReallocStr(var S: pStringArray; oldSize, NewSize: Integer);
@@ -885,7 +876,7 @@ begin
     inherited;
 end;
 
-function TParserVar.get_value: String;
+function TParserVar.Value(): String;
 begin
     if ActiveVariable > 0 then
         Result := VarValues[ActiveVariable]
@@ -893,7 +884,7 @@ begin
         Result := '';
 end;
 
-function TParserVar.Get_VarString(Idx: Cardinal): String;
+function TParserVar.GetVarString(Idx: Cardinal): String;
     function TestEmpty(const s: String): String;
     begin
         if Length(s) = 0 then
@@ -913,12 +904,6 @@ function TParserVar.Lookup(const VarName: String): Integer;
 begin
     ActiveVariable := VarNames.Find(VarName);
     Result := ActiveVariable;
-end;
-
-procedure TParserVar.set_value(const Value: String);
-begin
-    if (ActiveVariable > 0) and (ActiveVariable <= NumVariables) then
-        VarValues[ActiveVariable] := Value;
 end;
 
 procedure TDSSParser.SetVars(vars: TParserVar);

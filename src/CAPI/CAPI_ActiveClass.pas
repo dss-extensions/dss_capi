@@ -160,7 +160,7 @@ begin
     try
         json := TJSONArray.Create([]);
         cls := DSSPrime.ActiveDSSClass;
-        objlist := TDSSObjectPtr(cls.ElementList.InternalPointer);    
+        objlist := TDSSObjectPtr(cls.ElementList.listPtr);    
         if cls.ElementList.Count <> 0 then
         begin
             if ((joptions and Integer(DSSJSONOptions.ExcludeDisabled)) = 0) or not (objlist^ is TDSSCktElement) then

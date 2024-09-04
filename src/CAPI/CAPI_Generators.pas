@@ -247,7 +247,7 @@ begin
     if not _activeObj(DSSPrime, pGen) then
         Exit;
 
-    Result := pGen.PowerFactor;
+    Result := pGen.PowerFactor();
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Phases(): Integer; CDECL;
@@ -268,7 +268,7 @@ begin
     if not _activeObj(DSSPrime, pGen) then
         Exit;
 
-    pGen.PresentkV := Value;
+    pGen.SetPresentkV(Value);
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_kvar(Value: Double); CDECL;
@@ -290,7 +290,7 @@ begin
     if not _activeObj(DSSPrime, pGen) then
         Exit;
 
-    pGen.PresentkW := Value;
+    pGen.SetPresentkW(Value);
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_PF(Value: Double); CDECL;
@@ -300,7 +300,7 @@ begin
     if not _activeObj(DSSPrime, pGen) then
         Exit;
 
-    pGen.PowerFactor := Value;
+    pGen.SetPowerFactor(Value);
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Phases(Value: Integer); CDECL;

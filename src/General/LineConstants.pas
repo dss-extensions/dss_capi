@@ -60,7 +60,6 @@ type
 
         FFrequency: Double;  // Frequency for which impedances are computed
         Fw: Double;  // 2piF
-        FrhoEarth: Double;  // ohm-m
         Fme: Complex; // factor for earth impedance
         FRhoChanged: Boolean;
 
@@ -70,10 +69,8 @@ type
         function Get_Rac(i, units: Integer): Double;
         function Get_X(i, units: Integer): Double;
         function Get_Y(i, units: Integer): Double;
-        function Get_YCmatrix(f, Lngth: Double; Units: Integer): Tcmatrix;
         function Get_Ze(i, j, EarthModel: Integer): Complex;
         function Get_Zint(i, EarthModel: Integer): Complex;
-        function Get_Zmatrix(f, Lngth: Double; Units, EarthModel: Integer): Tcmatrix;
         procedure Set_GMR(i, units: Integer; const Value: Double);
         procedure Set_radius(i, units: Integer; const Value: Double);
         procedure Set_Rdc(i, units: Integer; const Value: Double);
@@ -81,7 +78,6 @@ type
         procedure Set_X(i, units: Integer; const Value: Double);
         procedure Set_Y(i, units: Integer; const Value: Double);
         procedure Set_Frequency(const Value: Double);
-        procedure Set_Frhoearth(const Value: Double);  // m
         
         // This allows you to compute capacitance using a different radius -- for bundled conductors
         function Get_Capradius(i, units: Integer): Double;
@@ -93,7 +89,9 @@ type
         procedure set_Nphases(const Value: Integer);
 
     PUBLIC
+        FrhoEarth: Double;  // ohm-m
 
+        procedure SetRhoEarth(const Value: Double);  // m
         function ConductorsInSameSpace(var ErrorMessage: String): Boolean; VIRTUAL;
         procedure Calc(f: Double; EarthModel: Integer); VIRTUAL; // force a calc of impedances
         procedure Kron(Norder: Integer); VIRTUAL; // Performs a Kron reduction leaving first Norder  rows
@@ -108,12 +106,11 @@ type
         property GMR[i, units: Integer]: Double READ Get_GMR WRITE Set_GMR;
         property Zint[i, EarthModel: Integer]: Complex READ Get_Zint;  // Internal impedance of i-th conductor for present frequency
         property Ze[i, j, EarthModel: Integer]: Complex READ Get_Ze;  // Earth return impedance at present frequency for ij element
-        property rhoearth: Double READ Frhoearth WRITE Set_Frhoearth;
 
-        // These two properties will auto recalc the impedance matrices if frequency is different
+        // These two functions will auto recalc the impedance matrices if frequency is different
         // Converts to desired units when executed; Returns Pointer to Working Verstion
-        property Zmatrix[f, Lngth: Double; Units, EarthModel: Integer]: Tcmatrix READ Get_Zmatrix;
-        property YCmatrix[f, Lngth: Double; Units: Integer]: Tcmatrix READ Get_YCmatrix;
+        function GetZMatrix(f, Lngth: Double; Units, EarthModel: Integer): Tcmatrix;
+        function GetYCMatrix(f, Lngth: Double; Units: Integer): Tcmatrix;
 
         property Nphases: Integer READ FNPhases WRITE set_Nphases;
         property Nconductors: Integer READ FNumConds;
@@ -161,7 +158,7 @@ var
     ReducedSize: Integer;
 
 begin
-    // RhoEarth := rho;
+    // rhoEarth := rho;
     Frequency := f;  // this has side effects
 
     if assigned(FZreduced) then
@@ -325,7 +322,7 @@ begin
     FYCMatrix := TCMatrix.CreateMatrixInPlace(FNumconds, pComplex(FData + FNumConds * 7 + FNumconds * FNumconds * 2));
 
     FFrequency := -1.0;  // not computed
-    Frhoearth := 100.0;  // default value
+    FrhoEarth := 100.0;  // default value
     FRhoChanged := TRUE;
 
     FZreduced := NIL;
@@ -383,8 +380,7 @@ begin
     Result := FY[i] * From_Meters(Units);
 end;
 
-function TLineConstants.Get_YCmatrix(f, Lngth: Double;
-    Units: Integer): Tcmatrix;
+function TLineConstants.GetYCMatrix(f, Lngth: Double; Units: Integer): Tcmatrix;
 // Makes a new YCmatrix and correct for lengths and units as it copies
 // Uses the reduced Zmatrix by default if it exists
 var
@@ -421,7 +417,7 @@ begin
 
         SIMPLECARSON:
         begin
-            Result := cmplx(Fw * Mu0 / 8.0, (Fw * Mu0 / twopi) * ln(658.5 * sqrt(Frhoearth / FFrequency)));
+            Result := cmplx(Fw * Mu0 / 8.0, (Fw * Mu0 / twopi) * ln(658.5 * sqrt(FrhoEarth / FFrequency)));
  // {****}             WriteDLLDebugFile(Format('Simple: Z(%d,%d) = %.8g +j %.8g',[i,j, Result.re, result.im]));
         end;
 
@@ -438,7 +434,7 @@ begin
                 Dij := sqrt(sqr(Fyi + Fyj) + sqr(Fx[i] - Fx[j]));
                 thetaij := ArcCos((Fyi + Fyj) / Dij);
             end;
-            mij := 2.8099e-3 * Dij * sqrt(FFrequency / Frhoearth);
+            mij := 2.8099e-3 * Dij * sqrt(FFrequency / FrhoEarth);
 
             Result.re := pi / 8.0 - b1 * mij * cos(thetaij) + b2 * sqr(mij) * (ln(exp(c2) / mij) * cos(2.0 * thetaij) + thetaij * sin(2.0 * thetaij)) + b3 * mij * mij * mij * cos(3.0 * thetaij) - d4 * mij * mij * mij * mij * cos(4.0 * thetaij);
 
@@ -502,8 +498,7 @@ begin
     end;
 end;
 
-function TLineConstants.Get_Zmatrix(f, Lngth: Double;
-    Units, EarthModel: Integer): Tcmatrix;
+function TLineConstants.GetZMatrix(f, Lngth: Double; Units, EarthModel: Integer): Tcmatrix;
 // Makes a new Zmatrix and correct for lengths and units as it copies
 // Uses the reduced Zmatrix by default if it exists
 var
@@ -549,9 +544,9 @@ begin
 
         // Reduce computed matrix one row/col at a time until it is norder
 
-        while Ztemp.Order > Norder do
+        while Ztemp.order > Norder do
         begin
-            FZReduced := Ztemp.Kron(ZTemp.Order);    // Eliminate last row
+            FZReduced := Ztemp.Kron(ZTemp.order);    // Eliminate last row
 
             if not FirstTime then
             begin   // don't throw away original matrix
@@ -587,16 +582,16 @@ procedure TLineConstants.Set_Frequency(const Value: Double);
 begin
     FFrequency := Value;
     Fw := twopi * FFrequency;
-    Fme := Csqrt(cmplx(0.0, Fw * Mu0 / Frhoearth));
+    Fme := Csqrt(cmplx(0.0, Fw * Mu0 / FrhoEarth));
 end;
 
-procedure TLineConstants.Set_Frhoearth(const Value: Double);
+procedure TLineConstants.SetRhoEarth(const Value: Double);
 begin
-    if Value <> Frhoearth then
+    if Value <> FrhoEarth then
         FRhoChanged := TRUE;
-    Frhoearth := Value;
+    FrhoEarth := Value;
     if FFrequency >= 0.0 then
-        Fme := Csqrt(cmplx(0.0, Fw * Mu0 / Frhoearth));
+        Fme := Csqrt(cmplx(0.0, Fw * Mu0 / FrhoEarth));
 end;
 
 procedure TLineConstants.Set_GMR(i, units: Integer; const Value: Double);

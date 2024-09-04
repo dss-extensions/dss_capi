@@ -335,8 +335,8 @@ type
 
         function NumVariables: Integer; OVERRIDE;
         procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
-        function Get_Variable(i: Integer): Double; OVERRIDE;
-        procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
+        function GetVariable(i: Integer): Double; OVERRIDE;
+        procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
 
         procedure InitStateVars(); OVERRIDE;
@@ -2361,7 +2361,7 @@ begin
     Result := TGeneric5(ParentClass).varNames[i - 1];
 end;
 
-function TGeneric5Obj.Get_Variable(i: Integer): Double;
+function TGeneric5Obj.GetVariable(i: Integer): Double;
 begin
     Result := -9999.99; // Error Value
     if (i < 1) or (i > NumGeneric5Variables) then
@@ -2457,7 +2457,7 @@ begin
     end;
 end;
 
-procedure TGeneric5Obj.Set_Variable(i: Integer; Value: Double);
+procedure TGeneric5Obj.SetVariable(i: Integer; Value: Double);
 begin
     if (i < 1) or (i > NumGeneric5Variables) then
     begin
@@ -2536,7 +2536,7 @@ var
     i: Integer;
 begin
     for i := 1 to NumGeneric5Variables do
-        States[i - 1] := Variable[i];
+        States[i - 1] := GetVariable(i);
 end;
 
 procedure TGeneric5Obj.MakePosSequence;

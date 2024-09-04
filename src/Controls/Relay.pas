@@ -1124,7 +1124,7 @@ procedure TRelayObj.GenericLogic;
 var
     VarValue: Double;
 begin
-    VarValue := TPCElement(MonitoredElement).Variable[MonitorVarIndex];
+    VarValue := TPCElement(MonitoredElement).GetVariable(MonitorVarIndex);
 
     // Check for Trip
     if (VarValue > OverTrip) or (VarValue < UnderTrip) then

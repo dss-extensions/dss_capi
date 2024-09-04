@@ -179,7 +179,6 @@ type
         procedure AddDblToBuffer(const Dbl: Double);
 
         procedure DoFlickerCalculations;  // call from CloseMonitorStream
-        function Get_FileName: String;
 
 
     PUBLIC
@@ -210,7 +209,7 @@ type
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
        //Property  MonitorFileName:String read BufferFile;
 
-        property CSVFileName: String READ Get_FileName;
+        function GetCSVFileName(): String;
     end;
 
 implementation
@@ -1325,11 +1324,11 @@ begin
             if ((MeteredElement.DSSObjType and CLASSMASK) = STORAGE_ELEMENT) then
             begin
                 storage := TStorageObj(MeteredElement);
-                AddDblToBuffer(storage.PresentkW);
-                AddDblToBuffer(storage.Presentkvar);
+                AddDblToBuffer(storage.PresentkW());
+                AddDblToBuffer(storage.Presentkvar());
                 AddDblToBuffer(storage.StorageVars.kWhStored);
                 AddDblToBuffer(((storage.StorageVars.kWhStored) / (storage.StorageVars.kWhRating)) * 100);
-                AddDblToBuffer(storage.StorageState);
+                AddDblToBuffer(storage.StorageState());
             end;
             Exit;  // Done with this mode now.
         end;
@@ -1739,7 +1738,7 @@ begin
     Save;  // Save present buffer
     CloseMonitorStream;   // Position at beginning
 
-    CSVName := Get_FileName;
+    CSVName := GetCSVFileName();
 
     try
 {$IFDEF DSS_CAPI_PM}
@@ -1864,7 +1863,7 @@ begin
     end;
 end;
 
-function TMonitorObj.Get_FileName: String;
+function TMonitorObj.GetCSVFileName: String;
 {$IFDEF DSS_CAPI_PM}
 var
     PMParent: TDSSContext;

@@ -39,7 +39,6 @@ type
     PRIVATE
         NumElementsAllocated: Cardinal;
         NumLists: Cardinal;
-        NumElements: Cardinal;
         StringPtr: pStringArray;
         ListPtr: pSubListArray;
         AllocationInc: Cardinal;
@@ -52,6 +51,8 @@ type
         procedure ResizeStrPtr;
     PUBLIC
         InitialAllocation: Cardinal;
+        count: Cardinal;
+
         constructor Create(Nelements: Cardinal);
         destructor Destroy; OVERRIDE;
         function Add(const S: String): Integer;
@@ -61,7 +62,6 @@ type
         // procedure Expand(NewSize: Cardinal);   // Expands number of elements
         procedure DumpToFile(F: TStream);
         procedure Clear;
-        property Count: Cardinal READ NumElements;
     end;
 
     TAltHashList = class (TFPHashList)
@@ -93,7 +93,7 @@ var
     Elementsperlist: Cardinal;
 begin
     inherited Create;
-    NumElements := 0;
+    count := 0;
     InitialAllocation := Nelements;
     StringPtr := NIL;  // Allocmem(Sizeof(StringPtr[1]) * Nelements);
 
@@ -224,10 +224,10 @@ begin
     SS := AnsiLowerCase(S);
     HashNum := Hash(SS);
 
-    Inc(NumElements);
-    if NumElements > NumElementsAllocated then
+    Inc(count);
+    if count > NumElementsAllocated then
         ResizeStrPtr;
-    Result := NumElements;
+    Result := count;
 
     with ListPtr[hashNum] do
     begin
@@ -239,8 +239,8 @@ begin
     with ListPtr[hashNum] do
     begin
         Str[Nelem] := SS;   // make copy of whole string, lower case
-        StringPtr[NumElements] := SS;   // increments count to string
-        Idx[Nelem] := NumElements;
+        StringPtr[count] := SS;   // increments count to string
+        Idx[Nelem] := count;
     end;
 end;
 
@@ -297,7 +297,7 @@ end;
 
 function THashList.NameOfIndex(i: Cardinal): String;
 begin
-    if (i > 0) and (i <= NumElements) then
+    if (i > 0) and (i <= count) then
         Result := StringPtr[i]
     else
         Result := '';
@@ -309,7 +309,7 @@ var
     i, j: Integer;
     sout: String;
 begin
-    FSWriteln(F, Format('Number of Hash Lists = %d, Number of Elements = %d', [NumLists, NumElements]));
+    FSWriteln(F, Format('Number of Hash Lists = %d, Number of Elements = %d', [NumLists, count]));
 
     FSWriteln(F);
     FSWriteln(F, 'Hash List Distribution');
@@ -336,7 +336,7 @@ begin
         FSWriteln(F);
     end;
     FSWriteln(F, 'LINEAR LISTING...');
-    for i := 1 to NumElements do
+    for i := 1 to count do
     begin
         WriteStr(sout, i: 3, ' = "', Stringptr[i], '"');
         FSWriteln(F, sout);
@@ -360,7 +360,7 @@ begin
     for i := 1 to NumElementsAllocated do
         StringPtr[i] := '';
 
-    NumElements := 0;
+    count := 0;
 end;
 
 constructor TAltHashList.Create(const Nelements: Integer);

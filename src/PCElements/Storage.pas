@@ -288,11 +288,11 @@ type
         procedure CalcDutyMult(Hr: Double);
         procedure CalcYearlyMult(Hr: Double);
 
-        procedure ComputePresentkW; // Included
-        procedure ComputeInverterPower; // Included
+        procedure ComputePresentkW(); // Included
+        procedure ComputeInverterPower(); // Included
 
-        procedure ComputekWkvar;        // Included
-        procedure ComputeDCkW; // For Storage Update
+        procedure ComputekWkvar();        // Included
+        procedure ComputeDCkW(); // For Storage Update
         procedure CalcStorageModelContribution();
         procedure CalcInjCurrentArray();
 
@@ -315,29 +315,14 @@ type
         function CheckIfDelivering(): Boolean;
         procedure UpdateStorage();    // Update Storage elements based on present kW and IntervalHrs variable
 
-        function Get_PresentkW: Double;
-        function Get_PresentkV: Double;
-
-        procedure Set_kW(const Value: Double);
-        function Get_kW: Double;
-
         procedure Set_PowerFactor(const Value: Double);
 
-        procedure Set_StorageState(const Value: Integer);
-
-        function Get_DCkW: Double;
-        function Get_kWTotalLosses: Double;
-        function Get_InverterLosses: Double;
-        function Get_kWIdlingLosses: Double;
-        function Get_kWChDchLosses: Double;
-        procedure Update_EfficiencyFactor;
-
-        function Get_kWDesired: Double;
+        procedure Update_EfficiencyFactor();
 
         // Procedures and functions for inverter functionalities
         procedure Set_kVARating(const Value: Double);
 
-        procedure kWOut_Calc;
+        procedure kWOut_Calc();
 
     PROTECTED
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
@@ -353,8 +338,6 @@ type
         pctReserve: Double;
         DispatchMode: Integer;
         pctIdlekW: Double;
-        kvarRequested: Double;
-        kWRequested: Double;
 
         kWOutIdling: Double;
 
@@ -388,8 +371,8 @@ type
         function InjCurrents(): Integer; OVERRIDE;
         function NumVariables(): Integer; OVERRIDE;
         procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
-        function Get_Variable(i: Integer): Double; OVERRIDE;
-        procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
+        function GetVariable(i: Integer): Double; OVERRIDE;
+        procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
 
         procedure Set_Maxkvar(const Value: Double);
@@ -409,26 +392,27 @@ type
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
-        property kW: Double READ Get_kW WRITE Set_kW;
-        property kWDesired: Double READ Get_kWDesired;
+        function kWDesired(): Double;
 
-        property PresentkW: Double READ Get_PresentkW;             // Present kW   at inverter output
-        property Presentkvar: Double READ Get_Presentkvar;           // Present kvar at inverter output
+        procedure SetkW(Value: Double);
+        function kW(): Double;
 
-        property PresentkV: Double READ Get_PresentkV;
+        function PresentkW(): Double; // Present kW at inverter output
+        function PresentkV(): Double;
         property PowerFactor: Double READ PFNominal WRITE Set_PowerFactor;
         property kVARating: Double READ StorageVars.FkVARating WRITE Set_kVARating;
        
         property kvarLimit: Double READ StorageVars.Fkvarlimit WRITE Set_Maxkvar;
         property kvarLimitneg: Double READ StorageVars.Fkvarlimitneg WRITE Set_Maxkvarneg;
 
-        property StorageState: Integer READ FState WRITE Set_StorageState;
+        procedure SetStorageState(const Value: Integer);
+        function StorageState(): Integer;
 
-        property kWTotalLosses: Double READ Get_kWTotalLosses;
-        property kWIdlingLosses: Double READ Get_kWIdlingLosses;
-        property kWInverterLosses: Double READ Get_InverterLosses;
-        property kWChDchLosses: Double READ Get_kWChDchLosses;
-        property DCkW: Double READ Get_DCkW;
+        function kWTotalLosses(): Double;
+        function kWInverterLosses(): Double;
+        function kWIdlingLosses(): Double;
+        function kWChDchLosses(): Double;
+        function DCkW(): Double;
 
         function IsStorage(): Boolean; OVERRIDE;
         function GetPFPriority(): Boolean; OVERRIDE;
@@ -504,7 +488,7 @@ end;
 
 procedure SetkW(obj: TObj; Value: Double);
 begin
-    obj.kW := Value;
+    obj.SetkW(Value);
 end;
 
 function Getkvar(obj: TObj): Double;
@@ -1235,8 +1219,8 @@ begin
         YeqDischarge := Cmplx((kWrating * 1000.0 / SQR(vbase) / FNPhases), 0.0);
 
         // values in ohms for thevenin equivalents
-        RThev := pctR * 0.01 * SQR(PresentkV) / FkVARating * 1000.0;      // Changed
-        XThev := pctX * 0.01 * SQR(PresentkV) / FkVARating * 1000.0;      // Changed
+        RThev := pctR * 0.01 * SQR(PresentkV()) / FkVARating * 1000.0;      // Changed
+        XThev := pctX * 0.01 * SQR(PresentkV()) / FkVARating * 1000.0;      // Changed
 
         CutInkW := FpctCutin * FkVArating / 100.0;
         CutOutkW := FpctCutOut * FkVArating / 100.0;
@@ -1392,8 +1376,8 @@ end;
 
 procedure TStorageObj.ComputekWkvar;
 begin
-    ComputePresentkW;
-    ComputeInverterPower; // apply inverter eff after checking for cutin/cutout
+    ComputePresentkW();
+    ComputeInverterPower(); // apply inverter eff after checking for cutin/cutout
 end;
 
 procedure TStorageObj.ComputePresentkW;
@@ -1507,7 +1491,7 @@ begin
         // Set inverter output
         if InverterON then
         begin
-            kWOut_Calc;
+            kWOut_Calc();
         end
         else
         begin
@@ -1789,8 +1773,8 @@ begin
             else
             with dynVars, StorageVars do
             begin
-                RatedkVLL := PresentkV;
-                Discharging := (StorageState = STORE_DISCHARGING);
+                RatedkVLL := PresentkV();
+                Discharging := (FState = STORE_DISCHARGING);
                 mKVARating := FkVArating;
                 CalcGFMYprim(NPhases, @YMatrix);
             end;
@@ -1844,12 +1828,12 @@ begin
         begin
             // set charge and discharge modes based on sign of loadshape
             if (Level > 0.0) and ((kWhStored - kWhReserve) > EPSILON) then
-                StorageState := STORE_DISCHARGING
+                SetStorageState(STORE_DISCHARGING)
             else
             if (Level < 0.0) and ((kWhStored - kWhRating) < -EPSILON) then
-                StorageState := STORE_CHARGING
+                SetStorageState(STORE_CHARGING)
             else
-                StorageState := STORE_IDLING;
+                SetStorageState(STORE_IDLING);
         end
         else
         begin   // All other dispatch modes  Just compare to trigger value
@@ -1970,7 +1954,7 @@ begin
             FSWrite(TraceFile, sout);
         end;
         for i := 1 to NumVariables() do
-            FSWrite(TraceFile, Format('%-.g, ', [Variable[i]]));
+            FSWrite(TraceFile, Format('%-.g, ', [GetVariable(i)]));
 
         FSWriteln(Tracefile);
         FSFlush(TraceFile);
@@ -2187,7 +2171,7 @@ begin
     with ActiveCircuit.Solution do
     begin
         dynVars.BaseV := VBase;
-        dynVars.Discharging := (StorageState = STORE_DISCHARGING);
+        dynVars.Discharging := (FState = STORE_DISCHARGING);
         if dynVars.IComp > 0 then
         begin
             ZSys := (2 * (Vbase * dynVars.ILimit)) - dynVars.IComp;
@@ -2400,7 +2384,7 @@ begin
     // Only tabulate discharge hours
     if FSTate = STORE_DISCHARGING then
     begin
-        S := cmplx(Get_PresentkW, Get_Presentkvar);
+        S := cmplx(PresentkW(), Presentkvar());
         Smag := Cabs(S);
         HourValue := 1.0;
     end
@@ -2475,11 +2459,11 @@ begin
                     UpdateSt := CheckIfDelivering();
 
                 if UpdateSt then
-                    kWhStored := kWhStored - (DCkW + kWIdlingLosses) / DischargeEff * IntervalHrs
+                    kWhStored := kWhStored - (DCkW() + kWIdlingLosses()) / DischargeEff * IntervalHrs
                 else
                 begin
                     // We are absorbing power, let's recharge if needed
-                    kWhStored := kWhStored + (DCkW + kWIdlingLosses) / DischargeEff * IntervalHrs;
+                    kWhStored := kWhStored + (DCkW() + kWIdlingLosses()) / DischargeEff * IntervalHrs;
                     if kWhStored > kWhRating then
                         kWhStored := kWhRating;
                 end;
@@ -2495,9 +2479,9 @@ begin
 
             STORE_CHARGING:
             begin
-                if (abs(DCkW) - kWIdlingLosses) >= 0 then // 99.9 % of the cases will fall here
+                if (abs(DCkW()) - kWIdlingLosses()) >= 0 then // 99.9 % of the cases will fall here
                 begin
-                    kWhStored := kWhStored + (abs(DCkW) - kWIdlingLosses) * ChargeEff * IntervalHrs;
+                    kWhStored := kWhStored + (abs(DCkW()) - kWIdlingLosses()) * ChargeEff * IntervalHrs;
                     if kWhStored > kWhRating then
                     begin
                         kWhStored := kWhRating;
@@ -2509,7 +2493,7 @@ begin
                 else   // Exceptional cases when the idling losses are higher than the DCkW such that the net effect is that the
                                 // the ideal Storage will discharge
                 begin
-                    kWhStored := kWhStored + (abs(DCkW) - kWIdlingLosses) / DischargeEff * IntervalHrs;
+                    kWhStored := kWhStored + (abs(DCkW()) - kWIdlingLosses()) / DischargeEff * IntervalHrs;
                     if kWhStored < kWhReserve then
                     begin
                         kWhStored := kWhReserve;
@@ -2582,18 +2566,18 @@ begin
         FDCkW := abs(FDCkW) * FState;
 end;
 
-function TStorageObj.Get_PresentkW: Double;
+function TStorageObj.PresentkW(): Double;
 begin
     Result := Pnominalperphase * 0.001 * Fnphases;
 end;
 
-function TStorageObj.Get_DCkW: Double;
+function TStorageObj.DCkW(): Double;
 begin
     ComputeDCkW;
     Result := FDCkW;
 end;
 
-function TStorageObj.Get_kWDesired: Double;
+function TStorageObj.kWDesired(): Double;
 begin
     case StateDesired of
         STORE_CHARGING:
@@ -2607,58 +2591,58 @@ begin
     end;
 end;
 
-function TStorageObj.Get_kWTotalLosses: Double;
+function TStorageObj.kWTotalLosses(): Double;
 begin
-    Result := kWIdlingLosses + kWInverterLosses + kWChDchLosses;
+    Result := kWIdlingLosses() + kWInverterLosses() + kWChDchLosses;
 end;
 
-function TStorageObj.Get_InverterLosses: Double;
+function TStorageObj.kWInverterLosses(): Double;
 begin
     Result := 0.0;
 
     with StorageVars do
     begin
-        case StorageState of
+        case FState of
 
             STORE_IDLING:
-                Result := abs(Power[1].re * 0.001) - abs(DCkW);
+                Result := abs(Power[1].re * 0.001) - abs(DCkW());
             STORE_CHARGING:
-                Result := abs(Power[1].re * 0.001) - abs(DCkW);
+                Result := abs(Power[1].re * 0.001) - abs(DCkW());
             STORE_DISCHARGING:
-                Result := DCkW - abs(Power[1].re * 0.001);
+                Result := DCkW() - abs(Power[1].re * 0.001);
         end;
     end;
 end;
 
-function TStorageObj.Get_kWIdlingLosses: Double;
+function TStorageObj.kWIdlingLosses(): Double;
 begin
     if (FState = STORE_IDLING) then
     begin
-        Result := abs(DCkW); // For consistency keeping with voltage variations
+        Result := abs(DCkW()); // For consistency keeping with voltage variations
     end
     else
         Result := Pidling;
 end;
 
-function TStorageObj.Get_kWChDchLosses: Double;
+function TStorageObj.kWChDchLosses(): Double;
 begin
     Result := 0.0;
 
     with StorageVars do
     begin
-        case StorageState of
+        case FState of
 
             STORE_IDLING:
                 Result := 0.0;
 
             STORE_CHARGING:
-                if (abs(DCkW) - Pidling > 0) then
-                    Result := (abs(DCkW) - Pidling) * (1.0 - 0.01 * pctChargeEff) // most cases will fall here
+                if (abs(DCkW()) - Pidling > 0) then
+                    Result := (abs(DCkW()) - Pidling) * (1.0 - 0.01 * pctChargeEff) // most cases will fall here
                 else
-                    Result := -1 * (abs(DCkW) - Pidling) * (1.0 / (0.01 * pctDischargeEff) - 1.0);             // exceptional cases when Pidling is higher than DCkW (net effect is that the ideal Storage will be discharged)
+                    Result := -1 * (abs(DCkW()) - Pidling) * (1.0 / (0.01 * pctDischargeEff) - 1.0);             // exceptional cases when Pidling is higher than DCkW (net effect is that the ideal Storage will be discharged)
 
             STORE_DISCHARGING:
-                Result := (DCkW + Pidling) * (1.0 / (0.01 * pctDischargeEff) - 1.0);
+                Result := (DCkW() + Pidling) * (1.0 / (0.01 * pctDischargeEff) - 1.0);
         end;
     end;
 end;
@@ -2670,11 +2654,11 @@ begin
         if not Assigned(InverterCurveObj) then
             EffFactor := 1.0
         else
-            EffFactor := InverterCurveObj.GetYValue(abs(DCkW) / FkVArating);
+            EffFactor := InverterCurveObj.GetYValue(abs(DCkW()) / FkVArating);
     end;
 end;
 
-function TStorageObj.Get_PresentkV: Double;
+function TStorageObj.PresentkV(): Double;
 begin
     Result := StorageVars.kVStorageBase;
 end;
@@ -2767,11 +2751,11 @@ begin
         InitDynArrays(NumPhases);
         
         if NumPhases > 1 then
-            BasekV := PresentkV / sqrt(3)
+            BasekV := PresentkV() / sqrt(3)
         else
-            BasekV := PresentkV;
+            BasekV := PresentkV();
 
-        BaseZt := 0.01 * ((PresentkV * PresentkV) / FkVArating) * 1000;
+        BaseZt := 0.01 * ((PresentkV() * PresentkV()) / FkVArating) * 1000;
         MaxVS := (2 - (SMThreshold / 100)) * BasekV * 1000;
         MinVS := (SMThreshold / 100) * BasekV * 1000;
         MinAmps := (FpctCutOut / 100) * ((FkVArating / BasekV) / NumPhases);
@@ -2944,7 +2928,7 @@ begin
     end;
 end;
 
-function TStorageObj.Get_Variable(i: Integer): Double;
+function TStorageObj.GetVariable(i: Integer): Double;
 // Return variables one at a time
 var
     N, k: Integer;
@@ -3000,15 +2984,15 @@ begin
             5:
                 Result := -1 * Power[1].im * 0.001;
             6:
-                Result := DCkW;
+                Result := DCkW();
             7:
-                Result := kWTotalLosses; // Present kW charge or discharge loss incl idle losses
+                Result := kWTotalLosses(); // Present kW charge or discharge loss incl idle losses
             8:
-                Result := kWInverterLosses; // Inverter Losses
+                Result := kWInverterLosses(); // Inverter Losses
             9:
-                Result := kWIdlingLosses; // Present kW Idling Loss
+                Result := kWIdlingLosses(); // Present kW Idling Loss
             10:
-                Result := kWChDchLosses;  // Charge/Discharge Losses
+                Result := kWChDchLosses();  // Charge/Discharge Losses
             11:
                 Result := kWhStored - kWhBeforeUpdate;
             12:
@@ -3038,7 +3022,7 @@ begin
             21:
                 Result := WVOperation;
             22:
-                Result := Get_kWDesired;
+                Result := kWDesired();
             23:
                 if not (VWMode) then
                     Result := 9999
@@ -3077,7 +3061,7 @@ begin
         end;
 end;
 
-procedure TStorageObj.Set_Variable(i: Integer; Value: Double);
+procedure TStorageObj.SetVariable(i: Integer; Value: Double);
 var
     N, k: Integer;
 begin
@@ -3156,7 +3140,7 @@ begin
     end;
 
     for i := 1 to NumStorageVariables do
-        States[i - 1] := Variable[i];
+        States[i - 1] := GetVariable(i);
 
     if UserModel.Exists then
     begin    // Checks for existence and Selects
@@ -3330,7 +3314,7 @@ begin
         StorageObjSwitchOpen := TRUE;
 end;
 
-procedure TStorageObj.kWOut_Calc;
+procedure TStorageObj.kWOut_Calc();
 var
     limitkWpct: Double;
 begin
@@ -3406,7 +3390,7 @@ begin
     end;
 end;
 
-procedure TStorageObj.Set_kW(const Value: Double);
+procedure TStorageObj.SetkW(Value: Double);
 begin
     if Value > 0 then
     begin
@@ -3449,7 +3433,7 @@ begin
     varMode := VARMODEPF;
 end;
 
-function TStorageObj.Get_kW: Double;
+function TStorageObj.kW(): Double;
 begin
     case Fstate of
         STORE_CHARGING:
@@ -3463,7 +3447,12 @@ begin
     end;
 end;
 
-procedure TStorageObj.Set_StorageState(const Value: Integer);
+function TStorageObj.StorageState(): Integer;
+begin
+    Result := FState;
+end;
+
+procedure TStorageObj.SetStorageState(const Value: Integer);
 var
     SavedState: Integer;
 begin

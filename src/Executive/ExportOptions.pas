@@ -158,7 +158,7 @@ begin
 
     Parm2 := '';
     ParamName := DSS.Parser.NextParam;
-    Parm1 := AnsiLowerCase(DSS.Parser.StrValue);
+    Parm1 := AnsiLowerCase(DSS.Parser.MakeString());
     ParamPointer := DSS.DSSExecutive.ExportCommands.Getcommand(Parm1);
 
    {Check commands requiring a solution and abort if no solution or circuit}
@@ -193,7 +193,7 @@ begin
         9, 19:
         begin { Trap export powers command and look for MVA/kVA option }
             ParamName := DSS.Parser.nextParam;
-            Parm2 := AnsiLowerCase(DSS.Parser.strvalue);
+            Parm2 := AnsiLowerCase(DSS.Parser.MakeString());
             MVAOpt := 0;
             if Length(Parm2) > 0 then
                 if Parm2[1] = 'm' then
@@ -203,7 +203,7 @@ begin
         8:
         begin { Trap UE only flag  }
             ParamName := DSS.Parser.nextParam;
-            Parm2 := AnsiLowerCase(DSS.Parser.strvalue);
+            Parm2 := AnsiLowerCase(DSS.Parser.MakeString());
             UEonlyOpt := FALSE;
             if Length(Parm2) > 0 then
                 if Parm2[1] = 'u' then
@@ -213,13 +213,13 @@ begin
         15:
         begin {Get monitor name for export monitors command}
             ParamName := DSS.Parser.NextParam;
-            Parm2 := DSS.Parser.StrValue;
+            Parm2 := DSS.Parser.MakeString();
         end;
 
         17:
         begin { Trap Sparse Triplet flag  }
             ParamName := DSS.Parser.nextParam;
-            Parm2 := AnsiLowerCase(DSS.Parser.strvalue);
+            Parm2 := AnsiLowerCase(DSS.Parser.MakeString());
             TripletOpt := FALSE;
             if Length(Parm2) > 0 then
                 if Parm2[1] = 't' then
@@ -229,7 +229,7 @@ begin
         20, 21:
         begin {user-supplied substation and regions}
             ParamName := AnsiLowerCase(DSS.Parser.nextParam);
-            Parm2 := DSS.Parser.strValue;
+            Parm2 := DSS.Parser.MakeString();
             while Length(ParamName) > 0 do
             begin
                 if CompareTextShortest(ParamName, 'subs') = 0 then
@@ -256,14 +256,14 @@ begin
                 if CompareTextShortest(ParamName, 'rg') = 0 then
                     RgnUuid := AssignNewUUID(Parm2);
                 ParamName := AnsiLowerCase(DSS.Parser.nextParam);
-                Parm2 := DSS.Parser.strValue;
+                Parm2 := DSS.Parser.MakeString();
             end;
         end;
 
         32:
         begin {Get phases to plot}
             ParamName := DSS.Parser.NextParam;
-            Parm2 := DSS.Parser.StrValue;
+            Parm2 := DSS.Parser.MakeString();
             PhasesToPlot := ord(TPlotPhases.ThreePhase); // the default
             if CompareTextShortest(Parm2, 'default') = 0 then
                 PhasesToPlot := ord(TPlotPhases.ThreePhase)
@@ -284,14 +284,14 @@ begin
                 PhasesToPlot := ord(TPlotPhases.LLPrimary)
             else
             if Length(Parm2) = 1 then
-                PhasesToPlot := DSS.Parser.IntValue;
+                PhasesToPlot := DSS.Parser.MakeInteger();
 
         end;
 
         51:
         begin {Sections}
             ParamName := DSS.Parser.NextParam;
-            Parm2 := DSS.Parser.StrValue;
+            Parm2 := DSS.Parser.MakeString();
 
             if CompareTextShortest(ParamName, 'meter') = 0 then
                 pMeter := DSS.EnergyMeterClass.Find(Parm2);
@@ -303,7 +303,7 @@ begin
     if Length(FileName) = 0 then
     begin
         ParamName := DSS.Parser.NextParam;
-        FileName := DSS.Parser.StrValue;    // should be full path name to work universally
+        FileName := DSS.Parser.MakeString();    // should be full path name to work universally
     end;
 
     DSS.InShowResults := TRUE;

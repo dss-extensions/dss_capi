@@ -1026,29 +1026,26 @@ begin
                 //--------------------------------------------- end Main process ---------------------------------------------//
 
                 // Sets PVSystem/Storage's kvar_out
-                if DERElem.IsPVSystem() then
-                    TPVSystemObj(DERElem).Presentkvar := QDesiredVV
-                else
-                    TStorageObj(DERElem).kvarRequested := QDesiredVV;
+                DERElem.kvarRequested := QDesiredVV;
 
                 // Updates PresentkW and Presentkvar considering watt and var priorities
                 DERElem.SetNominalDEROutput();
                 if QDesiredVV >= 0.0 then
-                    Qoutputpu := DERElem.Get_Presentkvar / QHeadroom
+                    Qoutputpu := DERElem.Presentkvar() / QHeadroom
                 else
-                    Qoutputpu := DERElem.Get_Presentkvar / QHeadroomNeg;
+                    Qoutputpu := DERElem.Presentkvar() / QHeadroomNeg;
 
                 // Values used in convergence
                 QoutputVVpu := Qoutputpu;
                 FAvgpVpuPrior := FPresentVpu;
 
                 // Values used in CalcQVVcurve_desiredpu
-                QOld := DERElem.Get_Presentkvar;
-                QOldVV := DERElem.Get_Presentkvar;
+                QOld := DERElem.Presentkvar();
+                QOldVV := DERElem.Presentkvar();
                 if ShowEventLog then
                     AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                         Format('VOLTVAR mode requested DER output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
-                        [QDesiredVV, DERElem.Get_Presentkvar()]));
+                        [QDesiredVV, DERElem.Presentkvar()]));
             end
             // Smart Inverter active voltage regulation function
             else
@@ -1066,17 +1063,14 @@ begin
                     FAvgpAVRVpuPrior := FPresentVpu;
 
                     // Sets PVSystem/Storage's kvar_out
-                    if DERElem.IsPVSystem() then
-                        TPVSystemObj(DERElem).Presentkvar := QHeadRoom / 2
-                    else
-                        TStorageObj(DERElem).kvarRequested := QHeadRoom / 2;
+                    DERElem.kvarRequested := QHeadRoom / 2;
                 end
                 else
                 if ActiveCircuit.Solution.ControlIteration = 2 then
                 begin
                     // Sets PVSystem/Storage's kvar_out
                     if DERElem.IsPVSystem() then
-                        DQDV := abs(TPVSystemObj(DERElem).Presentkvar / QHeadRoom / (FPresentVpu - FAvgpVpuPrior))
+                        DQDV := abs(TPVSystemObj(DERElem).Presentkvar() / QHeadRoom / (FPresentVpu - FAvgpVpuPrior))
                     else
                         DQDV := abs(TStorageObj(DERElem).kvarRequested / QHeadRoom / (FPresentVpu - FAvgpVpuPrior));
                 end
@@ -1100,30 +1094,27 @@ begin
                     //--------------------------------------------- end Main process ---------------------------------------------//
 
                     // Sets PVSystem/Storage's kvar_out
-                    if DERElem.IsPVSystem() then
-                        TPVSystemObj(DERElem).Presentkvar := QDesiredAVR
-                    else
-                        TStorageObj(DERElem).kvarRequested := QDesiredAVR;
+                    DERElem.kvarRequested := QDesiredAVR;
 
                     // Uptates PresentkW and Presentkvar considering watt and var priorities
                     DERElem.SetNominalDEROutput();                    
                     if QDesiredAVR >= 0.0 then
-                        Qoutputpu := DERElem.Get_Presentkvar / QHeadroom
+                        Qoutputpu := DERElem.Presentkvar() / QHeadroom
                     else
-                        Qoutputpu := DERElem.Get_Presentkvar / QHeadroomNeg;
+                        Qoutputpu := DERElem.Presentkvar() / QHeadroomNeg;
 
                     // Values used in convergence
                     QoutputAVRpu := Qoutputpu;
                     FAvgpVpuPrior := FPresentVpu;
 
                     // Values used in CalcQVVcurve_desiredpu
-                    QOld := DERElem.Get_Presentkvar;
-                    QOldAVR := DERElem.Get_Presentkvar;
+                    QOld := DERElem.Presentkvar();
+                    QOldAVR := DERElem.Presentkvar();
 
                     if ShowEventLog then
                         AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                             Format('VOLTVAR mode requested DER output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
-                            [QDesiredAVR, DERElem.Get_Presentkvar()]));
+                            [QDesiredAVR, DERElem.Presentkvar()]));
                 end;
             end
             // Smart Inverter watt-pf function
@@ -1155,30 +1146,27 @@ begin
                     TStorageObj(DERElem).kvarRequested := QDesiredWP;
 
                 // Sets PVSystem/Storage's kvar_out
-                if DERElem.IsPVSystem() then
-                    TPVSystemObj(DERElem).Presentkvar := QDesiredWP
-                else
-                    TStorageObj(DERElem).kvarRequested := QDesiredWP;
+                DERElem.kvarRequested := QDesiredWP;
 
                 // Updates PresentkW and Presentkvar considering watt and var priorities
                 DERElem.SetNominalDEROutput();
                 if QDesiredWP >= 0.0 then
-                    Qoutputpu := DERElem.Get_Presentkvar / QHeadroom
+                    Qoutputpu := DERElem.Presentkvar() / QHeadroom
                 else
-                    Qoutputpu := DERElem.Get_Presentkvar / QHeadroomNeg;
+                    Qoutputpu := DERElem.Presentkvar() / QHeadroomNeg;
 
                 // Values used in convergence
                 QoutputVVpu := Qoutputpu;
                 FAvgpVpuPrior := FPresentVpu;
 
                 // Values used in CalcQVVcurve_desiredpu
-                QOld := DERElem.Get_Presentkvar;
-                QOldVV := DERElem.Get_Presentkvar;
+                QOld := DERElem.Presentkvar();
+                QOldVV := DERElem.Presentkvar();
 
                 if ShowEventLog then
                     AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                         Format('WATTPF mode requested DER output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
-                        [QDesiredWP, DERElem.Get_Presentkvar()]));
+                        [QDesiredWP, DERElem.Presentkvar()]));
             end
             // Smart Inverter watt-var function
             else
@@ -1203,33 +1191,32 @@ begin
                 //--------------------------------------------- end Main process ---------------------------------------------//
 
                 // Sets PVSystem/Storage's kvar_out
+
+                DERElem.kvarRequested := QDesiredWV;
                 if DERElem.IsPVSystem() then
                 begin
-                    TPVSystemObj(DERElem).Presentkvar := QDesiredWV;
-                    TPVSystemObj(DERElem).PresentkW := PLimitEndpu * Min(FkVARating, FDCkWRated);
-                end
-                else
-                    TStorageObj(DERElem).kvarRequested := QDesiredWV;
+                    TPVSystemObj(DERElem).kWRequested := PLimitEndpu * Min(FkVARating, FDCkWRated);
+                end;
 
                 // Uptates PresentkW and Presentkvar considering watt and var priorities
                 DERElem.SetNominalDEROutput();
                 if QDesiredWV >= 0.0 then
-                    Qoutputpu := DERElem.Get_Presentkvar / QHeadroom
+                    Qoutputpu := DERElem.Presentkvar() / QHeadroom
                 else
-                    Qoutputpu := DERElem.Get_Presentkvar / QHeadroomNeg;
+                    Qoutputpu := DERElem.Presentkvar() / QHeadroomNeg;
 
                 // Values used in convergence
                 QoutputVVpu := Qoutputpu;
                 FAvgpVpuPrior := FPresentVpu;
 
                 // Values used in CalcQVVcurve_desiredpu
-                QOld := DERElem.Get_Presentkvar;
-                QOldVV := DERElem.Get_Presentkvar;
+                QOld := DERElem.Presentkvar();
+                QOldVV := DERElem.Presentkvar();
 
                 if ShowEventLog then
                     AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                         Format('WATTVAR mode requested DER output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
-                        [QDesiredWV, DERElem.Get_Presentkvar()]));
+                        [QDesiredWV, DERElem.Presentkvar()]));
             end
             // Smart Inverter DRC function
             else
@@ -1274,30 +1261,27 @@ begin
                 //--------------------------------------------- end main process ---------------------------------------------//
 
                 // Sets DER kvar_out
-                if DERElem.IsPVSystem() then
-                    TPVSystemObj(DERElem).Presentkvar := QDesiredDRC
-                else
-                    TStorageObj(DERElem).kvarRequested := QDesiredDRC;
+                DERElem.kvarRequested := QDesiredDRC;
 
                 // Uptates PresentkW and Presentkvar considering watt and var priorities
                 DERElem.SetNominalDEROutput();
                 if QDesiredDRC >= 0.0 then
-                    Qoutputpu := DERElem.Get_Presentkvar / QHeadroom
+                    Qoutputpu := DERElem.Presentkvar() / QHeadroom
                 else
-                    Qoutputpu := DERElem.Get_Presentkvar / QHeadroomNeg;
+                    Qoutputpu := DERElem.Presentkvar() / QHeadroomNeg;
 
                 // Values used in convergence
                 QoutputDRCpu := Qoutputpu;
                 FAvgpDRCVpuPrior := FPresentDRCVpu;
 
                 // Values used in CalcDRC_vars
-                QOld := DERElem.Get_Presentkvar;
-                QOldDRC := DERElem.Get_Presentkvar;
+                QOld := DERElem.Presentkvar();
+                QOldDRC := DERElem.Presentkvar();
 
                 if ShowEventLog then
                     AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                         Format('DRC mode requested DER output var level to **, kvar = %.5g. Actual output set to kvar = %.5g.',
-                        [QDesiredDRC, DERElem.Get_Presentkvar()]));
+                        [QDesiredDRC, DERElem.Presentkvar()]));
             end
             // Smart Inverter VV_DRC function
             else
@@ -1344,18 +1328,15 @@ begin
                 //--------------------------------------------- end main process ---------------------------------------------//
 
                 // Sets DER kvar_out
-                if DERElem.IsPVSystem() then
-                    TPVSystemObj(DERElem).Presentkvar := QDesiredVVDRC
-                else
-                    TStorageObj(DERElem).kvarRequested := QDesiredVVDRC;
+                DERElem.kvarRequested := QDesiredVVDRC;
 
                 // Updates PresentkW and Presentkvar considering watt and var priorities
                 DERElem.SetNominalDEROutput();
 
                 if QDesiredVVDRC >= 0.0 then
-                    Qoutputpu := DERElem.Get_Presentkvar / QHeadroom
+                    Qoutputpu := DERElem.Presentkvar() / QHeadroom
                 else
-                    Qoutputpu := DERElem.Get_Presentkvar / QHeadroomNeg;
+                    Qoutputpu := DERElem.Presentkvar() / QHeadroomNeg;
 
                 // Values used in convergence
                 QoutputVVDRCpu := Qoutputpu;
@@ -1363,13 +1344,13 @@ begin
                 FAvgpDRCVpuPrior := FPresentDRCVpu;
 
                 // Values used in CalcQVVcurve_desiredpu and CalcVVDRC_vars
-                QOld := DERElem.Get_Presentkvar;
-                QOldVVDRC := DERElem.Get_Presentkvar;
+                QOld := DERElem.Presentkvar();
+                QOldVVDRC := DERElem.Presentkvar();
 
                 if ShowEventLog then
                     AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                         Format('**VV_DRC mode requested DER output var level to **, kvar = %.5g. Actual output set to kvar = %.5g.',
-                        [QDesiredVVDRC, DERElem.Get_Presentkvar()]));
+                        [QDesiredVVDRC, DERElem.Presentkvar()]));
             end
             // Smart Inverter volt-watt function
             else
@@ -1409,21 +1390,9 @@ begin
 
                 //--------------------------------------------- end main process ---------------------------------------------//
                 // Sets DER kW_out
-                if DERElem.IsPVSystem() then
-                begin
-                    TPVSystemObj(DERElem).PresentkW := PLimitVW;
-
-                    // Updates PresentkW and Presentkvar considering watt and var priorities
-                    TPVSystemObj(DERElem).SetNominalDEROutput();
-
-                end
-                else
-                begin
-                    TStorageObj(DERElem).kWRequested := PLimitVW;
-
-                    // Updates PresentkW and Presentkvar considering watt and var priorities
-                    TStorageObj(DERElem).SetNominalDEROutput();
-                end;
+                DERElem.kWRequested := PLimitVW;
+                // Updates PresentkW and Presentkvar considering watt and var priorities
+                DERElem.SetNominalDEROutput();
 
                 // Values used in convergence
                 FAvgpVpuPrior := FPresentVpu;
@@ -1442,7 +1411,7 @@ begin
                 end
                 else
                 begin
-                    if abs(abs(TStorageObj(DERElem).presentkW) - PLimitVW) / PLimitVW > 0.0001 then
+                    if abs(abs(TStorageObj(DERElem).PresentkW()) - PLimitVW) / PLimitVW > 0.0001 then
                         FVWOperation := 0; // 0.01% is the value chosen at the moment
 
                     if ShowEventLog then
@@ -1508,24 +1477,16 @@ begin
                 //--------------------------------------------- end main process ---------------------------------------------//
 
                 // Sets DER kvar_out and kW_out
-                if DERElem.IsPVSystem() then
-                begin
-                    TPVSystemObj(DERElem).Presentkvar := QDesiredVV;
-                    TPVSystemObj(DERElem).presentkW := PLimitVW;
-                end
-                else
-                begin
-                    TStorageObj(DERElem).kvarRequested := QDesiredVV;
-                    TStorageObj(DERElem).kWRequested := PLimitVW;
-                end;
+                DERElem.kvarRequested := QDesiredVV;
+                DERElem.kWRequested := PLimitVW;
 
                 // Updates PresentkW and Presentkvar considering watt and var priorities
                 DERElem.SetNominalDEROutput();
 
                 if QDesiredVV >= 0.0 then
-                    Qoutputpu := DERElem.Get_Presentkvar / QHeadroom
+                    Qoutputpu := DERElem.Presentkvar() / QHeadroom
                 else
-                    Qoutputpu := DERElem.Get_Presentkvar / QHeadroomNeg;
+                    Qoutputpu := DERElem.Presentkvar() / QHeadroomNeg;
 
                 // Values used in convergence
                 QoutputVVpu := Qoutputpu;
@@ -1533,13 +1494,13 @@ begin
                 POldVWpu := PLimitVW / PBase;
 
                 // Values used in CalcQVVcurve_desiredpu
-                QOld := DERElem.Get_Presentkvar;
-                QOldVV := DERElem.Get_Presentkvar;
+                QOld := DERElem.Presentkvar();
+                QOldVV := DERElem.Presentkvar();
 
                 if ShowEventLog then
                     AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                         Format('**VV_VW mode requested DER output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
-                        [QDesiredVV, DERElem.Get_Presentkvar()]));
+                        [QDesiredVV, DERElem.Presentkvar()]));
 
                 // Flag has to do set to 0 when kW_out is lower than Ptemp (max power allowed from volt-watt function)
                 if DERElem.IsPVSystem() then
@@ -1554,7 +1515,7 @@ begin
                 end
                 else
                 begin
-                    if abs(abs(TStorageObj(DERElem).presentkW) - PLimitVW) / PLimitVW > 0.0001 then
+                    if abs(abs(TStorageObj(DERElem).PresentkW()) - PLimitVW) / PLimitVW > 0.0001 then
                         FVWOperation := 0; // 0.01% is the value chosen at the moment
 
                     if ShowEventLog then
@@ -1578,7 +1539,7 @@ begin
                             if not ActiveCircuit.Solution.IsDynamicModel then
                             begin
                                 DER_OL := True;
-                                TStorageObj(DERElem).StorageState := 0;  // It's burning, Turn it off
+                                TStorageObj(DERElem).SetStorageState(0);  // It's burning, Turn it off
                                 TStorageObj(DERElem).StateChanged := TRUE;
                             end
                             else
@@ -1821,15 +1782,15 @@ begin
                         // FVVDRCOperation is a flag which indicates if VVDRC function operates or not (-1=absorbing Q, 1=injecting Q, 0=No operation)
                         if DERElem.IsPVSystem() then
                         begin
-                            PVSys.Set_Variable(5, FVreg);
-                            PVSys.Set_Variable(6, FDRCRollAvgWindow.AvgVal / (basekV * 1000.0)); // save rolling average voltage in monitor
-                            PVSys.Set_Variable(10, FVVDRCOperation);
+                            PVSys.SetVariable(5, FVreg);
+                            PVSys.SetVariable(6, FDRCRollAvgWindow.AvgVal / (basekV * 1000.0)); // save rolling average voltage in monitor
+                            PVSys.SetVariable(10, FVVDRCOperation);
                         end
                         else
                         begin
-                            Storage.Set_Variable(14, FVreg);
-                            Storage.Set_Variable(15, FDRCRollAvgWindow.AvgVal / (basekV * 1000.0)); // save rolling average voltage in monitor
-                            Storage.Set_Variable(19, FVVDRCOperation);
+                            Storage.SetVariable(14, FVreg);
+                            Storage.SetVariable(15, FDRCRollAvgWindow.AvgVal / (basekV * 1000.0)); // save rolling average voltage in monitor
+                            Storage.SetVariable(19, FVVDRCOperation);
                         end;
 
                         // if inverter is off then exit
@@ -1895,15 +1856,15 @@ begin
 
                         if DERElem.IsPVSystem() then
                         begin
-                            PVSys.Set_Variable(5, FVreg);
-                            PVSys.Set_Variable(7, FVVOperation);
-                            PVSys.Set_Variable(8, FVWOperation);
+                            PVSys.SetVariable(5, FVreg);
+                            PVSys.SetVariable(7, FVVOperation);
+                            PVSys.SetVariable(8, FVWOperation);
                         end
                         else
                         begin
-                            Storage.Set_Variable(14, FVreg);
-                            Storage.Set_Variable(16, FVVOperation);
-                            Storage.Set_Variable(17, FVWOperation);
+                            Storage.SetVariable(14, FVreg);
+                            Storage.SetVariable(16, FVVOperation);
+                            Storage.SetVariable(17, FVWOperation);
                         end;
 
                         // if inverter is off then exit
@@ -1990,13 +1951,13 @@ begin
 
                     if DERElem.IsPVSystem() then
                     begin
-                        PVSys.Set_Variable(5, FVreg);
-                        PVSys.Set_Variable(8, FVWOperation);
+                        PVSys.SetVariable(5, FVreg);
+                        PVSys.SetVariable(8, FVWOperation);
                     end
                     else
                     begin
-                        Storage.Set_Variable(14, FVreg);
-                        Storage.Set_Variable(17, FVWOperation);
+                        Storage.SetVariable(14, FVreg);
+                        Storage.SetVariable(17, FVWOperation);
                     end;
 
                     if (FInverterON = FALSE) then
@@ -2081,13 +2042,13 @@ begin
 
                     if DERElem.IsPVSystem() then
                     begin
-                        PVSys.Set_Variable(5, FVreg);
-                        PVSys.Set_Variable(7, FVVOperation);
+                        PVSys.SetVariable(5, FVreg);
+                        PVSys.SetVariable(7, FVVOperation);
                     end
                     else
                     begin
-                        Storage.Set_Variable(14, FVreg);
-                        Storage.Set_Variable(16, FVVOperation);
+                        Storage.SetVariable(14, FVreg);
+                        Storage.SetVariable(16, FVVOperation);
                     end;
 
                     // if inverter is off then exit
@@ -2128,13 +2089,13 @@ begin
 
                     if DERElem.IsPVSystem() then
                     begin
-                        PVSys.Set_Variable(5, FVreg);
-                        PVSys.Set_Variable(11, FWPOperation);
+                        PVSys.SetVariable(5, FVreg);
+                        PVSys.SetVariable(11, FWPOperation);
                     end
                     else
                     begin
-                        Storage.Set_Variable(14, FVreg);
-                        Storage.Set_Variable(16, FWPOperation);
+                        Storage.SetVariable(14, FVreg);
+                        Storage.SetVariable(16, FWPOperation);
                     end;
 
                     // if inverter is off then exit
@@ -2175,13 +2136,13 @@ begin
 
                     if DERElem.IsPVSystem() then
                     begin
-                        PVSys.Set_Variable(5, FVreg);
-                        PVSys.Set_Variable(12, FWVOperation);        //CHANGE HERE
+                        PVSys.SetVariable(5, FVreg);
+                        PVSys.SetVariable(12, FWVOperation);        //CHANGE HERE
                     end
                     else
                     begin
-                        Storage.Set_Variable(14, FVreg);
-                        Storage.Set_Variable(16, FWVOperation);
+                        Storage.SetVariable(14, FVreg);
+                        Storage.SetVariable(16, FWVOperation);
                     end;
 
                     // if inverter is off then exit
@@ -2222,15 +2183,15 @@ begin
 
                     if DERElem.IsPVSystem() then
                     begin
-                        PVSys.Set_Variable(5, FVreg);
-                        PVSys.Set_Variable(6, FDRCRollAvgWindow.AvgVal / (basekV * 1000.0)); // save rolling average voltage in monitor
-                        PVSys.Set_Variable(9, FDRCOperation);
+                        PVSys.SetVariable(5, FVreg);
+                        PVSys.SetVariable(6, FDRCRollAvgWindow.AvgVal / (basekV * 1000.0)); // save rolling average voltage in monitor
+                        PVSys.SetVariable(9, FDRCOperation);
                     end
                     else
                     begin
-                        Storage.Set_Variable(14, FVreg);
-                        Storage.Set_Variable(15, FDRCRollAvgWindow.AvgVal / (basekV * 1000.0)); // save rolling average voltage in monitor
-                        Storage.Set_Variable(18, FDRCOperation);
+                        Storage.SetVariable(14, FVreg);
+                        Storage.SetVariable(15, FDRCRollAvgWindow.AvgVal / (basekV * 1000.0)); // save rolling average voltage in monitor
+                        Storage.SetVariable(18, FDRCOperation);
                     end;
 
                     // if inverter is off then exit
@@ -2278,7 +2239,7 @@ begin
                     if DERElem.GFM_Mode then
                     begin
                         // Check if it's in GFM mode
-                        if (not DERElem.IsStorage()) or (DERElem.IsStorage() and (TStorageObj(DERElem).StorageState = 1)) then // storage case
+                        if (not DERElem.IsStorage()) or (DERElem.IsStorage() and (TStorageObj(DERElem).StorageState() = 1)) then // storage case
                         begin
                             if DERElem.dynVars.ILimit > 0 then
                                 Valid := DERElem.CheckAmpsLimit() // Checks if reached the Amps limit
@@ -2521,7 +2482,7 @@ end;
 
 procedure TInvControlObj.UpdateInvControl(i: Integer);
 var
-    j, k: Integer;
+    j: Integer;
     solnvoltage: Double;
     BasekV: Double;
     DERElem: TInvBasedPCE;
@@ -2588,7 +2549,7 @@ begin
 
             // compute the present terminal voltage
             DERElem.ComputeVterminal();
-            //PVSys.Set_Variable(5,FDRCRollAvgWindow.AvgVal); // save rolling average voltage in monitor
+            //PVSys.SetVariable(5,FDRCRollAvgWindow.AvgVal); // save rolling average voltage in monitor
 
             solnvoltage := 0.0;
             GetMonVoltage(solnvoltage, j, BasekV);
@@ -2956,7 +2917,7 @@ begin
             PLimitVWpu := Fvoltwatt_curve.GetYValue(FPresentVpu)
         else
         begin
-            if TStorageObj(ControlledElement[j]).StorageState = STORE_DISCHARGING then
+            if TStorageObj(ControlledElement[j]).StorageState() = STORE_DISCHARGING then
             begin
                 if TStorageObj(ControlledElement[j]).FVWStateRequested then
                     PLimitVWpu := FvoltwattCH_curve.GetYValue(FPresentVpu)
@@ -2965,7 +2926,7 @@ begin
 
             end
             else
-            if (TStorageObj(ControlledElement[j]).StorageState = STORE_CHARGING) and (FvoltwattCH_curve <> NIL) then
+            if (TStorageObj(ControlledElement[j]).StorageState() = STORE_CHARGING) and (FvoltwattCH_curve <> NIL) then
             begin
                 if TStorageObj(ControlledElement[j]).FVWStateRequested then
                     PLimitVWpu := Fvoltwatt_curve.GetYValue(FPresentVpu)

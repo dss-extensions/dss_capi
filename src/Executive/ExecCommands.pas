@@ -243,7 +243,7 @@ begin
 
         ParamPointer := 0;
         ParamName := DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
         if Length(Param) = 0 then
             Exit;  // Skip blank line
 
@@ -320,7 +320,7 @@ begin
             ord(Cmd.CD):
             begin
                 ParamName := DSS.Parser.NextParam;
-                Param := DSS.Parser.StrValue;
+                Param := DSS.Parser.MakeString();
                 if DirectoryExists(Param) then
                 begin
                     DSS.CmdResult := 0;
@@ -398,7 +398,7 @@ begin
                 begin
                     // rebuild command line and pass to editor
                     // use quotes to ensure first parameter is interpreted OK after rebuild
-                    DSS.Parser.CmdString := PropName + '="' + Param + '" ' + DSS.Parser.Remainder;
+                    DSS.Parser.CmdString := PropName + '="' + Param + '" ' + DSS.Parser.Remainder();
                     DSS.ActiveDSSObject.ParentClass.Edit(DSS.Parser);
                 end;
             end;
@@ -675,7 +675,7 @@ begin
             ord(Cmd.AggregateProfiles):
             begin
                 DSS.Parser.NextParam;
-                DSS.ActiveCircuit.AggregateProfiles(DSS.Parser.StrValue);
+                DSS.ActiveCircuit.AggregateProfiles(DSS.Parser.MakeString());
             end;
 {$ENDIF}
             ord(Cmd.ExportVViolations):
@@ -686,12 +686,12 @@ begin
             ord(Cmd.AllPCEatBus):
             begin
                 DSS.Parser.NextParam;
-                DSS.GlobalResult  :=  DSS.ActiveCircuit.ReportPCEatBus(DSS.Parser.StrValue);
+                DSS.GlobalResult  :=  DSS.ActiveCircuit.ReportPCEatBus(DSS.Parser.MakeString());
             end;
             ord(Cmd.AllPDEatBus):
             begin
                 DSS.Parser.NextParam;
-                DSS.GlobalResult  :=  DSS.ActiveCircuit.ReportPDEatBus(DSS.Parser.StrValue);
+                DSS.GlobalResult  :=  DSS.ActiveCircuit.ReportPDEatBus(DSS.Parser.MakeString());
             end;
             ord(Cmd.TotalPowers): 
                 DSS.CmdResult := DSS.DSSExecutive.DopowersCmd(1);

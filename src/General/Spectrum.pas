@@ -300,11 +300,11 @@ begin
             FSReadln(F, S);  // Use Auxparser, which allows for formats
             DSS.AuxParser.CmdString := S;
             DSS.AuxParser.NextParam();
-            HarmArray[i] := DSS.AuxParser.DblValue;
+            HarmArray[i] := DSS.AuxParser.MakeDouble();
             DSS.AuxParser.NextParam();
-            puMagArray[i] := DSS.AuxParser.DblValue * 0.01;
+            puMagArray[i] := DSS.AuxParser.MakeDouble() * 0.01;
             DSS.AuxParser.NextParam();
-            AngleArray[i] := DSS.AuxParser.DblValue;
+            AngleArray[i] := DSS.AuxParser.MakeDouble();
         end;
         F.Free();
         NumHarm := i;   // reset number of points

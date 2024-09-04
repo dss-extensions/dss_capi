@@ -135,7 +135,7 @@ var
 begin
     with DSS.ActiveCircuit do
     begin
-        if Buses^[i].NumNodesThisBus >= 3 then
+        if Buses^[i].numNodesThisBus >= 3 then
         begin
             // compute sequence voltages for Nodes 1, 2, and 3 only
 
@@ -219,7 +219,7 @@ begin
     begin
         jj := 1;
         with Buses^[i] do
-            for j := 1 to NumNodesThisBus do
+            for j := 1 to numNodesThisBus do
             begin
          // Get the index of the next Node in numerical sequence
 
@@ -240,7 +240,7 @@ begin
                     if k > 3 then
                         k := 1;
                     kk := FindIdx(k);
-                    if kk <= NumNodesThisBus then
+                    if kk <= numNodesThisBus then
                     begin
                         nref2 := Buses^[i].GetRef(kk); // reference for next phase in sequence
                         VoltsLL := Volts - DSS.ActiveCircuit.Solution.NodeV^[nref2];
@@ -280,7 +280,7 @@ begin
                 else
                 begin
                     FSWrite(F, Format('%s %s %10.5g /_ %6.1f %9.5g %9.3f', [AnsiUpperCase(Bname), NodeName, Vmag, cdang(Volts), Vpu, kvbase * SQRT3]));
-                    if (NumNodesThisBus > 1) and (kk > 0) and (jj <= 4) then
+                    if (numNodesThisBus > 1) and (kk > 0) and (jj <= 4) then
                         FSWrite(F, Format('        %s %10.5g /_ %6.1f %9.5g', [NodeNameLL, VmagLL, cdang(VoltsLL), VpuLL]));
                     FSWriteln(F);
                     BName := Pad('   -', MaxBusNameLength);
@@ -1025,12 +1025,12 @@ begin
                             if j = 1 then
                             begin
                //----PDelem.ActiveTerminalIdx := 1;
-                                S := PDElem.ExcesskVANorm[1];
+                                S := PDElem.GetExcesskVANorm(1);
                                 if Opt = 1 then
                                     S := S * 0.001;
                                 FSWrite(F, Format('%11.1f', [S.re]));
                                 FSWrite(F, Format('%11.1f', [S.im]));
-                                S := PDElem.ExcesskVAEmerg[1];
+                                S := PDElem.GetExcesskVAEmerg(1);
                                 if Opt = 1 then
                                     S := S * 0.001;
                                 FSWrite(F, Format('%11.1f', [S.re]));
@@ -1886,7 +1886,7 @@ begin
                     begin
                         WriteStr(sout, Pad(EncloseQuotes(AnsiUpperCase(BusList.NameOfIndex(iBus))) + ' ', MaxBusNameLength + 2));
                         FSWrite(F, sout);
-                        for i := 1 to NumNodesThisBus do
+                        for i := 1 to numNodesThisBus do
                         begin
                             CurrMag := Cabs(BusCurrent^[i]);
                             if i > 1 then 
@@ -1924,16 +1924,16 @@ begin
                     // Bus Norton Equivalent Current, Isc has been previously computed
                     with Buses^[iBus] do
                     begin
-                        ZFault := TcMatrix.CreateMatrix(NumNodesThisBus);
+                        ZFault := TcMatrix.CreateMatrix(numNodesThisBus);
                         ZFault.CopyFrom(Zsc);
 
-                        for iphs := 1 to NumNodesThisBus do
+                        for iphs := 1 to numNodesThisBus do
                         begin
                             IFault := VBus[iphs] / Zsc.GetElement(iphs, iphs);
 
                             S := Format('%s %4u %12.0f ', [Pad(EncloseQuotes(AnsiUpperCase(BusList.NameOfIndex(iBus))), MaxBusNameLength + 2), GetNum(iphs), Cabs(Ifault)]);
                             FSWrite(F, S, '   ');
-                            for i := 1 to NumNodesThisBus do
+                            for i := 1 to numNodesThisBus do
                             begin
                                 Vphs := Cabs(VBus[i] - (Zsc.GetElement(i, iphs) * IFault));
                                 if kVbase > 0.0 then
@@ -1967,14 +1967,14 @@ begin
                     // Bus Norton Equivalent Current, Isc has been previously computed
                     with Buses^[iBus] do
                     begin
-                        YFault := TcMatrix.CreateMatrix(NumNodesThisBus);
-                        Getmem(VFault, Sizeof(Complex) * NumNodesThisBus);
+                        YFault := TcMatrix.CreateMatrix(numNodesThisBus);
+                        Getmem(VFault, Sizeof(Complex) * numNodesThisBus);
 
                         GFault := Cmplx(10000.0, 0.0);
 
-                        for iphs := 1 to NumNodesThisBus do
+                        for iphs := 1 to numNodesThisBus do
                         begin
-                            for iphs2 := 1 to NumNodesThisBus do
+                            for iphs2 := 1 to numNodesThisBus do
                             begin
 
                                 if iphs >= iphs2 then
@@ -1993,7 +1993,7 @@ begin
                                 WriteStr(sout, Pad(EncloseQuotes(AnsiUpperCase(BusList.NameOfIndex(iBus))), MaxBusNameLength + 2), GetNum(Iphs): 4, GetNum(iphs2): 4, Cabs((VFault^[iphs] - VFault^[iphs2]) * GFault): 12: 0, '   ');
                                 FSWrite(F, sout);
 
-                                for i := 1 to NumNodesThisBus do
+                                for i := 1 to numNodesThisBus do
                                 begin
                                     Vphs := Cabs(VFault^[i]);
                                     if kvbase > 0.0 then
@@ -2224,9 +2224,9 @@ begin
                 else
                     FSWrite(F, '     No  ');
                 FSWrite(F, '     ');
-                FSWrite(F, Format('%5d', [pBus.NumNodesThisBus]));
+                FSWrite(F, Format('%5d', [pBus.numNodesThisBus]));
                 FSWrite(F, '       ');
-                for j := 1 to pBus.NumNodesThisBus do
+                for j := 1 to pBus.numNodesThisBus do
                 begin
                     FSWrite(F, Format('%4d ', [pBus.GetNum(j)]));
                 end;
@@ -2435,7 +2435,7 @@ begin
     try
         FileNm := StripExtension(FileNm);
         {ParamName :=} DSS.Parser.NextParam;
-        Param := DSS.Parser.StrValue;
+        Param := DSS.Parser.MakeString();
 
         FileNm := FileNm + '_' + Param + '.txt';
 
@@ -2499,7 +2499,7 @@ begin
         FreeAndNil(F);
 
         DSS.Parser.NextParam;
-        Param := DSS.Parser.strvalue;
+        Param := DSS.Parser.MakeString();
 
         case length(Param) of
             0:
@@ -2828,7 +2828,7 @@ begin
                 FSWriteln(F, 'No. of variables: ', IntToStr(pcElem.Numvariables));
                 for  i := 1 to pcElem.Numvariables do
                 begin
-                    FSWriteln(F, Format('  %s = %-.6g', [pcElem.VariableName(i), pcElem.Variable[i]]));
+                    FSWriteln(F, Format('  %s = %-.6g', [pcElem.VariableName(i), pcElem.GetVariable(i)]));
                 end;
                 FSWriteln(F);
             end;
@@ -3279,7 +3279,7 @@ begin
         Z := NIL;
         YC := NIL;
 
-        DSS.ActiveEarthModel := DSS.DefaultEarthModel;
+        DSS.ActiveEarthModel := DSS.DefaultEarthModel; // Left for upstream compatibility
 
         p := DSS.LineGeometryClass.first;
         while p > 0 do
@@ -3290,9 +3290,9 @@ begin
 
             try
                 // Get impedances per unit length
-                pelem.RhoEarth := Rho;
-                Z := pelem.Zmatrix[freq, 1.0, Units];
-                YC := pelem.YCmatrix[freq, 1.0, Units];
+                pelem.lineConstants.SetRhoEarth(Rho);
+                Z := pelem.GetZMatrix(freq, 1.0, Units, DSS.DefaultEarthModel);
+                YC := pelem.GetYCMatrix(freq, 1.0, Units, DSS.DefaultEarthModel);
             except
                 on E: Exception do
                     DoSimpleMsg(DSS, 'Error computing line constants for %s; Error message: %s', [pelem.FullName, E.Message], 9934);
@@ -3689,7 +3689,7 @@ begin
 
             for i := 1 to DSS.ActiveCircuit.NumBuses do
             begin
-                for j := 1 to Buses^[i].NumNodesThisBus do
+                for j := 1 to Buses^[i].numNodesThisBus do
                 begin
                     nref := Buses^[i].GetRef(j);
                     dTemp := Cabs(Currents^[nref]);

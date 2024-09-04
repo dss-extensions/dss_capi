@@ -346,7 +346,7 @@ begin
     begin
         // myBName := DSS.ActiveCircuit.BusList.Get(i + 1);
         bus := DSS.ActiveCircuit.Buses[i + 1];
-        for j := 0 to (bus.NumNodesThisBus - 1) do // TODO: BUG: j is not used
+        for j := 0 to (bus.numNodesThisBus - 1) do // TODO: BUG: j is not used
         begin
             SetLength(NCIM_NodePower, Length(NCIM_NodePower) + 1);
             NCIM_NodePower[High(NCIM_NodePower)] := 0;

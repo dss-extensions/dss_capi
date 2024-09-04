@@ -125,7 +125,7 @@ begin
         for i := 1 to NumBuses do
         begin
             BusName := BusList.NameOfIndex(i);
-            for j := 1 to Buses[i].NumNodesThisBus do
+            for j := 1 to Buses[i].numNodesThisBus do
             begin
                 setlength(AllNNames, (length(AllNNames) + 1));
                 AllNNames[high(AllNNames)] := BusName + '.' + IntToStr(Buses[i].GetNum(j));

@@ -103,7 +103,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, PMon.CSVFileName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, PMon.GetCSVFileName());
 end;
 //------------------------------------------------------------------------------
 function Monitors_Get_First(): Integer; CDECL;

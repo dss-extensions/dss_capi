@@ -462,13 +462,13 @@ begin
         
         case ClsIdx of
             ord(ExtraClassIDs.DSSObjs):
-                Result := PPointer(DSS.DSSObjs.InternalPointer);
+                Result := PPointer(DSS.DSSObjs.listPtr);
             ord(ExtraClassIDs.CktElements):
-                Result := PPointer(DSS.ActiveCircuit.CktElements.InternalPointer);
+                Result := PPointer(DSS.ActiveCircuit.CktElements.listPtr);
             ord(ExtraClassIDs.PCElements):
-                Result := PPointer(DSS.ActiveCircuit.PCElements.InternalPointer);
+                Result := PPointer(DSS.ActiveCircuit.PCElements.listPtr);
             ord(ExtraClassIDs.PDElements):
-                Result := PPointer(DSS.ActiveCircuit.PDElements.InternalPointer);
+                Result := PPointer(DSS.ActiveCircuit.PDElements.listPtr);
         else
             DoSimpleMsg(DSS, 'Class index is not a valid DSS class or convenience extra class.', [ClsIdx], 5022);
         end;
@@ -479,7 +479,7 @@ begin
     if Cls = NIL then
         Exit;
 
-    Result := PPointer(Cls.ElementList.InternalPointer);
+    Result := PPointer(Cls.ElementList.listPtr);
 end;
 
 function Obj_GetCount(DSS: TDSSContext; ClsIdx: Integer): Integer; CDECL;
@@ -996,7 +996,7 @@ begin
     if cls = NIL then
         Exit;
     ensureBatchSize(cls.ElementList.Count, ResultPtr, ResultCount);
-    objlist := TDSSObjectPtr(cls.ElementList.InternalPointer);
+    objlist := TDSSObjectPtr(cls.ElementList.listPtr);
     outptr := ResultPtr;
     try
         res := re;
@@ -1038,7 +1038,7 @@ begin
         Exit;
     ensureBatchSize(cls.ElementList.Count, ResultPtr, ResultCount);
     ResultCount[0] := cls.ElementList.Count;
-    objlist := TDSSObjectPtr(cls.ElementList.InternalPointer);
+    objlist := TDSSObjectPtr(cls.ElementList.listPtr);
     outptr := ResultPtr;
     for i := 1 to cls.ElementList.Count do
     begin
@@ -1084,7 +1084,7 @@ begin
     begin
         Exit;
     end;
-    Batch_FilterByInt32Property(DSS, ResultPtr, ResultCount, TDSSObjectPtr(cls.ElementList.InternalPointer), cls.ElementList.Count, propidx, value);
+    Batch_FilterByInt32Property(DSS, ResultPtr, ResultCount, TDSSObjectPtr(cls.ElementList.listPtr), cls.ElementList.Count, propidx, value);
 end;
 
 procedure Batch_FilterByInt32Property(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; propidx: Integer; value: Integer); CDECL;
@@ -1174,7 +1174,7 @@ begin
     begin
         Exit;
     end;
-    Batch_FilterByFloat64PropertyRange(DSS, ResultPtr, ResultCount, TDSSObjectPtr(cls.ElementList.InternalPointer), cls.ElementList.Count, propidx, valueMin, valueMax);
+    Batch_FilterByFloat64PropertyRange(DSS, ResultPtr, ResultCount, TDSSObjectPtr(cls.ElementList.listPtr), cls.ElementList.Count, propidx, valueMin, valueMax);
 end;
 
 procedure Batch_FilterByFloat64PropertyRange(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; propidx: Integer; valueMin: Double; valueMax: Double); CDECL;

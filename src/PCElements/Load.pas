@@ -1921,7 +1921,7 @@ begin
             YPrimOpenCond := TcMatrix.CreateMatrix(Yorder)
         else
             YPrimOpenCond.Clear();
-        if YPrimOpenCond.Order <> Yorder then
+        if YPrimOpenCond.order <> Yorder then
         begin
             YPrimOpenCond.Free;
             YPrimOpenCond := TcMatrix.CreateMatrix(Yorder);

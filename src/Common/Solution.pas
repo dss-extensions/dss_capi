@@ -1480,7 +1480,7 @@ begin
     // This routine adds the series capacitors to the incidence matrix vectors
     for elem in ckt.ShuntCapacitors do
     begin
-        if not (elem.NumTerminals > 1) or not elem.Enabled then
+        if not (elem.NumTerm > 1) or not elem.Enabled then
             continue;
 
         inc(temp_counter);
@@ -2363,7 +2363,7 @@ begin
             for i := 1 to ckt.NumBuses do
             begin
                 BusName := ckt.BusList.NameOfIndex(i);
-                for j := 1 to ckt.Buses[i].NumNodesThisBus do
+                for j := 1 to ckt.Buses[i].numNodesThisBus do
                 begin
                     Volts := NodeV[ckt.Buses[i].RefNo[j]];
                     WriteStr(sout, BusName, ', ', ckt.Buses[i].GetNum(j): 0, Format(', %-.7g, %-.7g', [Cabs(Volts), CDang(Volts)]));
@@ -2457,7 +2457,7 @@ begin
     begin
         pBus := ckt.Buses[i];
             if pBus.VBus <> NIL then
-                for j := 1 to pBus.NumNodesThisBus do
+                for j := 1 to pBus.numNodesThisBus do
                     pBus.VBus[j] := NodeV[pBus.RefNo[j]];
     end;
 end;
@@ -2471,7 +2471,7 @@ begin
     begin
         pBus := ckt.Buses[i];
             if pBus.VBus <> NIL then
-                for j := 1 to pBus.NumNodesThisBus do
+                for j := 1 to pBus.numNodesThisBus do
                     NodeV[pBus.RefNo[j]] := pBus.VBus[j];
     end;
 end;

@@ -39,8 +39,6 @@ type
         kWLosses, BaseLosses, puLossImprovement: Double;
         kWEEN, BaseEEN, puEENImprovement: Double;
 
-        function Get_WeightedLosses: Double;
-
         procedure ComputekWLosses_EEN;
         procedure SetBaseLosses;
 
@@ -66,7 +64,7 @@ type
 
         function Solve: Integer; // Automatically add caps or generators
 
-        property WeightedLosses: Double READ Get_WeightedLosses;
+        function GetWeightedLosses(): Double;
     end;
 
 implementation
@@ -183,7 +181,7 @@ begin
 end;
 
 
-function TAutoAdd.Get_WeightedLosses: Double;
+function TAutoAdd.GetWeightedLosses(): Double;
 // Returns losses in metered part of circuit +
 // weighted EEN values
 //
@@ -404,7 +402,7 @@ begin
                         // Get the Number of Phases at this bus and the Node Ref and add into the Aux Current Array
 
                         // Assume either a 3-phase or 1-phase generator
-                        if ckt.Buses[BusIndex].NumNodesThisBus < 3 then
+                        if ckt.Buses[BusIndex].numNodesThisBus < 3 then
                             Phases := 1
                         else
                             Phases := 3;
@@ -424,7 +422,7 @@ begin
 
                             DSS.EnergyMeterClass.SampleAll();
 
-                            LossImproveFactor := WeightedLosses;
+                            LossImproveFactor := GetWeightedLosses();
 
                             FSWrite(Flog, Format('"%s", %-g', [TestBus, ckt.Buses[BusIndex].kVBase * SQRT3]));
                             FSWrite(Flog, Format(', %-g, %-g', [kWLosses, puLossImprovement * 100.0]));
@@ -512,7 +510,7 @@ begin
                         // Get the Number of Phases at this bus and the Node Ref and add into the Aux Current Array
 
                         // Assume either a 3-phase or 1-phase Capacitor
-                        if ckt.Buses[BusIndex].NumNodesThisBus < 3 then
+                        if ckt.Buses[BusIndex].numNodesThisBus < 3 then
                             Phases := 1
                         else
                             Phases := 3;
@@ -536,7 +534,7 @@ begin
 
                             DSS.EnergyMeterClass.SampleAll();
 
-                            LossImproveFactor := WeightedLosses;
+                            LossImproveFactor := GetWeightedLosses();
 
                             FSWrite(Flog, Format('"%s", %-g', [TestBus, ckt.Buses[BusIndex].kVBase * SQRT3]));
                             FSWrite(Flog, Format(', %-g, %-g', [kWLosses, puLossImprovement * 100.0]));

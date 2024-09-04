@@ -26,7 +26,7 @@ uses
     DSSObject,
     uCMatrix,
     LineConstants,
-    ConductorData,
+    conductorData,
     CNData,
     TSData,
     LineSpacing;
@@ -92,19 +92,19 @@ type
 
     TLineGeometryObj = class(TDSSObject)
     PUBLIC
-        FPhaseChoice: pConductorChoiceArray; // TODO: remove -- somewhat redundant with FWireData
+        phaseChoice: pConductorChoiceArray; // TODO: remove -- somewhat redundant with conductorData (FWireData)
         FNConds: Integer;
         FNPhases: Integer;
-        FWireData: pConductorDataArray;
-        FX: pDoubleArray;
-        FY: pDoubleArray;
-        FUnits: pIntegerArray;
+        conductorData: pConductorDataArray; // was originally FWireData
+        xCoord: pDoubleArray;
+        yCoord: pDoubleArray;
+        units: pIntegerArray;
         FLastUnit: Integer;
-        DataChanged: Boolean;
+        dataChanged: Boolean;
         FReduce: LongBool;
         FActiveCond: Integer;
 
-        FLineData: TLineConstants;
+        lineConstants: TLineConstants;
 
         NormAmps: Double;
         EmergAmps: Double;
@@ -116,27 +116,10 @@ type
         procedure ChangeLineConstantsType(newPhaseChoice: ConductorChoice);
 
         procedure set_Nconds(const Value: Integer);
-        procedure set_Nphases(const Value: Integer);
+        procedure SetNPhases(const Value: Integer);
         procedure set_ActiveCond(const Value: Integer);
-        function Get_YCmatrix(f, Lngth: Double; Units: Integer): Tcmatrix;
-        function Get_Zmatrix(f, Lngth: Double; Units: Integer): Tcmatrix;
-        function Get_RhoEarth: Double;
-        procedure Set_RhoEarth(const Value: Double);
         function get_Nconds: Integer;
-        procedure UpdateLineGeometryData(f: Double);   // call this before using the line data
-
-        // CIM Accessors
-        function Get_FX(i: Integer): Double;
-        function Get_FY(i: Integer): Double;
-        function Get_FUnits(i: Integer): Integer;
-        function Get_ConductorName(i: Integer): String;
-        function Get_ConductorData(i: Integer): TConductorDataObj;
-        //TODO: remove
-        procedure Set_FX(i: Integer; Value: Double);
-        procedure Set_FY(i: Integer; Value: Double);
-        procedure Set_FUnits(i: Integer; Value: Integer);
-
-        function Get_PhaseChoice(i: Integer): ConductorChoice;
+        procedure UpdateLineGeometryData(f: Double; earthModel: Integer);   // call this before using the line data
 
         constructor Create(ParClass: TDSSClass; const LineGeometryName: String);
         destructor Destroy; OVERRIDE;
@@ -148,23 +131,12 @@ type
 
         // called from a Line object that has its own Spacing and Wires input
         // automatically sets reduce=y if the spacing has more wires than phases
-        procedure LoadSpacingAndWires(Spc: TLineSpacingObj; Wires: pConductorDataArray);
+        procedure LoadSpacingAndWires(Spc: TLineSpacingObj; Wires: pConductorDataArray; earthModel: Integer);
 
         property Nconds: Integer READ get_Nconds WRITE set_Nconds;
-        property Nphases: Integer READ FNphases WRITE set_Nphases;
         property ActiveCond: Integer READ FActiveCond WRITE set_ActiveCond;
-        property Zmatrix[f, Lngth: Double; Units: Integer]: Tcmatrix READ Get_Zmatrix;
-        property YCmatrix[f, Lngth: Double; Units: Integer]: Tcmatrix READ Get_YCmatrix;
-        property RhoEarth: Double READ Get_RhoEarth WRITE Set_RhoEarth;
-
-        // CIM XML accessors
-        property Xcoord[i: Integer]: Double READ Get_FX WRITE Set_FX;
-        property Ycoord[i: Integer]: Double READ Get_FY WRITE Set_FY;
-        property Units[i: Integer]: Integer READ Get_FUnits WRITE Set_FUnits;
-        property ConductorName[i: Integer]: String READ Get_ConductorName;
-        property ConductorData[i: Integer]: TConductorDataObj READ Get_ConductorData;
-        property NWires: Integer READ FNConds;
-        property PhaseChoice[i: Integer]: ConductorChoice READ Get_PhaseChoice;
+        function GetYCMatrix(f, Lngth: Double; Units: Integer; earthModel: Integer): Tcmatrix;
+        function GetZMatrix(f, Lngth: Double; Units: Integer; earthModel: Integer): Tcmatrix;        
     end;
 
 implementation
@@ -222,15 +194,15 @@ begin
     begin
         for i := istart to istop do
         begin
-            obj.FWireData[i] := TConductorDataObj(Value^);
+            obj.conductorData[i] := TConductorDataObj(Value^);
             Inc(Value);
         end;
         // TLineGeometryObj.PropertySideEffects should handle the other side-effects
         Exit;
     end
-    else if obj.FPhaseChoice[obj.ActiveCond] = Unknown then
+    else if obj.phaseChoice[obj.ActiveCond] = Unknown then
         obj.ChangeLineConstantsType(Overhead)
-    else if obj.FPhaseChoice[obj.ActiveCond] <> Overhead then
+    else if obj.phaseChoice[obj.ActiveCond] <> Overhead then
         // these are buried neutral wires 
         // (only when the phase conductors not overhead)
         istart := obj.FNPhases + 1;
@@ -245,7 +217,7 @@ begin
 
     for i := istart to istop do
     begin
-        obj.FWireData[i] := TConductorDataObj(Value^);
+        obj.conductorData[i] := TConductorDataObj(Value^);
         Inc(Value);
     end;
     obj.FActiveCond := istop;
@@ -274,21 +246,21 @@ begin
 
     // list of objects
     PropertyType[ord(TProp.tscables)] := TPropertyType.DSSObjectReferenceArrayProperty;
-    PropertyOffset[ord(TProp.tscables)] := ptruint(@obj.FWireData);
+    PropertyOffset[ord(TProp.tscables)] := ptruint(@obj.conductorData);
     PropertyOffset2[ord(TProp.tscables)] := ptruint(DSS.TSDataClass);
     PropertyFlags[ord(TProp.tscables)] := [TPropertyFlag.AltIndex, TPropertyFlag.Redundant, TPropertyFlag.SuppressJSON];
     PropertyRedundantWith[ord(TProp.tscables)] := ord(TProp.tscable);
     PropertyArrayAlternative[ord(TProp.tscable)] := ord(TProp.tscables);
     
     PropertyType[ord(TProp.cncables)] := TPropertyType.DSSObjectReferenceArrayProperty;
-    PropertyOffset[ord(TProp.cncables)] := ptruint(@obj.FWireData);
+    PropertyOffset[ord(TProp.cncables)] := ptruint(@obj.conductorData);
     PropertyOffset2[ord(TProp.cncables)] := ptruint(DSS.CNDataClass);
     PropertyFlags[ord(TProp.cncables)] := [TPropertyFlag.AltIndex, TPropertyFlag.Redundant, TPropertyFlag.SuppressJSON];
     PropertyRedundantWith[ord(TProp.cncables)] := ord(TProp.cncable);
     PropertyArrayAlternative[ord(TProp.cncable)] := ord(TProp.cncables);
 
     PropertyType[ord(TProp.wires)] := TPropertyType.DSSObjectReferenceArrayProperty;
-    PropertyOffset[ord(TProp.wires)] := ptruint(@obj.FWireData);
+    PropertyOffset[ord(TProp.wires)] := ptruint(@obj.conductorData);
     PropertyOffset2[ord(TProp.wires)] := ptruint(DSS.WireDataClass);
     PropertyOffset3[ord(TProp.wires)] := ptruint(@obj.FNConds);
     PropertyWriteFunction[ord(TProp.wires)] := @SetWires;
@@ -300,7 +272,7 @@ begin
 
     // enums
     PropertyType[ord(TProp.units)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.units)] := ptruint(@obj.FUnits);
+    PropertyOffset[ord(TProp.units)] := ptruint(@obj.units);
     PropertyOffset2[ord(TProp.units)] := PtrInt(DSS.UnitsEnum);
     PropertyFlags[ord(TProp.units)] := [TPropertyFlag.OnArray];
 
@@ -339,9 +311,9 @@ begin
     PropertyType[ord(TProp.cncable)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.tscable)] := TPropertyType.DSSObjectReferenceProperty;
 
-    PropertyOffset[ord(TProp.wire)] := ptruint(@obj.FWireData); 
-    PropertyOffset[ord(TProp.cncable)] := ptruint(@obj.FWireData); 
-    PropertyOffset[ord(TProp.tscable)] := ptruint(@obj.FWireData); 
+    PropertyOffset[ord(TProp.wire)] := ptruint(@obj.conductorData); 
+    PropertyOffset[ord(TProp.cncable)] := ptruint(@obj.conductorData); 
+    PropertyOffset[ord(TProp.tscable)] := ptruint(@obj.conductorData); 
     
     PropertyOffset2[ord(TProp.wire)] := ptruint(DSS.WireDataClass);
     PropertyOffset2[ord(TProp.cncable)] := ptruint(DSS.CNDataClass);
@@ -355,12 +327,12 @@ begin
     PropertyRedundantWith[ord(TProp.wire)] := ord(TProp.wires);
 
     PropertyType[ord(TProp.x)] := TPropertyType.DoubleOnArrayProperty; //TODO: use TPropertyFlag.OnArray instead
-    PropertyOffset[ord(TProp.x)] := ptruint(@obj.FX); 
+    PropertyOffset[ord(TProp.x)] := ptruint(@obj.xCoord); 
     PropertyOffset2[ord(TProp.x)] := ptruint(@obj.FActiveCond);
     PropertyFlags[ord(TProp.x)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.h)] := TPropertyType.DoubleOnArrayProperty; //TODO: use TPropertyFlag.OnArray instead
-    PropertyOffset[ord(TProp.h)] := ptruint(@obj.FY); 
+    PropertyOffset[ord(TProp.h)] := ptruint(@obj.yCoord); 
     PropertyOffset2[ord(TProp.h)] := ptruint(@obj.FActiveCond);
     PropertyFlags[ord(TProp.h)] := [TPropertyFlag.RequiredInSpecSet];
 
@@ -390,20 +362,20 @@ var
 begin
     case Idx of
         ord(TProp.nphases):
-            if FLineData <> NIL then
+            if lineConstants <> NIL then
             begin
-                FLineData.Nphases := FNPhases;
-                if (FLineData.Nphases > FNconds) then
-                    FLineData.Nphases := FNConds;
+                lineConstants.Nphases := FNPhases;
+                if (lineConstants.Nphases > FNconds) then
+                    lineConstants.Nphases := FNConds;
             end;
         ord(TProp.cond):
-            if FUnits[FactiveCond] = -1 then
-                FUnits[FactiveCond] := FLastUnit;  // makes this a sticky value so you don't have to repeat it
+            if units[FactiveCond] = -1 then
+                units[FactiveCond] := FLastUnit;  // makes this a sticky value so you don't have to repeat it
         ord(TProp.wire):
-            if FPhaseChoice[ActiveCond] = Unknown then
+            if phaseChoice[ActiveCond] = Unknown then
                 ChangeLineConstantsType(Overhead);
         ord(TProp.units):
-            FLastUnit := FUnits[ActiveCond];
+            FLastUnit := units[ActiveCond];
         ord(TProp.cncable), ord(TProp.cncables):
             ChangeLineConstantsType(ConcentricNeutral);
         ord(TProp.tscable), ord(TProp.tscables):
@@ -412,28 +384,28 @@ begin
         begin
             if previousIntVal <> FNConds then
             begin
-                if Assigned(FLineData) then
-                    FreeAndNil(FLineData);
+                if Assigned(lineConstants) then
+                    FreeAndNil(lineConstants);
 
                 // Allocations
-                Reallocmem(FWireData, Sizeof(FWireData[1]) * FNconds);
+                Reallocmem(conductorData, Sizeof(conductorData[1]) * FNconds);
                 for i := max(1, previousIntVal) to FNconds do
-                    FWireData[i] := NIL;
+                    conductorData[i] := NIL;
 
-                Reallocmem(FX, Sizeof(FX[1]) * FNconds);
-                Reallocmem(FY, Sizeof(FY[1]) * FNconds);
-                Reallocmem(FUnits, Sizeof(FUnits[1]) * FNconds);
-                Reallocmem(FPhaseChoice, Sizeof(FPhaseChoice[1]) * FNconds);
+                Reallocmem(xCoord, Sizeof(xCoord[1]) * FNconds);
+                Reallocmem(yCoord, Sizeof(yCoord[1]) * FNconds);
+                Reallocmem(units, Sizeof(units[1]) * FNconds);
+                Reallocmem(phaseChoice, Sizeof(phaseChoice[1]) * FNconds);
             end
             else
             begin
                 for i := 1 to FNconds do
-                    FWireData[i] := NIL;
+                    conductorData[i] := NIL;
             end;
                 
             if FNconds > previousIntVal then
                 for i := Max(1, previousIntVal) to FNconds do
-                    FPhaseChoice[i] := Unknown;
+                    phaseChoice[i] := Unknown;
 
             for i := 1 to FNconds do
             begin
@@ -445,28 +417,28 @@ begin
 
             // Initialize Allocations
             for i := 1 to FNconds do
-                FPhaseChoice[i] := Overhead;
+                phaseChoice[i] := Overhead;
             for i := 1 to FNconds do
-                FWireData[i] := NIL;
+                conductorData[i] := NIL;
             for i := 1 to FNconds do
-                FX[i] := 0.0;
+                xCoord[i] := 0.0;
             for i := 1 to FNconds do
-                FY[i] := 0.0;
+                yCoord[i] := 0.0;
             for i := 1 to FNconds do
-                FUnits[i] := -1;  // default to ft
+                units[i] := -1;  // default to ft
             FLastUnit := UNITS_FT;
         end;
         ord(TProp.spacing):
             if LineSpacingObj <> NIL then
             begin
-                if (FNConds = LineSpacingObj.NWires) then
+                if (FNConds = LineSpacingObj.NConds) then
                 begin
                     FLastUnit := LineSpacingObj.Units;
                     for i := 1 to FNConds do
                     begin
-                        FX[i] := LineSpacingObj.Xcoord[i];
-                        FY[i] := LineSpacingObj.Ycoord[i];
-                        FUnits[i] := FLastUnit;
+                        xCoord[i] := LineSpacingObj.GetXCoord(i);
+                        yCoord[i] := LineSpacingObj.GetYCoord(i);
+                        units[i] := FLastUnit;
                     end;
                     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
                     begin
@@ -488,17 +460,17 @@ begin
                 for i := 1 to NConds do
                 begin
                     ActiveCond := i;
-                    if FWireData[ActiveCond] is TWireDataObj then 
+                    if conductorData[ActiveCond] is TWireDataObj then 
                     begin
                         PropertySideEffects(ord(TProp.wire), 0, setterFlags);
                         continue;
                     end;
-                    if FWireData[ActiveCond] is TCNDataObj then 
+                    if conductorData[ActiveCond] is TCNDataObj then 
                     begin
                         PropertySideEffects(ord(TProp.cncable), 0, setterFlags);
                         continue;
                     end;
-                    if FWireData[ActiveCond] is TTSDataObj then 
+                    if conductorData[ActiveCond] is TTSDataObj then 
                     begin
                         PropertySideEffects(ord(TProp.tscable), 0, setterFlags);
                         continue;
@@ -511,19 +483,19 @@ begin
                 i := 1;
                 if Idx = ord(TProp.wires) then
                 begin
-                    if FPhaseChoice[ActiveCond] = Unknown then
+                    if phaseChoice[ActiveCond] = Unknown then
                     begin
                         // no other cables set for ActiveCond
                     end
                     else 
-                    if FPhaseChoice[ActiveCond] <> Overhead then
+                    if phaseChoice[ActiveCond] <> Overhead then
                         // these are buried neutral wires
                         // (only when the phase conductors not overhead)
                         i := FNPhases + 1;
                 end;
                 if i = 1 then
                 begin
-                    conductorObj := FWireData[1];
+                    conductorObj := conductorData[1];
                     if (conductorObj.NormAmps > 0.0) and (Normamps = 0.0) then 
                         Normamps  := conductorObj.NormAmps;
                     
@@ -542,10 +514,10 @@ begin
         end;
         ord(TProp.wire), ord(TProp.cncable), ord(TProp.tscable):
         begin
-            conductorObj := FWireData[ActiveCond];
+            conductorObj := conductorData[ActiveCond];
             if Assigned(conductorObj) then
             begin
-                // FWireData[ActiveCond] := conductorObj;
+                // conductorData[ActiveCond] := conductorObj;
                 // Default the current ratings for this geometry to the rating of the first conductor
                 if (ActiveCond = 1) then
                 begin
@@ -583,7 +555,7 @@ begin
         ord(TProp.TSCable),
         ord(TProp.CNCables),
         ord(TProp.TSCables):
-            DataChanged := TRUE;
+            dataChanged := TRUE;
     end;
 
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
@@ -596,26 +568,26 @@ var
 begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
-    NConds := Other.NWires; // allocates
+    NConds := Other.FNConds; // allocates
     FNphases := Other.FNphases;
     LineSpacingObj := Other.LineSpacingObj;
     FLineType := Other.FLineType;
     for i := 1 to FNConds do
-        FPhaseChoice[i] := Other.FPhaseChoice[i];
+        phaseChoice[i] := Other.phaseChoice[i];
     for i := 1 to FNConds do
-        FWireData[i] := Other.FWireData[i];
+        conductorData[i] := Other.conductorData[i];
     for i := 1 to FNConds do
-        FX[i] := Other.FX[i];
+        xCoord[i] := Other.xCoord[i];
     for i := 1 to FNConds do
-        FY[i] := Other.FY[i];
+        yCoord[i] := Other.yCoord[i];
     for i := 1 to FNConds do
-        FUnits[i] := Other.FUnits[i];
-    DataChanged := TRUE;
+        units[i] := Other.units[i];
+    dataChanged := TRUE;
     NormAmps := Other.NormAmps;
     EmergAmps := Other.EmergAmps;
     FReduce := Other.FReduce;
 
-    UpdateLineGeometryData(activecircuit.solution.Frequency);
+    UpdateLineGeometryData(activecircuit.solution.Frequency, DSS.ActiveEarthModel);
 end;
 
 constructor TLineGeometryObj.Create(ParClass: TDSSClass; const LineGeometryName: String);
@@ -624,14 +596,14 @@ begin
     Name := AnsiLowerCase(LineGeometryName);
     DSSObjType := ParClass.DSSClassType;
 
-    DataChanged := TRUE;
+    dataChanged := TRUE;
 
-    FPhaseChoice := NIL;
-    FWireData := NIL;
-    FX := NIL;
-    FY := NIL;
-    FUnits := NIL;
-    FLineData := NIL;
+    phaseChoice := NIL;
+    conductorData := NIL;
+    xCoord := NIL;
+    yCoord := NIL;
+    units := NIL;
+    lineConstants := NIL;
     LineSpacingObj := NIL;
 
     // was causing unnecessary allocations (was leaving dangling memory)
@@ -655,13 +627,13 @@ end;
 
 destructor TLineGeometryObj.Destroy;
 begin
-    if FLineData <> NIL then
-        FLineData.Free;
-    Reallocmem(Fwiredata, 0);
-    Reallocmem(FY, 0);
-    Reallocmem(FX, 0);
-    Reallocmem(FUnits, 0);
-    Reallocmem(FPhaseChoice, 0);
+    if lineConstants <> NIL then
+        lineConstants.Free;
+    Reallocmem(conductorData, 0);
+    Reallocmem(yCoord, 0);
+    Reallocmem(xCoord, 0);
+    Reallocmem(units, 0);
+    Reallocmem(phaseChoice, 0);
 
     inherited destroy;
 end;
@@ -693,64 +665,6 @@ begin
     end;
 end;
 
-function TLineGeometryObj.Get_FX(i: Integer): Double;
-begin
-    if i <= FNConds then
-        Result := FX[i]
-    else
-        Result := 0.0;
-end;
-
-function TLineGeometryObj.Get_FY(i: Integer): Double;
-begin
-    if i <= FNConds then
-        Result := FY[i]
-    else
-        Result := 0.0;
-end;
-
-function TLineGeometryObj.Get_FUnits(i: Integer): Integer;
-begin
-    if i <= FNConds then
-        Result := FUnits[i]
-    else
-        Result := 0;
-end;
-
-procedure TLineGeometryObj.Set_FX(i: Integer; Value: Double);
-begin
-    if i <= FNConds then
-        FX[i] := Value;
-end;
-
-procedure TLineGeometryObj.Set_FY(i: Integer; Value: Double);
-begin
-    if i <= FNConds then
-        FY[i] := Value;
-end;
-
-procedure TLineGeometryObj.Set_FUnits(i: Integer; Value: Integer);
-begin
-    if i <= FNConds then
-        FUnits[i] := Value;
-end;
-
-function TLineGeometryObj.Get_ConductorName(i: Integer): String;
-begin
-    if (i <= FNConds) and (FWireData[i] <> NIL) then
-        Result := FWireData[i].Name
-    else
-        Result := '';
-end;
-
-function TLineGeometryObj.Get_ConductorData(i: Integer): TConductorDataObj;
-begin
-    if (i <= FNConds) and (FWireData[i] <> NIL) then
-        Result := FWireData[i]
-    else
-        Result := NIL;
-end;
-
 function TLineGeometryObj.get_Nconds: Integer;
 begin
     if Freduce then
@@ -759,34 +673,22 @@ begin
         Result := FNConds;
 end;
 
-function TLineGeometryObj.Get_PhaseChoice(i: Integer): ConductorChoice;
-begin
-    Result := FPhaseChoice[i];
-end;
-
-function TLineGeometryObj.Get_RhoEarth: Double;
-begin
-    Result := FLineData.rhoearth;
-end;
-
-function TLineGeometryObj.Get_YCmatrix(f, Lngth: Double;
-    Units: Integer): Tcmatrix;
+function TLineGeometryObj.GetYCMatrix(f, Lngth: Double; Units: Integer; earthModel: Integer): Tcmatrix;
 begin
     Result := NIL;
-    if DataChanged then
-        UpdateLineGeometryData(f);
+    if dataChanged then
+        UpdateLineGeometryData(f, earthModel);
     if not DSS.SolutionAbort then
-        Result := FLineData.YCMatrix[f, Lngth, Units];
+        Result := lineConstants.GetYCMatrix(f, Lngth, Units);
 end;
 
-function TLineGeometryObj.Get_Zmatrix(f, Lngth: Double;
-    Units: Integer): Tcmatrix;
+function TLineGeometryObj.GetZMatrix(f, Lngth: Double; Units: Integer; earthModel: Integer): Tcmatrix;
 begin
     Result := NIL;
-    if DataChanged then
-        UpdateLineGeometryData(f);
+    if dataChanged then
+        UpdateLineGeometryData(f, earthModel);
     if not DSS.SolutionAbort then
-        Result := FLineData.ZMatrix[F, Lngth, Units, DSS.ActiveEarthModel];
+        Result := lineConstants.GetZMatrix(F, Lngth, Units, earthModel);
 end;
 
 procedure TLineGeometryObj.SaveWrite(F: TStream);
@@ -812,16 +714,16 @@ begin
                 begin   // if cond=, spacing, or wires were ever used write out arrays ...
                     for i := 1 to Fnconds do
                     begin
-                        if FWireData[i] = NIL then
+                        if conductorData[i] = NIL then
                             continue; // shouldn't happen in normal conditions
-                        if FWireData[i].ParentClass = DSS.TSDataClass then
+                        if conductorData[i].ParentClass = DSS.TSDataClass then
                             strPhaseChoice := 'tscable'
-                        else if FWireData[i].ParentClass = DSS.CNDataClass then
+                        else if conductorData[i].ParentClass = DSS.CNDataClass then
                             strPhaseChoice := 'cncable'
                         else
                             strPhaseChoice := 'wire';
                         FSWriteln(F, Format('~ Cond=%d %s=%s X=%.7g h=%.7g units=%s',
-                            [i, strPhaseChoice, FWireData[i].Name, FX[i], FY[i], LineUnitsStr(FUnits[i])]));
+                            [i, strPhaseChoice, conductorData[i].Name, xCoord[i], yCoord[i], LineUnitsStr(units[i])]));
                     end;
                     wroteConds := True;
                 end;
@@ -844,8 +746,8 @@ begin
         if Value <= FNconds then
         begin
             FActiveCond := Value;
-            if FUnits[FactiveCond] = -1 then
-                FUnits[FactiveCond] := FLastUnit;  // makes this a sticky value so you don't have to repeat it
+            if units[FactiveCond] = -1 then
+                units[FactiveCond] := FLastUnit;  // makes this a sticky value so you don't have to repeat it
         end;
 end;
 
@@ -858,10 +760,10 @@ begin
     needNew := FALSE;
 
     if (ActiveCond > 0) and (ActiveCond <= FNConds) and 
-       (newPhaseChoice <> FPhaseChoice[ActiveCond]) then
+       (newPhaseChoice <> phaseChoice[ActiveCond]) then
         needNew := TRUE
     else
-    if (FLineData = NIL) or (FNConds <> FLineData.Nconductors) then
+    if (lineConstants = NIL) or (FNConds <> lineConstants.Nconductors) then
         needNew := TRUE;
 
     if needNew then
@@ -876,16 +778,16 @@ begin
 
     if Assigned(newLineData) then
     begin
-        if Assigned(FLineData) then
+        if Assigned(lineConstants) then
         begin
-            newLineData.Nphases := FLineData.Nphases;
-            newLineData.rhoearth := FLineData.rhoearth;
+            newLineData.Nphases := lineConstants.Nphases;
+            newLineData.SetRhoEarth(lineConstants.FrhoEarth);
         end;
-        FreeAndNil(FLineData);
-        FLineData := newLineData;
+        FreeAndNil(lineConstants);
+        lineConstants := newLineData;
     end;
     if (ActiveCond > 0) and (ActiveCond <= FNConds) then
-        FPhaseChoice[ActiveCond] := newPhaseChoice;
+        phaseChoice[ActiveCond] := newPhaseChoice;
 end;
 
 procedure TLineGeometryObj.set_Nconds(const Value: Integer);
@@ -897,7 +799,7 @@ begin
     PropertySideEffects(ord(TProp.nconds), prev, [])
 end;
 
-procedure TLineGeometryObj.set_Nphases(const Value: Integer);
+procedure TLineGeometryObj.SetNPhases(const Value: Integer);
 begin
     // TODO: remove/comment this block if using only neutrals is acceptable
     if Value < 1 then
@@ -907,15 +809,10 @@ begin
     end;
 
     FNphases := Value;
-    FLineData.Nphases := Value;
+    lineConstants.Nphases := Value;
 end;
 
-procedure TLineGeometryObj.Set_RhoEarth(const Value: Double);
-begin
-    FLineData.RhoEarth := Value;
-end;
-
-procedure TLineGeometryObj.UpdateLineGeometryData(f: Double);
+procedure TLineGeometryObj.UpdateLineGeometryData(f: Double; earthModel: Integer);
 var
     i: Integer;
     LineGeomErrMsg: String;
@@ -926,20 +823,20 @@ var
 begin
     for i := 1 to FNconds do
     begin
-        if FWireData[i] = NIL then
+        if conductorData[i] = NIL then
             raise Exception.Create(Format(_('%s: WireData is not correctly initialized. Check the object definition.'), [FullName]));
 
-        FLineData.X[i, FUnits[i]] := FX[i];
-        FLineData.Y[i, FUnits[i]] := FY[i];
-        FLineData.radius[i, FWireData[i].RadiusUnits] := FWireData[i].Radius;
-        FLineData.capradius[i, FWireData[i].RadiusUnits] := FWireData[i].capRadius;
-        FLineData.GMR[i, FWireData[i].GMRUnits] := FWireData[i].GMR;
-        FLineData.Rdc[i, FWireData[i].ResUnits] := FWireData[i].Rdc;
-        FLineData.Rac[i, FWireData[i].ResUnits] := FWireData[i].Rac;
-        if (FWireData[i] is TCNDataObj) then
+        lineConstants.X[i, units[i]] := xCoord[i];
+        lineConstants.Y[i, units[i]] := yCoord[i];
+        lineConstants.radius[i, conductorData[i].RadiusUnits] := conductorData[i].Radius;
+        lineConstants.capradius[i, conductorData[i].RadiusUnits] := conductorData[i].capRadius;
+        lineConstants.GMR[i, conductorData[i].GMRUnits] := conductorData[i].GMR;
+        lineConstants.Rdc[i, conductorData[i].ResUnits] := conductorData[i].Rdc;
+        lineConstants.Rac[i, conductorData[i].ResUnits] := conductorData[i].Rac;
+        if (conductorData[i] is TCNDataObj) then
         begin
-            cnconsts := (FLineData as TCNLineConstants);
-            cnd := (FWireData[i] as TCNDataObj);
+            cnconsts := (lineConstants as TCNLineConstants);
+            cnd := (conductorData[i] as TCNDataObj);
             cnconsts.EpsR[i] := cnd.EpsR;
             cnconsts.InsLayer[i, cnd.RadiusUnits] := cnd.InsLayer;
             cnconsts.DiaIns[i, cnd.RadiusUnits] := cnd.DiaIns;
@@ -950,10 +847,10 @@ begin
             cnconsts.RStrand[i, cnd.ResUnits] := cnd.RStrand;
         end
         else
-        if (FWireData[i] is TTSDataObj) then
+        if (conductorData[i] is TTSDataObj) then
         begin
-            tsconsts := (FLineData as TTSLineConstants);
-            tsd := (FWireData[i] as TTSDataObj);
+            tsconsts := (lineConstants as TTSLineConstants);
+            tsd := (conductorData[i] as TTSDataObj);
             tsconsts.EpsR[i] := tsd.EpsR;
             tsconsts.InsLayer[i, tsd.RadiusUnits] := tsd.InsLayer;
             tsconsts.DiaIns[i, tsd.RadiusUnits] := tsd.DiaIns;
@@ -964,29 +861,29 @@ begin
         end;
     end;
 
-    FLineData.Nphases := FNphases;
-    DataChanged := FALSE;
+    lineConstants.Nphases := FNphases;
+    dataChanged := FALSE;
 
     // Before we calc, check for bad conductor definitions
-    if FLineData.ConductorsInSameSpace(LineGeomErrMsg) then
+    if lineConstants.ConductorsInSameSpace(LineGeomErrMsg) then
     begin
         raise ELineGeometryProblem.Create(Format(_('Error in %s: %s'), [FullName, LineGeomErrMsg]));
         DSS.SolutionAbort := TRUE;
     end
     else
     begin
-        FLineData.Calc(f, DSS.ActiveEarthModel); // ***** Line impedance calc'd here ****
+        lineConstants.Calc(f, earthModel); // ***** Line impedance calc'd here ****
         if FReduce then
-            FLineData.Reduce; // reduce out neutrals
+            lineConstants.Reduce; // reduce out neutrals
     end;
 end;
 
-procedure TLineGeometryObj.LoadSpacingAndWires(Spc: TLineSpacingObj; Wires: pConductorDataArray);
+procedure TLineGeometryObj.LoadSpacingAndWires(Spc: TLineSpacingObj; Wires: pConductorDataArray; earthModel: Integer);
 var
     i: Integer;
     newPhaseChoice: ConductorChoice;
 begin
-    NConds := Spc.NWires;   // allocates
+    NConds := Spc.NConds;   // allocates
     FNphases := Spc.Nphases;
     LineSpacingObj := Spc;
     if FNConds > FNPhases then
@@ -1003,18 +900,18 @@ begin
     ChangeLineConstantsType(newPhaseChoice);
 
     for i := 1 to FNConds do
-        FWireData[i] := Wires[i];
+        conductorData[i] := Wires[i];
     for i := 1 to FNConds do
-        FX[i] := Spc.Xcoord[i];
+        xCoord[i] := Spc.GetXCoord(i);
     for i := 1 to FNConds do
-        FY[i] := Spc.Ycoord[i];
+        yCoord[i] := Spc.GetYCoord(i);
     for i := 1 to FNConds do
-        FUnits[i] := Spc.Units;
-    DataChanged := TRUE;
+        units[i] := Spc.Units;
+    dataChanged := TRUE;
     NormAmps := Wires[1].NormAmps;
     EmergAmps := Wires[1].EmergAmps;
 
-    UpdateLineGeometryData(activecircuit.solution.Frequency);
+    UpdateLineGeometryData(activecircuit.solution.Frequency, earthModel);
 end;
 
 end.

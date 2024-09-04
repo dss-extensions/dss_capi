@@ -49,12 +49,12 @@ begin
     end;
 
     bus := DSSPrime.ActiveCircuit.Buses[Index];
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, bus.NumNodesThisBus);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, bus.numNodesThisBus);
     if bus.kVBase > 0.0 then
         BaseFactor := 1000.0 * bus.kVBase
     else
         BaseFactor := 1.0;
-    for j := 1 to bus.NumNodesThisBus do
+    for j := 1 to bus.numNodesThisBus do
     begin
         Volts := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV[bus.GetRef(j)]);
         Result[j - 1] := Volts / BaseFactor;
@@ -92,8 +92,8 @@ begin
     end;
 
     bus := DSSPrime.ActiveCircuit.Buses[Index];
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * bus.NumNodesThisBus);
-    for j := 1 to bus.NumNodesThisBus do
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * bus.numNodesThisBus);
+    for j := 1 to bus.numNodesThisBus do
     begin
         Volts := DSSPrime.ActiveCircuit.Solution.NodeV[bus.GetRef(j)];
         k := (j - 1) * 2;

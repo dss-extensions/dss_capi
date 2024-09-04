@@ -59,7 +59,8 @@ uses
     Line,
     UcMatrix,
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    Utilities;
 
 
 //------------------------------------------------------------------------------
@@ -164,7 +165,7 @@ begin
     if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
 
-    Result := pLineGeometry.NPhases;
+    Result := pLineGeometry.FNPhases;
 end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Set_Phases(Value: Integer); CDECL;
@@ -180,7 +181,7 @@ begin
         Exit;
 
     pLineGeometry.DataChanged := TRUE;
-    pLineGeometry.NPhases := Value;
+    pLineGeometry.SetNPhases(Value);
 end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PAPISize; Frequency, Length: Double; Units: Integer); CDECL;
@@ -197,12 +198,12 @@ begin
         Exit;
     end;
 
-    mat := pLineGeometry.YCmatrix[Frequency, Length, Units];
+    mat := pLineGeometry.GetYCmatrix(Frequency, Length, Units, DSSPrime.ActiveEarthModel);
     Factor := (TwoPi * Frequency * 1.0e-9);
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.Order * mat.Order, mat.Order, mat.Order);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.order * mat.order, mat.order, mat.order);
     k := 0;
-    for i := 1 to mat.Order do
-        for j := 1 to mat.Order do
+    for i := 1 to mat.order do
+        for j := 1 to mat.order do
         begin
             Result[k] := mat[i, j].im / Factor;
             Inc(k);
@@ -229,11 +230,11 @@ begin
         Exit;
     end;
 
-    mat := pLineGeometry.Zmatrix[Frequency, Length, Units];
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.Order * mat.Order, mat.Order, mat.Order);
+    mat := pLineGeometry.GetZmatrix(Frequency, Length, Units, DSSPrime.ActiveEarthModel);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.order * mat.order, mat.order, mat.order);
     k := 0;
-    for i := 1 to mat.Order do
-        for j := 1 to mat.Order do
+    for i := 1 to mat.order do
+        for j := 1 to mat.order do
         begin
             Result[k] := mat[i, j].re;
             Inc(k);
@@ -260,11 +261,11 @@ begin
         Exit;
     end;
 
-    mat := pLineGeometry.Zmatrix[Frequency, Length, Units];
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.Order * mat.Order, mat.Order, mat.Order);
+    mat := pLineGeometry.GetZmatrix(Frequency, Length, Units, DSSPrime.ActiveEarthModel);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.order * mat.order, mat.order, mat.order);
     k := 0;
-    for i := 1 to mat.Order do
-        for j := 1 to mat.Order do
+    for i := 1 to mat.order do
+        for j := 1 to mat.order do
         begin
             Result[k] := mat[i, j].im;
             Inc(k);
@@ -291,7 +292,7 @@ begin
         Exit;
     end;
 
-    mat := pLineGeometry.Zmatrix[Frequency, Length, Units];
+    mat := pLineGeometry.GetZmatrix(Frequency, Length, Units, DSSPrime.ActiveEarthModel);
     data := mat.GetValuesArrayPtr(order);
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * order * order, order, order);
     Move(data[1], ResultPtr[0], ResultCount[0] * SizeOf(Double));
@@ -332,7 +333,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
-    Result := pLineGeometry.RhoEarth;
+    Result := pLineGeometry.lineConstants.FrhoEarth;
 end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Set_RhoEarth(Value: Double); CDECL;
@@ -341,7 +342,7 @@ var
 begin
     if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
-    pLineGeometry.RhoEarth := Value;
+    pLineGeometry.lineConstants.SetRhoEarth(Value);
     pLineGeometry.DataChanged := TRUE;
 end;
 //------------------------------------------------------------------------------
@@ -394,7 +395,7 @@ begin
         DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, pLineGeometry.FNConds], 183);
         Exit;
     end;
-    Move(ValuePtr[0], pLineGeometry.FUnits[1], ValueCount * SizeOf(Double));
+    Move(ValuePtr[0], pLineGeometry.units[1], ValueCount * SizeOf(Double));
     pLineGeometry.DataChanged := TRUE;
 end;
 //------------------------------------------------------------------------------
@@ -409,7 +410,7 @@ begin
         Exit;
     end;
     DSS_RecreateArray_PInteger(Result, ResultPtr, ResultCount, pLineGeometry.FNconds);
-    Move(pLineGeometry.FUnits[1], ResultPtr[0], pLineGeometry.FNconds * SizeOf(Integer));
+    Move(pLineGeometry.units[1], ResultPtr[0], pLineGeometry.FNconds * SizeOf(Integer));
 end;
 
 procedure LineGeometries_Get_Units_GR(); CDECL;
@@ -430,7 +431,7 @@ begin
         DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, pLineGeometry.FNConds], 188);
         Exit;
     end;
-    Move(ValuePtr[0], pLineGeometry.FY[1], ValueCount * SizeOf(Double));
+    Move(ValuePtr[0], pLineGeometry.yCoord[1], ValueCount * SizeOf(Double));
     pLineGeometry.DataChanged := TRUE;
 end;
 //------------------------------------------------------------------------------
@@ -445,7 +446,7 @@ begin
         Exit;
     end;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pLineGeometry.FNconds);
-    Move(pLineGeometry.FY[1], ResultPtr[0], pLineGeometry.FNconds * SizeOf(Double));
+    Move(pLineGeometry.yCoord[1], ResultPtr[0], pLineGeometry.FNconds * SizeOf(Double));
 end;
 
 procedure LineGeometries_Get_Ycoords_GR(); CDECL;
@@ -466,7 +467,7 @@ begin
         DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, pLineGeometry.FNConds], 187);
         Exit;
     end;
-    Move(ValuePtr[0], pLineGeometry.FX[1], ValueCount * SizeOf(Double));
+    Move(ValuePtr[0], pLineGeometry.xCoord[1], ValueCount * SizeOf(Double));
     pLineGeometry.DataChanged := TRUE;
 end;
 //------------------------------------------------------------------------------
@@ -481,7 +482,7 @@ begin
         Exit;
     end;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pLineGeometry.FNconds);
-    Move(pLineGeometry.FX[1], ResultPtr[0], pLineGeometry.FNconds * SizeOf(Double));
+    Move(pLineGeometry.xCoord[1], ResultPtr[0], pLineGeometry.FNconds * SizeOf(Double));
 end;
 
 procedure LineGeometries_Get_Xcoords_GR(); CDECL;
@@ -505,7 +506,7 @@ begin
     
     DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pLineGeometry.FNconds);
     for i := 1 to pLineGeometry.FNconds do
-        Result[i - 1] := DSS_CopyStringAsPChar(pLineGeometry.ConductorName[i]);
+        Result[i - 1] := DSS_CopyStringAsPChar(NameIfNotNil(pLineGeometry.ConductorData[i]));
 end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;

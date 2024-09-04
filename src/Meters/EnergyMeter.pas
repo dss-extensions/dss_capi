@@ -1400,8 +1400,8 @@ begin
     if LocalOnly then
     begin
         CktElem := MeteredElement as TPDElement;
-        MaxExcesskWNorm := Abs(CktElem.ExcesskVANorm[MeteredTerminal].re);
-        MaxExcesskWEmerg := Abs(CktElem.ExcesskVAEmerg[MeteredTerminal].re);
+        MaxExcesskWNorm := Abs(CktElem.GetExcesskVANorm(MeteredTerminal).re);
+        MaxExcesskWEmerg := Abs(CktElem.GetExcesskVAEmerg(MeteredTerminal).re);
     end
     else
         //--------------------------------------------------------------------------
@@ -1412,8 +1412,8 @@ begin
 
             CktElem.ActiveTerminalIdx := BranchList.Presentbranch.FromTerminal;
             // Invoking this property sets the Overload_UE flag in the PD Element
-            EEN := Abs(CktElem.ExcesskVANorm[CktElem.ActiveTerminalIdx].re);
-            UE := Abs(CktElem.ExcesskVAEmerg[CktElem.ActiveTerminalIdx].re);
+            EEN := Abs(CktElem.GetExcesskVANorm(CktElem.ActiveTerminalIdx).re);
+            UE := Abs(CktElem.GetExcesskVAEmerg(CktElem.ActiveTerminalIdx).re);
 
             // For radial circuits just keep the maximum overload; for mesh, add 'em up
             if (ZoneIsRadial) then
@@ -1567,7 +1567,7 @@ begin
                 with BranchList.PresentBranch do
                     if (VoltBaseIndex > 0) and (buses[FromBusReference].kVBase > 0.0) then
                     begin
-                        for i := 1 to buses[FromBusReference].NumNodesThisBus do
+                        for i := 1 to buses[FromBusReference].numNodesThisBus do
                         begin
                             j := buses[FromBusReference].GetNum(i);
                             if (j <= 0) or (j > 3) then
@@ -1891,7 +1891,7 @@ begin
             TestBusNum := ActiveBranch.Terminals[iTerm - 1].BusRef;
             with BranchList.PresentBranch do
             begin
-                ToBusReference := TestBusNum;   // Add this as a "to" bus reference
+                BranchList.PresentBranch.SetToBusReference(TestBusNum);   // Add this as a "to" bus reference
                 if isLineElement(ActiveBranch)   // Convert to consistent units (km)
                 then
                     buses[TestBusNum].DistFromMeter := buses[FromBusReference].DistFromMeter + TLineObj(ActiveBranch).Len * ConvertLineUnits(TLineObj(ActiveBranch).LengthUnits, UNITS_KM)
@@ -2050,8 +2050,8 @@ begin
             FSWriteln(F, Format('%d, %s.%s, %s, %s, %10.4f', [
                 BranchList.Level, PDelem.ParentClass.Name, PDelem.Name,
                 PDelem.FirstBus, PDelem.NextBus,
-                // BusList.NameOfIndex(BranchList.PresentBranch.ToBusReference),
-                ActiveCircuit.Buses[BranchList.PresentBranch.ToBusReference].DistFromMeter
+                // BusList.NameOfIndex(BranchList.PresentBranch.GetToBusReference()),
+                ActiveCircuit.Buses[BranchList.PresentBranch.GetToBusReference()].DistFromMeter
             ]));
             BranchList.PresentBranch.ResetToBusList;
             LoadElem := Branchlist.FirstObject;
@@ -3630,7 +3630,7 @@ begin
         if bus.kVBase <= 1.0 then // Primary Nodes first
             continue;
 
-        for j := 1 to bus.NumNodesThisBus do
+        for j := 1 to bus.numNodesThisBus do
         begin
             Vmagpu := Cabs(NodeV[bus.RefNo[j]]) / bus.kVBase * 0.001;
             if Vmagpu <= 0.1 then
@@ -3692,7 +3692,7 @@ begin
         if not ((bus.kVBase > 0.0) and (bus.kVBase <= 1.0)) then
             continue;
 
-        for j := 1 to bus.NumNodesThisBus do
+        for j := 1 to bus.numNodesThisBus do
         begin
             Vmagpu := Cabs(NodeV[bus.RefNo[j]]) / bus.kVBase * 0.001;
             if Vmagpu <= 0.1 then // ignore neutral buses

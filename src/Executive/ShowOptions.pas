@@ -114,7 +114,7 @@ begin
     Result := 0;
 
     DSS.Parser.NextParam;
-    Param := AnsiLowerCase(DSS.Parser.StrValue);
+    Param := AnsiLowerCase(DSS.Parser.MakeString());
     ParamPointer := DSS.DSSExecutive.ShowCommands.Getcommand(Param);
 
     if ParamPointer = 0 then
@@ -156,7 +156,7 @@ begin
             ShowOptionCode := 0;
             ShowResid := FALSE;
             DSS.Parser.NextParam;   // Look for residual
-            Param := AnsiUpperCase(DSS.Parser.StrValue);
+            Param := AnsiUpperCase(DSS.Parser.MakeString());
            // logic handles show curr y|n|T elements or show curr elements
             if (Length(Param) > 0) then
                 case Param[1] of
@@ -168,7 +168,7 @@ begin
                         ShowOptionCode := 1;
                 end;
             DSS.Parser.NextParam;   // Look for another param
-            Param := AnsiUpperCase(DSS.Parser.StrValue);
+            Param := AnsiUpperCase(DSS.Parser.MakeString());
             if (Length(Param) > 0) then
                 case Param[1] of
                     'E':
@@ -199,7 +199,7 @@ begin
         5:
         begin
             DSS.Parser.NextParam;   // Look for another param
-            Param := AnsiLowerCase(DSS.Parser.StrValue);
+            Param := AnsiLowerCase(DSS.Parser.MakeString());
             ShowElements(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Elements.txt', Param);
         end;
         6:
@@ -213,7 +213,7 @@ begin
         10:
         begin     // Show Monitor
             DSS.Parser.NextParam;
-            Param := DSS.Parser.StrValue;
+            Param := DSS.Parser.MakeString();
             if Length(Param) = 0 then
                 DoSimpleMsg(DSS, 'Monitor Name Not Specified. %s', [CRLF + DSS.Parser.CmdString], 249)
             else
@@ -253,7 +253,7 @@ begin
             MVAOpt := 0;
             FilName := 'Power';
             DSS.Parser.nextParam;
-            Param := AnsiLowerCase(DSS.Parser.strvalue);
+            Param := AnsiLowerCase(DSS.Parser.MakeString());
             if Length(Param) > 0 then
                 case Param[1] of
                     'm':
@@ -262,7 +262,7 @@ begin
                         ShowOptionCode := 1;
                 end;
             DSS.Parser.nextParam;
-            Param := AnsiLowerCase(DSS.Parser.strvalue);
+            Param := AnsiLowerCase(DSS.Parser.MakeString());
             if Length(Param) > 0 then
                 if Param[1] = 'e' then
                     ShowOptionCode := 1;
@@ -283,7 +283,7 @@ begin
             ShowOptionCode := 0;
             {Check for LL or LN option}
             DSS.Parser.nextParam;
-            Param := DSS.Parser.strvalue;
+            Param := DSS.Parser.MakeString();
 
             FilName := 'VLN';
             if Length(Param) > 0 then
@@ -294,7 +294,7 @@ begin
                 end;
             {Check for Seq | nodes | elements}
             DSS.Parser.nextParam;
-            Param := AnsiUpperCase(DSS.Parser.strvalue);
+            Param := AnsiUpperCase(DSS.Parser.MakeString());
             if Length(Param) > 0 then
                 case Param[1] of
                     'N':
@@ -321,7 +321,7 @@ begin
         17:
         begin
             DSS.Parser.NextParam;
-            Param := DSS.Parser.StrValue;
+            Param := DSS.Parser.MakeString();
             if Length(Param) > 0 then
                 ShowUnserved(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Unserved.txt', TRUE)
             else
@@ -342,13 +342,13 @@ begin
             ShowOptionCode := 0;
             MVAOpt := 0;
             DSS.Parser.nextParam; // Get busname
-            Busname := DSS.Parser.strvalue;
+            Busname := DSS.Parser.MakeString();
             if Length(BusName) > 0 then
                 FilName := BusName
             else
                 FilName := 'BusPower';
             DSS.Parser.nextParam;
-            Param := AnsiLowerCase(DSS.Parser.strvalue);
+            Param := AnsiLowerCase(DSS.Parser.MakeString());
             if Length(Param) > 0 then
                 case Param[1] of
                     'm':
@@ -357,7 +357,7 @@ begin
                         ShowOptionCode := 1;
                 end;
             DSS.Parser.nextParam;
-            Param := AnsiLowerCase(DSS.Parser.strvalue);
+            Param := AnsiLowerCase(DSS.Parser.MakeString());
             if Length(Param) > 0 then
                 if Param[1] = 'e' then
                     ShowOptionCode := 1;
@@ -378,14 +378,14 @@ begin
             Units := UNITS_KFT; // 'kft'; // default
             Rho_line := 100.0;
             DSS.Parser.nextparam;
-            if Length(DSS.Parser.strvalue) > 0 then
-                Freq := DSS.Parser.dblvalue;
+            if Length(DSS.Parser.MakeString()) > 0 then
+                Freq := DSS.Parser.MakeDouble();
             DSS.Parser.nextparam;
-            if Length(DSS.Parser.strvalue) > 0 then
-                Units := GetUnitsCode(DSS.Parser.strvalue);
+            if Length(DSS.Parser.MakeString()) > 0 then
+                Units := GetUnitsCode(DSS.Parser.MakeString());
             DSS.Parser.nextparam;
-            if Length(DSS.Parser.strvalue) > 0 then
-                Rho_line := DSS.Parser.dblValue;
+            if Length(DSS.Parser.MakeString()) > 0 then
+                Rho_line := DSS.Parser.MakeDouble();
             ShowLineConstants(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'LineConstants.txt', freq, units, Rho_line);
         end;
 

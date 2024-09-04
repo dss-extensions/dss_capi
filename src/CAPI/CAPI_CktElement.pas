@@ -791,7 +791,7 @@ begin
     VarIndex := elem.LookupVariable(VarName);
     if (VarIndex > 0) and (VarIndex <= elem.NumVariables) then
     begin
-        Result := elem.Variable[VarIndex];
+        Result := elem.GetVariable(VarIndex);
         Code := 0;  // Signify result is OK.
     end;
 end;
@@ -811,7 +811,7 @@ begin
     elem := (cktelem as TPCElement);
     if (Idx > 0) and (Idx <= elem.NumVariables) then
     begin
-        Result := elem.Variable[Idx];
+        Result := elem.GetVariable(Idx);
         Code := 0;  // Signify result is OK.
     end;
 end;
@@ -831,7 +831,7 @@ begin
     VarIndex := elem.LookupVariable(VarName);
     if (VarIndex > 0) and (VarIndex <= elem.NumVariables) then
     begin
-        elem.Variable[VarIndex] := Value;
+        elem.SetVariable(VarIndex, Value);
         Code := 0;  // Signify result is OK.
     end;
 end;
@@ -849,7 +849,7 @@ begin
     elem := (cktelem as TPCElement);
     if (Idx > 0) and (Idx <= elem.NumVariables) then
     begin
-        elem.Variable[Idx] := Value;
+        elem.SetVariable(Idx, Value);
         Code := 0;  // Signify result is OK.
     end;
 end;
@@ -1105,7 +1105,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid variable index %d for "%s"', [DSSPrime.API_VarIdx, elem.FullName], 100002);
         Exit;
     end;
-    Result := elem.Variable[DSSPrime.API_VarIdx];
+    Result := elem.GetVariable(DSSPrime.API_VarIdx);
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Set_VariableValue(Value: Double); CDECL;
@@ -1123,7 +1123,7 @@ begin
             DoSimpleMsg(DSSPrime, 'Invalid variable index %d for "%s"', [DSSPrime.API_VarIdx, elem.FullName], 100002);
         Exit;
     end;
-    elem.Variable[DSSPrime.API_VarIdx] := Value;
+    elem.SetVariable(DSSPrime.API_VarIdx, Value);
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_VariableIdx(): Integer; CDECL;

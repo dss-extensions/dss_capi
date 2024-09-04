@@ -210,9 +210,9 @@ begin
     end;
 
   // reduce out the CN
-    while Zmat.Order > FNumConds do
+    while Zmat.order > FNumConds do
     begin
-        Ztemp := Zmat.Kron(Zmat.Order);
+        Ztemp := Zmat.Kron(Zmat.order);
         Zmat.Free;
         Zmat := Ztemp;
     end;

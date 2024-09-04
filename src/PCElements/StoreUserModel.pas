@@ -30,7 +30,6 @@ TYPE
 
          Procedure Set_Name(const Value:String);
          Function  CheckFuncError(Addr:Pointer; FuncName:String):Pointer;
-         function  Get_Exists: Boolean;
 
       Public
          DSS: TDSSContext;
@@ -52,7 +51,7 @@ TYPE
         // old reference is freed first
          property Name : String read Fname write Set_Name;
          procedure Edit(const Value: String);
-         property Exists : Boolean read Get_Exists;
+         function Exists(): Boolean;
 
          Procedure   Select;
          Procedure   Integrate;
@@ -80,7 +79,6 @@ TYPE
 
          Procedure Set_Name(const Value:String);
          Function  CheckFuncError(Addr:Pointer; FuncName:String):Pointer;
-         function  Get_Exists: Boolean;
 
       public
         DSS: TDSSContext;
@@ -106,7 +104,7 @@ TYPE
         // old reference is freed first
         property Name:String read Fname write Set_Name;
         procedure Edit(const Value: String);
-        property Exists:Boolean read Get_Exists;
+        function Exists(): Boolean;
 
         Procedure   Select;
         Procedure   Integrate;
@@ -151,7 +149,7 @@ begin
     End;
 end;
 
-function TStoreUserModel.Get_Exists: Boolean;
+function TStoreUserModel.Exists(): Boolean;
 begin
         If FID <> 0 Then
          Begin
@@ -274,7 +272,7 @@ begin
    inherited;
 end;
 
-function TStoreDynaModel.Get_Exists: Boolean;
+function TStoreDynaModel.Exists(): Boolean;
 begin
         If FID <> 0 Then
          Begin

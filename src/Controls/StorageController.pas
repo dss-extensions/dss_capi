@@ -214,10 +214,8 @@ type
         procedure PushTimeOntoControlQueue(Code: Integer);
         procedure GetControlPower(var ControlPower: Complex);
         procedure GetControlCurrent(var ControlCurrent: Double);
-        function Get_FleetkW: Double;
-        function Get_FleetkWh: Double;
-        function Get_FleetkWhRating: Double;
-        function Get_FleetReservekWh: Double;
+        function GetFleetkW(): Double;
+        function GetFleetkWh(): Double;
 
         function Get_DynamicTarget(THigh: Integer): Double;
 
@@ -234,8 +232,8 @@ type
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
         procedure Reset; OVERRIDE;  // Reset to initial defined state
 
-        property FleetkWhRating: Double READ Get_FleetkWhRating;
-        property FleetReservekWh: Double READ Get_FleetReservekWh;
+        function GetFleetkWhRating(): Double;
+        function GetFleetReservekWh(): Double;
     end;
 
 implementation
@@ -308,12 +306,12 @@ end;
 
 function GetkWActual(Obj: TObj): Double;
 begin
-    Result := Obj.Get_FleetkW();
+    Result := Obj.GetFleetkW();
 end;
 
 function GetkWhActual(Obj: TObj): Double;
 begin
-    Result := Obj.Get_FleetkWh();
+    Result := Obj.GetFleetkWh();
 end;
 
 function GetkWhTotal(Obj: TObj): Double;
@@ -732,7 +730,7 @@ begin
     inherited Destroy;
 end;
 
-function TStorageControllerObj.Get_FleetkW: Double;
+function TStorageControllerObj.GetFleetkW(): Double;
 
 var
     pStorage: TStorageObj;
@@ -746,7 +744,7 @@ begin
     end;
 end;
 
-function TStorageControllerObj.Get_FleetkWh: Double;
+function TStorageControllerObj.GetFleetkWh(): Double;
 var
     pStorage: TStorageObj;
     i: Integer;
@@ -759,7 +757,7 @@ begin
     end;
 end;
 
-function TStorageControllerObj.Get_FleetkWhRating: Double;
+function TStorageControllerObj.GetFleetkWhRating(): Double;
 var
     pStorage: TStorageObj;
     i: Integer;
@@ -772,7 +770,7 @@ begin
     end;
 end;
 
-function TStorageControllerObj.Get_FleetReservekWh: Double;
+function TStorageControllerObj.GetFleetReservekWh(): Double;
 var
     pStorage: TStorageObj;
     i: Integer;
@@ -951,9 +949,9 @@ var
     ReservekWh,
     TotalRatingkWh: Double;
 begin
-    TotalRatingkWh := FleetkWhRating;
-    RemainingkWh := Get_FleetkWh();
-    ReservekWh := FleetReservekWh;
+    TotalRatingkWh := GetFleetkWhRating();
+    RemainingkWh := GetFleetkWh();
+    ReservekWh := GetFleetReservekWh();
 
 
     case Opt of
@@ -1164,7 +1162,7 @@ begin
             for i := 1 to FleetSize do
             begin
                 StorageObj := FleetPointerList.Get(i);
-                if StorageObj.StorageState <> STORE_IDLING then
+                if StorageObj.StorageState() <> STORE_IDLING then
                     Break;
                 if i = FleetSize then
                     FleetState := STORE_IDLING;
@@ -1192,14 +1190,14 @@ begin
             if (FleetState = STORE_CHARGING) then
             begin
                 if not (DischargeMode = CURRENTPEAKSHAVE) then
-                    Pdiff := Pdiff + Get_FleetkW()
+                    Pdiff := Pdiff + GetFleetkW()
                 else
                 begin
                     MonitoredElement.ComputeVterminal();
                     VoltsArr := MonitoredElement.Vterminal;
                     ElemVolts := cabs(VoltsArr[1]);
-                    Pdiff := Pdiff + (Get_FleetkW() * 1000 / (ElemVolts * MonitoredElement.NPhases));
-//                 Pdiff        :=  Pdiff + (Get_FleetkW() * 1000 / (ElemVolts ));
+                    Pdiff := Pdiff + (GetFleetkW() * 1000 / (ElemVolts * MonitoredElement.NPhases));
+//                 Pdiff        :=  Pdiff + (GetFleetkW() * 1000 / (ElemVolts ));
                 end;
 
             end;
@@ -1223,11 +1221,11 @@ begin
 
                         end;    // -----------------------------------------------------------------------
                     end;
-//                STORE_DISCHARGING: If ((PDiff + Get_FleetkW()) < 0.0)  or OutOfOomph Then
-//                STORE_DISCHARGING: If (((PDiff + Get_FleetkW()) < 0.0) and (abs(PDiff) > HalfkWBand)) or OutOfOomph Then // CR: set to idle only if out of band
+//                STORE_DISCHARGING: If ((PDiff + GetFleetkW()) < 0.0)  or OutOfOomph Then
+//                STORE_DISCHARGING: If (((PDiff + GetFleetkW()) < 0.0) and (abs(PDiff) > HalfkWBand)) or OutOfOomph Then // CR: set to idle only if out of band
 //                  Begin   // desired decrease is greater then present output; just cancel
 //                        If ShowEventLog Then  AppendToEventLog(Self.FullName,
-//                        Format('Desired decrease is greater than present output. Pdiff = %-.6g, FleetkW = %-.6g. Setting Fleet to Idle', [PDiff, Get_FleetkW()]));
+//                        Format('Desired decrease is greater than present output. Pdiff = %-.6g, FleetkW = %-.6g. Setting Fleet to Idle', [PDiff, GetFleetkW()]));
 //                        SetFleetToIdle;   // also sets presentkW = 0
 //                        For i := 1 to FleetSize Do Begin TStorageObj(FleetPointerList.Get(i)).SetNominalDEROutput() End; // To Update Current kvarLimit
 //                        PushTimeOntoControlQueue(STORE_IDLING);  // force a new power flow solution
@@ -1242,8 +1240,8 @@ begin
 
         if not SkipkWDispatch then
         begin
-            RemainingkWh := Get_FleetkWh();
-            ReservekWh := FleetReservekWh;
+            RemainingkWh := GetFleetkWh();
+            ReservekWh := GetFleetReservekWh();
             if (RemainingkWh > ReservekWh) then
             begin
                //  don't dispatch kW  if not enough storage left or an endless control loop will occur
@@ -1274,9 +1272,9 @@ begin
 
                         if DispatchkW <= 0.0 then // if kWNeeded is too low, DispatchkW may be negative depending on idling losses. In this case, just set it to idling
                         begin
-                            StorageObj.StorageState := STORE_IDLING;  // overrides SetFleetToDischarge
+                            StorageObj.SetStorageState(STORE_IDLING);  // overrides SetFleetToDischarge
 
-                            if (abs(StorageObj.PresentkW) - StorageObj.kWOutIdling > EPSILON) then  // if not already idling
+                            if (abs(StorageObj.PresentkW()) - StorageObj.kWOutIdling > EPSILON) then  // if not already idling
                             begin
                                 StorageObj.SetNominalDEROutput();
                                 ActualkWDispatch := StorageObj.PresentkW;
@@ -1291,7 +1289,7 @@ begin
                         end
                         else
                         begin
-                            if abs(StorageObj.kW - DispatchkW) / abs(DispatchkW) > 0.0001 then // redispatch only if change requested
+                            if abs(StorageObj.kW() - DispatchkW) / abs(DispatchkW) > 0.0001 then // redispatch only if change requested
                             begin
                                 if DispatchkW < Max(StorageObj.CutInkWAC, StorageObj.CutOutkWAC) then   // Necessary check to avoid the control to go into an infinite loop when DispatchkW is less than CutOutkWAC
                                 begin
@@ -1300,7 +1298,7 @@ begin
                                         // Next time, the inverter will be OFF and the control won't dispatch a new power
                                         if StorageObj.StorageVars.kWhStored > StorageObj.StorageVars.kWhReserve then
                                         begin
-                                            StorageObj.kW := DispatchkW;
+                                            StorageObj.SetkW(DispatchkW);
                                             StorageObj.SetNominalDEROutput();
                                             ActualkWDispatch := StorageObj.PresentkW;
                                             StorekWChanged := TRUE;     // This is what keeps the control iterations going
@@ -1315,7 +1313,7 @@ begin
                                         // if inverter is already off, just override discharging state to
                                         // idling and update current kvarlimit for usage by InvControl
 
-                                        StorageObj.StorageState := STORE_IDLING;     // overrides SetFleetToDischarge
+                                        StorageObj.SetStorageState(STORE_IDLING);     // overrides SetFleetToDischarge
                                         StorageObj.SetNominalDEROutput(); // to update current kvarLimit
                                         ActualkWDispatch := StorageObj.PresentkW;
                                         if ShowEventLog then
@@ -1327,7 +1325,7 @@ begin
                                 if StorageObj.StorageVars.kWhStored > StorageObj.StorageVars.kWhReserve then
                                 begin
                                     // Attempt to set discharge kW;  Storage element will revert to idling if out of capacity
-                                    StorageObj.kW := DispatchkW;
+                                    StorageObj.SetkW(DispatchkW);
                                     StorageObj.SetNominalDEROutput();
                                     ActualkWDispatch := StorageObj.PresentkW;
                                     StorekWChanged := TRUE;     // This is what keeps the control iterations going
@@ -1428,9 +1426,9 @@ begin
         PDiff := S.re * 0.001 - CtrlTarget;  // Assume S.re is normally positive
     end;
 
-    // ActualkW := Get_FleetkW();
-    ActualkWh := Get_FleetkWh();
-    TotalRatingkWh := FleetkWhRating;
+    // ActualkW := GetFleetkW();
+    ActualkWh := GetFleetkWh();
+    TotalRatingkWh := GetFleetkWhRating();
 
     if Chargemode = CURRENTPEAKSHAVELOW then   // convert Pdiff from Amps to kW
     begin
@@ -1442,7 +1440,7 @@ begin
         AmpsDiff := PDiff;
     end
     else
-        // kWNeeded := Pdiff + Get_FleetkW();
+        // kWNeeded := Pdiff + GetFleetkW();
         kWNeeded := Pdiff;
 
 
@@ -1452,7 +1450,7 @@ begin
         for i := 1 to FleetSize do
         begin
             StorageObj := FleetPointerList.Get(i);
-            if StorageObj.StorageState <> STORE_IDLING then
+            if StorageObj.StorageState() <> STORE_IDLING then
                 Break;
             if i = FleetSize then
                 FleetState := STORE_IDLING;
@@ -1473,14 +1471,14 @@ begin
     if (FleetState = STORE_DISCHARGING) then
     begin
         if not (ChargeMode = CURRENTPEAKSHAVELOW) then
-            Pdiff := Pdiff + Get_FleetkW()
+            Pdiff := Pdiff + GetFleetkW()
         else
         begin
             MonitoredElement.ComputeVterminal();
             VoltsArr := MonitoredElement.Vterminal;
             ElemVolts := cabs(VoltsArr[1]);
-            Pdiff := Pdiff + (Get_FleetkW() * 1000 / (ElemVolts * MonitoredElement.NPhases));   // get actual Pdiff in Currents (discount FleetkW)  (assuming same number of phases of Fleet and Monitored Element)
-            // Pdiff :=  Pdiff + (Get_FleetkW() * 1000 / (ElemVolts ));
+            Pdiff := Pdiff + (GetFleetkW() * 1000 / (ElemVolts * MonitoredElement.NPhases));   // get actual Pdiff in Currents (discount FleetkW)  (assuming same number of phases of Fleet and Monitored Element)
+            // Pdiff :=  Pdiff + (GetFleetkW() * 1000 / (ElemVolts ));
         end;
     end;
 
@@ -1495,7 +1493,7 @@ begin
             end
         //                End;
         //  STORE_CHARGING: If (kWNeeded > 0.0) or (ActualkWh>=TotalRatingkWh) // old approach
-        //  STORE_CHARGING: If (Pdiff + Get_FleetkW() > 0.0) or (ActualkWh >= TotalRatingkWh) Then
+        //  STORE_CHARGING: If (Pdiff + GetFleetkW() > 0.0) or (ActualkWh >= TotalRatingkWh) Then
         //                  Begin   // desired decrease (in absolute value) is greater than present output; just cancel
         //                        SetFleetToIdle;   // also sets presentkW = 0
         //                        PushTimeOntoControlQueue(STORE_IDLING);  // force a new power flow solution
@@ -1543,9 +1541,9 @@ begin
 
                 if ChargekW >= 0 then // chargekW may be positive if increase in demand is too high.
                 begin
-                    StorageObj.StorageState := STORE_IDLING;  // overrides SetFleetToDischarge
+                    StorageObj.SetStorageState(STORE_IDLING);  // overrides SetFleetToDischarge
 
-                    if (abs(StorageObj.PresentkW) - StorageObj.kWOutIdling) > EPSILON then  // if not already idling
+                    if (abs(StorageObj.PresentkW()) - StorageObj.kWOutIdling) > EPSILON then  // if not already idling
                     begin
                         StorageObj.SetNominalDEROutput();
                         ActualkWDispatch := StorageObj.PresentkW;
@@ -1569,7 +1567,7 @@ begin
                                 // Next time the inverter will be OFF and the control won't dispatch a new power
                                 if StorageObj.StorageVars.kWhStored > StorageObj.StorageVars.kWhReserve then
                                 begin
-                                    StorageObj.kW := ChargekW;
+                                    StorageObj.SetkW(ChargekW);
                                     StorageObj.SetNominalDEROutput();
                                     ActualkWDispatch := StorageObj.PresentkW;
                                     StorekWChanged := TRUE; // This is what keeps the control iterations going
@@ -1584,7 +1582,7 @@ begin
                                 // if inverter is already off, just override discharging state to
                                 // idling and update current kvarlimit for usage by InvControl
 
-                                StorageObj.StorageState := STORE_IDLING;     // overrides SetFleetToCharge
+                                StorageObj.SetStorageState(STORE_IDLING);     // overrides SetFleetToCharge
                                 StorageObj.SetNominalDEROutput(); // to update current kvarLimit
                                 ActualkWDispatch := StorageObj.PresentkW;
                                 if ShowEventLog then
@@ -1596,7 +1594,7 @@ begin
                         if StorageObj.StorageVars.kWhStored < StorageObj.StorageVars.kWhRating then
                         begin  // Attempt to set discharge kW;  Storage element will revert to idling if out of capacity
                             // StorageObj.PresentkW  :=  ChargekW;
-                            StorageObj.kW := ChargekW;
+                            StorageObj.SetkW(ChargekW);
                             StorageObj.SetNominalDEROutput();
                             ActualkWDispatch := StorageObj.PresentkW;
                             // KwtoPercentagekW := (ChargekW*100) / StorageVars.kWrating;  // old approach
@@ -1821,7 +1819,7 @@ var
     obj: TStorageObj;
 begin
     for obj in FleetPointerList do
-        obj.StorageState := STORE_CHARGING;
+        obj.SetStorageState(STORE_CHARGING);
     FleetState := STORE_CHARGING;
 end;
 
@@ -1830,7 +1828,7 @@ var
     obj: TStorageObj;
 begin
     for obj in FleetPointerList do
-        obj.StorageState := STORE_DISCHARGING;
+        obj.SetStorageState(STORE_DISCHARGING);
     FleetState := STORE_DISCHARGING;
 end;
 
@@ -1840,9 +1838,9 @@ var
 begin
     for obj in FleetPointerList do
     begin
-        obj.StorageState := STORE_IDLING;
-        // obj.PresentkW := 0.0;
-        obj.kW := 0.0;
+        obj.SetStorageState(STORE_IDLING);
+        // obj.kWRequested := 0.0;
+        obj.SetkW(0.0);
     end;
     FleetState := STORE_IDLING;
 end;

@@ -441,7 +441,7 @@ begin
 
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, elem.ControlledElement.NPhases);
     for i := 1 to elem.ControlledElement.NPhases do
-        if elem.States[i] = CTRL_CLOSE then 
+        if elem.GetState(i) = CTRL_CLOSE then 
             Result[i - 1] := DSS_CopyStringAsPChar('closed')
         else 
             Result[i - 1] := DSS_CopyStringAsPChar('open');
