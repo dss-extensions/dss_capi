@@ -21,25 +21,15 @@ type
         FDiaShield: pDoubleArray;
         FTapeLayer: pDoubleArray;
         FTapeLap: pDoubleArray;
-
-        function Get_DiaShield(i, units: Integer): Double;
-        function Get_TapeLayer(i, units: Integer): Double;
-        function Get_TapeLap(i: Integer): Double;
-
-        procedure Set_DiaShield(i, units: Integer; const Value: Double);
-        procedure Set_TapeLayer(i, units: Integer; const Value: Double);
-        procedure Set_TapeLap(i: Integer; const Value: Double);
-    PROTECTED
-
     PUBLIC
         procedure Calc(f: Double; EarthModel: Integer); OVERRIDE;
 
         constructor Create(NConductors: Integer);
         destructor Destroy; OVERRIDE;
 
-        property DiaShield[i, units: Integer]: Double READ Get_DiaShield WRITE Set_DiaShield;
-        property TapeLayer[i, units: Integer]: Double READ Get_TapeLayer WRITE Set_TapeLayer;
-        property TapeLap[i: Integer]: Double READ Get_TapeLap WRITE Set_TapeLap;
+        procedure SetDiaShield(i, units: Integer; const Value: Double);
+        procedure SetTapeLayer(i, units: Integer; const Value: Double);
+        procedure SetTapeLap(i: Integer; const Value: Double);
     end;
 
 implementation
@@ -51,34 +41,19 @@ uses
 const
     RhoTS: Double = 2.3718e-8;  // for copper tape shield
 
-function TTSLineConstants.Get_DiaShield(i, units: Integer): Double;
-begin
-    Result := FDiaShield[i] * From_Meters(Units);
-end;
-
-function TTSLineConstants.Get_TapeLayer(i, units: Integer): Double;
-begin
-    Result := FTapeLayer[i] * From_Meters(Units);
-end;
-
-function TTSLineConstants.Get_TapeLap(i: Integer): Double;
-begin
-    Result := FTapeLap[i];
-end;
-
-procedure TTSLineConstants.Set_DiaShield(i, units: Integer; const Value: Double);
+procedure TTSLineConstants.SetDiaShield(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= numConductors) then
         FDiaShield[i] := Value * To_Meters(units);
 end;
 
-procedure TTSLineConstants.Set_TapeLayer(i, units: Integer; const Value: Double);
+procedure TTSLineConstants.SetTapeLayer(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= numConductors) then
         FTapeLayer[i] := Value * To_Meters(units);
 end;
 
-procedure TTSLineConstants.Set_TapeLap(i: Integer; const Value: Double);
+procedure TTSLineConstants.SetTapeLap(i: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= numConductors) then
         FTapeLap[i] := Value;

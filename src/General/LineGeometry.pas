@@ -837,27 +837,27 @@ begin
         begin
             cnconsts := (lineConstants as TCNLineConstants);
             cnd := (conductorData[i] as TCNDataObj);
-            cnconsts.EpsR[i] := cnd.EpsR;
-            cnconsts.insLayer[i, cnd.radiusUnits] := cnd.insLayer;
-            cnconsts.diaIns[i, cnd.radiusUnits] := cnd.diaIns;
-            cnconsts.diaCable[i, cnd.radiusUnits] := cnd.diaCable;
-            cnconsts.kStrand[i] := cnd.kStrand;
-            cnconsts.DiaStrand[i, cnd.radiusUnits] := cnd.DiaStrand;
-            cnconsts.GmrStrand[i, cnd.GMRUnits] := cnd.GmrStrand;
-            cnconsts.RStrand[i, cnd.resistanceUnits] := cnd.RStrand;
+            cnconsts.SetEpsR(i, cnd.EpsR);
+            cnconsts.SetInsLayer(i, cnd.radiusUnits, cnd.insLayer);
+            cnconsts.SetDiaIns(i, cnd.radiusUnits, cnd.diaIns);
+            cnconsts.SetDiaCable(i, cnd.radiusUnits, cnd.diaCable);
+            cnconsts.SetkStrand(i, cnd.kStrand);
+            cnconsts.SetDiaStrand(i, cnd.radiusUnits, cnd.DiaStrand);
+            cnconsts.SetGmrStrand(i, cnd.GMRUnits, cnd.GmrStrand);
+            cnconsts.SetRStrand(i, cnd.resistanceUnits, cnd.RStrand);
         end
         else
         if (conductorData[i] is TTSDataObj) then
         begin
             tsconsts := (lineConstants as TTSLineConstants);
             tsd := (conductorData[i] as TTSDataObj);
-            tsconsts.EpsR[i] := tsd.EpsR;
-            tsconsts.insLayer[i, tsd.radiusUnits] := tsd.insLayer;
-            tsconsts.diaIns[i, tsd.radiusUnits] := tsd.diaIns;
-            tsconsts.diaCable[i, tsd.radiusUnits] := tsd.diaCable;
-            tsconsts.DiaShield[i, tsd.radiusUnits] := tsd.DiaShield;
-            tsconsts.TapeLayer[i, tsd.radiusUnits] := tsd.TapeLayer;
-            tsconsts.TapeLap[i] := tsd.TapeLap;
+            tsconsts.SetEpsR(i, tsd.EpsR);
+            tsconsts.SetInsLayer(i, tsd.radiusUnits, tsd.insLayer);
+            tsconsts.SetDiaIns(i, tsd.radiusUnits, tsd.diaIns);
+            tsconsts.SetDiaCable(i, tsd.radiusUnits, tsd.diaCable);
+            tsconsts.SetDiaShield(i, tsd.radiusUnits, tsd.DiaShield);
+            tsconsts.SetTapeLayer(i, tsd.radiusUnits, tsd.TapeLayer);
+            tsconsts.SetTapeLap(i, tsd.TapeLap);
         end;
     end;
 

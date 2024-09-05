@@ -23,26 +23,16 @@ type
         FGmrStrand: pDoubleArray;
         FRStrand: pDoubleArray;
 
-        function Get_kStrand(i: Integer): Integer;
-        function Get_DiaStrand(i, units: Integer): Double;
-        function Get_GmrStrand(i, units: Integer): Double;
-        function Get_RStrand(i, units: Integer): Double;
-
-        procedure Set_kStrand(i: Integer; const Value: Integer);
-        procedure Set_DiaStrand(i, units: Integer; const Value: Double);
-        procedure Set_GmrStrand(i, units: Integer; const Value: Double);
-        procedure Set_RStrand(i, units: Integer; const Value: Double);
-
     PUBLIC
         procedure Calc(f: Double; earthModel: Integer); OVERRIDE;
 
         constructor Create(NConductors: Integer);
         destructor Destroy; OVERRIDE;
 
-        property kStrand[i: Integer]: Integer READ Get_kStrand WRITE Set_kStrand;
-        property DiaStrand[i, units: Integer]: Double READ Get_DiaStrand WRITE Set_DiaStrand;
-        property GmrStrand[i, units: Integer]: Double READ Get_GmrStrand WRITE Set_GmrStrand;
-        property RStrand[i, units: Integer]: Double READ Get_RStrand WRITE Set_RStrand;
+        procedure SetkStrand(i: Integer; const Value: Integer);
+        procedure SetDiaStrand(i, units: Integer; const Value: Double);
+        procedure SetGmrStrand(i, units: Integer; const Value: Double);
+        procedure SetRStrand(i, units: Integer; const Value: Double);
     end;
 
 implementation
@@ -52,45 +42,25 @@ uses
     Math,
     Utilities;
 
-function TCNLineConstants.Get_kStrand(i: Integer): Integer;
-begin
-    Result := FkStrand[i];
-end;
-
-function TCNLineConstants.Get_DiaStrand(i, units: Integer): Double;
-begin
-    Result := FDiaStrand[i] * From_Meters(Units);
-end;
-
-function TCNLineConstants.Get_GmrStrand(i, units: Integer): Double;
-begin
-    Result := FGmrStrand[i] * From_Meters(Units);
-end;
-
-function TCNLineConstants.Get_RStrand(i, units: Integer): Double;
-begin
-    Result := FRStrand[i] * From_Per_Meter(Units);
-end;
-
-procedure TCNLineConstants.Set_kStrand(i: Integer; const Value: Integer);
+procedure TCNLineConstants.SetkStrand(i: Integer; const Value: Integer);
 begin
     if (i > 0) and (i <= numConductors) then
         FkStrand[i] := Value;
 end;
 
-procedure TCNLineConstants.Set_DiaStrand(i, units: Integer; const Value: Double);
+procedure TCNLineConstants.SetDiaStrand(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= numConductors) then
         FDiaStrand[i] := Value * To_Meters(units);
 end;
 
-procedure TCNLineConstants.Set_GmrStrand(i, units: Integer; const Value: Double);
+procedure TCNLineConstants.SetGmrStrand(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= numConductors) then
         FGmrStrand[i] := Value * To_Meters(units);
 end;
 
-procedure TCNLineConstants.Set_RStrand(i, units: Integer; const Value: Double);
+procedure TCNLineConstants.SetRStrand(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= numConductors) then
         FRStrand[i] := Value * To_Per_Meter(units);

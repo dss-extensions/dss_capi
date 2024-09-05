@@ -17,15 +17,6 @@ type
 
     TCableConstants = class(TLineConstants)
     PRIVATE
-        function Get_EpsR(i: Integer): Double;
-        function Get_InsLayer(i, units: Integer): Double;
-        function Get_DiaIns(i, units: Integer): Double;
-        function Get_DiaCable(i, units: Integer): Double;
-
-        procedure Set_EpsR(i: Integer; const Value: Double);
-        procedure Set_InsLayer(i, units: Integer; const Value: Double);
-        procedure Set_DiaIns(i, units: Integer; const Value: Double);
-        procedure Set_DiaCable(i, units: Integer; const Value: Double);
     PROTECTED
         FEpsR: pDoubleArray;
         FInsLayer: pDoubleArray;
@@ -39,10 +30,10 @@ type
         constructor Create(NConductors: Integer);
         destructor Destroy; OVERRIDE;
 
-        property EpsR[i: Integer]: Double READ Get_EpsR WRITE Set_EpsR;
-        property insLayer[i, units: Integer]: Double READ Get_InsLayer WRITE Set_InsLayer;
-        property diaIns[i, units: Integer]: Double READ Get_DiaIns WRITE Set_DiaIns;
-        property diaCable[i, units: Integer]: Double READ Get_DiaCable WRITE Set_DiaCable;
+        procedure SetEpsR(i: Integer; const Value: Double);
+        procedure SetInsLayer(i, units: Integer; const Value: Double);
+        procedure SetDiaIns(i, units: Integer; const Value: Double);
+        procedure SetDiaCable(i, units: Integer; const Value: Double);
     end;
 
 implementation
@@ -121,45 +112,25 @@ begin
     end;
 end;
 
-function TCableConstants.Get_EpsR(i: Integer): Double;
-begin
-    Result := FEpsR[i];
-end;
-
-function TCableConstants.Get_InsLayer(i, units: Integer): Double;
-begin
-    Result := FInsLayer[i] * From_Meters(Units);
-end;
-
-function TCableConstants.Get_DiaIns(i, units: Integer): Double;
-begin
-    Result := FDiaIns[i] * From_Meters(Units);
-end;
-
-function TCableConstants.Get_DiaCable(i, units: Integer): Double;
-begin
-    Result := FDiaCable[i] * From_Meters(Units);
-end;
-
-procedure TCableConstants.Set_EpsR(i: Integer; const Value: Double);
+procedure TCableConstants.SetEpsR(i: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= numConductors) then
         FEpsR[i] := Value;
 end;
 
-procedure TCableConstants.Set_InsLayer(i, units: Integer; const Value: Double);
+procedure TCableConstants.SetInsLayer(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= numConductors) then
         FInsLayer[i] := Value * To_Meters(units);
 end;
 
-procedure TCableConstants.Set_DiaIns(i, units: Integer; const Value: Double);
+procedure TCableConstants.SetDiaIns(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= numConductors) then
         FDiaIns[i] := Value * To_Meters(units);
 end;
 
-procedure TCableConstants.Set_DiaCable(i, units: Integer; const Value: Double);
+procedure TCableConstants.SetDiaCable(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= numConductors) then
         FDiaCable[i] := Value * To_Meters(units);
