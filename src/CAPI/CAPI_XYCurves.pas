@@ -132,7 +132,7 @@ begin
         Exit;
     end;
     
-    Result := pXYCurve.NumPoints;
+    Result := pXYCurve.numPoints;
 end;
 //------------------------------------------------------------------------------
 procedure XYCurves_Get_Xarray(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -146,8 +146,8 @@ begin
         DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51013);
         Exit;
     end;
-    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pXYCurve.NumPoints);
-    Move(pXYCurve.XValues[1], Result[0], pXYCurve.NumPoints * SizeOf(Double));
+    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pXYCurve.numPoints);
+    Move(pXYCurve.XValues[1], Result[0], pXYCurve.numPoints * SizeOf(Double));
 end;
 
 procedure XYCurves_Get_Xarray_GR(); CDECL;
@@ -168,8 +168,8 @@ begin
         Exit;
     end;
 
-    prev := pXYCurve.FNumPoints;
-    pXYCurve.FNumPoints := Value;
+    prev := pXYCurve.numPoints;
+    pXYCurve.numPoints := Value;
     pXYCurve.PropertySideEffects(ord(TXYcurveProp.npts), prev, []);
 end;
 //------------------------------------------------------------------------------
@@ -185,17 +185,17 @@ begin
         Exit;
     end;
 
-    if (pXYCurve.NumPoints <> ValueCount) and DSS_CAPI_EXT_ERRORS then
+    if (pXYCurve.numPoints <> ValueCount) and DSS_CAPI_EXT_ERRORS then
     begin
-        DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the expected (%d).', [ValueCount, pXYCurve.NumPoints], 183);
+        DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the expected (%d).', [ValueCount, pXYCurve.numPoints], 183);
         Exit;
     end;
     
     Value := PDoubleArray0(ValuePtr);
     // Only put in as many points as we have allocated
     ActualValueCount := ValueCount;
-    if ActualValueCount > pXYCurve.NumPoints then
-        ActualValueCount := pXYCurve.NumPoints;
+    if ActualValueCount > pXYCurve.numPoints then
+        ActualValueCount := pXYCurve.numPoints;
 
     Move(Value[0], pXYCurve.XValues[1], ActualValueCount * SizeOf(Double));
 end;
@@ -240,8 +240,8 @@ begin
         DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51013);
         Exit;
     end;
-    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pXYCurve.NumPoints);
-    Move(pXYCurve.YValues[1], ResultPtr^, pXYCurve.NumPoints * SizeOf(Double));
+    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pXYCurve.numPoints);
+    Move(pXYCurve.YValues[1], ResultPtr^, pXYCurve.numPoints * SizeOf(Double));
 end;
 
 procedure XYCurves_Get_Yarray_GR(); CDECL;
@@ -288,16 +288,16 @@ begin
         Exit;
     end;
 
-    if (pXYCurve.NumPoints <> ValueCount) and DSS_CAPI_EXT_ERRORS then
+    if (pXYCurve.numPoints <> ValueCount) and DSS_CAPI_EXT_ERRORS then
     begin
-        DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the expected (%d).', [ValueCount, pXYCurve.NumPoints], 183);
+        DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the expected (%d).', [ValueCount, pXYCurve.numPoints], 183);
         Exit;
     end;
     
     // Only put in as many points as we have allocated
     ActualValueCount := ValueCount;
-    if ActualValueCount > pXYCurve.NumPoints then
-        ActualValueCount := pXYCurve.NumPoints;
+    if ActualValueCount > pXYCurve.numPoints then
+        ActualValueCount := pXYCurve.numPoints;
 
     Move(ValuePtr^, pXYCurve.YValues[1], ActualValueCount * SizeOf(Double));
 end;

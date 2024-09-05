@@ -101,7 +101,7 @@ type
         procedure Set_Y(Value: Double);
 
     PUBLIC
-        FNumPoints: Integer;  // Number of points in curve
+        numPoints: Integer;  // Number of points in curve
 
         FXshift,
         FYshift,
@@ -119,7 +119,6 @@ type
         function GetXValue(Y: Double): Double;  // Get X value at specified Y Value
         function GetCoefficients(X: Double): TCoeff;
 
-        property NumPoints: Integer READ FNumPoints;
         property XValue_pt[Index: Integer]: Double READ Get_XValue WRITE Set_XValue;
         property YValue_pt[Index: Integer]: Double READ Get_YValue WRITE Set_YValue;
 
@@ -191,7 +190,7 @@ end;
 
 function Get2xNumPoints(Obj: TObj): Integer;
 begin
-    Result := Obj.FNumPoints * 2;
+    Result := Obj.numPoints * 2;
 end;
 
 procedure SetPoints(obj: TObj; Values: PDouble; ValueCount: Integer);
@@ -199,10 +198,10 @@ var
     i: Integer;
 begin
     // Allow possible Resetting (to a lower value) of num points when specifying temperatures not Hours
-    obj.FNumPoints := ValueCount div 2;
-    ReAllocmem(obj.YValues, Sizeof(Double) * obj.FNumPoints);
-    ReAllocmem(obj.XValues, Sizeof(Double) * obj.FNumPoints);
-    for i := 1 to obj.FNumPoints do
+    obj.numPoints := ValueCount div 2;
+    ReAllocmem(obj.YValues, Sizeof(Double) * obj.numPoints);
+    ReAllocmem(obj.XValues, Sizeof(Double) * obj.numPoints);
+    for i := 1 to obj.numPoints do
     begin
         obj.XValues[i] := Values^;
         Inc(Values);
@@ -220,8 +219,8 @@ var
 begin
     if (obj.XValues <> NIL) and (obj.YValues <> NIL) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, obj.FNumPoints * 2);
-        for i := 1 to obj.FNumPoints do
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, obj.numPoints * 2);
+        for i := 1 to obj.numPoints do
         begin
             Result[2 * (i - 1)] := obj.XValues[i];
             Result[2 * (i - 1) + 1] := obj.YValues[i];
@@ -241,7 +240,7 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
-    PropertyStructArrayCountOffset := ptruint(@obj.FNumPoints);
+    PropertyStructArrayCountOffset := ptruint(@obj.numPoints);
 
     SpecSetNames := ArrayOfString.Create(
         'Xarray, Yarray',
@@ -260,18 +259,18 @@ begin
 
     // integer properties
     PropertyType[ord(TProp.Npts)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Npts)] := ptruint(@obj.FNumPoints);
+    PropertyOffset[ord(TProp.Npts)] := ptruint(@obj.numPoints);
     PropertyFlags[ord(TProp.Npts)] := [TPropertyFlag.SuppressJSON];
           
     // double arrays
     PropertyType[ord(TProp.Xarray)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.Xarray)] := ptruint(@obj.XValues);
-    PropertyOffset2[ord(TProp.Xarray)] := ptruint(@obj.FNumPoints);
+    PropertyOffset2[ord(TProp.Xarray)] := ptruint(@obj.numPoints);
     PropertyFlags[ord(TProp.Xarray)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.Yarray)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.Yarray)] := ptruint(@obj.YValues);
-    PropertyOffset2[ord(TProp.Yarray)] := ptruint(@obj.FNumPoints);
+    PropertyOffset2[ord(TProp.Yarray)] := ptruint(@obj.numPoints);
     PropertyFlags[ord(TProp.Yarray)] := [TPropertyFlag.RequiredInSpecSet];
 
     // strings
@@ -334,11 +333,11 @@ procedure TXYcurveObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer;
 begin
     case Idx of
         ord(TProp.csvfile):
-            DoCSVFile(DSS, Xvalues, Yvalues, FNumPoints, False, csvfile, ParentClass.Name); // file of x,y points, one to a line
+            DoCSVFile(DSS, Xvalues, Yvalues, numPoints, False, csvfile, ParentClass.Name); // file of x,y points, one to a line
         ord(TProp.sngfile):
-            DoSngFile(DSS, Xvalues, Yvalues, FNumPoints, False, sngfile, ParentClass.Name);
+            DoSngFile(DSS, Xvalues, Yvalues, numPoints, False, sngfile, ParentClass.Name);
         ord(TProp.dblfile):
-            DoDblFile(DSS, Xvalues, Yvalues, FNumPoints, False, dblfile, ParentClass.Name);
+            DoDblFile(DSS, Xvalues, Yvalues, numPoints, False, dblfile, ParentClass.Name);
     end;
 
     case Idx of
@@ -346,8 +345,8 @@ begin
         begin
             // Force as the always first property when saving in a later point
             PrpSequence[Idx] := -10;
-            ReAllocmem(YValues, Sizeof(YValues[1]) * FNumPoints);
-            ReAllocmem(XValues, Sizeof(XValues[1]) * FNumPoints);
+            ReAllocmem(YValues, Sizeof(YValues[1]) * numPoints);
+            ReAllocmem(XValues, Sizeof(XValues[1]) * numPoints);
         end;
         ord(TProp.Yarray):
             if (YValues <> NIL) then
@@ -381,12 +380,12 @@ var
 begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
-    FNumPoints := Other.NumPoints;
-    ReAllocmem(XValues, Sizeof(XValues[1]) * NumPoints);
-    ReAllocmem(YValues, Sizeof(YValues[1]) * NumPoints);
-    for i := 1 to NumPoints do
+    numPoints := Other.numPoints;
+    ReAllocmem(XValues, Sizeof(XValues[1]) * numPoints);
+    ReAllocmem(YValues, Sizeof(YValues[1]) * numPoints);
+    for i := 1 to numPoints do
         XValues[i] := Other.XValues[i];
-    for i := 1 to NumPoints do
+    for i := 1 to numPoints do
         YValues[i] := Other.YValues[i];
 
     FXshift := Other.FXshift;
@@ -401,7 +400,7 @@ begin
     Name := AnsiLowerCase(XYCurveName);
     DSSObjType := ParClass.DSSClassType;
 
-    FNumPoints := 0;
+    numPoints := 0;
     XValues := NIL;
     YValues := NIL;
 
@@ -436,10 +435,10 @@ var
 begin
     Result := 0.0;    // default return value if no points in curve
 
-    if FNumPoints <= 0 then         // Handle Exceptional cases
+    if numPoints <= 0 then         // Handle Exceptional cases
         Exit;
 
-    if FNumPoints = 1 then
+    if numPoints = 1 then
     begin
         Result := YValues[1];
         Exit;
@@ -453,7 +452,7 @@ begin
     end;
 
     // In the middle of the arrays
-    for i := 1 to FNumPoints do
+    for i := 1 to numPoints do
     begin
         if (Abs(XValues[i] - X) < 0.00001) then  // If close to an actual point, just use it.
         begin
@@ -470,7 +469,7 @@ begin
     end;
 
     // If we fall through the loop, Extrapolate from last two points
-    Result := InterpolatePoints(FNumPoints, FNumPoints - 1, X, XValues, YValues); //TODO: check -1
+    Result := InterpolatePoints(numPoints, numPoints - 1, X, XValues, YValues);
 end;
 
 function TXYcurveObj.GetCoefficients(X: Double): TCoeff;
@@ -488,10 +487,10 @@ begin
     coef[2] := 0.0;
     Result := coef;
 
-    if FNumPoints <= 0 then         // Handle Exceptional cases
+    if numPoints <= 0 then         // Handle Exceptional cases
         Exit;
 
-    if FNumPoints = 1 then
+    if numPoints = 1 then
     begin
         Result := coef;
         Exit;
@@ -509,7 +508,7 @@ begin
     end;
 
     // In the middle of the arrays
-    for i := 1 to FNumPoints do
+    for i := 1 to numPoints do
     begin
         if (XValues[i] > X) then
         // INTERPOLATE between two values
@@ -523,8 +522,8 @@ begin
 
     // Assume the same coefficients determined by the last two points. Necessary to keep
     // consistency with TXYcurveObj.GetYValue function.
-    coef[1] := (YValues[FNumPoints] - YValues[FNumPoints - 1]) / (XValues[FNumPoints] - XValues[FNumPoints - 1]);
-    coef[2] := YValues[FNumPoints] - coef[1] * XValues[FNumPoints];
+    coef[1] := (YValues[numPoints] - YValues[numPoints - 1]) / (XValues[numPoints] - XValues[numPoints - 1]);
+    coef[2] := YValues[numPoints] - coef[1] * XValues[numPoints];
     Result := coef;
 end;
 
@@ -535,7 +534,7 @@ end;
 
 function TXYcurveObj.Get_YValue(i: Integer): Double;
 begin
-    if (i <= FNumPoints) and (i > 0) then
+    if (i <= numPoints) and (i > 0) then
     begin
         Result := YValues[i];
     end
@@ -550,7 +549,7 @@ end;
 
 function TXYcurveObj.Get_XValue(i: Integer): Double;
 begin
-    if (i <= FNumPoints) and (i > 0) then
+    if (i <= numPoints) and (i > 0) then
     begin
         Result := XValues[i];
     end
@@ -570,16 +569,16 @@ var
 begin
     Result := 0.0;    // default return value if no points in curve
 
-    if FNumPoints <= 0 then
+    if numPoints <= 0 then
         Exit;
 
-    if FNumPoints = 1 then
+    if numPoints = 1 then
     begin
         Result := XValues[1];
         Exit;
     end;
 
-    for i := 2 to FNumPoints do
+    for i := 2 to numPoints do
     begin
         if ((Y >= YValues[i - 1]) and (Y <= YValues[i])) then
         begin
@@ -594,19 +593,19 @@ begin
     end;
 
     // Y is out of range, need to determine which end to extrapolate from
-    if YValues[1] <= YValues[FNumPoints] then
+    if YValues[1] <= YValues[numPoints] then
     begin // increasing Y values
         if Y <= YValues[1] then
             Result := InterpolatePoints(1, 2, Y, YValues, XValues)
         else
-            Result := InterpolatePoints(FNumPoints - 1, FNumPoints, Y, YValues, XValues);
+            Result := InterpolatePoints(numPoints - 1, numPoints, Y, YValues, XValues);
     end
     else
     begin // decreasing Y values
         if Y >= YValues[1] then
             Result := InterpolatePoints(1, 2, Y, YValues, XValues)
         else
-            Result := InterpolatePoints(FNumPoints - 1, FNumPoints, Y, YValues, XValues);
+            Result := InterpolatePoints(numPoints - 1, numPoints, Y, YValues, XValues);
     end;
 end;
 
@@ -629,7 +628,7 @@ end;
 
 procedure TXYCurveObj.Set_XValue(Index: Integer; Value: Double);
 begin
-    if Index <= FNumPoints then
+    if Index <= numPoints then
         XValues[Index] := Value;
 end;
 
@@ -641,7 +640,7 @@ end;
 
 procedure TXYCurveObj.Set_YValue(Index: Integer; Value: Double);
 begin
-    if Index <= FNumPoints then
+    if Index <= numPoints then
         YValues[Index] := Value;
 end;
 
