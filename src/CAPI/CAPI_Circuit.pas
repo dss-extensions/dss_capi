@@ -151,7 +151,7 @@ begin
     Loss := 0;
     for pLine in DSSPrime.ActiveCircuit.Lines do
     begin
-        Loss += pLine.Losses;
+        Loss += pLine.Losses();
     end;
     Result[0] := Loss.re * 0.001;
     Result[1] := Loss.im * 0.001;
@@ -176,7 +176,7 @@ begin
     end;
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-    LossValue := DSSPrime.ActiveCircuit.Losses;
+    LossValue := DSSPrime.ActiveCircuit.Losses();
     Result[0] := LossValue.re;
     Result[1] := LossValue.im;
 end;
@@ -289,7 +289,7 @@ begin
     for pTransf in DSSPrime.ActiveCircuit.Transformers do
     begin
         if pTransf.Issubstation then
-            Loss += pTransf.Losses;
+            Loss += pTransf.Losses();
     end;
     Result[0] := Loss.re * 0.001;
     Result[1] := Loss.im * 0.001;
@@ -442,7 +442,7 @@ begin
 
     for pCktElem in DSSPrime.ActiveCircuit.CktElements do
     begin
-        CResultPtr^ := pCktElem.Losses;
+        CResultPtr^ := pCktElem.Losses();
         Inc(CResultPtr);
     end;
     for i := 0 to ResultCount[0] - 1 do
@@ -1049,7 +1049,7 @@ begin
     while i < ElementsCount do
     begin
         pCktElem := DSSPrime.ActiveCircuit.CktElements.Get(Elements[i]);
-        CResultPtr^ := pCktElem.Losses;
+        CResultPtr^ := pCktElem.Losses();
         Inc(CResultPtr);
         Inc(i);
     end;

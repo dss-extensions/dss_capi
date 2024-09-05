@@ -3491,7 +3491,7 @@ begin
     Peakkva := Max(Cabs(cPower), Peakkva);
 
     // Get total circuit losses
-    cLosses := DSS.ActiveCircuit.Losses;  // PD Elements except shunts
+    cLosses := DSS.ActiveCircuit.Losses();  // PD Elements except shunts
     cLosses := cLosses * 0.001;  // convert to kW
 
     Integrate(Losseskwh, cLosses.re, dLosseskwh);

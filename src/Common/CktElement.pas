@@ -113,7 +113,6 @@ type
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
 
-        function Get_Losses: Complex;   // Get total losses for property...
         function Power(idxTerm: Integer): Complex;    // Get total complex power in active terminal
         // function Get_MaxPower(idxTerm: Integer): Complex;    // Get equivalent total complex power in active terminal based on phase with max current
         function MaxCurrent(idxTerm: Integer): Double; // Get equivalent total complex current on phase with max current
@@ -128,7 +127,7 @@ type
         property NTerms: Int8 READ Fnterms WRITE Set_NTerms;
         property NConds: Int8 READ Fnconds WRITE Set_Nconds;
         property NPhases: Integer READ Fnphases;
-        property Losses: Complex READ Get_Losses;
+        function Losses(): Complex;   // Get total losses for property...
         property ActiveTerminalIdx: Int8 READ Get_ActiveTerminal WRITE Set_ActiveTerminal;
 
         function ConductorClosed(Index: Integer): Boolean; inline;
@@ -591,7 +590,7 @@ begin
         Result := Result * 3.0;
 end;
 
-function TDSSCktElement.Get_Losses: Complex;
+function TDSSCktElement.Losses(): Complex;
 // get total losses in circuit element, all phases, all terminals.
 // Returns complex losses (watts, vars)
 var

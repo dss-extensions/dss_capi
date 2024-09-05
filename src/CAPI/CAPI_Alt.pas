@@ -441,7 +441,7 @@ begin
         Exit;
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-    LossValue := elem.Losses;
+    LossValue := elem.Losses();
     Result[0] := LossValue.re;
     Result[1] := LossValue.im;
 end;
@@ -1975,7 +1975,7 @@ begin
     for i := 0 to batchSize do
     begin
         if batch^ <> NIL then
-            CResultPtr^ := batch^.Losses;
+            CResultPtr^ := batch^.Losses();
 
         Inc(batch);
         Inc(CResultPtr);

@@ -3046,7 +3046,7 @@ begin
                 cPower := GetTotalPowerFromSources(DSS) * 0.000001;  // MVA
                 FSWrite(F, Format(', %-.6g', [cPower.re]));
                 FSWrite(F, Format(', %-.6g', [cPower.im]));
-                cLosses := DSS.ActiveCircuit.Losses * 0.000001;
+                cLosses := DSS.ActiveCircuit.Losses() * 0.000001;
                 if cPower.re <> 0.0 then
                     FSWrite(F, Format(', %-.6g, %-.4g', [cLosses.re, (Closses.re / cPower.re * 100.0)]))
                 else

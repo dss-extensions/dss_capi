@@ -2110,7 +2110,7 @@ begin
     if DSS.ActiveCircuit <> NIL then
     begin
         DSS.GlobalResult := '';
-        LossValue := DSS.ActiveCircuit.Losses;
+        LossValue := DSS.ActiveCircuit.Losses();
         DSS.GlobalResult := Format('%10.5g, %10.5g', [LossValue.re * 0.001, LossValue.im * 0.001]);
     end
     else
@@ -2184,7 +2184,7 @@ begin
             if ActiveCktElement <> NIL then
             begin
                 DSS.GlobalResult := '';
-                LossValue := ActiveCktElement.Losses;
+                LossValue := ActiveCktElement.Losses();
                 DSS.GlobalResult := Format('%10.5g, %10.5g', [LossValue.re * 0.001, LossValue.im * 0.001]);
             end;
         end
@@ -3494,7 +3494,7 @@ begin
         cPower := GetTotalPowerFromSources(DSS) * 0.000001;  // MVA
         S := S + Format('Total Active Power:   %-.6g MW', [cpower.re]) + CRLF;
         S := S + Format('Total Reactive Power: %-.6g Mvar', [cpower.im]) + CRLF;
-        cLosses := DSS.ActiveCircuit.Losses * 0.000001;
+        cLosses := DSS.ActiveCircuit.Losses() * 0.000001;
         if cPower.re <> 0.0 then
             S := S + Format('Total Active Losses:   %-.6g MW, (%-.4g %%)', [cLosses.re, (Closses.re / cPower.re * 100.0)]) + CRLF
         else

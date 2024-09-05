@@ -80,7 +80,6 @@ type
         function AddBus(const BusName: String; NNodes: Integer): Integer;
         procedure Set_ActiveCktElement(Value: TDSSCktElement);
         procedure Set_BusNameRedefined(Value: Boolean);
-        function Get_Losses: Complex; //Total Circuit losses
         procedure Set_LoadMultiplier(Value: Double);
 
         function SaveMasterFile(circF: TStream; saveFlags: DSSSaveFlags; header: Boolean = true; footer: Boolean = true): Boolean;
@@ -338,7 +337,7 @@ type
         property Name: String READ LocalName;
         property CaseName: String READ FCaseName WRITE Set_CaseName;
         property ActiveCktElement: TDSSCktElement READ FActiveCktElement WRITE Set_ActiveCktElement;
-        property Losses: Complex READ Get_Losses;  // Total Circuit PD Element losses
+        function Losses(): Complex; // Total Circuit PD Element losses
         property BusNameRedefined: Boolean READ FBusNameRedefined WRITE Set_BusNameRedefined;
         property LoadMultiplier: Double READ FLoadMultiplier WRITE Set_LoadMultiplier;
     end;
@@ -2261,7 +2260,7 @@ begin
     end;
 end;
 
-function TDSSCircuit.Get_Losses: Complex;
+function TDSSCircuit.Losses(): Complex;
 var
     pdelem: TPDElement;
 begin
@@ -2278,7 +2277,7 @@ begin
         begin
             // Ignore Shunt Elements
             if not pdElem.IsShunt then
-                Result += pdelem.losses;
+                Result += pdelem.Losses();
         end;
     end;
 end;

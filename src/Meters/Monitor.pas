@@ -1353,7 +1353,7 @@ begin
 
         9:
         begin  // losses
-            CplxLosses := MeteredElement.Losses;
+            CplxLosses := MeteredElement.Losses();
             AddDblToBuffer(CplxLosses.re);
             AddDblToBuffer(CplxLosses.im);
             Exit; // Done with this mode now.

@@ -1315,7 +1315,7 @@ begin
         end; {CASE}
 
         FSWriteln(F);
-        S := DSS.ActiveCircuit.Losses * 0.001;
+        S := DSS.ActiveCircuit.Losses() * 0.001;
         if Opt = 1 then
             S := S * 0.001;
         
@@ -2730,7 +2730,7 @@ begin
             then
             begin
         //----PDelem.ActiveTerminalIdx := 1;  // activate 1st terminal for Power call
-                kLosses := PDelem.Losses * 0.001;   // kW Losses in element
+                kLosses := PDelem.Losses() * 0.001;   // kW Losses in element
                 TotalLosses += kLosses;
                 TermPower := PDelem.Power(1) * 0.001;     // Terminal 1 power
 

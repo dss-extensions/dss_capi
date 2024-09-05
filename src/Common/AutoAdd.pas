@@ -652,7 +652,7 @@ begin
     begin
         // No energymeters in circuit
         // Just go by total system losses
-        kWLosses := DSS.ActiveCircuit.Losses.re * 0.001;
+        kWLosses := DSS.ActiveCircuit.Losses().re * 0.001;
         kWEEN := 0.0;
     end
     else
