@@ -14,15 +14,11 @@ uses
 
 type
     TPowerTerminal = object
-    PRIVATE
-        ActiveConductor: Integer;
-        procedure Set_ActiveConductor(Value: Integer);
     PUBLIC
         BusRef: Integer;
         TermNodeRef: array of Integer;   // Need to get to this fast
         ConductorsClosed: array of Boolean;
         procedure Init(Ncond: Integer);
-        property Conductor: Integer READ ActiveConductor WRITE set_ActiveConductor;
     end;
 
     TerminalArray = array of TPowerTerminal;
@@ -43,13 +39,6 @@ begin
     SetLength(ConductorsClosed, NCond);
     for i := 1 to NCond do
         ConductorsClosed[i - 1] := True;
-    ActiveConductor := 1;
-end;
-
-procedure TPowerTerminal.Set_ActiveConductor(value: Integer);
-begin
-    if (Value > 0) and (Value <= Length(ConductorsClosed)) then
-        ActiveConductor := Value;
 end;
 
 end.
