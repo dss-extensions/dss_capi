@@ -569,7 +569,7 @@ begin
     Nconds := FNphases;
     ControlledElement.ActiveTerminalIdx := 1;  // Make the 1 st terminal active
     // Get control synched up with capacitor
-    ControlledElement.SetConductorClosed(0, ControlVars.AvailableSteps <> ControlledCapacitor.Numsteps);
+    ControlledElement.SetConductorClosed(0, ControlVars.AvailableSteps <> ControlledCapacitor.NumSteps());
     if ControlledElement.ConductorClosed(0)      // Check state of phases of active terminal
     then
         ControlVars.PresentState := CTRL_CLOSE
@@ -720,7 +720,7 @@ begin
     with ControlVars do
         case PendingChange of
             CTRL_OPEN:
-                case ControlledCapacitor.NumSteps of
+                case ControlledCapacitor.NumSteps() of
                     1:
                     begin
                         if PresentState = CTRL_CLOSE then
@@ -1017,7 +1017,7 @@ begin
                         MonitoredElement.GetCurrents(cBuffer);
                         GetControlCurrent(SampleCurr);
 
-                        NumCapSteps := ControlledCapacitor.NumSteps;
+                        NumCapSteps := ControlledCapacitor.NumSteps();
                         AvailableSteps := ControlledCapacitor.AvailableSteps;
                         LastStepInService := ControlledCapacitor.LastStepInService;
 
@@ -1119,7 +1119,7 @@ begin
                             else
                             if ControlledCapacitor.AvailableSteps > 0 then
                             begin
-                                if (PF < PFON_Value) and (S.im * 0.001 > ControlledCapacitor.Totalkvar / ControlledCapacitor.Numsteps * 0.5) then
+                                if (PF < PFON_Value) and (S.im * 0.001 > ControlledCapacitor.Totalkvar / ControlledCapacitor.NumSteps() * 0.5) then
                                 begin
                                     PendingChange := CTRL_CLOSE;  // We can go some more
                                     ShouldSwitch := TRUE;

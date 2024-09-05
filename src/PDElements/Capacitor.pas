@@ -121,8 +121,6 @@ type
 
         procedure MakeYprimWork(YprimWork: TcMatrix; iStep: Integer);
 
-        procedure set_NumSteps(const Value: Integer); // 1=kvar, 2=Cuf, 3=Cmatrix
-
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
         procedure SetConductorClosed(Index: Integer; Value: Boolean); OVERRIDE; 
 //        procedure Set_Enabled(Value: WordBool); OVERRIDE;
@@ -148,7 +146,9 @@ type
         function SubtractStep: Boolean;
         function AvailableSteps: Integer;
         procedure FindLastStepInService;
-        property NumSteps: Integer READ FNumSteps WRITE set_NumSteps;
+        procedure SetNumSteps(const Value: Integer); // 1=kvar, 2=Cuf, 3=Cmatrix
+        function NumSteps(): Integer;
+
         property States[Idx: Integer]: Integer READ get_States WRITE set_States;
         property LastStepInService: Integer READ FLastStepInService WRITE set_LastStepInService;
     end;
@@ -511,7 +511,7 @@ begin
         YPrimInvalid := TRUE;
     end;
 
-    NumSteps := Other.NumSteps;
+    SetNumSteps(Other.NumSteps());
 
     for i := 1 to FNumSteps do
     begin
@@ -562,7 +562,7 @@ begin
     FHarm := NIL;
     FStates := NIL;
 
-    NumSteps := 1;  // Initial Allocation for the Arrays, too
+    SetNumSteps(1);  // Initial Allocation for the Arrays, too
     LastStepInService := FNumSteps;
 
     InitDblArray(FNumSteps, FR, 0.0);
@@ -841,7 +841,12 @@ begin
     end;
 end;
 
-procedure TCapacitorObj.set_NumSteps(const Value: Integer);
+function TCapacitorObj.NumSteps(): Integer;
+begin
+    result := FNumSteps;
+end;
+
+procedure TCapacitorObj.SetNumSteps(const Value: Integer);
 // Special case for changing from 1 to more ..  Automatically make a new bank
 var
     prev: Integer;

@@ -1712,7 +1712,7 @@ begin
         exit;
     pPhase := TNamedObject.Create('dummy');
     s := PhaseString(pCap, 1);
-    bph := 0.001 * pCap.Totalkvar / pCap.kVRating / pCap.kVRating / pCap.NumSteps / pCap.NPhases;
+    bph := 0.001 * pCap.Totalkvar / pCap.kVRating / pCap.kVRating / pCap.NumSteps() / pCap.NPhases;
     if (pCap.Connection = TCapacitorConnection.Delta) then
         s := DeltaPhaseString(pCap);
     for i := 1 to length(s) do
@@ -1724,8 +1724,8 @@ begin
         PhaseKindNode(FunPrf, 'ShuntCompensatorPhase', phs);
         DoubleNode(EpPrf, 'LinearShuntCompensatorPhase.bPerSection', bph);
         DoubleNode(EpPrf, 'LinearShuntCompensatorPhase.gPerSection', 0.0);
-        IntegerNode(EpPrf, 'ShuntCompensatorPhase.normalSections', pCap.NumSteps);
-        IntegerNode(EpPrf, 'ShuntCompensatorPhase.maximumSections', pCap.NumSteps);
+        IntegerNode(EpPrf, 'ShuntCompensatorPhase.normalSections', pCap.NumSteps());
+        IntegerNode(EpPrf, 'ShuntCompensatorPhase.maximumSections', pCap.NumSteps());
         DoubleNode(SshPrf, 'ShuntCompensatorPhase.sections', sections);
         RefNode(FunPrf, 'ShuntCompensatorPhase.ShuntCompensator', pCap);
         UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
@@ -3690,7 +3690,7 @@ begin
             StartInstance(FunPrf, 'LinearShuntCompensator', pCap);
             CircuitNode(FunPrf, ActiveCircuit);
             VbaseNode(FunPrf, pCap);
-            val := 0.001 * pCap.Totalkvar / pCap.kVRating / pCap.kVRating / pCap.NumSteps;
+            val := 0.001 * pCap.Totalkvar / pCap.kVRating / pCap.kVRating / pCap.NumSteps();
             DoubleNode(EpPrf, 'ShuntCompensator.nomU', 1000.0 * pCap.kVRating);
             DoubleNode(EpPrf, 'LinearShuntCompensator.bPerSection', val);
             DoubleNode(EpPrf, 'LinearShuntCompensator.gPerSection', 0.0);
@@ -3708,8 +3708,8 @@ begin
                 DoubleNode(EpPrf, 'LinearShuntCompensator.b0PerSection', 0.0);
             end;
             DoubleNode(EpPrf, 'LinearShuntCompensator.g0PerSection', 0.0);
-            IntegerNode(EpPrf, 'ShuntCompensator.normalSections', pCap.NumSteps);
-            IntegerNode(EpPrf, 'ShuntCompensator.maximumSections', pCap.NumSteps);
+            IntegerNode(EpPrf, 'ShuntCompensator.normalSections', pCap.NumSteps());
+            IntegerNode(EpPrf, 'ShuntCompensator.maximumSections', pCap.NumSteps());
 
             val := 0.0;
             for pCapC in ActiveCircuit.CapControls do
@@ -3720,7 +3720,7 @@ begin
             DoubleNode(EpPrf, 'ShuntCompensator.aVRDelay', val);
 
             val := 0;
-            for i := 1 to pCap.NumSteps do
+            for i := 1 to pCap.NumSteps() do
                 if pCap.States[i] > 0 then
                     val := val + 1.0;
             DoubleNode(SshPrf, 'ShuntCompensator.sections', val);

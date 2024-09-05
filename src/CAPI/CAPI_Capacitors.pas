@@ -175,7 +175,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.NumSteps;
+    Result := elem.NumSteps();
 end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Set_IsDelta(Value: TAPIBoolean); CDECL;
@@ -276,8 +276,8 @@ begin
         Exit;
     end;
 
-    DSS_RecreateArray_PInteger(Result, ResultPtr, ResultCount, elem.NumSteps);
-    Move(elem.FStates[1], ResultPtr^, elem.NumSteps * SizeOf(Integer));
+    DSS_RecreateArray_PInteger(Result, ResultPtr, ResultCount, elem.NumSteps());
+    Move(elem.FStates[1], ResultPtr^, elem.NumSteps() * SizeOf(Integer));
 end;
 
 procedure Capacitors_Get_States_GR(); CDECL;
@@ -296,10 +296,10 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if (ValueCount <> elem.NumSteps) and DSS_CAPI_EXT_ERRORS then
+    if (ValueCount <> elem.NumSteps()) and DSS_CAPI_EXT_ERRORS then
     begin
         DoSimpleMsg(DSSPrime, 'The number of states provided (%d) does not match the number of steps (%d) in the active capacitor.', 
-            [ValueCount, elem.NumSteps], 
+            [ValueCount, elem.NumSteps()], 
             8989
         );
         Exit;
@@ -307,9 +307,9 @@ begin
 
     Value := PIntegerArray(ValuePtr);
     LoopLimit := ValueCount;
-    if LoopLimit > elem.NumSteps then
+    if LoopLimit > elem.NumSteps() then
     begin
-        LoopLimit := elem.NumSteps;
+        LoopLimit := elem.NumSteps();
     end;
 
     for i := 1 to LoopLimit do
@@ -329,7 +329,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    for i := 1 to elem.NumSteps do
+    for i := 1 to elem.NumSteps() do
         elem.States[i] := 0;   // open all steps
 end;
 //------------------------------------------------------------------------------
@@ -344,7 +344,7 @@ begin
     elem.ActiveTerminal := @elem.Terminals[0];  // make sure terminal 1 is closed
     elem.FActiveTerminal := 0;  // make sure terminal 1 is closed
     elem.SetConductorClosed(0, TRUE);    // closes all phases
-    for i := 1 to elem.NumSteps do
+    for i := 1 to elem.NumSteps() do
         elem.States[i] := 1;
 end;
 //------------------------------------------------------------------------------

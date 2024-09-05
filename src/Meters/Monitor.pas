@@ -775,7 +775,7 @@ begin
             end;
             6:
             begin
-                RecordSize := TCapacitorObj(MeteredElement).NumSteps;     // Capacitor Taps
+                RecordSize := TCapacitorObj(MeteredElement).NumSteps();     // Capacitor Taps
                 for i := 1 to RecordSize do
                     Header.Add('Step_' + inttostr(i));
 
@@ -1313,7 +1313,7 @@ begin
         begin     // Monitor Capacitor State
 
             cap := TCapacitorObj(MeteredElement);
-            for i := 1 to cap.NumSteps do
+            for i := 1 to cap.NumSteps() do
             begin
                 AddDblToBuffer(cap.States[i]);
             end;
