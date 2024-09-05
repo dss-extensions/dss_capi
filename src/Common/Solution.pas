@@ -590,7 +590,7 @@ begin
     // DSS.ThreadStatusEvent.SetEvent();
     if DSS.ActorThread <> NIL then
     begin
-        DSS.SolutionAbort := True;
+        DSS.SetSolutionAbort(true);
         DSS.ActorThread.Send_Message(TActorMessage.EXIT_ACTOR);
         DSS.ActorThread.WaitFor();
         DSS.ActorThread.Free();
@@ -627,7 +627,7 @@ begin
         Exit;
     end;
 
-    if DSS.SolutionAbort then
+    if DSS.SolutionAbort() then
     begin
         DSS.GlobalResult := 'Solution aborted.';
         DSS.ErrorNumber := SOLUTION_ABORT;
@@ -740,7 +740,7 @@ begin
         On E: Exception do
         begin
             DoSimpleMsg(DSS, 'Error Encountered in Solve: %s', [E.Message], 482);
-            DSS.SolutionAbort := TRUE;
+            DSS.SetSolutionAbort(true);
         end;
 
     end;
@@ -1031,7 +1031,7 @@ begin
                 raise ESolveError.Create('Aborting');
             end;
         end;
-        if DSS.SolutionAbort then
+        if DSS.SolutionAbort() then
             Exit; // Initialization can result in abort
 
         try
@@ -1044,7 +1044,7 @@ begin
             end;
         end;
 
-        if DSS.SolutionAbort then
+        if DSS.SolutionAbort() then
             Exit;
 
         // The above resets the active sparse set to hY
@@ -1071,13 +1071,13 @@ begin
     begin
         BuildYMatrix(DSS, SERIESONLY, TRUE);   // Side Effect: Allocates V
     end;
-    if DSS.SolutionAbort then
+    if DSS.SolutionAbort() then
         Exit;
 
     Inc(SolutionCount);    //Unique number for this solution
 
     ZeroInjCurr;
-    if DSS.SolutionAbort then
+    if DSS.SolutionAbort() then
         Exit;
 
     GetSourceInjCurrents;    // Vsource, Isource and VCCS only
@@ -1093,7 +1093,7 @@ begin
     SolveSystem(NodeV);  // also sets voltages in radial part of the circuit if radial solution
 
     // Reset the main system Y as the solution matrix
-    if (hYsystem > 0) and not DSS.SolutionAbort then
+    if (hYsystem > 0) and not DSS.SolutionAbort() then
         hY := hYsystem;
 end;
 
@@ -1138,7 +1138,7 @@ begin
         ckt.ZonesLocked := TRUE;
 
         SolveZeroLoadSnapShot;
-        if DSS.SolutionAbort then
+        if DSS.SolutionAbort() then
             Exit;
 
         for i := 1 to ckt.NumBuses do
@@ -1252,7 +1252,7 @@ begin
     if not ControlActionsDone and (ControlIteration >= MaxControlIterations) then
     begin
         DoSimpleMsg(DSS, _('Warning Max Control Iterations Exceeded.') + CRLF + _('Tip: Show Eventlog to debug control settings.'), 485);
-        DSS.SolutionAbort := TRUE;   // this will stop this message in dynamic power flow modes
+        DSS.SetSolutionAbort(true);   // this will stop this message in dynamic power flow modes
     end;
 
     if ckt.LogEvents then
@@ -1291,7 +1291,7 @@ begin
         end;
 
         ZeroInjCurr;
-        if DSS.SolutionAbort then
+        if DSS.SolutionAbort() then
             Exit;
 
         GetSourceInjCurrents;
@@ -1352,12 +1352,12 @@ begin
                     BuildYMatrix(DSS, WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
             end;
 
-            if DSS.SolutionAbort then
+            if DSS.SolutionAbort() then
                 Exit;
 
             DoPFLOWsolution;
 
-            if DSS.SolutionAbort then
+            if DSS.SolutionAbort() then
                 Exit;
         except
             ON E: EEsolv32Problem do
@@ -1376,7 +1376,7 @@ begin
     if Currents = NIL then
     begin
         DoSimpleMsg(DSS, _('General error: internal Currents vector is NIL. Please check your input data and retry.'), 11002);
-        DSS.SolutionAbort := True;
+        DSS.SetSolutionAbort(true);
         Exit;
     end;
 
@@ -1952,7 +1952,7 @@ begin
     if hY = 0 then
     begin
         DoSimpleMsg(DSS, _('Yij: Y matrix has not been initialized yet.'), 11003);
-        DSS.SolutionAbort := true;
+        DSS.SetSolutionAbort(true);
     end;
     GetMatrixElement(hY, i, j, @Result);
 end;
@@ -1962,7 +1962,7 @@ begin
     if hY = 0 then
     begin
         DoSimpleMsg(DSS, _('Yii: Y matrix has not been initialized yet.'), 11003);
-        DSS.SolutionAbort := true;
+        DSS.SetSolutionAbort(true);
     end;
     GetMatrixElement(hY, i, i, @Result);
 end;
@@ -2425,7 +2425,7 @@ begin
         On E: Exception do //Raise
         begin
             DoSimpleMsg(DSS, 'Error Solving System Y Matrix.  Sparse matrix solver reports numerical error: %s', [E.Message], 0);
-            DSS.SolutionAbort := TRUE;
+            DSS.SetSolutionAbort(true);
         end;
     end;
 end;
@@ -2484,7 +2484,7 @@ begin
     begin
 {$ENDIF}
         ZeroInjCurr;
-        if DSS.SolutionAbort then
+        if DSS.SolutionAbort() then
             Exit;
 
         GetSourceInjCurrents;
@@ -2653,7 +2653,7 @@ begin
                             FMessage := '1';
                             DSS.ActorStatus := TActorStatus.Idle;
                             StatusEvent.SetEvent();
-                            DSS.SolutionAbort := TRUE;
+                            DSS.SetSolutionAbort(true);
                             // if DSS.GetPrime().Parallel_enabled then
                             // begin
                             //     if not IsDLL then
@@ -2746,7 +2746,7 @@ begin
     if Initialize then
     begin
         ZeroInjCurr;
-        if DSS.SolutionAbort then
+        if DSS.SolutionAbort() then
             Exit;
 
         GetSourceInjCurrents;  // sources

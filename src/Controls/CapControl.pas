@@ -1136,7 +1136,7 @@ begin
                     if ctrlSignalShape = NIL then
                     begin
                         DoSimpleMsg('%s: Type is set to "Follow", but not "ControlSignal" was provided. Aborting solution.', [self.FullName], 10362);
-                        DSS.SolutionAbort := true;
+                        DSS.SetSolutionAbort(true);
                         Exit;
                     end;
 

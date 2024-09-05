@@ -233,7 +233,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.SetSolutionAbort(FALSE);  // Reset for commands entered from outside
     elem.ParsePropertyValue(ord(TSwtControlProp.SwitchedObj), Value, []);
 end;
 //------------------------------------------------------------------------------
@@ -243,7 +243,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.SetSolutionAbort(FALSE);  // Reset for commands entered from outside
     elem.SetInteger(ord(TSwtControlProp.SwitchedTerm), Value, []);
 end;
 //------------------------------------------------------------------------------

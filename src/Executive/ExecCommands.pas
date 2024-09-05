@@ -665,7 +665,7 @@ begin
 {$IFDEF DSS_CAPI_PM}
             ord(Cmd.Abort):
                 for i := 0 to High(PMParent.Children) do
-                    PMParent.Children[i].SolutionAbort := TRUE;
+                    PMParent.Children[i].SetSolutionAbort(true);
             ord(Cmd.Clone):
                 DoClone(DSS);
 {$ENDIF}

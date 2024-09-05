@@ -1549,7 +1549,7 @@ begin
     if not ZIPVset then
     begin
         DoSimpleMsg(_('ZIPV is not set. Aborting...'), 1366);
-        DSS.SolutionAbort := True;
+        DSS.SetSolutionAbort(true);
         Exit;
     end;
 

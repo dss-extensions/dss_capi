@@ -1812,7 +1812,7 @@ begin
                 // if (VLN = 0) then //TODO
                 // begin
                 //     DoSimpleMsg('%s: VLN is zero, aborting.', [self.FullName], 7340);
-                //     DSS.SolutionAbort := True;
+                //     DSS.SetSolutionAbort(true);
                 //     Exit;
                 // end;
 
@@ -1832,7 +1832,7 @@ begin
                 // if (VLL = 0) then //TODO
                 // begin
                 //     DoSimpleMsg('%s: VLL is zero, aborting.', [self.FullName], 7340);
-                //     DSS.SolutionAbort := True;
+                //     DSS.SetSolutionAbort(true);
                 //     Exit;
                 // end;
 
@@ -1885,7 +1885,7 @@ begin
             else
             begin
                 DoSimpleMsg('Dynamics model missing for %s ', [FullName], 5671);
-                DSS.SolutionAbort := TRUE;
+                DSS.SetSolutionAbort(true);
             end;
     else
 
@@ -1965,7 +1965,7 @@ begin
                 end;
         else
             DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Generators. %s has %d phases.', [FullName, Fnphases], 5671);
-            DSS.SolutionAbort := TRUE;
+            DSS.SetSolutionAbort(true);
         end;
 
     end;
@@ -2318,7 +2318,7 @@ begin
             end;
         else
             DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Generators. %s has %d phases.', [FullName, Fnphases], 5672);
-            DSS.SolutionAbort := TRUE;
+            DSS.SetSolutionAbort(true);
             Exit; // TODO: check conditions to allow generators with other phase count
         end;
 

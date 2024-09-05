@@ -149,7 +149,7 @@ end;
 
 procedure DoDSSCommandCallBack(S: pAnsiChar; Maxlen: Cardinal); STDCALL;
 begin
-    DSSPrime.SolutionAbort := FALSE;
+    DSSPrime.SetSolutionAbort(FALSE);
     DSSPrime.DSSExecutive.ParseCommand(String(S));
 end;
 

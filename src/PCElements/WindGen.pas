@@ -1631,7 +1631,7 @@ procedure TWindGenObj.DoHarmonicMode();
 //     GenHarmonic: Double;
 //     pBuffer: PCBuffer24;
 begin
-    DSS.SolutionAbort := true;
+    DSS.SetSolutionAbort(true);
     DoSimpleMsg('%s: WindGen harmonics model is not fully implemented. Please use the Generator model instead.', [FullName], 5674);
 
     // pBuffer := @TWindGen(ParentClass).cBuffer;
@@ -1797,7 +1797,7 @@ procedure TWindGenObj.InitHarmonics();
 //     E, Va: complex;
 //     NodeV: pNodeVarray;
 begin
-    DSS.SolutionAbort := true;
+    DSS.SetSolutionAbort(true);
     DoSimpleMsg('%s: WindGen harmonics model is not fully implemented. Please use the Generator model instead.', [FullName], 5673);
 
     // YprimInvalid := true; // Force rebuild of YPrims
@@ -1882,7 +1882,7 @@ begin
             end;
         else
             DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase WindGens. %s has %d phases.', [FullName, Fnphases], 5672);
-            DSS.SolutionAbort := true;
+            DSS.SetSolutionAbort(true);
         end;
 
         if DynamicEqObj = nil then

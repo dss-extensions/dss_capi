@@ -1878,7 +1878,7 @@ begin
             else
             begin
                 DoSimpleMsg(Format('Dynamics model missing for PVSystem.%s ', [Name]), 5671);
-                DSS.SolutionAbort := TRUE;
+                DSS.SetSolutionAbort(true);
             end;
     else  
         //All other models

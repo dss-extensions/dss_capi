@@ -1605,7 +1605,7 @@ begin
         setlength(PConn_Voltages, length(Locations) * 6); //  Sets the memory space for storing the voltage at the point of conn
         setlength(Link_branches, length(Locations)); //  Sets the memory space for storing the link branches names
         setlength(PConn_Names, length(Locations)); //  Sets the memory space for storing the Bus names
-        DSS.SolutionAbort := FALSE;
+        DSS.SetSolutionAbort(FALSE);
         j := 0;
         for i := 0 to High(Locations) do
         begin

@@ -587,7 +587,7 @@ begin
         SetInZipPath('');
 
         DSS.Redirect_Abort := False;
-        DSS.SolutionAbort := False;
+        DSS.SetSolutionAbort(FALSE);
 
         // Do the actual redirect to the file, while wrapping streams
         // and loading inputs from the UnZipper.

@@ -67,7 +67,7 @@ begin
     DSSPrime.LastErrorMessage := Value;
     if DSS_CAPI_EARLY_ABORT then
     begin
-        DSSPrime.SolutionAbort := true;
+        DSSPrime.SetSolutionAbort(true);
     end;
 end;
 //------------------------------------------------------------------------------

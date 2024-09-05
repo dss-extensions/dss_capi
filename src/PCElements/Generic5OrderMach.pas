@@ -639,7 +639,7 @@ end;
 procedure TGeneric5Obj.MakeLike(OtherPtr: Pointer);
 begin
     DoSimpleMsg('%s: TGeneric5Obj.MakeLike is not implemented. Aborting.', [FullName], 202406012);
-    DSS.SolutionAbort := true;
+    DSS.SetSolutionAbort(true);
 end;
 
 constructor TGeneric5Obj.Create(ParClass: TDSSClass; const Generic5ObjName: String);
@@ -2029,7 +2029,7 @@ begin
             end;
         else
             DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Motors. %s has %d phases.', [FullName, Fnphases], 5672);
-            DSS.SolutionAbort := TRUE;
+            DSS.SetSolutionAbort(true);
         end;
     // end;
 
@@ -2288,7 +2288,7 @@ begin
     if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
     begin
         DoSimpleMsg('%s: TGeneric5Obj.CalcGeneric5ModelContribution is not implemented for HarmonicMode. Aborting.', [FullName], 202406013);
-        DSS.SolutionAbort := true;
+        DSS.SetSolutionAbort(true);
         Exit;
     end;
 
@@ -2542,7 +2542,7 @@ end;
 procedure TGeneric5Obj.MakePosSequence;
 begin
     DoSimpleMsg('%s: TGeneric5Obj.MakePosSequence is not implemented. Aborting.', [FullName], 202406011);
-    DSS.SolutionAbort := true;
+    DSS.SetSolutionAbort(true);
 end;
 
 procedure TGeneric5Obj.SetConductorClosed(Index: Integer; Value: Boolean);

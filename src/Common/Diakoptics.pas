@@ -71,7 +71,7 @@ begin
     end;
     DSS.ActiveCircuit.IsSolved := TRUE;
     DSS.ActiveCircuit.BusNameRedefined := FALSE;
-    if DSS.SolutionAbort then
+    if DSS.SolutionAbort() then
         DSS.ActiveCircuit.IsSolved := FALSE;
     DSS.ActiveChild := DSS;
     DSS.ActiveChildIndex := 0;
@@ -456,7 +456,7 @@ begin
         DSS.DSSExecutive.ParseCommand('set controlmode=off');
         Ymatrix.BuildYMatrix(DSS, WHOLEMATRIX, FALSE);
         // DSS.ActiveCircuit.Solution.Solve();
-        if not DSS.SolutionAbort then
+        if not DSS.SolutionAbort() then
         begin
             Save_SubCircuits(AddISrc);
             Dynavars.SolutionMode := Prev_mode;  // Goes back to the previous solution mode
@@ -543,7 +543,7 @@ begin
                 DSS.Parallel_enabled := FALSE;
                 DSS.DSSExecutive.ClearAll;
                 Fileroot := DSS.OutputDirectory; // Gets the current directory // CurrentDSSDir
-                DSS.SolutionAbort := FALSE;
+                DSS.SetSolutionAbort(FALSE);
 
                 // Compiles the interconnected Circuit for further calculations on actor 1
                 DSS.DssExecutive.ParseCommand('compile "' + Fileroot + 'Torn_Circuit' + PathDelim + 'Master_interconnected.dss"');
@@ -578,7 +578,7 @@ begin
 
                     ChDSS.DssExecutive.ParseCommand('set controlmode=Off');
                     ChDSS.ActiveCircuit.Solution.Solve();
-                    if ChDSS.SolutionAbort then
+                    if ChDSS.SolutionAbort() then
                     begin
                         ErrorCode := 1;
                         Break;
@@ -700,7 +700,7 @@ begin
     //TODO: ScriptEd.PublishMessage(prog_Str)
     //TODO: check -- the previous GlobalResult is ignored here...
     DSS.GlobalResult := prog_str;
-    DSS.SolutionAbort := FALSE;
+    DSS.SetSolutionAbort(FALSE);
 end;
 
 end.

@@ -398,7 +398,7 @@ begin
             on E: Exception do
             begin
                 DoSimpleMsg(DSS, 'Redirect File "%s" could not be read: %s', [DSS.Parser.MakeString(), E.Message], 2202);
-                DSS.SolutionAbort := TRUE;
+                DSS.SetSolutionAbort(true);
                 Exit;
             end;
         end;
@@ -522,7 +522,7 @@ begin
                 Reset(Fin);
             except
                 DoSimpleMsg(DSS, 'Redirect file not found: "%s"', [DSS.Parser.MakeString()], 242);
-                DSS.SolutionAbort := TRUE;
+                DSS.SetSolutionAbort(true);
                 Exit;
             end;
             gotTheFile := TRUE;
@@ -532,7 +532,7 @@ begin
     if not gotTheFile then
     begin
         DoSimpleMsg(DSS, 'Redirect file not found: "%s"', [DSS.Parser.MakeString()], 243);
-        DSS.SolutionAbort := TRUE;
+        DSS.SetSolutionAbort(true);
         exit;  // Already had an extension, so just bail
     end;
 
@@ -579,7 +579,7 @@ begin
                             end;
 
                         if not InBlockComment then   // process the command line
-                            if not DSS.SolutionAbort then
+                            if not DSS.SolutionAbort() then
                                 ParseCommand(InputLine, LineNum)
                             else
                                 DSS.Redirect_Abort := TRUE;  // Abort file if solution was aborted
@@ -613,7 +613,7 @@ begin
                             end;
 
                         if not InBlockComment then   // process the command line
-                            if not DSS.SolutionAbort then
+                            if not DSS.SolutionAbort() then
                                 ParseCommand(InputLine, LineNum)
                             else
                                 DSS.Redirect_Abort := TRUE;  // Abort file if solution was aborted

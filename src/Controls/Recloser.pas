@@ -546,7 +546,7 @@ begin
     if MonitoredElement = NIL then
     begin
         DoSimpleMsg('Required property MonitoredObj is not defined for "%s".', [FullName], 9894);
-        DSS.SolutionAbort := True;
+        DSS.SetSolutionAbort(true);
         Exit;
     end;
 

@@ -777,7 +777,7 @@ begin
             if (R1 = 0) and (X1 = 0) then
             begin
                 DoSimpleMsg('%s: Z1 (R1 + jX1) cannot be zero.', [self.FullName], 7340);
-                DSS.SolutionAbort := True;
+                DSS.SetSolutionAbort(true);
                 Exit;
             end;
 

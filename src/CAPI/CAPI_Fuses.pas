@@ -83,7 +83,7 @@ var
 begin
     if not _activeObj(DSS, elem) then
         Exit;
-    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSS.SetSolutionAbort(FALSE);  // Reset for commands entered from outside
     elem.ParsePropertyValue(idx, val, []);
 end;
 //------------------------------------------------------------------------------
@@ -93,7 +93,7 @@ var
 begin
     if not _activeObj(DSS, elem) then
         Exit;
-    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSS.SetSolutionAbort(FALSE);  // Reset for commands entered from outside
     elem.SetDouble(idx, val, []);
 end;
 //------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ var
 begin
     if not _activeObj(DSS, elem) then
         Exit;
-    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSS.SetSolutionAbort(FALSE);  // Reset for commands entered from outside
     elem.SetInteger(idx, val, []);
 end;
 //------------------------------------------------------------------------------

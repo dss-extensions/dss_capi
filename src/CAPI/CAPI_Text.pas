@@ -32,7 +32,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Text_Set_Command(const Value: PAnsiChar); CDECL;
 begin
-    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.SetSolutionAbort(FALSE);  // Reset for commands entered from outside
     DSSPrime.DSSExecutive.ParseCommand(Value);  // Convert to String
 end;
 //------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ var
     // i: Integer = 1;
     strs: TStringList;
 begin
-    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.SetSolutionAbort(FALSE);  // Reset for commands entered from outside
     full := Value;
     posCurrent := 1;
     posNext := Pos(#10, full, posCurrent);
@@ -79,7 +79,7 @@ var
     i: Integer;
     p: PPAnsiChar;
 begin
-    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.SetSolutionAbort(FALSE);  // Reset for commands entered from outside
     p := Value;
     for i := 1 to ValueCount do
     begin

@@ -437,7 +437,7 @@ begin
                             end;
                         end;
                     end;
-                    if DSS.SolutionAbort then
+                    if DSS.SolutionAbort() then
                         Break;
                 end;
 
@@ -549,7 +549,7 @@ begin
                             end;
                         end;
                     end;
-                    if DSS.SolutionAbort then
+                    if DSS.SolutionAbort() then
                         Break;
                 end;
 

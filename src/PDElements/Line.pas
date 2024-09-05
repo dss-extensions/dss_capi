@@ -1166,7 +1166,7 @@ begin
     if LineGeometryObj <> NIL then
     begin
         FMakeZFromGeometry(ActiveCircuit.Solution.Frequency); // Includes length in proper units
-        if DSS.SolutionAbort then
+        if DSS.SolutionAbort() then
             Exit;
 
     end
@@ -1174,7 +1174,7 @@ begin
     if SpacingSpecified then
     begin
         FMakeZFromSpacing(ActiveCircuit.Solution.Frequency); // Includes length in proper units
-        if DSS.SolutionAbort then
+        if DSS.SolutionAbort() then
             Exit;
     end
     else

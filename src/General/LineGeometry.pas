@@ -678,7 +678,7 @@ begin
     Result := NIL;
     if dataChanged then
         UpdateLineGeometryData(f, earthModel);
-    if not DSS.SolutionAbort then
+    if not DSS.SolutionAbort() then
         Result := lineConstants.GetYCMatrix(f, Lngth, Units);
 end;
 
@@ -687,7 +687,7 @@ begin
     Result := NIL;
     if dataChanged then
         UpdateLineGeometryData(f, earthModel);
-    if not DSS.SolutionAbort then
+    if not DSS.SolutionAbort() then
         Result := lineConstants.GetZMatrix(F, Lngth, Units, earthModel);
 end;
 
@@ -868,7 +868,7 @@ begin
     if lineConstants.ConductorsInSameSpace(LineGeomErrMsg) then
     begin
         raise ELineGeometryProblem.Create(Format(_('Error in %s: %s'), [FullName, LineGeomErrMsg]));
-        DSS.SolutionAbort := TRUE;
+        DSS.SetSolutionAbort(true);
     end
     else
     begin

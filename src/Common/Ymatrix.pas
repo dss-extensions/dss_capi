@@ -120,7 +120,7 @@ begin
     if ckt.Solution.NodeVbase = NIL then
     begin
         DoSimpleMsg(ckt.DSS, _('General error: internal NodeVbase is NIL. Please check your input data and retry.'), 11002);
-        ckt.DSS.SolutionAbort := True;
+        ckt.DSS.SetSolutionAbort(true);
         Exit;
     end;
 
@@ -356,7 +356,7 @@ begin
                 ReCalcInvalidYPrims(DSS.ActiveCircuit);
         end;
         
-        if DSS.SolutionAbort then
+        if DSS.SolutionAbort() then
         begin
             if DSS.ErrorNumber <> 0 then
             begin

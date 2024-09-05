@@ -662,8 +662,6 @@ type
         CurrentDSSDir_internal: String;
         FSolutionAbort: LongInt; // changed to LongInt to enable InterLockedIncrement and others
 
-        function get_SolutionAbort(): Boolean;
-        procedure set_SolutionAbort(val: Boolean);
     public
         Parent: TDSSContext;
     
@@ -799,7 +797,9 @@ type
         function GetPrime(): TDSSContext;
         function CurrentDSSDir(): String;
         procedure SetCurrentDSSDir(dir: String);
-        property SolutionAbort: Boolean READ get_SolutionAbort WRITE set_SolutionAbort;
+        function SolutionAbort(): Boolean;
+        procedure SetSolutionAbort(val: Boolean);
+
         function GetInputStreamEx(fn: String): TStream;
         function GetOutputStreamEx(fn: String; mode: Integer=fmCreate or fmOpenWrite): TStream; // This one raises an exception on error
         function GetOutputStreamNoEx(fn: String; mode: Integer=fmCreate or fmOpenWrite): TStream; // This one maps the exception/error to the Error API
@@ -1017,12 +1017,12 @@ begin
         Result := Parent.GetPrime();
 end;
 
-function TDSSContext.get_SolutionAbort(): Boolean;
+function TDSSContext.SolutionAbort(): Boolean;
 begin
     Result := FSolutionAbort <> 0;
 end;
 
-procedure TDSSContext.set_SolutionAbort(val: Boolean);
+procedure TDSSContext.SetSolutionAbort(val: Boolean);
 begin
 {$IFDEF DSS_CAPI_PM}
     if val then

@@ -977,7 +977,7 @@ begin
         if pcElem.Enabled then
         begin
             pcElem.InitHarmonics();   // Virtual function
-            if DSS.SolutionAbort then
+            if DSS.SolutionAbort() then
                 Exit;
         end;
     end;

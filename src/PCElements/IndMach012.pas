@@ -699,7 +699,7 @@ begin
             end;
         else
             DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Motors. %s has %d phases.', [FullName, Fnphases], 5672);
-            DSS.SolutionAbort := TRUE;
+            DSS.SetSolutionAbort(true);
         end;
 
         InitModel(V012, I012); // E2, etc

@@ -262,7 +262,7 @@ begin
      DSS.LastErrorMessage := Msg;
      DSS.ErrorNumber := ErrNum;
      AppendGlobalResultCRLF(DSS, Msg);
-     DSS.SolutionAbort  :=  True;
+     DSS.SetSolutionAbort(true);
 End;
 
 PROCEDURE AppendGlobalResultCRLF(DSS: TDSSContext; const S: String);
@@ -396,7 +396,7 @@ begin
         // In case the actor hasn't been destroyed
         if ctx.ActorThread <> nil then
         begin
-            ctx.SolutionAbort := True;
+            ctx.SetSolutionAbort(true);
             ctx.ActorThread.Send_Message(TActorMessage.EXIT_ACTOR);
             ctx.ActorThread.WaitFor();
             ctx.ActorThread.Free;
@@ -435,7 +435,7 @@ Begin
         Inc(DSS.NumCircuits);
         S := DSS.Parser.Remainder();    // Pass remainder of string on to vsource.
         // Create a default Circuit
-        DSS.SolutionAbort := False;
+        DSS.SetSolutionAbort(FALSE);
         // Voltage source named "source" connected to SourceBus
         DSS.DSSExecutive.ParseCommand('New object=vsource.source Bus1=SourceBus ' + S);  // Load up the parser as if it were read in
     End
