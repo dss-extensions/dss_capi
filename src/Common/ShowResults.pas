@@ -2492,7 +2492,7 @@ begin
             end;
         end
         else
-            DoSimpleMsg(DSS, 'Meter Name Not Specified. %s', [CRLF + DSS.Parser.CmdString], 221);
+            DoSimpleMsg(DSS, 'Meter Name Not Specified. %s', [CRLF + DSS.Parser.CmdString()], 221);
 
     finally
 

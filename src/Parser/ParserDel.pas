@@ -46,7 +46,6 @@ type
         ConvertError: Boolean;
         IsQuotedString: Boolean;
         RPNCalculator: TRPNCalc;
-        procedure SetCmdString(const Value: String);
         procedure SkipWhiteSpace(const LineBuffer: String; var LinePos: Integer);
         function IsWhiteSpace(ch: Char): Boolean;
         function IsDelimiter(const LineBuffer: String; var LinePos: Integer): Boolean;
@@ -84,8 +83,8 @@ type
         procedure ResetDelims();   // resets delimiters to default
         function CheckforVar(var TokenBuffer_: String): Boolean;
         procedure SetVars(vars: TParserVar);
-
-        property CmdString: String READ CmdBuffer WRITE SetCmdString;
+        function CmdString(): String;
+        procedure SetCmdString(const Value: String);
     end;
 
 implementation
@@ -266,6 +265,11 @@ begin
     RPNCalculator.Free;
 
     inherited Destroy;
+end;
+
+function TDSSParser.CmdString(): String;
+begin
+    result := CmdBuffer;
 end;
 
 procedure TDSSParser.SetCmdString(const Value: String);

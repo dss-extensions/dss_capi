@@ -42,12 +42,12 @@ uses
 //------------------------------------------------------------------------------
 function Parser_Get_CmdString(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ComParser.CmdString);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ComParser.CmdString());
 end;
 //------------------------------------------------------------------------------
 procedure Parser_Set_CmdString(const Value: PAnsiChar); CDECL;
 begin
-    DSSPrime.ComParser.CmdString := Value;
+    DSSPrime.ComParser.SetCmdString(Value);
 end;
 //------------------------------------------------------------------------------
 function Parser_Get_NextParam(): PAnsiChar; CDECL;

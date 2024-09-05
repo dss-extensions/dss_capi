@@ -91,8 +91,6 @@ type
 
         cBuffer: pComplexArray;    // Complexarray buffer
 
-        function  get_PresentState: EControlAction; //TODO: check why this function even exists (also in Relay)
-        procedure set_PresentState(const Value: EControlAction);
     PUBLIC
         NormalState: EControlAction;
         NormalStateSet: Boolean;
@@ -113,11 +111,12 @@ type
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
         procedure RecalcElementData; OVERRIDE;
 
-        procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
+        procedure Sample(); OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
-        procedure Reset; OVERRIDE;  // Reset to initial defined state
+        procedure Reset(); OVERRIDE;  // Reset to initial defined state
 
-        property PresentState: EControlAction read get_PresentState write set_PresentState;
+        function PresentState(): EControlAction; //TODO: check why this function even exists (also in Relay)
+        procedure SetPresentState(const Value: EControlAction);
     end;
 
 implementation
@@ -525,7 +524,7 @@ begin
     end;
 end;
 
-procedure TRecloserObj.Sample;
+procedure TRecloserObj.Sample();
 var
     i: Integer;
     cmag: Double;
@@ -661,7 +660,7 @@ begin
     end;  // IF PresentState=CLOSE
 end;
 
-procedure TRecloserObj.Reset;
+procedure TRecloserObj.Reset();
 begin
     FPresentState := NormalState;
     ArmedForOpen := FALSE;
@@ -688,7 +687,7 @@ begin
     end;
 end;
 
-function TRecloserObj.get_PresentState: EControlAction; //TODO: why PropertyValue doesn't use this one?
+function TRecloserObj.PresentState(): EControlAction; //TODO: why PropertyValue doesn't use this one?
 begin
     if ControlledElement <> NIL then
     begin
@@ -702,9 +701,9 @@ begin
     Result := FPresentState;
 End;
 
-Procedure TRecloserObj.set_PresentState(const Value: EControlAction);
+Procedure TRecloserObj.SetPresentState(const Value: EControlAction);
 Begin
-    if PresentState = Value then 
+    if PresentState() = Value then 
         Exit;
 
     FPresentState := Value;

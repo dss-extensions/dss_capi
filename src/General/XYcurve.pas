@@ -90,16 +90,6 @@ type
         FY: Double;
 
         function InterpolatePoints(i, j: Integer; X: Double; Xarray, Yarray: pDoubleArray): Double;
-        function Get_YValue(i: Integer): Double;  // get Y Value by index
-        function Get_XValue(i: Integer): Double;  // get X Value corresponding to point index
-        procedure Set_XValue(Index: Integer; Value: Double);
-        procedure Set_YValue(Index: Integer; Value: Double);
-
-        function Get_X: Double;
-        function Get_Y: Double;
-        procedure Set_X(Value: Double);
-        procedure Set_Y(Value: Double);
-
     PUBLIC
         numPoints: Integer;  // Number of points in curve
 
@@ -119,11 +109,13 @@ type
         function GetXValue(Y: Double): Double;  // Get X value at specified Y Value
         function GetCoefficients(X: Double): TCoeff;
 
-        property XValue_pt[Index: Integer]: Double READ Get_XValue WRITE Set_XValue;
-        property YValue_pt[Index: Integer]: Double READ Get_YValue WRITE Set_YValue;
+        function YValue_pt(i: Integer): Double;  // get Y Value by index
+        function XValue_pt(i: Integer): Double;  // get X Value corresponding to point index
 
-        property X: Double READ Get_X WRITE Set_X;
-        property Y: Double READ Get_Y WRITE Set_Y;
+        function GetX(): Double;
+        function GetY(): Double;
+        procedure SetX(Value: Double);
+        procedure SetY(Value: Double);
     end;
 
 implementation
@@ -170,22 +162,22 @@ end;
 
 procedure SetX(Obj: TObj; Value: Double);
 begin
-    Obj.X := Value;
+    Obj.SetX(Value);
 end;
 
 procedure SetY(Obj: TObj; Value: Double);
 begin
-    Obj.Y := Value;
+    Obj.SetY(Value);
 end;
 
 function GetX(Obj: TObj): Double;
 begin
-    Result := Obj.X;
+    Result := Obj.GetX();
 end;
 
 function GetY(Obj: TObj): Double;
 begin
-    Result := Obj.Y;
+    Result := Obj.GetY();
 end;
 
 function Get2xNumPoints(Obj: TObj): Integer;
@@ -208,8 +200,8 @@ begin
         obj.YValues[i] := Values^;
         Inc(Values);
     end;
-    obj.X := obj.Xvalues[1];
-    obj.Y := obj.Yvalues[1];
+    obj.SetX(obj.Xvalues[1]);
+    obj.SetY(obj.Yvalues[1]);
 end;
 
 procedure GetPoints(obj: TObj; var ResultPtr: PDouble; ResultCount: PAPISize);
@@ -350,16 +342,16 @@ begin
         end;
         ord(TProp.Yarray):
             if (YValues <> NIL) then
-                Y := YValues[1];
+                SetY(YValues[1]);
         ord(TProp.Xarray):
             if (XValues <> NIL) then
-                X := XValues[1];
+                SetX(XValues[1]);
         ord(TProp.csvfile), ord(TProp.sngfile), ord(TProp.dblfile): 
         begin
             if (XValues <> NIL) then
-                X := XValues[1];
+                SetX(XValues[1]);
             if (YValues <> NIL) then
-                Y := YValues[1];
+                SetY(YValues[1]);
         end;
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
@@ -527,12 +519,12 @@ begin
     Result := coef;
 end;
 
-function TXYcurveObj.Get_Y: Double;
+function TXYcurveObj.GetY(): Double;
 begin
     Result := FY * FYscale + FYshift;
 end;
 
-function TXYcurveObj.Get_YValue(i: Integer): Double;
+function TXYcurveObj.YValue_pt(i: Integer): Double;
 begin
     if (i <= numPoints) and (i > 0) then
     begin
@@ -542,12 +534,12 @@ begin
         Result := 0.0;
 end;
 
-function TXYcurveObj.Get_X: Double;
+function TXYcurveObj.GetX(): Double;
 begin
     Result := FX * FXscale + FXshift;
 end;
 
-function TXYcurveObj.Get_XValue(i: Integer): Double;
+function TXYcurveObj.XValue_pt(i: Integer): Double;
 begin
     if (i <= numPoints) and (i > 0) then
     begin
@@ -620,28 +612,16 @@ begin
         Result := Yarray[i]; // Y is undefined, return ith value
 end;
 
-procedure TXYcurveObj.Set_X(Value: Double);
+procedure TXYcurveObj.SetX(Value: Double);
 begin
     FX := (Value - FXshift) / FXscale;
     FY := GetYValue(FX); //Keep In synch
 end;
 
-procedure TXYCurveObj.Set_XValue(Index: Integer; Value: Double);
-begin
-    if Index <= numPoints then
-        XValues[Index] := Value;
-end;
-
-procedure TXYcurveObj.Set_Y(Value: Double);
+procedure TXYcurveObj.SetY(Value: Double);
 begin
     FY := (Value - FYshift) / FYscale;
     FX := GetXValue(FY); //Keep In synch
-end;
-
-procedure TXYCurveObj.Set_YValue(Index: Integer; Value: Double);
-begin
-    if Index <= numPoints then
-        YValues[Index] := Value;
 end;
 
 end.

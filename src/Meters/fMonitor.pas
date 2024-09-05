@@ -578,7 +578,7 @@ var
     iNodeNum: Integer; //TODO: validate iNodeNum
     iPhasenum: Integer;
 begin
-    DSS.AuxParser.CmdString := Value;
+    DSS.AuxParser.SetCmdString(Value);
     DSS.AuxParser.NextParam();
 
     case TProp(Idx) of

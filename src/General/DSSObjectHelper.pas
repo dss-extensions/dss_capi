@@ -194,7 +194,7 @@ var
         Val(Value, Result, errCode);
         if errCode <> 0 then
         begin
-            PropParser.CmdString := '(' + Value + ')';
+            PropParser.SetCmdString('(' + Value + ')');
             PropParser.NextParam();
             Result := PropParser.MakeDouble();
         end;
@@ -204,7 +204,7 @@ var
         Val(Value, Result, errCode);
         if errCode <> 0 then
         begin
-            PropParser.CmdString := '(' + Value + ')';
+            PropParser.SetCmdString('(' + Value + ')');
             PropParser.NextParam();
             Result := PropParser.MakeInteger();
         end;
@@ -212,7 +212,7 @@ var
     function GetComplex(const s: String): Complex;
     // moved from Utilities -- previously InterpretComplex
     begin
-        PropParser.CmdString := S;
+        PropParser.SetCmdString(S);
         PropParser.NextParam();
         Result.re := PropParser.MakeDouble();
         PropParser.NextParam();
@@ -439,7 +439,7 @@ begin
             // Current position
             positionPtr := PInteger(PByte(obj) + PropertyStructArrayIndexOffset);
 
-            PropParser.CmdString := Value;  // Load up Parser
+            PropParser.SetCmdString(Value);  // Load up Parser
 
             // Loop for no more than the expected number of items;  Ignore omitted values
             for i := 1 to intVal do
@@ -479,7 +479,7 @@ begin
 
             integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
 
-            PropParser.CmdString := Value;  // Load up Parser
+            PropParser.SetCmdString(Value);  // Load up Parser
             for i := 1 to maxSize do
             begin
                 PropParser.NextParam(); // ignore any parameter name  not expecting any
@@ -506,7 +506,7 @@ begin
                 PropertyOffset[Index]
             );
 
-            PropParser.CmdString := Value;  // Load up Parser
+            PropParser.SetCmdString(Value);  // Load up Parser
             // Loop for no more than the expected number of items;  Ignore omitted values
             for i := 1 to intVal do
             begin
@@ -711,7 +711,7 @@ begin
 
             scale := PropertyScale[Index];
 
-            PropParser.CmdString := Value;  // Load up Parser
+            PropParser.SetCmdString(Value);  // Load up Parser
             // Loop for no more than the expected number of items;  Ignore omitted values
             for i := 1 to intVal do
             begin
@@ -796,7 +796,7 @@ begin
         end;
         TPropertyType.DSSObjectReferenceArrayProperty:
         begin
-            PropParser.CmdString := Value;
+            PropParser.SetCmdString(Value);
 
             // Class of the objects
             cls := Pointer(PropertyOffset2[Index]);
@@ -1546,7 +1546,7 @@ begin
                     break;
 
                 FSReadln(F, InputLine);
-                DSS.AuxParser.CmdString := InputLine;
+                DSS.AuxParser.SetCmdString(InputLine);
                 for iskip := 1 to CSVColumn do
                     DSS.AuxParser.NextParam();
 
@@ -1695,7 +1695,7 @@ begin
         while (F.Position + 1) < F.Size do
         begin
             FSReadln(F, Param);
-            DSS.AuxParser.CmdString := Param;
+            DSS.AuxParser.SetCmdString(Param);
             DSS.AuxParser.NextParam();
             NextParam := DSS.AuxParser.MakeString();
             if Length(NextParam) <= 0 then

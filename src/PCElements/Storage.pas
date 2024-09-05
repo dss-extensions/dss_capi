@@ -315,13 +315,9 @@ type
         function CheckIfDelivering(): Boolean;
         procedure UpdateStorage();    // Update Storage elements based on present kW and IntervalHrs variable
 
-        procedure Set_PowerFactor(const Value: Double);
-
         procedure Update_EfficiencyFactor();
 
         // Procedures and functions for inverter functionalities
-        procedure Set_kVARating(const Value: Double);
-
         procedure kWOut_Calc();
 
     PROTECTED
@@ -352,7 +348,6 @@ type
         CutOutkWAC: Double;  // CutInkW  reflected to the AC side of the inverter
         CutInkWAC: Double;   // CutOutkW reflected to the AC side of the inverter
 
-
         FVWStateRequested: Boolean;   // TEST Flag indicating if VW function has requested a specific state in last control iteration
 
         StorageClass: Integer;
@@ -375,12 +370,9 @@ type
         procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
 
-        procedure Set_Maxkvar(const Value: Double);
-        procedure Set_Maxkvarneg(const Value: Double);
-
         procedure SetNominalDEROutput(); OVERRIDE;
 
-        procedure ResetRegisters;
+        procedure ResetRegisters();
         procedure TakeSample();
 
         // Support for Dynamics Mode
@@ -399,15 +391,11 @@ type
 
         function PresentkW(): Double; // Present kW at inverter output
         function PresentkV(): Double;
-        property PowerFactor: Double READ PFNominal WRITE Set_PowerFactor;
-        property kVARating: Double READ StorageVars.FkVARating WRITE Set_kVARating;
-       
-        property kvarLimit: Double READ StorageVars.Fkvarlimit WRITE Set_Maxkvar;
-        property kvarLimitneg: Double READ StorageVars.Fkvarlimitneg WRITE Set_Maxkvarneg;
-
+        function PowerFactor(): Double;
+        procedure SetPowerFactor(const Value: Double);
+        procedure SetkVARating(const Value: Double);
         procedure SetStorageState(const Value: Integer);
         function StorageState(): Integer;
-
         function kWTotalLosses(): Double;
         function kWInverterLosses(): Double;
         function kWIdlingLosses(): Double;
@@ -2344,7 +2332,7 @@ begin
     end;
 end;
 
-procedure TStorageObj.ResetRegisters;
+procedure TStorageObj.ResetRegisters();
 var
     i: Integer;
 begin
@@ -3409,25 +3397,18 @@ begin
     end;
 end;
 
-procedure TStorageObj.Set_Maxkvar(const Value: Double);
-begin
-    StorageVars.Fkvarlimit := Value;
-    SetAsNextSeq(ord(TProp.kvarMax));
-end;
-
-procedure TStorageObj.Set_Maxkvarneg(const Value: Double);
-begin
-    StorageVars.Fkvarlimitneg := Value;
-    SetAsNextSeq(ord(TProp.kvarMaxAbs));
-end;
-
-procedure TStorageObj.Set_kVARating(const Value: Double);
+procedure TStorageObj.SetkVARating(const Value: Double);
 begin
     StorageVars.FkVARating := Value;
     SetAsNextSeq(ord(TProp.kVA));
 end;
 
-procedure TStorageObj.Set_PowerFactor(const Value: Double);
+function TStorageObj.PowerFactor(): Double;
+begin
+    result := PFNominal; 
+end;
+
+procedure TStorageObj.SetPowerFactor(const Value: Double);
 begin
     PFNominal := Value;
     varMode := VARMODEPF;

@@ -216,7 +216,7 @@ begin
     begin   // IF specified, must be object or an abbreviation
         if ComparetextShortest(ParamName, 'object') <> 0 then
         begin
-            DoSimpleMsg(DSS, 'object=Class.Name expected as first parameter in command. %s', [CRLF + DSS.Parser.CmdString], 240);
+            DoSimpleMsg(DSS, 'object=Class.Name expected as first parameter in command. %s', [CRLF + DSS.Parser.CmdString()], 240);
             Exit;
         end;
     end;
@@ -310,7 +310,7 @@ begin
         case DSS.LastClassReferenced of
             0:
             begin
-                DoSimpleMsg(DSS, 'BatchEdit Command: Object Type "%s" not found. %s', [ObjType, CRLF + DSS.Parser.CmdString], 267);
+                DoSimpleMsg(DSS, 'BatchEdit Command: Object Type "%s" not found. %s', [ObjType, CRLF + DSS.Parser.CmdString()], 267);
                 Exit;
             end;{Error}
         else
@@ -706,7 +706,7 @@ begin
         begin
             if not DSS.ActiveDSSClass.SetActive(Objname) then
             begin // scroll through list of objects untill a match
-                DoSimpleMsg(DSS, 'Error! Object "%s" not found. %s', [ObjName, CRLF + DSS.Parser.CmdString], 245);
+                DoSimpleMsg(DSS, 'Error! Object "%s" not found. %s', [ObjName, CRLF + DSS.Parser.CmdString()], 245);
                 Result := 0;
             end
             else
@@ -1074,7 +1074,7 @@ begin
         case DSS.LastClassReferenced of
             0:
             begin
-                DoSimpleMsg(DSS, 'Object Type "%s" not found. %s', [ObjType, CRLF + DSS.Parser.CmdString], 253);
+                DoSimpleMsg(DSS, 'Object Type "%s" not found. %s', [ObjType, CRLF + DSS.Parser.CmdString()], 253);
                 Result := 0;
                 Exit;
             end;{Error}
@@ -1087,7 +1087,7 @@ begin
                 begin // scroll through list of objects until a match
                     case DSS.ActiveDSSObject.DSSObjType of
                         DSS_OBJECT:
-                            DoSimpleMsg(DSS, 'Error in SetActiveCktElement: Object not a circuit Element. %s', [CRLF + DSS.Parser.CmdString], 254);
+                            DoSimpleMsg(DSS, 'Error in SetActiveCktElement: Object not a circuit Element. %s', [CRLF + DSS.Parser.CmdString()], 254);
                     else
                     begin
                         ActiveCktElement := DSS.ActiveDSSClass.GetActiveObj;
@@ -1142,7 +1142,7 @@ begin
                 begin
               // just load up the parser and call the edit routine for the object in question
 
-                    DSS.Parser.CmdString := 'Enabled=true';  // Will only work for CktElements
+                    DSS.Parser.SetCmdString('Enabled=true');  // Will only work for CktElements
                     Result := EditObject(ObjType, ObjName);
                 end;
             end;
@@ -1189,7 +1189,7 @@ begin
                 begin
               // just load up the parser and call the edit routine for the object in question
 
-                    DSS.Parser.CmdString := 'Enabled=false';  // Will only work for CktElements
+                    DSS.Parser.SetCmdString('Enabled=false');  // Will only work for CktElements
                     Result := EditObject(ObjType, ObjName);
                 end;
             end;
@@ -1310,7 +1310,7 @@ begin
                 if CompareText(Param2, 'debug') = 0 then
                     DebugDump := TRUE;
             // Set active Element to be value in Param
-                DSS.Parser.CmdString := '"' + Param + '"';  // put param back into DSS.Parser
+                DSS.Parser.SetCmdString('"' + Param + '"');  // put param back into DSS.Parser
                 GetObjClassAndName(ObjClass, ObjName);
             // IF DoSelectCmd=0 THEN Exit;  8-17-00
                 if SetObjectClass(DSS, ObjClass) then
@@ -1484,7 +1484,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSS, 'Error in Open Command: Circuit Element not found. %s', [CRLF + DSS.Parser.CmdString], 259);
+        DoSimpleMsg(DSS, 'Error in Open Command: Circuit Element not found. %s', [CRLF + DSS.Parser.CmdString()], 259);
     end;
     Result := 0;
 end;
@@ -1518,7 +1518,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSS, 'Error in Close Command: Circuit Element not found. %s', [CRLF + DSS.Parser.CmdString], 260);
+        DoSimpleMsg(DSS, 'Error in Close Command: Circuit Element not found. %s', [CRLF + DSS.Parser.CmdString()], 260);
     end;
     Result := 0;
 end;
@@ -1767,7 +1767,7 @@ begin
     else
     begin
          // Set Object Active
-        DSS.Parser.cmdstring := '"' + Objname + '"';
+        DSS.Parser.SetCmdString('"' + Objname + '"');
         DoSelectCmd;
           // Put property value in global VARiable
         PropIndex := DSS.ActiveDSSClass.Propertyindex(PropName);
@@ -1850,7 +1850,7 @@ begin
 
     if DSS.LastClassReferenced = 0 then
     begin
-        DoSimpleMsg(DSS, 'New Command: Object Type "%s" not found. %s', [ObjType, CRLF + DSS.Parser.CmdString], 263);
+        DoSimpleMsg(DSS, 'New Command: Object Type "%s" not found. %s', [ObjType, CRLF + DSS.Parser.CmdString()], 263);
         Result := 0;
         Exit;
     end;
@@ -1873,7 +1873,7 @@ begin
     //     DSS.LastClassReferenced := DSS.ClassNames.Find(ObjType);
     // if DSS.LastClassReferenced = 0 then
     // begin
-    //     DoSimpleMsg(DSS, 'New Command: Object Type "%s" not found. %s', [ObjType, CRLF + DSS.Parser.CmdString], 263);
+    //     DoSimpleMsg(DSS, 'New Command: Object Type "%s" not found. %s', [ObjType, CRLF + DSS.Parser.CmdString()], 263);
     //     Result := 0;
     //     Exit;
     // end;
@@ -1886,7 +1886,7 @@ begin
     // Name must be supplied
     if Length(Name) = 0 then
     begin
-        DoSimpleMsg(DSS, 'Object Name Missing %s', [CRLF + DSS.Parser.CmdString], 264);
+        DoSimpleMsg(DSS, 'Object Name Missing %s', [CRLF + DSS.Parser.CmdString()], 264);
         Exit;
     end;
 
@@ -1940,7 +1940,7 @@ begin
 
     if DSS.LastClassReferenced = 0 then
     begin
-        DoSimpleMsg(DSS, 'Edit Command: Object Type "%s" not found. %s', [ObjType, CRLF + DSS.Parser.CmdString], 267);
+        DoSimpleMsg(DSS, 'Edit Command: Object Type "%s" not found. %s', [ObjType, CRLF + DSS.Parser.CmdString()], 267);
         Result := 0;
         Exit;
     end;
@@ -2000,7 +2000,7 @@ begin
     DSS.ActiveCircuit.AutoAddBusList.Clear;
 
      // Load up auxiliary parser to reparse the array list or file name
-    DSS.AuxParser.CmdString := S;
+    DSS.AuxParser.SetCmdString(S);
     ParmName := DSS.AuxParser.NextParam;
     Param := DSS.AuxParser.MakeString();
 
@@ -2014,7 +2014,7 @@ begin
             while (F.Position + 1) < F.Size do
             begin
                 FSReadln(F, S2);
-                DSS.AuxParser.CmdString := S2;
+                DSS.AuxParser.SetCmdString(S2);
                 ParmName := DSS.AuxParser.NextParam;
                 Param := DSS.AuxParser.MakeString();
                 if Length(Param) > 0 then
@@ -2050,7 +2050,7 @@ var
     iBus: Integer;
 begin
      // Load up auxiliary parser to reparse the array list or file name
-    DSS.AuxParser.CmdString := S;
+    DSS.AuxParser.SetCmdString(S);
     ParmName := DSS.AuxParser.NextParam;
     Param := DSS.AuxParser.MakeString();
 
@@ -2063,7 +2063,7 @@ begin
             while (F.Position + 1) < F.Size do
             begin         // Fixed 7/8/01 to handle all sorts of bus names
                 FSReadln(F, S2);
-                DSS.AuxParser.CmdString := S2;
+                DSS.AuxParser.SetCmdString(S2);
                 ParmName := DSS.AuxParser.NextParam;
                 Param := DSS.AuxParser.MakeString();
                 if Length(Param) > 0 then
@@ -2997,7 +2997,7 @@ begin
                 Inc(iLine);
                 with DSS.AuxParser do
                 begin      // User Auxparser to parse line
-                    CmdString := strings[stringIdx];
+                    SetCmdString(strings[stringIdx]);
                     NextParam;
                     BusName := MakeString();
                     iB := DSS.ActiveCircuit.Buslist.Find(BusName);
@@ -3071,7 +3071,7 @@ begin
     if Length(S) = 0 then
         Exit;  {No option given}
 
-    DSS.AuxParser.CmdString := DSS.Parser.Remainder();  // so we don't mess up Set Command
+    DSS.AuxParser.SetCmdString(DSS.Parser.Remainder());  // so we don't mess up Set Command
 
     case AnsiUpperCase(S)[1] of
 
@@ -3219,7 +3219,7 @@ begin
         while (Fin.Position + 1) < Fin.Size do
         begin
             FSReadln(Fin, line);
-            DSS.AuxParser.CmdString := Line;  // Load the parser
+            DSS.AuxParser.SetCmdString(Line);  // Load the parser
             FieldNum := 0;
             repeat
                 DSS.AuxParser.NextParam;
@@ -3251,7 +3251,7 @@ begin
         if (Fin.Position + 1) < Fin.Size then
         begin
             FSReadln(Fin, Line);
-            DSS.AuxParser.CmdString := Line;  // Load the parser
+            DSS.AuxParser.SetCmdString(Line);  // Load the parser
             FieldNum := 0;
             repeat
                 DSS.AuxParser.NextParam;
@@ -3402,7 +3402,7 @@ begin
                 while (Fin.Position + 1) < Fin.Size do
                 begin
                     FSReadln(Fin, Line);
-                    DSS.AuxParser.CmdString := Line;
+                    DSS.AuxParser.SetCmdString(Line);
                     DSS.AuxParser.NextParam;
                     BusName := DSS.AuxParser.MakeString();
                     if Length(BusName) > 0 then
@@ -4050,7 +4050,7 @@ begin
             case ParamPointer of
                 1:
                 begin  // List of case names
-                    DSS.AuxParser.CmdString := Param;
+                    DSS.AuxParser.SetCmdString(Param);
                     DSS.AuxParser.NextParam;
                     Param := DSS.AuxParser.MakeString();
                     while Length(Param) > 0 do
@@ -4495,7 +4495,7 @@ begin
             with DSS.AuxParser do
             begin
                 pName := NIL;
-                CmdString := S;
+                SetCmdString(S);
                 NextParam;
                 NameVal := MakeString();
                 NextParam;
@@ -4574,7 +4574,7 @@ begin
 
     for pLoadShape in LoadShapeClass do
     begin
-        DSS.Parser.CmdString := Action;
+        DSS.Parser.SetCmdString(Action);
         pLoadShape.Edit(DSS.Parser);
         FSWriteln(F, Format('New %s Npts=%d Interval=%.8g %s', [pLoadShape.FullName, pLoadShape.NumPoints, pLoadShape.Interval, DSS.GlobalResult]));
     end;

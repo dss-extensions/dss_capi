@@ -127,7 +127,7 @@ begin
         else 
         begin
             // Otherwise, move the value to the values array
-            Parser.CmdString := '[' + varValueStr + ']';
+            Parser.SetCmdString('[' + varValueStr + ']');
             Parser.NextParam();
             DynamicEqVals[varIdx][0] := Parser.MakeDouble();
         end;

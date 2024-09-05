@@ -104,7 +104,7 @@ procedure ParserLoad(S: pAnsiChar; Maxlen: Cardinal); STDCALL;
 
 begin
     CallBackParser.DSSCtx := DSSPrime;
-    CallBackParser.CmdString := String(S);
+    CallBackParser.SetCmdString(String(S));
 end;
 
 

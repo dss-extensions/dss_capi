@@ -298,7 +298,7 @@ begin
         begin
             Inc(i);
             FSReadln(F, S);  // Use Auxparser, which allows for formats
-            DSS.AuxParser.CmdString := S;
+            DSS.AuxParser.SetCmdString(S);
             DSS.AuxParser.NextParam();
             HarmArray[i] := DSS.AuxParser.MakeDouble();
             DSS.AuxParser.NextParam();

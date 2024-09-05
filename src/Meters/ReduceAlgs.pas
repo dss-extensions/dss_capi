@@ -223,7 +223,7 @@ begin
                                                                 ShuntElement := ParentNode.FirstShuntObject();
                                                                 while ShuntElement <> NIL do
                                                                 begin
-                                                                    DSS.Parser.CmdString := 'bus1="' + DSS.ActiveCircuit.BusList.NameOfIndex(PresentBranch.GetToBusReference()) + GetNodeString(ShuntElement.GetBus(1)) + '"';
+                                                                    DSS.Parser.SetCmdString('bus1="' + DSS.ActiveCircuit.BusList.NameOfIndex(PresentBranch.GetToBusReference()) + GetNodeString(ShuntElement.GetBus(1)) + '"');
                                                                     ShuntElement.Edit(DSS.Parser);
                                                                     ShuntElement := ParentNode.NextShuntObject();
                                                                 end;
@@ -274,7 +274,7 @@ begin
                                                             //TODO: remove parser usage
                                                             // ShuntElement.SetBus(1, DSS.ActiveCircuit.BusList.NameOfIndex(PresentBranch.FromBusReference) + GetNodeString(ShuntElement.GetBus(1)));
                                                             // and SideEffects...
-                                                            DSS.Parser.CmdString := 'bus1="' + DSS.ActiveCircuit.BusList.NameOfIndex(PresentBranch.FromBusReference) + GetNodeString(ShuntElement.GetBus(1)) + '"';
+                                                            DSS.Parser.SetCmdString('bus1="' + DSS.ActiveCircuit.BusList.NameOfIndex(PresentBranch.FromBusReference) + GetNodeString(ShuntElement.GetBus(1)) + '"');
                                                             ShuntElement.Edit(DSS.Parser);
                                                             ShuntElement := PresentBranch.NextShuntObject();
                                                         end; 
@@ -415,7 +415,7 @@ begin
                 if FirstPDElement.NPhases > 1 then
                     LoadBasekV := LoadBasekV * Sqrt3;
                 // Load up DSS.Parser with definition of equivalent load
-                DSS.Parser.CmdString := Format(' phases=%d Bus1=%s kW=%g kvar=%g kV=%g %s', [FirstPDElement.NPhases, Busname, TotalkVA.re, TotalkVA.im, LoadBasekV, EditStr]);
+                DSS.Parser.SetCmdString(Format(' phases=%d Bus1=%s kW=%g kvar=%g kV=%g %s', [FirstPDElement.NPhases, Busname, TotalkVA.re, TotalkVA.im, LoadBasekV, EditStr]));
                 DSS.DSSExecutive.AddObject(DSS.LoadClass, NewLoadName); // Add new load to circuit
             end;
 
@@ -506,7 +506,7 @@ begin
                         pShunt := PresentBranch.FirstShuntObject();
                         while pShunt <> NIL do
                         begin
-                            DSS.Parser.CmdString := Format('Bus1=%s kV=%.6g ', [Busname, HeadBasekV]);
+                            DSS.Parser.SetCmdString(Format('Bus1=%s kV=%.6g ', [Busname, HeadBasekV]));
                             pShunt.Edit(DSS.Parser);
                             pShunt := PresentBranch.NextShuntObject();
                         end;

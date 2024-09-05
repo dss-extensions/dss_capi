@@ -265,9 +265,6 @@ type
         DebugTrace: LongBool;
         PreviousControlledElement: TDSSCktElement;
 
-        function get_PresentState: EControlAction;
-        procedure set_PresentState(const Value: EControlAction);
-
         procedure OvercurrentLogic;
         procedure VoltageLogic;
         procedure RevPowerLogic;
@@ -296,7 +293,8 @@ type
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
         procedure Reset; OVERRIDE;  // Reset to initial defined state
 
-        property PresentState: EControlAction Read get_PresentState write set_PresentState;
+        function PresentState(): EControlAction;
+        procedure SetPresentState(const Value: EControlAction);
     end;
 
 implementation
@@ -1076,7 +1074,7 @@ begin
     end;
 end;
 
-function TRelayObj.get_PresentState: EControlAction;
+function TRelayObj.PresentState(): EControlAction;
 begin
     if ControlledElement <> NIL then
     begin
@@ -1090,7 +1088,7 @@ begin
     Result := FPresentState;
 end;
 
-procedure TRelayObj.set_PresentState(const Value: EControlAction);
+procedure TRelayObj.SetPresentState(const Value: EControlAction);
 begin
     if FPresentState = Value then
         Exit;

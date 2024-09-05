@@ -649,11 +649,11 @@ begin
             z[iu] := 0;
             for k := 1 to Ffiltlen do
             begin
-                z[iu] := z[iu] + Ffilter.Yvalue_pt[k] * whist[MapIdx(iu - k + 1, Ffiltlen)];
+                z[iu] := z[iu] + Ffilter.YValue_pt(k) * whist[MapIdx(iu - k + 1, Ffiltlen)];
             end;
             for k := 2 to Ffiltlen do
             begin
-                z[iu] := z[iu] - Ffilter.Xvalue_pt[k] * z[MapIdx(iu - k + 1, Ffiltlen)];
+                z[iu] := z[iu] - Ffilter.XValue_pt(k) * z[MapIdx(iu - k + 1, Ffiltlen)];
             end;
             s3 := z[iu];
         end;
@@ -726,11 +726,11 @@ begin
         z[iu] := 0;
         for k := 1 to Ffiltlen do
         begin
-            z[iu] := z[iu] + Ffilter.Yvalue_pt[k] * whist[MapIdx(iu - k + 1, Ffiltlen)];
+            z[iu] := z[iu] + Ffilter.YValue_pt(k) * whist[MapIdx(iu - k + 1, Ffiltlen)];
         end;
         for k := 2 to Ffiltlen do
         begin
-            z[iu] := z[iu] - Ffilter.Xvalue_pt[k] * z[MapIdx(iu - k + 1, Ffiltlen)];
+            z[iu] := z[iu] - Ffilter.XValue_pt(k) * z[MapIdx(iu - k + 1, Ffiltlen)];
         end;
         y := Fbp2.GetYValue(z[iu]);
     // updating outputs

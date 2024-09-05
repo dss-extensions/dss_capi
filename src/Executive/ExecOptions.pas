@@ -357,7 +357,7 @@ var
     i, count: Integer;
 begin
     // Parse the line once to get the count of tokens on string, S
-    DSS.AuxParser.cmdString := S;
+    DSS.AuxParser.SetCmdString(S);
     count := 0;
     repeat
         DSS.AuxParser.NextParam();
@@ -370,7 +370,7 @@ begin
     SetLength(iarray, count);
 
     // Parse again for real
-    DSS.AuxParser.cmdString := S;
+    DSS.AuxParser.SetCmdString(S);
     for i := 0 to count - 1 do
     begin
         DSS.AuxParser.NextParam();

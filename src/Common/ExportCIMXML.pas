@@ -2512,7 +2512,7 @@ begin
     begin
         for i := 1 to xy.NumPoints do
         begin
-            if xy.YValue_pt[i] < -CatBQmin then
+            if xy.YValue_pt(i) < -CatBQmin then
             begin
                 bCatB := TRUE;
                 break;
@@ -2534,7 +2534,7 @@ begin
         bSet4 := FALSE;
         while i <= xy.NumPoints do
         begin
-            v := xy.XValue_pt[i];
+            v := xy.XValue_pt(i);
             if (v >= 0.77) and (v <= 1.25) then
                 bValid := TRUE;
             if bValid then
@@ -2542,7 +2542,7 @@ begin
                 if not bSet1 then
                 begin
                     VV_curveV1 := v;
-                    VV_curveQ1 := xy.YValue_pt[i];
+                    VV_curveQ1 := xy.YValue_pt(i);
                     bSet1 := TRUE;
                 end
                 else
@@ -2558,14 +2558,14 @@ begin
                             VV_curveQ3 := 0.0;
                             bSet3 := TRUE;
                             VV_curveV4 := v;
-                            VV_curveQ4 := xy.YValue_pt[i];
+                            VV_curveQ4 := xy.YValue_pt(i);
                             bSet4 := TRUE;
                         end;
                     end
                     else
                     begin
                         VV_curveV2 := v;
-                        VV_curveQ2 := xy.YValue_pt[i];
+                        VV_curveQ2 := xy.YValue_pt(i);
                     end;
                     bSet2 := TRUE;
                 end
@@ -2573,14 +2573,14 @@ begin
                 if not bSet3 then
                 begin
                     VV_curveV3 := v;
-                    VV_curveQ3 := xy.YValue_pt[i];
+                    VV_curveQ3 := xy.YValue_pt(i);
                     bSet3 := TRUE;
                 end
                 else
                 if not bSet4 then
                 begin
                     VV_curveV4 := v;
-                    VV_curveQ4 := xy.YValue_pt[i];
+                    VV_curveQ4 := xy.YValue_pt(i);
                     bSet4 := TRUE;
                 end;
             end;
@@ -2597,8 +2597,8 @@ begin
         bSet2 := FALSE;
         while i <= xy.NumPoints do
         begin
-            v := xy.XValue_pt[i];
-            p := xy.YValue_pt[i];
+            v := xy.XValue_pt(i);
+            p := xy.YValue_pt(i);
             if (v >= 1.00) and (v <= 1.10) then // TODO: per standard, v should be >= 1.05 but we loosen that criteria for testing
                 bValid := TRUE;
             if bValid then
@@ -2637,8 +2637,8 @@ begin
         i := 1;
         while i <= xy.NumPoints do
         begin
-            if xy.YValue_pt[i] > p then
-                p := xy.YValue_pt[i];
+            if xy.YValue_pt(i) > p then
+                p := xy.YValue_pt(i);
             inc(i);
         end;
         if (-p < VW_curveP2load) then
@@ -2658,8 +2658,8 @@ begin
         bSet6 := FALSE;
         while i <= xy.NumPoints do
         begin
-            p := xy.XValue_pt[i];
-            q := xy.YValue_pt[i];
+            p := xy.XValue_pt(i);
+            q := xy.YValue_pt(i);
             if (p >= -1.0) and (p <= 1.0) then
                 bValid := TRUE;
             if bValid then
@@ -2970,7 +2970,7 @@ begin
         AD_acVnom := PresentKV * 1000.0;
         ND_acVmax := PresentKV * Vmaxpu * 1000.0;
         ND_acVmin := PresentKV * Vmaxpu * 1000.0;
-        AD_sMax := kVARating * 1000.0;
+        AD_sMax := StorageVars.FkVARating * 1000.0;
         AD_pMax := (kwRating * pctKwOut / 100.0) * 1000.0;
         AD_pMaxOverPF := sqrt(FKvaRating * FKvaRating - FkvarLimit * FkvarLimit) * 1000.0;
         AD_pMaxUnderPF := sqrt(FKvaRating * FKvaRating - FkvarLimitNeg * FkvarLimitNeg) * 1000.0;
@@ -3592,7 +3592,7 @@ begin
             DoubleNode(SshPrf, 'PowerElectronicsConnection.p', pBat.PresentkW() * 1000.0);
             DoubleNode(SshPrf, 'PowerElectronicsConnection.q', pBat.Presentkvar() * 1000.0);
             ConverterControlEnum(SshPrf, pBat.VarMode, pBat.UsingCIMDynamics);
-            DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedS', pBat.kvarating * 1000.0);
+            DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedS', pBat.StorageVars.FkVARating * 1000.0);
             if pBat.nphases = 1 then
                 DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedU', pBat.PresentkV() * 1000.0 * sqrt(3.0))
             else

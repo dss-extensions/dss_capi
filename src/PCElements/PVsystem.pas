@@ -258,7 +258,6 @@ type
 
         function Get_PresentIrradiance: Double;
 
-        procedure Set_kVARating(const Value: Double);
         procedure Set_Pmpp(const Value: Double);
 
         procedure kWOut_Calc;
@@ -299,9 +298,6 @@ type
         procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
 
-        procedure Set_Maxkvar(const Value: Double);
-        procedure Set_Maxkvarneg(const Value: Double);
-
         procedure SetNominalDEROutput(); OVERRIDE;
 
         procedure ResetRegisters;
@@ -327,11 +323,11 @@ type
         function PowerFactor(): Double;
         procedure SetPowerFactor(const Value: Double);
 
-        property kVARating: Double READ PVSystemVars.FkVARating WRITE Set_kVARating;
+        procedure SetkVARating(const Value: Double);
+        property kVARating: Double READ PVSystemVars.FkVARating;
         property Pmpp: Double READ PVSystemVars.FPmpp WRITE Set_pmpp;
         property puPmpp: Double READ PVSystemVars.FpuPmpp WRITE PVSystemVars.FpuPmpp;
-        property kvarLimit: Double READ PVSystemVars.Fkvarlimit WRITE Set_Maxkvar;
-        property kvarLimitneg: Double READ PVSystemVars.Fkvarlimitneg WRITE Set_Maxkvarneg;
+        property kvarLimit: Double READ PVSystemVars.Fkvarlimit;
         property IrradianceNow: Double READ ShapeFactor.re;
     end;
 
@@ -2645,19 +2641,7 @@ begin
     PVsystemObjSwitchOpen := not Value;
 end;
 
-procedure TPVsystemObj.Set_Maxkvar(const Value: Double);
-begin
-    PVSystemVars.Fkvarlimit := Value;
-    SetAsNextSeq(ord(TProp.kvarMax));
-end;
-
-procedure TPVsystemObj.Set_Maxkvarneg(const Value: Double);
-begin
-    PVSystemVars.Fkvarlimitneg := Value;
-    SetAsNextSeq(ord(TProp.kvarMaxAbs));
-end;
-
-procedure TPVsystemObj.Set_kVARating(const Value: Double);
+procedure TPVsystemObj.SetkVARating(const Value: Double);
 begin
     PVSystemVars.FkVARating := Value;
     SetAsNextSeq(ord(TProp.kVA));

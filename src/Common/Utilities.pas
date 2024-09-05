@@ -454,7 +454,7 @@ var
     sngArray: ArrayDef.PSingleArray;
 
 begin
-    DSS.AuxParser.CmdString := S;
+    DSS.AuxParser.SetCmdString(S);
     ParmName := DSS.AuxParser.NextParam();
     Param := DSS.AuxParser.MakeString();
     Result := MaxValues; // Default Return Value;
@@ -505,7 +505,7 @@ begin
                     if (F.Position + 1) < F.Size then
                     begin
                         FSReadln(F, InputLIne);
-                        DSS.AuxParser.CmdString := InputLine;
+                        DSS.AuxParser.SetCmdString(InputLine);
                         for iskip := 1 to CSVColumn do
                             ParmName := DSS.AuxParser.NextParam();
                         ResultArray[i] := DSS.AuxParser.MakeDouble();
@@ -589,7 +589,7 @@ var
     i: Integer;
     line: String;
 begin
-    DSS.AuxParser.CmdString := S;
+    DSS.AuxParser.SetCmdString(S);
     ParmName := DSS.AuxParser.NextParam();
     Param := DSS.AuxParser.MakeString();
     Result := Maxvalues;  // Default return value
@@ -652,7 +652,7 @@ begin
     else
         ResultList.Clear();
 
-    DSS.AuxParser.CmdString := S;
+    DSS.AuxParser.SetCmdString(S);
     ParmName := DSS.AuxParser.NextParam();
     Param := DSS.AuxParser.MakeString();
 
@@ -665,7 +665,7 @@ begin
             while (F.Position + 1) < F.Size do
             begin
                 FSReadln(F, Param);
-                DSS.AuxParser.CmdString := Param;
+                DSS.AuxParser.SetCmdString(Param);
                 ParmName := DSS.AuxParser.NextParam();
                 NextParam := DSS.AuxParser.MakeString();
                 if Length(NextParam) > 0 then
@@ -1607,7 +1607,7 @@ begin
     begin
         if (pLine.NPhases = NPhases) or (Nphases = 0) then
         begin
-            DSS.Parser.CmdString := EditStr;
+            DSS.Parser.SetCmdString(EditStr);
             pLine.Edit(DSS.Parser);   // Uses Parser
         end;
         if pLine = ToLine then
@@ -1667,7 +1667,7 @@ begin
                 for i := 1 to pPDElem.NTerms do
                 begin
                     S := S + Format(' Bus%d=%s%s', [i, StripExtension(pPDelem.GetBus(i)), PhaseString]);
-                    //  Parser.CmdString := Format('Bus$d=%s%s',[i, StripExtension(pPDelem.GetBus(i)), PhaseString]);
+                    //  Parser.SetCmdString(Format('Bus$d=%s%s',[i, StripExtension(pPDelem.GetBus(i)), PhaseString]));
                     //  pPDelem.Edit;
                 end;
 
@@ -1675,7 +1675,7 @@ begin
                 if Length(EditStr) > 0 then
                 begin
                     S := S + '  ' + EditStr;
-                //  Parser.CmdString := EditStr;
+                //  Parser.SetCmdString(EditStr);
                 //  pPDelem.Edit;   // Uses Parser
                 end;
 
@@ -1692,7 +1692,7 @@ begin
                     if Length(EditStr) > 0 then
                         S := S + '  ' + EditStr;
                     FSWriteln(Fout, S);
-                    //  Parser.CmdString := Format('Bus$d=%s%s',[i, StripExtension(pShuntObject.GetBus(1)), PhaseString]);
+                    //  Parser.SetCmdString(Format('Bus$d=%s%s',[i, StripExtension(pShuntObject.GetBus(1)), PhaseString]));
                     //  pShuntObject.Edit;
                     pShuntObject := pMeter.BranchList.NextObject
                 end;
@@ -1871,7 +1871,7 @@ begin
                         S := S + Format('Bus%d=%s ', [i, NewBusName]);
                     end;
                 end;
-                DSS.Parser.CmdString := S;
+                DSS.Parser.SetCmdString(S);
                 pCktElem.Edit(DSS.Parser);
             end;
         end;
@@ -1952,7 +1952,7 @@ begin
                             begin
                                 if (pCtrlElem.DSSObjType and CLASSMASK) = REG_CONTROL then
                                 begin
-                                    DSS.Parser.CmdString := Format('Transformer=%s', [pCktElem.Name]);
+                                    DSS.Parser.SetCmdString(Format('Transformer=%s', [pCktElem.Name]));
                                     pCtrlElem.Edit(DSS.Parser);
                                 end;
                             end;
@@ -1967,7 +1967,7 @@ begin
         for i := 0 to ControlUpDatePtrs.Count - 1 do
         begin
             pCktElem := ControlUpDatePtrs.Items[i];
-            DSS.Parser.CmdString := ControlUpDateStrings.Strings[i];
+            DSS.Parser.SetCmdString(ControlUpDateStrings.Strings[i]);
             pCktElem.Edit(DSS.Parser);
         end;
 
@@ -2282,7 +2282,7 @@ begin
                 Inc(i);
                 FSReadln(F, s); // read entire line and parse with AuxParser
                 // AuxParser allows commas or white space
-                DSS.AuxParser.CmdString := s;
+                DSS.AuxParser.SetCmdString(s);
                 DSS.AuxParser.NextParam();
                 pA[i] := DSS.AuxParser.MakeDouble();
                 DSS.AuxParser.NextParam();
@@ -2296,7 +2296,7 @@ begin
                 Inc(i);
                 FSReadln(F, s); // read entire line and parse with AuxParser
                 // AuxParser allows commas or white space
-                DSS.AuxParser.CmdString := s;
+                DSS.AuxParser.SetCmdString(s);
                 DSS.AuxParser.NextParam();
                 pB[i] := DSS.AuxParser.MakeDouble();
             end;

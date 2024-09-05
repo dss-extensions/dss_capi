@@ -283,7 +283,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.kVARating := Value;
+    elem.SetkVARating(Value);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_PF(Value: Double); CDECL;

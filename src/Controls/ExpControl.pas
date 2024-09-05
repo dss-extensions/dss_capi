@@ -109,8 +109,7 @@ type
 
         FOpenTau: Double;
 
-        procedure Set_PendingChange(Value: Integer; DevIndex: Integer);
-        function Get_PendingChange(DevIndex: Integer): Integer;
+        procedure SetPendingChange(Value: Integer; DevIndex: Integer);
         procedure UpdateExpControl(i: Integer);
     PUBLIC
         FPVSystemNameList, DERNameList: TStringList;
@@ -140,9 +139,6 @@ type
         procedure Reset; OVERRIDE;  // Reset to initial defined state
 
         function MakePVSystemList(doRecalc: Boolean = TRUE): Boolean;
-
-        property PendingChange[DevIndex: Integer]: Integer READ Get_PendingChange WRITE Set_PendingChange;
-
     end;
 
 implementation
@@ -454,7 +450,7 @@ begin
     for i := 1 to FPVSystemPointerList.Count do
     begin
         PVSys := ControlledElement[i];   // Use local variable in loop
-        if PendingChange[i] = CHANGEVARLEVEL then
+        if FPendingChange[i] = CHANGEVARLEVEL then
         begin
             PVSys.VWmode := FALSE;
             PVSys.ActiveTerminalIdx := 1; // Set active terminal of PVSystem to terminal 1
@@ -523,7 +519,7 @@ begin
             FPriorVpu[i] := FPresentVpu[i];
             ActiveCircuit.Solution.LoadsNeedUpdating := TRUE;
       // Force recalc of power parms
-            Set_PendingChange(NONE, i);
+            SetPendingChange(NONE, i);
         end
     end;
 end;
@@ -585,8 +581,8 @@ begin
                 (ActiveCircuit.Solution.ControlIteration = 1)) then
             begin
                 FWithinTol[i] := FALSE;
-                Set_PendingChange(CHANGEVARLEVEL, i);
-                ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange[i], 0, Self);
+                SetPendingChange(CHANGEVARLEVEL, i);
+                ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, FPendingChange[i], 0, Self);
                 if ShowEventLog then
                     AppendtoEventLog(Self.FullName + ' ' + PVSys.Name, Format(' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr, Qerr]));
             end
@@ -689,7 +685,7 @@ end;
 //    // Reset controlled PVSystems to original PF
 //end;
 
-procedure TExpControlObj.Set_PendingChange(Value: Integer; DevIndex: Integer);
+procedure TExpControlObj.SetPendingChange(Value: Integer; DevIndex: Integer);
 begin
     FPendingChange[DevIndex] := Value;
     DblTraceParameter := Value;
@@ -725,11 +721,6 @@ begin
                 Format(' Setting new Vreg= %.5g Vpu=%.5g Verr=%.5g',
                 [FVregs[j], FPresentVpu[j], Verr]));
     end;
-end;
-
-function TExpControlObj.Get_PendingChange(DevIndex: Integer): Integer;
-begin
-    Result := FPendingChange[DevIndex];
 end;
 
 //Called at end of main power flow solution loop

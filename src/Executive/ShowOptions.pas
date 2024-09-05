@@ -215,7 +215,7 @@ begin
             DSS.Parser.NextParam;
             Param := DSS.Parser.MakeString();
             if Length(Param) = 0 then
-                DoSimpleMsg(DSS, 'Monitor Name Not Specified. %s', [CRLF + DSS.Parser.CmdString], 249)
+                DoSimpleMsg(DSS, 'Monitor Name Not Specified. %s', [CRLF + DSS.Parser.CmdString()], 249)
             else
             begin
 {$IFDEF DSS_CAPI_PM}
@@ -226,7 +226,7 @@ begin
                     if pMon <> NIL then
                         pMon.TranslateToCSV(TRUE)
                     else
-                        DoSimpleMsg(DSS, 'Monitor "%s" not found. %s', [param, CRLF + DSS.Parser.CmdString], 248);
+                        DoSimpleMsg(DSS, 'Monitor "%s" not found. %s', [param, CRLF + DSS.Parser.CmdString()], 248);
 {$IFDEF DSS_CAPI_PM}
                 end
                 else
@@ -239,7 +239,7 @@ begin
                         if pMon <> NIL then
                             pMon.TranslateToCSV((idxP = FinalP))
                         else
-                            DoSimpleMsg(DSS, 'Monitor "%s" not found. %s', [param, CRLF + DSS.Parser.CmdString], 248);
+                            DoSimpleMsg(DSS, 'Monitor "%s" not found. %s', [param, CRLF + DSS.Parser.CmdString()], 248);
                     end;
                 end;
 {$ENDIF}

@@ -317,8 +317,7 @@ type
         CtrlModel: TInvControlModel;
         CtrlVars: Array of TInvVars;
 
-        procedure Set_PendingChange(Value: Integer; DevIndex: Integer);
-        function Get_PendingChange(DevIndex: Integer): Integer;
+        procedure SetPendingChange(Value: Integer; DevIndex: Integer);
         procedure UpdateInvControl(i: Integer);
         procedure UpdateDERParameters(i: Integer);
         procedure CalcVoltWatt_watts(j: Integer);
@@ -375,9 +374,8 @@ type
         procedure RecalcElementData(); OVERRIDE;
         procedure Sample(); OVERRIDE; // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE; // do the action that is pending from last sample
-        procedure Reset; OVERRIDE; // Reset to initial defined state
-        function MakeDERList: Boolean;
-        property PendingChange[DevIndex: Integer]: Integer READ Get_PendingChange WRITE Set_PendingChange;
+        procedure Reset(); OVERRIDE; // Reset to initial defined state
+        function MakeDERList(): Boolean;
     end;
 
 
@@ -614,7 +612,7 @@ begin
     begin
         for i := 1 to curve.NumPoints do
         begin
-            if (curve.YValue_pt[i] < 0.0) or (curve.YValue_pt[i] > 1.0) then
+            if (curve.YValue_pt(i) < 0.0) or (curve.YValue_pt(i) > 1.0) then
             begin
                 DoSimpleMsg(dss, 'XY Curve object: "%s" has active power value(s) greater than 1.0 per-unit or less than -1.0 per-unit.  Not allowed for VOLTWATT control mode for PVSystem/Storages', [Curve.Name], 381);
                 curve := NIL;
@@ -629,7 +627,7 @@ begin
     begin
         for i := 1 to curve.NumPoints do
         begin
-            if (curve.YValue_pt[i] < -1.0) or (curve.YValue_pt[i] > 1.0) then
+            if (curve.YValue_pt(i) < -1.0) or (curve.YValue_pt(i) > 1.0) then
             begin
                 DoSimpleMsg(dss, 'XY Curve object: "%s" has power factor value(s) greater than 1.0 or less than -1.0.  Not allowed for WATTPF control mode for PVSystem/Storages', [Curve.Name], 381);
                 curve := NIL;
@@ -644,7 +642,7 @@ begin
     begin
         for i := 1 to curve.NumPoints do
         begin
-            if (curve.YValue_pt[i] < -1.0) or (curve.YValue_pt[i] > 1.0) then
+            if (curve.YValue_pt(i) < -1.0) or (curve.YValue_pt(i) > 1.0) then
             begin
                 DoSimpleMsg(dss, 'XY Curve object: "%s" has reactive power value(s) greater than 1.0 per-unit or less than -1.0 per-unit.  Not allowed for WATTVAR control mode for PVSystem/Storages', [Curve.Name], 381);
                 curve := NIL;
@@ -894,7 +892,7 @@ var
     i: Integer;
 begin
     if FDERPointerList.Count = 0 then
-        MakeDERList;
+        MakeDERList();
 
     if FDERPointerList.Count > 0 then
     // Setting the terminal of the InvControl device to same as the 1st PVSystem/Storage element
@@ -1564,7 +1562,7 @@ begin
             end;
         end;
         ActiveCircuit.Solution.LoadsNeedUpdating := TRUE;
-        Set_PendingChange(NONE, k);
+        SetPendingChange(NONE, k);
         DERElem := NIL;
     end;
 end;
@@ -1677,8 +1675,8 @@ begin
                 FpresentkW := PresentkW;
                 FkVARating := kVARating;
                 Fpresentkvar := Presentkvar;
-                FkvarLimit := kvarLimit;
-                FkvarLimitNeg := kvarLimitNeg;
+                FkvarLimit := PVSystemVars.FkvarLimit;
+                FkvarLimitNeg := PVSystemVars.FkvarLimitNeg;
                 FCurrentkvarLimit := CurrentkvarLimit;
                 FCurrentkvarLimitNeg := CurrentkvarLimitNeg;
                 FDCkWRated := Pmpp;
@@ -1698,10 +1696,10 @@ begin
                 FVarFollowInverter := VarFollowInverter;
                 FInverterON := InverterON;
                 FpresentkW := PresentkW;
-                FkVARating := kVARating;
+                FkVARating := StorageVars.FkVARating;
                 Fpresentkvar := Presentkvar;
-                FkvarLimit := kvarLimit;
-                FkvarLimitNeg := kvarLimitNeg;
+                FkvarLimit := StorageVars.FkvarLimit;
+                FkvarLimitNeg := StorageVars.FkvarLimitNeg;
                 FCurrentkvarLimit := CurrentkvarLimit;
                 FCurrentkvarLimitNeg := CurrentkvarLimitNeg;
                 FDCkWRated := StorageVars.kWrating;
@@ -1816,9 +1814,9 @@ begin
                                 // Resets DER state variable only if it has not converged yet
                                 FVVDRCOperation := 0.0;
 
-                                Set_PendingChange(CHANGEDRCVVARLEVEL, i);
+                                SetPendingChange(CHANGEDRCVVARLEVEL, i);
 
-                                ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange[i], 0, Self);
+                                ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, CtrlVars[i].FPendingChange, 0, Self);
 
                                 if ShowEventLog then
                                     AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
@@ -1837,8 +1835,8 @@ begin
                             // Resets DER state variable only if it has not converged yet
                             FVVDRCOperation := 0.0;
 
-                            Set_PendingChange(CHANGEDRCVVARLEVEL, i);
-                            ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange[i], 0, Self);
+                            SetPendingChange(CHANGEDRCVVARLEVEL, i);
+                            ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, CtrlVars[i].FPendingChange, 0, Self);
 
                             if ShowEventLog then
                                 AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
@@ -1907,9 +1905,9 @@ begin
                             // Resets DER state variable only if it has not converged yet
                             FVWOperation := 0;
 
-                            Set_PendingChange(CHANGEWATTVARLEVEL, i);
+                            SetPendingChange(CHANGEWATTVARLEVEL, i);
 
-                            ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange[i], 0, Self);
+                            ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, CtrlVars[i].FPendingChange, 0, Self);
 
                             if ShowEventLog then
                                 AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
@@ -1926,8 +1924,8 @@ begin
                         begin
                             // Resets DER state variable only if it has not converged yet
                             FVVOperation := 0;
-                            Set_PendingChange(CHANGEWATTVARLEVEL, i);
-                            ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange[i], 0, Self);
+                            SetPendingChange(CHANGEWATTVARLEVEL, i);
+                            ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, CtrlVars[i].FPendingChange, 0, Self);
 
                             if ShowEventLog then
                                 AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
@@ -1989,9 +1987,9 @@ begin
                         // Resets DER state variable only if it has not converged yet
                         FVWOperation := 0;
 
-                        Set_PendingChange(CHANGEWATTLEVEL, i);
+                        SetPendingChange(CHANGEWATTLEVEL, i);
 
-                        ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange[i], 0, Self);
+                        ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, CtrlVars[i].FPendingChange, 0, Self);
                         if ShowEventLog then
                             AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                                 Format('**Ready to limit watt output due to VOLTWATT mode**, Vavgpu= %.5g, VPriorpu=%.5g',
@@ -2025,9 +2023,9 @@ begin
                         // Resets DER state variable only if it has not converged yet
                         FAVROperation := 0;
 
-                        Set_PendingChange(CHANGEVARLEVEL, i);
+                        SetPendingChange(CHANGEVARLEVEL, i);
 
-                        ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange[i], 0, Self);
+                        ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, CtrlVars[i].FPendingChange, 0, Self);
 
                         if ShowEventLog then
                             AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
@@ -2072,9 +2070,9 @@ begin
                         // Resets DER state variable only if it has not converged yet
                         FVVOperation := 0;
 
-                        Set_PendingChange(CHANGEVARLEVEL, i);
+                        SetPendingChange(CHANGEVARLEVEL, i);
 
-                        ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange[i], 0, Self);
+                        ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, CtrlVars[i].FPendingChange, 0, Self);
 
                         if ShowEventLog then
                             AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
@@ -2119,9 +2117,9 @@ begin
                         // Resets DER state variable only if it has not converged yet
                         FWPOperation := 0;
 
-                        Set_PendingChange(CHANGEVARLEVEL, i);
+                        SetPendingChange(CHANGEVARLEVEL, i);
 
-                        ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange[i], 0, Self);
+                        ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, CtrlVars[i].FPendingChange, 0, Self);
 
                         if ShowEventLog then
                             AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
@@ -2166,9 +2164,9 @@ begin
                         // Resets DER state variable only if it has not converged yet
                         FWVOperation := 0;
 
-                        Set_PendingChange(CHANGEVARLEVEL, i);
+                        SetPendingChange(CHANGEVARLEVEL, i);
 
-                        ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange[i], 0, Self);
+                        ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, CtrlVars[i].FPendingChange, 0, Self);
 
                         if ShowEventLog then
                             AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
@@ -2207,9 +2205,9 @@ begin
                             FDRCOperation := 0;
 
 
-                            Set_PendingChange(CHANGEVARLEVEL, i);
+                            SetPendingChange(CHANGEVARLEVEL, i);
 
-                            ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange[i], 0, Self);
+                            ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, CtrlVars[i].FPendingChange, 0, Self);
 
                             if ShowEventLog then
                                 AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
@@ -2224,8 +2222,8 @@ begin
                         (Abs(Abs(QoutputDRCpu) - Abs(QDesireEndpu)) > FVarChangeTolerance) or // TEMc; also tried checking against QDesireEndpu
                         (ActiveCircuit.Solution.ControlIteration = 1)) then
                     begin
-                        Set_PendingChange(CHANGEVARLEVEL, i);
-                        ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange[i], 0, Self);
+                        SetPendingChange(CHANGEVARLEVEL, i);
+                        ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, CtrlVars[i].FPendingChange, 0, Self);
 
                         if ShowEventLog then
                             AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
@@ -2252,7 +2250,7 @@ begin
                         Valid := Valid and not DERElem.dynVars.ResetIBR; // Check if we are not resetting
                         if Valid then
                         begin
-                            ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange[i], 0, self);
+                            ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, CtrlVars[i].FPendingChange, 0, self);
                         end;
                     end;
                 end;
@@ -2263,7 +2261,7 @@ begin
     end; // for i := 1 to FDERPointerList.Count do
 end;
 
-function TInvControlObj.MakeDERList: Boolean;
+function TInvControlObj.MakeDERList(): Boolean;
 var
     PVSysClass: TDSSClass;
     StorageClass: TDSSClass;
@@ -2380,7 +2378,7 @@ begin
             if PVSys = nil then
                 QOldAVR := 0.0
             else
-                QOldAVR := -PVSys.kvarLimitNeg / 2.0;
+                QOldAVR := -PVSys.PVSystemVars.FkvarLimitNeg / 2.0;
             QOldDRC := -1.0;
             QOldVVDRC := -1.0;
             QDesiredDRC := 0.0;
@@ -2469,12 +2467,12 @@ begin
         Result := TRUE;
 end;
 
-procedure TInvControlObj.Reset;
+procedure TInvControlObj.Reset();
 begin
     // inherited;
 end;
 
-procedure TInvControlObj.Set_PendingChange(Value: Integer; DevIndex: Integer);
+procedure TInvControlObj.SetPendingChange(Value: Integer; DevIndex: Integer);
 begin
     CtrlVars[DevIndex].FPendingChange := Value;
     DblTraceParameter := Value;
@@ -2561,11 +2559,6 @@ begin
             FVpuSolution[FVpuSolutionIdx] := solnvoltage / ((ActiveCircuit.Buses[DERElem.terminals[0].busRef].kVBase) * 1000.0);
         end;
     end;
-end;
-
-function TInvControlObj.Get_PendingChange(DevIndex: Integer): Integer;
-begin
-    Result := CtrlVars[DevIndex].FPendingChange;
 end;
 
 procedure TInvControlObj.CalcVoltWatt_watts(j: Integer);
@@ -3283,7 +3276,7 @@ begin
         else
         if (Q < 0.0) and (abs(Q) >= abs(currentkvarlimitnegpu)) then
         begin
-            FOperation := 0.2 * sign(Q); // When kvarlimitneg is exceeded
+            FOperation := 0.2 * sign(Q); // When kvarLimitNeg is exceeded
             QDesireLimitedpu := currentkvarlimitnegpu * sign(Q);
         end;
 
@@ -3405,7 +3398,7 @@ begin
         else
         if (Q < 0.0) and (abs(Q) >= abs(currentkvarlimitnegpu)) then
         begin
-            FOperation := 0.2 * sign(Q); // When kvarlimitneg is exceeded
+            FOperation := 0.2 * sign(Q); // When kvarLimitNeg is exceeded
             QDesireLimitedpu := currentkvarlimitnegpu * sign(Q);
         end;
 

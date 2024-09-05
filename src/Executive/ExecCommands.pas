@@ -238,7 +238,7 @@ begin
 
         // Load up the parser and process the first parameter only
         DSS.LastCmdLine := CmdLine;
-        DSS.Parser.CmdString := DSS.LastCmdLine;  // Load up command parser
+        DSS.Parser.SetCmdString(DSS.LastCmdLine);  // Load up command parser
         DSS.LastCommandWasCompile := FALSE;
 
         ParamPointer := 0;
@@ -383,7 +383,7 @@ begin
             // If a command or no text beFORe the = sign, THEN error
             if (Length(ParamName) = 0) or (Comparetext(paramName, 'command') = 0) then
             begin
-                DoSimpleMsg(DSS, 'Unknown Command: "%s" %s', [Param, CRLF + DSS.Parser.CmdString], 302);
+                DoSimpleMsg(DSS, 'Unknown Command: "%s" %s', [Param, CRLF + DSS.Parser.CmdString()], 302);
                 DSS.CmdResult := 1;
             end
             else
@@ -398,7 +398,7 @@ begin
                 begin
                     // rebuild command line and pass to editor
                     // use quotes to ensure first parameter is interpreted OK after rebuild
-                    DSS.Parser.CmdString := PropName + '="' + Param + '" ' + DSS.Parser.Remainder();
+                    DSS.Parser.SetCmdString(PropName + '="' + Param + '" ' + DSS.Parser.Remainder());
                     DSS.ActiveDSSObject.ParentClass.Edit(DSS.Parser);
                 end;
             end;
@@ -702,7 +702,7 @@ begin
     except
         On E: Exception do
             DoErrorMsg(DSS, 
-                Format(_('ProcessCommand: Exception Raised While Processing DSS Command: %s'), [CRLF + DSS.Parser.CmdString]),
+                Format(_('ProcessCommand: Exception Raised While Processing DSS Command: %s'), [CRLF + DSS.Parser.CmdString()]),
                 E.Message, _('Error in command string or circuit data.'), 303);
     end;
 {$IFNDEF DSS_CAPI_PM}

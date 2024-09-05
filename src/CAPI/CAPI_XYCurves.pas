@@ -212,7 +212,7 @@ begin
         Exit;
     end;
     
-    Result := pXYCurve.X;
+    Result := pXYCurve.GetX();
 end;
 //------------------------------------------------------------------------------
 function XYCurves_Get_y(): Double; CDECL;
@@ -226,7 +226,7 @@ begin
         Exit;
     end;
     
-    Result := pXYCurve.Y;
+    Result := pXYCurve.GetY();
 end;
 //------------------------------------------------------------------------------
 procedure XYCurves_Get_Yarray(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -261,7 +261,7 @@ begin
         Exit;
     end;
 
-    pXYCurve.X := Value;
+    pXYCurve.SetX(Value);
 end;
 //------------------------------------------------------------------------------
 procedure XYCurves_Set_y(Value: Double); CDECL;
@@ -274,7 +274,7 @@ begin
         Exit;
     end;
     
-    pXYCurve.Y := Value;
+    pXYCurve.SetY(Value);
 end;
 //------------------------------------------------------------------------------
 procedure XYCurves_Set_Yarray(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;

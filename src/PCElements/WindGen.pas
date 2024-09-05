@@ -729,14 +729,14 @@ begin
             TProp.VV_Curve: //  the Volt-var control curve
                 if VV_CurveObj <> NIL then
                 begin
-                    WindModelDyn.V1_VoltVar := VV_CurveObj.XValue_pt[1];
-                    WindModelDyn.V2_VoltVar := VV_CurveObj.XValue_pt[2];
-                    WindModelDyn.V3_VoltVar := VV_CurveObj.XValue_pt[3];
-                    WindModelDyn.V4_VoltVar := VV_CurveObj.XValue_pt[4];
-                    WindModelDyn.Q1_VoltVar := VV_CurveObj.YValue_pt[1];
-                    WindModelDyn.Q2_VoltVar := VV_CurveObj.YValue_pt[2];
-                    WindModelDyn.Q3_VoltVar := VV_CurveObj.YValue_pt[3];
-                    WindModelDyn.Q4_VoltVar := VV_CurveObj.YValue_pt[4];
+                    WindModelDyn.V1_VoltVar := VV_CurveObj.XValue_pt(1);
+                    WindModelDyn.V2_VoltVar := VV_CurveObj.XValue_pt(2);
+                    WindModelDyn.V3_VoltVar := VV_CurveObj.XValue_pt(3);
+                    WindModelDyn.V4_VoltVar := VV_CurveObj.XValue_pt(4);
+                    WindModelDyn.Q1_VoltVar := VV_CurveObj.YValue_pt(1);
+                    WindModelDyn.Q2_VoltVar := VV_CurveObj.YValue_pt(2);
+                    WindModelDyn.Q3_VoltVar := VV_CurveObj.YValue_pt(3);
+                    WindModelDyn.Q4_VoltVar := VV_CurveObj.YValue_pt(4);
                     // WindModelDyn.ReCalcElementData(); -- already done in our ReCalcElementData
                 end;
 

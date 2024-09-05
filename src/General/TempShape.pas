@@ -91,7 +91,6 @@ type
 
     TTShapeObj = class(TDSSObject)
     PRIVATE
-        FNumPoints: Integer;  // Number of points in curve
 
         FStdDevCalculated: Boolean;
         FMean,
@@ -101,6 +100,8 @@ type
         procedure SaveToSngFile;
         procedure CalcMeanandStdDev;
     PUBLIC
+        numPoints: Integer;  // Number of points in curve
+
         Interval: Double;  //=0.0 then random interval     (hr)
         Hours,          // Time values (hr) if Interval > 0.0  Else nil
         TValues: pDoubleArray;  // Temperatures
@@ -113,7 +114,6 @@ type
 
         function GetTemperatureAtHour(Hr: Double): Double;  // Get Temperatures at specified time, hr
 
-        property NumPoints: Integer READ FNumPoints;
         function GetMean(): Double;
         function GetStdDev(): Double;
         procedure SetMean(const Value: Double);
@@ -209,7 +209,7 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
-    PropertyStructArrayCountOffset := ptruint(@obj.FNumPoints);
+    PropertyStructArrayCountOffset := ptruint(@obj.numPoints);
 
     SpecSetNames := ArrayOfString.Create(
         'Temp, Hour',
@@ -266,18 +266,18 @@ begin
 
     // integer
     PropertyType[ord(TProp.Npts)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Npts)] := ptruint(@obj.FNumPoints);
+    PropertyOffset[ord(TProp.Npts)] := ptruint(@obj.numPoints);
     PropertyFlags[ord(TProp.Npts)] := [TPropertyFlag.SuppressJSON];
 
     // double arrays
     PropertyType[ord(TProp.hour)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.hour)] := ptruint(@obj.Hours);
-    PropertyOffset2[ord(TProp.hour)] := ptruint(@obj.FNumPoints);
+    PropertyOffset2[ord(TProp.hour)] := ptruint(@obj.numPoints);
     PropertyFlags[ord(TProp.hour)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.temp)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.temp)] := ptruint(@obj.TValues);
-    PropertyOffset2[ord(TProp.temp)] := ptruint(@obj.FNumPoints);
+    PropertyOffset2[ord(TProp.temp)] := ptruint(@obj.numPoints);
     PropertyFlags[ord(TProp.temp)] := [TPropertyFlag.RequiredInSpecSet];
 
     // enum action
@@ -304,11 +304,11 @@ procedure TTShapeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; 
 begin
     case Idx of 
         ord(TProp.csvfile):
-            DoCSVFile(DSS, Hours, TValues, FNumPoints, (Interval <> 0.0), csvfile, ParentClass.Name);
+            DoCSVFile(DSS, Hours, TValues, numPoints, (Interval <> 0.0), csvfile, ParentClass.Name);
         ord(TProp.sngfile):
-            DoSngFile(DSS, Hours, TValues, FNumPoints, (Interval <> 0.0), sngfile, ParentClass.Name);
+            DoSngFile(DSS, Hours, TValues, numPoints, (Interval <> 0.0), sngfile, ParentClass.Name);
         ord(TProp.dblfile):
-            DoDblFile(DSS, Hours, TValues, FNumPoints, (Interval <> 0.0), dblfile, ParentClass.Name);
+            DoDblFile(DSS, Hours, TValues, numPoints, (Interval <> 0.0), dblfile, ParentClass.Name);
     end;
     case Idx of
         ord(TProp.npts):
@@ -338,17 +338,17 @@ var
 begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
-    FNumPoints := Other.NumPoints;
+    numPoints := Other.numPoints;
     Interval := Other.Interval;
-    ReallocMem(TValues, SizeOf(TValues[1]) * NumPoints);
-    for i := 1 to NumPoints do
+    ReallocMem(TValues, SizeOf(TValues[1]) * numPoints);
+    for i := 1 to numPoints do
         TValues[i] := Other.TValues[i];
     if Interval > 0.0 then
         ReallocMem(Hours, 0)
     else
     begin
-        ReallocMem(Hours, SizeOf(Hours[1]) * NumPoints);
-        for i := 1 to NumPoints do
+        ReallocMem(Hours, SizeOf(Hours[1]) * numPoints);
+        for i := 1 to numPoints do
             Hours[i] := Other.Hours[i];
     end;
 end;
@@ -359,7 +359,7 @@ begin
     Name := AnsiLowerCase(TShapeName);
     DSSObjType := ParClass.DSSClassType;
 
-    FNumPoints := 0;
+    numPoints := 0;
     Interval := 1.0;  // hr
     Hours := NIL;
     TValues := NIL;
@@ -391,10 +391,10 @@ var
 begin
     Result := 0.0;    // default return value if no points in curve
 
-    if FNumPoints <= 0 then         // Handle Exceptional cases
+    if numPoints <= 0 then         // Handle Exceptional cases
         Exit;
 
-    if FNumPoints = 1 then
+    if numPoints = 1 then
     begin
         Result := TValues[1];
         Exit;
@@ -403,10 +403,10 @@ begin
     if Interval > 0.0 then
     begin
         Index := round(Hr / Interval);
-        if Index > FNumPoints then
-            Index := Index mod FNumPoints;  // Wrap around using remainder
+        if Index > numPoints then
+            Index := Index mod numPoints;  // Wrap around using remainder
         if Index = 0 then
-            Index := FNumPoints;
+            Index := numPoints;
         Result := TValues[Index];
         Exit;
     end;
@@ -414,12 +414,12 @@ begin
     // For random interval
 
     // Normalize Hr to max hour in curve to get wraparound
-    if (Hr > Hours[FNumPoints]) then
+    if (Hr > Hours[numPoints]) then
     begin
-        Hr := Hr - Trunc(Hr / Hours[FNumPoints]) * Hours[FNumPoints];
+        Hr := Hr - Trunc(Hr / Hours[numPoints]) * Hours[numPoints];
     end;
 
-    for i := 1 to FNumPoints do
+    for i := 1 to numPoints do
     begin
         if (Abs(Hours[i] - Hr) < 0.00001) then  // If close to an actual point, just use it.
         begin
@@ -436,16 +436,16 @@ begin
         end;
     end;
     // If we fall through the loop, just use last value
-    Result := TValues[FNumPoints];
+    Result := TValues[numPoints];
 end;
 
 procedure TTShapeObj.CalcMeanandStdDev;
 begin
-    if FNumPoints > 0 then
+    if numPoints > 0 then
         if Interval > 0.0 then
-            RCDMeanandStdDev(TValues, FNumPoints, FMean, FStdDev)
+            RCDMeanandStdDev(TValues, numPoints, FMean, FStdDev)
         else
-            CurveMeanAndStdDev(TValues, Hours, FNumPoints, FMean, FStdDev);
+            CurveMeanAndStdDev(TValues, Hours, numPoints, FMean, FStdDev);
 
     FStdDevCalculated := TRUE;
 end;
@@ -477,7 +477,7 @@ begin
     try
         FName := DSS.OutputDirectory + Format('%s.dbl', [Name]); // CurrentDSSDir
         F := DSS.GetOutputStreamEx(FName, fmCreate);
-        F.WriteBuffer(TValues[1], NumPoints * SizeOf(Double));
+        F.WriteBuffer(TValues[1], numPoints * SizeOf(Double));
         DSS.GlobalResult := 'Temp=[dblfile=' + FName + ']';
     finally
         FreeAndNil(F);
@@ -499,7 +499,7 @@ begin
     try
         FName := DSS.OutputDirectory + Format('%s.sng', [Name]); // CurrentDSSDir
         F := DSS.GetOutputStreamEx(FName, fmCreate);
-        for i := 1 to NumPoints do
+        for i := 1 to numPoints do
         begin
             Temp := TValues[i];
             F.WriteBuffer(Temp, SizeOf(Temp));

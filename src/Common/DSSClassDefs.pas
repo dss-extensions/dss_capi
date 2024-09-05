@@ -275,7 +275,7 @@ begin
 
     if Classref = 0 then
     begin
-        DoSimpleMsg(DSS, Format(_('Error! Object Class "%s" not found.'), [ObjType]) + CRLF + DSS.Parser.CmdString, 903);
+        DoSimpleMsg(DSS, Format(_('Error! Object Class "%s" not found.'), [ObjType]) + CRLF + DSS.Parser.CmdString(), 903);
         Result := FALSE;
         Exit;
     end;

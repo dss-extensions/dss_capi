@@ -478,7 +478,7 @@ begin
             ExportMeters(DSS, FileName);
         15:
             if Length(Parm2) = 0 then
-                DoSimpleMsg(DSS, 'Monitor name not specified. %s', [CRLF + DSS.Parser.CmdString], 251)
+                DoSimpleMsg(DSS, 'Monitor name not specified. %s', [CRLF + DSS.Parser.CmdString()], 251)
             else
             begin
 {$IFDEF DSS_CAPI_PM}
@@ -502,7 +502,7 @@ begin
                             FileName := DSS.GlobalResult;
                         end
                         else
-                            DoSimpleMsg(DSS, 'Monitor "%s" not found. %s', [Parm2, CRLF + DSS.Parser.CmdString], 250);
+                            DoSimpleMsg(DSS, 'Monitor "%s" not found. %s', [Parm2, CRLF + DSS.Parser.CmdString()], 250);
                     end;
 {$IFDEF DSS_CAPI_PM}
                 end
@@ -529,7 +529,7 @@ begin
                                 FileName := DSS.GlobalResult;
                             end
                             else
-                                DoSimpleMsg(DSS, 'Monitor "%s" not found. %s', [Parm2, CRLF + DSS.Parser.CmdString], 250);
+                                DoSimpleMsg(DSS, 'Monitor "%s" not found. %s', [Parm2, CRLF + DSS.Parser.CmdString()], 250);
                         end;
                     end;
                 end;

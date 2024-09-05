@@ -547,7 +547,7 @@ var
     ParmName,
     Param: String;
 begin
-    DSS.AuxParser.CmdString := mmFileCmd;
+    DSS.AuxParser.SetCmdString(mmFileCmd);
     ParmName := DSS.AuxParser.NextParam();
     LocalCol := 1;
 
@@ -640,7 +640,7 @@ var
     Param: String;
 begin
     try
-        DSS.AuxParser.CmdString := S;
+        DSS.AuxParser.SetCmdString(S);
         ParmName := DSS.AuxParser.NextParam();
         Param := AdjustInputFilePath(DSS.AuxParser.MakeString());
         if not FileExists(Param) then
@@ -969,7 +969,7 @@ begin
             Inc(i);
             FSReadln(F, s); // read entire line and parse with AuxParser
             // AuxParser allows commas or white space
-            DSS.AuxParser.CmdString := s;
+            DSS.AuxParser.SetCmdString(s);
             if Interval = 0.0 then
             begin
                 DSS.AuxParser.NextParam();
@@ -1042,7 +1042,7 @@ begin
             Inc(i);
             FSReadln(F, s); // read entire line  and parse with AuxParser
             // AuxParser allows commas or white space
-            DSS.AuxParser.CmdString := s;
+            DSS.AuxParser.SetCmdString(s);
             if Interval = 0.0 then
             begin
                 DSS.AuxParser.NextParam();

@@ -335,7 +335,7 @@ begin
 
     if not DSS.ActiveDSSClass.SetActive(Objname) then
     begin // scroll through list of objects untill a match
-        DoSimpleMsg(DSS, Format(_('Error! Object "%s" not found.'), [ObjName]) + CRLF + DSS.Parser.CmdString, 904);
+        DoSimpleMsg(DSS, Format(_('Error! Object "%s" not found.'), [ObjName]) + CRLF + DSS.Parser.CmdString(), 904);
         Result := false;
         Exit;
     end;

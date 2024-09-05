@@ -252,7 +252,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.PresentState := CTRL_CLOSE;
+    elem.SetPresentState(CTRL_CLOSE);
 end;
 //------------------------------------------------------------------------------
 procedure Relays_Open(); CDECL;
@@ -261,7 +261,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.PresentState := CTRL_OPEN;
+    elem.SetPresentState(CTRL_OPEN);
 end;
 //------------------------------------------------------------------------------
 procedure Relays_Reset(); CDECL;
@@ -312,7 +312,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := Ord(elem.PresentState);
+    Result := Ord(elem.PresentState());
 end;
 //------------------------------------------------------------------------------
 procedure Relays_Set_State(Value: Integer); CDECL;
@@ -322,9 +322,9 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if Value = dssActionOpen then
-        elem.PresentState := CTRL_OPEN
+        elem.SetPresentState(CTRL_OPEN)
     else if Value = dssActionClose then
-        elem.PresentState := CTRL_CLOSE
+        elem.SetPresentState(CTRL_CLOSE)
     else
     begin
         DoSimpleMsg(DSSPrime, 'Invalid Relay state: "%d".', [Value], 656568);
