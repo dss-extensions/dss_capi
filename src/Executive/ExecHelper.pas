@@ -1477,7 +1477,7 @@ begin
         with DSS.ActiveCircuit do
         begin
             ActiveCktElement.ActiveTerminalIdx := Terminal;
-            ActiveCktElement.Closed[Conductor] := FALSE;
+            ActiveCktElement.SetConductorClosed(Conductor, FALSE);
             with ActiveCktElement do
                 SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx)));
         end;
@@ -1510,7 +1510,7 @@ begin
         with DSS.ActiveCircuit do
         begin
             ActiveCktElement.ActiveTerminalIdx := Terminal;
-            ActiveCktElement.Closed[Conductor] := TRUE;
+            ActiveCktElement.SetConductorClosed(Conductor, TRUE);
             with ActiveCktElement do
                 SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx)));
         end;
@@ -1772,7 +1772,7 @@ begin
           // Put property value in global VARiable
         PropIndex := DSS.ActiveDSSClass.Propertyindex(PropName);
         if PropIndex > 0 then
-            DSS.GlobalPropertyValue := DSS.ActiveDSSObject.GetPropertyValue(PropIndex)
+            DSS.GlobalPropertyValue := DSS.ActiveDSSObject.PropertyValue(PropIndex)
         else
             DSS.GlobalPropertyValue := 'Property Unknown';
     end;
@@ -4532,7 +4532,7 @@ begin
                     end;
           // re-assign its UUID
                     if pName <> NIL then
-                        pName.UUID := StringToUuid(UuidVal);
+                        pName.SetUUID(StringToUuid(UuidVal));
                 end;
             end;
         end;

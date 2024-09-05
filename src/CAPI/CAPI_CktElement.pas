@@ -606,7 +606,7 @@ begin
     Result := NIL;
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ID)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.GetID())
 end;
 
 //------------------------------------------------------------------------------

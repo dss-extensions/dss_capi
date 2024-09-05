@@ -1259,7 +1259,7 @@ begin
                         StorageObj := FleetPointerList.Get(i);
 
                         if Dischargemode = CURRENTPEAKSHAVE then // Current to power
-                        begin    //  (MonitoredElement.MaxVoltage[ElementTerminal] / 1000)
+                        begin    //  (MonitoredElement.MaxVoltage(ElementTerminal) / 1000)
                             if StorageObj.NPhases = 1 then
                                 kWNeeded := StorageObj.PresentkV * AmpsDiff
                             else
@@ -1944,7 +1944,7 @@ var
 begin
     if MonitoredElement.NPhases = 1 then
     begin
-        ControlPower := MonitoredElement.Power[ElementTerminal]; // just take the total power (works also for 1ph elements with 2 conductors)
+        ControlPower := MonitoredElement.Power(ElementTerminal); // just take the total power (works also for 1ph elements with 2 conductors)
     end
     else
     begin

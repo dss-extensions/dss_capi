@@ -38,21 +38,16 @@ type
 
     TCableDataObj = class(TConductorDataObj)
     PUBLIC
-        FEpsR: Double;
-        // next 3 use parent RadiusUnits
-        FInsLayer: Double;
-        FDiaIns: Double;
-        FDiaCable: Double;
+        epsR: Double;
+        // next 3 use parent radiusUnits
+        insLayer: Double;
+        diaIns: Double;
+        diaCable: Double;
 
         constructor Create(ParClass: TDSSClass; const CableDataName: String);
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherObj: Pointer); override;
-
-        property EpsR: Double READ FEpsR;
-        property DiaIns: Double READ FDiaIns;
-        property DiaCable: Double READ FDiaCable;
-        property InsLayer: Double READ FInsLayer;
     end;
 
 implementation
@@ -111,16 +106,16 @@ begin
     PropertyOffset_CableData := ActiveProperty;
 
     // double properties (default type)
-    PropertyOffset[ActiveProperty + ord(TProp.EpsR)] := ptruint(@obj.FEpsR);
+    PropertyOffset[ActiveProperty + ord(TProp.EpsR)] := ptruint(@obj.epsR);
     // PropertyMinimum[ActiveProperty + ord(TProp.EpsR)] := 1.0; //TODO: add support for minimum value
     
-    PropertyOffset[ActiveProperty + ord(TProp.InsLayer)] := ptruint(@obj.FInsLayer);
-    PropertyFlags[ActiveProperty + ord(TProp.InsLayer)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
+    PropertyOffset[ActiveProperty + ord(TProp.insLayer)] := ptruint(@obj.insLayer);
+    PropertyFlags[ActiveProperty + ord(TProp.insLayer)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
 
-    PropertyOffset[ActiveProperty + ord(TProp.DiaIns)] := ptruint(@obj.FDiaIns);
+    PropertyOffset[ActiveProperty + ord(TProp.DiaIns)] := ptruint(@obj.diaIns);
     PropertyFlags[ActiveProperty + ord(TProp.DiaIns)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
 
-    PropertyOffset[ActiveProperty + ord(TProp.DiaCable)] := ptruint(@obj.FDiaCable);
+    PropertyOffset[ActiveProperty + ord(TProp.DiaCable)] := ptruint(@obj.diaCable);
     PropertyFlags[ActiveProperty + ord(TProp.DiaCable)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
 
     ActiveProperty := ActiveProperty + NumPropsThisClass;
@@ -132,16 +127,16 @@ begin
     // Check for critical errors
     case (Idx - (ParentClass as TCableData).PropertyOffset_CableData)  of
         ord(TProp.EpsR):
-            if (FEpsR < 1.0) then
+            if (epsR < 1.0) then
                 DoSimpleMsg('Error: Insulation permittivity must be greater than one for CableData %s', [Name], 999);
-        ord(TProp.InsLayer):
-            if (FInsLayer <= 0.0) then
+        ord(TProp.insLayer):
+            if (insLayer <= 0.0) then
                 DoSimpleMsg('Error: Insulation layer thickness must be positive for CableData %s', [Name], 999);
         ord(TProp.DiaIns):
-            if (FDiaIns <= 0.0) then
+            if (diaIns <= 0.0) then
                 DoSimpleMsg('Error: Diameter over insulation layer must be positive for CableData %s', [Name], 999);
         ord(TProp.DiaCable):
-            if (FDiaCable <= 0.0) then
+            if (diaCable <= 0.0) then
                 DoSimpleMsg('Error: Diameter over cable must be positive for CableData %s', [Name], 999);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
@@ -153,10 +148,10 @@ var
 begin
     inherited MakeLike(OtherObj);
     Other := TCableDataObj(OtherObj);
-    FEpsR := Other.FEpsR;
-    FInsLayer := Other.FInsLayer;
-    FDiaIns := Other.FDiaIns;
-    FDiaCable := Other.FDiaCable;
+    epsR := Other.epsR;
+    insLayer := Other.insLayer;
+    diaIns := Other.diaIns;
+    diaCable := Other.diaCable;
 end;
 
 constructor TCableDataObj.Create(ParClass: TDSSClass; const CableDataName: String);
@@ -165,10 +160,10 @@ begin
     Name := AnsiLowerCase(CableDataName);
     DSSObjType := ParClass.DSSClassType;
 
-    FEpsR := 2.3;
-    FInsLayer := -1.0;
-    FDiaIns := -1.0;
-    FDiaCable := -1.0;
+    epsR := 2.3;
+    insLayer := -1.0;
+    diaIns := -1.0;
+    diaCable := -1.0;
 end;
 
 destructor TCableDataObj.Destroy;

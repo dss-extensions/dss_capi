@@ -44,20 +44,15 @@ type
 
     TCNDataObj = class(TCableDataObj)
     PUBLIC
-        FkStrand: Integer;
-        FDiaStrand: Double;
-        FGmrStrand: Double;
-        FRStrand: Double;
+        kStrand: Integer;
+        diaStrand: Double;
+        gmrStrand: Double;
+        rStrand: Double;
 
         constructor Create(ParClass: TDSSClass; const CNDataName: String);
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
-
-        property NStrand: Integer READ FkStrand;
-        property DiaStrand: Double READ FDiaStrand;
-        property GmrStrand: Double READ FGmrStrand;
-        property RStrand: Double READ FRStrand;
     end;
 
 implementation
@@ -110,17 +105,17 @@ begin
 
     // integer properties
     PropertyType[ActiveProperty + ord(TProp.k)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ActiveProperty + ord(TProp.k)] := ptruint(@obj.FkStrand);
+    PropertyOffset[ActiveProperty + ord(TProp.k)] := ptruint(@obj.kStrand);
     // PropertyMinimum[ActiveProperty + ord(TProp.k)] := 2; //TODO: add support for minimum value
 
     // double properties (default type)
-    PropertyOffset[ActiveProperty + ord(TProp.DiaStrand)] := ptruint(@obj.FDiaStrand);
+    PropertyOffset[ActiveProperty + ord(TProp.DiaStrand)] := ptruint(@obj.diaStrand);
     PropertyFlags[ActiveProperty + ord(TProp.DiaStrand)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
 
-    PropertyOffset[ActiveProperty + ord(TProp.GmrStrand)] := ptruint(@obj.FGmrStrand);
+    PropertyOffset[ActiveProperty + ord(TProp.GmrStrand)] := ptruint(@obj.gmrStrand);
     PropertyFlags[ActiveProperty + ord(TProp.GmrStrand)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.DynamicDefault];
 
-    PropertyOffset[ActiveProperty + ord(TProp.Rstrand)] := ptruint(@obj.FRStrand);
+    PropertyOffset[ActiveProperty + ord(TProp.Rstrand)] := ptruint(@obj.rStrand);
     PropertyFlags[ActiveProperty + ord(TProp.Rstrand)] := [TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm_per_length];//, TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     ActiveProperty := NumPropsThisClass;
@@ -143,19 +138,19 @@ begin
     // Set defaults
     case Idx of
         ord(TProp.DiaStrand):
-            if FGmrStrand <= 0.0 then
-                FGmrStrand := 0.7788 * 0.5 * FDiaStrand;
+            if gmrStrand <= 0.0 then
+                gmrStrand := 0.7788 * 0.5 * diaStrand;
     end;
     // Check for critical errors
     case Idx of
         ord(TProp.k):
-            if (FkStrand < 2) then
+            if (kStrand < 2) then
                 DoSimpleMsg('Error: Must have at least 2 concentric neutral strands for CNData %s', [Name], 999);
         ord(TProp.DiaStrand):
-            if (FDiaStrand <= 0.0) then
+            if (diaStrand <= 0.0) then
                 DoSimpleMsg('Error: Neutral strand diameter must be positive for CNData %s', [Name], 999);
         ord(TProp.GmrStrand):
-            if (FGmrStrand <= 0.0) then
+            if (gmrStrand <= 0.0) then
                 DoSimpleMsg('Error: Neutral strand GMR must be positive for CNData %s', [Name], 999);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
@@ -167,10 +162,10 @@ var
 begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
-    FkStrand := Other.FkStrand;
-    FDiaStrand := Other.FDiaStrand;
-    FGmrStrand := Other.FGmrStrand;
-    FRStrand := Other.FRStrand;
+    kStrand := Other.kStrand;
+    diaStrand := Other.diaStrand;
+    gmrStrand := Other.gmrStrand;
+    rStrand := Other.rStrand;
 end;
 
 constructor TCNDataObj.Create(ParClass: TDSSClass; const CNDataName: String);
@@ -178,10 +173,10 @@ begin
     inherited Create(ParClass, CNDataName);
     Name := AnsiLowerCase(CNDataName);
     DSSObjType := ParClass.DSSClassType;
-    FkStrand := 2;
-    FDiaStrand := -1.0;
-    FGmrStrand := -1.0;
-    FRStrand := -1.0;
+    kStrand := 2;
+    diaStrand := -1.0;
+    gmrStrand := -1.0;
+    rStrand := -1.0;
 end;
 
 destructor TCNDataObj.Destroy;

@@ -34,9 +34,9 @@ type
         procedure Set_RStrand(i, units: Integer; const Value: Double);
 
     PUBLIC
-        procedure Calc(f: Double; EarthModel: Integer); OVERRIDE;
+        procedure Calc(f: Double; earthModel: Integer); OVERRIDE;
 
-        constructor Create(NumConductors: Integer);
+        constructor Create(NConductors: Integer);
         destructor Destroy; OVERRIDE;
 
         property kStrand[i: Integer]: Integer READ Get_kStrand WRITE Set_kStrand;
@@ -74,29 +74,29 @@ end;
 
 procedure TCNLineConstants.Set_kStrand(i: Integer; const Value: Integer);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         FkStrand[i] := Value;
 end;
 
 procedure TCNLineConstants.Set_DiaStrand(i, units: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         FDiaStrand[i] := Value * To_Meters(units);
 end;
 
 procedure TCNLineConstants.Set_GmrStrand(i, units: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         FGmrStrand[i] := Value * To_Meters(units);
 end;
 
 procedure TCNLineConstants.Set_RStrand(i, units: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         FRStrand[i] := Value * To_Per_Meter(units);
 end;
 
-procedure TCNLineConstants.Calc(f: Double; EarthModel: Integer);
+procedure TCNLineConstants.Calc(f: Double; earthModel: Integer);
 // Compute base Z and YC matrices in ohms/m for this frequency and earth impedance
 var
     Zi, Zspacing: Complex;
@@ -129,7 +129,7 @@ begin
     FYCMatrix.Clear;
 
   // add concentric neutrals to the end of conductor list; they are always reduced
-    N := FNumConds + FNPhases;
+    N := numConductors + FNPhases;
     Zmat := TCMatrix.CreateMatrix(N);
 
     // For less than 1 kHz use GMR to better match published data
@@ -140,9 +140,9 @@ begin
         PowerFreq := FALSE;
 
   // Self Impedances - CN cores and bare neutrals
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
     begin
-        Zi := Get_Zint(i, EarthModel);
+        Zi := GetZint(i, earthModel);
         if PowerFreq then
         begin // for less than 1 kHz, use published GMR
             Zi.im := 0.0;
@@ -152,7 +152,7 @@ begin
         begin
             Zspacing := Lfactor * ln(1.0 / Fradius[i]);
         end;
-        Zmat[i, i] := Zi + Zspacing + Get_Ze(i, i, EarthModel);
+        Zmat[i, i] := Zi + Zspacing + GetZearth(i, i, earthModel);
     end;
 
   // CN self impedances
@@ -164,17 +164,17 @@ begin
             1.0 / FkStrand[i]);
         Zspacing := Lfactor * ln(1.0 / GmrCN);
         Zi := ResCN;
-        idxi := i + FNumConds;
-        Zmat[idxi, idxi] := Zi + Zspacing + Get_Ze(i, i, EarthModel);
+        idxi := i + numConductors;
+        Zmat[idxi, idxi] := Zi + Zspacing + GetZearth(i, i, earthModel);
     end;
 
   // Mutual Impedances - between CN cores and bare neutrals
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
     begin
         for j := 1 to i - 1 do
         begin
             Dij := sqrt(sqr(Fx[i] - Fx[j]) + sqr(Fy[i] - Fy[j]));
-            Zmat[i, j] := Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel);
+            Zmat[i, j] := Lfactor * ln(1.0 / Dij) + GetZearth(i, j, earthModel);
             Zmat[j, i] := Zmat[i, j];
         end;
     end;
@@ -182,15 +182,15 @@ begin
   // Mutual Impedances - CN to other CN, cores, and bare neutrals
     for i := 1 to FNPhases do
     begin
-        idxi := i + FNumConds;
+        idxi := i + numConductors;
         for j := 1 to i - 1 do
         begin  // CN to other CN
-            idxj := j + FNumConds;
+            idxj := j + numConductors;
             Dij := sqrt(sqr(Fx[i] - Fx[j]) + sqr(Fy[i] - Fy[j]));
-            Zmat[idxi, idxj] := Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel);
+            Zmat[idxi, idxj] := Lfactor * ln(1.0 / Dij) + GetZearth(i, j, earthModel);
             Zmat[idxj, idxi] := Zmat[idxi, idxj];
         end;
-        for j := 1 to FNumConds do
+        for j := 1 to numConductors do
         begin // CN to cores and bare neutrals
             idxj := j;
             RadCN := 0.5 * (FDiaCable[i] - FDiaStrand[i]);
@@ -201,16 +201,15 @@ begin
             else
             begin // CN to another phase or bare neutral
                 Dij := sqrt(sqr(Fx[i] - Fx[j]) + sqr(Fy[i] - Fy[j]));
-                Dij := Power(Power(Dij, FkStrand[i]) - Power(RadCN, FkStrand[i]),
-                    1.0 / FkStrand[i]);
+                Dij := Power(Power(Dij, FkStrand[i]) - Power(RadCN, FkStrand[i]), 1.0 / FkStrand[i]);
             end;
-            Zmat[idxi, idxj] := Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel);
+            Zmat[idxi, idxj] := Lfactor * ln(1.0 / Dij) + GetZearth(i, j, earthModel);
             Zmat[idxj, idxi] := Zmat[idxi, idxj];
         end;
     end;
 
   // reduce out the CN
-    while Zmat.order > FNumConds do
+    while Zmat.order > numConductors do
     begin
         Ztemp := Zmat.Kron(Zmat.order);
         Zmat.Free;
@@ -237,13 +236,13 @@ begin
     FRhoChanged := FALSE;
 end;
 
-constructor TCNLineConstants.Create(NumConductors: Integer);
+constructor TCNLineConstants.Create(NConductors: Integer);
 begin
-    inherited Create(NumConductors);
-    FkStrand := Allocmem(Sizeof(FkStrand[1]) * FNumConds);
-    FDiaStrand := Allocmem(Sizeof(FDiaStrand[1]) * FNumConds);
-    FGmrStrand := Allocmem(Sizeof(FGmrStrand[1]) * FNumConds);
-    FRStrand := Allocmem(Sizeof(FRStrand[1]) * FNumConds);
+    inherited Create(NConductors);
+    FkStrand := Allocmem(Sizeof(FkStrand[1]) * numConductors);
+    FDiaStrand := Allocmem(Sizeof(FDiaStrand[1]) * numConductors);
+    FGmrStrand := Allocmem(Sizeof(FGmrStrand[1]) * numConductors);
+    FRStrand := Allocmem(Sizeof(FRStrand[1]) * numConductors);
 end;
 
 destructor TCNLineConstants.Destroy;

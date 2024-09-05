@@ -903,7 +903,7 @@ var
             Result := False;
             Exit;
         end;
-        MonPower := MonElm.Power[1];
+        MonPower := MonElm.Power(1);
         MonPF := MonPower.re / sqrt(MonPower.re * MonPower.re + MonPower.im * MonPower.im);
         // calculate the difference to the target, check if whitin tolerance
         Result :=  (abs(pf - MonPF) / pf) > Tol1; 
@@ -1034,7 +1034,7 @@ begin
 
     for i := 1 to ParentClass.NumProperties do
     begin
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
     end;
 
     if Complete then

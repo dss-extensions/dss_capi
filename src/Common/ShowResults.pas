@@ -2390,14 +2390,14 @@ begin
             begin
                 with pReg.Transformer do
                 begin
-                    iWind := pReg.TrWinding;
+                    iWind := pReg.TrWinding();
                     FSWrite(F, Pad(Name, 12), ' ');
                     FSWrite(F, Pad(pReg.Name, 12), ' ');
                     FSWriteln(F, Format('%8.5f %8.5f %8.5f %8.5f     %d      %d      %s      %s', [
-                        PresentTap[iWind], 
-                        MinTap[iWind], 
-                        MaxTap[iWind], 
-                        TapIncrement[iWind], 
+                        PresentTap(iWind), 
+                        MinTap(iWind), 
+                        MaxTap(iWind), 
+                        TapIncrement(iWind), 
                         TapPosition(iWind),
                         iWind,
                         StrUtils.IfThen(pReg.InReverseMode, 'Reverse', 'Forward'),
@@ -2732,7 +2732,7 @@ begin
         //----PDelem.ActiveTerminalIdx := 1;  // activate 1st terminal for Power call
                 kLosses := PDelem.Losses * 0.001;   // kW Losses in element
                 TotalLosses += kLosses;
-                TermPower := PDelem.power[1] * 0.001;     // Terminal 1 power
+                TermPower := PDelem.Power(1) * 0.001;     // Terminal 1 power
 
                 if (CLASSMASK and PDElem.DSSObjType) = XFMR_ELEMENT then
                     TransLosses += kLosses;
@@ -2772,7 +2772,7 @@ begin
         begin
             if PcElem.Enabled then
             begin
-                LoadPower += PCelem.Power[1];
+                LoadPower += PCelem.Power(1);
             end;
             PCelem := DSS.ActiveCircuit.Loads.Next;
         end;

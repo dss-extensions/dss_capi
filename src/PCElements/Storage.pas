@@ -364,7 +364,7 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
+        procedure SetConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure RecalcElementData(); OVERRIDE;
         procedure CalcYPrim(); OVERRIDE;
 
@@ -838,18 +838,18 @@ begin
         ord(TProp.UserModel):
         begin
             UserModel.Name := UserModelNameStr;
-            IsUserModel := UserModel.Exists;
+            IsUserModel := UserModel.Exists();
         end;
         ord(TProp.UserData):
-            if UserModel.Exists then
+            if UserModel.Exists() then
                 UserModel.Edit(UserModelEditStr);
         ord(TProp.DynaDLL):
         begin
             DynaModel.Name := DynaModelNameStr; 
-            IsUserModel := DynaModel.Exists;
+            IsUserModel := DynaModel.Exists();
         end;
         ord(TProp.DynaData):
-            if DynaModel.Exists then
+            if DynaModel.Exists() then
                 DynaModel.Edit(DynaModelEditStr);
 
         ord(TProp.debugtrace):
@@ -1258,9 +1258,9 @@ begin
     Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 
     // Update any user-written models
-    if Usermodel.Exists then
+    if UserModel.Exists() then
         UserModel.FUpdateModel;  // Checks for existence and Selects
-    if Dynamodel.Exists then
+    if DynaModel.Exists() then
         Dynamodel.FUpdateModel;  // Checks for existence and Selects
 end;
 
@@ -2082,7 +2082,7 @@ var
 begin
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
 
-    if UserModel.Exists then    // Check automatically selects the usermodel If true
+    if UserModel.Exists() then    // Check automatically selects the usermodel If true
     begin
         UserModel.FCalc(Vterminal, Iterminal);
         set_ITerminalUpdated(TRUE);
@@ -2112,7 +2112,7 @@ var
     end;
 
 begin
-    if DynaModel.Exists then
+    if DynaModel.Exists() then
     begin
         DoDynaModel(); // do user-written model
         Exit;
@@ -2527,7 +2527,7 @@ begin
     coef[1] := 1.0;
     coef[2] := 1.0;  // just a guess
 
-    FDCkW := Power[1].re * 0.001;  // Assume ideal inverter
+    FDCkW := Power(1).re * 0.001;  // Assume ideal inverter
 
     if not Assigned(InverterCurveObj) then
     begin
@@ -2549,7 +2549,7 @@ begin
         case FState of
 
             STORE_DISCHARGING:
-                FDCkW := QuadSolver(coefGuess[1] / StorageVars.FkVArating, coefGuess[2], -1.0 * abs(Power[1].re * 0.001)); //TODO: check -- can this be NaN/complex?
+                FDCkW := QuadSolver(coefGuess[1] / StorageVars.FkVArating, coefGuess[2], -1.0 * abs(Power(1).re * 0.001)); //TODO: check -- can this be NaN/complex?
             STORE_CHARGING,
             STORE_IDLING:
                 FDCkW := abs(FDCkW) * coefGuess[2] / (1.0 - (coefGuess[1] * abs(FDCkW) / StorageVars.FkVArating));
@@ -2605,11 +2605,11 @@ begin
         case FState of
 
             STORE_IDLING:
-                Result := abs(Power[1].re * 0.001) - abs(DCkW());
+                Result := abs(Power(1).re * 0.001) - abs(DCkW());
             STORE_CHARGING:
-                Result := abs(Power[1].re * 0.001) - abs(DCkW());
+                Result := abs(Power(1).re * 0.001) - abs(DCkW());
             STORE_DISCHARGING:
-                Result := DCkW() - abs(Power[1].re * 0.001);
+                Result := DCkW() - abs(Power(1).re * 0.001);
         end;
     end;
 end;
@@ -2723,7 +2723,7 @@ begin
         Yeq := Cinv(ZThev);  // used to init state vars
     end;
 
-    if DynaModel.Exists then   // Checks existence and selects
+    if DynaModel.Exists() then   // Checks existence and selects
     begin
         ComputeIterminal();
         ComputeVterminal();
@@ -2805,7 +2805,7 @@ begin
     // Compute Derivatives and Then integrate
     ComputeIterminal();
 
-    if Dynamodel.Exists then   // Checks for existence and Selects
+    if DynaModel.Exists() then   // Checks for existence and Selects
     begin
         DynaModel.Integrate();
         Exit;
@@ -2893,7 +2893,7 @@ begin
                                     DynamicEqVals[DynamicEqPair[j * 2]][0] := m[i]
                                 end
                             else
-                                DynamicEqVals[DynamicEqPair[j * 2]][0] := PCEValue[1, DynamicEqPair[(j * 2) + 1]];
+                                DynamicEqVals[DynamicEqPair[j * 2]][0] := PCEValue(1, DynamicEqPair[(j * 2) + 1]);
                             end;
                         end;
                     end;
@@ -2977,12 +2977,12 @@ begin
                 if i = 4 then
                     A := not A;
                 if A then
-                    Result := abs(Power[1].re * 0.001)
+                    Result := abs(Power(1).re * 0.001)
                 else
                     Result := 0.0;
             end;
             5:
-                Result := -1 * Power[1].im * 0.001;
+                Result := -1 * Power(1).im * 0.001;
             6:
                 Result := DCkW();
             7:
@@ -3038,7 +3038,7 @@ begin
             (NumBaseStorageVariables + 1)..NumStorageVariables:
                 Result := dynVars.Get_InvDynValue(i - NumBaseStorageVariables - 1, NPhases);
         else
-            if UserModel.Exists then   // Checks for existence and Selects
+            if UserModel.Exists() then   // Checks for existence and Selects
             begin
                 N := UserModel.FNumVars;
                 k := (i - NumStorageVariables);
@@ -3048,7 +3048,7 @@ begin
                     Exit;
                 end;
             end;
-            if DynaModel.Exists then  // Checks for existence and Selects
+            if DynaModel.Exists() then  // Checks for existence and Selects
             begin
                 N := DynaModel.FNumVars;
                 k := (i - NumStorageVariables);
@@ -3104,7 +3104,7 @@ begin
             (NumBaseStorageVariables + 1)..NumStorageVariables:
                 dynVars.Set_InvDynValue(i - NumBaseStorageVariables - 1, Value);
         else
-            if UserModel.Exists then    // Checks for existence and Selects
+            if UserModel.Exists() then    // Checks for existence and Selects
             begin
                 N := UserModel.FNumVars;
                 k := (i - NumStorageVariables);
@@ -3114,7 +3114,7 @@ begin
                     Exit;
                 end;
             end;
-            if DynaModel.Exists then     // Checks for existence and Selects
+            if DynaModel.Exists() then     // Checks for existence and Selects
             begin
                 N := DynaModel.FNumVars;
                 k := (i - NumStorageVariables);
@@ -3142,12 +3142,12 @@ begin
     for i := 1 to NumStorageVariables do
         States[i - 1] := GetVariable(i);
 
-    if UserModel.Exists then
+    if UserModel.Exists() then
     begin    // Checks for existence and Selects
         // N := UserModel.FNumVars;
         UserModel.FGetAllVars(pDoubleArray(@States[NumStorageVariables]));
     end;
-    if DynaModel.Exists then
+    if DynaModel.Exists() then
     begin    // Checks for existence and Selects
         // N := UserModel.FNumVars;
         DynaModel.FGetAllVars(pDoubleArray(@States[NumStorageVariables]));
@@ -3165,9 +3165,9 @@ begin
     Result := NumStorageVariables;
 
      // Exists does a check and then does a Select
-    if UserModel.Exists then
+    if UserModel.Exists() then
         Result := Result + UserModel.FNumVars;
-    if DynaModel.Exists then
+    if DynaModel.Exists() then
         Result := Result + DynaModel.FNumVars;
 end;
 
@@ -3244,7 +3244,7 @@ begin
         (NumBaseStorageVariables + 1)..NumStorageVariables:
             Result := dynVars.Get_InvDynName(i - NumBaseStorageVariables - 1);
     else
-        if UserModel.Exists then    // Checks for existence and Selects
+        if UserModel.Exists() then    // Checks for existence and Selects
         begin
             pName := PAnsiChar(@Buff);
             n := UserModel.FNumVars;
@@ -3256,7 +3256,7 @@ begin
                 Exit;
             end;
         end;
-        if DynaModel.Exists then   // Checks for existence and Selects
+        if DynaModel.Exists() then   // Checks for existence and Selects
         begin
             pName := PAnsiChar(@Buff);
             n := DynaModel.FNumVars;
@@ -3303,7 +3303,7 @@ begin
     inherited;   // write out other properties
 end;
 
-procedure TStorageObj.Set_ConductorClosed(Index: Integer; Value: Boolean);
+procedure TStorageObj.SetConductorClosed(Index: Integer; Value: Boolean);
 begin
     inherited;
 

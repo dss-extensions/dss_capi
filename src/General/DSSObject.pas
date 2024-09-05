@@ -52,13 +52,11 @@ type
 
         procedure SetAsNextSeq(Index: Integer); inline;
 
-        function GetPropertyValue(Index: Integer): String; VIRTUAL;  // Use dssclass.propertyindex to get index by name
+        function PropertyValue(Index: Integer): String; VIRTUAL;  // Use dssclass.propertyindex to get index by name
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); VIRTUAL;
         procedure SaveWrite(F: TStream); VIRTUAL;
         procedure CustomSetRaw(Idx: Integer; Value: String); virtual;
         function ParseDynVar(Parser: TDSSParser; variable: String): Boolean; VIRTUAL;
-
-        property PropertyValue[Index: Integer]: String READ GetPropertyValue;
 
         property Name: String READ LocalName WRITE Set_Name;
         function FullName: String;
@@ -116,7 +114,7 @@ begin
     if Leaf then
     begin
         for i := 1 to ParentClass.NumProperties do
-            FSWriteLn(F, '~ ' + ParentClass.PropertyName[i] + '=' + GetPropertyValue(i));
+            FSWriteLn(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
         
         if Complete then
             FSWriteln(F);        
@@ -137,7 +135,7 @@ begin
     Move(other.PrpSequence[0], PrpSequence[0], SizeOf(Integer) * (ParentClass.NumProperties + 1));
 end;
 
-function TDSSObject.GetPropertyValue(Index: Integer): String;
+function TDSSObject.PropertyValue(Index: Integer): String;
 begin
     ParentClass.GetObjPropertyValue(self, Index, Result);
 end;
@@ -152,7 +150,7 @@ begin
     iProp := GetNextPropertySet(-9999999);
     while iProp > 0 do
     begin
-        str := trim(PropertyValue[iProp]);
+        str := trim(PropertyValue(iProp));
         if Comparetext(str, '----') = 0 then
             str := ''; // set to ignore this property
         if Length(str) > 0 then

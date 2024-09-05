@@ -1858,8 +1858,8 @@ begin
     FSWriteln(F, 'Set Normvmaxpu=', Format('%-g', [ckt.NormalMaxVolts]));
     FSWriteln(F, 'Set Emergvminpu=', Format('%-g', [ckt.EmergMinVolts]));
     FSWriteln(F, 'Set Emergvmaxpu=', Format('%-g', [ckt.EmergMaxVolts]));
-    FSWriteln(F, 'Set %mean=', Format('%-.4g', [ckt.DefaultDailyShapeObj.Mean * 100.0]));
-    FSWriteln(F, 'Set %stddev=', Format('%-.4g', [ckt.DefaultDailyShapeObj.StdDev * 100.0]));
+    FSWriteln(F, 'Set %mean=', Format('%-.4g', [ckt.DefaultDailyShapeObj.GetMean() * 100.0]));
+    FSWriteln(F, 'Set %stddev=', Format('%-.4g', [ckt.DefaultDailyShapeObj.GetStdDev() * 100.0]));
     FSWriteln(F, 'Set LDCurve=', NameIfNotNil(ckt.LoadDurCurveObj));  // Load Duration Curve
     FSWriteln(F, 'Set %growth=', Format('%-.4g', [((ckt.DefaultGrowthRate - 1.0) * 100.0)]));  // default growth rate
 

@@ -332,7 +332,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.TrWinding;  // has the taps
+    Result := elem.TrWinding();  // has the taps
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_Transformer(): PAnsiChar; CDECL;

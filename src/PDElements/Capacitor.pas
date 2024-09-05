@@ -124,7 +124,7 @@ type
         procedure set_NumSteps(const Value: Integer); // 1=kvar, 2=Cuf, 3=Cmatrix
 
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
-        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE; 
+        procedure SetConductorClosed(Index: Integer; Value: Boolean); OVERRIDE; 
 //        procedure Set_Enabled(Value: WordBool); OVERRIDE;
 {$ENDIF}
 
@@ -751,7 +751,7 @@ begin
 
     for i := 1 to ParentClass.NumProperties do
     begin
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
     end;
 
     if Complete then
@@ -1047,7 +1047,7 @@ begin
 end;
 
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
-procedure TCapacitorObj.Set_ConductorClosed(Index: Integer; Value: Boolean);
+procedure TCapacitorObj.SetConductorClosed(Index: Integer; Value: Boolean);
 var
     i: Integer;
 begin

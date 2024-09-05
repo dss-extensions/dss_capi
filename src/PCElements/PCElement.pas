@@ -257,7 +257,7 @@ begin
     begin
         for i := 1 to ParentClass.NumProperties do
         begin
-            FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+            FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
         end;
 
         if Complete then

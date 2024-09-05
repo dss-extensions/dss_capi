@@ -178,7 +178,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FRadius * 2.0;
+    Result := elem.radius * 2.0;
 end;
 //------------------------------------------------------------------------------
 procedure WireData_Set_Diameter(Value: Double); CDECL;
@@ -188,7 +188,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.FRadius := Value / 2.0;
+    elem.radius := Value / 2.0;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.diam), 0, [])
 end;
 //------------------------------------------------------------------------------
@@ -199,7 +199,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FRadius;
+    Result := elem.radius;
 end;
 //------------------------------------------------------------------------------
 procedure WireData_Set_Radius(Value: Double); CDECL;
@@ -208,7 +208,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.FRadius := Value;
+    elem.radius := Value;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Radius), 0, [])
 end;
 //------------------------------------------------------------------------------
@@ -219,7 +219,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FGMR60;
+    Result := elem.GMRAC;
 end;
 //------------------------------------------------------------------------------
 procedure WireData_Set_GMRac(Value: Double); CDECL;
@@ -228,7 +228,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.FGMR60 := Value;
+    elem.GMRAC := Value;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRac), 0, [])
 end;
 //------------------------------------------------------------------------------
@@ -239,7 +239,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FR60;
+    Result := elem.RAC;
 end;
 //------------------------------------------------------------------------------
 procedure WireData_Set_Rac(Value: Double); CDECL;
@@ -248,7 +248,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.FR60 := Value;
+    elem.RAC := Value;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rac), 0, [])
 end;
 //------------------------------------------------------------------------------
@@ -259,7 +259,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FRDC;
+    Result := elem.RDC;
 end;
 //------------------------------------------------------------------------------
 procedure WireData_Set_Rdc(Value: Double); CDECL;
@@ -268,7 +268,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.FRDC := Value;
+    elem.RDC := Value;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rdc), 0, [])
 end;
 //------------------------------------------------------------------------------
@@ -279,7 +279,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.CapRadius;
+    Result := elem.capRadius;
 end;
 //------------------------------------------------------------------------------
 procedure WireData_Set_CapRadius(Value: Double); CDECL;
@@ -288,8 +288,8 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.Fcapradius60 := Value;
-    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.CapRadius), 0, [])
+    elem.capRadius := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.capRadius), 0, [])
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_GMRUnits(): Integer; CDECL;
@@ -299,7 +299,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FGMRUnits;
+    Result := elem.GMRUnits;
 end;
 //------------------------------------------------------------------------------
 procedure WireData_Set_GMRUnits(Value: Integer); CDECL;
@@ -310,8 +310,8 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    prevVal := elem.FGMRUnits;
-    elem.FGMRUnits := Value;
+    prevVal := elem.GMRUnits;
+    elem.GMRUnits := Value;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRunits), prevVal, [])
 end;
 //------------------------------------------------------------------------------
@@ -322,7 +322,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FRadiusUnits;
+    Result := elem.radiusUnits;
 end;
 //----------------his show is a genius, every contestant is so wholesome and (often unintentionally) hilarious. Eddy's enthusiasm during the Greggs round was so cute! And Jimmy is on fire as usual.--------------------------------------------------------------
 procedure WireData_Set_RadiusUnits(Value: Integer); CDECL;
@@ -333,8 +333,8 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    prevVal := elem.FRadiusUnits;
-    elem.FRadiusUnits := Value;
+    prevVal := elem.radiusUnits;
+    elem.radiusUnits := Value;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.radunits), prevVal, [])
 end;
 //------------------------------------------------------------------------------
@@ -345,7 +345,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FResistanceUnits;
+    Result := elem.resistanceUnits;
 end;
 //------------------------------------------------------------------------------
 procedure WireData_Set_ResistanceUnits(Value: Integer); CDECL;
@@ -356,8 +356,8 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    prevVal := elem.FResistanceUnits;
-    elem.FResistanceUnits := Value;
+    prevVal := elem.resistanceUnits;
+    elem.resistanceUnits := Value;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Runits), prevVal, [])
 end;
 //------------------------------------------------------------------------------

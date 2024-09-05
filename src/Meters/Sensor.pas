@@ -59,7 +59,7 @@ type
 
     TSensor = class(TMeterClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -67,18 +67,15 @@ type
         function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
         Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
 
-        procedure ResetAll; OVERRIDE;
-        procedure SampleAll; OVERRIDE;  // Force all Sensors to take a sample
-        procedure SaveAll; OVERRIDE;   // Force all Sensors to save their buffers to disk
-        procedure SetHasSensorFlag;
+        procedure ResetAll(); OVERRIDE;
+        procedure SampleAll(); OVERRIDE;  // Force all Sensors to take a sample
+        procedure SaveAll(); OVERRIDE;   // Force all Sensors to save their buffers to disk
+        procedure SetHasSensorFlag();
     end;
 
     TSensorObj = class(TMeterElement)
     PRIVATE
         ValidSensor: Boolean;
-        SensorkW: pDoubleArray;
-        Sensorkvar: pDoubleArray;
-        kVBase: Double; // value specified
         Vbase: Double; // in volts
 
         Vspecified,
@@ -86,24 +83,24 @@ type
         Pspecified,
         Qspecified: Boolean;
 
-        FDeltaDirection: Integer;
-
         //procedure Set_Action(const Value: String);
-        procedure ZeroSensorArrays;
-        procedure AllocateSensorObjArrays;
+        procedure ZeroSensorArrays();
+        procedure AllocateSensorObjArrays();
 
         function RotatePhases(const j: Integer): Integer;
-        procedure ClearSensor;
-        procedure UpdateCurrentVector;
-        function Get_WLSCurrentError: Double;
-        function Get_WLSVoltageError: Double;
+        procedure ClearSensor();
+        procedure UpdateCurrentVector();
 
     PUBLIC
-
         pctError,
         Weight: Double;
         FConn: Integer;
-        procedure RecalcVbase;
+        deltaDirection: Integer;
+        kVBase: Double; // value specified
+        SensorkW: pDoubleArray;
+        Sensorkvar: pDoubleArray;
+
+        procedure RecalcVbase();
 
         constructor Create(ParClass: TDSSClass; const SensorName: String);
         destructor Destroy; OVERRIDE;
@@ -111,22 +108,12 @@ type
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model, reset nphases
-        procedure RecalcElementData; OVERRIDE;
-        procedure TakeSample; OVERRIDE; // Go add a sample to the buffer
-        procedure ResetIt;
-        procedure Save;  // Saves present buffer to file
-
-       // Properties to interpret input to the sensor
-
-        // property Action: String WRITE Set_Action;
-        property WLSCurrentError: Double READ Get_WLSCurrentError;
-        property WLSVoltageError: Double READ Get_WLSVoltageError;
-
-        property BaseKV: Double READ kVBase;
-        property DeltaDirection: Integer READ FDeltaDirection;
-       // the following two properties actually give write access, since they are pointers
-        property SensorP: pDoubleArray READ SensorKW;
-        property SensorQ: pDoubleArray READ SensorKVAR;
+        procedure RecalcElementData(); OVERRIDE;
+        procedure TakeSample(); OVERRIDE; // Go add a sample to the buffer
+        procedure ResetIt();
+        procedure Save();  // Saves present buffer to file
+        function WLSCurrentError(): Double;
+        function WLSVoltageError(): Double;
     end;
 
 implementation
@@ -184,12 +171,12 @@ begin
     Obj.Qspecified := FALSE;
 end;
 
-procedure TSensorObj.ClearSensor;
+procedure TSensorObj.ClearSensor();
 begin
     DoClearSensor(self);
 end;
 
-procedure TSensor.DefineProperties;
+procedure TSensor.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -242,7 +229,7 @@ begin
     PropertyOffset[ord(TProp.terminal)] := ptruint(@obj.MeteredTerminal);
 
     PropertyType[ord(TProp.DeltaDirection)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.DeltaDirection)] := ptruint(@obj.FDeltaDirection);
+    PropertyOffset[ord(TProp.DeltaDirection)] := ptruint(@obj.deltaDirection);
     //TODO: for DeltaDirection, use explicit enum instead of numeric values
 
     // boolean properties
@@ -299,15 +286,15 @@ begin
         end;
         9:
         begin
-            RecalcVbase;
+            RecalcVbase();
             Include(Flags, Flg.NeedsRecalc);
         end;
         10:
         begin
-            if FDeltaDirection >= 0 then
-                FDeltaDirection := 1
+            if deltaDirection >= 0 then
+                deltaDirection := 1
             else
-                FDeltaDirection := -1;
+                deltaDirection := -1;
 
             Include(Flags, Flg.NeedsRecalc);
         end;
@@ -325,7 +312,7 @@ begin
     Exclude(obj.Flags, Flg.EditingActive);
 end;
 
-procedure TSensor.ResetAll; // Force all Sensors in the circuit to reset
+procedure TSensor.ResetAll(); // Force all Sensors in the circuit to reset
 var
     pSensor: TSensorObj;
 begin
@@ -336,7 +323,7 @@ begin
     end;
 end;
 
-procedure TSensor.SampleAll; // Force all Sensors in the circuit to take a sample
+procedure TSensor.SampleAll(); // Force all Sensors in the circuit to take a sample
 var
     pSensor: TSensorObj;
 begin
@@ -347,11 +334,11 @@ begin
     end;
 end;
 
-procedure TSensor.SaveAll; // Force all Sensors in the circuit to save their buffers to disk
+procedure TSensor.SaveAll(); // Force all Sensors in the circuit to save their buffers to disk
 begin
 end;
 
-procedure TSensor.SetHasSensorFlag;
+procedure TSensor.SetHasSensorFlag();
 // Set the HasSensorObj Flag for all cktElement;
 var
     i: Integer;
@@ -414,7 +401,7 @@ begin
     Weight := 1.0;
     pctError := 1.0;
 
-    FDeltaDirection := 1;
+    deltaDirection := 1;
 
     FConn := 0;  // Wye
     RecalcVbase();
@@ -433,7 +420,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TSensorObj.RecalcElementData;
+procedure TSensorObj.RecalcElementData();
 begin
     Exclude(Flags, Flg.NeedsRecalc);
     ValidSensor := FALSE;
@@ -460,7 +447,7 @@ begin
 
             AllocateSensorObjArrays;
             ZeroSensorArrays;
-            RecalcVbase;
+            RecalcVbase();
         end;
         Exit;
     end;
@@ -483,12 +470,12 @@ begin
         ValidSensor := TRUE;
         AllocateSensorObjArrays;
         ZeroSensorArrays;
-        RecalcVbase;
+        RecalcVbase();
     end;
     inherited;
 end;
 
-procedure TSensorObj.RecalcVbase;
+procedure TSensorObj.RecalcVbase();
 begin
     case Fconn of
         0:
@@ -502,7 +489,7 @@ begin
     end;
 end;
 
-procedure TSensorObj.ResetIt;
+procedure TSensorObj.ResetIt();
 // What does it mean to reset a sensor?
 begin
     ClearSensor;
@@ -511,7 +498,7 @@ end;
 function TSensorObj.RotatePhases(const j: Integer): Integer;
 // For Delta connections or Line-Line voltages
 begin
-    Result := j + FDeltaDirection;
+    Result := j + deltaDirection;
 
      // make sure result is within limits
     if FnPhases > 2 then
@@ -528,7 +515,7 @@ begin
 
 end;
 
-procedure TSensorObj.TakeSample;
+procedure TSensorObj.TakeSample();
 var
     i: Integer;
 begin
@@ -548,7 +535,7 @@ begin
     // NOTE: CalculatedVoltage is complex
 end;
 
-procedure TSensorObj.UpdateCurrentVector;
+procedure TSensorObj.UpdateCurrentVector();
 // Updates the currentvector when P and Q are defined
 // as the input vectors for the sensor
 var
@@ -577,7 +564,7 @@ begin
     end;
 end;
 
-function TSensorObj.Get_WLSCurrentError: Double;
+function TSensorObj.WLSCurrentError(): Double;
 // Return the WLS Error for Currents
 // Get Square error and weight it
 var
@@ -615,7 +602,7 @@ begin
     Result := Result * Weight;
 end;
 
-function TSensorObj.Get_WLSVoltageError: Double;
+function TSensorObj.WLSVoltageError(): Double;
 // Get Square error and weight it
 var
     i: Integer;
@@ -629,14 +616,14 @@ begin
     Result := Result * Weight;
 end;
 
-procedure TSensorObj.AllocateSensorObjArrays;
+procedure TSensorObj.AllocateSensorObjArrays();
 begin
     ReAllocMem(SensorkW, Sizeof(SensorkW[1]) * Fnphases);
     ReAllocMem(Sensorkvar, Sizeof(Sensorkvar[1]) * Fnphases);
     AllocateSensorArrays;
 end;
 
-procedure TSensorObj.ZeroSensorArrays;
+procedure TSensorObj.ZeroSensorArrays();
 var
     i: Integer;
 begin
@@ -649,7 +636,7 @@ begin
     end;
 end;
 
-procedure TSensorObj.Save;
+procedure TSensorObj.Save();
 begin
 end;
 

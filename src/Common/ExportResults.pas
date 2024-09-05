@@ -598,7 +598,7 @@ begin
             MaxCurrent := Currmag;
     end;
     //----pElem.ActiveTerminalIdx := 1;
-    LocalPower := pElem.Power[1] * 0.001;
+    LocalPower := pElem.Power(1) * 0.001;
     if (pElem.NormAmps = 0.0) or (pElem.EmergAmps = 0.0) then
         FSWrite(F, Format(', %10.6g, %8.2f, %8.2f', [MaxCurrent, 0.0, 0.0]))
     else
@@ -759,7 +759,7 @@ begin
     try
         F := TBufferedFileStream.Create(FileNm, fmCreate);
         // Header Record
-        FSWrite(F, 'Element, Nterminals, Nconductors, Node-1, Node-2, Node-3, ...');
+        FSWrite(F, 'Element, Nterminals, numConductors, Node-1, Node-2, Node-3, ...');
         FSWriteln(F);
         // Sources first
         pElem := DSS.ActiveCircuit.Sources.First;
@@ -840,7 +840,7 @@ begin
         F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         // Header Record
-        FSWrite(F, 'Element, Nterminals, Nconductors, I_1, Ang_1, ...');
+        FSWrite(F, 'Element, Nterminals, numConductors, I_1, Ang_1, ...');
         FSWriteln(F);
         // Sources first
         pElem := DSS.ActiveCircuit.Sources.First;
@@ -921,7 +921,7 @@ begin
         F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         // Header Record
-        FSWrite(F, 'Element, Nterminals, Nconductors, V_1, Ang_1, ...');
+        FSWrite(F, 'Element, Nterminals, numConductors, V_1, Ang_1, ...');
         FSWriteln(F);
         // Sources first
         pElem := DSS.ActiveCircuit.Sources.First;
@@ -1011,7 +1011,7 @@ begin
         F := TBufferedFileStream.Create(FileNm, fmCreate);
 
      {Header Record}
-        FSWrite(F, 'Element, Nterminals, Nconductors, P_1, Q_1, ...');
+        FSWrite(F, 'Element, Nterminals, numConductors, P_1, Q_1, ...');
         FSWriteln(F);
 
 
@@ -1117,7 +1117,7 @@ begin
                     WriteStr(sout, Pad('"' + PDelem.DSSClassName + '.' + AnsiUpperCase(PDElem.Name) + '"', 24), Separator, j: 3);
                     FSWrite(F, sout);
            //----PDElem.ActiveTerminalIdx := j;
-                    S := PDElem.Power[j];
+                    S := PDElem.Power(j);
                     if Opt = 1 then
                         S := S * 0.001;
                     WriteStr(sout, Separator, S.re * 0.001: 11: 1);
@@ -1161,7 +1161,7 @@ begin
                 begin
                     FSWrite(F, Pad('"' + PCElem.DSSClassName + '.' + AnsiUpperCase(PCElem.Name) + '"', 24), Separator, Format('%3d', [j]));
            //----pcElem.ActiveTerminalIdx := j;
-                    S := pCElem.Power[j];
+                    S := pCElem.Power(j);
                     if Opt = 1 then
                         S := S * 0.001;
                     
@@ -2559,7 +2559,7 @@ begin
                             if (CMax > PDElem.NormAmps) or (Cmax > pdelem.EmergAmps) then
                             begin
                                 // Get terminal 1 power
-                                Spower := Cabs(PDElem.Power[1]) * 0.001;   // kW
+                                Spower := Cabs(PDElem.Power(1)) * 0.001;   // kW
 
                                 FSWrite(F, Format('%s, %d, ', [Pad(('"' + pDelem.DSSClassName + '.' + AnsiUpperCase(pDelem.Name) + '"'), 22), j]));
                                 FSWrite(F, Format('%8.2f, ', [I1]));
@@ -2895,65 +2895,65 @@ begin
     
         F := TBufferedFileStream.Create(FileNm, fmCreate);
 
-        FSWriteln(F, Format('Circuit.%s %s', [DSS.ActiveCircuit.LocalName, DSS.ActiveCircuit.ID]));
+        FSWriteln(F, Format('Circuit.%s %s', [DSS.ActiveCircuit.LocalName, DSS.ActiveCircuit.GetID()]));
  
         for i :=1 to DSS.ActiveCircuit.NumBuses do 
         begin
-            FSWriteln(F, Format ('Bus.%s %s', [DSS.ActiveCircuit.Buses^[i].LocalName, DSS.ActiveCircuit.Buses^[i].ID]));
+            FSWriteln(F, Format ('Bus.%s %s', [DSS.ActiveCircuit.Buses^[i].LocalName, DSS.ActiveCircuit.Buses^[i].GetID()]));
         end;
     
         pName := DSS.ActiveCircuit.CktElements.First;
         while pName <> NIL do
         begin
-            FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.GetID()]));
             pName := DSS.ActiveCircuit.CktElements.Next;
         end;
 
         pName := clsLnCd.ElementList.First;
         while pName <> NIL do
         begin
-            FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.GetID()]));
             pName := clsLnCd.ElementList.Next;
         end;
 
         pName := clsWire.ElementList.First;
         while pName <> NIL do
         begin
-            FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.GetID()]));
             pName := clsWire.ElementList.Next;
         end;
 
         pName := clsGeom.ElementList.First;
         while pName <> NIL do
         begin
-            FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.GetID()]));
             pName := clsGeom.ElementList.Next;
         end;
 
         pName := clsXfCd.ElementList.First;
         while pName <> nil do 
         begin
-            FSWriteln(F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.GetID()]));
             pName := clsXfCd.ElementList.Next;
         end;
         
         pName := clsSpac.ElementList.First;
         while pName <> NIL do begin
-            FSWriteln(F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.GetID()]));
             pName := clsSpac.ElementList.Next;
         end;
         
         pName := clsTape.ElementList.First;
         while pName <> NIL do 
         begin
-            FSWriteln(F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.GetID()]));
             pName := clsTape.ElementList.Next;
         end;
 
         pName := clsConc.ElementList.First;
         while pName <> NIL do
         begin
-            FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.GetID()]));
             pName := clsConc.ElementList.Next;
         end;
 
@@ -3746,14 +3746,14 @@ begin
             begin
                 with pReg.Transformer do
                 begin
-                    iWind := pReg.TrWinding;
+                    iWind := pReg.TrWinding();
                     FSWrite(F, Name);
                     FSWriteln(F, Format(', %s , %8.5f, %8.5f, %8.5f, %8.5f, %d, %d, %s, %s', [
                         pReg.Name,
-                        PresentTap[iWind], 
-                        MinTap[iWind], 
-                        MaxTap[iWind], 
-                        TapIncrement[iWind], 
+                        PresentTap(iWind), 
+                        MinTap(iWind),
+                        MaxTap(iWind),
+                        TapIncrement(iWind),
                         TapPosition(iWind),
                         iWind,
                         StrUtils.IfThen(pReg.InReverseMode, 'Reverse', 'Forward'),

@@ -648,20 +648,20 @@ begin
 
     for i := 1 to 2 do
     begin
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + GetPropertyValue(i));
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
     end;
     for j := 1 to FNConds do
     begin
         ActiveCond := j;
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[3] + '=' + GetPropertyValue(3));
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[4] + '=' + GetPropertyValue(4));
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[5] + '=' + GetPropertyValue(5));
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[6] + '=' + GetPropertyValue(6));
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[7] + '=' + GetPropertyValue(7));
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[3] + '=' + PropertyValue(3));
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[4] + '=' + PropertyValue(4));
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[5] + '=' + PropertyValue(5));
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[6] + '=' + PropertyValue(6));
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[7] + '=' + PropertyValue(7));
     end;
     for i := 8 to ParentClass.NumProperties do
     begin
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + GetPropertyValue(i));
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
     end;
 end;
 
@@ -734,7 +734,7 @@ begin
             ord(TProp.cncable), ord(TProp.tscable):
                 ; // Ignore these properties;
         else
-            FSWriteln(F, Format('~ %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(PropertyValue[iProp])]));
+            FSWriteln(F, Format('~ %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(PropertyValue(iProp))]));
         end;
         iProp := GetNextPropertySet(iProp);
     end;
@@ -763,7 +763,7 @@ begin
        (newPhaseChoice <> phaseChoice[ActiveCond]) then
         needNew := TRUE
     else
-    if (lineConstants = NIL) or (FNConds <> lineConstants.Nconductors) then
+    if (lineConstants = NIL) or (FNConds <> lineConstants.numConductors) then
         needNew := TRUE;
 
     if needNew then
@@ -826,25 +826,25 @@ begin
         if conductorData[i] = NIL then
             raise Exception.Create(Format(_('%s: WireData is not correctly initialized. Check the object definition.'), [FullName]));
 
-        lineConstants.X[i, units[i]] := xCoord[i];
-        lineConstants.Y[i, units[i]] := yCoord[i];
-        lineConstants.radius[i, conductorData[i].RadiusUnits] := conductorData[i].Radius;
-        lineConstants.capradius[i, conductorData[i].RadiusUnits] := conductorData[i].capRadius;
-        lineConstants.GMR[i, conductorData[i].GMRUnits] := conductorData[i].GMR;
-        lineConstants.Rdc[i, conductorData[i].ResUnits] := conductorData[i].Rdc;
-        lineConstants.Rac[i, conductorData[i].ResUnits] := conductorData[i].Rac;
+        lineConstants.SetX(i, units[i], xCoord[i]);
+        lineConstants.SetY(i, units[i], yCoord[i]);
+        lineConstants.SetRadius(i, conductorData[i].radiusUnits, conductorData[i].Radius);
+        lineConstants.SetCapRadius(i, conductorData[i].radiusUnits, conductorData[i].capRadius);
+        lineConstants.SetGMR(i, conductorData[i].GMRUnits, conductorData[i].GMRAC);
+        lineConstants.SetRdc(i, conductorData[i].resistanceUnits, conductorData[i].RDC);
+        lineConstants.SetRac(i, conductorData[i].resistanceUnits, conductorData[i].RAC);
         if (conductorData[i] is TCNDataObj) then
         begin
             cnconsts := (lineConstants as TCNLineConstants);
             cnd := (conductorData[i] as TCNDataObj);
             cnconsts.EpsR[i] := cnd.EpsR;
-            cnconsts.InsLayer[i, cnd.RadiusUnits] := cnd.InsLayer;
-            cnconsts.DiaIns[i, cnd.RadiusUnits] := cnd.DiaIns;
-            cnconsts.DiaCable[i, cnd.RadiusUnits] := cnd.DiaCable;
-            cnconsts.kStrand[i] := cnd.NStrand;
-            cnconsts.DiaStrand[i, cnd.RadiusUnits] := cnd.DiaStrand;
+            cnconsts.insLayer[i, cnd.radiusUnits] := cnd.insLayer;
+            cnconsts.diaIns[i, cnd.radiusUnits] := cnd.diaIns;
+            cnconsts.diaCable[i, cnd.radiusUnits] := cnd.diaCable;
+            cnconsts.kStrand[i] := cnd.kStrand;
+            cnconsts.DiaStrand[i, cnd.radiusUnits] := cnd.DiaStrand;
             cnconsts.GmrStrand[i, cnd.GMRUnits] := cnd.GmrStrand;
-            cnconsts.RStrand[i, cnd.ResUnits] := cnd.RStrand;
+            cnconsts.RStrand[i, cnd.resistanceUnits] := cnd.RStrand;
         end
         else
         if (conductorData[i] is TTSDataObj) then
@@ -852,11 +852,11 @@ begin
             tsconsts := (lineConstants as TTSLineConstants);
             tsd := (conductorData[i] as TTSDataObj);
             tsconsts.EpsR[i] := tsd.EpsR;
-            tsconsts.InsLayer[i, tsd.RadiusUnits] := tsd.InsLayer;
-            tsconsts.DiaIns[i, tsd.RadiusUnits] := tsd.DiaIns;
-            tsconsts.DiaCable[i, tsd.RadiusUnits] := tsd.DiaCable;
-            tsconsts.DiaShield[i, tsd.RadiusUnits] := tsd.DiaShield;
-            tsconsts.TapeLayer[i, tsd.RadiusUnits] := tsd.TapeLayer;
+            tsconsts.insLayer[i, tsd.radiusUnits] := tsd.insLayer;
+            tsconsts.diaIns[i, tsd.radiusUnits] := tsd.diaIns;
+            tsconsts.diaCable[i, tsd.radiusUnits] := tsd.diaCable;
+            tsconsts.DiaShield[i, tsd.radiusUnits] := tsd.DiaShield;
+            tsconsts.TapeLayer[i, tsd.radiusUnits] := tsd.TapeLayer;
             tsconsts.TapeLap[i] := tsd.TapeLap;
         end;
     end;

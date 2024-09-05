@@ -34,7 +34,7 @@ type
     PUBLIC
         procedure Calc(f: Double; EarthModel: Integer); OVERRIDE;
 
-        constructor Create(NumConductors: Integer);
+        constructor Create(NConductors: Integer);
         destructor Destroy; OVERRIDE;
 
         property DiaShield[i, units: Integer]: Double READ Get_DiaShield WRITE Set_DiaShield;
@@ -68,19 +68,19 @@ end;
 
 procedure TTSLineConstants.Set_DiaShield(i, units: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         FDiaShield[i] := Value * To_Meters(units);
 end;
 
 procedure TTSLineConstants.Set_TapeLayer(i, units: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         FTapeLayer[i] := Value * To_Meters(units);
 end;
 
 procedure TTSLineConstants.Set_TapeLap(i: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         FTapeLap[i] := Value;
 end;
 
@@ -117,7 +117,7 @@ begin
     FYCMatrix.Clear;
 
     // add concentric neutrals to the end of conductor list; they are always reduced
-    N := FNumConds + FNPhases;
+    N := numConductors + FNPhases;
     Zmat := TCMatrix.CreateMatrix(N);
 
     // For less than 1 kHz use GMR to better match published data
@@ -128,9 +128,9 @@ begin
         PowerFreq := FALSE;
 
   // Self Impedances - TS cores and bare neutrals
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
     begin
-        Zi := Get_Zint(i, EarthModel);
+        Zi := GetZint(i, EarthModel);
         if PowerFreq then
         begin // for less than 1 kHz, use published GMR
             Zi.im := 0.0;
@@ -140,7 +140,7 @@ begin
         begin
             Zspacing := Lfactor * ln(1.0 / Fradius[i]);
         end;
-        Zmat[i, i] := Zi + Zspacing + Get_Ze(i, i, EarthModel);
+        Zmat[i, i] := Zi + Zspacing + GetZearth(i, i, EarthModel);
     end;
 
   // TS self impedances
@@ -150,17 +150,17 @@ begin
         GmrTS := 0.5 * (FDiaShield[i] - FTapeLayer[i]);  // per Kersting, to center of TS
         Zspacing := Lfactor * ln(1.0 / GmrTS);
         Zi := ResTS;
-        idxi := i + FNumConds;
-        Zmat[idxi, idxi] := Zi + Zspacing + Get_Ze(i, i, EarthModel);
+        idxi := i + numConductors;
+        Zmat[idxi, idxi] := Zi + Zspacing + GetZearth(i, i, EarthModel);
     end;
 
   // Mutual Impedances - between TS cores and bare neutrals
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
     begin
         for j := 1 to i - 1 do
         begin
             Dij := sqrt(sqr(Fx[i] - Fx[j]) + sqr(Fy[i] - Fy[j]));
-            Zmat[i, j] := Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel);
+            Zmat[i, j] := Lfactor * ln(1.0 / Dij) + GetZearth(i, j, EarthModel);
             Zmat[j, i] := Zmat[i, j];
         end;
     end;
@@ -168,15 +168,15 @@ begin
   // Mutual Impedances - TS to other TS, cores, and bare neutrals
     for i := 1 to FNPhases do
     begin
-        idxi := i + FNumConds;
+        idxi := i + numConductors;
         for j := 1 to i - 1 do
         begin  // TS to other TS
-            idxj := j + FNumConds;
+            idxj := j + numConductors;
             Dij := sqrt(sqr(Fx[i] - Fx[j]) + sqr(Fy[i] - Fy[j]));
-            Zmat[idxi, idxj] := Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel);
+            Zmat[idxi, idxj] := Lfactor * ln(1.0 / Dij) + GetZearth(i, j, EarthModel);
             Zmat[idxj, idxi] := Zmat[idxi, idxj];
         end;
-        for j := 1 to FNumConds do
+        for j := 1 to numConductors do
         begin // CN to cores and bare neutrals
             idxj := j;
             GmrTS := 0.5 * (FDiaShield[i] - FTapeLayer[i]);  // per Kersting, to center of TS
@@ -188,13 +188,13 @@ begin
             begin // TS to another phase or bare neutral
                 Dij := sqrt(sqr(Fx[i] - Fx[j]) + sqr(Fy[i] - Fy[j]));
             end;
-            Zmat[idxi, idxj] := Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel);
+            Zmat[idxi, idxj] := Lfactor * ln(1.0 / Dij) + GetZearth(i, j, EarthModel);
             Zmat[idxj, idxi] := Zmat[idxi, idxj];
         end;
     end;
 
   // reduce out the tape shields
-    while Zmat.order > FNumConds do
+    while Zmat.order > numConductors do
     begin
         Ztemp := Zmat.Kron(Zmat.order);
         Zmat.Free;
@@ -221,12 +221,12 @@ begin
     FRhoChanged := FALSE;
 end;
 
-constructor TTSLineConstants.Create(NumConductors: Integer);
+constructor TTSLineConstants.Create(NConductors: Integer);
 begin
-    inherited Create(NumConductors);
-    FDiaShield := Allocmem(Sizeof(FDiaShield[1]) * FNumConds);
-    FTapeLayer := Allocmem(Sizeof(FTapeLayer[1]) * FNumConds);
-    FTapeLap := Allocmem(Sizeof(FTapeLap[1]) * FNumConds);
+    inherited Create(NConductors);
+    FDiaShield := Allocmem(Sizeof(FDiaShield[1]) * numConductors);
+    FTapeLayer := Allocmem(Sizeof(FTapeLayer[1]) * numConductors);
+    FTapeLap := Allocmem(Sizeof(FTapeLap[1]) * numConductors);
 end;
 
 destructor TTSLineConstants.Destroy;

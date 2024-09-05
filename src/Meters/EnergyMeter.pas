@@ -1344,7 +1344,7 @@ begin
     // Compute energy in branch  to which meter is connected
 
      //----MeteredElement.ActiveTerminalIdx := MeteredTerminal;  // needed for Excess kVA calcs
-    S_Local := MeteredElement.Power[MeteredTerminal] * 0.001;
+    S_Local := MeteredElement.Power(MeteredTerminal) * 0.001;
     S_Local_kVA := Cabs(S_Local);
     DSS.EnergyMeterClass.Delta_Hrs := DSS.ActiveCircuit.Solution.IntervalHrs;
     Integrate(ord(EMRegister.kWh), S_Local.re, DSS.EnergyMeterClass.Delta_Hrs);   // Accumulate the power
@@ -2078,7 +2078,7 @@ begin
     inherited DumpProperties(F, complete);
 
     for i := 1 to ParentClass.NumProperties do
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
 
     if complete then
     begin
@@ -2190,7 +2190,7 @@ var
     S: Complex;
 begin
      //----pGen.ActiveTerminalIdx := 1;
-    S := -pGen.Power[1] * 0.001;
+    S := -pGen.Power(1) * 0.001;
     TotalZonekw := TotalZonekW + S.re;
     TotalZonekvar := TotalZonekvar + S.im;
 end;
@@ -2204,7 +2204,7 @@ var
     Load_UE: Double;
 begin
     //----ActiveTerminalIdx := 1;
-    S_Load := pLoad.Power[1] * 0.001;   // Get Power in Terminal 1
+    S_Load := pLoad.Power(1) * 0.001;   // Get Power in Terminal 1
     kW_Load := S_Load.re;
     Result := kw_Load;
 

@@ -288,7 +288,7 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
+        procedure SetConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure RecalcElementData(); OVERRIDE;
         procedure CalcYPrim(); OVERRIDE;
 
@@ -627,7 +627,7 @@ begin
         ord(TProp.UserModel):
             UserModel.Name := UserModelNameStr;  // Connect to user written models
         ord(TProp.UserData):
-            if UserModel.Exists then
+            if UserModel.Exists() then
                 UserModel.Edit(UserModelEditStr);  // Send edit string to user model
 
         ord(TProp.phases):
@@ -1130,7 +1130,7 @@ begin
     Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 
     // Update any user-written models
-    if Usermodel.Exists then
+    if UserModel.Exists() then
         UserModel.FUpdateModel;
 end;
 
@@ -1814,7 +1814,7 @@ var
 begin
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
 
-    if UserModel.Exists then     // Check automatically selects the usermodel If true
+    if UserModel.Exists() then     // Check automatically selects the usermodel If true
     begin
         UserModel.FCalc(Vterminal, Iterminal);
         set_ITerminalUpdated(TRUE);
@@ -1870,7 +1870,7 @@ begin
     // Inj = -Itotal (in) - Yprim*Vtemp
     case VoltageModel of
         3:
-            if UserModel.Exists then // auto selects model (User model)
+            if UserModel.Exists() then // auto selects model (User model)
             begin
                 // We have total currents in Iterminal
                 UserModel.FCalc(Vterminal, Iterminal);  // returns terminal currents in Iterminal
@@ -2237,7 +2237,7 @@ var
 begin
     // Compute Derivatives and Then integrate
     ComputeIterminal();
-    if Usermodel.Exists then
+    if UserModel.Exists() then
     begin
         Usermodel.Integrate(); // Checks for existence and Selects
         Exit;
@@ -2342,7 +2342,7 @@ begin
                                 DynamicEqVals[DynamicEqPair[j * 2]][0] := m[i]
                             end
                         else
-                            DynamicEqVals[DynamicEqPair[j * 2]][0] := PCEValue[1, DynamicEqPair[(j * 2) + 1]];
+                            DynamicEqVals[DynamicEqPair[j * 2]][0] := PCEValue(1, DynamicEqPair[(j * 2) + 1]);
                         end;
                     end;
                 end;
@@ -2412,7 +2412,7 @@ begin
             (NumBasePVSystemVariables + 1)..NumPVSystemVariables:
                 Result := dynVars.Get_InvDynValue(i - NumBasePVSystemVariables - 1, NumPhases);
         else
-            if UserModel.Exists then
+            if UserModel.Exists() then
             begin
                 N := UserModel.FNumVars;
                 k := (i - NumPVSystemVariables);
@@ -2493,7 +2493,7 @@ begin
             (NumBasePVSystemVariables + 1)..NumPVSystemVariables:
                 dynVars.Set_InvDynValue(i - NumBasePVSystemVariables - 1, Value);
         else
-            if UserModel.Exists then
+            if UserModel.Exists() then
             begin
                 N := UserModel.FNumVars;
                 k := (i - NumPVSystemVariables);
@@ -2521,7 +2521,7 @@ begin
     for i := 1 to NumPVSystemVariables do
         States[i - 1] := GetVariable(i);
 
-    if UserModel.Exists then
+    if UserModel.Exists() then
         UserModel.FGetAllVars(pDoubleArray(@States[NumPVSystemVariables]));
 end;
 
@@ -2534,7 +2534,7 @@ begin
 
     // Fallback to the classic
     Result := NumPVSystemVariables;
-    if UserModel.Exists then
+    if UserModel.Exists() then
         Result := Result + UserModel.FNumVars;
 end;
 
@@ -2586,7 +2586,7 @@ begin
         (NumBasePVSystemVariables + 1)..NumPVSystemVariables:
             Result := dynVars.Get_InvDynName(i - NumBasePVSystemVariables - 1);
     else
-        if UserModel.Exists then
+        if UserModel.Exists() then
         begin
             pName := PAnsiChar(@Buff);
             n := UserModel.FNumVars;
@@ -2637,7 +2637,7 @@ begin
     inherited;   // write out other properties
 end;
 
-procedure TPVsystemObj.Set_ConductorClosed(Index: Integer; Value: Boolean);
+procedure TPVsystemObj.SetConductorClosed(Index: Integer; Value: Boolean);
 begin
     inherited;
 

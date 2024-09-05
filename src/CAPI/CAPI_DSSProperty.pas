@@ -96,7 +96,7 @@ begin
     if IsPropIndexInvalid(DSSPrime, 33004) then
         Exit;
         
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSObject.PropertyValue[DSSPrime.FPropIndex]);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSObject.PropertyValue(DSSPrime.FPropIndex));
 end;
 
 //------------------------------------------------------------------------------

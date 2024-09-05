@@ -46,9 +46,7 @@ type
         function Pop_Time(const ActionTime: TTimeRec; var Code, ProxyHdl, Hdl: Integer; var ATime: Double; KeepIn: Boolean): TControlElem;  // Pop action from queue <= given time
         procedure DeleteFromQueue(i: Integer; popped: Boolean);
         function TimeRecToTime(Trec: TTimeRec): Double;
-        procedure Set_Trace(const Value: Boolean);
         procedure WriteTraceRecord(const ElementName: String; const Code: Integer; TraceParameter: Double; const s: String);
-        function Get_QueueSize: Integer;
         procedure Recalc_Time_Step();
         procedure Restore_Time_Step();
 
@@ -60,18 +58,18 @@ type
         function Push(const Hour: Integer; const Sec: Double; const Code: EControlAction; const ProxyHdl: Integer; const Owner: TControlElem): Integer; OVERLOAD;
         function Push(const Delay: Double; const Code: EControlAction; const ProxyHdl: Integer; const Owner: TControlElem): Integer; OVERLOAD;
         function Push(const Delay: Double; const Code, ProxyHdl: Integer; const Owner: TControlElem): Integer; OVERLOAD;
-        procedure Clear;
-        procedure DoAllActions;
+        procedure Clear();
+        procedure DoAllActions();
         function DoNearestActions(var Hour: Integer; var Sec: Double): Boolean;  // Do only actions with lowest time
         function DoActions(const Hour: Integer; const sec: Double): Boolean;  // Do actions with time <= t
         function DoMultiRate(const Hour: Integer; const sec: Double): Boolean;  // Do actions with time <= t
         function IsEmpty: Boolean;
         procedure Delete(Hdl: Integer);  // Delete queue item by handle
+        function QueueSize(): Integer;
 
         procedure WriteQueue(F: TStream); // was ShowQueue
-
-        property TraceLog: Boolean READ DebugTrace WRITE Set_Trace;
-        property QueueSize: Integer READ Get_QueueSize;
+        procedure SetTraceLog(const Value: Boolean);
+        function TraceLog(): Boolean;
         function QueueItem(Qidx: Integer): String;
 
 
@@ -167,7 +165,7 @@ begin
 end;
 
 
-procedure TControlQueue.Clear;
+procedure TControlQueue.Clear();
 var
     i: Integer;
 begin
@@ -175,7 +173,7 @@ begin
     for i := 0 to ActionList.Count - 1 do
         Freemem(ActionList.Items[i], Sizeof(TActionRecord));
 
-    ActionList.Clear;
+    ActionList.Clear();
 end;
 
 procedure TControlQueue.Init(dssContext: TDSSContext);
@@ -184,7 +182,7 @@ begin
     DSS := dssContext;
 
     ActionList := TList.Create;
-    ActionList.Clear;
+    ActionList.Clear();
 
     ctrlHandle := 0;
 
@@ -193,12 +191,12 @@ end;
 
 procedure TControlQueue.Dispose;
 begin
-    Clear;
+    Clear();
     ActionList.Free;
     FreeAndNil(TraceFile);
 end;
 
-procedure TControlQueue.DoAllActions;
+procedure TControlQueue.DoAllActions();
 
 var
     actionRec: PActionRecord;
@@ -206,7 +204,7 @@ begin
     for actionRec in ActionList do
         actionRec^.ControlElement.DoPendingAction(actionRec^.ActionCode, actionRec^.ProxyHandle);
 
-    Clear;
+    Clear();
 end;
 
 function TControlQueue.DoNearestActions(var Hour: Integer; var Sec: Double): Boolean;
@@ -467,7 +465,12 @@ begin
     Result := Trec.Hour * 3600.0 + Trec.Sec
 end;
 
-procedure TControlQueue.Set_Trace(const Value: Boolean);
+function TControlQueue.TraceLog(): Boolean;
+begin
+    result := DebugTrace;
+end;
+
+procedure TControlQueue.SetTraceLog(const Value: Boolean);
 begin
     DebugTrace := Value;
 
@@ -542,7 +545,7 @@ begin
     end;
 end;
 
-function TControlQueue.Get_QueueSize: Integer;
+function TControlQueue.QueueSize(): Integer;
 begin
     Result := ActionList.Count;
 end;

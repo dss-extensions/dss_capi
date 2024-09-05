@@ -244,7 +244,7 @@ procedure DoReset(Obj: TObj);
 begin
     // force a reset
     Obj.Reset;
-    //PropertyValue[22] := 'n'; // so it gets reported properly
+    //PropertyValue(22) := 'n'; // so it gets reported properly
 end;
 
 procedure TCapControl.DefineProperties;
@@ -413,10 +413,10 @@ begin
             ord(TProp.UserModel):
             begin
                 UserModel.Name := UserModelNameStr;  // Connect to user written model
-                IsUserModel := UserModel.Exists;
+                IsUserModel := UserModel.Exists();
             end;
             ord(TProp.UserData):
-                if UserModel.Exists then
+                if UserModel.Exists() then
                     UserModel.Edit(UserModelEditStr);  // Send edit string to user model
         end;
 
@@ -569,8 +569,8 @@ begin
     Nconds := FNphases;
     ControlledElement.ActiveTerminalIdx := 1;  // Make the 1 st terminal active
     // Get control synched up with capacitor
-    ControlledElement.Closed[0] := ControlVars.AvailableSteps <> ControlledCapacitor.Numsteps;
-    if ControlledElement.Closed[0]      // Check state of phases of active terminal
+    ControlledElement.SetConductorClosed(0, ControlVars.AvailableSteps <> ControlledCapacitor.Numsteps);
+    if ControlledElement.ConductorClosed(0)      // Check state of phases of active terminal
     then
         ControlVars.PresentState := CTRL_CLOSE
     else
@@ -619,7 +619,7 @@ begin
         end;
 
     // User model property update, if necessary
-    if Usermodel.Exists then
+    if UserModel.Exists() then
         UserModel.UpdateModel;  // Checks for existence and Selects
 end;
 
@@ -708,7 +708,7 @@ begin
     // Allow user control to do something
     case ControlType of
         USERCONTROL:
-            if UserModel.Exists then
+            if UserModel.Exists() then
             begin
                 UserModel.DoPending(Code, ProxyHdl);
                 // If control action changes last step in service, force update of Yprim and Fstates array
@@ -725,7 +725,7 @@ begin
                     begin
                         if PresentState = CTRL_CLOSE then
                         begin
-                            ControlledElement.Closed[0] := FALSE;  // Open all phases of active terminal
+                            ControlledElement.SetConductorClosed(0, FALSE);  // Open all phases of active terminal
                             ControlledCapacitor.SubtractStep;
 
                             if ShowEventLog then
@@ -740,7 +740,7 @@ begin
                         if not ControlledCapacitor.SubtractStep then
                         begin
                             PresentState := CTRL_OPEN;
-                            ControlledElement.Closed[0] := FALSE;   // Open all phases of active terminal
+                            ControlledElement.SetConductorClosed(0, FALSE);   // Open all phases of active terminal
                             if ShowEventLog then
                                 AppendtoEventLog(ControlledElement.FullName, '**Opened**');
                         end
@@ -753,7 +753,7 @@ begin
             begin
                 if PresentState = CTRL_OPEN then
                 begin
-                    ControlledElement.Closed[0] := TRUE;    // Close all phases of active terminal
+                    ControlledElement.SetConductorClosed(0, TRUE);    // Close all phases of active terminal
                     if ShowEventLog then
                         AppendtoEventLog(ControlledElement.FullName, '**Closed**');
                     PresentState := CTRL_CLOSE;
@@ -850,7 +850,7 @@ var
 
 begin
     ControlledElement.ActiveTerminalIdx := 1;
-    if ControlledElement.Closed[0]      // Check state of phases of active terminal
+    if ControlledElement.ConductorClosed(0)      // Check state of phases of active terminal
     then
         ControlVars.PresentState := CTRL_CLOSE
     else
@@ -974,7 +974,7 @@ begin
                 KVARCONTROL:
                 begin
                     //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
-                    S := MonitoredElement.Power[ElementTerminal];
+                    S := MonitoredElement.Power(ElementTerminal);
                     Q := S.im * 0.001;  // kvar
 
                     case PresentState of
@@ -1006,10 +1006,10 @@ begin
                     end;
                 end;
                 USERCONTROL:
-                    if UserModel.Exists then   // selects the model associated with this control
+                    if UserModel.Exists() then   // selects the model associated with this control
                     begin
                         // Load up test data into the public data record
-                        SampleP := MonitoredElement.Power[ElementTerminal] * 0.001;  // kW kvar
+                        SampleP := MonitoredElement.Power(ElementTerminal) * 0.001;  // kW kvar
 
                         MonitoredElement.GetTermVoltages(ElementTerminal, cBuffer);
                         GetControlVoltage(SampleV);
@@ -1094,7 +1094,7 @@ begin
                 PFCONTROL: // PF
                 begin
                       //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
-                    S := MonitoredElement.Power[ElementTerminal];
+                    S := MonitoredElement.Power(ElementTerminal);
                     PF := PF1to2(S);
 
                     // PF is in range of 0 .. 2;  Leading is 1..2
@@ -1194,9 +1194,9 @@ begin
     begin
         case InitialState of
             CTRL_OPEN:
-                ControlledElement.Closed[0] := FALSE;   // Open all phases of active terminal
+                ControlledElement.SetConductorClosed(0, FALSE);   // Open all phases of active terminal
             CTRL_CLOSE:
-                ControlledElement.Closed[0] := TRUE;    // Close all phases of active terminal
+                ControlledElement.SetConductorClosed(0, TRUE);    // Close all phases of active terminal
         end;
         ShouldSwitch := FALSE;
         LastOpenTime := -DeadTime;

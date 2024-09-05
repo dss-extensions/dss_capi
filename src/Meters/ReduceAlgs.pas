@@ -401,7 +401,7 @@ begin
             with BranchList.PresentBranch do
             begin
                 BusName := FirstPDElement.GetBus(FromTerminal);
-                TotalkVA := PDelem.Power[FromTerminal] / 1000.0;
+                TotalkVA := PDelem.Power(FromTerminal) / 1000.0;
                 NewLoadName := Format('Eq_%s_%s', [FirstPDElement.Name, StripExtension(BusName)]);
                 // Pick up the kV Base for the From bus
                 LoadBus := DSS.ActiveCircuit.Buses[FromBusReference];

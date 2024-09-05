@@ -323,7 +323,7 @@ type
 
         procedure RecalcElementData(); OVERRIDE; // Generally called after Edit is complete to recompute variables
         procedure CalcYPrim(); OVERRIDE; // Calculate Primitive Y matrix
-        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
+        procedure SetConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure IntegrateABCD();
         procedure CalcDynamic(var V012, I012: TSymCompArray);
         procedure CalcPFlow(var V012, I012: TSymCompArray);
@@ -402,7 +402,7 @@ end;
 
 function getPF(obj: TObj): Double;
 begin
-    Result := PowerFactor(obj.Power[1]);
+    Result := PowerFactor(obj.Power(1));
 end;
 
 procedure TGeneric5.DefineProperties();
@@ -2039,8 +2039,8 @@ begin
     begin
         V_DG := Cabs(V012[1]);// Pos Seq Control
         Theta_DG := Cang(V012[1]);
-        P_DG := 0 - Power[1].re;
-        Q_DG := 0 - Power[1].im;
+        P_DG := 0 - Power(1).re;
+        Q_DG := 0 - Power(1).im;
         P_ref := P_DG / 3;
         Q_ref := Q_DG / 3;
 
@@ -2545,7 +2545,7 @@ begin
     DSS.SolutionAbort := true;
 end;
 
-procedure TGeneric5Obj.Set_ConductorClosed(Index: Integer; Value: Boolean);
+procedure TGeneric5Obj.SetConductorClosed(Index: Integer; Value: Boolean);
 // Routine for handling Open/Close procedures
 begin
     inherited;

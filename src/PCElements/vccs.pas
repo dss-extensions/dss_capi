@@ -443,7 +443,7 @@ var
     i: Integer;
     i1: complex;
 begin
-    if not Closed[1] then 
+    if not ConductorClosed(1) then 
     begin
         for i := 1 to Fnphases do 
             Curr[i] := 0;
@@ -681,7 +681,7 @@ var
     vnow: complex;
     iu, iy: Integer; // local copies of sIdxU and sIdxY for predictor
 begin
-    if not Closed[1] then 
+    if not ConductorClosed(1) then 
     begin
         ShutoffInjections;
         Exit;

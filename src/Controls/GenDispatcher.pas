@@ -294,7 +294,7 @@ begin
     if FListSize > 0 then
     begin
        //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
-        S := MonitoredElement.Power[ElementTerminal];  // Power in active terminal
+        S := MonitoredElement.Power(ElementTerminal);  // Power in active terminal
 
         PDiff := S.re * 0.001 - FkWLimit;
 

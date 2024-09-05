@@ -870,14 +870,14 @@ begin
         // Open/Close State of controlled element based on state assigned to the control
         if FPresentState = CTRL_CLOSE then
         begin
-            ControlledElement.Closed[0] := TRUE;
+            ControlledElement.SetConductorClosed(0, TRUE);
             LockedOut := FALSE;
             OperationCount := 1;
             ArmedForOpen := FALSE;
         end
         else
         begin
-            ControlledElement.Closed[0] := FALSE;
+            ControlledElement.SetConductorClosed(0, FALSE);
             LockedOut := TRUE;
             OperationCount := NumReclose + 1;
             ArmedForClose := FALSE;
@@ -959,7 +959,7 @@ begin
             if FPresentState = CTRL_CLOSE then
                 if ArmedForOpen then
                 begin   // ignore if we became disarmed in meantime
-                    ControlledElement.Closed[0] := FALSE;   // Open all phases of active terminal
+                    ControlledElement.SetConductorClosed(0, FALSE);   // Open all phases of active terminal
                     if (OperationCount > NumReclose) then
                     begin
                         LockedOut := TRUE;
@@ -985,7 +985,7 @@ begin
             if FPresentState = CTRL_OPEN then
                 if ArmedForClose and not LockedOut then
                 begin
-                    ControlledElement.Closed[0] := TRUE; // Close all phases of active terminal
+                    ControlledElement.SetConductorClosed(0, TRUE); // Close all phases of active terminal
                     Inc(OperationCount);
                     if ShowEventLog then
                         AppendtoEventLog(Self.FullName, _('Closed'));
@@ -1014,7 +1014,7 @@ end;
 procedure TRelayObj.Sample;
 begin
     ControlledElement.ActiveTerminalIdx := ElementTerminal;
-    if ControlledElement.Closed[0] // Check state of phases of active terminal
+    if ControlledElement.ConductorClosed(0) // Check state of phases of active terminal
     then
         FPresentState := CTRL_CLOSE
     else
@@ -1064,13 +1064,13 @@ begin
 
     if NormalState = CTRL_OPEN then
     begin
-        ControlledElement.Closed[0] := FALSE; // Open all phases of active terminal
+        ControlledElement.SetConductorClosed(0, FALSE); // Open all phases of active terminal
         LockedOut := TRUE;
         OperationCount := NumReclose + 1;
     end
     else
     begin
-        ControlledElement.Closed[0] := TRUE; // Close all phases of active terminal
+        ControlledElement.SetConductorClosed(0, TRUE); // Close all phases of active terminal
         LockedOut := FALSE;
         OperationCount := 1;
     end;
@@ -1082,7 +1082,7 @@ begin
     begin
         ControlledElement.ActiveTerminalIdx := ElementTerminal;
 
-        if not ControlledElement.Closed[0] then
+        if not ControlledElement.ConductorClosed(0) then
             FPresentState:= CTRL_OPEN
         else
             FPresentState:= CTRL_CLOSE;
@@ -1103,7 +1103,7 @@ begin
     ControlledElement.ActiveTerminalIdx := ElementTerminal;
     if Value = CTRL_OPEN then
     begin
-        ControlledElement.Closed[0] := FALSE;
+        ControlledElement.SetConductorClosed(0, FALSE);
         LockedOut := TRUE;
         OperationCount := NumReclose + 1;
         ArmedForClose := FALSE;
@@ -1111,7 +1111,7 @@ begin
     end
     else
     begin
-        ControlledElement.Closed[0] := TRUE;
+        ControlledElement.SetConductorClosed(0, TRUE);
         LockedOut := FALSE;
         OperationCount := 1;
         ArmedForOpen := FALSE;
@@ -1710,7 +1710,7 @@ begin
     if MonitoredElement.NPhases < 3 then
     begin
         // just take the total power (works also for 1ph elements with 2 conductors)
-        Result := MonitoredElement.Power[MonitoredElementTerminal];
+        Result := MonitoredElement.Power(MonitoredElementTerminal);
         Exit;
     end;
 
@@ -2171,7 +2171,7 @@ var
     S: Complex;
 begin
     // MonitoredElement.ActiveTerminalIdx := MonitoredElementTerminal;
-    S := MonitoredElement.Power[MonitoredElementTerminal];
+    S := MonitoredElement.Power(MonitoredElementTerminal);
     if S.re < 0.0 then
     begin
         if Abs(S.Re) > PhaseInst * 1000.0 then

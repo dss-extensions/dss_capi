@@ -1262,7 +1262,7 @@ begin
 
         2:
         begin     // Monitor Transformer Tap Position
-            AddDblToBuffer(TControlledTransformerObj(MeteredElement).PresentTap[MeteredTerminal]);
+            AddDblToBuffer(TControlledTransformerObj(MeteredElement).PresentTap(MeteredTerminal));
 
             Exit;  // Done with this mode now.
         end;
@@ -1833,7 +1833,7 @@ begin
 
     for i := 1 to ParentClass.NumProperties do
     begin
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
     end;
 
 

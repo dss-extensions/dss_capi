@@ -36,7 +36,6 @@ type
 
     TLineConstants = class(TObject)
     PROTECTED
-        FNumConds: Integer;
         FNPhases: Integer;
 
         FData: pDouble;
@@ -63,26 +62,10 @@ type
         Fme: Complex; // factor for earth impedance
         FRhoChanged: Boolean;
 
-        function Get_GMR(i, units: Integer): Double;
-        function Get_radius(i, units: Integer): Double;
-        function Get_Rdc(i, units: Integer): Double;
-        function Get_Rac(i, units: Integer): Double;
-        function Get_X(i, units: Integer): Double;
-        function Get_Y(i, units: Integer): Double;
-        function Get_Ze(i, j, EarthModel: Integer): Complex;
-        function Get_Zint(i, EarthModel: Integer): Complex;
-        procedure Set_GMR(i, units: Integer; const Value: Double);
-        procedure Set_radius(i, units: Integer; const Value: Double);
-        procedure Set_Rdc(i, units: Integer; const Value: Double);
-        procedure Set_Rac(i, units: Integer; const Value: Double);
-        procedure Set_X(i, units: Integer; const Value: Double);
-        procedure Set_Y(i, units: Integer; const Value: Double);
+        function GetZearth(i, j, EarthModel: Integer): Complex;
+        function GetZint(i, EarthModel: Integer): Complex;
         procedure Set_Frequency(const Value: Double);
         
-        // This allows you to compute capacitance using a different radius -- for bundled conductors
-        function Get_Capradius(i, units: Integer): Double;
-        procedure Set_Capradius(i, units: Integer; const Value: Double);
-
         // These can only be called privately
         property Frequency: Double READ FFrequency WRITE Set_Frequency;
 
@@ -90,6 +73,7 @@ type
 
     PUBLIC
         FrhoEarth: Double;  // ohm-m
+        numConductors: Integer;
 
         procedure SetRhoEarth(const Value: Double);  // m
         function ConductorsInSameSpace(var ErrorMessage: String): Boolean; VIRTUAL;
@@ -97,25 +81,23 @@ type
         procedure Kron(Norder: Integer); VIRTUAL; // Performs a Kron reduction leaving first Norder  rows
         procedure Reduce;  // Kron reduce to Numphases only
 
-        property X[i, units: Integer]: Double READ Get_X WRITE Set_X;
-        property Y[i, units: Integer]: Double READ Get_Y WRITE Set_Y;
-        property Rdc[i, units: Integer]: Double READ Get_Rdc WRITE Set_Rdc;
-        property Rac[i, units: Integer]: Double READ Get_Rac WRITE Set_Rac;
-        property radius[i, units: Integer]: Double READ Get_radius WRITE Set_radius;
-        Property Capradius[i, units:Integer]:Double Read Get_Capradius Write Set_Capradius;
-        property GMR[i, units: Integer]: Double READ Get_GMR WRITE Set_GMR;
-        property Zint[i, EarthModel: Integer]: Complex READ Get_Zint;  // Internal impedance of i-th conductor for present frequency
-        property Ze[i, j, EarthModel: Integer]: Complex READ Get_Ze;  // Earth return impedance at present frequency for ij element
-
+        procedure SetX(i, units: Integer; const Value: Double);
+        procedure SetY(i, units: Integer; const Value: Double);
+        procedure SetRdc(i, units: Integer; const Value: Double);
+        procedure SetRac(i, units: Integer; const Value: Double);
+        procedure SetRadius(i, units: Integer; const Value: Double);
+        // This allows you to compute capacitance using a different radius -- for bundled conductors
+        procedure SetCapradius(i, units: Integer; const Value: Double);
+        procedure SetGMR(i, units: Integer; const Value: Double);
+        
         // These two functions will auto recalc the impedance matrices if frequency is different
         // Converts to desired units when executed; Returns Pointer to Working Verstion
         function GetZMatrix(f, Lngth: Double; Units, EarthModel: Integer): Tcmatrix;
         function GetYCMatrix(f, Lngth: Double; Units: Integer): Tcmatrix;
 
         property Nphases: Integer READ FNPhases WRITE set_Nphases;
-        property Nconductors: Integer READ FNumConds;
 
-        constructor Create(NumConductors: Integer);
+        constructor Create(NConductors: Integer);
         destructor Destroy; OVERRIDE;
 
     end;
@@ -186,9 +168,9 @@ begin
 
     // Self Impedances
 
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
     begin
-        Zi := Get_Zint(i, EarthModel);
+        Zi := GetZint(i, EarthModel);
         if PowerFreq then
         begin // for less than 1 kHz, use published GMR
             Zi.im := 0.0;
@@ -199,18 +181,18 @@ begin
             Zspacing := Lfactor * ln(1.0 / Fradius[i]);
         end;
 
-        FZmatrix[i, i] := Zi + Zspacing + Get_Ze(i, i, EarthModel);
+        FZmatrix[i, i] := Zi + Zspacing + GetZearth(i, i, EarthModel);
 
     end;
 
     // Mutual IMpedances
 
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
     begin
         for j := 1 to i - 1 do
         begin
             Dij := sqrt(sqr(Fx[i] - Fx[j]) + sqr(Fy[i] - Fy[j]));
-            FZmatrix[i, j] := Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel);
+            FZmatrix[i, j] := Lfactor * ln(1.0 / Dij) + GetZearth(i, j, EarthModel);
             FZmatrix[j, i] := FZmatrix[i, j];
         end;
     end;
@@ -224,7 +206,7 @@ begin
     // Self uses capradius, which defaults to actual conductor radius. But
     // in case of bundled conductors can be specified different in Wiredata.
 
-    for i := 1 to FnumConds do
+    for i := 1 to numConductors do
     begin
         if Fcapradius[i] < 0 then
             FYCMatrix[i, i] := cmplx(0.0, pfactor * ln(2.0 * Fy[i] / Fradius[i]))
@@ -232,7 +214,7 @@ begin
             FYCMatrix[i, i] := cmplx(0.0, pfactor * ln(2.0 * Fy[i] / Fcapradius[i]));
     end;
 
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
     begin
         for j := 1 to i - 1 do
         begin
@@ -262,7 +244,7 @@ begin
     Result := FALSE;
 
     // Check for 0 Y coordinate
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
     begin
         if (FY[i] <= 0.0) then
         begin
@@ -273,9 +255,9 @@ begin
     end;
 
     // Check for overlapping conductors
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
     begin
-        for j := i + 1 to FNumConds do
+        for j := i + 1 to numConductors do
         begin
             Dij := Sqrt(SQR(FX[i] - FX[j]) + SQR(FY[i] - FY[j]));
             if (Dij < (Fradius[i] + Fradius[j])) then
@@ -289,37 +271,37 @@ begin
     end;
 end;
 
-constructor TLineConstants.Create(NumConductors: Integer);
+constructor TLineConstants.Create(NConductors: Integer);
 var
     i: Integer;
 begin
-    FNumConds := NumConductors;
-    NPhases := FNumConds;
+    numConductors := NConductors;
+    NPhases := numConductors;
 
     // Data for FX, FY, FGMR, Fradius, Fcapradius, FRdc, FRac, 
     // FZMatrix, FYCMatrix
-    FData := Allocmem(Sizeof(Double) * (FNumConds * 7 + FNumconds * FNumconds * (2 * 2)));
+    FData := Allocmem(Sizeof(Double) * (numConductors * 7 + numConductors * numConductors * (2 * 2)));
 
     FX := pDoubleArray(FData);
-    FY := pDoubleArray(FData + FNumConds);
-    FGMR := pDoubleArray(FData + FNumConds * 2);
-    Fradius := pDoubleArray(FData + FNumConds * 3);
-    Fcapradius := pDoubleArray(FData + FNumConds * 4);
-    FRdc := pDoubleArray(FData + FNumConds * 5);
-    FRac := pDoubleArray(FData + FNumConds * 6);
+    FY := pDoubleArray(FData + numConductors);
+    FGMR := pDoubleArray(FData + numConductors * 2);
+    Fradius := pDoubleArray(FData + numConductors * 3);
+    Fcapradius := pDoubleArray(FData + numConductors * 4);
+    FRdc := pDoubleArray(FData + numConductors * 5);
+    FRac := pDoubleArray(FData + numConductors * 6);
 
     // Initialize to  not set
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
         FGMR[i] := -1.0;
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
         Fradius[i] := -1.0;
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
         Fcapradius[i] := -1.0;
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
         FRdc[i] := -1.0;
 
-    FZMatrix := TCMatrix.CreateMatrixInplace(FNumconds, pComplex(FData + FNumConds * 7));
-    FYCMatrix := TCMatrix.CreateMatrixInPlace(FNumconds, pComplex(FData + FNumConds * 7 + FNumconds * FNumconds * 2));
+    FZMatrix := TCMatrix.CreateMatrixInplace(numConductors, pComplex(FData + numConductors * 7));
+    FYCMatrix := TCMatrix.CreateMatrixInPlace(numConductors, pComplex(FData + numConductors * 7 + numConductors * numConductors * 2));
 
     FFrequency := -1.0;  // not computed
     FrhoEarth := 100.0;  // default value
@@ -343,41 +325,6 @@ begin
     Reallocmem(FData, 0);
 
     inherited;
-end;
-
-function TLineConstants.Get_Capradius(i, units: Integer): Double;
-begin
-    Result := Fcapradius[i] * From_Meters(Units);
-end;
-
-function TLineConstants.Get_GMR(i, units: Integer): Double;
-begin
-    Result := FGMR[i] * From_Meters(Units);
-end;
-
-function TLineConstants.Get_Rac(i, units: Integer): Double;
-begin
-    Result := FRAC[i] * From_per_Meter(Units);
-end;
-
-function TLineConstants.Get_radius(i, units: Integer): Double;
-begin
-    Result := Fradius[i] * From_Meters(Units);
-end;
-
-function TLineConstants.Get_Rdc(i, units: Integer): Double;
-begin
-    Result := FRDC[i] * From_per_Meter(Units);
-end;
-
-function TLineConstants.Get_X(i, units: Integer): Double;
-begin
-    Result := FX[i] * From_Meters(Units);
-end;
-
-function TLineConstants.Get_Y(i, units: Integer): Double;
-begin
-    Result := FY[i] * From_Meters(Units);
 end;
 
 function TLineConstants.GetYCMatrix(f, Lngth: Double; Units: Integer): Tcmatrix;
@@ -404,7 +351,7 @@ begin
         YCValues[i] *= UnitLengthConversion;
 end;
 
-function TLineConstants.Get_Ze(i, j, EarthModel: Integer): Complex;
+function TLineConstants.GetZearth(i, j, EarthModel: Integer): Complex;
 var
     LnArg, hterm, xterm: Complex;
     mij, thetaij, Dij, Fyi, Fyj: Double;
@@ -471,7 +418,7 @@ begin
     end;
 end;
 
-function TLineConstants.Get_Zint(i, EarthModel: Integer): Complex;
+function TLineConstants.GetZint(i, EarthModel: Integer): Complex;
 var
     Alpha, I0I1: Complex;
 begin
@@ -535,7 +482,7 @@ begin
     Ztemp := FZMatrix;
     FirstTime := TRUE;
 
-    if (FFrequency >= 0.0) and (Norder > 0) and (Norder < FnumConds) then
+    if (FFrequency >= 0.0) and (Norder > 0) and (Norder < numConductors) then
     begin
         if Assigned(FZreduced) then
             FZreduced.Free;
@@ -572,9 +519,9 @@ begin
     Kron(FNPhases);
 end;
 
-procedure TLineConstants.Set_Capradius(i, units: Integer; const Value: Double);
+procedure TLineConstants.SetCapradius(i, units: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then 
+    if (i > 0) and (i <= numConductors) then 
         Fcapradius[i] := Value * To_Meters(units);
 end;
 
@@ -594,9 +541,9 @@ begin
         Fme := Csqrt(cmplx(0.0, Fw * Mu0 / FrhoEarth));
 end;
 
-procedure TLineConstants.Set_GMR(i, units: Integer; const Value: Double);
+procedure TLineConstants.SetGMR(i, units: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
     begin
         FGMR[i] := Value * To_Meters(units);
         if Fradius[i] < 0.0 then
@@ -609,16 +556,15 @@ begin
     FNPhases := Value;
 end;
 
-procedure TLineConstants.Set_Rac(i, units: Integer; const Value: Double);
+procedure TLineConstants.SetRac(i, units: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         FRac[i] := Value * To_per_Meter(units);
 end;
 
-procedure TLineConstants.Set_radius(i, units: Integer;
-    const Value: Double);
+procedure TLineConstants.SetRadius(i, units: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
     begin
         Fradius[i] := Value * To_Meters(units);
         if FGMR[i] < 0.0 then
@@ -626,21 +572,21 @@ begin
     end;
 end;
 
-procedure TLineConstants.Set_Rdc(i, units: Integer; const Value: Double);
+procedure TLineConstants.SetRdc(i, units: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         FRdc[i] := Value * To_per_Meter(units);
 end;
 
-procedure TLineConstants.Set_X(i, units: Integer; const Value: Double);
+procedure TLineConstants.SetX(i, units: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         FX[i] := Value * To_Meters(units);
 end;
 
-procedure TLineConstants.Set_Y(i, units: Integer; const Value: Double);
+procedure TLineConstants.SetY(i, units: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         FY[i] := Value * To_Meters(units);
 end;
 

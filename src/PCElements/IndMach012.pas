@@ -186,7 +186,7 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
+        procedure SetConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure RecalcElementData; OVERRIDE;   // Generally called after Edit is complete to recompute variables
         procedure CalcYPrim; OVERRIDE;   // Calculate Primitive Y matrix
         procedure Integrate;
@@ -260,7 +260,7 @@ end;
 
 function PowerFactorProperty(obj: TObj): Double;
 begin
-    Result := PowerFactor(obj.Power[1]);
+    Result := PowerFactor(obj.Power(1));
 end;
 
 procedure SetLocalSlip(Obj: TObj; Value: Double);
@@ -711,7 +711,7 @@ begin
         // recalc Mmass and D in case the frequency has changed
         Mmass := 2.0 * Hmass * kVArating * 1000.0 / (w0);   // M = W-sec
         D := Dpu * kVArating * 1000.0 / (w0);
-        Pshaft := Power[1].re; // Initialize Pshaft to present power consumption of motor
+        Pshaft := Power(1).re; // Initialize Pshaft to present power consumption of motor
 
         Speed := -S1 * w0;    // relative to synch speed
         dSpeed := 0.0;
@@ -1370,9 +1370,9 @@ begin
                 Result := 3.0 / 746.0 * (Sqr(Cabs(Ir1)) * (1.0 - S1) / S1 + Sqr(Cabs(Ir2)) * (1.0 - S2) / S2) * Zr.re;
             end;
             21:
-                Result := PowerFactor(Power[1]);
+                Result := PowerFactor(Power(1));
             22:
-                Result := (1.0 - (GetStatorLosses + GetRotorLosses) / power[1].re) * 100.0;    // Efficiency
+                Result := (1.0 - (GetStatorLosses + GetRotorLosses) / Power(1).re) * 100.0;    // Efficiency
         end;
 end;
 
@@ -1424,7 +1424,7 @@ procedure TIndMach012Obj.MakePosSequence();
 begin
 end;
 
-procedure TIndMach012Obj.Set_ConductorClosed(Index: Integer; Value: Boolean);
+procedure TIndMach012Obj.SetConductorClosed(Index: Integer; Value: Boolean);
 // Routine for handling Open/Close procedures
 begin
     inherited;
@@ -1468,7 +1468,7 @@ begin
     FSWrite(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(Is1), Cabs(Is2)]));
     FSWrite(TraceFile, Format('%-.6g, %-.6g, %-.6g, %-.6g, ', [Cabs(E1), Cabs(dE1dt), Cabs(E2), Cabs(dE2dt)]));
     FSWrite(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(V1), Cabs(V2)]));
-    FSWrite(TraceFile, Format('%-.6g, %-.6g, ', [MachineData.Pshaft, power[1].re]));
+    FSWrite(TraceFile, Format('%-.6g, %-.6g, ', [MachineData.Pshaft, Power(1).re]));
     FSWrite(TraceFile, Format('%-.6g, %-.6g, ', [MachineData.speed, MachineData.dSpeed]));
 
     FSWriteln(TraceFile);

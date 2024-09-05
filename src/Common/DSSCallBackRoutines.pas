@@ -240,7 +240,7 @@ begin
     if DSSPrime.ActiveCircuit.ActiveCktElement = NIL then
         Exit;
     //----ActiveTerminalIdx := Terminal;
-    TotalPower := DSSPrime.ActiveCircuit.ActiveCktElement.Power[Terminal];
+    TotalPower := DSSPrime.ActiveCircuit.ActiveCktElement.Power(Terminal);
 end;
 
 

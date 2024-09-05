@@ -42,8 +42,6 @@ TYPE
 
          Procedure Set_Name(const Value:String);
          Function  CheckFuncError(Addr:Pointer; FuncName:String):Pointer;
-         function  Get_Exists: Boolean;
-
       public
         DSS: TDSSContext;
 
@@ -62,7 +60,7 @@ TYPE
         // Wide string OK here
         property  Name:String    read  Fname write Set_Name;
         procedure Edit(const Value: String);
-        property  Exists:Boolean read  Get_Exists;
+        function Exists(): Boolean;
       end;
 
 implementation
@@ -113,7 +111,7 @@ begin
      End;
 end;
 
-function TCapUserControl.Get_Exists: Boolean;
+function TCapUserControl.Exists(): Boolean;
 begin
         If FID <> 0 Then
          Begin

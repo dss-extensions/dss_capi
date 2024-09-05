@@ -18,15 +18,15 @@ uses
 type
     TOHLineConstants = class(TLineConstants)
     PUBLIC
-        constructor Create(NumConductors: Integer);
+        constructor Create(NConductors: Integer);
         destructor Destroy; OVERRIDE;
     end;
 
 implementation
 
-constructor TOHLineConstants.Create(NumConductors: Integer);
+constructor TOHLineConstants.Create(NConductors: Integer);
 begin
-    inherited Create(NumConductors);
+    inherited Create(NConductors);
 end;
 
 destructor TOHLineConstants.Destroy;

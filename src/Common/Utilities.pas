@@ -1334,7 +1334,7 @@ begin
     Result := 0;
     for cktElem in DSS.ActiveCircuit.Sources do
     begin
-        Result -= CktElem.power[1];
+        Result -= CktElem.Power(1);
     end;
 end;
 
@@ -1888,42 +1888,42 @@ begin
             case (pCktElem.DSSObjType and CLASSMASK) of
                 CAP_CONTROL:
                 begin
-                    S := Format('Element=%s ', [makeNewCktElemName(DSS, pCktElem.GetPropertyValue(1))]);
-                    ControlUpDateStrings.Add(S + Format('Capacitor=%s ', [Copy(makeNewCktElemName(DSS, 'capacitor.' + pCktElem.GetPropertyValue(3)), 11, 100)]));
+                    S := Format('Element=%s ', [makeNewCktElemName(DSS, pCktElem.PropertyValue(1))]);
+                    ControlUpDateStrings.Add(S + Format('Capacitor=%s ', [Copy(makeNewCktElemName(DSS, 'capacitor.' + pCktElem.PropertyValue(3)), 11, 100)]));
                     ControlUpDatePtrs.Add(pCktElem);
                 end;
                 REG_CONTROL: ;   // handled below
                 RELAY_CONTROL:
                 begin
-                    S := Format('MonitoredObj=%s ', [makeNewCktElemName(DSS, pCktElem.GetPropertyValue(1))]);
-                    ControlUpDateStrings.Add(S + Format('SwitchedObj=%s ', [makeNewCktElemName(DSS, pCktElem.GetPropertyValue(3))]));
+                    S := Format('MonitoredObj=%s ', [makeNewCktElemName(DSS, pCktElem.PropertyValue(1))]);
+                    ControlUpDateStrings.Add(S + Format('SwitchedObj=%s ', [makeNewCktElemName(DSS, pCktElem.PropertyValue(3))]));
                     ControlUpDatePtrs.Add(pCktElem);
                 end;
                 RECLOSER_CONTROL:
                 begin
-                    S := Format('MonitoredObj=%s ', [makeNewCktElemName(DSS, pCktElem.GetPropertyValue(1))]);
-                    ControlUpDateStrings.Add(S + Format('SwitchedObj=%s ', [makeNewCktElemName(DSS, pCktElem.GetPropertyValue(3))]));
+                    S := Format('MonitoredObj=%s ', [makeNewCktElemName(DSS, pCktElem.PropertyValue(1))]);
+                    ControlUpDateStrings.Add(S + Format('SwitchedObj=%s ', [makeNewCktElemName(DSS, pCktElem.PropertyValue(3))]));
                     ControlUpDatePtrs.Add(pCktElem);
                 end;
                 FUSE_CONTROL:
                 begin
-                    S := Format('MonitoredObj=%s ', [makeNewCktElemName(DSS, pCktElem.GetPropertyValue(1))]);
-                    ControlUpDateStrings.Add(S + Format('SwitchedObj=%s ', [makeNewCktElemName(DSS, pCktElem.GetPropertyValue(3))]));
+                    S := Format('MonitoredObj=%s ', [makeNewCktElemName(DSS, pCktElem.PropertyValue(1))]);
+                    ControlUpDateStrings.Add(S + Format('SwitchedObj=%s ', [makeNewCktElemName(DSS, pCktElem.PropertyValue(3))]));
                     ControlUpDatePtrs.Add(pCktElem);
                 end;
                 GEN_CONTROL:
                 begin
-                    ControlUpDateStrings.Add(Format('Element=%s ', [makeNewCktElemName(DSS, pCktElem.GetPropertyValue(1))]));
+                    ControlUpDateStrings.Add(Format('Element=%s ', [makeNewCktElemName(DSS, pCktElem.PropertyValue(1))]));
                     ControlUpDatePtrs.Add(pCktElem);
                 end;
                 STORAGE_CONTROL:
                 begin
-                    ControlUpDateStrings.Add(Format('Element=%s ', [makeNewCktElemName(DSS, pCktElem.GetPropertyValue(1))]));
+                    ControlUpDateStrings.Add(Format('Element=%s ', [makeNewCktElemName(DSS, pCktElem.PropertyValue(1))]));
                     ControlUpDatePtrs.Add(pCktElem);
                 end;
                 SWT_CONTROL:
                 begin
-                    ControlUpDateStrings.Add(Format('SwitchedObj=%s ', [makeNewCktElemName(DSS, pCktElem.GetPropertyValue(1))]));
+                    ControlUpDateStrings.Add(Format('SwitchedObj=%s ', [makeNewCktElemName(DSS, pCktElem.PropertyValue(1))]));
                     ControlUpDatePtrs.Add(pCktElem);
                 end;
             end;

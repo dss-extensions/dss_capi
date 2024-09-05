@@ -25,9 +25,6 @@ TYPE
          FRecorderFile:String;
          RecorderFile: TFileStream;
 
-         FUNCTION Get_LastError:String;
-         FUNCTION Get_ErrorResult:Integer;
-
          function Get_Command: String;
          
          procedure Set_RecorderOn(const Value: Boolean);
@@ -48,19 +45,17 @@ TYPE
          constructor Create(dssContext: TDSSContext);
          destructor  Destroy; override;
 
-         PROCEDURE CreateDefaultDSSItems;
+         PROCEDURE CreateDefaultDSSItems();
          Procedure Write_to_RecorderFile(const s:String);
 
          Procedure Clear(Resetting: Boolean = True);
 {$IFDEF DSS_CAPI_PM}
-         Procedure ClearAll;
+         Procedure ClearAll();
 {$ENDIF}
 
          procedure ParseCommand(const Value: String); overload;
          procedure ParseCommand(const Value: String; LineNum: Integer); overload;
 
-         Property Error:Integer    read Get_ErrorResult;
-         Property LastError:String read Get_LastError;
          Property RecorderOn:Boolean Read FRecorderOn write Set_RecorderOn;
 
          // ZIP functions
@@ -171,17 +166,7 @@ begin
     inherited Destroy;
 end;
 
-FUNCTION TExecutive.Get_LastError:String;
-Begin
-     Result := DSS.LastErrorMessage;
-End;
-
-FUNCTION TExecutive.Get_ErrorResult:Integer;
-Begin
-     Result := DSS.ErrorNumber;
-End;
-
-PROCEDURE TExecutive.CreateDefaultDSSItems;
+PROCEDURE TExecutive.CreateDefaultDSSItems();
 // Create default loadshapes, growthshapes, and other general DSS objects
 // used by all circuits.
 var
@@ -335,7 +320,7 @@ begin
 end;
 
 {$IFDEF DSS_CAPI_PM}
-procedure TExecutive.ClearAll;
+procedure TExecutive.ClearAll();
 var
     PMParent: TDSSContext;
     i: integer;

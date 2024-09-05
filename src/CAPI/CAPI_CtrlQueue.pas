@@ -135,7 +135,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.ActiveCircuit.ControlQueue.QueueSize;
+    Result := DSSPrime.ActiveCircuit.ControlQueue.QueueSize();
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_DoAllQueue(); CDECL;

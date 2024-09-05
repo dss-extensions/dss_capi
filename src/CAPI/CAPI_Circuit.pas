@@ -318,7 +318,7 @@ begin
     cPower := 0;
     for pCktElem in DSSPrime.ActiveCircuit.Sources do
     begin
-        cPower += pcktElem.Power[1];
+        cPower += pcktElem.Power(1);
     end;
     Result[0] := cPower.re * 0.001;
     Result[1] := cPower.im * 0.001;

@@ -339,7 +339,7 @@ procedure Settings_Set_ControlTrace(Value: TAPIBoolean); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    DSSPrime.ActiveCircuit.ControlQueue.TraceLog := Value;
+    DSSPrime.ActiveCircuit.ControlQueue.SetTraceLog(Value);
 end;
 //------------------------------------------------------------------------------
 procedure Settings_Set_VoltageBases(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;

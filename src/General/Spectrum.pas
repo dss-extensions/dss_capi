@@ -330,7 +330,7 @@ begin
     inherited DumpProperties(F, Complete);
 
     for i := 1 to ParentClass.NumProperties do
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
 
     if Complete then
     begin

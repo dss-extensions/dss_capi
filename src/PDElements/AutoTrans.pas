@@ -186,7 +186,6 @@ type
         function Get_BasekVLL(i: Integer): Double;
         // CIM accessors
         function Get_WdgResistance(i: Integer): Double;
-        function Get_WdgkVA(i: Integer): Double;
         function Get_Xsc(i: Integer): Double;
 
         procedure CalcY_Terminal(FreqMult: Double);
@@ -226,14 +225,14 @@ type
         XHXChanged: Boolean;
 
         procedure SetTermRef;
-        function Get_PresentTap(i: Integer): Double; override;
-        procedure Set_PresentTap(i: Integer; const Value: Double); override;
-        function Get_MinTap(i: Integer): Double; override;
-        function Get_MaxTap(i: Integer): Double; override;
-        function Get_TapIncrement(i: Integer): Double; override;
-        function Get_BaseVoltage(i: Integer): Double; override;
-        function Get_NumTaps(i: Integer): Integer; override;
-        function Get_WdgConnection(i: Integer): Integer; override;
+        function PresentTap(i: Integer): Double; override;
+        procedure SetPresentTap(i: Integer; const Value: Double); override;
+        function MinTap(i: Integer): Double; override;
+        function MaxTap(i: Integer): Double; override;
+        function TapIncrement(i: Integer): Double; override;
+        function BaseVoltage(i: Integer): Double; override;
+        function NumTaps(i: Integer): Integer; override;
+        function WdgConnection(i: Integer): Integer; override;
 
     PUBLIC
         ActiveWinding: Integer;  // public for COM interface
@@ -274,18 +273,11 @@ type
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
-        //property PresentTap[i: Integer]: Double READ Get_PresentTap WRITE Set_PresentTap;
-        //property Mintap[i: Integer]: Double READ Get_MinTap;
-        //property Maxtap[i: Integer]: Double READ Get_MaxTap;
-        //property TapIncrement[i: Integer]: Double READ Get_TapIncrement;
-        // property BaseVoltage[i: Integer]: Double READ Get_BaseVoltage;  // Winding VBase
         property BasekVLL[i: Integer]: Double READ Get_BasekVLL;  // Winding VBase
 
         // CIM accessors
-        // property NumTaps[i: Integer]: Integer READ Get_NumTaps;
         property WdgResistance[i: Integer]: Double READ Get_WdgResistance;
-        property WdgkVA[i: Integer]: Double READ Get_WdgkVA;
-        // property WdgConnection[i: Integer]: Integer READ Get_WdgConnection;
+        function WdgkVA(i: Integer): Double;
         property XscVal[i: Integer]: Double READ Get_Xsc;
     end;
 
@@ -1086,7 +1078,7 @@ begin
                         if TProp(i) in done then
                             continue;
 
-                        FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[i], GetPropertyValue(i)]));
+                        FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[i], PropertyValue(i)]));
                         Include(done, TProp(i));
                     end;
                     for i := 1 to Numwindings do
@@ -1119,8 +1111,8 @@ begin
             if not (TProp(iProp) in done) then
             begin
                 Include(done, TProp(iProp));
-                if (Length(PropertyValue[iProp]) > 0) then
-                    FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(PropertyValue[iProp])]));
+                if (Length(PropertyValue(iProp)) > 0) then
+                    FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(PropertyValue(iProp))]));
             end;
         end;
         iProp := GetNextPropertySet(iProp);
@@ -1304,10 +1296,10 @@ begin
     FSWriteln(F, Format('~ %%noloadloss=%.0f', [pctNoLoadLoss]));
 
     for i := 28 to NumPropsThisClass do
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
 
     for i := NumPropsthisClass + 1 to ParentClass.NumProperties do
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
 
     if Complete then
     begin
@@ -1422,7 +1414,7 @@ begin
     MinTap := 0.90;
 end;
 
-function TAutoTransObj.Get_PresentTap(i: Integer): Double;
+function TAutoTransObj.PresentTap(i: Integer): Double;
 begin
     if (i > 0) and (i <= NumWindings) then
         Result := Winding[i].puTap
@@ -1430,7 +1422,7 @@ begin
         Result := 0.0;
 end;
 
-procedure TAutoTransObj.Set_PresentTap(i: Integer; const Value: Double);
+procedure TAutoTransObj.SetPresentTap(i: Integer; const Value: Double);
 var
     TempVal: Double;
 begin
@@ -1462,7 +1454,7 @@ begin
         Result := 0.0;
 end;
 
-function TAutoTransObj.Get_WdgkVA(i: Integer): Double;
+function TAutoTransObj.WdgkVA(i: Integer): Double;
 begin
     if (i > 0) and (i <= NumWindings) then
         Result := Winding[i].kVA
@@ -1481,7 +1473,7 @@ begin
         Result := 0.0;
 end;
 
-function TAutoTransObj.Get_WdgConnection(i: Integer): Integer;
+function TAutoTransObj.WdgConnection(i: Integer): Integer;
 begin
     if (i > 0) and (i <= NumWindings) then
         Result := Ord(Winding[i].Connection)
@@ -1489,7 +1481,7 @@ begin
         Result := 0;
 end;
 
-function TAutoTransObj.Get_MinTap(i: Integer): Double;
+function TAutoTransObj.MinTap(i: Integer): Double;
 begin
     if (i > 0) and (i <= NumWindings) then
         Result := Winding[i].MinTap
@@ -1497,7 +1489,7 @@ begin
         Result := 0.0;
 end;
 
-function TAutoTransObj.Get_MaxTap(i: Integer): Double;
+function TAutoTransObj.MaxTap(i: Integer): Double;
 begin
     if (i > 0) and (i <= NumWindings) then
         Result := Winding[i].MaxTap
@@ -1505,7 +1497,7 @@ begin
         Result := 0.0;
 end;
 
-function TAutoTransObj.Get_NumTaps(i: Integer): Integer;
+function TAutoTransObj.NumTaps(i: Integer): Integer;
 begin
     if (i > 0) and (i <= NumWindings) then
         Result := Winding[i].NumTaps
@@ -1513,7 +1505,7 @@ begin
         Result := 0;
 end;
 
-function TAutoTransObj.Get_TapIncrement(i: Integer): Double;
+function TAutoTransObj.TapIncrement(i: Integer): Double;
 begin
     if (i > 0) and (i <= NumWindings) then
         Result := Winding[i].TapIncrement
@@ -1653,7 +1645,7 @@ begin
     end;
 end;
 
-function TAutoTransObj.Get_BaseVoltage(i: Integer): Double;
+function TAutoTransObj.BaseVoltage(i: Integer): Double;
 begin
     if (i < 1) or (i > NumWindings) then
         Result := Winding[1].VBase

@@ -442,14 +442,14 @@ begin
         // Open/Close State of controlled element based on state assigned to the control
         if FPresentState = CTRL_CLOSE then
         begin
-            ControlledElement.Closed[0] := TRUE;
+            ControlledElement.SetConductorClosed(0, TRUE);
             LockedOut := FALSE;
             OperationCount := 1;
             ArmedForOpen := FALSE;
         end
         else
         begin
-            ControlledElement.Closed[0] := FALSE;
+            ControlledElement.SetConductorClosed(0, FALSE);
             LockedOut := TRUE;
             OperationCount := NumReclose + 1;
             ArmedForClose := FALSE;
@@ -480,7 +480,7 @@ begin
                 CTRL_CLOSE:
                     if ArmedForOpen then
                     begin   // ignore if we became disarmed in meantime
-                        ControlledElement.Closed[0] := FALSE;   // Open all phases of active terminal
+                        ControlledElement.SetConductorClosed(0, FALSE);   // Open all phases of active terminal
                         if OperationCount > NumReclose then
                         begin
                             LockedOut := TRUE;
@@ -506,7 +506,7 @@ begin
                 CTRL_OPEN:
                     if ArmedForClose and not LockedOut then
                     begin
-                        ControlledElement.Closed[0] := TRUE; // Close all phases of active terminal
+                        ControlledElement.SetConductorClosed(0, TRUE); // Close all phases of active terminal
                         Inc(OperationCount);
                         AppendtoEventLog(Self.FullName, 'Closed');
                         ArmedForClose := FALSE;
@@ -537,7 +537,7 @@ var
 begin
     ControlledElement.ActiveTerminalIdx := ElementTerminal;
 
-    if ControlledElement.Closed[0] // Check state of phases of active terminal
+    if ControlledElement.ConductorClosed(0) // Check state of phases of active terminal
     then
         FPresentState := CTRL_CLOSE
     else
@@ -676,24 +676,24 @@ begin
 
     if NormalState = CTRL_OPEN then
     begin
-        ControlledElement.Closed[0] := FALSE; // Open all phases of active terminal
+        ControlledElement.SetConductorClosed(0, FALSE); // Open all phases of active terminal
         LockedOut := TRUE;
         OperationCount := NumReclose + 1;
     end
     else
     begin
-        ControlledElement.Closed[0] := TRUE; // Close all phases of active terminal
+        ControlledElement.SetConductorClosed(0, TRUE); // Close all phases of active terminal
         LockedOut := FALSE;
         Operationcount := 1;
     end;
 end;
 
-function TRecloserObj.get_PresentState: EControlAction; //TODO: why GetPropertyValue doesn't use this one?
+function TRecloserObj.get_PresentState: EControlAction; //TODO: why PropertyValue doesn't use this one?
 begin
     if ControlledElement <> NIL then
     begin
         ControlledElement.ActiveTerminalIdx := ElementTerminal;
-        if ControlledElement.Closed[0] then
+        if ControlledElement.ConductorClosed(0) then
             FPresentState := CTRL_CLOSE
         else
             FPresentState := CTRL_OPEN;
@@ -715,7 +715,7 @@ Begin
     ControlledElement.ActiveTerminalIdx := ElementTerminal;
     if Value = CTRL_OPEN then
     begin
-        ControlledElement.Closed[0] := FALSE;
+        ControlledElement.SetConductorClosed(0, FALSE);
         LockedOut := TRUE;
         OperationCount := NumReclose + 1;
         ArmedForClose := FALSE;
@@ -723,7 +723,7 @@ Begin
     else 
     // if Value = CTRL_CLOSE then
     begin
-        ControlledElement.Closed[0] := TRUE;
+        ControlledElement.SetConductorClosed(0, TRUE);
         LockedOut := FALSE;
         OperationCount := 1;
         ArmedForOpen := FALSE;

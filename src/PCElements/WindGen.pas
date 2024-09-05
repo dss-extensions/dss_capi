@@ -307,7 +307,7 @@ type
 
         procedure RecalcElementData(); OVERRIDE;
         procedure CalcYPrim(); OVERRIDE;
-        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
+        procedure SetConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
 
         function InjCurrents(): Integer; OVERRIDE;
         function NumVariables(): Integer; OVERRIDE;
@@ -1895,7 +1895,7 @@ begin
             // recalc Mmass and D in case the frequency has changed
             GenVars.Mmass := 2.0 * GenVars.Hmass * GenVars.kVArating * 1000.0 / w0; // M = W-sec
             GenVars.D := GenVars.Dpu * GenVars.kVArating * 1000.0 / w0;
-            Pshaft := -Power[1].re; // Initialize Pshaft to present power Output
+            Pshaft := -Power(1).re; // Initialize Pshaft to present power Output
 
             Speed := 0.0; // relative to synch speed
             dSpeed := 0.0;
@@ -1924,7 +1924,7 @@ begin
                     DynamicEqVals[DynamicEqPair[i * 2]][0] := Cang(Edp);
                 end
                 else
-                    DynamicEqVals[DynamicEqPair[i * 2]][0] := PCEValue[1, DynamicEqPair[(i * 2) + 1]];
+                    DynamicEqVals[DynamicEqPair[i * 2]][0] := PCEValue(1, DynamicEqPair[(i * 2) + 1]);
             end;
         end;
     end;
@@ -2003,7 +2003,7 @@ begin
                     1:
                         DynamicEqVals[DynamicEqPair[i * 2]][0] := -TerminalPowerIn(Vterminal, Iterminal, FnPhases).im;
                 else
-                    DynamicEqVals[DynamicEqPair[i * 2]][0] := PCEValue[1, DynamicEqPair[(i * 2) + 1]];
+                    DynamicEqVals[DynamicEqPair[i * 2]][0] := PCEValue(1, DynamicEqPair[(i * 2) + 1]);
                 end;
             end;
         end;
@@ -2237,7 +2237,7 @@ begin
     inherited;
 end;
 
-procedure TWindGenObj.Set_ConductorClosed(Index: Integer; Value: Boolean);
+procedure TWindGenObj.SetConductorClosed(Index: Integer; Value: Boolean);
 begin
     inherited;
     GenSwitchOpen := not Value; // Just turn WindGen on or off;

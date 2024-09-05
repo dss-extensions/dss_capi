@@ -131,7 +131,7 @@ begin
         Exit;
     end;
     Obj.ControlledElement.ActiveTerminalIdx := Obj.ElementTerminal;
-    if Obj.ControlledElement.Closed[0] then
+    if Obj.ControlledElement.ConductorClosed(0) then
         Result := ord(CTRL_CLOSE)
     else
         Result := ord(CTRL_OPEN);
@@ -228,9 +228,9 @@ begin
                 ControlledElement.ActiveTerminalIdx := ElementTerminal;
                 case PresentState of     // Force state
                     CTRL_OPEN:
-                        ControlledElement.Closed[0] := FALSE;
+                        ControlledElement.SetConductorClosed(0, FALSE);
                     CTRL_CLOSE:
-                        ControlledElement.Closed[0] := TRUE;
+                        ControlledElement.SetConductorClosed(0, TRUE);
                 end;
             end;
         end;
@@ -330,13 +330,13 @@ begin
         begin
             if (Code = Integer(CTRL_OPEN)) and (PresentState = CTRL_CLOSE) then
             begin
-                ControlledElement.Closed[0] := FALSE; // Open all phases of active terminal
+                ControlledElement.SetConductorClosed(0, FALSE); // Open all phases of active terminal
                 PresentState := CTRL_OPEN;
                 AppendtoEventLog(Self.FullName, 'Opened');
             end;
             if (Code = Integer(CTRL_CLOSE)) and (PresentState = CTRL_OPEN) then
             begin
-                ControlledElement.Closed[0] := TRUE;    // Close all phases of active terminal
+                ControlledElement.SetConductorClosed(0, TRUE);    // Close all phases of active terminal
                 PresentState := CTRL_CLOSE;
                 AppendtoEventLog(Self.FullName, 'Closed');
             end;
@@ -373,10 +373,10 @@ begin
             ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal
             case NormalState of
                 CTRL_OPEN:
-                    ControlledElement.Closed[0] := FALSE;
+                    ControlledElement.SetConductorClosed(0, FALSE);
             else
             //CTRL_CLOSE:
-                ControlledElement.Closed[0] := TRUE;  // Close all phases of active terminal
+                ControlledElement.SetConductorClosed(0, TRUE);  // Close all phases of active terminal
             end;
         end;
     end;

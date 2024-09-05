@@ -898,14 +898,14 @@ begin
             RandomMult := 1.0;
         GAUSSIAN:
             if Assigned(YearlyShapeObj) then
-                RandomMult := Gauss(YearlyShapeObj.Mean, YearlyShapeObj.StdDev)
+                RandomMult := Gauss(YearlyShapeObj.GetMean(), YearlyShapeObj.GetStdDev())
             else
                 RandomMult := Gauss(puMean, puStdDev);
         UNIFORM:
             RandomMult := Random;  // number between 0 and 1.0
         LOGNORMAL:
             if Assigned(YearlyShapeObj) then
-                RandomMult := QuasiLognormal(YearlyShapeObj.Mean)
+                RandomMult := QuasiLognormal(YearlyShapeObj.GetMean())
             else
                 RandomMult := QuasiLognormal(puMean);
     end;

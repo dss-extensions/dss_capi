@@ -211,7 +211,7 @@ begin
     PropertyFlags[ord(TProp.Normal)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.DynamicDefault]; // FControlledElement.NPhases
 
     PropertyType[ord(TProp.State)] := TPropertyType.MappedStringEnumArrayProperty;
-    PropertyOffset[ord(TProp.State)] := ptrint(@obj.FPresentState); //TODO: why GetPropertyValue doesn't use get_State(x) in the original codebase?
+    PropertyOffset[ord(TProp.State)] := ptrint(@obj.FPresentState); //TODO: why PropertyValue doesn't use get_State(x) in the original codebase?
     PropertyOffset2[ord(TProp.State)] := ptrint(StateEnum); 
     PropertyOffset3[ord(TProp.State)] := ptrint(@GetFuseStateSize);
     PropertyFlags[ord(TProp.State)] := [TPropertyFlag.SizeIsFunction]; // FControlledElement.NPhases
@@ -257,10 +257,7 @@ begin
 
             ControlledElement.ActiveTerminalIdx := ElementTerminal;
             for i := 1 to ControlledElement.NPhases do
-                if FPresentState[i] = CTRL_OPEN then
-                    ControlledElement.Closed[i] := FALSE
-                else
-                    ControlledElement.Closed[i] := TRUE;
+                ControlledElement.SetConductorClosed(i, FPresentState[i] <> CTRL_OPEN);
         end;
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
@@ -392,9 +389,9 @@ begin
         // Open/Close State of controlled element based on state assigned to the control
         for i := 1 to Min(FUSEMAXDIM, ControlledElement.Nphases) do
             if FPresentState[i] = CTRL_OPEN then
-                ControlledElement.Closed[i] := FALSE
+                ControlledElement.SetConductorClosed(i, FALSE)
             else
-                ControlledElement.Closed[i] := TRUE;
+                ControlledElement.SetConductorClosed(i, TRUE);
 
         for i := 1 to ControlledElement.Nphases do
             hAction[i] := 0;
@@ -438,7 +435,7 @@ begin
     if FPresentState[Phs] = CTRL_CLOSE then
         if ReadyToBlow[Phs] then
         begin   // ignore if we became disarmed in meantime
-            ControlledElement.Closed[Phs] := FALSE;   // Open all phases of active terminal
+            ControlledElement.SetConductorClosed(Phs, FALSE);   // Open all phases of active terminal
             AppendtoEventLog(Self.FullName, 'Phase ' + IntToStr(Phs) + ' Blown');
             hAction[phs] := 0;
         end;
@@ -455,7 +452,7 @@ begin
 
     for i := 1 to Min(FUSEMAXDIM, MonitoredElement.Nphases) do
     begin
-        if ControlledElement.Closed[i]      // Check state of phases of active terminal
+        if ControlledElement.ConductorClosed(i)      // Check state of phases of active terminal
         then
             FPresentState[i] := CTRL_CLOSE
         else
@@ -511,9 +508,9 @@ begin
         hAction[i] := 0;
 
         if FNormalState[i] = CTRL_OPEN then
-            ControlledElement.Closed[i] := FALSE
+            ControlledElement.SetConductorClosed(i, FALSE)
         else
-            ControlledElement.Closed[i] := TRUE;
+            ControlledElement.SetConductorClosed(i, TRUE);
     end;
 end;
 
@@ -523,7 +520,7 @@ begin
     if ControlledElement <> NIL then
     begin
         ControlledElement.ActiveTerminalIdx := ElementTerminal; 
-        if not ControlledElement.Closed[Idx] then
+        if not ControlledElement.ConductorClosed(Idx) then
             FPresentState[Idx]:= CTRL_OPEN
         else
             FPresentState[Idx]:= CTRL_CLOSE;

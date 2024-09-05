@@ -1472,7 +1472,7 @@ begin
     // Dump the rest by default
     for i := ord(TProp.Rg) to ParentClass.NumProperties do
     begin
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
     end;
 end;
 
@@ -2189,7 +2189,7 @@ begin
                     wroteConds := True;
                 end;
         else
-            FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(PropertyValue[iProp])]));
+            FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(PropertyValue(iProp))]));
         end;
         iProp := GetNextPropertySet(iProp);
     end;

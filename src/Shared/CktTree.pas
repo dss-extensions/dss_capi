@@ -538,7 +538,7 @@ begin
         Result := FALSE;
         ThisElement.ActiveTerminalIdx := i;
         for j := 1 to ThisElement.NPhases do
-            if ThisElement.Closed[j] then
+            if ThisElement.ConductorClosed(j) then
             begin
                 Result := TRUE;
                 Break;

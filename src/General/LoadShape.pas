@@ -150,10 +150,6 @@ type
         procedure SaveToDblFile();
         procedure SaveToSngFile();
         procedure CalcMeanandStdDev;
-        function Get_Mean: Double;
-        function Get_StdDev: Double;
-        procedure Set_Mean(const Value: Double);
-        procedure Set_StdDev(const Value: Double);  // Normalize the curve presently in memory
         function GetMultAtHourSingle(Hr: Double): Complex;
         function HasData(): Boolean;
     PUBLIC
@@ -211,12 +207,13 @@ type
         procedure LoadMMFView(const Parmname: String; Destination: TMMShapeType);
         procedure LoadFileFeatures(ShapeType: TMMShapeType);
 
-        function GetPropertyValue(Index: Integer): String; OVERRIDE;
+        function PropertyValue(Index: Integer): String; OVERRIDE;
 
         function IntervalAtIndex(i: Integer): Double;
-        property Mean: Double READ Get_Mean WRITE Set_Mean;
-        property StdDev: Double READ Get_StdDev WRITE Set_StdDev;
-
+        function GetMean(): Double;
+        function GetStdDev(): Double;
+        procedure SetMean(const Value: Double);
+        procedure SetStdDev(const Value: Double);  // Normalize the curve presently in memory
         procedure SetDataPointers(HoursPtr: PDouble; PMultPtr: PDouble; QMultPtr: PDouble; DStride: Integer);
         procedure SetDataPointersSingle(HoursPtr: PSingle; PMultPtr: PSingle; QMultPtr: PSingle; SStride: Integer);
         procedure UseFloat32;
@@ -299,22 +296,22 @@ end;
 
 function GetMean(obj: TObj): Double;
 begin
-    Result := obj.Mean;
+    Result := obj.GetMean();
 end;
 
 procedure SetMean(obj: TObj; value: Double);
 begin
-    obj.Mean := value;
+    obj.SetMean(value);
 end;
 
 function GetStdDev(obj: TObj): Double;
 begin
-    Result := obj.StdDev;
+    Result := obj.GetStdDev();
 end;
 
 procedure SetStdDev(obj: TObj; value: Double);
 begin
-    obj.StdDev := value;
+    obj.SetStdDev(value);
 end;
 
 procedure DoAction(obj: TObj; action: TLoadShapeAction);
@@ -1740,14 +1737,14 @@ begin
     end;
 end;
 
-function TLoadShapeObj.Get_Mean: Double;
+function TLoadShapeObj.GetMean(): Double;
 begin
     if not FStdDevCalculated then
         CalcMeanandStdDev;
     Result := FMean;
 end;
 
-function TLoadShapeObj.Get_StdDev: Double;
+function TLoadShapeObj.GetStdDev(): Double;
 begin
     if not FStdDevCalculated then
         CalcMeanandStdDev;
@@ -1807,7 +1804,7 @@ begin
         m := 0.0;
 end;
 
-function TLoadShapeObj.GetPropertyValue(Index: Integer): String;
+function TLoadShapeObj.PropertyValue(Index: Integer): String;
 begin
     Result := '';
 
@@ -1844,7 +1841,7 @@ begin
                 Result := GetDSSArray(NumPoints, pSingleArray(sQ));
         end;
     else
-        Result := inherited GetPropertyValue(index);
+        Result := inherited PropertyValue(index);
     end;
 end;
 
@@ -2050,13 +2047,13 @@ begin
     end;
 end;
 
-procedure TLoadShapeObj.Set_Mean(const Value: Double);
+procedure TLoadShapeObj.SetMean(const Value: Double);
 begin
     FStdDevCalculated := TRUE;
     FMean := Value;
 end;
 
-procedure TLoadShapeObj.Set_StdDev(const Value: Double);
+procedure TLoadShapeObj.SetStdDev(const Value: Double);
 begin
     FStdDevCalculated := TRUE;
     FStdDev := Value;

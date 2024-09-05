@@ -599,7 +599,7 @@ begin
     FSWriteln(F, Format('~ %s=%.5f', [ParentClass.PropertyName[5], X0]));
     FSWriteln(F, Format('~ %s=%.5f', [ParentClass.PropertyName[6], C1 * 1.0e9]));
     FSWriteln(F, Format('~ %s=%.5f', [ParentClass.PropertyName[7], C0 * 1.0e9]));
-    FSWriteln(F, Format('~ %s=%s',   [ParentClass.PropertyName[8], PropertyValue[8]]));
+    FSWriteln(F, Format('~ %s=%s',   [ParentClass.PropertyName[8], PropertyValue(8)]));
     FSWrite(F, '~ ' + ParentClass.PropertyName[9] + '=' + '"');
     for i := 1 to FNPhases do
     begin
@@ -634,7 +634,7 @@ begin
 
     for i := 12 to 21 do
     begin
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
     end;
 
     FSWriteln(F, Format('~ %s=%d', [ParentClass.PropertyName[22], FNeutralConductor]));
@@ -644,7 +644,7 @@ begin
         TempStr := TempStr + floattoStrf(AmpRatings[k - 1], ffGeneral, 8, 4) + ',';
     TempStr := TempStr + ']';
     FSWriteln(F, Format('~ %s=%s', [ParentClass.PropertyName[26], TempStr]));
-    FSWriteln(F, Format('~ %s=%s', [ParentClass.PropertyName[27], PropertyValue[27]]));
+    FSWriteln(F, Format('~ %s=%s', [ParentClass.PropertyName[27], PropertyValue(27)]));
 end;
 
 procedure TLineCodeObj.DoKronReduction;

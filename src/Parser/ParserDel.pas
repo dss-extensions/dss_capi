@@ -40,11 +40,7 @@ type
     PRIVATE
         ParserVars: TParserVar; // reference to global parser vars
         CmdBuffer: String;
-        FPosition: Integer;
         ParameterBuffer: String;
-        DelimChars: String;
-        WhiteSpaceChars: String;
-        FBeginQuoteChars, FEndQuoteChars: String;
         LastDelimiter: Char;
         MatrixRowTerminator: Char;
         ConvertError: Boolean;
@@ -62,6 +58,10 @@ type
         DSSCtx: TObject;
         tokenBuffer: String;
         autoIncrement: Boolean;
+        position: Integer;
+        delimiters: String;
+        whiteSpace: String;
+        beginQuoteChars, endQuoteChars: String;
 
         constructor Create(dssContext: TObject);
         destructor Destroy; OVERRIDE;
@@ -86,11 +86,6 @@ type
         procedure SetVars(vars: TParserVar);
 
         property CmdString: String READ CmdBuffer WRITE SetCmdString;
-        property Position: Integer READ FPosition WRITE FPosition; // to save and restore
-        property Delimiters: String READ DelimChars WRITE DelimChars;
-        property Whitespace: String READ WhiteSpaceChars WRITE WhiteSpaceChars;
-        property BeginQuoteChars: String READ FBeginQuoteChars WRITE FBeginQuoteChars;
-        property EndQuoteChars: String READ FEndQuoteChars WRITE FEndQuoteChars;
     end;
 
 implementation
@@ -117,7 +112,7 @@ begin
     Val(tokenBuffer, Number, ErrorCode);
     if ErrorCode = 0 then
     begin
-        RPN.X := Number;  // Enters number in X register
+        RPN.SetX(Number);  // Enters number in X register
         Exit;
     end;
 
@@ -256,11 +251,11 @@ begin
 
     DSSCtx := dssContext;
     ParserVars := nil;
-    DelimChars := ',=';
-    WhiteSpaceChars := ' ' + #9;   // blank + tab
-    FBeginQuoteChars := '("''[{';
-    FEndQuoteChars := ')"'']}';
-    FPosition := 1;
+    delimiters := ',=';
+    whiteSpace := ' ' + #9;   // blank + tab
+    beginQuoteChars := '("''[{';
+    endQuoteChars := ')"'']}';
+    position := 1;
     MatrixRowTerminator := '|';
     autoIncrement := FALSE;
     RPNCalculator := TRPNCalc.Create;
@@ -276,17 +271,17 @@ end;
 procedure TDSSParser.SetCmdString(const Value: String);
 begin
     CmdBuffer := Value + ' '; // add some white space at end to get last param
-    FPosition := 1;
-    SkipWhiteSpace(CmdBuffer, FPosition);   // position at first non whitespace character
+    position := 1;
+    SkipWhiteSpace(CmdBuffer, position);   // position at first non whitespace character
 end;
 
 procedure TDSSParser.ResetDelims();
 begin
-    DelimChars := ',=';
-    WhiteSpaceChars := ' ' + #9;
+    delimiters := ',=';
+    whiteSpace := ' ' + #9;
     MatrixRowTerminator := '|';
-    FBeginQuoteChars := '("''[{';
-    FEndQuoteChars := ')"'']}';
+    beginQuoteChars := '("''[{';
+    endQuoteChars := ')"'']}';
 end;
 
 function TDSSParser.IsWhiteSpace(ch: Char): Boolean;
@@ -294,9 +289,9 @@ var
     i: Integer;
 begin
     Result := FALSE;
-    for i := 1 to Length(WhiteSpaceChars) do
+    for i := 1 to Length(whiteSpace) do
     begin
-        if ch = WhiteSpaceChars[i] then
+        if ch = whiteSpace[i] then
         begin
             Result := TRUE;
             Exit;
@@ -320,9 +315,9 @@ begin
 
     ch := LineBuffer[LinePos];
 
-    for i := 1 to Length(DelimChars) do
+    for i := 1 to Length(delimiters) do
     begin
-        if ch = DelimChars[i] then
+        if ch = delimiters[i] then
         begin
             Result := TRUE;
             LastDelimiter := ch;
@@ -330,9 +325,9 @@ begin
         end;
     end;
 
-    for i := 1 to Length(WhiteSpaceChars) do
+    for i := 1 to Length(whiteSpace) do
     begin
-        if ch = WhiteSpaceChars[i] then
+        if ch = whiteSpace[i] then
         begin
             Result := TRUE;
             LastDelimiter := ' ';  // to indicate stopped on white space
@@ -346,9 +341,9 @@ var
     i: Integer;
 begin
     Result := FALSE;
-    for i := 1 to Length(DelimChars) do
+    for i := 1 to Length(delimiters) do
     begin
-        if ch = DelimChars[i] then
+        if ch = delimiters[i] then
         begin
             Result := TRUE;
             Exit;
@@ -383,13 +378,13 @@ var
 
     procedure ParseToEndQuote();
     begin
-        ParseToEndChar(FEndQuoteChars[QuoteIndex]);
+        ParseToEndChar(endQuoteChars[QuoteIndex]);
         IsQuotedString := TRUE;
     end;
 
     function IsBeginQuote(ch: Char): Boolean;
     begin
-        QuoteIndex := Pos(ch, FBeginQuoteChars);
+        QuoteIndex := Pos(ch, beginQuoteChars);
         if QuoteIndex > 0 then
             Result := TRUE
         else
@@ -436,14 +431,14 @@ end;
 
 function TDSSParser.NextParam(): String;
 begin
-    if FPosition <= Length(CmdBuffer) then
+    if position <= Length(CmdBuffer) then
     begin
         LastDelimiter := ' ';
-        tokenBuffer := GetToken(CmdBuffer, FPosition); // Get entire token and put in token Buffer
+        tokenBuffer := GetToken(CmdBuffer, position); // Get entire token and put in token Buffer
         if (LastDelimiter = '=') then
         begin
             Parameterbuffer := tokenBuffer;     // put first token in Parameterbuffer
-            tokenBuffer := Gettoken(CmdBuffer, FPosition);   // get token value after the =
+            tokenBuffer := Gettoken(CmdBuffer, position);   // get token value after the =
         end
         else
         begin
@@ -483,8 +478,8 @@ begin
         NodeBuffer := Copy(tokenBuffer, DotPos + 1, Length(tokenBuffer) - DotPos) + ' ';
 
         NodeBufferPos := 1;
-        DelimSave := DelimChars;
-        DelimChars := '.';
+        DelimSave := delimiters;
+        delimiters := '.';
         tokenBuffer := GetToken(NodeBuffer, NodeBufferPos);
         try
             while Length(tokenBuffer) > 0 do
@@ -500,7 +495,7 @@ begin
                 TDSSContext(DSSCtx).MessageDlg('Node Buffer Too Small: ' + E.Message, TRUE);
         end;
 
-        DelimChars := DelimSave;   //restore to original delimiters
+        delimiters := DelimSave;   //restore to original delimiters
         tokenBuffer := TokenSave;
     end;
 end;
@@ -528,8 +523,8 @@ begin
         ParseBuffer := tokenBuffer + ' ';
 
         ParseBufferPos := 1;
-        DelimSave := DelimChars;
-        DelimChars := DelimChars + MatrixRowTerminator;
+        DelimSave := delimiters;
+        delimiters := delimiters + MatrixRowTerminator;
 
         SkipWhiteSpace(ParseBuffer, ParseBufferPos);
         tokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
@@ -553,7 +548,7 @@ begin
             TDSSContext(DSSCtx).MessageDlg('Vector Buffer in ParseAsVector Probably Too Small: ' + E.Message, TRUE);
     end;
 
-    DelimChars := DelimSave;   //restore to original delimiters
+    delimiters := DelimSave;   //restore to original delimiters
     tokenBuffer := copy(ParseBuffer, ParseBufferPos, Length(ParseBuffer));  // prepare for next trip
     if DoRound then
         for i := 1 to Math.Min(NumElements, ExpectedSize) do
@@ -739,7 +734,7 @@ end;
 
 function TDSSParser.Remainder(): String;
 begin
-    Result := Copy(CmdBuffer, FPosition, Length(CmdBuffer) - FPosition + 1)
+    Result := Copy(CmdBuffer, position, Length(CmdBuffer) - position + 1)
 end;
 
 function TDSSParser.IsCommentChar(const LineBuffer: String; var LinePos: Integer): Boolean;
@@ -786,7 +781,7 @@ begin
     if (requiredRPN <> NIL) then
         requiredRPN^ := (cnt > 1);
 
-    Result := RPNCalculator.X;
+    Result := RPNCalculator.GetX();
 
     tokenBuffer := copy(ParseBuffer, ParseBufferPos, Length(ParseBuffer));  // prepare for next trip
 end;

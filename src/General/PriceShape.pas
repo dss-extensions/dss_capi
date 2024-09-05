@@ -99,8 +99,6 @@ type
         procedure SaveToDblFile;
         procedure SaveToSngFile;
         procedure CalcMeanandStdDev;
-        function Get_Mean: Double;
-        function Get_StdDev: Double;
     PUBLIC
         Interval: Double;  //=0.0 then random interval     (hr)
         Hours,          // Time values (hr) if Interval > 0.0  Else nil
@@ -115,8 +113,8 @@ type
         function PriceAtHour(Hr: Double): Double;  // Get Prices at specified time, hr
         function PriceAtIndex(i: Integer): Double;  // get Prices by index
 
-        property Mean: Double READ Get_Mean;
-        property StdDev: Double READ Get_StdDev;
+        function GetMean(): Double;
+        function GetStdDev(): Double;
     end;
 
 implementation
@@ -184,7 +182,7 @@ end;
 
 function GetMean(obj: TObj): Double;
 begin
-    Result := obj.Mean;
+    Result := obj.GetMean();
 end;
 
 procedure SetMean(obj: TObj; value: Double);
@@ -195,7 +193,7 @@ end;
 
 function GetStdDev(obj: TObj): Double;
 begin
-    Result := obj.StdDev;
+    Result := obj.GetStdDev();
 end;
 
 procedure SetStdDev(obj: TObj; value: Double);
@@ -473,14 +471,14 @@ begin
     FStdDevCalculated := TRUE;
 end;
 
-function TPriceShapeObj.Get_Mean: Double;
+function TPriceShapeObj.GetMean(): Double;
 begin
     if not FStdDevCalculated then
         CalcMeanandStdDev;
     Result := FMean;
 end;
 
-function TPriceShapeObj.Get_StdDev: Double;
+function TPriceShapeObj.GetStdDev(): Double;
 begin
     if not FStdDevCalculated then
         CalcMeanandStdDev;

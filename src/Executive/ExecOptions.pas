@@ -480,9 +480,9 @@ begin
             24:
                 DSS.ActiveCircuit.EmergMaxVolts := DSS.Parser.MakeDouble();
             25:
-                DSS.ActiveCircuit.DefaultDailyShapeObj.Mean := DSS.Parser.MakeDouble() / 100.0;
+                DSS.ActiveCircuit.DefaultDailyShapeObj.SetMean(DSS.Parser.MakeDouble() / 100.0);
             26:
-                DSS.ActiveCircuit.DefaultDailyShapeObj.StdDev := DSS.Parser.MakeDouble() / 100.0;
+                DSS.ActiveCircuit.DefaultDailyShapeObj.SetStdDev(DSS.Parser.MakeDouble() / 100.0);
             27:
                 with DSS.ActiveCircuit do
                 begin
@@ -535,7 +535,7 @@ begin
                     DefaultControlMode := ControlMode;  // always revert to last one specified in a script
                 end;
             44:
-                DSS.ActiveCircuit.ControlQueue.TraceLog := InterpretYesNo(Param);
+                DSS.ActiveCircuit.ControlQueue.SetTraceLog(InterpretYesNo(Param));
             45:
                 DSS.ActiveCircuit.GenMultiplier := DSS.Parser.MakeDouble();
             46:
@@ -910,9 +910,9 @@ begin
                 24:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.EmergMaxVolts);
                 25:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.DefaultDailyShapeObj.Mean * 100.0);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.DefaultDailyShapeObj.GetMean() * 100.0);
                 26:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.DefaultDailyShapeObj.StdDev * 100.0);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.DefaultDailyShapeObj.GetStdDev() * 100.0);
                 27:
                     AppendGlobalResult(DSS, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj));
                 28:

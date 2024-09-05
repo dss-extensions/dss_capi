@@ -1009,7 +1009,7 @@ begin
             ord(TProp.LmH):
                 FSWriteln(F, Format('~ LmH=%-.8g', [L * 1000.0]));
         else
-            FSWriteln(F, '~ ' + ParentClass.PropertyName[k] + '=' + PropertyValue[k]);
+            FSWriteln(F, '~ ' + ParentClass.PropertyName[k] + '=' + PropertyValue(k));
         end;
     end;
 end;

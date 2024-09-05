@@ -167,7 +167,7 @@ begin
 
     if (elem.ActiveWinding > 0) and 
        (elem.ActiveWinding <= elem.NumWindings) and
-       (elem.WdgConnection[elem.ActiveWinding] > 0) then
+       (elem.WdgConnection(elem.ActiveWinding) > 0) then
         Result := TRUE;
 end;
 //------------------------------------------------------------------------------
@@ -194,7 +194,7 @@ begin
 
     if (elem.ActiveWinding > 0) and 
        (elem.ActiveWinding <= elem.NumWindings) then
-        Result := elem.WdgKVA[elem.ActiveWinding];
+        Result := elem.WdgkVA(elem.ActiveWinding);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_MaxTap(): Double; CDECL;
@@ -207,7 +207,7 @@ begin
 
     if (elem.ActiveWinding > 0) and 
        (elem.ActiveWinding <= elem.NumWindings) then
-        Result := elem.Maxtap[elem.ActiveWinding];
+        Result := elem.MaxTap(elem.ActiveWinding);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_MinTap(): Double; CDECL;
@@ -220,7 +220,7 @@ begin
 
     if (elem.ActiveWinding > 0) and 
        (elem.ActiveWinding <= elem.NumWindings) then
-        Result := elem.Mintap[elem.ActiveWinding];
+        Result := elem.MinTap(elem.ActiveWinding);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Name(): PAnsiChar; CDECL;
@@ -244,7 +244,7 @@ begin
 
     if (elem.ActiveWinding > 0) and 
        (elem.ActiveWinding <= elem.NumWindings) then
-        Result := elem.NumTaps[elem.ActiveWinding];
+        Result := elem.NumTaps(elem.ActiveWinding);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_NumWindings(): Integer; CDECL;
@@ -294,7 +294,7 @@ begin
 
     if (elem.ActiveWinding > 0) and 
        (elem.ActiveWinding <= elem.NumWindings) then
-        Result := elem.PresentTap[elem.ActiveWinding];
+        Result := elem.PresentTap(elem.ActiveWinding);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Wdg(): Integer; CDECL;
@@ -541,7 +541,7 @@ begin
         Exit;
     end;
     
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.GetPropertyValue(ord(TTransfProp.WdgCurrents)));
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.PropertyValue(ord(TTransfProp.WdgCurrents)));
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_CoreType(): Integer; CDECL;

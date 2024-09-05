@@ -320,7 +320,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.ControlledElement.Closed[0] := FALSE; // Open all phases
+    elem.ControlledElement.SetConductorClosed(0, FALSE); // Open all phases
     for i := 1 to elem.ControlledElement.NPhases do 
         elem.FPresentState[i] := CTRL_OPEN; // Open all phases
 end;
@@ -369,7 +369,7 @@ begin
         Exit;
 
     for i := 1 to elem.nphases do
-        if not elem.ControlledElement.Closed[i] then
+        if not elem.ControlledElement.ConductorClosed(i) then
             Result := TRUE;
 end;
 //------------------------------------------------------------------------------

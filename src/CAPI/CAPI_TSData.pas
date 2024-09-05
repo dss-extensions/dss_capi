@@ -203,7 +203,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FRadius * 2.0;
+    Result := elem.radius * 2.0;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_Diameter(Value: Double); CDECL;
@@ -212,7 +212,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.FRadius := Value / 2.0;
+    elem.radius := Value / 2.0;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.diam), 0, []);
 end;
 //------------------------------------------------------------------------------
@@ -223,7 +223,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FRadius;
+    Result := elem.radius;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_Radius(Value: Double); CDECL;
@@ -232,7 +232,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.FRadius := Value;
+    elem.radius := Value;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Radius), 0, []);
 end;
 //------------------------------------------------------------------------------
@@ -243,7 +243,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FGMR60;
+    Result := elem.GMRAC;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_GMRac(Value: Double); CDECL;
@@ -252,7 +252,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.FGMR60 := Value;
+    elem.GMRAC := Value;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRac), 0, []);
 end;
 //------------------------------------------------------------------------------
@@ -263,7 +263,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FR60;
+    Result := elem.RAC;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_Rac(Value: Double); CDECL;
@@ -272,7 +272,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.FR60 := Value;
+    elem.RAC := Value;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rac), 0, []);
 end;
 //------------------------------------------------------------------------------
@@ -283,7 +283,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FRDC;
+    Result := elem.RDC;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_Rdc(Value: Double); CDECL;
@@ -292,7 +292,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.FRDC := Value;
+    elem.RDC := Value;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rdc), 0, []);
 end;
 //------------------------------------------------------------------------------
@@ -303,7 +303,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FGMRUnits;
+    Result := elem.GMRUnits;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_GMRUnits(Value: Integer); CDECL;
@@ -313,8 +313,8 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    prevVal := elem.FGMRUnits;
-    elem.FGMRUnits := Value;
+    prevVal := elem.GMRUnits;
+    elem.GMRUnits := Value;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRunits), prevVal, [])
 end;
 //------------------------------------------------------------------------------
@@ -325,7 +325,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FRadiusUnits;
+    Result := elem.radiusUnits;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_RadiusUnits(Value: Integer); CDECL;
@@ -335,8 +335,8 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    prevVal := elem.FRadiusUnits;
-    elem.FRadiusUnits := Value;
+    prevVal := elem.radiusUnits;
+    elem.radiusUnits := Value;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.radunits), prevVal, [])
 end;
 //------------------------------------------------------------------------------
@@ -347,7 +347,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FResistanceUnits;
+    Result := elem.resistanceUnits;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_ResistanceUnits(Value: Integer); CDECL;
@@ -357,8 +357,8 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    prevVal := elem.FResistanceUnits;
-    elem.FResistanceUnits := Value;
+    prevVal := elem.resistanceUnits;
+    elem.resistanceUnits := Value;
     elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Runits), prevVal, [])
 end;
 //------------------------------------------------------------------------------
@@ -369,7 +369,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FEpsR;
+    Result := elem.epsR;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_EpsR(Value: Double); CDECL;
@@ -378,7 +378,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.FEpsR := Value;
+    elem.epsR := Value;
     elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.EpsR), 0, []);
 end;
 //------------------------------------------------------------------------------
@@ -389,7 +389,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FInsLayer;
+    Result := elem.insLayer;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_InsLayer(Value: Double); CDECL;
@@ -398,8 +398,8 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.FInsLayer := Value;
-    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.InsLayer), 0, []);
+    elem.insLayer := Value;
+    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.insLayer), 0, []);
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_DiaIns(): Double; CDECL;
@@ -409,7 +409,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FDiaIns;
+    Result := elem.diaIns;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_DiaIns(Value: Double); CDECL;
@@ -419,7 +419,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.FDiaIns := Value;
+    elem.diaIns := Value;
     elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.DiaIns), 0, []);
 end;
 //------------------------------------------------------------------------------
@@ -430,7 +430,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.FDiaCable;
+    Result := elem.diaCable;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_DiaCable(Value: Double); CDECL;
@@ -439,7 +439,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.FDiaCable := Value;
+    elem.diaCable := Value;
     elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.DiaCable), 0, []);
 end;
 //------------------------------------------------------------------------------

@@ -449,7 +449,7 @@ begin
                     UNIFORM:
                         ckt.LoadMultiplier := Random();  // number between 0 and 1
                     GAUSSIAN:
-                        ckt.LoadMultiplier := Gauss(ckt.DefaultDailyShapeObj.Mean, ckt.DefaultDailyShapeObj.StdDev);
+                        ckt.LoadMultiplier := Gauss(ckt.DefaultDailyShapeObj.GetMean(), ckt.DefaultDailyShapeObj.GetStdDev());
                 end;
 
                 with DynaVars do
@@ -521,9 +521,9 @@ begin
                     UNIFORM:
                         ckt.LoadMultiplier := Random();  // number between 0 and 1
                     GAUSSIAN:
-                        ckt.LoadMultiplier := Gauss(ckt.DefaultDailyShapeObj.Mean, ckt.DefaultDailyShapeObj.StdDev);
+                        ckt.LoadMultiplier := Gauss(ckt.DefaultDailyShapeObj.GetMean(), ckt.DefaultDailyShapeObj.GetStdDev());
                     LOGNORMAL:
-                        ckt.LoadMultiplier := QuasiLognormal(ckt.DefaultDailyShapeObj.Mean);
+                        ckt.LoadMultiplier := QuasiLognormal(ckt.DefaultDailyShapeObj.GetMean());
                 end;
 
                 SolveSnap();

@@ -36,13 +36,13 @@ type
         function ConductorsInSameSpace(var ErrorMessage: String): Boolean; OVERRIDE;
         procedure Kron(Norder: Integer); OVERRIDE; // don't reduce Y, it has zero neutral capacitance
 
-        constructor Create(NumConductors: Integer);
+        constructor Create(NConductors: Integer);
         destructor Destroy; OVERRIDE;
 
         property EpsR[i: Integer]: Double READ Get_EpsR WRITE Set_EpsR;
-        property InsLayer[i, units: Integer]: Double READ Get_InsLayer WRITE Set_InsLayer;
-        property DiaIns[i, units: Integer]: Double READ Get_DiaIns WRITE Set_DiaIns;
-        property DiaCable[i, units: Integer]: Double READ Get_DiaCable WRITE Set_DiaCable;
+        property insLayer[i, units: Integer]: Double READ Get_InsLayer WRITE Set_InsLayer;
+        property diaIns[i, units: Integer]: Double READ Get_DiaIns WRITE Set_DiaIns;
+        property diaCable[i, units: Integer]: Double READ Get_DiaCable WRITE Set_DiaCable;
     end;
 
 implementation
@@ -58,7 +58,7 @@ var
 begin
     Ztemp := FZMatrix;
     FirstTime := TRUE;
-    if (FFrequency >= 0.0) and (Norder > 0) and (Norder < FnumConds) then
+    if (FFrequency >= 0.0) and (Norder > 0) and (Norder < numConductors) then
     begin
         if Assigned(FZreduced) then
             FZreduced.Free;
@@ -90,7 +90,7 @@ begin
 
 //  Height of cable doesn't matter
 //  Removed 5-25-2016 RcD
-//  For i := 1 to FNumConds do Begin
+//  For i := 1 to numConductors do Begin
 //    if (FY[i] >= 0.0) then Begin
 //      Result := TRUE;
 //      ErrorMessage :=
@@ -98,13 +98,13 @@ begin
 //      Exit
 //    End;
 //  End;
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
     begin
         if i <= FNPhases then
             Ri := FRadius[i]
         else
             Ri := 0.5 * FDiaCable[i];
-        for j := i + 1 to FNumConds do
+        for j := i + 1 to numConductors do
         begin
             if j <= FNPhases then
                 Rj := FRadius[j]
@@ -143,35 +143,35 @@ end;
 
 procedure TCableConstants.Set_EpsR(i: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         FEpsR[i] := Value;
 end;
 
 procedure TCableConstants.Set_InsLayer(i, units: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         FInsLayer[i] := Value * To_Meters(units);
 end;
 
 procedure TCableConstants.Set_DiaIns(i, units: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         FDiaIns[i] := Value * To_Meters(units);
 end;
 
 procedure TCableConstants.Set_DiaCable(i, units: Integer; const Value: Double);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         FDiaCable[i] := Value * To_Meters(units);
 end;
 
-constructor TCableConstants.Create(NumConductors: Integer);
+constructor TCableConstants.Create(NConductors: Integer);
 begin
-    inherited Create(NumConductors);
-    FEpsR := Allocmem(Sizeof(FEpsR[1]) * FNumConds);
-    FInsLayer := Allocmem(Sizeof(FInsLayer[1]) * FNumConds);
-    FDiaIns := Allocmem(Sizeof(FDiaIns[1]) * FNumConds);
-    FDiaCable := Allocmem(Sizeof(FDiaCable[1]) * FNumConds);
+    inherited Create(NConductors);
+    FEpsR := Allocmem(Sizeof(FEpsR[1]) * numConductors);
+    FInsLayer := Allocmem(Sizeof(FInsLayer[1]) * numConductors);
+    FDiaIns := Allocmem(Sizeof(FDiaIns[1]) * numConductors);
+    FDiaCable := Allocmem(Sizeof(FDiaCable[1]) * numConductors);
 end;
 
 destructor TCableConstants.Destroy;

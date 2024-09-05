@@ -351,7 +351,7 @@ type
         procedure RecalcElementData; OVERRIDE;
         procedure CalcYPrim; OVERRIDE;
 
-        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
+        procedure SetConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         function InjCurrents: Integer; OVERRIDE;
         function NumVariables(): Integer; OVERRIDE;
         procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
@@ -751,12 +751,12 @@ begin
             TProp.UserModel:
                 UserModel.Name := UserModelNameStr;  // Connect to user written models
             TProp.UserData:
-                if UserModel.Exists then
+                if UserModel.Exists() then
                     UserModel.Edit(UserModelEditStr);  // Send edit string to user model
             TProp.ShaftModel:
                 ShaftModel.Name := ShaftModelNameStr;
             TProp.ShaftData:
-                if ShaftModel.Exists then
+                if ShaftModel.Exists() then
                     ShaftModel.Edit(ShaftModelEditStr);
 
             // if a model 3 generator added, force calc of dQdV
@@ -1260,9 +1260,9 @@ begin
     Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 
     // Update any user-written models
-    if Usermodel.Exists then
+    if UserModel.Exists() then
         UserModel.FUpdateModel;
-    if Shaftmodel.Exists then
+    if ShaftModel.Exists() then
         Shaftmodel.FUpdateModel;
 end;
 
@@ -1764,7 +1764,7 @@ var
 begin
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
 
-    if UserModel.Exists then    // Check automatically selects the usermodel if true
+    if UserModel.Exists() then    // Check automatically selects the usermodel if true
     begin
          //AppendToEventLog('Wnominal=', Format('%-.5g',[Pnominalperphase]));
         UserModel.FCalc(Vterminal, Iterminal);
@@ -1878,7 +1878,7 @@ begin
     case GenModel of
 
         6:
-            if UserModel.Exists then       // auto selects model
+            if UserModel.Exists() then       // auto selects model
             begin   // We have total currents in Iterminal
                 UserModel.FCalc(Vterminal, Iterminal);  // returns terminal currents in Iterminal
             end
@@ -1977,7 +1977,7 @@ begin
         InjCurrent[i] -= Iterminal[i];
 
     // Take Care of any shaft model calcs
-    if (GenModel = 6) and ShaftModel.Exists then      // auto selects model
+    if (GenModel = 6) and ShaftModel.Exists() then      // auto selects model
     begin           // Compute Mech Power to shaft
         ShaftModel.FCalc(Vterminal, Iterminal);     // Returns pshaft at least
     end;
@@ -2217,7 +2217,7 @@ begin
     FSWriteLn(F, Format('!DQDV=%10.2g', [DQDV]));
 
     for i := 1 to ParentClass.NumProperties do
-        FSWriteLn(F, '~ ' + ParentClass.PropertyName[i] + '=' + GetPropertyValue(i));
+        FSWriteLn(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
 
     FSWriteLn(F);
 end;
@@ -2339,7 +2339,7 @@ begin
                 GenVars.Mmass := 2.0 * GenVars.Hmass * GenVars.kVArating * 1000.0 / (w0);   // M = W-sec
                 D := Dpu * kVArating * 1000.0 / (w0);
             end;
-            Pshaft := -Power[1].re; // Initialize Pshaft to present power Output
+            Pshaft := -Power(1).re; // Initialize Pshaft to present power Output
 
             Speed := 0.0;    // relative to synch speed
             dSpeed := 0.0;
@@ -2348,9 +2348,9 @@ begin
             //Ncond:Integer; V, I:pComplexArray; const X,Pshaft,Theta,Speed,dt,time:Double
             if GenModel = 6 then
             begin
-                if UserModel.Exists then
+                if UserModel.Exists() then
                     UserModel.FInit(Vterminal, Iterminal);
-                if ShaftModel.Exists then
+                if ShaftModel.Exists() then
                     ShaftModel.Finit(Vterminal, Iterminal);
             end;
             Exit;
@@ -2377,7 +2377,7 @@ begin
                         Model7LastAngle := DynamicEqVals[DynamicEqPair[i * 2]][0];
                 end
                 else
-                    DynamicEqVals[DynamicEqPair[i * 2]][0] := PCEValue[1, DynamicEqPair[(i * 2) + 1]];
+                    DynamicEqVals[DynamicEqPair[i * 2]][0] := PCEValue(1, DynamicEqPair[(i * 2) + 1]);
             end;
         end;
     end;
@@ -2433,9 +2433,9 @@ begin
 
             if GenModel = 6 then
             begin
-                if UserModel.Exists then
+                if UserModel.Exists() then
                     UserModel.Integrate();
-                if ShaftModel.Exists then
+                if ShaftModel.Exists() then
                     ShaftModel.Integrate();
             end;
             Exit;
@@ -2458,7 +2458,7 @@ begin
                     0:  DynamicEqVals[DynamicEqPair[i * 2]][0] := -TerminalPowerIn(Vterminal,Iterminal,FnPhases).re;
                     1:  DynamicEqVals[DynamicEqPair[i * 2]][0] := -TerminalPowerIn(Vterminal,Iterminal,FnPhases).im;
                 else
-                    DynamicEqVals[DynamicEqPair[i * 2]][0] := PCEValue[1, DynamicEqPair[(i * 2) + 1]];
+                    DynamicEqVals[DynamicEqPair[i * 2]][0] := PCEValue(1, DynamicEqPair[(i * 2) + 1]);
                 end;
             end;
         
@@ -2512,7 +2512,7 @@ begin
                 Result := dTheta;
         else
             begin
-                if UserModel.Exists then
+                if UserModel.Exists() then
                 begin
                     N := UserModel.FNumVars;
                     k := (i - NumGenVariables);
@@ -2524,7 +2524,7 @@ begin
                 end;
 
                 // If we get here, must be in the Shaft Model if anywhere
-                if ShaftModel.Exists then
+                if ShaftModel.Exists() then
                 begin
                     k := i - (NumGenVariables + N);
                     if k > 0 then
@@ -2565,7 +2565,7 @@ begin
             6:
                 dTheta := Value;
         else
-            if UserModel.Exists then
+            if UserModel.Exists() then
             begin
                 N := UserModel.FNumVars;
                 k := (i - NumGenVariables);
@@ -2576,7 +2576,7 @@ begin
                 end;
             end;
             // If we get here, must be in the shaft model
-            if ShaftModel.Exists then
+            if ShaftModel.Exists() then
             begin
                 k := (i - (NumGenVariables + N));
                 if k > 0 then
@@ -2601,13 +2601,13 @@ begin
     for i := 1 to NumGenVariables do
         States[i - 1] := GetVariable(i);
 
-    if UserModel.Exists then
+    if UserModel.Exists() then
     begin
         N := UserModel.FNumVars;
         UserModel.FGetAllVars(pDoubleArray(@States[NumGenVariables]));
     end;
 
-    if ShaftModel.Exists then
+    if ShaftModel.Exists() then
     begin
         ShaftModel.FGetAllVars(pDoubleArray(@States[NumGenVariables + N]));
     end;
@@ -2622,9 +2622,9 @@ begin
 
     // Fallback to the classic
     Result := NumGenVariables;
-    if UserModel.Exists then
+    if UserModel.Exists() then
         Result := Result + UserModel.FNumVars;
-    if ShaftModel.Exists then
+    if ShaftModel.Exists() then
         Result := Result + ShaftModel.FNumVars;
 end;
 
@@ -2661,7 +2661,7 @@ begin
         6:
             Result := 'dTheta (Deg)';
     else
-        if UserModel.Exists then  // Checks for existence and Selects
+        if UserModel.Exists() then  // Checks for existence and Selects
         begin
             pName := PAnsiChar(@Buff);
             n := UserModel.FNumVars;
@@ -2675,7 +2675,7 @@ begin
             end;
         end;
 
-        if ShaftModel.Exists then
+        if ShaftModel.Exists() then
         begin
             pName := PAnsiChar(Buff);
             i2 := i - NumGenVariables - n;
@@ -2750,7 +2750,7 @@ begin
     inherited;
 end;
 
-procedure TGeneratorObj.Set_ConductorClosed(Index: Integer; Value: Boolean);
+procedure TGeneratorObj.SetConductorClosed(Index: Integer; Value: Boolean);
 begin
     inherited;
 

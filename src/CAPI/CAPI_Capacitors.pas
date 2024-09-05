@@ -343,7 +343,7 @@ begin
     
     elem.ActiveTerminal := @elem.Terminals[0];  // make sure terminal 1 is closed
     elem.FActiveTerminal := 0;  // make sure terminal 1 is closed
-    elem.Closed[0] := TRUE;    // closes all phases
+    elem.SetConductorClosed(0, TRUE);    // closes all phases
     for i := 1 to elem.NumSteps do
         elem.States[i] := 1;
 end;

@@ -32,17 +32,7 @@ type
         procedure Set_Nconds(Value: Int8);
         function Get_ActiveTerminal(): Int8; inline;
         procedure Set_ActiveTerminal(value: Int8);
-        function Get_ConductorClosed(Index: Integer): Boolean; inline;
         procedure Set_YprimInvalid(const Value: Boolean);
-        function Get_Losses: Complex;   // Get total losses for property...
-        function Get_Power(idxTerm: Integer): Complex;    // Get total complex power in active terminal
-        function Get_MaxPower(idxTerm: Integer): Complex;    // Get equivalent total complex power in active terminal based on phase with max current
-        function Get_MaxCurrent(idxTerm: Integer): Double; // Get equivalent total complex current on phase with max current
-        function Get_MaxCurrentAng(idxTerm:Integer): Double; // Get equivalent angle of the total complex current on phase with max current
-        function Get_MaxVoltageC(idxTerm: Integer): Complex; // Get equivalent total complex voltage on phase
-        function Get_MaxVoltage(idxTerm: Integer): Double; // Get equivalent total complex voltage on phase
-        function Get_MaxVoltageAng(idxTerm:Integer): Double; // Get equivalent angle of the total complex voltage on phase
-        function Get_PCE_Value(idxTerm:Integer; ValType:Integer): Double; // Get a value for the active PCE such as P, Q, Vmag, IMag, etc.
 
         procedure DoYprimCalcs(Ymatrix: TCMatrix);
 
@@ -63,7 +53,6 @@ type
         FYprimFreq: Double;     // Frequency at which YPrim has been computed
 
         procedure Set_Enabled(Value: WordBool); VIRTUAL;
-        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); VIRTUAL;
         procedure Set_NTerms(Value: Int8);
     PUBLIC
         Handle: Integer;
@@ -123,6 +112,16 @@ type
 
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
+
+        function Get_Losses: Complex;   // Get total losses for property...
+        function Power(idxTerm: Integer): Complex;    // Get total complex power in active terminal
+        // function Get_MaxPower(idxTerm: Integer): Complex;    // Get equivalent total complex power in active terminal based on phase with max current
+        function MaxCurrent(idxTerm: Integer): Double; // Get equivalent total complex current on phase with max current
+        function MaxCurrentAng(idxTerm:Integer): Double; // Get equivalent angle of the total complex current on phase with max current
+        function MaxVoltageC(idxTerm: Integer): Complex; // Get equivalent total complex voltage on phase
+        function MaxVoltage(idxTerm: Integer): Double; // Get equivalent **magnitude** of total complex voltage on phase
+        function MaxVoltageAng(idxTerm:Integer): Double; // Get equivalent angle of the total complex voltage on phase
+
         property Enabled: WordBool READ FEnabled WRITE Set_Enabled;
         property YPrimInvalid: Boolean READ FYPrimInvalid WRITE set_YprimInvalid;
         property YPrimFreq: Double READ FYprimFreq WRITE Set_Freq;
@@ -130,18 +129,12 @@ type
         property NConds: Int8 READ Fnconds WRITE Set_Nconds;
         property NPhases: Integer READ Fnphases;
         property Losses: Complex READ Get_Losses;
-        property Power[idxTerm: Integer]: Complex READ Get_Power;  // Total power in active terminal
-        property MaxPower[idxTerm: Integer]: Complex READ Get_MaxPower;  // Total power in active terminal
-        property MaxCurrent[idxTerm: Integer]: Double READ Get_MaxCurrent;  // Max current in active terminal
-        property MaxVoltage[idxTerm: Integer]: Double READ Get_MaxVoltage;  // Max voltage in active terminal
         property ActiveTerminalIdx: Int8 READ Get_ActiveTerminal WRITE Set_ActiveTerminal;
-        property Closed[Index: Integer]: Boolean READ Get_ConductorClosed WRITE Set_ConductorClosed;
-        property MaxCurrentAng[idxTerm: Integer]: Double READ Get_MaxCurrentAng;  // Max current in active terminal
-        property MaxVoltageAng[idxTerm: Integer]: Double READ Get_MaxVoltageAng;  // Max current in active terminal
-        property PCEValue[Index:Integer; ValType: Integer]: Double READ Get_PCE_Value;
 
-        procedure SumCurrents;
-        
+        function ConductorClosed(Index: Integer): Boolean; inline;
+        procedure SetConductorClosed(Index: Integer; Value: Boolean); VIRTUAL;
+        function PCEValue(idxTerm:Integer; ValType:Integer): Double; // Get a value for the active PCE such as P, Q, Vmag, IMag, etc.
+        procedure SumCurrents();
         procedure Get_Current_Mags(cMBuffer: pDoubleArray); // Returns the Currents vector in magnitude
     end;
 
@@ -259,7 +252,7 @@ begin
     end;
 end;
 
-function TDSSCktElement.Get_ConductorClosed(Index: Integer): Boolean; inline;
+function TDSSCktElement.ConductorClosed(Index: Integer): Boolean; inline;
 // return state of selected conductor
 // if index=0 return true if all phases closed, else false
 var
@@ -284,7 +277,7 @@ begin
         Result := FALSE;
 end;
 
-procedure TDSSCktElement.Set_ConductorClosed(Index: Integer; Value: Boolean);
+procedure TDSSCktElement.SetConductorClosed(Index: Integer; Value: Boolean);
 var
     i: Integer;
 begin
@@ -572,7 +565,7 @@ begin
         cMBuffer[i] := cabs(Iterminal[i]);
 end;
 
-function TDSSCktElement.Get_Power(idxTerm: Integer): Complex;    // Get total complex power in active terminal
+function TDSSCktElement.Power(idxTerm: Integer): Complex;    // Get total complex power in active terminal
 var
     i, k, n: Integer;
     NodeV: pNodeVarray;
@@ -648,7 +641,7 @@ begin
         Result *= 3.0;
 end;
 
-function TDSSCktElement.Get_MaxVoltageC(idxTerm: Integer): Complex;
+function TDSSCktElement.MaxVoltageC(idxTerm: Integer): Complex;
 // Get Voltage at the specified terminal 09/17/2019
 var
     volts: Complex;
@@ -696,75 +689,75 @@ begin
     Result := volts;
 end;
 
-function TDSSCktElement.Get_MaxVoltage(idxTerm: Integer): double;
+function TDSSCktElement.MaxVoltage(idxTerm: Integer): double;
 begin
-    Result := cabs(Get_MaxVoltageC(idxTerm));
+    Result := cabs(MaxVoltageC(idxTerm));
 end;
 
-function TDSSCktElement.Get_MaxVoltageAng(idxTerm: Integer): double;
+function TDSSCktElement.MaxVoltageAng(idxTerm: Integer): double;
 begin
-    Result := cang(Get_MaxVoltageC(idxTerm));
+    Result := cang(MaxVoltageC(idxTerm));
 end;
 
-function TDSSCktElement.Get_MaxPower(idxTerm: Integer): Complex;
-//Get power in the phase with the max current and return equivalent power as if it were balanced in all phases
-// 2/12/2019
-var
-    volts: Complex;
-    ClassIdx,
-    i, k,
-    nrefN,
-    nref: Integer;
-    MaxCurr,
-    CurrMag: Double;
-    MaxPhase: Integer;
-    NodeV: pNodeVarray;
-begin
-    ActiveTerminalIdx := idxTerm;   // set active Terminal
-    Result := 0;
-    if (not FEnabled) or (NodeRef = NIL) then
-        Exit;
+// function TDSSCktElement.Get_MaxPower(idxTerm: Integer): Complex;
+// //Get power in the phase with the max current and return equivalent power as if it were balanced in all phases
+// // 2/12/2019
+// var
+//     volts: Complex;
+//     ClassIdx,
+//     i, k,
+//     nrefN,
+//     nref: Integer;
+//     MaxCurr,
+//     CurrMag: Double;
+//     MaxPhase: Integer;
+//     NodeV: pNodeVarray;
+// begin
+//     ActiveTerminalIdx := idxTerm;   // set active Terminal
+//     Result := 0;
+//     if (not FEnabled) or (NodeRef = NIL) then
+//         Exit;
         
-    ComputeIterminal();
+//     ComputeIterminal();
 
-    // Method: Get power in the phase with max current of active terminal
-    // Multiply by Nphases and return
+//     // Method: Get power in the phase with max current of active terminal
+//     // Multiply by Nphases and return
 
-    MaxCurr := 0.0;
-    MaxPhase := 1;  // Init this so it has a non zero value
-    k := (idxTerm - 1) * Fnconds; // starting index of terminal
-    for i := 1 to Fnphases do
-    begin
-        CurrMag := Cabs(Iterminal[k + i]);
-        if CurrMag > MaxCurr then
-        begin
-            MaxCurr := CurrMag;
-            MaxPhase := i
-        end;
-    end;
+//     MaxCurr := 0.0;
+//     MaxPhase := 1;  // Init this so it has a non zero value
+//     k := (idxTerm - 1) * Fnconds; // starting index of terminal
+//     for i := 1 to Fnphases do
+//     begin
+//         CurrMag := Cabs(Iterminal[k + i]);
+//         if CurrMag > MaxCurr then
+//         begin
+//             MaxCurr := CurrMag;
+//             MaxPhase := i
+//         end;
+//     end;
 
-    NodeV := ActiveCircuit.Solution.NodeV;
-    ClassIdx := DSSObjType and CLASSMASK;              // gets the parent class descriptor (int)
-    nref := ActiveTerminal^.TermNodeRef[MaxPhase - 1]; // reference to the phase voltage with the max current
-    nrefN := ActiveTerminal^.TermNodeRef[Fnconds - 1];  // reference to the ground terminal (GND or other phase)
+//     NodeV := ActiveCircuit.Solution.NodeV;
+//     ClassIdx := DSSObjType and CLASSMASK;              // gets the parent class descriptor (int)
+//     nref := ActiveTerminal^.TermNodeRef[MaxPhase - 1]; // reference to the phase voltage with the max current
+//     nrefN := ActiveTerminal^.TermNodeRef[Fnconds - 1];  // reference to the ground terminal (GND or other phase)
     
-    // Get power into max phase of active terminal
-    if not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
-        volts := NodeV[nref]
-    else
-        volts := NodeV[nref] - NodeV[nrefN];
-    Result := volts * cong(Iterminal[k + MaxPhase]);
+//     // Get power into max phase of active terminal
+//     if not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
+//         volts := NodeV[nref]
+//     else
+//         volts := NodeV[nref] - NodeV[nrefN];
+//     Result := volts * cong(Iterminal[k + MaxPhase]);
 
-    // Compute equivalent total power of all phases assuming equal to max power in all phases
-    Result := Result * Fnphases;
+//     // Compute equivalent total power of all phases assuming equal to max power in all phases
+//     Result := Result * Fnphases;
 
-    // If this is a positive sequence circuit (Fnphases=1),
-    // then we need to multiply by 3 to get the 3-phase power
-    if ActiveCircuit.PositiveSequence then
-        Result := Result * 3.0;
-end;
+//     // If this is a positive sequence circuit (Fnphases=1),
+//     // then we need to multiply by 3 to get the 3-phase power
+//     if ActiveCircuit.PositiveSequence then
+//         Result := Result * 3.0;
+// end;
 
-function TDSSCktElement.Get_MaxCurrent(idxTerm: Integer): Double;
+function TDSSCktElement.MaxCurrent(idxTerm: Integer): Double;
 // returns the magnitude fo the maximum current at the element's terminal
 var
     i, k: Integer;
@@ -791,7 +784,7 @@ begin
     end;
 end;
 
-function TDSSCktElement.Get_MaxCurrentAng(idxTerm: Integer): Double;
+function TDSSCktElement.MaxCurrentAng(idxTerm: Integer): Double;
 // returns the angle fo the maximum current at the element's terminal
 var
     i, k: Integer;
@@ -825,23 +818,23 @@ begin
     Result := CurrAng;
 end;
 
-function TDSSCktElement.Get_PCE_Value(idxTerm: Integer; ValType: Integer): Double;
+function TDSSCktElement.PCEValue(idxTerm: Integer; ValType: Integer): Double;
 begin
     case ValType of
         0, 7:
-            Result := -Power[1].re;             // P, P0
+            Result := -Power(1).re;             // P, P0
         1, 8:
-            Result := -Power[1].im;             // Q, Q0
+            Result := -Power(1).im;             // Q, Q0
         2:
-            Result := MaxVoltage[1];             // VMag
+            Result := MaxVoltage(1);             // VMag
         3:
-            Result := MaxVoltageAng[1];          // VAng
+            Result := MaxVoltageAng(1);          // VAng
         4:
-            Result := MaxCurrent[1];             // IMag
+            Result := MaxCurrent(1);             // IMag
         5:
-            Result := MaxCurrentAng[1];          // IAng
+            Result := MaxCurrentAng(1);          // IAng
         6:
-            Result := cabs(Power[1]);            // S
+            Result := cabs(Power(1));            // S
     else
         Result := 0;
     end;
@@ -1045,7 +1038,7 @@ begin
     end;
 end;
 
-procedure TDSSCktElement.SumCurrents;
+procedure TDSSCktElement.SumCurrents();
 // sum Terminal Currents into System  Currents Array
 // Primarily for Newton Iteration
 var

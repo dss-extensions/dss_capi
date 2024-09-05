@@ -389,7 +389,7 @@ begin
             if (Cmds[idx] <> -50) then // The index
             begin
                 if OutIdx >= 0 then // It's not the first equation
-                    MemSpace[OutIdx][1] := RPN.X; // Uploads value into memory space
+                    MemSpace[OutIdx][1] := RPN.GetX(); // Uploads value into memory space
                 OutIdx := Cmds[idx];
             end;
         end
@@ -442,13 +442,13 @@ begin
         else
             begin
                 if Cmds[idx] >= 50000 then
-                    RPN.X := VarConsts[Cmds[idx] - 50000]  // It's a constant
+                    RPN.SetX(VarConsts[Cmds[idx] - 50000])  // It's a constant
                 else
-                    RPN.X := MemSpace[Cmds[idx]][0];       // It's a variable
+                    RPN.SetX(MemSpace[Cmds[idx]][0]);       // It's a variable
             end;
         end;
     end;
-    MemSpace[OutIdx][1] := RPN.X; // Uploads value into memory space
+    MemSpace[OutIdx][1] := RPN.GetX(); // Uploads value into memory space
     RPN.Free(); // Destroy RPN calculator
 end;
 

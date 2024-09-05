@@ -660,10 +660,10 @@ begin
     FSWriteln(F, Format('~ %%noloadloss=%.0f', [pctNoLoadLoss]));
 
     for i := 28 to NumPropsThisClass do
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
 
     for i := NumPropsthisClass + 1 to ParentClass.NumProperties do
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue(i));
 end;
 
 procedure TXfmrCodeObj.SaveWrite(F: TStream);
@@ -701,7 +701,7 @@ begin
                         if TProp(i) in done then
                             continue;
 
-                        FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[i], GetPropertyValue(i)]));
+                        FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[i], PropertyValue(i)]));
                         Include(done, TProp(i));
                     end;
                     for i := 1 to Numwindings do
@@ -739,8 +739,8 @@ begin
             if not (TProp(iProp) in done) then
             begin
                 Include(done, TProp(iProp));
-                if (Length(PropertyValue[iProp]) > 0) then
-                    FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(PropertyValue[iProp])]));
+                if (Length(PropertyValue(iProp)) > 0) then
+                    FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(PropertyValue(iProp))]));
             end;
         end;
         iProp := GetNextPropertySet(iProp);

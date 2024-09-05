@@ -78,14 +78,14 @@ type
 
     TConductorDataObj = class(TDSSObject)
     PUBLIC
-        FRDC: Double;
-        FR60: Double;
-        FGMR60: Double;
-        Fcapradius60: Double;  // in case it is different than radius for cap calcs
-        Fradius: Double;
-        FGMRUnits: Integer;
-        FResistanceUnits: Integer;
-        FRadiusUnits: Integer;
+        RDC: Double;
+        RAC: Double;
+        GMRAC: Double;
+        capRadius: Double;  // in case it is different than radius for cap calcs
+        radius: Double;
+        GMRUnits: Integer;
+        resistanceUnits: Integer;
+        radiusUnits: Integer;
         NormAmps: Double;
         EmergAmps: Double;
         NumAmpRatings: Integer;
@@ -95,15 +95,6 @@ type
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherObj: Pointer); override;
-
-        property Rdc: Double READ FRDC;
-        property Rac: Double READ FR60;
-        property GMR: Double READ FGMR60;
-        Property CapRadius: Double Read Fcapradius60;
-        property Radius: Double READ FRadius;
-        property ResUnits: Integer READ FresistanceUnits;
-        property RadiusUnits: Integer READ FradiusUnits;
-        property GMRUnits: Integer READ FGMRUnits;
     end;
 
     TConductorDataArray = array[1..100] of TConductorDataObj;
@@ -164,15 +155,15 @@ begin
     PropertyOffset_ConductorData := ActiveProperty;
     // enums
     PropertyType[ActiveProperty + ord(TProp.Runits)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ActiveProperty + ord(TProp.Runits)] := ptruint(@obj.FresistanceUnits);
+    PropertyOffset[ActiveProperty + ord(TProp.Runits)] := ptruint(@obj.resistanceUnits);
     PropertyOffset2[ActiveProperty + ord(TProp.Runits)] := PtrInt(DSS.UnitsEnum);
 
     PropertyType[ActiveProperty + ord(TProp.GMRunits)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ActiveProperty + ord(TProp.GMRunits)] := ptruint(@obj.FGMRUnits);
+    PropertyOffset[ActiveProperty + ord(TProp.GMRunits)] := ptruint(@obj.GMRUnits);
     PropertyOffset2[ActiveProperty + ord(TProp.GMRunits)] := PtrInt(DSS.UnitsEnum);
 
     PropertyType[ActiveProperty + ord(TProp.radunits)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ActiveProperty + ord(TProp.radunits)] := ptruint(@obj.FRadiusUnits);
+    PropertyOffset[ActiveProperty + ord(TProp.radunits)] := ptruint(@obj.radiusUnits);
     PropertyOffset2[ActiveProperty + ord(TProp.radunits)] := PtrInt(DSS.UnitsEnum);
 
     // double arrays
@@ -181,10 +172,10 @@ begin
     PropertyOffset2[ActiveProperty + ord(TProp.Ratings)] := ptruint(@obj.NumAmpRatings);
 
     // double properties (default type)
-    PropertyOffset[ActiveProperty + ord(TProp.Rdc)] := ptruint(@obj.FRDC);
+    PropertyOffset[ActiveProperty + ord(TProp.Rdc)] := ptruint(@obj.RDC);
     PropertyFlags[ActiveProperty + ord(TProp.Rdc)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_ohm_per_length];
     
-    PropertyOffset[ActiveProperty + ord(TProp.Rac)] := ptruint(@obj.FR60);
+    PropertyOffset[ActiveProperty + ord(TProp.Rac)] := ptruint(@obj.RAC);
     PropertyFlags[ActiveProperty + ord(TProp.Rac)] := [TPropertyFlag.DynamicDefault];
 
     PropertyOffset[ActiveProperty + ord(TProp.normamps)] := ptruint(@obj.NormAmps);
@@ -193,17 +184,17 @@ begin
     PropertyOffset[ActiveProperty + ord(TProp.emergamps)] := ptruint(@obj.EmergAmps); 
     PropertyFlags[ActiveProperty + ord(TProp.emergamps)] := [TPropertyFlag.DynamicDefault];
 
-    PropertyOffset[ActiveProperty + ord(TProp.GMRac)] := ptruint(@obj.FGMR60);
+    PropertyOffset[ActiveProperty + ord(TProp.GMRac)] := ptruint(@obj.GMRAC);
     PropertyFlags[ActiveProperty + ord(TProp.GMRac)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.DynamicDefault];
     
-    PropertyOffset[ActiveProperty + ord(TProp.radius)] := ptruint(@obj.Fradius);
+    PropertyOffset[ActiveProperty + ord(TProp.radius)] := ptruint(@obj.radius);
     PropertyFlags[ActiveProperty + ord(TProp.radius)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.DynamicDefault];
     
-    PropertyOffset[ActiveProperty + ord(TProp.Capradius)] := ptruint(@obj.Fcapradius60);
+    PropertyOffset[ActiveProperty + ord(TProp.Capradius)] := ptruint(@obj.capRadius);
     PropertyFlags[ActiveProperty + ord(TProp.Capradius)] := [TPropertyFlag.NonZero, TPropertyFlag.DynamicDefault];
 
     // scaled double
-    PropertyOffset[ActiveProperty + ord(TProp.diam)] := ptruint(@obj.Fradius);
+    PropertyOffset[ActiveProperty + ord(TProp.diam)] := ptruint(@obj.radius);
     PropertyScale[ActiveProperty + ord(TProp.diam)] := 1.0 / 2.0;
     PropertyFlags[ActiveProperty + ord(TProp.diam)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Redundant];
     PropertyRedundantWith[ActiveProperty + ord(TProp.diam)] := ActiveProperty + ord(TProp.radius);
@@ -224,31 +215,31 @@ begin
     Idx2 := Idx - (ParentClass as TConductorData).PropertyOffset_ConductorData;
     case Idx2 of
         ord(TProp.Rdc):
-            if FR60 < 0.0 then
-                FR60 := 1.02 * FRDC;
+            if RAC < 0.0 then
+                RAC := 1.02 * RDC;
         ord(TProp.Rac):
-            if FRDC < 0.0 then
-                FRDC := FR60 / 1.02;
+            if RDC < 0.0 then
+                RDC := RAC / 1.02;
         ord(TProp.GMRac):
         begin
-            if Fradius < 0.0 then
-                Fradius := FGMR60 / 0.7788;
-            if (Fradius = 0.0) then
+            if radius < 0.0 then
+                radius := GMRAC / 0.7788;
+            if (radius = 0.0) then
                 DoSimpleMsg('Error: Radius is specified as zero for %s', [FullName], 999);
         end;
         ord(TProp.GMRunits):
-            if FradiusUnits = 0 then
-                FradiusUnits := FGMRunits;
+            if radiusUnits = 0 then
+                radiusUnits := GMRUnits;
         ord(TProp.radius), ord(TProp.diam):
         begin
-            if FGMR60 < 0.0 then
-                FGMR60 := 0.7788 * FRadius;
-            if Fcapradius60 < 0.0 then
-                Fcapradius60 := Fradius;    // default to radius
+            if GMRAC < 0.0 then
+                GMRAC := 0.7788 * radius;
+            if capRadius < 0.0 then
+                capRadius := radius;    // default to radius
         end;
         ord(TProp.radunits):
-            if FGMRUnits = 0 then
-                FGMRunits := FradiusUnits;
+            if GMRUnits = 0 then
+                GMRUnits := radiusUnits;
         ord(TProp.normamps):
             if EmergAmps < 0.0 then
                 EmergAmps := 1.5 * NormAmps;
@@ -267,14 +258,14 @@ var
 begin
     inherited MakeLike(OtherObj);
     Other := TObj(OtherObj);
-    FRDC := Other.FRDC;
-    FR60 := Other.FR60;
-    FResistanceUnits := Other.FResistanceUnits;
-    FGMR60 := Other.FGMR60;
-    Fcapradius60 := Other.Fcapradius60;
-    FGMRUnits := Other.FGMRUnits;
-    FRadius := Other.FRadius;
-    FRadiusUnits := Other.FRadiusUnits;
+    RDC := Other.RDC;
+    RAC := Other.RAC;
+    resistanceUnits := Other.resistanceUnits;
+    GMRAC := Other.GMRAC;
+    capRadius := Other.capRadius;
+    GMRUnits := Other.GMRUnits;
+    radius := Other.radius;
+    radiusUnits := Other.radiusUnits;
     NormAmps := Other.NormAmps;
     EmergAmps := Other.EmergAmps;
 end;
@@ -285,14 +276,14 @@ begin
     Name := AnsiLowerCase(ConductorDataName);
     DSSObjType := ParClass.DSSClassType;
 
-    FRDC := -1.0;
-    FR60 := -1.0;
-    FGMR60 := -1.0;
-    Fradius := -1.0;
-    Fcapradius60 := -1.0;   // init to not defined
-    FGMRUnits := 0;
-    FResistanceUnits := 0;
-    FRadiusUnits := 0;
+    RDC := -1.0;
+    RAC := -1.0;
+    GMRAC := -1.0;
+    radius := -1.0;
+    capRadius := -1.0;   // init to not defined
+    GMRUnits := 0;
+    resistanceUnits := 0;
+    radiusUnits := 0;
     Normamps := -1.0;
     EmergAmps := -1.0;
     NumAmpRatings := 1;

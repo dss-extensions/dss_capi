@@ -234,7 +234,7 @@ begin
         Exit;
     end;
 
-    kVA := Power[idxTerm] * 0.001;  // Also forces computation of Current into Itemp
+    kVA := Power(idxTerm) * 0.001;  // Also forces computation of Current into Itemp
     Factor := (MaxTerminalOneIMag / NormAmps - 1.0);
     if (Factor > 0.0) then
     begin
@@ -261,7 +261,7 @@ begin
         Exit;
     end;
 
-    kVA := Power[idxTerm] * 0.001;  // Also forces computation of Current into Itemp
+    kVA := Power(idxTerm) * 0.001;  // Also forces computation of Current into Itemp
 
     Factor := (MaxTerminalOneIMag / EmergAmps - 1.0);
     if Factor > 0.0 then

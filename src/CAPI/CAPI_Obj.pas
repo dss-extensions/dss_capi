@@ -558,7 +558,7 @@ end;
 
 function Obj_GetAsString(obj: TDSSObject; Index: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_CopyStringAsPChar(obj.GetPropertyValue(Index));
+    Result := DSS_CopyStringAsPChar(obj.PropertyValue(Index));
 end;
 
 function Obj_GetObject(obj: TDSSObject; Index: Integer): Pointer; CDECL;
@@ -2625,8 +2625,8 @@ begin
         cmds.Add('Set Normvmaxpu=' + Format('%-g', [ckt.NormalMaxVolts]));
         cmds.Add('Set Emergvminpu=' + Format('%-g', [ckt.EmergMinVolts]));
         cmds.Add('Set Emergvmaxpu=' + Format('%-g', [ckt.EmergMaxVolts]));
-        cmds.Add('Set %mean=' + Format('%-.4g', [ckt.DefaultDailyShapeObj.Mean * 100.0]));
-        cmds.Add('Set %stddev=' + Format('%-.4g', [ckt.DefaultDailyShapeObj.StdDev * 100.0]));
+        cmds.Add('Set %mean=' + Format('%-.4g', [ckt.DefaultDailyShapeObj.GetMean() * 100.0]));
+        cmds.Add('Set %stddev=' + Format('%-.4g', [ckt.DefaultDailyShapeObj.GetStdDev() * 100.0]));
         cmds.Add('Set LDCurve=' + NameIfNotNil(ckt.LoadDurCurveObj));
         cmds.Add('Set %growth=' + Format('%-.4g', [((ckt.DefaultGrowthRate - 1.0) * 100.0)]));  // default growth rate
         cmds.Add('Set genkw=' + Format('%-g', [ckt.AutoAddObj.GenkW]));

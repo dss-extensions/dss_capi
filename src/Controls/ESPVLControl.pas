@@ -384,7 +384,7 @@ begin
 
     if FLocalControlListSize > 0 then
     begin
-        S := MonitoredElement.Power[ElementTerminal];  // Power in active terminal
+        S := MonitoredElement.Power(ElementTerminal);  // Power in active terminal
 
         PDiff := S.re * 0.001 - FkWLimit;
 

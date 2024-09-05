@@ -668,7 +668,7 @@ begin
 
     elem.ActiveTerminal := @elem.Terminals[Term - 1];
     elem.FActiveTerminal := Term - 1;
-    elem.Closed[Phs] := TRUE;
+    elem.SetConductorClosed(Phs, TRUE);
 end;
 //------------------------------------------------------------------------------
 procedure Alt_CE_Open(elem: TDSSCktElement; Term, Phs: Integer); CDECL;
@@ -681,7 +681,7 @@ begin
 
     elem.ActiveTerminal := @elem.Terminals[Term - 1];
     elem.FActiveTerminal := Term - 1;
-    elem.Closed[Phs] := FALSE;
+    elem.SetConductorClosed(Phs, FALSE);
 end;
 //------------------------------------------------------------------------------
 function Alt_CE_IsOpen(elem: TDSSCktElement; Term, Phs: Integer): TAltAPIBoolean; CDECL;
@@ -702,14 +702,14 @@ begin
     begin
         Result := FALSE;
         for i := 1 to elem.NConds do
-            if not elem.Closed[i] then
+            if not elem.ConductorClosed(i) then
             begin
                 Result := TRUE;
                 Exit;
             end;
     end
     else // Check a specific phase or conductor
-        Result := not elem.Closed[Phs];
+        Result := not elem.ConductorClosed(Phs);
 end;
 //------------------------------------------------------------------------------
 procedure Alt_CE_Get_Residuals(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
@@ -1280,7 +1280,7 @@ end;
 //------------------------------------------------------------------------------
 function Alt_CE_Get_GUID(elem: TDSSCktElement): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(elem.DSS, elem.ID)
+    Result := DSS_GetAsPAnsiChar(elem.DSS, elem.GetID())
 end;
 //------------------------------------------------------------------------------
 procedure Alt_CE_Set_DisplayName(elem: TDSSCktElement; const value: PAnsiChar); CDECL;
@@ -3371,7 +3371,7 @@ begin
     case What of // MaxCurrent (0), CapacityNorm (1), CapacityEmerg (2), Power (3)
     3: 
         begin
-            cResult^ := pElem.Power[1] * 0.001;
+            cResult^ := pElem.Power(1) * 0.001;
         end;
     0, 1, 2:
         try
@@ -3435,7 +3435,7 @@ begin
             begin
                 if pElem^.Enabled then
                 begin
-                    LocalPower := pElem^.Power[1];
+                    LocalPower := pElem^.Power(1);
                     Result[k] := Localpower.re * 0.001;
                     Result[k + 1] := Localpower.im * 0.001;
                 end;

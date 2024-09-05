@@ -100,11 +100,6 @@ type
         procedure SaveToDblFile;
         procedure SaveToSngFile;
         procedure CalcMeanandStdDev;
-        function Get_Mean: Double;
-        function Get_StdDev: Double;
-        procedure Set_Mean(const Value: Double);
-        procedure Set_StdDev(const Value: Double);  // Normalize the curve presently in memory
-
     PUBLIC
         Interval: Double;  //=0.0 then random interval     (hr)
         Hours,          // Time values (hr) if Interval > 0.0  Else nil
@@ -119,8 +114,10 @@ type
         function GetTemperatureAtHour(Hr: Double): Double;  // Get Temperatures at specified time, hr
 
         property NumPoints: Integer READ FNumPoints;
-        property Mean: Double READ Get_Mean WRITE Set_Mean;
-        property StdDev: Double READ Get_StdDev WRITE Set_StdDev;
+        function GetMean(): Double;
+        function GetStdDev(): Double;
+        procedure SetMean(const Value: Double);
+        procedure SetStdDev(const Value: Double);  // Normalize the curve presently in memory
     end;
 
 implementation
@@ -186,22 +183,22 @@ end;
 
 function GetMean(obj: TObj): Double;
 begin
-    Result := obj.Mean;
+    Result := obj.GetMean();
 end;
 
 procedure SetMean(obj: TObj; value: Double);
 begin
-    obj.Mean := value;
+    obj.SetMean(value);
 end;
 
 function GetStdDev(obj: TObj): Double;
 begin
-    Result := obj.StdDev;
+    Result := obj.GetStdDev();
 end;
 
 procedure SetStdDev(obj: TObj; value: Double);
 begin
-    obj.StdDev := value;
+    obj.SetStdDev(value);
 end;
 
 procedure TTShape.DefineProperties;
@@ -453,14 +450,14 @@ begin
     FStdDevCalculated := TRUE;
 end;
 
-function TTShapeObj.Get_Mean: Double;
+function TTShapeObj.GetMean(): Double;
 begin
     if not FStdDevCalculated then
         CalcMeanandStdDev;
     Result := FMean;
 end;
 
-function TTShapeObj.Get_StdDev: Double;
+function TTShapeObj.GetStdDev(): Double;
 begin
     if not FStdDevCalculated then
         CalcMeanandStdDev;
@@ -513,13 +510,13 @@ begin
     end;
 end;
 
-procedure TTShapeObj.Set_Mean(const Value: Double);
+procedure TTShapeObj.SetMean(const Value: Double);
 begin
     FStdDevCalculated := TRUE;
     FMean := Value;
 end;
 
-procedure TTShapeObj.Set_StdDev(const Value: Double);
+procedure TTShapeObj.SetStdDev(const Value: Double);
 begin
     FStdDevCalculated := TRUE;
     FStdDev := Value;

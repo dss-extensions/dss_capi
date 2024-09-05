@@ -17,43 +17,33 @@ type
     TRPNCalc = class(TObject)
     PRIVATE
         FStack: array[1..MaxStackSize] of Double;
-        function Get_X: Double;
-        function Get_Y: Double;
-        function Get_Z: Double;
-        procedure Set_X(const Value: Double);
-        procedure Set_Y(const Value: Double);
-        procedure Set_Z(const Value: Double);
-
-    PROTECTED
-
     PUBLIC
-        procedure Multiply;
-        procedure Divide;
-        procedure Sqrt;
-        procedure Square;
-        procedure Add;
-        procedure Subtract;
-        procedure YToTheXPower;
-        procedure Sindeg;
-        procedure Cosdeg;
-        procedure Tandeg;
-        procedure aSindeg;
-        procedure aCosdeg;
-        procedure aTandeg;
-        procedure aTan2deg;
-        procedure NatLog;
-        procedure TenLog;
-        procedure etothex;
-        procedure EnterPi;
-        procedure Inv;
+        procedure Multiply();
+        procedure Divide();
+        procedure Sqrt();
+        procedure Square();
+        procedure Add();
+        procedure Subtract();
+        procedure YToTheXPower();
+        procedure Sindeg();
+        procedure Cosdeg();
+        procedure Tandeg();
+        procedure aSindeg();
+        procedure aCosdeg();
+        procedure aTandeg();
+        procedure aTan2deg();
+        procedure NatLog();
+        procedure TenLog();
+        procedure etothex();
+        procedure EnterPi();
+        procedure Inv();
 
-        procedure SwapXY;
-        procedure RollUp;
-        procedure RollDn;
+        procedure SwapXY();
+        procedure RollUp();
+        procedure RollDn();
 
-        property X: Double READ Get_X WRITE Set_X;
-        property Y: Double READ Get_Y WRITE Set_Y;
-        property Z: Double READ Get_Z WRITE Set_Z;
+        function GetX(): Double;
+        procedure SetX(const Value: Double);
 
         constructor Create;
         destructor Destroy; OVERRIDE;
@@ -69,40 +59,39 @@ const
     DegToRad: Double = 3.14159265359 / 180.0;
     RadToDeg: Double = 180.0 / 3.14159265359;
 
-procedure TRPNCalc.aCosdeg;
+procedure TRPNCalc.aCosdeg();
 begin
     FStack[1] := RadToDeg * ArcCos(Fstack[1]);
 end;
 
-procedure TRPNCalc.Add;
+procedure TRPNCalc.Add();
 begin
     FStack[2] := FStack[1] + FStack[2];
     Rolldn;
 end;
 
-procedure TRPNCalc.aSinDeg;
+procedure TRPNCalc.aSinDeg();
 begin
     FStack[1] := RadToDeg * ArcSin(Fstack[1]);
 end;
 
-procedure TRPNCalc.aTanDeg;
+procedure TRPNCalc.aTanDeg();
 begin
     FStack[1] := RadToDeg * ArcTan(Fstack[1]);
 end;
 
-procedure TRPNCalc.aTan2Deg;
+procedure TRPNCalc.aTan2Deg();
 begin
     FStack[2] := RadToDeg * ArcTan2(FStack[2], Fstack[1]);
     Rolldn;
 end;
 
-procedure TRPNCalc.CosDeg;
+procedure TRPNCalc.CosDeg();
 begin
     FStack[1] := System.Cos(DegToRad * Fstack[1]);
 end;
 
 constructor TRPNCalc.Create;
-
 var
     i: Integer;
 begin
@@ -115,34 +104,24 @@ begin
     inherited;
 end;
 
-procedure TRPNCalc.Divide;
+procedure TRPNCalc.Divide();
 begin
     FStack[2] := FStack[2] / FStack[1];
     Rolldn;
 end;
 
-function TRPNCalc.Get_X: Double;
+function TRPNCalc.GetX(): Double;
 begin
     Result := FStack[1];
 end;
 
-function TRPNCalc.Get_Y: Double;
-begin
-    Result := FStack[2];
-end;
-
-function TRPNCalc.Get_Z: Double;
-begin
-    Result := FStack[3];
-end;
-
-procedure TRPNCalc.Multiply;
+procedure TRPNCalc.Multiply();
 begin
     FStack[2] := FStack[2] * FStack[1];
     Rolldn;
 end;
 
-procedure TRPNCalc.RollDn;
+procedure TRPNCalc.RollDn();
 var
     i: Integer;
 begin
@@ -150,7 +129,7 @@ begin
         FStack[i - 1] := FStack[i];
 end;
 
-procedure TRPNCalc.RollUp;
+procedure TRPNCalc.RollUp();
 var
     i: Integer;
 begin
@@ -158,45 +137,34 @@ begin
         FStack[i] := FStack[i - 1];
 end;
 
-procedure TRPNCalc.Set_X(const Value: Double);
+procedure TRPNCalc.SetX(const Value: Double);
 begin
     RollUp;
     FStack[1] := Value;
 end;
 
-procedure TRPNCalc.Set_Y(const Value: Double);
-begin
-    FStack[2] := Value;
-end;
-
-procedure TRPNCalc.Set_Z(const Value: Double);
-begin
-    FStack[3] := Value;
-end;
-
-procedure TRPNCalc.SinDeg;
+procedure TRPNCalc.SinDeg();
 begin
     FStack[1] := System.Sin(DegToRad * Fstack[1]);
 end;
 
-procedure TRPNCalc.Sqrt;
+procedure TRPNCalc.Sqrt();
 begin
     FStack[1] := System.Sqrt(Fstack[1]);
 end;
 
-procedure TRPNCalc.Square;
+procedure TRPNCalc.Square();
 begin
     FStack[1] := SQR(FStack[1]);
 end;
 
-procedure TRPNCalc.Subtract;
+procedure TRPNCalc.Subtract();
 begin
     FStack[2] := FStack[2] - FStack[1];
     Rolldn;
 end;
 
-procedure TRPNCalc.SwapXY;
-
+procedure TRPNCalc.SwapXY();
 var
     Temp: Double;
 begin
@@ -205,39 +173,39 @@ begin
     FStack[2] := Temp;
 end;
 
-procedure TRPNCalc.TanDeg;
+procedure TRPNCalc.TanDeg();
 begin
     FStack[1] := Math.Tan(DegToRad * FStack[1]);
 end;
 
-procedure TRPNCalc.YToTheXPower;
+procedure TRPNCalc.YToTheXPower();
 begin
     FStack[2] := Power(FStack[2], FStack[1]);
     Rolldn;
 end;
 
-procedure TRPNCalc.EnterPi;
+procedure TRPNCalc.EnterPi();
 begin
     Rollup;
     FStack[1] := pi;
 end;
 
-procedure TRPNCalc.etothex;
+procedure TRPNCalc.etothex();
 begin
     FStack[1] := System.Exp(FStack[1]);
 end;
 
-procedure TRPNCalc.NatLog;
+procedure TRPNCalc.NatLog();
 begin
     FStack[1] := Ln(FStack[1]);
 end;
 
-procedure TRPNCalc.TenLog;
+procedure TRPNCalc.TenLog();
 begin
     FStack[1] := Log10(FStack[1]);
 end;
 
-procedure TRPNCalc.Inv;  // invert  1/X
+procedure TRPNCalc.Inv();  // invert  1/X
 begin
     FStack[1] := 1.0 / FStack[1];
 end;

@@ -15,21 +15,17 @@ type
     // TODO: remove TNamedObject as a whole. Use an extra structure to track the data here.
     PROTECTED
         pUuid: ^TUuid;  // compliant to RFC 4122, v4
-    PRIVATE
-        function Get_UUID: TUuid;
-        function Get_ID: String;
-        function Get_CIM_ID: String;
-        procedure Set_UUID(const Value: TUuid);
     PUBLIC
         LocalName: String;  // localName is unique within a class, like the old FName
         DisplayName: String;
 
         constructor Create(ClassName_: String);
         destructor Destroy; OVERRIDE;
-        
-        property UUID: TUuid READ Get_UUID WRITE Set_UUID;
-        property ID: String READ Get_ID;
-        property CIM_ID: String READ Get_CIM_ID;
+
+        function GetCIM_ID(): String;
+        function GetID(): String;
+        function GetUUID(): TUuid;
+        procedure SetUUID(const Value: TUuid);
     end;
 
 function CreateUUID4(out UUID: TUuid): Integer;
@@ -83,14 +79,14 @@ begin
     inherited Destroy;
 end;
 
-procedure TNamedObject.Set_UUID(const Value: TUuid);
+procedure TNamedObject.SetUUID(const Value: TUuid);
 begin
     if pUuid = NIL then
         New(pUuid);
     pUuid^ := Value;
 end;
 
-function TNamedObject.Get_UUID: TUuid;
+function TNamedObject.GetUUID(): TUuid;
 begin
     if pUuid = NIL then
     begin
@@ -100,14 +96,14 @@ begin
     Result := pUuid^;
 end;
 
-function TNamedObject.Get_ID: String;
+function TNamedObject.GetID(): String;
 begin
-    Result := GUIDToString(Get_UUID);
+    Result := GUIDToString(GetUUID());
 end;
 
-function TNamedObject.Get_CIM_ID: String;
+function TNamedObject.GetCIM_ID(): String;
 begin
-    Result := UUIDToCIMString(Get_UUID);
+    Result := UUIDToCIMString(GetUUID());
 end;
 
 end.
