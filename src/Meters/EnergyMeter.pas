@@ -218,8 +218,6 @@ type
         FSaveDemandInterval: Boolean;
         FDI_Verbose: Boolean;
 
-        procedure Set_SaveDemandInterval(const Value: Boolean);
-        function Get_SaveDemandInterval: Boolean;
         procedure CreateMeterTotals;
         procedure CreateFDI_Totals;
         procedure ClearDI_Totals;
@@ -228,8 +226,6 @@ type
         procedure OpenVoltageReportFile;
         procedure WriteOverloadReport;
         procedure WriteVoltageReport;
-        procedure Set_DI_Verbose(const Value: Boolean);
-        function Get_DI_Verbose: Boolean;
 
     PROTECTED
         // Moved from global unit vars
@@ -308,9 +304,10 @@ type
         function GetRegisterNames(obj: TDSSObject): ArrayOfString; override;
         function GetRegisterValues(obj: TDSSObject; var numRegisters: Integer): pDoubleArray; override;
 
-        property SaveDemandInterval: Boolean READ FSaveDemandInterval WRITE Set_SaveDemandInterval;
-        property DI_Verbose: Boolean READ FDI_Verbose WRITE Set_DI_Verbose;
-
+        function SaveDemandInterval(): Boolean;
+        procedure SetSaveDemandInterval(const Value: Boolean);
+        procedure SetDIVerbose(const Value: Boolean);
+        function DIVerbose(): Boolean;
     end;
 
     TEnergyMeterObj = class(TMeterElement)
@@ -1228,7 +1225,7 @@ begin
     Registers[ord(EMRegister.GenMaxkVA)] := -1.0e50;
 
     FirstSampleAfterReset := TRUE;  // initialize for trapezoidal integration
-   // Removed .. open in solution loop See Solve Yearly If EnergyMeterClass.SaveDemandInterval Then OpenDemandIntervalFile;
+   // Removed .. open in solution loop See Solve Yearly If EnergyMeterClass.SaveDemandInterval() Then OpenDemandIntervalFile;
 end;
 
 procedure TEnergyMeterObj.SaveRegisters;
@@ -1685,7 +1682,7 @@ begin
     end;
 
     FirstSampleAfterReset := FALSE;
-    if DSS.EnergyMeterClass.SaveDemandInterval then
+    if DSS.EnergyMeterClass.SaveDemandInterval() then
         WriteDemandIntervalData;
 end;
 
@@ -2890,7 +2887,7 @@ begin
         if This_Meter_DIFileIsOpen then
             CloseDemandIntervalFile;
 
-        if (DSS.EnergyMeterClass.DI_Verbose) then
+        if (DSS.EnergyMeterClass.DIVerbose()) then
         begin
             This_Meter_DIFileIsOpen := TRUE;
             if DI_MHandle <> NIL then
@@ -2943,7 +2940,7 @@ var
     end;
 
 begin
-    if DSS.EnergyMeterClass.DI_Verbose and This_Meter_DIFileIsOpen then
+    if DSS.EnergyMeterClass.DIVerbose() and This_Meter_DIFileIsOpen then
     begin
         WriteintoMem(DI_MHandle, DSS.ActiveCircuit.Solution.DynaVars.dblHour);
         for i := 1 to NumEMRegisters do
@@ -3146,13 +3143,13 @@ begin
     Result := DSS.EnergyMeterClass.DI_Dir + PathDelim + Self.Name() + DSS._Name + '.csv';
 end;
 
-procedure TEnergyMeter.Set_SaveDemandInterval(const Value: Boolean);
+procedure TEnergyMeter.SetSaveDemandInterval(const Value: Boolean);
 begin
     FSaveDemandInterval := Value;
-    ResetAll;
+    ResetAll();
 end;
 
-function TEnergyMeter.Get_SaveDemandInterval: Boolean;
+function TEnergyMeter.SaveDemandInterval(): Boolean;
 begin
     Result := FSaveDemandInterval;
 end;
@@ -3435,7 +3432,7 @@ end;
 procedure TSystemMeter.Reset;
 begin
     Clear();
-   // removed - open in solution If EnergyMeterClass.SaveDemandInterval Then OpenDemandIntervalFile;
+   // removed - open in solution If EnergyMeterClass.SaveDemandInterval() Then OpenDemandIntervalFile;
 end;
 
 procedure TSystemMeter.Save;
@@ -3447,8 +3444,8 @@ begin
         CSVName := 'SystemMeter' + DSS._Name + '.csv';
         // If we are doing a simulation and saving interval data, create this in the
         // same directory as the demand interval data
-        if DSS.energyMeterClass.SaveDemandInterval then
-            Folder := DSS.energyMeterClass.DI_DIR + PathDelim
+        if DSS.EnergyMeterClass.SaveDemandInterval() then
+            Folder := DSS.EnergyMeterClass.DI_DIR + PathDelim
         else
             Folder := DSS.OutputDirectory;
         DSS.GlobalResult := CSVName;
@@ -3548,13 +3545,13 @@ begin
     WriteintoMem(SM_MHandle, PeakLosseskW);
 end;
 
-procedure TEnergyMeter.Set_DI_Verbose(const Value: Boolean);
+procedure TEnergyMeter.SetDIVerbose(const Value: Boolean);
 begin
     FDI_Verbose := Value;
     ResetAll;
 end;
 
-function TEnergyMeter.Get_DI_Verbose: Boolean;
+function TEnergyMeter.DIVerbose(): Boolean;
 begin
     Result := FDI_Verbose;
 end;

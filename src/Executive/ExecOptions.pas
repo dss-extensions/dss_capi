@@ -589,14 +589,14 @@ begin
             59:
                 DSS.DSSExecutive.DoSetReduceStrategy(param);
             60:
-                DSS.EnergyMeterClass.SaveDemandInterval := InterpretYesNo(Param);
+                DSS.EnergyMeterClass.SetSaveDemandInterval(InterpretYesNo(Param));
             61:
             begin
                 DSS.ActiveCircuit.PctNormalFactor := DSS.Parser.MakeDouble();
                 DSS.DSSExecutive.DoSetNormal(DSS.ActiveCircuit.PctNormalFactor);
             end;
             62:
-                DSS.EnergyMeterClass.DI_Verbose := InterpretYesNo(Param);
+                DSS.EnergyMeterClass.SetDIVerbose(InterpretYesNo(Param));
             63:
                 DSS.ActiveCircuit.SetCaseName(DSS.Parser.MakeString());
             64:
@@ -1004,11 +1004,11 @@ begin
                 59:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.ReductionStrategyString);
                 60:
-                    AppendGlobalResult(DSS, DSS.EnergyMeterClass.SaveDemandInterval);
+                    AppendGlobalResult(DSS, DSS.EnergyMeterClass.SaveDemandInterval());
                 61:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.PctNormalFactor);
                 62:
-                    AppendGlobalResult(DSS, DSS.EnergyMeterClass.DI_Verbose);
+                    AppendGlobalResult(DSS, DSS.EnergyMeterClass.DIVerbose());
                 63:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.CaseName());
                 64:
