@@ -74,7 +74,7 @@ var
     GmrTS: Double;
     Denom, RadIn, RadOut: Double;
 begin
-    Frequency := f;  // this has side effects
+    SetFrequency(f);  // this has side effects
 
     if assigned(FZreduced) then
     begin
@@ -92,7 +92,7 @@ begin
     FYCMatrix.Clear;
 
     // add concentric neutrals to the end of conductor list; they are always reduced
-    N := numConductors + FNPhases;
+    N := numConductors + nPhases;
     Zmat := TCMatrix.CreateMatrix(N);
 
     // For less than 1 kHz use GMR to better match published data
@@ -119,7 +119,7 @@ begin
     end;
 
   // TS self impedances
-    for i := 1 to FNPhases do
+    for i := 1 to nPhases do
     begin
         ResTS := 0.3183 * RhoTS / (FDiaShield[i] * FTapeLayer[i] * sqrt(50.0 / (100.0 - FTapeLap[i])));
         GmrTS := 0.5 * (FDiaShield[i] - FTapeLayer[i]);  // per Kersting, to center of TS
@@ -141,7 +141,7 @@ begin
     end;
 
   // Mutual Impedances - TS to other TS, cores, and bare neutrals
-    for i := 1 to FNPhases do
+    for i := 1 to nPhases do
     begin
         idxi := i + numConductors;
         for j := 1 to i - 1 do
@@ -180,7 +180,7 @@ begin
 
   // for shielded cables, build the capacitance matrix directly
   // assumes the insulation may lie between semicon layers
-    for i := 1 to FNPhases do
+    for i := 1 to nPhases do
     begin
         Yfactor := twopi * e0 * FEpsR[i] * Fw; // includes frequency so C==>Y
         RadOut := 0.5 * FDiaIns[i];

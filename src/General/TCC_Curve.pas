@@ -63,8 +63,6 @@ type
         function GetTCCTime(const C_Value: Double): Double;  // Return operating time for a particular time value
         function GetUVTime(const V_Value: Double): Double;  // Return operating time for undervoltage relay
         function GetOVTime(const V_Value: Double): Double;  // Return operating time for overvoltage relay
-
-        property NumPoints: Integer READ Npts;
     end;
 
 implementation

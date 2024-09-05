@@ -81,7 +81,7 @@ var
     GmrCN: Double;
     Denom, RadIn, RadOut: Double;
 begin
-    Frequency := f;  // this has side effects
+    SetFrequency(f);  // this has side effects
 
     if assigned(FZreduced) then
     begin
@@ -99,7 +99,7 @@ begin
     FYCMatrix.Clear;
 
   // add concentric neutrals to the end of conductor list; they are always reduced
-    N := numConductors + FNPhases;
+    N := numConductors + nPhases;
     Zmat := TCMatrix.CreateMatrix(N);
 
     // For less than 1 kHz use GMR to better match published data
@@ -126,7 +126,7 @@ begin
     end;
 
   // CN self impedances
-    for i := 1 to FNPhases do
+    for i := 1 to nPhases do
     begin
         ResCN := FRstrand[i] / FkStrand[i];
         RadCN := 0.5 * (FDiaCable[i] - FDiaStrand[i]);
@@ -150,7 +150,7 @@ begin
     end;
 
   // Mutual Impedances - CN to other CN, cores, and bare neutrals
-    for i := 1 to FNPhases do
+    for i := 1 to nPhases do
     begin
         idxi := i + numConductors;
         for j := 1 to i - 1 do
@@ -190,7 +190,7 @@ begin
 
   // for shielded cables, build the capacitance matrix directly
   // assumes the insulation may lie between semicon layers
-    for i := 1 to FNPhases do
+    for i := 1 to nPhases do
     begin
         Yfactor := twopi * e0 * FEpsR[i] * Fw; // includes frequency so C==>Y
         RadOut := 0.5 * FDiaIns[i];

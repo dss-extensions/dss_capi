@@ -36,8 +36,6 @@ type
 
     TLineConstants = class(TObject)
     PROTECTED
-        FNPhases: Integer;
-
         FData: pDouble;
 
         // Memory for the arrays below is shared in FData above;
@@ -64,15 +62,10 @@ type
 
         function GetZearth(i, j, EarthModel: Integer): Complex;
         function GetZint(i, EarthModel: Integer): Complex;
-        procedure Set_Frequency(const Value: Double);
-        
-        // These can only be called privately
-        property Frequency: Double READ FFrequency WRITE Set_Frequency;
-
-        procedure set_Nphases(const Value: Integer);
-
+        procedure SetFrequency(const Value: Double);
     PUBLIC
         FrhoEarth: Double;  // ohm-m
+        nPhases: Integer;
         numConductors: Integer;
 
         procedure SetRhoEarth(const Value: Double);  // m
@@ -94,8 +87,6 @@ type
         // Converts to desired units when executed; Returns Pointer to Working Verstion
         function GetZMatrix(f, Lngth: Double; Units, EarthModel: Integer): Tcmatrix;
         function GetYCMatrix(f, Lngth: Double; Units: Integer): Tcmatrix;
-
-        property Nphases: Integer READ FNPhases WRITE set_Nphases;
 
         constructor Create(NConductors: Integer);
         destructor Destroy; OVERRIDE;
@@ -141,7 +132,7 @@ var
 
 begin
     // rhoEarth := rho;
-    Frequency := f;  // this has side effects
+    SetFrequency(f);  // this has side effects
 
     if assigned(FZreduced) then
     begin
@@ -276,7 +267,7 @@ var
     i: Integer;
 begin
     numConductors := NConductors;
-    NPhases := numConductors;
+    nPhases := numConductors;
 
     // Data for FX, FY, FGMR, Fradius, Fcapradius, FRdc, FRac, 
     // FZMatrix, FYCMatrix
@@ -516,7 +507,7 @@ end;
 procedure TLineConstants.Reduce;
 // Performs a Kron reduction to get rid of neutral conductors
 begin
-    Kron(FNPhases);
+    Kron(nPhases);
 end;
 
 procedure TLineConstants.SetCapradius(i, units: Integer; const Value: Double);
@@ -525,7 +516,7 @@ begin
         Fcapradius[i] := Value * To_Meters(units);
 end;
 
-procedure TLineConstants.Set_Frequency(const Value: Double);
+procedure TLineConstants.SetFrequency(const Value: Double);
 begin
     FFrequency := Value;
     Fw := twopi * FFrequency;
@@ -549,11 +540,6 @@ begin
         if Fradius[i] < 0.0 then
             Fradius[i] := FGMR[i] / 0.7788; // equivalent round conductor
     end;
-end;
-
-procedure TLineConstants.set_Nphases(const Value: Integer);
-begin
-    FNPhases := Value;
 end;
 
 procedure TLineConstants.SetRac(i, units: Integer; const Value: Double);

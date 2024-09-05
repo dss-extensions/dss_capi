@@ -91,13 +91,13 @@ begin
 //  End;
     for i := 1 to numConductors do
     begin
-        if i <= FNPhases then
+        if i <= nPhases then
             Ri := FRadius[i]
         else
             Ri := 0.5 * FDiaCable[i];
         for j := i + 1 to numConductors do
         begin
-            if j <= FNPhases then
+            if j <= nPhases then
                 Rj := FRadius[j]
             else
                 Rj := 0.5 * FDiaCable[j];
