@@ -166,8 +166,6 @@ type
         FpctMinkvar: Double;
         ctrlSignalShape: TLoadShapeObj;        
 
-        procedure Set_PendingChange(const Value: EControlAction);
-        function Get_PendingChange: EControlAction;
         procedure GetControlVoltage(var ControlVoltage: Double);
         procedure GetControlCurrent(var ControlCurrent: Double);
         procedure GetBusVoltages(pBus: TDSSBus; Buff: pComplexArray);
@@ -187,7 +185,8 @@ type
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
         procedure Reset; OVERRIDE;  // Reset to initial defined state
 
-        property PendingChange: EControlAction READ Get_PendingChange WRITE Set_PendingChange;
+        function PendingChange(): EControlAction;
+        procedure SetPendingChange(const Value: EControlAction);
     end;
 
 implementation
@@ -512,7 +511,7 @@ begin
 
         ShouldSwitch := FALSE;
         Armed := FALSE;
-        PendingChange := CTRL_NONE;
+        SetPendingChange(CTRL_NONE);
     end;
 
     PublicDataStruct := @ControlVars;   // So User-written models can access
@@ -717,7 +716,7 @@ begin
     end;
 
     with ControlVars do
-        case PendingChange of
+        case PendingChange() of
             CTRL_OPEN:
                 case ControlledCapacitor.NumSteps() of
                     1:
@@ -877,7 +876,7 @@ begin
                     CTRL_OPEN:
                         if Vtest < VMin then
                         begin
-                            PendingChange := CTRL_CLOSE;
+                            SetPendingChange(CTRL_CLOSE);
                             ShouldSwitch := TRUE;
                             VoverrideEvent := TRUE;
                             if ShowEventLog then
@@ -886,7 +885,7 @@ begin
                     CTRL_CLOSE:
                         if Vtest > Vmax then
                         begin
-                            PendingChange := CTRL_OPEN;
+                            SetPendingChange(CTRL_OPEN);
                             ShouldSwitch := TRUE;
                             VoverrideEvent := TRUE;
                             if ShowEventLog then
@@ -909,15 +908,15 @@ begin
                         CTRL_OPEN:
                             if CurrTest > ON_Value then
                             begin
-                                PendingChange := CTRL_CLOSE;
+                                SetPendingChange(CTRL_CLOSE);
                                 ShouldSwitch := TRUE;
                             end
                             else // Reset
-                                PendingChange := CTRL_NONE;
+                                SetPendingChange(CTRL_NONE);
                         CTRL_CLOSE:
                             if CurrTest < OFF_Value then
                             begin
-                                PendingChange := CTRL_OPEN;
+                                SetPendingChange(CTRL_OPEN);
                                 ShouldSwitch := TRUE;
                             end
                             else
@@ -925,12 +924,12 @@ begin
                             begin
                                 if CurrTest > ON_Value then
                                 begin
-                                    PendingChange := CTRL_CLOSE;
+                                    SetPendingChange(CTRL_CLOSE);
                                     ShouldSwitch := TRUE;
                                 end;
                             end
                             else // Reset
-                                PendingChange := CTRL_NONE;
+                                SetPendingChange(CTRL_NONE);
                     end;
                 end;
 
@@ -944,17 +943,17 @@ begin
                         CTRL_OPEN:
                             if Vtest < ON_Value then
                             begin
-                                PendingChange := CTRL_CLOSE;
+                                SetPendingChange(CTRL_CLOSE);
                                 ShouldSwitch := TRUE;
                             end
                             else // Reset
-                                PendingChange := CTRL_NONE;
+                                SetPendingChange(CTRL_NONE);
                         CTRL_CLOSE:
                         begin
-                            PendingChange := CTRL_NONE;
+                            SetPendingChange(CTRL_NONE);
                             if Vtest > OFF_Value then
                             begin
-                                PendingChange := CTRL_OPEN;
+                                SetPendingChange(CTRL_OPEN);
                                 ShouldSwitch := TRUE;
                             end
                             else
@@ -962,7 +961,7 @@ begin
                             begin
                                 if Vtest < ON_Value then
                                 begin
-                                    PendingChange := CTRL_CLOSE;
+                                    SetPendingChange(CTRL_CLOSE);
                                     ShouldSwitch := TRUE;
                                 end
                             end;
@@ -980,15 +979,15 @@ begin
                         CTRL_OPEN:
                             if Q > ON_Value then
                             begin
-                                PendingChange := CTRL_CLOSE;
+                                SetPendingChange(CTRL_CLOSE);
                                 ShouldSwitch := TRUE;
                             end
                             else // Reset
-                                PendingChange := CTRL_NONE;
+                                SetPendingChange(CTRL_NONE);
                         CTRL_CLOSE:
                             if Q < OFF_Value then
                             begin
-                                PendingChange := CTRL_OPEN;
+                                SetPendingChange(CTRL_OPEN);
                                 ShouldSwitch := TRUE;
                             end
                             else
@@ -996,12 +995,12 @@ begin
                             begin
                                 if Q > ON_Value then
                                 begin
-                                    PendingChange := CTRL_CLOSE;  // We can go some more
+                                    SetPendingChange(CTRL_CLOSE);  // We can go some more
                                     ShouldSwitch := TRUE;
                                 end;
                             end
                             else // Reset
-                                PendingChange := CTRL_NONE;
+                                SetPendingChange(CTRL_NONE);
                     end;
                 end;
                 USERCONTROL:
@@ -1031,21 +1030,21 @@ begin
                             begin
                                 if (NormalizedTime >= ON_Value) and (NormalizedTime < OFF_Value) then
                                 begin
-                                    PendingChange := CTRL_CLOSE;
+                                    SetPendingChange(CTRL_CLOSE);
                                     ShouldSwitch := TRUE;
                                 end
                                 else // Reset
-                                    PendingChange := CTRL_NONE;
+                                    SetPendingChange(CTRL_NONE);
                             end
                             else
                             begin    // OFF time is next day
                                 if (NormalizedTime >= ON_Value) and (NormalizedTime < 24.0) then
                                 begin
-                                    PendingChange := CTRL_CLOSE;
+                                    SetPendingChange(CTRL_CLOSE);
                                     ShouldSwitch := TRUE;
                                 end
                                 else // Reset
-                                    PendingChange := CTRL_NONE;
+                                    SetPendingChange(CTRL_NONE);
                             end;
 
                         CTRL_CLOSE:
@@ -1053,7 +1052,7 @@ begin
                             begin
                                 if (NormalizedTime >= OFF_Value) or (NormalizedTime < ON_Value) then
                                 begin
-                                    PendingChange := CTRL_OPEN;
+                                    SetPendingChange(CTRL_OPEN);
                                     ShouldSwitch := TRUE;
                                 end
                                 else
@@ -1061,18 +1060,18 @@ begin
                                 begin
                                     if (NormalizedTime >= ON_Value) and (NormalizedTime < OFF_Value) then
                                     begin
-                                        PendingChange := CTRL_CLOSE;  // We can go some more
+                                        SetPendingChange(CTRL_CLOSE);  // We can go some more
                                         ShouldSwitch := TRUE;
                                     end;
                                 end
                                 else // Reset
-                                    PendingChange := CTRL_NONE;
+                                    SetPendingChange(CTRL_NONE);
                             end
                             else
                             begin  // OFF time is next day
                                 if (NormalizedTime >= OFF_Value) and (NormalizedTime < ON_Value) then
                                 begin
-                                    PendingChange := CTRL_OPEN;
+                                    SetPendingChange(CTRL_OPEN);
                                     ShouldSwitch := TRUE;
                                 end
                                 else
@@ -1080,12 +1079,12 @@ begin
                                 begin
                                     if (NormalizedTime >= ON_Value) and (NormalizedTime < 24.0) then
                                     begin
-                                        PendingChange := CTRL_CLOSE;  // We can go some more
+                                        SetPendingChange(CTRL_CLOSE);  // We can go some more
                                         ShouldSwitch := TRUE;
                                     end;
                                 end
                                 else // Reset
-                                    PendingChange := CTRL_NONE;
+                                    SetPendingChange(CTRL_NONE);
                             end;
                     end;
                 end;
@@ -1104,15 +1103,15 @@ begin
                             if (PF < PFON_Value) and (S.im * 0.001 > ControlledCapacitor.Totalkvar * FpctMinkvar * 0.01) // make sure we don't go too far leading
                             then
                             begin
-                                PendingChange := CTRL_CLOSE;
+                                SetPendingChange(CTRL_CLOSE);
                                 ShouldSwitch := TRUE;
                             end
                             else // Reset
-                                PendingChange := CTRL_NONE;
+                                SetPendingChange(CTRL_NONE);
                         CTRL_CLOSE:
                             if PF > PFOFF_Value then
                             begin
-                                PendingChange := CTRL_OPEN;
+                                SetPendingChange(CTRL_OPEN);
                                 ShouldSwitch := TRUE;
                             end
                             else
@@ -1120,12 +1119,12 @@ begin
                             begin
                                 if (PF < PFON_Value) and (S.im * 0.001 > ControlledCapacitor.Totalkvar / ControlledCapacitor.NumSteps() * 0.5) then
                                 begin
-                                    PendingChange := CTRL_CLOSE;  // We can go some more
+                                    SetPendingChange(CTRL_CLOSE);  // We can go some more
                                     ShouldSwitch := TRUE;
                                 end;
                             end
                             else // Reset
-                                PendingChange := CTRL_NONE;
+                                SetPendingChange(CTRL_NONE);
                     end;
 
                 end;
@@ -1143,9 +1142,9 @@ begin
                     if not ((nextState <> 0) xor (PresentState = CTRL_OPEN)) then
                     begin
                         if PresentState = CTRL_OPEN then
-                            PendingChange := CTRL_CLOSE
+                            SetPendingChange(CTRL_CLOSE)
                         else
-                            PendingChange := CTRL_OPEN;
+                            SetPendingChange(CTRL_OPEN);
                         ShouldSwitch := TRUE;
                     end;
                 end;
@@ -1155,7 +1154,7 @@ begin
     begin
         if ShouldSwitch and not Armed then
         begin
-            if PendingChange = CTRL_CLOSE then
+            if PendingChange() = CTRL_CLOSE then
             begin
                 if (ActiveCircuit.Solution.DynaVars.t + ActiveCircuit.Solution.DynaVars.intHour * 3600.0 - LastOpenTime) < DeadTime then // delay the close operation
                     TimeDelay := Max(ONDelay, (Deadtime + ONDelay) - (ActiveCircuit.Solution.DynaVars.t + ActiveCircuit.Solution.DynaVars.intHour * 3600.0 - LastOpenTime))
@@ -1164,13 +1163,13 @@ begin
             end
             else
                 TimeDelay := OFFDelay;
-            ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange, 0, Self);
+            ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange(), 0, Self);
             Armed := TRUE;
             if ShowEventLog then
                 AppendtoEventLog(ControlledElement.FullName(), Format('**Armed**, Delay= %.5g sec', [TimeDelay]));
         end;
 
-        if Armed and (PendingChange = CTRL_NONE) then
+        if Armed and (PendingChange() = CTRL_NONE) then
         begin
             ActiveCircuit.ControlQueue.Delete(ControlActionHandle);
             Armed := FALSE;
@@ -1180,14 +1179,14 @@ begin
     end;  // With
 end;
 
-function TCapControlObj.Get_PendingChange: EControlAction;
+function TCapControlObj.PendingChange(): EControlAction;
 begin
     Result := ControlVars.FPendingChange;
 end;
 
 procedure TCapControlObj.Reset;
 begin
-    PendingChange := CTRL_NONE;
+    SetPendingChange(CTRL_NONE);
     ControlledElement.ActiveTerminalIdx := 1;
     with ControlVars do
     begin
@@ -1203,7 +1202,7 @@ begin
     end;
 end;
 
-procedure TCapControlObj.Set_PendingChange(const Value: EControlAction);
+procedure TCapControlObj.SetPendingChange(const Value: EControlAction);
 begin
     ControlVars.FPendingChange := Value;
     DblTraceParameter := Integer(Value);
