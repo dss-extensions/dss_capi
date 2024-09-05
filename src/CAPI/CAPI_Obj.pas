@@ -2620,7 +2620,7 @@ begin
         cmds.Add('Set maxiterations=' + IntToStr(ckt.Solution.MaxIterations));
         cmds.Add('Set miniterations=' + IntToStr(ckt.Solution.MinIterations));
         cmds.Add('Set loadmodel=' + DSS.DefaultLoadModelEnum.OrdinalToString(ckt.Solution.LoadModel));
-        cmds.Add('Set loadmult=' + Format('%-g', [ckt.LoadMultiplier]));
+        cmds.Add('Set loadmult=' + Format('%-g', [ckt.LoadMultiplier()]));
         cmds.Add('Set Normvminpu=' + Format('%-g', [ckt.NormalMinVolts]));
         cmds.Add('Set Normvmaxpu=' + Format('%-g', [ckt.NormalMaxVolts]));
         cmds.Add('Set Emergvminpu=' + Format('%-g', [ckt.EmergMinVolts]));
@@ -2990,7 +2990,7 @@ begin
     end;
 
     // "MakeBusList"
-    if DSS.ActiveCircuit.BusNameRedefined then
+    if DSS.ActiveCircuit.BusNameRedefined() then
         DSS.ActiveCircuit.ReprocessBusDefs();
 
     tmp := jckt.Find('Bus'); 

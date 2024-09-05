@@ -1206,7 +1206,7 @@ begin
             ActiveCircuit.Solution.DynaVars.t: 0: 3, Separator,
             ActiveCircuit.Solution.ControlIteration: 0, Separator,
             ActiveCircuit.Solution.Iteration: 0, Separator,
-            ActiveCircuit.LoadMultiplier: 6: 2, Separator,
+            ActiveCircuit.LoadMultiplier(): 6: 2, Separator,
             tr.PresentTap(ElementTerminal): 8: 5, Separator,
             PendingTapChange: 8: 5, Separator,
             TapChangeMade: 8: 5, Separator,

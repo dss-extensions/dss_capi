@@ -151,7 +151,7 @@ begin
     Result := 0.0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.ActiveCircuit.LoadMultiplier
+    Result := DSSPrime.ActiveCircuit.LoadMultiplier()
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_MaxIterations(): Integer; CDECL;
@@ -237,7 +237,7 @@ procedure Solution_Set_LoadMult(Value: Double); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    DSSPrime.ActiveCircuit.LoadMultiplier := Value;
+    DSSPrime.ActiveCircuit.SetLoadMultiplier(Value);
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_MaxIterations(Value: Integer); CDECL;

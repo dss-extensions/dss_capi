@@ -3006,7 +3006,7 @@ begin
             FSWrite(F, ', Iterations, ControlMode, ControlIterations');
             FSWrite(F, ', MostIterationsDone');
             if DSS.ActiveCircuit <> NIL then
-                if DSS.ActiveCircuit.Issolved and not DSS.ActiveCircuit.BusNameRedefined then
+                if DSS.ActiveCircuit.Issolved and not DSS.ActiveCircuit.BusNameRedefined() then
                 begin
                     FSWrite(F, ', Year, Hour, MaxPuVoltage, MinPuVoltage, TotalMW, TotalMvar');
                     FSWrite(F, ', MWLosses, pctLosses, MvarLosses, Frequency');
@@ -3028,7 +3028,7 @@ begin
 
         FSWrite(F, Format(', %s', [DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode))]));
         FSWrite(F, Format(', %d', [DSS.ActiveCircuit.Solution.NumberofTimes]));
-        FSWrite(F, Format(', %8.3f', [DSS.ActiveCircuit.LoadMultiplier]));
+        FSWrite(F, Format(', %8.3f', [DSS.ActiveCircuit.LoadMultiplier()]));
         FSWrite(F, Format(', %d', [DSS.ActiveCircuit.NumDevices]));
         FSWrite(F, Format(', %d', [DSS.ActiveCircuit.NumBuses]));
         FSWrite(F, Format(', %d', [DSS.ActiveCircuit.NumNodes]));
@@ -3037,7 +3037,7 @@ begin
         FSWrite(F, Format(', %d', [DSS.ActiveCircuit.Solution.ControlIteration]));
         FSWrite(F, Format(', %d', [DSS.ActiveCircuit.Solution.MostIterationsDone]));
         if DSS.ActiveCircuit <> NIL then
-            if DSS.ActiveCircuit.Issolved and not DSS.ActiveCircuit.BusNameRedefined then
+            if DSS.ActiveCircuit.Issolved and not DSS.ActiveCircuit.BusNameRedefined() then
             begin
                 FSWrite(F, Format(', %d', [DSS.ActiveCircuit.Solution.Year()]));
                 FSWrite(F, Format(', %d', [DSS.ActiveCircuit.Solution.DynaVars.intHour]));

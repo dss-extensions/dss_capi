@@ -2622,7 +2622,7 @@ begin
     Result := 0;
     with DSS.ActiveCircuit do
     begin
-        LoadMultiplier := 1.0;   // Property .. has side effects
+        SetLoadMultiplier(1.0);   // Property .. has side effects
         with Solution do
         begin
             if Mode <> TSolveMode.SNAPSHOT then
@@ -2806,7 +2806,7 @@ begin
                 DSS.ActiveCircuit.RegisterTotals[ord(EMRegister.MaxkW)] + 
                 DSS.ActiveCircuit.RegisterTotals[ord(EMRegister.GenMaxkW)]
             ]);  // Peak KW in Meters
-            AppendGlobalResult(DSS, Format('%-.6g', [LoadMultiplier]));
+            AppendGlobalResult(DSS, Format('%-.6g', [LoadMultiplier()]));
         end;
 end;
 
@@ -3474,7 +3474,7 @@ begin
     end;
     S := S + 'Solution Mode = ' + DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)) + CRLF;
     S := S + 'Number = ' + IntToStr(DSS.ActiveCircuit.Solution.NumberofTimes) + CRLF;
-    S := S + 'Load Mult = ' + Format('%5.3f', [DSS.ActiveCircuit.LoadMultiplier]) + CRLF;
+    S := S + 'Load Mult = ' + Format('%5.3f', [DSS.ActiveCircuit.LoadMultiplier()]) + CRLF;
     S := S + 'Devices = ' + Format('%d', [DSS.ActiveCircuit.NumDevices]) + CRLF;
     S := S + 'Buses = ' + Format('%d', [DSS.ActiveCircuit.NumBuses]) + CRLF;
     S := S + 'Nodes = ' + Format('%d', [DSS.ActiveCircuit.NumNodes]) + CRLF;

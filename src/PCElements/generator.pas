@@ -1432,7 +1432,7 @@ begin
         WriteStr(sout, Format('%-.g, %d, %-.g, ',
             [ActiveCircuit.Solution.DynaVars.t + ActiveCircuit.Solution.Dynavars.IntHour * 3600.0,
             ActiveCircuit.Solution.Iteration,
-            ActiveCircuit.LoadMultiplier]),
+            ActiveCircuit.LoadMultiplier()]),
             DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)), ', ',
             DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.Solution.LoadModel), ', ',
             GenModel: 0, ', ',

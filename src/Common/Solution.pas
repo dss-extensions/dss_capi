@@ -815,33 +815,33 @@ procedure TSolutionObj.SetGeneratorDispRef;
 begin
     case Dynavars.SolutionMode of
         TSolveMode.SNAPSHOT:
-            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor;
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier() * ckt.DefaultGrowthFactor;
         TSolveMode.YEARLYMODE:
             ckt.GeneratorDispatchReference := ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
         TSolveMode.DAILYMODE:
-            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier() * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
         TSolveMode.DUTYCYCLE:
-            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier() * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
         TSolveMode.GENERALTIME:
-            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier() * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
         TSolveMode.DYNAMICMODE:
-            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor;
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier() * ckt.DefaultGrowthFactor;
         TSolveMode.HARMONICMODE:
-            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor;
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier() * ckt.DefaultGrowthFactor;
         TSolveMode.MONTECARLO1:
-            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor;
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier() * ckt.DefaultGrowthFactor;
         TSolveMode.MONTECARLO2:
-            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier() * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
         TSolveMode.MONTECARLO3:
-            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier() * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
         TSolveMode.PEAKDAY:
-            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier() * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
         TSolveMode.LOADDURATION1:
-            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier() * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
         TSolveMode.LOADDURATION2:
-            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier() * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
         TSolveMode.DIRECT:
-            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor;
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier() * ckt.DefaultGrowthFactor;
         TSolveMode.MONTEFAULT:
             ckt.GeneratorDispatchReference := 1.0;  // Monte Carlo Fault Cases solve  at peak load only base case
         TSolveMode.FAULTSTUDY:
@@ -849,7 +849,7 @@ begin
         TSolveMode.AUTOADDFLAG:
             ckt.GeneratorDispatchReference := ckt.DefaultGrowthFactor;   // peak load only
         TSolveMode.HARMONICMODET:
-            ckt.GeneratorDispatchReference := ckt.LoadMultiplier * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
+            ckt.GeneratorDispatchReference := ckt.LoadMultiplier() * ckt.DefaultGrowthFactor * ckt.DefaultHourMult.re;
     else
         DoSimpleMsg(DSS, _('Unknown solution mode.'), 483);
     end;
@@ -1851,7 +1851,7 @@ begin
     FSWriteln(F, 'Set miniterations=', IntToStr(MinIterations));
     FSWriteln(F, 'Set loadmodel=', DSS.DefaultLoadModelEnum.OrdinalToString(LoadModel));
 
-    FSWriteln(F, 'Set loadmult=', Format('%-g', [ckt.LoadMultiplier]));
+    FSWriteln(F, 'Set loadmult=', Format('%-g', [ckt.LoadMultiplier()]));
     FSWriteln(F, 'Set Normvminpu=', Format('%-g', [ckt.NormalMinVolts]));
     FSWriteln(F, 'Set Normvmaxpu=', Format('%-g', [ckt.NormalMaxVolts]));
     FSWriteln(F, 'Set Emergvminpu=', Format('%-g', [ckt.EmergMinVolts]));

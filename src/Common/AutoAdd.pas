@@ -315,7 +315,7 @@ begin
         // Do a preliminary snapshot solution to Force definition of meter zones
         // And set bus lists
         DSS.EnergyMeterClass.ResetAll();
-        if solution.SystemYChanged or ckt.BusNameRedefined then
+        if solution.SystemYChanged or ckt.BusNameRedefined() then
         begin
             solution.SolveSnap();
             ModeChanged := TRUE;

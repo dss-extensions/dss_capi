@@ -370,7 +370,7 @@ var
 begin
     Result := 0;
     try
-        ckt.LoadMultiplier := 1.0;   // Always set with prop in case matrix must be rebuilt
+        ckt.SetLoadMultiplier(1.0);   // Always set with prop in case matrix must be rebuilt
         IntervalHrs := 1.0;     // needed for energy meters and storage devices
         DynaVars.intHour := 0;
         DynaVars.dblHour := 0.0;// Use hour to denote Case number
@@ -447,9 +447,9 @@ begin
                 // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
                 case Randomtype of
                     UNIFORM:
-                        ckt.LoadMultiplier := Random();  // number between 0 and 1
+                        ckt.SetLoadMultiplier(Random());  // number between 0 and 1
                     GAUSSIAN:
-                        ckt.LoadMultiplier := Gauss(ckt.DefaultDailyShapeObj.GetMean(), ckt.DefaultDailyShapeObj.GetStdDev());
+                        ckt.SetLoadMultiplier(Gauss(ckt.DefaultDailyShapeObj.GetMean(), ckt.DefaultDailyShapeObj.GetStdDev()));
                 end;
 
                 with DynaVars do
@@ -519,11 +519,11 @@ begin
                 // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
                 case Randomtype of
                     UNIFORM:
-                        ckt.LoadMultiplier := Random();  // number between 0 and 1
+                        ckt.SetLoadMultiplier(Random());  // number between 0 and 1
                     GAUSSIAN:
-                        ckt.LoadMultiplier := Gauss(ckt.DefaultDailyShapeObj.GetMean(), ckt.DefaultDailyShapeObj.GetStdDev());
+                        ckt.SetLoadMultiplier(Gauss(ckt.DefaultDailyShapeObj.GetMean(), ckt.DefaultDailyShapeObj.GetStdDev()));
                     LOGNORMAL:
-                        ckt.LoadMultiplier := QuasiLognormal(ckt.DefaultDailyShapeObj.GetMean());
+                        ckt.SetLoadMultiplier(QuasiLognormal(ckt.DefaultDailyShapeObj.GetMean()));
                 end;
 
                 SolveSnap();
@@ -597,7 +597,7 @@ begin
                 begin
                     for N := 1 to ckt.LoadDurCurveObj.NumPoints do
                     begin
-                        ckt.LoadMultiplier := ckt.LoadDurCurveObj.MultAtIndex(N);  // Always set LoadMultiplier with prop in case matrix must be rebuilt
+                        ckt.SetLoadMultiplier(ckt.LoadDurCurveObj.MultAtIndex(N));  // Always set LoadMultiplier with prop in case matrix must be rebuilt
                         // Adjust meter interval to interval on value of present Load-Duration Curve
                         IntervalHrs := ckt.LoadDurCurveObj.IntervalAtIndex(N);
 
@@ -675,7 +675,7 @@ begin
         for N := 1 to ckt.LoadDurCurveObj.NumPoints do
         begin
             // Adjust meter interval to interval on value of present Load-Duration Curve
-            ckt.LoadMultiplier := ckt.LoadDurCurveObj.MultAtIndex(N);     // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
+            ckt.SetLoadMultiplier(ckt.LoadDurCurveObj.MultAtIndex(N));     // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
             IntervalHrs := ckt.LoadDurCurveObj.IntervalAtIndex(N);
 
             // Price curve must correspond to load-duration curve
@@ -729,7 +729,7 @@ begin
     Result := 0;
     try
         LoadModel := ADMITTANCE;   // All Direct solution
-        ckt.LoadMultiplier := 1.0;    // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
+        ckt.SetLoadMultiplier(1.0);    // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
         DynaVars.intHour := 0;
         DynaVars.dblHour := 0.0; // Use hour to denote Case number
         DynaVars.t := 0.0;

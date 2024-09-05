@@ -307,7 +307,7 @@ begin
     end;
 
     if Value <> Fnconds then
-        ActiveCircuit.BusNameRedefined := TRUE;
+        ActiveCircuit.SetBusNameRedefined();
     Fnconds := Value;
     Set_Nterms(fNterms);  // ReallocTerminals    NEED MORE EFFICIENT WAY TO DO THIS
 end;
@@ -394,7 +394,7 @@ begin
         Exit;
         
     FEnabled := Value;
-    ActiveCircuit.BusNameRedefined := TRUE;  // forces rebuilding of Y matrix and bus lists
+    ActiveCircuit.SetBusNameRedefined();  // forces rebuilding of Y matrix and bus lists
 end;
 
 function TDSSCktElement.GetYPrim(var Ymatrix: TCmatrix; Opt: Integer): Integer;
@@ -504,7 +504,7 @@ begin
     if i <= FNterms then
     begin
         FBusNames[i] := AnsiLowerCase(S);
-        ActiveCircuit.BusNameRedefined := TRUE;  // Set Global Flag to signal circuit to rebuild busdefs
+        ActiveCircuit.SetBusNameRedefined();  // Set Global Flag to signal circuit to rebuild busdefs
     end
     else
         DoSimpleMsg('Attempt to set bus name for non-existent circuit element terminal (%d): "%s"', [i, s], 7541);

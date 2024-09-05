@@ -78,8 +78,6 @@ type
         BusAdjPC, BusAdjPD: TAdjArray; // bus adjacency lists of PD and PC elements
 
         function AddBus(const BusName: String; NNodes: Integer): Integer;
-        procedure Set_BusNameRedefined(Value: Boolean);
-        procedure Set_LoadMultiplier(Value: Double);
 
         function SaveMasterFile(circF: TStream; saveFlags: DSSSaveFlags; header: Boolean = true; footer: Boolean = true): Boolean;
         function SaveDSSObjects(circF: TStream; saveFlags: DSSSaveFlags): Boolean;
@@ -340,8 +338,10 @@ type
         procedure SetActiveCktElement(Value: TDSSCktElement);
 
         function Losses(): Complex; // Total Circuit PD Element losses
-        property BusNameRedefined: Boolean READ FBusNameRedefined WRITE Set_BusNameRedefined;
-        property LoadMultiplier: Double READ FLoadMultiplier WRITE Set_LoadMultiplier;
+        function BusNameRedefined(): Boolean;
+        procedure SetBusNameRedefined(Value: Boolean = true);
+        function LoadMultiplier(): Double;
+        procedure SetLoadMultiplier(Value: Double);
     end;
 
 implementation
@@ -548,7 +548,7 @@ begin
 
     CurrentDirectory := '';
 
-    BusNameRedefined := TRUE;  // set to force rebuild of buslists, nodelists
+    SetBusNameRedefined();  // set to force rebuild of buslists, nodelists
 
     SavedBuses := NIL;
     SavedBusNames := NIL;
@@ -2258,11 +2258,16 @@ begin
 
     DoResetMeterZones();  // Fix up meter zones to correspond
 
-    BusNameRedefined := FALSE;  // Get ready for next time
+    SetBusNameRedefined(FALSE);  // Get ready for next time
     DSS.SignalEvent(TAltDSSEvent.ReprocessBuses, 1);
 end;
 
-procedure TDSSCircuit.Set_BusNameRedefined(Value: Boolean);
+function TDSSCircuit.BusNameRedefined(): Boolean;
+begin
+    result := FBusNameRedefined;
+end;
+
+procedure TDSSCircuit.SetBusNameRedefined(Value: Boolean = true);
 begin
     FBusNameRedefined := Value;
 
@@ -2344,7 +2349,12 @@ begin
     Solution.SystemYChanged := TRUE;  // Force rebuild of matrix on next solution
 end;
 
-procedure TDSSCircuit.Set_LoadMultiplier(Value: Double);
+function TDSSCircuit.LoadMultiplier(): Double;
+begin
+    result := FLoadMultiplier;
+end;
+
+procedure TDSSCircuit.SetLoadMultiplier(Value: Double);
 begin
     if (Value <> FLoadMultiplier) then   // We may have to change the Y matrix if the load multiplier  has changed
         case Solution.LoadModel of
@@ -2394,7 +2404,7 @@ begin
     end;
 
     Solution.Mode := TSolveMode.SNAPSHOT;
-    LoadMultiplier := CapacityStart;
+    SetLoadMultiplier(CapacityStart);
     CapacityFound := FALSE;
 
     repeat
@@ -2412,10 +2422,10 @@ begin
             CapacityFound := TRUE;
         // LoadMultiplier is a property ...
         if not CapacityFound then
-            LoadMultiplier := LoadMultiplier + CapacityIncrement;
-    until (LoadMultiplier > 1.0) or CapacityFound;
-    if LoadMultiplier > 1.0 then
-        LoadMultiplier := 1.0;
+            SetLoadMultiplier(LoadMultiplier() + CapacityIncrement);
+    until (LoadMultiplier() > 1.0) or CapacityFound;
+    if LoadMultiplier() > 1.0 then
+        SetLoadMultiplier(1.0);
     Result := TRUE;
 end;
 

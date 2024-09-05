@@ -235,7 +235,7 @@ begin
             if Fnphases <> previousIntVal then
             begin
                 NConds := Fnphases;
-                ActiveCircuit.BusNameRedefined := TRUE;
+                ActiveCircuit.SetBusNameRedefined();
             end;
         ord(TProp.bus1):
         begin

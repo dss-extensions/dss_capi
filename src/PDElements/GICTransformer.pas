@@ -297,7 +297,7 @@ begin
             if Fnphases <> previousIntVal then
             begin
                 NConds := Fnphases;  // Force Reallocation of terminal info if different size
-                ActiveCircuit.BusNameRedefined := TRUE;  // Set Global Flag to signal circuit to rebuild busdefs
+                ActiveCircuit.SetBusNameRedefined();  // Set Global Flag to signal circuit to rebuild busdefs
             end;
         ord(TProp.Typ):
             case Spectype of

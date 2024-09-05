@@ -70,7 +70,7 @@ begin
         SendCmd2Actors(SOLVE_AD2);
     end;
     DSS.ActiveCircuit.IsSolved := TRUE;
-    DSS.ActiveCircuit.BusNameRedefined := FALSE;
+    DSS.ActiveCircuit.SetBusNameRedefined(FALSE);
     if DSS.SolutionAbort() then
         DSS.ActiveCircuit.IsSolved := FALSE;
     DSS.ActiveChild := DSS;
@@ -600,7 +600,7 @@ begin
                     DSS.ActiveCircuit.SetElementActive(String(Links[DIdx]));
                     DSS.ActiveCircuit.ActiveCktElement.Enabled := FALSE;
                 end;
-                DSS.ActiveCircuit.BusNameRedefined := FALSE;
+                DSS.ActiveCircuit.SetBusNameRedefined(FALSE);
                 Ymatrix.BuildYMatrix(DSS,WHOLEMATRIX, FALSE);
                 prog_Str := prog_str + _('Done');
                 ErrorCode := 0; // No error handling here
@@ -670,7 +670,7 @@ begin
                     DSS.ActiveCircuit.SetElementActive(String(Links[DIdx]));
                     DSS.ActiveCircuit.ActiveCktElement.Enabled := TRUE;
                 end;
-                DSS.ActiveCircuit.BusNameRedefined := FALSE;
+                DSS.ActiveCircuit.SetBusNameRedefined(FALSE);
                 Ymatrix.BuildYMatrix(DSS, WHOLEMATRIX, FALSE);
 
                 DSS.ActiveCircuit.Solution.SendCmd2Actors(INIT_ADIAKOPTICS);

@@ -544,9 +544,8 @@ begin
             ord(Cmd.Buscoords):
                 DSS.CmdResult := DSS.DSSExecutive.DoBusCoordsCmd(FALSE);
             ord(Cmd.MakeBusList):
-                with DSS.ActiveCircuit do
-                    if BusNameRedefined then
-                        ReprocessBusDefs;
+                if DSS.ActiveCircuit.BusNameRedefined() then
+                    DSS.ActiveCircuit.ReprocessBusDefs();
             ord(Cmd.MakePosSeq):
                 DSS.CmdResult := DSS.DSSExecutive.DoMakePosSeq;
             ord(Cmd.Reduce):

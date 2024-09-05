@@ -1916,7 +1916,7 @@ begin
         WriteStr(sout, Format('%-.g, %d, %-.g, ',
             [ActiveCircuit.Solution.DynaVars.dblHour,
             ActiveCircuit.Solution.Iteration,
-            ActiveCircuit.LoadMultiplier]),
+            ActiveCircuit.LoadMultiplier()]),
             DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)), ', ',
             DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.Solution.LoadModel), ', ',
             VoltageModel: 0, ', ',

@@ -468,7 +468,7 @@ begin
                 end;
             ord(TExecOption.Loadmult):
             begin
-                DSS.ActiveCircuit.LoadMultiplier := DSS.Parser.MakeDouble();  // Set using LoadMultiplier property
+                DSS.ActiveCircuit.SetLoadMultiplier(DSS.Parser.MakeDouble());  // Set using LoadMultiplier property
                 DSS.ActiveCircuit.Solution.SystemYChanged := True;
             end;
             21:
@@ -900,7 +900,7 @@ begin
                 19:
                     AppendGlobalResult(DSS, DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.Solution.LoadModel));
                 20:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.LoadMultiplier);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.LoadMultiplier());
                 21:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.NormalMinVolts);
                 22:

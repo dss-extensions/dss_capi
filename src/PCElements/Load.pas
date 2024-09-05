@@ -1047,17 +1047,17 @@ begin
                 if status = TLoadStatus.Exempt then
                     Factor := GrowthFactor(year)
                 else
-                    Factor := ActiveCircuit.LoadMultiplier * GrowthFactor(year);
+                    Factor := ActiveCircuit.LoadMultiplier() * GrowthFactor(year);
             TSolveMode.DAILYMODE:
             begin
                 Factor := GrowthFactor(year);
                 if status <> TLoadStatus.Exempt then
-                    Factor := Factor * ActiveCircuit.LoadMultiplier;
+                    Factor := Factor * ActiveCircuit.LoadMultiplier();
                 CalcDailyMult(dblHour);
             end;
             TSolveMode.YEARLYMODE:
             begin
-                Factor := ActiveCircuit.LoadMultiplier * GrowthFactor(year);
+                Factor := ActiveCircuit.LoadMultiplier() * GrowthFactor(year);
                 CalcYearlyMult(dblHour);
                 if FLoadModel = TLoadModel.CVR then
                     CalcCVRMult(dblHour);
@@ -1066,7 +1066,7 @@ begin
             begin
                 Factor := GrowthFactor(year);
                 if status <> TLoadStatus.Exempt then
-                    Factor := Factor * ActiveCircuit.LoadMultiplier;
+                    Factor := Factor * ActiveCircuit.LoadMultiplier();
                 CalcDutyMult(dblHour);
             end;
             TSolveMode.GENERALTIME,
@@ -1074,7 +1074,7 @@ begin
             begin
                 Factor := GrowthFactor(year);
                 if status <> TLoadStatus.Exempt then
-                    Factor := Factor * ActiveCircuit.LoadMultiplier;
+                    Factor := Factor * ActiveCircuit.LoadMultiplier();
                 // This mode allows use of one class of load shape
                 case ActiveCircuit.ActiveLoadShapeClass of
                     USEDAILY:
@@ -1092,7 +1092,7 @@ begin
                 Randomize(ActiveCircuit.Solution.RandomType);
                 Factor := RandomMult * GrowthFactor(year);
                 if status <> TLoadStatus.Exempt then
-                    Factor := Factor * ActiveCircuit.LoadMultiplier;
+                    Factor := Factor * ActiveCircuit.LoadMultiplier();
             end;
 
             TSolveMode.MONTECARLO2,
@@ -1103,7 +1103,7 @@ begin
                 Factor := GrowthFactor(year);
                 CalcDailyMult(dblHour);
                 if status <> TLoadStatus.Exempt then
-                    Factor := Factor * ActiveCircuit.LoadMultiplier;
+                    Factor := Factor * ActiveCircuit.LoadMultiplier();
             end;
             TSolveMode.PEAKDAY:
             begin
