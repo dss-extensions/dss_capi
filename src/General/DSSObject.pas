@@ -19,9 +19,6 @@ type
     TDSSObjectPtr = ^TDSSObject;
 
     TDSSObject = class(TNamedObject)
-    PRIVATE
-        procedure Set_Name(const Value: String);
-
     PUBLIC
         DSS: TDSSContext;
 
@@ -44,7 +41,7 @@ type
 
         Flags: TDSSObjectFlags;
 
-        constructor Create(ParClass: TDSSClass);
+        constructor Create(ParClass: TDSSClass; objName: String);
         destructor Destroy; OVERRIDE;
 
         function Edit(Parser: TDSSParser): Integer;  // Allow Calls to edit from object itself
@@ -58,9 +55,10 @@ type
         procedure CustomSetRaw(Idx: Integer; Value: String); virtual;
         function ParseDynVar(Parser: TDSSParser; variable: String): Boolean; VIRTUAL;
 
-        property Name: String READ LocalName WRITE Set_Name;
-        function FullName: String;
-        function DSSClassName: String;
+        function Name(): String;
+        procedure SetName(const Value: String);
+        function FullName(): String;
+        function DSSClassName(): String;
     end;
 
 implementation
@@ -80,10 +78,11 @@ begin
     DoSimpleMsg('Error: base CustomSetRaw reached', 8754);
 end;
 
-constructor TDSSObject.Create(ParClass: TDSSClass);
+constructor TDSSObject.Create(ParClass: TDSSClass; objName: String);
 begin
     inherited Create(ParClass.Name);
     DSS := ParClass.DSS;
+    LocalName := AnsiLowerCase(objName); // not need to call SetName(), no previous name here
 
     DSSObjType := 0;
     ParentClass := ParClass;
@@ -110,7 +109,7 @@ var
     i: Integer;
 begin
     FSWriteln(F);
-    FSWriteln(F, 'New ' + EncloseQuotes(FullName));
+    FSWriteln(F, 'New ' + EncloseQuotes(FullName()));
     if Leaf then
     begin
         for i := 1 to ParentClass.NumProperties do
@@ -184,7 +183,12 @@ begin
     end;
 end;
 
-procedure TDSSObject.Set_Name(const Value: String);
+function TDSSObject.Name(): String;
+begin
+    result := LocalName;
+end;
+
+procedure TDSSObject.SetName(const Value: String);
 begin
     // If renamed, then let someone know so hash list can be updated;
     if Length(LocalName) > 0 then
@@ -227,12 +231,12 @@ begin
     DSS.EventStrings.Add(S);
 end;
 
-function TDSSObject.FullName: String;
+function TDSSObject.FullName(): String;
 begin
     Result := ParentClass.Name + '.' + Name;
 end;
 
-function TDSSObject.DSSClassName: String;
+function TDSSObject.DSSClassName(): String;
 begin
     Result := ParentClass.Name;
 end;

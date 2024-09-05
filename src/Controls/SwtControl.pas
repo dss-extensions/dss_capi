@@ -259,8 +259,7 @@ end;
 
 constructor TSwtControlObj.Create(ParClass: TDSSClass; const SwtControlName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(SwtControlName);
+    inherited Create(ParClass, SwtControlName);
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
@@ -332,13 +331,13 @@ begin
             begin
                 ControlledElement.SetConductorClosed(0, FALSE); // Open all phases of active terminal
                 PresentState := CTRL_OPEN;
-                AppendtoEventLog(Self.FullName, 'Opened');
+                AppendtoEventLog(Self.FullName(), 'Opened');
             end;
             if (Code = Integer(CTRL_CLOSE)) and (PresentState = CTRL_OPEN) then
             begin
                 ControlledElement.SetConductorClosed(0, TRUE);    // Close all phases of active terminal
                 PresentState := CTRL_CLOSE;
-                AppendtoEventLog(Self.FullName, 'Closed');
+                AppendtoEventLog(Self.FullName(), 'Closed');
             end;
             Armed := FALSE;  // reset the switch
         end;

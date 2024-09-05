@@ -440,7 +440,7 @@ end;
 
 function Obj_GetFullName(obj: TDSSObject): PAnsiChar; CDECL;
 begin
-    Result := DSS_CopyStringAsPChar(obj.FullName);
+    Result := DSS_CopyStringAsPChar(obj.FullName());
 end;
 
 function Obj_GetNumProperties(obj: TDSSObject): Integer; CDECL;
@@ -2523,7 +2523,7 @@ begin
         if elem.AllConductorsClosed() then
             continue;
 
-        name := CheckForBlanks(elem.FullName);
+        name := CheckForBlanks(elem.FullName());
         for termIdx := 0 to elem.NTerms - 1 do
         begin
             numCondOpen := 0;

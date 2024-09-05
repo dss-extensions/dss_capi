@@ -212,8 +212,7 @@ end;
 
 constructor TDynamicExpObj.Create(ParClass: TDSSClass; const ObjName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(ObjName);
+    inherited Create(ParClass, ObjName);
     DSSObjType := ParClass.DSSClassType;
     NVariables := 0;
     ActiveVar := '';

@@ -540,8 +540,7 @@ end;
 
 constructor TCapacitorObj.Create(ParClass: TDSSClass; const CapacitorName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(CapacitorName);
+    inherited Create(ParClass, CapacitorName);
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases

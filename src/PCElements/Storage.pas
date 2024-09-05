@@ -1025,8 +1025,7 @@ end;
 
 constructor TStorageObj.Create(ParClass: TDSSClass; const SourceName: String);
 begin
-    inherited create(ParClass);
-    Name := AnsiLowerCase(SourceName);
+    inherited create(ParClass, SourceName);
     DSSObjType := ParClass.DSSClassType; // + Storage_ELEMENT;  // In both PCelement and Storageelement list
     TraceFile := nil;
 
@@ -2080,7 +2079,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('%s model designated to use user-written model, but user-written model is not defined.', [FullName], 567);
+        DoSimpleMsg('%s model designated to use user-written model, but user-written model is not defined.', [FullName()], 567);
     end;
 end;
 
@@ -2925,7 +2924,7 @@ begin
     Result := -9999.99;  // error return value; no state vars
     if i < 1 then
     begin
-        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName(), i], 565);
         Exit;
     end;
     if DynamicEqObj <> NIL then
@@ -2933,7 +2932,7 @@ begin
         if i <= DynamicEqObj.NVariables * Length(DynamicEqVals[0]) then
             Result := DynamicEqObj.Get_DynamicEqVal(i - 1, DynamicEqVals)
         else
-            DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+            DoSimpleMsg('%s: invalid variable index %d.', [FullName(), i], 565);
         Exit;
     end;
 
@@ -3055,12 +3054,12 @@ var
 begin
     if i < 1 then
     begin
-        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName(), i], 565);
         Exit;  // No variables to set
     end;
     if DynamicEqObj <> NIL then
     begin
-        DoSimpleMsg('%s: cannot set state variable when using DynamicEq.', [FullName], 566);
+        DoSimpleMsg('%s: cannot set state variable when using DynamicEq.', [FullName()], 566);
         Exit;
     end;
 
@@ -3072,7 +3071,7 @@ begin
                 Fstate := Trunc(Value);
             3..13,
             22..25: 
-                DoSimpleMsg('%s: variable index %d is read-only.', [FullName, i], 564);
+                DoSimpleMsg('%s: variable index %d is read-only.', [FullName(), i], 564);
             14:
                 Vreg := Value;
             15:

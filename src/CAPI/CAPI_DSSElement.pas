@@ -47,7 +47,7 @@ begin
     Result := NIL;
     if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveDSSObject = NIL) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSObject.FullName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSObject.FullName());
 end;
 //------------------------------------------------------------------------------
 function DSSElement_Get_NumProperties(): Integer; CDECL;

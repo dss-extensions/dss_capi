@@ -638,7 +638,7 @@ end;
 
 procedure TGeneric5Obj.MakeLike(OtherPtr: Pointer);
 begin
-    DoSimpleMsg('%s: TGeneric5Obj.MakeLike is not implemented. Aborting.', [FullName], 202406012);
+    DoSimpleMsg('%s: TGeneric5Obj.MakeLike is not implemented. Aborting.', [FullName()], 202406012);
     DSS.SetSolutionAbort(true);
 end;
 
@@ -646,8 +646,7 @@ constructor TGeneric5Obj.Create(ParClass: TDSSClass; const Generic5ObjName: Stri
 var
     i, j: Integer;
 begin
-    inherited create(ParClass);
-    Name := LowerCase(Generic5ObjName);
+    inherited create(ParClass, Generic5ObjName);
     DSSObjType := ParClass.DSSClassType; // Same as Parent Class
 
     // TODO: BUG: These three are neither initialized nor modified at all in the original code,
@@ -2028,7 +2027,7 @@ begin
                 Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
             end;
         else
-            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Motors. %s has %d phases.', [FullName, Fnphases], 5672);
+            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Motors. %s has %d phases.', [FullName(), Fnphases], 5672);
             DSS.SetSolutionAbort(true);
         end;
     // end;
@@ -2287,7 +2286,7 @@ begin
     end;
     if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
     begin
-        DoSimpleMsg('%s: TGeneric5Obj.CalcGeneric5ModelContribution is not implemented for HarmonicMode. Aborting.', [FullName], 202406013);
+        DoSimpleMsg('%s: TGeneric5Obj.CalcGeneric5ModelContribution is not implemented for HarmonicMode. Aborting.', [FullName()], 202406013);
         DSS.SetSolutionAbort(true);
         Exit;
     end;
@@ -2366,7 +2365,7 @@ begin
     Result := -9999.99; // Error Value
     if (i < 1) or (i > NumGeneric5Variables) then
     begin
-        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName(), i], 565);
         Exit; // No variables to set
     end;
 
@@ -2461,7 +2460,7 @@ procedure TGeneric5Obj.SetVariable(i: Integer; Value: Double);
 begin
     if (i < 1) or (i > NumGeneric5Variables) then
     begin
-        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName(), i], 565);
         Exit; // No variables to set
     end;
 
@@ -2525,7 +2524,7 @@ begin
         TVar.NdNumInCluster:
             NdNumInCluster := trunc(Value) - 1;
     else
-        DoSimpleMsg('%s: variable %d is read-only.', [FullName, i], 568);
+        DoSimpleMsg('%s: variable %d is read-only.', [FullName(), i], 568);
         Exit; // No variables to set
     end;
     // Do Nothing for other variables: they are read only
@@ -2541,7 +2540,7 @@ end;
 
 procedure TGeneric5Obj.MakePosSequence;
 begin
-    DoSimpleMsg('%s: TGeneric5Obj.MakePosSequence is not implemented. Aborting.', [FullName], 202406011);
+    DoSimpleMsg('%s: TGeneric5Obj.MakePosSequence is not implemented. Aborting.', [FullName()], 202406011);
     DSS.SetSolutionAbort(true);
 end;
 

@@ -805,8 +805,7 @@ constructor TTransfObj.Create(ParClass: TDSSClass; const TransfName: String);
 var
     i: Integer;
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(TransfName);
+    inherited Create(ParClass, TransfName);
     DSSObjType := ParClass.DSSClassType; //DSSObjType + XFMR; // override PDElement   (kept in both actually)
 
     FNphases := 3;  // Directly set conds and phases

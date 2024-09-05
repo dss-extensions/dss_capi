@@ -221,7 +221,7 @@ begin
     if (obj.HarmArray <> NIL) then   // Check this after HarmArray is allocated  2/20/2018
     begin
         if obj.HarmArrayHasaZero(iZeroPoint) then
-            DoSimpleMsg('Error: Zero frequency detected in %s, point %d. Not allowed', [obj.FullName, iZeroPoint], 65001)
+            DoSimpleMsg('Error: Zero frequency detected in %s, point %d. Not allowed', [obj.FullName(), iZeroPoint], 65001)
 
         else
         if (obj.HarmArray <> NIL) and (obj.puMagArray <> NIL) and (obj.AngleArray <> NIL) then
@@ -254,8 +254,7 @@ end;
 
 constructor TSpectrumObj.Create(ParClass: TDSSClass; const SpectrumName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(SpectrumName);
+    inherited Create(ParClass, SpectrumName);
     DSSObjType := ParClass.DSSClassType;
 
     NumHarm := 0;
@@ -403,7 +402,7 @@ begin
             MultArray[i] := pdegtocomplex(puMagArray[i], (AngleArray[i] - HarmArray[i] * FundAngle));
 
     except
-        DoSimpleMsg('Exception while computing %s. Check Definition. Aborting', [FullName], 655);
+        DoSimpleMsg('Exception while computing %s. Check Definition. Aborting', [FullName()], 655);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;

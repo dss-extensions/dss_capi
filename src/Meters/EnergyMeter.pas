@@ -953,8 +953,7 @@ constructor TEnergyMeterObj.Create(ParClass: TDSSClass; const EnergyMeterName: S
 var
     i: Integer;
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(EnergyMeterName);
+    inherited Create(ParClass, EnergyMeterName);
     DSSObjType := ParClass.DSSClassType; //ENERGY_METER;
 
     FNPhases := 3;  // Directly set conds and phases
@@ -2099,7 +2098,7 @@ begin
                 LoadElem := Branchlist.FirstObject;
                 while LoadElem <> NIL do
                 begin
-                    FSWriteln(F, '   Shunt Element = ' + LoadElem.FullName);
+                    FSWriteln(F, '   Shunt Element = ' + LoadElem.FullName());
                     LoadElem := BranchList.NextObject
                 end;
                 PDElem := BranchList.GoForward();
@@ -2410,7 +2409,7 @@ var
 begin
     if not Assigned(SequenceList) then
     begin
-        DoSimpleMsg('%s Zone not defined properly.', [FullName], 52901);
+        DoSimpleMsg('%s Zone not defined properly.', [FullName()], 52901);
         Exit;
     end;
 
@@ -3264,7 +3263,7 @@ begin
                 end;
 
                 WriteintoMem(OV_MHandle, DSS.ActiveCircuit.Solution.DynaVars.dblHour);
-                WriteintoMemStr(OV_MHandle, ', ' + EncloseQuotes(PDelem.FullName));
+                WriteintoMemStr(OV_MHandle, ', ' + EncloseQuotes(PDelem.FullName()));
                 WriteintoMem(OV_MHandle, PDElem.NormAmps);
                 WriteintoMem(OV_MHandle, pdelem.EmergAmps);
                 if PDElem.Normamps > 0.0 then

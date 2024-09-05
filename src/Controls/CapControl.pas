@@ -369,7 +369,7 @@ begin
                     end
                     else
                     begin
-                        DoSimpleMsg('Invalid PF ON value for "%s"', [FullName], 353);
+                        DoSimpleMsg('Invalid PF ON value for "%s"', [FullName()], 353);
                     end;
                 end;
                 ord(TProp.OFFsetting):
@@ -383,7 +383,7 @@ begin
                     end
                     else
                     begin
-                        DoSimpleMsg('Invalid PF OFF value for "%s"', [FullName], 35301);
+                        DoSimpleMsg('Invalid PF OFF value for "%s"', [FullName()], 35301);
                     end;
                 end;
             end;
@@ -404,7 +404,7 @@ begin
                 end;
             ord(TProp.Capacitor):
                 if ControlledElement <> NIL then
-                    ControlVars.CapacitorName := ControlledElement.FullName;
+                    ControlVars.CapacitorName := ControlledElement.FullName();
             ord(TProp.VBus):
             begin
                 ControlVars.VOverrideBusName := AnsiLowerCase(ControlVars.VOverrideBusName);
@@ -474,8 +474,7 @@ end;
 
 constructor TCapControlObj.Create(ParClass: TDSSClass; const CapControlName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(CapControlName);
+    inherited Create(ParClass, CapControlName);
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
@@ -561,7 +560,7 @@ begin
     // 5-21-01 RCD moved this section ahead of monitored element so Nphases gets defined first
 
     if ControlledElement = NIL then
-        raise Exception.Create(Format(_('"%s": Capacitor is not set, aborting.'), [FullName]));
+        raise Exception.Create(Format(_('"%s": Capacitor is not set, aborting.'), [FullName()]));
 
     // Both capacitor and monitored element must already exist
     ControlledCapacitor := ControlledElement as TCapacitorObj;
@@ -581,7 +580,7 @@ begin
     if (ControlType <> TIMECONTROL) and (ControlType <> FOLLOWCONTROL) then
     begin
         if MonitoredElement = NIL then
-            raise Exception.Create(Format(_('%s: Element is not set, aborting.'), [FullName]));
+            raise Exception.Create(Format(_('%s: Element is not set, aborting.'), [FullName()]));
         effElement := MonitoredElement;
     end
     else
@@ -593,8 +592,8 @@ begin
 
     if ElementTerminal > effElement.Nterms then
     begin
-        DoErrorMsg(FullName,
-            Format(_('Terminal number %d does not exist in "%s".'), [ElementTerminal, effElement.FullName]),
+        DoErrorMsg(FullName(),
+            Format(_('Terminal number %d does not exist in "%s".'), [ElementTerminal, effElement.FullName()]),
             _('Re-specify terminal number.'), 362);
         Exit;
     end;
@@ -612,7 +611,7 @@ begin
             VOverrideBusIndex := ActiveCircuit.BusList.Find(VOverrideBusName);
             if VOverrideBusIndex = 0 then
             begin
-                DoSimpleMsg('%s: Voltage override Bus "%s" not found. Did you wait until buses were defined? Reverting to default.', [FullName, VOverrideBusName], 10361);
+                DoSimpleMsg('%s: Voltage override Bus "%s" not found. Did you wait until buses were defined? Reverting to default.', [FullName(), VOverrideBusName], 10361);
                 VoverrideBusSpecified := FALSE;
             end;
 
@@ -729,7 +728,7 @@ begin
                             ControlledCapacitor.SubtractStep;
 
                             if ShowEventLog then
-                                AppendtoEventLog(ControlledElement.FullName, '**Opened**');
+                                AppendtoEventLog(ControlledElement.FullName(), '**Opened**');
                             PresentState := CTRL_OPEN;
                             LastOpenTime := ActiveCircuit.Solution.DynaVars.t + 3600.0 * ActiveCircuit.Solution.DynaVars.intHour;
                         end;
@@ -742,11 +741,11 @@ begin
                             PresentState := CTRL_OPEN;
                             ControlledElement.SetConductorClosed(0, FALSE);   // Open all phases of active terminal
                             if ShowEventLog then
-                                AppendtoEventLog(ControlledElement.FullName, '**Opened**');
+                                AppendtoEventLog(ControlledElement.FullName(), '**Opened**');
                         end
                         else
                         if ShowEventLog then
-                            AppendtoEventLog(ControlledElement.FullName, '**Step Down**');
+                            AppendtoEventLog(ControlledElement.FullName(), '**Step Down**');
                     end;
                 end;
             CTRL_CLOSE:
@@ -755,7 +754,7 @@ begin
                 begin
                     ControlledElement.SetConductorClosed(0, TRUE);    // Close all phases of active terminal
                     if ShowEventLog then
-                        AppendtoEventLog(ControlledElement.FullName, '**Closed**');
+                        AppendtoEventLog(ControlledElement.FullName(), '**Closed**');
                     PresentState := CTRL_CLOSE;
                     ControlledCapacitor.AddStep;
                 end
@@ -763,7 +762,7 @@ begin
                 begin
                     if ControlledCapacitor.AddStep then
                         if ShowEventLog then
-                            AppendtoEventLog(ControlledElement.FullName, '**Step Up**');
+                            AppendtoEventLog(ControlledElement.FullName(), '**Step Up**');
                 end;
             end;
         else
@@ -882,7 +881,7 @@ begin
                             ShouldSwitch := TRUE;
                             VoverrideEvent := TRUE;
                             if ShowEventLog then
-                                AppendtoEventLog(ControlledElement.FullName, Format('Low Voltage Override: %.8g V', [Vtest]));
+                                AppendtoEventLog(ControlledElement.FullName(), Format('Low Voltage Override: %.8g V', [Vtest]));
                         end;
                     CTRL_CLOSE:
                         if Vtest > Vmax then
@@ -891,7 +890,7 @@ begin
                             ShouldSwitch := TRUE;
                             VoverrideEvent := TRUE;
                             if ShowEventLog then
-                                AppendtoEventLog(ControlledElement.FullName, Format('High Voltage Override: %.8g V', [Vtest]));
+                                AppendtoEventLog(ControlledElement.FullName(), Format('High Voltage Override: %.8g V', [Vtest]));
                         end;
                 end;
             end;
@@ -1135,7 +1134,7 @@ begin
                 begin
                     if ctrlSignalShape = NIL then
                     begin
-                        DoSimpleMsg('%s: Type is set to "Follow", but not "ControlSignal" was provided. Aborting solution.', [self.FullName], 10362);
+                        DoSimpleMsg('%s: Type is set to "Follow", but not "ControlSignal" was provided. Aborting solution.', [self.FullName()], 10362);
                         DSS.SetSolutionAbort(true);
                         Exit;
                     end;
@@ -1168,7 +1167,7 @@ begin
             ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange, 0, Self);
             Armed := TRUE;
             if ShowEventLog then
-                AppendtoEventLog(ControlledElement.FullName, Format('**Armed**, Delay= %.5g sec', [TimeDelay]));
+                AppendtoEventLog(ControlledElement.FullName(), Format('**Armed**, Delay= %.5g sec', [TimeDelay]));
         end;
 
         if Armed and (PendingChange = CTRL_NONE) then
@@ -1176,7 +1175,7 @@ begin
             ActiveCircuit.ControlQueue.Delete(ControlActionHandle);
             Armed := FALSE;
             if ShowEventLog then
-                AppendtoEventLog(ControlledElement.FullName, '**Reset**');
+                AppendtoEventLog(ControlledElement.FullName(), '**Reset**');
         end;
     end;  // With
 end;

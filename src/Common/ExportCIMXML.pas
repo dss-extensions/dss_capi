@@ -1301,7 +1301,7 @@ function TCIMExporterHelper.GetTermUuid(pElem: TDSSCktElement; Seq: Integer): TU
 var
     key: String;
 begin
-    key := IntToStr(pElem.DSSObjType) + '=' + pElem.Name + '=' + IntToStr(Seq);
+    key := IntToStr(pElem.DSSObjType) + '=' + pElem.Name() + '=' + IntToStr(Seq);
     Result := GetHashedUuid(key);
 end;
 
@@ -2085,7 +2085,7 @@ begin
         if IsGroundBus(BusName) = FALSE then
         begin
             ref := pElem.Terminals[j - 1].BusRef;
-            TermName := pElem.Name + '_T' + IntToStr(j);
+            TermName := pElem.Name() + '_T' + IntToStr(j);
             TermUuid := GetTermUuid(pElem, j);
             StartFreeInstance(FunPrf, 'Terminal', TermUuid);
             StringNode(FunPrf, 'IdentifiedObject.mRID', UUIDToCIMString(TermUuid));
@@ -4499,7 +4499,7 @@ begin
                 begin
                     if pLine.Enabled then
                     begin
-                        if (pLine.LineCodeObj <> NIL) and (pLine.LineCodeObj.Name = pLnCd.LocalName) then
+                        if (pLine.LineCodeObj <> NIL) and (pLine.LineCodeObj.Name() = pLnCd.LocalName) then
                         begin
                             pLnCd.Units := pLine.UserLengthUnits;
                             // writeln ('Setting Units on ' + pLnCd.LocalName + ' to ' + LineUnitsStr(pLnCd.Units));

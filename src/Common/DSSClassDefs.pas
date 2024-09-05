@@ -227,7 +227,7 @@ begin
             for i := 1 to DSS.DSSObjs.Count do
             begin
                 DSSObj := DSS.DSSObjs.At(i);
-                TraceName := DSSObj.FullName;
+                TraceName := DSSObj.FullName();
                 DSSObj.Free;
                 SuccessFree := TraceName;
             end;

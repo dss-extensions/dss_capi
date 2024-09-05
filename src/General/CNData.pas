@@ -171,7 +171,6 @@ end;
 constructor TCNDataObj.Create(ParClass: TDSSClass; const CNDataName: String);
 begin
     inherited Create(ParClass, CNDataName);
-    Name := AnsiLowerCase(CNDataName);
     DSSObjType := ParClass.DSSClassType;
     kStrand := 2;
     diaStrand := -1.0;

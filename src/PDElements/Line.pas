@@ -631,7 +631,7 @@ begin
                 begin
                     // ignore change of nphases if geometry used                
                     FNphases := previousIntVal;
-                    DoSimpleMsg('Illegal change of number of phases for "%s"', [FullName], 18101);
+                    DoSimpleMsg('Illegal change of number of phases for "%s"', [FullName()], 18101);
                 end;
             end;
         ord(TProp.r1),
@@ -802,7 +802,7 @@ begin
     // Previously in "FetchWireList"
     if not assigned(LineSpacingObj) then
     begin
-        DoSimpleMsg('You must assign the LineSpacing before the Wires Property ("%s").', [FullName], 18102);
+        DoSimpleMsg('You must assign the LineSpacing before the Wires Property ("%s").', [FullName()], 18102);
         Exit;
     end;
 
@@ -838,7 +838,7 @@ begin
     if (LineSpacingObj.NConds - istart + 1) <> ValueCount then
     begin
         DoSimpleMsg('%s: Unexpected number (%d) of wires; expected %d objects.', 
-            [FullName, ValueCount, (LineSpacingObj.NConds - istart + 1)], 18102);
+            [FullName(), ValueCount, (LineSpacingObj.NConds - istart + 1)], 18102);
         Exit;
     end;
 
@@ -931,9 +931,7 @@ end;
 
 constructor TLineObj.Create(ParClass: TDSSClass; const LineName: String);
 begin
-    inherited Create(ParClass);
-
-    Name := AnsiLowerCase(LineName);
+    inherited Create(ParClass, LineName);
     DSSObjType := ParClass.DSSClassType; // DSSObjType + LINESECTION; // in both PDElement list and Linesection lists
 
     FNphases := 3;  // Directly set conds and phases
@@ -1704,7 +1702,7 @@ begin
 
         // Update ControlElement Connections to This Line 
         UpdateControlElements(self, Other);
-        Name := NewName;
+        SetName(NewName);
 
         if Series then
             IsSwitch := FALSE; // not allowed on series merge.
@@ -1837,7 +1835,7 @@ begin
     for pControlElem in ActiveCircuit.DSSControls do
     begin
         if OldLine = pControlElem.MonitoredElement then // TODO: check if this works (and needs to work) with Fuse
-            pControlElem.ParsePropertyValue(pControlElem.ParentClass.CommandList.GetCommand('element'), NewLine.FullName, []);
+            pControlElem.ParsePropertyValue(pControlElem.ParentClass.CommandList.GetCommand('element'), NewLine.FullName(), []);
     end;
 end;
 

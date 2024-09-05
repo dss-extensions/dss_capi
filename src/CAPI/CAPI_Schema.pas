@@ -826,7 +826,7 @@ begin
                         otherName := 'CktElement';
                     
                     if other <> NIL then
-                        prop.Add('default', other.FullName);
+                        prop.Add('default', other.FullName());
                     
                     // prop.Add('$comment', Format('A validation regex for this would be long (%s)', [otherName]));
                 end
@@ -880,7 +880,7 @@ begin
                         if Length(allowedClasses) = 1 then
                             prop.Add('default', other.Name)
                         else
-                            prop.Add('default', other.FullName);
+                            prop.Add('default', other.FullName());
                     end;
                     // prop.Add('format', 'json-pointer');
                     //prop.Add('pattern', pattern);

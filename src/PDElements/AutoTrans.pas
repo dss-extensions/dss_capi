@@ -601,7 +601,7 @@ begin
             begin
                 i := NumWindings;
                 NumWindings := previousIntVal;
-                DoSimpleMsg('Invalid number of windings: (%d) for "%s"', [i, FullName], 100111);
+                DoSimpleMsg('Invalid number of windings: (%d) for "%s"', [i, FullName()], 100111);
                 Exit;
             end;
             OldWdgSize := (previousIntVal - 1) * previousIntVal div 2;
@@ -803,8 +803,7 @@ constructor TAutoTransObj.Create(ParClass: TDSSClass; const TransfName: String);
 var
     i: Integer;
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(TransfName);
+    inherited Create(ParClass, TransfName);
     DSSObjType := ParClass.DSSClassType; //DSSObjType + XFMR; // override PDElement   (kept in both actually)
 
     FNphases := 3;  // Directly set conds and phases

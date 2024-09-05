@@ -150,7 +150,6 @@ end;
 constructor TTSDataObj.Create(ParClass: TDSSClass; const TSDataName: String);
 begin
     inherited Create(ParClass, TSDataName);
-    Name := AnsiLowerCase(TSDataName);
     DSSObjType := ParClass.DSSClassType;
     DiaShield := -1.0;
     TapeLayer := -1.0;

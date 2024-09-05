@@ -779,7 +779,7 @@ begin
 
                 if not (DSS.ActiveCircuit.ActiveCktElement() is TPCElement) then
                 begin
-                    DoSimpleMsg(DSS, 'Object "%s" is not a valid PC element.', [DSS.ActiveCircuit.ActiveCktElement.FullName], 7103);
+                    DoSimpleMsg(DSS, 'Object "%s" is not a valid PC element.', [DSS.ActiveCircuit.ActiveCktElement.FullName()], 7103);
                     Exit;
                 end;
                 pce := DSS.ActiveCircuit.ActiveCktElement() as TPCElement;
@@ -797,7 +797,7 @@ begin
                 i := pce.LookupVariable(TmpStr, true);
                 if i < 0 then
                 begin
-                    DoSimpleMsg(DSS, 'State variable "%s" not found in "%s".', [TmpStr, pce.FullName], 7102);
+                    DoSimpleMsg(DSS, 'State variable "%s" not found in "%s".', [TmpStr, pce.FullName()], 7102);
                     Exit;
                 end;
 
@@ -1189,7 +1189,7 @@ begin
 
                     if not (DSS.ActiveCircuit.ActiveCktElement() is TPCElement) then
                     begin
-                        DoSimpleMsg(DSS, 'Object "%s" is not a valid PC element.', [DSS.ActiveCircuit.ActiveCktElement.FullName], 7103);
+                        DoSimpleMsg(DSS, 'Object "%s" is not a valid PC element.', [DSS.ActiveCircuit.ActiveCktElement.FullName()], 7103);
                         Exit;
                     end;
                     pce := DSS.ActiveCircuit.ActiveCktElement() as TPCElement;
@@ -1207,7 +1207,7 @@ begin
                     i := pce.LookupVariable(TmpStr, true);
                     if i < 0 then
                     begin
-                        DoSimpleMsg(DSS, 'State variable "%s" not found in "%s".', [TmpStr, pce.FullName], 7102);
+                        DoSimpleMsg(DSS, 'State variable "%s" not found in "%s".', [TmpStr, pce.FullName()], 7102);
                         Exit;
                     end;
                     AppendGlobalResult(DSS, Format('%g', [pce.GetVariable(i)]));

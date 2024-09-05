@@ -145,7 +145,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name());
 end;
 //------------------------------------------------------------------------------
 procedure Storages_Set_Name(const Value: PAnsiChar); CDECL;

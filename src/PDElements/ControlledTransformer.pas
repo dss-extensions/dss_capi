@@ -26,15 +26,15 @@ type
         function WdgConnection(i: Integer): Integer; virtual; abstract;
         function BaseVoltage(i: Integer): Double; virtual; abstract;
 
-        constructor Create(ParClass: TDSSClass);
+        constructor Create(ParClass: TDSSClass; objName: String);
         destructor Destroy; override;
     end;
 
 implementation
 
-constructor TControlledTransformerObj.Create(ParClass: TDSSClass);
+constructor TControlledTransformerObj.Create(ParClass: TDSSClass; objName: String);
 begin
-    inherited Create(ParClass);
+    inherited Create(ParClass, objName);
 end;
 
 destructor TControlledTransformerObj.Destroy;

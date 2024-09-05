@@ -335,8 +335,7 @@ end;
 
 constructor TRecloserObj.Create(ParClass: TDSSClass; const RecloserName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(RecloserName);
+    inherited Create(ParClass, RecloserName);
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
@@ -483,14 +482,14 @@ begin
                         if OperationCount > NumReclose then
                         begin
                             LockedOut := TRUE;
-                            AppendtoEventLog(Self.FullName, 'Opened, Locked Out');
+                            AppendtoEventLog(Self.FullName(), 'Opened, Locked Out');
                         end
                         else
                         begin
                             if OperationCount > NumFast then
-                                AppendtoEventLog(Self.FullName, 'Opened, Delayed')
+                                AppendtoEventLog(Self.FullName(), 'Opened, Delayed')
                             else
-                                AppendtoEventLog(Self.FullName, 'Opened, Fast');
+                                AppendtoEventLog(Self.FullName(), 'Opened, Fast');
                         end;
                         if PhaseTarget then
                             AppendtoEventLog(' ', 'Phase Target');
@@ -507,7 +506,7 @@ begin
                     begin
                         ControlledElement.SetConductorClosed(0, TRUE); // Close all phases of active terminal
                         Inc(OperationCount);
-                        AppendtoEventLog(Self.FullName, 'Closed');
+                        AppendtoEventLog(Self.FullName(), 'Closed');
                         ArmedForClose := FALSE;
                     end;
             else // Nada
@@ -544,7 +543,7 @@ begin
 
     if MonitoredElement = NIL then
     begin
-        DoSimpleMsg('Required property MonitoredObj is not defined for "%s".', [FullName], 9894);
+        DoSimpleMsg('Required property MonitoredObj is not defined for "%s".', [FullName()], 9894);
         DSS.SetSolutionAbort(true);
         Exit;
     end;

@@ -141,7 +141,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name());
 end;
 //------------------------------------------------------------------------------
 procedure Relays_Set_Name(const Value: PAnsiChar); CDECL;
@@ -168,7 +168,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if elem.MonitoredElement <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.MonitoredElement.FullName));
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.MonitoredElement.FullName()));
 end;
 
 //------------------------------------------------------------------------------
@@ -195,7 +195,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if elem.ControlledElement <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.ControlledElement.FullName));
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.ControlledElement.FullName()));
 end;
 
 //------------------------------------------------------------------------------

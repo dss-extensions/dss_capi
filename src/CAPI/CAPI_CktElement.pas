@@ -166,7 +166,7 @@ begin
     Result := NIL;
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.FullName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.FullName());
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_NumConductors(): Integer; CDECL;
@@ -595,7 +595,7 @@ begin
     if elem.DisplayName <> '' then
         Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DisplayName)
     else
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ParentClass.Name + '_' + elem.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ParentClass.Name + '_' + elem.Name());
 end;
 
 //------------------------------------------------------------------------------
@@ -644,7 +644,7 @@ begin
     begin
         ctrl := elem.ControlElementList.Get(idx);
         if ctrl <> NIL then
-            Result := DSS_GetAsPAnsiChar(DSSPrime, ctrl.FullName);
+            Result := DSS_GetAsPAnsiChar(DSSPrime, ctrl.FullName());
     end;
 end;
 //------------------------------------------------------------------------------
@@ -1068,7 +1068,7 @@ begin
     elem := TPCElement(cktelem);
     if (DSSPrime.API_VarIdx <= 0) or (DSSPrime.API_VarIdx > elem.NumVariables) then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid variable index %d for "%s"', [DSSPrime.API_VarIdx, elem.FullName], 97802);
+        DoSimpleMsg(DSSPrime, 'Invalid variable index %d for "%s"', [DSSPrime.API_VarIdx, elem.FullName()], 97802);
         Exit;
     end;
     Result := DSS_GetAsPAnsiChar(DSSPrime, elem.VariableName(DSSPrime.API_VarIdx));
@@ -1087,7 +1087,7 @@ begin
     elem := TPCElement(cktelem);
     DSSPrime.API_VarIdx := elem.LookupVariable(Value);
     if (DSSPrime.API_VarIdx <= 0) or (DSSPrime.API_VarIdx > elem.NumVariables) then
-        DoSimpleMsg(DSSPrime, 'Invalid variable name "%s" for "%s"', [Value, elem.FullName], 100001);
+        DoSimpleMsg(DSSPrime, 'Invalid variable name "%s" for "%s"', [Value, elem.FullName()], 100001);
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_VariableValue(): Double; CDECL;
@@ -1102,7 +1102,7 @@ begin
     elem := TPCElement(cktelem);
     if (DSSPrime.API_VarIdx <= 0) or (DSSPrime.API_VarIdx > elem.NumVariables) then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid variable index %d for "%s"', [DSSPrime.API_VarIdx, elem.FullName], 100002);
+        DoSimpleMsg(DSSPrime, 'Invalid variable index %d for "%s"', [DSSPrime.API_VarIdx, elem.FullName()], 100002);
         Exit;
     end;
     Result := elem.GetVariable(DSSPrime.API_VarIdx);
@@ -1120,7 +1120,7 @@ begin
     if (DSSPrime.API_VarIdx <= 0) or (DSSPrime.API_VarIdx > elem.NumVariables) then
     begin
         if DSS_CAPI_EXT_ERRORS then
-            DoSimpleMsg(DSSPrime, 'Invalid variable index %d for "%s"', [DSSPrime.API_VarIdx, elem.FullName], 100002);
+            DoSimpleMsg(DSSPrime, 'Invalid variable index %d for "%s"', [DSSPrime.API_VarIdx, elem.FullName()], 100002);
         Exit;
     end;
     elem.SetVariable(DSSPrime.API_VarIdx, Value);
@@ -1151,7 +1151,7 @@ begin
     if (Value <= 0) or (Value > elem.NumVariables) then
     begin
         if DSS_CAPI_EXT_ERRORS then
-            DoSimpleMsg(DSSPrime, 'Invalid variable index %d for "%s"', [DSSPrime.API_VarIdx, elem.FullName], 100003);
+            DoSimpleMsg(DSSPrime, 'Invalid variable index %d for "%s"', [DSSPrime.API_VarIdx, elem.FullName()], 100003);
         Exit;
     end;
     DSSPrime.API_VarIdx := Value;

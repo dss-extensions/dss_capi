@@ -105,7 +105,7 @@ begin
     Result := NIL;  // signify no name
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name());
 end;
 //------------------------------------------------------------------------------
 procedure WireData_Set_Name(const Value: PAnsiChar); CDECL;

@@ -1714,28 +1714,28 @@ procedure TExecHelper.ParseObjName(const fullname: String; var objname, propname
 var
     DotPos1, DotPos2: Integer;
 begin
-    DotPos1 := Pos('.', fullname);
+    DotPos1 := Pos('.', fullName);
     case Dotpos1 of
 
         0:
         begin
             Objname := '';
-            PropName := FullName;
+            PropName := fullName;
         end;
 
     else
     begin
-        PropName := Copy(FullName, Dotpos1 + 1, (Length(FullName) - DotPos1));
+        PropName := Copy(fullName, Dotpos1 + 1, (Length(fullName) - DotPos1));
         DotPos2 := Pos('.', PropName);
         case DotPos2 of
 
             0:
             begin
-                ObjName := Copy(FullName, 1, DotPos1 - 1);
+                ObjName := Copy(fullName, 1, DotPos1 - 1);
             end;
         else
         begin
-            ObjName := Copy(FullName, 1, Dotpos1 + DotPos2 - 1);
+            ObjName := Copy(fullName, 1, Dotpos1 + DotPos2 - 1);
             PropName := Copy(PropName, Dotpos2 + 1, (Length(PropName) - DotPos2));
         end;
 
@@ -4357,7 +4357,7 @@ begin
     if pLine1.MeterObj <> pline2.MeterObj then
     begin
         DoSimpleMsg(DSS, 'Error: Line1 is in %s zone while Line2 is in %s zone. Both must be in the same Zone.',
-            [pLine1.MeterObj.FullName, pLine2.MeterObj.FullName], 28706);
+            [pLine1.MeterObj.FullName(), pLine2.MeterObj.FullName()], 28706);
         Exit;
     end;
 
@@ -4576,7 +4576,7 @@ begin
     begin
         DSS.Parser.SetCmdString(Action);
         pLoadShape.Edit(DSS.Parser);
-        FSWriteln(F, Format('New %s Npts=%d Interval=%.8g %s', [pLoadShape.FullName, pLoadShape.NumPoints, pLoadShape.Interval, DSS.GlobalResult]));
+        FSWriteln(F, Format('New %s Npts=%d Interval=%.8g %s', [pLoadShape.FullName(), pLoadShape.NumPoints, pLoadShape.Interval, DSS.GlobalResult]));
     end;
 
     FreeAndNil(F);
@@ -5040,12 +5040,12 @@ begin
     begin
         DoSimpleMsg(DSS,
             'Element "%s" is not in a meter zone! Add an Energymeter. ',
-            [pPDelem.FullName],
+            [pPDelem.FullName()],
             287261);
         Exit;
     end;
 
-    FMeterName := pPDElem.SensorObj.FullName;
+    FMeterName := pPDElem.SensorObj.FullName();
     SetObject(DSS, FMeterName);
 
     if not (DSS.ActiveCircuit.ActiveCktElement() is TEnergyMeterObj) then

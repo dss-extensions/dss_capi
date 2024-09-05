@@ -859,8 +859,7 @@ end;
 
 constructor TPVsystemObj.Create(ParClass: TDSSClass; const SourceName: String);
 begin
-    inherited create(ParClass);
-    Name := AnsiLowerCase(SourceName);
+    inherited create(ParClass, SourceName);
     DSSObjType := ParClass.DSSClassType; // + PVSystem_ELEMENT;  // In both PCelement and PVSystemelement list
     TraceFile := nil;
 
@@ -1819,7 +1818,7 @@ begin
             InjCurrent[i] -= Iterminal[i];
     end
     else
-        DoSimpleMsg('%s model designated to use user-written model, but user-written model is not defined.', [FullName], 567);
+        DoSimpleMsg('%s model designated to use user-written model, but user-written model is not defined.', [FullName()], 567);
 end;
 
 procedure TPVsystemObj.DoDynamicMode;
@@ -2365,7 +2364,7 @@ begin
 
     if i < 1 then
     begin
-        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName(), i], 565);
         Exit;
     end;
     if DynamicEqObj <> NIL then
@@ -2373,7 +2372,7 @@ begin
         if i <= DynamicEqObj.NVariables * Length(DynamicEqVals[0]) then
             Result := DynamicEqObj.Get_DynamicEqVal(i - 1, DynamicEqVals)
         else
-            DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+            DoSimpleMsg('%s: invalid variable index %d.', [FullName(), i], 565);
         Exit;
     end;
 
@@ -2454,12 +2453,12 @@ var
 begin
     if i < 1 then
     begin
-        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName(), i], 565);
         Exit;  // No variables to set
     end;
     if DynamicEqObj <> NIL then
     begin
-        DoSimpleMsg('%s: cannot set state variable when using DynamicEq.', [FullName], 566);
+        DoSimpleMsg('%s: cannot set state variable when using DynamicEq.', [FullName()], 566);
         Exit;
     end;
 
@@ -2468,7 +2467,7 @@ begin
             1:
                 FIrradiance := Value;
             2, 3, 4: // Setting this has no effect Read only
-                DoSimpleMsg('%s: variable index %d is read-only.', [FullName, i], 564);
+                DoSimpleMsg('%s: variable index %d is read-only.', [FullName(), i], 564);
             5:
                 Vreg := Value; // the InvControl or ExpControl will do this
             6:

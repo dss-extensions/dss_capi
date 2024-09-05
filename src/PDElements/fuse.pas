@@ -295,8 +295,7 @@ constructor TFuseObj.Create(ParClass: TDSSClass; const FuseName: String);
 var
     i: Integer;
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(FuseName);
+    inherited Create(ParClass, FuseName);
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
@@ -436,7 +435,7 @@ begin
         if ReadyToBlow[Phs] then
         begin   // ignore if we became disarmed in meantime
             ControlledElement.SetConductorClosed(Phs, FALSE);   // Open all phases of active terminal
-            AppendtoEventLog(Self.FullName, 'Phase ' + IntToStr(Phs) + ' Blown');
+            AppendtoEventLog(Self.FullName(), 'Phase ' + IntToStr(Phs) + ' Blown');
             hAction[phs] := 0;
         end;
 end;

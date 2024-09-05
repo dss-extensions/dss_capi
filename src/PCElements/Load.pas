@@ -794,8 +794,7 @@ constructor TLoadObj.Create(ParClass: TDSSClass; const SourceName: String);
 begin
     if ParClass = nil then Exit;
 
-    inherited create(ParClass);
-    Name := AnsiLowerCase(SourceName);
+    inherited create(ParClass, SourceName);
     DSSObjType := ParClass.DSSClassType;
 
     Fnphases := 3;
@@ -1750,7 +1749,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error in %s: %s ', [FullName, E.Message], 5871);
+            DoSimpleMsg('Error in %s: %s ', [FullName(), E.Message], 5871);
             raise;
         end;
 

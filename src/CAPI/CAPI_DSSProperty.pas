@@ -34,7 +34,7 @@ begin
     begin
         DoSimpleMsg(DSS,
             'Invalid property index "%d" for "%s"',
-            [DSS.FPropIndex, DSS.ActiveDSSObject.FullName],
+            [DSS.FPropIndex, DSS.ActiveDSSObject.FullName()],
             errorNum
         );
         Result := TRUE;
@@ -174,7 +174,7 @@ begin
     
     DoSimpleMsg(DSSPrime,
         'Invalid property name "%s" for "%s"',
-        [String(Value), DSSPrime.ActiveDSSObject.FullName],
+        [String(Value), DSSPrime.ActiveDSSObject.FullName()],
         33003
     );
 end;

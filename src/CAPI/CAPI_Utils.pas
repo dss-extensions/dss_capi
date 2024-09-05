@@ -696,7 +696,7 @@ begin
     elem := TDSSObject(pList.First);
     while elem <> NIL do
     begin
-        ResultPtr[k] := DSS_CopyStringAsPChar(elem.Name);
+        ResultPtr[k] := DSS_CopyStringAsPChar(elem.Name());
         Inc(k);
         elem := TDSSObject(pList.Next);
     end;

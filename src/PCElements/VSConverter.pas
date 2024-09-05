@@ -293,9 +293,8 @@ end;
 
 constructor TVSConverterObj.Create(ParClass: TDSSClass; const FaultName: String);
 begin
-    inherited Create(ParClass);
+    inherited Create(ParClass, FaultName);
     DSSObjType := ParClass.DSSClassType;
-    Name := AnsiLowerCase(FaultName);
 
     LastCurrents := NIL;
 

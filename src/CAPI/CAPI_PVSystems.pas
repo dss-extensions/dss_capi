@@ -199,7 +199,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name());
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Name(const Value: PAnsiChar); CDECL;
@@ -467,7 +467,7 @@ begin
         Exit;
 
     if (elem.SensorObj <> NIL) and (elem.SensorObj.MeteredElement <> NIL) then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.SensorObj.MeteredElement.FullName));
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.SensorObj.MeteredElement.FullName()));
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Pointer(): Pointer; CDECL;

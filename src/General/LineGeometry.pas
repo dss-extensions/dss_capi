@@ -210,7 +210,7 @@ begin
     if (istop - istart + 1) <> ValueCount then
     begin
         obj.DoSimpleMsg('%s: Unexpected number (%d) of objects; expected %d objects.', 
-            [obj.FullName, ValueCount, (istop - istart + 1)], 18102);
+            [obj.FullName(), ValueCount, (istop - istart + 1)], 18102);
         Exit;
     end;
 
@@ -591,8 +591,7 @@ end;
 
 constructor TLineGeometryObj.Create(ParClass: TDSSClass; const LineGeometryName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(LineGeometryName);
+    inherited Create(ParClass, LineGeometryName);
     DSSObjType := ParClass.DSSClassType;
 
     dataChanged := TRUE;
@@ -823,7 +822,7 @@ begin
     for i := 1 to FNconds do
     begin
         if conductorData[i] = NIL then
-            raise Exception.Create(Format(_('%s: WireData is not correctly initialized. Check the object definition.'), [FullName]));
+            raise Exception.Create(Format(_('%s: WireData is not correctly initialized. Check the object definition.'), [FullName()]));
 
         lineConstants.SetX(i, units[i], xCoord[i]);
         lineConstants.SetY(i, units[i], yCoord[i]);
@@ -866,7 +865,7 @@ begin
     // Before we calc, check for bad conductor definitions
     if lineConstants.ConductorsInSameSpace(LineGeomErrMsg) then
     begin
-        raise ELineGeometryProblem.Create(Format(_('Error in %s: %s'), [FullName, LineGeomErrMsg]));
+        raise ELineGeometryProblem.Create(Format(_('Error in %s: %s'), [FullName(), LineGeomErrMsg]));
         DSS.SetSolutionAbort(true);
     end
     else

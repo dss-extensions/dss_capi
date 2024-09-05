@@ -51,13 +51,15 @@ end;
 
 procedure TControlProxyObj.ClearActionList;
 begin
-    while PopAction do ;  // spin until it is done
+    while PopAction do
+    begin
+    end;  // spin until it is done
 end;
 
 constructor TControlProxyObj.Create(context: TDSSContext);
 begin
     DSS := context;
-    Name := 'COM_Proxy';
+    LocalName := 'COM_Proxy'; //SetName('COM_Proxy');
     ActionList := TList.Create;
     DSSObjType := DSS_OBJECT + HIDDEN_ELEMENT;
     

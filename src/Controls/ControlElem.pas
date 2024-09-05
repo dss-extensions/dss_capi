@@ -45,7 +45,7 @@ type
         DblTraceParameter: Double;
         ShowEventLog: LongBool;
 
-        constructor Create(ParClass: TDSSClass);
+        constructor Create(ParClass: TDSSClass; objName: String);
         destructor Destroy; OVERRIDE;
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Always Zero
@@ -84,9 +84,9 @@ begin
     obj.Set_ControlledElement(el);
 end;
 
-constructor TControlElem.Create(ParClass: TDSSClass);
+constructor TControlElem.Create(ParClass: TDSSClass; objName: String);
 begin
-    inherited Create(ParClass);
+    inherited Create(ParClass, objName);
     DSSObjType := CTRL_ELEMENT;
     DblTraceParameter := 0.0;
     TimeDelay := 0.0;
@@ -104,7 +104,7 @@ end;
 procedure TControlElem.DoPendingAction;
 begin
   // virtual function - should be overridden
-    DoSimpleMsg('Programming Error:  Reached base class for DoPendingAction.' + CRLF + 'Device: ' + FullName, 460);
+    DoSimpleMsg('Programming Error:  Reached base class for DoPendingAction.' + CRLF + 'Device: ' + FullName(), 460);
 end;
 
 procedure TControlElem.RemoveSelfFromControlElementList(cktElem: TDSSCktElement);
@@ -127,13 +127,13 @@ end;
 
 procedure TControlElem.Reset;
 begin
-    DoSimpleMsg('Programming Error: Reached base class for Reset.' + CRLF + 'Device: ' + FullName, 461);
+    DoSimpleMsg('Programming Error: Reached base class for Reset.' + CRLF + 'Device: ' + FullName(), 461);
 end;
 
 procedure TControlElem.Sample;
 begin
     // virtual function - should be overridden
-    DoSimpleMsg('Programming Error:  Reached base class for Sample.' + CRLF + 'Device: ' + FullName, 462);
+    DoSimpleMsg('Programming Error:  Reached base class for Sample.' + CRLF + 'Device: ' + FullName(), 462);
 end;
 
 procedure TControlElem.Set_ControlledElement(const Value: TDSSCktElement);

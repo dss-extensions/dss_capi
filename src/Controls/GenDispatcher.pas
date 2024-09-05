@@ -208,8 +208,7 @@ end;
 
 constructor TGenDispatcherObj.Create(ParClass: TDSSClass; const GenDispatcherName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(GenDispatcherName);
+    inherited Create(ParClass, GenDispatcherName);
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
@@ -257,7 +256,7 @@ begin
         end;
     end
     else
-        DoSimpleMsg('Monitored Element in %s is not set', [FullName], 372);
+        DoSimpleMsg('Monitored Element in %s is not set', [FullName()], 372);
 end;
 
 procedure TGenDispatcherObj.MakePosSequence();

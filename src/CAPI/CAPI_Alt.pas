@@ -517,7 +517,7 @@ begin
         On E: Exception do
         begin
             S := E.message + CRLF +
-                'Element=' + elem.Name + CRLF +
+                'Element=' + elem.Name() + CRLF +
                 'Nphases=' + IntToStr(elem.Nphases) + CRLF +
                 'NTerms=' + IntToStr(elem.NTerms) + CRLF +
                 'NConds =' + IntToStr(elem.NConds);
@@ -649,7 +649,7 @@ begin
         On E: Exception do
         begin
             S := E.message + CRLF +
-                'Element=' + elem.Name + CRLF +
+                'Element=' + elem.Name() + CRLF +
                 'Nphases=' + IntToStr(elem.Nphases) + CRLF +
                 'NTerms=' + IntToStr(elem.NTerms) + CRLF +
                 'NConds =' + IntToStr(elem.NConds);
@@ -662,7 +662,7 @@ procedure Alt_CE_Close(elem: TDSSCktElement; Term, Phs: Integer); CDECL;
 begin
     if (Term <= 0) or (Term > elem.fNterms) then
     begin
-        elem.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals.', [Term, elem.FullName, elem.NTerms], 97804);
+        elem.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals.', [Term, elem.FullName(), elem.NTerms], 97804);
         Exit;
     end;
 
@@ -675,7 +675,7 @@ procedure Alt_CE_Open(elem: TDSSCktElement; Term, Phs: Integer); CDECL;
 begin
     if (Term <= 0) or (Term > elem.fNterms) then
     begin
-        elem.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals.', [Term, elem.FullName, elem.NTerms], 97805);
+        elem.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals.', [Term, elem.FullName(), elem.NTerms], 97805);
         Exit;
     end;
 
@@ -692,7 +692,7 @@ begin
     
     if (Term <= 0) or (Term > elem.fNterms) then
     begin
-        elem.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals.', [Term, elem.FullName, elem.NTerms], 97806);
+        elem.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals.', [Term, elem.FullName(), elem.NTerms], 97806);
         Exit;
     end;
 
@@ -773,7 +773,7 @@ end;
 //     begin
 //         ctrl := elem.ControlElementList.Get(idx);
 //         if ctrl <> NIL then
-//             Result := DSS_GetAsPAnsiChar(elem.DSS, ctrl.FullName);
+//             Result := DSS_GetAsPAnsiChar(elem.DSS, ctrl.FullName());
 //     end;
 // end;
 // //------------------------------------------------------------------------------
@@ -801,7 +801,7 @@ begin
     Result := NIL;
     if Flg.HasEnergyMeter in elem.Flags then
     begin
-        Result := PAnsiChar(elem.MeterObj.Name);
+        Result := PAnsiChar(elem.MeterObj.Name());
     end;
 end;
 
@@ -819,7 +819,7 @@ begin
     Result := NIL;
     if Flg.HasEnergyMeter in elem.Flags then
     begin
-        Result := PAnsiChar(elem.MeterObj.Name);
+        Result := PAnsiChar(elem.MeterObj.Name());
     end;
 end;
 
@@ -886,7 +886,7 @@ begin
         On E: Exception do
         begin
             S := E.message + CRLF +
-                'Element=' + elem.Name + CRLF +
+                'Element=' + elem.Name() + CRLF +
                 'Nphases=' + IntToStr(elem.Nphases) + CRLF +
                 'NTerms=' + IntToStr(elem.NTerms) + CRLF +
                 'NConds =' + IntToStr(elem.NConds);
@@ -916,7 +916,7 @@ begin
         On E: Exception do
         begin
             S := E.message + CRLF +
-                'Element=' + elem.Name + CRLF +
+                'Element=' + elem.Name() + CRLF +
                 'Nphases=' + IntToStr(elem.Nphases) + CRLF +
                 'NTerms=' + IntToStr(elem.NTerms) + CRLF +
                 'NConds =' + IntToStr(elem.NConds);
@@ -1178,7 +1178,7 @@ begin
     begin
         if (terminalIdx <= 0) or (terminalIdx > obj.NTerms) then
         begin
-            obj.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals. Use -1 for all terminals.', [terminalIdx, obj.FullName, obj.NTerms], 97803);
+            obj.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals. Use -1 for all terminals.', [terminalIdx, obj.FullName(), obj.NTerms], 97803);
             Exit;
         end;
         minTerm := terminalIdx;
@@ -1206,7 +1206,7 @@ begin
     Result := NIL;
     if (varIdx <= 0) or (varIdx > elem.NumVariables) then
     begin
-        DoSimpleMsg(elem.DSS, 'Invalid variable index %d for "%s"', [varIdx, elem.FullName], 97802);
+        DoSimpleMsg(elem.DSS, 'Invalid variable index %d for "%s"', [varIdx, elem.FullName()], 97802);
         Exit;
     end;
     Result := DSS_GetAsPAnsiChar(elem.DSS, elem.VariableName(varIdx));
@@ -1217,7 +1217,7 @@ begin
     Result := 0;
     if (varIdx <= 0) or (varIdx > elem.NumVariables) then
     begin
-        DoSimpleMsg(elem.DSS, 'Invalid variable index %d for "%s"', [varIdx, elem.FullName], 100002);
+        DoSimpleMsg(elem.DSS, 'Invalid variable index %d for "%s"', [varIdx, elem.FullName()], 100002);
         Exit;
     end;
     Result := elem.GetVariable(varIdx);
@@ -1228,7 +1228,7 @@ begin
     if (varIdx <= 0) or (varIdx > elem.NumVariables) then
     begin
         if DSS_CAPI_EXT_ERRORS then
-            DoSimpleMsg(elem.DSS, 'Invalid variable index %d for "%s"', [varIdx, elem.FullName], 100002);
+            DoSimpleMsg(elem.DSS, 'Invalid variable index %d for "%s"', [varIdx, elem.FullName()], 100002);
         Exit;
     end;
     elem.SetVariable(varIdx, value);
@@ -1244,7 +1244,7 @@ begin
     varIdx := elem.LookupVariable(sname);
     if (varIdx <= 0) or (varIdx > elem.NumVariables) then
     begin
-        DoSimpleMsg(elem.DSS, 'Invalid variable name %s for "%s"', [sname, elem.FullName], 100002);
+        DoSimpleMsg(elem.DSS, 'Invalid variable name %s for "%s"', [sname, elem.FullName()], 100002);
         Exit;
     end;
     Result := elem.GetVariable(varIdx);
@@ -1259,7 +1259,7 @@ begin
     varIdx := elem.LookupVariable(sname);
     if (varIdx <= 0) or (varIdx > elem.NumVariables) then
     begin
-        DoSimpleMsg(elem.DSS, 'Invalid variable name %s for "%s"', [sname, elem.FullName], 100002);
+        DoSimpleMsg(elem.DSS, 'Invalid variable name %s for "%s"', [sname, elem.FullName()], 100002);
         Exit;
     end;
     elem.SetVariable(varIdx, value);
@@ -1275,7 +1275,7 @@ begin
     if elem.DisplayName <> '' then
         Result := DSS_GetAsPAnsiChar(elem.DSS, elem.DisplayName)
     else
-        Result := DSS_GetAsPAnsiChar(elem.DSS, elem.ParentClass.Name + '_' + elem.Name);
+        Result := DSS_GetAsPAnsiChar(elem.DSS, elem.ParentClass.Name + '_' + elem.Name());
 end;
 //------------------------------------------------------------------------------
 function Alt_CE_Get_GUID(elem: TDSSCktElement): PAnsiChar; CDECL;
@@ -1514,7 +1514,7 @@ begin
     begin
         DoSimpleMsg(pmon.DSS,
             'Monitors.Channel: invalid channel index (%d), monitor "%s" has %d channels.',
-            [Index, pmon.Name, pmon.RecordSize],
+            [Index, pmon.Name(), pmon.RecordSize],
             5888);
         Exit;
     end;
@@ -1630,7 +1630,7 @@ begin
             elem.GetWindingVoltages(winding, pComplexArray(ResultPtr));
         Exit;
     end;
-    elem.DoSimpleMsg('Invalid winding number (%d) for transformer %s. Valid numbers: from 1 to %d.', [winding, elem.FullName, elem.NumWindings], 8986);
+    elem.DoSimpleMsg('Invalid winding number (%d) for transformer %s. Valid numbers: from 1 to %d.', [winding, elem.FullName(), elem.NumWindings], 8986);
     DefaultResult(ResultPtr, ResultCount);
 end;
 //------------------------------------------------------------------------------
@@ -1662,7 +1662,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            elem.DoSimpleMsg('LoadList for %s is not initialized. Try solving or running "Makebuslist" first.', [elem.FullName], 8987);
+            elem.DoSimpleMsg('LoadList for %s is not initialized. Try solving or running "Makebuslist" first.', [elem.FullName()], 8987);
         end;
         Result := false;
     end;
@@ -1675,7 +1675,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            elem.DoSimpleMsg('SequenceList for %s is not initialized. Try solving or running "Makebuslist" first.', [elem.FullName], 8988);
+            elem.DoSimpleMsg('SequenceList for %s is not initialized. Try solving or running "Makebuslist" first.', [elem.FullName()], 8988);
         end;
         Result := false;
     end;

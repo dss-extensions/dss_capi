@@ -149,7 +149,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name());
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_Name(const Value: PAnsiChar); CDECL;
@@ -177,7 +177,7 @@ begin
         Exit;
 
     if elem.MonitoredElement <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.MonitoredElement.FullName));
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.MonitoredElement.FullName()));
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_MonitoredTerm(): Integer; CDECL;
@@ -200,7 +200,7 @@ begin
         Exit;
 
     if elem.ControlledElement <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.ControlledElement.FullName));
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.ControlledElement.FullName()));
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_MonitoredObj(const Value: PAnsiChar); CDECL;

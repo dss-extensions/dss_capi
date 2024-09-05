@@ -129,7 +129,7 @@ begin
     Nterm := pElem.Nterms;
     k := 0;
     BusName := (StripExtension(pElem.FirstBus));
-    FSWrite(F, pElem.FullName);
+    FSWrite(F, pElem.FullName());
 
 
     FSWrite(F, Format(',%d', [NTerm]));
@@ -766,7 +766,7 @@ begin
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                WriteNodeList(DSS, F, pElem.FullName);
+                WriteNodeList(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.Sources.Next;
         end;
         // PDELEMENTS first
@@ -774,7 +774,7 @@ begin
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                WriteNodeList(DSS, F, pElem.FullName);
+                WriteNodeList(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.PDElements.Next;
         end;
         // Faults
@@ -782,7 +782,7 @@ begin
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                WriteNodeList(DSS, F, pElem.FullName);
+                WriteNodeList(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.Faults.Next;
         end;
          // PCELEMENTS next
@@ -790,7 +790,7 @@ begin
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                WriteNodeList(DSS, F, pElem.FullName);
+                WriteNodeList(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.PCElements.Next;
         end;
         DSS.GlobalResult := FileNm;
@@ -847,7 +847,7 @@ begin
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                WriteElemCurrents(DSS, F, pElem.FullName);
+                WriteElemCurrents(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.Sources.Next;
         end;
         // PDELEMENTS first
@@ -855,7 +855,7 @@ begin
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                WriteElemCurrents(DSS, F, pElem.FullName);
+                WriteElemCurrents(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.PDElements.Next;
         end;
         // Faults
@@ -863,7 +863,7 @@ begin
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                WriteElemCurrents(DSS, F, pElem.FullName);
+                WriteElemCurrents(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.Faults.Next;
         end;
         // PCELEMENTS next
@@ -871,7 +871,7 @@ begin
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                WriteElemCurrents(DSS, F, pElem.FullName);
+                WriteElemCurrents(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.PCElements.Next;
         end;
 
@@ -928,7 +928,7 @@ begin
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                WriteElemVoltages(DSS, F, pElem.FullName);
+                WriteElemVoltages(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.Sources.Next;
         end;
         // PDELEMENTS first
@@ -936,7 +936,7 @@ begin
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                WriteElemVoltages(DSS, F, pElem.FullName);
+                WriteElemVoltages(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.PDElements.Next;
         end;
         // Faults
@@ -944,7 +944,7 @@ begin
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                WriteElemVoltages(DSS, F, pElem.FullName);
+                WriteElemVoltages(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.Faults.Next;
         end;
         // PCELEMENTS next
@@ -952,7 +952,7 @@ begin
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                WriteElemVoltages(DSS, F, pElem.FullName);
+                WriteElemVoltages(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.PCElements.Next;
         end;
 
@@ -1021,7 +1021,7 @@ begin
         begin
             if pElem.Enabled then
             begin
-                strName := pElem.FullName;
+                strName := pElem.FullName();
                 WriteElemPowers(DSS, F, strName);
             end;
             pElem := DSS.ActiveCircuit.Sources.Next;
@@ -1034,7 +1034,7 @@ begin
         begin
             if pElem.Enabled then
             begin
-                strName := pElem.FullName;
+                strName := pElem.FullName();
                 WriteElemPowers(DSS, F, strName);
             end;
             pElem := DSS.ActiveCircuit.PDElements.Next;
@@ -1046,7 +1046,7 @@ begin
         begin
             if pElem.Enabled then
             begin
-                strName := pElem.FullName;
+                strName := pElem.FullName();
                 WriteElemPowers(DSS, F, strName);
             end;
             pElem := DSS.ActiveCircuit.Faults.Next;
@@ -1058,7 +1058,7 @@ begin
         begin
             if pElem.Enabled then
             begin
-                strName := pElem.FullName;
+                strName := pElem.FullName();
                 WriteElemPowers(DSS, F, strName);
             end;
             pElem := DSS.ActiveCircuit.PCElements.Next;
@@ -3895,7 +3895,7 @@ begin
                         DSS.ActiveCircuit.SetActiveCktElement(TDSSCktElement(sequenceList.Get(SeqIndex)));
                         FSWriteln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
                             [Name, i, SeqIndex, getOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
-                            EncloseQuotes(DSS.ActiveCircuit.ActiveCktElement.FullName)]));
+                            EncloseQuotes(DSS.ActiveCircuit.ActiveCktElement.FullName())]));
                     end;
             end
         else    // export sections for all meters
@@ -3912,7 +3912,7 @@ begin
                             DSS.ActiveCircuit.SetActiveCktElement(TDSSCktElement(sequenceList.Get(SeqIndex)));
                             FSWriteln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
                                 [Name, i, SeqIndex, getOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
-                                EncloseQuotes(DSS.ActiveCircuit.ActiveCktElement.FullName)]));
+                                EncloseQuotes(DSS.ActiveCircuit.ActiveCktElement.FullName())]));
                         end;
                 end;
                 iMeter := DSS.EnergyMeterClass.Next;

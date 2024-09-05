@@ -228,7 +228,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name());
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_NumTaps(): Integer; CDECL;

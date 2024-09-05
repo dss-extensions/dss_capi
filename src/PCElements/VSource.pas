@@ -609,8 +609,7 @@ end;
 
 constructor TVsourceObj.Create(ParClass: TDSSClass; const SourceName: String);
 begin
-    inherited create(ParClass);
-    Name := AnsiLowerCase(SourceName);
+    inherited create(ParClass, SourceName);
     DSSObjType := ParClass.DSSClassType; //SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
 
     FNphases := 3;
@@ -725,7 +724,7 @@ begin
             R0 := QuadSolver((1.0 + SQR(X0R0)), (4.0 * (R1 + X1 * X0R0)), (4.0 * (R1 * R1 + X1 * X1) - SQR(3.0 * kVBase * 1000.0 / Factor / Isc1)));
             if IsNaN(R0) then
             begin
-                raise Exception.Create(Format('%s: cannot calculate a real-valued R0; check the Vsource/Circuit definitions.', [FullName]));
+                raise Exception.Create(Format('%s: cannot calculate a real-valued R0; check the Vsource/Circuit definitions.', [FullName()]));
             end;
             X0 := R0 * X0R0;
 
@@ -749,7 +748,7 @@ begin
             R0 := QuadSolver((1.0 + SQR(X0R0)), (4.0 * (R1 + X1 * X0R0)), (4.0 * (R1 * R1 + X1 * X1) - SQR(3.0 * kVBase * 1000.0 / Factor / Isc1)));
             if IsNaN(R0) then
             begin
-                raise Exception.Create(Format('%s: cannot calculate a real-valued R0; check the Vsource/Circuit definitions.', [FullName]));
+                raise Exception.Create(Format('%s: cannot calculate a real-valued R0; check the Vsource/Circuit definitions.', [FullName()]));
             end;
             X0 := R0 * X0R0;
 
@@ -776,7 +775,7 @@ begin
 
             if (R1 = 0) and (X1 = 0) then
             begin
-                DoSimpleMsg('%s: Z1 (R1 + jX1) cannot be zero.', [self.FullName], 7340);
+                DoSimpleMsg('%s: Z1 (R1 + jX1) cannot be zero.', [self.FullName()], 7340);
                 DSS.SetSolutionAbort(true);
                 Exit;
             end;
@@ -1090,7 +1089,7 @@ begin
         end;
 
     except
-        DoSimpleMsg('Error computing Voltages for "%s". Check specification. Aborting.', [FullName], 326);
+        DoSimpleMsg('Error computing Voltages for "%s". Check specification. Aborting.', [FullName()], 326);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;
@@ -1238,7 +1237,7 @@ var
 begin
     // Initialization
     BusName := StripExtension(GetBus(1));
-    myName := LowerCase(ParentClass.Name + '.' + Name);
+    myName := FullName();
     with ActiveCircuit do
     begin
         ActiveElem := ActiveCktElement; // saves whatever the active ckt element is

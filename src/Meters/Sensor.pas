@@ -386,8 +386,7 @@ end;
 
 constructor TSensorObj.Create(ParClass: TDSSClass; const SensorName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(SensorName);
+    inherited Create(ParClass, SensorName);
 
     FNphases := 3;  // Directly set conds and phases
     Fnconds := 3;

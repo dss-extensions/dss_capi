@@ -275,8 +275,7 @@ end;
 
 constructor TGICSourceObj.Create(ParClass: TDSSClass; const SourceName: String);
 begin
-    inherited create(ParClass);
-    Name := AnsiLowerCase(SourceName);
+    inherited create(ParClass, SourceName);
     DSSObjType := ParClass.DSSClassType; // SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
     LineClass := DSS.DSSClassList.Get(DSS.ClassNames.Find('Line'));
     pLineElem := LineClass.Find(Name); // GICsource name must be same as associated Line
@@ -333,7 +332,7 @@ begin
         pLineElem := LineClass.Find(Name);
         if pLineElem = NIL then
         begin
-            DoSimpleMsg('Line Object %s associated with %s not found. Make sure you define it first.', [Name, FullName], 333);
+            DoSimpleMsg('Line Object %s associated with %s not found. Make sure you define it first.', [Name, FullName()], 333);
         end;
     end
     else
@@ -419,7 +418,7 @@ begin
         end;
 
     except
-        DoSimpleMsg('Error computing current for %s. Check specification. Aborting.', [FullName], 334);
+        DoSimpleMsg('Error computing current for %s. Check specification. Aborting.', [FullName()], 334);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;
@@ -449,7 +448,7 @@ begin
             Curr[i] := Curr[i] - ComplexBuffer[i];
     except
         On E: Exception do
-            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName]), E.Message,
+            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName()]), E.Message,
                 _('Inadequate storage allotted for circuit element?'), 335);
     end;
 end;

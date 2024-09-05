@@ -920,8 +920,7 @@ end;
 
 constructor TGeneratorObj.Create(ParClass: TDSSClass; const SourceName: String);
 begin
-    inherited create(ParClass);
-    Name := AnsiLowerCase(SourceName);
+    inherited create(ParClass, SourceName);
     DSSObjType := ParClass.DSSClassType; // + GEN_ELEMENT;  // In both PCelement and Genelement list
 
     TraceFile := nil;
@@ -1775,7 +1774,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('%s model designated to use user-written model, but user-written model is not defined.', [FullName], 567);
+        DoSimpleMsg('%s model designated to use user-written model, but user-written model is not defined.', [FullName()], 567);
     end;
 end;
 
@@ -1811,7 +1810,7 @@ begin
                 VLN := Vterminal[i];   // VTerminal is LN for this connection
                 // if (VLN = 0) then //TODO
                 // begin
-                //     DoSimpleMsg('%s: VLN is zero, aborting.', [self.FullName], 7340);
+                //     DoSimpleMsg('%s: VLN is zero, aborting.', [self.FullName()], 7340);
                 //     DSS.SetSolutionAbort(true);
                 //     Exit;
                 // end;
@@ -1831,7 +1830,7 @@ begin
                 VLL := Vterminal[i];     // VTerminal is LL for this connection
                 // if (VLL = 0) then //TODO
                 // begin
-                //     DoSimpleMsg('%s: VLL is zero, aborting.', [self.FullName], 7340);
+                //     DoSimpleMsg('%s: VLL is zero, aborting.', [self.FullName()], 7340);
                 //     DSS.SetSolutionAbort(true);
                 //     Exit;
                 // end;
@@ -1884,7 +1883,7 @@ begin
             end
             else
             begin
-                DoSimpleMsg('Dynamics model missing for %s ', [FullName], 5671);
+                DoSimpleMsg('Dynamics model missing for %s ', [FullName()], 5671);
                 DSS.SetSolutionAbort(true);
             end;
     else
@@ -1964,7 +1963,7 @@ begin
                         ITerminal[FnConds] := -I012[0] * 3;
                 end;
         else
-            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Generators. %s has %d phases.', [FullName, Fnphases], 5671);
+            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Generators. %s has %d phases.', [FullName(), Fnphases], 5671);
             DSS.SetSolutionAbort(true);
         end;
 
@@ -2317,7 +2316,7 @@ begin
                 VThevMag := Cabs(Edp);
             end;
         else
-            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Generators. %s has %d phases.', [FullName, Fnphases], 5672);
+            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Generators. %s has %d phases.', [FullName(), Fnphases], 5672);
             DSS.SetSolutionAbort(true);
             Exit; // TODO: check conditions to allow generators with other phase count
         end;
@@ -2484,7 +2483,7 @@ begin
     Result := -9999.99;  // error return value
     if i < 1 then
     begin
-        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName(), i], 565);
         Exit;
     end;
     if DynamicEqObj <> NIL then
@@ -2492,7 +2491,7 @@ begin
         if i <= DynamicEqObj.NVariables * Length(DynamicEqVals[0]) then
             Result := DynamicEqObj.Get_DynamicEqVal(i - 1, DynamicEqVals)
         else
-            DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+            DoSimpleMsg('%s: invalid variable index %d.', [FullName(), i], 565);
         Exit;
     end;
 
@@ -2541,12 +2540,12 @@ begin
     N := 0;
     if i < 1 then
     begin
-        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName(), i], 565);
         Exit;  // No variables to set
     end;
     if DynamicEqObj <> NIL then
     begin
-        DoSimpleMsg('%s: cannot set state variable when using DynamicEq.', [FullName], 566);
+        DoSimpleMsg('%s: cannot set state variable when using DynamicEq.', [FullName()], 566);
         Exit;
     end;
 
@@ -2557,7 +2556,7 @@ begin
             2:
                 Theta := Value / RadiansToDegrees; // deg to rad
             3: // meaningless to set Vd := Value * vbase; // pu to volts
-                DoSimpleMsg('%s: variable index %d is read-only.', [FullName, i], 564);
+                DoSimpleMsg('%s: variable index %d is read-only.', [FullName(), i], 564);
             4:
                 Pshaft := Value;
             5:

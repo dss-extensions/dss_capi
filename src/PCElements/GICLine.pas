@@ -361,8 +361,7 @@ end;
 
 constructor TGICLineObj.Create(ParClass: TDSSClass; const SourceName: String);
 begin
-    inherited create(ParClass);
-    Name := AnsiLowerCase(SourceName);
+    inherited create(ParClass, SourceName);
     DSSObjType := ParClass.DSSClassType; //SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
 
     FNphases := 3;
@@ -574,7 +573,7 @@ begin
         end;
 
     except
-        DoSimpleMsg('Error computing Voltages for %s. Check specification. Aborting.', [FullName], 326);
+        DoSimpleMsg('Error computing Voltages for %s. Check specification. Aborting.', [FullName()], 326);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;
@@ -603,7 +602,7 @@ begin
             Curr[i] -= ComplexBuffer[i];
     except
         On E: Exception do
-            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName]), E.Message,
+            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName()]), E.Message,
                 _('Inadequate storage allotted for circuit element.'), 327);
     end;
 end;

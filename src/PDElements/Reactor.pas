@@ -571,8 +571,7 @@ end;
 
 constructor TReactorObj.Create(ParClass: TDSSClass; const ReactorName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(ReactorName);
+    inherited Create(ParClass, ReactorName);
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
@@ -681,7 +680,7 @@ begin
         ETKInvert(Gmatrix, Fnphases, CheckError);
         if CheckError > 0 then
         begin
-            DoSimpleMsg('Error inverting R Matrix for "%s" - G is zeroed.', [FullName], 232);
+            DoSimpleMsg('Error inverting R Matrix for "%s" - G is zeroed.', [FullName()], 232);
             for i := 1 to Fnphases * Fnphases do
                 Gmatrix[i] := 0.0;
         end;
@@ -692,7 +691,7 @@ begin
         ETKInvert(Bmatrix, Fnphases, CheckError);
         if CheckError > 0 then
         begin
-            DoSimpleMsg('Error inverting X Matrix for "%s" - B is zeroed.', [FullName], 233);
+            DoSimpleMsg('Error inverting X Matrix for "%s" - B is zeroed.', [FullName()], 233);
             for i := 1 to Fnphases * Fnphases do
                 Bmatrix[i] := 0.0;
         end;

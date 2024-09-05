@@ -480,8 +480,7 @@ end;
 
 constructor TRegControlObj.Create(ParClass: TDSSClass; const RegControlName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(RegControlName);
+    inherited Create(ParClass, RegControlName);
     DSSObjType := ParClass.DSSClassType;
     TraceFile := nil;
 
@@ -1001,7 +1000,7 @@ begin
                     VBuffer[i] := Vterminal[i] - Vterminal[ii];
                 end;
                 2:
-                    raise Exception.Create(Format(_('%s: Series connection used in "%s" has not been implemented or tested!'), [FullName, ControlledTransformer.FullName]));
+                    raise Exception.Create(Format(_('%s: Series connection used in "%s" has not been implemented or tested!'), [FullName(), ControlledTransformer.FullName()]));
             end;
         end;
         Vcontrol := GetControlVoltage(VBuffer, Fnphases, RemotePTRatio);

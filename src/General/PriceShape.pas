@@ -374,8 +374,7 @@ end;
 
 constructor TPriceShapeObj.Create(ParClass: TDSSClass; const PriceShapeName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(PriceShapeName);
+    inherited Create(ParClass, PriceShapeName);
     DSSObjType := ParClass.DSSClassType;
 
     numPoints := 0;
@@ -502,7 +501,7 @@ var
 begin
     if not Assigned(PriceValues) then
     begin
-        DoSimpleMsg('%s Prices not defined.', [FullName], 58622);
+        DoSimpleMsg('%s Prices not defined.', [FullName()], 58622);
         Exit;
     end;
 
@@ -525,7 +524,7 @@ var
 begin
     if not Assigned(PriceValues) then
     begin
-        DoSimpleMsg('%s Prices not defined.', [FullName], 58623);
+        DoSimpleMsg('%s Prices not defined.', [FullName()], 58623);
         Exit;
     end;
 

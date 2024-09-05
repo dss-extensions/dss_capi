@@ -462,8 +462,7 @@ end;
 
 constructor TLineCodeObj.Create(ParClass: TDSSClass; const LineCodeName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(LineCodeName);
+    inherited Create(ParClass, LineCodeName);
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
@@ -662,7 +661,7 @@ begin
 
     if Fnphases <= 1 then
     begin
-        DoSimpleMsg('Cannot perform Kron Reduction on a 1-phase LineCode: %s', [FullName], 103);
+        DoSimpleMsg('Cannot perform Kron Reduction on a 1-phase LineCode: %s', [FullName()], 103);
         Exit;
     end;
 
@@ -673,14 +672,14 @@ begin
         NewYC := YC.Kron(FNeutralConductor);
     except
         On E: Exception do
-            DoSimpleMsg('Kron Reduction failed: %s. Attempting to eliminate Neutral Conductor %d.', [FullName, FNeutralConductor], 103);
+            DoSimpleMsg('Kron Reduction failed: %s. Attempting to eliminate Neutral Conductor %d.', [FullName(), FNeutralConductor], 103);
     end;
 
     // Reallocate into smaller space   if Kron was successful
 
     if (NewZ = NIL) or (NewYC = NIL) then
     begin
-        DoSimpleMsg('Kron Reduction failed: %s. Attempting to eliminate Neutral Conductor %d.', [FullName, FNeutralConductor], 103);
+        DoSimpleMsg('Kron Reduction failed: %s. Attempting to eliminate Neutral Conductor %d.', [FullName(), FNeutralConductor], 103);
         Exit;
     end;
 

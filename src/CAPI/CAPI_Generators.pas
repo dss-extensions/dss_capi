@@ -312,7 +312,7 @@ begin
 
     if Value < 1 then
     begin
-        DoSimpleMsg(DSSPrime, '%s: Number of phases must be a positive integer!', [elem.FullName], 6568);
+        DoSimpleMsg(DSSPrime, '%s: Number of phases must be a positive integer!', [elem.FullName()], 6568);
         Exit;
     end;
     elem.FNphases := Value;

@@ -107,7 +107,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'SequenceList for %s is not initialized. Try solving or running "Makebuslist" first.', [obj.FullName], 8988);
+            DoSimpleMsg(DSS, 'SequenceList for %s is not initialized. Try solving or running "Makebuslist" first.', [obj.FullName()], 8988);
         end;
         Exit;
     end;
@@ -397,7 +397,7 @@ begin
         Exit;
 
     if pMeterObj.MeteredElement <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(pMeterObj.MeteredElement.FullName));
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(pMeterObj.MeteredElement.FullName()));
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_MeteredTerminal(): Integer; CDECL;
@@ -503,7 +503,7 @@ begin
     begin
         pMeterObj.BranchList.ZoneEndsList.Get(k + 1, node);
         elem := node.CktObject;
-        Result[k] := DSS_CopyStringAsPChar(elem.FullName);
+        Result[k] := DSS_CopyStringAsPChar(elem.FullName());
     end;
 end;
 //------------------------------------------------------------------------------
@@ -565,7 +565,7 @@ begin
     k := 0;
     while pElem <> NIL do
     begin
-        Result[k] := DSS_CopyStringAsPChar(pElem.FullName);
+        Result[k] := DSS_CopyStringAsPChar(pElem.FullName());
         inc(k);
         pElem := pMeterObj.BranchList.GoForward();
     end;
@@ -863,7 +863,7 @@ begin
         
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, length(pMeter.ZonePCE));
     for k := 0 to High(pMeter.ZonePCE) do
-        Result[k] := DSS_CopyStringAsPChar(pMeter.ZonePCE[k].FullName);
+        Result[k] := DSS_CopyStringAsPChar(pMeter.ZonePCE[k].FullName());
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_Pointer(): Pointer; CDECL;

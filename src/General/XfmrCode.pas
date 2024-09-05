@@ -535,8 +535,7 @@ constructor TXfmrCodeObj.Create(ParClass: TDSSClass; const XfmrCodeName: String)
 var
     i: Integer;
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(XfmrCodeName);
+    inherited Create(ParClass, XfmrCodeName);
     DSSObjType := ParClass.DSSClassType;
 
     // default values and sizes

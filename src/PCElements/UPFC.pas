@@ -343,8 +343,7 @@ var
     i: Integer;
     ctrl: TUPFCControlObj;
 begin
-    inherited create(ParClass);
-    Name := AnsiLowerCase(SourceName);
+    inherited create(ParClass, SourceName);
     DSSObjType := ParClass.DSSClassType; //SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
 
     FNphases := 1;
@@ -728,7 +727,7 @@ begin
         end;
         Result := CurrOut;
     except
-        DoSimpleMsg('Error computing current for "%s". Check specification. Aborting.', [FullName], 334);
+        DoSimpleMsg('Error computing current for "%s". Check specification. Aborting.', [FullName()], 334);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;
@@ -861,7 +860,7 @@ begin
         end;
         Result := CurrIn;
     except
-        DoSimpleMsg('Error computing current for "%s". Check specification. Aborting.', [FullName], 334);
+        DoSimpleMsg('Error computing current for "%s". Check specification. Aborting.', [FullName()], 334);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;
@@ -1020,7 +1019,7 @@ begin
             Curr[i] := Curr[i] - ComplexBuffer[i];
     except
         On E: Exception do
-            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName]), E.Message,
+            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName()]), E.Message,
                 _('Inadequate storage allotted for circuit element.'), 327);
     end;
 end;
@@ -1068,7 +1067,7 @@ procedure TUPFCObj.SetVariable(i: Integer; Value: Double);
 begin
     if i < 1 then
     begin
-        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName(), i], 565);
         Exit; // No variables to set
     end;
     case i of
@@ -1092,7 +1091,7 @@ begin
         14:
             Sr1[1].im := Value;
     else
-        DoSimpleMsg('%s: variable index %d is read-only.', [FullName, i], 564);
+        DoSimpleMsg('%s: variable index %d is read-only.', [FullName(), i], 564);
     end;
 end;
 

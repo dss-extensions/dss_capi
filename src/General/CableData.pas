@@ -157,7 +157,6 @@ end;
 constructor TCableDataObj.Create(ParClass: TDSSClass; const CableDataName: String);
 begin
     inherited Create(ParClass, CableDataName);
-    Name := AnsiLowerCase(CableDataName);
     DSSObjType := ParClass.DSSClassType;
 
     epsR := 2.3;

@@ -447,8 +447,7 @@ end;
 
 constructor TMonitorObj.Create(ParClass: TDSSClass; const MonitorName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(MonitorName);
+    inherited Create(ParClass, MonitorName);
 
     FNphases := 3;  // Directly set conds and phases
     Fnconds := 3;

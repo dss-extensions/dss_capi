@@ -964,7 +964,7 @@ begin
     
     if Value < 1 then
     begin
-        DoSimpleMsg(DSSPrime, '%s: Number of phases must be a positive integer!', [elem.FullName], 6568);
+        DoSimpleMsg(DSSPrime, '%s: Number of phases must be a positive integer!', [elem.FullName()], 6568);
         Exit;
     end;
     if (Value <> elem.NPhases) then
@@ -1005,7 +1005,7 @@ begin
         Exit;
 
     if (pLoad.SensorObj <> NIL) and (pLoad.SensorObj.MeteredElement <> NIL) then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(pLoad.SensorObj.MeteredElement.FullName));
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(pLoad.SensorObj.MeteredElement.FullName()));
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Pointer(): Pointer; CDECL;

@@ -385,9 +385,8 @@ end;
 
 constructor TGICTransformerObj.Create(ParClass: TDSSClass; const FaultName: String);
 begin
-    inherited Create(ParClass);
+    inherited Create(ParClass, FaultName);
     DSSObjType := ParClass.DSSClassType;
-    Name := AnsiLowerCase(FaultName);
 
     FNPhases := 3;  // Directly set conds and phases
     Fnconds := 3;

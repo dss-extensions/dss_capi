@@ -187,7 +187,7 @@ begin
     Result := NIL;   // return null if not a PD element
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.FullName);  // full name
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.FullName());  // full name
 end;
 
 //------------------------------------------------------------------------------
@@ -203,7 +203,7 @@ begin
     // Search through list of PD Elements until we find this one
     for elem in DSSPrime.ActiveCircuit.PDElements do
     begin
-        if (AnsiCompareText(TestString, elem.FullName) = 0) then
+        if (AnsiCompareText(TestString, elem.FullName()) = 0) then
         begin
             DSSPrime.ActiveCircuit.SetActiveCktElement(elem);
             break;
@@ -354,7 +354,7 @@ begin
     begin
         // if (elem.Enabled or DSS_CAPI_ITERATE_DISABLED) then
         begin
-            Result[k] := DSS_CopyStringAsPChar(elem.FullName);
+            Result[k] := DSS_CopyStringAsPChar(elem.FullName());
             Inc(k);
         end;
     end;

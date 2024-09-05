@@ -225,7 +225,7 @@ begin
             if radius < 0.0 then
                 radius := GMRAC / 0.7788;
             if (radius = 0.0) then
-                DoSimpleMsg('Error: Radius is specified as zero for %s', [FullName], 999);
+                DoSimpleMsg('Error: Radius is specified as zero for %s', [FullName()], 999);
         end;
         ord(TProp.GMRunits):
             if radiusUnits = 0 then
@@ -272,8 +272,7 @@ end;
 
 constructor TConductorDataObj.Create(ParClass: TDSSClass; const ConductorDataName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(ConductorDataName);
+    inherited Create(ParClass, ConductorDataName);
     DSSObjType := ParClass.DSSClassType;
 
     RDC := -1.0;

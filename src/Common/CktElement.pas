@@ -79,7 +79,7 @@ type
                              // Accessing app has to know the structure
                              // Inited to Nil.  If Nil, accessing app should ignore
 
-        constructor Create(ParClass: TDSSClass);
+        constructor Create(ParClass: TDSSClass; objName: String);
         destructor Destroy; OVERRIDE;
         procedure MakeLike(OtherObj: Pointer); override;
         function FirstBus(): String;
@@ -154,9 +154,9 @@ uses
 const
     cEpsilon : Complex = (re: EPSILON; im: 0.0);
 
-constructor TDSSCktElement.Create(ParClass: TDSSClass);
+constructor TDSSCktElement.Create(ParClass: TDSSClass; objName: String);
 begin
-    inherited Create(ParClass);
+    inherited Create(ParClass, objName);
 
     NodeRef := NIL;
     YPrim_Series := NIL;
@@ -302,7 +302,7 @@ begin
     if Value <= 0 then
     begin
         DoSimpleMsg('Invalid number of terminals (%d) for "%s"',
-            [Value, FullName], 749);
+            [Value, FullName()], 749);
         Exit;
     end;
 
@@ -321,7 +321,7 @@ begin
     if Value <= 0 then
     begin
         DoSimpleMsg('Invalid number of terminals (%d) for "%s"',
-            [Value, FullName], 749);
+            [Value, FullName()], 749);
         Exit;
     end;
 
@@ -334,7 +334,7 @@ begin
     if Fnconds > 101 then
     begin
         DoSimpleMsg('Warning: Number of conductors is very large (%d) for Circuit Element: "%s". Possible error in specifying the Number of Phases for element.',
-            [Fnconds, FullName], 750);
+            [Fnconds, FullName()], 750);
     end;
 
 
@@ -444,7 +444,7 @@ end;
 function TDSSCktElement.InjCurrents: Integer;  // Applies to PC Elements
 begin
     Result := 0;
-    DoErrorMsg(Format(_('Improper call to InjCurrents for Element: "%s".'), [FullName]), '****',
+    DoErrorMsg(Format(_('Improper call to InjCurrents for Element: "%s".'), [FullName()]), '****',
         'Called CktElement class base function instead of actual.', 753)
 end;
 
@@ -1077,7 +1077,7 @@ begin
 
     except
         On E: Exception do
-            DoSimpleMsg('Error filling voltage buffer in GetTermVoltages for Circuit Element: "%s". Probable Cause: Invalid definition of element. System Error Message: %s', [FullName, E.Message], 755);
+            DoSimpleMsg('Error filling voltage buffer in GetTermVoltages for Circuit Element: "%s". Probable Cause: Invalid definition of element. System Error Message: %s', [FullName(), E.Message], 755);
     end;
 end;
 

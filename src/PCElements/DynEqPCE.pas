@@ -33,7 +33,7 @@ type
         DynamicEqPair: Array of Integer; // Memory space for assigning calculated values to vars
         UserDynInit: TJSONObject;
 
-        constructor Create(ParClass: TDSSClass);
+        constructor Create(ParClass: TDSSClass; objName: String);
         destructor Destroy; OVERRIDE;
         //TODO? procedure MakeLike(OtherObj: Pointer); override;
         procedure SaveWrite(F: TStream); override; // override to add user-defined dyn init expressions
@@ -69,9 +69,9 @@ begin
     inherited Destroy;
 end;
 
-constructor TDynEqPCE.Create(ParClass: TDSSClass);
+constructor TDynEqPCE.Create(ParClass: TDSSClass; objName: String);
 begin
-    inherited Create(ParClass);
+    inherited Create(ParClass, objName);
     DynamicEqObj := NIL;
     UserDynInit := NIL;
 end;

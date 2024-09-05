@@ -300,7 +300,7 @@ type
 
         Registers, Derivatives: array[1..NumWGenregisters] of Double;
 
-        constructor Create(ParClass: TDSSClass; const SourceName: String);
+        constructor Create(ParClass: TDSSClass; const genName: String);
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
@@ -846,10 +846,9 @@ begin
     Result := pDoubleArray(@TObj(obj).Registers[1]);
 end;
 
-constructor TWindGenObj.Create(ParClass: TDSSClass; const SourceName: String);
+constructor TWindGenObj.Create(ParClass: TDSSClass; const genName: String);
 begin
-    inherited create(ParClass);
-    Name := LowerCase(SourceName);
+    inherited create(ParClass, genName);
     DSSObjType := ParClass.DSSClassType; // + WINDGEN_ELEMENT; // In both PCelement and Genelement list
 
     FNphases := 3; //TODO: check if we need any side-effect for this
@@ -1632,7 +1631,7 @@ procedure TWindGenObj.DoHarmonicMode();
 //     pBuffer: PCBuffer24;
 begin
     DSS.SetSolutionAbort(true);
-    DoSimpleMsg('%s: WindGen harmonics model is not fully implemented. Please use the Generator model instead.', [FullName], 5674);
+    DoSimpleMsg('%s: WindGen harmonics model is not fully implemented. Please use the Generator model instead.', [FullName()], 5674);
 
     // pBuffer := @TWindGen(ParentClass).cBuffer;
     // ComputeVterminal();
@@ -1798,7 +1797,7 @@ procedure TWindGenObj.InitHarmonics();
 //     NodeV: pNodeVarray;
 begin
     DSS.SetSolutionAbort(true);
-    DoSimpleMsg('%s: WindGen harmonics model is not fully implemented. Please use the Generator model instead.', [FullName], 5673);
+    DoSimpleMsg('%s: WindGen harmonics model is not fully implemented. Please use the Generator model instead.', [FullName()], 5673);
 
     // YprimInvalid := true; // Force rebuild of YPrims
     // GenFundamental := ActiveCircuit.Solution.Frequency; // Whatever the frequency is when we enter here.
@@ -1881,7 +1880,7 @@ begin
                 VThevMag := Cabs(Edp);
             end;
         else
-            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase WindGens. %s has %d phases.', [FullName, Fnphases], 5672);
+            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase WindGens. %s has %d phases.', [FullName(), Fnphases], 5672);
             DSS.SetSolutionAbort(true);
         end;
 
@@ -2027,7 +2026,7 @@ begin
     Result := -9999.99; // error return value
     if i < 1 then
     begin
-        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName(), i], 565);
         Exit;
     end;
     if DynamicEqObj <> NIL then
@@ -2035,7 +2034,7 @@ begin
         if i <= DynamicEqObj.NVariables * Length(DynamicEqVals[0]) then
             Result := DynamicEqObj.Get_DynamicEqVal(i - 1, DynamicEqVals)
         else
-            DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+            DoSimpleMsg('%s: invalid variable index %d.', [FullName(), i], 565);
         Exit;
     end;
 
@@ -2095,12 +2094,12 @@ procedure TWindGenObj.SetVariable(i: Integer; Value: Double);
 begin
     if i < 1 then
     begin
-        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName(), i], 565);
         Exit; // No variables to set
     end;
     if DynamicEqObj <> NIL then
     begin
-        DoSimpleMsg('%s: cannot set state variable when using DynamicEq.', [FullName], 566);
+        DoSimpleMsg('%s: cannot set state variable when using DynamicEq.', [FullName()], 566);
         Exit;
     end;
 

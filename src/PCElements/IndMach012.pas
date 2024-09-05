@@ -439,8 +439,7 @@ end;
 
 constructor TIndMach012Obj.Create(ParClass: TDSSClass; const IndMach012ObjName: String);
 begin
-    inherited create(ParClass);
-    Name := AnsiLowerCase(IndMach012ObjName);
+    inherited create(ParClass, IndMach012ObjName);
     DSSObjType := ParClass.DSSClassType; // Same as Parent Class
 
     TraceFile := nil;
@@ -698,7 +697,7 @@ begin
                 E1 := V012[1] - I012[1] * Zsp;    // Pos sequence
             end;
         else
-            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Motors. %s has %d phases.', [FullName, Fnphases], 5672);
+            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Motors. %s has %d phases.', [FullName(), Fnphases], 5672);
             DSS.SetSolutionAbort(true);
         end;
 

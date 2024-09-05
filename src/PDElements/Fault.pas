@@ -342,9 +342,8 @@ end;
 
 constructor TFaultObj.Create(ParClass: TDSSClass; const FaultName: String);
 begin
-    inherited Create(ParClass);
+    inherited Create(ParClass, FaultName);
     DSSObjType := ParClass.DSSClassType; //FAULTOBJECT + NON_PCPD_ELEM;  // Only in Fault object class
-    Name := AnsiLowerCase(FaultName);
 
      // Default to SLG fault
     FNPhases := 1;  // Directly set conds and phases
@@ -562,7 +561,7 @@ begin
                 begin
                     Is_ON := TRUE;
                     YPrimInvalid := TRUE;
-                    AppendtoEventLog(FullName, '**APPLIED**');
+                    AppendtoEventLog(FullName(), '**APPLIED**');
                 end;
             end
             else
@@ -573,7 +572,7 @@ begin
                         Is_ON := FALSE;
                         Cleared := TRUE;
                         YPrimInvalid := TRUE;
-                        AppendtoEventLog(FullName, '**CLEARED**');
+                        AppendtoEventLog(FullName(), '**CLEARED**');
                     end;
             end;
         end;

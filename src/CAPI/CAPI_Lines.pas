@@ -219,7 +219,7 @@ begin
     Result := NIL;  // signify no name
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name());
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Phases(): Integer; CDECL;
@@ -329,7 +329,7 @@ begin
         Exit;
     if Value < 1 then
     begin
-        DoSimpleMsg(DSSPrime, '%s: Number of phases must be a positive integer!', [elem.FullName], 6568);
+        DoSimpleMsg(DSSPrime, '%s: Number of phases must be a positive integer!', [elem.FullName()], 6568);
         Exit;
     end;
     elem.FNphases := Value;

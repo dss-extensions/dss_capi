@@ -1223,8 +1223,8 @@ end;
 
 procedure WriteDSSObject(obj: TDSSObject; F: TStream; const NeworEdit: String);
 begin
-    //  FSWrite(F, NeworEdit, ' "', obj.FullName,'"');
-    FSWrite(F, Format('%s "%s"', [NeworEdit, obj.FullName]));
+    //  FSWrite(F, NeworEdit, ' "', obj.FullName(),'"');
+    FSWrite(F, Format('%s "%s"', [NeworEdit, obj.FullName()]));
 
     obj.SaveWrite(F);
 
@@ -1645,7 +1645,7 @@ begin
     // Error check
     if pPDelem = NIL then
     begin
-        DoSimpleMsg(DSS, '"%s" not found in Meter Zone.', [FromLine.FullName], 723);
+        DoSimpleMsg(DSS, '"%s" not found in Meter Zone.', [FromLine.FullName()], 723);
         Exit;
     end;
 
@@ -1660,7 +1660,7 @@ begin
 
         while pPDelem <> NIL do
         begin
-            S := 'edit "' + pPDelem.FullName + '"';
+            S := 'edit "' + pPDelem.FullName() + '"';
             // ----------------LINES---------------------------------------------------
             if IsLineElement(pPDelem) then
             begin
@@ -1687,7 +1687,7 @@ begin
                 begin
                     // 1st Terminal Only
                     i := 1;
-                    S := 'edit "' + pShuntObject.FullName + '"';
+                    S := 'edit "' + pShuntObject.FullName() + '"';
                     S := S + Format(' Bus%d=%s%s', [i, StripExtension(pShuntObject.GetBus(i)), PhaseString]);
                     if Length(EditStr) > 0 then
                         S := S + '  ' + EditStr;
@@ -1820,12 +1820,9 @@ var
 
     procedure RenameCktElem(pelem: TDSSCktElement); // local proc
     begin
-        with pelem do
-        begin
-            Name := Format('%s%d', [copy(ParentClass.Name, 1, 4), ClassIndex]);
-            DSS.ActiveCircuit.DeviceList.Add(Name); // Make a new device list corresponding to the CktElements List
-            Include(pelem.Flags, Flg.Checked);
-        end;
+        pelem.SetName(Format('%s%d', [copy(pelem.ParentClass.Name, 1, 4), pelem.ClassIndex]));
+        DSS.ActiveCircuit.DeviceList.Add(pelem.Name); // Make a new device list corresponding to the CktElements List
+        Include(pelem.Flags, Flg.Checked);
     end;
 
 begin
@@ -2403,7 +2400,7 @@ begin
     if obj = NIL then
         Result := ''
     else
-        Result := obj.FullName;
+        Result := obj.FullName();
 end;
 
 function LowerBound(data: PSingleArray0; npts: Integer; Stride: Integer; value: Single): Integer; overload;

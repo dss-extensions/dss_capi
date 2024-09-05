@@ -150,8 +150,7 @@ end;
 
 constructor TUPFCControlObj.Create(ParClass: TDSSClass; const UPFCControlName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(UPFCControlName);
+    inherited Create(ParClass, UPFCControlName);
     DSSObjType := ParClass.DSSClassType;
 
     FUPFCNameList := TSTringList.Create;

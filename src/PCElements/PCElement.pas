@@ -35,7 +35,7 @@ type
         elementSolutionCount: Integer;
 
 
-        constructor Create(ParClass: TDSSClass);
+        constructor Create(ParClass: TDSSClass; objName: String);
         destructor Destroy; OVERRIDE;
         procedure MakeLike(OtherObj: Pointer); override;
         procedure ZeroInjCurrent;
@@ -76,9 +76,9 @@ uses
     TypInfo;
 
 
-constructor TPCElement.Create(ParClass: TDSSClass);
+constructor TPCElement.Create(ParClass: TDSSClass; objName: String);
 begin
-    inherited Create(ParClass);
+    inherited Create(ParClass, objName);
     SpectrumObj := DSS.SpectrumClass.DefaultGeneral;
     SensorObj := NIL;
     MeterObj := NIL;
@@ -160,7 +160,7 @@ begin
 
     except
         On E: Exception do
-            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName]), E.Message,
+            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName()]), E.Message,
                 _('Inadequate storage allotted for circuit element.'), 641);
     end;
 end;

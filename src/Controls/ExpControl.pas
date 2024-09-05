@@ -306,8 +306,7 @@ end;
 
 constructor TExpControlObj.Create(ParClass: TDSSClass; const ExpControlName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(ExpControlName);
+    inherited Create(ParClass, ExpControlName);
     DSSObjType := ParClass.DSSClassType;
 
      //  Control elements are zero current sources that attach to a terminal of a
@@ -465,7 +464,7 @@ begin
         // look up Qpu from the slope crossing at Vreg, and add the bias
                 Qpu := -QVSlope * (FPresentVpu[i] - FVregs[i]) + FQbias;
                 if ShowEventLog then
-                    AppendtoEventLog(Self.FullName + ',' + PVSys.Name,
+                    AppendtoEventLog(Self.FullName() + ',' + PVSys.Name,
                         Format(' Setting Qpu= %.5g at FVreg= %.5g, Vpu= %.5g', [Qpu, FVregs[i], FPresentVpu[i]]));
             end;
 
@@ -490,7 +489,7 @@ begin
                 if Plimit < PVSys.PresentkW then
                 begin
                     if ShowEventLog then
-                        AppendtoEventLog(Self.FullName + ',' + PVSys.Name,
+                        AppendtoEventLog(Self.FullName() + ',' + PVSys.Name,
                             Format(' curtailing %.3f to %.3f kW', [PVSys.PresentkW, Plimit]));
                     PVSys.kWRequested := Plimit;
                     PVSys.puPmpp := Plimit / PVSys.Pmpp;
@@ -512,7 +511,7 @@ begin
             if PVSys.Presentkvar() <> Qset then
                 PVSys.kvarRequested := Qset;
             if ShowEventLog then
-                AppendtoEventLog(Self.FullName + ',' + PVSys.Name,
+                AppendtoEventLog(Self.FullName() + ',' + PVSys.Name,
                     Format(' Setting PVSystem output kvar= %.5g',
                     [PVSys.Presentkvar]));
             FLastIterQ[i] := Qset;
@@ -584,13 +583,13 @@ begin
                 SetPendingChange(CHANGEVARLEVEL, i);
                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, FPendingChange[i], 0, Self);
                 if ShowEventLog then
-                    AppendtoEventLog(Self.FullName + ' ' + PVSys.Name, Format(' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr, Qerr]));
+                    AppendtoEventLog(Self.FullName() + ' ' + PVSys.Name, Format(' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr, Qerr]));
             end
             else
             begin
                 FWithinTol[i] := TRUE;
                 if ShowEventLog then
-                    AppendtoEventLog(Self.FullName + ' ' + PVSys.Name, Format(' within Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr, Qerr]));
+                    AppendtoEventLog(Self.FullName() + ' ' + PVSys.Name, Format(' within Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr, Qerr]));
             end;
         end;  // For
     end; // If FlistSize
@@ -717,7 +716,7 @@ begin
             FVregs[j] := VregMax;
         PVSys.SetVariable(5, FVregs[j]);
         if ShowEventLog then
-            AppendtoEventLog(Self.FullName + ',' + PVSys.Name,
+            AppendtoEventLog(Self.FullName() + ',' + PVSys.Name,
                 Format(' Setting new Vreg= %.5g Vpu=%.5g Verr=%.5g',
                 [FVregs[j], FPresentVpu[j], Verr]));
     end;

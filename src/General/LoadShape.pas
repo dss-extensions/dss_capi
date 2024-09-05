@@ -1241,8 +1241,7 @@ end;
 
 constructor TLoadShapeObj.Create(ParClass: TDSSClass; const LoadShapeName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(LoadShapeName);
+    inherited Create(ParClass, LoadShapeName);
     DSSObjType := ParClass.DSSClassType;
 
     ExternalMemory := False;
@@ -1856,7 +1855,7 @@ begin
     UseFloat64;
     if not Assigned(dP) then
     begin
-        DoSimpleMsg('%s P multipliers not defined.', [FullName], 622);
+        DoSimpleMsg('%s P multipliers not defined.', [FullName()], 622);
         Exit;
     end;
 
@@ -1914,7 +1913,7 @@ begin
     UseFloat64;
     if not Assigned(dP) then
     begin
-        DoSimpleMsg('%s P multipliers not defined.', [FullName], 623);
+        DoSimpleMsg('%s P multipliers not defined.', [FullName()], 623);
         Exit;
     end;
 

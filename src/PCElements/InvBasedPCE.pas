@@ -100,7 +100,7 @@ type
         Tracefile: TFileStream;
         FirstSampleAfterReset: Boolean;
 
-        constructor Create(ParClass: TDSSClass);
+        constructor Create(ParClass: TDSSClass; objName: String);
         destructor Destroy; OVERRIDE;
 
         function IsPVSystem(): Boolean; virtual;
@@ -135,9 +135,9 @@ begin
     inherited Destroy;
 end;
 
-constructor TInvBasedPCE.Create(ParClass: TDSSClass);
+constructor TInvBasedPCE.Create(ParClass: TDSSClass; objName: String);
 begin
-    inherited Create(ParClass);
+    inherited Create(ParClass, objName);
 
     GFM_Mode := FALSE;
 
@@ -238,7 +238,7 @@ begin
         end;
     except
         On E: Exception do
-            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName]), E.Message, _('Inadequate storage allotted for circuit element.'), 327);
+            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName()]), E.Message, _('Inadequate storage allotted for circuit element.'), 327);
     end;
 end;
 

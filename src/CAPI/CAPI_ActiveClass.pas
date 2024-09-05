@@ -54,7 +54,7 @@ begin
     k := 0;
     for elem in DSSPrime.ActiveDSSClass do
     begin
-        Result[k] := DSS_CopyStringAsPChar(elem.Name);
+        Result[k] := DSS_CopyStringAsPChar(elem.Name());
         k += 1;
     end;
 end;
@@ -81,7 +81,7 @@ begin
     if DSSPrime.ActiveDSSObject = NIL then
         Exit;
     
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSObject.Name)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSObject.Name())
 end;
 //------------------------------------------------------------------------------
 procedure ActiveClass_Set_Name(const Value: PAnsiChar); CDECL;

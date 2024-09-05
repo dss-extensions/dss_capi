@@ -304,8 +304,7 @@ end;
 
 constructor TIsourceObj.Create(ParClass: TDSSClass; const SourceName: String);
 begin
-    inherited create(ParClass);
-    Name := AnsiLowerCase(SourceName);
+    inherited create(ParClass, SourceName);
     DSSObjType := ParClass.DSSClassType; // SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
 
     FNphases := 3;
@@ -427,7 +426,7 @@ begin
             Result := 0;
 
     except
-        DoSimpleMsg('Error computing current for "%s". Check specification. Aborting.', [FullName], 334);
+        DoSimpleMsg('Error computing current for "%s". Check specification. Aborting.', [FullName()], 334);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;
@@ -455,7 +454,7 @@ begin
 
     except
         On E: Exception do
-            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName]), 
+            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName()]), 
                 E.Message, _('Inadequate storage allotted for circuit element?'), 335);
     end;
 end;

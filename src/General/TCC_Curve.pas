@@ -194,8 +194,7 @@ end;
 
 constructor TTCC_CurveObj.Create(ParClass: TDSSClass; const TCC_CurveName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(TCC_CurveName);
+    inherited Create(ParClass, TCC_CurveName);
     DSSObjType := ParClass.DSSClassType;
 
     Npts := 0;

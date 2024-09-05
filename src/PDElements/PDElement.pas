@@ -53,7 +53,7 @@ type
         NumAmpRatings: Integer;
         AmpRatings: array of Double;
 
-        constructor Create(ParClass: TDSSClass);
+        constructor Create(ParClass: TDSSClass; objName: String);
         destructor Destroy; OVERRIDE;
         procedure MakeLike(OtherObj: Pointer); override;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
@@ -170,9 +170,9 @@ begin
     BranchSectionID := ToBus.BusSectionID;
 end;
 
-constructor TPDElement.Create(ParClass: TDSSClass);
+constructor TPDElement.Create(ParClass: TDSSClass; objName: String);
 begin
-    inherited Create(ParClass);
+    inherited Create(ParClass, objName);
 
     IsShunt := FALSE;
     normAmpsSpecified := False;

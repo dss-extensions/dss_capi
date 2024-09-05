@@ -392,7 +392,7 @@ begin
 
     if PDElem = NIL then
     begin
-        DoSimpleMsg(DSS, '%s not found (Remove Command).', [FirstPDElement.FullName], 5432100);
+        DoSimpleMsg(DSS, '%s not found (Remove Command).', [FirstPDElement.FullName()], 5432100);
     end
     else
     begin

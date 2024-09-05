@@ -29,12 +29,12 @@ type
         CalculatedVoltage: pComplexArray;
         AvgAllocFactor: Double; // Average Allocation Factor
 
-        constructor Create(ParClass: TDSSClass);
+        constructor Create(ParClass: TDSSClass; objName: String);
         destructor Destroy; OVERRIDE;
 
-        procedure TakeSample; VIRTUAL;    // Sample control quantities and set action times in Control Queue
-        procedure AllocateSensorArrays;
-        procedure CalcAllocationFactors;
+        procedure TakeSample(); VIRTUAL;    // Sample control quantities and set action times in Control Queue
+        procedure AllocateSensorArrays();
+        procedure CalcAllocationFactors();
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Always Zero
         procedure CalcYPrim(); OVERRIDE; // Always Zero 
     end;
@@ -46,7 +46,7 @@ uses
     DSSGlobals,
     Sysutils;
 
-procedure TMeterElement.AllocateSensorArrays;
+procedure TMeterElement.AllocateSensorArrays();
 var
     i: Integer;
 begin
@@ -71,7 +71,7 @@ begin
         PhsAllocationFactor[i] := 0;
 end;
 
-procedure TMeterElement.CalcAllocationFactors;
+procedure TMeterElement.CalcAllocationFactors();
 var
     iOffset: Integer;
     i: Integer;
@@ -95,9 +95,9 @@ begin
 
 end;
 
-constructor TMeterElement.Create(ParClass: TDSSClass);
+constructor TMeterElement.Create(ParClass: TDSSClass; objName: String);
 begin
-    inherited Create(ParClass);
+    inherited Create(ParClass, objName);
     DSSObjType := METER_ELEMENT;
 
     MeteredElement := NIL;
@@ -126,7 +126,7 @@ begin
 end;
 
 
-procedure TMeterElement.TakeSample;
+procedure TMeterElement.TakeSample();
 begin
   // virtual function - should be overridden
     DoSimpleMsg('Programming Error: Reached base Meterelement class for TakeSample.' + CRLF + 'Device: ' + Name, 723);

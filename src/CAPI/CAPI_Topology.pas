@@ -125,7 +125,7 @@ begin
         begin
             if Flg.IsIsolated in elm.Flags then
             begin
-                Result[k] := elm.FullName;
+                Result[k] := elm.FullName();
                 Inc(k);
                 if k > 0 then
                     SetLength(Result, k + 1);
@@ -172,9 +172,9 @@ begin
             i := 1;
             while (i <= k) and (not found) do
             begin
-                if (Result[i - 1] = pdElem.FullName) and (Result[i] = pdLoop.FullName) then
+                if (Result[i - 1] = pdElem.FullName()) and (Result[i] = pdLoop.FullName()) then
                     found := TRUE;
-                if (Result[i - 1] = pdLoop.FullName) and (Result[i] = pdElem.FullName) then
+                if (Result[i - 1] = pdLoop.FullName()) and (Result[i] = pdElem.FullName()) then
                     found := TRUE;
                 i := i + 1;
             end;
@@ -182,8 +182,8 @@ begin
             begin
                 k := k + 2;
                 SetLength(Result, k + 1);
-                Result[k - 1] := pdElem.FullName;
-                Result[k] := pdLoop.FullName;
+                Result[k - 1] := pdElem.FullName();
+                Result[k] := pdLoop.FullName();
             end;
         end;
         PDElem := topo.GoForward();
@@ -230,7 +230,7 @@ begin
         Exit;
     elm := node.CktObject;
     if assigned(elm) then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elm.FullName);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elm.FullName());
 end;
 //------------------------------------------------------------------------------
 function Topology_Get_First(): Integer; CDECL;
@@ -332,7 +332,7 @@ begin
         pdElem := topo.First();
         while Assigned(pdElem) do
         begin
-            if (AnsiCompareText(pdElem.FullName, S) = 0) then
+            if (AnsiCompareText(pdElem.FullName(), S) = 0) then
             begin
                 DSSPrime.ActiveCircuit.SetActiveCktElement(pdElem);
                 Found := TRUE;
@@ -365,7 +365,7 @@ begin
         begin
             if Flg.IsIsolated in elm.Flags then
             begin
-                Result[k] := elm.FullName;
+                Result[k] := elm.FullName();
                 Inc(k);
                 if k > 0 then
                     SetLength(Result, (k) + 1);

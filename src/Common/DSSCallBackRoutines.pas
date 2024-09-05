@@ -60,7 +60,7 @@ TYPE
         GetTimeHr:                Function() : Double; StdCall; // returns time as a double in hours
 
         GetPublicDataPtr:         Procedure(var pPublicData : Pointer; Var PublicDataBytes : Int32); StdCall;
-        GetActiveElementName:     Function(FullName : pAnsiChar; MaxNameLen : UInt32) : Int32; StdCall;
+        GetActiveElementName:     Function(FullName: pAnsiChar; MaxNameLen : UInt32) : Int32; StdCall;
         GetActiveElementPtr:      Function() : Pointer; StdCall;  // Returns pointer to active circuit element
         ControlQueuePush:         Function(Const Hour:Int32; Const Sec:Double; Const Code, ProxyHdl:Int32; Owner:Pointer):Int32; StdCall;
         GetResultStr:             Procedure(S : pAnsiChar; Maxlen : UInt32); StdCall;
@@ -431,7 +431,7 @@ begin
     if elem = NIL then
         Exit;
 
-    S := elem.FullName;
+    S := elem.FullName();
     StrlCopy(ElFullName, pAnsiChar(Ansistring(S)), Maxlen);
     Result := Length(ElFullName);
 end;

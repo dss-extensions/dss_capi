@@ -393,7 +393,7 @@ begin
             if DSS.ActiveCircuit <> NIL then
             begin  {Yprim}
                 with DSS.ActiveCircuit.ActiveCktElement() do
-                    ShowYprim(DSS, DSS.OutputDirectory + ParentClass.name + '_' + name + '_Yprim.txt');
+                    ShowYprim(DSS, DSS.OutputDirectory + ParentClass.Name + '_' + name + '_Yprim.txt');
             end;
 
         26:

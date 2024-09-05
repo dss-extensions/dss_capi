@@ -678,8 +678,7 @@ end;
 
 constructor TRelayObj.Create(ParClass: TDSSClass; const RelayName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(RelayName);
+    inherited Create(ParClass, RelayName);
     DSSObjType := ParClass.DSSClassType;
 
     DebugTrace := FALSE;
@@ -799,7 +798,7 @@ procedure TRelayObj.RecalcElementData;
 begin
     if DebugTrace then
         AppendToEventLog(
-            Self.FullName,
+            Self.FullName(),
             Format('RecalcElementData NumReclose=%d', [NumReclose])
         );
 
@@ -939,7 +938,7 @@ end;
 procedure TRelayObj.DoPendingAction(const Code, ProxyHdl: Integer);
 begin
     if DebugTrace then
-        AppendToEventLog(Self.FullName, Format(
+        AppendToEventLog(Self.FullName(), Format(
             'DoPendingAction Code=%d State=%d ArmedOpen=%s Close=%s Reset=%s Count=%d NumReclose=%d', [
                 Integer (Code),
                 Integer (FPresentState),
@@ -962,11 +961,11 @@ begin
                     begin
                         LockedOut := TRUE;
                         if ShowEventLog then
-                            AppendtoEventLog(Self.FullName, Format(_('Opened on %s & Locked Out'), [RelayTarget]));
+                            AppendtoEventLog(Self.FullName(), Format(_('Opened on %s & Locked Out'), [RelayTarget]));
                     end
                     else
                     if ShowEventLog then
-                        AppendtoEventLog(Self.FullName, Format(_('Opened on %s'), [RelayTarget]));
+                        AppendtoEventLog(Self.FullName(), Format(_('Opened on %s'), [RelayTarget]));
 
                     if PhaseTarget and ShowEventLog then
                         AppendtoEventLog(' ', _('Phase Target'));
@@ -986,7 +985,7 @@ begin
                     ControlledElement.SetConductorClosed(0, TRUE); // Close all phases of active terminal
                     Inc(OperationCount);
                     if ShowEventLog then
-                        AppendtoEventLog(Self.FullName, _('Closed'));
+                        AppendtoEventLog(Self.FullName(), _('Closed'));
 
                     ArmedForClose := FALSE;
 
@@ -998,7 +997,7 @@ begin
             if ArmedForClose and not LockedOut then
             begin
                 if ShowEventLog then
-                    if ShowEventLog then AppendToEventLog(Self.FullName, _('Reset'));
+                    if ShowEventLog then AppendToEventLog(Self.FullName(), _('Reset'));
 
                 Reset();
 
@@ -1043,7 +1042,7 @@ end;
 procedure TRelayObj.Reset;
 begin
     if ShowEventLog then
-        AppendToEventLog (Self.FullName, _('Resetting'));
+        AppendToEventLog (Self.FullName(), _('Resetting'));
 
     FPresentState := NormalState;
 
@@ -1227,7 +1226,7 @@ begin
             GroundTime := TDGround * GroundCurve.GetTCCTime(Cmag / GroundTrip);
 
         if DebugTrace then
-            AppendToEventLog(Self.FullName, Format(
+            AppendToEventLog(Self.FullName(), Format(
                 _('Ground Trip: Mag=%.3g, Mult=%.3g, Time=%.3g'),
                 [Cmag, Cmag / GroundTrip, GroundTime]
             ));
@@ -1276,7 +1275,7 @@ begin
 
         if DebugTrace then
             AppendToEventLog(
-                Self.FullName, Format(
+                Self.FullName(), Format(
                 _('Phase %d Trip: Mag=%.3g, Mult=%.3g, Time=%.3g'),
                 [i-CondOffset, Cmag, Cmag / PhaseTrip, PhaseTime]
             ));
@@ -1371,7 +1370,7 @@ begin
 
                 // start with a very simple rectangular characteristic
                 if DebugTrace and (ActiveCircuit.Solution.DynaVars.t > 0.043) then
-                    AppendToEventLog(self.FullName, Format('Zloop[%d,%d]=%.4f+j%.4f', [i, j, Zloop.re, Zloop.im]));
+                    AppendToEventLog(self.FullName(), Format('Zloop[%d,%d]=%.4f+j%.4f', [i, j, Zloop.re, Zloop.im]));
 
                 if (Zloop.re >= 0) and (Zloop.im >= MIN_DISTANCE_REACTANCE) and (Zloop.re <= Zreach.re) and (Zloop.im <= Zreach.im) then
                 begin
@@ -1402,7 +1401,7 @@ begin
     if PickedUp then
     begin
         if DebugTrace then
-            AppendToEventLog (Self.FullName, 'Picked up');
+            AppendToEventLog (Self.FullName(), 'Picked up');
 
         if ArmedForReset then
         begin
@@ -1473,7 +1472,7 @@ begin
             ReAllocMem(td21_Uref, SizeOf(td21_Uref[1]) * Nphases);
             ReAllocMem(td21_dI, SizeOf(td21_dI[1]) * Nphases);
             if DebugTrace then
-                AppendToEventLog(self.FullName,
+                AppendToEventLog(self.FullName(),
                     Format(
                         _('TD21 prep %d phases, %.3g dt, %d points, %d elements'),
                         [NPhases, dt, td21_pt, td21_stride * td21_pt]
@@ -1501,7 +1500,7 @@ begin
     end;
 
     if DebugTrace then
-        AppendToEventLog(Self.FullName, Format(
+        AppendToEventLog(Self.FullName(), Format(
             'FaultDetected=%s',
             [BoolToStr(FaultDetected)]
         ));
@@ -1510,7 +1509,7 @@ begin
     if td21_i < 1 then
     begin
         if DebugTrace then
-            AppendToEventLog (Self.FullName, 'Initialize cqueue');
+            AppendToEventLog (Self.FullName(), 'Initialize cqueue');
 
         for i := 1 to td21_pt do
         begin
@@ -1590,7 +1589,7 @@ begin
                 begin
                     Zdir := -(Vloop / Iloop);
                     if DebugTrace then
-                        AppendToEventLog(Self.FullName, Format(
+                        AppendToEventLog(Self.FullName(), Format(
                             'Zhsd[%d,%d]=%.4f+j%.4f, Zdir=%.4f+j%.4f',
                             [i, j, Zhsd.re, Zhsd.im, Zdir.re, Zdir.im]
                         ));
@@ -1600,7 +1599,7 @@ begin
                         Uhsd := Zhsd * Iloop - Vloop;
                         Uhsd2 := cabs2 (Uhsd);
                         if DebugTrace then
-                            AppendToEventLog(Self.FullName, Format(
+                            AppendToEventLog(Self.FullName(), Format(
                                 '     Uhsd=%.2f, Uref=%.2f',
                                 [cabs(Uhsd), cabs(Uref)]
                             ));
@@ -1631,14 +1630,14 @@ begin
         if PickedUp then
         begin
             if DebugTrace then
-                AppendToEventLog (Self.FullName, 'Picked up');
+                AppendToEventLog (Self.FullName(), 'Picked up');
 
             if ArmedForReset then
             begin
                 ActiveCircuit.ControlQueue.Delete(LastEventHandle);
                 ArmedForReset := FALSE;
                 if DebugTrace then
-                    AppendToEventLog(Self.FullName, 'Dropping last event.');
+                    AppendToEventLog(Self.FullName(), 'Dropping last event.');
             end;
 
             if not ArmedForOpen then
@@ -1649,7 +1648,7 @@ begin
 
                 LastEventHandle := ActiveCircuit.ControlQueue.Push(Delay_Time + Breaker_time, CTRL_OPEN, 0, Self);
                 if DebugTrace then
-                    AppendToEventLog(Self.FullName, Format('Pushing trip event for %.3f', [ActiveCircuit.Solution.DynaVars.t + Delay_Time + Breaker_time]));
+                    AppendToEventLog(Self.FullName(), Format('Pushing trip event for %.3f', [ActiveCircuit.Solution.DynaVars.t + Delay_Time + Breaker_time]));
 
                 ArmedForOpen := TRUE;
 
@@ -1657,7 +1656,7 @@ begin
                 begin
                     LastEventHandle := ActiveCircuit.ControlQueue.Push(Delay_Time + Breaker_time + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
                     if DebugTrace then
-                        AppendToEventLog (Self.FullName, Format(
+                        AppendToEventLog (Self.FullName(), Format(
                             'Pushing reclose event for %.3f',
                             [ActiveCircuit.Solution.DynaVars.t + Delay_Time + Breaker_time + RecloseIntervals[OperationCount]]
                         ));
@@ -1676,7 +1675,7 @@ begin
                 LastEventHandle := ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
 
                 if DebugTrace then
-                    AppendToEventLog(Self.FullName, Format(
+                    AppendToEventLog(Self.FullName(), Format(
                         'Pushing reset event for %.3f',
                         [ActiveCircuit.Solution.DynaVars.t + ResetTime]
                     ));
@@ -1688,7 +1687,7 @@ begin
                 ArmedForOpen := FALSE;
                 ArmedForClose := FALSE;
                 if DebugTrace then
-                    AppendToEventLog(Self.FullName, Format (
+                    AppendToEventLog(Self.FullName(), Format (
                         'Dropping out at %.3f',
                         [ActiveCircuit.Solution.DynaVars.t]
                     ));
@@ -1752,7 +1751,7 @@ begin
                 ArmedForClose := FALSE;
                 if DebugTrace then
                     AppendToEventLog(
-                        Self.FullName, 
+                        Self.FullName(), 
                         Format('DOC - Reset on Forward Net Balanced Active Power: %.2f kW', [ControlPower.re])
                     );
             end
@@ -1760,7 +1759,7 @@ begin
             begin
                 if DebugTrace then
                     AppendToEventLog(
-                        Self.FullName, 
+                        Self.FullName(), 
                         Format('DOC - Forward Net Balanced Active Power: %.2f kW. DOC Element blocked.', [ControlPower.re])
                     );
             end;
@@ -2133,7 +2132,7 @@ begin
         if (TimeTest >= 0.0) then
         begin
             if DebugTrace then
-                AppendToEventLog(Self.FullName, Format('Directional Overcurrent - Phase %d Trip: Mag=%.5g, Ang=%.5g, Time=%.5g', [i - CondOffset, Cmag, Cangle, TimeTest]));
+                AppendToEventLog(Self.FullName(), Format('Directional Overcurrent - Phase %d Trip: Mag=%.5g, Ang=%.5g, Time=%.5g', [i - CondOffset, Cmag, Cangle, TimeTest]));
             if TripTime < 0.0 then
                 TripTime := TimeTest
             else

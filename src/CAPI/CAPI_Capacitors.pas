@@ -165,7 +165,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name());
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_NumSteps(): Integer; CDECL;

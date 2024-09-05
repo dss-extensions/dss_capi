@@ -912,8 +912,7 @@ constructor TFMonitorObj.Create(ParClass: TDSSClass; const MonitorName: String);
 var
     i: Integer;
 begin
-    inherited Create(ParClass);
-    Name := LowerCase(MonitorName);
+    inherited Create(ParClass, MonitorName);
 
     FMonClass := TFMonitor(ParClass);
     FNphases := 3;  // Directly set conds and phases
@@ -992,14 +991,14 @@ procedure TFMonitorObj.RecalcElementData();
 begin
     if MeteredElement = NIL then
     begin
-        DoErrorMsg(FullName, 
+        DoErrorMsg(FullName(), 
             'Target circuit element (in "Element" property) for not found or not provided.',
             ' Element must be defined previously.', 666);
         Exit;
     end;
     if not (MeteredElement is TPDElement) then
     begin
-        DoErrorMsg(FullName, 
+        DoErrorMsg(FullName(), 
             'Target circuit element (in "Element" property) is not a PD element.',
             ' Element must be a PD element.', 667);
         Exit;

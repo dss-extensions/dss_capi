@@ -290,8 +290,7 @@ end;
 
 constructor TESPVLControlObj.Create(ParClass: TDSSClass; const ESPVLControlName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(ESPVLControlName);
+    inherited Create(ParClass, ESPVLControlName);
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
@@ -337,7 +336,7 @@ begin
     // Check for existence of monitored element
     if MonitoredElement = NIL then
     begin
-        DoSimpleMsg('Monitored Element in "%s" is not set', [FullName], 372);
+        DoSimpleMsg('Monitored Element in "%s" is not set', [FullName()], 372);
         Exit;
     end;
 

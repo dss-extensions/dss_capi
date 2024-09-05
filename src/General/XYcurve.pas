@@ -388,8 +388,7 @@ end;
 
 constructor TXYcurveObj.Create(ParClass: TDSSClass; const XYCurveName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(XYCurveName);
+    inherited Create(ParClass, XYCurveName);
     DSSObjType := ParClass.DSSClassType;
 
     numPoints := 0;

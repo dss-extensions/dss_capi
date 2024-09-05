@@ -249,8 +249,7 @@ end;
 
 constructor TGrowthShapeObj.Create(ParClass: TDSSClass; const GrowthShapeName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(GrowthShapeName);
+    inherited Create(ParClass, GrowthShapeName);
     DSSObjType := ParClass.DSSClassType;
 
     Npts := 0;

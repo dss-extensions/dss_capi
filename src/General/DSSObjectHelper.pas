@@ -241,7 +241,7 @@ begin
         begin
             DoSimpleMsg(
                 '%s.%s: %s', 
-                [TDSSObject(obj).FullName, PropertyName[Index], _(PropertyDeprecatedMessage[Index])],
+                [TDSSObject(obj).FullName(), PropertyName[Index], _(PropertyDeprecatedMessage[Index])],
                 2020030);
 
             Result := False;
@@ -280,7 +280,7 @@ begin
                     begin
                         DoSimpleMsg(
                             '%s.%s: Error in specification, invalid value: "%s". Units can only be h, m, or s (single char only). If omitted, "s" is assumed.', 
-                            [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                            [TDSSObject(obj).FullName(), PropertyName[Index], Value],
                             2020034);
                         Exit;
                     end;
@@ -296,7 +296,7 @@ begin
                         begin
                             DoSimpleMsg(
                                 '%s.%s: Error in specification, invalid value: "%s". Units can only be h, m, or s (single char only). If omitted, "s" is assumed.', 
-                                [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                                [TDSSObject(obj).FullName(), PropertyName[Index], Value],
                                 2020035);
                             Exit;
                         end;
@@ -332,7 +332,7 @@ begin
                     begin
                         DoSimpleMsg(
                             '%s.%s: Error in specification, invalid value: "%s". Units can only be h, m, or s (single char only). If omitted, "s" is assumed.', 
-                            [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                            [TDSSObject(obj).FullName(), PropertyName[Index], Value],
                         2020034);
                         Exit;
                     end;
@@ -348,7 +348,7 @@ begin
                         begin
                             DoSimpleMsg(
                                 '%s.%s: Error in specification, invalid value: "%s". Units can only be h, m, or s (single char only). If omitted, "s" is assumed.', 
-                                [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                                [TDSSObject(obj).FullName(), PropertyName[Index], Value],
                             2020035);
 
                             Exit;
@@ -380,7 +380,7 @@ begin
             begin
                 DoSimpleMsg(
                     Format('%s.%s: "%s" is not a valid value.',
-                        [TDSSObject(obj).FullName, PropertyName[Index], Value]
+                        [TDSSObject(obj).FullName(), PropertyName[Index], Value]
                     ), 401);
                 // DoSimpleMsg('Invalid value (%d).', [intVal], 5004);
                 Exit;
@@ -667,7 +667,7 @@ begin
                     begin
                         DoSimpleMsg(
                             '%s.%s: Elements cannot be zero.', 
-                            [TDSSObject(obj).FullName, PropertyName[Index]],
+                            [TDSSObject(obj).FullName(), PropertyName[Index]],
                         2020038);
                         Result := False;
                         Exit;
@@ -755,7 +755,7 @@ begin
                 begin
                     DoSimpleMsg(
                         Format('%s.%s: %s object "%s" not found.',
-                            [TDSSObject(obj).FullName, PropertyName[Index], cls.Name, Value]
+                            [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name, Value]
                         ), 401);
                     //TODO: stop?
                 end;
@@ -772,7 +772,7 @@ begin
                 begin
                     DoSimpleMsg(
                         Format('%s.%s: CktElement "%s" not found.',
-                            [TDSSObject(obj).FullName, PropertyName[Index], Value]
+                            [TDSSObject(obj).FullName(), PropertyName[Index], Value]
                         ), 402);
                     //TODO: stop?
                 end
@@ -780,7 +780,7 @@ begin
                 begin
                     DoSimpleMsg(
                         Format('%s.%s: "%s" is not a PDElement.',
-                            [TDSSObject(obj).FullName, PropertyName[Index], otherObj.FullName]
+                            [TDSSObject(obj).FullName(), PropertyName[Index], otherObj.FullName()]
                         ), 405);
                     //TODO: stop?
                 end;
@@ -818,7 +818,7 @@ begin
                         begin
                             DoSimpleMsg(
                                 Format('%s.%s: %s object "%s" not found.',
-                                    [TDSSObject(obj).FullName, PropertyName[Index], cls.Name, PropParser.MakeString()]
+                                    [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name, PropParser.MakeString()]
                                 ), 40303);
                             Exit;
                         end;
@@ -841,7 +841,7 @@ begin
                         begin
                             DoSimpleMsg(
                                 Format('%s.%s: object "%s" not found.',
-                                    [TDSSObject(obj).FullName, PropertyName[Index], ElemName]
+                                    [TDSSObject(obj).FullName(), PropertyName[Index], ElemName]
                                 ), 40304);
                             Exit;
                         end;
@@ -862,7 +862,7 @@ begin
             begin
                 DoSimpleMsg(
                     Format('%s.%s: No objects are expected! Check if the order of property assignments is correct.',
-                        [TDSSObject(obj).FullName, PropertyName[Index]]
+                        [TDSSObject(obj).FullName(), PropertyName[Index]]
                     ), 402);
                 Exit;
             end;
@@ -893,7 +893,7 @@ begin
                 begin
                     DoSimpleMsg(
                         Format('%s.%s: %s object "%s" not found.',
-                            [TDSSObject(obj).FullName, PropertyName[Index], cls.Name, PropParser.MakeString()]
+                            [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name, PropParser.MakeString()]
                         ), 40305);
                     //TODO: stop?
                 end
@@ -1176,7 +1176,7 @@ begin
                 begin
                     for i := 1 to Norder do
                     begin
-                        jsonArray.Add(otherObjPtr^.FullName);
+                        jsonArray.Add(otherObjPtr^.FullName());
                         inc(otherObjPtr);
                     end;
                 end
@@ -1184,7 +1184,7 @@ begin
                 begin
                     for i := 1 to Norder do
                     begin
-                        jsonArray.Add(otherObjPtr^.Name);
+                        jsonArray.Add(otherObjPtr^.Name());
                         inc(otherObjPtr);
                     end;
                 end;
@@ -1196,7 +1196,7 @@ begin
                 val := TJSONNull.Create()
             else if ((joptions and Integer(DSSJSONOptions.FullNames)) <> 0) or (Pointer(PropertyOffset2[Index]) = NIL) then
             begin
-                val := TJSONString.Create(otherObj.FullName)
+                val := TJSONString.Create(otherObj.FullName())
             end
             else
                 val := TJSONString.Create(GetObjString(obj, Index));
@@ -1493,7 +1493,7 @@ begin
             begin
                 for i := 1 to count do
                 begin
-                    jsonArray.Add(otherObjPtr^.FullName);
+                    jsonArray.Add(otherObjPtr^.FullName());
                     Inc(otherObjPtr);
                 end;
             end
@@ -1501,7 +1501,7 @@ begin
             begin
                 for i := 1 to count do
                 begin
-                    jsonArray.Add(otherObjPtr^.Name);
+                    jsonArray.Add(otherObjPtr^.Name());
                     Inc(otherObjPtr);
                 end;
             end;
@@ -2078,7 +2078,7 @@ begin
             begin
                 DoSimpleMsg(
                     '%s.%s: Invalid number of elements. Provide either the full matrix or a triangle (lower or upper).', 
-                    [TDSSObject(obj).FullName, PropertyName[Index]],
+                    [TDSSObject(obj).FullName(), PropertyName[Index]],
                 2020037);
                 Exit;
             end;
@@ -2471,9 +2471,9 @@ begin
                 if otherObj <> NIL then
                 begin
                     if PropertyOffset2[Index] = 0 then
-                        PropStr := otherObj.FullName
+                        PropStr := otherObj.FullName()
                     else
-                        PropStr := otherObj.Name
+                        PropStr := otherObj.Name()
                 end
                 else
                     PropStr := '';
@@ -2525,7 +2525,7 @@ begin
                 begin
                     for i := 1 to count do
                     begin
-                        PropStr := PropStr + CheckForBlanks(otherObjPtr^.FullName);
+                        PropStr := PropStr + CheckForBlanks(otherObjPtr^.FullName());
                         if i <> count then
                             PropStr := PropStr + ', ';
                         Inc(otherObjPtr);
@@ -2535,7 +2535,7 @@ begin
                 begin
                     for i := 1 to count do
                     begin
-                        PropStr := PropStr + CheckForBlanks(otherObjPtr^.Name);
+                        PropStr := PropStr + CheckForBlanks(otherObjPtr^.Name());
                         if i <> count then
                             PropStr := PropStr + ', ';
                         Inc(otherObjPtr);
@@ -2619,7 +2619,7 @@ begin
     begin
         DoSimpleMsg(
             Format('%s.%s: No objects are expected! Check if the order of property assignments is correct.',
-                [TDSSObject(obj).FullName, PropertyName[Index]]
+                [TDSSObject(obj).FullName(), PropertyName[Index]]
             ), 402);
         Exit;
     end;
@@ -2773,7 +2773,7 @@ begin
             if not (TPropertyFlag.IgnoreInvalid in flags) then
                 DoSimpleMsg(
                     '%s.%s: Value (%g) must be greater than one.', 
-                    [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                    [TDSSObject(obj).FullName(), PropertyName[Index], Value],
                 2020031);
             Exit;
         end;
@@ -2782,7 +2782,7 @@ begin
             if not (TPropertyFlag.IgnoreInvalid in flags) then
                 DoSimpleMsg(
                     '%s.%s: Value (%g) cannot be zero.', 
-                    [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                    [TDSSObject(obj).FullName(), PropertyName[Index], Value],
                 2020031);
 
             Exit;
@@ -2792,7 +2792,7 @@ begin
             if not (TPropertyFlag.IgnoreInvalid in flags) then
                 DoSimpleMsg(
                     '%s.%s: Value (%g) cannot be negative.', 
-                    [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                    [TDSSObject(obj).FullName(), PropertyName[Index], Value],
                 2020032);
                 
             Exit;
@@ -2802,7 +2802,7 @@ begin
             if not (TPropertyFlag.IgnoreInvalid in flags) then
                 DoSimpleMsg(
                     '%s.%s: Value (%g) cannot be positive.', 
-                    [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                    [TDSSObject(obj).FullName(), PropertyName[Index], Value],
                 2020033);
                 
             Exit;
@@ -2813,7 +2813,7 @@ begin
 
     if (Value = 0) and (PropertyTrapZero[Index] <> 0) then
     begin
-        // DoSimpleMsg('Zero Reactance specified for ......' + DSS.ActiveAutoTransObj.Name, 1011201);
+        // DoSimpleMsg('Zero Reactance specified for ......' + DSS.ActiveAutoTransObj.Name(), 1011201);
         Value := PropertyTrapZero[Index];
     end;
 
@@ -2894,7 +2894,7 @@ begin
         if not (TPropertyFlag.IgnoreInvalid in flags) then
             DoSimpleMsg(
                 '%s.%s: Invalid value (%d).', 
-                [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                [TDSSObject(obj).FullName(), PropertyName[Index], Value],
             2020031);
 
         Exit;
@@ -2904,7 +2904,7 @@ begin
         if not (TPropertyFlag.IgnoreInvalid in flags) then
             DoSimpleMsg(
                 '%s.%s: Value (%d) must be greater than one.', 
-                [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                [TDSSObject(obj).FullName(), PropertyName[Index], Value],
             2020031);
 
         Exit;
@@ -2914,7 +2914,7 @@ begin
         if not (TPropertyFlag.IgnoreInvalid in flags) then
             DoSimpleMsg(
                 '%s.%s: Value (%d) cannot be zero.', 
-                [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                [TDSSObject(obj).FullName(), PropertyName[Index], Value],
             2020031);
 
         Exit;
@@ -2924,7 +2924,7 @@ begin
         if not (TPropertyFlag.IgnoreInvalid in flags) then
             DoSimpleMsg(
                 '%s.%s: Value (%d) cannot be negative.', 
-                [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                [TDSSObject(obj).FullName(), PropertyName[Index], Value],
             2020032);
             
         Exit;
@@ -2934,7 +2934,7 @@ begin
         if not (TPropertyFlag.IgnoreInvalid in flags) then
             DoSimpleMsg(
                 '%s.%s: Value (%d) cannot be positive.', 
-                [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                [TDSSObject(obj).FullName(), PropertyName[Index], Value],
             2020033);
             
         Exit;
@@ -3369,7 +3369,7 @@ var
             begin
                 DoSimpleMsg(
                     '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
-                    [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
+                    [TDSSObject(obj).FullName(), PropertyName[Index], maxSize, ValueCount],
                 20200421);
                 Exit;
             end;
@@ -3526,7 +3526,7 @@ var
             begin
                 DoSimpleMsg(
                     '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
-                    [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
+                    [TDSSObject(obj).FullName(), PropertyName[Index], maxSize, ValueCount],
                 20200425);
                 Exit;
             end;
@@ -3552,7 +3552,7 @@ begin
             begin
                 DoSimpleMsg(
                     '%s.%s: Invalid number of elements. Provide a complex number (pair of two float64 values).', 
-                    [TDSSObject(obj).FullName, PropertyName[Index]],
+                    [TDSSObject(obj).FullName(), PropertyName[Index]],
                 2020040);
                 Exit;
             end;
@@ -3569,7 +3569,7 @@ begin
             begin
                 DoSimpleMsg(
                     '%s.%s: Invalid number of elements. Provide a complex number (pair of two float64 values).', 
-                    [TDSSObject(obj).FullName, PropertyName[Index]],
+                    [TDSSObject(obj).FullName(), PropertyName[Index]],
                 2020039);
                 Exit;
             end;
@@ -3586,7 +3586,7 @@ begin
             begin
                 DoSimpleMsg(
                     '%s.%s: Invalid number of elements. Provide either the full matrix or the lower triangle.', 
-                    [TDSSObject(obj).FullName, PropertyName[Index]],
+                    [TDSSObject(obj).FullName(), PropertyName[Index]],
                 2020036);
                 Exit;
             end;
@@ -3638,7 +3638,7 @@ begin
             begin
                 DoSimpleMsg(
                     '%s.%s: Invalid number of elements. Provide either the full matrix or the lower triangle.', 
-                    [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                    [TDSSObject(obj).FullName(), PropertyName[Index], Value],
                 2020037);
                 Exit;
             end;
@@ -3761,7 +3761,7 @@ begin
                     begin
                         DoSimpleMsg(
                             '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
-                            [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
+                            [TDSSObject(obj).FullName(), PropertyName[Index], maxSize, ValueCount],
                         20200423);
                         Exit;
                     end;
@@ -3905,7 +3905,7 @@ var
             begin
                 DoSimpleMsg(
                     '%s.%s: Invalid number of elements. Expected %d elements, got %d.', 
-                    [TDSSObject(obj).FullName, PropertyName[Index], maxSize, ValueCount],
+                    [TDSSObject(obj).FullName(), PropertyName[Index], maxSize, ValueCount],
                 20200424);
                 Exit;
             end;
@@ -3947,7 +3947,7 @@ begin
                         begin
                             DoSimpleMsg(
                                 Format('%s.%s: %s object "%s" not found.',
-                                    [TDSSObject(obj).FullName, PropertyName[Index], cls.Name, ElemName]
+                                    [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name, ElemName]
                                 ), 40306);
                             Exit;
                         end;
@@ -3985,7 +3985,7 @@ begin
                         begin
                             DoSimpleMsg(
                                 Format('%s.%s: conductor object "%s" not found. Please provide the full name of a conductor object (types WireData, CNData, TSData) which is already defined.',
-                                    [TDSSObject(obj).FullName, PropertyName[Index], ElemName]
+                                    [TDSSObject(obj).FullName(), PropertyName[Index], ElemName]
                                 ), 40300);
                             Exit;
                         end;
@@ -4007,7 +4007,7 @@ begin
                         begin
                             DoSimpleMsg(
                                 Format('%s.%s: object "%s" not found.',
-                                    [TDSSObject(obj).FullName, PropertyName[Index], ElemName]
+                                    [TDSSObject(obj).FullName(), PropertyName[Index], ElemName]
                                 ), 40301);
                             Exit;
                         end;
@@ -4027,7 +4027,7 @@ begin
             begin
                 DoSimpleMsg(
                     Format('%s.%s: No objects are expected! Check if the order of property assignments is correct.',
-                        [TDSSObject(obj).FullName, PropertyName[Index]]
+                        [TDSSObject(obj).FullName(), PropertyName[Index]]
                     ), 402);
                 Exit;
             end;
@@ -4035,7 +4035,7 @@ begin
             begin
                 DoSimpleMsg(
                     Format('%s.%s: Number of elements expected (%d) does not match the number of provided elements (%d).',
-                        [TDSSObject(obj).FullName, PropertyName[Index], intVal, ValueCount]
+                        [TDSSObject(obj).FullName(), PropertyName[Index], intVal, ValueCount]
                     ), 406);
                 Exit;
             end;
@@ -4062,7 +4062,7 @@ begin
                 begin
                     DoSimpleMsg(
                         Format('%s.%s: %s object "%s" not found.',
-                            [TDSSObject(obj).FullName, PropertyName[Index], cls.Name, Value^]
+                            [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name, Value^]
                         ), 40302);
                     Exit;
                 end
@@ -4301,7 +4301,7 @@ begin
         begin
             otherObj := GetObjObject(Obj, Index);
             if otherObj <> NIL then
-                Result := otherObj.Name
+                Result := otherObj.Name()
             else
                 Result := '';
         end;
@@ -4749,7 +4749,7 @@ begin
                 for i := 1 to count do
                 begin
                     if otherObjPtr^ <> NIL then
-                        Result[i - 1] := DSS_CopyStringAsPChar(otherObjPtr^.FullName)
+                        Result[i - 1] := DSS_CopyStringAsPChar(otherObjPtr^.FullName())
                     else
                         Result[i - 1] := NIL;
 
@@ -4759,7 +4759,7 @@ begin
                 for i := 1 to count do
                 begin
                     if otherObjPtr^ <> NIL then
-                        Result[i - 1] := DSS_CopyStringAsPChar(otherObjPtr^.Name)
+                        Result[i - 1] := DSS_CopyStringAsPChar(otherObjPtr^.Name())
                     else
                         Result[i - 1] := NIL;
 
@@ -4797,9 +4797,9 @@ begin
                 if otherObjPtr^ <> NIL then
                 begin
                     if (PropertyOffset2[Index] = 0) or (TPropertyFlag.FullNameAsArray in PropertyFlags[Index]) then
-                        Result[i - 1] := DSS_CopyStringAsPChar(otherObjPtr^.FullName)
+                        Result[i - 1] := DSS_CopyStringAsPChar(otherObjPtr^.FullName())
                     else
-                        Result[i - 1] := DSS_CopyStringAsPChar(otherObjPtr^.Name)
+                        Result[i - 1] := DSS_CopyStringAsPChar(otherObjPtr^.Name())
                 end
                 else
                     Result[i - 1] := NIL;
@@ -4942,11 +4942,11 @@ begin
         propName := PropertyNameJSON[propIndex];
         propFlags := PropertyFlags[propIndex];
         ptype := PropertyType[propIndex];
-        // WriteLn(dssObj.FullName, '  -  ', propName, '  -  ', ptype); SysFlushStdIO();
+        // WriteLn(dssObj.FullName(), '  -  ', propName, '  -  ', ptype); SysFlushStdIO();
         if (not json.Find(propName, propData)) then
         begin
             if TPropertyFlag.Required in propFlags then
-                raise Exception.Create(Format('JSON/%s/%s: required property not provided: "%s".', [Name, dssObj.Name, propName]));
+                raise Exception.Create(Format('JSON/%s/%s: required property not provided: "%s".', [Name, dssObj.Name(), propName]));
 
             continue;
         end;
@@ -4956,7 +4956,7 @@ begin
         if propData.IsNull and (not (TPropertyFlag.AllowNone in PropertyFlags[propIndex])) then
             continue;
 
-        // WriteLn('-> ', dssObj.FullName, '.', propName, ' = ', propData.FormatJSON()); SysFlushStdIO();
+        // WriteLn('-> ', dssObj.FullName(), '.', propName, ' = ', propData.FormatJSON()); SysFlushStdIO();
         prevInt := 0;
         // Note: propIndex may be replaced/redirected in SetObjPropertyJSONValue
         if (not SetObjPropertyJSONValue(obj, propIndex, joptions, propData, setterFlags, prevInt)) or (DSS.ErrorNumber <> 0) then
@@ -4978,7 +4978,7 @@ begin
             if not (dynInitData is TJSONObject) then
             begin
                 dynInitData.Free;
-                raise Exception.Create(Format('JSON/%s/%s: if provided, "DynInit" must be a JSON object.', [Name, dssObj.Name]));
+                raise Exception.Create(Format('JSON/%s/%s: if provided, "DynInit" must be a JSON object.', [Name, dssObj.Name()]));
             end;
         end;
         if dynInitData <> NIL then

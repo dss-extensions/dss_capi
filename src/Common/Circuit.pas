@@ -595,7 +595,7 @@ begin
     begin
         try
             pCktElem := TDSSCktElement(CktElements.Get(i));
-            ElemName := pCktElem.ParentClass.name + '.' + pCktElem.Name;
+            ElemName := pCktElem.ParentClass.Name + '.' + pCktElem.Name;
             pCktElem.Free;
         except
             ON E: Exception do
@@ -1384,7 +1384,7 @@ begin
     // Add monitors and Energy Meters at link branches
     // Creates and EnergyMeter at the feeder head
     pLine := Lines.First();
-    DSS.DSSExecutive.ParseCommand('New EnergyMeter.myEMZoneFH element=' + CheckForBlanks(pLine.FullName) + ' terminal=1');
+    DSS.DSSExecutive.ParseCommand('New EnergyMeter.myEMZoneFH element=' + CheckForBlanks(pLine.FullName()) + ' terminal=1');
     for i := 0 to High(Link_Branches) do
     begin
         DSS.DSSExecutive.ParseCommand('New EnergyMeter.myEMZone' + InttoStr(i) + ' element=' + Link_Branches[i] + ' terminal=1');
@@ -1764,7 +1764,7 @@ begin
                             if (myBus[0] <> myBus[1]) then
                             begin
                                 SetLength(Result, length(Result) + 1);
-                                Result[High(Result)] := elem.FullName;
+                                Result[High(Result)] := elem.FullName();
                             end;
                             break;
                         end;
@@ -1783,7 +1783,7 @@ begin
                 if ((myBus[0] = BusName) or (myBus[1] = BusName)) and (myBus[0] <> myBus[1]) then
                 begin
                     SetLength(Result, length(Result) + 1);
-                    Result[High(Result)] := elem.FullName;
+                    Result[High(Result)] := elem.FullName();
                 end;
             end;
         end;
@@ -1845,7 +1845,7 @@ begin
                             continue;
 
                         SetLength(Result, length(Result) + 1);
-                        Result[High(Result)] := elem.FullName;
+                        Result[High(Result)] := elem.FullName();
                         break;
                     end;
                     if found then
@@ -1859,7 +1859,7 @@ begin
                 if myBus = BusName then
                 begin
                     SetLength(Result, length(Result) + 1);
-                    Result[High(Result)] := elem.FullName;
+                    Result[High(Result)] := elem.FullName();
                 end;
             end;
         end;
@@ -1929,7 +1929,7 @@ begin
         begin
             if NodeBuffer[j] < 0 then
             begin
-                retval := DSS.MessageDlg('Error in Node specification for Element: "' + element.FullName + '"' + CRLF +
+                retval := DSS.MessageDlg('Error in Node specification for Element: "' + element.FullName() + '"' + CRLF +
                     'Bus Spec: "' + DSS.Parser.tokenBuffer + '"', FALSE);
                 NodesOK := FALSE;
                 if retval = -1 then
@@ -2904,7 +2904,7 @@ begin
             if elem.AllConductorsClosed() then
                 continue;
 
-            name := CheckForBlanks(elem.FullName);
+            name := CheckForBlanks(elem.FullName());
             for termIdx := 0 to elem.NTerms - 1 do
             begin
                 numCondOpen := 0;

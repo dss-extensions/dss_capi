@@ -86,7 +86,6 @@ end;
 constructor TWireDataObj.Create(ParClass: TDSSClass; const WireDataName: String);
 begin
     inherited Create(ParClass, WireDataName);
-    Name := AnsiLowerCase(WireDataName);
     DSSObjType := ParClass.DSSClassType;
 end;
 

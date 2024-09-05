@@ -355,8 +355,7 @@ end;
 
 constructor TTShapeObj.Create(ParClass: TDSSClass; const TShapeName: String);
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(TShapeName);
+    inherited Create(ParClass, TShapeName);
     DSSObjType := ParClass.DSSClassType;
 
     numPoints := 0;
@@ -471,7 +470,7 @@ var
 begin
     if not Assigned(TValues) then
     begin
-        DoSimpleMsg('%s Temperatures not defined.', [FullName], 57622);
+        DoSimpleMsg('%s Temperatures not defined.', [FullName()], 57622);
         Exit;
     end;
     try
@@ -493,7 +492,7 @@ var
 begin
     if not Assigned(TValues) then
     begin
-        DoSimpleMsg('%s Temperatures not defined.', [FullName], 57623);
+        DoSimpleMsg('%s Temperatures not defined.', [FullName()], 57623);
         Exit;
     end;
     try

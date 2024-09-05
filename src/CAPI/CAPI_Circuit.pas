@@ -271,7 +271,7 @@ begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.NumDevices);
     for i := 1 to DSSPrime.ActiveCircuit.NumDevices do
     begin
-        Result[i - 1] := DSS_CopyStringAsPChar(TDSSCktElement(DSSPrime.ActiveCircuit.CktElements.Get(i)).FullName);
+        Result[i - 1] := DSS_CopyStringAsPChar(TDSSCktElement(DSSPrime.ActiveCircuit.CktElements.Get(i)).FullName());
     end;
 end;
 //------------------------------------------------------------------------------

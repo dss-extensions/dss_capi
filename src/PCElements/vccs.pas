@@ -309,8 +309,7 @@ end;
 
 constructor TVCCSObj.Create(ParClass: TDSSClass; const SourceName: String);
 begin
-    inherited create(ParClass);
-    Name := AnsiLowerCase(SourceName);
+    inherited create(ParClass, SourceName);
     DSSObjType := ParClass.DSSClassType;
 
     FNphases := 1;

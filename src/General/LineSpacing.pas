@@ -187,8 +187,7 @@ constructor TLineSpacingObj.Create(ParClass: TDSSClass; const LineSpacingName: S
 var
     i: Integer;
 begin
-    inherited Create(ParClass);
-    Name := AnsiLowerCase(LineSpacingName);
+    inherited Create(ParClass, LineSpacingName);
     DSSObjType := ParClass.DSSClassType;
 
     DataChanged := TRUE;

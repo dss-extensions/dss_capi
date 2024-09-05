@@ -1631,7 +1631,7 @@ begin
     if (Obj <> NIL) and (Flg.EditingActive in Obj.Flags) then
     begin
         //TODO: refine the logic to throw the error
-        DosimpleMsg('%s: Object already being edited!', [Obj.FullName], 37737);
+        DosimpleMsg('%s: Object already being edited!', [Obj.FullName()], 37737);
         Exit;
     end;
     if (Obj <> NIL) then
@@ -1680,9 +1680,9 @@ begin
             if not Obj.ParseDynVar(Parser, ParamName) then
             begin
                 if Length(ParamName) > 0 then
-                    DoSimpleMsg('Unknown parameter "%s" (value "%s") for object "%s"', [ParamName, Param, TDSSObject(Obj).FullName], 110)
+                    DoSimpleMsg('Unknown parameter "%s" (value "%s") for object "%s"', [ParamName, Param, TDSSObject(Obj).FullName()], 110)
                 else
-                    DoSimpleMsg('Unknown parameter for value "%s" in object "%s"', [Param, TDSSObject(Obj).FullName], 110);
+                    DoSimpleMsg('Unknown parameter for value "%s" in object "%s"', [Param, TDSSObject(Obj).FullName()], 110);
 
                 if DSS_CAPI_EARLY_ABORT then
                 begin
@@ -1719,7 +1719,7 @@ begin
         Obj.PropertySideEffects(ParamPointer, prevInt, []);
 
 //            GetObjPropertyValue(Obj, ParamPointer, tmp);
-//            WriteLn(TDSSObject(Obj).FullName, '.', PropertyName[ParamPointer], ' = ', tmp);
+//            WriteLn(TDSSObject(Obj).FullName(), '.', PropertyName[ParamPointer], ' = ', tmp);
 
         ParamName := Parser.NextParam();
         Param := Parser.MakeString();
