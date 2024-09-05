@@ -412,7 +412,7 @@ begin
             end;
             ord(TProp.UserModel):
             begin
-                UserModel.Name := UserModelNameStr;  // Connect to user written model
+                UserModel.SetName(UserModelNameStr);  // Connect to user written model
                 IsUserModel := UserModel.Exists();
             end;
             ord(TProp.UserData):
@@ -462,7 +462,7 @@ begin
         VOverrideBusName := Other.ControlVars.VOverrideBusName;
     end;
 
-    UserModel.Name := Other.UserModel.Name;  // Connect to user written models
+    UserModel.SetName(Other.UserModel.GetName());  // Connect to user written models
     UserModelNameStr := Other.UserModelNameStr;
 
     IsUserModel := Other.IsUserModel;

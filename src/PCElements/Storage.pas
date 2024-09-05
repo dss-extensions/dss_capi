@@ -837,7 +837,7 @@ begin
 
         ord(TProp.UserModel):
         begin
-            UserModel.Name := UserModelNameStr;
+            UserModel.SetName(UserModelNameStr);
             IsUserModel := UserModel.Exists();
         end;
         ord(TProp.UserData):
@@ -845,7 +845,7 @@ begin
                 UserModel.Edit(UserModelEditStr);
         ord(TProp.DynaDLL):
         begin
-            DynaModel.Name := DynaModelNameStr; 
+            DynaModel.SetName(DynaModelNameStr);
             IsUserModel := DynaModel.Exists();
         end;
         ord(TProp.DynaData):
@@ -978,8 +978,8 @@ begin
     WVMode := Other.WVMode;
     AVRMode := Other.AVRMode;
 
-    UserModel.Name := Other.UserModel.Name;
-    DynaModel.Name := Other.DynaModel.Name;
+    UserModel.SetName(Other.UserModel.GetName());
+    DynaModel.SetName(Other.DynaModel.GetName());
     UserModelNameStr := Other.UserModelNameStr;
     DynaModelNameStr := Other.DynaModelNameStr;
     

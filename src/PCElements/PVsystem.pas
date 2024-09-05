@@ -625,7 +625,7 @@ var
 begin
     case Idx of
         ord(TProp.UserModel):
-            UserModel.Name := UserModelNameStr;  // Connect to user written models
+            UserModel.SetName(UserModelNameStr);  // Connect to user written models
         ord(TProp.UserData):
             if UserModel.Exists() then
                 UserModel.Edit(UserModelEditStr);  // Send edit string to user model
@@ -815,7 +815,7 @@ begin
     WVMode := Other.WVMode;
     DRCMode := Other.DRCMode;
     AVRMode := Other.AVRMode;
-    UserModel.Name := Other.UserModel.Name;  // Connect to user written models
+    UserModel.SetName(Other.UserModel.GetName());  // Connect to user written models
     UserModelNameStr := Other.UserModelNameStr;
     //UserModelEditStr := Other.UserModelEditStr;
 

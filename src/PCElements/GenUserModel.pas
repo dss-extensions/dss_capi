@@ -28,7 +28,6 @@ TYPE
          FDelete: Procedure(var x:Integer); Stdcall;  // deletes specified instance
          FSelect: Function (var x:Integer):Integer; Stdcall;    // Select active instance
 
-         Procedure Set_Name(const Value:String);
          Function CheckFuncError(Addr:Pointer; FuncName:String):Pointer;
 
       protected
@@ -58,7 +57,9 @@ TYPE
         // this property loads library (if needed), sets the procedure variables, and makes a new instance
         // old reference is freed first
         // Wide string OK here
-        property Name:String    read  Fname write Set_Name;
+        procedure SetName(const Value: String);
+        function GetName(): String;
+
         procedure Edit(const Value: String);
         function Exists(): Boolean;
 
@@ -135,7 +136,12 @@ begin
         // Else Ignore
 end;
 
-procedure TGenUserModel.Set_Name(const Value:String);
+function TGenUserModel.GetName(): String;
+begin
+        result := Fname;
+end;
+
+procedure TGenUserModel.SetName(const Value: String);
 begin
     // If Model already points to something, then free it
 

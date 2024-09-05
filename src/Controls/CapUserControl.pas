@@ -40,7 +40,6 @@ TYPE
          FSample:       Procedure; StdCall;
          FDoPending:    Procedure( Var Code, ProxyHdl:Integer); StdCall;
 
-         Procedure Set_Name(const Value:String);
          Function  CheckFuncError(Addr:Pointer; FuncName:String):Pointer;
       public
         DSS: TDSSContext;
@@ -58,7 +57,8 @@ TYPE
         // this property loads library (if needed), sets the procedure variables, and makes a new instance
         // old reference is freed first
         // Wide string OK here
-        property  Name:String    read  Fname write Set_Name;
+        procedure SetName(const Value: String);
+        function GetName(): String;
         procedure Edit(const Value: String);
         function Exists(): Boolean;
       end;
@@ -137,8 +137,12 @@ begin
      If FID <> 0 Then FEdit(pAnsichar(AnsiString(Value)), Length(Value));
 end;
 
-procedure TCapUserControl.Set_Name(const Value:String);
+function TCapUserControl.GetName(): String;
+begin
+     result := Fname;
+end;
 
+procedure TCapUserControl.SetName(const Value: String);
 begin
     // If Model already points to something, then free it
 

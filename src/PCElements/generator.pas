@@ -749,12 +749,12 @@ begin
                 end;
             end;
             TProp.UserModel:
-                UserModel.Name := UserModelNameStr;  // Connect to user written models
+                UserModel.SetName(UserModelNameStr);  // Connect to user written models
             TProp.UserData:
                 if UserModel.Exists() then
                     UserModel.Edit(UserModelEditStr);  // Send edit string to user model
             TProp.ShaftModel:
-                ShaftModel.Name := ShaftModelNameStr;
+                ShaftModel.SetName(ShaftModelNameStr);
             TProp.ShaftData:
                 if ShaftModel.Exists() then
                     ShaftModel.Edit(ShaftModelEditStr);
@@ -874,8 +874,8 @@ begin
     pctFuel := Other.pctFuel;
     pctReserve := Other.pctReserve;
 
-    UserModel.Name := Other.UserModel.Name;  // Connect to user written models
-    ShaftModel.Name := Other.ShaftModel.Name;
+    UserModel.SetName(Other.UserModel.GetName());  // Connect to user written models
+    ShaftModel.SetName(Other.ShaftModel.GetName());
     UserModelNameStr := Other.UserModelNameStr;
     ShaftModelNameStr := Other.ShaftModelNameStr;
 end;
