@@ -115,10 +115,12 @@ type
 
         procedure ChangeLineConstantsType(newPhaseChoice: ConductorChoice);
 
-        procedure set_Nconds(const Value: Integer);
         procedure SetNPhases(const Value: Integer);
-        procedure set_ActiveCond(const Value: Integer);
-        function get_Nconds: Integer;
+        procedure SetActiveCond(const Value: Integer);
+
+        function NConds(): Integer;
+        procedure SetNConds(const Value: Integer);
+
         procedure UpdateLineGeometryData(f: Double; earthModel: Integer);   // call this before using the line data
 
         constructor Create(ParClass: TDSSClass; const LineGeometryName: String);
@@ -132,9 +134,6 @@ type
         // called from a Line object that has its own Spacing and Wires input
         // automatically sets reduce=y if the spacing has more wires than phases
         procedure LoadSpacingAndWires(Spc: TLineSpacingObj; Wires: pConductorDataArray; earthModel: Integer);
-
-        property Nconds: Integer READ get_Nconds WRITE set_Nconds;
-        property ActiveCond: Integer READ FActiveCond WRITE set_ActiveCond;
         function GetYCMatrix(f, Lngth: Double; Units: Integer; earthModel: Integer): Tcmatrix;
         function GetZMatrix(f, Lngth: Double; Units: Integer; earthModel: Integer): Tcmatrix;        
     end;
@@ -200,9 +199,9 @@ begin
         // TLineGeometryObj.PropertySideEffects should handle the other side-effects
         Exit;
     end
-    else if obj.phaseChoice[obj.ActiveCond] = Unknown then
+    else if obj.phaseChoice[obj.FActiveCond] = Unknown then
         obj.ChangeLineConstantsType(Overhead)
-    else if obj.phaseChoice[obj.ActiveCond] <> Overhead then
+    else if obj.phaseChoice[obj.FActiveCond] <> Overhead then
         // these are buried neutral wires 
         // (only when the phase conductors not overhead)
         istart := obj.FNPhases + 1;
@@ -372,10 +371,10 @@ begin
             if units[FactiveCond] = -1 then
                 units[FactiveCond] := FLastUnit;  // makes this a sticky value so you don't have to repeat it
         ord(TProp.wire):
-            if phaseChoice[ActiveCond] = Unknown then
+            if phaseChoice[FActiveCond] = Unknown then
                 ChangeLineConstantsType(Overhead);
         ord(TProp.units):
-            FLastUnit := units[ActiveCond];
+            FLastUnit := units[FActiveCond];
         ord(TProp.cncable), ord(TProp.cncables):
             ChangeLineConstantsType(ConcentricNeutral);
         ord(TProp.tscable), ord(TProp.tscables):
@@ -457,20 +456,20 @@ begin
             begin
                 // Simulate setting the conductors one by one
                 // Much easier/safer than reproducing the whole code paths
-                for i := 1 to NConds do
+                for i := 1 to NConds() do
                 begin
-                    ActiveCond := i;
-                    if conductorData[ActiveCond] is TWireDataObj then 
+                    SetActiveCond(i);
+                    if conductorData[FActiveCond] is TWireDataObj then 
                     begin
                         PropertySideEffects(ord(TProp.wire), 0, setterFlags);
                         continue;
                     end;
-                    if conductorData[ActiveCond] is TCNDataObj then 
+                    if conductorData[FActiveCond] is TCNDataObj then 
                     begin
                         PropertySideEffects(ord(TProp.cncable), 0, setterFlags);
                         continue;
                     end;
-                    if conductorData[ActiveCond] is TTSDataObj then 
+                    if conductorData[FActiveCond] is TTSDataObj then 
                     begin
                         PropertySideEffects(ord(TProp.tscable), 0, setterFlags);
                         continue;
@@ -483,12 +482,12 @@ begin
                 i := 1;
                 if Idx = ord(TProp.wires) then
                 begin
-                    if phaseChoice[ActiveCond] = Unknown then
+                    if phaseChoice[FActiveCond] = Unknown then
                     begin
                         // no other cables set for ActiveCond
                     end
                     else 
-                    if phaseChoice[ActiveCond] <> Overhead then
+                    if phaseChoice[FActiveCond] <> Overhead then
                         // these are buried neutral wires
                         // (only when the phase conductors not overhead)
                         i := FNPhases + 1;
@@ -514,12 +513,12 @@ begin
         end;
         ord(TProp.wire), ord(TProp.cncable), ord(TProp.tscable):
         begin
-            conductorObj := conductorData[ActiveCond];
+            conductorObj := conductorData[FActiveCond];
             if Assigned(conductorObj) then
             begin
                 // conductorData[ActiveCond] := conductorObj;
                 // Default the current ratings for this geometry to the rating of the first conductor
-                if (ActiveCond = 1) then
+                if (FActiveCond = 1) then
                 begin
                     if (conductorObj.NormAmps > 0.0) and (Normamps = 0.0) then
                         Normamps := conductorObj.NormAmps;
@@ -568,7 +567,7 @@ var
 begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
-    NConds := Other.FNConds; // allocates
+    SetNConds(Other.FNConds); // allocates
     FNphases := Other.FNphases;
     LineSpacingObj := Other.LineSpacingObj;
     FLineType := Other.FLineType;
@@ -612,7 +611,7 @@ begin
 
     FNconds := 0;
     FNPhases := 0;
-    // ActiveCond  := 1;
+    // SetActiveCond(1);
     FActiveCond := 1;
     FLastUnit := UNITS_FT;
     Normamps := 0.0;
@@ -652,7 +651,7 @@ begin
     end;
     for j := 1 to FNConds do
     begin
-        ActiveCond := j;
+        SetActiveCond(j);
         FSWriteln(F, '~ ' + ParentClass.PropertyName[3] + '=' + PropertyValue(3));
         FSWriteln(F, '~ ' + ParentClass.PropertyName[4] + '=' + PropertyValue(4));
         FSWriteln(F, '~ ' + ParentClass.PropertyName[5] + '=' + PropertyValue(5));
@@ -665,7 +664,7 @@ begin
     end;
 end;
 
-function TLineGeometryObj.get_Nconds: Integer;
+function TLineGeometryObj.NConds(): Integer;
 begin
     if Freduce then
         Result := FNPhases
@@ -740,7 +739,7 @@ begin
     end;
 end;
 
-procedure TLineGeometryObj.set_ActiveCond(const Value: Integer);
+procedure TLineGeometryObj.SetActiveCond(const Value: Integer);
 begin
     if Value > 0 then
         if Value <= FNconds then
@@ -759,8 +758,8 @@ begin
     newLineData := NIL;
     needNew := FALSE;
 
-    if (ActiveCond > 0) and (ActiveCond <= FNConds) and 
-       (newPhaseChoice <> phaseChoice[ActiveCond]) then
+    if (FActiveCond > 0) and (FActiveCond <= FNConds) and 
+       (newPhaseChoice <> phaseChoice[FActiveCond]) then
         needNew := TRUE
     else
     if (lineConstants = NIL) or (FNConds <> lineConstants.numConductors) then
@@ -786,11 +785,11 @@ begin
         FreeAndNil(lineConstants);
         lineConstants := newLineData;
     end;
-    if (ActiveCond > 0) and (ActiveCond <= FNConds) then
-        phaseChoice[ActiveCond] := newPhaseChoice;
+    if (FActiveCond > 0) and (FActiveCond <= FNConds) then
+        phaseChoice[FActiveCond] := newPhaseChoice;
 end;
 
-procedure TLineGeometryObj.set_Nconds(const Value: Integer);
+procedure TLineGeometryObj.SetNConds(const Value: Integer);
 var
     prev: Integer;
 begin
@@ -883,7 +882,7 @@ var
     i: Integer;
     newPhaseChoice: ConductorChoice;
 begin
-    NConds := Spc.NConds;   // allocates
+    SetNConds(Spc.NConds);   // allocates
     FNphases := Spc.Nphases;
     LineSpacingObj := Spc;
     if FNConds > FNPhases then

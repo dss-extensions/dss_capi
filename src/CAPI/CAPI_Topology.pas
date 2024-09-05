@@ -105,7 +105,7 @@ begin
     if not ActiveTreeNode(DSSPrime, node) then
         Exit;
     Result := topo.Level;
-    DSSPrime.ActiveCircuit.ActiveCktElement := node.CktObject;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(node.CktObject);
 end;
 //------------------------------------------------------------------------------
 procedure Topology_Get_AllIsolatedBranches(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -216,7 +216,7 @@ begin
     if topo.GoBackward() = NIL then
         Exit;
 
-    DSSPrime.ActiveCircuit.ActiveCktElement := topo.PresentBranch.CktObject;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(topo.PresentBranch.CktObject);
     Result := 1;
 end;
 //------------------------------------------------------------------------------
@@ -243,7 +243,7 @@ begin
 
     if assigned(topo.First) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := topo.PresentBranch.CktObject;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(topo.PresentBranch.CktObject);
         Result := 1;
     end;
 end;
@@ -258,7 +258,7 @@ begin
 
     if assigned(topo.GoForward) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := topo.PresentBranch.CktObject;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(topo.PresentBranch.CktObject);
         Result := 1;
     end;
 end;
@@ -272,7 +272,7 @@ begin
         Exit;
     if node.IsLoopedHere then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := node.LoopLineObj;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(node.LoopLineObj);
         Result := 1;
     end;
 end;
@@ -307,7 +307,7 @@ begin
         Exit;
     if node.IsParallel then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := node.LoopLineObj;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(node.LoopLineObj);
         Result := 1;
     end;
 end;
@@ -334,7 +334,7 @@ begin
         begin
             if (AnsiCompareText(pdElem.FullName, S) = 0) then
             begin
-                DSSPrime.ActiveCircuit.ActiveCktElement := pdElem;
+                DSSPrime.ActiveCircuit.SetActiveCktElement(pdElem);
                 Found := TRUE;
                 Break;
             end;
@@ -345,7 +345,7 @@ begin
     begin
         DoSimpleMsg(DSSPrime, 'Branch "%s" not found in Active Circuit Topology.', [S], 5003);
         if assigned(elem) then
-            DSSPrime.ActiveCircuit.ActiveCktElement := elem;
+            DSSPrime.ActiveCircuit.SetActiveCktElement(elem);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -399,7 +399,7 @@ begin
     elm := node.FirstShuntObject;
     if assigned(elm) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := elm;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(elm);
         Result := 1;
     end;
 end;
@@ -416,7 +416,7 @@ begin
     elm := node.NextShuntObject();
     if assigned(elm) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := elm;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(elm);
         Result := 1;
     end;
 end;
@@ -478,7 +478,7 @@ begin
         begin
             if (AnsiCompareText(B, S) = 0) then
             begin
-                DSSPrime.ActiveCircuit.ActiveCktElement := pdElem;
+                DSSPrime.ActiveCircuit.SetActiveCktElement(pdElem);
                 Found := TRUE;
                 Break;
             end;
@@ -490,7 +490,7 @@ begin
     begin
         DoSimpleMsg(DSSPrime, 'Bus "%s" not found in Active Circuit Topology.', [S], 5003);
         if assigned(elem) then
-            DSSPrime.ActiveCircuit.ActiveCktElement := elem;
+            DSSPrime.ActiveCircuit.SetActiveCktElement(elem);
     end;
 end;
 //------------------------------------------------------------------------------

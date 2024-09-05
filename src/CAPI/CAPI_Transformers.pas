@@ -398,7 +398,7 @@ begin
 
     if DSSPrime.TransformerClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.TransformerClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.TransformerClass.ElementList.Active);
         DSSPrime.ActiveCircuit.Transformers.Get(DSSPrime.TransformerClass.Active);
     end
     else
@@ -660,7 +660,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Transformer', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pTransformer;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pTransformer);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Pointer(): Pointer; CDECL;

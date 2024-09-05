@@ -403,7 +403,7 @@ begin
         Exit;
     if DSSPrime.SensorClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.SensorClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.SensorClass.ElementList.Active);
         DSSPrime.ActiveCircuit.Sensors.Get(DSSPrime.SensorClass.Active);
     end
     else
@@ -465,7 +465,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Sensor', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pSensor;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pSensor);
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Get_AllocationFactor(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;

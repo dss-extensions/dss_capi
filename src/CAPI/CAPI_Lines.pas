@@ -312,7 +312,7 @@ begin
         Exit;
     if DSSPrime.LineClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.LineClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.LineClass.ElementList.Active);
         DSSPrime.ActiveCircuit.Lines.Get(DSSPrime.LineClass.Active);
     end
     else
@@ -844,7 +844,7 @@ begin
         
     if (other.Enabled and ((other.DssObjtype and CLASSMASK) = LINE_ELEMENT)) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := other;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(other);
         if ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.ActiveLine)) = 0) then
             DSSPrime.ActiveCircuit.Lines.Get(other.ClassIndex);
 
@@ -927,7 +927,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Line', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pLine;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pLine);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_SeasonRating(): Double; CDECL;

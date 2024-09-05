@@ -154,7 +154,7 @@ begin
         Exit;
 
     pLineGeometry.DataChanged := TRUE;
-    pLineGeometry.Nconds := Value;
+    pLineGeometry.SetNConds(Value);
 end;
 //------------------------------------------------------------------------------
 function LineGeometries_Get_Phases(): Integer; CDECL;

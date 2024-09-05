@@ -78,7 +78,6 @@ type
         BusAdjPC, BusAdjPD: TAdjArray; // bus adjacency lists of PD and PC elements
 
         function AddBus(const BusName: String; NNodes: Integer): Integer;
-        procedure Set_ActiveCktElement(Value: TDSSCktElement);
         procedure Set_BusNameRedefined(Value: Boolean);
         procedure Set_LoadMultiplier(Value: Double);
 
@@ -90,7 +89,6 @@ type
         function SaveVoltageBases(circF: TStream; saveFlags: DSSSaveFlags): Boolean;
 
         procedure ReallocDeviceList;
-        procedure Set_CaseName(const Value: String);
     PUBLIC
         DSS: TDSSContext;
         MaxBusNameLength, MaxDeviceNameLength: Integer;
@@ -334,9 +332,13 @@ type
         function ReportPCEatBus(BusName: String): String;
         function ReportPDEatBus(BusName: String): String;
 
+        function CaseName(): String;
+        procedure SetCaseName(const Value: String);
+
         property Name: String READ LocalName;
-        property CaseName: String READ FCaseName WRITE Set_CaseName;
-        property ActiveCktElement: TDSSCktElement READ FActiveCktElement WRITE Set_ActiveCktElement;
+        function ActiveCktElement(): TDSSCktElement;
+        procedure SetActiveCktElement(Value: TDSSCktElement);
+
         function Losses(): Complex; // Total Circuit PD Element losses
         property BusNameRedefined: Boolean READ FBusNameRedefined WRITE Set_BusNameRedefined;
         property LoadMultiplier: Double READ FLoadMultiplier WRITE Set_LoadMultiplier;
@@ -384,11 +386,11 @@ begin
 
     LocalName := AnsiLowerCase(aName);
 
-    CaseName := aName;  // Default case name to circuitname
+    SetCaseName(aName);  // Default case name to circuitname
                         // Sets CircuitName_
 
     Fundamental := DSS.DefaultBaseFreq;
-    ActiveCktElement := NIL;
+    SetActiveCktElement(NIL);
     ActiveBusIndex := 1;    // Always a bus
 
      // initial allocations increased from 100 to 1000 to speed things up
@@ -842,7 +844,7 @@ begin
     F := DSS.GetOutputStreamEx(Path, fmOpenReadWrite);
     F.Seek(0, soEnd);
     SetElementActive(LinkBranch);
-    BusName := ActiveCktElement.GetBus(BusNum);
+    BusName := FActiveCktElement.GetBus(BusNum);
     jj := ansipos('.', BusName);     // removes the dot
     if jj > 0 then
         BusName := BusName.Substring(0, jj - 1);
@@ -1162,7 +1164,7 @@ begin
                     if myClass <> 'Transformer' then
                     begin
                         DSS.ActiveCircuit.SetElementActive(MyName);
-                        myIntVar := DSS.ActiveCircuit.ActiveCktElement.NPhases;
+                        myIntVar := DSS.ActiveCircuit.ActiveCktElement().NPhases;
                     end
                     else
                         myIntVar := 1;
@@ -1325,7 +1327,7 @@ begin
         begin
             myIdx := DSS.ActiveDSSClass.First();
             repeat
-                ActiveCktElement.Enabled := FALSE;
+                FActiveCktElement.Enabled := FALSE;
                 myIdx := DSS.ActiveDSSClass.Next();
             until (myIdx <= 0);
         end;
@@ -1961,9 +1963,9 @@ begin
     // Trap error in bus name
     if Length(BusName) = 0 then
     begin  // Error in busname
-        DoErrorMsg(DSS, 'TDSSCircuit.AddBus', 'BusName for Object "' + ActiveCktElement.Name + '" is null.',
+        DoErrorMsg(DSS, 'TDSSCircuit.AddBus', 'BusName for Object "' + FActiveCktElement.Name + '" is null.',
             'Error in definition of object.', 424);
-        for i := 1 to ActiveCktElement.NConds do
+        for i := 1 to FActiveCktElement.NConds do
             NodeBuffer[i] := 0;
         Result := 0;
         Exit;
@@ -2035,7 +2037,7 @@ begin
             DSS.ActiveDSSClass := DSS.DSSClassList.Get(DevClassIndex);
             DSS.LastClassReferenced := DevClassIndex;
             Result := TDSSCktElement(element).Handle;
-            ActiveCktElement := CktElements.Get(Result);
+            SetActiveCktElement(CktElements.Get(Result));
         end;
     end
     else
@@ -2048,7 +2050,7 @@ begin
                 DSS.ActiveDSSClass := DSS.DSSClassList.Get(DevClassIndex);
                 DSS.LastClassReferenced := DevClassIndex;
                 Result := Devindex;
-                ActiveCktElement := CktElements.Get(Result);
+                SetActiveCktElement(CktElements.Get(Result));
                 break;
             end;
             Devindex := Devicelist.FindNext;   // Could be duplicates
@@ -2056,7 +2058,12 @@ begin
     end;
 end;
 
-procedure TDSSCircuit.Set_ActiveCktElement(Value: TDSSCktElement);
+function TDSSCircuit.ActiveCktElement(): TDSSCktElement;
+begin
+    result := FActiveCktElement;
+end;
+
+procedure TDSSCircuit.SetActiveCktElement(Value: TDSSCktElement);
 begin
     FActiveCktElement := Value;
     DSS.ActiveDSSObject := Value;
@@ -2303,8 +2310,8 @@ begin
     for i := 1 to NumDevices do
     begin
         FSWrite(F, '  ', Pad(DeviceList.NameOfIndex(i), 12));
-        ActiveCktElement := CktElements.Get(i);
-        if not ActiveCktElement.Enabled then
+        SetActiveCktElement(CktElements.Get(i));
+        if not FActiveCktElement.Enabled then
             FSWrite(F, '  DISABLED');
         FSWriteln(F);
     end;
@@ -3006,7 +3013,12 @@ begin
     Devicelist := TempList;
 end;
 
-procedure TDSSCircuit.Set_CaseName(const Value: String);
+function TDSSCircuit.CaseName(): String;
+begin
+    result := FCaseName;
+end;
+
+procedure TDSSCircuit.SetCaseName(const Value: String);
 begin
     FCaseName := Value;
     DSS.CircuitName_ := Value + '_';

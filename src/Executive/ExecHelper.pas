@@ -717,7 +717,7 @@ begin
 
                     else
                     begin   // for circuit types, set DSS.ActiveCircuit Element, too
-                        ActiveCktElement := DSS.ActiveDSSClass.GetActiveObj;
+                        SetActiveCktElement(DSS.ActiveDSSClass.GetActiveObj());
                    // Now check for active terminal designation
                         DSS.Parser.NextParam;
                         Param := DSS.Parser.MakeString();
@@ -725,7 +725,7 @@ begin
                             ActiveCktElement.ActiveTerminalIdx := DSS.Parser.MakeInteger()
                         else
                             ActiveCktElement.ActiveTerminalIdx := 1;  {default to 1}
-                        with ActiveCktElement do
+                        with ActiveCktElement() do
                             SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx)));
                     end;
                     end;
@@ -1090,7 +1090,7 @@ begin
                             DoSimpleMsg(DSS, 'Error in SetActiveCktElement: Object not a circuit Element. %s', [CRLF + DSS.Parser.CmdString()], 254);
                     else
                     begin
-                        ActiveCktElement := DSS.ActiveDSSClass.GetActiveObj;
+                        SetActiveCktElement(DSS.ActiveDSSClass.GetActiveObj());
                         Result := 1;
                     end;
                     end;
@@ -1478,7 +1478,7 @@ begin
         begin
             ActiveCktElement.ActiveTerminalIdx := Terminal;
             ActiveCktElement.SetConductorClosed(Conductor, FALSE);
-            with ActiveCktElement do
+            with ActiveCktElement() do
                 SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx)));
         end;
     end
@@ -1511,7 +1511,7 @@ begin
         begin
             ActiveCktElement.ActiveTerminalIdx := Terminal;
             ActiveCktElement.SetConductorClosed(Conductor, TRUE);
-            with ActiveCktElement do
+            with ActiveCktElement() do
                 SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx)));
         end;
 
@@ -2126,7 +2126,7 @@ begin
     Result := 0;
 
     if DSS.ActiveCircuit <> NIL then
-        with DSS.ActiveCircuit.ActiveCktElement do
+        with DSS.ActiveCircuit.ActiveCktElement() do
         begin
             NValues := NConds * Nterms;
             DSS.GlobalResult := '';
@@ -2158,7 +2158,7 @@ begin
             SetObject(DSS, CktElementName);
 
         if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
-            with DSS.ActiveCircuit.ActiveCktElement do
+            with DSS.ActiveCircuit.ActiveCktElement() do
             begin
                 NValues := NConds * Nterms;
                 DSS.GlobalResult := '';
@@ -2181,7 +2181,7 @@ begin
     if DSS.ActiveCircuit <> NIL then
         with DSS.ActiveCircuit do
         begin
-            if ActiveCktElement <> NIL then
+            if ActiveCktElement() <> NIL then
             begin
                 DSS.GlobalResult := '';
                 LossValue := ActiveCktElement.Losses();
@@ -2205,7 +2205,7 @@ begin
 
     if DSS.ActiveCircuit <> NIL then
 
-        with DSS.ActiveCircuit.ActiveCktElement do
+        with DSS.ActiveCircuit.ActiveCktElement() do
         begin
             NValues := NPhases;
             cBuffer := Allocmem(sizeof(Complex) * NValues);
@@ -2239,7 +2239,7 @@ begin
 
     Result := 0;
     if DSS.ActiveCircuit <> NIL then
-        with DSS.ActiveCircuit.ActiveCktElement do
+        with DSS.ActiveCircuit.ActiveCktElement() do
         begin
             NValues := NConds * Nterms;
             DSS.GlobalResult := '';
@@ -2287,8 +2287,8 @@ begin
     if DSS.ActiveCircuit <> NIL then
         with DSS.ActiveCircuit do
         begin
-            if ActiveCktElement <> NIL then
-                with ActiveCktElement do
+            if ActiveCktElement() <> NIL then
+                with ActiveCktElement() do
                 begin
                     DSS.GlobalResult := '';
                     if Nphases < 3 then
@@ -2336,8 +2336,8 @@ begin
     if DSS.ActiveCircuit <> NIL then
         with DSS.ActiveCircuit do
         begin
-            if ActiveCktElement <> NIL then
-                with ActiveCktElement do
+            if ActiveCktElement() <> NIL then
+                with ActiveCktElement() do
                 begin
                     DSS.GlobalResult := '';
                     if NPhases < 3 then
@@ -2393,8 +2393,8 @@ begin
     if DSS.ActiveCircuit <> NIL then
         with DSS.ActiveCircuit do
         begin
-            if ActiveCktElement <> NIL then
-                with ActiveCktElement do
+            if ActiveCktElement() <> NIL then
+                with ActiveCktElement() do
                     if Enabled then
                     begin
                         try
@@ -2872,7 +2872,7 @@ begin
          // Check if PCElement
             case (ActiveCktElement.DSSObjType and BASECLASSMASK) of
                 PC_ELEMENT:
-                    with ActiveCktElement as TPCElement do
+                    with ActiveCktElement() as TPCElement do
                     begin
                         for i := 1 to NumVariables do
                             AppendGlobalResult(DSS, Format('%-.6g', [GetVariable(i)]));
@@ -2902,7 +2902,7 @@ begin
 
     else
     begin
-        PCElem := DSS.ActiveCircuit.ActiveCktElement as TPCElement;
+        PCElem := DSS.ActiveCircuit.ActiveCktElement() as TPCElement;
 
         // Get next parameter on command line
 
@@ -2949,7 +2949,7 @@ begin
          {Check if PCElement}
             case (ActiveCktElement.DSSObjType and BASECLASSMASK) of
                 PC_ELEMENT:
-                    with (ActiveCktElement as TPCElement) do
+                    with (ActiveCktElement() as TPCElement) do
                     begin
                         for i := 1 to NumVariables do
                             AppendGlobalResult(DSS, VariableName(i));
@@ -5025,7 +5025,7 @@ begin
 
     // Set CktElement active
     SetObject(DSS, FelementName);
-    if not (DSS.ActiveCircuit.ActiveCktElement is TPDElement) then
+    if not (DSS.ActiveCircuit.ActiveCktElement() is TPDElement) then
     begin
         DoSimpleMsg(DSS,
             Format('Error: Element "%s" is not a power delivery element (PDElement)', [FelementName]),
@@ -5035,7 +5035,7 @@ begin
     end;
 
     // Get Energymeter associated with this element.
-    pPDElem := DSS.ActiveCircuit.ActiveCktElement as TPDElement;
+    pPDElem := DSS.ActiveCircuit.ActiveCktElement() as TPDElement;
     if pPDElem.SensorObj = NIL then
     begin
         DoSimpleMsg(DSS,
@@ -5048,7 +5048,7 @@ begin
     FMeterName := pPDElem.SensorObj.FullName;
     SetObject(DSS, FMeterName);
 
-    if not (DSS.ActiveCircuit.ActiveCktElement is TEnergyMeterObj) then
+    if not (DSS.ActiveCircuit.ActiveCktElement() is TEnergyMeterObj) then
     begin
         DoSimpleMsg(DSS,
             'Error: The Sensor Object for "%s" is not an EnergyMeter object', [FelementName],
@@ -5057,7 +5057,7 @@ begin
         Exit;
     end;
 
-    pMeter := DSS.ActiveCircuit.ActiveCktElement as TEnergyMeterObj;
+    pMeter := DSS.ActiveCircuit.ActiveCktElement() as TEnergyMeterObj;
     // in ReduceAlgs
     DoRemoveBranches(DSS, pMeter.BranchList, pPDelem, FKeepLoad, FEditString);
 end;

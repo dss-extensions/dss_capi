@@ -475,7 +475,7 @@ var
 begin
     Obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.ActiveCktElement := Obj;
+        ActiveCircuit.SetActiveCktElement(Obj);
     Obj.ClassIndex := AddObjectToList(Obj, Activate);
     Result := Obj;
 end;
@@ -1901,7 +1901,7 @@ begin
         PrpSequence[(NumPropsThisClass + ord(TPDElementProp.EmergAmps))] := 0;
     end;
 
-    FNPhases := LineGeometryObj.Nconds;
+    FNPhases := LineGeometryObj.NConds();
     Nconds := FNPhases;  // Force Reallocation of terminal info
     Yorder := Fnconds * Fnterms;
     YPrimInvalid := TRUE;       // Force Rebuild of Y matrix

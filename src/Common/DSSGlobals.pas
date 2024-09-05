@@ -343,7 +343,7 @@ begin
     if DSS.ActiveDSSObject.DSSObjType <> DSS_OBJECT then
     begin
         // for circuit types, set ActiveCircuit Element, too
-        DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveDSSClass.GetActiveObj;
+        DSS.ActiveCircuit.SetActiveCktElement(DSS.ActiveDSSClass.GetActiveObj);
     end;
     // else do nothing for general DSS object
 end;

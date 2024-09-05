@@ -165,7 +165,7 @@ begin
         Exit;
     if DSSPrime.RecloserClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.RecloserClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.RecloserClass.ElementList.Active);
         DSSPrime.ActiveCircuit.Reclosers.Get(DSSPrime.RecloserClass.Active);
     end
     else
@@ -385,7 +385,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Recloser', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pRecloser;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pRecloser);
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Reset(); CDECL;

@@ -151,7 +151,7 @@ begin
         Exit;
     if DSSPrime.RelayClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.RelayClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.RelayClass.ElementList.Active);
         DSSPrime.ActiveCircuit.Relays.Get(DSSPrime.RelayClass.Active);
     end
     else
@@ -243,7 +243,7 @@ begin
     begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Relay', Value], 656565);
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pRelay;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pRelay);
 end;
 //------------------------------------------------------------------------------
 procedure Relays_Close(); CDECL;

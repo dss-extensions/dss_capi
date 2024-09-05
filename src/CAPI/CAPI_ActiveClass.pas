@@ -97,7 +97,7 @@ begin
         Exit;
 
     if pelem is TDSSCktElement then
-        DSSPrime.ActiveCircuit.ActiveCktElement := TDSSCktElement(pelem)  // sets DSSPrime.ActiveDSSObject
+        DSSPrime.ActiveCircuit.SetActiveCktElement(TDSSCktElement(pelem))  // sets DSSPrime.ActiveDSSObject
     else
         DSSPrime.ActiveDSSObject := pelem;
 end;

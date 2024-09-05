@@ -204,7 +204,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Load', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pLoad;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pLoad);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Name(): PAnsiChar; CDECL;
@@ -224,7 +224,7 @@ begin
         Exit;
     if DSSPrime.LoadClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.LoadClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.LoadClass.ElementList.Active);
         DSSPrime.ActiveCircuit.Loads.Get(DSSPrime.LoadClass.Active);
     end
     else

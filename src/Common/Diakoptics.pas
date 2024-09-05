@@ -373,8 +373,8 @@ begin
             inc(PLinks);
             idx := SetElementActive(String(PLinks^));
 
-            if ActiveCktElement <> NIL then
-                with ActiveCktElement do
+            if ActiveCktElement() <> NIL then
+                with ActiveCktElement() do
                 begin
                     NValues := SQR(Yorder);
                     cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values

@@ -199,7 +199,7 @@ begin
         Exit;
     if DSSPrime.WindGenClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.WindGenClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.WindGenClass.ElementList.Active);
         DSSPrime.WindGenClass.ElementList.Get(DSSPrime.WindGenClass.Active);
     end
     else
@@ -236,7 +236,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['WindGen', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(elem);
 end;
 //------------------------------------------------------------------------------
 function WindGens_Get_Pointer(): Pointer; CDECL; // API Extension

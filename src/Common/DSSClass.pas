@@ -1599,7 +1599,7 @@ BEGIN
         // Make sure Active Ckt Element agrees if is a ckt element
         // So COM interface will work
         if DSS.ActiveDSSObject is TDSSCktElement then
-            ActiveCircuit.ActiveCktElement := TDSSCktElement(DSS.ActiveDSSObject);
+            ActiveCircuit.SetActiveCktElement(TDSSCktElement(DSS.ActiveDSSObject));
     End;
 END;
 
@@ -2065,7 +2065,7 @@ begin
         // Make sure Active Ckt Element agrees if is a ckt element
         // So COM interface will work
         if DSS.ActiveDSSObject is TDSSCktElement then
-            ActiveCircuit.ActiveCktElement := TDSSCktElement(DSS.ActiveDSSObject);
+            ActiveCircuit.SetActiveCktElement(TDSSCktElement(DSS.ActiveDSSObject));
         Result := ActiveElement;
     End;
 end;
@@ -2081,7 +2081,7 @@ begin
         // Make sure Active Ckt Element agrees if is a ckt element
         // So COM interface will work
         if DSS.ActiveDSSObject is TDSSCktElement then
-            ActiveCircuit.ActiveCktElement := TDSSCktElement(DSS.ActiveDSSObject);
+            ActiveCircuit.SetActiveCktElement(TDSSCktElement(DSS.ActiveDSSObject));
         Result := ActiveElement;
     End;
 end;

@@ -565,8 +565,8 @@ begin
                 end;
             52:
                 with DSS.ActiveCircuit do
-                    if ActiveCktElement <> NIL then
-                        with ActiveCktElement do
+                    if ActiveCktElement() <> NIL then
+                        with ActiveCktElement() do
                         begin
                             ActiveTerminalIdx := DSS.Parser.MakeInteger();
                             SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx)));   // bus connected to terminal
@@ -598,7 +598,7 @@ begin
             62:
                 DSS.EnergyMeterClass.DI_Verbose := InterpretYesNo(Param);
             63:
-                DSS.ActiveCircuit.CaseName := DSS.Parser.MakeString();
+                DSS.ActiveCircuit.SetCaseName(DSS.Parser.MakeString());
             64:
                 DSS.ActiveCircuit.NodeMarkerCode := DSS.Parser.MakeInteger();
             65:
@@ -777,12 +777,12 @@ begin
                     Exit;
                 end;
 
-                if not (DSS.ActiveCircuit.ActiveCktElement is TPCElement) then
+                if not (DSS.ActiveCircuit.ActiveCktElement() is TPCElement) then
                 begin
                     DoSimpleMsg(DSS, 'Object "%s" is not a valid PC element.', [DSS.ActiveCircuit.ActiveCktElement.FullName], 7103);
                     Exit;
                 end;
-                pce := DSS.ActiveCircuit.ActiveCktElement as TPCElement;
+                pce := DSS.ActiveCircuit.ActiveCktElement() as TPCElement;
 
                 if pce.NumVariables() = 0 then
                 begin
@@ -1010,7 +1010,7 @@ begin
                 62:
                     AppendGlobalResult(DSS, DSS.EnergyMeterClass.DI_Verbose);
                 63:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.CaseName);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.CaseName());
                 64:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.NodeMarkerCode);
                 65:
@@ -1187,12 +1187,12 @@ begin
                         Exit;
                     end;
 
-                    if not (DSS.ActiveCircuit.ActiveCktElement is TPCElement) then
+                    if not (DSS.ActiveCircuit.ActiveCktElement() is TPCElement) then
                     begin
                         DoSimpleMsg(DSS, 'Object "%s" is not a valid PC element.', [DSS.ActiveCircuit.ActiveCktElement.FullName], 7103);
                         Exit;
                     end;
-                    pce := DSS.ActiveCircuit.ActiveCktElement as TPCElement;
+                    pce := DSS.ActiveCircuit.ActiveCktElement() as TPCElement;
 
                     if pce.NumVariables() = 0 then
                     begin

@@ -197,7 +197,7 @@ var
     elem: TDSSCktElement;
     circ: TDSSCircuit;
 begin
-    if DSSPrime.ActiveCircuit.ActiveCktElement = NIL then
+    if DSSPrime.ActiveCircuit.ActiveCktElement() = NIL then
         Exit;
     elem := DSSPrime.ActiveCircuit.ActiveCktElement;
     circ := DSSPrime.ActiveCircuit;
@@ -212,7 +212,7 @@ var
     i: Integer;
     elem: TDSSCktElement;
 begin
-    if DSSPrime.ActiveCircuit.ActiveCktElement = NIL then
+    if DSSPrime.ActiveCircuit.ActiveCktElement() = NIL then
         Exit;
     elem := DSSPrime.ActiveCircuit.ActiveCktElement;
     elem.ComputeIterminal();
@@ -227,7 +227,7 @@ begin
     TotalLosses := 0;
     LoadLosses := 0;
     NoLoadLosses := 0;
-    if DSSPrime.ActiveCircuit.ActiveCktElement = NIL then
+    if DSSPrime.ActiveCircuit.ActiveCktElement() = NIL then
         Exit;
 
     DSSPrime.ActiveCircuit.ActiveCktElement.GetLosses(TotalLosses, LoadLosses, NoLoadLosses);
@@ -237,7 +237,7 @@ end;
 procedure GetActiveElementPowerCallBack(Terminal: Integer; var TotalPower: Complex); STDCALL;
 begin
     TotalPower := 0;
-    if DSSPrime.ActiveCircuit.ActiveCktElement = NIL then
+    if DSSPrime.ActiveCircuit.ActiveCktElement() = NIL then
         Exit;
     //----ActiveTerminalIdx := Terminal;
     TotalPower := DSSPrime.ActiveCircuit.ActiveCktElement.Power(Terminal);
@@ -252,12 +252,12 @@ var
 begin
     NumCust := 0;
     TotalCust := 0;
-    if DSSPrime.ActiveCircuit.ActiveCktElement = NIL then
+    if DSSPrime.ActiveCircuit.ActiveCktElement() = NIL then
         Exit;
 
-    if DSSPrime.ActiveCircuit.ActiveCktElement is TPDElement then
+    if DSSPrime.ActiveCircuit.ActiveCktElement() is TPDElement then
     begin
-        pDElem := DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement;
+        pDElem := DSSPrime.ActiveCircuit.ActiveCktElement() as TPDElement;
         NumCust := pDElem.BranchNumCustomers;
         TotalCust := pDElem.BranchTotalCustomers;
     end;

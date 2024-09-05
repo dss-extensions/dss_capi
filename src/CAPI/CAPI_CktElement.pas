@@ -1164,7 +1164,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Obj_Circuit_Set_ActiveCktElement(obj: TDSSCktElement); CDECL;
 begin
-    obj.DSS.ActiveCircuit.ActiveCktElement := obj;
+    obj.DSS.ActiveCircuit.SetActiveCktElement(obj);
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_Pointer(): Pointer; CDECL;

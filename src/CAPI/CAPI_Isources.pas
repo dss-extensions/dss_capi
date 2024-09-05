@@ -111,7 +111,7 @@ begin
 
     if DSSPrime.IsourceClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.IsourceClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.IsourceClass.ElementList.Active);
     end
     else
     begin
@@ -196,7 +196,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['ISource', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pISource;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pISource);
 end;
 //------------------------------------------------------------------------------
 function ISources_Get_Pointer(): Pointer; CDECL;

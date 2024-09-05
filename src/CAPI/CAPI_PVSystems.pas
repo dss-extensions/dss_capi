@@ -189,7 +189,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['PVSystem', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pPVSystem;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pPVSystem);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Name(): PAnsiChar; CDECL;
@@ -209,7 +209,7 @@ begin
 
     if DSSPrime.PVSystemClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.PVSystemClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.PVSystemClass.ElementList.Active);
         DSSPrime.ActiveCircuit.PVSystems.Get(DSSPrime.PVSystemClass.Active);
     end
     else

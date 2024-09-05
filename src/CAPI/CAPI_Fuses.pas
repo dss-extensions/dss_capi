@@ -159,7 +159,7 @@ begin
         Exit;
     if DSSPrime.FuseClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.FuseClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.FuseClass.ElementList.Active);
         DSSPrime.ActiveCircuit.Fuses.Get(DSSPrime.FuseClass.Active);
     end
     else
@@ -393,7 +393,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Fuse', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(elem);
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_NumPhases(): Integer; CDECL;

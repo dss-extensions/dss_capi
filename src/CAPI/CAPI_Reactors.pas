@@ -139,7 +139,7 @@ begin
         Exit;
     if DSSPrime.ReactorClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.ReactorClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.ReactorClass.ElementList.Active);
         DSSPrime.ActiveCircuit.Reactors.Get(DSSPrime.ReactorClass.Active);
     end
     else
@@ -700,7 +700,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Reactor', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pReactor;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pReactor);
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Pointer(): Pointer; CDECL;

@@ -155,7 +155,7 @@ begin
         Exit;
     if DSSPrime.StorageClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.StorageClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.StorageClass.ElementList.Active);
         DSSPrime.ActiveCircuit.StorageElements.Get(DSSPrime.StorageClass.Active);
     end
     else
@@ -184,7 +184,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Storage', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pStorage;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pStorage);
 end;
 //------------------------------------------------------------------------------
 procedure Storages_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;

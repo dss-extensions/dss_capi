@@ -213,7 +213,7 @@ begin
 
     if DSSPrime.CapacitorClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.CapacitorClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.CapacitorClass.ElementList.Active);
         DSSPrime.ActiveCircuit.ShuntCapacitors.Get(DSSPrime.CapacitorClass.Active);
     end
     else
@@ -369,7 +369,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid Capacitor index: "%d".', [Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pCapacitor;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pCapacitor);
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_Pointer(): Pointer; CDECL;

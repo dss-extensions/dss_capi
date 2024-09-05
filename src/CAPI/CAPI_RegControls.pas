@@ -431,7 +431,7 @@ begin
         Exit;
     if DSSPrime.RegControlClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.RegControlClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.RegControlClass.ElementList.Active);
         DSSPrime.ActiveCircuit.RegControls.Get(DSSPrime.RegControlClass.Active);
     end
     else
@@ -532,7 +532,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['RegControl', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pRegControl;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pRegControl);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_Pointer(): Pointer; CDECL;

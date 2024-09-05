@@ -115,7 +115,7 @@ begin
     if SetActive_ then
     begin
         //TODO: e.g. DSS.ActiveCapControlObj := Obj; -- if ever required for all elements
-        ActiveCircuit.ActiveCktElement := Obj;
+        ActiveCircuit.SetActiveCktElement(Obj);
     end;
     Result := Obj;
 end;

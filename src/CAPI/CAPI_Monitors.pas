@@ -202,7 +202,7 @@ begin
         Exit;
     if DSSPrime.MonitorClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.MonitorClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.MonitorClass.ElementList.Active);
         DSSPrime.ActiveCircuit.Monitors.Get(DSSPrime.MonitorClass.Active);
     end
     else
@@ -492,7 +492,7 @@ begin
         Exit;
     end;
 
-    DSSPrime.ActiveCircuit.ActiveCktElement := pMonitor;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pMonitor);
 end;
 //------------------------------------------------------------------------------
 function Monitors_Get_Pointer(): Pointer; CDECL;

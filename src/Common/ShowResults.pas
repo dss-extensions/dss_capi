@@ -3492,9 +3492,9 @@ var
     i, j: Integer;
 
 begin
-    if (DSS.ActiveCircuit = NIL) or (DSS.ActiveCircuit.ActiveCktElement = NIL) then
+    if (DSS.ActiveCircuit = NIL) or (DSS.ActiveCircuit.ActiveCktElement() = NIL) then
         Exit;
-    with DSS.ActiveCircuit, ActiveCktElement do
+    with DSS.ActiveCircuit, ActiveCktElement() do
     try
         F := TBufferedFileStream.Create(FileNm, fmCreate);
         FSWriteln(F, 'Yprim of active circuit element: ', FullName);

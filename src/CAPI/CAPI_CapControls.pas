@@ -369,7 +369,7 @@ begin
 
     if DSSPrime.CapControlClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.CapControlClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.CapControlClass.ElementList.Active);
         DSSPrime.ActiveCircuit.CapControls.Get(DSSPrime.CapControlClass.Active);
     end
     else
@@ -444,7 +444,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['CapControl', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pCapControl;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pCapControl);
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Pointer(): Pointer; CDECL;

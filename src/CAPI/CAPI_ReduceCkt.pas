@@ -158,7 +158,7 @@ begin
     // element was found (0-based array)
     DoRemoveBranches(DSSPrime, 
         DSSPrime.ActiveEnergyMeterObj.BranchList, 
-        DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement, 
+        DSSPrime.ActiveCircuit.ActiveCktElement() as TPDElement, 
         DSSPrime.ActiveCircuit.ReduceLateralsKeepLoad, 
         DSSPrime.ReduceEditString
     );

@@ -84,7 +84,7 @@ begin
     if InvalidCircuit(DSS) then
         Exit;
     
-    if DSS.ActiveCircuit.ActiveCktElement = NIL then 
+    if DSS.ActiveCircuit.ActiveCktElement() = NIL then 
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
@@ -93,7 +93,7 @@ begin
         Exit;
     end;
 
-    if not (DSS.ActiveCircuit.ActiveCktElement is TPDElement) then
+    if not (DSS.ActiveCircuit.ActiveCktElement() is TPDElement) then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
@@ -102,7 +102,7 @@ begin
         Exit;
     end;
         
-    obj := DSS.ActiveCircuit.ActiveCktElement as TPDElement;
+    obj := DSS.ActiveCircuit.ActiveCktElement() as TPDElement;
     Result := True;
 end;
 //------------------------------------------------------------------------------
@@ -205,7 +205,7 @@ begin
     begin
         if (AnsiCompareText(TestString, elem.FullName) = 0) then
         begin
-            DSSPrime.ActiveCircuit.ActiveCktElement := elem;
+            DSSPrime.ActiveCircuit.SetActiveCktElement(elem);
             break;
         end;
     end;
@@ -248,9 +248,9 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    if elem.ParentPDElement <> NIL then    // leaves ActiveCktElement as is
+    if elem.ParentPDElement <> NIL then    // leaves ActiveCktElement() as is
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := elem.ParentPDElement;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(elem.ParentPDElement);
         Result := DSSPrime.ActiveCircuit.ActivecktElement.ClassIndex;
     end;
 end;
@@ -273,9 +273,9 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
         
-    if DSSPrime.ActiveCircuit.ActiveCktElement is TPDElement then
+    if DSSPrime.ActiveCircuit.ActiveCktElement() is TPDElement then
     begin
-        elem := DSSPrime.ActiveCircuit.ActiveCktelement as TPDElement;
+        elem := DSSPrime.ActiveCircuit.ActiveCktElement() as TPDElement;
         Result := elem.BranchTotalCustomers;
     end;
 end;

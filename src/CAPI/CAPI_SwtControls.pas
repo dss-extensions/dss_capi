@@ -218,7 +218,7 @@ begin
 
     if DSSPrime.SwtControlClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.SwtControlClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.SwtControlClass.ElementList.Active);
         DSSPrime.ActiveCircuit.SwtControls.Get(DSSPrime.SwtControlClass.Active);
     end
     else
@@ -336,7 +336,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['SwtControl', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pSwtControl;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pSwtControl);
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_Pointer(): Pointer; CDECL;

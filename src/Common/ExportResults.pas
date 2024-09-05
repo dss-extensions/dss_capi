@@ -737,7 +737,7 @@ begin
 
 
         if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
-            with DSS.ActiveCircuit.ActiveCktElement do
+            with DSS.ActiveCircuit.ActiveCktElement() do
             begin
                 FSWrite(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
                 NValues := NConds * Nterms;
@@ -816,7 +816,7 @@ begin
         SetObject(DSS, CktElementName);
 
         if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
-            with DSS.ActiveCircuit.ActiveCktElement do
+            with DSS.ActiveCircuit.ActiveCktElement() do
             begin
                 ComputeIterminal;
                 FSWrite(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
@@ -897,7 +897,7 @@ begin
         SetObject(DSS, CktElementName);
 
         if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
-            with DSS.ActiveCircuit.ActiveCktElement do
+            with DSS.ActiveCircuit.ActiveCktElement() do
             begin
                 ComputeVterminal;
                 FSWrite(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
@@ -979,7 +979,7 @@ begin
         SetObject(DSS, CktElementName);
 
         if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
-            with DSS.ActiveCircuit.ActiveCktElement do
+            with DSS.ActiveCircuit.ActiveCktElement() do
             begin
                 ComputeVterminal;
                 ComputeIterminal;
@@ -2697,11 +2697,11 @@ begin
         begin
             for k := 1 to NumDevices do
             begin
-                ActiveCktElement := CktElements.Get(k);
+                SetActiveCktElement(CktElements.Get(k));
                 if ActiveCktElement.Enabled then
                 begin
-                    if (ActiveCktElement is TPDElement) or (ActiveCktElement is TPCElement) then
-                        with ActiveCktElement do
+                    if (ActiveCktElement() is TPDElement) or (ActiveCktElement() is TPCElement) then
+                        with ActiveCktElement() do
                         begin
                             FSWriteln(F, ParentClass.Name, '.', AnsiUpperCase(Name));
                             cValues := GetYprimValues(ALL_YPRIM);
@@ -3017,7 +3017,7 @@ begin
 
         FSWrite(F, Format('"%s", ', [DateTimeToStr(Now)]));
         if DSS.ActiveCircuit <> NIL then
-            FSWrite(F, Format('%s, ', [DSS.ActiveCircuit.CaseName]))
+            FSWrite(F, Format('%s, ', [DSS.ActiveCircuit.CaseName()]))
         else
             FSWrite(F, 'NONE, ');
 
@@ -3892,7 +3892,7 @@ begin
                 for i := 1 to SectionCount do
                     with FeederSections^[i] do
                     begin
-                        DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
+                        DSS.ActiveCircuit.SetActiveCktElement(TDSSCktElement(sequenceList.Get(SeqIndex)));
                         FSWriteln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
                             [Name, i, SeqIndex, getOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
                             EncloseQuotes(DSS.ActiveCircuit.ActiveCktElement.FullName)]));
@@ -3909,7 +3909,7 @@ begin
                     for i := 1 to SectionCount do
                         with FeederSections^[i] do
                         begin
-                            DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
+                            DSS.ActiveCircuit.SetActiveCktElement(TDSSCktElement(sequenceList.Get(SeqIndex)));
                             FSWriteln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
                                 [Name, i, SeqIndex, getOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
                                 EncloseQuotes(DSS.ActiveCircuit.ActiveCktElement.FullName)]));

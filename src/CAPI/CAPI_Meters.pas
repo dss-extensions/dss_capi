@@ -249,7 +249,7 @@ begin
         Exit;
     if DSSPrime.EnergyMeterClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.EnergyMeterClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.EnergyMeterClass.ElementList.Active);
         DSSPrime.ActiveCircuit.EnergyMeters.Get(DSSPrime.EnergyMeterClass.Active);
     end
     else
@@ -612,7 +612,7 @@ begin
         Exit;
 
     if (Value > 0) and (Value <= pMeterObj.SequenceList.Count) then
-        DSSPrime.ActiveCircuit.ActiveCktElement := pMeterObj.SequenceList.Get(Value)
+        DSSPrime.ActiveCircuit.SetActiveCktElement(pMeterObj.SequenceList.Get(Value))
     else if DSS_CAPI_EXT_ERRORS then
         DoSimpleMsg(DSSPrime, 'Invalid index for SequenceList: %d. List size is %d.', [Value, pMeterObj.SequenceList.Count], 500501);
 end;
@@ -839,7 +839,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Meter', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pEnergyMeter;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pEnergyMeter);
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_ZonePCE(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;

@@ -197,7 +197,7 @@ begin
         Exit;
     if DSSPrime.GeneratorClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.GeneratorClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.GeneratorClass.ElementList.Active);
         DSSPrime.ActiveCircuit.Generators.Get(DSSPrime.GeneratorClass.Active);
     end
     else
@@ -353,7 +353,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Generator', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pGen;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pGen);
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Model(): Integer; CDECL;

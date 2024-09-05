@@ -364,7 +364,7 @@ var
 begin
     Obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.ActiveCktElement := Obj;
+        ActiveCircuit.SetActiveCktElement(Obj);
     Obj.ClassIndex := AddObjectToList(Obj, Activate);
     Result := Obj;
 end;
@@ -1297,7 +1297,7 @@ begin
             for j := 1 to NPhases do
                 Curr[j] := Curr[j] + ElmCurrents[(myTerm * ActivePCE.NPhases) + j];
         end;
-        ActiveCktElement := ActiveElem;
+        SetActiveCktElement(ActiveElem);
     end;
 end;
 

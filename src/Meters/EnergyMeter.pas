@@ -709,7 +709,7 @@ var
 begin
     Obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.ActiveCktElement := Obj;
+        ActiveCircuit.SetActiveCktElement(Obj);
     Obj.ClassIndex := AddObjectToList(Obj, Activate);
     Result := Obj;
 end;
@@ -856,7 +856,7 @@ begin
 
     if FSaveDemandInterval then
     begin
-        CasePath := DSS.OutputDirectory + DSS.ActiveCircuit.CaseName;
+        CasePath := DSS.OutputDirectory + DSS.ActiveCircuit.CaseName();
         
         //Make directories to save data
         if not DirectoryExists(CasePath) then
@@ -2824,11 +2824,11 @@ begin
     begin
         if CktElem.Enabled Then
         begin
-            ActiveCircuit.ActiveCktElement := cktElem;
+            ActiveCircuit.SetActiveCktElement(cktElem);
             shuntElement := Branchlist.FirstObject;
             while shuntElement <> NIL do
             begin
-                ActiveCircuit.ActiveCktElement := shuntElement;
+                ActiveCircuit.SetActiveCktElement(shuntElement);
                 ZonePCE[numPCE] := shuntElement;
                 numPCE += 1;
                 shuntElement := BranchList.NextObject;

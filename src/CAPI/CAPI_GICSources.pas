@@ -119,7 +119,7 @@ begin
         Exit;
     if DSSPrime.GICsourceClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.GICsourceClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.GICsourceClass.ElementList.Active);
     end
     else
     begin
@@ -349,7 +349,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['GICSource', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(elem);
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Pointer(): Pointer; CDECL;

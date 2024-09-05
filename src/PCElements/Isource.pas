@@ -213,7 +213,7 @@ var
 begin
     Obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.ActiveCktElement := Obj;
+        ActiveCircuit.SetActiveCktElement(Obj);
     Obj.ClassIndex := AddObjectToList(Obj, Activate);
     Result := Obj;
 end;

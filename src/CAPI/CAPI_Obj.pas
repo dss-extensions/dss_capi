@@ -336,7 +336,7 @@ end;
 procedure Obj_Activate(obj: TDSSObject; AllLists: TAltAPIBoolean); CDECL;
 begin
     if obj is TDSSCktElement then
-        obj.DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(obj)
+        obj.DSS.ActiveCircuit.SetActiveCktElement(TDSSCktElement(obj))
     else
         obj.DSS.ActiveDSSObject := obj;
 

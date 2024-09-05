@@ -340,7 +340,7 @@ begin
 
     nameStr := ElementName;
     DSSPrime.ActiveCircuit.SetElementActive(nameStr);
-    if DSSPrime.ActiveCircuit.ActiveCktElement <> NIL then
+    if DSSPrime.ActiveCircuit.ActiveCktElement() <> NIL then
     begin
         DSSPrime.ActiveCircuit.ActiveCktElement.Enabled := FALSE;
         Exit;
@@ -361,7 +361,7 @@ begin
 
     nameStr := ElementName;
     DSSPrime.ActiveCircuit.SetElementActive(nameStr);
-    if DSSPrime.ActiveCircuit.ActiveCktElement <> NIL then
+    if DSSPrime.ActiveCircuit.ActiveCktElement() <> NIL then
     begin
         DSSPrime.ActiveCircuit.ActiveCktElement.Enabled := TRUE;
         Exit;
@@ -913,12 +913,12 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
 
-    if DSSPrime.ActiveCircuit.ActiveCktElement is TPDElement then
+    if DSSPrime.ActiveCircuit.ActiveCktElement() is TPDElement then
     begin
         elem := TPDElement(DSSPrime.ActiveCircuit.ActiveCktElement).ParentPDElement;
         if elem <> NIL then
         begin
-            DSSPrime.ActiveCircuit.ActiveCktElement := elem;
+            DSSPrime.ActiveCircuit.SetActiveCktElement(elem);
             Result := elem.ClassIndex;  // should be >0
         end;
     end;
@@ -1014,7 +1014,7 @@ begin
     end;
 
     if DSSPrime.ActiveCircuit.NumDevices > Value then
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.ActiveCircuit.CktElements.Get(Value + 1)
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.ActiveCircuit.CktElements.Get(Value + 1))
     else
         DoSimpleMsg(DSSPrime, _('Invalid CktElement index'), 5030);
 end;

@@ -112,7 +112,7 @@ begin
         
     if DSSPrime.VsourceClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.VsourceClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.VsourceClass.ElementList.Active);
     end
     else
     begin
@@ -256,7 +256,7 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['VSource', Value], 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pVsource;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pVsource);
 end;
 //------------------------------------------------------------------------------
 function Vsources_Get_Pointer(): Pointer; CDECL;
