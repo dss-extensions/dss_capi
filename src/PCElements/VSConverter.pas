@@ -437,7 +437,7 @@ begin
 
   // obtain the terminal control quantities
     ComputeVterminal;
-    ITerminalUpdated := FALSE;
+    SetITerminalUpdated(FALSE);
     GetTerminalCurrents(ITerminal);
 
   // do the AC voltage source injection - dependent voltage sources kept in ComplexBuffer
@@ -479,7 +479,7 @@ begin
 
     Curr[FNphases] := Idc;
     Curr[2 * FNphases] := -Idc;
-    ITerminalUpdated := FALSE;
+    SetITerminalUpdated(FALSE);
 end;
 
 procedure TVSConverterObj.MakePosSequence();

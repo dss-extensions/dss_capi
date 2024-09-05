@@ -1447,7 +1447,7 @@ begin
         end;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i); // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i); // Put into Terminal array taking into account connection
     end;
 end;
@@ -1472,7 +1472,7 @@ begin
         Curr := Yeq2 * Vterminal[i]; // Yeq is always line to neutral
 
         StickCurrInTerminalArray(ITerminal, -Curr, i); // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i); // Put into Terminal array taking into account connection
     end;
 end;
@@ -1525,7 +1525,7 @@ begin
         end;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i); // Put into Terminal array taking into account connection
-        set_ITerminalUpdated(true);
+        SetITerminalUpdated(true);
         StickCurrInTerminalArray(InjCurrent, Curr, i); // Put into Terminal array taking into account connection
     end;
 end;
@@ -1585,7 +1585,7 @@ begin
 
 
         StickCurrInTerminalArray(ITerminal, -Curr, i); // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i); // Put into Terminal array taking into account connection
     end;
 end;
@@ -1613,7 +1613,7 @@ begin
 
     WindModelDyn.CalcDynamic(Vterminal, Iterminal);
 
-    IterminalUpdated := TRUE;
+    SetITerminalUpdated(TRUE);
 
     // Add it into inj current array
     for i := 1 to FnConds do
@@ -1659,7 +1659,7 @@ procedure TWindGenObj.CalcGenModelContribution();
 // Calculates WindGen current and adds it properly into the injcurrent array
 // routines may also compute ITerminal  (ITerminalUpdated flag)
 begin
-    IterminalUpdated := FALSE;
+    SetITerminalUpdated(FALSE);
     if ActiveCircuit.Solution.IsDynamicModel then
     begin
         DoDynamicMode();

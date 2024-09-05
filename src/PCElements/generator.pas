@@ -1542,7 +1542,7 @@ begin
             Curr := 0;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
 end;
@@ -1571,7 +1571,7 @@ begin
             Curr := 0;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
 end;
@@ -1629,7 +1629,7 @@ begin
                 Curr := 0;
             
             StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-            IterminalUpdated := TRUE;
+            SetITerminalUpdated(TRUE);
             StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
         end;
     end; // With
@@ -1688,7 +1688,7 @@ begin
             Curr := 0;
         
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
 end;
@@ -1752,7 +1752,7 @@ begin
             Curr := 0;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
 end;
@@ -1768,7 +1768,7 @@ begin
     begin
          //AppendToEventLog('Wnominal=', Format('%-.5g',[Pnominalperphase]));
         UserModel.FCalc(Vterminal, Iterminal);
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
         // Negate currents from user model for power flow generator model
         for i := 1 to FnConds do
             InjCurrent[i] -= Iterminal[i];
@@ -1823,7 +1823,7 @@ begin
                     PhaseCurr := cong(PhaseCurrentLimit / (VLN / VMagLN));
 
                 StickCurrInTerminalArray(ITerminal, -PhaseCurr, i);  // Put into Terminal array taking into account connection
-                ITerminalUpdated := TRUE;
+                SetITerminalUpdated(TRUE);
                 StickCurrInTerminalArray(InjCurrent, PhaseCurr, i);  // Put into Terminal array taking into account connection
             end;
             TGeneralConnection.Delta:
@@ -1857,7 +1857,7 @@ begin
                     DeltaCurr := 0;
 
                 StickCurrInTerminalArray(ITerminal, -DeltaCurr, i);  // Put into Terminal array taking into account connection
-                ITerminalUpdated := TRUE;
+                SetITerminalUpdated(TRUE);
                 StickCurrInTerminalArray(InjCurrent, DeltaCurr, i);  // Put into Terminal array taking into account connection
             end;
         end;
@@ -1970,7 +1970,7 @@ begin
 
     end;
 
-    IterminalUpdated := TRUE;
+    SetITerminalUpdated(TRUE);
 
     // Add it into inj current array
     for i := 1 to FnConds do
@@ -2019,7 +2019,7 @@ procedure TGeneratorObj.CalcGenModelContribution;
 // Calculates generator current and adds it properly into the injcurrent array
 // routines may also compute ITerminal  (ITerminalUpdated flag)
 begin
-    IterminalUpdated := FALSE;
+    SetITerminalUpdated(FALSE);
     if ActiveCircuit.Solution.IsDynamicModel then
     begin
         DoDynamicMode();

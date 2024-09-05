@@ -2036,7 +2036,7 @@ begin
             end;
         end;
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-        set_ITerminalUpdated(TRUE);
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
 end;
@@ -2070,7 +2070,7 @@ begin
     begin
         Curr := Yeq2 * Vterminal[i];   // Yeq is always line to neutral
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-        set_ITerminalUpdated(TRUE);
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
 end;
@@ -2085,7 +2085,7 @@ begin
     if UserModel.Exists() then    // Check automatically selects the usermodel If true
     begin
         UserModel.FCalc(Vterminal, Iterminal);
-        set_ITerminalUpdated(TRUE);
+        SetITerminalUpdated(TRUE);
         // Negate currents from user model for power flow Storage element model
         for i := 1 to FnConds do
             InjCurrent[i] -= Iterminal[i];
@@ -2159,7 +2159,7 @@ begin
     for i := 1 to FnConds do
         InjCurrent[i] -= Iterminal[i];
 
-    set_ITerminalUpdated(TRUE);
+    SetITerminalUpdated(TRUE);
 end;
 
 procedure TStorageObj.DoGFM_Mode();
@@ -2179,7 +2179,7 @@ begin
         end;
         dynVars.CalcGFMVoltage(NPhases, Vterminal);
         YPrim.MVMult(InjCurrent, Vterminal);
-        set_ITerminalUpdated(FALSE);
+        SetITerminalUpdated(FALSE);
     end;
 end;
 
@@ -2203,7 +2203,7 @@ begin
     for i := 1 to Fnphases do
     begin
         StickCurrInTerminalArray(ITerminal, -DESSCurr[i], i);  // Put into Terminal array taking into account connection
-        set_ITerminalUpdated(TRUE);
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, DESSCurr[i], i);  // Put into Terminal array taking into account connection
     end;
 end;
@@ -2248,7 +2248,7 @@ procedure TStorageObj.CalcStorageModelContribution();
 // Calculates Storage element current and adds it properly into the injcurrent array
 // routines may also compute ITerminal  (ITerminalUpdated flag)
 begin
-    set_ITerminalUpdated(FALSE);
+    SetITerminalUpdated(FALSE);
     if ActiveCircuit.Solution.IsDynamicModel then
     begin
         DoDynamicMode();

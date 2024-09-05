@@ -1418,7 +1418,7 @@ begin
         FPhaseCurr[i] := Curr;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
 end;
@@ -1442,7 +1442,7 @@ begin
         FPhaseCurr[i] := Curr;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
 end;
@@ -1482,7 +1482,7 @@ begin
         FPhaseCurr[i] := Curr;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
 end;
@@ -1521,7 +1521,7 @@ begin
         FPhaseCurr[i] := Curr;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
 end;
@@ -1667,7 +1667,7 @@ begin
         FPhaseCurr[i] := Curr;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
 end;
@@ -1743,7 +1743,7 @@ begin
             FPhaseCurr[i] := Curr;
 
             StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-            IterminalUpdated := TRUE;
+            SetITerminalUpdated(TRUE);
             StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
         end;
 
@@ -1790,7 +1790,7 @@ begin
         FPhaseCurr[i] := Curr;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
 end;
@@ -1829,7 +1829,7 @@ begin
         FPhaseCurr[i] := Curr;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
 end;
@@ -1857,7 +1857,7 @@ begin
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into InjCurrent array taking into account connection
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         // NOTE: This is the value of ITerminal a Monitor will capture in Harmonics mode .. it captures the harmonic injection
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
     end;
 end;
 
@@ -1866,7 +1866,7 @@ procedure TLoadObj.CalcLoadModelContribution;
 
 // Need to implement DynamicMode sometime ...
 begin
-    IterminalUpdated := FALSE;
+    SetITerminalUpdated(FALSE);
     // IF IsDynamicModel THEN  DoDynamicMode ELSE
     if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
     begin

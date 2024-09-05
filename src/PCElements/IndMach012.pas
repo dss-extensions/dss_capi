@@ -890,7 +890,7 @@ begin
 
     CalcModel(Vterminal, Iterminal);
 
-    IterminalUpdated := TRUE;
+    SetITerminalUpdated(TRUE);
 
     for i := 1 to FNphases do
         InjCurrent[i] -= Iterminal[i];
@@ -939,7 +939,7 @@ begin
 
     CalcModel(Vterminal, Iterminal);
 
-    IterminalUpdated := TRUE;
+    SetITerminalUpdated(TRUE);
     for i := 1 to FNphases do
         InjCurrent[i] -= ITerminal[i];
 end;
@@ -996,7 +996,7 @@ procedure TIndMach012Obj.CalcIndMach012ModelContribution;
 // Calculates IndMach012 current and adds it properly into the injcurrent array
 // routines may also compute ITerminal  (ITerminalUpdated flag)
 begin
-    IterminalUpdated := FALSE;
+    SetITerminalUpdated(FALSE);
     if ActiveCircuit.Solution.IsDynamicModel then
         DoDynamicMode()
     else

@@ -1140,7 +1140,7 @@ begin
     GetVterminalForSource;  // gets voltage vector above
     YPrim.MVMult(Curr, Vterminal);
 
-    ITerminalUpdated := FALSE;
+    SetITerminalUpdated(FALSE);
 end;
 
 procedure TVsourceObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);

@@ -453,7 +453,7 @@ begin
     ComputeVterminal;
     UpdateSequenceVoltage;
 
-    // IterminalUpdated := FALSE;
+    // SetITerminalUpdated(FALSE);
     if ActiveCircuit.Solution.IsDynamicModel then
     begin
         if FrmsMode then

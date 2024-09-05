@@ -45,7 +45,6 @@ type
         function InjCurrents: Integer; OVERRIDE;
         procedure CalcYPrimContribution(Curr: pComplexArray); INLINE;
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
-        procedure set_ITerminalUpdated(const Value: Boolean);
 
         // For Harmonics Mode
         procedure InitHarmonics; VIRTUAL;
@@ -60,7 +59,8 @@ type
         function LookupVariable(const s: String; const matchLength: Boolean = false): Integer;
         function GetVariable(i: Integer): Double; VIRTUAL;
         procedure SetVariable(i: Integer; Value: Double); VIRTUAL;
-        property ITerminalUpdated: Boolean READ FITerminalUpdated WRITE set_ITerminalUpdated;
+        function ITerminalUpdated(): Boolean;
+        procedure SetITerminalUpdated(const Value: Boolean);
     end;
 
 implementation
@@ -116,7 +116,7 @@ procedure TPCElement.GetTerminalCurrents(Curr: pComplexArray);
 var
     i: Integer;
 begin
-    if ITerminalUpdated then
+    if ITerminalUpdated() then
     begin   // Just copy iTerminal unless iTerminal=Curr
         if Curr <> ITerminal then
             for i := 1 to Yorder do
@@ -127,7 +127,7 @@ begin
         YPrim.MVmult(Curr, VTerminal);
         for i := 1 to Yorder do
             Curr[i] -= InjCurrent[i];
-        IterminalUpdated := TRUE;
+        SetITerminalUpdated(TRUE);
     end;
     IterminalSolutionCount := ActiveCircuit.Solution.SolutionCount;
 end;
@@ -296,7 +296,12 @@ begin
         InjCurrent[i] := 0;
 end;
 
-procedure TPCElement.set_ITerminalUpdated(const Value: Boolean);
+function TPCElement.ITerminalUpdated(): Boolean;
+begin
+    result := FITerminalUpdated;
+end;
+
+procedure TPCElement.SetITerminalUpdated(const Value: Boolean);
 begin
     FITerminalUpdated := Value;
     if Value then

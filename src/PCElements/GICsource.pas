@@ -465,7 +465,7 @@ begin
     GetVterminalForSource;    // only at 0.1 Hz
     YPrim.MVMult(Curr, Vterminal);
 
-    ITerminalUPdated := FALSE;
+    SetITerminalUpdated(FALSE);
 end;
 
 procedure TGICSourceObj.MakePosSequence();

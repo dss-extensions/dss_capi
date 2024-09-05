@@ -1090,7 +1090,7 @@ begin
         end;
         CalcGFMVoltage(NPhases, Vterminal);
         YPrim.MVMult(InjCurrent, Vterminal);
-        set_ITerminalUpdated(FALSE);
+        SetITerminalUpdated(FALSE);
     end;
 end;
 
@@ -1724,7 +1724,7 @@ begin
                 end;
 
                 StickCurrInTerminalArray(ITerminal, -PhaseCurr, i);  // Put into Terminal array taking into account connection
-                set_ITerminalUpdated(TRUE);
+                SetITerminalUpdated(TRUE);
                 StickCurrInTerminalArray(InjCurrent, PhaseCurr, i);  // Put into Terminal array taking into account connection
             end;
 
@@ -1760,7 +1760,7 @@ begin
                 end;
 
                 StickCurrInTerminalArray(ITerminal, -DeltaCurr, i);  // Put into Terminal array taking into account connection
-                set_ITerminalUpdated(TRUE);
+                SetITerminalUpdated(TRUE);
                 StickCurrInTerminalArray(InjCurrent, DeltaCurr, i);  // Put into Terminal array taking into account connection
             end;
 
@@ -1801,7 +1801,7 @@ begin
     begin
         Curr := YEQ2 * Vterminal[i];
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-        set_ITerminalUpdated(TRUE);
+        SetITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
 end;
@@ -1817,7 +1817,7 @@ begin
     if UserModel.Exists() then     // Check automatically selects the usermodel If true
     begin
         UserModel.FCalc(Vterminal, Iterminal);
-        set_ITerminalUpdated(TRUE);
+        SetITerminalUpdated(TRUE);
         // Negate currents from user model for power flow PVSystem element model
         for i := 1 to FnConds do
             InjCurrent[i] -= Iterminal[i];
@@ -1909,7 +1909,7 @@ begin
     for i := 1 to FnConds do
         InjCurrent[i] -= Iterminal[i];
 
-    set_ITerminalUpdated(TRUE);
+    SetITerminalUpdated(TRUE);
 end;
 
 procedure TPVsystemObj.DoHarmonicMode();
@@ -1956,7 +1956,7 @@ procedure TPVsystemObj.CalcPVSystemModelContribution();
 // Calculates PVSystem element current and adds it properly into the injcurrent array
 // routines may also compute ITerminal  (ITerminalUpdated flag)
 begin
-    set_ITerminalUpdated(FALSE);
+    SetITerminalUpdated(FALSE);
     if ActiveCircuit.Solution.IsDynamicModel then
     begin
         DoDynamicMode();

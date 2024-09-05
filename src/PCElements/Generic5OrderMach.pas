@@ -2270,7 +2270,7 @@ begin
     CalcYPrimContribution(InjCurrent); // Init InjCurrent Array
     // Inj = -Itotal (in) - Yprim*Vtemp
     CalcModel(Vterminal, Iterminal);
-    IterminalUpdated := TRUE;
+    SetITerminalUpdated(TRUE);
     for i := 1 to Nphases do
         InjCurrent[i] -= ITerminal[i];
 end;
@@ -2279,7 +2279,7 @@ procedure TGeneric5Obj.CalcGeneric5ModelContribution();
 var
     i: Integer;
 begin
-    IterminalUpdated := FALSE;
+    SetITerminalUpdated(FALSE);
     if ActiveCircuit.Solution.IsDynamicModel then
     begin
         DoDynamicMode();
@@ -2294,7 +2294,7 @@ begin
 
     CalcYPrimContribution(InjCurrent); // Init InjCurrent Array
     CalcModel(Vterminal, Iterminal);
-    IterminalUpdated := TRUE;
+    SetITerminalUpdated(TRUE);
 
     for i := 1 to Nphases do
         InjCurrent[i] -= ITerminal[i];
