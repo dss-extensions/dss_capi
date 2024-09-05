@@ -124,12 +124,11 @@ type
         procedure Start_Diakoptics();
         procedure IndexBuses(); // Locates the actor buses within the bus array in Actor 1 (interconnected)
 {$ENDIF}
-        function Get_CPU(): Integer;
-        procedure Set_CPU(CPU: Integer);
 
     PUBLIC
         procedure Send_Message(Msg: TActorMessage);
-        property CPU: Integer READ Get_CPU WRITE Set_CPU;
+        function GetCPU(): Integer;
+        procedure SetCPU(CPU: Integer);
     end;
 {$ENDIF}
 
@@ -2545,13 +2544,13 @@ begin
 end;
 
 // Returns the CPU assigned to the actor
-function TSolver.Get_CPU(): Integer;
+function TSolver.GetCPU(): Integer;
 begin
     Result := DSS.CPU;
 end;
 
 // Sets the CPU assigned to the actor
-procedure TSolver.Set_CPU(CPU: Integer);
+procedure TSolver.SetCPU(CPU: Integer);
 begin
     DSS.CPU := CPU;
     Set_Thread_affinity(handle, CPU);

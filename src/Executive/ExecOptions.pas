@@ -289,7 +289,7 @@ begin
                 begin
                     DSS.CPU := DSS.Parser.MakeInteger();
                     if DSS.ActorThread <> NIL then
-                        DSS.ActorThread.CPU := DSS.CPU;
+                        DSS.ActorThread.SetCPU(DSS.CPU);
                 end
                 else
                 begin
@@ -733,7 +733,7 @@ begin
                 begin
                     DSS.CPU := DSS.Parser.MakeInteger();
                     if DSS.ActorThread <> NIL then
-                        DSS.ActorThread.CPU := DSS.CPU;
+                        DSS.ActorThread.SetCPU(DSS.CPU);
                 end
                 else
                 begin

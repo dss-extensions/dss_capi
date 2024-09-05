@@ -82,7 +82,7 @@ begin
     begin
         DSSPrime.ActiveChild.CPU := value;
         if DSSPrime.ActiveChild.ActorThread <> nil then
-            DSSPrime.ActiveChild.ActorThread.CPU := value;
+            DSSPrime.ActiveChild.ActorThread.SetCPU(value);
     end
     else DoSimpleMsg(DSSPrime, _('The CPU does not exist'), 7004);
 end;
