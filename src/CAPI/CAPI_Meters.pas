@@ -250,7 +250,7 @@ begin
     if DSSPrime.EnergyMeterClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.EnergyMeterClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.EnergyMeters.Get(DSSPrime.EnergyMeterClass.Active);
+        DSSPrime.ActiveCircuit.EnergyMeters.Get(DSSPrime.EnergyMeterClass.ActiveIndex());
     end
     else
     begin

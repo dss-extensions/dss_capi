@@ -2089,7 +2089,7 @@ begin
                 DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
                 for i := 1 to DSS.ActiveDSSClass.ElementCount do
                 begin
-                    DSS.ActiveDSSClass.Active := i;
+                    DSS.ActiveDSSClass.SetActiveIndex(i);
                     if (DSS.ActiveDSSClass.DSSClassType and BASECLASSMASK) > 0 then
                     begin
                         if TDSSCktElement(DSS.ActiveDSSObject).Enabled then

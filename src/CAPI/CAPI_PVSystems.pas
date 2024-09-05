@@ -210,7 +210,7 @@ begin
     if DSSPrime.PVSystemClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.PVSystemClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.PVSystems.Get(DSSPrime.PVSystemClass.Active);
+        DSSPrime.ActiveCircuit.PVSystems.Get(DSSPrime.PVSystemClass.ActiveIndex());
     end
     else
     begin

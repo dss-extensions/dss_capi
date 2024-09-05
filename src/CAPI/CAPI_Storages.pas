@@ -156,7 +156,7 @@ begin
     if DSSPrime.StorageClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.StorageClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.StorageElements.Get(DSSPrime.StorageClass.Active);
+        DSSPrime.ActiveCircuit.StorageElements.Get(DSSPrime.StorageClass.ActiveIndex());
     end
     else
     begin

@@ -198,7 +198,7 @@ begin
     if DSSPrime.GeneratorClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.GeneratorClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.Generators.Get(DSSPrime.GeneratorClass.Active);
+        DSSPrime.ActiveCircuit.Generators.Get(DSSPrime.GeneratorClass.ActiveIndex());
     end
     else
     begin

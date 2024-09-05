@@ -370,7 +370,7 @@ begin
     if DSSPrime.CapControlClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.CapControlClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.CapControls.Get(DSSPrime.CapControlClass.Active);
+        DSSPrime.ActiveCircuit.CapControls.Get(DSSPrime.CapControlClass.ActiveIndex());
     end
     else
     begin

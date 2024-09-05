@@ -146,8 +146,6 @@ type
         procedure SumAllCurrents;
         procedure Set_Frequency(const Value: Double);
         procedure Set_Mode(const Value: TSolveMode);
-        procedure Set_Year(const Value: Integer);
-
     PUBLIC
         DSS: TDSSContext;
         cktptr: Pointer;
@@ -335,7 +333,8 @@ type
 
         property Mode: TSolveMode READ dynavars.SolutionMode WRITE Set_Mode;
         property Frequency: Double READ FFrequency WRITE Set_Frequency;
-        property Year: Integer READ FYear WRITE Set_Year;
+        function Year(): Integer;
+        procedure SetYear(const Value: Integer);
 
         procedure AddInAuxCurrents(SolveType: Integer);
         function SolveSystem(V: pNodeVArray): Integer;
@@ -634,10 +633,10 @@ begin
     end;
     try
         // Main solution Algorithm dispatcher
-        if Year = 0 then
+        if Year() = 0 then
             ckt.DefaultGrowthFactor := 1.0    // RCD 8-17-00
         else
-            ckt.DefaultGrowthFactor := IntPower(ckt.DefaultGrowthRate, (year - 1));
+            ckt.DefaultGrowthFactor := IntPower(ckt.DefaultGrowthRate, (Year() - 1));
         DSS.SignalEvent(TAltDSSEvent.Legacy_InitControls);
 
         // CheckFaultStatus;  ???? needed here??
@@ -1837,7 +1836,7 @@ begin
     begin
         FSWriteln(F, 'Set hour=', IntToStr(DynaVars.intHour));
         FSWriteln(F, 'Set sec=', Format('%-g', [DynaVars.t]));
-        FSWriteln(F, 'Set year=', IntToStr(Year));
+        FSWriteln(F, 'Set year=', IntToStr(Year()));
     end;
     FSWriteln(F, 'Set frequency=', Format('%-g', [Frequency]));
     FSWriteln(F, 'Set stepsize=', Format('%-g', [DynaVars.h]));
@@ -2335,7 +2334,12 @@ begin
     end;
 end;
 
-procedure TSolutionObj.Set_Year(const Value: Integer);
+function TSolutionObj.Year(): Integer;
+begin
+    result := FYear;
+end;
+
+procedure TSolutionObj.SetYear(const Value: Integer);
 begin
     if DSS.DIFilesAreOpen then
         DSS.EnergyMeterClass.CloseAllDIFiles;

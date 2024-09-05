@@ -225,7 +225,7 @@ begin
     if DSSPrime.LoadClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.LoadClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.Loads.Get(DSSPrime.LoadClass.Active);
+        DSSPrime.ActiveCircuit.Loads.Get(DSSPrime.LoadClass.ActiveIndex());
     end
     else
     begin

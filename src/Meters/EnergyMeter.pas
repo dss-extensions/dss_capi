@@ -868,7 +868,7 @@ begin
                     DoSimpleMsg('Error making  Directory: "%s". %s', [CasePath, E.Message], 522);
             end;
         end;
-        DI_Dir := CasePath + PathDelim + 'DI_yr_' + Trim(IntToStr(ActiveCircuit.Solution.Year));
+        DI_Dir := CasePath + PathDelim + 'DI_yr_' + Trim(IntToStr(ActiveCircuit.Solution.Year()));
         if not DirectoryExists(DI_Dir) then
         begin
             try
@@ -1256,7 +1256,7 @@ begin
 
     try
 //       FSWriteln(F,'**** NEW RECORD ****');
-        WriteStr(sout, 'Year, ', DSS.ActiveCircuit.Solution.Year: 0, ',');
+        WriteStr(sout, 'Year, ', DSS.ActiveCircuit.Solution.Year(): 0, ',');
         FSWriteLn(F, sout);
         for i := 1 to NumEMregisters do
         begin
@@ -3469,7 +3469,7 @@ begin
             FreeAndNil(cls.SM_MHandle);
         cls.SM_MHandle := Create_Meter_Space('Year, ');
         WriteintoMemStr(cls.SM_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
-        WriteintoMemStr(cls.SM_MHandle, inttostr(DSS.ActiveCircuit.Solution.Year));
+        WriteintoMemStr(cls.SM_MHandle, inttostr(DSS.ActiveCircuit.Solution.Year()));
         WriteRegisters();
         WriteintoMemStr(cls.SM_MHandle, Char(10));
 
@@ -3588,7 +3588,7 @@ begin
                 WriteintoMemStr(FM_MHandle, ', "' + regName + '"'); //Write(F,', "', regName,'"');
         WriteintoMemStr(FM_MHandle, Char(10));
 
-        WriteintoMemStr(FM_MHandle, inttostr(ActiveCircuit.Solution.Year));
+        WriteintoMemStr(FM_MHandle, inttostr(ActiveCircuit.Solution.Year()));
         for i := 1 to NumEMRegisters do
             WriteintoMem(FM_MHandle, Double(RegSum[i]));
         WriteintoMemStr(FM_MHandle, Char(10));

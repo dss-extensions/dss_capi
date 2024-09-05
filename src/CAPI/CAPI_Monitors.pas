@@ -203,7 +203,7 @@ begin
     if DSSPrime.MonitorClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.MonitorClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.Monitors.Get(DSSPrime.MonitorClass.Active);
+        DSSPrime.ActiveCircuit.Monitors.Get(DSSPrime.MonitorClass.ActiveIndex());
     end
     else
     begin

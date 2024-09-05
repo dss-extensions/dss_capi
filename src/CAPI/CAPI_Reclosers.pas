@@ -166,7 +166,7 @@ begin
     if DSSPrime.RecloserClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.RecloserClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.Reclosers.Get(DSSPrime.RecloserClass.Active);
+        DSSPrime.ActiveCircuit.Reclosers.Get(DSSPrime.RecloserClass.ActiveIndex());
     end
     else
     begin

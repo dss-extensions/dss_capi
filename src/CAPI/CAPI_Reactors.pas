@@ -140,7 +140,7 @@ begin
     if DSSPrime.ReactorClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.ReactorClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.Reactors.Get(DSSPrime.ReactorClass.Active);
+        DSSPrime.ActiveCircuit.Reactors.Get(DSSPrime.ReactorClass.ActiveIndex());
     end
     else
     begin

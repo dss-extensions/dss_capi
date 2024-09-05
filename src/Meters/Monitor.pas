@@ -1303,7 +1303,7 @@ begin
             SolutionBuffer[7] := solution.SolutionCount;
             SolutionBuffer[8] := Ord(solution.Mode);
             SolutionBuffer[9] := solution.Frequency;
-            SolutionBuffer[10] := solution.Year;
+            SolutionBuffer[10] := solution.Year();
             SolutionBuffer[11] := solution.Solve_Time_Elapsed;
             SolutionBuffer[12] := solution.Step_Time_Elapsed;
 

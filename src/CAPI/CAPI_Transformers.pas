@@ -399,7 +399,7 @@ begin
     if DSSPrime.TransformerClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.TransformerClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.Transformers.Get(DSSPrime.TransformerClass.Active);
+        DSSPrime.ActiveCircuit.Transformers.Get(DSSPrime.TransformerClass.ActiveIndex());
     end
     else
     begin

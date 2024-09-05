@@ -256,7 +256,7 @@ begin
             57:
                 SetDataPath(DSS, Param);  // Set a legal data path
             67:
-                DSS.DSSExecutive.RecorderOn := InterpretYesNo(Param);
+                DSS.DSSExecutive.SetRecorderOn(InterpretYesNo(Param));
             73:
                 DSS.DefaultBaseFreq := DSS.Parser.MakeDouble();
             102:
@@ -433,8 +433,8 @@ begin
             5:
                 with DSS.ActiveCircuit do
                 begin
-                    Solution.Year := DSS.Parser.MakeInteger();
-                    DefaultGrowthFactor := IntPower(DefaultGrowthRate, (Solution.Year - 1));
+                    Solution.SetYear(DSS.Parser.MakeInteger());
+                    DefaultGrowthFactor := IntPower(DefaultGrowthRate, (Solution.Year() - 1));
                 end;
             6:
                 DSS.ActiveCircuit.solution.Frequency := DSS.Parser.MakeDouble();
@@ -494,7 +494,7 @@ begin
                 with DSS.ActiveCircuit do
                 begin
                     DefaultGrowthRate := 1.0 + DSS.Parser.MakeDouble() / 100.0;
-                    DefaultGrowthFactor := IntPower(DefaultGrowthRate, (Solution.Year - 1));
+                    DefaultGrowthFactor := IntPower(DefaultGrowthRate, (Solution.Year() - 1));
                 end;
             29:
                 DSS.ActiveCircuit.AutoAddObj.GenkW := DSS.Parser.MakeDouble();
@@ -606,7 +606,7 @@ begin
             66:
                 DSS.ActiveCircuit.LogEvents := InterpretYesNo(Param);
             67:
-                DSS.DSSExecutive.RecorderOn := InterpretYesNo(Param);
+                DSS.DSSExecutive.SetRecorderOn(InterpretYesNo(Param));
             68:
                 DSS.EnergyMeterClass.Do_OverloadReport := InterpretYesNo(Param);
             ord(Opt.Voltexceptionreport):
@@ -876,7 +876,7 @@ begin
                 4:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.DynaVars.t);
                 5:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.Year);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.Year());
                 6:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.Frequency);
                 7, 18:
@@ -1018,7 +1018,7 @@ begin
                 66:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.LogEvents);
                 67:
-                    AppendGlobalResult(DSS, DSS.DSSExecutive.RecorderON);
+                    AppendGlobalResult(DSS, DSS.DSSExecutive.RecorderOn());
                 68:
                     AppendGlobalResult(DSS, DSS.EnergyMeterClass.Do_OverloadReport);
                 ord(Opt.Voltexceptionreport):

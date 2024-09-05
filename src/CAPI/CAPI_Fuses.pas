@@ -160,7 +160,7 @@ begin
     if DSSPrime.FuseClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.FuseClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.Fuses.Get(DSSPrime.FuseClass.Active);
+        DSSPrime.ActiveCircuit.Fuses.Get(DSSPrime.FuseClass.ActiveIndex());
     end
     else
     begin

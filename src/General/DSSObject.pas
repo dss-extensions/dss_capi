@@ -123,7 +123,7 @@ end;
 
 function TDSSObject.Edit(Parser: TDSSParser): Integer;
 begin
-    ParentClass.Active := ClassIndex;
+    ParentClass.SetActiveIndex(ClassIndex);
     Result := ParentClass.Edit(Parser);
 end;
 

@@ -27,7 +27,6 @@ TYPE
 
          function Get_Command: String;
          
-         procedure Set_RecorderOn(const Value: Boolean);
      public
          ExecCommand: ArrayOfString;
          ExecOption: ArrayOfString;
@@ -56,7 +55,8 @@ TYPE
          procedure ParseCommand(const Value: String); overload;
          procedure ParseCommand(const Value: String; LineNum: Integer); overload;
 
-         Property RecorderOn:Boolean Read FRecorderOn write Set_RecorderOn;
+         procedure SetRecorderOn(const Value: Boolean);
+         function RecorderOn(): Boolean;
 
          // ZIP functions
          procedure ZipOpen(ZipFileName: String);
@@ -151,8 +151,8 @@ end;
 
 destructor TExecutive.Destroy;
 begin
-    if RecorderOn then 
-        RecorderOn := FALSE;
+    if RecorderOn() then 
+        SetRecorderOn(FALSE);
 
     Clear(False);
     
@@ -336,7 +336,12 @@ begin
 end;
 {$ENDIF}
 
-procedure TExecutive.Set_RecorderOn(const Value: Boolean);
+function TExecutive.RecorderOn(): Boolean;
+begin
+    result := FRecorderOn;
+end;
+
+procedure TExecutive.SetRecorderOn(const Value: Boolean);
 begin
     If Value Then 
     Begin

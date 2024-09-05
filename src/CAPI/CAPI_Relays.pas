@@ -152,7 +152,7 @@ begin
     if DSSPrime.RelayClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.RelayClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.Relays.Get(DSSPrime.RelayClass.Active);
+        DSSPrime.ActiveCircuit.Relays.Get(DSSPrime.RelayClass.ActiveIndex());
     end
     else
     begin

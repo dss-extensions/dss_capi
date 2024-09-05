@@ -436,8 +436,6 @@ type
         THashListType = TAltHashList;
      private
 
-        procedure Set_Active(value:Integer);
-
         procedure ResynchElementNameList;
 
     Protected
@@ -509,13 +507,14 @@ type
         function NewObject(const ObjName: String; Activate: Boolean; out Idx: Integer):Pointer; overload; // for compatibility, when the index is required
 
         Function SetActive(const ObjName: String): Boolean;
-        Function GetActiveObj:Pointer; // Get address of active obj of this class
+        Function GetActiveObj(): Pointer; // Get address of active obj of this class
         Function Find(const ObjName:String; const ChangeActive: Boolean=True): Pointer; virtual;  // Find an obj of this class by name
 
         Function PropertyIndex(Const Prop:String):Integer;
         function GetPropertyHelp(idx: Integer): String;
 
-        Property Active:Integer read ActiveElement write Set_Active;
+        function ActiveIndex(): Integer;
+        procedure SetActiveIndex(value:Integer); overload;
         function ElementCount(): Integer;
         function First(): Integer;
         function Next(): Integer;
@@ -1590,7 +1589,12 @@ begin
     Idx := ElementList.Count;
 end;
 
-Procedure TDSSClass.Set_Active(value:Integer);
+function TDSSClass.ActiveIndex(): Integer;
+begin
+    result := ActiveElement;
+end;
+
+Procedure TDSSClass.SetActiveIndex(value:Integer);
 BEGIN
     If (Value > 0) and (Value <= ElementList.Count) THEN
     Begin
@@ -1772,7 +1776,7 @@ BEGIN
     End;
 END;
 
-Function TDSSClass.GetActiveObj:Pointer; // Get address of active obj of this class
+Function TDSSClass.GetActiveObj(): Pointer; // Get address of active obj of this class
 BEGIN
     ActiveElement := ElementList.ActiveIndex;
     Result := ElementList.Active;

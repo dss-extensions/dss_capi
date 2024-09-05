@@ -313,7 +313,7 @@ begin
     if DSSPrime.LineClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.LineClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.Lines.Get(DSSPrime.LineClass.Active);
+        DSSPrime.ActiveCircuit.Lines.Get(DSSPrime.LineClass.ActiveIndex());
     end
     else
     begin

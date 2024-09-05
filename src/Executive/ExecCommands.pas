@@ -262,14 +262,14 @@ begin
             ord(Cmd.Compile), ord(Cmd.Redirect):
             begin
                 with DSS.DSSExecutive do
-                    if RecorderOn then
+                    if RecorderOn() then
                         Write_to_RecorderFile(CRLF + '!*********' + CmdLine);
                 DSS.CmdResult := DSS.DSSExecutive.DoRedirect(ParamPointer = ord(Cmd.Compile));
                 Exit;
             end;
         else   // Write everything direct to recorder, if ON
             with DSS.DSSExecutive do
-                if RecorderOn then
+                if RecorderOn() then
                     Write_to_RecorderFile(CmdLine);
         end;
 

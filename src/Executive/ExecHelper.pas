@@ -1346,7 +1346,7 @@ begin
                 begin
                     for i := 1 to DSS.ActiveDSSClass.ElementCount do
                     begin
-                        DSS.ActiveDSSClass.Active := i;
+                        DSS.ActiveDSSClass.SetActiveIndex(i);
                         DSS.ActiveDSSObject.DumpProperties(F, DebugDump, TRUE);
                     end;
                 end;
@@ -1805,7 +1805,7 @@ begin
         case UpCase(Param[1]) of
 
             'Y'{Year}:
-                Year := Year + 1;
+                SetYear(Year() + 1);
             'H'{Hour}:
                 Inc(DynaVars.intHour);
             'T'{Time}:
@@ -3487,7 +3487,7 @@ begin
     S := S + ' ' + CRLF;
     if DSS.ActiveCircuit <> NIL then
     begin
-        S := S + Format('Year = %d ', [DSS.ActiveCircuit.Solution.Year]) + CRLF;
+        S := S + Format('Year = %d ', [DSS.ActiveCircuit.Solution.Year()]) + CRLF;
         S := S + Format('Hour = %d ', [DSS.ActiveCircuit.Solution.DynaVars.intHour]) + CRLF;
         S := S + 'Max pu. voltage = ' + Format('%-.5g ', [GetMaxPUVoltage(DSS)]) + CRLF;
         S := S + 'Min pu. voltage = ' + Format('%-.5g ', [GetMinPUVoltage(DSS, TRUE)]) + CRLF;

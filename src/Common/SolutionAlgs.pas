@@ -118,7 +118,7 @@ begin
 {$IFDEF DSS_CAPI_PM}
     DSS.ActorPctProgress := 0;
 {$ELSE}
-    DSS.ProgressCaption('Solving Year ' + IntToStr(ckt.Solution.Year));
+    DSS.ProgressCaption('Solving Year ' + IntToStr(ckt.Solution.Year()));
     DSS.ShowPctProgress(0);
 {$ENDIF}
 
@@ -582,7 +582,7 @@ begin
 {$ELSE}
         DSS.ProgressCaption('Load-Duration Mode 1 Solution. ');
 {$ENDIF}
-        // (set in Solve method) DefaultGrowthFactor :=  IntPower(DefaultGrowthRate, (Year-1));
+        // (set in Solve method) DefaultGrowthFactor :=  IntPower(DefaultGrowthRate, (Year()-1));
 
         DynaVars.intHour := 0;
         with DynaVars do
@@ -662,7 +662,7 @@ begin
     if not DSS.DIFilesAreOpen then
         DSS.EnergyMeterClass.OpenAllDIFiles;   // Open Demand Interval Files, if desired
 
-// (set in Solve Method) DefaultGrowthFactor :=  IntPower(DefaultGrowthRate, (Year-1));
+// (set in Solve Method) DefaultGrowthFactor :=  IntPower(DefaultGrowthRate, (Year()-1));
 
     try
         if DSS.SolutionAbort() then
@@ -990,7 +990,7 @@ begin
     begin
         if p.enabled then
             if (p.SpectrumObj <> NIL) and (DSS.SpectrumClass.Find(p.SpectrumObj.Name) <> NIL) then
-                SpectrumInUse[DSS.SpectrumClass.Active - 1] := true;
+                SpectrumInUse[DSS.SpectrumClass.ActiveIndex() - 1] := true;
     end;
 
     // Add marked Spectra to list
@@ -998,7 +998,7 @@ begin
     begin
         if SpectrumInUse[i - 1] then
         begin
-            DSS.SpectrumClass.Active := i;
+            DSS.SpectrumClass.SetActiveIndex(i);
             pSpectrum := DSS.SpectrumClass.GetActiveObj;
             for j := 1 to pSpectrum.NumHarm do
                 AddFrequency(FreqList, NumFreq, MaxFreq, pSpectrum.HarmArray[j] * ckt.Fundamental);

@@ -1807,7 +1807,7 @@ begin
 
                 F := TBufferedFileStream.Create(FileNm, fmOpenReadWrite);
                 F.Seek(0, soEnd);
-                FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.Year), Separator);
+                FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.Year()), Separator);
                 FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.DynaVars.intHour), Separator);
                 FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
@@ -1888,7 +1888,7 @@ begin
         begin
             if pElem.Enabled then
             begin
-                FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.Year), Separator);
+                FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.Year()), Separator);
                 FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.DynaVars.intHour), Separator);
                 FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
@@ -1965,7 +1965,7 @@ begin
                 F.Seek(0, soEnd);
                 with DSS.ActiveCircuit do
                 begin
-                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, IntToStr(Solution.Year()), Separator);
                     FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
@@ -2054,7 +2054,7 @@ begin
             if pElem.Enabled then
                 with DSS.ActiveCircuit do
                 begin
-                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, IntToStr(Solution.Year()), Separator);
                     FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
@@ -2113,7 +2113,7 @@ begin
                 F.Seek(0, soEnd);
                 with DSS.ActiveCircuit do
                 begin
-                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, IntToStr(Solution.Year()), Separator);
                     FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
@@ -2198,7 +2198,7 @@ begin
             if pElem.Enabled then
                 with DSS.ActiveCircuit do
                 begin
-                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, IntToStr(Solution.Year()), Separator);
                     FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
@@ -2258,7 +2258,7 @@ begin
                 F.Seek(0, soEnd);
                 with DSS.ActiveCircuit do
                 begin
-                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, IntToStr(Solution.Year()), Separator);
                     FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
@@ -2342,7 +2342,7 @@ begin
             if pElem.Enabled then
                 with DSS.ActiveCircuit do
                 begin
-                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, IntToStr(Solution.Year()), Separator);
                     FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
@@ -3039,7 +3039,7 @@ begin
         if DSS.ActiveCircuit <> NIL then
             if DSS.ActiveCircuit.Issolved and not DSS.ActiveCircuit.BusNameRedefined then
             begin
-                FSWrite(F, Format(', %d', [DSS.ActiveCircuit.Solution.Year]));
+                FSWrite(F, Format(', %d', [DSS.ActiveCircuit.Solution.Year()]));
                 FSWrite(F, Format(', %d', [DSS.ActiveCircuit.Solution.DynaVars.intHour]));
                 FSWrite(F, Format(', %-.5g', [GetMaxPUVoltage(DSS)]));
                 FSWrite(F, Format(', %-.5g', [GetMinPUVoltage(DSS, TRUE)]));

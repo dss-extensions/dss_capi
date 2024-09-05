@@ -214,7 +214,7 @@ begin
     if DSSPrime.CapacitorClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.CapacitorClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.ShuntCapacitors.Get(DSSPrime.CapacitorClass.Active);
+        DSSPrime.ActiveCircuit.ShuntCapacitors.Get(DSSPrime.CapacitorClass.ActiveIndex());
     end
     else
     begin

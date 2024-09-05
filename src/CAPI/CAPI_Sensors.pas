@@ -404,7 +404,7 @@ begin
     if DSSPrime.SensorClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.SensorClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.Sensors.Get(DSSPrime.SensorClass.Active);
+        DSSPrime.ActiveCircuit.Sensors.Get(DSSPrime.SensorClass.ActiveIndex());
     end
     else
     begin

@@ -200,7 +200,7 @@ begin
     if DSSPrime.WindGenClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.WindGenClass.ElementList.Active);
-        DSSPrime.WindGenClass.ElementList.Get(DSSPrime.WindGenClass.Active);
+        DSSPrime.WindGenClass.ElementList.Get(DSSPrime.WindGenClass.ActiveIndex());
     end
     else
     begin

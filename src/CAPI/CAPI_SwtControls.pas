@@ -219,7 +219,7 @@ begin
     if DSSPrime.SwtControlClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.SwtControlClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.SwtControls.Get(DSSPrime.SwtControlClass.Active);
+        DSSPrime.ActiveCircuit.SwtControls.Get(DSSPrime.SwtControlClass.ActiveIndex());
     end
     else
     begin

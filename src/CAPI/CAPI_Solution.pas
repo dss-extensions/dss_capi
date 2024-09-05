@@ -215,7 +215,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.ActiveCircuit.Solution.Year
+    Result := DSSPrime.ActiveCircuit.Solution.Year()
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Frequency(Value: Double); CDECL;
@@ -299,7 +299,7 @@ procedure Solution_Set_Year(Value: Integer); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    DSSPrime.ActiveCircuit.Solution.Year := Value;
+    DSSPrime.ActiveCircuit.Solution.SetYear(Value);
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Solve(); CDECL;
@@ -369,7 +369,7 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
     DSSPrime.ActiveCircuit.DefaultGrowthRate := 1.0 + Value / 100.0;
-    DSSPrime.ActiveCircuit.DefaultGrowthFactor := IntPower(DSSPrime.ActiveCircuit.DefaultGrowthRate, (DSSPrime.ActiveCircuit.Solution.Year - 1));
+    DSSPrime.ActiveCircuit.DefaultGrowthFactor := IntPower(DSSPrime.ActiveCircuit.DefaultGrowthRate, (DSSPrime.ActiveCircuit.Solution.Year() - 1));
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_AddType(): Integer; CDECL;

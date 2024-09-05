@@ -235,7 +235,7 @@ type
         procedure DoCVRModel;
         procedure DoZIPVModel;
         procedure DoMotorTypeLoad;
-        function GrowthFactor(Year: Integer): Double;
+        function GrowthFactor(year: Integer): Double;
         procedure StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer); inline;
         function InterpolateY95_YLow(const Vmag: Double): Complex; inline;
         function InterpolateY95I_YLow(const Vmag: Double): Complex; inline; // ***Added by Celso & Paulo
@@ -961,12 +961,12 @@ begin
     // Else CVRWattFactor, etc. remain unchanged
 end;
 
-function TLoadObj.GrowthFactor(Year: Integer): Double;
+function TLoadObj.GrowthFactor(year: Integer): Double;
 var
     calcYear,
     firstY: Double;
 begin
-    if Year = 0 then
+    if year = 0 then
     begin
         LastGrowthFactor := 1.0;  // default all to 1 in year 0 ; use base values
         if (GrowthShapeObj <> NIL) then
@@ -993,8 +993,8 @@ begin
     if GrowthShapeObj = NIL then
         LastGrowthFactor := ActiveCircuit.DefaultGrowthFactor
     else
-    if Year <> LastYear then    // Search growthcurve
-        LastGrowthFactor := GrowthShapeObj.GetMult(Year);
+    if year <> LastYear then    // Search growthcurve
+        LastGrowthFactor := GrowthShapeObj.GetMult(year);
 
     Result := LastGrowthFactor;  // for Now
 end;
@@ -1033,12 +1033,12 @@ var
     year: Integer;
 begin
     dblHour := ActiveCircuit.Solution.DynaVars.dblHour;
-    year := ActiveCircuit.Solution.Year;
+    year := ActiveCircuit.Solution.Year();
     ShapeFactor := CDOUBLEONE;
     ShapeIsActual := FALSE;
     if status = TLoadStatus.Fixed then
     begin
-        Factor := GrowthFactor(Year);   // For fixed loads, consider only growth factor
+        Factor := GrowthFactor(year);   // For fixed loads, consider only growth factor
     end
     else
     begin
@@ -1046,26 +1046,26 @@ begin
             TSolveMode.SNAPSHOT,
             TSolveMode.HARMONICMODE:
                 if status = TLoadStatus.Exempt then
-                    Factor := GrowthFactor(Year)
+                    Factor := GrowthFactor(year)
                 else
-                    Factor := ActiveCircuit.LoadMultiplier * GrowthFactor(Year);
+                    Factor := ActiveCircuit.LoadMultiplier * GrowthFactor(year);
             TSolveMode.DAILYMODE:
             begin
-                Factor := GrowthFactor(Year);
+                Factor := GrowthFactor(year);
                 if status <> TLoadStatus.Exempt then
                     Factor := Factor * ActiveCircuit.LoadMultiplier;
                 CalcDailyMult(dblHour);
             end;
             TSolveMode.YEARLYMODE:
             begin
-                Factor := ActiveCircuit.LoadMultiplier * GrowthFactor(Year);
+                Factor := ActiveCircuit.LoadMultiplier * GrowthFactor(year);
                 CalcYearlyMult(dblHour);
                 if FLoadModel = TLoadModel.CVR then
                     CalcCVRMult(dblHour);
             end;
             TSolveMode.DUTYCYCLE:
             begin
-                Factor := GrowthFactor(Year);
+                Factor := GrowthFactor(year);
                 if status <> TLoadStatus.Exempt then
                     Factor := Factor * ActiveCircuit.LoadMultiplier;
                 CalcDutyMult(dblHour);
@@ -1073,7 +1073,7 @@ begin
             TSolveMode.GENERALTIME,
             TSolveMode.DYNAMICMODE:
             begin
-                Factor := GrowthFactor(Year);
+                Factor := GrowthFactor(year);
                 if status <> TLoadStatus.Exempt then
                     Factor := Factor * ActiveCircuit.LoadMultiplier;
                 // This mode allows use of one class of load shape
@@ -1091,7 +1091,7 @@ begin
             TSolveMode.MONTECARLO1:
             begin
                 Randomize(ActiveCircuit.Solution.RandomType);
-                Factor := RandomMult * GrowthFactor(Year);
+                Factor := RandomMult * GrowthFactor(year);
                 if status <> TLoadStatus.Exempt then
                     Factor := Factor * ActiveCircuit.LoadMultiplier;
             end;
@@ -1101,20 +1101,20 @@ begin
             TSolveMode.LOADDURATION1,
             TSolveMode.LOADDURATION2:
             begin
-                Factor := GrowthFactor(Year);
+                Factor := GrowthFactor(year);
                 CalcDailyMult(dblHour);
                 if status <> TLoadStatus.Exempt then
                     Factor := Factor * ActiveCircuit.LoadMultiplier;
             end;
             TSolveMode.PEAKDAY:
             begin
-                Factor := GrowthFactor(Year);
+                Factor := GrowthFactor(year);
                 CalcDailyMult(dblHour);
             end;
             TSolveMode.AUTOADDFLAG:
-                Factor := GrowthFactor(Year);  // Loadmult = 1.0 by default
+                Factor := GrowthFactor(year);  // Loadmult = 1.0 by default
         else
-            Factor := GrowthFactor(Year)    // defaults to Base kW * growth
+            Factor := GrowthFactor(year)    // defaults to Base kW * growth
         end;
     end;
 

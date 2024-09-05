@@ -432,7 +432,7 @@ begin
     if DSSPrime.RegControlClass.SetActive(Value) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(DSSPrime.RegControlClass.ElementList.Active);
-        DSSPrime.ActiveCircuit.RegControls.Get(DSSPrime.RegControlClass.Active);
+        DSSPrime.ActiveCircuit.RegControls.Get(DSSPrime.RegControlClass.ActiveIndex());
     end
     else
     begin
