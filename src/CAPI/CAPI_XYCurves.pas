@@ -95,7 +95,7 @@ begin
     if not _activeObj(DSSPrime, pXYCurve) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime, pXYCurve.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pXYCurve.Name());
 end;
 //------------------------------------------------------------------------------
 function XYCurves_Get_Next(): Integer; CDECL;

@@ -1843,7 +1843,7 @@ begin
     FSWriteln(F, 'Set number=', IntToStr(NumberOfTimes));
     if Leaf then
     begin
-        FSWriteln(F, 'Set circuit=', ckt.Name);
+        FSWriteln(F, 'Set circuit=', ckt.Name());
         FSWriteln(F, 'Set editor=', DefaultEditor);
     end;
     FSWriteln(F, 'Set tolerance=', Format('%-g', [ConvergenceTolerance]));
@@ -2819,7 +2819,7 @@ begin
     // Now disables all the VSources added artificially
     for VSourceObj in DSS.VsourceClass.ElementList do
     begin
-        BusName := AnsiLowerCase(VSourceObj.Name);
+        BusName := AnsiLowerCase(VSourceObj.Name());
         if (BusName = 'source') then
             VSourceObj.Enabled := FALSE // Disables the artificial VSource phase 1
         else

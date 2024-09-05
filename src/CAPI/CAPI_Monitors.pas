@@ -140,7 +140,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, PMon.Name)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, PMon.Name())
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Reset(); CDECL;
@@ -305,7 +305,7 @@ begin
     begin
         DoSimpleMsg(DSSPrime,
             'Monitors.Channel: invalid channel index (%d), monitor "%s" has %d channels.',
-            [Index, pMon.Name, pMon.RecordSize],
+            [Index, pMon.Name(), pMon.RecordSize],
             5888);
         Exit;
     end;

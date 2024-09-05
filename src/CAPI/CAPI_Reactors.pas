@@ -185,7 +185,7 @@ begin
         Exit;
 
     if pReactor.LCurveObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, pReactor.LCurveObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, pReactor.LCurveObj.Name());
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_RCurve(): PAnsiChar; CDECL;
@@ -197,7 +197,7 @@ begin
         Exit;
     
     if pReactor.RCurveObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, pReactor.RCurveObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, pReactor.RCurveObj.Name());
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Parallel(): TAPIBoolean; CDECL;

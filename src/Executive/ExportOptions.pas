@@ -184,9 +184,9 @@ begin
     TripletOpt := FALSE;
     PhasesToPlot := ord(TPlotPhases.ThreePhase);  // init this to get rid of compiler warning
     pMeter := NIL;
-    Substation := DSS.ActiveCircuit.Name + '_Substation';
-    SubGeographicRegion := DSS.ActiveCircuit.Name + '_SubRegion';
-    GeographicRegion := DSS.ActiveCircuit.Name + '_Region';
+    Substation := DSS.ActiveCircuit.Name() + '_Substation';
+    SubGeographicRegion := DSS.ActiveCircuit.Name() + '_SubRegion';
+    GeographicRegion := DSS.ActiveCircuit.Name() + '_Region';
     DSS.CIMExporter.DefaultCircuitUUIDs(FdrUuid, SubUuid, RgnUuid, SubGeoUuid);
 
     case ParamPointer of

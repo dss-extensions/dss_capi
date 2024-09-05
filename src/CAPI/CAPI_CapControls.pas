@@ -133,7 +133,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ControlledElement.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ControlledElement.Name());
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_CTratio(): Double; CDECL;

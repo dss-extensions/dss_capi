@@ -339,7 +339,7 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
     if DSSPrime.ActiveCircuit.LoadDurCurveObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.LoadDurCurveObj.Name)
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.LoadDurCurveObj.Name())
     else
         Result := DSS_GetAsPAnsiChar(DSSPrime, '');
 end;
@@ -483,7 +483,7 @@ begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.DefaultDailyShapeObj.Name)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.DefaultDailyShapeObj.Name())
 end;
 
 //------------------------------------------------------------------------------
@@ -492,7 +492,7 @@ begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.DefaultYearlyShapeObj.Name)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.DefaultYearlyShapeObj.Name())
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_DefaultDaily(const Value: PAnsiChar); CDECL;

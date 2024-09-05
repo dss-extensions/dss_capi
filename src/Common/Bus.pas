@@ -67,7 +67,8 @@ type
         function GetZsc0(): Complex;
         function GetZsc1(): Complex;
 
-        property Name: String READ LocalName WRITE LocalName; // Reuse LocalName
+        function Name(): String; // Reuse LocalName
+        procedure SetName(value: String);
     end;
 
     // Bus Collection
@@ -89,6 +90,16 @@ uses
     DSSGlobals,
     SysUtils,
     Circuit;
+
+function TDSSBus.Name(): String;
+begin
+    result := LocalName;
+end;
+
+procedure TDSSBus.SetName(value: String);
+begin
+    LocalName := value;
+end;
 
 constructor TDSSBus.Create(dssContext: TDSSContext);
 begin

@@ -553,7 +553,7 @@ begin
                 begin
                     for EMeter in EnergyMeters do
                     begin
-                        j := ansipos('zone_', EMeter.Name);
+                        j := ansipos('zone_', EMeter.Name());
                         if j <> 0 then
                             EMeter.Enabled := FALSE;
                     end;

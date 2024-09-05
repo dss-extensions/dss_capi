@@ -989,7 +989,7 @@ begin
     for p in ckt.PCelements  do
     begin
         if p.enabled then
-            if (p.SpectrumObj <> NIL) and (DSS.SpectrumClass.Find(p.SpectrumObj.Name) <> NIL) then
+            if (p.SpectrumObj <> NIL) and (DSS.SpectrumClass.Find(p.SpectrumObj.Name()) <> NIL) then
                 SpectrumInUse[DSS.SpectrumClass.ActiveIndex() - 1] := true;
     end;
 

@@ -1161,7 +1161,7 @@ begin
             pECP.cvr := NameIfNotNil(obj.CVRshapeObj);
             pECP.yearly := NameIfNotNil(obj.YearlyShapeObj);
             if (obj.SpectrumObj <> NIL) and (obj.SpectrumObj <> DSS.SpectrumClass.DefaultLoad) then
-                pECP.spectrum := obj.SpectrumObj.Name;
+                pECP.spectrum := obj.SpectrumObj.Name();
             AddECP(pECP);
         end;
         pECP.AddConnection(obj);
@@ -1644,7 +1644,7 @@ begin
             phs := 's1';
         if phs = '2' then
             phs := 's2';
-        pPhase.LocalName := pLine.Name + '_' + phs;
+        pPhase.LocalName := pLine.Name() + '_' + phs;
         pPhase.SetUUID(GetDevUuid(LinePhase, pPhase.LocalName, 1));
         StartInstance(FunPrf, 'ACLineSegmentPhase', pPhase);
         PhaseKindNode(FunPrf, 'ACLineSegmentPhase', phs);
@@ -1653,7 +1653,7 @@ begin
             PhaseWireRefNode(CatPrf, pLine.CIM_GetConductorData(i));
         RefNode(FunPrf, 'ACLineSegmentPhase.ACLineSegment', pLine);
         UuidNode(GeoPrf, 'PowerSystemResource.Location',
-            GetDevUuid(LineLoc, pLine.Name, 1));
+            GetDevUuid(LineLoc, pLine.Name(), 1));
         EndInstance(FunPrf, 'ACLineSegmentPhase');
     end;
     pPhase.Destroy;
@@ -1687,7 +1687,7 @@ begin
             phs2 := 's1';
         if phs2 = '2' then 
             phs2 := 's2';
-        pPhase.LocalName := pLine.Name + '_' + phs1;
+        pPhase.LocalName := pLine.Name() + '_' + phs1;
         pPhase.SetUUID(GetDevUuid(LinePhase, pPhase.LocalName, 1));
         StartInstance(FunPrf, 'SwitchPhase', pPhase);
         BooleanNode(SshPrf, 'SwitchPhase.closed', pLine.ConductorClosed(0));
@@ -1695,7 +1695,7 @@ begin
         PhaseSideNode(FunPrf, 'SwitchPhase', 1, phs1);
         PhaseSideNode(FunPrf, 'SwitchPhase', 2, phs2);
         RefNode(FunPrf, 'SwitchPhase.Switch', pLine);
-        UuidNode(GeoPrf, 'PowerSystemResource.Location', GetDevUuid(LineLoc, pLine.Name, 1));
+        UuidNode(GeoPrf, 'PowerSystemResource.Location', GetDevUuid(LineLoc, pLine.Name(), 1));
         EndInstance(FunPrf, 'SwitchPhase');
     end;
     pPhase.Destroy;
@@ -1718,7 +1718,7 @@ begin
     for i := 1 to length(s) do
     begin
         phs := s[i];
-        pPhase.LocalName := pCap.Name + '_' + phs;
+        pPhase.LocalName := pCap.Name() + '_' + phs;
         pPhase.SetUUID(GetDevUuid(CapPhase, pPhase.LocalName, 1));
         StartInstance(FunPrf, 'LinearShuntCompensatorPhase', pPhase);
         PhaseKindNode(FunPrf, 'ShuntCompensatorPhase', phs);
@@ -1736,7 +1736,7 @@ end;
 
 procedure TCIMExporterHelper.AttachSecondaryPhases(pLoad: TLoadObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
 begin
-    pPhase.LocalName := pLoad.Name + '_' + phs;
+    pPhase.LocalName := pLoad.Name() + '_' + phs;
     pPhase.SetUUID(GetDevUuid(LoadPhase, pPhase.LocalName, 1));
     StartInstance(FunPrf, 'EnergyConsumerPhase', pPhase);
     PhaseKindNode(FunPrf, 'EnergyConsumerPhase', phs);
@@ -1791,7 +1791,7 @@ begin
     for i := 1 to length(s) do
     begin
         phs := s[i];
-        pPhase.LocalName := pLoad.Name + '_' + phs;
+        pPhase.LocalName := pLoad.Name() + '_' + phs;
         pPhase.SetUUID(GetDevUuid(LoadPhase, pPhase.LocalName, 1));
         StartInstance(FunPrf, 'EnergyConsumerPhase', pPhase);
         PhaseKindNode(FunPrf, 'EnergyConsumerPhase', phs);
@@ -1806,7 +1806,7 @@ end;
 
 procedure TCIMExporterHelper.AttachSecondaryGenPhases(pGen: TGeneratorObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
 begin
-    pPhase.LocalName := pGen.Name + '_' + phs;
+    pPhase.LocalName := pGen.Name() + '_' + phs;
     pPhase.SetUUID(GetDevUuid(GenPhase, pPhase.LocalName, 1));
     StartInstance(FunPrf, 'SynchronousMachinePhase', pPhase);
     PhaseKindNode(FunPrf, 'SynchronousMachinePhase', phs);
@@ -1855,7 +1855,7 @@ begin
     for i := 1 to length(s) do
     begin
         phs := s[i];
-        pPhase.LocalName := pGen.Name + '_' + phs;
+        pPhase.LocalName := pGen.Name() + '_' + phs;
         pPhase.SetUUID(GetDevUuid(GenPhase, pPhase.LocalName, 1));
         StartInstance(FunPrf, 'SynchronousMachinePhase', pPhase);
         PhaseKindNode(FunPrf, 'SynchronousMachinePhase', phs);
@@ -1870,7 +1870,7 @@ end;
 
 procedure TCIMExporterHelper.AttachSecondarySolarPhases(pPV: TPVSystemObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
 begin
-    pPhase.LocalName := pPV.Name + '_' + phs;
+    pPhase.LocalName := pPV.Name() + '_' + phs;
     pPhase.SetUUID(GetDevUuid(SolarPhase, pPhase.LocalName, 1));
     StartInstance(FunPrf, 'PowerElectronicsConnectionPhase', pPhase);
     PhaseKindNode(FunPrf, 'PowerElectronicsConnectionPhase', phs);
@@ -1919,7 +1919,7 @@ begin
     for i := 1 to length(s) do
     begin
         phs := s[i];
-        pPhase.LocalName := pPV.Name + '_' + phs;
+        pPhase.LocalName := pPV.Name() + '_' + phs;
         pPhase.SetUUID(GetDevUuid(SolarPhase, pPhase.LocalName, 1));
         StartInstance(FunPrf, 'PowerElectronicsConnectionPhase', pPhase);
         PhaseKindNode(FunPrf, 'PowerElectronicsConnectionPhase', phs);
@@ -1934,7 +1934,7 @@ end;
 
 procedure TCIMExporterHelper.AttachSecondaryStoragePhases(pBat: TStorageObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
 begin
-    pPhase.LocalName := pBat.Name + '_' + phs;
+    pPhase.LocalName := pBat.Name() + '_' + phs;
     pPhase.SetUUID(GetDevUuid(BatteryPhase, pPhase.LocalName, 1));
     StartInstance(FunPrf, 'PowerElectronicsConnectionPhase', pPhase);
     PhaseKindNode(FunPrf, 'PowerElectronicsConnectionPhase', phs);
@@ -1983,7 +1983,7 @@ begin
     for i := 1 to length(s) do
     begin
         phs := s[i];
-        pPhase.LocalName := pBat.Name + '_' + phs;
+        pPhase.LocalName := pBat.Name() + '_' + phs;
         pPhase.SetUUID(GetDevUuid(BatteryPhase, pPhase.LocalName, 1));
         StartInstance(FunPrf, 'PowerElectronicsConnectionPhase', pPhase);
         PhaseKindNode(FunPrf, 'PowerElectronicsConnectionPhase', phs);
@@ -2148,8 +2148,8 @@ begin
         begin
             Zbase_local := Winding[i].kvll;
             Zbase_local := 1000.0 * Zbase_local * Zbase_local / Winding[1].kva;
-            pName.localName := pXfCd.Name + '_' + IntToStr(i);
-            pName.SetUUID(GetDevUuid(WdgInf, pXfCd.Name, i));
+            pName.localName := pXfCd.Name() + '_' + IntToStr(i);
+            pName.SetUUID(GetDevUuid(WdgInf, pXfCd.Name(), i));
             StartInstance(CatPrf, 'TransformerEndInfo', pName);
             RefNode(CatPrf, 'TransformerEndInfo.TransformerTankInfo', pXfCd);
             IntegerNode(CatPrf, 'TransformerEndInfo.endNumber', i);
@@ -2183,10 +2183,10 @@ begin
             DoubleNode(CatPrf, 'TransformerEndInfo.insulationU', 0.0);
             EndInstance(CatPrf, 'TransformerEndInfo');
         end;
-        pName.localName := pXfCd.Name + '_' + IntToStr(1);
-        pName.SetUUID(GetDevUuid(OcTest, pXfCd.Name, 1));
+        pName.localName := pXfCd.Name() + '_' + IntToStr(1);
+        pName.SetUUID(GetDevUuid(OcTest, pXfCd.Name(), 1));
         StartInstance(CatPrf, 'NoLoadTest', pName);
-        UuidNode(CatPrf, 'NoLoadTest.EnergisedEnd', GetDevUuid(WdgInf, pXfCd.Name, 1));
+        UuidNode(CatPrf, 'NoLoadTest.EnergisedEnd', GetDevUuid(WdgInf, pXfCd.Name(), 1));
         DoubleNode(CatPrf, 'NoLoadTest.energisedEndVoltage', 1000.0 * Winding[1].kvll);
         pctIexc := sqrt(pctImag * pctImag + pctNoLoadLoss * pctNoLoadLoss);
         DoubleNode(CatPrf, 'NoLoadTest.excitingCurrent', pctIexc);
@@ -2202,12 +2202,12 @@ begin
             for j := (i + 1) to NumWindings do
             begin
                 Inc(seq);
-                pName.localName := pXfCd.Name + '_' + IntToStr(seq);
-                pName.SetUUID(GetDevUuid(ScTest, pXfCd.Name, seq));
+                pName.localName := pXfCd.Name() + '_' + IntToStr(seq);
+                pName.SetUUID(GetDevUuid(ScTest, pXfCd.Name(), seq));
                 StartInstance(CatPrf, 'ShortCircuitTest', pName);
-                UuidNode(CatPrf, 'ShortCircuitTest.EnergisedEnd', GetDevUuid(WdgInf, pXfCd.Name, i));
+                UuidNode(CatPrf, 'ShortCircuitTest.EnergisedEnd', GetDevUuid(WdgInf, pXfCd.Name(), i));
                 // NOTE: can insert more than one GroundedEnds for three-winding short-circuit tests
-                UuidNode(CatPrf, 'ShortCircuitTest.GroundedEnds', GetDevUuid(WdgInf, pXfCd.Name, j));
+                UuidNode(CatPrf, 'ShortCircuitTest.GroundedEnds', GetDevUuid(WdgInf, pXfCd.Name(), j));
                 IntegerNode(CatPrf, 'ShortCircuitTest.energisedEndStep', Winding[i].NumTaps div 2);
                 IntegerNode(CatPrf, 'ShortCircuitTest.groundedEndStep', Winding[j].NumTaps div 2);
                 TestKVA := Winding[1].kva;
@@ -2280,11 +2280,11 @@ var
     v1: Double;
     name: String;
 begin
-    name := pWire.Name;
+    name := pWire.Name();
     if pWire.DisplayName <> '' then
         StringNode(CatPrf, 'WireInfo.sizeDescription', pWire.DisplayName)
     else
-        StringNode(CatPrf, 'WireInfo.sizeDescription', pWire.DSSClassName + '_' + pWire.Name);
+        StringNode(CatPrf, 'WireInfo.sizeDescription', pWire.DSSClassName + '_' + pWire.Name());
 
     if CompareText(LeftStr(name, 2), 'AA') = 0 then
         ConductorMaterialEnum(CatPrf, 'aluminum')
@@ -2498,7 +2498,7 @@ var
     mode, combi, i: Integer;
     v, p, q, qvslope: Double;
 begin
-    pInvName.LocalName := pInv.Name;
+    pInvName.LocalName := pInv.Name();
     pInvName.SetUUID(pInv.GetUUID());
     pDERNames.Assign(pInv.DERNameList);
     if pInv.MonBusesNameList.Count > 0 then
@@ -2848,7 +2848,7 @@ procedure TIEEE1547Controller.PullFromExpControl(pExp: TExpControlObj);
 var
     i: Integer;
 begin
-    pInvName.LocalName := pExp.Name;
+    pInvName.LocalName := pExp.Name();
     pInvName.SetUUID(pExp.GetUUID());
 
     i := 0;
@@ -3310,14 +3310,14 @@ begin
         StartECPList(ActiveCircuit.Loads.Count + ActiveCircuit.Generators.Count + ActiveCircuit.StorageElements.Count + ActiveCircuit.PVSystems.Count);        
         StartOpLimitList(ActiveCircuit.Lines.Count + ActiveCircuit.Transformers.Count + ActiveCircuit.AutoTransformers.Count);
 
-        DSS.InfoMessageDlg(FileNm + '<=' + ActiveCircuit.Name + '<-' + Substation + '<-' + SubGeographicRegion + '<-' + GeographicRegion);
+        DSS.InfoMessageDlg(FileNm + '<=' + ActiveCircuit.Name() + '<-' + Substation + '<-' + SubGeographicRegion + '<-' + GeographicRegion);
 
         FD_Create(Combined, FileNm);
 
         pCRS := TNamedObject.Create('CoordinateSystem');
         crsUUID := GetDevUuid(CoordSys, 'Local', 1);
         pCRS.SetUUID(crsUUID);
-        pCRS.localName := ActiveCircuit.Name + '_CrsUrn';
+        pCRS.localName := ActiveCircuit.Name() + '_CrsUrn';
         StartInstance(GeoPrf, 'CoordinateSystem', pCRS);
         StringNode(GeoPrf, 'CoordinateSystem.crsUrn', 'OpenDSSLocalBusCoordinates');
         EndInstance(GeoPrf, 'CoordinateSystem');
@@ -3343,8 +3343,8 @@ begin
         EndInstance(FunPrf, 'Substation');
 
         pLocation := TNamedObject.Create('Location');
-        pLocation.SetUUID(GetDevUuid(FdrLoc, ActiveCircuit.Name, 1));
-        pLocation.localName := ActiveCircuit.Name + '_Location';
+        pLocation.SetUUID(GetDevUuid(FdrLoc, ActiveCircuit.Name(), 1));
+        pLocation.localName := ActiveCircuit.Name() + '_Location';
         StartInstance(GeoPrf, 'Location', pLocation);
         UuidNode(GeoPrf, 'Location.CoordinateSystem', crsUUID);
         EndInstance(GeoPrf, 'Location');
@@ -3357,13 +3357,13 @@ begin
 
         // the whole system will be a topo island
         pIsland := TNamedObject.Create('Island');
-        pIsland.localName := ActiveCircuit.Name + '_Island';
+        pIsland.localName := ActiveCircuit.Name() + '_Island';
         pIsland.SetUUID(GetDevUuid(TopoIsland, 'Island', 1));
         pSwing := TNamedObject.Create('SwingBus');
-        pSwing.localName := ActiveCircuit.Name + '_SwingBus';
+        pSwing.localName := ActiveCircuit.Name() + '_SwingBus';
 
         pNormLimit := TNamedObject.Create('NormalAmpsType');
-        pNormLimit.localName := ActiveCircuit.Name + '_NormAmpsType';
+        pNormLimit.localName := ActiveCircuit.Name() + '_NormAmpsType';
         pNormLimit.SetUUID(GetDevUuid(OpLimT, 'NormalAmps', 1));
         StartInstance(FunPrf, 'OperationalLimitType', pNormLimit);
         DoubleNode(FunPrf, 'OperationalLimitType.acceptableDuration', 5.0e9);  // more than 100 years
@@ -3371,7 +3371,7 @@ begin
         EndInstance(FunPrf, 'OperationalLimitType');
 
         pEmergLimit := TNamedObject.Create('EmergencyAmpsType');
-        pEmergLimit.localName := ActiveCircuit.Name + '_EmergencyAmpsType';
+        pEmergLimit.localName := ActiveCircuit.Name() + '_EmergencyAmpsType';
         pEmergLimit.SetUUID(GetDevUuid(OpLimT, 'EmergencyAmps', 1));
         StartInstance(FunPrf, 'OperationalLimitType', pEmergLimit);
         DoubleNode(FunPrf, 'OperationalLimitType.acceptableDuration', 2.0 * 3600.0); // 2 hours
@@ -3379,7 +3379,7 @@ begin
         EndInstance(FunPrf, 'OperationalLimitType');
 
         pRangeAHiLimit := TNamedObject.Create('RangeAHiType');
-        pRangeAHiLimit.localName := ActiveCircuit.Name + '_RangeAHiType';
+        pRangeAHiLimit.localName := ActiveCircuit.Name() + '_RangeAHiType';
         pRangeAHiLimit.SetUUID(GetDevUuid(OpLimT, 'AHi', 1));
         StartInstance(FunPrf, 'OperationalLimitType', pRangeAHiLimit);
         DoubleNode(FunPrf, 'OperationalLimitType.acceptableDuration', 5.0e9);
@@ -3387,7 +3387,7 @@ begin
         EndInstance(FunPrf, 'OperationalLimitType');
 
         pRangeALoLimit := TNamedObject.Create('RangeALoType');
-        pRangeALoLimit.localName := ActiveCircuit.Name + '_RangeALoType';
+        pRangeALoLimit.localName := ActiveCircuit.Name() + '_RangeALoType';
         pRangeALoLimit.SetUUID(GetDevUuid(OpLimT, 'ALo', 1));
         StartInstance(FunPrf, 'OperationalLimitType', pRangeALoLimit);
         DoubleNode(FunPrf, 'OperationalLimitType.acceptableDuration', 5.0e9);
@@ -3395,7 +3395,7 @@ begin
         EndInstance(FunPrf, 'OperationalLimitType');
 
         pRangeBHiLimit := TNamedObject.Create('RangeBHiType');
-        pRangeBHiLimit.localName := ActiveCircuit.Name + '_RangeBHiType';
+        pRangeBHiLimit.localName := ActiveCircuit.Name() + '_RangeBHiType';
         pRangeBHiLimit.SetUUID(GetDevUuid(OpLimT, 'BHi', 1));
         StartInstance(FunPrf, 'OperationalLimitType', pRangeBHiLimit);
         DoubleNode(FunPrf, 'OperationalLimitType.acceptableDuration', 24.0 * 3600.0);
@@ -3403,7 +3403,7 @@ begin
         EndInstance(FunPrf, 'OperationalLimitType');
 
         pRangeBLoLimit := TNamedObject.Create('RangeBLoType');
-        pRangeBLoLimit.localName := ActiveCircuit.Name + '_RangeBLoType';
+        pRangeBLoLimit.localName := ActiveCircuit.Name() + '_RangeBLoType';
         pRangeBLoLimit.SetUUID(GetDevUuid(OpLimT, 'BLo', 1));
         StartInstance(FunPrf, 'OperationalLimitType', pRangeBLoLimit);
         DoubleNode(FunPrf, 'OperationalLimitType.acceptableDuration', 24.0 * 3600.0);
@@ -3527,7 +3527,7 @@ begin
             if not pPV.Enabled then
                 continue;
 
-            pName1.LocalName := pPV.Name; // + '_PVPanels';
+            pName1.LocalName := pPV.Name(); // + '_PVPanels';
             pName1.SetUUID(GetDevUuid(PVPanels, pPV.LocalName, 1));
             StartInstance(FunPrf, 'PhotovoltaicUnit', pName1);
             geoUUID := GetDevUuid(SolarLoc, pPV.localName, 1);
@@ -3574,7 +3574,7 @@ begin
             if not pBat.Enabled then
                 continue;
 
-            pName1.LocalName := pBat.Name; // + '_Cells';
+            pName1.LocalName := pBat.Name(); // + '_Cells';
             pName1.SetUUID(GetDevUuid(Battery, pBat.LocalName, 1));
             StartInstance(FunPrf, 'BatteryUnit', pName1);
             DoubleNode(EpPrf, 'PowerElectronicsUnit.maxP', pBat.StorageVars.kwRating * pBat.StorageVars.pctkWRated * 1000);
@@ -3734,7 +3734,7 @@ begin
         for pCapC in ActiveCircuit.CapControls do
         begin
             StartInstance(FunPrf, 'RegulatingControl', pCapC);
-            UuidNode(GeoPrf, 'PowerSystemResource.Location', GetDevUuid(CapLoc, pCapC.ControlledElement.Name, 1));
+            UuidNode(GeoPrf, 'PowerSystemResource.Location', GetDevUuid(CapLoc, pCapC.ControlledElement.Name(), 1));
             RefNode(FunPrf, 'RegulatingControl.RegulatingCondEq', pCapC.ControlledElement);
             i1 := GetCktElementIndex(DSS, FullNameIfNotNil(pCapC.MonitoredElement)); // Global function
             UuidNode(FunPrf, 'RegulatingControl.Terminal', GetTermUuid(DSS.ActiveCircuit.CktElements.Get(i1), pCapC.ElementTerminal));
@@ -3812,7 +3812,7 @@ begin
             with pAuto do
             begin
                 if XfmrBank = '' then
-                    sBank := '=' + pAuto.Name
+                    sBank := '=' + pAuto.Name()
                 else
                     sBank := XfmrBank;
                 pBank := GetBank(sBank);
@@ -3824,20 +3824,20 @@ begin
                     AddBank(pBank);
                 end;
                 pBank.AddAutoTransformer(self, pAuto);
-                geoUUID := GetDevUuid(XfLoc, pAuto.Name, 1);
+                geoUUID := GetDevUuid(XfLoc, pAuto.Name(), 1);
                 WritePositions(pAuto, geoUUID, crsUUID);
                 // pre-make the winding, mesh and core name objects for easy reference
                 for i := 1 to NumWindings do
                 begin
-                    WdgList[i - 1].localName := pAuto.Name + '_End_' + IntToStr(i);
-                    WdgList[i - 1].SetUUID(GetDevUuid(Wdg, pAuto.Name, i));
+                    WdgList[i - 1].localName := pAuto.Name() + '_End_' + IntToStr(i);
+                    WdgList[i - 1].SetUUID(GetDevUuid(Wdg, pAuto.Name(), i));
                 end;
-                CoreList[0].LocalName := pAuto.Name + '_Yc';
-                CoreList[0].SetUUID(GetDevUuid(XfCore, pAuto.Name, 1));
+                CoreList[0].LocalName := pAuto.Name() + '_Yc';
+                CoreList[0].SetUUID(GetDevUuid(XfCore, pAuto.Name(), 1));
                 for i := 1 to ((maxWdg - 1) * maxWdg div 2) do
                 begin
-                    MeshList[i - 1].localName := pAuto.Name + '_Zsc_' + IntToStr(i);
-                    MeshList[i - 1].SetUUID(GetDevUuid(XfMesh, pAuto.Name, i));
+                    MeshList[i - 1].localName := pAuto.Name() + '_Zsc_' + IntToStr(i);
+                    MeshList[i - 1].SetUUID(GetDevUuid(XfMesh, pAuto.Name(), i));
                 end;
                 val := Winding[1].kVLL; // write core Y
                 zbase := 1000.0 * val * val / Winding[1].kVA;
@@ -3902,7 +3902,7 @@ begin
                     end;
                     IntegerNode(FunPrf, 'TransformerEnd.endNumber', i);
                     j := pAuto.Terminals[i - 1].BusRef;
-                    pName2.LocalName := pAuto.Name + '_T' + IntToStr(i);
+                    pName2.LocalName := pAuto.Name() + '_T' + IntToStr(i);
                     pName2.SetUUID(GetTermUuid(pAuto, i));
                     RefNode(FunPrf, 'TransformerEnd.Terminal', pName2);
                     UuidNode(FunPrf, 'TransformerEnd.BaseVoltage', GetBaseVUuid(sqrt(3.0) * ActiveCircuit.Buses[j].kVBase));
@@ -3945,11 +3945,11 @@ begin
             begin
                 if (pXf.XfmrCodeObj = NIL) and (pXf.NPhases <> 3) then
                 begin
-                    sBank := 'CIMXfmrCode_' + pXf.Name;
+                    sBank := 'CIMXfmrCode_' + pXf.Name();
                     clsXfCd.NewObject(sBank);
                     pXfCd := clsXfCd.Find(sBank);
                     DSS.DSSObjs.Add(pXfCd); // this is how ExecHelper.pas keeps track of "General Objects" for cleanup
-                    pXfCd.SetUUID(GetDevUuid(TankInfo, pXfCd.Name, 1));
+                    pXfCd.SetUUID(GetDevUuid(TankInfo, pXfCd.Name(), 1));
                     pXfCd.PullFromTransformer(pXf);
                     pXf.XfmrCodeObj := pXfCd;
                 end;
@@ -4001,7 +4001,7 @@ begin
 
                 pBank := GetBank(sBank);
                 pBank.AddTransformer(self, pXf);
-                geoUUID := GetDevUuid(XfLoc, pXf.Name, 1);
+                geoUUID := GetDevUuid(XfLoc, pXf.Name(), 1);
 
                 if bTanks then
                 begin
@@ -4022,15 +4022,15 @@ begin
                 // make the winding, mesh and core name objects for easy reference
                 for i := 1 to NumWindings do
                 begin
-                    WdgList[i - 1].localName := pXf.Name + '_End_' + IntToStr(i);
-                    WdgList[i - 1].SetUUID(GetDevUuid(Wdg, pXf.Name, i));
+                    WdgList[i - 1].localName := pXf.Name() + '_End_' + IntToStr(i);
+                    WdgList[i - 1].SetUUID(GetDevUuid(Wdg, pXf.Name(), i));
                 end;
-                CoreList[0].LocalName := pXf.Name + '_Yc';
-                CoreList[0].SetUUID(GetDevUuid(XfCore, pXf.Name, 1));
+                CoreList[0].LocalName := pXf.Name() + '_Yc';
+                CoreList[0].SetUUID(GetDevUuid(XfCore, pXf.Name(), 1));
                 for i := 1 to ((maxWdg - 1) * maxWdg div 2) do
                 begin
-                    MeshList[i - 1].localName := pXf.Name + '_Zsc_' + IntToStr(i);
-                    MeshList[i - 1].SetUUID(GetDevUuid(XfMesh, pXf.Name, i));
+                    MeshList[i - 1].localName := pXf.Name() + '_Zsc_' + IntToStr(i);
+                    MeshList[i - 1].SetUUID(GetDevUuid(XfMesh, pXf.Name(), i));
                 end;
 
                 if not bTanks then
@@ -4122,7 +4122,7 @@ begin
                     end;
                     IntegerNode(FunPrf, 'TransformerEnd.endNumber', i);
                     j := pXf.Terminals[i - 1].BusRef;
-                    pName2.LocalName := pXf.Name + '_T' + IntToStr(i);
+                    pName2.LocalName := pXf.Name() + '_T' + IntToStr(i);
                     pName2.SetUUID(GetTermUuid(pXf, i));
                     RefNode(FunPrf, 'TransformerEnd.Terminal', pName2);
                     UuidNode(FunPrf, 'TransformerEnd.BaseVoltage', GetBaseVUuid(sqrt(3.0) * ActiveCircuit.Buses[j].kVBase));
@@ -4169,7 +4169,7 @@ begin
             CircuitNode(FunPrf, ActiveCircuit);
             StringNode(FunPrf, 'PowerTransformer.vectorGroup', pBank.vectorGroup);
             UuidNode(GeoPrf, 'PowerSystemResource.Location',
-                GetDevUuid(XfLoc, pBank.pd_unit.Name, 1));
+                GetDevUuid(XfLoc, pBank.pd_unit.Name(), 1));
             EndInstance(FunPrf, 'PowerTransformer');
         end;
 
@@ -4242,12 +4242,12 @@ begin
                 DoubleNode(EpPrf, 'TapChangerControl.minLimitVoltage', MinTap * v1);                
                 
                 UuidNode(GeoPrf, 'PowerSystemResource.Location',
-                    GetDevUuid(XfLoc, tr.Name, 1));
+                    GetDevUuid(XfLoc, tr.Name(), 1));
                 EndInstance(FunPrf, 'TapChangerControl');
 
                 StartInstance(FunPrf, 'RatioTapChanger', pReg);
                 UuidNode(FunPrf, 'RatioTapChanger.TransformerEnd',
-                    GetDevUuid(Wdg, tr.Name, pReg.TrWinding()));
+                    GetDevUuid(Wdg, tr.Name(), pReg.TrWinding()));
                 UuidNode(FunPrf, 'TapChanger.TapChangerControl', pName2.GetUUID());
                 DoubleNode(EpPrf, 'RatioTapChanger.stepVoltageIncrement', 100.0 * TapIncrement);
                 TransformerControlEnum(FunPrf, 'volt');
@@ -4264,8 +4264,7 @@ begin
                 DoubleNode(EpPrf, 'TapChanger.ptRatio', PTRatio);
                 DoubleNode(EpPrf, 'TapChanger.ctRatio', CTRating / 0.2);
                 DoubleNode(EpPrf, 'TapChanger.ctRating', CTRating);
-                UuidNode(GeoPrf, 'PowerSystemResource.Location',
-                    GetDevUuid(XfLoc, tr.Name, 1));
+                UuidNode(GeoPrf, 'PowerSystemResource.Location', GetDevUuid(XfLoc, tr.Name(), 1));
                 EndInstance(FunPrf, 'RatioTapChanger');
             end;
         end;
@@ -4281,7 +4280,7 @@ begin
             StartInstance(FunPrf, 'SeriesCompensator', pReac);
             CircuitNode(FunPrf, ActiveCircuit);
             VbaseNode(FunPrf, pReac);
-            geoUUID := GetDevUuid(ReacLoc, pReac.Name, 1);
+            geoUUID := GetDevUuid(ReacLoc, pReac.Name(), 1);
             UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
             DoubleNode(EpPrf, 'SeriesCompensator.r', pReac.Z.re);
             DoubleNode(EpPrf, 'SeriesCompensator.x', pReac.Z.im);
@@ -4301,7 +4300,7 @@ begin
             begin
                 bval := FALSE; // flag to write a "line code" of PULengthPhaseZ
                 v1 := To_Meters(pLine.UserLengthUnits);
-                geoUUID := GetDevUuid(LineLoc, pLine.Name, 1);
+                geoUUID := GetDevUuid(LineLoc, pLine.Name(), 1);
                 if IsSwitch then
                 begin
                     ParseSwitchClass(pLine, swtCls, ratedAmps, breakingAmps);
@@ -4370,8 +4369,8 @@ begin
                         else
                         begin
                             bval := TRUE;
-                            pName1.LocalName := pLine.Name + '_PUZ';
-                            pName1.SetUUID(GetDevUuid(PUZ, pLine.Name, 1));
+                            pName1.LocalName := pLine.Name() + '_PUZ';
+                            pName1.SetUUID(GetDevUuid(PUZ, pLine.Name(), 1));
                             RefNode(EpPrf, 'ACLineSegment.PerLengthImpedance', pName1);
                             // TODO - we no longer have proper length units if matrices were specified
                             DoubleNode(FunPrf, 'Conductor.length', Len * v1);
@@ -4483,7 +4482,7 @@ begin
                 ShuntConnectionKindNode(FunPrf, 'EnergyConsumer', 'D');
                 BooleanNode(FunPrf, 'EnergyConsumer.grounded', FALSE);
             end;
-            geoUUID := GetDevUuid(LoadLoc, pLoad.Name, 1);
+            geoUUID := GetDevUuid(LoadLoc, pLoad.Name(), 1);
             UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
             EndInstance(FunPrf, 'EnergyConsumer');
             AttachLoadPhases(pLoad, geoUUID);
@@ -4587,7 +4586,7 @@ begin
 
             for i := 1 to pGeom.FNConds do // Using FNConds instead of the NConds property to read the number of conductors before a potential reduction
             begin
-                pName1.LocalName := 'WP_' + pGeom.Name + '_' + IntToStr(i);
+                pName1.LocalName := 'WP_' + pGeom.Name() + '_' + IntToStr(i);
                 pName1.SetUUID(GetDevUuid(WirePos, pName1.LocalName, 1));  // 1 for pGeom
                 StartInstance(CatPrf, 'WirePosition', pName1);
                 RefNode(CatPrf, 'WirePosition.WireSpacingInfo', pGeom);
@@ -4614,7 +4613,7 @@ begin
 
             for i := 1 to pSpac.NConds do
             begin
-                pName1.LocalName := 'WP_' + pSpac.Name + '_' + IntToStr(i);
+                pName1.LocalName := 'WP_' + pSpac.Name() + '_' + IntToStr(i);
                 pName1.SetUUID(GetDevUuid(WirePos, pName1.LocalName, 2)); // 2 for pSpac
                 StartInstance(CatPrf, 'WirePosition', pName1);
                 RefNode(CatPrf, 'WirePosition.WireSpacingInfo', pSpac);

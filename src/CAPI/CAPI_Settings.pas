@@ -357,7 +357,7 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
     if DSSPrime.ActiveCircuit.PriceCurveObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.PriceCurveObj.Name)
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.PriceCurveObj.Name())
     else
         Result := DSS_GetAsPAnsiChar(DSSPrime, '');
 end;

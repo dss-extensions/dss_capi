@@ -870,7 +870,7 @@ begin
                 1, 12:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.ActiveCktElement.DSSClassName);
                 2, 13:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.ActiveCktElement.Name);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.ActiveCktElement.Name());
                 3:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.DynaVars.intHour);
                 4:
@@ -890,7 +890,7 @@ begin
                 11:
                     AppendGlobalResult(DSS, Format('[ %d, %-g ] !... %-g (hours)', [DSS.ActiveCircuit.solution.DynaVars.intHour, DSS.ActiveCircuit.solution.DynaVars.t, DSS.ActiveCircuit.solution.DynaVars.dblHour]));
                 14:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.name);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Name());
                 15:
                     AppendGlobalResult(DSS, DefaultEditor);
                 16:
@@ -966,9 +966,9 @@ begin
                 45:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.GenMultiplier);
                 46:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.DefaultDailyShapeObj.Name);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.DefaultDailyShapeObj.Name());
                 47:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.DefaultYearlyShapeObj.Name);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.DefaultYearlyShapeObj.Name());
                 48:
                     AppendGlobalResult(DSS, 'Get function not applicable.');
                 49:

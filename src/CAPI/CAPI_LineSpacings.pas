@@ -97,7 +97,7 @@ begin
     if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
         
-    Result := DSS_GetAsPAnsiChar(DSSPrime, pLineSpacing.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pLineSpacing.Name());
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Set_Name(const Value: PAnsiChar); CDECL;

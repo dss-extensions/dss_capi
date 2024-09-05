@@ -2047,7 +2047,7 @@ begin
         while PDElem <> NIL do
         begin
             FSWriteln(F, Format('%d, %s.%s, %s, %s, %10.4f', [
-                BranchList.Level, PDelem.ParentClass.Name, PDelem.Name,
+                BranchList.Level, PDelem.ParentClass.Name, PDelem.Name(),
                 PDelem.FirstBus, PDelem.NextBus,
                 // BusList.NameOfIndex(BranchList.PresentBranch.GetToBusReference()),
                 ActiveCircuit.Buses[BranchList.PresentBranch.GetToBusReference()].DistFromMeter
@@ -2057,7 +2057,7 @@ begin
             while LoadElem <> NIL do
             begin
                 FSWrite(F, '-1, ');
-                FSWriteln(F, Format('%s.%s, %s', [LoadElem.ParentClass.Name, LoadElem.Name, LoadElem.Firstbus]));
+                FSWriteln(F, Format('%s.%s, %s', [LoadElem.ParentClass.Name, LoadElem.Name(), LoadElem.Firstbus]));
                 LoadElem := BranchList.NextObject();
             end;
             PDElem := BranchList.GoForward();
@@ -2094,7 +2094,7 @@ begin
             PDElem := BranchList.First();
             while PDElem <> NIL do
             begin
-                FSWriteln(F, 'Circuit Element = ', PDelem.Name);
+                FSWriteln(F, 'Circuit Element = ', PDelem.Name());
                 LoadElem := Branchlist.FirstObject;
                 while LoadElem <> NIL do
                 begin
@@ -2492,9 +2492,9 @@ begin
             ('Meter, SectionID, BranchName, FaultRate, AccumulatedBrFltRate, BranchFltRate, RepairHrs, NCustomers, Num_Interrupt');
         
         WriteDLLDebugFile
-        (Format('%s.%s, %d, %s.%s, %.11g, %.11g, %.11g, %.11g, %d, %.11g ',
-            [ParentClass.Name, Name, PD_Elem.BranchSectionID,
-            PD_Elem.ParentClass.Name, PD_Elem.Name, PD_Elem.FaultRate,
+        (Format('%s, %d, %s, %.11g, %.11g, %.11g, %.11g, %d, %.11g ',
+            [FullName(), PD_Elem.BranchSectionID,
+            PD_Elem.FullName(), PD_Elem.FaultRate,
             PD_Elem.AccumulatedBrFltRate, PD_Elem.BranchFltRate,
             PD_Elem.HrsToRepair, PD_Elem.BranchNumCustomers,
             pBus.Bus_Num_Interrupt]));
@@ -2520,8 +2520,8 @@ begin
     for idx := 0 to SectionCount do
     begin
         psection := @FeederSections[idx];
-        WriteDLLDebugFile(Format('%s.%s, %d, %d, %d, %.11g, %.11g, %.11g, %.11g ',
-            [ParentClass.Name, Name, idx, psection^.NBranches, psection^.NCustomers, psection^.AverageRepairTime,
+        WriteDLLDebugFile(Format('%s, %d, %d, %d, %.11g, %.11g, %.11g, %.11g ',
+            [FullName(), idx, psection^.NBranches, psection^.NCustomers, psection^.AverageRepairTime,
             psection^.AverageRepairTime * 60.0, psection^.SumFltRatesXRepairHrs, psection^.SumBranchFltRates]));
     end;
 {$ENDIF}
@@ -2605,7 +2605,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error creating Branches.dss for Energymeter: %s. %s', [Self.Name, E.Message], 530);
+            DoSimpleMsg('Error creating Branches.dss for Energymeter: %s. %s', [self.Name(), E.Message], 530);
             FreeAndNil(FBranches);
             Exit;
         end;
@@ -2617,7 +2617,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error creating Transformers.dss for Energymeter: %s. %s', [Self.Name, E.Message], 53001);
+            DoSimpleMsg('Error creating Transformers.dss for Energymeter: %s. %s', [self.Name(), E.Message], 53001);
             FreeAndNil(FXfmrs);
             Exit;
         end;
@@ -2629,7 +2629,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error creating Shunts.dss for Energymeter: %s. %s', [Self.Name, E.Message], 531);
+            DoSimpleMsg('Error creating Shunts.dss for Energymeter: %s. %s', [self.Name(), E.Message], 531);
             FreeAndNil(FShunts);
             Exit;
         end;
@@ -2641,7 +2641,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error creating Loads.dss for Energymeter: %s. %s', [Self.Name, E.Message], 532);
+            DoSimpleMsg('Error creating Loads.dss for Energymeter: %s. %s', [self.Name(), E.Message], 532);
             FreeAndNil(FLoads);
             Exit;
         end;
@@ -2653,7 +2653,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error creating Generators.dss for Energymeter: %s. %s', [Self.Name, E.Message], 533);
+            DoSimpleMsg('Error creating Generators.dss for Energymeter: %s. %s', [self.Name(), E.Message], 533);
             FreeAndNil(FGens);
             Exit;
         end;
@@ -2665,7 +2665,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error creating Capacitors.dss for Energymeter: %s. %s', [Self.Name, E.Message], 534);
+            DoSimpleMsg('Error creating Capacitors.dss for Energymeter: %s. %s', [self.Name(), E.Message], 534);
             FreeAndNil(FCaps);
             Exit;
         end;
@@ -2870,11 +2870,11 @@ begin
         end;
     except
         ON E: Exception do
-            DoSimpleMsg('Error Closing Demand Interval file for Meter "%s"', [Name], 534);
+            DoSimpleMsg('Error Closing Demand Interval file for Meter "%s"', [Name()], 534);
     end;
 
     // Write Registers to Totals File
-    WriteintoMemStr(DSS.EnergyMeterClass.EMT_MHandle, '"' + Self.Name + '"');
+    WriteintoMemStr(DSS.EnergyMeterClass.EMT_MHandle, '"' + Self.Name() + '"');
     for i := 1 to NumEMregisters do
         WriteintoMem(DSS.EnergyMeterClass.EMT_MHandle, Registers[i]);
     WriteintoMemStr(DSS.EnergyMeterClass.EMT_MHandle, Char(10));
@@ -3143,7 +3143,7 @@ end;
 
 function TEnergyMeterObj.MakeDIFileName(): String;
 begin
-    Result := DSS.EnergyMeterClass.DI_Dir + PathDelim + Self.Name + DSS._Name + '.csv';
+    Result := DSS.EnergyMeterClass.DI_Dir + PathDelim + Self.Name() + DSS._Name + '.csv';
 end;
 
 procedure TEnergyMeter.Set_SaveDemandInterval(const Value: Boolean);

@@ -177,7 +177,7 @@ begin
     begin
         bus := DSSPrime.ActiveCircuit.Buses[BusIdx];
         if bus.CoordDefined then
-            StrlCopy(Name1, pAnsiChar(bus.Name), Len1);
+            StrlCopy(Name1, pAnsiChar(bus.Name()), Len1);
     end;
     // Second bus
     BusIdx := CktElement.Terminals[1].busref;
@@ -185,7 +185,7 @@ begin
     begin
         bus := DSSPrime.ActiveCircuit.Buses[BusIdx];
         if bus.CoordDefined then
-            StrlCopy(Name2, pAnsiChar(bus.Name), Len2);
+            StrlCopy(Name2, pAnsiChar(bus.Name()), Len2);
     end;
 end;
 

@@ -721,7 +721,7 @@ begin
                         else
                             strPhaseChoice := 'wire';
                         FSWriteln(F, Format('~ Cond=%d %s=%s X=%.7g h=%.7g units=%s',
-                            [i, strPhaseChoice, conductorData[i].Name, xCoord[i], yCoord[i], LineUnitsStr(units[i])]));
+                            [i, strPhaseChoice, conductorData[i].Name(), xCoord[i], yCoord[i], LineUnitsStr(units[i])]));
                     end;
                     wroteConds := True;
                 end;

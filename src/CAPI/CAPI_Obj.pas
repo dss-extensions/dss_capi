@@ -435,7 +435,7 @@ end;
 
 function Obj_GetName(obj: TDSSObject): PAnsiChar; CDECL;
 begin
-    Result := PAnsiChar(obj.Name);
+    Result := PAnsiChar(obj.Name());
 end;
 
 function Obj_GetFullName(obj: TDSSObject): PAnsiChar; CDECL;
@@ -699,9 +699,9 @@ begin
     if (joptions and Integer(DSSJSONOptions.IncludeDSSClass)) <> 0 then
     begin
         if (joptions and Integer(DSSJSONOptions.LowercaseKeys)) = 0 then
-            Result := TJSONObject.Create(['DSSClass', cls.Name, 'Name', obj.Name])
+            Result := TJSONObject.Create(['DSSClass', cls.Name, 'Name', obj.Name()])
         else
-            Result := TJSONObject.Create(['dssclass', cls.Name, 'Name', obj.Name]);
+            Result := TJSONObject.Create(['dssclass', cls.Name, 'Name', obj.Name()]);
     end
     else
         Result := TJSONObject.Create(['Name', obj.Name]);
@@ -1006,7 +1006,7 @@ begin
         ResultCount[0] := 0;
         for i := 1 to cls.ElementList.Count do
         begin
-            if rex.Exec(objlist^.Name) then
+            if rex.Exec(objlist^.Name()) then
             begin
                 outptr^:= objlist^;
                 inc(outptr);
@@ -2784,7 +2784,7 @@ var
                 dssObj := cls.ElementList.Get(1);
             end;
             if not cls.FillObjFromJSON(dssObj, o, joptions or extraOptions, []) then
-                raise Exception.Create(Format('JSON/%s/%s: error processing item.', [cls.Name, name]));
+                raise Exception.Create(Format('JSON/%s/%s: error processing item.', [cls.Name, Name]));
         finally
             if nameData <> NIL then
                 nameData.Free();

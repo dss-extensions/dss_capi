@@ -125,7 +125,7 @@ begin
     if not _activeObj(DSSPrime, pBus) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime, pBus.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pBus.Name());
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_NumNodes(): Integer; CDECL;
@@ -691,7 +691,7 @@ begin
     begin
         if CheckBusReference(pElem, BusReference, j) then
         begin
-            Result[k] := DSS_CopyStringAsPChar('LINE.' + pElem.name);
+            Result[k] := DSS_CopyStringAsPChar('LINE.' + pElem.Name());
             Inc(k);
         end;
     end;
@@ -734,7 +734,7 @@ begin
     begin
         if CheckBusReference(pElem, BusReference, j) then
         begin
-            Result[k] := DSS_CopyStringAsPChar('LOAD.' + pElem.name);
+            Result[k] := DSS_CopyStringAsPChar('LOAD.' + pElem.Name());
             Inc(k);
         end;
     end;

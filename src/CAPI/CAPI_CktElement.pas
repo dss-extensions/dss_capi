@@ -661,7 +661,7 @@ begin
     if Flg.HasEnergyMeter in elem.Flags then
     begin
         pd := elem as TPDElement;
-        Result := DSS_GetAsPAnsiChar(DSSPrime, pd.MeterObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, pd.MeterObj.Name());
     end;
 end;
 //------------------------------------------------------------------------------

@@ -209,7 +209,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if elem.LineCodeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.LineCodeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.LineCodeObj.Name());
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Name(): PAnsiChar; CDECL;
@@ -690,7 +690,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if elem.LineGeometryObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.LineGeometryObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.LineGeometryObj.Name());
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Geometry(const Value: PAnsiChar); CDECL;
@@ -868,7 +868,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if elem.LineSpacingObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.LineSpacingObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.LineSpacingObj.Name());
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Spacing(const Value: PAnsiChar); CDECL;

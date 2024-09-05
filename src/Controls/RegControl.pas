@@ -205,7 +205,6 @@ type
         function TrWinding(): Integer; // Report Tapped winding
         property PendingTapChange: Double READ FPendingTapChange WRITE set_PendingTapChange;
         function VLimitActive: Boolean;
-        // property InitialDelay: Double READ TimeDelay;
         property TapNum: Integer READ Get_TapNum WRITE Set_TapNum;
     end;
 
@@ -621,7 +620,7 @@ begin
     end
     else
     begin
-        ename := ControlledElement.Name;
+        ename := ControlledElement.Name();
         ControlledElement := NIL;   
         DoErrorMsg(
             Format(_('RegControl: "%s"'), [Self.Name]),
@@ -767,7 +766,7 @@ begin
                             RegWriteTraceRecord(TapChangeToMake);
                         tr.SetPresentTap(TapWinding, tr.PresentTap(TapWinding) + TapChangeToMake);
                         if ShowEventLog then
-                            AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d taps to %-.6g.', [Lastchange, tr.PresentTap(TapWinding)]));
+                            AppendtoEventLog('Regulator.' + ControlledElement.Name(), Format(' Changed %d taps to %-.6g.', [Lastchange, tr.PresentTap(TapWinding)]));
                         PendingTapChange := 0.0;  // Reset to no change.  Program will determine if another needed.
                         Armed := FALSE;
                     end;
@@ -779,9 +778,9 @@ begin
                             RegWriteTraceRecord(TapChangeToMake);
                         tr.SetPresentTap(TapWinding, tr.PresentTap(TapWinding) + TapChangeToMake);
                         if ShowEventLog then 
-                            AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d tap to %-.6g.',[Lastchange, tr.PresentTap(TapWinding)]));
+                            AppendtoEventLog('Regulator.' + ControlledElement.Name(), Format(' Changed %d tap to %-.6g.',[Lastchange, tr.PresentTap(TapWinding)]));
                         if DebugTrace then
-                            RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name, Lastchange, tr.PresentTap(TapWinding)]));
+                            RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name(), Lastchange, tr.PresentTap(TapWinding)]));
 
                         if PendingTapChange <> 0.0 then
                             ActiveCircuit.ControlQueue.Push(TapDelay, 0, 0, Self)
@@ -796,9 +795,9 @@ begin
                             RegWriteTraceRecord(TapChangeToMake);
                         tr.SetPresentTap(TapWinding, tr.PresentTap(TapWinding) + TapChangeToMake);
                         if ShowEventLog then
-                            AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d tap to %-.6g.', [Lastchange, tr.PresentTap(TapWinding)]));
+                            AppendtoEventLog('Regulator.' + ControlledElement.Name(), Format(' Changed %d tap to %-.6g.', [Lastchange, tr.PresentTap(TapWinding)]));
                         if (DebugTrace) then
-                            RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name, Lastchange, tr.PresentTap(TapWinding)]));
+                            RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name(), Lastchange, tr.PresentTap(TapWinding)]));
 
                         if PendingTapChange <> 0.0 then
                             ActiveCircuit.ControlQueue.Push(TapDelay, 0, 0, Self)
@@ -813,9 +812,9 @@ begin
                             RegWriteTraceRecord(TapChangeToMake);
                         tr.SetPresentTap(TapWinding, tr.PresentTap(TapWinding) + TapChangeToMake);
                         if ShowEventLog then
-                            AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d tap to %-.6g.', [Lastchange, tr.PresentTap(TapWinding)]));
+                            AppendtoEventLog('Regulator.' + ControlledElement.Name(), Format(' Changed %d tap to %-.6g.', [Lastchange, tr.PresentTap(TapWinding)]));
                         if (DebugTrace) then
-                            RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name, Lastchange, tr.PresentTap(TapWinding)]));
+                            RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name(), Lastchange, tr.PresentTap(TapWinding)]));
 
                         if PendingTapChange <> 0.0 then
                             ActiveCircuit.ControlQueue.Push(TapDelay, 0, 0, Self)

@@ -878,7 +878,7 @@ begin
                     if other <> NIL then
                     begin
                         if Length(allowedClasses) = 1 then
-                            prop.Add('default', other.Name)
+                            prop.Add('default', other.Name())
                         else
                             prop.Add('default', other.FullName());
                     end;

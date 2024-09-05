@@ -314,7 +314,7 @@ begin
         Exit;
 
     if elem.XfmrCodeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.XfmrCodeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.XfmrCodeObj.Name());
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Xhl(): Double; CDECL;

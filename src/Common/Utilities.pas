@@ -809,9 +809,9 @@ begin
         begin
             case pLoad.LoadSpecType of
                 TLoadSpec.ConnectedkVA_PF:
-                    FSWriteln(F, 'Load.' + pLoad.Name + '.AllocationFactor=' + Format('%-.5g', [pLoad.FkVAAllocationFactor]));
+                    FSWriteln(F, pLoad.FullName() + '.AllocationFactor=' + Format('%-.5g', [pLoad.FkVAAllocationFactor]));
                 TLoadSpec.kwh_PF:
-                    FSWriteln(F, 'Load.' + pLoad.Name + '.CFactor=' + Format('%-.5g', [pLoad.FCFactor]));
+                    FSWriteln(F, pLoad.FullName() + '.CFactor=' + Format('%-.5g', [pLoad.FCFactor]));
             end;
         end;
     end;
@@ -864,7 +864,7 @@ begin
    // Dump All present DSSClasses
    for pClass in DSS.DSSClassList do
    begin
-       FSWriteln(F, '[' + pClass.name + ']');
+       FSWriteln(F, '[' + pClass.Name + ']');
        for i := 1 to pClass.NumProperties do
        begin
            WriteStr(sout, i: 0, ', "', pClass.PropertyName[i], '", "', ReplaceCRLF(pClass.GetPropertyHelp(i)), '"');
@@ -1821,7 +1821,7 @@ var
     procedure RenameCktElem(pelem: TDSSCktElement); // local proc
     begin
         pelem.SetName(Format('%s%d', [copy(pelem.ParentClass.Name, 1, 4), pelem.ClassIndex]));
-        DSS.ActiveCircuit.DeviceList.Add(pelem.Name); // Make a new device list corresponding to the CktElements List
+        DSS.ActiveCircuit.DeviceList.Add(pelem.Name()); // Make a new device list corresponding to the CktElements List
         Include(pelem.Flags, Flg.Checked);
     end;
 
@@ -2392,7 +2392,7 @@ begin
     if obj = NIL then
         Result := ''
     else
-        Result := obj.Name;
+        Result := obj.Name();
 end;
 
 function FullNameIfNotNil(obj: TDSSObject): String;

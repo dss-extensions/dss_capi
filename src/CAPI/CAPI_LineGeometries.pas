@@ -116,7 +116,7 @@ begin
     if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime, pLineGeometry.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pLineGeometry.Name());
 end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Set_Name(const Value: PAnsiChar); CDECL;

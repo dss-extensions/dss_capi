@@ -215,7 +215,7 @@ begin
     if not _activeObj(DSSPrime, pLoad) then
         Exit;
         
-    Result := DSS_GetAsPAnsiChar(DSSPrime, pLoad.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pLoad.Name());
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Name(const Value: PAnsiChar); CDECL;
@@ -401,7 +401,7 @@ begin
         Exit;
 
     if elem.CVRshapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.CVRshapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.CVRshapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_CVRvars(): Double; CDECL;
@@ -435,7 +435,7 @@ begin
         Exit;
 
     if elem.DailyShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyShapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_duty(): PAnsiChar; CDECL;
@@ -447,7 +447,7 @@ begin
         Exit;
 
     if elem.DutyShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyShapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Growth(): PAnsiChar; CDECL;
@@ -459,7 +459,7 @@ begin
         Exit;
 
     if elem.GrowthShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.GrowthShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.GrowthShapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_IsDelta(): TAPIBoolean; CDECL;
@@ -578,7 +578,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if elem.SpectrumObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.SpectrumObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.SpectrumObj.Name());
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Status(): Integer; CDECL;
@@ -664,7 +664,7 @@ begin
         Exit;
 
     if elem.YearlyShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyShapeObj.Name());
 end;
 
 //------------------------------------------------------------------------------

@@ -342,7 +342,8 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Transformer.Name);
+    if elem.Transformer <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Transformer.Name());
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_VoltageLimit(): Double; CDECL;

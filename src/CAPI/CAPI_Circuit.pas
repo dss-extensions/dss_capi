@@ -111,7 +111,7 @@ begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.Name)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.Name())
 end;
 //------------------------------------------------------------------------------
 function Circuit_Get_NumBuses(): Integer; CDECL;
@@ -586,7 +586,7 @@ begin
     k := 0;
     for i := 1 to DSSPrime.ActiveCircuit.NumBuses do
     begin
-        BusName := buses[i].Name;
+        BusName := buses[i].Name();
         for j := 1 to buses[i].numNodesThisBus do
         begin
             Result[k] := DSS_CopyStringAsPChar(BusName + '.' + IntToStr(buses[i].GetNum(j)));

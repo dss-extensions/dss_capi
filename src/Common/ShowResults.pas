@@ -119,7 +119,7 @@ begin
         for i := 1 to NumDevices do
         begin
             element := TDSSCktElement(CktElements.At(i));
-            MaxDeviceNameLength := Max(MaxDeviceNameLength, (Length(element.Name) + Length(element.ParentClass.Name) + 1));
+            MaxDeviceNameLength := Max(MaxDeviceNameLength, (Length(element.Name()) + Length(element.ParentClass.Name) + 1));
         end;
 end;
 
@@ -303,7 +303,7 @@ begin
     Nterm := pElem.Nterms;
     k := 0;
     BusName := Pad(StripExtension(pElem.FirstBus), MaxBusNameLength);
-    FSWriteln(F, 'ELEMENT = "' + pElem.dssclassname + '.' + AnsiUpperCase(pElem.Name) + '"');
+    FSWriteln(F, 'ELEMENT = "' + pElem.dssclassname + '.' + AnsiUpperCase(pElem.Name()) + '"');
     for j := 1 to NTerm do
     begin
         for i := 1 to NCond do
@@ -351,7 +351,7 @@ var
 begin
     NCond := pElem.NConds;
 
-    ElemName := Pad(pElem.dssclassname + '.' + AnsiUpperCase(pElem.Name), MaxDeviceNameLength);
+    ElemName := Pad(pElem.dssclassname + '.' + AnsiUpperCase(pElem.Name()), MaxDeviceNameLength);
     for i := 1 to NCond do
     begin
         Node1 := pElem.NodeRef^[i];
@@ -2093,12 +2093,12 @@ begin
                     if (DSS.ActiveDSSClass.DSSClassType and BASECLASSMASK) > 0 then
                     begin
                         if TDSSCktElement(DSS.ActiveDSSObject).Enabled then
-                            FSWriteln(F, AnsiUpperCase(DSS.ActiveDssObject.Name))
+                            FSWriteln(F, AnsiUpperCase(DSS.ActiveDssObject.Name()))
                         else
-                            FSWriteln(Fdisabled, AnsiUpperCase(DSS.ActiveDssObject.Name));
+                            FSWriteln(Fdisabled, AnsiUpperCase(DSS.ActiveDssObject.Name()));
                     end
                     else
-                        FSWriteln(F, AnsiUpperCase(DSS.ActiveDssObject.Name));   // non cktelements
+                        FSWriteln(F, AnsiUpperCase(DSS.ActiveDssObject.Name()));   // non cktelements
                 end;
             end;
         end
@@ -2106,7 +2106,7 @@ begin
         begin  // Default - Just do PD and PC Element in active circuit
 
             FSWriteln(F);
-            FSWriteln(F, 'Elements in Active Circuit: ' + DSS.ActiveCircuit.Name);
+            FSWriteln(F, 'Elements in Active Circuit: ' + DSS.ActiveCircuit.Name());
             FSWriteln(F);
             FSWriteln(F, 'Power Delivery Elements');
             FSWriteln(F);
@@ -2115,7 +2115,7 @@ begin
 
 
             FSWriteln(Fdisabled);
-            FSWriteln(Fdisabled, 'DISABLED Elements in Active Circuit: ' + DSS.ActiveCircuit.Name);
+            FSWriteln(Fdisabled, 'DISABLED Elements in Active Circuit: ' + DSS.ActiveCircuit.Name());
             FSWriteln(Fdisabled);
             FSWriteln(Fdisabled, 'DISABLED Power Delivery Elements');
             FSWriteln(Fdisabled);
@@ -2199,7 +2199,7 @@ begin
         F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         FSWriteln(F);
-        FSWriteln(F, 'BUSES AND NODES IN ACTIVE CIRCUIT: ' + DSS.ActiveCircuit.name);
+        FSWriteln(F, 'BUSES AND NODES IN ACTIVE CIRCUIT: ' + DSS.ActiveCircuit.Name());
         FSWriteln(F);
         FSWriteln(F, Pad('     ', MaxBusNameLength), '                         Coord                                 Number of     Nodes');
         FSWriteln(F, Pad('  Bus', MaxBusNameLength), '    Base kV             (x, y)                      Keep?       Nodes        connected ...');
@@ -2291,7 +2291,7 @@ begin
                 begin
                     if pElem.Enabled then
                     begin
-                        FSWrite(F, Pad(pElem.Name, 12));
+                        FSWrite(F, Pad(pElem.Name(), 12));
                         for j := 1 to NumEMRegisters do
                         begin
                             FSWrite(F, Format('%10.0f ', [PElem.Registers[j]]));
@@ -2344,7 +2344,7 @@ begin
             begin
                 if pElem.Enabled then
                 begin
-                    FSWrite(F, Pad(pElem.Name, 12));
+                    FSWrite(F, Pad(pElem.Name(), 12));
                     for j := 1 to NumGenRegisters do
                     begin
                         FSWrite(F, Format('%10.0f ', [PElem.Registers[j]]));
@@ -2392,7 +2392,7 @@ begin
                 begin
                     iWind := pReg.TrWinding();
                     FSWrite(F, Pad(Name, 12), ' ');
-                    FSWrite(F, Pad(pReg.Name, 12), ' ');
+                    FSWrite(F, Pad(pReg.Name(), 12), ' ');
                     FSWriteln(F, Format('%8.5f %8.5f %8.5f %8.5f     %d      %d      %s      %s', [
                         PresentTap(iWind), 
                         MinTap(iWind), 
@@ -2461,11 +2461,11 @@ begin
                     for i := 1 to pMtr.Branchlist.Level do
                         FSWrite(F, TABCHAR);
                  //Write(F, pMtr.BranchList.Level:0,' ');
-                    FSWrite(F, PDElem.ParentClass.Name, '.', PDelem.Name);
+                    FSWrite(F, PDElem.FullName());
                     with pMtr.BranchList.PresentBranch do
                     begin
                         if IsParallel then
-                            FSWrite(F, '(PARALLEL:' + TDSSCktElement(LoopLineObj).Name + ')');
+                            FSWrite(F, '(PARALLEL:' + TDSSCktElement(LoopLineObj).Name() + ')');
                         if IsLoopedHere then
                             FSWrite(F, '(LOOP:' + TDSSCktElement(LoopLineObj).FullName() + ')');
                     end;
@@ -2479,7 +2479,7 @@ begin
                     begin
                         for i := 1 to pMtr.Branchlist.Level + 1 do
                             FSWrite(F, TABCHAR);
-                        FSWrite(F, LoadElem.ParentClass.Name, '.', LoadElem.Name);
+                        FSWrite(F, LoadElem.FullName());
                         if Assigned(LoadElem.SensorObj) then
                             FSWrite(F, Format(' (Sensor: %s) ', [LoadElem.SensorObj.FullName()]))
                         else
@@ -2663,7 +2663,7 @@ begin
 
                 if DoIt then
                 begin
-                    FSWrite(F, Pad(pLoad.Name, 20));
+                    FSWrite(F, Pad(pLoad.Name(), 20));
                     FSWrite(F, Pad(pLoad.GetBus(1), 10));
                     FSWrite(F, Format('%8.0f', [pLoad.kWBase]));
                     FSWrite(F, Format('%9.3f', [pLoad.EEN_Factor]));
@@ -3069,9 +3069,9 @@ begin
                     with pMtr.BranchList.PresentBranch do
                     begin
                         if IsParallel then
-                            FSWriteln(F, Format('(%s) %s.%s: PARALLEL WITH %s', [pMtr.Name, PDElem.ParentClass.Name, AnsiUpperCase(PDelem.Name), TDSSCktElement(LoopLineObj).FullName()]));
+                            FSWriteln(F, Format('(%s) %s.%s: PARALLEL WITH %s', [pMtr.Name(), PDElem.ParentClass.Name, AnsiUpperCase(PDelem.Name()), TDSSCktElement(LoopLineObj).FullName()]));
                         if IsLoopedHere then
-                            FSWriteln(F, Format('(%s) %s.%s: LOOPED TO     %s', [pMtr.Name, PDElem.ParentClass.Name, AnsiUpperCase(PDelem.Name), TDSSCktElement(LoopLineObj).FullName()]));
+                            FSWriteln(F, Format('(%s) %s.%s: LOOPED TO     %s', [pMtr.Name(), PDElem.ParentClass.Name, AnsiUpperCase(PDelem.Name()), TDSSCktElement(LoopLineObj).FullName()]));
                     end;
                     PDElem := pMtr.BranchList.GoForward;
                 end;
@@ -3121,7 +3121,7 @@ begin
         FSWriteln(F);
 
         Ftree := TBufferedFileStream.Create(TreeNm, fmCreate);
-        FSWriteln(Ftree, 'Branches and Loads in Circuit ' + DSS.ActiveCircuit.Name);
+        FSWriteln(Ftree, 'Branches and Loads in Circuit ' + DSS.ActiveCircuit.Name());
         FSWriteln(Ftree);
 
         topo := DSS.ActiveCircuit.GetTopology;
@@ -3139,7 +3139,7 @@ begin
                 if topo.Level > nLevels then
                     nLevels := topo.Level;
                 TopoLevelTabs(Ftree, topo.Level);
-                FSWrite(Ftree, PDElem.ParentClass.Name, '.', PDElem.Name);
+                FSWrite(Ftree, PDElem.ParentClass.Name, '.', PDElem.Name());
                 with topo.PresentBranch do
                 begin
                     if IsParallel then
@@ -3174,7 +3174,7 @@ begin
                 while Assigned(LoadElem) do
                 begin
                     TopoLevelTabs(Ftree, topo.Level + 1);
-                    FSWrite(Ftree, LoadElem.ParentClass.Name, '.', LoadElem.Name);
+                    FSWrite(Ftree, LoadElem.ParentClass.Name, '.', LoadElem.Name());
                     if Flg.HasSensorObj in LoadElem.Flags then
                         FSWrite(Ftree, Format(' (Sensor: %s) ',[LoadElem.SensorObj.FullName()]));
                     if Flg.HasControl in LoadElem.Flags then
@@ -3300,7 +3300,7 @@ begin
 
             FSWriteln(F);
             FSWriteln(F, '--------------------------------------------------');
-            FSWriteln(F, 'Geometry Code = ', Pelem.Name);
+            FSWriteln(F, 'Geometry Code = ', Pelem.Name());
             FSWriteln(F);
             FSWriteln(F, 'R MATRIX, ohms per ', LineUnitsStr(Units));
             for i := 1 to Z.order do
@@ -3365,7 +3365,7 @@ begin
             //Writeln(F,'-------------------------------------------------------------------');
             FSWriteln(F2);
 
-            FSWriteln(F2, Format('New Linecode.%s nphases=%d  Units=%s', [pelem.Name, z.order, LineUnitsStr(Units)]));
+            FSWriteln(F2, Format('New Linecode.%s nphases=%d  Units=%s', [pelem.Name(), z.order, LineUnitsStr(Units)]));
 
             FSWrite(F2, '~ Rmatrix=[');
             for i := 1 to Z.order do

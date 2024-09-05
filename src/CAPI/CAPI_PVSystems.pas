@@ -314,7 +314,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if elem.DailyShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyShapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_daily(const Value: PAnsiChar); CDECL;
@@ -335,7 +335,7 @@ begin
         Exit;
 
     if elem.DutyShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyShapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_duty(const Value: PAnsiChar); CDECL;
@@ -355,7 +355,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if elem.YearlyShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyShapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_yearly(const Value: PAnsiChar); CDECL;
@@ -375,7 +375,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if elem.DailyTShapeObj <> NIL then        
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyTShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyTShapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Tdaily(const Value: PAnsiChar); CDECL;
@@ -396,7 +396,7 @@ begin
         Exit;
 
     if elem.DutyTShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyTShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyTShapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Tduty(const Value: PAnsiChar); CDECL;
@@ -417,7 +417,7 @@ begin
         Exit;
 
     if elem.YearlyTShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyTShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyTShapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Tyearly(const Value: PAnsiChar); CDECL;

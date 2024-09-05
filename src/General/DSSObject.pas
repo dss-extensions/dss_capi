@@ -233,7 +233,7 @@ end;
 
 function TDSSObject.FullName(): String;
 begin
-    Result := ParentClass.Name + '.' + Name;
+    Result := ParentClass.Name + '.' + Name();
 end;
 
 function TDSSObject.DSSClassName(): String;

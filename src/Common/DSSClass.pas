@@ -436,7 +436,7 @@ type
         THashListType = TAltHashList;
      private
 
-        procedure ResynchElementNameList;
+        procedure ResynchElementNameList();
 
     Protected
         ActiveElement: Integer;   // index of present ActiveElement
@@ -495,7 +495,7 @@ type
         constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String; addToReg: Boolean = true);
         destructor Destroy; override;
         
-        Procedure ReallocateElementNameList;
+        Procedure ReallocateElementNameList();
 
         // function CustomParse(ptr: Pointer; Idx: Integer; Param: String): Boolean; virtual;
 
@@ -1732,7 +1732,7 @@ end;
 function TDSSClass.AddObjectToList(Obj:Pointer; Activate: Boolean): Integer;
 begin
     ElementList.Add(Obj); // Stuff it in this collection's element list
-    ElementNameList.Add(TDSSObject(Obj).Name);
+    ElementNameList.Add(TDSSObject(Obj).Name());
     if Activate then
     begin
         ActiveElement := ElementList.Count;
@@ -1748,7 +1748,8 @@ var
 begin
     Result := False;
     // Faster to look in hash list 7/7/03
-    If ElementNamesOutOfSynch Then ResynchElementNameList;
+    if ElementNamesOutOfSynch then 
+        ResynchElementNameList();
     idx := ElementNameList.Find(ObjName);
     
     if idx > 0 then
@@ -1764,16 +1765,17 @@ VAR
     idx: Integer;
 BEGIN
     Result := Nil;
-    If ElementNamesOutOfSynch Then ResynchElementNameList;
+    if ElementNamesOutOfSynch then
+        ResynchElementNameList();
     // Faster to look in hash list 7/7/03
     idx := ElementNameList.Find(ObjName);
     
-    If idx>0 Then
-    Begin
+    if idx>0 Then
+    begin
         Result := ElementList.Get(idx);
         if ChangeActive then 
             ActiveElement := idx;
-    End;
+    end;
 END;
 
 Function TDSSClass.GetActiveObj(): Pointer; // Get address of active obj of this class
@@ -2090,7 +2092,7 @@ begin
     End;
 end;
 
-procedure TDSSClass.ReallocateElementNameList;
+procedure TDSSClass.ReallocateElementNameList();
 Var
     i: Integer;
 begin
@@ -2101,12 +2103,15 @@ begin
     // Do this using the Names of the Elements rather than the old list because it might be
     // messed up if an element gets renamed
 
-    For i := 1 to ElementList.Count Do ElementNameList.Add(TDSSObject(ElementList.Get(i)).Name);
+    for i := 1 to ElementList.Count do
+    begin
+        ElementNameList.Add(TDSSObject(ElementList.Get(i)).Name());
+    end;
 end;
 
-procedure TDSSClass.ResynchElementNameList;
+procedure TDSSClass.ResynchElementNameList();
 begin
-    ReallocateElementNameList;
+    ReallocateElementNameList();
     ElementNamesOutOfSynch := False;
 end;
 

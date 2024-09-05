@@ -113,7 +113,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
     
-    Result := DSS_GetAsPAnsiChar(DSSPrime, pLineCode.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pLineCode.Name());
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_Name(const Value: PAnsiChar); CDECL;

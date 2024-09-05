@@ -419,7 +419,7 @@ begin
         Exit;
 
     if elem.DailyDispShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyDispShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyDispShapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 function WindGens_Get_Class_(): Integer; CDECL; // API Extension
@@ -442,7 +442,7 @@ begin
         Exit;
 
     if elem.DutyShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyShapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 function WindGens_Get_IsDelta(): TAPIBoolean; CDECL; // API Extension
@@ -464,7 +464,7 @@ begin
         Exit;
 
     if elem.YearlyShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyShapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_Bus1(const Value: PAnsiChar); CDECL; // API Extension

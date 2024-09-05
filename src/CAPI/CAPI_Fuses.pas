@@ -265,7 +265,7 @@ begin
     end;
 
     If elem.FuseCurve <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.FuseCurve.Name)
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.FuseCurve.Name())
     else
         Result := NIL;
 end;

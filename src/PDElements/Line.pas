@@ -1390,7 +1390,7 @@ begin
     FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.Bus2)] + '=' + nextbus);
 
     if LineCodeObj <> NIL then
-        FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.LineCode)] + '=' + LineCodeObj.Name)
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.LineCode)] + '=' + LineCodeObj.Name())
     else
         FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.LineCode)] + '=' + '');
 
@@ -1696,7 +1696,7 @@ begin
 
         // Rename the line
         if Series then
-            NewName := Other.Name + '~' + Name //(GetBus(1)) + '~'  + StripExtension(GetBus(2))
+            NewName := Other.Name() + '~' + Name() //(GetBus(1)) + '~'  + StripExtension(GetBus(2))
         else
             NewName := StripExtension(GetBus(1)) + '||' + StripExtension(GetBus(2));
 
@@ -2171,13 +2171,13 @@ begin
                         else
                             strPhaseChoice := 'Wires';
 
-                        strConductors := CheckForBlanks(lineConductorData[i].Name);
+                        strConductors := CheckForBlanks(lineConductorData[i].Name());
                         for i := i0 + 1 to FWireDataSize do
                         begin
                             if (conductorCls <> lineConductorData[i].ParentClass) then
                                 break;
 
-                            strConductors += ', ' + CheckForBlanks(lineConductorData[i].Name);
+                            strConductors += ', ' + CheckForBlanks(lineConductorData[i].Name());
                             i0 := i;
                         end;
                         FSWrite(F, Format(' %s=[%s]', [strPhaseChoice, strConductors]));

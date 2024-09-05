@@ -163,7 +163,7 @@ begin
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
     
-    Result := DSS_GetAsPAnsiChar(DSSPrime, pMeterObj.name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pMeterObj.Name());
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;

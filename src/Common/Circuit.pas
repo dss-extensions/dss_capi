@@ -335,7 +335,7 @@ type
         function CaseName(): String;
         procedure SetCaseName(const Value: String);
 
-        property Name: String READ LocalName;
+        function Name(): String;
         function ActiveCktElement(): TDSSCktElement;
         procedure SetActiveCktElement(Value: TDSSCktElement);
 
@@ -372,6 +372,12 @@ uses
     PVSystem,
     DSSHelper,
     DateUtils;
+
+
+function TDSSCircuit.Name(): String;
+begin
+    result := LocalName;
+end;
 
 constructor TDSSCircuit.Create(dssContext: TDSSContext; const aName: String);
 begin
@@ -595,7 +601,7 @@ begin
     begin
         try
             pCktElem := TDSSCktElement(CktElements.Get(i));
-            ElemName := pCktElem.ParentClass.Name + '.' + pCktElem.Name;
+            ElemName := pCktElem.FullName();
             pCktElem.Free;
         except
             ON E: Exception do
@@ -1430,7 +1436,7 @@ begin
                 begin
                     SetElementActive(EMeter.ZonePCE[j]);
                     TotalkW := TotalkW + TLoadObj(DSS.ActiveDSSObject).kWBase;
-                    myLoads[k] := TLoadObj(DSS.ActiveDSSObject).Name;
+                    myLoads[k] := TLoadObj(DSS.ActiveDSSObject).Name();
                     setlength(myLoads, length(myLoads) + 1);
                     inc(k);
                 end;
@@ -1453,7 +1459,7 @@ begin
                     myPF := TLoadObj(DSS.ActiveDSSObject).PFNominal;
                     PFSpecified := TLoadObj(DSS.ActiveDSSObject).PFSpecified;
                     if TLoadObj(DSS.ActiveDSSObject).YearlyShapeObj <> NIL then
-                        DSS.LoadshapeClass.SetActive(TLoadObj(DSS.ActiveDSSObject).YearlyShapeObj.Name)
+                        DSS.LoadshapeClass.SetActive(TLoadObj(DSS.ActiveDSSObject).YearlyShapeObj.Name())
                     else
                         DSS.LoadshapeClass.SetActive('');
 
@@ -1497,7 +1503,7 @@ begin
                 end;
 
                 // Saves the profile on disk
-                myLoadShapes[High(myLoadShapes)] := DSS.OutputDirectory + 'loadShape_' + EMeter.Name + '.csv'; // CurrentDSSDir
+                myLoadShapes[High(myLoadShapes)] := DSS.OutputDirectory + 'loadShape_' + EMeter.Name() + '.csv'; // CurrentDSSDir
 
                 F := DSS.GetOutputStreamEx(myLoadShapes[High(myLoadShapes)], fmCreate);
                 for j := 0 to High(myLoadShape) do
@@ -1963,7 +1969,7 @@ begin
     // Trap error in bus name
     if Length(BusName) = 0 then
     begin  // Error in busname
-        DoErrorMsg(DSS, 'TDSSCircuit.AddBus', 'BusName for Object "' + FActiveCktElement.Name + '" is null.',
+        DoErrorMsg(DSS, 'TDSSCircuit.AddBus', 'BusName for Object "' + FActiveCktElement.Name() + '" is null.',
             'Error in definition of object.', 424);
         for i := 1 to FActiveCktElement.NConds do
             NodeBuffer[i] := 0;
@@ -1984,7 +1990,7 @@ begin
             ReallocMem(Buses, SizeOf(Buses[1]) * MaxBuses);
         end;
         bus := TDSSBus.Create(DSS);
-        bus.Name := BusName;
+        bus.SetName(BusName);
         Buses[NumBuses] := bus;
     end;
 
@@ -2077,7 +2083,7 @@ begin
     // Resize DeviceList if no. of devices greatly exceeds allocation
     if Cardinal(NumDevices) > 2 * DeviceList.InitialAllocation then
         ReAllocDeviceList;
-    DeviceList.Add(Obj.Name);
+    DeviceList.Add(Obj.Name());
     CktElements.Add(Obj);
 
     // Build Lists of PC and PD elements
@@ -2833,7 +2839,7 @@ begin
     for i := 1 to EnergyMeters.Count do
     begin
         Meter := EnergyMeters.Get(i); // Recast pointer
-        CurrDir := SaveDir + Meter.Name;
+        CurrDir := SaveDir + Meter.Name();
         if not Meter.Enabled then // Only active meters
             continue;
 

@@ -865,7 +865,7 @@ end;
 {$ENDIF}
 function CompareClassNames(Item1, Item2: Pointer): Integer;
 begin
-    Result := CompareText(TDSSClass(Item1).name, TDSSClass(Item2).name);
+    Result := CompareText(TDSSClass(Item1).Name, TDSSClass(Item2).Name);
 end;
 
 procedure AddHelpForClasses(DSS: TDSSContext; DSSClassList: TDSSPointerList; BaseClass: Word; bProperties: Boolean);
@@ -888,7 +888,7 @@ begin
         for i := 1 to HelpList.Count do
         begin
             pDSSClass := HelpList.Items[i - 1];
-            DSS.DSSMessageCallback(DSS, PChar(pDSSClass.name), ord(DSSMessageType.Help), Length(pDSSClass.name) + 1);
+            DSS.DSSMessageCallback(DSS, PChar(pDSSClass.Name), ord(DSSMessageType.Help), Length(pDSSClass.Name) + 1);
             if bProperties = TRUE then
                 for j := 1 to pDSSClass.NumProperties do
                 begin
@@ -1423,7 +1423,7 @@ var
 begin
     for pCkt in DSS.Circuits do
     begin
-        if AnsiCompareText(pCkt.Name, cktname) = 0 then
+        if AnsiCompareText(pCkt.Name(), cktname) = 0 then
         begin
             DSS.ActiveCircuit := pCkt;
             Exit;
@@ -1611,7 +1611,7 @@ begin
                 except
                     On E: Exception do
                     begin
-                        DoSimpleMsg(DSS, '%s %s Reactor=%s Bus No.=%d ', [E.Message, CRLF, pReacElement.Name, pReacElement.NodeRef[1]], 9999);
+                        DoSimpleMsg(DSS, '%s %s Reactor=%s Bus No.=%d ', [E.Message, CRLF, pReacElement.Name(), pReacElement.NodeRef[1]], 9999);
                         Break;
                     end;
                 end;
@@ -2426,7 +2426,7 @@ begin
                             On E: Exception do
                             begin
                                 S := E.message + CRLF +
-                                    'Element=' + ActiveCktElement.Name + CRLF +
+                                    'Element=' + ActiveCktElement().Name()+ CRLF +
                                     'Nvalues=' + IntToStr(NValues) + CRLF +
                                     'Nterms=' + IntToStr(Nterms) + CRLF +
                                     'NConds =' + IntToStr(NConds) + CRLF +
@@ -4191,7 +4191,7 @@ begin
         // pElem.ComputeVTerminal();
         plotParams := TJSONObject.Create([
             'PlotType', 'Visualize',
-            'ElementName', pElem.Name,
+            'ElementName', pElem.Name(),
             'ElementType', pElem.DSSClassName,
             'Quantity', Quantity
             ]);

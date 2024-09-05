@@ -742,7 +742,7 @@ begin
 
             TProp.PLoss:
                 if Loss_CurveObj <> NIL then
-                    GenVars.PLoss := Loss_CurveObj.Name;
+                    GenVars.PLoss := Loss_CurveObj.Name();
 
             TProp.VWind:
             begin

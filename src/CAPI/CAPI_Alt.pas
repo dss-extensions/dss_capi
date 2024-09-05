@@ -2033,7 +2033,7 @@ end;
 //------------------------------------------------------------------------------
 function Alt_Bus_Get_Name(DSS: TDSSContext; pBus: TDSSBus): PAnsiChar; CDECL;
 begin
-    Result := PChar(pBus.Name);
+    Result := PChar(pBus.Name()); // reference to LocalName
 end;
 function Alt_Bus_Get_NumNodes(DSS: TDSSContext; pBus: TDSSBus): Integer; CDECL;
 begin
@@ -2645,7 +2645,7 @@ begin
     if pdes or lines then
         maxTerm := 2;
 
-    busName := AnsiLowerCase(pBus.Name);
+    busName := AnsiLowerCase(pBus.Name());
     for i := 1 to DSS.DSSClassList.Count do
     begin
         cls := DSS.DSSClassList.Get(i);
@@ -2820,7 +2820,7 @@ end;
 
 function alt_Bus_ToJSON_(DSS: TDSSContext; bus: TDSSBus; joptions: Integer): TJSONObject;
 begin
-    Result := TJSONObject.Create(['Name', bus.Name]);
+    Result := TJSONObject.Create(['Name', bus.Name()]);
     if bus.CoordDefined then
     begin
         Result.Add('X', bus.x);

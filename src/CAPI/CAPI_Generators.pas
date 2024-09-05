@@ -127,7 +127,7 @@ begin
     if not _activeObj(DSSPrime, pGen) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime, pGen.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pGen.Name());
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -463,7 +463,7 @@ begin
         Exit;
 
     if elem.DailyDispShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyDispShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyDispShapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Class_(): Integer; CDECL;
@@ -486,7 +486,7 @@ begin
         Exit;
 
     if elem.DutyShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyShapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_IsDelta(): TAPIBoolean; CDECL;
@@ -529,7 +529,7 @@ begin
         Exit;
 
     if elem.YearlyShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyShapeObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyShapeObj.Name());
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Bus1(const Value: PAnsiChar); CDECL;
