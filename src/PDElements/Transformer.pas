@@ -197,14 +197,10 @@ type
         function MaxTap(i: Integer): Double; override;
         function TapIncrement(i: Integer): Double; override;
         function BaseVoltage(i: Integer): Double; override;
-        function Get_BasekVLL(i: Integer): Double;
         // CIM accessors
         function NumTaps(i: Integer): Integer; override;
-        function Get_WdgResistance(i: Integer): Double;
         function WdgConnection(i: Integer): Integer; override;
-        function Get_Xsc(i: Integer): Double;
-        function Get_WdgRneutral(i: Integer): Double;
-        function Get_WdgXneutral(i: Integer): Double;
+        function GetXsc(i: Integer): Double;
 
         procedure CalcY_Terminal(FreqMult: Double);
         procedure GICBuildYTerminal;
@@ -280,14 +276,6 @@ type
         procedure GetAllWindingCurrents(CurrBuffer: pComplexArray); override; // All Winding currents in complex array
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
-
-        // TODO: remove most of these
-        function WdgkVA(i: Integer): Double;
-        property BasekVLL[i: Integer]: Double READ Get_BasekVLL;  // Winding VBase
-        property WdgResistance[i: Integer]: Double READ Get_WdgResistance;
-        property WdgRneutral[i: Integer]: Double READ Get_WdgRneutral;
-        property WdgXneutral[i: Integer]: Double READ Get_WdgXneutral;
-        property XscVal[i: Integer]: Double READ Get_Xsc;
     end;
 
 implementation
@@ -1419,39 +1407,7 @@ begin
         end;
 end;
 
-function TTransfObj.Get_WdgResistance(i: Integer): Double;
-begin
-    if (i > 0) and (i <= NumWindings) then
-        Result := Winding[i].Rpu
-    else
-        Result := 0.0;
-end;
-
-function TTransfObj.WdgkVA(i: Integer): Double;
-begin
-    if (i > 0) and (i <= NumWindings) then
-        Result := Winding[i].kVA
-    else
-        Result := 0.0;
-end;
-
-function TTransfObj.Get_WdgRneutral(i: Integer): Double;
-begin
-    if (i > 0) and (i <= NumWindings) then
-        Result := Winding[i].Rneut
-    else
-        Result := 0.0;
-end;
-
-function TTransfObj.Get_WdgXneutral(i: Integer): Double;
-begin
-    if (i > 0) and (i <= NumWindings) then
-        Result := Winding[i].Xneut
-    else
-        Result := 0.0;
-end;
-
-function TTransfObj.Get_Xsc(i: Integer): Double;
+function TTransfObj.GetXsc(i: Integer): Double;
 var
     imax: Integer;
 begin
@@ -1807,12 +1763,6 @@ begin
         end;
     end;
 end;
-
-function TTransfObj.Get_BasekVLL(i: Integer): Double;
-begin
-    Result := Winding[i].kVLL;
-end;
-
 
 procedure TTransfObj.GICBuildYTerminal;
 // Build YTerminal considering on resistance and no coupling to other winding.

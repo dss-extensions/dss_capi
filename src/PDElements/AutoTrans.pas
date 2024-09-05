@@ -183,11 +183,6 @@ type
         ppm_FloatFactor: Double; //  parts per million winding float factor
         XRConst: LongBool;
 
-        function Get_BasekVLL(i: Integer): Double;
-        // CIM accessors
-        function Get_WdgResistance(i: Integer): Double;
-        function Get_Xsc(i: Integer): Double;
-
         procedure CalcY_Terminal(FreqMult: Double);
         procedure GICBuildYTerminal;
 
@@ -269,16 +264,10 @@ type
         procedure SaveWrite(F: TStream); OVERRIDE;
         procedure GetWindingVoltages(iWind: Integer; VBuffer: pComplexArray); override; // previously GetAutoWindingVoltages
         procedure GetAllWindingCurrents(CurrBuffer: pComplexArray); override;
-
-
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
-        property BasekVLL[i: Integer]: Double READ Get_BasekVLL;  // Winding VBase
-
         // CIM accessors
-        property WdgResistance[i: Integer]: Double READ Get_WdgResistance;
-        function WdgkVA(i: Integer): Double;
-        property XscVal[i: Integer]: Double READ Get_Xsc;
+        function GetXsc(i: Integer): Double;
     end;
 
 implementation
@@ -1446,23 +1435,7 @@ begin
         end;
 end;
 
-function TAutoTransObj.Get_WdgResistance(i: Integer): Double;
-begin
-    if (i > 0) and (i <= NumWindings) then
-        Result := Winding[i].Rpu
-    else
-        Result := 0.0;
-end;
-
-function TAutoTransObj.WdgkVA(i: Integer): Double;
-begin
-    if (i > 0) and (i <= NumWindings) then
-        Result := Winding[i].kVA
-    else
-        Result := 0.0;
-end;
-
-function TAutoTransObj.Get_Xsc(i: Integer): Double;
+function TAutoTransObj.GetXsc(i: Integer): Double;
 var
     imax: Integer;
 begin
@@ -1806,12 +1779,6 @@ begin
         end;
     end;
 end;
-
-function TAutoTransObj.Get_BasekVLL(i: Integer): Double;
-begin
-    Result := Winding[i].kVLL;
-end;
-
 
 procedure TAutoTransObj.GICBuildYTerminal;
 // Build YTerminal considering only resistance and no coupling to other winding.

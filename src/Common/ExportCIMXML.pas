@@ -778,7 +778,7 @@ begin
         connections[i - 1] := pXf.WdgConnection(i);
         if connections[i - 1] <> connections[0] then
             angles[i - 1] := 1;
-        if (pXf.WdgRneutral[i] >= 0.0) or (pXf.WdgXneutral[i] > 0.0) then
+        if (pXf.Winding[i].Rneut >= 0.0) or (pXf.Winding[i].Xneut > 0.0) then
             if connections[i - 1] < 1 then
                 ground[i - 1] := 1;
     end;
@@ -3839,8 +3839,8 @@ begin
                     MeshList[i - 1].localName := pAuto.Name + '_Zsc_' + IntToStr(i);
                     MeshList[i - 1].SetUUID(GetDevUuid(XfMesh, pAuto.Name, i));
                 end;
-                val := BaseKVLL[1]; // write core Y
-                zbase := 1000.0 * val * val / WdgkVA(1);
+                val := Winding[1].kVLL; // write core Y
+                zbase := 1000.0 * val * val / Winding[1].kVA;
                 StartInstance(EpPrf, 'TransformerCoreAdmittance', CoreList[0]);
                 val := pAuto.pctNoLoadLoss / 100.0 / zbase;
                 DoubleNode(EpPrf, 'TransformerCoreAdmittance.g', val);
@@ -3855,13 +3855,13 @@ begin
                 begin
                     for k := i + 1 to NumWindings do
                     begin
-                        val := BaseKVLL[i];
-                        zbase := 1000.0 * val * val / WdgkVA(1); // always based on Winding 1 kVA
+                        val := Winding[i].kVLL;
+                        zbase := 1000.0 * val * val / Winding[1].kVA; // always based on Winding 1 kVA
                         StartInstance(EpPrf, 'TransformerMeshImpedance', MeshList[seq - 1]);
-                        val := zbase * (WdgResistance[i] + WdgResistance[k]);
+                        val := zbase * (Winding[i].Rpu + Winding[k].Rpu);
                         DoubleNode(EpPrf, 'TransformerMeshImpedance.r', val);
                         DoubleNode(EpPrf, 'TransformerMeshImpedance.r0', val);
-                        val := zbase * XscVal[seq];
+                        val := zbase * pAuto.GetXsc(seq);
                         inc(seq);
                         DoubleNode(EpPrf, 'TransformerMeshImpedance.x', val);
                         DoubleNode(EpPrf, 'TransformerMeshImpedance.x0', val);
@@ -3875,10 +3875,10 @@ begin
                 begin
                     StartInstance(FunPrf, 'PowerTransformerEnd', WdgList[i - 1]);
                     RefNode(FunPrf, 'PowerTransformerEnd.PowerTransformer', pBank);
-                    DoubleNode(EpPrf, 'PowerTransformerEnd.ratedS', 1000 * WdgkVA(i));
+                    DoubleNode(EpPrf, 'PowerTransformerEnd.ratedS', 1000 * Winding[i].kVA);
                     DoubleNode(EpPrf, 'PowerTransformerEnd.ratedU', 1000 * Winding[i].kvll);
-                    zbase := 1000.0 * BaseKVLL[i] * BaseKVLL[i] / WdgkVA(i);
-                    DoubleNode(EpPrf, 'PowerTransformerEnd.r', zbase * WdgResistance[i]);
+                    zbase := 1000.0 * Winding[i].kVLL * Winding[i].kVLL / Winding[i].kVA;
+                    DoubleNode(EpPrf, 'PowerTransformerEnd.r', zbase * Winding[i].Rpu);
                     if i = 1 then
                     begin
                         WindingConnectionKindNode(FunPrf, 'Y');
@@ -4035,8 +4035,8 @@ begin
 
                 if not bTanks then
                 begin // write the mesh impedances and core admittances
-                    val := BaseKVLL[1];
-                    zbase := 1000.0 * val * val / WdgkVA(1);
+                    val := Winding[1].kVLL;
+                    zbase := 1000.0 * val * val / Winding[1].kVA;
                     StartInstance(EpPrf, 'TransformerCoreAdmittance', CoreList[0]);
                     val := pXf.pctNoLoadLoss / 100.0 / zbase;
                     DoubleNode(EpPrf, 'TransformerCoreAdmittance.g', val);
@@ -4051,13 +4051,13 @@ begin
                     begin
                         for k := i + 1 to NumWindings do
                         begin
-                            val := BaseKVLL[i];
-                            zbase := 1000.0 * val * val / WdgkVA(1); // always based on Winding 1 kVA
+                            val := Winding[1].kVLL;
+                            zbase := 1000.0 * val * val / Winding[1].kVA; // always based on Winding 1 kVA
                             StartInstance(EpPrf, 'TransformerMeshImpedance', MeshList[seq - 1]);
-                            val := zbase * (WdgResistance[i] + WdgResistance[k]);
+                            val := zbase * (Winding[i].Rpu + Winding[k].Rpu);
                             DoubleNode(EpPrf, 'TransformerMeshImpedance.r', val);
                             DoubleNode(EpPrf, 'TransformerMeshImpedance.r0', val);
-                            val := zbase * XscVal[seq];
+                            val := zbase * pXf.GetXsc(seq);
                             inc(seq);
                             DoubleNode(EpPrf, 'TransformerMeshImpedance.x', val);
                             DoubleNode(EpPrf, 'TransformerMeshImpedance.x0', val);
@@ -4081,10 +4081,10 @@ begin
                     begin
                         StartInstance(FunPrf, 'PowerTransformerEnd', WdgList[i - 1]);
                         RefNode(FunPrf, 'PowerTransformerEnd.PowerTransformer', pBank);
-                        DoubleNode(EpPrf, 'PowerTransformerEnd.ratedS', 1000 * WdgkVA(i));
+                        DoubleNode(EpPrf, 'PowerTransformerEnd.ratedS', 1000 * Winding[i].kVA);
                         DoubleNode(EpPrf, 'PowerTransformerEnd.ratedU', 1000 * Winding[i].kvll);
-                        zbase := 1000.0 * BaseKVLL[i] * BaseKVLL[i] / WdgkVA(i);
-                        DoubleNode(EpPrf, 'PowerTransformerEnd.r', zbase * WdgResistance[i]);
+                        zbase := 1000.0 * Winding[i].kVLL * Winding[i].kVLL / Winding[i].kVA;
+                        DoubleNode(EpPrf, 'PowerTransformerEnd.r', zbase * Winding[i].Rpu);
                         if Winding[i].Connection = 1 then
                             WindingConnectionKindNode(FunPrf, 'D')
                         else

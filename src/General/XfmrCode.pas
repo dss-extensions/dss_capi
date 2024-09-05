@@ -601,7 +601,7 @@ begin
     ppm_FloatFactor := obj.ppm_FloatFactor;
     pctImag := obj.pctImag;
     for i := 1 to (NumWindings - 1) * NumWindings div 2 do
-        XSC[i] := obj.XscVal[i];
+        XSC[i] := obj.GetXsc(i);
     for i := 1 to NumWindings do
         Winding[i] := obj.Winding[i];
 end;

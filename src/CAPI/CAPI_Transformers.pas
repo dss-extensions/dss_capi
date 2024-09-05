@@ -179,8 +179,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if (elem.ActiveWinding > 0) and 
-       (elem.ActiveWinding <= elem.NumWindings) then
+    if (elem.ActiveWinding > 0) and (elem.ActiveWinding <= elem.NumWindings) then
         Result := elem.Winding[elem.ActiveWinding].kvll;
 end;
 //------------------------------------------------------------------------------
@@ -192,9 +191,8 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if (elem.ActiveWinding > 0) and 
-       (elem.ActiveWinding <= elem.NumWindings) then
-        Result := elem.WdgkVA(elem.ActiveWinding);
+    if (elem.ActiveWinding > 0) and (elem.ActiveWinding <= elem.NumWindings) then
+        Result := elem.Winding[elem.ActiveWinding].kVA;
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_MaxTap(): Double; CDECL;
@@ -205,8 +203,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if (elem.ActiveWinding > 0) and 
-       (elem.ActiveWinding <= elem.NumWindings) then
+    if (elem.ActiveWinding > 0) and (elem.ActiveWinding <= elem.NumWindings) then
         Result := elem.MaxTap(elem.ActiveWinding);
 end;
 //------------------------------------------------------------------------------
@@ -268,7 +265,7 @@ begin
 
     if (elem.ActiveWinding > 0) and 
        (elem.ActiveWinding <= elem.NumWindings) then
-        Result := elem.WdgResistance[elem.ActiveWinding] * 100;
+        Result := elem.Winding[elem.ActiveWinding].Rpu * 100;
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Rneut(): Double; CDECL;
@@ -281,7 +278,7 @@ begin
 
     if (elem.ActiveWinding > 0) and 
        (elem.ActiveWinding <= elem.NumWindings) then
-        Result := elem.WdgRneutral[elem.ActiveWinding];
+        Result := elem.Winding[elem.ActiveWinding].Rneut;
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Tap(): Double; CDECL;
@@ -363,7 +360,7 @@ begin
 
     if (elem.ActiveWinding > 0) and 
        (elem.ActiveWinding <= elem.NumWindings) then
-        Result := elem.WdgXneutral[elem.ActiveWinding];
+        Result := elem.Winding[elem.ActiveWinding].Xneut;
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_IsDelta(Value: TAPIBoolean); CDECL;
