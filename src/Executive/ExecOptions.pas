@@ -335,7 +335,7 @@ begin
     Val(S2, Result, Code);
     if Code > 0 then
     begin   // check for error
-        Result := DSS.ActiveCircuit.solution.DynaVars.h; // Don't change it
+        Result := DSS.ActiveCircuit.Solution.DynaVars.h; // Don't change it
         DoSimpleMsg(DSS, 'Error in specification of StepSize: %s', [s], 99933);
         Exit;
     end;
@@ -346,7 +346,7 @@ begin
             Result := Result * 60.0;
         's': ; // Do nothing
     else
-        Result := DSS.ActiveCircuit.solution.DynaVars.h; // Don't change it
+        Result := DSS.ActiveCircuit.Solution.DynaVars.h; // Don't change it
         DoSimpleMsg(DSS, 'Error in specification of StepSize: "%s". Units can only be h, m, or s (single char only)', [s], 99934);
     end;
 end;
@@ -427,9 +427,9 @@ begin
             2, 13:
                 SetObject(DSS, Param);
             3:
-                DSS.ActiveCircuit.solution.DynaVars.intHour := DSS.Parser.MakeInteger();
+                DSS.ActiveCircuit.Solution.DynaVars.intHour := DSS.Parser.MakeInteger();
             4:
-                DSS.ActiveCircuit.solution.DynaVars.t := DSS.Parser.MakeDouble();
+                DSS.ActiveCircuit.Solution.DynaVars.t := DSS.Parser.MakeDouble();
             5:
                 with DSS.ActiveCircuit do
                 begin
@@ -437,7 +437,7 @@ begin
                     DefaultGrowthFactor := IntPower(DefaultGrowthRate, (Solution.Year() - 1));
                 end;
             6:
-                DSS.ActiveCircuit.solution.Frequency := DSS.Parser.MakeDouble();
+                DSS.ActiveCircuit.Solution.SetFrequency(DSS.Parser.MakeDouble());
             7, 18:
                 with DSS.ActiveCircuit do
                 begin
@@ -445,11 +445,11 @@ begin
                     Solution.IntervalHrs := Solution.DynaVars.h/3600.0;
                 end;
             ord(Opt.Mode):
-                DSS.ActiveCircuit.solution.Mode := TSolveMode(DSS.SolveModeEnum.StringToOrdinal(Param));  // see DSSGlobals
+                DSS.ActiveCircuit.Solution.SetMode(TSolveMode(DSS.SolveModeEnum.StringToOrdinal(Param)));  // see DSSGlobals
             9:
-                DSS.ActiveCircuit.solution.RandomType := DSS.RandomModeEnum.StringToOrdinal(Param);
+                DSS.ActiveCircuit.Solution.RandomType := DSS.RandomModeEnum.StringToOrdinal(Param);
             10:
-                DSS.ActiveCircuit.solution.NumberOfTimes := DSS.Parser.MakeInteger();
+                DSS.ActiveCircuit.Solution.NumberOfTimes := DSS.Parser.MakeInteger();
             11:
                 DSS.DSSExecutive.Set_Time;
             14:
@@ -457,9 +457,9 @@ begin
             15:
                 DefaultEditor := Param;     // 'Editor='
             16:
-                DSS.ActiveCircuit.solution.ConvergenceTolerance := DSS.Parser.MakeDouble();
+                DSS.ActiveCircuit.Solution.ConvergenceTolerance := DSS.Parser.MakeDouble();
             17:
-                DSS.ActiveCircuit.solution.MaxIterations := DSS.Parser.MakeInteger();
+                DSS.ActiveCircuit.Solution.MaxIterations := DSS.Parser.MakeInteger();
             19:
                 with DSS.ActiveCircuit.solution do
                 begin
@@ -574,7 +574,7 @@ begin
             53:
             begin
                 DSS.ActiveCircuit.Fundamental := DSS.Parser.MakeDouble();     // Set Base Frequency for system (used henceforth)
-                DSS.ActiveCircuit.Solution.Frequency := DSS.Parser.MakeDouble();
+                DSS.ActiveCircuit.Solution.SetFrequency(DSS.Parser.MakeDouble());
             end;
             54:
                 DSS.DSSExecutive.DoHarmonicsList(Param);
@@ -621,7 +621,7 @@ begin
             begin
                 DSS.DefaultBaseFreq := DSS.Parser.MakeDouble();
                 DSS.ActiveCircuit.Fundamental := DSS.Parser.MakeDouble();     // Set Base Frequency for system (used henceforth)
-                DSS.ActiveCircuit.Solution.Frequency := DSS.Parser.MakeDouble();
+                DSS.ActiveCircuit.Solution.SetFrequency(DSS.Parser.MakeDouble());
             end;
             74:
                 DSS.ActiveCircuit.MarkSwitches := InterpretYesNo(Param);
@@ -696,7 +696,7 @@ begin
             109:
                 DSS.ActiveCircuit.Solution.SampleTheMeters := InterpretYesNo(Param);
             110:
-                DSS.ActiveCircuit.solution.MinIterations := DSS.Parser.MakeInteger();
+                DSS.ActiveCircuit.Solution.MinIterations := DSS.Parser.MakeInteger();
             111:
                 DoSimpleMsg(DSS, _('This is not supported in DSS-Extensions.'), 303);
             112:
@@ -812,7 +812,7 @@ begin
 
         case ParamPointer of
             3, 4:
-                DSS.ActiveCircuit.Solution.Update_dblHour;
+                DSS.ActiveCircuit.Solution.Update_dblHour();
             ord(Opt.LongLineCorrection):
                 with DSS.ActiveCircuit Do
                 begin
@@ -872,31 +872,31 @@ begin
                 2, 13:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.ActiveCktElement.Name());
                 3:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.DynaVars.intHour);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.DynaVars.intHour);
                 4:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.DynaVars.t);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.DynaVars.t);
                 5:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.Year());
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.Year());
                 6:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.Frequency);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.Frequency());
                 7, 18:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.DynaVars.h);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.DynaVars.h);
                 ord(Opt.Mode):
-                    AppendGlobalResult(DSS, DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)));
+                    AppendGlobalResult(DSS, DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.Mode())));
                 9:
                     AppendGlobalResult(DSS, DSS.RandomModeEnum.OrdinalToString(DSS.ActiveCircuit.Solution.RandomType));
                 10:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.NumberOfTimes);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.NumberOfTimes);
                 11:
-                    AppendGlobalResult(DSS, Format('[ %d, %-g ] !... %-g (hours)', [DSS.ActiveCircuit.solution.DynaVars.intHour, DSS.ActiveCircuit.solution.DynaVars.t, DSS.ActiveCircuit.solution.DynaVars.dblHour]));
+                    AppendGlobalResult(DSS, Format('[ %d, %-g ] !... %-g (hours)', [DSS.ActiveCircuit.Solution.DynaVars.intHour, DSS.ActiveCircuit.Solution.DynaVars.t, DSS.ActiveCircuit.Solution.DynaVars.dblHour]));
                 14:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.Name());
                 15:
                     AppendGlobalResult(DSS, DefaultEditor);
                 16:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.ConvergenceTolerance);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.ConvergenceTolerance);
                 17:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.MaxIterations);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.MaxIterations);
                 19:
                     AppendGlobalResult(DSS, DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.Solution.LoadModel));
                 20:
@@ -991,7 +991,7 @@ begin
                                 AppendGlobalResult(DSS, HarmonicList[i]);
                         end;
                 55:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.MaxControlIterations);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.MaxControlIterations);
                 56:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.BusList.NameOfIndex(DSS.ActiveCircuit.ActiveBusIndex));
                 57:
@@ -1104,7 +1104,7 @@ begin
                 109:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.SampleTheMeters);
                 110:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.solution.MinIterations);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.MinIterations);
                 111:
                     AppendGlobalResult(DSS, 'No');
                 112:

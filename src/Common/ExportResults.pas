@@ -3026,7 +3026,7 @@ begin
         else
             FSWrite(F, 'UnSolved');
 
-        FSWrite(F, Format(', %s', [DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode))]));
+        FSWrite(F, Format(', %s', [DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.Mode()))]));
         FSWrite(F, Format(', %d', [DSS.ActiveCircuit.Solution.NumberofTimes]));
         FSWrite(F, Format(', %8.3f', [DSS.ActiveCircuit.LoadMultiplier()]));
         FSWrite(F, Format(', %d', [DSS.ActiveCircuit.NumDevices]));
@@ -3052,7 +3052,7 @@ begin
                 else
                     FSWrite(F, 'Total Active Losses:   ****** MW, (**** %%)');
                 FSWrite(F, Format(', %-.6g', [cLosses.im]));
-                FSWrite(F, Format(', %-g', [DSS.ActiveCircuit.Solution.Frequency]));
+                FSWrite(F, Format(', %-g', [DSS.ActiveCircuit.Solution.Frequency()]));
             end;
 
         FSWriteln(F);

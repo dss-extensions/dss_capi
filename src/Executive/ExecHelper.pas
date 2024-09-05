@@ -1413,7 +1413,7 @@ begin
     begin
         DynaVars.intHour := Round(TimeArray[1]);
         DynaVars.t := TimeArray[2];
-        Update_dblHour;
+        Update_dblHour();
     end;
 end;
 
@@ -2625,8 +2625,8 @@ begin
         SetLoadMultiplier(1.0);   // Property .. has side effects
         with Solution do
         begin
-            if Mode <> TSolveMode.SNAPSHOT then
-                Mode := TSolveMode.SNAPSHOT;   // Resets meters, etc. if not in snapshot mode
+            if Mode() <> TSolveMode.SNAPSHOT then
+                SetMode(TSolveMode.SNAPSHOT);   // Resets meters, etc. if not in snapshot mode
             Solve;  // Make guess based on present allocationfactors
         end;
 
@@ -3472,7 +3472,7 @@ begin
     begin
         S := S + 'Status = NOT Solved' + CRLF;
     end;
-    S := S + 'Solution Mode = ' + DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)) + CRLF;
+    S := S + 'Solution Mode = ' + DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.Mode())) + CRLF;
     S := S + 'Number = ' + IntToStr(DSS.ActiveCircuit.Solution.NumberofTimes) + CRLF;
     S := S + 'Load Mult = ' + Format('%5.3f', [DSS.ActiveCircuit.LoadMultiplier()]) + CRLF;
     S := S + 'Devices = ' + Format('%d', [DSS.ActiveCircuit.NumDevices]) + CRLF;
@@ -3500,8 +3500,8 @@ begin
         else
             S := S + 'Total Active Losses:   ****** MW, (**** %%)' + CRLF;
         S := S + Format('Total Reactive Losses: %-.6g Mvar', [cLosses.im]) + CRLF;
-        S := S + Format('Frequency = %-g Hz', [DSS.ActiveCircuit.Solution.Frequency]) + CRLF;
-        S := S + 'Mode = ' + DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)) + CRLF;
+        S := S + Format('Frequency = %-g Hz', [DSS.ActiveCircuit.Solution.Frequency()]) + CRLF;
+        S := S + 'Mode = ' + DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.Mode())) + CRLF;
         S := S + 'Control Mode = ' + DSS.ControlModeEnum.OrdinalToString(DSS.ActiveCircuit.Solution.Controlmode) + CRLF;
         S := S + 'Load Model = ' + DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.Solution.LoadModel) + CRLF;
     end;
@@ -4826,7 +4826,7 @@ begin
             2:
                 Npts := InterpretDblArray(DSS, Param, Npts, PDoubleArray(@Varray[0]));
             3:
-                CyclesPerSample := Round(DSS.ActiveCircuit.Solution.Frequency * DSS.Parser.MakeDouble());
+                CyclesPerSample := Round(DSS.ActiveCircuit.Solution.Frequency() * DSS.Parser.MakeDouble());
             4:
                 Freq := DSS.Parser.MakeDouble();
             5:

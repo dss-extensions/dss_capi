@@ -1141,7 +1141,7 @@ begin
         Exit;
 
     // Check dispatch to see what state the PVSystem element should be in
-    case ActiveCircuit.Solution.Mode of
+    case ActiveCircuit.Solution.Mode() of
         TSolveMode.SNAPSHOT: ; // Just solve for the present kW, kvar  // Don't check for state change
         TSolveMode.DAILYMODE:
         begin
@@ -1244,7 +1244,7 @@ var
     i, j: Integer;
     FreqMultiplier: Double;
 begin
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := ActiveCircuit.Solution.Frequency();
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
     if ActiveCircuit.Solution.IsHarmonicModel then
@@ -1627,7 +1627,7 @@ begin
             [ActiveCircuit.Solution.DynaVARs.t,
             ActiveCircuit.Solution.Iteration,
             ActiveCircuit.LoadMultiplier()]),
-            DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)), ', ',
+            DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.Mode())), ', ',
             DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.Solution.LoadModel), ', ',
             VoltageModel: 0, ', ',
             (Qnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
@@ -1924,7 +1924,7 @@ begin
 
     with PVSystemVars do
     begin
-        PVSystemHarmonic := ActiveCircuit.Solution.Frequency / PVSystemFundamental;
+        PVSystemHarmonic := ActiveCircuit.Solution.Frequency() / PVSystemFundamental;
         if SpectrumObj <> NIL then
             E := SpectrumObj.GetMult(PVSystemHarmonic) * VThevHarm // Get base harmonic magnitude
         else
@@ -1957,7 +1957,7 @@ begin
         DoDynamicMode();
         Exit;
     end;
-    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
+    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency() <> ActiveCircuit.Fundamental) then
     begin
         DoHarmonicMode();
         Exit;
@@ -2101,7 +2101,7 @@ var
     E, Va: complex;
 begin
     YprimInvalid := TRUE;  // Force rebuild of YPrims
-    PVSystemFundamental := ActiveCircuit.Solution.Frequency;  // Whatever the frequency is when we enter here.
+    PVSystemFundamental := ActiveCircuit.Solution.Frequency();  // Whatever the frequency is when we enter here.
 
     // Compute reference Thevinen voltage from phase 1 current
 

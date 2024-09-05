@@ -1163,7 +1163,7 @@ begin
     // Build Zmatrix
     if LineGeometryObj <> NIL then
     begin
-        FMakeZFromGeometry(ActiveCircuit.Solution.Frequency); // Includes length in proper units
+        FMakeZFromGeometry(ActiveCircuit.Solution.Frequency()); // Includes length in proper units
         if DSS.SolutionAbort() then
             Exit;
 
@@ -1171,7 +1171,7 @@ begin
     else
     if SpacingSpecified then
     begin
-        FMakeZFromSpacing(ActiveCircuit.Solution.Frequency); // Includes length in proper units
+        FMakeZFromSpacing(ActiveCircuit.Solution.Frequency()); // Includes length in proper units
         if DSS.SolutionAbort() then
             Exit;
     end
@@ -1180,7 +1180,7 @@ begin
         // Z is from line code or specified in line data
         // In this section Z is assumed in ohms per unit length
         LengthMultiplier := Len / unitsFactor;   // convert to per unit length
-        FYprimFreq := ActiveCircuit.Solution.Frequency;
+        FYprimFreq := ActiveCircuit.Solution.Frequency();
         FreqMultiplier := FYprimFreq / BaseFrequency;
 
         // If positive sequence, long-line correction can be taken into account here
@@ -1283,7 +1283,7 @@ begin
     // At this point have Z and Zinv in proper values including length
     // If GIC simulation, convert Zinv back to sym components, R Only
 
-    if ActiveCircuit.Solution.Frequency < 0.51 then     // 0.5 Hz is cutoff
+    if ActiveCircuit.Solution.Frequency() < 0.51 then     // 0.5 Hz is cutoff
         ConvertZinvToPosSeqR();
 
     if Zinv.Inverterror > 0 then
@@ -1328,7 +1328,7 @@ begin
         Yprim_Series.AddElement(i, i, CAP_EPSILON);
 
      // Now Build the Shunt admittances and add into YPrim
-    if ActiveCircuit.Solution.Frequency > 0.51 then   // Skip Capacitance for GIC
+    if ActiveCircuit.Solution.Frequency() > 0.51 then   // Skip Capacitance for GIC
     begin
         // Put half the Shunt Capacitive Admittance at each end
         YValues := Yc.GetValuesArrayPtr(Norder);

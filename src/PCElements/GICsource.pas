@@ -406,7 +406,7 @@ var
 begin
     try
         // If the solution frequency not 0.1 Hz, source is shorted.
-        if abs(ActiveCircuit.Solution.Frequency - SrcFrequency) < EPSILON2 then
+        if abs(ActiveCircuit.Solution.Frequency() - SrcFrequency) < EPSILON2 then
             Vmag := Volts
         else
             Vmag := 0.0;

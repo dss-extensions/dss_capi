@@ -910,7 +910,7 @@ var
     w, FreqMultiple: Double;
     HasZL: Boolean;
 begin
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := ActiveCircuit.Solution.Frequency();
     FreqMultiple := FYprimFreq / BaseFrequency;
     w := TwoPi * FYprimFreq;
     HasZL := (FR[iStep] + Abs(FXL[iSTep])) > 0.0;

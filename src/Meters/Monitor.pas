@@ -1212,6 +1212,7 @@ var
     cap: TCapacitorObj;
     storage: TStorageObj;
     tr: TControlledTransformerObj;
+    tmp: Double;
 begin
     if not (ValidMonitor and Enabled) then
         Exit;
@@ -1226,7 +1227,8 @@ begin
     //Save time unless Harmonics mode and then save Frequency and Harmonic
     if ActiveCircuit.Solution.IsHarmonicModel then
     begin
-        AddDblsToBuffer(pDoubleArray(@ActiveCircuit.Solution.Frequency), 1);  // put freq in hour slot as a double
+        tmp := ActiveCircuit.Solution.Frequency();
+        AddDblsToBuffer(pDoubleArray(@tmp), 1);  // put freq in hour slot as a double
         AddDblsToBuffer(pDoubleArray(@ActiveCircuit.Solution.Harmonic), 1);  // stick harmonic in time slot in buffer
     end
     else
@@ -1300,8 +1302,8 @@ begin
                 SolutionBuffer[5] := 0;
             SolutionBuffer[6] := solution.IntervalHrs;
             SolutionBuffer[7] := solution.SolutionCount;
-            SolutionBuffer[8] := Ord(solution.Mode);
-            SolutionBuffer[9] := solution.Frequency;
+            SolutionBuffer[8] := Ord(Solution.Mode());
+            SolutionBuffer[9] := Solution.Frequency();
             SolutionBuffer[10] := solution.Year();
             SolutionBuffer[11] := solution.Solve_Time_Elapsed;
             SolutionBuffer[12] := solution.Step_Time_Elapsed;

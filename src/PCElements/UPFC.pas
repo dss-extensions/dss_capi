@@ -472,7 +472,7 @@ begin
         YPrim.Clear;
     end;
 
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := ActiveCircuit.Solution.Frequency();
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
     // Put in Series RL Adjusted for frequency

@@ -127,7 +127,7 @@ begin
     Result := 0.0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSSPrime.ActiveCircuit.Solution.Frequency
+    Result := DSSPrime.ActiveCircuit.Solution.Frequency()
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Hour(): Integer; CDECL;
@@ -167,7 +167,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Ord(DSSPrime.ActiveCircuit.Solution.Mode)
+    Result := Ord(DSSPrime.ActiveCircuit.Solution.Mode())
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Number(): Integer; CDECL;
@@ -222,7 +222,7 @@ procedure Solution_Set_Frequency(Value: Double); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    DSSPrime.ActiveCircuit.Solution.Frequency := Value;
+    DSSPrime.ActiveCircuit.Solution.SetFrequency(Value);
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Hour(Value: Integer); CDECL;
@@ -252,7 +252,7 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
     if (Mode >= Ord(Low(TSolveMode))) and (Mode <= Ord(High(TSolveMode))) then
-        DSSPrime.ActiveCircuit.Solution.Mode := TSolveMode(Mode)
+        DSSPrime.ActiveCircuit.Solution.SetMode(TSolveMode(Mode))
     else
         DoSimpleMsg(DSSPrime, 'Invalid solution mode (%d).', [Mode], 5004);
 end;
@@ -314,7 +314,7 @@ begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.SolveModeEnum.OrdinalToString(ord(DSSPrime.ActiveCircuit.Solution.Mode)))
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.SolveModeEnum.OrdinalToString(ord(DSSPrime.ActiveCircuit.Solution.Mode())))
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_LoadModel(): Integer; CDECL;

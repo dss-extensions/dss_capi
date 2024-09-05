@@ -1718,7 +1718,7 @@ begin
 
     // Get multiplier
 
-    case ActiveCircuit.Solution.Mode of
+    case ActiveCircuit.Solution.Mode() of
         TSolveMode.DAILYMODE:
             CalcDailyMult(ActiveCircuit.Solution.DynaVars.dblHour); // Daily dispatch curve
         TSolveMode.YEARLYMODE:

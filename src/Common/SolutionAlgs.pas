@@ -92,7 +92,7 @@ begin
     DSS.ExpControlClass.UpdateAll();
 
     // End of Time Step Timer
-    ckt.Solution.UpdateLoopTime;
+    ckt.Solution.UpdateLoopTime();
     DSS.MonitorClass.SampleAllMode5;  // sample all mode 5 monitors to get timings
 end;
 
@@ -1024,9 +1024,9 @@ begin
 {$ENDIF}
     try
 
-        if Frequency <> ckt.Fundamental then
+        if Frequency() <> ckt.Fundamental then
         begin // Last solution was something other than fundamental
-            Frequency := ckt.Fundamental;
+            SetFrequency(ckt.Fundamental);
             if not RetrieveSavedVoltages(DSS) then
                 Exit; // Get Saved fundamental frequency solution
         end;
@@ -1045,13 +1045,13 @@ begin
 
         for i := 0 to High(FrequencyList) do
         begin
-            Frequency := FrequencyList[i];   // forces rebuild of SystemY
+            SetFrequency(FrequencyList[i]);   // forces rebuild of SystemY
             if Abs(Harmonic - 1.0) > EPSILON then
             begin    // Skip fundamental
                 {$IFDEF DSS_CAPI_PM}
                 DSS.ActorPctProgress := Round((100.0 * i) / Length(FrequencyList));
                 {$ELSE}
-                DSS.ProgressCaption('Solving at Frequency = ' + Format('%-g', [Frequency]));
+                DSS.ProgressCaption('Solving at Frequency = ' + Format('%-g', [Frequency()]));
                 DSS.ShowPctProgress(Round((100.0 * i) / Length(FrequencyList)));
                 {$ENDIF}
 
@@ -1104,9 +1104,9 @@ begin
 
     IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
     try
-        if Frequency <> ckt.Fundamental then
+        if Frequency() <> ckt.Fundamental then
         begin     // Last solution was something other than fundamental
-            Frequency := ckt.Fundamental;
+            SetFrequency(ckt.Fundamental);
             if not RetrieveSavedVoltages(DSS) then
                 Exit; // Get Saved fundamental frequency solution
         end;
@@ -1136,7 +1136,7 @@ begin
 
         for i := 0 to High(FrequencyList) do
         begin
-            Frequency := FrequencyList[i]; // forces rebuild of SystemY
+            SetFrequency(FrequencyList[i]); // forces rebuild of SystemY
             if Abs(Harmonic - 1.0) > EPSILON then
             begin  // Skip fundamental
                 // DefaultHourMult := DefaultDailyShapeObj.MultAtHour(DynaVars.dblHour);

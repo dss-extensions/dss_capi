@@ -367,7 +367,7 @@ begin
     end;
 
     // calculate the AC voltage source admittance
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := ActiveCircuit.Solution.Frequency();
     FreqMultiplier := FYprimFreq / BaseFrequency;
     Value.re := FRac;
     Value.im := FXac * FreqMultiplier;

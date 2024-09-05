@@ -144,8 +144,6 @@ type
         procedure DoNewtonSolution;
         procedure DoNormalSolution;
         procedure SumAllCurrents;
-        procedure Set_Frequency(const Value: Double);
-        procedure Set_Mode(const Value: TSolveMode);
     PUBLIC
         DSS: TDSSContext;
         cktptr: Pointer;
@@ -295,7 +293,7 @@ type
         destructor Destroy; OVERRIDE;
 
         function Converged(): Boolean;
-        procedure SetGeneratordQdV;
+        procedure SetGeneratordQdV();
 
         procedure SolveZeroLoadSnapShot();
         procedure DoPFLOWsolution();
@@ -306,18 +304,18 @@ type
         procedure SolveDirect();  // solve for now once, direct solution
         procedure SolveYDirect(); // Similar to SolveDirect; used for initialization
         procedure SolveCircuit(); // SolveSnap sans control iteration
-        procedure CheckControls;       // Snapshot checks with matrix rebuild
-        procedure SampleControlDevices;
-        procedure DoControlActions;
-        procedure Sample_DoControlActions;    // Sample and Do
-        procedure Check_Fault_Status;
+        procedure CheckControls();       // Snapshot checks with matrix rebuild
+        procedure SampleControlDevices();
+        procedure DoControlActions();
+        procedure Sample_DoControlActions();    // Sample and Do
+        procedure Check_Fault_Status();
 
-        procedure SetGeneratorDispRef;
-        procedure SetVoltageBases;
+        procedure SetGeneratorDispRef();
+        procedure SetVoltageBases();
 
-        procedure SaveVoltages;
-        procedure UpdateVBus; // updates voltages for each bus    from NodeV
-        procedure RestoreNodeVfromVbus;  // opposite   of updatebus
+        procedure SaveVoltages();
+        procedure UpdateVBus(); // updates voltages for each bus    from NodeV
+        procedure RestoreNodeVfromVbus();  // opposite   of updatebus
 
         function VDiff(i, j: Integer): Complex;  // Difference between two node voltages
         function Yij(i, j: Integer): Complex;
@@ -326,34 +324,37 @@ type
 
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False);
         procedure WriteConvergenceReport(F: TStream);
-        procedure Update_dblHour;
-        procedure IncrementTime;
+        procedure Update_dblHour();
+        procedure IncrementTime();
 
-        procedure UpdateLoopTime;
+        procedure UpdateLoopTime();
 
-        property Mode: TSolveMode READ dynavars.SolutionMode WRITE Set_Mode;
-        property Frequency: Double READ FFrequency WRITE Set_Frequency;
+        function Mode(): TSolveMode;
+        procedure SetMode(const Value: TSolveMode);
+        function Frequency(): Double;
+        procedure SetFrequency(const Value: Double);
+
         function Year(): Integer;
         procedure SetYear(const Value: Integer);
 
         procedure AddInAuxCurrents(SolveType: Integer);
         function SolveSystem(V: pNodeVArray): Integer;
         procedure GetPCInjCurr(GFMOnly: Boolean = FALSE);
-        procedure GetSourceInjCurrents;
-        procedure ZeroInjCurr;
-        procedure Upload2IncMatrix;
+        procedure GetSourceInjCurrents();
+        procedure ZeroInjCurr();
+        procedure Upload2IncMatrix();
 
-        procedure Calc_Inc_Matrix; // Calculates the incidence matrix for the Circuit
-        procedure Calc_Inc_Matrix_Org; // Calculates the incidence matrix hierarchically organized for the Circuit
+        procedure Calc_Inc_Matrix(); // Calculates the incidence matrix for the Circuit
+        procedure Calc_Inc_Matrix_Org(); // Calculates the incidence matrix hierarchically organized for the Circuit
 
         function get_IncMatrix_Row(Col: Integer): Integer; // Gets the index of the Row connected to the specified Column
         function get_IncMatrix_Col(Row: Integer): Integer; // Gets the index of the Column connected to the specified Row
         function CheckLocationIdx(Idx: Integer): Integer; // Evaluates the area covered by the tearing point to see if there is a better one
 
-        procedure AddLines2IncMatrix; // Adds the Lines to the Incidence matrix arrays
-        procedure AddXfmr2IncMatrix; // Adds the Xfmrs to the Incidence matrix arrays
-        procedure AddSeriesCap2IncMatrix; // Adds capacitors in series to the Incidence matrix arrays
-        procedure AddSeriesReac2IncMatrix; // Adds Reactors in series to the Incidence matrix arrays
+        procedure AddLines2IncMatrix(); // Adds the Lines to the Incidence matrix arrays
+        procedure AddXfmr2IncMatrix(); // Adds the Xfmrs to the Incidence matrix arrays
+        procedure AddSeriesCap2IncMatrix(); // Adds capacitors in series to the Incidence matrix arrays
+        procedure AddSeriesReac2IncMatrix(); // Adds Reactors in series to the Incidence matrix arrays
 
         function TimeOfDay(useEpsilon: Boolean = false): Double;
     end;
@@ -482,7 +483,7 @@ begin
     IsDynamicModel := FALSE;
     IsHarmonicModel := FALSE;
 
-    Frequency := DSS.DefaultBaseFreq;
+    SetFrequency(DSS.DefaultBaseFreq);
     Harmonic := 1.0;
 
     FrequencyChanged := TRUE;  // Force Building of YPrim matrices
@@ -795,7 +796,7 @@ begin
     ConvergedFlag := Result;
 end;
 
-procedure TSolutionObj.GetSourceInjCurrents;
+procedure TSolutionObj.GetSourceInjCurrents();
 // Add in the contributions of all source type elements to the global solution vector InjCurr
 var
     pElem: TDSSCktElement;
@@ -810,7 +811,7 @@ begin
     GetPCInjCurr(TRUE);
 end;
 
-procedure TSolutionObj.SetGeneratorDispRef;
+procedure TSolutionObj.SetGeneratorDispRef();
 // Set the global generator dispatch reference
 begin
     case Dynavars.SolutionMode of
@@ -855,7 +856,7 @@ begin
     end;
 end;
 
-procedure TSolutionObj.SetGeneratordQdV;
+procedure TSolutionObj.SetGeneratordQdV();
 var
     pGen: TGeneratorObj;
     Did_One: Boolean;
@@ -1033,7 +1034,7 @@ begin
             Exit; // Initialization can result in abort
 
         try
-            SetGeneratordQdV;  // Set dQdV for Model 3 generators
+            SetGeneratordQdV();  // Set dQdV for Model 3 generators
         except
             ON E: EEsolv32Problem do
             begin
@@ -1074,11 +1075,11 @@ begin
 
     Inc(SolutionCount);    //Unique number for this solution
 
-    ZeroInjCurr;
+    ZeroInjCurr();
     if DSS.SolutionAbort() then
         Exit;
 
-    GetSourceInjCurrents;    // Vsource, Isource and VCCS only
+    GetSourceInjCurrents();    // Vsource, Isource and VCCS only
 
     // Make the series Y matrix the active matrix
     if hYseries = 0 then
@@ -1120,7 +1121,7 @@ begin
     end;
 end;
 
-procedure TSolutionObj.SetVoltageBases;
+procedure TSolutionObj.SetVoltageBases();
 // Set voltage bases using voltage at first node (phase) of a bus
 var
     i: Integer;
@@ -1162,14 +1163,14 @@ end;
 
 procedure TSolutionObj.SnapShotInit;
 begin
-    SetGeneratorDispRef;
+    SetGeneratorDispRef();
     ControlIteration := 0;
     ControlActionsDone := FALSE;
     MostIterationsDone := 0;
     LoadsNeedUpdating := TRUE;  // Force the loads to update at least once
 end;
 
-procedure TSolutionObj.CheckControls;
+procedure TSolutionObj.CheckControls();
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
 var
      i: Integer;
@@ -1185,8 +1186,8 @@ begin
             begin
                 if ckt.LogEvents then
                     DSS.LogThisEvent('Control Iteration ' + IntToStr(ControlIteration));
-                Sample_DoControlActions;
-                Check_Fault_Status;
+                Sample_DoControlActions();
+                Check_Fault_Status();
             end
             else
                 ControlActionsDone := TRUE; // Stop solution process if failure to converge
@@ -1237,7 +1238,7 @@ begin
         SolveCircuit();  // Do circuit solution w/o checking controls
         // Now Check controls
         DSS.SignalEvent(TAltDSSEvent.Legacy_CheckControls);
-        CheckControls;
+        CheckControls();
 
         // For reporting max iterations per control iteration
         if Iteration > MostIterationsDone then
@@ -1288,11 +1289,11 @@ begin
             BuildYMatrix(DSS, WHOLEMATRIX, TRUE); // Side Effect: Allocates V
         end;
 
-        ZeroInjCurr;
+        ZeroInjCurr();
         if DSS.SolutionAbort() then
             Exit;
 
-        GetSourceInjCurrents;
+        GetSourceInjCurrents();
 
         // Pick up PCELEMENT injections for Harmonics mode and Dynamics mode
         // Ignore these injections for powerflow; Use only admittance in Y matrix
@@ -1367,7 +1368,7 @@ begin
     end;
 end;
 
-procedure TSolutionObj.ZeroInjCurr;
+procedure TSolutionObj.ZeroInjCurr();
 var
     I: Integer;
 begin
@@ -1382,14 +1383,14 @@ begin
         Currents[i] := 0;
 end;
 
-procedure TSolutionObj.Upload2IncMatrix;
+procedure TSolutionObj.Upload2IncMatrix();
 begin
   // Uploads the values to the incidence matrix
     IncMat.insert((ActiveIncCell[0] - 1), (ActiveIncCell[1] - 2), ActiveIncCell[2]);
     ActiveIncCell[2] := -1;
 end;
 
-procedure TSolutionObj.AddLines2IncMatrix;
+procedure TSolutionObj.AddLines2IncMatrix();
 var
     LineBus: String;
     elem: TLineObj;
@@ -1428,7 +1429,7 @@ begin
     end;
 end;
 
-procedure TSolutionObj.AddXfmr2IncMatrix;
+procedure TSolutionObj.AddXfmr2IncMatrix();
 var
     LineBus: String;
     elem: TTransfObj;
@@ -1467,7 +1468,7 @@ begin
     end;
 end;
 
-procedure TSolutionObj.AddSeriesCap2IncMatrix;
+procedure TSolutionObj.AddSeriesCap2IncMatrix();
 var
     CapBus: String;
     elem: TCapacitorObj;
@@ -1506,7 +1507,7 @@ begin
     end;
 end;
 
-procedure TSolutionObj.AddSeriesReac2IncMatrix;
+procedure TSolutionObj.AddSeriesReac2IncMatrix();
 var
     RBus: String;
     TermIdx,
@@ -1549,7 +1550,7 @@ end;
 
 // Routine for extracting the Branch to Node incidence matrix
 // The order depends on the way the lines, xfmr, series cap and reactors
-procedure TSolutionObj.Calc_Inc_Matrix;
+procedure TSolutionObj.Calc_Inc_Matrix();
 begin
     // If the sparse matrix obj doesn't exists creates it, otherwise deletes the content
     if IncMat = NIL then
@@ -1563,10 +1564,10 @@ begin
     temp_counter := 0;
     ActiveIncCell[0] := 1;           // Activates row 1 of the incidence matrix
     // Now we proceed to evaluate the link branches
-    AddLines2IncMatrix;      // Includes the Lines
-    AddXfmr2IncMatrix;       // Includes the Xfmrs
-    AddSeriesCap2IncMatrix;  // Includes Series Cap
-    AddSeriesReac2IncMatrix; // Includes Series Reactors
+    AddLines2IncMatrix();      // Includes the Lines
+    AddXfmr2IncMatrix();       // Includes the Xfmrs
+    AddSeriesCap2IncMatrix();  // Includes Series Cap
+    AddSeriesReac2IncMatrix(); // Includes Series Reactors
     DSS.IncMat_Ordered := FALSE;
 end;
 
@@ -1619,7 +1620,7 @@ end;
 // Organized hierarchically. This routine also calculates the
 // Levels vector for defining the proximity of the bus to the circuit's
 // Backbone. To do it, this routine uses the CktTree class
-procedure TSolutionObj.Calc_Inc_Matrix_Org;
+procedure TSolutionObj.Calc_Inc_Matrix_Org();
 
 var
     pdElem: TPDElement;
@@ -1838,7 +1839,7 @@ begin
         FSWriteln(F, 'Set sec=', Format('%-g', [DynaVars.t]));
         FSWriteln(F, 'Set year=', IntToStr(Year()));
     end;
-    FSWriteln(F, 'Set frequency=', Format('%-g', [Frequency]));
+    FSWriteln(F, 'Set frequency=', Format('%-g', [FFrequency]));
     FSWriteln(F, 'Set stepsize=', Format('%-g', [DynaVars.h]));
     FSWriteln(F, 'Set number=', IntToStr(NumberOfTimes));
     if Leaf then
@@ -2009,7 +2010,7 @@ begin
     end;
 end;
 
-procedure TSolutionObj.DoControlActions;
+procedure TSolutionObj.DoControlActions();
 var
     XHour: Integer;
     XSec: Double;
@@ -2042,7 +2043,7 @@ begin
     end;
 end;
 
-procedure TSolutionObj.SampleControlDevices;
+procedure TSolutionObj.SampleControlDevices();
 var
     ControlDevice: TControlElem;
 begin
@@ -2064,7 +2065,7 @@ begin
     end;
 end;
 
-procedure TSolutionObj.Sample_DoControlActions;
+procedure TSolutionObj.Sample_DoControlActions();
 begin
     if ControlMode = CONTROLSOFF then
         ControlActionsDone := TRUE
@@ -2078,11 +2079,16 @@ begin
     end;
 end;
 
-procedure TSolutionObj.Set_Mode(const Value: TSolveMode);
+function TSolutionObj.Mode(): TSolveMode;
+begin
+    result := dynavars.SolutionMode;
+end;
+
+procedure TSolutionObj.SetMode(const Value: TSolveMode);
 begin
     DynaVars.intHour := 0;
     DynaVars.t := 0.0;
-    Update_dblHour;
+    Update_dblHour();
     ckt.TrapezoidalIntegration := FALSE;
 
     if not OK_for_Dynamics(Value) then
@@ -2214,7 +2220,7 @@ begin
         ckt.AutoAddObj.AddCurrents(SolveType);
 end;
 
-procedure TSolutionObj.Check_Fault_Status;
+procedure TSolutionObj.Check_Fault_Status();
 var
     pFault: TFaultObj;
 begin
@@ -2281,16 +2287,15 @@ begin
     if IsHarmonicModel and not ((Value = TSolveMode.HARMONICMODE) or (Value = TSolveMode.HARMONICMODET)) then
     begin
         ckt.InvalidateAllPCELEMENTS();  // Force Recomp of YPrims when we leave Harmonics mode
-        Frequency := ckt.Fundamental;   // Resets everything to norm
+        SetFrequency(ckt.Fundamental);   // Resets everything to norm
     end;
 
     if not IsHarmonicModel and ((Value = TSolveMode.HARMONICMODE) or (Value = TSolveMode.HARMONICMODET)) then
     begin   // see if conditions right for going into Harmonics
 
-        if (ckt.IsSolved) and (Frequency = ckt.Fundamental) then
+        if (ckt.IsSolved) and (FFrequency = ckt.Fundamental) then
         begin
-            if not InitializeForHarmonics(DSS)   // set state variables for machines (loads and generators) and sources
-            then
+            if not InitializeForHarmonics(DSS) then // set state variables for machines (loads and generators) and sources
             begin
                 Result := FALSE;
                 if DSS.In_ReDirect then
@@ -2307,7 +2312,12 @@ begin
     end;
 end;
 
-procedure TSolutionObj.Set_Frequency(const Value: Double);
+function TSolutionObj.Frequency(): Double;
+begin
+    result := FFrequency;
+end;
+
+procedure TSolutionObj.SetFrequency(const Value: Double);
 begin
     if FFrequency <> Value then
     begin
@@ -2320,7 +2330,7 @@ begin
         Harmonic := FFrequency / ckt.Fundamental;  // Make Sure Harmonic stays in synch
 end;
 
-procedure TSolutionObj.IncrementTime;
+procedure TSolutionObj.IncrementTime();
 begin
     with Dynavars do
     begin
@@ -2330,7 +2340,7 @@ begin
             Inc(intHour);
             t := t - 3600.0;
         end;
-        Update_dblHour;
+        Update_dblHour();
     end;
 end;
 
@@ -2346,11 +2356,11 @@ begin
     FYear := Value;
     DynaVars.intHour := 0;  // Change year, start over
     Dynavars.t := 0.0;
-    Update_dblHour;
+    Update_dblHour();
     DSS.EnergyMeterClass.ResetAll;  // force any previous year data to complete
 end;
 
-procedure TSolutionObj.SaveVoltages;
+procedure TSolutionObj.SaveVoltages();
 
 var
     F: TStream = nil;
@@ -2433,12 +2443,12 @@ begin
     end;
 end;
 
-procedure TSolutionObj.Update_dblHour;
+procedure TSolutionObj.Update_dblHour();
 begin
     DynaVars.dblHour := DynaVars.intHour + dynavars.t / 3600.0;
 end;
 
-procedure TSolutionObj.UpdateLoopTime;
+procedure TSolutionObj.UpdateLoopTime();
 begin
     // Update Loop time is called from end of time step cleanup
     // Timer is based on beginning of SolveSnap time
@@ -2450,7 +2460,7 @@ begin
     Step_Time_Elapsed := ((LoopEndtime - SolveStartTime) / CPU_Freq) * 1000000;
 end;
 
-procedure TSolutionObj.UpdateVBus;
+procedure TSolutionObj.UpdateVBus();
 // Save present solution vector values to buses
 var
     i, j: Integer;
@@ -2465,7 +2475,7 @@ begin
     end;
 end;
 
-procedure TSolutionObj.RestoreNodeVfromVbus;
+procedure TSolutionObj.RestoreNodeVfromVbus();
 var
     i, j: Integer;
     pBus: TDSSBus;
@@ -2486,11 +2496,11 @@ begin
     if not ADiakoptics or (DSS.Parent <> NIL) then
     begin
 {$ENDIF}
-        ZeroInjCurr;
+        ZeroInjCurr();
         if DSS.SolutionAbort() then
             Exit;
 
-        GetSourceInjCurrents;
+        GetSourceInjCurrents();
         if IsDynamicModel then
             GetPCInjCurr; // Need this in dynamics mode to pick up additional injections
 
@@ -2694,7 +2704,7 @@ begin
                 TActorMessage.DO_CTRL_ACTIONS:
                 begin
                     solution.ControlActionsDone := FALSE;
-                    solution.Sample_DoControlActions;
+                    solution.Sample_DoControlActions();
                     try
                         actorMessagesLock.Acquire();
                         actorMessages.enqueue(TActorMessage.CHECK_FAULT);
@@ -2748,11 +2758,11 @@ begin
     Result := 0;
     if Initialize then
     begin
-        ZeroInjCurr;
+        ZeroInjCurr();
         if DSS.SolutionAbort() then
             Exit;
 
-        GetSourceInjCurrents;  // sources
+        GetSourceInjCurrents();  // sources
         if ADiak_PCInj then
         begin
             LoadsNeedUpdating := TRUE;  // Force the loads to update at least once

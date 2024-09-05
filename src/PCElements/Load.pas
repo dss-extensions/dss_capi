@@ -1041,7 +1041,7 @@ begin
     end
     else
     begin
-        case ActiveCircuit.Solution.Mode of
+        case ActiveCircuit.Solution.Mode() of
             TSolveMode.SNAPSHOT,
             TSolveMode.HARMONICMODE:
                 if status = TLoadStatus.Exempt then
@@ -1234,10 +1234,10 @@ var
     FreqMultiplier: Double;
     XseriesOhms: Double;
 begin
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := ActiveCircuit.Solution.Frequency();
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
-    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
+    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency() <> ActiveCircuit.Fundamental) then
     begin // Harmonic Mode  and other than fundamental frequency
         if ActiveCircuit.NeglectLoadY then
         begin
@@ -1846,7 +1846,7 @@ begin
     ZeroInjCurrent();
     ZeroIterminal();
 
-    LoadHarmonic := ActiveCircuit.Solution.Frequency / LoadFundamental; // Loadfundamental = frequency of solution when Harmonic mode entered
+    LoadHarmonic := ActiveCircuit.Solution.Frequency() / LoadFundamental; // Loadfundamental = frequency of solution when Harmonic mode entered
     Mult := SpectrumObj.GetMult(LoadHarmonic);
     for i := 1 to FNphases do
     begin
@@ -1867,7 +1867,7 @@ procedure TLoadObj.CalcLoadModelContribution;
 begin
     SetITerminalUpdated(FALSE);
     // IF IsDynamicModel THEN  DoDynamicMode ELSE
-    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
+    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency() <> ActiveCircuit.Fundamental) then
     begin
         DoHarmonicMode();
         Exit;
@@ -2185,7 +2185,7 @@ begin
 
      // Currents := AllocMem(Sizeof(Currents[1])*Yorder);   // to hold currents
 
-    LoadFundamental := ActiveCircuit.Solution.Frequency;
+    LoadFundamental := ActiveCircuit.Solution.Frequency();
 
     // GetCurrents(Currents); // Use FPhaseCurr from most recent pflow solution
     // Store the currents at fundamental frequency. The spectrum is applied to these.

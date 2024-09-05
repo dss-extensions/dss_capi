@@ -2610,10 +2610,10 @@ begin
 
         // This will be automated later
         cmds := TJSONArray.Create();
-        // cmds.Add('Set Mode=' + DSS.SolveModeEnum.OrdinalToString(ord(ckt.Solution.mode)));
+        // cmds.Add('Set Mode=' + DSS.SolveModeEnum.OrdinalToString(ord(ckt.Solution.Mode())));
         cmds.Add('Set ControlMode=' + DSS.ControlModeEnum.OrdinalToString(ckt.Solution.Controlmode));
         cmds.Add('Set Random=' + DSS.RandomModeEnum.OrdinalToString(ckt.Solution.RandomType));
-        cmds.Add('Set frequency=' + Format('%-g', [ckt.Solution.Frequency]));
+        cmds.Add('Set frequency=' + Format('%-g', [ckt.Solution.Frequency()]));
         cmds.Add('Set stepsize=' + Format('%-g', [ckt.Solution.DynaVars.h]));
         cmds.Add('Set number=' + IntToStr(ckt.Solution.NumberOfTimes));
         cmds.Add('Set tolerance=' + Format('%-g', [ckt.Solution.ConvergenceTolerance]));

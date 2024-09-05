@@ -706,7 +706,7 @@ begin
         // Shaft variables
         Theta := Cang(E1);
         dTheta := 0.0;
-        w0 := Twopi * ActiveCircuit.Solution.Frequency;
+        w0 := Twopi * ActiveCircuit.Solution.Frequency();
         // recalc Mmass and D in case the frequency has changed
         Mmass := 2.0 * Hmass * kVArating * 1000.0 / (w0);   // M = W-sec
         D := Dpu * kVArating * 1000.0 / (w0);
@@ -732,7 +732,7 @@ var
     i, j: Integer;
     FreqMultiplier: Double;
 begin
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := ActiveCircuit.Solution.Frequency();
     FreqMultiplier := FYprimFreq / BaseFrequency;  // ratio to adjust reactances for present solution frequency
 
     if ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel then
@@ -965,7 +965,7 @@ begin
    // Set the VTerminal array
     ComputeVterminal;
 
-    GenHarmonic := ActiveCircuit.Solution.Frequency / BaseFrequency; // harmonic based on the fundamental for this object
+    GenHarmonic := ActiveCircuit.Solution.Frequency() / BaseFrequency; // harmonic based on the fundamental for this object
     // get the spectrum multiplier and multiply by the V thev (or Norton current for load objects)
     // ???  E := SpectrumObj.GetMult(GenHarmonic) * VThevHarm; // Get base harmonic magnitude
     // ???  RotatePhasorRad(E, GenHarmonic, ThetaHarm);  // Time shift by fundamental frequency phase shift
@@ -999,7 +999,7 @@ begin
     if ActiveCircuit.Solution.IsDynamicModel then
         DoDynamicMode()
     else
-    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
+    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency() <> ActiveCircuit.Fundamental) then
         DoHarmonicMode()
     else
         DoIndMach012Model();
@@ -1068,7 +1068,7 @@ begin
     end
     else
     begin    // Generator is on, compute it's nominal watts and vars
-        case ActiveCircuit.Solution.Mode of
+        case ActiveCircuit.Solution.Mode() of
             TSolveMode.SNAPSHOT:
                 Factor := 1.0;
             TSolveMode.DAILYMODE:

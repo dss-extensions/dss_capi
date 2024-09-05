@@ -1453,7 +1453,7 @@ begin
     dt := ActiveCircuit.Solution.DynaVars.h;
     if dt > 0.0 then
     begin
-        if dt > 1.0 / ActiveCircuit.Solution.Frequency then
+        if dt > 1.0 / ActiveCircuit.Solution.Frequency() then
             DoErrorMsg(Format(_('Relay: "%s"'), [Name]),
                 _('Has type TD21 with time step greater than one cycle.'),
                 _('Reduce time step, or change type to Distance.'),

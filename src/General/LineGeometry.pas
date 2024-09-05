@@ -586,7 +586,7 @@ begin
     EmergAmps := Other.EmergAmps;
     FReduce := Other.FReduce;
 
-    UpdateLineGeometryData(activecircuit.solution.Frequency, DSS.ActiveEarthModel);
+    UpdateLineGeometryData(activecircuit.Solution.Frequency(), DSS.ActiveEarthModel);
 end;
 
 constructor TLineGeometryObj.Create(ParClass: TDSSClass; const LineGeometryName: String);
@@ -909,7 +909,7 @@ begin
     NormAmps := Wires[1].NormAmps;
     EmergAmps := Wires[1].EmergAmps;
 
-    UpdateLineGeometryData(activecircuit.solution.Frequency, earthModel);
+    UpdateLineGeometryData(activecircuit.Solution.Frequency(), earthModel);
 end;
 
 end.

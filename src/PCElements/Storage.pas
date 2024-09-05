@@ -1272,7 +1272,7 @@ begin
 
         else // dispatch off element's loadshapes, If any
 
-            case solution.Mode of
+            case solution.Mode() of
                 TSolveMode.SNAPSHOT: ; // Just solve for the present kW, kvar  // Don't check for state change
                 TSolveMode.DAILYMODE:
                     CalcDailyMult(solution.DynaVars.dblHour); // Daily dispatch curve
@@ -1710,7 +1710,7 @@ var
     i, j: Integer;
     FreqMultiplier: Double;
 begin
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := ActiveCircuit.Solution.Frequency();
     FreqMultiplier := FYprimFreq / BaseFrequency;
     
     if ActiveCircuit.Solution.IsHarmonicModel then // IsDynamicModel or
@@ -1917,7 +1917,7 @@ begin
             [ActiveCircuit.Solution.DynaVars.dblHour,
             ActiveCircuit.Solution.Iteration,
             ActiveCircuit.LoadMultiplier()]),
-            DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)), ', ',
+            DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.Mode())), ', ',
             DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.Solution.LoadModel), ', ',
             VoltageModel: 0, ', ',
             (Qnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
@@ -2180,7 +2180,7 @@ begin
     // Just pass node voltages to ground and let dynamic model take care of it
     for i := 1 to FNconds do
         VTerminal[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
-    StorageVars.w_grid := TwoPi * ActiveCircuit.Solution.Frequency;
+    StorageVars.w_grid := TwoPi * ActiveCircuit.Solution.Frequency();
 
     DynaModel.FCalc(Vterminal, pComplexArray(@DESSCurr));
 
@@ -2209,7 +2209,7 @@ begin
     pBuffer := @TStorage(ParentClass).cBuffer;
     ComputeVterminal();
 
-    StorageHarmonic := ActiveCircuit.Solution.Frequency / StorageFundamental;
+    StorageHarmonic := ActiveCircuit.Solution.Frequency() / StorageFundamental;
     if SpectrumObj <> NIL then
         E := SpectrumObj.GetMult(StorageHarmonic) * StorageVars.VThevHarm // Get base harmonic magnitude
     else
@@ -2242,7 +2242,7 @@ begin
         Exit;
     end;
 
-    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
+    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency() <> ActiveCircuit.Fundamental) then
     begin
         DoHarmonicMode();
         Exit;
@@ -2656,7 +2656,7 @@ var
     E, Va: complex;
 begin
     YprimInvalid := TRUE;  // Force rebuild of YPrims
-    StorageFundamental := ActiveCircuit.Solution.Frequency;  // Whatever the frequency is when we enter here.
+    StorageFundamental := ActiveCircuit.Solution.Frequency();  // Whatever the frequency is when we enter here.
 
     Yeq := Cinv(Cmplx(StorageVars.RThev, StorageVars.XThev));      // used for current calcs  Always L-N
 
@@ -2718,7 +2718,7 @@ begin
         begin
             NumPhases := Fnphases;
             NumConductors := Fnconds;
-            w_grid := twopi * ActiveCircuit.Solution.Frequency;
+            w_grid := twopi * ActiveCircuit.Solution.Frequency();
         end;
         DynaModel.FInit(Vterminal, Iterminal);
         Exit;

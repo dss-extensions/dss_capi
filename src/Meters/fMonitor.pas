@@ -2922,7 +2922,7 @@ begin
     domg := (DeltaP / (kVA_fm * 1000) - D_fm * omg_fm) / M_fm;
     dpm := -ki_fm * omg_fm * (kva_fm * 1000) / tau_fm;
       //integral
-    if ActiveCircuit.Solution.Mode = TSolveMode.DYNAMICMODE then
+    if ActiveCircuit.Solution.Mode() = TSolveMode.DYNAMICMODE then
     begin
         //dlt_fm += ddlt * ActiveCircuit.Solution.DynaVars.h;
         Pm_fm += dpm * ActiveCircuit.Solution.DynaVars.h;

@@ -1173,7 +1173,7 @@ begin
     end;
 
     // Set frequency multipliers for this calculation
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := ActiveCircuit.Solution.Frequency();
     FreqMultiplier := FYprimFreq / BaseFrequency;
     // Check for rebuilding Y_Terminal; Only rebuild if freq is different than last time
     if FreqMultiplier <> Y_Terminal_Freqmult then
@@ -1819,7 +1819,7 @@ var
     end;
 
 begin
-    if ActiveCircuit.Solution.Frequency < 0.51 then
+    if ActiveCircuit.Solution.Frequency() < 0.51 then
     begin
         // Build Yterminal for GIC ~dc simulation
         GICBuildYTerminal();

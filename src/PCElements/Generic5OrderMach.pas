@@ -2102,7 +2102,7 @@ var
     i, j: Integer;
     FreqMultiplier: Double;
 begin
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := ActiveCircuit.Solution.Frequency();
     FreqMultiplier := FYprimFreq / BaseFrequency; // ratio to adjust reactances for present solution frequency
 
     if ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel then
@@ -2284,7 +2284,7 @@ begin
         DoDynamicMode();
         Exit;
     end;
-    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
+    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency() <> ActiveCircuit.Fundamental) then
     begin
         DoSimpleMsg('%s: TGeneric5Obj.CalcGeneric5ModelContribution is not implemented for HarmonicMode. Aborting.', [FullName()], 202406013);
         DSS.SetSolutionAbort(true);
@@ -2442,7 +2442,7 @@ begin
             Result := P_ref * 3.0;
         TVar.Frequency:
         begin
-            freq := ActiveCircuit.solution.Frequency;
+            freq := ActiveCircuit.Solution.Frequency();
             if FMonObj <> nil then
                 freq := freq + FMonObj.omg_fm;
             Result := freq;

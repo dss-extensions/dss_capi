@@ -374,12 +374,12 @@ var
     dblHour: Double;
 begin
     try
-        mode := ActiveCircuit.Solution.Mode;
+        mode := ActiveCircuit.Solution.Mode();
         dblHour := ActiveCircuit.Solution.DynaVars.dblHour;
         // Get first Phase Current
         if ActiveCircuit.Solution.IsHarmonicModel then
         begin
-            SrcHarmonic := ActiveCircuit.Solution.Frequency / SrcFrequency;
+            SrcHarmonic := ActiveCircuit.Solution.Frequency() / SrcFrequency;
             Result := SpectrumObj.GetMult(SrcHarmonic) * Amps;  // Base current for this harmonic
             RotatePhasorDeg(Result, SrcHarmonic, Angle);
             Exit;
@@ -420,7 +420,7 @@ begin
             (mode = TSolveMode.DUTYCYCLE) or 
             (mode = TSolveMode.DYNAMICMODE) then
             NAmps := Amps * ShapeFactor.re;
-        if abs(ActiveCircuit.Solution.Frequency - SrcFrequency) < EPSILON2 then
+        if abs(ActiveCircuit.Solution.Frequency() - SrcFrequency) < EPSILON2 then
             Result := pdegtocomplex(NAmps, Angle)
         else
             Result := 0;

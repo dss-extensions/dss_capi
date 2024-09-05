@@ -584,7 +584,7 @@ begin
 
   // initialize the history terms for HW model source convention
     d := 1 / FsampleFreq;
-    wd := 2 * Pi * ActiveCircuit.Solution.Frequency * d;
+    wd := 2 * Pi * ActiveCircuit.Solution.Frequency() * d;
     for i := 1 to Ffiltlen do
     begin
         wt := vang - wd * (Ffiltlen - i);
@@ -695,7 +695,7 @@ begin
 
     t := ActiveCircuit.Solution.DynaVars.t;
     h := ActiveCircuit.Solution.DynaVars.h;
-    f := ActiveCircuit.Solution.Frequency;
+    f := ActiveCircuit.Solution.Frequency();
     corrector := ActiveCircuit.Solution.DynaVars.IterationFlag;
     d := 1 / FSampleFreq;
     nstep := trunc(1e-6 + h / d);

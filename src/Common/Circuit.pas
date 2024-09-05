@@ -1406,7 +1406,7 @@ begin
             j := k;
     end;
     // Configures simulation
-    solution.Mode := TSolveMode.SNAPSHOT;
+    solution.SetMode(TSolveMode.SNAPSHOT);
     solution.MaxIterations := 100;
     Solution.MaxControlIterations := 100;
 
@@ -2403,7 +2403,7 @@ begin
         Exit;
     end;
 
-    Solution.Mode := TSolveMode.SNAPSHOT;
+    Solution.SetMode(TSolveMode.SNAPSHOT);
     SetLoadMultiplier(CapacityStart);
     CapacityFound := FALSE;
 

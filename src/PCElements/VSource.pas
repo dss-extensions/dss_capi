@@ -908,7 +908,7 @@ begin
         YPrim.Clear;
     end;
 
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := ActiveCircuit.Solution.Frequency();
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
     // **** Quasi Ideal Source for fundamental power flow****
@@ -983,7 +983,7 @@ var
     dblHour: Double;
 begin
     try
-        mode := ActiveCircuit.Solution.Mode;
+        mode := ActiveCircuit.Solution.Mode();
         dblHour := ActiveCircuit.Solution.DynaVars.dblHour;
         // This formulation will theoretically handle voltage sources of
         // any number of phases assuming they are
@@ -1048,7 +1048,7 @@ begin
 
         if ActiveCircuit.Solution.IsHarmonicModel then
         begin
-            SrcHarmonic := ActiveCircuit.Solution.Frequency / SrcFrequency;
+            SrcHarmonic := ActiveCircuit.Solution.Frequency() / SrcFrequency;
             Vharm := SpectrumObj.GetMult(SrcHarmonic) * Vmag;  // Base voltage for this harmonic
             RotatePhasorDeg(Vharm, SrcHarmonic, Angle);  // Rotate for phase 1 shift
             for i := 1 to Fnphases do
@@ -1070,7 +1070,7 @@ begin
         end
         else
         begin  // non-harmonic modes
-            if abs(ActiveCircuit.Solution.Frequency - SrcFrequency) > EPSILON2 then
+            if abs(ActiveCircuit.Solution.Frequency() - SrcFrequency) > EPSILON2 then
                 Vmag := 0.0;  // Solution Frequency and Source Frequency don't match!
             // NOTE: RE-uses VTerminal space
             for i := 1 to Fnphases do

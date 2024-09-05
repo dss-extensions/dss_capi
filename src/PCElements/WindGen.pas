@@ -990,7 +990,7 @@ var
     mode: TSolveMode;
     dblHour: Double;
 begin
-    mode := ActiveCircuit.Solution.Mode;
+    mode := ActiveCircuit.Solution.Mode();
     dblHour := ActiveCircuit.Solution.DynaVars.dblHour;
 
     VMag := 0.0;
@@ -1217,7 +1217,7 @@ var
     FreqMultiplier: Double;
     WTGZLV: Double;
 begin
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := ActiveCircuit.Solution.Frequency();
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
     if ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel then
@@ -1357,7 +1357,7 @@ begin
             [ActiveCircuit.Solution.DynaVars.t + ActiveCircuit.Solution.Dynavars.IntHour * 3600.0,
             ActiveCircuit.Solution.Iteration,
             ActiveCircuit.LoadMultiplier()]),
-            DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)), ', ',
+            DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.Mode())), ', ',
             DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.Solution.LoadModel), ', ',
             GenModel: 0, ', ',
             0.0: 10: 4, ', ',
@@ -1636,7 +1636,7 @@ begin
     // pBuffer := @TWindGen(ParentClass).cBuffer;
     // ComputeVterminal();
 
-    // GenHarmonic := ActiveCircuit.Solution.Frequency / GenFundamental;
+    // GenHarmonic := ActiveCircuit.Solution.Frequency() / GenFundamental;
     // E := SpectrumObj.GetMult(GenHarmonic) * GenVars.VThevHarm; // Get base harmonic magnitude
     // RotatePhasorRad(E, GenHarmonic, GenVars.ThetaHarm); // Time shift by fundamental frequency phase shift
     // for i := 1 to Fnphases do
@@ -1665,7 +1665,7 @@ begin
         Exit;
     end;
 
-    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency <> ActiveCircuit.Fundamental) then
+    if ActiveCircuit.Solution.IsHarmonicModel and (ActiveCircuit.Solution.Frequency() <> ActiveCircuit.Fundamental) then
     begin
         DoHarmonicMode();
         Exit;
@@ -1800,7 +1800,7 @@ begin
     DoSimpleMsg('%s: WindGen harmonics model is not fully implemented. Please use the Generator model instead.', [FullName()], 5673);
 
     // YprimInvalid := true; // Force rebuild of YPrims
-    // GenFundamental := ActiveCircuit.Solution.Frequency; // Whatever the frequency is when we enter here.
+    // GenFundamental := ActiveCircuit.Solution.Frequency(); // Whatever the frequency is when we enter here.
 
     // with GenVars do
     // begin
@@ -1890,7 +1890,7 @@ begin
             // Theta is angle on Vthev[1] relative to system reference
             Theta := Cang(Edp);
             dTheta := 0.0;
-            w0 := Twopi * ActiveCircuit.Solution.Frequency;
+            w0 := Twopi * ActiveCircuit.Solution.Frequency();
             // recalc Mmass and D in case the frequency has changed
             GenVars.Mmass := 2.0 * GenVars.Hmass * GenVars.kVArating * 1000.0 / w0; // M = W-sec
             GenVars.D := GenVars.Dpu * GenVars.kVArating * 1000.0 / w0;

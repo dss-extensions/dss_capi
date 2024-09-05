@@ -737,11 +737,11 @@ begin
         YPrimTemp := Yprim_Series;
 
 
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := ActiveCircuit.Solution.Frequency();
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
     // If GIC simulation, Resistance Only
-    if ActiveCircuit.Solution.Frequency < 0.51 then
+    if ActiveCircuit.Solution.Frequency() < 0.51 then
     begin    // 0.5 Hz is cutoff
         if Z.im > 0.0 then
             if Z.re <= 0.0 then
