@@ -118,7 +118,7 @@ type
 
     TDSSMonitor = class(TMeterClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -194,7 +194,7 @@ type
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model, reset nphases
-        procedure RecalcElementData; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
         procedure TakeSample; OVERRIDE; // Go add a sample to the buffer
         procedure ResetIt;
         procedure Save;     // Saves present buffer to file
@@ -300,7 +300,7 @@ begin
     end;
 end;
 
-procedure TDSSMonitor.DefineProperties;
+procedure TDSSMonitor.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -334,7 +334,7 @@ begin
     PropertyOffset2[ord(TProp.Action)] := PtrInt(ActionEnum); 
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TDSSMonitor.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -527,7 +527,7 @@ begin
     end;
 end;
 
-procedure TMonitorObj.RecalcElementData;
+procedure TMonitorObj.RecalcElementData();
 var
     tr: TControlledTransformerObj;
 begin
@@ -1316,7 +1316,7 @@ begin
             cap := TCapacitorObj(MeteredElement);
             for i := 1 to cap.NumSteps() do
             begin
-                AddDblToBuffer(cap.States[i]);
+                AddDblToBuffer(cap.State(i));
             end;
             Exit;  // Done with this mode now.
         end;

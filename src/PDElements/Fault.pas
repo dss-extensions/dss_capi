@@ -68,7 +68,7 @@ type
 
     TFault = class(TPDClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -100,8 +100,8 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
 
         procedure Randomize;
         procedure CheckStatus(ControlMode: Integer);
@@ -152,7 +152,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TFault.DefineProperties;
+procedure TFault.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -208,7 +208,7 @@ begin
 
     ActiveProperty := NumPropsThisClass;
 
-    inherited DefineProperties;
+    inherited DefineProperties();
 
     //TODO: fully remove some inherited properties like normamps/emergamps?
     // Currently, this just suppresses them from the JSON output/schema
@@ -377,7 +377,7 @@ begin
     HrsToRepair := 0.0;
 
     Yorder := Fnterms * Fnconds;
-    RecalcElementData;
+    RecalcElementData();
 end;
 
 destructor TFaultObj.Destroy;
@@ -386,7 +386,7 @@ begin
     inherited destroy;
 end;
 
-procedure TFaultObj.RecalcElementData;
+procedure TFaultObj.RecalcElementData();
 begin
 // Nothing to do
 end;
@@ -411,7 +411,7 @@ begin
     YPrimInvalid := TRUE;    // force rebuilding of matrix
 end;
 
-procedure TFaultObj.CalcYPrim;
+procedure TFaultObj.CalcYPrim();
 var
     Value, Value2: Complex;
     i,
@@ -494,7 +494,7 @@ begin
 
     YPrim.CopyFrom(YPrimTemp);
 
-    inherited CalcYPrim;
+    inherited CalcYPrim();
     YprimInvalid := FALSE;
 end;
 

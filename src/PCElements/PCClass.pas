@@ -26,7 +26,7 @@ type
     TPCClass = class(TCktElementClass)
     PROTECTED
         procedure CountPropertiesAndAllocate; override;
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
 
     PUBLIC
         PropertyOffset_PCClass: Integer;
@@ -85,7 +85,7 @@ begin
     inherited CountPropertiesAndAllocate;
 end;
 
-procedure TPCClass.DefineProperties;
+procedure TPCClass.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -97,7 +97,7 @@ begin
     PropertyOffset[ActiveProperty + ord(TProp.Spectrum)] := ptruint(@obj.SpectrumObj);
     PropertyOffset2[ActiveProperty + ord(TProp.Spectrum)] := ptruint(DSS.SpectrumClass);
     ActiveProperty := ActiveProperty + NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 end.

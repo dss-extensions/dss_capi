@@ -34,7 +34,7 @@ type
 
     TCNData = class(TCableData)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -95,7 +95,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TCNData.DefineProperties;
+procedure TCNData.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -119,7 +119,7 @@ begin
     PropertyFlags[ActiveProperty + ord(TProp.Rstrand)] := [TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm_per_length];//, TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TCNData.NewObject(const ObjName: String; Activate: Boolean): Pointer;

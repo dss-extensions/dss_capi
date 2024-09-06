@@ -26,7 +26,7 @@ type
 {$SCOPEDENUMS OFF}
     TTSData = class(TCableData)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -86,7 +86,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TTSData.DefineProperties;
+procedure TTSData.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -105,7 +105,7 @@ begin
     PropertyFlags[ActiveProperty + ord(TProp.TapeLap)] := [TPropertyFlag.NonNegative, TPropertyFlag.NoDefault];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TTSData.NewObject(const ObjName: String; Activate: Boolean): Pointer;

@@ -55,7 +55,7 @@ type
     PROTECTED
         TCC_CurveClass: TDSSClass;
 
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -109,7 +109,7 @@ type
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
-        procedure RecalcElementData; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
 
         procedure Sample(); OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
@@ -167,7 +167,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TRecloser.DefineProperties;
+procedure TRecloser.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -260,7 +260,7 @@ begin
     PropertyOffset[ord(TProp.TDGrDelayed)] := ptruint(@obj.TDGrDelayed);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TRecloser.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -388,7 +388,7 @@ begin
 
     DSSObjType := ParClass.DSSClassType; //cap_CONTROL;
 
-   //  RecalcElementData;
+   //  RecalcElementData();
 end;
 
 destructor TRecloserObj.Destroy;
@@ -398,7 +398,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TRecloserObj.RecalcElementData;
+procedure TRecloserObj.RecalcElementData();
 begin
     //TODO: still need to warn/error if elements are NIL?
 

@@ -220,7 +220,7 @@ type
     PROTECTED
         cBuffer: TCBuffer24;  // Temp buffer for calcs  24-phase generator?
 
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         RegisterNames: ArrayOfString;
 
@@ -348,8 +348,8 @@ type
         procedure MakeLike(OtherPtr: Pointer); override;
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
-        procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
 
         procedure SetConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         function InjCurrents: Integer; OVERRIDE;
@@ -490,7 +490,7 @@ begin
     Result := obj.GetDynOutputNames();
 end;
 
-procedure TGenerator.DefineProperties;
+procedure TGenerator.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -640,7 +640,7 @@ begin
     PropertyOffset[ord(TProp.Refuel)] := ptruint(@DoRefuel);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TGenerator.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -1018,7 +1018,7 @@ begin
 
     DynamicEqObj := NIL;
 
-    RecalcElementData;
+    RecalcElementData();
 end;
 
 destructor TGeneratorObj.Destroy;
@@ -1223,7 +1223,7 @@ begin
         YPrimInvalid := TRUE;
 end;
 
-procedure TGeneratorObj.RecalcElementData;
+procedure TGeneratorObj.RecalcElementData();
 begin
     VBase95 := VMinPu * VBase;
     VBase105 := VMaxPu * VBase;
@@ -1359,7 +1359,7 @@ begin
     end;
 end;
 
-procedure TGeneratorObj.CalcYPrim;
+procedure TGeneratorObj.CalcYPrim();
 var
     i: Integer;
 begin
@@ -1404,7 +1404,7 @@ begin
     YPrim.CopyFrom(YPrim_Shunt);
 
     // Account for Open Conductors
-    inherited CalcYPrim;
+    inherited CalcYPrim();
 end;
 
 procedure TGeneratorObj.GetCurrents(Curr: pComplexArray);

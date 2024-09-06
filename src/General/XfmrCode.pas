@@ -116,7 +116,7 @@ type
 
     TXfmrCode = class(TDSSClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -203,7 +203,7 @@ begin
     Result := (obj.NumWindings - 1) * obj.NumWindings div 2;
 end;
 
-procedure TXfmrCode.DefineProperties;
+procedure TXfmrCode.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -384,7 +384,7 @@ begin
     PropertyArrayAlternative[ord(TProp.tap)] := ord(TProp.taps);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TXfmrCode.NewObject(const ObjName: String; Activate: Boolean): Pointer;

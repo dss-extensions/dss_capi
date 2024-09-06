@@ -33,7 +33,7 @@ type
 
     TUPFCControl = class(TControlClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -56,7 +56,7 @@ type
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
-        procedure RecalcElementData; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
 
         procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
@@ -106,7 +106,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TUPFCControl.DefineProperties;
+procedure TUPFCControl.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -119,7 +119,7 @@ begin
     PropertyOffset[ord(TProp.UPFCList)] := ptruint(@obj.FUPFCNameList);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TUPFCControl.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -159,7 +159,7 @@ begin
     FWeights := NIL;
     ListSize := 0;
 
-    // RecalcElementData;
+    // RecalcElementData();
 end;
 
 destructor TUPFCControlObj.Destroy;
@@ -171,7 +171,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TUPFCControlObj.RecalcElementData;
+procedure TUPFCControlObj.RecalcElementData();
 begin
 end;
 

@@ -447,7 +447,7 @@ begin
         Exit;
     pMon.ParsePropertyValue(ord(TMonitorProp.element), Value, []);
     pMon.SetAsNextSeq(ord(TMonitorProp.Element));
-    pMon.RecalcElementData;
+    pMon.RecalcElementData();
 end;
 //------------------------------------------------------------------------------
 function Monitors_Get_Terminal(): Integer; CDECL;

@@ -19,7 +19,7 @@ uses
 type
     TWireData = class(TConductorData)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -63,13 +63,13 @@ begin
     inherited Destroy;
 end;
 
-procedure TWireData.DefineProperties;
+procedure TWireData.DefineProperties();
 begin
     NumProperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TWireData.NewObject(const ObjName: String; Activate: Boolean): Pointer;

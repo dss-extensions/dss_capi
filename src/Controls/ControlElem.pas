@@ -49,7 +49,7 @@ type
         destructor Destroy; OVERRIDE;
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Always Zero
-        procedure CalcYPrim; OVERRIDE; // Always Zero
+        procedure CalcYPrim(); OVERRIDE; // Always Zero
 
         procedure Sample; VIRTUAL;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); VIRTUAL;   // Do the action that is pending from last sample
@@ -171,7 +171,7 @@ begin
         Curr[i] := 0;
 end;
 
-procedure TControlElem.CalcYPrim;
+procedure TControlElem.CalcYPrim();
 begin
   // leave YPrims as nil and they will be ignored
   // Yprim is zeroed when created.  Leave it as is.

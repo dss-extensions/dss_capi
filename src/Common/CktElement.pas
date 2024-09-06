@@ -99,8 +99,8 @@ type
         function GetBus(i: Integer): String;  // Get bus name by index
         procedure SetBus(i: Integer; const s: String); virtual;  // Set bus name by index
         procedure SetNodeRef(iTerm: Integer; NodeRefArray: pIntegerArray); VIRTUAL;  // Set NodeRef Array for fast solution with intrinsics
-        procedure RecalcElementData; VIRTUAL; ABSTRACT;
-        procedure CalcYPrim; VIRTUAL;
+        procedure RecalcElementData(); VIRTUAL; ABSTRACT;
+        procedure CalcYPrim(); VIRTUAL;
 
         procedure MakePosSequence(); VIRTUAL;  // Make a positive Sequence Model
 
@@ -516,7 +516,7 @@ begin
         FYprimFreq := Value;
 end;
 
-procedure TDSSCktElement.CalcYPrim;
+procedure TDSSCktElement.CalcYPrim();
 begin
     if YPrim_Series <> NIL then
         DoYPrimCalcs(Yprim_Series);

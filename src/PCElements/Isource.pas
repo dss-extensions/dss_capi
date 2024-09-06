@@ -58,7 +58,7 @@ type
 
     TIsource = class(TPCClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -98,8 +98,8 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;        
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
@@ -147,7 +147,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TIsource.DefineProperties;
+procedure TIsource.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -204,7 +204,7 @@ begin
     PropertyFlags[ord(TProp.frequency)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TIsource.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -326,7 +326,7 @@ begin
     DutyShapeObj := NIL;
 
     Yorder := Fnterms * Fnconds;
-    RecalcElementData;
+    RecalcElementData();
 end;
 
 destructor TIsourceObj.Destroy;
@@ -334,12 +334,12 @@ begin
     inherited Destroy;
 end;
 
-procedure TIsourceObj.RecalcElementData;
+procedure TIsourceObj.RecalcElementData();
 begin
     Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 end;
 
-procedure TIsourceObj.CalcYPrim;
+procedure TIsourceObj.CalcYPrim();
 begin
      // Build only YPrim Series
     if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) then // YPrimInvalid
@@ -361,7 +361,7 @@ begin
 
     // Now Account for Open Conductors
     // For any conductor that is open, zero out row and column
-    inherited CalcYPrim;
+    inherited CalcYPrim();
 
     YPrimInvalid := FALSE;
 end;

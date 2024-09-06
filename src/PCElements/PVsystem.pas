@@ -190,7 +190,7 @@ type
     PROTECTED
         cBuffer: TCBuffer24;  // Temp buffer for calcs  24-phase PVSystem element?
 
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         RegisterNames: ArrayOfString;
 
@@ -409,7 +409,7 @@ begin
     Result := obj.GetDynOutputNames();
 end;
 
-procedure TPVsystem.DefineProperties;
+procedure TPVsystem.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -577,7 +577,7 @@ begin
 
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TPVsystem.NewObject(const ObjName: String; Activate: Boolean): Pointer;

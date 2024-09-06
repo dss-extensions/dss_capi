@@ -25,7 +25,7 @@ type
 
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
         procedure Reset; OVERRIDE;  // Reset to initial defined state
-        procedure RecalcElementData; Override;
+        procedure RecalcElementData(); Override;
     end;
 
 implementation
@@ -44,7 +44,7 @@ begin
     ActionList.Add(Action);
 end;
 
-procedure TControlProxyObj.RecalcElementData;
+procedure TControlProxyObj.RecalcElementData();
 begin
     raise Exception.Create('This procedure should not be called');
 end;

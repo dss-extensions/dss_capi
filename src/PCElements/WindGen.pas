@@ -570,7 +570,7 @@ begin
     PropertyRedundantWith[ord(TProp.MVA)] := ord(TProp.kVA);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TWindGen.NewObject(const ObjName: String; Activate: Boolean): Pointer;

@@ -107,7 +107,7 @@ type
     PROTECTED
         Transf_Or_AutoTrans_ProxyClass: TProxyClass;
 
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -194,7 +194,7 @@ type
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
-        procedure RecalcElementData; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
         procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
         procedure Reset; OVERRIDE;  // Reset to initial defined state
@@ -283,7 +283,7 @@ begin
     //PropertyValue(29) := 'n'; // so it gets reported properly
 end;
 
-procedure TRegControl.DefineProperties;
+procedure TRegControl.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -383,7 +383,7 @@ begin
     PropertyOffset[ord(TProp.Reset)] := ptruint(@DoReset);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TRegControl.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -542,7 +542,7 @@ begin
 
     ControlActionHandle := 0;
 
-   //  RecalcElementData;
+   //  RecalcElementData();
 end;
 
 destructor TRegControlObj.Destroy;
@@ -557,7 +557,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TRegControlObj.RecalcElementData;
+procedure TRegControlObj.RecalcElementData();
 var
     ename: String;
 begin

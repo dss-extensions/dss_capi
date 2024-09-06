@@ -49,7 +49,7 @@ type
 {$SCOPEDENUMS OFF}
     TGICsource = class(TPCClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -91,8 +91,8 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
@@ -141,7 +141,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TGICsource.DefineProperties;
+procedure TGICsource.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -191,7 +191,7 @@ begin
     PropertyFlags[ord(TProp.Lon2)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_deg];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 
 
 end;
@@ -299,7 +299,7 @@ begin
     Bus2Defined := FALSE;
 
     Yorder := Fnterms * Fnconds;
-    // Don't do This here RecalcElementData;
+    // Don't do This here RecalcElementData();
 
     SpectrumObj := NIL; // Spectrum not allowed
 end;
@@ -322,7 +322,7 @@ begin
     Result := VN + VE;
 end;
 
-procedure TGICSourceObj.RecalcElementData;
+procedure TGICSourceObj.RecalcElementData();
 var
     GICBus: String;
     LineBus2: String;
@@ -357,7 +357,7 @@ begin
     Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 end;
 
-procedure TGICSourceObj.CalcYPrim;
+procedure TGICSourceObj.CalcYPrim();
 var
     // Rs, Rm, Rzero: Double;
     i: Integer;
@@ -394,7 +394,7 @@ begin
     YPrim.Copyfrom(Yprim_Series);      // Initialize YPrim for series impedances
     // Now Account for Open Conductors
     // For any conductor that is open, zero out row and column
-    inherited CalcYPrim;
+    inherited CalcYPrim();
 
     YPrimInvalid := FALSE;
 end;

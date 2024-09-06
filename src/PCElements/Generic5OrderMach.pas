@@ -520,7 +520,7 @@ begin
     PropertyReadFunction[ord(TProp.PF)] := @getPF;
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TGeneric5.NewObject(const ObjName: String; Activate: Boolean): Pointer;

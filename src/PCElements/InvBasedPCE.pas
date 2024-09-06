@@ -23,7 +23,7 @@ uses
 type
     TInvBasedPCEClass = class(TDynEqPCEClass)
     PROTECTED
-        // procedure DefineProperties; override;
+        // procedure DefineProperties(); override;
 
     PUBLIC
         constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);

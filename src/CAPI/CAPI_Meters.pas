@@ -420,7 +420,7 @@ begin
 
     pMeterObj.ParsePropertyValue(ord(TEnergyMeterProp.element), Value, []);
     pMeterObj.MeteredElementChanged := TRUE;
-    pMeterObj.RecalcElementData;
+    pMeterObj.RecalcElementData();
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Set_MeteredTerminal(Value: Integer); CDECL;
@@ -432,7 +432,7 @@ begin
 
     pMeterObj.MeteredTerminal := Value;
     pMeterObj.MeteredElementChanged := TRUE;
-    pMeterObj.RecalcElementData;
+    pMeterObj.RecalcElementData();
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_DIFilesAreOpen(): TAPIBoolean; CDECL;

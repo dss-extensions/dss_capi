@@ -307,7 +307,7 @@ begin
         pLoad.PrpSequence[ord(TLoadProp.kWh)] := 0;
     end;
 
-    pLoad.RecalcElementData;  // set power factor based on kW, kvar
+    pLoad.RecalcElementData();  // set power factor based on kW, kvar
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_kW(Value: Double); CDECL;
@@ -328,7 +328,7 @@ begin
         pLoad.PrpSequence[ord(TLoadProp.xfkVA)] := 0;
         pLoad.PrpSequence[ord(TLoadProp.kWh)] := 0;
     end;
-    pLoad.RecalcElementData; // sets kvar based on kW and pF
+    pLoad.RecalcElementData(); // sets kvar based on kW and pF
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_PF(Value: Double); CDECL;
@@ -349,7 +349,7 @@ begin
         pLoad.PrpSequence[ord(TLoadProp.xfkVA)] := 0;
         pLoad.PrpSequence[ord(TLoadProp.kWh)] := 0;
     end;
-    pLoad.RecalcElementData; //  sets kvar based on kW and pF
+    pLoad.RecalcElementData(); //  sets kvar based on kW and pF
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Count(): Integer; CDECL;

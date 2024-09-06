@@ -90,7 +90,7 @@ type
     PROTECTED
         cBuffer: TCBuffer24; // Temp buffer for complex math calcs; allows up to 24-phase models.
 
-        procedure DefineProperties; override;    // Define the property names and help strings
+        procedure DefineProperties(); override;    // Define the property names and help strings
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -187,8 +187,8 @@ type
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure SetConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
-        procedure RecalcElementData; OVERRIDE;   // Generally called after Edit is complete to recompute variables
-        procedure CalcYPrim; OVERRIDE;   // Calculate Primitive Y matrix
+        procedure RecalcElementData(); OVERRIDE;   // Generally called after Edit is complete to recompute variables
+        procedure CalcYPrim(); OVERRIDE;   // Calculate Primitive Y matrix
         procedure Integrate;
         procedure CalcDynamic(var V012, I012: TSymCompArray);
         procedure CalcPFlow(var V012, I012: TSymCompArray);
@@ -268,7 +268,7 @@ begin
     obj.set_Localslip(Value);
 end;
 
-procedure TIndMach012.DefineProperties;
+procedure TIndMach012.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -341,7 +341,7 @@ begin
     PropertyFlags[ord(TProp.slip)] := [TPropertyFlag.WriteByFunction];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TIndMach012.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -497,7 +497,7 @@ begin
 
     InDynamics := FALSE;
 
-    RecalcElementData;
+    RecalcElementData();
 end;
 
 destructor TIndMach012Obj.Destroy;
@@ -509,7 +509,7 @@ begin
     inherited Destroy;   // This will take care of most common circuit element arrays, etc.
 end;
 
-procedure TIndMach012Obj.RecalcElementData;
+procedure TIndMach012Obj.RecalcElementData();
 var
     Rs, Xs,
     Rr, Xr,
@@ -817,7 +817,7 @@ begin
     Result := S1 / (V1 * cong(Is1)).Re;
 end;
 
-procedure TIndMach012Obj.CalcYPrim;
+procedure TIndMach012Obj.CalcYPrim();
 
 // Required routine to calculate the primitive Y matrix for this element
 
@@ -875,7 +875,7 @@ begin
     YPrim.CopyFrom(YPrim_Shunt);
 
      // Account for Open Conductors -- done in base class
-    inherited CalcYPrim;
+    inherited CalcYPrim();
 end;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -

@@ -151,7 +151,7 @@ type
 
     TTransf = class(TPDClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -263,8 +263,8 @@ type
 
         procedure SetNumWindings(N: Integer);
 
-        procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
 
         // GetLosses override for Transformer
         procedure GetLosses(var TotalLosses, LoadLosses, NoLoadLosses: Complex); OVERRIDE;
@@ -348,7 +348,7 @@ begin
     Reallocmem(WindingCurrents, 0);  // throw away temp array
 end;
 
-procedure TTransf.DefineProperties;
+procedure TTransf.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -578,7 +578,7 @@ begin
     PropertyRedundantWith[ord(TProp.XLT)] := ord(TProp.X23);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 
     //TODO: fully remove some inherited properties like normamps/emergamps?
     // Currently, this just suppresses them from the JSON output/schema
@@ -870,7 +870,7 @@ begin
     SetLength(kVARatings, NumAmpRatings);
     kVARatings[0] := NormMaxHkVA;
     
-    RecalcElementData;
+    RecalcElementData();
 end;
 
 
@@ -897,7 +897,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TTransfObj.RecalcElementData;
+procedure TTransfObj.RecalcElementData();
 var
     i,
     ihvolt: Integer;
@@ -1147,7 +1147,7 @@ begin
     end;
 end;
 
-procedure TTransfObj.CalcYPrim;
+procedure TTransfObj.CalcYPrim();
 var
     FreqMultiplier: Double;
 begin
@@ -1190,7 +1190,7 @@ begin
 
     // Now Account for Open Conductors
     // For any conductor that is open, zero out row and column
-    inherited CalcYPrim;
+    inherited CalcYPrim();
 
     YprimInvalid := FALSE;
 end;
@@ -1401,7 +1401,7 @@ begin
 {$ENDIF}
                     YPrimInvalid := TRUE;  // this property triggers setting SystemYChanged=true
 
-                RecalcElementData;
+                RecalcElementData();
             end;
         end;
 end;

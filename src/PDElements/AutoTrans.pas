@@ -141,7 +141,7 @@ type
 
     TAutoTrans = class(TPDClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -250,9 +250,9 @@ type
 
         procedure SetNumWindings(N: Integer);
 
-        procedure RecalcElementData; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
         procedure SetNodeRef(iTerm: Integer; NodeRefArray: pIntegerArray); OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
 
         // GetLosses override for AutoTrans
         procedure GetLosses(var TotalLosses, LoadLosses, NoLoadLosses: Complex); OVERRIDE;
@@ -343,7 +343,7 @@ begin
     Reallocmem(WindingCurrents, 0);  // throw away temp array
 end;
 
-procedure TAutoTrans.DefineProperties;
+procedure TAutoTrans.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -539,7 +539,7 @@ begin
     PropertyArrayAlternative[ord(TProp.tap)] := ord(TProp.taps);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TAutoTrans.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -850,7 +850,7 @@ begin
     Y_Terminal_FreqMult := 0.0;
 
     Yorder := fNTerms * fNconds;
-    RecalcElementData;
+    RecalcElementData();
 end;
 
 procedure TAutoTransObj.SetNodeRef(iTerm: Integer; NodeRefArray: pIntegerArray);
@@ -897,7 +897,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TAutoTransObj.RecalcElementData;
+procedure TAutoTransObj.RecalcElementData();
 var
     i,
     ihvolt: Integer;
@@ -1177,7 +1177,7 @@ begin
     end; // CASE Fnphases
 end;
 
-procedure TAutoTransObj.CalcYPrim;
+procedure TAutoTransObj.CalcYPrim();
 var
     FreqMultiplier: Double;
 begin
@@ -1219,7 +1219,7 @@ begin
 
     // Now Account for Open Conductors
     // For any conductor that is open, zero out row and column
-    inherited CalcYPrim;
+    inherited CalcYPrim();
 
     YprimInvalid := FALSE;
 end;
@@ -1429,7 +1429,7 @@ begin
             begin    // Only if there's been a change
                 puTap := TempVal;
                 YPrimInvalid := TRUE;  // this property triggers setting SystemYChanged=true
-                RecalcElementData;
+                RecalcElementData();
             end;
         end;
 end;

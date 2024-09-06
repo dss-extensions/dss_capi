@@ -42,7 +42,7 @@ type
 
     TDynamicExp = class(TDSSClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -129,7 +129,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TDynamicExp.DefineProperties;
+procedure TDynamicExp.DefineProperties();
 var
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -166,7 +166,7 @@ begin
     PropertyFlags[ord(TProp.VarNames)] := [TPropertyFlag.Transform_LowerCase];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 procedure TDynamicExpObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);

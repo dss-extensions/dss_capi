@@ -67,7 +67,7 @@ type
 
     TExpControl = class(TControlClass)
     PROTECTED
-        procedure DefineProperties; OVERRIDE;
+        procedure DefineProperties(); OVERRIDE;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -128,7 +128,7 @@ type
 
         // PROCEDURE Set_Enabled(Value: WordBool);Override;
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
-        procedure RecalcElementData; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
 
             // Sample control quantities and set action times in Control Queue
         procedure Sample; OVERRIDE;
@@ -185,7 +185,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TExpControl.DefineProperties;
+procedure TExpControl.DefineProperties();
 var
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -236,7 +236,7 @@ begin
     PropertyFlags[ord(TProp.Tresponse)] := [TPropertyFlag.IgnoreInvalid, TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TExpControl.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -379,7 +379,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TExpControlObj.RecalcElementData;
+procedure TExpControlObj.RecalcElementData();
 var
     i: Integer;
     maxord: Integer;
@@ -418,7 +418,7 @@ procedure TExpControlObj.MakePosSequence();
 // ***  This assumes the PVSystem devices have already been converted to pos seq
 begin
     if FPVSystemPointerList.Count = 0 then
-        RecalcElementData;
+        RecalcElementData();
   // TEMC - from here to inherited was copied from InvControl
     FNphases := 3;
     Nconds := 3;
@@ -532,7 +532,7 @@ var
 begin
   // If list is not defined, go make one from all PVSystem in circuit
     if FPVSystemPointerList.Count = 0 then
-        RecalcElementData;
+        RecalcElementData();
 
     if (FListSize > 0) then
     begin
@@ -667,7 +667,7 @@ begin
         FPendingChange[i] := NONE;
     end;
     if doRecalc then
-        RecalcElementData;
+        RecalcElementData();
 
     if FPVSystemPointerList.Count > 0 then
         Result := TRUE;

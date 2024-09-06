@@ -55,7 +55,7 @@ type
     PRIVATE
         TCC_CurveClass: TDSSClass;
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -85,8 +85,8 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;    // Always Zero for a Fuse
+        procedure RecalcElementData(); OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;    // Always Zero for a Fuse
 
         procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Phs, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
@@ -163,7 +163,7 @@ begin
         Result := Obj.ControlledElement.NPhases;
 end;
 
-procedure TFuse.DefineProperties;
+procedure TFuse.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -217,7 +217,7 @@ begin
     PropertyFlags[ord(TProp.State)] := [TPropertyFlag.SizeIsFunction]; // FControlledElement.NPhases
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TFuse.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -332,7 +332,7 @@ begin
 
     DSSObjType := ParClass.DSSClassType; //cap_CONTROL;
 
-   //  RecalcElementData;
+   //  RecalcElementData();
 end;
 
 destructor TFuseObj.Destroy;
@@ -344,7 +344,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TFuseObj.RecalcElementData;
+procedure TFuseObj.RecalcElementData();
 var
     i: Integer;
 begin
@@ -406,7 +406,7 @@ begin
     end;
 end;
 
-procedure TFuseObj.CalcYPrim;
+procedure TFuseObj.CalcYPrim();
 begin
   // leave YPrims as nil and they will be ignored
   // Yprim is zeroed when created.  Leave it as is.

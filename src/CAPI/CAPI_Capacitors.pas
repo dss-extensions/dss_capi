@@ -314,7 +314,7 @@ begin
 
     for i := 1 to LoopLimit do
     begin
-        elem.States[i] := Value[i - 1];
+        elem.SetState(i, Value[i - 1]);
     end;
 
     elem.FindLastStepInService();
@@ -330,7 +330,7 @@ begin
         Exit;
 
     for i := 1 to elem.NumSteps() do
-        elem.States[i] := 0;   // open all steps
+        elem.SetState(i, 0);   // open all steps
 end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Close(); CDECL;
@@ -345,7 +345,7 @@ begin
     elem.FActiveTerminal := 0;  // make sure terminal 1 is closed
     elem.SetConductorClosed(0, TRUE);    // closes all phases
     for i := 1 to elem.NumSteps() do
-        elem.States[i] := 1;
+        elem.SetState(i, 1);
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_idx(): Integer; CDECL;

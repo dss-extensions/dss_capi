@@ -35,7 +35,7 @@ type
 
     TSwtControl = class(TControlClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -59,7 +59,7 @@ type
 
         procedure Set_Enabled(Value: WordBool); OVERRIDE;
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
-        procedure RecalcElementData; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
 
         procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
@@ -137,7 +137,7 @@ begin
         Result := ord(CTRL_OPEN);
 end;
 
-procedure TSwtControl.DefineProperties;
+procedure TSwtControl.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -190,7 +190,7 @@ begin
     PropertyOffset[ord(TProp.Reset)] := ptruint(@DoReset);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TSwtControl.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -282,7 +282,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TSwtControlObj.RecalcElementData;
+procedure TSwtControlObj.RecalcElementData();
 begin
     if ControlledElement = NIL then   // element not found
     begin

@@ -30,7 +30,7 @@ type
         PropertyOffset_CableData: Integer;
 
         procedure CountPropertiesAndAllocate; override;
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
         destructor Destroy; OVERRIDE;
@@ -97,7 +97,7 @@ begin
     inherited CountPropertiesAndAllocate;
 end;
 
-procedure TCableData.DefineProperties;
+procedure TCableData.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -119,7 +119,7 @@ begin
     PropertyFlags[ActiveProperty + ord(TProp.DiaCable)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
 
     ActiveProperty := ActiveProperty + NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 procedure TCableDataObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);

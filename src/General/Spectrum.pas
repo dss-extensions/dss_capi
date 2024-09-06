@@ -44,7 +44,7 @@ type
 
     TSpectrum = class(TDSSClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         DefaultGeneral: TSpectrumObj;
         DefaultLoad: TSpectrumObj;
@@ -131,7 +131,7 @@ begin
     DefaultVSource := Find('defaultvsource');
 end;
 
-procedure TSpectrum.DefineProperties;
+procedure TSpectrum.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin

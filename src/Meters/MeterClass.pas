@@ -14,7 +14,7 @@ type
     TMeterClass = class(TCktElementClass)
     PROTECTED
         procedure CountPropertiesAndAllocate; override;
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
         destructor Destroy; OVERRIDE;
@@ -52,11 +52,11 @@ begin
     inherited CountPropertiesAndAllocate;
 end;
 
-procedure TMeterClass.DefineProperties;
+procedure TMeterClass.DefineProperties();
 begin
     // no properties
     ActiveProperty := ActiveProperty + NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 procedure TMeterClass.ResetAll;

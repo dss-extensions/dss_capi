@@ -111,7 +111,7 @@ type
 
     TReactor = class(TPDClass)
     PROTECTED
-        procedure DefineProperties; override;  // Add Properties of this class to propName
+        procedure DefineProperties(); override;  // Add Properties of this class to propName
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -149,7 +149,7 @@ type
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
         procedure RecalcElementData(); OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
     end;
 
@@ -191,7 +191,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TReactor.DefineProperties;
+procedure TReactor.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -305,7 +305,7 @@ begin
     PropertyRedundantWith[ord(TProp.LmH)] := ord(TProp.X);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 
     PropertyFlags[PropertyOffset_PDClass + ord(TPDElementProp.normamps)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_A];
     PropertyFlags[PropertyOffset_PDClass + ord(TPDElementProp.emergamps)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_A];
@@ -698,7 +698,7 @@ begin
     end;
 end;
 
-procedure TReactorObj.CalcYPrim;
+procedure TReactorObj.CalcYPrim();
 var
     Value, Value1, Value2: Complex;
     Calpha1, CAlpha2: Complex;
@@ -957,7 +957,7 @@ begin
     Yprim.Copyfrom(YPrimTemp);
     // Don't Free YPrimTemp - It's just a pointer to an existing complex matrix
 
-    inherited CalcYPrim;
+    inherited CalcYPrim();
 
     YprimInvalid := FALSE;
 end;

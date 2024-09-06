@@ -72,7 +72,7 @@ type
 
     TXYcurve = class(TDSSClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -224,7 +224,7 @@ begin
     Result[1] := 0;
 end;
 
-procedure TXYcurve.DefineProperties;
+procedure TXYcurve.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -307,7 +307,7 @@ begin
     PropertyRedundantWith[ord(TProp.Points)] := ord(TProp.Xarray);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TXYcurve.NewObject(const ObjName: String; Activate: Boolean): Pointer;

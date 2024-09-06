@@ -125,7 +125,7 @@ type
 
     TStorageController = class(TControlClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -336,7 +336,7 @@ begin
     end;
 end;
 
-procedure TStorageController.DefineProperties;
+procedure TStorageController.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -463,7 +463,7 @@ begin
     PropertyOffset[ord(TProp.ResetLevel)] := ptruint(@obj.ResetLevel);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TStorageController.NewObject(const ObjName: String; Activate: Boolean): Pointer;

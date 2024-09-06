@@ -181,7 +181,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    pLineCode.NumPhases := Value;   // use property value to force reallocations
+    pLineCode.SetNumPhases(Value);   // use property value to force reallocations
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_R1(): Double; CDECL;

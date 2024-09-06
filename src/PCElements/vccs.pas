@@ -56,7 +56,7 @@ type
 
     TVCCS = class(TPCClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -119,8 +119,8 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
@@ -192,7 +192,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TVCCS.DefineProperties;
+procedure TVCCS.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -244,7 +244,7 @@ begin
     PropertyOffset[ord(TProp.irmstau)] := ptruint(@obj.FirmsTau);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TVCCS.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -340,7 +340,7 @@ begin
     wlast := NIL;
 
     Yorder := Fnterms * Fnconds;
-    RecalcElementData;
+    RecalcElementData();
 end;
 
 destructor TVCCSObj.Destroy;
@@ -353,7 +353,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TVCCSObj.RecalcElementData;
+procedure TVCCSObj.RecalcElementData();
 begin
     Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 
@@ -380,7 +380,7 @@ begin
     end;
 end;
 
-procedure TVCCSObj.CalcYPrim;
+procedure TVCCSObj.CalcYPrim();
 begin
   // Build only YPrim Series
     if YPrimInvalid then
@@ -401,7 +401,7 @@ begin
 
   // Now Account for Open Conductors
   // For any conductor that is open, zero out row and column
-    inherited CalcYPrim;
+    inherited CalcYPrim();
     YPrimInvalid := FALSE;
 end;
 

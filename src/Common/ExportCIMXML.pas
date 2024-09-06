@@ -3721,7 +3721,7 @@ begin
 
             val := 0;
             for i := 1 to pCap.NumSteps() do
-                if pCap.States[i] > 0 then
+                if pCap.State(i) > 0 then
                     val := val + 1.0;
             DoubleNode(SshPrf, 'ShuntCompensator.sections', val);
             geoUUID := GetDevUuid(CapLoc, pCap.localName, 1);
@@ -4508,7 +4508,7 @@ begin
                 end;
             end;
             v1 := To_per_Meter(pLnCd.Units); // TODO: warn if still UNITS_NONE
-            if pLnCd.SymComponentsModel and (pLnCd.NumPhases = 3) then
+            if pLnCd.SymComponentsModel and (pLnCd.NumPhases() = 3) then
             begin
                 v2 := 1.0e-9 * TwoPi * pLnCd.BaseFrequency; // convert nF to mhos
                 StartInstance(EpPrf, 'PerLengthSequenceImpedance', pLnCd);

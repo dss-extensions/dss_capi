@@ -158,7 +158,7 @@ type
 
     TRelay = class(TControlClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -287,7 +287,7 @@ type
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
-        procedure RecalcElementData; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
 
         procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
@@ -363,7 +363,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TRelay.DefineProperties;
+procedure TRelay.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
     TCC_CurveClass: TDSSClass;
@@ -505,7 +505,7 @@ begin
     PropertyOffset[ord(TProp.DOC_TDPhaseInner)] := ptruint(@obj.DOC_TDPhaseInner);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TRelay.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -772,7 +772,7 @@ begin
 
     DSSObjType := ParClass.DSSClassType; //cap_CONTROL;
 
-   //  RecalcElementData;
+   //  RecalcElementData();
 end;
 
 destructor TRelayObj.Destroy;
@@ -794,7 +794,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TRelayObj.RecalcElementData;
+procedure TRelayObj.RecalcElementData();
 begin
     if DebugTrace then
         AppendToEventLog(

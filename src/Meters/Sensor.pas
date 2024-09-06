@@ -244,7 +244,7 @@ begin
     PropertyOffset[ord(TProp.Weight)] := ptruint(@obj.Weight);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TSensor.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -408,7 +408,7 @@ begin
     ClearSensor;
 
     DSSObjType := ParClass.DSSClassType; //SENSOR_ELEMENT;
-    //  RecalcElementData;
+    //  RecalcElementData();
 end;
 
 destructor TSensorObj.Destroy;

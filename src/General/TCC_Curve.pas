@@ -38,7 +38,7 @@ type
 
     TTCC_Curve = class(TDSSClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -104,7 +104,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TTCC_Curve.DefineProperties;
+procedure TTCC_Curve.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -127,7 +127,7 @@ begin
     PropertyFlags[ord(TProp.Npts)] := [TPropertyFlag.SuppressJSON];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TTCC_Curve.NewObject(const ObjName: String; Activate: Boolean): Pointer;

@@ -152,7 +152,7 @@ type
 {$SCOPEDENUMS OFF}
     TLoad = class(TPCClass)
     PROTECTED
-        procedure DefineProperties; override;  // Add Properties of this class to propName
+        procedure DefineProperties(); override;  // Add Properties of this class to propName
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -285,8 +285,8 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
         function InjCurrents: Integer; OVERRIDE;
         procedure InitHarmonics; OVERRIDE;
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
@@ -351,7 +351,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TLoad.DefineProperties;
+procedure TLoad.DefineProperties();
 type
     P = TProp;
 var 
@@ -458,7 +458,7 @@ begin
     PropertyFlags[ord(TProp.Xneut)] := [TPropertyFlag.Units_ohm];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TLoad.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -875,7 +875,7 @@ begin
 
     Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
     Reallocmem(FPhaseCurr, SizeOf(FPhaseCurr[1]) * FNphases);
-    RecalcElementData;
+    RecalcElementData();
 end;
 
 destructor TLoadObj.Destroy;
@@ -1161,7 +1161,7 @@ begin
     M95I := (IBase - ILow) / (VBase95 - VBaseLow); // (IBase - ILow)/(Vbase95 - VbaseLow);    ***Added by Celso & Paulo
 end;
 
-procedure TLoadObj.RecalcElementData;
+procedure TLoadObj.RecalcElementData();
 begin
     VBaseLow := VLowpu * VBase;
     VBase95 := VMinPu * VBase;
@@ -1310,7 +1310,7 @@ begin
     end;
 end;
 
-procedure TLoadObj.CalcYPrim;
+procedure TLoadObj.CalcYPrim();
 // If doing an analysis that requires the load to be modeled as an impedance
 // then put all in.
 var
@@ -1359,7 +1359,7 @@ begin
     YPrim.CopyFrom(YPrim_Shunt);
 
      // Account for Open Conductors
-    inherited CalcYPrim;
+    inherited CalcYPrim();
 end;
 
 procedure TLoadObj.StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer); inline;

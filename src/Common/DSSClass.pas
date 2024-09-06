@@ -445,7 +445,7 @@ type
 
         Function AddObjectToList(Obj:Pointer; Activate: Boolean = True):Integer;  // Used by NewObject
         Procedure CountPropertiesAndAllocate;virtual;
-        procedure DefineProperties;virtual;
+        procedure DefineProperties();virtual;
 
         procedure PopulatePropertyNames(PropOffset: Integer; NumProps: Integer; EnumInfo: Pointer; EnumInfoLegacy: Pointer; ReplacePct: Boolean = True; PropSource: String = '');
      public
@@ -536,7 +536,7 @@ type
 
         constructor Create(dssContext: TDSSContext; Targets: Array Of String);
         destructor Destroy; override;
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
         function Find(const ObjName: String; const ChangeActive: Boolean): Pointer; override;
     end;
 
@@ -1957,7 +1957,7 @@ begin
     end;
 end;
 
-procedure TDSSClass.DefineProperties;
+procedure TDSSClass.DefineProperties();
 var
     i, nextZorder, propIdx, zorder, outIdx: Integer;
     propZorder: ArrayOfInteger;
@@ -2613,7 +2613,7 @@ begin
     end;
 end;
 
-procedure TProxyClass.DefineProperties;
+procedure TProxyClass.DefineProperties();
 begin
     // Empty
 end;

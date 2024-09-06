@@ -63,7 +63,7 @@ type
 {$SCOPEDENUMS OFF}
     TUPFC = class(TPCClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -129,8 +129,8 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
 
         function InjCurrents: Integer; OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
@@ -201,7 +201,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TUPFC.DefineProperties;
+procedure TUPFC.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -257,7 +257,7 @@ begin
     PropertyFlags[ord(TProp.kvarLimit)] := [TPropertyFlag.Units_kvar];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TUPFC.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -400,7 +400,7 @@ begin
     end;
 
     Yorder := Fnterms * Fnconds;
-    RecalcElementData;
+    RecalcElementData();
 end;
 
 destructor TUPFCObj.Destroy;
@@ -414,7 +414,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TUPFCObj.RecalcElementData;
+procedure TUPFCObj.RecalcElementData();
 var
     Z1: Complex;
     Value: Complex;
@@ -447,7 +447,7 @@ begin
 end;
 
 
-procedure TUPFCObj.CalcYPrim;
+procedure TUPFCObj.CalcYPrim();
 
 var
     Value: Complex;
@@ -515,7 +515,7 @@ begin
 
     // Now Account for Open Conductors
     // For any conductor that is open, zero out row and column
-    inherited CalcYPrim;
+    inherited CalcYPrim();
 
     YPrimInvalid := FALSE;
 end;

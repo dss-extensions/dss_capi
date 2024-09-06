@@ -79,7 +79,7 @@ type
 
     TPriceShape = class(TDSSClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -202,7 +202,7 @@ begin
     obj.FStdDev := value;
 end;
 
-procedure TPriceShape.DefineProperties;
+procedure TPriceShape.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -287,7 +287,7 @@ begin
     PropertyOffset2[ord(TProp.Action)] := PtrInt(ActionEnum); 
     
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TPriceShape.NewObject(const ObjName: String; Activate: Boolean): Pointer;

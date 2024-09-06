@@ -91,7 +91,7 @@ type
 {$SCOPEDENUMS OFF}
     TVsource = class(TPCClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -161,8 +161,8 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
 
         function InjCurrents: Integer; OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
@@ -219,7 +219,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TVSource.DefineProperties;
+procedure TVSource.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -355,7 +355,7 @@ begin
     PropertyFlags[ord(TProp.baseMVA)] := [TPropertyFlag.RequiredInSpecSet];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TVsource.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -667,7 +667,7 @@ begin
     DutyShapeObj := NIL;
 
     Yorder := Fnterms * Fnconds;
-    RecalcElementData;
+    RecalcElementData();
 end;
 
 destructor TVsourceObj.Destroy;
@@ -678,7 +678,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TVsourceObj.RecalcElementData;
+procedure TVsourceObj.RecalcElementData();
 var
     Zs, Zm, Z1, Z2, Z0: Complex;
     Value, Value1, Value2: Complex;
@@ -886,7 +886,7 @@ begin
     Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 end;
 
-procedure TVsourceObj.CalcYPrim;
+procedure TVsourceObj.CalcYPrim();
 var
     Value: Complex;
     i, j: Integer;
@@ -969,7 +969,7 @@ begin
 
     // Now Account for Open Conductors
     // For any conductor that is open, zero out row and column
-    inherited CalcYPrim;
+    inherited CalcYPrim();
 
     YPrimInvalid := FALSE;
 end;

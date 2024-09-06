@@ -94,7 +94,7 @@ type
 
     TLine = class(TPDClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -169,8 +169,8 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
         function MergeWith(var Other: TLineObj; Series: Boolean): Boolean;
@@ -282,7 +282,7 @@ end;
 
 procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); forward;
 
-procedure TLine.DefineProperties;
+procedure TLine.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -466,7 +466,7 @@ begin
     PropertyOffset2[ord(TProp.c0)] := ptruint(@GetCSeqScale);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TLine.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -569,7 +569,7 @@ begin
         Yc.CopyFrom(LineCodeObj.Yc);
     end
     else
-        RecalcElementData;    // Compute matrices
+        RecalcElementData();    // Compute matrices
 
     NConds := Fnphases;  // Force Reallocation of terminal info
     //Fnconds := Fnphases;
@@ -625,7 +625,7 @@ begin
                     NConds := Fnphases;  // Force Reallocation of terminal info
                     Yorder := Fnterms * Fnconds;
                     // YPrimInvalid := True;  // now set below
-                    RecalcElementData;  // Reallocate Z, etc.
+                    RecalcElementData();  // Reallocate Z, etc.
                 end
                 else
                 begin
@@ -995,7 +995,7 @@ begin
     FZFrequency := -1.0; // indicate Z not computed.
 
     Yorder := Fnterms * Fnconds;
-    RecalcElementData;
+    RecalcElementData();
 
     NumAmpRatings := 1;
     setlength(AmpRatings, NumAmpRatings);
@@ -1062,7 +1062,7 @@ begin
     G_h := Ym.re
 end;
 
-procedure TLineObj.RecalcElementData;
+procedure TLineObj.RecalcElementData();
 //  This routine is only called when the symmetrical component data have changed
 //  It computes the values for Z and Yc in ohms per unit length
 //
@@ -1122,7 +1122,7 @@ begin
     BranchFltRate := Faultrate * pctperm * 0.01 * Len;
 end;
 
-procedure TLineObj.CalcYPrim;
+procedure TLineObj.CalcYPrim();
 var
     Value: Complex;
     ZinvValues: pComplexArray;
@@ -1153,7 +1153,7 @@ begin
             FCapSpecified := TRUE;   // so we don't do it again
         end;
 
-        RecalcElementData;
+        RecalcElementData();
     end;
 
     ClearYPrim;
@@ -1374,7 +1374,7 @@ begin
     YPrim.AddFrom(Yprim_Shunt);
     // Now Account for Open Conductors
     // For any conductor that is open, zero out row and column
-    inherited CalcYPrim;
+    inherited CalcYPrim();
     YprimInvalid := FALSE;
 end;
 
@@ -1772,7 +1772,7 @@ begin
             EndEdit(2);
             // Update symmetrical Components computation
             // (Only time this function is called is for sym comp update -- computes Z and Yc)
-            RecalcelementData;
+            RecalcElementData();
         end
         else  //  Matrix Model for anything other than Symmetrical Components
         if not Series then

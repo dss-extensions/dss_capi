@@ -145,7 +145,7 @@ type
 
     TCapControl = class(TControlClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -179,7 +179,7 @@ type
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
-        procedure RecalcElementData; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
 
         procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
@@ -246,7 +246,7 @@ begin
     //PropertyValue(22) := 'n'; // so it gets reported properly
 end;
 
-procedure TCapControl.DefineProperties;
+procedure TCapControl.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -332,7 +332,7 @@ begin
     PropertyOffset[ord(TProp.Reset)] := ptruint(@DoReset);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TCapControl.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -534,7 +534,7 @@ begin
 
     DSSObjType := ParClass.DSSClassType; //cap_CONTROL;
 
-   //  RecalcElementData;
+   //  RecalcElementData();
 end;
 
 destructor TCapControlObj.Destroy;
@@ -550,7 +550,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TCapControlObj.RecalcElementData;
+procedure TCapControlObj.RecalcElementData();
 var
     effElement: TDSSCktElement = NIL;
 begin
@@ -710,7 +710,7 @@ begin
             begin
                 UserModel.DoPending(Code, ProxyHdl);
                 // If control action changes last step in service, force update of Yprim and Fstates array
-                ControlledCapacitor.LastStepInService := ControlVars.LastStepInService;
+                ControlledCapacitor.SetLastStepInService(ControlVars.LastStepInService);
                 // Usermodel could override Pending change so the rest of this procedure is ignored.
             end;
     end;
@@ -1016,8 +1016,8 @@ begin
                         GetControlCurrent(SampleCurr);
 
                         NumCapSteps := ControlledCapacitor.NumSteps();
-                        AvailableSteps := ControlledCapacitor.AvailableSteps;
-                        LastStepInService := ControlledCapacitor.LastStepInService;
+                        AvailableSteps := ControlledCapacitor.AvailableSteps();
+                        LastStepInService := ControlledCapacitor.LastStepInService();
 
                         UserModel.Sample;   // Sets the switching flags
                     end;

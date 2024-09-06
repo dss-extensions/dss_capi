@@ -91,7 +91,7 @@ type
 
     TLineCode = class(TDSSClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -145,8 +145,8 @@ type
         procedure CalcMatricesFromZ1Z0;
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
-        procedure Set_NumPhases(Value: Integer);
-        property NumPhases: Integer read FNPhases write Set_NumPhases;
+        procedure SetNumPhases(Value: Integer);
+        function NumPhases(): Integer;
     end;
 
 implementation
@@ -204,7 +204,7 @@ begin
     obj.DoKronReduction(); 
 end;
 
-procedure TLineCode.DefineProperties;
+procedure TLineCode.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -332,7 +332,7 @@ begin
     PropertyOffset3[ord(TProp.B0)] := ptruint(@obj.SymComponentsModel);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TLineCode.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -519,7 +519,12 @@ begin
     inherited destroy;
 end;
 
-procedure TLineCodeObj.Set_NumPhases(Value: Integer);
+function TLineCodeObj.NumPhases(): Integer;
+begin
+    result := FNPhases;
+end;
+
+procedure TLineCodeObj.SetNumPhases(Value: Integer);
 // Set the number of phases and reallocate phase-sensitive arrays
 // Need to preserve values in Z matrices
 begin
@@ -685,7 +690,7 @@ begin
 
     NewYC.Invert();  // Back to Y
 
-    Numphases := NewZ.order;
+    SetNumPhases(NewZ.order);
 
     // Get rid of Z and YC and replace
     Z.Free;

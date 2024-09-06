@@ -34,7 +34,7 @@ type
     TPDClass = class(TCktElementClass)
     PROTECTED
         procedure CountPropertiesAndAllocate; override;
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         PropertyOffset_PDClass: Integer;
 
@@ -89,7 +89,7 @@ begin
     inherited CountPropertiesAndAllocate;
 end;
 
-procedure TPDClass.DefineProperties;
+procedure TPDClass.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -104,7 +104,7 @@ begin
     PropertyOffset[ActiveProperty + ord(TProp.repair)] := ptruint(@obj.HrsToRepair);
 
     ActiveProperty := ActiveProperty + NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 end.

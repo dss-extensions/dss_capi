@@ -70,7 +70,7 @@ type
         PropertyOffset_ConductorData: Integer;
 
         procedure CountPropertiesAndAllocate; override;
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
         destructor Destroy; OVERRIDE;
@@ -146,7 +146,7 @@ begin
     inherited CountPropertiesAndAllocate;
 end;
 
-procedure TConductorData.DefineProperties;
+procedure TConductorData.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -205,7 +205,7 @@ begin
     PropertyFlags[ActiveProperty + ord(TProp.Seasons)] := [TPropertyFlag.SuppressJSON]; // can be derived trivially from length(Ratings)
 
     ActiveProperty := ActiveProperty + NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 procedure TConductorDataObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);

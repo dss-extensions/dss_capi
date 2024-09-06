@@ -62,7 +62,7 @@ type
 
     TGICTransformer = class(TPDClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -94,8 +94,8 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
@@ -159,7 +159,7 @@ begin
     obj.SetBus(3, busDef);
 end;
 
-procedure TGICTransformer.DefineProperties;
+procedure TGICTransformer.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -234,7 +234,7 @@ begin
     PropertyFlags[ord(TProp.R2)] := [TPropertyFlag.InverseValue, TPropertyFlag.Units_ohm];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TGICTransformer.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -420,7 +420,7 @@ begin
     Yorder := Fnterms * Fnconds;
 
     FpctRSpecified := TRUE;  // Force computation of G1, G2
-    RecalcElementData;
+    RecalcElementData();
     FpctRSpecified := FALSE;  // Turn flag off
 end;
 
@@ -429,7 +429,7 @@ begin
     inherited destroy;
 end;
 
-procedure TGICTransformerObj.RecalcElementData;
+procedure TGICTransformerObj.RecalcElementData();
 begin
     FZbase1 := SQR(FkV1) / FMVArating;
     FZbase2 := SQR(FkV2) / FMVArating;
@@ -479,7 +479,7 @@ begin
     FSWriteln(F, Format('%s, %.8g, %.8g', [GetBus(1), MVarMag, (GICperPhase)]));
 end;
 
-procedure TGICTransformerObj.CalcYPrim;
+procedure TGICTransformerObj.CalcYPrim();
 var
     Value, Value2: Complex;
     i: Integer;
@@ -578,7 +578,7 @@ begin
 
     YPrim.CopyFrom(YPrimTemp);
 
-    inherited CalcYPrim;
+    inherited CalcYPrim();
     YprimInvalid := FALSE;
 end;
 

@@ -70,7 +70,7 @@ type
 
     TGrowthShape = class(TDSSClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -138,7 +138,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TGrowthShape.DefineProperties;
+procedure TGrowthShape.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -190,7 +190,7 @@ begin
     PropertyFlags[ord(TProp.Npts)] := [TPropertyFlag.SuppressJSON];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 
     CommandList.Abbrev := FALSE; //TODO: why only this class?
 end;

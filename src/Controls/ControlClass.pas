@@ -16,7 +16,7 @@ type
     TControlClass = class(TCktElementClass)
     PROTECTED
         procedure CountPropertiesAndAllocate; override;
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
 
     PUBLIC
         constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
@@ -51,11 +51,11 @@ begin
     inherited CountPropertiesAndAllocate;
 end;
 
-procedure TControlClass.DefineProperties;
+procedure TControlClass.DefineProperties();
 begin
     // no properties
     ActiveProperty := ActiveProperty + NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 end.

@@ -4452,7 +4452,7 @@ begin
             pLoad.kVLoadBase := kvln;
 
         pLoad.PropertySideEffects(ord(TLoadProp.kV), 0, []);
-        pLoad.RecalcElementData;
+        pLoad.RecalcElementData();
     end;
 
     for i := 1 to DSS.ActiveCircuit.Generators.Count do
@@ -4466,7 +4466,7 @@ begin
             pGen.SetPresentKV(kvln * sqrt(3.0))
         else
             pGen.SetPresentKV(kvln);
-        pGen.RecalcElementData;
+        pGen.RecalcElementData();
     end;
 end;
 

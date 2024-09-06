@@ -30,7 +30,7 @@ type
     TCktElementClass = class(TDSSClass)
     PROTECTED
         procedure CountPropertiesAndAllocate; override;
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         PropertyOffset_CktElementClass: Integer;
 
@@ -85,7 +85,7 @@ begin
     obj.Set_Enabled(value);
 end;
 
-procedure TCktElementClass.DefineProperties;
+procedure TCktElementClass.DefineProperties();
 var
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -104,7 +104,7 @@ begin
     PropertyFlags[ActiveProperty + ord(TProp.basefreq)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
 
     ActiveProperty := ActiveProperty + NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TCktElementClass.BeginEdit(ptr: Pointer; SetActive_: Boolean): Pointer;

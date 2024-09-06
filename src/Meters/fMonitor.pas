@@ -526,7 +526,7 @@ begin
     PropertyReadFunction[ord(TProp.ElemTableLine)] := @getProp_Empty;
     
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function getProp_Attack_Defense(obj: TObj): String;

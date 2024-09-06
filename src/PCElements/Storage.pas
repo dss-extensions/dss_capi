@@ -242,7 +242,7 @@ type
     PROTECTED
         cBuffer: TCBuffer24;  // Temp buffer for calcs  24-phase Storage element?
 
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         RegisterNames: ArrayOfString;
 
@@ -505,7 +505,7 @@ begin
     Result := obj.GetDynOutputNames();
 end;
 
-procedure TStorage.DefineProperties;
+procedure TStorage.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -699,7 +699,7 @@ begin
     PropertyOffset[ord(TProp.AmpLimitGain)] := ptruint(@obj.dynVars.VError);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TStorage.NewObject(const ObjName: String; Activate: Boolean): Pointer;

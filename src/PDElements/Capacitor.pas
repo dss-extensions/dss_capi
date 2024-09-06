@@ -87,7 +87,7 @@ type
 
     TCapacitor = class(TPDClass)
     PROTECTED
-        procedure DefineProperties; override;  // Add Properties of this class to propName
+        procedure DefineProperties(); override;  // Add Properties of this class to propName
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -115,10 +115,6 @@ type
 
         SpecType: Integer;
 
-        function get_States(Idx: Integer): Integer;
-        procedure set_States(Idx: Integer; const Value: Integer);
-        procedure set_LastStepInService(const Value: Integer);
-
         procedure MakeYprimWork(YprimWork: TcMatrix; iStep: Integer);
 
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
@@ -135,22 +131,23 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
-        function AddStep: Boolean;
-        function SubtractStep: Boolean;
-        function AvailableSteps: Integer;
-        procedure FindLastStepInService;
+        function AddStep(): Boolean;
+        function SubtractStep(): Boolean;
+        function AvailableSteps(): Integer;
+        procedure FindLastStepInService();
         procedure SetNumSteps(const Value: Integer); // 1=kvar, 2=Cuf, 3=Cmatrix
         function NumSteps(): Integer;
-
-        property States[Idx: Integer]: Integer READ get_States WRITE set_States;
-        property LastStepInService: Integer READ FLastStepInService WRITE set_LastStepInService;
+        function State(Idx: Integer): Integer;
+        procedure SetState(Idx: Integer; const Value: Integer);
+        function LastStepInService(): Integer;
+        procedure SetLastStepInService(const Value: Integer);
     end;
 
 implementation
@@ -192,7 +189,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TCapacitor.DefineProperties;
+procedure TCapacitor.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -274,7 +271,7 @@ begin
     PropertyFlags[ord(TProp.NumSteps)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.SuppressJSON];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TCapacitor.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -448,7 +445,7 @@ begin
 
                 for i := 1 to FNumSteps do
                     Fstates[i] := 1;   // turn 'em all ON
-                LastStepInService := FNumSteps;
+                SetLastStepInService(FNumSteps);
                 for i := 2 to FNumSteps do
                     FHarm[i] := FHarm[1];  // tune 'em all the same as first
             end;
@@ -562,7 +559,7 @@ begin
     FStates := NIL;
 
     SetNumSteps(1);  // Initial Allocation for the Arrays, too
-    LastStepInService := FNumSteps;
+    SetLastStepInService(FNumSteps);
 
     InitDblArray(FNumSteps, FR, 0.0);
     InitDblArray(FNumSteps, FXL, 0.0);
@@ -587,7 +584,7 @@ begin
     DoHarmonicRecalc := FALSE;
     Bus2Defined := FALSE;
 
-    RecalcElementData;
+    RecalcElementData();
     NumTerm := 1;
 end;
 
@@ -605,7 +602,7 @@ begin
     inherited destroy;
 end;
 
-procedure TCapacitorObj.RecalcElementData;
+procedure TCapacitorObj.RecalcElementData();
 var
     KvarPerPhase, PhasekV, w: Double;
     i: Integer;
@@ -686,7 +683,7 @@ begin
         EmergAmps := kvarPerPhase / PhasekV * 1.8; 
 end;
 
-procedure TCapacitorObj.CalcYPrim;
+procedure TCapacitorObj.CalcYPrim();
 var
     i: Integer;
     YPrimTemp, YPrimWork: TCMatrix;
@@ -737,7 +734,7 @@ begin
 
     // Don't Free YPrimTemp - It's just a pointer to an existing complex matrix
 
-    inherited CalcYPrim;
+    inherited CalcYPrim();
 
     YprimInvalid := FALSE;
 end;
@@ -812,13 +809,12 @@ begin
     inherited;
 end;
 
-
-function TCapacitorObj.get_States(Idx: Integer): Integer;
+function TCapacitorObj.State(Idx: Integer): Integer;
 begin
     Result := FStates[Idx];
 end;
 
-procedure TCapacitorObj.set_States(Idx: Integer; const Value: Integer);
+procedure TCapacitorObj.SetState(Idx: Integer; const Value: Integer);
 begin
     if FStates[Idx] <> Value then
     begin
@@ -857,7 +853,7 @@ begin
     PropertySideEffects(ord(TProp.numsteps), prev, []);
 end;
 
-procedure TCapacitorObj.FindLastStepInService;
+procedure TCapacitorObj.FindLastStepInService();
 // Find the last step energized
 var
     i: Integer;
@@ -874,7 +870,12 @@ begin
     end;
 end;
 
-procedure TCapacitorObj.set_LastStepInService(const Value: Integer);
+function TCapacitorObj.LastStepInService(): Integer;
+begin 
+    result := FLastStepInService; 
+end;
+
+procedure TCapacitorObj.SetLastStepInService(const Value: Integer);
 // force the last step in service to be a certain value
 var
     i: Integer;
@@ -1017,37 +1018,37 @@ begin
     end;
 end;
 
-function TCapacitorObj.AddStep: Boolean;
+function TCapacitorObj.AddStep(): Boolean;
 begin
     // Start with last step in service and see if we can add more.  If not return FALSE
-    if LastStepInService = FNumSteps then
+    if LastStepInService() = FNumSteps then
         Result := FALSE
     else
     begin
         Inc(FLastStepInService);
-        States[FLastStepInService] := 1;
+        SetState(FLastStepInService, 1);
         Result := TRUE;
     end;
 end;
 
-function TCapacitorObj.SubtractStep: Boolean;
+function TCapacitorObj.SubtractStep(): Boolean;
 begin
-    if LastStepInService = 0 then
+    if LastStepInService() = 0 then
         Result := FALSE
     else
     begin
-        States[FLastStepInService] := 0;
+        SetState(FLastStepInService, 0);
         Dec(FLastStepInService);
-        if LastStepInService = 0 then
+        if LastStepInService() = 0 then
             Result := FALSE
         else
             Result := TRUE;   // signify bank OPEN
     end;
 end;
 
-function TCapacitorObj.AvailableSteps: Integer;
+function TCapacitorObj.AvailableSteps(): Integer;
 begin
-    Result := FNumsteps - LastStepInService;
+    Result := FNumsteps - LastStepInService();
 end;
 
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}

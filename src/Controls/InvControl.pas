@@ -151,7 +151,7 @@ type
         XY_CurveClass: TDSSClass;
 
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -463,7 +463,7 @@ begin
     Result := Obj.MonBusesNameList.Count;
 end;
 
-procedure TInvControl.DefineProperties;
+procedure TInvControl.DefineProperties();
 var
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -585,7 +585,7 @@ begin
 
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TInvControl.NewObject(const ObjName: Ansistring; Activate: Boolean): Pointer;

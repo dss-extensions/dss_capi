@@ -68,7 +68,7 @@ type
 
     TESPVLControl = class(TControlClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -118,7 +118,7 @@ type
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
-        procedure RecalcElementData; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
 
         procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
@@ -170,7 +170,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TESPVLControl.DefineProperties;
+procedure TESPVLControl.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -228,7 +228,7 @@ begin
     PropertyOffset[ord(TProp.kvarlimit)] := ptruint(@obj.FkvarLimit);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TESPVLControl.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -323,7 +323,7 @@ begin
     HalfkWBand := FkWBand / 2.0;
     FkvarLimit := FkWLimit / 2.0;
 
-   //  RecalcElementData;
+   //  RecalcElementData();
 end;
 
 destructor TESPVLControlObj.Destroy;
@@ -331,7 +331,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TESPVLControlObj.RecalcElementData;
+procedure TESPVLControlObj.RecalcElementData();
 begin
     // Check for existence of monitored element
     if MonitoredElement = NIL then

@@ -68,7 +68,7 @@ type
 
     TVSConverter = class(TPCClass)
     PROTECTED
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -101,8 +101,8 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
 
         // these three functions make it a PCElement
         function InjCurrents: Integer; OVERRIDE;
@@ -162,7 +162,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TVSConverter.DefineProperties;
+procedure TVSConverter.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -211,7 +211,7 @@ begin
     PropertyOffset[ord(TProp.Vdcref)] := ptruint(@obj.FRefVdc);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TVSConverter.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -323,7 +323,7 @@ begin
     FmaxIdc := 2.0;
 
     Yorder := Fnterms * Fnconds;
-    RecalcElementData;
+    RecalcElementData();
 end;
 
 destructor TVSConverterObj.Destroy;
@@ -332,7 +332,7 @@ begin
     inherited destroy;
 end;
 
-procedure TVSConverterObj.RecalcElementData;
+procedure TVSConverterObj.RecalcElementData();
 var
     i: Integer;
 begin
@@ -344,7 +344,7 @@ begin
         LastCurrents[i] := 0;
 end;
 
-procedure TVSConverterObj.CalcYPrim;
+procedure TVSConverterObj.CalcYPrim();
 var
     Value, Value2: Complex;
     FreqMultiplier: Double;
@@ -382,7 +382,7 @@ begin
         YPrim_Series[i + Fnphases, i] := Value2;
     end;
     YPrim.CopyFrom(YPrim_Series);
-    inherited CalcYPrim; // may open some conductors
+    inherited CalcYPrim(); // may open some conductors
     YprimInvalid := FALSE;
 end;
 

@@ -270,7 +270,7 @@ type
         FM_MHandle: TBytesStream;
 
 
-        procedure DefineProperties; override;
+        procedure DefineProperties(); override;
         procedure SetHasMeterFlag;
 
     PUBLIC
@@ -429,7 +429,7 @@ type
         procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model, reset nphases
-        procedure RecalcElementData; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
         function CheckBranchList(code: Integer): Boolean;
         procedure ResetRegisters;
         procedure TakeSample; OVERRIDE;
@@ -616,7 +616,7 @@ begin
         Result.Add('C');
 end;
 
-procedure TEnergyMeter.DefineProperties;
+procedure TEnergyMeter.DefineProperties();
 var 
     obj: TObj = NIL; // NIL (0) on purpose
 begin
@@ -697,7 +697,7 @@ begin
     PropertyOffset2[ord(TProp.Action)] := PtrInt(ActionEnum);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;
+    inherited DefineProperties();
 end;
 
 function TEnergyMeter.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -1092,7 +1092,7 @@ begin
     SetLength(ZonePCE, 1);
     ZonePCE[0] := NIL;
 
-    // RecalcElementData;
+    // RecalcElementData();
 end;
 
 destructor TEnergyMeterObj.Destroy;
@@ -1134,7 +1134,7 @@ begin
     inherited destroy;
 end;
 
-procedure TEnergyMeterObj.RecalcElementData;
+procedure TEnergyMeterObj.RecalcElementData();
 begin
     Exclude(Flags, Flg.NeedsRecalc);
     if MeteredElement <> NIL then
