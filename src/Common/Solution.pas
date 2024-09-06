@@ -587,13 +587,13 @@ begin
 {$IFDEF DSS_CAPI_PM}    
     // Sends a message to the working actor
     // DSS.ThreadStatusEvent.SetEvent();
-    if DSS.ActorThread <> NIL then
+    if DSS.ActorThread() <> NIL then
     begin
         DSS.SetSolutionAbort(true);
-        DSS.ActorThread.Send_Message(TActorMessage.EXIT_ACTOR);
-        DSS.ActorThread.WaitFor();
-        DSS.ActorThread.Free();
-        DSS.ActorThread := nil;
+        DSS.ActorThread().Send_Message(TActorMessage.EXIT_ACTOR);
+        DSS.ActorThread().WaitFor();
+        DSS.ActorThread().Free();
+        DSS.SetActorThread(nil);
     end;
     DSS.ThreadStatusEvent.Free;
     DSS.ThreadStatusEvent := NIL;
@@ -645,7 +645,7 @@ begin
 {$IFDEF DSS_CAPI_PM}
         // If we won't run in parallel and don't have a thread already,
         // don't use a new thread
-        if (not PMParent.Parallel_enabled) and (DSS.ActorThread = NIL) then
+        if (not PMParent.Parallel_enabled) and (DSS.ActorThread() = NIL) then
         begin
 {$ENDIF}
             {$IFDEF WINDOWS}
@@ -704,15 +704,15 @@ begin
 {$IFDEF DSS_CAPI_PM}
         end;
         // Creates the actor again in case of being terminated due to an error before
-        if (DSS.ActorThread = NIL) or DSS.ActorThread.Terminated then
+        if (DSS.ActorThread() = NIL) or DSS.ActorThread().Terminated then
         begin
-            if (DSS.ActorThread <> NIL) and DSS.ActorThread.Terminated then
-                DSS.ActorThread.Free;
+            if (DSS.ActorThread() <> NIL) and DSS.ActorThread().Terminated then
+                DSS.ActorThread().Free;
 
-            DSS.ActorThread := TSolver.Create(self, True, DSS.CPU, DSS.ThreadStatusEvent);
-            // DSS.ActorThread.Priority := tpTimeCritical;
+            DSS.SetActorThread(TSolver.Create(self, True, DSS.CPU, DSS.ThreadStatusEvent));
+            // DSS.ActorThread().Priority := tpTimeCritical;
             DSS.ActorStatus := TActorStatus.Busy;
-            DSS.ActorThread.Start();
+            DSS.ActorThread().Start();
         end;
         // CheckFaultStatus;  ???? needed here??
 
@@ -729,7 +729,7 @@ begin
         {$ENDIF}
 
         // Sends message to start the Simulation
-        DSS.ActorThread.Send_Message(TActorMessage.SIMULATE);
+        DSS.ActorThread().Send_Message(TActorMessage.SIMULATE);
 
         // If the parallel mode is not active, Waits until the actor finishes
         if not DSS.GetPrime().Parallel_enabled then
@@ -1214,7 +1214,7 @@ begin
             SendCmd2Actors(DO_CTRL_ACTIONS);
             // Checks if there are pending ctrl actions at the actors
             ControlActionsDone := TRUE;
-            for i := 2 to DSS.NumOfActors do
+            for i := 2 to DSS.NumOfActors() do
                 ControlActionsDone := ControlActionsDone and DSS.Children[i - 1].ActiveCircuit.Solution.ControlActionsDone;
         end;
     end;
@@ -2796,12 +2796,12 @@ var
     i: Integer;
     ChDSS: TDSSContext;
 begin
-    for i := 2 to DSS.NumOfActors do
+    for i := 2 to DSS.NumOfActors() do
     begin
         ChDSS := DSS.Children[i - 1];
         ChDSS.ActorStatus := TActorStatus.Busy;
-        if ChDSS.ActorThread <> NIL then
-            ChDSS.ActorThread.Send_Message(Msg);
+        if ChDSS.ActorThread() <> NIL then
+            ChDSS.ActorThread().Send_Message(Msg);
     end;
     Wait4Actors(DSS, AD_ACTORS);
 end;

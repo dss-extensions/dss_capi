@@ -394,13 +394,13 @@ begin
     for ctx in PMParent.Children do
     begin
         // In case the actor hasn't been destroyed
-        if ctx.ActorThread <> nil then
+        if ctx.ActorThread() <> nil then
         begin
             ctx.SetSolutionAbort(true);
-            ctx.ActorThread.Send_Message(TActorMessage.EXIT_ACTOR);
-            ctx.ActorThread.WaitFor();
-            ctx.ActorThread.Free;
-            ctx.ActorThread := nil;
+            ctx.ActorThread().Send_Message(TActorMessage.EXIT_ACTOR);
+            ctx.ActorThread().WaitFor();
+            ctx.ActorThread().Free;
+            ctx.SetActorThread(nil);
         end;
 
         for circuit in ctx.Circuits do
@@ -648,7 +648,7 @@ begin
     DSS.Parser.NextParam();
     NumClones := DSS.Parser.MakeInteger();
     PMParent.Parallel_enabled := False;
-    if ((PMParent.NumOfActors + NumClones) <= CPU_Cores) and (NumClones > 0) then
+    if ((PMParent.NumOfActors() + NumClones) <= CPU_Cores) and (NumClones > 0) then
     begin
         for i := 1 to NumClones do
         begin

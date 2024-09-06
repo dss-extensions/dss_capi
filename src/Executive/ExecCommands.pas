@@ -351,7 +351,7 @@ begin
             ord(Cmd.SolveAll):
             begin
                 PMParent.IsSolveAll := TRUE;
-                for i := 0 to PMParent.NumOfActors - 1 do
+                for i := 0 to PMParent.NumOfActors() - 1 do
                 begin
                     PMParent.ActiveChild := PMParent.Children[i];
                     PMParent.ActiveChild.CmdResult := DoSetCmd(PMParent.ActiveChild, 1);

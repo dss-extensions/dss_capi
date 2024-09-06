@@ -273,7 +273,7 @@ begin
                 end
                 else
                 begin
-                    if (DSS.Parser.MakeInteger() > 0) and (DSS.Parser.MakeInteger() <= PMParent.NumOfActors) then
+                    if (DSS.Parser.MakeInteger() > 0) and (DSS.Parser.MakeInteger() <= PMParent.NumOfActors()) then
                     begin
                         PMParent.ActiveChildIndex := DSS.Parser.MakeInteger() - 1;
                         PMParent.ActiveChild := PMParent.Children[PMParent.ActiveChildIndex];
@@ -288,8 +288,8 @@ begin
                 if DSS.Parser.MakeInteger() < CPU_Cores then
                 begin
                     DSS.CPU := DSS.Parser.MakeInteger();
-                    if DSS.ActorThread <> NIL then
-                        DSS.ActorThread.SetCPU(DSS.CPU);
+                    if DSS.ActorThread() <> NIL then
+                        DSS.ActorThread().SetCPU(DSS.CPU);
                 end
                 else
                 begin
@@ -717,7 +717,7 @@ begin
                 end
                 else
                 begin
-                    if (DSS.Parser.MakeInteger() > 0) and (DSS.Parser.MakeInteger() <= PMParent.NumOfActors) then
+                    if (DSS.Parser.MakeInteger() > 0) and (DSS.Parser.MakeInteger() <= PMParent.NumOfActors()) then
                     begin
                         PMParent.ActiveChildIndex := DSS.Parser.MakeInteger() - 1;
                         PMParent.ActiveChild := PMParent.Children[PMParent.ActiveChildIndex];
@@ -732,8 +732,8 @@ begin
                 if DSS.Parser.MakeInteger() < CPU_Cores then
                 begin
                     DSS.CPU := DSS.Parser.MakeInteger();
-                    if DSS.ActorThread <> NIL then
-                        DSS.ActorThread.SetCPU(DSS.CPU);
+                    if DSS.ActorThread() <> NIL then
+                        DSS.ActorThread().SetCPU(DSS.CPU);
                 end
                 else
                 begin

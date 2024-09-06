@@ -69,10 +69,6 @@ type
    
     TDSSGlobalHelper = class helper for TDSSContext
     private
-{$IFDEF DSS_CAPI_PM}
-        function GetNumOfActors: Integer; inline;
-        function GetActorThread: TSolver; inline;
-{$ENDIF}
         function GetControlProxyObj: TControlProxyObj; inline;
         function GetDSSExecutive: TExecutive; inline;
         function GetCIMExporter: TCIMExporter; inline;
@@ -131,9 +127,6 @@ type
         function GetGICLineClass: TGICLine; inline;
         function GetGICTransformerClass:TGICTransformer; inline;
         
-{$IFDEF DSS_CAPI_PM}
-        procedure SetActorThread(val: TSolver); inline;
-{$ENDIF}
         procedure SetDSSExecutive(val: TExecutive); inline;
         procedure SetCIMExporter(val: TCIMExporter); inline;
         procedure SetActiveDSSObject(val: TDSSObject); inline;
@@ -199,8 +192,9 @@ type
         
     public
 {$IFDEF DSS_CAPI_PM}
-        property NumOfActors: Integer read GetNumOfActors;
-        property ActorThread: TSolver read GetActorThread write SetActorThread;
+        function NumOfActors(): Integer; inline;
+        function ActorThread(): TSolver; inline;
+        procedure SetActorThread(val: TSolver); inline;
 {$ENDIF}
         property ControlProxyObj: TControlProxyObj read GetControlProxyObj;
         property DSSExecutive: TExecutive read GetDSSExecutive write SetDSSExecutive;
@@ -268,8 +262,8 @@ type
 implementation
 
 {$IFDEF DSS_CAPI_PM}
-function TDSSGlobalHelper.GetNumOfActors: Integer; begin Result := High(Children) + 1; end;
-function TDSSGlobalHelper.GetActorThread: TSolver; begin Result := TSolver(FActorThread); end;
+function TDSSGlobalHelper.NumOfActors(): Integer; begin Result := High(Children) + 1; end;
+function TDSSGlobalHelper.ActorThread(): TSolver; begin Result := TSolver(FActorThread); end;
 {$ENDIF}
 function TDSSGlobalHelper.GetControlProxyObj: TControlProxyObj; begin Result := TControlProxyObj(FControlProxyObj); end;
 function TDSSGlobalHelper.GetDSSExecutive: TExecutive; begin Result := TExecutive(FDSSExecutive); end;

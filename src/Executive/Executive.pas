@@ -273,12 +273,12 @@ begin
 	begin
 {$IFDEF DSS_CAPI_PM}
         // In case the actor hasn't been destroyed
-        if DSS.ActorThread <> NIL then
+        if DSS.ActorThread() <> NIL then
         begin
-            DSS.ActorThread.Send_Message(TActorMessage.EXIT_ACTOR);
-            DSS.ActorThread.WaitFor();
-            DSS.ActorThread.Free();
-            DSS.ActorThread := NIL;
+            DSS.ActorThread().Send_Message(TActorMessage.EXIT_ACTOR);
+            DSS.ActorThread().WaitFor();
+            DSS.ActorThread().Free();
+            DSS.SetActorThread(NIL);
         end;
 {$ENDIF}        
     	if DSS.DIFilesAreOpen then

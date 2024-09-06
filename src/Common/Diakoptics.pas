@@ -91,7 +91,7 @@ var
     AvgImbal: Double;
 begin
     setlength(ASize, 0);
-    for idx := 1 to DSS.NumOfActors - 1 do
+    for idx := 1 to DSS.NumOfActors() - 1 do
     begin
         setlength(ASize, length(ASize) + 1);
         ASize[high(ASize)] := DSS.Children[idx].ActiveCircuit.NumNodes;
@@ -136,7 +136,7 @@ begin
     // The feeder head first
     DSS.Children[1].ActiveCircuit.VIndex := 0;
     // Then checks the rest of the actors
-    for i := 2 to DSS.NumOfActors - 1 do
+    for i := 2 to DSS.NumOfActors() - 1 do
     begin
         BusName := DSS.Children[i].ActiveCircuit.BusList.NameOfIndex(1) + '.1';
         // Looks for the node within all the Node Names in the interconnected model
@@ -653,14 +653,14 @@ begin
                 prog_Str := prog_str + CRLF + CRLF + _('Partitioning statistics');
                 prog_Str := prog_str + get_Statistics(DSS);
                 // Assigns the processor per actor
-                for DIdx := 1 to DSS.NumOfActors do
+                for DIdx := 1 to DSS.NumOfActors() do
                 begin
                     ChDSS := DSS.Children[DIdx - 1];//TODO: check
                     ChDSS.CPU := DIdx;
-                    if ChDSS.ActorThread <> NIL then
+                    if ChDSS.ActorThread() <> NIL then
                     begin
-                        ChDSS.ActorThread.CPU := ChDSS.CPU;
-                        // ChDSS.ActorThread.Priority := tpTimeCritical;
+                        ChDSS.ActorThread().CPU := ChDSS.CPU;
+                        // ChDSS.ActorThread().Priority := tpTimeCritical;
                     end;
                 end;
                 // Compiles the interconnected Circuit for further calculations on actor 1

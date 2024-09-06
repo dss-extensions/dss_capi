@@ -57,7 +57,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Parallel_Set_ActiveActor(Value: Integer); CDECL;
 begin
-    if (Value > 0) and (Value <= DSSPrime.NumOfActors) then
+    if (Value > 0) and (Value <= DSSPrime.NumOfActors()) then
     begin
         DSSPrime.ActiveChildIndex := Value - 1;
         DSSPrime.ActiveChild := DSSPrime.Children[DSSPrime.ActiveChildIndex];
@@ -81,15 +81,15 @@ begin
     if Value < CPU_Cores then
     begin
         DSSPrime.ActiveChild.CPU := value;
-        if DSSPrime.ActiveChild.ActorThread <> nil then
-            DSSPrime.ActiveChild.ActorThread.SetCPU(value);
+        if DSSPrime.ActiveChild.ActorThread() <> nil then
+            DSSPrime.ActiveChild.ActorThread().SetCPU(value);
     end
     else DoSimpleMsg(DSSPrime, _('The CPU does not exist'), 7004);
 end;
 //------------------------------------------------------------------------------
 function Parallel_Get_NumOfActors(): Integer; CDECL;
 begin
-    Result := DSSPrime.NumOfActors;
+    Result := DSSPrime.NumOfActors();
 end;
 //------------------------------------------------------------------------------
 procedure Parallel_Wait(); CDECL;
@@ -103,7 +103,7 @@ var
     Result: PIntegerArray0;
     idx: Integer;
 begin
-    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, DSSPrime.NumOfActors);
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, DSSPrime.NumOfActors());
     for idx := 0 to High(DSSPrime.Children) do
     begin
         Result[idx] := DSSPrime.Children[idx].ActorPctProgress;
@@ -122,7 +122,7 @@ var
     Result: PIntegerArray0;
     idx: Integer;
 begin
-    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, DSSPrime.NumOfActors);
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, DSSPrime.NumOfActors());
     for idx := 0 to High(DSSPrime.Children) do
         Result[idx] := Ord(DSSPrime.Children[idx].ActorStatus);
 end;
