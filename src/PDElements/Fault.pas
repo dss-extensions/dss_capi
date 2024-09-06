@@ -105,7 +105,7 @@ type
 
         procedure Randomize;
         procedure CheckStatus(ControlMode: Integer);
-        procedure Reset;
+        procedure Reset();
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
@@ -595,7 +595,7 @@ begin
     end;
 end;
 
-procedure TFaultObj.Reset;
+procedure TFaultObj.Reset();
 begin
     Cleared := FALSE;
 end;

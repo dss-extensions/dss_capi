@@ -51,9 +51,9 @@ type
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Always Zero
         procedure CalcYPrim(); OVERRIDE; // Always Zero
 
-        procedure Sample; VIRTUAL;    // Sample control quantities and set action times in Control Queue
+        procedure Sample(); VIRTUAL;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); VIRTUAL;   // Do the action that is pending from last sample
-        procedure Reset; VIRTUAL;
+        procedure Reset(); VIRTUAL;
         procedure Set_ControlledElement(const Value: TDSSCktElement);  // Pointer to target circuit element
         procedure Set_MonitoredElement(const Value: TDSSCktElement);
         property ControlledElement: TDSSCktElement READ FControlledElement WRITE Set_ControlledElement;
@@ -125,12 +125,12 @@ begin
     CktElem.ControlElementList := TempList;
 end;
 
-procedure TControlElem.Reset;
+procedure TControlElem.Reset();
 begin
     DoSimpleMsg('Programming Error: Reached base class for Reset.' + CRLF + 'Device: ' + FullName(), 461);
 end;
 
-procedure TControlElem.Sample;
+procedure TControlElem.Sample();
 begin
     // virtual function - should be overridden
     DoSimpleMsg('Programming Error:  Reached base class for Sample.' + CRLF + 'Device: ' + FullName(), 462);

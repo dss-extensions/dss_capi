@@ -289,9 +289,9 @@ type
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
         procedure RecalcElementData(); OVERRIDE;
 
-        procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
+        procedure Sample(); OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
-        procedure Reset; OVERRIDE;  // Reset to initial defined state
+        procedure Reset(); OVERRIDE;  // Reset to initial defined state
 
         function PresentState(): EControlAction;
         procedure SetPresentState(const Value: EControlAction);
@@ -1008,7 +1008,7 @@ begin
     end;
 end;
 
-procedure TRelayObj.Sample;
+procedure TRelayObj.Sample();
 begin
     ControlledElement.ActiveTerminalIdx := ElementTerminal;
     if ControlledElement.ConductorClosed(0) // Check state of phases of active terminal
@@ -1039,7 +1039,7 @@ begin
     end;
 end;
 
-procedure TRelayObj.Reset;
+procedure TRelayObj.Reset();
 begin
     if ShowEventLog then
         AppendToEventLog (Self.FullName(), _('Resetting'));

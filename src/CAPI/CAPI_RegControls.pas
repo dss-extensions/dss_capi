@@ -373,7 +373,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.TapNum;  // tap number on the controlled-winding of the transformer controlled by this regcontrol
+    Result := elem.TapNum();  // tap number on the controlled-winding of the transformer controlled by this regcontrol
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_CTPrimary(Value: Double); CDECL;

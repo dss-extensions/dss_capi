@@ -206,7 +206,7 @@ type
     PUBLIC
 
         procedure TakeSample;
-        procedure Reset;
+        procedure Reset();
         procedure Save;
 
         constructor Create(EnergyMeterClass: TEnergyMeter);
@@ -884,7 +884,7 @@ begin
         mtr.ResetRegisters;
     end;
 
-    SystemMeter.Reset;
+    SystemMeter.Reset();
 
     // Reset Generator Objects, too
     DSS.GeneratorClass.ResetRegistersAll;
@@ -3429,7 +3429,7 @@ begin
     end;
 end;
 
-procedure TSystemMeter.Reset;
+procedure TSystemMeter.Reset();
 begin
     Clear();
    // removed - open in solution If EnergyMeterClass.SaveDemandInterval() Then OpenDemandIntervalFile;

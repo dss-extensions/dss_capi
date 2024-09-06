@@ -58,9 +58,9 @@ type
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
         procedure RecalcElementData(); OVERRIDE;
 
-        procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
+        procedure Sample(); OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
-        procedure Reset; OVERRIDE;  // Reset to initial defined state
+        procedure Reset(); OVERRIDE;  // Reset to initial defined state
 
         function MakeUPFCList: Boolean;
     end;
@@ -201,7 +201,7 @@ begin
     end;
 end;
 
-procedure TUPFCControlObj.Sample;
+procedure TUPFCControlObj.Sample();
 var
     Update: Boolean;
     i: Integer;
@@ -281,7 +281,7 @@ begin
         Result := TRUE;
 end;
 
-procedure TUPFCControlObj.Reset;
+procedure TUPFCControlObj.Reset();
 begin
   // inherited;
 end;

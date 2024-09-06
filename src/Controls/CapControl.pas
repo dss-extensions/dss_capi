@@ -181,9 +181,9 @@ type
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
         procedure RecalcElementData(); OVERRIDE;
 
-        procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
+        procedure Sample(); OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
-        procedure Reset; OVERRIDE;  // Reset to initial defined state
+        procedure Reset(); OVERRIDE;  // Reset to initial defined state
 
         function PendingChange(): EControlAction;
         procedure SetPendingChange(const Value: EControlAction);
@@ -242,7 +242,7 @@ end;
 procedure DoReset(Obj: TObj);
 begin
     // force a reset
-    Obj.Reset;
+    Obj.Reset();
     //PropertyValue(22) := 'n'; // so it gets reported properly
 end;
 
@@ -824,7 +824,7 @@ begin
         end;
 end;
 
-procedure TCapControlObj.Sample;
+procedure TCapControlObj.Sample();
 var
     CurrTest,
     Vtest,
@@ -1019,7 +1019,7 @@ begin
                         AvailableSteps := ControlledCapacitor.AvailableSteps();
                         LastStepInService := ControlledCapacitor.LastStepInService();
 
-                        UserModel.Sample;   // Sets the switching flags
+                        UserModel.Sample();   // Sets the switching flags
                     end;
                 TIMECONTROL:
                 begin
@@ -1184,7 +1184,7 @@ begin
     Result := ControlVars.FPendingChange;
 end;
 
-procedure TCapControlObj.Reset;
+procedure TCapControlObj.Reset();
 begin
     SetPendingChange(CTRL_NONE);
     ControlledElement.ActiveTerminalIdx := 1;

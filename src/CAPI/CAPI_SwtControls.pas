@@ -173,7 +173,7 @@ begin
         dssActionClose:
             elem.CurrentAction := CTRL_CLOSE;
         dssActionReset:
-            elem.Reset;
+            elem.Reset();
         dssActionLock:
             elem.Locked := TRUE;
         dssActionUnlock:
@@ -312,7 +312,7 @@ begin
         Exit;
 
     elem.Locked := FALSE;
-    elem.Reset;
+    elem.Reset();
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_idx(): Integer; CDECL;

@@ -24,7 +24,7 @@ type
         destructor Destroy; OVERRIDE;
 
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
-        procedure Reset; OVERRIDE;  // Reset to initial defined state
+        procedure Reset(); OVERRIDE;  // Reset to initial defined state
         procedure RecalcElementData(); Override;
     end;
 
@@ -91,7 +91,7 @@ begin
         Result := FALSE;
 end;
 
-procedure TControlProxyObj.Reset;
+procedure TControlProxyObj.Reset();
 begin
     ClearActionList;
 end;

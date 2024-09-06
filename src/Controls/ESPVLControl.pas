@@ -120,9 +120,9 @@ type
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
         procedure RecalcElementData(); OVERRIDE;
 
-        procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
+        procedure Sample(); OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
-        procedure Reset; OVERRIDE;  // Reset to initial defined state
+        procedure Reset(); OVERRIDE;  // Reset to initial defined state
 
         function MakeLocalControlList: Boolean;
     end;
@@ -369,7 +369,7 @@ begin
     // Do Nothing
 end;
 
-procedure TESPVLControlObj.Sample;
+procedure TESPVLControlObj.Sample();
 var
     i: Integer;
     PDiff: Double;
@@ -450,7 +450,7 @@ begin
     end;
 end;
 
-procedure TESPVLControlObj.Reset;
+procedure TESPVLControlObj.Reset();
 begin
   // inherited;
 end;

@@ -1556,7 +1556,7 @@ begin
     if IncMat = NIL then
         IncMat := Tsparse_matrix.Create
     else
-        IncMat.reset;
+        IncMat.Reset();
 
     if cktptr = NIL then //TODO: is this even possible?
         Exit; 
@@ -1654,7 +1654,7 @@ begin
     if IncMat = NIL then
         IncMat := Tsparse_matrix.Create
     else
-        IncMat.reset;
+        IncMat.Reset();
 
     ActiveIncCell[0] := -1;           // Activates row 1 of the incidence matrix
     if Assigned(topo) then

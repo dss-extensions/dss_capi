@@ -61,9 +61,9 @@ type
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
         procedure RecalcElementData(); OVERRIDE;
 
-        procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
+        procedure Sample(); OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
-        procedure Reset; OVERRIDE;  // Reset to initial defined state
+        procedure Reset(); OVERRIDE;  // Reset to initial defined state
 
     end;
 
@@ -119,7 +119,7 @@ procedure DoReset(Obj: TObj);
 begin
     // force a reset
     Obj.Locked := FALSE;
-    Obj.Reset;
+    Obj.Reset();
 end;
 
 function GetState(Obj: TObj): Integer;
@@ -344,7 +344,7 @@ begin
     end;
 end;
 
-procedure TSwtControlObj.Sample;
+procedure TSwtControlObj.Sample();
 begin
     // push on the Lock command if any at the present time delay
     if LockCommand <> CTRL_NONE then
@@ -360,7 +360,7 @@ begin
     end;
 end;
 
-procedure TSwtControlObj.Reset;
+procedure TSwtControlObj.Reset();
 begin
     if not Locked then
     begin

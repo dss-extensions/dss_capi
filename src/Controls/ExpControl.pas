@@ -131,12 +131,12 @@ type
         procedure RecalcElementData(); OVERRIDE;
 
             // Sample control quantities and set action times in Control Queue
-        procedure Sample; OVERRIDE;
+        procedure Sample(); OVERRIDE;
 
             // Do the action that is pending from last sample
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;
 
-        procedure Reset; OVERRIDE;  // Reset to initial defined state
+        procedure Reset(); OVERRIDE;  // Reset to initial defined state
 
         function MakePVSystemList(doRecalc: Boolean = TRUE): Boolean;
     end;
@@ -523,7 +523,7 @@ begin
     end;
 end;
 
-procedure TExpControlObj.Sample;
+procedure TExpControlObj.Sample();
 var
     i, j: Integer;
     basekV, Vpresent: Double;
@@ -673,7 +673,7 @@ begin
         Result := TRUE;
 end;
 
-procedure TExpControlObj.Reset;
+procedure TExpControlObj.Reset();
 begin
   // inherited;
 end;

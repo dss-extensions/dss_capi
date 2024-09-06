@@ -88,9 +88,9 @@ type
         procedure RecalcElementData(); OVERRIDE;
         procedure CalcYPrim(); OVERRIDE;    // Always Zero for a Fuse
 
-        procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
+        procedure Sample(); OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Phs, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
-        procedure Reset; OVERRIDE;  // Reset to initial defined state
+        procedure Reset(); OVERRIDE;  // Reset to initial defined state
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
         function GetState(Idx: Integer): EControlAction;
@@ -440,7 +440,7 @@ begin
         end;
 end;
 
-procedure TFuseObj.Sample;
+procedure TFuseObj.Sample();
 var
     i: Integer;
     Cmag: Double;
@@ -491,7 +491,7 @@ begin
     end;
 end;
 
-procedure TFuseObj.Reset;
+procedure TFuseObj.Reset();
 var
     i: Integer;
 begin

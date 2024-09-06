@@ -49,7 +49,7 @@ TYPE
         Procedure Select;
         Procedure UpdateModel;
         Procedure DoPending(Const Code, ProxyHdl:integer);
-        Procedure Sample;
+        Procedure Sample();
 
         constructor Create(dssContext: TDSSContext);
         destructor  Destroy; override;
@@ -121,7 +121,7 @@ begin
         Else Result := False;
 end;
 
-procedure TCapUserControl.Sample;
+procedure TCapUserControl.Sample();
 // Sample the cap control
 begin
      If FID <> 0 Then FSample;

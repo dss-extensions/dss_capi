@@ -76,9 +76,9 @@ type
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
         procedure RecalcElementData(); OVERRIDE;
 
-        procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
+        procedure Sample(); OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
-        procedure Reset; OVERRIDE;  // Reset to initial defined state
+        procedure Reset(); OVERRIDE;  // Reset to initial defined state
 
         function MakeGenList: Boolean;
     end;
@@ -275,7 +275,7 @@ begin
     // Do Nothing
 end;
 
-procedure TGenDispatcherObj.Sample;
+procedure TGenDispatcherObj.Sample();
 var
     i: Integer;
     PDiff,
@@ -391,7 +391,7 @@ begin
 end;
 
 
-procedure TGenDispatcherObj.Reset;
+procedure TGenDispatcherObj.Reset();
 begin
   // inherited;
 end;

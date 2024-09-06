@@ -4234,7 +4234,7 @@ begin
                 begin
                     BooleanNode(EpPrf, 'TapChangerControl.reversible', False);
                 end;
-                if VLimitActive then 
+                if VLimitActive() then 
                     // maxLimitVoltage only in OpenDSS
                     DoubleNode(EpPrf, 'TapChangerControl.maxLimitVoltage', Vlimit)
                 else 
@@ -4260,7 +4260,7 @@ begin
                 DoubleNode(EpPrf, 'TapChanger.subsequentDelay', TapDelay);
                 BooleanNode(EpPrf, 'TapChanger.ltcFlag', TRUE);
                 BooleanNode(SshPrf, 'TapChanger.controlEnabled', pReg.Enabled);
-                DoubleNode(SshPrf, 'TapChanger.step', TapNum);
+                DoubleNode(SshPrf, 'TapChanger.step', TapNum());
                 DoubleNode(EpPrf, 'TapChanger.ptRatio', PTRatio);
                 DoubleNode(EpPrf, 'TapChanger.ctRatio', CTRating / 0.2);
                 DoubleNode(EpPrf, 'TapChanger.ctRating', CTRating);

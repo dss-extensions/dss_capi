@@ -157,16 +157,13 @@ type
 
         procedure Set_Enabled(Value: WordBool); OVERRIDE;
 
-        function MinTap: Double;
-        function MaxTap: Double;
-        function TapIncrement: Double;
-        function NumTaps: Integer;
-        function Get_TapNum: Integer;
-        procedure Set_TapNum(const Value: Integer);
+        function MinTap(): Double;
+        function MaxTap(): Double;
+        function TapIncrement(): Double;
+        function NumTaps(): Integer;
 
         procedure RegWriteTraceRecord(TapChangeMade: Double);
         procedure RegWriteDebugRecord(S: String);
-        procedure set_PendingTapChange(const Value: Double);
         function AtLeastOneTap(const ProposedChange: Double; Increment: Double): Double;
         function ComputeTimeDelay(Vavg: Double): Double;
         function GetControlVoltage(VBuffer: pComplexArray; Nphs: Integer; PTRatio: Double): Complex;
@@ -195,17 +192,19 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
         procedure RecalcElementData(); OVERRIDE;
-        procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
+        procedure Sample(); OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
-        procedure Reset; OVERRIDE;  // Reset to initial defined state
+        procedure Reset(); OVERRIDE;  // Reset to initial defined state
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
         function Transformer(): TControlledTransformerObj;
         function TrWinding(): Integer; // Report Tapped winding
-        property PendingTapChange: Double READ FPendingTapChange WRITE set_PendingTapChange;
-        function VLimitActive: Boolean;
-        property TapNum: Integer READ Get_TapNum WRITE Set_TapNum;
+        function PendingTapChange(): Double;
+        procedure SetPendingTapChange(const Value: Double);
+        function VLimitActive(): Boolean;
+        function TapNum(): Integer;
+        procedure SetTapNum(const Value: Integer);
     end;
 
 implementation
@@ -268,18 +267,18 @@ end;
 
 procedure SetTapNum(obj: TObj; Value: Integer);
 begin
-    obj.set_TapNum(Value);
+    obj.SetTapNum(Value);
 end;
 
 function GetTapNum(obj: TObj): Integer;
 begin
-    Result := obj.get_TapNum();
+    Result := obj.TapNum();
 end;
 
 procedure DoReset(Obj: TObj);
 begin
     // force a reset
-    Obj.Reset;
+    Obj.Reset();
     //PropertyValue(29) := 'n'; // so it gets reported properly
 end;
 
@@ -471,7 +470,7 @@ begin
     // DebugTrace := Other.DebugTrace;  Always default to NO
 
     FPTphase := Other.FPTphase;
-    TapNum := Other.TapNum;
+    SetTapNum(Other.TapNum());
     CogenEnabled := Other.CogenEnabled;
     LDC_Z := Other.LDC_Z;
     RevLDC_Z := Other.revLDC_Z;
@@ -694,25 +693,27 @@ function TRegControlObj.AtLeastOneTap(const ProposedChange: Double; Increment: D
 // Called in STATIC mode
 // Changes 70% of the way but at least one tap, subject to maximum allowable tap change
 var
-    NumTaps: Integer;
+    nTaps: Integer;
 begin
-    NumTaps := Trunc(0.7 * Abs(ProposedChange) / Increment);
+    nTaps := Trunc(0.7 * Abs(ProposedChange) / Increment);
 
-    if NumTaps = 0 then
-        NumTaps := 1;
+    if nTaps = 0 then
+        nTaps := 1;
 
-    if NumTaps > TapLimitPerChange then
-        NumTaps := TapLimitPerChange;
+    if nTaps > TapLimitPerChange then
+        nTaps := TapLimitPerChange;
 
-    LastChange := NumTaps;
+    LastChange := nTaps;
 
     if ProposedChange > 0.0    // check sign on change
     then
-        Result := NumTaps * Increment
+    begin
+        Result := nTaps * Increment;
+    end
     else
     begin
-        Result := -NumTaps * Increment;
-        LastChange := -NumTaps;
+        Result := -nTaps * Increment;
+        LastChange := -nTaps;
     end;
 end;
 
@@ -750,9 +751,9 @@ begin
         ACTION_TAPCHANGE:
         begin
             if (DebugTrace) then
-                RegWriteDebugRecord(Format('+++ %.6g s: Handling TapChange = %.8g', [solution.DynaVars.t, PendingTapChange]));
+                RegWriteDebugRecord(Format('+++ %.6g s: Handling TapChange = %.8g', [solution.DynaVars.t, PendingTapChange()]));
 
-            if PendingTapChange = 0.0 then  // Check to make sure control has not reset
+            if PendingTapChange() = 0.0 then  // Check to make sure control has not reset
                 Armed := FALSE
             else
             begin
@@ -761,13 +762,13 @@ begin
                 case solution.ControlMode of
                     CTRLSTATIC:
                     begin
-                        TapChangeToMake := AtLeastOneTap(PendingTapChange, tr.TapIncrement(TapWinding));
+                        TapChangeToMake := AtLeastOneTap(PendingTapChange(), tr.TapIncrement(TapWinding));
                         if (DebugTrace) then
                             RegWriteTraceRecord(TapChangeToMake);
                         tr.SetPresentTap(TapWinding, tr.PresentTap(TapWinding) + TapChangeToMake);
                         if ShowEventLog then
                             AppendtoEventLog('Regulator.' + ControlledElement.Name(), Format(' Changed %d taps to %-.6g.', [Lastchange, tr.PresentTap(TapWinding)]));
-                        PendingTapChange := 0.0;  // Reset to no change.  Program will determine if another needed.
+                        SetPendingTapChange(0.0);  // Reset to no change.  Program will determine if another needed.
                         Armed := FALSE;
                     end;
 
@@ -782,7 +783,7 @@ begin
                         if DebugTrace then
                             RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name(), Lastchange, tr.PresentTap(TapWinding)]));
 
-                        if PendingTapChange <> 0.0 then
+                        if PendingTapChange() <> 0.0 then
                             ActiveCircuit.ControlQueue.Push(TapDelay, 0, 0, Self)
                         else
                             Armed := FALSE;
@@ -799,7 +800,7 @@ begin
                         if (DebugTrace) then
                             RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name(), Lastchange, tr.PresentTap(TapWinding)]));
 
-                        if PendingTapChange <> 0.0 then
+                        if PendingTapChange() <> 0.0 then
                             ActiveCircuit.ControlQueue.Push(TapDelay, 0, 0, Self)
                         else
                             Armed := FALSE;
@@ -816,7 +817,7 @@ begin
                         if (DebugTrace) then
                             RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name(), Lastchange, tr.PresentTap(TapWinding)]));
 
-                        if PendingTapChange <> 0.0 then
+                        if PendingTapChange() <> 0.0 then
                             ActiveCircuit.ControlQueue.Push(TapDelay, 0, 0, Self)
                         else
                             Armed := FALSE;
@@ -852,7 +853,7 @@ begin
     end;
 end;
 
-procedure TRegControlObj.Sample;
+procedure TRegControlObj.Sample();
 // This is where it all happens ...
 var
     BoostNeeded,
@@ -876,7 +877,7 @@ begin
 
     if TapLimitPerChange = 0 then
     begin
-        PendingTapChange := 0;
+        SetPendingTapChange(0);
         Exit;
     end;
 
@@ -960,15 +961,15 @@ begin
                 begin
                     if not Armed then
                     begin
-                        PendingTapChange := 0.0;
+                        SetPendingTapChange(0.0);
                         if (abs(ControlledTransformer.PresentTap(TapWinding) - 1.0) > Epsilon) then
                         begin
                             Increment := ControlledTransformer.TapIncrement(TapWinding);
-                            PendingTapChange := Round((1.0 - ControlledTransformer.PresentTap(Tapwinding)) / Increment) * Increment;
-                            if (PendingTapChange <> 0.0) and not Armed then
+                            SetPendingTapChange(Round((1.0 - ControlledTransformer.PresentTap(Tapwinding)) / Increment) * Increment);
+                            if (PendingTapChange() <> 0.0) and not Armed then
                             begin
                                 if (DebugTrace) then
-                                    RegWriteDebugRecord(Format('*** %.6g s: Pushing TapChange = %.8g, delay= %.8g', [ActiveCircuit.Solution.DynaVars.t, PendingTapChange, TapDelay]));
+                                    RegWriteDebugRecord(Format('*** %.6g s: Pushing TapChange = %.8g, delay= %.8g', [ActiveCircuit.Solution.DynaVars.t, PendingTapChange(), TapDelay]));
                                 ActiveCircuit.ControlQueue.Push(TapDelay, ACTION_TAPCHANGE, 0, Self);
                                 Armed := TRUE;
                             end;
@@ -1011,7 +1012,7 @@ begin
     end;
 
      // Check Vlimit
-    if VlimitActive then
+    if VlimitActive() then
     begin
         if UsingRegulatedBus then
         begin
@@ -1076,7 +1077,7 @@ begin
     else
         TapChangeIsNeeded := FALSE;
 
-    if Vlimitactive then
+    if Vlimitactive() then
         if (Vlocalbus > Vlimit) then
             TapChangeIsNeeded := TRUE;
 
@@ -1084,23 +1085,23 @@ begin
     begin
         // Compute tapchange
         Vboost := (VregTest - Vactual);
-        if Vlimitactive then
+        if Vlimitactive() then
             if (Vlocalbus > Vlimit) then
                 Vboost := (Vlimit - Vlocalbus);
         BoostNeeded := Vboost * PTRatio / ControlledTransformer.BaseVoltage(ElementTerminal);  // per unit Winding boost needed
         Increment := ControlledTransformer.TapIncrement(TapWinding);
-        PendingTapChange := Round(BoostNeeded / Increment) * Increment;  // Make sure it is an even increment
+        SetPendingTapChange(Round(BoostNeeded / Increment) * Increment);  // Make sure it is an even increment
 
         // If Tap is another winding or in REVERSE MODE, it has to move the other way to accomplish the change
         if (TapWinding <> ElementTerminal) or InReverseMode then
-            PendingTapChange := -PendingTapChange;
+            SetPendingTapChange(-PendingTapChange());
 
         // Send Initial Tap Change message to control queue
         // Add Delay time to solution control queue
-        if (PendingTapChange <> 0.0) and not Armed then
+        if (PendingTapChange() <> 0.0) and not Armed then
         begin
             // Now see if any tap change is possible in desired direction  Else ignore
-            if PendingTapChange > 0.0 then
+            if PendingTapChange() > 0.0 then
             begin
                 if ControlledTransformer.PresentTap(TapWinding) < ControlledTransformer.MaxTap(TapWinding) then
                 begin
@@ -1120,7 +1121,7 @@ begin
     end // If TapChangeIsNeeded
     else
     begin // Reset if back in band.
-        PendingTapChange := 0.0;
+        SetPendingTapChange(0.0);
         if Armed then
         begin
             ActiveCircuit.ControlQueue.Delete(ControlActionHandle);
@@ -1140,7 +1141,7 @@ begin
     Result := TapWinding;
 end;
 
-function TRegControlObj.Get_TapNum: Integer;
+function TRegControlObj.TapNum(): Integer;
 var
     tr: TControlledTransformerObj;
     ictrldWinding: Integer;
@@ -1155,22 +1156,22 @@ begin
     Result := round((tr.PresentTap(ictrldWinding) - (tr.MaxTap(ictrldWinding) + tr.MinTap(ictrldWinding)) / 2.0) / tr.TapIncrement(ictrldWinding));
 end;
 
-function TRegControlObj.MinTap: Double;
+function TRegControlObj.MinTap(): Double;
 begin
     Result := Transformer().MinTap(TapWinding);
 end;
 
-function TRegControlObj.MaxTap: Double;
+function TRegControlObj.MaxTap(): Double;
 begin
     Result := Transformer().MaxTap(TapWinding);
 end;
 
-function TRegControlObj.TapIncrement: Double;
+function TRegControlObj.TapIncrement(): Double;
 begin
     Result := Transformer().TapIncrement(TapWinding);
 end;
 
-function TRegControlObj.NumTaps: Integer;
+function TRegControlObj.NumTaps(): Integer;
 begin
     Result := Transformer().NumTaps(TapWinding);
 end;
@@ -1208,7 +1209,7 @@ begin
             ActiveCircuit.Solution.Iteration: 0, Separator,
             ActiveCircuit.LoadMultiplier(): 6: 2, Separator,
             tr.PresentTap(ElementTerminal): 8: 5, Separator,
-            PendingTapChange: 8: 5, Separator,
+            PendingTapChange(): 8: 5, Separator,
             TapChangeMade: 8: 5, Separator,
             tr.TapIncrement(ElementTerminal): 8: 5, Separator,
             tr.MinTap(ElementTerminal): 8: 5, Separator,
@@ -1223,19 +1224,24 @@ begin
     end;
 end;
 
-procedure TRegControlObj.Reset;
+procedure TRegControlObj.Reset();
 begin
-    PendingTapChange := 0.0;
+    SetPendingTapChange(0.0);
     ARMED := FALSE;
 end;
 
-procedure TRegControlObj.set_PendingTapChange(const Value: Double);
+function TRegControlObj.PendingTapChange(): Double;
+begin
+    result := FPendingTapChange;
+end;
+
+procedure TRegControlObj.SetPendingTapChange(const Value: Double);
 begin
     FPendingTapChange := Value;
     dblTraceParameter := Value;
 end;
 
-procedure TRegControlObj.Set_TapNum(const Value: Integer);
+procedure TRegControlObj.SetTapNum(const Value: Integer);
 var
     tr: TControlledTransformerObj;
     ictrldWinding: Integer;
@@ -1297,7 +1303,7 @@ begin
     FEnabled := Value;
 end;
 
-function TRegControlObj.VLimitActive: Boolean;
+function TRegControlObj.VLimitActive(): Boolean;
 begin
     Result := VLimit > 0.0;
 end;

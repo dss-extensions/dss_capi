@@ -230,7 +230,7 @@ type
 
         procedure Sample(); OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
-        procedure Reset; OVERRIDE;  // Reset to initial defined state
+        procedure Reset(); OVERRIDE;  // Reset to initial defined state
 
         function GetFleetkWhRating(): Double;
         function GetFleetReservekWh(): Double;
@@ -1925,7 +1925,7 @@ begin
 end;
 
 
-procedure TStorageControllerObj.Reset;
+procedure TStorageControllerObj.Reset();
 begin
     // inherited;
     SetFleetToIdle;
