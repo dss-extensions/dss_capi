@@ -452,7 +452,7 @@ begin
         Exit;
     elm := node.CktObject;
     if assigned(elm) then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elm.FirstBus);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elm.FirstBus());
 end;
 //------------------------------------------------------------------------------
 procedure Topology_Set_BusName(const Value: PAnsiChar); CDECL;
@@ -473,7 +473,7 @@ begin
     pdElem := topo.First();
     while Assigned(pdElem) and (not found) do
     begin
-        B := pdElem.FirstBus;
+        B := pdElem.FirstBus();
         while Length(B) > 0 do
         begin
             if (AnsiCompareText(B, S) = 0) then
@@ -482,7 +482,7 @@ begin
                 Found := TRUE;
                 Break;
             end;
-            B := pdElem.NextBus;
+            B := pdElem.NextBus();
         end;
         pdElem := topo.GoForward();
     end;

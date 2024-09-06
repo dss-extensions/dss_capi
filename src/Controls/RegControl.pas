@@ -297,7 +297,7 @@ begin
 
     // object reference
     PropertyType[ord(TProp.transformer)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.transformer)] := ptruint(@obj.FControlledElement);
+    PropertyOffset[ord(TProp.transformer)] := ptruint(@obj.controlledElement);
     PropertyOffset2[ord(TProp.transformer)] := ptruint(Transf_Or_AutoTrans_ProxyClass);
     PropertyWriteFunction[ord(TProp.transformer)] := @SetControlledElement;
     PropertyFlags[ord(TProp.transformer)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.CheckForVar, TPropertyFlag.Required];
@@ -401,7 +401,7 @@ begin
     case Idx of
         ord(TProp.Transformer):
         begin
-            MonitoredElement := ControlledElement;  // same for this controller            
+            SetMonitoredElement(controlledElement);  // same for this controller            
             PrpSequence[Idx] := -10; // make sure Transformer prop is first
         end;
         ord(TProp.winding):
@@ -440,7 +440,7 @@ begin
     FNphases := Other.Fnphases;
     NConds := Other.Fnconds; // Force Reallocation of terminal stuff
 
-    ControlledElement := Other.ControlledElement;  // Pointer to target circuit element
+    SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
     ElementTerminal := Other.ElementTerminal;
 
     Vreg := Other.Vreg;
@@ -526,7 +526,7 @@ begin
     RevHandle := 0;
     RevBackHandle := 0;
 
-    ControlledElement := NIL;
+    SetControlledElement(NIL);
     ElementTerminal := 1;
     TapWinding := ElementTerminal;
 
@@ -569,7 +569,7 @@ begin
     else
         UsingRegulatedBus := TRUE;
 
-    if ControlledElement = NIL then
+    if controlledElement = NIL then
     begin
         // element not found or not set
         DoErrorMsg(
@@ -586,7 +586,7 @@ begin
     end
     else
     begin
-        FNphases := ControlledElement.NPhases;
+        FNphases := controlledElement.NPhases;
         Nconds := FNphases;
         if FPTphase > FNphases then
         begin
@@ -595,10 +595,10 @@ begin
         end;
     end;
 
-    if (Comparetext(ControlledElement.DSSClassName, 'transformer') = 0) or  // either should work
-        (Comparetext(ControlledElement.DSSClassName, 'autotrans') = 0) then
+    if (Comparetext(controlledElement.DSSClassName, 'transformer') = 0) or  // either should work
+        (Comparetext(controlledElement.DSSClassName, 'autotrans') = 0) then
     begin
-        if ElementTerminal > ControlledElement.Nterms then
+        if ElementTerminal > controlledElement.Nterms then
         begin
             DoErrorMsg(
                 Format(_('RegControl: "%s"'), [Name]),
@@ -612,15 +612,15 @@ begin
             if UsingRegulatedBus then
                 Setbus(1, RegulatedBus)   // hopefully this will actually exist
             else
-                Setbus(1, ControlledElement.GetBus(ElementTerminal));
-            ReAllocMem(VBuffer, SizeOf(Complex) * ControlledElement.NPhases);  // buffer to hold regulator voltages
-            ReAllocMem(CBuffer, SizeOf(Complex) * ControlledElement.Yorder);
+                Setbus(1, controlledElement.GetBus(ElementTerminal));
+            ReAllocMem(VBuffer, SizeOf(Complex) * controlledElement.NPhases);  // buffer to hold regulator voltages
+            ReAllocMem(CBuffer, SizeOf(Complex) * controlledElement.Yorder);
         end;
     end
     else
     begin
-        ename := ControlledElement.Name();
-        ControlledElement := NIL;   
+        ename := controlledElement.Name();
+        SetControlledElement(NIL);
         DoErrorMsg(
             Format(_('RegControl: "%s"'), [Self.Name]),
             Format(_('Controlled Regulator Element "%s" is not a transformer.'), [ename]),
@@ -767,7 +767,7 @@ begin
                             RegWriteTraceRecord(TapChangeToMake);
                         tr.SetPresentTap(TapWinding, tr.PresentTap(TapWinding) + TapChangeToMake);
                         if ShowEventLog then
-                            AppendtoEventLog('Regulator.' + ControlledElement.Name(), Format(' Changed %d taps to %-.6g.', [Lastchange, tr.PresentTap(TapWinding)]));
+                            AppendtoEventLog('Regulator.' + controlledElement.Name(), Format(' Changed %d taps to %-.6g.', [Lastchange, tr.PresentTap(TapWinding)]));
                         SetPendingTapChange(0.0);  // Reset to no change.  Program will determine if another needed.
                         Armed := FALSE;
                     end;
@@ -779,9 +779,9 @@ begin
                             RegWriteTraceRecord(TapChangeToMake);
                         tr.SetPresentTap(TapWinding, tr.PresentTap(TapWinding) + TapChangeToMake);
                         if ShowEventLog then 
-                            AppendtoEventLog('Regulator.' + ControlledElement.Name(), Format(' Changed %d tap to %-.6g.',[Lastchange, tr.PresentTap(TapWinding)]));
+                            AppendtoEventLog('Regulator.' + controlledElement.Name(), Format(' Changed %d tap to %-.6g.',[Lastchange, tr.PresentTap(TapWinding)]));
                         if DebugTrace then
-                            RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name(), Lastchange, tr.PresentTap(TapWinding)]));
+                            RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [controlledElement.Name(), Lastchange, tr.PresentTap(TapWinding)]));
 
                         if PendingTapChange() <> 0.0 then
                             ActiveCircuit.ControlQueue.Push(TapDelay, 0, 0, Self)
@@ -796,9 +796,9 @@ begin
                             RegWriteTraceRecord(TapChangeToMake);
                         tr.SetPresentTap(TapWinding, tr.PresentTap(TapWinding) + TapChangeToMake);
                         if ShowEventLog then
-                            AppendtoEventLog('Regulator.' + ControlledElement.Name(), Format(' Changed %d tap to %-.6g.', [Lastchange, tr.PresentTap(TapWinding)]));
+                            AppendtoEventLog('Regulator.' + controlledElement.Name(), Format(' Changed %d tap to %-.6g.', [Lastchange, tr.PresentTap(TapWinding)]));
                         if (DebugTrace) then
-                            RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name(), Lastchange, tr.PresentTap(TapWinding)]));
+                            RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [controlledElement.Name(), Lastchange, tr.PresentTap(TapWinding)]));
 
                         if PendingTapChange() <> 0.0 then
                             ActiveCircuit.ControlQueue.Push(TapDelay, 0, 0, Self)
@@ -813,9 +813,9 @@ begin
                             RegWriteTraceRecord(TapChangeToMake);
                         tr.SetPresentTap(TapWinding, tr.PresentTap(TapWinding) + TapChangeToMake);
                         if ShowEventLog then
-                            AppendtoEventLog('Regulator.' + ControlledElement.Name(), Format(' Changed %d tap to %-.6g.', [Lastchange, tr.PresentTap(TapWinding)]));
+                            AppendtoEventLog('Regulator.' + controlledElement.Name(), Format(' Changed %d tap to %-.6g.', [Lastchange, tr.PresentTap(TapWinding)]));
                         if (DebugTrace) then
-                            RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name(), Lastchange, tr.PresentTap(TapWinding)]));
+                            RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [controlledElement.Name(), Lastchange, tr.PresentTap(TapWinding)]));
 
                         if PendingTapChange() <> 0.0 then
                             ActiveCircuit.ControlQueue.Push(TapDelay, 0, 0, Self)
@@ -1030,9 +1030,9 @@ begin
      // Check for LDC
     if not UsingRegulatedBus and LDCActive then
     begin
-        ControlledElement.GetCurrents(Cbuffer);
+        controlledElement.GetCurrents(Cbuffer);
         // Convert current to control current by CTRating
-        ILDC := (CBuffer[ControlledElement.Nconds * (ElementTerminal - 1) + ControlledPhase]) / CTRating;
+        ILDC := (CBuffer[controlledElement.Nconds * (ElementTerminal - 1) + ControlledPhase]) / CTRating;
         if LDC_Z = 0.0 then  // Standard R, X LDC
         begin
             if InReverseMode or InCogenMode then
@@ -1146,7 +1146,7 @@ var
     tr: TControlledTransformerObj;
     ictrldWinding: Integer;
 begin
-    if ControlledElement = NIL then
+    if controlledElement = NIL then
     begin
         Result := 0;
         Exit;
@@ -1247,10 +1247,10 @@ var
     ictrldWinding: Integer;
 
 begin
-    if not Assigned(ControlledElement) then
+    if controlledElement = NIL then
         RecalcElementData();
 
-    if ControlledElement = NIL then
+    if controlledElement = NIL then
         Exit;
 
     tr := Transformer();
@@ -1264,25 +1264,25 @@ end;
 
 procedure TRegControlObj.MakePosSequence();
 begin
-    if ControlledElement <> NIL then
+    if controlledElement <> NIL then
     begin
-        Enabled := ControlledElement.Enabled;
+        Enabled := controlledElement.Enabled;
         if UsingRegulatedBus then
             FNphases := 1
         else
-            FNphases := ControlledElement.NPhases;
+            FNphases := controlledElement.NPhases;
         Nconds := FNphases;
-        if (Comparetext(ControlledElement.DSSClassName, 'transformer') = 0) or   // either should work
-            (Comparetext(ControlledElement.DSSClassName, 'autotrans') = 0) then
+        if (Comparetext(controlledElement.DSSClassName, 'transformer') = 0) or   // either should work
+            (Comparetext(controlledElement.DSSClassName, 'autotrans') = 0) then
         begin
         // Sets name of i-th terminal's connected bus in RegControl's buslist
         // This value will be used to set the NodeRef array (see Sample function)
             if UsingRegulatedBus then
                 Setbus(1, RegulatedBus)   // hopefully this will actually exist
             else
-                Setbus(1, ControlledElement.GetBus(ElementTerminal));
-            ReAllocMem(VBuffer, SizeOF(Complex) * ControlledElement.NPhases);  // buffer to hold regulator voltages
-            ReAllocMem(CBuffer, SizeOF(Complex) * ControlledElement.Yorder);
+                Setbus(1, controlledElement.GetBus(ElementTerminal));
+            ReAllocMem(VBuffer, SizeOF(Complex) * controlledElement.NPhases);  // buffer to hold regulator voltages
+            ReAllocMem(CBuffer, SizeOF(Complex) * controlledElement.Yorder);
         end;
     end;
     inherited;

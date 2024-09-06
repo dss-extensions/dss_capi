@@ -460,7 +460,7 @@ begin
     breakingAmps := ratedAmps;
     for pFuse in ActiveCircuit.Fuses do
     begin
-        if pFuse.ControlledElement = pLine then
+        if pFuse.controlledElement = pLine then
         begin
             swtCls := 'Fuse';
             ratedAmps := pFuse.RatedCurrent;
@@ -471,7 +471,7 @@ begin
 
     for pRelay in ActiveCircuit.Relays do
     begin
-        if pRelay.ControlledElement = pLine then
+        if pRelay.controlledElement = pLine then
         begin
             swtCls := 'Breaker';
             exit;
@@ -480,7 +480,7 @@ begin
 
     for pRecloser in ActiveCircuit.Reclosers do
     begin
-        if pRecloser.ControlledElement = pLine then
+        if pRecloser.controlledElement = pLine then
         begin
             swtCls := 'Recloser';
             exit;
@@ -495,9 +495,9 @@ var
     dot: Integer;
     bSec: Boolean;
 begin
-    phs := pElem.FirstBus;
+    phs := pElem.FirstBus();
     for dot := 2 to bus do
-        phs := pElem.NextBus;
+        phs := pElem.NextBus();
     bSec := FALSE;
     if bAllowSec then 
     begin
@@ -552,9 +552,9 @@ var
     dot: Integer;
     bSec: Boolean;
 begin
-    phs := pElem.FirstBus;
+    phs := pElem.FirstBus();
     for dot := 2 to bus do
-        phs := pElem.NextBus;
+        phs := pElem.NextBus();
 
     bSec := false;
     if bAllowSec then 
@@ -641,7 +641,7 @@ var
     phs: String;
     dot: Integer;
 begin
-    phs := pElem.FirstBus;
+    phs := pElem.FirstBus();
 
     dot := pos('.', phs);
     if (dot < 1) or (pElem.NPhases = 3) then
@@ -2048,7 +2048,7 @@ var
     BusName: String;
 begin
     Nterm := pElem.Nterms;
-    BusName := pElem.FirstBus;
+    BusName := pElem.FirstBus();
     StartFreeInstance(GeoPrf, 'Location', geoUUID);
     StringNode(GeoPrf, 'IdentifiedObject.mRID', UUIDToCIMString(geoUUID));
     StringNode(GeoPrf, 'IdentifiedObject.name', pElem.LocalName + '_Loc');
@@ -2067,7 +2067,7 @@ begin
             StringNode(GeoPrf, 'PositionPoint.yPosition', FloatToStr(ActiveCircuit.Buses[ref].y));
             EndInstance(GeoPrf, 'PositionPoint');
         end;
-        BusName := pElem.Nextbus;
+        BusName := pElem.NextBus();
     end;
 end;
 
@@ -2079,7 +2079,7 @@ var
     pLimit: TCIMOpLimitObject;
 begin
     Nterm := pElem.Nterms;
-    BusName := pElem.FirstBus;
+    BusName := pElem.FirstBus();
     for j := 1 to NTerm do
     begin
         if IsGroundBus(BusName) = FALSE then
@@ -2111,7 +2111,7 @@ begin
             end;
             EndInstance(FunPrf, 'Terminal');
         end;
-        BusName := pElem.Nextbus;
+        BusName := pElem.NextBus();
     end;
 end;
 
@@ -3714,7 +3714,7 @@ begin
             val := 0.0;
             for pCapC in ActiveCircuit.CapControls do
             begin
-                if pCapC.ControlledElement = pCap then 
+                if pCapC.controlledElement = pCap then 
                     val := pCapC.ControlVars.OnDelay;
             end;
             DoubleNode(EpPrf, 'ShuntCompensator.aVRDelay', val);
@@ -3734,9 +3734,9 @@ begin
         for pCapC in ActiveCircuit.CapControls do
         begin
             StartInstance(FunPrf, 'RegulatingControl', pCapC);
-            UuidNode(GeoPrf, 'PowerSystemResource.Location', GetDevUuid(CapLoc, pCapC.ControlledElement.Name(), 1));
-            RefNode(FunPrf, 'RegulatingControl.RegulatingCondEq', pCapC.ControlledElement);
-            i1 := GetCktElementIndex(DSS, FullNameIfNotNil(pCapC.MonitoredElement)); // Global function
+            UuidNode(GeoPrf, 'PowerSystemResource.Location', GetDevUuid(CapLoc, pCapC.controlledElement.Name(), 1));
+            RefNode(FunPrf, 'RegulatingControl.RegulatingCondEq', pCapC.controlledElement);
+            i1 := GetCktElementIndex(DSS, FullNameIfNotNil(pCapC.MonitoredElement())); // Global function
             UuidNode(FunPrf, 'RegulatingControl.Terminal', GetTermUuid(DSS.ActiveCircuit.CktElements.Get(i1), pCapC.ElementTerminal));
             s := FirstPhaseString(DSS.ActiveCircuit.CktElements.Get(i1), 1);
             if pCapC.ControlVars.FPTPhase > 0 then
@@ -4200,10 +4200,10 @@ begin
         begin
             with pReg do
             begin
-                if not (pReg.ControlledElement is TTransfObj) then
+                if not (pReg.controlledElement is TTransfObj) then
                     continue; //TODO: skipping AutoTrans for now...
 
-                tr := (pReg.ControlledElement as TTransfObj);
+                tr := (pReg.controlledElement as TTransfObj);
 
                 v1 := tr.BaseVoltage(pReg.TrWinding()) / PTRatio;
                 pName2.LocalName := pReg.LocalName + '_Ctrl';

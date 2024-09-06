@@ -262,8 +262,8 @@ type
     TInvControlObj = class(TControlElem)
     PRIVATE
         ControlActionHandle: Integer;
-        ControlledElement: array of TInvBasedPCE;
-        MonitoredElement: TInvBasedPCE;  // First DER element for now (the first element from ControlledElement TDSSPointerList)
+        ControlledElements: array of TInvBasedPCE;
+        // MonitoredElement: TInvBasedPCE;  // First DER element for now (the first element from ControlledElements TDSSPointerList)
 
         // Variables for voltages
         FVreg: Double;
@@ -730,7 +730,7 @@ begin
     FNPhases := Other.Fnphases;
     NConds := Other.Fnconds; // Force Reallocation of terminal stuff
 
-    ControlledElement := Copy(Other.ControlledElement, Length(Other.ControlledElement));
+    ControlledElements := Copy(Other.ControlledElements, Length(Other.ControlledElements));
     for i := 1 to FDERPointerList.Count do
     begin
         with CtrlVars[i] do
@@ -808,7 +808,7 @@ begin
     Nterms := 1;  // this forces allocation of terminals and conductors in base class
     ControlMode := NONE_MODE; // TODO: The docs say the default is "VoltVar"
     CombiMode := NONE_COMBMODE;
-    ControlledElement := NIL;
+    ControlledElements := NIL;
 
     FVpuSolutionIdx := -1;
 
@@ -897,38 +897,38 @@ begin
     // Setting the terminal of the InvControl device to same as the 1st PVSystem/Storage element
     // This sets it to a realistic value to avoid crashes later
     begin
-        MonitoredElement := TInvBasedPCE(FDERPointerList.Get(1));   // Set MonitoredElement to 1st elemnent in list
-        Setbus(1, MonitoredElement.Firstbus);
+        SetMonitoredElement(TInvBasedPCE(FDERPointerList.Get(1)));   // Set MonitoredElement() to 1st elemnent in list
+        Setbus(1, MonitoredElement().FirstBus());
     end;
 
     for i := 1 to FDERPointerList.Count do
     begin
-        // User ControlledElement[] as the pointer to the PVSystem/Storage elements
-        ControlledElement[i] := TInvBasedPCE(FDERPointerList.Get(i));  // pointer to i-th PVSystem/Storage element
-        ControlledElement[i].ActiveTerminalIdx := 1; // Make the 1 st terminal active
+        // User ControlledElements[] as the pointer to the PVSystem/Storage elements
+        ControlledElements[i] := TInvBasedPCE(FDERPointerList.Get(i));  // pointer to i-th PVSystem/Storage element
+        ControlledElements[i].ActiveTerminalIdx := 1; // Make the 1 st terminal active
 
         with CtrlVars[i] do
         begin
-            SetLength(cBuffer, SizeOf(Complex) * ControlledElement[i].Yorder);
-            FNphases := ControlledElement[i].NPhases;
+            SetLength(cBuffer, SizeOf(Complex) * ControlledElements[i].Yorder);
+            FNphases := ControlledElements[i].NPhases;
             Nconds := Nphases; //TODO: check
             FRollAvgWindow.SetLength(FRollAvgWindowLength);
             FDRCRollAvgWindow.SetLength(FDRCRollAvgWindowLength);
 
             // for all modes other than VW and WATTPF, PF priority is not allowed
             if ((ControlMode <> VOLTWATT) and (ControlMode <> WATTPF)) then
-                ControlledElement[i].SetPFPriority(FALSE);
+                ControlledElements[i].SetPFPriority(FALSE);
 
             if Length(FMonBuses) = 0 then
                 FUsingMonBuses := FALSE
             else
                 FUsingMonBuses := TRUE;
 
-            if (ControlledElement[i] <> NIL) then
+            if (ControlledElements[i] <> NIL) then
                 UpdateDERParameters(i)
             else
             begin
-                // ControlledElement[i] := NIL;
+                // ControlledElements[i] := NIL;
                 DoErrorMsg(Format(_('InvControl: "%s"'), [Self.Name]),
                     Format(_('Controlled Element "%s" not found.'), [DERNameList.Strings[i - 1]]),
                     _('PVSystem or Storage object must be defined previously.'), 361);
@@ -944,15 +944,15 @@ begin
         RecalcElementData();
     FNphases := 3;
     Nconds := 3;
-    Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+    Setbus(1, MonitoredElement().GetBus(ElementTerminal));
 
     if FDERPointerList.Count > 0 then
     // Setting the terminal of the InvControl device to same as the 1st PVSystem/Storage element
     //  This sets it to a realistic value to avoid crashes later 
     begin
-        MonitoredElement := TInvBasedPCE(FDERPointerList.Get(1));   // Set MonitoredElement to 1st PVSystem/Storage in list
-        Setbus(1, MonitoredElement.Firstbus);
-        FNphases := MonitoredElement.NPhases;
+        SetMonitoredElement(TInvBasedPCE(FDERPointerList.Get(1)));   // Set MonitoredElement() to 1st PVSystem/Storage in list
+        Setbus(1, MonitoredElement().FirstBus());
+        FNphases := MonitoredElement().NPhases;
         Nconds := Nphases;
     end;
     inherited;
@@ -966,7 +966,7 @@ var
 begin
     for k := 1 to FDERPointerList.Count do
     begin
-        DERElem := ControlledElement[k];
+        DERElem := ControlledElements[k];
         with CtrlVars[k] do
         begin
             // Calculates QHeadRoom
@@ -1575,7 +1575,7 @@ var
     vj: Complex;
     DERElem: TInvBasedPCE;
 begin
-    DERElem := ControlledElement[i];
+    DERElem := ControlledElements[i];
     with CtrlVars[i] do
         if FUsingMonBuses then
         begin
@@ -1660,7 +1660,7 @@ procedure TInvControlObj.UpdateDERParameters(i: Integer);
 var
     DERElem: TInvBasedPCE;
 begin
-    DERElem := ControlledElement[i];
+    DERElem := ControlledElements[i];
     with CtrlVars[i], DERElem do
         if DERElem.IsPVSystem() then
         begin
@@ -1734,7 +1734,7 @@ begin
         with CtrlVars[i] do
         begin
             UpdateDERParameters(i);
-            DERElem := ControlledElement[i];
+            DERElem := ControlledElements[i];
             if DERElem.IsPVSystem() then
                 PVSys := DERElem as TPVSystemObj
             else
@@ -2275,7 +2275,7 @@ begin
 
     if FListSize > 0 then
     begin    // Name list is defined - Use it
-        SetLength(ControlledElement, FListSize + 1);  // Use this as the main pointer to PVSystem and Storage Elements
+        SetLength(ControlledElements, FListSize + 1);  // Use this as the main pointer to PVSystem and Storage Elements
         SetLength(CtrlVars, FListSize + 1);
 
         for i := 1 to FListSize do
@@ -2342,7 +2342,7 @@ begin
 
         FListSize := FDERPointerList.Count;
 
-        SetLength(ControlledElement, FListSize + 1);
+        SetLength(ControlledElements, FListSize + 1);
         SetLength(CtrlVars, FListSize + 1);
     end;
 
@@ -2509,7 +2509,7 @@ begin
             end;
         end;
 
-        DERElem := ControlledElement[j];
+        DERElem := ControlledElements[j];
         with CtrlVars[j] do
         begin
             BasekV := FVBase / 1000.0;
@@ -2805,7 +2805,7 @@ procedure TInvControlObj.Calc_PBase(j: Integer);
 var
     DERElem: TInvBasedPCE;
 begin
-    DERElem := ControlledElement[j];
+    DERElem := ControlledElements[j];
     with CtrlVars[j] do
     begin
         if DERElem.IsPVSystem() then
@@ -2905,22 +2905,22 @@ procedure TInvControlObj.CalcPVWcurve_limitpu(j: Integer);
 begin
     with CtrlVars[j] do
     begin
-        if ControlledElement[j].IsPVSystem() then
+        if ControlledElements[j].IsPVSystem() then
             PLimitVWpu := Fvoltwatt_curve.GetYValue(FPresentVpu)
         else
         begin
-            if TStorageObj(ControlledElement[j]).StorageState() = STORE_DISCHARGING then
+            if TStorageObj(ControlledElements[j]).StorageState() = STORE_DISCHARGING then
             begin
-                if TStorageObj(ControlledElement[j]).FVWStateRequested then
+                if TStorageObj(ControlledElements[j]).FVWStateRequested then
                     PLimitVWpu := FvoltwattCH_curve.GetYValue(FPresentVpu)
                 else
                     PLimitVWpu := Fvoltwatt_curve.GetYValue(FPresentVpu);
 
             end
             else
-            if (TStorageObj(ControlledElement[j]).StorageState() = STORE_CHARGING) and (FvoltwattCH_curve <> NIL) then
+            if (TStorageObj(ControlledElements[j]).StorageState() = STORE_CHARGING) and (FvoltwattCH_curve <> NIL) then
             begin
-                if TStorageObj(ControlledElement[j]).FVWStateRequested then
+                if TStorageObj(ControlledElements[j]).FVWStateRequested then
                     PLimitVWpu := Fvoltwatt_curve.GetYValue(FPresentVpu)
                 else
                     PLimitVWpu := FvoltwattCH_curve.GetYValue(FPresentVpu) // try with positive PlimitVWpu
@@ -3160,7 +3160,7 @@ var
     QDesiredWP: Double;
     DERElem: TInvBasedPCE;
 begin
-    DERElem := ControlledElement[j];
+    DERElem := ControlledElements[j];
     with CtrlVars[j] do
     begin
         QDesireWPpu := 0.0;

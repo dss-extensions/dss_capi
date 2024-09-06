@@ -793,7 +793,7 @@ begin
     begin
         if ((ctrl_mode = 1) or (ctrl_mode = 2) or (ctrl_mode = 3)) then
         begin
-            strtemp := FirstBus; //only one
+            strtemp := FirstBus(); //only one
             DotPos := Pos('.', strtemp);
             if DotPos <> 0 then
             begin

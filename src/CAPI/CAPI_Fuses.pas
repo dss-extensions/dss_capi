@@ -176,8 +176,8 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if elem.MonitoredElement <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.MonitoredElement.FullName()));
+    if elem.MonitoredElement() <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.MonitoredElement().FullName()));
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_MonitoredTerm(): Integer; CDECL;
@@ -199,8 +199,8 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if elem.ControlledElement <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.ControlledElement.FullName()));
+    if elem.controlledElement <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.controlledElement.FullName()));
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
@@ -320,8 +320,8 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.ControlledElement.SetConductorClosed(0, FALSE); // Open all phases
-    for i := 1 to elem.ControlledElement.NPhases do 
+    elem.controlledElement.SetConductorClosed(0, FALSE); // Open all phases
+    for i := 1 to elem.controlledElement.NPhases do 
         elem.FPresentState[i] := CTRL_OPEN; // Open all phases
 end;
 //------------------------------------------------------------------------------
@@ -330,10 +330,10 @@ var
     elem: TObj;
     i: Integer;
 begin
-    if (not _activeObj(DSSPrime, elem)) or (elem.ControlledElement = NIL) then
+    if (not _activeObj(DSSPrime, elem)) or (elem.controlledElement = NIL) then
         Exit;
 
-    for i := 1 to elem.ControlledElement.NPhases do 
+    for i := 1 to elem.controlledElement.NPhases do 
         elem.FPresentState[i] := CTRL_CLOSE; // Close all phases
     elem.PropertySideEffects(ord(TFuseProp.State), 0, []);
 end;
@@ -369,7 +369,7 @@ begin
         Exit;
 
     for i := 1 to elem.nphases do
-        if not elem.ControlledElement.ConductorClosed(i) then
+        if not elem.controlledElement.ConductorClosed(i) then
             Result := TRUE;
 end;
 //------------------------------------------------------------------------------
@@ -413,14 +413,14 @@ var
     elem: TObj;
     i: Integer;
 begin
-    if (not _activeObj(DSSPrime, elem)) or (elem.ControlledElement = NIL) then
+    if (not _activeObj(DSSPrime, elem)) or (elem.controlledElement = NIL) then
     begin
         DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
 
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, elem.ControlledElement.NPhases);
-    for i := 1 to elem.ControlledElement.NPhases do
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, elem.controlledElement.NPhases);
+    for i := 1 to elem.controlledElement.NPhases do
         if elem.FNormalState[i] = CTRL_CLOSE then 
             Result[i - 1] := DSS_CopyStringAsPChar('closed') 
         else 
@@ -433,14 +433,14 @@ var
     elem: TObj;
     i: Integer;
 begin
-    if (not _activeObj(DSSPrime, elem)) or (elem.ControlledElement = NIL) then
+    if (not _activeObj(DSSPrime, elem)) or (elem.controlledElement = NIL) then
     begin
         DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
 
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, elem.ControlledElement.NPhases);
-    for i := 1 to elem.ControlledElement.NPhases do
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, elem.controlledElement.NPhases);
+    for i := 1 to elem.controlledElement.NPhases do
         if elem.GetState(i) = CTRL_CLOSE then 
             Result[i - 1] := DSS_CopyStringAsPChar('closed')
         else 
@@ -454,24 +454,24 @@ var
     Count: Integer;
     elem: TObj;
 begin
-    if (not _activeObj(DSSPrime, elem)) or (elem.ControlledElement = NIL) then
+    if (not _activeObj(DSSPrime, elem)) or (elem.controlledElement = NIL) then
         Exit;
 
     Value := PPAnsiCharArray0(ValuePtr);
 
     Count := ValueCount;
-    if (Count <> elem.ControlledElement.NPhases) AND (DSS_CAPI_EXT_ERRORS) then
+    if (Count <> elem.controlledElement.NPhases) AND (DSS_CAPI_EXT_ERRORS) then
     begin
         DoSimpleMsg(DSSPrime, 
             'The number of states provided (%d) does not match the number of phases (%d).', 
-                [ValueCount, Integer(elem.ControlledElement.NPhases)],
+                [ValueCount, Integer(elem.controlledElement.NPhases)],
             97896
         );
         Exit;
     end;
         
-    if Count > elem.ControlledElement.NPhases then
-        Count := elem.ControlledElement.NPhases;
+    if Count > elem.controlledElement.NPhases then
+        Count := elem.controlledElement.NPhases;
 
     for i := 1 to Count Do 
     begin
@@ -491,24 +491,24 @@ var
     Count: Integer;
     elem: TObj;
 begin
-    if (not _activeObj(DSSPrime, elem)) or (elem.ControlledElement = NIL) then
+    if (not _activeObj(DSSPrime, elem)) or (elem.controlledElement = NIL) then
         Exit;
 
     Value := PPAnsiCharArray0(ValuePtr);
 
     Count := ValueCount;
-    if (Count <> elem.ControlledElement.NPhases) AND (DSS_CAPI_EXT_ERRORS) then
+    if (Count <> elem.controlledElement.NPhases) AND (DSS_CAPI_EXT_ERRORS) then
     begin
         DoSimpleMsg(DSSPrime, 
             'The number of states provided (%d) does not match the number of phases (%d).', 
-                [ValueCount, Integer(elem.ControlledElement.NPhases)],
+                [ValueCount, Integer(elem.controlledElement.NPhases)],
             97897
         );
         Exit;
     end;
         
-    if Count > elem.ControlledElement.NPhases then
-        Count := elem.ControlledElement.NPhases;
+    if Count > elem.controlledElement.NPhases then
+        Count := elem.controlledElement.NPhases;
 
     for i := 1 to Count Do 
     begin

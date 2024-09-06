@@ -302,7 +302,7 @@ begin
     NCond := pElem.NConds;
     Nterm := pElem.Nterms;
     k := 0;
-    BusName := Pad(StripExtension(pElem.FirstBus), MaxBusNameLength);
+    BusName := Pad(StripExtension(pElem.FirstBus()), MaxBusNameLength);
     FSWriteln(F, 'ELEMENT = "' + pElem.dssclassname + '.' + AnsiUpperCase(pElem.Name()) + '"');
     for j := 1 to NTerm do
     begin
@@ -331,7 +331,7 @@ begin
         end;
         if j < Nterm then
             FSWriteln(F, '------------');
-        BusName := Pad(StripExtension(pElem.Nextbus), MaxBusNameLength);
+        BusName := Pad(StripExtension(pElem.NextBus()), MaxBusNameLength);
     end;
 end;
 
@@ -597,7 +597,7 @@ begin
         Getmem(cBuffer, sizeof(cBuffer^[1]) * Ncond * Nterm);
         pElem.GetCurrents(cBuffer);
         k := 0;
-        FromBus := Pad(StripExtension(pElem.FirstBus), MaxBusNameLength);
+        FromBus := Pad(StripExtension(pElem.FirstBus()), MaxBusNameLength);
         FSWriteln(F, 'ELEMENT = ', EncloseQuotes(Pelem.FullName()));
         for      j := 1 to NTerm do
         begin
@@ -621,7 +621,7 @@ begin
             end;
             if j < Nterm then
                 FSWriteln(F, '------------');
-            FromBus := Pad(StripExtension(pElem.Nextbus), MaxBusNameLength);
+            FromBus := Pad(StripExtension(pElem.NextBus()), MaxBusNameLength);
             if (CLASSMASK and pElem.DSSObjType) = AUTOTRANS_ELEMENT then 
                 Inc(k, Ntimes);  // Special case for AutoTrans
         end;
@@ -1144,7 +1144,7 @@ begin
                         Nterm := p_Elem.Nterms;
                         p_Elem.GetCurrents(c_Buffer);
                         k := 0;
-                        FromBus := Pad(StripExtension(p_Elem.FirstBus), MaxBusNameLength);
+                        FromBus := Pad(StripExtension(p_Elem.FirstBus()), MaxBusNameLength);
                         FSWriteln(F, 'ELEMENT = ', EncloseQuotes(P_Elem.FullName()));
                         for j := 1 to NTerm do
                         begin
@@ -1167,7 +1167,7 @@ begin
                             end;
                             FSWrite(F, Format('%s%8.1f +j %8.1f', [Paddots('   TERMINAL TOTAL', MaxBusNameLength + 10), Saccum.re / 1000.0, Saccum.im / 1000.0]));
                             FSWriteln(F, Format('   %8.1f     %8.4f', [Cabs(Saccum) / 1000.0, PowerFactor(Saccum)]));
-                            FromBus := Pad(StripExtension(p_Elem.Nextbus), MaxBusNameLength);
+                            FromBus := Pad(StripExtension(p_Elem.NextBus()), MaxBusNameLength);
                         end;
                         FSWriteln(F);
                     end;
@@ -1185,7 +1185,7 @@ begin
                         Nterm := p_Elem.Nterms;
                         p_Elem.GetCurrents(c_Buffer);
                         k := 0;
-                        FromBus := Pad(StripExtension(p_Elem.FirstBus), MaxBusNameLength);
+                        FromBus := Pad(StripExtension(p_Elem.FirstBus()), MaxBusNameLength);
                         FSWriteln(F, 'ELEMENT = ', EncloseQuotes(p_elem.FullName()));
 
                         if (CLASSMASK and P_Elem.DSSObjType) = AUTOTRANS_ELEMENT then
@@ -1221,7 +1221,7 @@ begin
                             WriteStr(sout, '   ', Cabs(Saccum) / 1000.0: 8: 1, '     ', PowerFactor(Saccum): 8: 4);
                             FSWriteln(F, sout);
 
-                            FromBus := Pad(StripExtension(p_Elem.Nextbus), MaxBusNameLength);
+                            FromBus := Pad(StripExtension(p_Elem.NextBus()), MaxBusNameLength);
                         end
                         else
                         for j := 1 to NTerm do
@@ -1247,7 +1247,7 @@ begin
                             FSWrite(F, sout);
                             WriteStr(sout, '   ', Cabs(Saccum) / 1000.0: 8: 1, '     ', PowerFactor(Saccum): 8: 4);
                             FSWriteln(F, sout);
-                            FromBus := Pad(StripExtension(p_Elem.Nextbus), MaxBusNameLength);
+                            FromBus := Pad(StripExtension(p_Elem.NextBus()), MaxBusNameLength);
                         end;
                         FSWriteln(F);
                         if (CLASSMASK and P_Elem.DSSObjType) = AUTOTRANS_ELEMENT then 
@@ -1279,7 +1279,7 @@ begin
                         Nterm := p_Elem.Nterms;
                         p_Elem.GetCurrents(c_Buffer);
                         k := 0;
-                        FromBus := Pad(StripExtension(p_Elem.FirstBus), MaxBusNameLength);
+                        FromBus := Pad(StripExtension(p_Elem.FirstBus()), MaxBusNameLength);
                         FSWriteln(F, 'ELEMENT = ', EncloseQuotes(P_Elem.FullName()));
                         for j := 1 to NTerm do
                         begin
@@ -1304,7 +1304,7 @@ begin
                             FSWrite(F, sout);
                             WriteStr(sout, '   ', Cabs(Saccum) / 1000.0: 8: 1, '     ', PowerFactor(Saccum): 8: 4);
                             FSWriteln(F, sout);
-                            FromBus := Pad(StripExtension(p_Elem.Nextbus), MaxBusNameLength);
+                            FromBus := Pad(StripExtension(p_Elem.NextBus()), MaxBusNameLength);
                         end;
                         FSWriteln(F);
                     end;
@@ -2036,12 +2036,12 @@ var
     BusName: String;
 begin
     Nterm := pElem.Nterms;
-    BusName := Pad(StripExtension(pElem.FirstBus), MaxBusNameLength);
+    BusName := Pad(StripExtension(pElem.FirstBus()), MaxBusNameLength);
     FSWrite(F, Pad(EncloseQuotes(PElem.FullName()), MaxDeviceNameLength + 2), ' ');
     for j := 1 to NTerm do
     begin
         FSWrite(F, AnsiUpperCase(Busname), ' ');
-        BusName := Pad(StripExtension(pElem.Nextbus), MaxBusNameLength);
+        BusName := Pad(StripExtension(pElem.NextBus()), MaxBusNameLength);
     end;
     FSWriteln(F);
 end;

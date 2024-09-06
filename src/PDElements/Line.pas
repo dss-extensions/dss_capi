@@ -1386,8 +1386,8 @@ var
 begin
     inherited DumpProperties(F, Complete);
 
-    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.Bus1)] + '=' + firstbus);
-    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.Bus2)] + '=' + nextbus);
+    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.Bus1)] + '=' + FirstBus());
+    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.Bus2)] + '=' + NextBus());
 
     if LineCodeObj <> NIL then
         FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.LineCode)] + '=' + LineCodeObj.Name())
@@ -1834,7 +1834,7 @@ var
 begin
     for pControlElem in ActiveCircuit.DSSControls do
     begin
-        if OldLine = pControlElem.MonitoredElement then // TODO: check if this works (and needs to work) with Fuse
+        if OldLine = pControlElem.MonitoredElement() then // TODO: check if this works (and needs to work) with Fuse
             pControlElem.ParsePropertyValue(pControlElem.ParentClass.CommandList.GetCommand('element'), NewLine.FullName(), []);
     end;
 end;

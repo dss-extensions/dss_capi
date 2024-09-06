@@ -142,8 +142,8 @@ begin
     FNPhases := Other.Fnphases;
     NConds := Other.Fnconds; // Force Reallocation of terminal stuff
 
-    ControlledElement := Other.ControlledElement;  // Pointer to target circuit element
-    MonitoredElement := Other.MonitoredElement;  // Pointer to target circuit element
+    SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
+    SetMonitoredElement(Other.MonitoredElement());  // Pointer to target circuit element
 
     ElementTerminal := Other.ElementTerminal;
 end;
@@ -177,11 +177,11 @@ end;
 
 procedure TUPFCControlObj.MakePosSequence();
 begin
-    if MonitoredElement <> NIL then
+    if MonitoredElement() <> NIL then
     begin
-        FNphases := ControlledElement.NPhases;
+        FNphases := controlledElement.NPhases;
         Nconds := FNphases;
-        Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+        Setbus(1, MonitoredElement().GetBus(ElementTerminal));
     end;
     inherited;
 end;

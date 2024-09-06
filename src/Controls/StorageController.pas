@@ -587,8 +587,8 @@ begin
     FNPhases := Other.Fnphases;
     NConds := Other.Fnconds; // Force Reallocation of terminal stuff
 
-    // ControlledElement := Other.ControlledElement;  // Pointer to target circuit element
-    MonitoredElement := Other.MonitoredElement;  // Pointer to target circuit element
+    // SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
+    SetMonitoredElement(Other.MonitoredElement());  // Pointer to target circuit element
     ElementTerminal := Other.ElementTerminal;
     FMonPhase := Other.FMonPhase;
     CondOffset := Other.CondOffset;
@@ -657,9 +657,9 @@ begin
     Fnconds := 3;
     Nterms := 1;  // this forces allocation of terminals and conductors
 
-    ControlledElement := NIL;    // not used in this control
+    SetControlledElement(NIL);    // not used in this control
     ElementTerminal := 1;
-    MonitoredElement := NIL;
+    SetMonitoredElement(NIL);
     FMonPhase := MAXPHASE;
     cBuffer := NIL; // Complex buffer
 
@@ -787,9 +787,9 @@ procedure TStorageControllerObj.RecalcElementData();
 begin
     // Check for existence of monitored element
 
-    if MonitoredElement <> NIL then
+    if MonitoredElement() <> NIL then
     begin
-        if ElementTerminal > MonitoredElement.Nterms then
+        if ElementTerminal > MonitoredElement().Nterms then
         begin
             DoErrorMsg(Format('StorageController: "%s"', [Name]),
                 Format('Terminal no. "%d" Does not exist.', [ElementTerminal]),
@@ -797,15 +797,15 @@ begin
         end
         else
         begin
-            FNphases := MonitoredElement.Nphases;
+            FNphases := MonitoredElement().Nphases;
             NConds := FNphases;
 
             // Sets name of i-th terminal's connected bus in StorageController's buslist
-            Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+            Setbus(1, MonitoredElement().GetBus(ElementTerminal));
 
             // Allocate a buffer bigenough to hold everything from the monitored element
-            ReAllocMem(cBuffer, SizeOF(cBuffer[1]) * MonitoredElement.Yorder);
-            CondOffset := (ElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
+            ReAllocMem(cBuffer, SizeOF(cBuffer[1]) * MonitoredElement().Yorder);
+            CondOffset := (ElementTerminal - 1) * MonitoredElement().NConds; // for speedy sampling
         end;
     end
     else
@@ -830,14 +830,14 @@ end;
 
 procedure TStorageControllerObj.MakePosSequence();
 begin
-    if MonitoredElement <> NIL then
+    if MonitoredElement() <> NIL then
     begin
-        FNphases := MonitoredElement.NPhases;
+        FNphases := MonitoredElement().NPhases;
         Nconds := FNphases;
-        Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+        Setbus(1, MonitoredElement().GetBus(ElementTerminal));
         // Allocate a buffer big enough to hold everything from the monitored element
-        ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement.Yorder);
-        CondOffset := (ElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
+        ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement().Yorder);
+        CondOffset := (ElementTerminal - 1) * MonitoredElement().NConds; // for speedy sampling
     end;
     inherited;
 end;
@@ -1081,13 +1081,13 @@ begin
         StorekvarChanged := FALSE;
         SkipkWDispatch := FALSE;
 
-        //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
+        //----MonitoredElement().ActiveTerminalIdx := ElementTerminal;
         if DischargeMode = CURRENTPEAKSHAVE then
         begin
-            MonitoredElement.GetCurrents(cBuffer);
+            MonitoredElement().GetCurrents(cBuffer);
             GetControlCurrent(Amps);
 
-            // Amps := MonitoredElement.MaxCurrent[ElementTerminal]; // Max current in active terminal  // old
+            // Amps := MonitoredElement().MaxCurrent[ElementTerminal]; // Max current in active terminal  // old
         end
         else
             GetControlPower(S);
@@ -1142,10 +1142,10 @@ begin
 
         if Dischargemode = CURRENTPEAKSHAVE then    // convert Pdiff from Amps to kW
         begin
-            MonitoredElement.ComputeVterminal();
-            VoltsArr := MonitoredElement.Vterminal;
+            MonitoredElement().ComputeVterminal();
+            VoltsArr := MonitoredElement().Vterminal;
             ElemVolts := cabs(VoltsArr[1]);
-            kWNeeded := ((MonitoredElement.NPhases * Pdiff * ElemVolts) / 1000.0);
+            kWNeeded := ((MonitoredElement().NPhases * Pdiff * ElemVolts) / 1000.0);
 //         kWNeeded     :=  ((Pdiff * ElemVolts) / 1000.0);
             AmpsDiff := PDiff;
         end
@@ -1178,8 +1178,8 @@ begin
 //                      Pdiff :=  Pdiff + FleetkW  // ignore overload due to charging
 //                     else
 //                     Begin
-//                       MonitoredElement.ComputeVterminal();
-//                       VoltsArr     :=  MonitoredElement.Vterminal;
+//                       MonitoredElement().ComputeVterminal();
+//                       VoltsArr     :=  MonitoredElement().Vterminal;
 //                       ElemVolts    :=  cabs(VoltsArr[1]);
 //                       Pdiff        :=  Pdiff + (FleetkW * 1000 / ElemVolts);
 //                     End;
@@ -1192,10 +1192,10 @@ begin
                     Pdiff := Pdiff + GetFleetkW()
                 else
                 begin
-                    MonitoredElement.ComputeVterminal();
-                    VoltsArr := MonitoredElement.Vterminal;
+                    MonitoredElement().ComputeVterminal();
+                    VoltsArr := MonitoredElement().Vterminal;
                     ElemVolts := cabs(VoltsArr[1]);
-                    Pdiff := Pdiff + (GetFleetkW() * 1000 / (ElemVolts * MonitoredElement.NPhases));
+                    Pdiff := Pdiff + (GetFleetkW() * 1000 / (ElemVolts * MonitoredElement().NPhases));
 //                 Pdiff        :=  Pdiff + (GetFleetkW() * 1000 / (ElemVolts ));
                 end;
 
@@ -1258,7 +1258,7 @@ begin
                         StorageObj := FleetPointerList.Get(i);
 
                         if Dischargemode = CURRENTPEAKSHAVE then // Current to power
-                        begin    //  (MonitoredElement.MaxVoltage(ElementTerminal) / 1000)
+                        begin    //  (MonitoredElement().MaxVoltage(ElementTerminal) / 1000)
                             if StorageObj.NPhases = 1 then
                                 kWNeeded := StorageObj.PresentkV * AmpsDiff
                             else
@@ -1411,12 +1411,12 @@ begin
         CtrlTarget := FkWTargetLow;
 
 
-    //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
+    //----MonitoredElement().ActiveTerminalIdx := ElementTerminal;
     if Chargemode = CURRENTPEAKSHAVELOW then
     begin
-        MonitoredElement.GetCurrents(cBuffer);
+        MonitoredElement().GetCurrents(cBuffer);
         GetControlCurrent(Amps);
-        // Amps := MonitoredElement.MaxCurrent[ElementTerminal]; // Max current in active terminal
+        // Amps := MonitoredElement().MaxCurrent[ElementTerminal]; // Max current in active terminal
         PDiff := Amps - CtrlTarget * 1000;  // Gets the difference in terms of amps
     end
     else
@@ -1431,10 +1431,10 @@ begin
 
     if Chargemode = CURRENTPEAKSHAVELOW then   // convert Pdiff from Amps to kW
     begin
-        MonitoredElement.ComputeVterminal();
-        VoltsArr := MonitoredElement.Vterminal;
+        MonitoredElement().ComputeVterminal();
+        VoltsArr := MonitoredElement().Vterminal;
         ElemVolts := cabs(VoltsArr[1]);     // LN voltage
-        kWNeeded := ((MonitoredElement.NPhases * PDiff * ElemVolts) / 1000.0);
+        kWNeeded := ((MonitoredElement().NPhases * PDiff * ElemVolts) / 1000.0);
         // kWNeeded := (( PDiff * ElemVolts) / 1000.0);
         AmpsDiff := PDiff;
     end
@@ -1473,10 +1473,10 @@ begin
             Pdiff := Pdiff + GetFleetkW()
         else
         begin
-            MonitoredElement.ComputeVterminal();
-            VoltsArr := MonitoredElement.Vterminal;
+            MonitoredElement().ComputeVterminal();
+            VoltsArr := MonitoredElement().Vterminal;
             ElemVolts := cabs(VoltsArr[1]);
-            Pdiff := Pdiff + (GetFleetkW() * 1000 / (ElemVolts * MonitoredElement.NPhases));   // get actual Pdiff in Currents (discount FleetkW)  (assuming same number of phases of Fleet and Monitored Element)
+            Pdiff := Pdiff + (GetFleetkW() * 1000 / (ElemVolts * MonitoredElement().NPhases));   // get actual Pdiff in Currents (discount FleetkW)  (assuming same number of phases of Fleet and Monitored Element)
             // Pdiff :=  Pdiff + (GetFleetkW() * 1000 / (ElemVolts ));
         end;
     end;
@@ -1941,25 +1941,25 @@ var
     TempPower: Double;
 
 begin
-    if MonitoredElement.NPhases = 1 then
+    if MonitoredElement().NPhases = 1 then
     begin
-        ControlPower := MonitoredElement.Power(ElementTerminal); // just take the total power (works also for 1ph elements with 2 conductors)
+        ControlPower := MonitoredElement().Power(ElementTerminal); // just take the total power (works also for 1ph elements with 2 conductors)
     end
     else
     begin
-        MonitoredElement.GetPhasePower(cBuffer);
+        MonitoredElement().GetPhasePower(cBuffer);
 
         case FMonPhase of
             AVG:
             begin  // Get avg of all phases
                 ControlPower := 0;
-                for i := (1 + CondOffset) to (MonitoredElement.NConds + CondOffset) do
+                for i := (1 + CondOffset) to (MonitoredElement().NConds + CondOffset) do
                     ControlPower := ControlPower + cBuffer[i];
             end;
             MAXPHASE:
             begin  // Get abs max of all phases
                 ControlPower := 0;
-                for i := (1 + CondOffset) to (MonitoredElement.NConds + CondOffset) do
+                for i := (1 + CondOffset) to (MonitoredElement().NConds + CondOffset) do
                 begin
                     TempPower := abs(cBuffer[i].re);
                     if TempPower > abs(ControlPower.re) then
@@ -1972,7 +1972,7 @@ begin
             MINPHASE:
             begin // Get abs min of all phases
                 ControlPower := Cmplx(1.0e50, 1.0e50);
-                for i := (1 + CondOffset) to (MonitoredElement.NConds + CondOffset) do
+                for i := (1 + CondOffset) to (MonitoredElement().NConds + CondOffset) do
                 begin
                     TempPower := abs(cBuffer[i].re);
                     if TempPower < abs(ControlPower.re) then
@@ -2003,21 +2003,21 @@ begin
         AVG:
         begin
             ControlCurrent := 0.0;     // Get avg of all phases
-            for i := (1 + CondOffset) to (MonitoredElement.NConds + CondOffset) do
+            for i := (1 + CondOffset) to (MonitoredElement().NConds + CondOffset) do
                 ControlCurrent := ControlCurrent + Cabs(cBuffer[i]);
             ControlCurrent := ControlCurrent / Fnphases;
         end;
         MAXPHASE:
         begin
             ControlCurrent := 0.0;     // Get max of all phases
-            for i := (1 + CondOffset) to (MonitoredElement.NConds + CondOffset) do
+            for i := (1 + CondOffset) to (MonitoredElement().NConds + CondOffset) do
                 ControlCurrent := max(ControlCurrent, Cabs(cBuffer[i]));
             ControlCurrent := ControlCurrent;
         end;
         MINPHASE:
         begin
             ControlCurrent := 1.0e50;     // Get min of all phases
-            for i := (1 + CondOffset) to (MonitoredElement.NConds + CondOffset) do
+            for i := (1 + CondOffset) to (MonitoredElement().NConds + CondOffset) do
                 ControlCurrent := min(ControlCurrent, Cabs(cBuffer[i]));
             ControlCurrent := ControlCurrent;
         end;

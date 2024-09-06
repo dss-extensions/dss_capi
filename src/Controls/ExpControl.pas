@@ -79,14 +79,13 @@ type
     TExpControlObj = class(TControlElem)
     PRIVATE
         ControlActionHandle: Integer;
-        ControlledElement: array of TPVSystemObj;    // list of pointers to controlled PVSystem elements
-        MonitoredElement: TDSSCktElement;  // First PVSystem element for now
+        ControlledElements: array of TPVSystemObj;    // list of pointers to controlled PVSystem elements
 
-            // PVSystemList information
+        // PVSystemList information
         FListSize: Integer;
         FPVSystemPointerList: TDSSPointerList;
 
-            // working storage for each PV system under management
+        // working storage for each PV system under management
         FPriorVpu: array of Double;
         FPresentVpu: array of Double;
         FPendingChange: array of Integer;
@@ -96,10 +95,10 @@ type
         FTargetQ: array of Double;
         FWithinTol: array of Boolean;
 
-            // temp storage for biggest PV system, not each one
+        // temp storage for biggest PV system, not each one
         cBuffer: array of Complex;
 
-            // user-supplied parameters (also PVSystemList and EventLog)
+        // user-supplied parameters (also PVSystemList and EventLog)
         FVregInit: Double;
         FQbias: Double;
         FdeltaQ_factor: Double;
@@ -130,10 +129,10 @@ type
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
         procedure RecalcElementData(); OVERRIDE;
 
-            // Sample control quantities and set action times in Control Queue
+        // Sample control quantities and set action times in Control Queue
         procedure Sample(); OVERRIDE;
 
-            // Do the action that is pending from last sample
+        // Do the action that is pending from last sample
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;
 
         procedure Reset(); OVERRIDE;  // Reset to initial defined state
@@ -286,7 +285,7 @@ begin
     NConds := Other.Fnconds; // Force Reallocation of terminal stuff
     for i := 1 to FPVSystemPointerList.Count do
     begin
-        ControlledElement[i] := Other.ControlledElement[i];
+        ControlledElements[i] := Other.ControlledElements[i];
         FWithinTol[i] := Other.FWithinTol[i];
     end;
     FListSize := Other.FListSize;
@@ -322,7 +321,7 @@ begin
 
     ShowEventLog := FALSE;
 
-    ControlledElement := NIL;
+    SetControlledElement(NIL);
     FPVSystemNameList := NIL;
     FPVSystemPointerList := NIL;
     cBuffer := NIL;
@@ -366,7 +365,7 @@ begin
     FreeAndNil(FPVSystemPointerList);
     FreeAndNil(FPVSystemNameList);
     FreeAndNil(DERNameList);
-    Finalize(ControlledElement);
+    Finalize(ControlledElements);
     Finalize(cBuffer);
     Finalize(FPriorVpu);
     Finalize(FPresentVpu);
@@ -391,24 +390,24 @@ begin
     if FPVSystemPointerList.Count > 0 then
     begin
     // Setting the terminal of the ExpControl device to same as the 1st PVSystem element
-        MonitoredElement := TDSSCktElement(FPVSystemPointerList.Get(1));   // Set MonitoredElement to 1st PVSystem in lise
-        Setbus(1, MonitoredElement.Firstbus);
+        SetMonitoredElement(TDSSCktElement(FPVSystemPointerList.Get(1)));   // Set MonitoredElement() to 1st PVSystem in lise
+        Setbus(1, MonitoredElement().FirstBus());
     end;
 
     maxord := 0; // will be the size of cBuffer
     for i := 1 to FPVSystemPointerList.Count do
     begin
-        // User ControlledElement[] as the pointer to the PVSystem elements
-        ControlledElement[i] := TPVSystemObj(FPVSystemPointerList.Get(i));  // pointer to i-th PVSystem
-        FNphases := ControlledElement[i].NPhases;  // TEMC TODO - what if these are different sizes (same concern exists with InvControl)
+        // User ControlledElements[] as the pointer to the PVSystem elements
+        ControlledElements[i] := TPVSystemObj(FPVSystemPointerList.Get(i));  // pointer to i-th PVSystem
+        FNphases := ControlledElements[i].NPhases;  // TEMC TODO - what if these are different sizes (same concern exists with InvControl)
         Nconds := Nphases;
-        if (ControlledElement[i] = NIL) then
+        if (ControlledElements[i] = NIL) then
             DoErrorMsg(Format(_('ExpControl: "%s"'), [Self.Name]),
                 Format(_('Controlled Element "%s" not found.'), [FPVSystemNameList.Strings[i - 1]]),
                 _('PVSystem object must be defined previously.'), 361);
-        if ControlledElement[i].Yorder > maxord then
-            maxord := ControlledElement[i].Yorder;
-        ControlledElement[i].ActiveTerminalIdx := 1; // Make the 1 st terminal active
+        if ControlledElements[i].Yorder > maxord then
+            maxord := ControlledElements[i].Yorder;
+        ControlledElements[i].ActiveTerminalIdx := 1; // Make the 1 st terminal active
     end;
     if maxord > 0 then
         SetLength(cBuffer, SizeOF(Complex) * maxord);
@@ -422,14 +421,14 @@ begin
   // TEMC - from here to inherited was copied from InvControl
     FNphases := 3;
     Nconds := 3;
-    Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+    Setbus(1, MonitoredElement().GetBus(ElementTerminal));
     if FPVSystemPointerList.Count > 0 then
     begin
     // Setting the terminal of the ExpControl device to same as the 1st PVSystem element
     // This sets it to a realistic value to avoid crashes later
-        MonitoredElement := TDSSCktElement(FPVSystemPointerList.Get(1));   // Set MonitoredElement to 1st PVSystem in lise
-        Setbus(1, MonitoredElement.Firstbus);
-        FNphases := MonitoredElement.NPhases;
+        SetMonitoredElement(TDSSCktElement(FPVSystemPointerList.Get(1)));   // Set MonitoredElement() to 1st PVSystem in lise
+        Setbus(1, MonitoredElement().FirstBus());
+        FNphases := MonitoredElement().NPhases;
         Nconds := Nphases;
     end;
     inherited;
@@ -448,7 +447,7 @@ var
 begin
     for i := 1 to FPVSystemPointerList.Count do
     begin
-        PVSys := ControlledElement[i];   // Use local variable in loop
+        PVSys := ControlledElements[i];   // Use local variable in loop
         if FPendingChange[i] = CHANGEVARLEVEL then
         begin
             PVSys.VWmode := FALSE;
@@ -540,7 +539,7 @@ begin
     // separately based on the PVSystem's terminal voltages, etc.
         for i := 1 to FPVSystemPointerList.Count do
         begin
-            PVSys := ControlledElement[i];   // Use local variable in loop
+            PVSys := ControlledElements[i];   // Use local variable in loop
       // Calculate the present average voltage  magnitude
             PVSys.ComputeVTerminal;
             for j := 1 to PVSys.Yorder do
@@ -605,7 +604,7 @@ begin
     PVSysClass := GetDSSClassPtr(DSS, 'PVsystem');
     if FListSize > 0 then
     begin    // Name list is defined - Use it
-        SetLength(ControlledElement, FListSize + 1);  // Use this as the main pointer to PVSystem Elements
+        SetLength(ControlledElements, FListSize + 1);  // Use this as the main pointer to PVSystem Elements
         SetLength(FPriorVpu, FListSize + 1);
         SetLength(FPresentVpu, FListSize + 1);
         SetLength(FPendingChange, FListSize + 1);
@@ -639,7 +638,7 @@ begin
         end;
         FListSize := FPVSystemPointerList.Count;
 
-        SetLength(ControlledElement, FListSize + 1);
+        SetLength(ControlledElements, FListSize + 1);
 
         SetLength(FPriorVpu, FListSize + 1);
         SetLength(FPresentVpu, FListSize + 1);
@@ -698,7 +697,7 @@ var
 begin
     for j := 1 to FPVSystemPointerList.Count do
     begin
-        PVSys := ControlledElement[j];
+        PVSys := ControlledElements[j];
         FLastStepQ[j] := PVSys.Presentkvar;
         if VregTau > 0.0 then
         begin

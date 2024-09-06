@@ -159,8 +159,8 @@ end;
 function GetFuseStateSize(Obj: TObj): Integer;
 begin
     Result := Min(FUSEMAXDIM, Obj.FNPhases); // NOTE: DSS-Extensions: changed from FUSEMAXDIM to avoid invalid access
-    if Obj.ControlledElement <> NIL then
-        Result := Obj.ControlledElement.NPhases;
+    if Obj.controlledElement <> NIL then
+        Result := Obj.controlledElement.NPhases;
 end;
 
 procedure TFuse.DefineProperties();
@@ -177,12 +177,12 @@ begin
     PropertyOffset2[ord(TProp.FuseCurve)] := ptruint(TCC_CurveClass);
 
     PropertyType[ord(TProp.MonitoredObj)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.MonitoredObj)] := ptruint(@obj.MonitoredElement);
+    PropertyOffset[ord(TProp.MonitoredObj)] := ptruint(@obj.FMonitoredElement);
     //PropertyWriteFunction[ord(TProp.MonitoredObj)] := @SetMonitoredElement;
     PropertyFlags[ord(TProp.MonitoredObj)] := [TPropertyFlag.Required];//TPropertyFlag.WriteByFunction];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     PropertyType[ord(TProp.SwitchedObj)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.SwitchedObj)] := ptruint(@obj.FControlledElement);
+    PropertyOffset[ord(TProp.SwitchedObj)] := ptruint(@obj.controlledElement);
     PropertyWriteFunction[ord(TProp.SwitchedObj)] := @SetControlledElement;
     PropertyFlags[ord(TProp.SwitchedObj)] := [TPropertyFlag.WriteByFunction];// [TPropertyFlag.CheckForVar]; // not required for general cktelements
 
@@ -208,13 +208,13 @@ begin
     PropertyOffset[ord(TProp.Normal)] := ptrint(@obj.FNormalState); 
     PropertyOffset2[ord(TProp.Normal)] := ptrint(StateEnum); 
     PropertyOffset3[ord(TProp.Normal)] := ptrint(@GetFuseStateSize);
-    PropertyFlags[ord(TProp.Normal)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.DynamicDefault]; // FControlledElement.NPhases
+    PropertyFlags[ord(TProp.Normal)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.DynamicDefault]; // controlledElement.NPhases
 
     PropertyType[ord(TProp.State)] := TPropertyType.MappedStringEnumArrayProperty;
     PropertyOffset[ord(TProp.State)] := ptrint(@obj.FPresentState); //TODO: why PropertyValue doesn't use get_State(x) in the original codebase?
     PropertyOffset2[ord(TProp.State)] := ptrint(StateEnum); 
     PropertyOffset3[ord(TProp.State)] := ptrint(@GetFuseStateSize);
-    PropertyFlags[ord(TProp.State)] := [TPropertyFlag.SizeIsFunction]; // FControlledElement.NPhases
+    PropertyFlags[ord(TProp.State)] := [TPropertyFlag.SizeIsFunction]; // controlledElement.NPhases
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();
@@ -238,7 +238,7 @@ begin
     case Idx of
         // Default the controlled element to the monitored element
         ord(TProp.MonitoredObj):
-            ControlledElement := MonitoredElement;
+            SetControlledElement(MonitoredElement());
         ord(TProp.MonitoredTerm):
             ElementTerminal := MonitoredElementTerminal;
         ord(TProp.Normal):
@@ -252,12 +252,12 @@ begin
                 
                 NormalStateSet := TRUE; // normal state will default to state only the 1st state is specified.
             end;
-            if ControlledElement = NIL then
+            if controlledElement = NIL then
                 Exit;
 
-            ControlledElement.ActiveTerminalIdx := ElementTerminal;
-            for i := 1 to ControlledElement.NPhases do
-                ControlledElement.SetConductorClosed(i, FPresentState[i] <> CTRL_OPEN);
+            controlledElement.ActiveTerminalIdx := ElementTerminal;
+            for i := 1 to controlledElement.NPhases do
+                controlledElement.SetConductorClosed(i, FPresentState[i] <> CTRL_OPEN);
         end;
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
@@ -275,15 +275,15 @@ begin
     NConds := Other.Fnconds; // Force Reallocation of terminal stuff
 
     ElementTerminal := Other.ElementTerminal;
-    ControlledElement := Other.ControlledElement;  // Pointer to target circuit element
+    SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
 
-    MonitoredElement := Other.MonitoredElement;  // Pointer to target circuit element
+    SetMonitoredElement(Other.MonitoredElement());  // Pointer to target circuit element
     MonitoredElementTerminal := Other.MonitoredElementTerminal;  // Pointer to target circuit element
 
     FuseCurve := Other.FuseCurve;
     RatedCurrent := Other.RatedCurrent;
 
-    for i := 1 to Min(FUSEMAXDIM, ControlledElement.Nphases) do 
+    for i := 1 to Min(FUSEMAXDIM, controlledElement.Nphases) do 
     begin
         FPresentState[i] := Other.FPresentState[i];
         FNormalState[i] := Other.FNormalState[i];
@@ -301,11 +301,11 @@ begin
     FNPhases := 3;  // Directly set conds and phases
     Fnconds := 3;
     Nterms := 1;  // this forces allocation of terminals and conductors in base class
-    ControlledElement := NIL;
+    SetControlledElement(NIL);
     ElementTerminal := 1;
 
     MonitoredElementTerminal := 1;
-    MonitoredElement := NIL;
+    SetMonitoredElement(NIL);
     PreviousControlledElement := NIL;
 
     FuseCurve := TFuse(ParClass).TCC_CurveClass.Find('tlink');//TODO: is an error message ever required for this?
@@ -348,12 +348,12 @@ procedure TFuseObj.RecalcElementData();
 var
     i: Integer;
 begin
-    if MonitoredElement <> NIL then
+    if MonitoredElement() <> NIL then
     begin
-        FNphases := MonitoredElement.NPhases; // Force number of phases to be same
+        FNphases := MonitoredElement().NPhases; // Force number of phases to be same
         if Fnphases > FUSEMAXDIM then
             DoSimpleMsg('Warning: Fuse %s: Number of phases > Max fuse dimension.', [Self.Name], 404);
-        if MonitoredElementTerminal > MonitoredElement.Nterms then
+        if MonitoredElementTerminal > MonitoredElement().Nterms then
         begin
             DoErrorMsg(Format(_('Fuse: "%s"'), [Name]),
                 Format(_('Terminal no. "%d" does not exist.'), [MonitoredElementTerminal]),
@@ -362,10 +362,10 @@ begin
         else
         begin
             // Sets name of i-th terminal's connected bus in Fuse's buslist
-            Setbus(1, MonitoredElement.GetBus(MonitoredElementTerminal));
+            Setbus(1, MonitoredElement().GetBus(MonitoredElementTerminal));
             // Allocate a buffer big enough to hold everything from the monitored element
-            ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement.Yorder);
-            CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
+            ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement().Yorder);
+            CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement().NConds; // for speedy sampling
         end;
     end;
 
@@ -378,23 +378,23 @@ begin
         PreviousControlledElement := ControlledElement;
     end;
 
-    if ControlledElement <> NIL then
+    if controlledElement <> NIL then
     begin  // Both CktElement and monitored element must already exist
-        ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Make the 1 st terminal active
+        controlledElement.ActiveTerminalIdx := ElementTerminal;  // Make the 1 st terminal active
 
         if Enabled then
-            Include(ControlledElement.Flags, Flg.HasOCPDevice);  // For Reliability calcs
+            Include(controlledElement.Flags, Flg.HasOCPDevice);  // For Reliability calcs
 
         // Open/Close State of controlled element based on state assigned to the control
-        for i := 1 to Min(FUSEMAXDIM, ControlledElement.Nphases) do
+        for i := 1 to Min(FUSEMAXDIM, controlledElement.Nphases) do
             if FPresentState[i] = CTRL_OPEN then
-                ControlledElement.SetConductorClosed(i, FALSE)
+                controlledElement.SetConductorClosed(i, FALSE)
             else
-                ControlledElement.SetConductorClosed(i, TRUE);
+                controlledElement.SetConductorClosed(i, TRUE);
 
-        for i := 1 to ControlledElement.Nphases do
+        for i := 1 to controlledElement.Nphases do
             hAction[i] := 0;
-        for i := 1 to Min(FUSEMAXDIM, ControlledElement.Nphases) do
+        for i := 1 to Min(FUSEMAXDIM, controlledElement.Nphases) do
             ReadyToBlow[i] := FALSE;
     end
     else
@@ -430,11 +430,11 @@ begin
     if Phs > FUSEMAXDIM then
         Exit;
 
-    ControlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.ActiveTerminalIdx := ElementTerminal;
     if FPresentState[Phs] = CTRL_CLOSE then
         if ReadyToBlow[Phs] then
         begin   // ignore if we became disarmed in meantime
-            ControlledElement.SetConductorClosed(Phs, FALSE);   // Open all phases of active terminal
+            controlledElement.SetConductorClosed(Phs, FALSE);   // Open all phases of active terminal
             AppendtoEventLog(Self.FullName(), 'Phase ' + IntToStr(Phs) + ' Blown');
             hAction[phs] := 0;
         end;
@@ -446,12 +446,12 @@ var
     Cmag: Double;
     TripTime: Double;
 begin
-    ControlledElement.ActiveTerminalIdx := ElementTerminal;
-    MonitoredElement.GetCurrents(cBuffer);
+    controlledElement.ActiveTerminalIdx := ElementTerminal;
+    MonitoredElement().GetCurrents(cBuffer);
 
-    for i := 1 to Min(FUSEMAXDIM, MonitoredElement.Nphases) do
+    for i := 1 to Min(FUSEMAXDIM, MonitoredElement().Nphases) do
     begin
-        if ControlledElement.ConductorClosed(i)      // Check state of phases of active terminal
+        if controlledElement.ConductorClosed(i)      // Check state of phases of active terminal
         then
             FPresentState[i] := CTRL_CLOSE
         else
@@ -495,31 +495,31 @@ procedure TFuseObj.Reset();
 var
     i: Integer;
 begin
-    if ControlledElement = NIL then
+    if controlledElement = NIL then
         Exit;
 
-    ControlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.ActiveTerminalIdx := ElementTerminal;
 
-    for i := 1 to Min(FUSEMAXDIM, ControlledElement.Nphases) do
+    for i := 1 to Min(FUSEMAXDIM, controlledElement.Nphases) do
     begin
         FPresentState[i] := FNormalState[i];  // reset to normal state
         ReadyToBlow[i] := FALSE;
         hAction[i] := 0;
 
         if FNormalState[i] = CTRL_OPEN then
-            ControlledElement.SetConductorClosed(i, FALSE)
+            controlledElement.SetConductorClosed(i, FALSE)
         else
-            ControlledElement.SetConductorClosed(i, TRUE);
+            controlledElement.SetConductorClosed(i, TRUE);
     end;
 end;
 
 function TFuseObj.GetState(Idx: Integer): EControlAction;
 begin
     //TODO: do we need to validate Idx?
-    if ControlledElement <> NIL then
+    if controlledElement <> NIL then
     begin
-        ControlledElement.ActiveTerminalIdx := ElementTerminal; 
-        if not ControlledElement.ConductorClosed(Idx) then
+        controlledElement.ActiveTerminalIdx := ElementTerminal; 
+        if not controlledElement.ConductorClosed(Idx) then
             FPresentState[Idx]:= CTRL_OPEN
         else
             FPresentState[Idx]:= CTRL_CLOSE;

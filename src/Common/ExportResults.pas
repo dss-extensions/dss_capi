@@ -128,7 +128,7 @@ begin
     NCond := pElem.NConds;
     Nterm := pElem.Nterms;
     k := 0;
-    BusName := (StripExtension(pElem.FirstBus));
+    BusName := (StripExtension(pElem.FirstBus()));
     FSWrite(F, pElem.FullName());
 
 
@@ -171,7 +171,7 @@ begin
         for m := (NCond + 1) to (MaxNumNodes) do
             FSWrite(F, ', 0, 0, 0, 0');
 
-        BusName := StripExtension(pElem.Nextbus);
+        BusName := StripExtension(pElem.NextBus());
     end; // end for numterminals
 end; //end procedure
 

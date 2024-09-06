@@ -34,7 +34,7 @@ type
     PRIVATE
         procedure RemoveSelfFromControlElementList(cktElem: TDSSCktElement);
     PUBLIC
-        FControlledElement: TDSSCktElement;
+        controlledElement: TDSSCktElement;
         FMonitoredElement: TDSSCktElement;
         ElementTerminal: Integer;
         ControlledBusName: String;  // If different than terminal
@@ -54,10 +54,9 @@ type
         procedure Sample(); VIRTUAL;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); VIRTUAL;   // Do the action that is pending from last sample
         procedure Reset(); VIRTUAL;
-        procedure Set_ControlledElement(const Value: TDSSCktElement);  // Pointer to target circuit element
-        procedure Set_MonitoredElement(const Value: TDSSCktElement);
-        property ControlledElement: TDSSCktElement READ FControlledElement WRITE Set_ControlledElement;
-        property MonitoredElement: TDSSCktElement READ FMonitoredElement WRITE Set_MonitoredElement;
+        procedure SetControlledElement(const Value: TDSSCktElement);  // Pointer to target circuit element
+        function MonitoredElement(): TDSSCktElement;
+        procedure SetMonitoredElement(const Value: TDSSCktElement);
     end;
 
 procedure SetMonitoredElement(obj: TControlElem; el: TDSSCktElement);
@@ -76,12 +75,12 @@ uses
 
 procedure SetMonitoredElement(obj: TControlElem; el: TDSSCktElement);
 begin
-    obj.Set_MonitoredElement(el);
+    obj.SetMonitoredElement(el);
 end;
 
 procedure SetControlledElement(obj: TControlElem; el: TDSSCktElement);
 begin
-    obj.Set_ControlledElement(el);
+    obj.SetControlledElement(el);
 end;
 
 constructor TControlElem.Create(ParClass: TDSSClass; objName: String);
@@ -92,7 +91,7 @@ begin
     TimeDelay := 0.0;
     MonitorVariable := '';
     MonitorVarIndex := 0;
-    FControlledElement := NIL;
+    controlledElement := NIL;
     ShowEventLog := DSS.EventLogDefault;
 end;
 
@@ -136,30 +135,35 @@ begin
     DoSimpleMsg('Programming Error:  Reached base class for Sample.' + CRLF + 'Device: ' + FullName(), 462);
 end;
 
-procedure TControlElem.Set_ControlledElement(const Value: TDSSCktElement);
+procedure TControlElem.SetControlledElement(const Value: TDSSCktElement);
 begin
     try
       // Check for reassignment of Controlled element and remove from list
-        if FControlledElement <> NIL then
+        if controlledElement <> NIL then
         begin
-            if FControlledElement.ControlElementList.Count = 1 then
-                Exclude(FControlledElement.Flags, Flg.HasControl);
-            RemoveSelfFromControlElementList(FControlledElement);
+            if controlledElement.ControlElementList.Count = 1 then
+                Exclude(controlledElement.Flags, Flg.HasControl);
+            RemoveSelfFromControlElementList(controlledElement);
         end;
     finally
-        FControlledElement := Value;
-        if FControlledElement <> NIL then
+        controlledElement := Value;
+        if controlledElement <> NIL then
         begin
-            Include(FControlledElement.Flags, Flg.HasControl);
-            FControlledElement.ControlElementList.Add(Self);
+            Include(controlledElement.Flags, Flg.HasControl);
+            controlledElement.ControlElementList.Add(Self);
         end;
     end;
 end;
 
-procedure TControlElem.Set_MonitoredElement(const Value: TDSSCktElement);
+function TControlElem.MonitoredElement(): TDSSCktElement;
+begin
+    result := FMonitoredElement;
+end;
+
+procedure TControlElem.SetMonitoredElement(const Value: TDSSCktElement);
 begin
     FMonitoredElement := Value;
-    if Assigned(FMonitoredElement) then
+    if FMonitoredElement <> NIL then
         Include(FMonitoredElement.Flags, Flg.IsMonitored);
 end;
 

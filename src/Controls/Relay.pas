@@ -434,7 +434,7 @@ begin
     PropertyFlags[ord(TProp.MonitoredObj)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Required];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     PropertyType[ord(TProp.SwitchedObj)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.SwitchedObj)] := ptruint(@obj.FControlledElement);
+    PropertyOffset[ord(TProp.SwitchedObj)] := ptruint(@obj.controlledElement);
     PropertyOffset2[ord(TProp.SwitchedObj)] := 0;
     PropertyWriteFunction[ord(TProp.SwitchedObj)] := @SetControlledElement;
     PropertyFlags[ord(TProp.SwitchedObj)] := [TPropertyFlag.WriteByFunction];
@@ -524,7 +524,7 @@ begin
     case Idx of
         // Default the controlled element to the monitored element
         ord(TProp.MonitoredObj):
-            ControlledElement := MonitoredElement;
+            SetControlledElement(MonitoredElement());
         ord(TProp.MonitoredTerm):
             ElementTerminal := MonitoredElementTerminal;
         // ord(TProp.RecloseIntervals): -- changed in r3326, zero allowed
@@ -605,9 +605,9 @@ begin
     ShowEventLog := Other.ShowEventLog; // but leave DebugTrace off
 
     ElementTerminal := Other.ElementTerminal;
-    ControlledElement := Other.ControlledElement;  // Pointer to target circuit element
+    SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
 
-    MonitoredElement := Other.MonitoredElement;  // Pointer to target circuit element
+    SetMonitoredElement(Other.MonitoredElement());  // Pointer to target circuit element
     MonitoredElementTerminal := Other.MonitoredElementTerminal;  // Pointer to target circuit element
 
     PhaseCurve := Other.PhaseCurve;
@@ -687,12 +687,12 @@ begin
     Fnconds := 3;
     Nterms := 1;  // this forces allocation of terminals and conductors in base class
 
-    ControlledElement := NIL;
+    SetControlledElement(NIL);
     PreviousControlledElement := NIL;
     ElementTerminal := 1;
 
     MonitoredElementTerminal := 1;
-    MonitoredElement := NIL;
+    SetMonitoredElement(NIL);
 
     RelayTarget := '';
 
@@ -802,10 +802,10 @@ begin
             Format('RecalcElementData NumReclose=%d', [NumReclose])
         );
 
-    if MonitoredElement <> NIL then
+    if MonitoredElement() <> NIL then
     begin
-        FNphases := MonitoredElement.NPhases;       // Force number of phases to be same
-        if MonitoredElementTerminal > MonitoredElement.Nterms then
+        FNphases := MonitoredElement().NPhases;       // Force number of phases to be same
+        if MonitoredElementTerminal > MonitoredElement().Nterms then
         begin
             DoErrorMsg(Format(_('Relay: "%s"'), [Name]),
                 Format(_('Terminal no. "%d" does not exist.'), [MonitoredElementTerminal]),
@@ -814,24 +814,24 @@ begin
         else
         begin
             // Sets name of i-th terminal's connected bus in Relay's buslist
-            Setbus(1, MonitoredElement.GetBus(MonitoredElementTerminal));
+            Setbus(1, MonitoredElement().GetBus(MonitoredElementTerminal));
 
             // Allocate a buffer big enough to hold everything from the monitored element
-            ReAllocMem(cBuffer, SizeOf(cbuffer[1]) * MonitoredElement.Yorder);
+            ReAllocMem(cBuffer, SizeOf(cbuffer[1]) * MonitoredElement().Yorder);
 
             if (ControlType = Distance) or (ControlType = TD21) or (ControlType = DOC) then
-                ReAllocMem(cvBuffer, SizeOf(cvBuffer[1]) * MonitoredElement.Yorder);
+                ReAllocMem(cvBuffer, SizeOf(cvBuffer[1]) * MonitoredElement().Yorder);
 
-            CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
+            CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement().NConds; // for speedy sampling
 
             case ControlType of
                 Generic:
                 begin
-                    if (MonitoredElement.DSSObjType and BASECLASSMASK) <> PC_ELEMENT then
+                    if (MonitoredElement().DSSObjType and BASECLASSMASK) <> PC_ELEMENT then
                         DoSimpleMsg('Relay %s: Monitored element for Generic relay is not a PC Element.', [Name], 385)
                     else
                     begin
-                        MonitorVarIndex := (MonitoredElement as TPCelement).LookupVariable(MonitorVariable);
+                        MonitorVarIndex := (MonitoredElement() as TPCelement).LookupVariable(MonitorVariable);
                         if MonitorVarIndex < 1 then    // oops
                         begin
                             DoSimpleMsg('Relay "%s": Monitor variable "%s" does not exist.', [Name, MonitorVariable], 386);
@@ -850,31 +850,31 @@ begin
     begin
         Exclude(PreviousControlledElement.Flags, Flg.HasOCPDevice);
         Exclude(PreviousControlledElement.Flags, Flg.HasAutoOCPDevice);
-        PreviousControlledElement := ControlledElement;
+        PreviousControlledElement := controlledElement;
     end;
 
-    if ControlledElement <> NIL then
+    if controlledElement <> NIL then
     begin  // Both CktElement and monitored element must already exist
-        ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Make the 1 st terminal active
+        controlledElement.ActiveTerminalIdx := ElementTerminal;  // Make the 1 st terminal active
 
         // If the relay becomes disabled, leave at False
         if Enabled then
         begin
-            Include(ControlledElement.Flags, Flg.HasOCPDevice);  // For Reliability calcs
-            Include(ControlledElement.Flags, Flg.HasAutoOCPDevice);  // For Reliability calcs
+            Include(controlledElement.Flags, Flg.HasOCPDevice);  // For Reliability calcs
+            Include(controlledElement.Flags, Flg.HasAutoOCPDevice);  // For Reliability calcs
         end;
 
         // Open/Close State of controlled element based on state assigned to the control
         if FPresentState = CTRL_CLOSE then
         begin
-            ControlledElement.SetConductorClosed(0, TRUE);
+            controlledElement.SetConductorClosed(0, TRUE);
             LockedOut := FALSE;
             OperationCount := 1;
             ArmedForOpen := FALSE;
         end
         else
         begin
-            ControlledElement.SetConductorClosed(0, FALSE);
+            controlledElement.SetConductorClosed(0, FALSE);
             LockedOut := TRUE;
             OperationCount := NumReclose + 1;
             ArmedForClose := FALSE;
@@ -911,19 +911,19 @@ end;
 
 procedure TRelayObj.MakePosSequence();
 begin
-    if MonitoredElement <> NIL then
+    if MonitoredElement() <> NIL then
     begin
-        FNphases := MonitoredElement.NPhases;
+        FNphases := MonitoredElement().NPhases;
         Nconds := FNphases;
-        Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+        Setbus(1, MonitoredElement().GetBus(ElementTerminal));
 
         // Allocate a buffer big enough to hold everything from the monitored element
-        ReAllocMem(cBuffer, SizeOf(cbuffer[1]) * MonitoredElement.Yorder);
+        ReAllocMem(cBuffer, SizeOf(cbuffer[1]) * MonitoredElement().Yorder);
 
         if (ControlType = Distance) or (ControlType = TD21) or (ControlType = DOC) then
-            ReAllocMem(cvBuffer, SizeOf(cvBuffer[1]) * MonitoredElement.Yorder);
+            ReAllocMem(cvBuffer, SizeOf(cvBuffer[1]) * MonitoredElement().Yorder);
 
-        CondOffset := (ElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
+        CondOffset := (ElementTerminal - 1) * MonitoredElement().NConds; // for speedy sampling
     end;
     case FNPhases of
         1:
@@ -949,14 +949,14 @@ begin
                 NumReclose
         ]));
 
-    ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal of CktElement to terminal 1
+    controlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal of CktElement to terminal 1
 
     case Code of
         Integer(CTRL_OPEN):
             if FPresentState = CTRL_CLOSE then
                 if ArmedForOpen then
                 begin   // ignore if we became disarmed in meantime
-                    ControlledElement.SetConductorClosed(0, FALSE);   // Open all phases of active terminal
+                    controlledElement.SetConductorClosed(0, FALSE);   // Open all phases of active terminal
                     if (OperationCount > NumReclose) then
                     begin
                         LockedOut := TRUE;
@@ -982,7 +982,7 @@ begin
             if FPresentState = CTRL_OPEN then
                 if ArmedForClose and not LockedOut then
                 begin
-                    ControlledElement.SetConductorClosed(0, TRUE); // Close all phases of active terminal
+                    controlledElement.SetConductorClosed(0, TRUE); // Close all phases of active terminal
                     Inc(OperationCount);
                     if ShowEventLog then
                         AppendtoEventLog(Self.FullName(), _('Closed'));
@@ -1010,8 +1010,8 @@ end;
 
 procedure TRelayObj.Sample();
 begin
-    ControlledElement.ActiveTerminalIdx := ElementTerminal;
-    if ControlledElement.ConductorClosed(0) // Check state of phases of active terminal
+    controlledElement.ActiveTerminalIdx := ElementTerminal;
+    if controlledElement.ConductorClosed(0) // Check state of phases of active terminal
     then
         FPresentState := CTRL_CLOSE
     else
@@ -1054,20 +1054,20 @@ begin
 
     NextTripTime := -1.0;  // not set to trip
 
-    if ControlledElement = NIL then
+    if controlledElement = NIL then
         Exit;
 
-    ControlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.ActiveTerminalIdx := ElementTerminal;
 
     if NormalState = CTRL_OPEN then
     begin
-        ControlledElement.SetConductorClosed(0, FALSE); // Open all phases of active terminal
+        controlledElement.SetConductorClosed(0, FALSE); // Open all phases of active terminal
         LockedOut := TRUE;
         OperationCount := NumReclose + 1;
     end
     else
     begin
-        ControlledElement.SetConductorClosed(0, TRUE); // Close all phases of active terminal
+        controlledElement.SetConductorClosed(0, TRUE); // Close all phases of active terminal
         LockedOut := FALSE;
         OperationCount := 1;
     end;
@@ -1075,11 +1075,11 @@ end;
 
 function TRelayObj.PresentState(): EControlAction;
 begin
-    if ControlledElement <> NIL then
+    if controlledElement <> NIL then
     begin
-        ControlledElement.ActiveTerminalIdx := ElementTerminal;
+        controlledElement.ActiveTerminalIdx := ElementTerminal;
 
-        if not ControlledElement.ConductorClosed(0) then
+        if not controlledElement.ConductorClosed(0) then
             FPresentState:= CTRL_OPEN
         else
             FPresentState:= CTRL_CLOSE;
@@ -1094,13 +1094,13 @@ begin
 
     FPresentState := Value;
 
-    if ControlledElement = NIL then
+    if controlledElement = NIL then
         Exit;
 
-    ControlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.ActiveTerminalIdx := ElementTerminal;
     if Value = CTRL_OPEN then
     begin
-        ControlledElement.SetConductorClosed(0, FALSE);
+        controlledElement.SetConductorClosed(0, FALSE);
         LockedOut := TRUE;
         OperationCount := NumReclose + 1;
         ArmedForClose := FALSE;
@@ -1108,7 +1108,7 @@ begin
     end
     else
     begin
-        ControlledElement.SetConductorClosed(0, TRUE);
+        controlledElement.SetConductorClosed(0, TRUE);
         LockedOut := FALSE;
         OperationCount := 1;
         ArmedForOpen := FALSE;
@@ -1121,14 +1121,14 @@ procedure TRelayObj.GenericLogic;
 var
     VarValue: Double;
 begin
-    VarValue := TPCElement(MonitoredElement).GetVariable(MonitorVarIndex);
+    VarValue := TPCElement(MonitoredElement()).GetVariable(MonitorVarIndex);
 
     // Check for Trip
     if (VarValue > OverTrip) or (VarValue < UnderTrip) then
     begin
         if not ArmedForOpen then  // push the trip operation and arm to trip
         begin
-            RelayTarget := TPCElement(MonitoredElement).VariableName(MonitorVarIndex);
+            RelayTarget := TPCElement(MonitoredElement()).VariableName(MonitorVarIndex);
             LastEventHandle := ActiveCircuit.ControlQueue.Push(Delay_Time + Breaker_time, CTRL_OPEN, 0, Self);
             OperationCount := NumReclose + 1;  // force a lockout
             ArmedForOpen := TRUE;
@@ -1152,9 +1152,9 @@ var
     iOffset: Integer;
     I012: array[1..3] of Complex;
 begin
-    MonitoredElement.ActiveTerminalIdx := MonitoredElementTerminal;
-    MonitoredElement.GetCurrents(cBuffer);
-    iOffset := (MonitoredElementTerminal - 1) * MonitoredElement.NConds;  // offset for active terminal
+    MonitoredElement().ActiveTerminalIdx := MonitoredElementTerminal;
+    MonitoredElement().GetCurrents(cBuffer);
+    iOffset := (MonitoredElementTerminal - 1) * MonitoredElement().NConds;  // offset for active terminal
     Phase2SymComp(pComplexArray(@cBuffer[iOffset + 1]), pComplexArray(@I012));
     NegSeqCurrentMag := Cabs(I012[3]);
     if NegSeqCurrentMag >= PickupAmps46 then
@@ -1201,13 +1201,13 @@ begin
     PhaseTime := -1.0;  // No trip
 
     // Check largest Current of all phases of monitored element
-    MonitoredElement.GetCurrents(cBuffer);
+    MonitoredElement().GetCurrents(cBuffer);
 
     // Check Ground Trip, if any
     if ((GroundCurve <> NIL) or (Delay_Time > 0.0)) and (GroundTrip > 0.0) then
     begin
         Csum := 0;
-        for i := (1 + CondOffset) to (MonitoredElement.NPhases + CondOffset) do
+        for i := (1 + CondOffset) to (MonitoredElement().NPhases + CondOffset) do
         begin
             Csum += cBuffer[i];
         end;
@@ -1244,7 +1244,7 @@ begin
 
     if ((PhaseCurve <> NIL) or (Delay_Time > 0.0)) and (PhaseTrip > 0.0) then
     begin
-        for i := (1 + CondOffset) to (MonitoredElement.NPhases + CondOffset) do
+        for i := (1 + CondOffset) to (MonitoredElement().NPhases + CondOffset) do
         begin
             Cmag := Cabs(cBuffer[i]);
             if (PhaseInst > 0.0) and (Cmag >= PhaseInst) and (OperationCount = 1) then
@@ -1333,22 +1333,22 @@ begin
 
     PickedUp := False;
     min_distance := 1.0e30;
-    MonitoredElement.GetCurrents(cBuffer);
+    MonitoredElement().GetCurrents(cBuffer);
 
     if Dist_Reverse then
-        for i := 1 to MonitoredElement.NPhases do
+        for i := 1 to MonitoredElement().NPhases do
             cBuffer[i + CondOffset] := -cBuffer[i + CondOffset];
 
     Ires := 0;
-    for i := 1 to MonitoredElement.Nphases do
+    for i := 1 to MonitoredElement().Nphases do
         Ires += cBuffer[i + CondOffset];
 
     kIres := Dist_K0 * Ires;
-    MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer);
+    MonitoredElement().GetTermVoltages(MonitoredElementTerminal, cvBuffer);
 
-    for i := 1 to MonitoredElement.NPhases do
+    for i := 1 to MonitoredElement().NPhases do
     begin
-        for j := i to MonitoredElement.NPhases do
+        for j := i to MonitoredElement().NPhases do
         begin
             if (i = j) then
             begin
@@ -1485,14 +1485,14 @@ begin
         Exit;
 
     FaultDetected := False;
-    MonitoredElement.GetCurrents(cBuffer);
+    MonitoredElement().GetCurrents(cBuffer);
 
     if Dist_Reverse then
-        for i := 1 to MonitoredElement.NPhases do
+        for i := 1 to MonitoredElement().NPhases do
             cBuffer[i+CondOffset] := -cBuffer[i+CondOffset];
 
     i2fault := PhaseTrip * PhaseTrip;
-    for i := 1 to MonitoredElement.Nphases do
+    for i := 1 to MonitoredElement().Nphases do
     begin
         i2 := cabs2 (cBuffer[i+CondOffset]);
         if i2 > i2fault then
@@ -1505,7 +1505,7 @@ begin
             [BoolToStr(FaultDetected)]
         ));
 
-    MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer);
+    MonitoredElement().GetTermVoltages(MonitoredElementTerminal, cvBuffer);
     if td21_i < 1 then
     begin
         if DebugTrace then
@@ -1514,11 +1514,11 @@ begin
         for i := 1 to td21_pt do
         begin
             ib := (i - 1) * td21_stride;
-            for j := 1 to MonitoredElement.Nphases do
+            for j := 1 to MonitoredElement().Nphases do
             begin
                 iv := ib + j;
                 td21_h[iv] := cvBuffer[j];
-                ii := ib + MonitoredElement.Nphases + j;
+                ii := ib + MonitoredElement().Nphases + j;
                 td21_h[ii] := cBuffer[j+CondOffset];
             end;
         end;
@@ -1529,12 +1529,12 @@ begin
 
     // calculate the differential currents and voltages
     ib := (td21_next - 1) * td21_stride;
-    for j := 1 to MonitoredElement.Nphases do
+    for j := 1 to MonitoredElement().Nphases do
     begin
         iv := ib + j;
         td21_Uref[j] := td21_h[iv];
         td21_dV[j] := cvBuffer[j] - td21_h[iv];
-        ii := ib + MonitoredElement.Nphases + j;
+        ii := ib + MonitoredElement().Nphases + j;
         td21_dI[j] := cBuffer[j+CondOffset] - td21_h[ii];
     end;
 
@@ -1542,11 +1542,11 @@ begin
     if ActiveCircuit.Solution.DynaVars.IterationFlag < 1 then
     begin
         ib := (td21_i - 1) * td21_stride;
-        for j := 1 to MonitoredElement.Nphases do
+        for j := 1 to MonitoredElement().Nphases do
         begin
             iv := ib + j;
             td21_h[iv] := cvBuffer[j];
-            ii := ib + MonitoredElement.Nphases + j;
+            ii := ib + MonitoredElement().Nphases + j;
             td21_h[ii] := cBuffer[j+CondOffset];
         end;
         td21_i := td21_next;
@@ -1560,13 +1560,13 @@ begin
         PickedUp := False;
         min_distance := 1.0e30;
         Ires := 0;
-        for i := 1 to MonitoredElement.Nphases do
+        for i := 1 to MonitoredElement().Nphases do
             Ires += td21_dI[i];
 
         kIres := Dist_K0 * Ires;
-        for i := 1 to MonitoredElement.NPhases do
+        for i := 1 to MonitoredElement().NPhases do
         begin
-            for j := i to MonitoredElement.NPhases do
+            for j := i to MonitoredElement().NPhases do
             begin
                 if (i = j) then
                 begin
@@ -1704,19 +1704,19 @@ var
     Vph, V012: Complex3;
     Iph, I012: Complex3;
 begin
-    if MonitoredElement.NPhases < 3 then
+    if MonitoredElement().NPhases < 3 then
     begin
         // just take the total power (works also for 1ph elements with 2 conductors)
-        Result := MonitoredElement.Power(MonitoredElementTerminal);
+        Result := MonitoredElement().Power(MonitoredElementTerminal);
         Exit;
     end;
 
-    MonitoredElement.GetCurrents(cBuffer);
-    MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer);
+    MonitoredElement().GetCurrents(cBuffer);
+    MonitoredElement().GetTermVoltages(MonitoredElementTerminal, cvBuffer);
 
     for i := 1 to 3 do
     begin
-        k := (MonitoredElementTerminal - 1) * MonitoredElement.NConds + i;
+        k := (MonitoredElementTerminal - 1) * MonitoredElement().NConds + i;
         Iph[i] := cBuffer[k];
         Vph[i] := cvBuffer[i];
     end;
@@ -1769,14 +1769,14 @@ begin
 
     TripTime := -1.0;
 
-    MonitoredElement.GetCurrents(cBuffer);
-    MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer);
+    MonitoredElement().GetCurrents(cBuffer);
+    MonitoredElement().GetTermVoltages(MonitoredElementTerminal, cvBuffer);
 
     // Shift angle to cBuffer to be relative to cvBuffer
-    for i := (1 + CondOffset) to (MonitoredElement.NPhases + CondOffset) do
+    for i := (1 + CondOffset) to (MonitoredElement().NPhases + CondOffset) do
         cBuffer[i] := PDEGtoCompLeX(Cabs(cBuffer[i]), CDANG(cBuffer[i]) - CDANG(cvBuffer[i - CondOffset]));
 
-    for i := (1 + CondOffset) to (MonitoredElement.NPhases + CondOffset) do
+    for i := (1 + CondOffset) to (MonitoredElement().NPhases + CondOffset) do
     begin
         TimeTest := -1.0;
         Cmag := Cabs(cBuffer[i]);
@@ -2167,8 +2167,8 @@ procedure TRelayObj.RevPowerLogic;
 var
     S: Complex;
 begin
-    // MonitoredElement.ActiveTerminalIdx := MonitoredElementTerminal;
-    S := MonitoredElement.Power(MonitoredElementTerminal);
+    // MonitoredElement().ActiveTerminalIdx := MonitoredElementTerminal;
+    S := MonitoredElement().Power(MonitoredElementTerminal);
     if S.re < 0.0 then
     begin
         if Abs(S.Re) > PhaseInst * 1000.0 then
@@ -2204,11 +2204,11 @@ begin
         Exit;
 
     //**** Fix so that fastest trip time applies ****
-    MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cBuffer);
+    MonitoredElement().GetTermVoltages(MonitoredElementTerminal, cBuffer);
 
     Vmin := 1.0E50;
     Vmax := 0.0;
-    for i := 1 to MonitoredElement.NPhases do
+    for i := 1 to MonitoredElement().NPhases do
     begin
         Vmag := Cabs(cBuffer[i]);
         if Vmag > Vmax then
@@ -2320,7 +2320,7 @@ var
     NegSeqVoltageMag: Double;
     V012: array[1..3] of Complex;
 begin
-    MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cBuffer);
+    MonitoredElement().GetTermVoltages(MonitoredElementTerminal, cBuffer);
     Phase2SymComp(cBuffer, pComplexArray(@V012)); // Phase to symmetrical components
     NegSeqVoltageMag := Cabs(V012[3]);
     if NegSeqVoltageMag >= PickupVolts47 then

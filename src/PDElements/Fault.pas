@@ -504,8 +504,8 @@ var
 begin
     inherited DumpProperties(F, complete);
 
-    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.Bus1)] + '=' + firstbus);
-    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.Bus2)] + '=' + nextbus);
+    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.Bus1)] + '=' + FirstBus());
+    FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.Bus2)] + '=' + NextBus());
 
     FSWriteln(F, Format('~ %s=%d', [ParentClass.PropertyName[ord(TProp.Phases)], Fnphases]));
     FSWriteln(F, Format('~ %s=%.2f', [ParentClass.PropertyName[ord(TProp.R)], (1.0 / G)]));

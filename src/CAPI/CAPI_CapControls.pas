@@ -133,7 +133,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ControlledElement.Name());
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.controlledElement.Name());
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_CTratio(): Double; CDECL;
@@ -223,8 +223,8 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    if elem.MonitoredElement <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.MonitoredElement.FullName()));
+    if elem.MonitoredElement() <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.MonitoredElement().FullName()));
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_MonitoredTerm(): Integer; CDECL;

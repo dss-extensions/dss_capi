@@ -282,8 +282,8 @@ begin
     FNPhases := Other.Fnphases;
     NConds := Other.Fnconds; // Force Reallocation of terminal stuff
 
-    // ControlledElement := Other.ControlledElement;  // Pointer to target circuit element
-    MonitoredElement := Other.MonitoredElement;  // Pointer to target circuit element
+    // SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
+    SetMonitoredElement(Other.MonitoredElement());  // Pointer to target circuit element
 
     ElementTerminal := Other.ElementTerminal;
 end;
@@ -298,9 +298,9 @@ begin
     Nterms := 1;  // this forces allocation of terminals and conductors
                          // in base class
 
-    ControlledElement := NIL;  // not used in this control
+    SetControlledElement(NIL);  // not used in this control
     ElementTerminal := 1;
-    MonitoredElement := NIL;
+    SetMonitoredElement(NIL);
 
     FLocalControlNameList := TSTringList.Create;
     FLocalControlWeights := NIL;
@@ -334,13 +334,13 @@ end;
 procedure TESPVLControlObj.RecalcElementData();
 begin
     // Check for existence of monitored element
-    if MonitoredElement = NIL then
+    if MonitoredElement() = NIL then
     begin
         DoSimpleMsg('Monitored Element in "%s" is not set', [FullName()], 372);
         Exit;
     end;
 
-    if ElementTerminal > MonitoredElement.Nterms then
+    if ElementTerminal > MonitoredElement().Nterms then
     begin
         DoErrorMsg(Format(_('ESPVLControl: "%s"'), [Name]),
             Format(_('Terminal no. "%d" does not exist.'), [ElementTerminal]),
@@ -349,17 +349,17 @@ begin
     else
     begin
         // Sets name of i-th terminal's connected bus in ESPVLControl's buslist
-        Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+        Setbus(1, MonitoredElement().GetBus(ElementTerminal));
     end;
 end;
 
 procedure TESPVLControlObj.MakePosSequence();
 begin
-    if MonitoredElement <> NIL then
+    if MonitoredElement() <> NIL then
     begin
-        FNphases := ControlledElement.NPhases;
+        FNphases := controlledElement.NPhases;
         Nconds := FNphases;
-        Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+        Setbus(1, MonitoredElement().GetBus(ElementTerminal));
     end;
     inherited;
 end;
@@ -383,7 +383,7 @@ begin
 
     if FLocalControlListSize > 0 then
     begin
-        S := MonitoredElement.Power(ElementTerminal);  // Power in active terminal
+        S := MonitoredElement().Power(ElementTerminal);  // Power in active terminal
 
         PDiff := S.re * 0.001 - FkWLimit;
 

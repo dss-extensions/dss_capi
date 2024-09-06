@@ -2045,7 +2045,7 @@ begin
         begin
             FSWriteln(F, Format('%d, %s.%s, %s, %s, %10.4f', [
                 BranchList.Level, PDelem.ParentClass.Name, PDelem.Name(),
-                PDelem.FirstBus, PDelem.NextBus,
+                PDelem.FirstBus(), PDelem.NextBus(),
                 // BusList.NameOfIndex(BranchList.PresentBranch.GetToBusReference()),
                 ActiveCircuit.Buses[BranchList.PresentBranch.GetToBusReference()].DistFromMeter
             ]));
@@ -3233,7 +3233,7 @@ begin
                     dVector[i] := 0.0;
                 if PDElem.NPhases < 3 then
                 begin
-                    ClassName := PDElem.FirstBus;
+                    ClassName := PDElem.FirstBus();
                     j := ansipos('.', ClassName);     // Removes the name of the bus
                     ClassName := ClassName.Substring(j);
                     for i := 1 to 3 do

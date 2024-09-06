@@ -256,7 +256,7 @@ begin
 
     // object references
     PropertyType[ord(TProp.capacitor)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.capacitor)] := ptruint(@obj.FControlledElement);
+    PropertyOffset[ord(TProp.capacitor)] := ptruint(@obj.controlledElement);
     PropertyOffset2[ord(TProp.capacitor)] := ptruint(DSS.CapacitorClass);
     PropertyWriteFunction[ord(TProp.capacitor)] := @SetControlledElement;
     PropertyFlags[ord(TProp.capacitor)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.CheckForVar, TPropertyFlag.Required]; // will automatically substitute @var value
@@ -402,8 +402,8 @@ begin
                     FPTPhase := 1;
                 end;
             ord(TProp.Capacitor):
-                if ControlledElement <> NIL then
-                    ControlVars.CapacitorName := ControlledElement.FullName();
+                if controlledElement <> NIL then
+                    ControlVars.CapacitorName := controlledElement.FullName();
             ord(TProp.VBus):
             begin
                 ControlVars.VOverrideBusName := AnsiLowerCase(ControlVars.VOverrideBusName);
@@ -435,8 +435,8 @@ begin
     NConds := Other.Fnconds; // Force Reallocation of terminal stuff
 
     ControlVars.CapacitorName := Other.ControlVars.CapacitorName;
-    ControlledElement := Other.ControlledElement;  // Pointer to target circuit element
-    MonitoredElement := Other.MonitoredElement;  // Pointer to target circuit element
+    SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
+    SetMonitoredElement(Other.MonitoredElement());  // Pointer to target circuit element
 
     ElementTerminal := Other.ElementTerminal;
     with ControlVars do
@@ -517,10 +517,10 @@ begin
     PublicDataStruct := @ControlVars;   // So User-written models can access
     PublicDataSize := Sizeof(TCapControlVars);
 
-    ControlledElement := NIL;
+    SetControlledElement(NIL);
     ElementTerminal := 1;
     ControlVars.CapacitorName := '';
-    MonitoredElement := NIL;
+    SetMonitoredElement(NIL);
 
     FpctMinkvar := 50.0;
 
@@ -558,17 +558,17 @@ begin
 
     // 5-21-01 RCD moved this section ahead of monitored element so Nphases gets defined first
 
-    if ControlledElement = NIL then
+    if controlledElement = NIL then
         raise Exception.Create(Format(_('"%s": Capacitor is not set, aborting.'), [FullName()]));
 
     // Both capacitor and monitored element must already exist
-    ControlledCapacitor := ControlledElement as TCapacitorObj;
-    FNphases := ControlledElement.NPhases;  // Force number of phases to be same   Added 5/21/01  RCD
+    ControlledCapacitor := controlledElement as TCapacitorObj;
+    FNphases := controlledElement.NPhases;  // Force number of phases to be same   Added 5/21/01  RCD
     Nconds := FNphases;
-    ControlledElement.ActiveTerminalIdx := 1;  // Make the 1 st terminal active
+    controlledElement.ActiveTerminalIdx := 1;  // Make the 1 st terminal active
     // Get control synched up with capacitor
-    ControlledElement.SetConductorClosed(0, ControlVars.AvailableSteps <> ControlledCapacitor.NumSteps());
-    if ControlledElement.ConductorClosed(0)      // Check state of phases of active terminal
+    controlledElement.SetConductorClosed(0, ControlVars.AvailableSteps <> ControlledCapacitor.NumSteps());
+    if controlledElement.ConductorClosed(0)      // Check state of phases of active terminal
     then
         ControlVars.PresentState := CTRL_CLOSE
     else
@@ -578,13 +578,13 @@ begin
 
     if (ControlType <> TIMECONTROL) and (ControlType <> FOLLOWCONTROL) then
     begin
-        if MonitoredElement = NIL then
+        if MonitoredElement() = NIL then
             raise Exception.Create(Format(_('%s: Element is not set, aborting.'), [FullName()]));
-        effElement := MonitoredElement;
+        effElement := MonitoredElement();
     end
     else
     begin
-        effElement := ControlledElement;
+        effElement := controlledElement;
         // force terminal to 1 if no monitored element is provided
         ElementTerminal := 1;
     end;
@@ -627,19 +627,19 @@ var
 begin
     // NOTE: Calling RecalcElementData would achieved what's done here and more
 
-    if ControlledElement <> NIL then
+    if controlledElement <> NIL then
     begin
-        Enabled := ControlledElement.Enabled;
-        FNphases := ControlledElement.NPhases;
+        Enabled := controlledElement.Enabled;
+        FNphases := controlledElement.NPhases;
         Nconds := FNphases;
     end;
-    if MonitoredElement <> NIL then
+    if MonitoredElement() <> NIL then
     begin
-        effElement := MonitoredElement;
+        effElement := MonitoredElement();
     end
     else
     begin
-        effElement := ControlledElement;
+        effElement := controlledElement;
         // force terminal to 1 if no monitored element is provided
         ElementTerminal := 1;
     end;
@@ -701,7 +701,7 @@ end;
 
 procedure TCapControlObj.DoPendingAction(const Code, ProxyHdl: Integer);
 begin
-    ControlledElement.ActiveTerminalIdx := 1;  // Set active terminal of capacitor to terminal 1
+    controlledElement.ActiveTerminalIdx := 1;  // Set active terminal of capacitor to terminal 1
 
     // Allow user control to do something
     case ControlType of
@@ -723,11 +723,11 @@ begin
                     begin
                         if PresentState = CTRL_CLOSE then
                         begin
-                            ControlledElement.SetConductorClosed(0, FALSE);  // Open all phases of active terminal
+                            controlledElement.SetConductorClosed(0, FALSE);  // Open all phases of active terminal
                             ControlledCapacitor.SubtractStep;
 
                             if ShowEventLog then
-                                AppendtoEventLog(ControlledElement.FullName(), '**Opened**');
+                                AppendtoEventLog(controlledElement.FullName(), '**Opened**');
                             PresentState := CTRL_OPEN;
                             LastOpenTime := ActiveCircuit.Solution.DynaVars.t + 3600.0 * ActiveCircuit.Solution.DynaVars.intHour;
                         end;
@@ -738,22 +738,22 @@ begin
                         if not ControlledCapacitor.SubtractStep then
                         begin
                             PresentState := CTRL_OPEN;
-                            ControlledElement.SetConductorClosed(0, FALSE);   // Open all phases of active terminal
+                            controlledElement.SetConductorClosed(0, FALSE);   // Open all phases of active terminal
                             if ShowEventLog then
-                                AppendtoEventLog(ControlledElement.FullName(), '**Opened**');
+                                AppendtoEventLog(controlledElement.FullName(), '**Opened**');
                         end
                         else
                         if ShowEventLog then
-                            AppendtoEventLog(ControlledElement.FullName(), '**Step Down**');
+                            AppendtoEventLog(controlledElement.FullName(), '**Step Down**');
                     end;
                 end;
             CTRL_CLOSE:
             begin
                 if PresentState = CTRL_OPEN then
                 begin
-                    ControlledElement.SetConductorClosed(0, TRUE);    // Close all phases of active terminal
+                    controlledElement.SetConductorClosed(0, TRUE);    // Close all phases of active terminal
                     if ShowEventLog then
-                        AppendtoEventLog(ControlledElement.FullName(), '**Closed**');
+                        AppendtoEventLog(controlledElement.FullName(), '**Closed**');
                     PresentState := CTRL_CLOSE;
                     ControlledCapacitor.AddStep;
                 end
@@ -761,7 +761,7 @@ begin
                 begin
                     if ControlledCapacitor.AddStep then
                         if ShowEventLog then
-                            AppendtoEventLog(ControlledElement.FullName(), '**Step Up**');
+                            AppendtoEventLog(controlledElement.FullName(), '**Step Up**');
                 end;
             end;
         else
@@ -794,28 +794,28 @@ begin
             AVGPHASES:
             begin
                 ControlVoltage := 0.0;
-                for i := 1 to MonitoredElement.NPhases do
+                for i := 1 to MonitoredElement().NPhases do
                     ControlVoltage := ControlVoltage + Cabs(cBuffer[i]);
-                ControlVoltage := ControlVoltage / MonitoredElement.NPhases / PTRatio;
+                ControlVoltage := ControlVoltage / MonitoredElement().NPhases / PTRatio;
             end;
             MAXPHASE:
             begin
                 ControlVoltage := 0.0;
-                for i := 1 to MonitoredElement.NPhases do
+                for i := 1 to MonitoredElement().NPhases do
                     ControlVoltage := Max(ControlVoltage, Cabs(cBuffer[i]));
                 ControlVoltage := ControlVoltage / PTRatio;
             end;
             MINPHASE:
             begin
                 ControlVoltage := 1.0E50;
-                for i := 1 to MonitoredElement.NPhases do
+                for i := 1 to MonitoredElement().NPhases do
                     ControlVoltage := Min(ControlVoltage, Cabs(cBuffer[i]));
                 ControlVoltage := ControlVoltage / PTRatio;
             end;
         else
             // Just use one phase because that's what most controls do.
             // Use L-L aB if capacitor is delta connected!!
-            case TCapacitorObj(ControlledElement).Connection of
+            case TCapacitorObj(controlledElement).Connection of
                 TCapacitorConnection.Delta:
                     ControlVoltage := Cabs(cBuffer[FPTPhase] - cBuffer[NextDeltaPhase(FPTPhase)]) / PTRatio;
             else
@@ -847,8 +847,8 @@ var
     end;
 
 begin
-    ControlledElement.ActiveTerminalIdx := 1;
-    if ControlledElement.ConductorClosed(0)      // Check state of phases of active terminal
+    controlledElement.ActiveTerminalIdx := 1;
+    if controlledElement.ConductorClosed(0)      // Check state of phases of active terminal
     then
         ControlVars.PresentState := CTRL_CLOSE
     else
@@ -868,7 +868,7 @@ begin
                     GetBusVoltages(ActiveCircuit.Buses[VOverrideBusIndex], cBuffer);
                 end
                 else
-                    MonitoredElement.GetTermVoltages(ElementTerminal, cBuffer);
+                    MonitoredElement().GetTermVoltages(ElementTerminal, cBuffer);
 
                 GetControlVoltage(Vtest);
 
@@ -880,7 +880,7 @@ begin
                             ShouldSwitch := TRUE;
                             VoverrideEvent := TRUE;
                             if ShowEventLog then
-                                AppendtoEventLog(ControlledElement.FullName(), Format('Low Voltage Override: %.8g V', [Vtest]));
+                                AppendtoEventLog(controlledElement.FullName(), Format('Low Voltage Override: %.8g V', [Vtest]));
                         end;
                     CTRL_CLOSE:
                         if Vtest > Vmax then
@@ -889,7 +889,7 @@ begin
                             ShouldSwitch := TRUE;
                             VoverrideEvent := TRUE;
                             if ShowEventLog then
-                                AppendtoEventLog(ControlledElement.FullName(), Format('High Voltage Override: %.8g V', [Vtest]));
+                                AppendtoEventLog(controlledElement.FullName(), Format('High Voltage Override: %.8g V', [Vtest]));
                         end;
                 end;
             end;
@@ -899,7 +899,7 @@ begin
                 CURRENTCONTROL:
                 begin
                     // Check largest Current of all phases of monitored element
-                    MonitoredElement.GetCurrents(cBuffer);
+                    MonitoredElement().GetCurrents(cBuffer);
 
                     GetControlCurrent(CurrTest);
 
@@ -935,7 +935,7 @@ begin
 
                 VOLTAGECONTROL:
                 begin
-                    MonitoredElement.GetTermVoltages(ElementTerminal, cBuffer);
+                    MonitoredElement().GetTermVoltages(ElementTerminal, cBuffer);
 
                     GetControlVoltage(Vtest);
 
@@ -971,8 +971,8 @@ begin
 
                 KVARCONTROL:
                 begin
-                    //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
-                    S := MonitoredElement.Power(ElementTerminal);
+                    //----MonitoredElement().ActiveTerminalIdx := ElementTerminal;
+                    S := MonitoredElement().Power(ElementTerminal);
                     Q := S.im * 0.001;  // kvar
 
                     case PresentState of
@@ -1007,12 +1007,12 @@ begin
                     if UserModel.Exists() then   // selects the model associated with this control
                     begin
                         // Load up test data into the public data record
-                        SampleP := MonitoredElement.Power(ElementTerminal) * 0.001;  // kW kvar
+                        SampleP := MonitoredElement().Power(ElementTerminal) * 0.001;  // kW kvar
 
-                        MonitoredElement.GetTermVoltages(ElementTerminal, cBuffer);
+                        MonitoredElement().GetTermVoltages(ElementTerminal, cBuffer);
                         GetControlVoltage(SampleV);
 
-                        MonitoredElement.GetCurrents(cBuffer);
+                        MonitoredElement().GetCurrents(cBuffer);
                         GetControlCurrent(SampleCurr);
 
                         NumCapSteps := ControlledCapacitor.NumSteps();
@@ -1091,8 +1091,8 @@ begin
 
                 PFCONTROL: // PF
                 begin
-                      //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
-                    S := MonitoredElement.Power(ElementTerminal);
+                      //----MonitoredElement().ActiveTerminalIdx := ElementTerminal;
+                    S := MonitoredElement().Power(ElementTerminal);
                     PF := PF1to2(S);
 
                     // PF is in range of 0 .. 2;  Leading is 1..2
@@ -1166,7 +1166,7 @@ begin
             ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange(), 0, Self);
             Armed := TRUE;
             if ShowEventLog then
-                AppendtoEventLog(ControlledElement.FullName(), Format('**Armed**, Delay= %.5g sec', [TimeDelay]));
+                AppendtoEventLog(controlledElement.FullName(), Format('**Armed**, Delay= %.5g sec', [TimeDelay]));
         end;
 
         if Armed and (PendingChange() = CTRL_NONE) then
@@ -1174,7 +1174,7 @@ begin
             ActiveCircuit.ControlQueue.Delete(ControlActionHandle);
             Armed := FALSE;
             if ShowEventLog then
-                AppendtoEventLog(ControlledElement.FullName(), '**Reset**');
+                AppendtoEventLog(controlledElement.FullName(), '**Reset**');
         end;
     end;  // With
 end;
@@ -1187,14 +1187,14 @@ end;
 procedure TCapControlObj.Reset();
 begin
     SetPendingChange(CTRL_NONE);
-    ControlledElement.ActiveTerminalIdx := 1;
+    controlledElement.ActiveTerminalIdx := 1;
     with ControlVars do
     begin
         case InitialState of
             CTRL_OPEN:
-                ControlledElement.SetConductorClosed(0, FALSE);   // Open all phases of active terminal
+                controlledElement.SetConductorClosed(0, FALSE);   // Open all phases of active terminal
             CTRL_CLOSE:
-                ControlledElement.SetConductorClosed(0, TRUE);    // Close all phases of active terminal
+                controlledElement.SetConductorClosed(0, TRUE);    // Close all phases of active terminal
         end;
         ShouldSwitch := FALSE;
         LastOpenTime := -DeadTime;

@@ -145,8 +145,8 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if elem.ControlledElement <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.ControlledElement.FullName()));
+    if elem.controlledElement <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.controlledElement.FullName()));
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_SwitchedTerm(): Integer; CDECL;

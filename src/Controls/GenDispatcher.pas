@@ -201,8 +201,8 @@ begin
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
     NConds := Other.Fnconds; // Force Reallocation of terminal stuff
-    // ControlledElement := Other.ControlledElement;  // Pointer to target circuit element
-    MonitoredElement := Other.MonitoredElement;  // Pointer to target circuit element
+    // SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
+    SetMonitoredElement(Other.MonitoredElement());  // Pointer to target circuit element
     ElementTerminal := Other.ElementTerminal;
 end;
 
@@ -216,9 +216,9 @@ begin
     Nterms := 1;  // this forces allocation of terminals and conductors
                          // in base class
 
-    ControlledElement := NIL;  // not used in this control
+    SetControlledElement(NIL);  // not used in this control
     ElementTerminal := 1;
-    MonitoredElement := NIL;
+    SetMonitoredElement(NIL);
 
     FGeneratorNameList := TSTringList.Create;
     FWeights := NIL;
@@ -241,9 +241,9 @@ end;
 procedure TGenDispatcherObj.RecalcElementData();
 begin
     // Check for existence of monitored element
-    if MonitoredElement <> NIL then
+    if MonitoredElement() <> NIL then
     begin
-        if ElementTerminal > MonitoredElement.Nterms then
+        if ElementTerminal > MonitoredElement().Nterms then
         begin
             DoErrorMsg(Format(_('GenDispatcher: "%s"'), [Name]),
                 Format(_('Terminal no. "%d" does not exist.'), [ElementTerminal]),
@@ -252,7 +252,7 @@ begin
         else
         begin
                // Sets name of i-th terminal's connected bus in GenDispatcher's buslist
-            Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+            Setbus(1, MonitoredElement().GetBus(ElementTerminal));
         end;
     end
     else
@@ -261,11 +261,11 @@ end;
 
 procedure TGenDispatcherObj.MakePosSequence();
 begin
-    if MonitoredElement <> NIL then
+    if MonitoredElement() <> NIL then
     begin
-        FNphases := ControlledElement.NPhases;
+        FNphases := controlledElement.NPhases;
         Nconds := FNphases;
-        Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+        Setbus(1, MonitoredElement().GetBus(ElementTerminal));
     end;
     inherited;
 end;
@@ -292,8 +292,8 @@ begin
 
     if FListSize > 0 then
     begin
-       //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
-        S := MonitoredElement.Power(ElementTerminal);  // Power in active terminal
+       //----MonitoredElement().ActiveTerminalIdx := ElementTerminal;
+        S := MonitoredElement().Power(ElementTerminal);  // Power in active terminal
 
         PDiff := S.re * 0.001 - FkWLimit;
 

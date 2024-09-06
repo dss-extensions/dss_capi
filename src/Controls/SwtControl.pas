@@ -124,14 +124,14 @@ end;
 
 function GetState(Obj: TObj): Integer;
 begin
-    if Obj.ControlledElement = NIL then
+    if Obj.controlledElement = NIL then
     begin
         // If no element is attached, return CTRL_NONE to indicate we cannot tell the state            
         Result := ord(CTRL_NONE);
         Exit;
     end;
-    Obj.ControlledElement.ActiveTerminalIdx := Obj.ElementTerminal;
-    if Obj.ControlledElement.ConductorClosed(0) then
+    Obj.controlledElement.ActiveTerminalIdx := Obj.ElementTerminal;
+    if Obj.controlledElement.ConductorClosed(0) then
         Result := ord(CTRL_CLOSE)
     else
         Result := ord(CTRL_OPEN);
@@ -172,7 +172,7 @@ begin
 
     // object references
     PropertyType[ord(TProp.SwitchedObj)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.SwitchedObj)] := ptruint(@obj.FControlledElement);
+    PropertyOffset[ord(TProp.SwitchedObj)] := ptruint(@obj.controlledElement);
     PropertyOffset2[ord(TProp.SwitchedObj)] := 0;
     PropertyWriteFunction[ord(TProp.SwitchedObj)] := @SetControlledElement;
     PropertyFlags[ord(TProp.SwitchedObj)] := [TPropertyFlag.WriteByFunction]; //[TPropertyFlag.CheckForVar]; // not required for general cktelements
@@ -223,14 +223,14 @@ begin
             PresentState := CurrentAction;
             if NormalState = CTRL_NONE then
                 NormalState := PresentState;
-            if ControlledElement <> NIL then
+            if controlledElement <> NIL then
             begin
-                ControlledElement.ActiveTerminalIdx := ElementTerminal;
+                controlledElement.ActiveTerminalIdx := ElementTerminal;
                 case PresentState of     // Force state
                     CTRL_OPEN:
-                        ControlledElement.SetConductorClosed(0, FALSE);
+                        controlledElement.SetConductorClosed(0, FALSE);
                     CTRL_CLOSE:
-                        ControlledElement.SetConductorClosed(0, TRUE);
+                        controlledElement.SetConductorClosed(0, TRUE);
                 end;
             end;
         end;
@@ -248,7 +248,7 @@ begin
     NConds := Other.Fnconds; // Force Reallocation of terminal stuff
 
     ElementTerminal := Other.ElementTerminal;
-    ControlledElement := Other.ControlledElement;  // Pointer to target circuit element
+    SetControlledElement(Other.ControlledElement);  // Pointer to target circuit element
 
     TimeDelay := Other.TimeDelay;
     Locked := Other.Locked;
@@ -266,7 +266,7 @@ begin
     Fnconds := 3;
     Nterms := 1;  // this forces allocation of terminals and conductors in base class
 
-    ControlledElement := NIL;
+    SetControlledElement(NIL);
     ElementTerminal := 1;
     PresentState := CTRL_CLOSE;  // default to closed
     NormalState := CTRL_NONE;   // default to unspecified; set on first setting action or anything
@@ -284,7 +284,7 @@ end;
 
 procedure TSwtControlObj.RecalcElementData();
 begin
-    if ControlledElement = NIL then   // element not found
+    if controlledElement = NIL then   // element not found
     begin
         DoErrorMsg(
             Format(_('SwtControl: "%s"'), [Self.Name]), 
@@ -293,22 +293,22 @@ begin
         Exit;
     end;
 
-    FNphases := ControlledElement.NPhases;
+    FNphases := controlledElement.NPhases;
     Nconds := FNphases;
-    ControlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.ActiveTerminalIdx := ElementTerminal;
 
-    // Include(ControlledElement.Flags, Flg.HasSwtControl);  // For Reliability calcs
+    // Include(controlledElement.Flags, Flg.HasSwtControl);  // For Reliability calcs
     // attach controller bus to the switch bus - no space allocated for monitored variables
-    Setbus(1, ControlledElement.GetBus(ElementTerminal));
+    Setbus(1, controlledElement.GetBus(ElementTerminal));
 end;
 
 procedure TSwtControlObj.MakePosSequence();
 begin
-    if ControlledElement <> NIL then
+    if controlledElement <> NIL then
     begin
-        FNphases := ControlledElement.NPhases;
+        FNphases := controlledElement.NPhases;
         Nconds := FNphases;
-        Setbus(1, ControlledElement.GetBus(ElementTerminal));
+        Setbus(1, controlledElement.GetBus(ElementTerminal));
     end;
     inherited;
 end;
@@ -318,7 +318,7 @@ var
     ctrl_code: EControlAction;
 begin
     ctrl_code := EControlAction(Code);  // change type
-    ControlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.ActiveTerminalIdx := ElementTerminal;
     case Ctrl_Code of
         CTRL_LOCK:
             Locked := TRUE;
@@ -329,13 +329,13 @@ begin
         begin
             if (Code = Integer(CTRL_OPEN)) and (PresentState = CTRL_CLOSE) then
             begin
-                ControlledElement.SetConductorClosed(0, FALSE); // Open all phases of active terminal
+                controlledElement.SetConductorClosed(0, FALSE); // Open all phases of active terminal
                 PresentState := CTRL_OPEN;
                 AppendtoEventLog(Self.FullName(), 'Opened');
             end;
             if (Code = Integer(CTRL_CLOSE)) and (PresentState = CTRL_OPEN) then
             begin
-                ControlledElement.SetConductorClosed(0, TRUE);    // Close all phases of active terminal
+                controlledElement.SetConductorClosed(0, TRUE);    // Close all phases of active terminal
                 PresentState := CTRL_CLOSE;
                 AppendtoEventLog(Self.FullName(), 'Closed');
             end;
@@ -367,15 +367,15 @@ begin
         PresentState := NormalState;
         CurrentAction := PresentState;
         Armed := FALSE;
-        if ControlledElement <> NIL then
+        if controlledElement <> NIL then
         begin
-            ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal
+            controlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal
             case NormalState of
                 CTRL_OPEN:
-                    ControlledElement.SetConductorClosed(0, FALSE);
+                    controlledElement.SetConductorClosed(0, FALSE);
             else
             //CTRL_CLOSE:
-                ControlledElement.SetConductorClosed(0, TRUE);  // Close all phases of active terminal
+                controlledElement.SetConductorClosed(0, TRUE);  // Close all phases of active terminal
             end;
         end;
     end;

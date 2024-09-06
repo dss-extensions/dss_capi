@@ -1212,9 +1212,9 @@ begin
         with Winding[i] do
         begin
             if i = 1 then
-                FSWriteln(F, Format('~ Wdg=%d bus=%s', [i, firstbus]))
+                FSWriteln(F, Format('~ Wdg=%d bus=%s', [i, FirstBus()]))
             else
-                FSWriteln(F, Format('~ Wdg=%d bus=%s', [i, nextbus]));
+                FSWriteln(F, Format('~ Wdg=%d bus=%s', [i, NextBus()]));
             case Connection of
                 0:
                     FSWriteln(F, '~ conn=wye');

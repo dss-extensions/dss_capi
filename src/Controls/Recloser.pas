@@ -223,7 +223,7 @@ begin
     //[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     PropertyType[ord(TProp.SwitchedObj)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.SwitchedObj)] := ptruint(@obj.FControlledElement);
+    PropertyOffset[ord(TProp.SwitchedObj)] := ptruint(@obj.controlledElement);
     PropertyOffset2[ord(TProp.SwitchedObj)] := 0;
     PropertyWriteFunction[ord(TProp.SwitchedObj)] := @SetControlledElement;
     PropertyFlags[ord(TProp.SwitchedObj)] := [TPropertyFlag.WriteByFunction]; 
@@ -279,7 +279,7 @@ begin
     case Idx of
         ord(TProp.MonitoredObj):
             // Default the controlled element to the monitored element
-            ControlledElement := MonitoredElement; //TODO: This can cause unexpected behavior
+            SetControlledElement(MonitoredElement()); //TODO: This can cause unexpected behavior
         ord(TProp.MonitoredTerm):
             ElementTerminal := MonitoredElementTerminal; //TODO: This can cause unexpected behavior
         ord(TProp.Normal):
@@ -305,9 +305,9 @@ begin
     NConds := Other.Fnconds; // Force Reallocation of terminal stuff
 
     ElementTerminal := Other.ElementTerminal;
-    ControlledElement := Other.ControlledElement;  // Pointer to target circuit element
+    SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
 
-    MonitoredElement := Other.MonitoredElement;  // Pointer to target circuit element
+    SetMonitoredElement(Other.MonitoredElement());  // Pointer to target circuit element
     MonitoredElementTerminal := Other.MonitoredElementTerminal;  // Pointer to target circuit element
 
     PhaseDelayed := Other.PhaseDelayed;
@@ -342,11 +342,11 @@ begin
     Fnconds := 3;
     Nterms := 1;  // this forces allocation of terminals and conductors in base class
 
-    ControlledElement := NIL;
+    SetControlledElement(NIL);
     ElementTerminal := 1;
 
     MonitoredElementTerminal := 1;
-    MonitoredElement := NIL;
+    SetMonitoredElement(NIL);
 
     PhaseFast := TRecloser(ParClass).TCC_CurveClass.Find('a'); //TODO: is an error message ever required for this?
     PhaseDelayed := TRecloser(ParClass).TCC_CurveClass.Find('d'); //TODO: is an error message ever required for this?
@@ -402,10 +402,10 @@ procedure TRecloserObj.RecalcElementData();
 begin
     //TODO: still need to warn/error if elements are NIL?
 
-    if MonitoredElement <> NIL then
+    if MonitoredElement() <> NIL then
     begin
-        FNphases := MonitoredElement.NPhases;       // Force number of phases to be same
-        if MonitoredElementTerminal > MonitoredElement.Nterms then
+        FNphases := MonitoredElement().NPhases;       // Force number of phases to be same
+        if MonitoredElementTerminal > MonitoredElement().Nterms then
         begin
             DoErrorMsg(Format(_('Recloser: "%s"'), [Name]),
                 Format(_('Terminal no. "%d" does not exist.'), [MonitoredElementTerminal]),
@@ -413,41 +413,41 @@ begin
             Exit;
         end;
         // Sets name of i-th terminal's connected bus in Recloser's buslist
-        Setbus(1, MonitoredElement.GetBus(MonitoredElementTerminal));
+        Setbus(1, MonitoredElement().GetBus(MonitoredElementTerminal));
         // Allocate a buffer bigenough to hold everything from the monitored element
-        ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement.Yorder);
-        CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
+        ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement().Yorder);
+        CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement().NConds; // for speedy sampling
     end;
 
     // Check for existence of Controlled Element
 
     // If previously assigned, reset HasOCPDevice flag in case this is a move
-    if ControlledElement <> NIL then
+    if controlledElement <> NIL then
     begin
-        Exclude(ControlledElement.Flags, Flg.HasOCPDevice);
-        Exclude(ControlledElement.Flags, Flg.HasAutoOCPDevice);
+        Exclude(controlledElement.Flags, Flg.HasOCPDevice);
+        Exclude(controlledElement.Flags, Flg.HasAutoOCPDevice);
     
         // Both CktElement and monitored element must already exist
-        ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Make the 1 st terminal active
+        controlledElement.ActiveTerminalIdx := ElementTerminal;  // Make the 1 st terminal active
 
         // If the recloser becomes disabled, leave at False
         if Enabled then
         begin 
-            Include(ControlledElement.Flags, Flg.HasOCPDevice); // For Reliability calcs
-            Include(ControlledElement.Flags, Flg.HasAutoOCPDevice); // For Reliability calcs
+            Include(controlledElement.Flags, Flg.HasOCPDevice); // For Reliability calcs
+            Include(controlledElement.Flags, Flg.HasAutoOCPDevice); // For Reliability calcs
         end;
 
         // Open/Close State of controlled element based on state assigned to the control
         if FPresentState = CTRL_CLOSE then
         begin
-            ControlledElement.SetConductorClosed(0, TRUE);
+            controlledElement.SetConductorClosed(0, TRUE);
             LockedOut := FALSE;
             OperationCount := 1;
             ArmedForOpen := FALSE;
         end
         else
         begin
-            ControlledElement.SetConductorClosed(0, FALSE);
+            controlledElement.SetConductorClosed(0, FALSE);
             LockedOut := TRUE;
             OperationCount := NumReclose + 1;
             ArmedForClose := FALSE;
@@ -457,28 +457,28 @@ end;
 
 procedure TRecloserObj.MakePosSequence();
 begin
-    if MonitoredElement <> NIL then
+    if MonitoredElement() <> NIL then
     begin
-        FNphases := MonitoredElement.NPhases;
+        FNphases := MonitoredElement().NPhases;
         Nconds := FNphases;
-        Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+        Setbus(1, MonitoredElement().GetBus(ElementTerminal));
         // Allocate a buffer bigenough to hold everything from the monitored element
-        ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement.Yorder);
-        CondOffset := (ElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
+        ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement().Yorder);
+        CondOffset := (ElementTerminal - 1) * MonitoredElement().NConds; // for speedy sampling
     end;
     inherited;
 end;
 
 procedure TRecloserObj.DoPendingAction(const Code, ProxyHdl: Integer);
 begin
-    ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal of CktElement to terminal 1
+    controlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal of CktElement to terminal 1
     case Code of
         Integer(CTRL_OPEN):
             case FPresentState of
                 CTRL_CLOSE:
                     if ArmedForOpen then
                     begin   // ignore if we became disarmed in meantime
-                        ControlledElement.SetConductorClosed(0, FALSE);   // Open all phases of active terminal
+                        controlledElement.SetConductorClosed(0, FALSE);   // Open all phases of active terminal
                         if OperationCount > NumReclose then
                         begin
                             LockedOut := TRUE;
@@ -504,7 +504,7 @@ begin
                 CTRL_OPEN:
                     if ArmedForClose and not LockedOut then
                     begin
-                        ControlledElement.SetConductorClosed(0, TRUE); // Close all phases of active terminal
+                        controlledElement.SetConductorClosed(0, TRUE); // Close all phases of active terminal
                         Inc(OperationCount);
                         AppendtoEventLog(Self.FullName(), 'Closed');
                         ArmedForClose := FALSE;
@@ -533,15 +533,15 @@ var
     Groundtime, PhaseTime, TripTime, TimeTest: Double;
     TDPhase, TDGround: Double;
 begin
-    ControlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.ActiveTerminalIdx := ElementTerminal;
 
-    if ControlledElement.ConductorClosed(0) // Check state of phases of active terminal
+    if controlledElement.ConductorClosed(0) // Check state of phases of active terminal
     then
         FPresentState := CTRL_CLOSE
     else
         FPresentState := CTRL_OPEN;
 
-    if MonitoredElement = NIL then
+    if MonitoredElement() = NIL then
     begin
         DoSimpleMsg('Required property MonitoredObj is not defined for "%s".', [FullName()], 9894);
         DSS.SetSolutionAbort(true);
@@ -570,7 +570,7 @@ begin
         PhaseTime := -1.0;  // No trip
 
         // Check largest Current of all phases of monitored element
-        MonitoredElement.GetCurrents(cBuffer);
+        MonitoredElement().GetCurrents(cBuffer);
 
         // Check Ground Trip, if any
         if GroundCurve <> NIL then
@@ -667,20 +667,20 @@ begin
     GroundTarget := FALSE;
     PhaseTarget := FALSE;
 
-    if ControlledElement = NIL then
+    if controlledElement = NIL then
         Exit;
 
-    ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal
+    controlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal
 
     if NormalState = CTRL_OPEN then
     begin
-        ControlledElement.SetConductorClosed(0, FALSE); // Open all phases of active terminal
+        controlledElement.SetConductorClosed(0, FALSE); // Open all phases of active terminal
         LockedOut := TRUE;
         OperationCount := NumReclose + 1;
     end
     else
     begin
-        ControlledElement.SetConductorClosed(0, TRUE); // Close all phases of active terminal
+        controlledElement.SetConductorClosed(0, TRUE); // Close all phases of active terminal
         LockedOut := FALSE;
         Operationcount := 1;
     end;
@@ -688,10 +688,10 @@ end;
 
 function TRecloserObj.PresentState(): EControlAction; //TODO: why PropertyValue doesn't use this one?
 begin
-    if ControlledElement <> NIL then
+    if controlledElement <> NIL then
     begin
-        ControlledElement.ActiveTerminalIdx := ElementTerminal;
-        if ControlledElement.ConductorClosed(0) then
+        controlledElement.ActiveTerminalIdx := ElementTerminal;
+        if controlledElement.ConductorClosed(0) then
             FPresentState := CTRL_CLOSE
         else
             FPresentState := CTRL_OPEN;
@@ -707,13 +707,13 @@ Begin
 
     FPresentState := Value;
 
-    if ControlledElement = NIL then
+    if controlledElement = NIL then
         Exit;
 
-    ControlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.ActiveTerminalIdx := ElementTerminal;
     if Value = CTRL_OPEN then
     begin
-        ControlledElement.SetConductorClosed(0, FALSE);
+        controlledElement.SetConductorClosed(0, FALSE);
         LockedOut := TRUE;
         OperationCount := NumReclose + 1;
         ArmedForClose := FALSE;
@@ -721,7 +721,7 @@ Begin
     else 
     // if Value = CTRL_CLOSE then
     begin
-        ControlledElement.SetConductorClosed(0, TRUE);
+        controlledElement.SetConductorClosed(0, TRUE);
         LockedOut := FALSE;
         OperationCount := 1;
         ArmedForOpen := FALSE;
