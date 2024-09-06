@@ -200,7 +200,7 @@ begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
-    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    SetNConds(Other.FNConds); // Force Reallocation of terminal stuff
     // SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
     SetMonitoredElement(Other.MonitoredElement());  // Pointer to target circuit element
     ElementTerminal := Other.ElementTerminal;
@@ -212,8 +212,8 @@ begin
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors
+    FNConds := 3;
+    SetNTerms(1);  // this forces allocation of terminals and conductors
                          // in base class
 
     SetControlledElement(NIL);  // not used in this control
@@ -243,7 +243,7 @@ begin
     // Check for existence of monitored element
     if MonitoredElement() <> NIL then
     begin
-        if ElementTerminal > MonitoredElement().Nterms then
+        if ElementTerminal > MonitoredElement().NTerms() then
         begin
             DoErrorMsg(Format(_('GenDispatcher: "%s"'), [Name]),
                 Format(_('Terminal no. "%d" does not exist.'), [ElementTerminal]),
@@ -264,7 +264,7 @@ begin
     if MonitoredElement() <> NIL then
     begin
         FNphases := controlledElement.NPhases;
-        Nconds := FNphases;
+        SetNConds(FNphases);
         Setbus(1, MonitoredElement().GetBus(ElementTerminal));
     end;
     inherited;
@@ -292,7 +292,7 @@ begin
 
     if FListSize > 0 then
     begin
-       //----MonitoredElement().ActiveTerminalIdx := ElementTerminal;
+       //----MonitoredElement().SetActiveTerminalIdx(ElementTerminal);
         S := MonitoredElement().Power(ElementTerminal);  // Power in active terminal
 
         PDiff := S.re * 0.001 - FkWLimit;
@@ -361,7 +361,7 @@ begin
         for i := 1 to FListSize do
         begin
             Gen := GenClass.Find(FGeneratorNameList.Strings[i - 1]);
-            if Assigned(Gen) and Gen.Enabled then
+            if Assigned(Gen) and Gen.Enabled() then
                 FGenPointerList.Add(Gen);
         end;
     end
@@ -371,7 +371,7 @@ begin
         for i := 1 to GenClass.ElementCount() do
         begin
             Gen := GenClass.ElementList.Get(i);
-            if Gen.Enabled then
+            if Gen.Enabled() then
                 FGenPointerList.Add(Gen);
         end;
         // Allocate uniform weights

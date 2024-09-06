@@ -239,7 +239,7 @@ begin
         TSpecSet.Create(ord(TProp.x), ord(TProp.h))
     );
 
-    PropertyStructArrayCountOffset := ptruint(@obj.FNconds);
+    PropertyStructArrayCountOffset := ptruint(@obj.FNConds);
     PropertyStructArrayIndexOffset := ptruint(@obj.FActiveCond);
     PropertyStructArrayIndexOffset2 := ptruint(@obj.FNPhases);
 
@@ -296,7 +296,7 @@ begin
     PropertyType[ord(TProp.nconds)] := TPropertyType.IntegerProperty;
     PropertyType[ord(TProp.cond)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.nphases)] := ptruint(@obj.FNphases);
-    PropertyOffset[ord(TProp.nconds)] := ptruint(@obj.FNconds);
+    PropertyOffset[ord(TProp.nconds)] := ptruint(@obj.FNConds);
     PropertyOffset[ord(TProp.cond)] := ptruint(@obj.FActiveCond);
     PropertyFlags[ord(TProp.nphases)] := [TPropertyFlag.NonNegative]; // phases can be zero (e.g. only neutral cables)
     PropertyFlags[ord(TProp.nconds)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
@@ -364,7 +364,7 @@ begin
             if lineConstants <> NIL then
             begin
                 lineConstants.Nphases := FNPhases;
-                if (lineConstants.Nphases > FNconds) then
+                if (lineConstants.Nphases > FNConds) then
                     lineConstants.Nphases := FNConds;
             end;
         ord(TProp.cond):
@@ -387,26 +387,26 @@ begin
                     FreeAndNil(lineConstants);
 
                 // Allocations
-                Reallocmem(conductorData, Sizeof(conductorData[1]) * FNconds);
-                for i := max(1, previousIntVal) to FNconds do
+                Reallocmem(conductorData, Sizeof(conductorData[1]) * FNConds);
+                for i := max(1, previousIntVal) to FNConds do
                     conductorData[i] := NIL;
 
-                Reallocmem(xCoord, Sizeof(xCoord[1]) * FNconds);
-                Reallocmem(yCoord, Sizeof(yCoord[1]) * FNconds);
-                Reallocmem(units, Sizeof(units[1]) * FNconds);
-                Reallocmem(phaseChoice, Sizeof(phaseChoice[1]) * FNconds);
+                Reallocmem(xCoord, Sizeof(xCoord[1]) * FNConds);
+                Reallocmem(yCoord, Sizeof(yCoord[1]) * FNConds);
+                Reallocmem(units, Sizeof(units[1]) * FNConds);
+                Reallocmem(phaseChoice, Sizeof(phaseChoice[1]) * FNConds);
             end
             else
             begin
-                for i := 1 to FNconds do
+                for i := 1 to FNConds do
                     conductorData[i] := NIL;
             end;
                 
-            if FNconds > previousIntVal then
-                for i := Max(1, previousIntVal) to FNconds do
+            if FNConds > previousIntVal then
+                for i := Max(1, previousIntVal) to FNConds do
                     phaseChoice[i] := Unknown;
 
-            for i := 1 to FNconds do
+            for i := 1 to FNConds do
             begin
                 FActiveCond := i;
                 ChangeLineConstantsType(Overhead); // works on activecond
@@ -415,15 +415,15 @@ begin
             FActiveCond := 1;
 
             // Initialize Allocations
-            for i := 1 to FNconds do
+            for i := 1 to FNConds do
                 phaseChoice[i] := Overhead;
-            for i := 1 to FNconds do
+            for i := 1 to FNConds do
                 conductorData[i] := NIL;
-            for i := 1 to FNconds do
+            for i := 1 to FNConds do
                 xCoord[i] := 0.0;
-            for i := 1 to FNconds do
+            for i := 1 to FNConds do
                 yCoord[i] := 0.0;
-            for i := 1 to FNconds do
+            for i := 1 to FNConds do
                 units[i] := -1;  // default to ft
             FLastUnit := UNITS_FT;
         end;
@@ -608,7 +608,7 @@ begin
     // Nconds      := 3;  // Allocates terminals
     // FNphases    := 3;
 
-    FNconds := 0;
+    FNConds := 0;
     FNPhases := 0;
     // SetActiveCond(1);
     FActiveCond := 1;
@@ -710,7 +710,7 @@ begin
             ord(TProp.cond), ord(TProp.spacing), ord(TProp.wires):
                 if not wroteConds then
                 begin   // if cond=, spacing, or wires were ever used write out arrays ...
-                    for i := 1 to Fnconds do
+                    for i := 1 to FNConds do
                     begin
                         if conductorData[i] = NIL then
                             continue; // shouldn't happen in normal conditions
@@ -741,7 +741,7 @@ end;
 procedure TLineGeometryObj.SetActiveCond(const Value: Integer);
 begin
     if Value > 0 then
-        if Value <= FNconds then
+        if Value <= FNConds then
         begin
             FActiveCond := Value;
             if units[FactiveCond] = -1 then
@@ -792,8 +792,8 @@ procedure TLineGeometryObj.SetNConds(const Value: Integer);
 var
     prev: Integer;
 begin
-    prev := Fnconds;
-    Fnconds := Value;
+    prev := FNConds;
+    FNConds := Value;
     PropertySideEffects(ord(TProp.nconds), prev, [])
 end;
 
@@ -819,7 +819,7 @@ var
     cnconsts: TCNLineConstants;
     tsconsts: TTSLineConstants;
 begin
-    for i := 1 to FNconds do
+    for i := 1 to FNConds do
     begin
         if conductorData[i] = NIL then
             raise Exception.Create(Format(_('%s: WireData is not correctly initialized. Check the object definition.'), [FullName()]));

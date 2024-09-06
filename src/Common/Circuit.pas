@@ -1333,7 +1333,7 @@ begin
         begin
             myIdx := DSS.ActiveDSSClass.First();
             repeat
-                FActiveCktElement.Enabled := FALSE;
+                FActiveCktElement.SetEnabled(FALSE);
                 myIdx := DSS.ActiveDSSClass.Next();
             until (myIdx <= 0);
         end;
@@ -1380,11 +1380,11 @@ begin
     // Disables Monitors and EnergyMeters if any
     for EMeter in EnergyMeters do
     begin
-        EMeter.Enabled := FALSE;
+        EMeter.SetEnabled(FALSE);
     end;
     for pMonitor in Monitors do
     begin
-        pMonitor.Enabled := FALSE;
+        pMonitor.SetEnabled(FALSE);
     end;
 
     // Add monitors and Energy Meters at link branches
@@ -1422,7 +1422,7 @@ begin
     setlength(myLoadShapes, 1);
     for EMeter in EnergyMeters do
     begin
-        if EMeter.Enabled then
+        if EMeter.Enabled() then
         begin
             // First, get the total load at nominal value for the zone
             EMeter.GetPCEatZone;
@@ -1520,7 +1520,7 @@ begin
     for lsobj in DSS.LoadshapeClass do
     begin
         DSS.ActiveDSSObject := DSS.LoadshapeClass.ElementList.Active;
-        lsobj.Enabled := FALSE;
+        lsobj.SetEnabled(FALSE);
     end;
 
     // Declare the new loadshapes in the model
@@ -1540,7 +1540,7 @@ begin
     k := 0;
     for EMeter in EnergyMeters.Count do
     begin
-        if EMeter.Enabled then
+        if EMeter.Enabled() then
         begin
             EMeter.GetPCEatZone;
             if length(EMeter.ZonePCE) > 1 then
@@ -1567,10 +1567,10 @@ begin
                 end;
                 inc(k);
             end;
-            EMeter.Enabled := FALSE;
+            EMeter.SetEnabled(FALSE);
         end
         else
-            EMeter.Enabled := TRUE;
+            EMeter.SetEnabled(TRUE);
     end;
 
     // saves the new model
@@ -1605,7 +1605,7 @@ begin
         // ***********The directory is ready for storing the new circuit****************
         for EMeter in EnergyMeters do
         begin
-            EMeter.Enabled := FALSE;
+            EMeter.SetEnabled(FALSE);
         end;
         // ************ Creates the meters at the tearing locations  ********************
         Result := 1; // Resets the result variable (Return)
@@ -1912,10 +1912,10 @@ var
     NodesOK: Boolean;
 begin
     np := element.NPhases;
-    Ncond := element.NConds;
+    Ncond := element.NConds();
 
     CurrentBus := element.FirstBus();     // use parser functions to decode
-    for iTerm := 1 to element.Nterms do
+    for iTerm := 1 to element.NTerms() do
     begin
         NodesOK := TRUE;
         // Assume normal phase rotation  for default
@@ -1953,7 +1953,7 @@ begin
         // with global node reference number.
         if NodesOK then
         begin
-            element.ActiveTerminalIdx := iTerm;
+            element.SetActiveTerminalIdx(iTerm);
             element.ActiveTerminal.BusRef := AddBus(BusName, Ncond);
             element.SetNodeRef(iTerm, NodeBuffer);  // for active circuit
         end;
@@ -1971,7 +1971,7 @@ begin
     begin  // Error in busname
         DoErrorMsg(DSS, 'TDSSCircuit.AddBus', 'BusName for Object "' + FActiveCktElement.Name() + '" is null.',
             'Error in definition of object.', 424);
-        for i := 1 to FActiveCktElement.NConds do
+        for i := 1 to FActiveCktElement.NConds() do
             NodeBuffer[i] := 0;
         Result := 0;
         Exit;
@@ -2209,7 +2209,7 @@ begin
     // Now redo all enabled circuit elements
     for element in CktElements do
     begin
-        if element.Enabled then
+        if element.Enabled() then
             ProcessBusDefs(element);
         if AbortBusProcess then
             Exit;
@@ -2291,7 +2291,7 @@ begin
 
     for pdelem in PDElements do
     begin
-        if pdelem.enabled then
+        if pdelem.Enabled() then
         begin
             // Ignore Shunt Elements
             if not pdElem.IsShunt then
@@ -2322,7 +2322,7 @@ begin
     begin
         FSWrite(F, '  ', Pad(DeviceList.NameOfIndex(i), 12));
         SetActiveCktElement(CktElements.Get(i));
-        if not FActiveCktElement.Enabled then
+        if not FActiveCktElement.Enabled() then
             FSWrite(F, '  DISABLED');
         FSWriteln(F);
     end;
@@ -2342,8 +2342,8 @@ var
 begin
     for p in PCElements do
     begin
-        // if pcelem.Enabled then -- TODO: check -- the version in Utilities.pas had this `if`
-        p.YprimInvalid := TRUE;
+        // if pcelem.Enabled() then -- TODO: check -- the version in Utilities.pas had this `if`
+        p.SetYprimInvalid(true);
     end;
 
     Solution.SystemYChanged := TRUE;  // Force rebuild of matrix on next solution
@@ -2719,7 +2719,7 @@ begin
     begin
         // Skip Cktelements that have been checked before and written out by
         // something else
-        if (not includeDisabled) and (not obj.Enabled) then
+        if (not includeDisabled) and (not obj.Enabled()) then
             continue;
         if (Flg.HasBeenSaved in obj.Flags) then
             continue;
@@ -2850,7 +2850,7 @@ begin
     begin
         Meter := EnergyMeters.Get(i); // Recast pointer
         CurrDir := SaveDir + Meter.Name();
-        if not Meter.Enabled then // Only active meters
+        if not Meter.Enabled() then // Only active meters
             continue;
 
         if DirectoryExists(CurrDir) then
@@ -2893,7 +2893,7 @@ begin
     // First, check if there is actually any open terminals
     for elem in CktElements do
     begin
-        if not elem.Enabled then
+        if not elem.Enabled() then
             continue;
         if not elem.AllConductorsClosed() then
         begin
@@ -2921,10 +2921,10 @@ begin
                 continue;
 
             name := CheckForBlanks(elem.FullName());
-            for termIdx := 0 to elem.NTerms - 1 do
+            for termIdx := 0 to elem.NTerms() - 1 do
             begin
                 numCondOpen := 0;
-                for i := 0 to elem.NConds - 1 do 
+                for i := 0 to elem.NConds() - 1 do 
                 begin
                     if not elem.Terminals[termIdx].ConductorsClosed[i] then
                         numCondOpen += 1;
@@ -2932,7 +2932,7 @@ begin
                 if numCondOpen = 0 then
                     continue;
 
-                if numCondOpen = elem.NConds then
+                if numCondOpen = elem.NConds() then
                 begin   
                     // Open all conductors in the terminal, easy path
                     FSWriteLn(F, Format('Open %s %d', [name, termIdx + 1]));
@@ -2940,7 +2940,7 @@ begin
                 end;
 
                 // Open specific conductors
-                for i := 0 to elem.NConds - 1 do 
+                for i := 0 to elem.NConds() - 1 do 
                 begin
                     if elem.Terminals[termIdx].ConductorsClosed[i] then
                         continue;
@@ -3065,7 +3065,7 @@ begin
         for elem in CktElements do
         begin
             Exclude(elem.Flags, Flg.Checked);
-            for i := 1 to elem.Nterms do
+            for i := 1 to elem.NTerms() do
                 elem.TerminalsChecked[i - 1] := FALSE;
             Include(elem.Flags, Flg.IsIsolated); // till proven otherwise
         end;

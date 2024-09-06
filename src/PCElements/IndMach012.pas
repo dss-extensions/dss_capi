@@ -359,13 +359,13 @@ procedure SetNcondsForConnection(Obj: TObj);
 begin
     case obj.Connection of
         TGeneralConnection.Wye:
-            obj.NConds := obj.Fnphases;  // Neutral is not connected for induction machine
+            obj.SetNConds(obj.Fnphases);  // Neutral is not connected for induction machine
         TGeneralConnection.Delta:
             case obj.Fnphases of
                 1, 2:
-                    obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
+                    obj.SetNConds(obj.Fnphases + 1); // L-L and Open-delta
             else
-                obj.NConds := obj.Fnphases;    // no neutral for this connection
+                obj.SetNConds(obj.Fnphases);    // no neutral for this connection
             end;
     end;
 end;
@@ -404,7 +404,7 @@ var
 begin
     obj := TObj(ptr);
     obj.RecalcElementData();
-    obj.YPrimInvalid := TRUE;
+    obj.SetYprimInvalid(true);
     Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
@@ -419,10 +419,10 @@ begin
     if (Fnphases <> Other.Fnphases) then
     begin
         FNphases := Other.Fnphases;
-        NConds := Fnphases;  // Forces reallocation of terminal stuff
+        SetNConds(Fnphases);  // Forces reallocation of terminal stuff
 
-        Yorder := Fnconds * Fnterms;
-        YPrimInvalid := TRUE;
+        Yorder := FNConds * Fnterms;
+        SetYprimInvalid(true);
     end;
 
     MachineData := Other.MachineData; // record, copy everything at once
@@ -445,9 +445,9 @@ begin
     TraceFile := nil;
     
     FNphases := 3;
-    Fnconds := 3;
+    FNConds := 3;
     Yorder := 0;
-    Nterms := 1;
+    SetNTerms(1);
     kWBase := 1000.0;
 
     YearlyShapeObj := NIL;  // if YearlyShapeobj = nil then the load alway stays nominal * global multipliers
@@ -456,7 +456,7 @@ begin
 
     Debugtrace := FALSE;
 
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
     ShapeIsActual := FALSE;
     IndMach012SwitchOpen := FALSE;
 
@@ -478,7 +478,7 @@ begin
            // newly added
         Conn := Ord(connection);
         NumPhases := Fnphases;
-        NumConductors := Fnconds;
+        NumConductors := FNConds;
     end;
 
     // Typical machine impedance data
@@ -520,7 +520,7 @@ begin
         ZBase := Sqr(kVGeneratorBase) / kVArating * 1000.0;
         Conn := Ord(connection);
         NumPhases := Fnphases;
-        NumConductors := Fnconds;
+        NumConductors := FNConds;
     end;
 
     Rs := puRs * ZBase;
@@ -657,7 +657,7 @@ var
     Vabc: array[1..3] of Complex;
     NodeV: pNodeVArray;
 begin
-    YPrimInvalid := TRUE;  // Force rebuild of YPrims
+    SetYprimInvalid(true);  // Force rebuild of YPrims
 
     if not MachineON then
         with MachineData do
@@ -797,7 +797,7 @@ begin
                 for i := 1 to Fnphases do
                 begin
                     j := i + 1;
-                    if j > Fnconds then
+                    if j > FNConds then
                         j := 1;  // wrap around for closed connections
                     YMatrix.AddElement(i, i, Y);
                     YMatrix.AddElement(j, j, Y);
@@ -980,7 +980,7 @@ begin
 
     // Handle Wye Connection
     if Connection = TGeneralConnection.Wye then
-        pBuffer[Fnconds] := Vterminal[Fnconds];  // assume no neutral injection voltage
+        pBuffer[FNConds] := Vterminal[FNConds];  // assume no neutral injection voltage
 
     // In this case the injection currents are simply Yprim(frequency) times the voltage buffer
     // Refer to Load.Pas for load-type objects
@@ -1140,7 +1140,7 @@ begin
 
    // If machine state changes, force re-calc of Y matrix
     if MachineON <> MachineOn_Saved then
-        YPrimInvalid := TRUE;
+        SetYprimInvalid(true);
 end;
 
 procedure TIndMach012Obj.CalcDailyMult(Hr: Double);
@@ -1181,7 +1181,7 @@ end;
 procedure TIndMach012Obj.InitHarmonics;
 // Procedure to initialize for Harmonics solution
 begin
-    YPrimInvalid := TRUE;  // Force rebuild of YPrims
+    SetYprimInvalid(true);  // Force rebuild of YPrims
 end;
 
 procedure TIndMach012Obj.IntegrateStates;

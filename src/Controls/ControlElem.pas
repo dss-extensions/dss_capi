@@ -171,7 +171,7 @@ procedure TControlElem.GetCurrents(Curr: pComplexArray);
 var
     i: Integer;
 begin
-    for i := 1 to Fnconds do
+    for i := 1 to FNConds do
         Curr[i] := 0;
 end;
 

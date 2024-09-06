@@ -216,7 +216,7 @@ begin
         ord(TProp.Phases):
         begin
             FphaseShift := 0.0;     // Zero Sequence
-            NConds := Fnphases;  // Force Reallocation of terminal info
+            SetNConds(Fnphases);  // Force Reallocation of terminal info
         end;
         ord(TProp.EN),
         ord(TProp.EE),
@@ -235,7 +235,7 @@ var
 begin
     obj := TObj(ptr);
     obj.RecalcElementData(); // Updates Volts
-    obj.YPrimInvalid := TRUE;
+    obj.SetYprimInvalid(true);
     Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
@@ -250,10 +250,10 @@ begin
     if Fnphases <> Other.Fnphases then
     begin
         FNphases := Other.Fnphases;
-        NConds := Fnphases;  // Forces reallocation of terminal stuff
+        SetNConds(Fnphases);  // Forces reallocation of terminal stuff
 
-        Yorder := Fnconds * Fnterms;
-        YPrimInvalid := TRUE;
+        Yorder := FNConds * Fnterms;
+        SetYprimInvalid(true);
     end;
 
     Volts := Other.Volts;
@@ -280,8 +280,8 @@ begin
     LineClass := DSS.DSSClassList.Get(DSS.ClassNames.Find('Line'));
     pLineElem := LineClass.Find(Name); // GICsource name must be same as associated Line
     FNphases := 3;
-    Fnconds := 3;
-    Nterms := 2;   // 4/27/2018 made a 2-terminal I source
+    FNConds := 3;
+    SetNTerms(2);   // 4/27/2018 made a 2-terminal I source
 
     Volts := 0.0;
     Angle := 0.0;
@@ -298,7 +298,7 @@ begin
     FphaseShift := 0.0;    // always zero sequence
     Bus2Defined := FALSE;
 
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
     // Don't do This here RecalcElementData();
 
     SpectrumObj := NIL; // Spectrum not allowed
@@ -396,7 +396,7 @@ begin
     // For any conductor that is open, zero out row and column
     inherited CalcYPrim();
 
-    YPrimInvalid := FALSE;
+    SetYprimInvalid(false);
 end;
 
 procedure TGICSourceObj.GetVterminalForSource;

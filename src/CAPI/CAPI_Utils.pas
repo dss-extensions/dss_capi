@@ -714,7 +714,7 @@ begin
         Exit;
         
     repeat
-        if (DSS_CAPI_ITERATE_DISABLED = 1) or elem.Enabled then
+        if (DSS_CAPI_ITERATE_DISABLED = 1) or elem.Enabled() then
         begin
             DSS.ActiveCircuit.SetActiveCktElement(elem);
             Result := 1;
@@ -734,7 +734,7 @@ begin
         Exit;
         
     repeat
-        if (DSS_CAPI_ITERATE_DISABLED = 1) or elem.Enabled then
+        if (DSS_CAPI_ITERATE_DISABLED = 1) or elem.Enabled() then
         begin
             DSS.ActiveCircuit.SetActiveCktElement(elem);
             Result := pList.ActiveIndex;

@@ -585,7 +585,7 @@ begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
-    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    SetNConds(Other.FNConds); // Force Reallocation of terminal stuff
 
     // SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
     SetMonitoredElement(Other.MonitoredElement());  // Pointer to target circuit element
@@ -654,8 +654,8 @@ begin
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors
+    FNConds := 3;
+    SetNTerms(1);  // this forces allocation of terminals and conductors
 
     SetControlledElement(NIL);    // not used in this control
     ElementTerminal := 1;
@@ -789,7 +789,7 @@ begin
 
     if MonitoredElement() <> NIL then
     begin
-        if ElementTerminal > MonitoredElement().Nterms then
+        if ElementTerminal > MonitoredElement().NTerms() then
         begin
             DoErrorMsg(Format('StorageController: "%s"', [Name]),
                 Format('Terminal no. "%d" Does not exist.', [ElementTerminal]),
@@ -798,14 +798,14 @@ begin
         else
         begin
             FNphases := MonitoredElement().Nphases;
-            NConds := FNphases;
+            SetNConds(FNphases);
 
             // Sets name of i-th terminal's connected bus in StorageController's buslist
             Setbus(1, MonitoredElement().GetBus(ElementTerminal));
 
             // Allocate a buffer bigenough to hold everything from the monitored element
             ReAllocMem(cBuffer, SizeOF(cBuffer[1]) * MonitoredElement().Yorder);
-            CondOffset := (ElementTerminal - 1) * MonitoredElement().NConds; // for speedy sampling
+            CondOffset := (ElementTerminal - 1) * MonitoredElement().NConds(); // for speedy sampling
         end;
     end
     else
@@ -833,11 +833,11 @@ begin
     if MonitoredElement() <> NIL then
     begin
         FNphases := MonitoredElement().NPhases;
-        Nconds := FNphases;
+        SetNConds(FNphases);
         Setbus(1, MonitoredElement().GetBus(ElementTerminal));
         // Allocate a buffer big enough to hold everything from the monitored element
         ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement().Yorder);
-        CondOffset := (ElementTerminal - 1) * MonitoredElement().NConds; // for speedy sampling
+        CondOffset := (ElementTerminal - 1) * MonitoredElement().NConds(); // for speedy sampling
     end;
     inherited;
 end;
@@ -1081,7 +1081,7 @@ begin
         StorekvarChanged := FALSE;
         SkipkWDispatch := FALSE;
 
-        //----MonitoredElement().ActiveTerminalIdx := ElementTerminal;
+        //----MonitoredElement().SetActiveTerminalIdx(ElementTerminal);
         if DischargeMode = CURRENTPEAKSHAVE then
         begin
             MonitoredElement().GetCurrents(cBuffer);
@@ -1411,7 +1411,7 @@ begin
         CtrlTarget := FkWTargetLow;
 
 
-    //----MonitoredElement().ActiveTerminalIdx := ElementTerminal;
+    //----MonitoredElement().SetActiveTerminalIdx(ElementTerminal);
     if Chargemode = CURRENTPEAKSHAVELOW then
     begin
         MonitoredElement().GetCurrents(cBuffer);
@@ -1877,7 +1877,7 @@ begin
             StorageObj := DSS.StorageClass.Find(FStorageNameList.Strings[i - 1]);
             if Assigned(StorageObj) then
             begin
-                if StorageObj.Enabled then
+                if StorageObj.Enabled() then
                     FleetPointerList.Add(StorageObj);
             end
             else
@@ -1953,13 +1953,13 @@ begin
             AVG:
             begin  // Get avg of all phases
                 ControlPower := 0;
-                for i := (1 + CondOffset) to (MonitoredElement().NConds + CondOffset) do
+                for i := (1 + CondOffset) to (MonitoredElement().NConds() + CondOffset) do
                     ControlPower := ControlPower + cBuffer[i];
             end;
             MAXPHASE:
             begin  // Get abs max of all phases
                 ControlPower := 0;
-                for i := (1 + CondOffset) to (MonitoredElement().NConds + CondOffset) do
+                for i := (1 + CondOffset) to (MonitoredElement().NConds() + CondOffset) do
                 begin
                     TempPower := abs(cBuffer[i].re);
                     if TempPower > abs(ControlPower.re) then
@@ -1972,7 +1972,7 @@ begin
             MINPHASE:
             begin // Get abs min of all phases
                 ControlPower := Cmplx(1.0e50, 1.0e50);
-                for i := (1 + CondOffset) to (MonitoredElement().NConds + CondOffset) do
+                for i := (1 + CondOffset) to (MonitoredElement().NConds() + CondOffset) do
                 begin
                     TempPower := abs(cBuffer[i].re);
                     if TempPower < abs(ControlPower.re) then
@@ -2003,21 +2003,21 @@ begin
         AVG:
         begin
             ControlCurrent := 0.0;     // Get avg of all phases
-            for i := (1 + CondOffset) to (MonitoredElement().NConds + CondOffset) do
+            for i := (1 + CondOffset) to (MonitoredElement().NConds() + CondOffset) do
                 ControlCurrent := ControlCurrent + Cabs(cBuffer[i]);
             ControlCurrent := ControlCurrent / Fnphases;
         end;
         MAXPHASE:
         begin
             ControlCurrent := 0.0;     // Get max of all phases
-            for i := (1 + CondOffset) to (MonitoredElement().NConds + CondOffset) do
+            for i := (1 + CondOffset) to (MonitoredElement().NConds() + CondOffset) do
                 ControlCurrent := max(ControlCurrent, Cabs(cBuffer[i]));
             ControlCurrent := ControlCurrent;
         end;
         MINPHASE:
         begin
             ControlCurrent := 1.0e50;     // Get min of all phases
-            for i := (1 + CondOffset) to (MonitoredElement().NConds + CondOffset) do
+            for i := (1 + CondOffset) to (MonitoredElement().NConds() + CondOffset) do
                 ControlCurrent := min(ControlCurrent, Cabs(cBuffer[i]));
             ControlCurrent := ControlCurrent;
         end;

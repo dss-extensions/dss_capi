@@ -125,7 +125,7 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); OVERRIDE;
         procedure MakeLike(OtherPtr: Pointer); OVERRIDE;
 
-        // PROCEDURE Set_Enabled(Value: WordBool);Override;
+        // PROCEDURE SetEnabled(Value: WordBool);Override;
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
         procedure RecalcElementData(); OVERRIDE;
 
@@ -282,7 +282,7 @@ begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
-    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    SetNConds(Other.FNConds); // Force Reallocation of terminal stuff
     for i := 1 to FPVSystemPointerList.Count do
     begin
         ControlledElements[i] := Other.ControlledElements[i];
@@ -314,8 +314,8 @@ begin
      //  RecalcElementData routine if necessary. This allocates arrays for voltages
      //  and currents and gives more direct access to the values, if needed
     FNPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors
+    FNConds := 3;
+    SetNTerms(1);  // this forces allocation of terminals and conductors
      // This general feature should not be used for ExpControl,
      // because it controls more than one PVSystem
 
@@ -400,14 +400,14 @@ begin
         // User ControlledElements[] as the pointer to the PVSystem elements
         ControlledElements[i] := TPVSystemObj(FPVSystemPointerList.Get(i));  // pointer to i-th PVSystem
         FNphases := ControlledElements[i].NPhases;  // TEMC TODO - what if these are different sizes (same concern exists with InvControl)
-        Nconds := Nphases;
+        SetNConds(Nphases);
         if (ControlledElements[i] = NIL) then
             DoErrorMsg(Format(_('ExpControl: "%s"'), [Self.Name]),
                 Format(_('Controlled Element "%s" not found.'), [FPVSystemNameList.Strings[i - 1]]),
                 _('PVSystem object must be defined previously.'), 361);
         if ControlledElements[i].Yorder > maxord then
             maxord := ControlledElements[i].Yorder;
-        ControlledElements[i].ActiveTerminalIdx := 1; // Make the 1 st terminal active
+        ControlledElements[i].SetActiveTerminalIdx(1); // Make the 1 st terminal active
     end;
     if maxord > 0 then
         SetLength(cBuffer, SizeOF(Complex) * maxord);
@@ -420,7 +420,7 @@ begin
         RecalcElementData();
   // TEMC - from here to inherited was copied from InvControl
     FNphases := 3;
-    Nconds := 3;
+    SetNConds(3);
     Setbus(1, MonitoredElement().GetBus(ElementTerminal));
     if FPVSystemPointerList.Count > 0 then
     begin
@@ -429,7 +429,7 @@ begin
         SetMonitoredElement(TDSSCktElement(FPVSystemPointerList.Get(1)));   // Set MonitoredElement() to 1st PVSystem in lise
         Setbus(1, MonitoredElement().FirstBus());
         FNphases := MonitoredElement().NPhases;
-        Nconds := Nphases;
+        SetNConds(Nphases);
     end;
     inherited;
 end;
@@ -451,7 +451,7 @@ begin
         if FPendingChange[i] = CHANGEVARLEVEL then
         begin
             PVSys.VWmode := FALSE;
-            PVSys.ActiveTerminalIdx := 1; // Set active terminal of PVSystem to terminal 1
+            PVSys.SetActiveTerminalIdx(1); // Set active terminal of PVSystem to terminal 1
             PVSys.Varmode := VARMODEKVAR;  // Set var mode to VARMODEKVAR to indicate we might change kvar
             FTargetQ[i] := 0.0;
             Qbase := PVSys.kVARating;
@@ -616,7 +616,7 @@ begin
         for i := 1 to FListSize do
         begin
             PVSys := PVSysClass.Find(FPVSystemNameList.Strings[i - 1]);
-            if Assigned(PVSys) and PVSys.Enabled then
+            if Assigned(PVSys) and PVSys.Enabled() then
             begin
                 FPVSystemPointerList.Add(PVSys);
                 PVSys.AVRmode := TRUE;
@@ -629,7 +629,7 @@ begin
         for i := 1 to PVSysClass.ElementCount() do
         begin
             PVSys := PVSysClass.ElementList.Get(i);
-            if PVSys.Enabled then
+            if PVSys.Enabled() then
             begin
                 FPVSystemPointerList.Add(PVSys);
                 PVSys.AVRmode := TRUE;
@@ -655,7 +655,7 @@ begin
     for i := 1 to FlistSize do
     begin
     // PVSys := PVSysClass.Find(FPVSystemNameList.Strings[i-1]);
-    // Set_NTerms(PVSys.NTerms); // TODO - what is this for?
+    // SetNTerms(PVSys.NTerms()); // TODO - what is this for?
         FPriorVpu[i] := 0.0;
         FPresentVpu[i] := 0.0;
         FLastIterQ[i] := -1.0;
@@ -677,7 +677,7 @@ begin
   // inherited;
 end;
 
-//procedure TExpControlObj.Set_Enabled(Value: WordBool);
+//procedure TExpControlObj.SetEnabled(Value: WordBool);
 //begin
 //    inherited;
 //    // Reset controlled PVSystems to original PF
@@ -730,7 +730,7 @@ begin
     for i := 1 to ElementList.Count do
     begin
         obj := ElementList.Get(i);
-        if obj.Enabled then
+        if obj.Enabled() then
             obj.UpdateExpControl(i);
     end;
 end;

@@ -342,7 +342,7 @@ begin
     DSSPrime.ActiveCircuit.SetElementActive(nameStr);
     if DSSPrime.ActiveCircuit.ActiveCktElement() <> NIL then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement.Enabled := FALSE;
+        DSSPrime.ActiveCircuit.ActiveCktElement.SetEnabled(FALSE);
         Exit;
     end;
     if (DSS_CAPI_EXT_ERRORS) then
@@ -363,7 +363,7 @@ begin
     DSSPrime.ActiveCircuit.SetElementActive(nameStr);
     if DSSPrime.ActiveCircuit.ActiveCktElement() <> NIL then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement.Enabled := TRUE;
+        DSSPrime.ActiveCircuit.ActiveCktElement.SetEnabled(TRUE);
         Exit;
     end;
     if (DSS_CAPI_EXT_ERRORS) then

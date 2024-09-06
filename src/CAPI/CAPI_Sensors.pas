@@ -143,8 +143,8 @@ begin
         Exit;
     end;
 
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
-    Move(elem.SensorCurrent[1], ResultPtr^, elem.NPhases * SizeOf(Double));
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases());
+    Move(elem.SensorCurrent[1], ResultPtr^, elem.NPhases() * SizeOf(Double));
 end;
 
 procedure Sensors_Get_Currents_GR(); CDECL;
@@ -189,8 +189,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
-    Move(elem.Sensorkvar[1], ResultPtr^, elem.NPhases * SizeOf(Double));
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases());
+    Move(elem.Sensorkvar[1], ResultPtr^, elem.NPhases() * SizeOf(Double));
 end;
 
 procedure Sensors_Get_kVARS_GR(); CDECL;
@@ -209,8 +209,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
-    Move(elem.SensorVoltage[1], ResultPtr^, elem.NPhases * SizeOf(Double));
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases());
+    Move(elem.SensorVoltage[1], ResultPtr^, elem.NPhases() * SizeOf(Double));
 end;
 
 procedure Sensors_Get_kVS_GR(); CDECL;
@@ -229,8 +229,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
-    Move(elem.SensorkW[1], ResultPtr^, elem.NPhases * SizeOf(Double));
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases());
+    Move(elem.SensorkW[1], ResultPtr^, elem.NPhases() * SizeOf(Double));
 end;
 
 procedure Sensors_Get_kWS_GR(); CDECL;
@@ -324,12 +324,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if ValueCount <> elem.NPhases then
+    if ValueCount <> elem.NPhases() then
     begin
         DoSimpleMsg(DSSPrime, _('The provided number of values does not match the element''s number of phases.'), 5023);
         Exit;
     end;
-    Move(ValuePtr^, elem.SensorCurrent[1], elem.NPhases * SizeOf(Double));
+    Move(ValuePtr^, elem.SensorCurrent[1], elem.NPhases() * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_IsDelta(Value: TAPIBoolean); CDECL;
@@ -349,12 +349,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if ValueCount <> elem.NPhases then
+    if ValueCount <> elem.NPhases() then
     begin
         DoSimpleMsg(DSSPrime, _('The provided number of values does not match the element''s number of phases.'), 5024);
         Exit;
     end;
-    Move(ValuePtr^, elem.Sensorkvar[1], elem.NPhases * SizeOf(Double));
+    Move(ValuePtr^, elem.Sensorkvar[1], elem.NPhases() * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_kVS(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -364,12 +364,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if ValueCount <> elem.NPhases then
+    if ValueCount <> elem.NPhases() then
     begin
         DoSimpleMsg(DSSPrime, _('The provided number of values does not match the element''s number of phases.'), 5024);
         Exit;
     end;
-    Move(ValuePtr^, elem.SensorVoltage[1], elem.NPhases * SizeOf(Double));
+    Move(ValuePtr^, elem.SensorVoltage[1], elem.NPhases() * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_kWS(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -379,12 +379,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if ValueCount <> elem.NPhases then
+    if ValueCount <> elem.NPhases() then
     begin
         DoSimpleMsg(DSSPrime, _('The provided number of values does not match the element''s number of phases.'), 5024);
         Exit;
     end;
-    Move(ValuePtr^, elem.SensorkW[1], elem.NPhases * SizeOf(Double));
+    Move(ValuePtr^, elem.SensorkW[1], elem.NPhases() * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_MeteredElement(const Value: PAnsiChar); CDECL;
@@ -477,8 +477,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
-    Move(elem.PhsAllocationFactor[1], ResultPtr^, elem.NPhases * SizeOf(Double));
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases());
+    Move(elem.PhsAllocationFactor[1], ResultPtr^, elem.NPhases() * SizeOf(Double));
 end;
 
 procedure Sensors_Get_AllocationFactor_GR(); CDECL;

@@ -280,7 +280,7 @@ begin
     
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
-    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    SetNConds(Other.FNConds); // Force Reallocation of terminal stuff
 
     // SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
     SetMonitoredElement(Other.MonitoredElement());  // Pointer to target circuit element
@@ -294,8 +294,8 @@ begin
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors
+    FNConds := 3;
+    SetNTerms(1);  // this forces allocation of terminals and conductors
                          // in base class
 
     SetControlledElement(NIL);  // not used in this control
@@ -340,7 +340,7 @@ begin
         Exit;
     end;
 
-    if ElementTerminal > MonitoredElement().Nterms then
+    if ElementTerminal > MonitoredElement().NTerms() then
     begin
         DoErrorMsg(Format(_('ESPVLControl: "%s"'), [Name]),
             Format(_('Terminal no. "%d" does not exist.'), [ElementTerminal]),
@@ -358,7 +358,7 @@ begin
     if MonitoredElement() <> NIL then
     begin
         FNphases := controlledElement.NPhases;
-        Nconds := FNphases;
+        SetNConds(FNphases);
         Setbus(1, MonitoredElement().GetBus(ElementTerminal));
     end;
     inherited;
@@ -418,7 +418,7 @@ begin
             for i := 1 to FLocalControlListSize do
             begin
                 pESPVLControl := ParentClass.Find(FLocalControlNameList.Strings[i - 1]);
-                if Assigned(pESPVLControl) and pESPVLControl.Enabled then
+                if Assigned(pESPVLControl) and pESPVLControl.Enabled() then
                     FLocalControlPointerList.Add(pESPVLControl);
             end;
         end
@@ -428,7 +428,7 @@ begin
             for i := 1 to ParentClass.ElementCount do
             begin
                 pESPVLControl := ParentClass.ElementList.Get(i);
-                if pESPVLControl.Enabled then
+                if pESPVLControl.Enabled() then
                     FLocalControlPointerList.Add(pESPVLControl);
             end;
 

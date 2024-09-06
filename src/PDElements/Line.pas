@@ -571,10 +571,10 @@ begin
     else
         RecalcElementData();    // Compute matrices
 
-    NConds := Fnphases;  // Force Reallocation of terminal info
-    //Fnconds := Fnphases;
-    Yorder := Fnconds * Fnterms;
-    // YPrimInvalid := True;  (set in Edit; this is redundant)
+    SetNConds(Fnphases);  // Force Reallocation of terminal info
+    //FNConds := Fnphases;
+    Yorder := FNConds * Fnterms;
+    // SetYprimInvalid(true);  (set in Edit; this is redundant)
 
     FLineType := LineCodeObj.FLineType;
 
@@ -608,7 +608,7 @@ begin
             
             UserLengthUnits := LengthUnits;
             if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
-                YprimInvalid := true;
+                SetYprimInvalid(true);
         end;
     end;
 
@@ -622,9 +622,9 @@ begin
             begin
                 if (LineGeometryObj = NIL) and SymComponentsModel then
                 begin  
-                    NConds := Fnphases;  // Force Reallocation of terminal info
-                    Yorder := Fnterms * Fnconds;
-                    // YPrimInvalid := True;  // now set below
+                    SetNConds(Fnphases);  // Force Reallocation of terminal info
+                    Yorder := Fnterms * FNConds;
+                    // SetYprimInvalid(true);  // now set below
                     RecalcElementData();  // Reallocate Z, etc.
                 end
                 else
@@ -673,7 +673,7 @@ begin
             if IsSwitch then
             begin
                 SymComponentsChanged := TRUE;
-                YprimInvalid := TRUE;
+                SetYprimInvalid(true);
                 KillLineCodeSpecified(); //TODO: check if this missing is relevant bug
                 KillGeometrySpecified();
                 KillSpacingSpecified();
@@ -733,7 +733,7 @@ begin
                     PrpSequence[ord(TProp.B0)] := 0;
                 end;
             end;
-            YprimInvalid := TRUE;
+            SetYprimInvalid(true);
         end;
         ord(TProp.Seasons):
             setlength(AmpRatings, NumAmpRatings);
@@ -753,12 +753,12 @@ begin
         ord(TProp.XMatrix),
         ord(TProp.CMatrix):
             //YPrim invalidation on anything that changes impedance values
-            YprimInvalid := TRUE;
+            SetYprimInvalid(true);
 
         ord(TProp.Rg),
         ord(TProp.Xg):
             if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
-                YprimInvalid := true;
+                SetYprimInvalid(true);
 
         ord(TProp.rho):
         begin
@@ -766,7 +766,7 @@ begin
             begin
                 LineGeometryObj.lineConstants.SetRhoEarth(rho); // TODO: This is weird
                 if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
-                    YprimInvalid := true;
+                    SetYprimInvalid(true);
             end;
         end;
         ord(TProp.Seasons), 
@@ -895,10 +895,10 @@ begin
     if Fnphases <> Other.Fnphases then
     begin
         FNphases := Other.Fnphases;
-        NConds := Fnphases; // force reallocation of terminals and conductors
+        SetNConds(Fnphases); // force reallocation of terminals and conductors
 
-        Yorder := Fnconds * Fnterms;
-        YPrimInvalid := TRUE;
+        Yorder := FNConds * Fnterms;
+        SetYprimInvalid(true);
 
         if Z <> NIL then
             Z.Free;
@@ -935,8 +935,8 @@ begin
     DSSObjType := ParClass.DSSClassType; // DSSObjType + LINESECTION; // in both PDElement list and Linesection lists
 
     FNphases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 2;  // Force allocation of terminals and conductors
+    FNConds := 3;
+    SetNTerms(2);  // Force allocation of terminals and conductors
     IsSwitch := FALSE;
     R1 := 0.0580;  //ohms per 1000 ft
     X1 := 0.1206;
@@ -994,7 +994,7 @@ begin
 
     FZFrequency := -1.0; // indicate Z not computed.
 
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
     RecalcElementData();
 
     NumAmpRatings := 1;
@@ -1375,7 +1375,7 @@ begin
     // Now Account for Open Conductors
     // For any conductor that is open, zero out row and column
     inherited CalcYPrim();
-    YprimInvalid := FALSE;
+    SetYprimInvalid(false);
 end;
 
 procedure TLineObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
@@ -1641,7 +1641,7 @@ begin
 
         LenUnitsSaved := LengthUnits;
 
-        YPrimInvalid := TRUE;
+        SetYprimInvalid(true);
 
         // Redefine property values to make it appear that line was defined this way originally using matrices
         if Series then
@@ -1659,10 +1659,10 @@ begin
             i := 1;
             while (Common1 = 0) and (i <= 2) do
             begin
-                TestBusNum := ActiveCircuit.MapNodeToBus[NodeRef[1 + (i - 1) * Fnconds]].BusRef;
+                TestBusNum := ActiveCircuit.MapNodeToBus[NodeRef[1 + (i - 1) * FNConds]].BusRef;
                 for j := 1 to 2 do
                 begin
-                    if ActiveCircuit.MapNodeToBus[Other.NodeRef[1 + (j - 1) * Other.Nconds]].BusRef = TestBusNum then
+                    if ActiveCircuit.MapNodeToBus[Other.NodeRef[1 + (j - 1) * Other.NConds()]].BusRef = TestBusNum then
                     begin
                         Common1 := i;
                         Common2 := j;
@@ -1714,7 +1714,7 @@ begin
 
         // If both lines are Symmmetrical Components, just merge the R1..C0 values
         // This will catch many 3-phase lines since this is a common way to define lines
-        if SymComponentsModel and Other.SymComponentsModel and (nphases = 3) then
+        if SymComponentsModel and Other.SymComponentsModel and (FNPhases = 3) then
         begin  // Sym Component Model
             UseRXC := False;
             // This reset the length units
@@ -1821,7 +1821,7 @@ begin
             PropertySideEffects(ord(TProp.cmatrix), 0, []);
         end;  // Matrix definition
 
-        Other.Enabled := FALSE;  // Disable the Other Line
+        Other.SetEnabled(FALSE);  // Disable the Other Line
         Result := TRUE;
     end
     else
@@ -1848,9 +1848,9 @@ begin
     KillGeometrySpecified;
     // need to establish Yorder before FMakeZFromSpacing
     FNPhases := LineSpacingObj.NPhases;
-    Nconds := FNPhases;  // Force Reallocation of terminal info
-    Yorder := Fnconds * Fnterms;
-    YPrimInvalid := TRUE;       // Force Rebuild of Y matrix
+    SetNConds(FNPhases);  // Force Reallocation of terminal info
+    Yorder := FNConds * Fnterms;
+    SetYprimInvalid(true);       // Force Rebuild of Y matrix
 
     lineConductorData := Allocmem(Sizeof(lineConductorData[1]) * LineSpacingObj.NConds);
     FWireDataSize := LineSpacingObj.NConds;
@@ -1900,9 +1900,9 @@ begin
     end;
 
     FNPhases := LineGeometryObj.NConds();
-    Nconds := FNPhases;  // Force Reallocation of terminal info
-    Yorder := Fnconds * Fnterms;
-    YPrimInvalid := TRUE;       // Force Rebuild of Y matrix
+    SetNConds(FNPhases);  // Force Reallocation of terminal info
+    Yorder := FNConds * Fnterms;
+    SetYprimInvalid(true);       // Force Rebuild of Y matrix
 
     NumAmpRatings := LineGeometryObj.NumAmpRatings;
     setlength(AmpRatings, NumAmpRatings);

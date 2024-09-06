@@ -592,13 +592,13 @@ procedure SetNcondsForConnection(obj: TObj);
 begin
     case obj.Connection of
         TGeneralConnection.Wye:
-            obj.NConds := obj.Fnphases + 1;
+            obj.SetNConds(obj.Fnphases + 1);
         TGeneralConnection.Delta:
             case obj.Fnphases of
                 1, 2:
-                    obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
+                    obj.SetNConds(obj.Fnphases + 1); // L-L and Open-delta
             else
-                obj.NConds := obj.Fnphases;
+                obj.SetNConds(obj.Fnphases);
             end;
     end;
 end;
@@ -608,7 +608,7 @@ var
     obj: TObj;
 begin
     for obj in ElementList do
-        if obj.Enabled then
+        if obj.Enabled() then
             obj.UpdatePVSystem();
 end;
 
@@ -645,8 +645,8 @@ begin
             VBaseMin := Vminpu * VBase;
             VBaseMax := Vmaxpu * VBase;
 
-            Yorder := Fnconds * Fnterms;
-            YprimInvalid := TRUE;
+            Yorder := FNConds * Fnterms;
+            SetYprimInvalid(true);
         end;
 
         ord(TProp.pf):
@@ -700,11 +700,11 @@ begin
                 FreeAndNil(TraceFile);
                 TraceFile := TBufferedFileStream.Create(DSS.OutputDirectory + 'STOR_' + Name + '.csv', fmCreate);
                 FSWrite(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, PVSystemModel,  Qnominalperphase, Pnominalperphase, CurrentType');
-                for i := 1 to nphases do
+                for i := 1 to FNPhases do
                     FSWrite(Tracefile, ', |Iinj' + IntToStr(i) + '|');
-                for i := 1 to nphases do
+                for i := 1 to FNPhases do
                     FSWrite(Tracefile, ', |Iterm' + IntToStr(i) + '|');
-                for i := 1 to nphases do
+                for i := 1 to FNPhases do
                     FSWrite(Tracefile, ', |Vterm' + IntToStr(i) + '|');
                 FSWrite(TraceFile, ',Vthev, Theta');
                 FSWriteln(TraceFile);
@@ -725,10 +725,10 @@ begin
             begin
                 // Enables GFM mode for this IBR
                 dynVars.ResetIBR := FALSE;
-                if Length(dynVars.Vgrid) < NPhases then //TODO: check why this is not done in Storage
-                    SetLength(dynVars.Vgrid, NPhases); // Used to store the voltage per phase
+                if Length(dynVars.Vgrid) < FNPhases then //TODO: check why this is not done in Storage
+                    SetLength(dynVars.Vgrid, FNPhases); // Used to store the voltage per phase
             end;
-            YprimInvalid := TRUE;
+            SetYprimInvalid(true);
         end;
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
@@ -740,7 +740,7 @@ var
 begin
     obj := TObj(ptr);
     obj.RecalcElementData();
-    obj.YPrimInvalid := TRUE;
+    obj.SetYprimInvalid(true);
     Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
@@ -755,9 +755,9 @@ begin
     if (Fnphases <> Other.Fnphases) then
     begin
         FNphases := Other.Fnphases;
-        NConds := Fnphases;  // Forces reallocation of terminal stuff
-        Yorder := Fnconds * Fnterms;
-        YprimInvalid := TRUE;
+        SetNConds(Fnphases);  // Forces reallocation of terminal stuff
+        Yorder := FNConds * Fnterms;
+        SetYprimInvalid(true);
     end;
 
     PVSystemVars.kVPVSystemBase := Other.PVSystemVars.kVPVSystemBase;
@@ -849,7 +849,7 @@ var
 begin
     for elem in ElementList do
     begin
-        if elem.Enabled then
+        if elem.Enabled() then
             elem.TakeSample();
     end;
 end;
@@ -861,9 +861,9 @@ begin
     TraceFile := nil;
 
     FNphases := 3;
-    Fnconds := 4;  // defaults to wye
+    FNConds := 4;  // defaults to wye
     Yorder := 0;  // To trigger an initial allocation
-    Nterms := 1;  // forces allocations
+    SetNTerms(1);  // forces allocations
 
     DutyStart := 0.0;
 
@@ -883,7 +883,7 @@ begin
     Vmaxpu := 1.10;
     VBaseMin := Vminpu * Vbase;
     VBaseMax := Vmaxpu * Vbase;
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
 
     varMode := VARMODEPF;
     InverterON := TRUE;
@@ -1044,9 +1044,9 @@ begin
         Exit;
 
     ComputePanelPower();
-    MaxAmps := ((PVSystemvars.PanelkW * 1000) / NPhases) / VBase;
+    MaxAmps := ((PVSystemvars.PanelkW * 1000) / FNPhases) / VBase;
     ComputeIterminal();
-    for i := 1 to NPhases do
+    for i := 1 to FNPhases do
     begin
         PhaseAmps := cabs(Iterminal[i]);
         if PhaseAmps > MaxAmps then
@@ -1069,10 +1069,10 @@ begin
     with dynVars do
     begin
         // Initialization just in case
-        if length(Vgrid) < NPhases then
-            SetLength(Vgrid, NPhases);
+        if length(Vgrid) < FNPhases then
+            SetLength(Vgrid, FNPhases);
 
-        for i := 1 to NPhases do
+        for i := 1 to FNPhases do
             Vgrid[i - 1] := ctopolar(ActiveCircuit.Solution.NodeV[NodeRef[i]]);
 
         if IComp > 0 then
@@ -1080,7 +1080,7 @@ begin
             ZSys := (2 * (Vbase * ILimit)) - IComp;
             BaseV := (ZSys / ILimit) * VError;
         end;
-        CalcGFMVoltage(NPhases, Vterminal);
+        CalcGFMVoltage(FNPhases, Vterminal);
         YPrim.MVMult(InjCurrent, Vterminal);
         SetITerminalUpdated(FALSE);
     end;
@@ -1260,9 +1260,9 @@ begin
                 TGeneralConnection.Wye:
                 begin
                     Ymatrix[i, i] := Y;
-                    Ymatrix.AddElement(Fnconds, Fnconds, Y);
-                    Ymatrix[i, Fnconds] := Yij;
-                    Ymatrix[Fnconds, i] := Yij;
+                    Ymatrix.AddElement(FNConds, FNConds, Y);
+                    Ymatrix[i, FNConds] := Yij;
+                    Ymatrix[FNConds, i] := Yij;
                 end;
 
                 TGeneralConnection.Delta:
@@ -1287,7 +1287,7 @@ begin
         begin
             RatedkVLL := PresentkV();
             mKVARating := PVSystemVars.FkVArating;
-            CalcGFMYprim(NPhases, @YMatrix);
+            CalcGFMYprim(FNPhases, @YMatrix);
         end;
         Exit;
     end;
@@ -1308,9 +1308,9 @@ begin
                 for i := 1 to Fnphases do
                 begin
                     YMatrix[i, i] := Y;
-                    YMatrix.AddElement(Fnconds, Fnconds, Y);
-                    YMatrix[i, Fnconds] := Yij;
-                    YMatrix[Fnconds, i] := Yij;
+                    YMatrix.AddElement(FNConds, FNConds, Y);
+                    YMatrix[i, FNConds] := Yij;
+                    YMatrix[FNConds, i] := Yij;
                 end;
             end;
 
@@ -1321,7 +1321,7 @@ begin
                 for i := 1 to Fnphases do
                 begin
                     j := i + 1;
-                    if j > Fnconds then
+                    if j > FNConds then
                         j := 1;  // wrap around for closed connections
                     YMatrix.AddElement(i, i, Y);
                     YMatrix.AddElement(j, j, Y);
@@ -1580,7 +1580,7 @@ var
 begin
     // Build only shunt Yprim
     // Build a dummy Yprim Series so that CalcV Does not fail
-    if YprimInvalid then
+    if YprimInvalid() then
     begin
         if YPrim_Shunt <> NIL then
             YPrim_Shunt.Free;
@@ -1631,17 +1631,17 @@ begin
             (Pnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
             s, ', ');
         FSWrite(TraceFile, sout);
-        for i := 1 to nphases do
+        for i := 1 to FNPhases do
         begin
             WriteStr(sout, (Cabs(InjCurrent[i])): 8: 1, ', ');
             FSWrite(TraceFile, sout);
         end;
-        for i := 1 to nphases do
+        for i := 1 to FNPhases do
         begin
             WriteStr(sout, (Cabs(ITerminal[i])): 8: 1, ', ');
             FSWrite(TraceFile, sout);
         end;
-        for i := 1 to nphases do
+        for i := 1 to FNPhases do
         begin
             WriteStr(sout, (Cabs(Vterminal[i])): 8: 1, ', ');
             FSWrite(TraceFile, sout);
@@ -1811,7 +1811,7 @@ begin
         UserModel.FCalc(Vterminal, Iterminal);
         SetITerminalUpdated(TRUE);
         // Negate currents from user model for power flow PVSystem element model
-        for i := 1 to FnConds do
+        for i := 1 to FNConds do
             InjCurrent[i] -= Iterminal[i];
     end
     else
@@ -1853,7 +1853,7 @@ begin
     if GFM_Mode then
     begin
         dynVars.BaseV := dynVars.BasekV * 1000 * (dynVars.it[0] / dynVars.IMaxPPhase);  // Uses dynamics model as reference
-        dynVars.CalcGFMVoltage(NPhases, Vterminal);
+        dynVars.CalcGFMVoltage(FNPhases, Vterminal);
         YPrim.MVMult(InjCurrent, Vterminal);
         Exit;
     end;
@@ -1894,11 +1894,11 @@ begin
                 NeutAmps := NeutAmps - Iterminal[i];
             end;
         end;
-        if FnConds > FNphases then
-            Iterminal[FnConds] := NeutAmps;
+        if FNConds > FNphases then
+            Iterminal[FNConds] := NeutAmps;
     end;
     // Add it into inj current array
-    for i := 1 to FnConds do
+    for i := 1 to FNConds do
         InjCurrent[i] -= Iterminal[i];
 
     SetITerminalUpdated(TRUE);
@@ -1938,7 +1938,7 @@ begin
 
     // Handle Wye Connection
     if Connection = TGeneralConnection.Wye then
-        pBuffer[Fnconds] := Vterminal[Fnconds];  // assume no neutral injection voltage
+        pBuffer[FNConds] := Vterminal[FNConds];  // assume no neutral injection voltage
 
     // Inj currents = Yprim (E) 
     YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
@@ -2050,7 +2050,7 @@ var
     HourValue: Double;
 begin
     // Compute energy in PVSystem element branch
-    if not Enabled then
+    if not FEnabled then
         Exit;
 
     S := cmplx(PresentkW(), Presentkvar());
@@ -2097,7 +2097,7 @@ procedure TPVsystemObj.InitHarmonics();
 var
     E, Va: complex;
 begin
-    YprimInvalid := TRUE;  // Force rebuild of YPrims
+    SetYprimInvalid(true);  // Force rebuild of YPrims
     PVSystemFundamental := ActiveCircuit.Solution.Frequency();  // Whatever the frequency is when we enter here.
 
     // Compute reference Thevinen voltage from phase 1 current
@@ -2107,7 +2107,7 @@ begin
     case Connection of
         TGeneralConnection.Wye:
         begin // wye - neutral is explicit
-            Va := ActiveCircuit.Solution.NodeV[NodeRef[1]] - ActiveCircuit.Solution.NodeV[NodeRef[Fnconds]];
+            Va := ActiveCircuit.Solution.NodeV[NodeRef[1]] - ActiveCircuit.Solution.NodeV[NodeRef[FNConds]];
         end;
 
         TGeneralConnection.Delta:
@@ -2131,7 +2131,7 @@ var
     i: Integer;
     BaseZt: Double;
 begin
-    YprimInvalid := TRUE; // Force rebuild of YPrims
+    SetYprimInvalid(true); // Force rebuild of YPrims
 
     with PVSystemVars, dynVars do
     begin
@@ -2169,7 +2169,7 @@ begin
 
         ComputePanelPower();
         NumPhases := Fnphases; // set Publicdata vars
-        NumConductors := Fnconds;
+        NumConductors := FNConds;
         Conn := ord(Connection);
         // Sets the length of State vars to cover the num of phases
         InitDynArrays(NumPhases);
@@ -2197,7 +2197,7 @@ begin
 
         LS := XThev / (2 * PI * DSS.DefaultBaseFreq);
 
-        for i := 0 to (NPhases - 1) do
+        for i := 0 to (FNPhases - 1) do
         begin
             dit[i] := 0;
             Vgrid[i] := ctopolar(ActiveCircuit.Solution.NodeV[NodeRef[i + 1]]);
@@ -2291,9 +2291,9 @@ begin
                 // Checks if there is current limit set
                 if ILimit > 0 then
                 begin
-                    setlength(curr, NPhases + 1);
+                    setlength(curr, FNPhases + 1);
                     GetCurrents(pComplexArray(@curr[0]));
-                    for j := 0 to (Nphases - 1) do
+                    for j := 0 to (FNPhases - 1) do
                     begin
                         IPresent := cabs(curr[j]);
                         GFMUpdate := GFMUpdate and (IPresent < (ILimit * VError));

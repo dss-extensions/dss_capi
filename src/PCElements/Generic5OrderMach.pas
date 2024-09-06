@@ -538,13 +538,13 @@ procedure SetNcondsForConnection(obj: TObj);
 begin
     case obj.Connection of
         TGeneralConnection.Wye:
-            obj.NConds := obj.Fnphases; // Neutral is not connected for induction machine
+            obj.SetNConds(obj.Fnphases); // Neutral is not connected for induction machine
         TGeneralConnection.Delta:
             case obj.Fnphases of
                 1, 2:
-                    obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
+                    obj.SetNConds(obj.Fnphases + 1); // L-L and Open-delta
             else
-                obj.NConds := obj.Fnphases; // no neutral for this connection
+                obj.SetNConds(obj.Fnphases); // no neutral for this connection
             end;
     end;
 end;
@@ -631,7 +631,7 @@ begin
     obj:= TObj(ptr);
     obj.Update_PQLimits();
     obj.RecalcElementData();
-    obj.YPrimInvalid := true;
+    obj.SetYprimInvalid(true);
     Exclude(obj.Flags, Flg.EditingActive);
     Result := True;    
 end;
@@ -659,12 +659,12 @@ begin
     Connection := TGeneralConnection.Delta; // Delta Default -- override the default in PCE (Wye)
     FNphases := 3; // typical DSS default for a circuit element
     Yorder := 0; // To trigger an initial allocation
-    Nterms := 1; // forces allocations of terminal quantities
+    SetNTerms(1); // forces allocations of terminal quantities
     WBase := -1;//00; // has to be set in DSS scripts
 
     FFMonObj := nil;
     FFMonObj2 := nil;
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
     // ShapeIsActual := false;
     Generic5SwitchOpen := false;
 
@@ -2002,7 +2002,7 @@ var
     Vabc: array[1..3] of Complex;
     cBuffer: pComplexArray;
 begin
-    YPrimInvalid := true; // Force rebuild of YPrims
+    SetYprimInvalid(true); // Force rebuild of YPrims
 
     // Compute nominal Positive sequence voltage behind transient reactance
 
@@ -2160,7 +2160,7 @@ begin
             for i := 1 to Fnphases do
             begin
                 j := i + 1;
-                if j > Fnconds then
+                if j > FNConds then
                     j := 1; // wrap around for closed connections
                 YMatrix.AddElement(i, i, Y);
                 YMatrix.AddElement(j, j, Y);
@@ -2336,7 +2336,7 @@ end;
 
 procedure TGeneric5Obj.InitHarmonics;
 begin
-    YPrimInvalid := true; // Force rebuild of YPrims
+    SetYprimInvalid(true); // Force rebuild of YPrims
 end;
 
 procedure TGeneric5Obj.IntegrateStates();

@@ -119,7 +119,7 @@ type
 
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
         procedure SetConductorClosed(Index: Integer; Value: Boolean); OVERRIDE; 
-//        procedure Set_Enabled(Value: WordBool); OVERRIDE;
+//        procedure SetEnabled(Value: WordBool); OVERRIDE;
 {$ENDIF}
 
     PUBLIC
@@ -316,20 +316,20 @@ begin
             case Connection of
                 TCapacitorConnection.Delta:
                 begin
-                    Nterms := 1;  // Force reallocation of terminals
+                    SetNTerms(1);  // Force reallocation of terminals
                     if (Fnphases = 1) or (Fnphases = 2) then
-                        NConds := Fnphases + 1
+                        SetNConds(Fnphases + 1)
                     else
-                        NConds := Fnphases;
+                        SetNConds(Fnphases);
                 end;
                 TCapacitorConnection.Wye:
                 begin
                     if Fnterms <> 2 then
                     begin
-                        Nterms := 2;
-                        // Yorder := Fnterms * Fnconds;
+                        SetNTerms(2);
+                        // Yorder := Fnterms * FNConds;
                     end;
-                    NConds := Fnphases;
+                    SetNConds(Fnphases);
                 end;
             end;
         ord(TProp.bus2):
@@ -348,21 +348,21 @@ begin
                 if (Connection = TCapacitorConnection.Delta) then
                 begin
                     if (Fnphases = 1) or (Fnphases = 2) then
-                        NConds := Fnphases + 1
+                        SetNConds(Fnphases + 1)
                     else
-                        NConds := Fnphases;
+                        SetNConds(Fnphases);
                 end
                 else
-                    NConds := Fnphases;
+                    SetNConds(Fnphases);
 
-                Yorder := Fnterms * Fnconds;
+                Yorder := Fnterms * FNConds;
             end
             else
             // Probably don't need to check this, but just to be sure...
-            if (Connection = TCapacitorConnection.Delta) and (NConds <> (Fnphases + 1)) then 
+            if (Connection = TCapacitorConnection.Delta) and (FNConds <> (Fnphases + 1)) then 
             begin
-                NConds := Fnphases + 1;
-                Yorder := Fnterms * Fnconds;
+                SetNConds(Fnphases + 1);
+                Yorder := Fnterms * FNConds;
             end;
         ord(TProp.kvar):
         begin
@@ -473,7 +473,7 @@ begin
         ord(TProp.conn),
         ord(TProp.cmatrix),
         ord(TProp.cuf):
-            YprimInvalid := TRUE;
+            SetYprimInvalid(true);
         ord(TProp.Numsteps),
         ord(TProp.states):
         // Numsteps, states:
@@ -482,12 +482,12 @@ begin
             if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
                 (not ActiveCircuit.Solution.SystemYChanged) and 
                 (YPrim <> NIL) and 
-                (not YPrimInvalid)
+                (not YPrimInvalid())
             then
                 ActiveCircuit.IncrCktElements.Add(self)
             else
 {$ENDIF}
-                YprimInvalid := TRUE;
+                SetYprimInvalid(true);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -502,10 +502,10 @@ begin
     if Fnphases <> Other.Fnphases then
     begin
         FNPhases := Other.Fnphases;
-        NConds := Fnphases; // force reallocation of terminals and conductors
+        SetNConds(Fnphases); // force reallocation of terminals and conductors
 
-        Yorder := Fnconds * Fnterms;
-        YPrimInvalid := TRUE;
+        Yorder := FNConds * Fnterms;
+        SetYprimInvalid(true);
     end;
 
     SetNumSteps(Other.NumSteps());
@@ -541,8 +541,8 @@ begin
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 2;  // Force allocation of terminals and conductors
+    FNConds := 3;
+    SetNTerms(2);  // Force allocation of terminals and conductors
 
     Setbus(2, (GetBus(1) + '.0.0.0'));  // Default to grounded wye
 
@@ -579,7 +579,7 @@ begin
     FaultRate := 0.0005;
     PctPerm := 100.0;
     HrsToRepair := 3.0;
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
 
     DoHarmonicRecalc := FALSE;
     Bus2Defined := FALSE;
@@ -736,7 +736,7 @@ begin
 
     inherited CalcYPrim();
 
-    YprimInvalid := FALSE;
+    SetYprimInvalid(false);
 end;
 
 procedure TCapacitorObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
@@ -824,7 +824,7 @@ begin
         if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
            (not ActiveCircuit.Solution.SystemYChanged) and 
            (YPrim <> NIL) and 
-           (not YPrimInvalid)
+           (not YPrimInvalid())
         then
             // Mark this to incrementally update the matrix.
             // If the matrix is already being rebuilt, there is 
@@ -832,7 +832,7 @@ begin
            ActiveCircuit.IncrCktElements.Add(Self)
         else
 {$ENDIF}        
-        YprimInvalid := TRUE;
+        SetYprimInvalid(true);
     end;
 end;
 
@@ -892,12 +892,12 @@ begin
         if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
            (not ActiveCircuit.Solution.SystemYChanged) and 
            (YPrim <> NIL) and 
-           (not YPrimInvalid)
+           (not YPrimInvalid())
         then
            ActiveCircuit.IncrCktElements.Add(Self)
 {$ENDIF}
         else
-            YprimInvalid := TRUE;
+            SetYprimInvalid(true);
 
     FLastStepInService := Value;
 end;
@@ -934,7 +934,7 @@ begin
                     for i := 1 to Fnphases do
                     begin
                         j := i + 1;
-                        if j > Fnconds then
+                        if j > FNConds then
                             j := 1;
 
                         YprimWork.AddElement(i, i, Value);
@@ -1059,42 +1059,42 @@ begin
     if (Index = 0) then
     begin  // Do all conductors
         for i := 1 to Fnphases do
-            Terminals[ActiveTerminalIdx - 1].ConductorsClosed[i - 1] := Value; //TODO: why not use the ActiveTerminal directly?
+            Terminals[ActiveTerminalIdx() - 1].ConductorsClosed[i - 1] := Value; //TODO: why not use the ActiveTerminal directly?
         
         if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
            (not ActiveCircuit.Solution.SystemYChanged) and 
            (YPrim <> NIL) and 
-           (not YPrimInvalid)
+           (not YPrimInvalid())
         then
             // Mark this to incrementally update the matrix.
             // If the matrix is already being rebuilt, there is 
             // no point in doing this, just rebuild it as usual.
            ActiveCircuit.IncrCktElements.Add(Self)
         else
-            YPrimInvalid := TRUE; // this also sets the global SystemYChanged flag
+            SetYprimInvalid(true); // this also sets the global SystemYChanged flag
     end
     else
-    if (Index > 0) and (Index <= Fnconds) then
+    if (Index > 0) and (Index <= FNConds) then
     begin
-        Terminals[ActiveTerminalIdx - 1].ConductorsClosed[index - 1] := Value;
+        Terminals[ActiveTerminalIdx() - 1].ConductorsClosed[index - 1] := Value;
             
         if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
            (not ActiveCircuit.Solution.SystemYChanged) and 
            (YPrim <> NIL) and 
-           (not YPrimInvalid)
+           (not YPrimInvalid())
         then
            ActiveCircuit.IncrCktElements.Add(Self)
         else
-            YPrimInvalid := TRUE;
+            SetYprimInvalid(true);
     end;
 end;
 
-// procedure TCapacitorObj.Set_Enabled(Value: WordBool);
+// procedure TCapacitorObj.SetEnabled(Value: WordBool);
 // begin
 //     if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and 
 //        (not ActiveCircuit.Solution.SystemYChanged) and 
 //        (YPrim <> NIL) and 
-//        (not YPrimInvalid) and
+//        (not YPrimInvalid()) and
 //        (NumTerm = 1) // Assumes disabling shunt capacitors have no ill-effects
 //     begin
 //        ActiveCircuit.IncrCktElements.Add(Self);
@@ -1103,7 +1103,7 @@ end;
 //     end;
 // 
 //     // Fallback to the inherited CktElement procedure
-//     Inherited Set_Enabled(Value);
+//     Inherited SetEnabled(Value);
 // end;
 
 {$ENDIF}

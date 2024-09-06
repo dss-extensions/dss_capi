@@ -318,7 +318,7 @@ var
 begin
     for pSensor in ActiveCircuit.Sensors do
     begin
-        if pSensor.enabled then
+        if pSensor.Enabled() then
             pSensor.ResetIt;
     end;
 end;
@@ -329,7 +329,7 @@ var
 begin
     for pSensor in ActiveCircuit.Sensors do
     begin
-        if pSensor.enabled then
+        if pSensor.Enabled() then
             pSensor.TakeSample;
     end;
 end;
@@ -376,7 +376,7 @@ begin
 
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
-    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    SetNConds(Other.FNConds); // Force Reallocation of terminal stuff
 
     MeteredElement := Other.MeteredElement;  // Pointer to target circuit element
     MeteredTerminal := Other.MeteredTerminal;
@@ -389,8 +389,8 @@ begin
     inherited Create(ParClass, SensorName);
 
     FNphases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors
+    FNConds := 3;
+    SetNTerms(1);  // this forces allocation of terminals and conductors
                          // in base class
 
     SensorkW := NIL;
@@ -425,7 +425,7 @@ begin
     ValidSensor := FALSE;
     if MeteredElement <> NIL then
     begin  // Sensored element must already exist
-        if MeteredTerminal > MeteredElement.Nterms then
+        if MeteredTerminal > MeteredElement.NTerms() then
         begin
             DoErrorMsg(Format(_('Sensor: "%s"'), [Name]),
                 Format(_('Terminal no. "%d" does not exist.'), [MeteredTerminal]),
@@ -434,7 +434,7 @@ begin
         else
         begin
             FNphases := MeteredElement.NPhases;
-            Nconds := MeteredElement.NConds;
+            SetNConds(MeteredElement.NConds());
 
             // Sets name of i-th terminal's connected bus in Sensor's buslist
             // This value will be used to set the NodeRef array (see TakeSample)
@@ -464,7 +464,7 @@ begin
     begin
         Setbus(1, MeteredElement.GetBus(MeteredTerminal));
         FNphases := MeteredElement.NPhases;
-        Nconds := MeteredElement.Nconds;
+        SetNConds(MeteredElement.NConds());
         ClearSensor;
         ValidSensor := TRUE;
         AllocateSensorObjArrays;
@@ -518,7 +518,7 @@ procedure TSensorObj.TakeSample();
 var
     i: Integer;
 begin
-    if not (ValidSensor and Enabled) then
+    if not (ValidSensor and FEnabled) then
         Exit;
 
     MeteredElement.GetCurrents(CalculatedCurrent);

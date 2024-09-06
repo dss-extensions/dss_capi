@@ -658,13 +658,13 @@ procedure SetNcondsForConnection(obj: TObj);
 begin
     case obj.Connection of
         TGeneralConnection.Wye:
-            obj.NConds := obj.Fnphases + 1;
+            obj.SetNConds(obj.Fnphases + 1);
         TGeneralConnection.Delta:
             case obj.Fnphases of
                 1, 2:
-                    obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
+                    obj.SetNConds(obj.Fnphases + 1); // L-L and Open-delta
             else
-                obj.NConds := obj.Fnphases;
+                obj.SetNConds(obj.Fnphases);
             end;
     end;
 end;
@@ -703,8 +703,8 @@ begin
                     else
                         VBase := kVGeneratorBase * 1000.0;   // Just use what is supplied
                     end;
-                Yorder := Fnconds * Fnterms;
-                YPrimInvalid := TRUE;
+                Yorder := FNConds * Fnterms;
+                SetYprimInvalid(true);
             end;
             TProp.kV:
                 with Genvars do
@@ -818,7 +818,7 @@ begin
     obj.RecalcElementData();
     if Flg.NeedsYprim in obj.Flags then
     begin
-        obj.YPrimInvalid := TRUE;
+        obj.SetYprimInvalid(true);
         Exclude(obj.Flags, Flg.NeedsYprim);
     end;
     Exclude(obj.Flags, Flg.EditingActive);
@@ -835,10 +835,10 @@ begin
     if (Fnphases <> Other.Fnphases) then
     begin
         FNphases := Other.Fnphases;
-        NConds := Fnphases;  // Forces reallocation of terminal stuff
+        SetNConds(Fnphases);  // Forces reallocation of terminal stuff
 
-        Yorder := Fnconds * Fnterms;
-        YPrimInvalid := TRUE;
+        Yorder := FNConds * Fnterms;
+        SetYprimInvalid(true);
     end;
 
     Vbase := Other.Vbase;
@@ -896,7 +896,7 @@ var
 begin
     for pGen in ActiveCircuit.Generators do
     begin
-        if pGen.enabled then
+        if pGen.Enabled() then
             pGen.TakeSample;
     end;
 end;
@@ -926,9 +926,9 @@ begin
     TraceFile := nil;
 
     FNphases := 3;
-    Fnconds := 4;  // defaults to wye
+    FNConds := 4;  // defaults to wye
     Yorder := 0;  // To trigger an initial allocation
-    Nterms := 1;  // forces allocations
+    SetNTerms(1);  // forces allocations
     kWBase := 1000.0;
     kvarBase := 60.0;
     kvarMax := kvarBase * 2.0;
@@ -962,7 +962,7 @@ begin
     Vmaxpu := 1.10;
     VBase95 := Vminpu * Vbase;
     VBase105 := Vmaxpu * Vbase;
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
     IsFixed := FALSE;
 
     // Machine rating stuff
@@ -1220,7 +1220,7 @@ begin
 
     // If generator state changes, force re-calc of Y matrix
     if GenON <> GenON_Saved then
-        YPrimInvalid := TRUE;
+        SetYprimInvalid(true);
 end;
 
 procedure TGeneratorObj.RecalcElementData();
@@ -1240,7 +1240,7 @@ begin
         Xdpp := puXdpp * 1000.0 * SQR(kVGeneratorBase) / kVArating;
         Conn := Ord(connection);
         NumPhases := Fnphases;
-        NumConductors := Fnconds;
+        NumConductors := FNConds;
     end;
 
     SetNominalGeneration;
@@ -1291,9 +1291,9 @@ begin
                 TGeneralConnection.Wye:
                 begin
                     Ymatrix[i, i] := Y;
-                    Ymatrix.AddElement(Fnconds, Fnconds, Y);
-                    Ymatrix[i, Fnconds] := Yij;
-                    Ymatrix[Fnconds, i] := Yij;
+                    Ymatrix.AddElement(FNConds, FNConds, Y);
+                    Ymatrix[i, FNConds] := Yij;
+                    Ymatrix[FNConds, i] := Yij;
                 end;
                 TGeneralConnection.Delta:
                 begin
@@ -1311,9 +1311,9 @@ begin
         //
         // IF Connection = TGeneralConnection.Wye Then   With Ymatrix Do  // Take care of neutral issues
         // Begin
-        //     AddElement(Fnconds, Fnconds, YNeut);  // Add in user specified Neutral Z, if any
+        //     AddElement(FNConds, FNConds, YNeut);  // Add in user specified Neutral Z, if any
         //     // Bump up neutral-ground in case neutral ends up floating
-        //     SetElement(Fnconds, Fnconds, GetElement(Fnconds, Fnconds) * 1.000001);
+        //     SetElement(FNConds, FNConds, GetElement(FNConds, FNConds) * 1.000001);
         // End;
     
         Exit;
@@ -1337,9 +1337,9 @@ begin
                 for i := 1 to Fnphases do
                 begin
                     YMatrix[i, i] := Y;
-                    YMatrix.AddElement(Fnconds, Fnconds, Y);
-                    YMatrix[i, Fnconds] := Yij;
-                    YMatrix[Fnconds, i] := Yij;
+                    YMatrix.AddElement(FNConds, FNConds, Y);
+                    YMatrix[i, FNConds] := Yij;
+                    YMatrix[FNConds, i] := Yij;
                 end;
             end;
         TGeneralConnection.Delta:
@@ -1349,7 +1349,7 @@ begin
                 for i := 1 to Fnphases do
                 begin
                     j := i + 1;
-                    if j > Fnconds then
+                    if j > FNConds then
                         j := 1;  // wrap around for closed connections
                     YMatrix.AddElement(i, i, Y);
                     YMatrix.AddElement(j, j, Y);
@@ -1769,7 +1769,7 @@ begin
         UserModel.FCalc(Vterminal, Iterminal);
         SetITerminalUpdated(TRUE);
         // Negate currents from user model for power flow generator model
-        for i := 1 to FnConds do
+        for i := 1 to FNConds do
             InjCurrent[i] -= Iterminal[i];
     end
     else
@@ -1960,7 +1960,7 @@ begin
 
                     // Neutral current
                     if Connection = TGeneralConnection.Wye then
-                        ITerminal[FnConds] := -I012[0] * 3;
+                        ITerminal[FNConds] := -I012[0] * 3;
                 end;
         else
             DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Generators. %s has %d phases.', [FullName(), Fnphases], 5671);
@@ -1972,7 +1972,7 @@ begin
     SetITerminalUpdated(TRUE);
 
     // Add it into inj current array
-    for i := 1 to FnConds do
+    for i := 1 to FNConds do
         InjCurrent[i] -= Iterminal[i];
 
     // Take Care of any shaft model calcs
@@ -2008,7 +2008,7 @@ begin
 
     // Handle Wye Connection
     if Connection = TGeneralConnection.Wye then
-        pBuffer[Fnconds] := Vterminal[Fnconds];  // assume no neutral injection voltage
+        pBuffer[FNConds] := Vterminal[FNConds];  // assume no neutral injection voltage
 
     // Inj currents = Yprim (E)
     YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
@@ -2128,7 +2128,7 @@ var
     IntervalHrs: Double;
 begin
     // Compute energy in Generator branch
-    if not Enabled then
+    if not FEnabled then
         Exit;
 
     IntervalHrs := ActiveCircuit.Solution.IntervalHrs;
@@ -2226,7 +2226,7 @@ var
     E, Va: complex;
     NodeV: pNodeVarray;
 begin
-    YPrimInvalid := TRUE;  // Force rebuild of YPrims
+    SetYprimInvalid(true);  // Force rebuild of YPrims
     GenFundamental := ActiveCircuit.Solution.Frequency();  // Whatever the frequency is when we enter here.
 
     with GenVars do
@@ -2244,7 +2244,7 @@ begin
         NodeV := ActiveCircuit.Solution.NodeV;
         case Connection of
             TGeneralConnection.Wye:// wye - neutral is explicit
-                Va := NodeV[NodeRef[1]] - NodeV[NodeRef[Fnconds]];
+                Va := NodeV[NodeRef[1]] - NodeV[NodeRef[FNConds]];
             TGeneralConnection.Delta:// delta -- assume neutral is at zero
                 Va := NodeV[NodeRef[1]];
         end;
@@ -2265,7 +2265,7 @@ var
     VXd: Complex;  // voltage drop through machine
     NodeV: pNodeVarray;
 begin
-    YPrimInvalid := TRUE;  // Force rebuild of YPrims
+    SetYprimInvalid(true);  // Force rebuild of YPrims
 
     with GenVars do
     begin

@@ -125,8 +125,8 @@ var
     Vpu, Vmag: Double;
 
 begin
-    NCond := pElem.NConds;
-    Nterm := pElem.Nterms;
+    NCond := pElem.NConds();
+    Nterm := pElem.NTerms();
     k := 0;
     BusName := (StripExtension(pElem.FirstBus()));
     FSWrite(F, pElem.FullName());
@@ -362,7 +362,7 @@ var
 
 
 begin
-    NCond := pelem.NConds;
+    NCond := pelem.NConds();
     if (pelem.Nphases >= 3) then
     begin
         for i := 1 to 3 do
@@ -455,10 +455,10 @@ begin
         Pelem := DSS.ActiveCircuit.Sources.First;
         while pelem <> NIL do
         begin
-            if (pelem.Enabled) then
+            if (pelem.Enabled()) then
             begin
                 pelem.GetCurrents(cBuffer);
-                for j := 1 to pelem.Nterms do
+                for j := 1 to pelem.NTerms() do
                     CalcAndWriteSeqCurrents(DSS, F, j, pelem, cBuffer, FALSE);
             end;
             pelem := DSS.ActiveCircuit.Sources.Next;
@@ -470,10 +470,10 @@ begin
 
         while PDelem <> NIL do
         begin
-            if (PDelem.Enabled) then
+            if (PDelem.Enabled()) then
             begin
                 PDelem.GetCurrents(cBuffer);
-                for j := 1 to PDelem.Nterms do
+                for j := 1 to PDelem.NTerms() do
                     CalcAndWriteSeqCurrents(DSS, F, j, pDelem, cBuffer, TRUE);
             end;
             PDelem := DSS.ActiveCircuit.PDElements.Next;
@@ -484,10 +484,10 @@ begin
 
         while PCelem <> NIL do
         begin
-            if (PCelem.Enabled) then
+            if (PCelem.Enabled()) then
             begin
                 PCelem.GetCurrents(cBuffer);
-                for j := 1 to PCelem.Nterms do
+                for j := 1 to PCelem.NTerms() do
                     CalcAndWriteSeqCurrents(DSS, F, j, pCelem, cBuffer, FALSE);
             end;
             PCelem := DSS.ActiveCircuit.PCelements.Next;
@@ -498,10 +498,10 @@ begin
         Pelem := DSS.ActiveCircuit.Faults.First;
         while pelem <> NIL do
         begin
-            if (pelem.Enabled) then
+            if (pelem.Enabled()) then
             begin
                 pelem.GetCurrents(cBuffer);
-                for j := 1 to pelem.Nterms do
+                for j := 1 to pelem.NTerms() do
                     CalcAndWriteSeqCurrents(DSS, F, j, pelem, cBuffer, FALSE);
             end;
             pelem := DSS.ActiveCircuit.Faults.Next;
@@ -525,23 +525,23 @@ var
 begin
     k := 0;
     FSWrite(F, Format('%s', [pelem.DSSClassName + '.' + AnsiUpperCase(pElem.Name())]));
-    for      j := 1 to pElem.Nterms do
+    for      j := 1 to pElem.NTerms() do
     begin
         Iresid := CZERO;
-        for    i := 1 to pElem.NConds do
+        for    i := 1 to pElem.NConds() do
         begin
             Inc(k);
             FSWrite(F,
                 Format(', %10.6g, %8.2f', [Cabs(cBuffer^[k]), cdang(cBuffer^[k])]));
             Iresid += cBuffer^[k];
         end;
-        for i := pElem.Nconds + 1 to CondWidth do
+        for i := pElem.NConds() + 1 to CondWidth do
             FSWrite(F, Format(', %10.6g, %8.2f', [0.0, 0.0]));
         FSWrite(F, Format(', %10.6g, %8.2f', [Cabs(Iresid), cdang(Iresid)]));
     end;
 
     {Filler if no. terms less than termwidth}
-    for j := pElem.Nterms + 1 to TermWidth do
+    for j := pElem.NTerms() + 1 to TermWidth do
         for i := 1 to Condwidth + 1 do
             FSWrite(F, Format(', %10.6g, %8.2f', [0.0, 0.0]));
 
@@ -597,7 +597,7 @@ begin
         if Currmag > MaxCurrent then
             MaxCurrent := Currmag;
     end;
-    //----pElem.ActiveTerminalIdx := 1;
+    //----pElem.SetActiveTerminalIdx(1);
     LocalPower := pElem.Power(1) * 0.001;
     if (pElem.NormAmps = 0.0) or (pElem.EmergAmps = 0.0) then
         FSWrite(F, Format(', %10.6g, %8.2f, %8.2f', [MaxCurrent, 0.0, 0.0]))
@@ -635,10 +635,10 @@ begin
         pElem := DSS.ActiveCircuit.CktElements.First;
         while pElem <> NIL do
         begin
-            if pelem.NTerms > MaxTerm then
-                MaxTerm := pelem.NTerms;
-            if pelem.NConds > MaxCond then
-                MaxCond := pelem.NConds;
+            if pelem.NTerms() > MaxTerm then
+                MaxTerm := pelem.NTerms();
+            if pelem.NConds() > MaxCond then
+                MaxCond := pelem.NConds();
             pElem := DSS.ActiveCircuit.CktElements.Next;
         end;
 
@@ -658,7 +658,7 @@ begin
         pElem := DSS.ActiveCircuit.Sources.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
             begin
                 pElem.GetCurrents(cBuffer);
                 CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
@@ -671,7 +671,7 @@ begin
         pElem := DSS.ActiveCircuit.PDElements.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
             begin
                 pElem.GetCurrents(cBuffer);
                 CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
@@ -683,7 +683,7 @@ begin
         pElem := DSS.ActiveCircuit.Faults.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
             begin
                 pElem.GetCurrents(cBuffer);
                 CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
@@ -695,7 +695,7 @@ begin
         pElem := DSS.ActiveCircuit.PCElements.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
             begin
                 pElem.GetCurrents(cBuffer);
                 CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
@@ -739,8 +739,8 @@ begin
         if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
             with DSS.ActiveCircuit.ActiveCktElement() do
             begin
-                FSWrite(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
-                NValues := NConds * Nterms;
+                FSWrite(F, Format('"%s", %d, %d', [CktElementName, NTerms(), NConds()]));
+                NValues := NConds() * NTerms();
                 for i := 1 to NValues do
                 begin
                     FSWrite(F, Format(', %d', [GetNodeNum(DSS, NodeRef^[i])]));
@@ -765,7 +765,7 @@ begin
         pElem := DSS.ActiveCircuit.Sources.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 WriteNodeList(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.Sources.Next;
         end;
@@ -773,7 +773,7 @@ begin
         pElem := DSS.ActiveCircuit.PDElements.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 WriteNodeList(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.PDElements.Next;
         end;
@@ -781,7 +781,7 @@ begin
         pElem := DSS.ActiveCircuit.Faults.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 WriteNodeList(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.Faults.Next;
         end;
@@ -789,7 +789,7 @@ begin
         pElem := DSS.ActiveCircuit.PCElements.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 WriteNodeList(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.PCElements.Next;
         end;
@@ -819,8 +819,8 @@ begin
             with DSS.ActiveCircuit.ActiveCktElement() do
             begin
                 ComputeIterminal;
-                FSWrite(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
-                NValues := NConds * Nterms;
+                FSWrite(F, Format('"%s", %d, %d', [CktElementName, NTerms(), NConds()]));
+                NValues := NConds() * NTerms();
                 for i := 1 to NValues do
                 begin
                     FSWrite(F, Format(', %10.6g, %8.2f', [Cabs(Iterminal^[i]), cdang(Iterminal^[i])]));
@@ -846,7 +846,7 @@ begin
         pElem := DSS.ActiveCircuit.Sources.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 WriteElemCurrents(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.Sources.Next;
         end;
@@ -854,7 +854,7 @@ begin
         pElem := DSS.ActiveCircuit.PDElements.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 WriteElemCurrents(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.PDElements.Next;
         end;
@@ -862,7 +862,7 @@ begin
         pElem := DSS.ActiveCircuit.Faults.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 WriteElemCurrents(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.Faults.Next;
         end;
@@ -870,7 +870,7 @@ begin
         pElem := DSS.ActiveCircuit.PCElements.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 WriteElemCurrents(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.PCElements.Next;
         end;
@@ -900,8 +900,8 @@ begin
             with DSS.ActiveCircuit.ActiveCktElement() do
             begin
                 ComputeVterminal;
-                FSWrite(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
-                NValues := NConds * Nterms;
+                FSWrite(F, Format('"%s", %d, %d', [CktElementName, NTerms(), NConds()]));
+                NValues := NConds() * NTerms();
                 for i := 1 to NValues do
                 begin
                     FSWrite(F, Format(', %10.6g, %8.2f', [Cabs(Vterminal^[i]), cdang(Vterminal^[i])]));
@@ -927,7 +927,7 @@ begin
         pElem := DSS.ActiveCircuit.Sources.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 WriteElemVoltages(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.Sources.Next;
         end;
@@ -935,7 +935,7 @@ begin
         pElem := DSS.ActiveCircuit.PDElements.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 WriteElemVoltages(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.PDElements.Next;
         end;
@@ -943,7 +943,7 @@ begin
         pElem := DSS.ActiveCircuit.Faults.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 WriteElemVoltages(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.Faults.Next;
         end;
@@ -951,7 +951,7 @@ begin
         pElem := DSS.ActiveCircuit.PCElements.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 WriteElemVoltages(DSS, F, pElem.FullName());
             pElem := DSS.ActiveCircuit.PCElements.Next;
         end;
@@ -983,8 +983,8 @@ begin
             begin
                 ComputeVterminal;
                 ComputeIterminal;
-                FSWrite(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
-                NValues := NConds * Nterms;
+                FSWrite(F, Format('"%s", %d, %d', [CktElementName, NTerms(), NConds()]));
+                NValues := NConds() * NTerms();
                 for i := 1 to NValues do
                 begin
                     S := Vterminal^[i] * cong(Iterminal^[i]);
@@ -1019,7 +1019,7 @@ begin
         pElem := DSS.ActiveCircuit.Sources.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
             begin
                 strName := pElem.FullName();
                 WriteElemPowers(DSS, F, strName);
@@ -1032,7 +1032,7 @@ begin
         pElem := DSS.ActiveCircuit.PDElements.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
             begin
                 strName := pElem.FullName();
                 WriteElemPowers(DSS, F, strName);
@@ -1044,7 +1044,7 @@ begin
         pElem := DSS.ActiveCircuit.Faults.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
             begin
                 strName := pElem.FullName();
                 WriteElemPowers(DSS, F, strName);
@@ -1056,7 +1056,7 @@ begin
         pElem := DSS.ActiveCircuit.PCElements.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
             begin
                 strName := pElem.FullName();
                 WriteElemPowers(DSS, F, strName);
@@ -1108,15 +1108,15 @@ begin
 
         while PDElem <> NIL do
         begin
-            if (PDElem.Enabled) then
+            if (PDElem.Enabled()) then
             begin
-                Nterm := pDElem.Nterms;
+                Nterm := pDElem.NTerms();
 
                 for j := 1 to NTerm do
                 begin
                     WriteStr(sout, Pad('"' + PDelem.DSSClassName + '.' + AnsiUpperCase(PDElem.Name()) + '"', 24), Separator, j: 3);
                     FSWrite(F, sout);
-           //----PDElem.ActiveTerminalIdx := j;
+           //----PDElem.SetActiveTerminalIdx(j);
                     S := PDElem.Power(j);
                     if Opt = 1 then
                         S := S * 0.001;
@@ -1126,7 +1126,7 @@ begin
                     FSWrite(F, sout);
                     if j = 1 then
                     begin
-             //----PDelem.ActiveTerminalIdx := 1;
+             //----PDelem.SetActiveTerminalIdx(1);
                         S := PDElem.GetExcesskVANorm(1);
                         if Opt = 1 then
                             S := S * 0.001;
@@ -1153,14 +1153,14 @@ begin
 
         while PCElem <> NIL do
         begin
-            if (PCElem.Enabled) then
+            if (PCElem.Enabled()) then
             begin
-                Nterm := PCElem.Nterms;
+                Nterm := PCElem.NTerms();
 
                 for j := 1 to NTerm do
                 begin
                     FSWrite(F, Pad('"' + PCElem.DSSClassName + '.' + AnsiUpperCase(PCElem.Name()) + '"', 24), Separator, Format('%3d', [j]));
-           //----pcElem.ActiveTerminalIdx := j;
+           //----pcElem.SetActiveTerminalIdx(j);
                     S := pCElem.Power(j);
                     if Opt = 1 then
                         S := S * 0.001;
@@ -1207,7 +1207,7 @@ begin
 
         while PDElem <> NIL do
         begin
-            if (PDElem.Enabled) then
+            if (PDElem.Enabled()) then
             begin
                 PDElem.GetLosses(S_total, S_Load, S_NoLoad);
                 FSWriteln(F, Format('%s.%s, %.7g, %.7g, %.7g, %.7g, %.7g, %.7g', [PDElem.ParentClass.Name, AnsiUpperCase(PDElem.Name()), S_total.re, S_total.im, S_Load.re, S_Load.im, S_NoLoad.re, S_NoLoad.im]));
@@ -1256,13 +1256,13 @@ begin
 
         while PDElem <> NIL do
         begin
-            if (PDElem.Enabled) then
+            if (PDElem.Enabled()) then
             begin
                 with PDElem do
                 begin
                     ComputeITerminal;
                     ComputeVTerminal;
-                    FSWrite(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, AnsiUpperCase(Name), NTerms, NConds, Nphases]));
+                    FSWrite(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, AnsiUpperCase(Name), NTerms(), NConds(), Nphases]));
                     for i := 1 to Yorder do
                     begin
                         S := Vterminal^[i] * cong(ITerminal^[i]) * 0.001;
@@ -1281,13 +1281,13 @@ begin
 
         while PCElem <> NIL do
         begin
-            if (PCElem.Enabled) then
+            if (PCElem.Enabled()) then
             begin
                 with PCelem do
                 begin
                     ComputeITerminal;
                     ComputeVTerminal;
-                    FSWrite(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, AnsiUpperCase(Name), NTerms, NConds, NPhases]));
+                    FSWrite(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, AnsiUpperCase(Name), NTerms(), NConds(), NPhases]));
                     for i := 1 to Yorder do
                     begin
                         S := Vterminal^[i] * cong(ITerminal^[i]) * 0.001;
@@ -1352,10 +1352,10 @@ begin
 
         while PDElem <> NIL do
         begin
-            if (PDElem.Enabled) then
+            if (PDElem.Enabled()) then
             begin
-                NCond := pDElem.NConds;
-                Nterm := pDElem.Nterms;
+                NCond := pDElem.NConds();
+                Nterm := pDElem.NTerms();
                 PDElem.GetCurrents(cBuffer);
 
                 for j := 1 to NTerm do
@@ -1417,7 +1417,7 @@ begin
 
                     if j = 1 then
                     begin
-                 //----PDelem.ActiveTerminalIdx := 1;
+                 //----PDelem.SetActiveTerminalIdx(1);
                         S := PDElem.GetExcesskVANorm(1);
                         if Opt = 1 then
                             S := S * 0.001;
@@ -1445,10 +1445,10 @@ begin
 
         while PCElem <> NIL do
         begin
-            if (PCElem.Enabled) then
+            if (PCElem.Enabled()) then
             begin
-                NCond := PCElem.NConds;
-                Nterm := PCElem.Nterms;
+                NCond := PCElem.NConds();
+                Nterm := PCElem.NTerms();
                 PCElem.GetCurrents(cBuffer);
 
                 for j := 1 to NTerm do
@@ -1679,7 +1679,7 @@ begin
         pEnergyMeterObj := DSS.ActiveCircuit.energyMeters.First;
         while pEnergyMeterObj <> NIL do
         begin
-            if pEnergyMeterObj.Enabled then
+            if pEnergyMeterObj.Enabled() then
             begin
                 FSWrite(F, Format('"Energymeter.%s"', [AnsiUpperCase(pEnergyMeterObj.Name())]));
                 // Sensor currents (Target)
@@ -1719,7 +1719,7 @@ begin
         pSensorObj := DSS.ActiveCircuit.Sensors.First;
         while pSensorObj <> NIL do
         begin
-            if pSensorObj.Enabled then
+            if pSensorObj.Enabled() then
             begin
                 FSWrite(F, Format('"Sensor.%s"', [AnsiUpperCase(pSensorObj.Name())]));
                 // Sensor currents (Target)
@@ -1789,7 +1789,7 @@ begin
     pElem := DSS.ActiveCircuit.energyMeters.First;
     while pElem <> NIL do
     begin
-        if pElem.Enabled then
+        if pElem.Enabled() then
         begin
             try
                 FileNm := DSS.OutputDirectory + 'EXP_MTR_' + AnsiUpperCase(pElem.Name()) + '.csv';
@@ -1886,7 +1886,7 @@ begin
         pElem := DSS.ActiveCircuit.energyMeters.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
             begin
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.Year()), Separator);
                 FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
@@ -1945,7 +1945,7 @@ begin
     pElem := DSS.ActiveCircuit.Generators.First;
     while pElem <> NIL do
     begin
-        if pElem.Enabled then
+        if pElem.Enabled() then
         begin
             try
                 FileNm := DSS.OutputDirectory + 'EXP_GEN_' + AnsiUpperCase(pElem.Name()) + '.csv';
@@ -2051,7 +2051,7 @@ begin
         pElem := DSS.ActiveCircuit.Generators.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year()), Separator);
@@ -2092,7 +2092,7 @@ begin
     pElem := DSS.ActiveCircuit.PVSystems.First;
     while pElem <> NIL do
     begin
-        if pElem.Enabled then
+        if pElem.Enabled() then
         begin
             try
                 FileNm := DSS.OutputDirectory + 'EXP_PV_' + AnsiUpperCase(pElem.Name()) + '.csv';
@@ -2195,7 +2195,7 @@ begin
         pElem := DSS.ActiveCircuit.PVSystems.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year()), Separator);
@@ -2237,7 +2237,7 @@ begin
     pElem := DSS.ActiveCircuit.StorageElements.First;
     while pElem <> NIL do
     begin
-        if pElem.Enabled then
+        if pElem.Enabled() then
         begin
             try
                 FileNm := DSS.OutputDirectory + 'EXP_PV_' + AnsiUpperCase(pElem.Name()) + '.csv';
@@ -2339,7 +2339,7 @@ begin
         pElem := DSS.ActiveCircuit.StorageElements.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year()), Separator);
@@ -2422,7 +2422,7 @@ begin
         pElem := DSS.ActiveCircuit.Loads.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
                 with pElem do
                 begin
                     WriteStr(sout, 
@@ -2470,7 +2470,7 @@ begin
         pElem := DSS.ActiveCircuit.PDElements.First;
         while pElem <> NIL do
         begin
-            if pElem.Enabled then
+            if pElem.Enabled() then
             begin
                 pElem.GetCurrents(cBuffer);
                 CalcAndWriteMaxCurrents(DSS, F, pElem, Cbuffer);
@@ -2525,11 +2525,11 @@ begin
 
         while PDelem <> NIL do
         begin
-            if (PDelem.Enabled) then
+            if (PDelem.Enabled()) then
                 if (CLASSMASK and PDElem.DSSObjType) <> CAP_ELEMENT    // ignore caps
                 then
                 begin
-                    NCond := PDelem.NConds;
+                    NCond := PDelem.NConds();
                     PDelem.GetCurrents(cBuffer);
 
                     for j := 1 to 1 do       // only for terminal 1
@@ -2642,7 +2642,7 @@ begin
         pLoad := DSS.ActiveCircuit.Loads.First;
         while pLoad <> NIL do
         begin
-            if (pLoad.Enabled) then
+            if (pLoad.Enabled()) then
             begin
                 DoIt := FALSE;
                 if UE_Only then
@@ -2698,7 +2698,7 @@ begin
             for k := 1 to NumDevices do
             begin
                 SetActiveCktElement(CktElements.Get(k));
-                if ActiveCktElement.Enabled then
+                if ActiveCktElement.Enabled() then
                 begin
                     if (ActiveCktElement() is TPDElement) or (ActiveCktElement() is TPCElement) then
                         with ActiveCktElement() do
@@ -3504,8 +3504,8 @@ begin
     pElem := DSS.ActiveCircuit.CktElements.First;
     while pElem <> NIL do
     begin
-        MaxNumTerminals := max(MaxNumTerminals, pElem.NTerms);
-        MaxNumNodes := max(MaxNumNodes, pElem.NConds);
+        MaxNumTerminals := max(MaxNumTerminals, pElem.NTerms());
+        MaxNumNodes := max(MaxNumNodes, pElem.NConds());
         pElem := DSS.ActiveCircuit.CktElements.Next;
     end;
 
@@ -3538,7 +3538,7 @@ begin
 
             while pElem <> NIL do
             begin
-                if pElem.Enabled then
+                if pElem.Enabled() then
                 begin
                     WriteElementVoltagesExportFile(DSS, F, pElem, MaxNumNodes);
                     FSWriteln(F);
@@ -3552,7 +3552,7 @@ begin
 
             while pElem <> NIL do
             begin
-                if pElem.Enabled then
+                if pElem.Enabled() then
                 begin
                     WriteElementVoltagesExportFile(DSS, F, pElem, MaxNumNodes);
                     FSWriteln(F);
@@ -3566,7 +3566,7 @@ begin
 
             while pElem <> NIL do
             begin
-                if pElem.Enabled then
+                if pElem.Enabled() then
                 begin
                     WriteElementVoltagesExportFile(DSS, F, pElem, MaxNumNodes);
                     FSWriteln(F);
@@ -3656,7 +3656,7 @@ begin
             pElem := DSS.ActiveCircuit.PDElements.First;
             while pElem <> NIL do
             begin
-                if pElem.Enabled then
+                if pElem.Enabled() then
                     with pElem do
                     begin
                         pBus := Buses^[Terminals[FromTerminal - 1].BusRef];
@@ -3672,7 +3672,7 @@ begin
             pElem := DSS.ActiveCircuit.PDElements.First;
             while pElem <> NIL do
             begin
-                if pElem.Enabled then
+                if pElem.Enabled() then
                     with pElem do
                     begin
                         pBus := Buses^[Terminals[FromTerminal - 1].BusRef];

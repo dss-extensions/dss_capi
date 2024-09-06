@@ -155,7 +155,7 @@ type
 
         VBuffer, CBuffer: pComplexArray;
 
-        procedure Set_Enabled(Value: WordBool); OVERRIDE;
+        procedure SetEnabled(Value: WordBool); OVERRIDE;
 
         function MinTap(): Double;
         function MaxTap(): Double;
@@ -438,7 +438,7 @@ begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
     FNphases := Other.Fnphases;
-    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    SetNConds(Other.FNConds); // Force Reallocation of terminal stuff
 
     SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
     ElementTerminal := Other.ElementTerminal;
@@ -485,8 +485,8 @@ begin
     LastChange := 0;
 
     FNPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors in base class
+    FNConds := 3;
+    SetNTerms(1);  // this forces allocation of terminals and conductors in base class
 
     Vreg := 120.0;
     Bandwidth := 3.0;
@@ -582,12 +582,12 @@ begin
     if UsingRegulatedBus then
     begin
         FNphases := 1;     // Only need one phase
-        Nconds := 2;
+        SetNConds(2);
     end
     else
     begin
         FNphases := controlledElement.NPhases;
-        Nconds := FNphases;
+        SetNConds(FNphases);
         if FPTphase > FNphases then
         begin
             FPTphase := 1;
@@ -598,7 +598,7 @@ begin
     if (Comparetext(controlledElement.DSSClassName, 'transformer') = 0) or  // either should work
         (Comparetext(controlledElement.DSSClassName, 'autotrans') = 0) then
     begin
-        if ElementTerminal > controlledElement.Nterms then
+        if ElementTerminal > controlledElement.NTerms() then
         begin
             DoErrorMsg(
                 Format(_('RegControl: "%s"'), [Name]),
@@ -1032,7 +1032,7 @@ begin
     begin
         controlledElement.GetCurrents(Cbuffer);
         // Convert current to control current by CTRating
-        ILDC := (CBuffer[controlledElement.Nconds * (ElementTerminal - 1) + ControlledPhase]) / CTRating;
+        ILDC := (CBuffer[controlledElement.NConds() * (ElementTerminal - 1) + ControlledPhase]) / CTRating;
         if LDC_Z = 0.0 then  // Standard R, X LDC
         begin
             if InReverseMode or InCogenMode then
@@ -1266,12 +1266,12 @@ procedure TRegControlObj.MakePosSequence();
 begin
     if controlledElement <> NIL then
     begin
-        Enabled := controlledElement.Enabled;
+        SetEnabled(controlledElement.Enabled());
         if UsingRegulatedBus then
             FNphases := 1
         else
             FNphases := controlledElement.NPhases;
-        Nconds := FNphases;
+        SetNConds(FNphases);
         if (Comparetext(controlledElement.DSSClassName, 'transformer') = 0) or   // either should work
             (Comparetext(controlledElement.DSSClassName, 'autotrans') = 0) then
         begin
@@ -1296,7 +1296,7 @@ begin
         Result := TimeDelay;
 end;
 
-procedure TRegControlObj.Set_Enabled(Value: WordBool);
+procedure TRegControlObj.SetEnabled(Value: WordBool);
 begin
     // Do nothing else besides toggling the flag,
     // we don't need BusNameRedefined from CktElement.pas

@@ -138,7 +138,7 @@ var
     i: Integer;
 begin
     try
-        if Enabled then
+        if FEnabled then
         begin
             if (ActiveCircuit.Solution.LastSolutionWasDirect) and (not (ActiveCircuit.Solution.IsDynamicModel or ActiveCircuit.Solution.IsHarmonicModel)) then
             begin
@@ -329,7 +329,7 @@ begin
         TGeneralConnection.Wye:
         begin
             for i := 1 to Fnphases do
-                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[Fnconds]);
+                Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[FNConds]);
         end;
 
         TGeneralConnection.Delta:
@@ -337,7 +337,7 @@ begin
             for i := 1 to Fnphases do
             begin
                 j := i + 1;
-                if j > Fnconds then
+                if j > FNConds then
                     j := 1;
                 Vterminal[i] := ActiveCircuit.Solution.VDiff(NodeRef[i], NodeRef[j]);
             end;
@@ -357,13 +357,13 @@ begin
         TGeneralConnection.Wye:
         begin
             TermArray[i] += Curr;
-            TermArray[Fnconds] -= Curr; // Neutral
+            TermArray[FNConds] -= Curr; // Neutral
         end;
         TGeneralConnection.Delta:
         begin
             TermArray[i] += Curr;
             j := i + 1;
-            if j > Fnconds then
+            if j > FNConds then
                 j := 1;
             TermArray[j] -= Curr;
         end;

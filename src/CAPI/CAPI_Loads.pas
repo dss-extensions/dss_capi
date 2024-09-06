@@ -708,7 +708,7 @@ begin
     elem.DailyShapeObj := DSSPrime.LoadShapeClass.Find(Value);
     elem.PropertySideEffects(ord(TLoadProp.daily), 0, []);
     elem.RecalcElementData();
-    elem.YPrimInvalid := true;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_duty(const Value: PAnsiChar); CDECL;
@@ -721,7 +721,7 @@ begin
     elem.DutyShapeObj := DSSPrime.LoadShapeClass.Find(Value);
     elem.PropertySideEffects(ord(TLoadProp.duty), 0, []);
     elem.RecalcElementData();
-    elem.YPrimInvalid := true;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Growth(const Value: PAnsiChar); CDECL;
@@ -734,7 +734,7 @@ begin
     elem.GrowthShapeObj := DSSPrime.GrowthShapeClass.Find(Value);
     elem.PropertySideEffects(ord(TLoadProp.growth), 0, []);
     elem.RecalcElementData();
-    elem.YPrimInvalid := true;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_IsDelta(Value: TAPIBoolean); CDECL;
@@ -752,7 +752,7 @@ begin
     begin
         elem.PropertySideEffects(ord(TLoadProp.conn), 0, []);
         elem.RecalcElementData();
-        elem.YPrimInvalid := true;
+        elem.SetYprimInvalid(true);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -967,12 +967,12 @@ begin
         DoSimpleMsg(DSSPrime, '%s: Number of phases must be a positive integer!', [elem.FullName()], 6568);
         Exit;
     end;
-    if (Value <> elem.NPhases) then
+    if (Value <> elem.NPhases()) then
     begin
         prevVal := elem.FNPhases;
         elem.FNPhases := Value;
         elem.PropertySideEffects(ord(TLoadProp.phases), prevVal, []);
-        elem.YPrimInvalid := TRUE;
+        elem.SetYprimInvalid(true);
     end;
 end;
 //------------------------------------------------------------------------------

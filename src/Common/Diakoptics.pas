@@ -294,7 +294,7 @@ begin
                 // Get the names of the buses fot this PDElement
                 // If it is something different from a Transformer reports an error
                 // Since a link branch cannot be a transformer
-                for i := 1 to ActiveCktElement.Nterms do
+                for i := 1 to ActiveCktElement.NTerms() do
                 begin
                     Elem_Buses[i - 1] := ActiveCktElement.GetBus(i);
                     j := ansipos('.', Elem_Buses[i - 1]);
@@ -555,7 +555,7 @@ begin
                     begin
                         j := ansipos('zone_', EMeter.Name());
                         if j <> 0 then
-                            EMeter.Enabled := FALSE;
+                            EMeter.SetEnabled(FALSE);
                     end;
                 end;
                 Ymatrix.BuildYMatrix(DSS, WHOLEMATRIX, FALSE);
@@ -598,7 +598,7 @@ begin
                 for DIdx := 1 to High(Links) do
                 begin
                     DSS.ActiveCircuit.SetElementActive(String(Links[DIdx]));
-                    DSS.ActiveCircuit.ActiveCktElement.Enabled := FALSE;
+                    DSS.ActiveCircuit.ActiveCktElement.SetEnabled(FALSE);
                 end;
                 DSS.ActiveCircuit.SetBusNameRedefined(FALSE);
                 Ymatrix.BuildYMatrix(DSS,WHOLEMATRIX, FALSE);
@@ -668,7 +668,7 @@ begin
                 for DIdx := 1 to High(Links) do
                 begin
                     DSS.ActiveCircuit.SetElementActive(String(Links[DIdx]));
-                    DSS.ActiveCircuit.ActiveCktElement.Enabled := TRUE;
+                    DSS.ActiveCircuit.ActiveCktElement.SetEnabled(TRUE);
                 end;
                 DSS.ActiveCircuit.SetBusNameRedefined(FALSE);
                 Ymatrix.BuildYMatrix(DSS, WHOLEMATRIX, FALSE);

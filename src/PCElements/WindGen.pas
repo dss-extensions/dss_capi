@@ -588,13 +588,13 @@ procedure SetNcondsForConnection(obj: TObj);
 begin
     case obj.Connection of
         TGeneralConnection.Wye:
-            obj.NConds := obj.Fnphases + 1;
+            obj.SetNConds(obj.Fnphases + 1);
         TGeneralConnection.Delta:
             case obj.Fnphases of
                 1, 2:
-                    obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
+                    obj.SetNConds(obj.Fnphases + 1); // L-L and Open-delta
             else
-                obj.NConds := obj.Fnphases;
+                obj.SetNConds(obj.Fnphases);
             end;
     end;
 end;
@@ -605,10 +605,10 @@ var
 begin
     obj:= TObj(ptr);
     obj.RecalcElementData();
-    obj.YPrimInvalid := TRUE;
+    obj.SetYprimInvalid(true);
     // if Flg.NeedsYprim in obj.Flags then
     // begin
-    //     obj.YPrimInvalid := TRUE;
+    //     obj.SetYprimInvalid(true);
     //     Exclude(obj.Flags, Flg.NeedsYprim);
     // end;
     Exclude(obj.Flags, Flg.EditingActive);
@@ -650,8 +650,8 @@ begin
                         VBase := kVWindGenBase * 1000.0; // Just use what is supplied
                     end;
 
-                Yorder := Fnconds * Fnterms;
-                YPrimInvalid := TRUE;
+                Yorder := FNConds * Fnterms;
+                SetYprimInvalid(true);
             end;
             TProp.kV:
                 with GenVars do
@@ -700,11 +700,11 @@ begin
                     FreeAndNil(TraceFile);
                     TraceFile := TBufferedFileStream.Create(DSS.OutputDirectory + 'WINDGEN_' + Name + '.csv', fmCreate);
                     FSWrite(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, GenModel, dQdV, Avg_Vpu, Vdiff, MQnominalperphase, MPnominalperphase, CurrentType');
-                    for i := 1 to nphases do
+                    for i := 1 to FNPhases do
                         FSWrite(Tracefile, ', |Iinj' + IntToStr(i) + '|');
-                    for i := 1 to nphases do
+                    for i := 1 to FNPhases do
                         FSWrite(Tracefile, ', |Iterm' + IntToStr(i) + '|');
-                    for i := 1 to nphases do
+                    for i := 1 to FNPhases do
                         FSWrite(Tracefile, ', |Vterm' + IntToStr(i) + '|');
                     FSWrite(TraceFile, ',Vthev, Theta');
                     FSWriteln(TraceFile);
@@ -763,10 +763,10 @@ begin
     if (Fnphases <> Other.Fnphases) then
     begin
         FNphases := Other.Fnphases;
-        NConds := Fnphases; // Forces reallocation of terminal stuff
+        SetNConds(Fnphases); // Forces reallocation of terminal stuff
 
-        Yorder := Fnconds * Fnterms;
-        YprimInvalid := true;
+        Yorder := FNConds * Fnterms;
+        SetYprimInvalid(true);
     end;
 
     GenVars.kVWindGenBase := Other.GenVars.kVWindGenBase;
@@ -824,7 +824,7 @@ var
 begin
     for pGen in ElementList do
     begin
-        if pGen.enabled then
+        if pGen.Enabled() then
             pGen.TakeSample();
     end;
 end;
@@ -852,9 +852,9 @@ begin
     DSSObjType := ParClass.DSSClassType; // + WINDGEN_ELEMENT; // In both PCelement and Genelement list
 
     FNphases := 3; //TODO: check if we need any side-effect for this
-    Fnconds := 4; // defaults to wye
+    FNConds := 4; // defaults to wye
     Yorder := 0; // To trigger an initial allocation
-    Nterms := 1; // forces allocations
+    SetNTerms(1); // forces allocations
     kWBase := 1000.0;
     kvarBase := 60.0;
 
@@ -876,7 +876,7 @@ begin
     Vmaxpu := 1.10;
     VBase95 := Vminpu * Vbase;
     VBase105 := Vmaxpu * Vbase;
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
     // IsFixed := false;
 
     // Machine rating stuff
@@ -1162,7 +1162,7 @@ begin
 
     // If WindGen state changes, force re-calc of Y matrix
     if GenON <> GenON_Saved then
-        YprimInvalid := true;
+        SetYprimInvalid(true);
 end;
 
 procedure TWindGenObj.RecalcElementData();
@@ -1179,7 +1179,7 @@ begin
         // Xdpp := puXdpp * 1000.0 * SQR(kVWindGenBase) / kVArating;
         Conn := ord(connection);
         NumPhases := Fnphases;
-        NumConductors := Fnconds;
+        NumConductors := FNConds;
 
         if not (kVANotSet) then
         begin
@@ -1240,9 +1240,9 @@ begin
                 TGeneralConnection.Wye:
                 begin
                     Ymatrix[i, i] := Y;
-                    Ymatrix.AddElement(Fnconds, Fnconds, Y);
-                    Ymatrix[i, Fnconds] := Yij;
-                    Ymatrix[Fnconds, i] := Yij;
+                    Ymatrix.AddElement(FNConds, FNConds, Y);
+                    Ymatrix[i, FNConds] := Yij;
+                    Ymatrix[FNConds, i] := Yij;
                 end;
                 TGeneralConnection.Delta:
                 begin
@@ -1273,9 +1273,9 @@ begin
                 for i := 1 to Fnphases do
                 begin
                     YMatrix[i, i] := Y;
-                    YMatrix.AddElement(Fnconds, Fnconds, Y);
-                    YMatrix[i, Fnconds] := Yij;
-                    YMatrix[Fnconds, i] := Yij;
+                    YMatrix.AddElement(FNConds, FNConds, Y);
+                    YMatrix[i, FNConds] := Yij;
+                    YMatrix[FNConds, i] := Yij;
                 end;
             end;
         TGeneralConnection.Delta:
@@ -1285,7 +1285,7 @@ begin
                 for i := 1 to Fnphases do
                 begin
                     j := i + 1;
-                    if j > Fnconds then
+                    if j > FNConds then
                         j := 1; // wrap around for closed connections
                     YMatrix.AddElement(i, i, Y);
                     YMatrix.AddElement(j, j, Y);
@@ -1301,7 +1301,7 @@ var
 begin
      // Build only shunt Yprim
      // Build a dummy Yprim Series so that CalcV does not fail
-    if YprimInvalid then
+    if YprimInvalid() then
     begin
         if YPrim_Shunt <> nil then
             YPrim_Shunt.Free;
@@ -1403,7 +1403,7 @@ var
     Vmag: Double;
 begin
     CalcYPrimContribution(InjCurrent); // Init InjCurrent Array
-    // for i := 1 to FnConds do
+    // for i := 1 to FNConds do
     //     InjCurrent[i] := 0;
 
     ZeroITerminal();
@@ -1596,7 +1596,7 @@ var
 begin
     //CalcYPrimContribution(InjCurrent); // Init InjCurrent Array  and computes VTerminal L-N
     ComputeVTerminal();
-    // for i := 1 to FnConds do
+    // for i := 1 to FNConds do
     //     InjCurrent[i] := 0;
 
     // NOTE: while Generator does:
@@ -1615,7 +1615,7 @@ begin
     SetITerminalUpdated(TRUE);
 
     // Add it into inj current array
-    for i := 1 to FnConds do
+    for i := 1 to FNConds do
         InjCurrent[i] := -Iterminal[i];
 end;
 
@@ -1648,7 +1648,7 @@ begin
 
     // // Handle Wye Connection
     // if Connection = TGeneralConnection.Wye then
-    //     pBuffer[Fnconds] := Vterminal[Fnconds]; // assume no neutral injection voltage
+    //     pBuffer[FNConds] := Vterminal[FNConds]; // assume no neutral injection voltage
 
     // // Inj currents = Yprim (E)
     // YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
@@ -1755,7 +1755,7 @@ var
     IntervalHrs: Double;
 begin
     // Compute energy in WindGen branch
-    if not Enabled then
+    if not FEnabled then
         Exit;
 
     IntervalHrs := ActiveCircuit.Solution.IntervalHrs;
@@ -1799,7 +1799,7 @@ begin
     DSS.SetSolutionAbort(true);
     DoSimpleMsg('%s: WindGen harmonics model is not fully implemented. Please use the Generator model instead.', [FullName()], 5673);
 
-    // YprimInvalid := true; // Force rebuild of YPrims
+    // SetYprimInvalid(true); // Force rebuild of YPrims
     // GenFundamental := ActiveCircuit.Solution.Frequency(); // Whatever the frequency is when we enter here.
 
     // with GenVars do
@@ -1818,7 +1818,7 @@ begin
     //     NodeV := ActiveCircuit.Solution.NodeV;
     //     case Connection of
     //         TGeneralConnection.Wye:// wye - neutral is explicit
-    //             Va := NodeV[NodeRef[1]] - NodeV[NodeRef[Fnconds]];
+    //             Va := NodeV[NodeRef[1]] - NodeV[NodeRef[FNConds]];
     //         TGeneralConnection.Delta:// delta -- assume neutral is at zero
     //             Va := NodeV[NodeRef[1]];
     //     end;
@@ -1840,7 +1840,7 @@ var
 begin
     NodeV := ActiveCircuit.Solution.NodeV;
 
-    YprimInvalid := true; // Force rebuild of YPrims
+    SetYprimInvalid(true); // Force rebuild of YPrims
     with GenVars do
     begin
         Yeq := Cinv(WindModelDyn.Zthev);

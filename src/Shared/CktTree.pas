@@ -472,7 +472,7 @@ var
 begin
     for psrc in Ckt.Sources do
     begin
-        if not psrc.Enabled then
+        if not psrc.Enabled() then
             continue;
 
         if Analyze or (not (Flg.Checked in psrc.Flags)) then
@@ -502,7 +502,7 @@ begin
     for i := 0 to adjLst.Count - 1 do
     begin
         p := adjLst[i];
-        if p.Enabled then
+        if p.Enabled() then
         begin
             if Analyze then
             begin
@@ -533,10 +533,10 @@ var
     i, j: Integer;
 begin
     Result := FALSE;
-    for i := 1 to ThisElement.Nterms do
+    for i := 1 to ThisElement.NTerms() do
     begin
         Result := FALSE;
-        ThisElement.ActiveTerminalIdx := i;
+        ThisElement.SetActiveTerminalIdx(i);
         for j := 1 to ThisElement.NPhases do
             if ThisElement.ConductorClosed(j) then
             begin
@@ -557,13 +557,13 @@ begin
     for i := 0 to adjLst.Count - 1 do
     begin
         p := adjLst[i];
-        if p.Enabled and not (p = ActiveBranch) then
+        if p.Enabled() and not (p = ActiveBranch) then
         begin
             if Analyze or (not (Flg.Checked in p.Flags)) then
             begin
                 if (not IsShuntElement(p)) and AllTerminalsClosed(p) then
                 begin
-                    for j := 1 to p.NTerms do
+                    for j := 1 to p.NTerms() do
                     begin
                         if BusNum = p.Terminals[j - 1].BusRef then
                         begin
@@ -603,7 +603,7 @@ begin
     for i := 0 to adjLst.Count - 1 do
     begin
         p := adjLst[i];
-        if p.Enabled and IsShuntElement(p) then
+        if p.Enabled() and IsShuntElement(p) then
         begin
             if Analyze then
             begin
@@ -650,7 +650,7 @@ begin
     TestBranch := TestElement;
     while TestBranch <> NIL do
     begin
-        for iTerm := 1 to TestBranch.Nterms do
+        for iTerm := 1 to TestBranch.NTerms() do
         begin
             if not TestBranch.TerminalsChecked[iTerm - 1] then
             begin
@@ -692,7 +692,7 @@ begin
 
     for pCktElement in Ckt.PCElements do
     begin
-        if pCktElement.Enabled then
+        if pCktElement.Enabled() then
         begin
             i := pCktElement.Terminals[0].BusRef;
             lstPC[i].Add(pCktElement);
@@ -702,7 +702,7 @@ begin
     for pCktElement in Ckt.PDElements do
     // Put only eligible PDElements in the list
     begin
-        if pCktElement.Enabled then
+        if pCktElement.Enabled() then
             if IsShuntElement(pCktElement) then
             begin
                 i := pCktElement.Terminals[0].BusRef;
@@ -710,7 +710,7 @@ begin
             end
             else
             if AllTerminalsClosed(pCktElement) then
-                for j := 1 to pCktElement.Nterms do
+                for j := 1 to pCktElement.NTerms() do
                 begin
                     i := pCktElement.Terminals[j - 1].BusRef;
                     lstPD[i].Add(pCktElement);

@@ -345,14 +345,14 @@ begin
     numEnabled := pList.Count;
 //    for elem in pList do
 //    begin
-//        if elem.Enabled then 
+//        if elem.Enabled() then 
 //            Inc(numEnabled);
 //    end;
     DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, numEnabled);
 
     for elem in pList do
     begin
-        // if (elem.Enabled or DSS_CAPI_ITERATE_DISABLED) then
+        // if (elem.Enabled() or DSS_CAPI_ITERATE_DISABLED) then
         begin
             Result[k] := DSS_CopyStringAsPChar(elem.FullName());
             Inc(k);
@@ -543,10 +543,10 @@ begin
     
     for pElem in pList do
     begin
-        if pElem.Enabled then
+        if pElem.Enabled() then
         begin
-            Inc(NValuesTotal, 3 * pElem.NTerms);
-            MaxNValues := Max(MaxNValues, pElem.NConds * pElem.NTerms);
+            Inc(NValuesTotal, 3 * pElem.NTerms());
+            MaxNValues := Max(MaxNValues, pElem.NConds() * pElem.NTerms());
         end;
     end;
 
@@ -558,7 +558,7 @@ begin
     iCount := 0;
     for pElem in pList do
     begin
-//            if not pElem.Enabled then  
+//            if not pElem.Enabled() then  
 //            begin
 //                continue;
 //            end;
@@ -566,17 +566,17 @@ begin
         begin
             if (pElem.Nphases = 1) and DSSPrime.ActiveCircuit.PositiveSequence then
             begin
-                if pElem.Enabled then  
+                if pElem.Enabled() then  
                     pElem.GetCurrents(cBuffer)
                 else
                     FillByte(cBuffer^, SizeOf(Complex) * MaxNValues, 0);
 
                 Inc(iCount, 2);  // Start with kW1
                 // Put only phase 1 quantities in Pos seq
-                for j := 1 to pElem.NTerms do
+                for j := 1 to pElem.NTerms() do
                 begin
-                    k := (j - 1) * pElem.NConds;
-                    if pElem.Enabled and (pElem.NodeRef <> NIL) then
+                    k := (j - 1) * pElem.NConds();
+                    if pElem.Enabled() and (pElem.NodeRef <> NIL) then
                     begin
                         n := pElem.NodeRef[k + 1];
                         Vph[1] := NodeV[n];  // Get voltage at node
@@ -590,23 +590,23 @@ begin
             end
             else
             begin
-                for i := 0 to 2 * 3 * pElem.NTerms - 1 do
+                for i := 0 to 2 * 3 * pElem.NTerms() - 1 do
                     Result[iCount + i] := -1.0;  // Signify n/A
                     
-                Inc(iCount, 6 * pElem.NTerms);
+                Inc(iCount, 6 * pElem.NTerms());
             end;
         end
         else
         begin
-            if pElem.Enabled then  
+            if pElem.Enabled() then  
                 pElem.GetCurrents(cBuffer)
             else
                 FillByte(cBuffer^, SizeOf(Complex) * MaxNValues, 0);
         
-            for j := 1 to pElem.NTerms do
+            for j := 1 to pElem.NTerms() do
             begin
-                k := (j - 1) * pElem.NConds;
-                if pElem.Enabled and (pElem.NodeRef <> NIL) then                
+                k := (j - 1) * pElem.NConds();
+                if pElem.Enabled() and (pElem.NodeRef <> NIL) then                
                 begin
                     for i := 1 to 3 do
                         Vph[i] := NodeV[pElem.NodeRef[i + k]];
@@ -628,7 +628,7 @@ begin
                     Inc(icount, 6);
             end;
         end;
-        Inc(CResultPtr, 3 * pElem.NTerms);
+        Inc(CResultPtr, 3 * pElem.NTerms());
         
     end;
     ReAllocMem(cBuffer, 0);
@@ -667,7 +667,7 @@ begin
     numEnabled := pList.Count;
 //    for pElem in pList do
 //    begin
-//        if pElem.Enabled then 
+//        if pElem.Enabled() then 
 //            Inc(numEnabled);
 //    end;
     DSS_RecreateArray_PInteger(ResultPtr, ResultCount, numEnabled);
@@ -677,7 +677,7 @@ begin
         0:
             for pElem in pList do
             begin
-                // if pElem.Enabled then
+                // if pElem.Enabled() then
                 begin
                     pval^ := pElem.NPhases;
                     Inc(pval);
@@ -686,18 +686,18 @@ begin
         1:
             for pElem in pList do
             begin
-                // if pElem.Enabled then
+                // if pElem.Enabled() then
                 begin
-                    pval^ := pElem.Nconds;
+                    pval^ := pElem.NConds();
                     Inc(pval);
                 end;
             end;
         2:
             for pElem in pList do
             begin
-                // if pElem.Enabled then
+                // if pElem.Enabled() then
                 begin
-                    pval^ := pElem.Nterms;
+                    pval^ := pElem.NTerms();
                     Inc(pval);
                 end;
             end;

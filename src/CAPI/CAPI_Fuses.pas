@@ -368,7 +368,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    for i := 1 to elem.nphases do
+    for i := 1 to elem.NPhases() do
         if not elem.controlledElement.ConductorClosed(i) then
             Result := TRUE;
 end;
@@ -404,7 +404,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := elem.NPhases;
+    Result := elem.NPhases();
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Get_NormalState(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;

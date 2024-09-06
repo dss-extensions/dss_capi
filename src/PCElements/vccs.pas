@@ -263,7 +263,7 @@ begin
     case Idx of
         ord(TProp.phases):
             if FNPhases <> previousIntVal then
-                NConds := Fnphases;  // Force Reallocation of terminal info
+                SetNConds(Fnphases);  // Force Reallocation of terminal info
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -274,7 +274,7 @@ var
 begin
     obj := TObj(ptr);
     obj.RecalcElementData();
-    obj.YPrimInvalid := TRUE;
+    obj.SetYprimInvalid(true);
     Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
@@ -289,10 +289,10 @@ begin
     if Fnphases <> Other.Fnphases then
     begin
         FNphases := Other.Fnphases;
-        NConds := Fnphases;  // Forces reallocation of terminal stuff
+        SetNConds(Fnphases);  // Forces reallocation of terminal stuff
 
-        Yorder := Fnconds * Fnterms;
-        YPrimInvalid := TRUE;
+        Yorder := FNConds * Fnterms;
+        SetYprimInvalid(true);
     end;
     Prated := Other.Prated;
     Vrated := Other.Vrated;
@@ -313,8 +313,8 @@ begin
     DSSObjType := ParClass.DSSClassType;
 
     FNphases := 1;
-    Fnconds := 1;
-    Nterms := 1;
+    FNConds := 1;
+    SetNTerms(1);
 
     Prated := 250.0;
     Vrated := 208.0;
@@ -339,7 +339,7 @@ begin
     zlast := NIL;
     wlast := NIL;
 
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
     RecalcElementData();
 end;
 
@@ -383,7 +383,7 @@ end;
 procedure TVCCSObj.CalcYPrim();
 begin
   // Build only YPrim Series
-    if YPrimInvalid then
+    if YprimInvalid() then
     begin
         if YPrim_Series <> NIL then
             YPrim_Series.Free;
@@ -402,7 +402,7 @@ begin
   // Now Account for Open Conductors
   // For any conductor that is open, zero out row and column
     inherited CalcYPrim();
-    YPrimInvalid := FALSE;
+    SetYprimInvalid(false);
 end;
 
 function TVCCSObj.InjCurrents: Integer;

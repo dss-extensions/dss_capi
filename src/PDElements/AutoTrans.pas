@@ -562,7 +562,7 @@ begin
     case Idx of
         ord(TProp.phases):
             if FNPhases <> previousIntVal then
-                NConds := 2 * Fnphases;  // Force redefinition of number of conductors and reallocation of matrices
+                SetNConds(2 * Fnphases);  // Force redefinition of number of conductors and reallocation of matrices
             // YPrim is built with windings not connected.  Connected in NodeRef
             // default all winding kVAs to first winding so latter Donot have to be specified
 
@@ -576,8 +576,8 @@ begin
                     2:
                         Connection := TAutoTransConnection.Wye;  // Second Winding is always Common and Wye
                 end;
-            Yorder := fNConds * fNTerms;
-            // YPrimInvalid := TRUE; -- already done below
+            Yorder := FNConds * fNTerms;
+            // SetYprimInvalid(true); -- already done below
         end;
         ord(TProp.conns):
         begin
@@ -591,8 +591,8 @@ begin
                             Connection := TAutoTransConnection.Wye;  // Second Winding is always Common and Wye
                     end;
             
-            Yorder := fNConds * fNTerms;
-            // YPrimInvalid := TRUE; -- already done below
+            Yorder := FNConds * fNTerms;
+            // SetYprimInvalid(true); -- already done below
         end;
 
         ord(TProp.windings):
@@ -607,8 +607,8 @@ begin
             OldWdgSize := (previousIntVal - 1) * previousIntVal div 2;
             MaxWindings := NumWindings;
             NewWdgSize := (NumWindings - 1) * NumWindings div 2;
-            FNconds := 2 * Fnphases;
-            Nterms := NumWindings;
+            FNConds := 2 * Fnphases;
+            SetNTerms(NumWindings);
             Reallocmem(Winding, Sizeof(TAutoWinding) * MaxWindings);  // Reallocate collector array
             for i := 1 to MaxWindings do
                 Winding[i].Init(i);
@@ -692,10 +692,10 @@ begin
         ord(TProp.pctimag),
         ord(TProp.ppm_antifloat),
         ord(TProp.pctRs):
-            YprimInvalid := TRUE;
+            SetYprimInvalid(true);
         ord(TProp.XSCarray):
             if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
-                YprimInvalid := TRUE;
+                SetYprimInvalid(true);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -715,24 +715,24 @@ begin
     case iwdg of
         2:
         begin
-            for ii := 1 to nphases do
+            for ii := 1 to FNPhases do
                 NNodes[ii] := ii; // set up buffer with defaults
                // Default all other conductors to a ground connection
                // If user wants them ungrounded, must be specified explicitly!
-            for ii := nphases + 1 to NConds do
+            for ii := FNPhases + 1 to FNConds do
                 NNodes[ii] := 0;
 
             strBusName := DSS.AuxParser.ParseAsBusName(s, NumNodes, pIntegerArray(@NNodes));
 
             // Check for non-zero neutral specification
-            if NNodes[nphases + 1] > 0 then
+            if NNodes[FNPhases + 1] > 0 then
             begin
                 // Reconstruct new bus name
                 strNewBusName := strBusName;
-                for ii := 1 to Nphases do
+                for ii := 1 to FNPhases do
                     strNewBusName := strNewBusName + Format('.%d', [NNodes[ii]]);
-                for ii := nphases + 1 to Nconds do
-                    strNewBusName := strNewBusName + Format('.%d', [NNodes[nphases + 1]]);
+                for ii := FNPhases + 1 to FNConds do
+                    strNewBusName := strNewBusName + Format('.%d', [NNodes[FNPhases + 1]]);
                 inherited SetBus(iwdg, strNewBusName);
             end
             else
@@ -761,10 +761,10 @@ begin
     Other := TObj(OtherPtr);
     FNphases := Other.Fnphases;
     SetNumWindings(Other.NumWindings);
-    NConds := 2 * Fnphases; // forces reallocation of terminals and conductors
+    SetNConds(2 * Fnphases); // forces reallocation of terminals and conductors
 
-    Yorder := fNConds * fNTerms;
-    YPrimInvalid := TRUE;
+    Yorder := FNConds * fNTerms;
+    SetYprimInvalid(true);
 
     for i := 1 to NumWindings do
         Winding[i] := Other.Winding[i];
@@ -807,11 +807,11 @@ begin
     DSSObjType := ParClass.DSSClassType; //DSSObjType + XFMR; // override PDElement   (kept in both actually)
 
     FNphases := 3;  // Directly set conds and phases
-    fNConds := 2 * Fnphases; // 2 conductors per phase; let NodeRef connect neutral, etc.
+    FNConds := 2 * Fnphases; // 2 conductors per phase; let NodeRef connect neutral, etc.
     SetNumWindings(2);  // must do this after setting number of phases
     ActiveWinding := 1;
 
-    Nterms := NumWindings;  // Force allocation of terminals and conductors
+    SetNTerms(NumWindings);  // Force allocation of terminals and conductors
 
     puXHX := 0.10;
     puXHT := 0.35;
@@ -849,7 +849,7 @@ begin
 
     Y_Terminal_FreqMult := 0.0;
 
-    Yorder := fNTerms * fNconds;
+    Yorder := fNTerms * FNConds;
     RecalcElementData();
 end;
 
@@ -869,8 +869,8 @@ begin
         begin
             for i := 1 to Fnphases do
             begin
-                NodeRef[Fnphases + i] := NodeRef[i + Fnconds];
-                Terminals[iTerm - 1].TermNodeRef[Fnphases + i - 1] := NodeRef[i + Fnconds];
+                NodeRef[Fnphases + i] := NodeRef[i + FNConds];
+                Terminals[iTerm - 1].TermNodeRef[Fnphases + i - 1] := NodeRef[i + FNConds];
             end;
         end;
 end;
@@ -1123,9 +1123,9 @@ begin
             for j := 1 to NumWindings do
             begin
                 Inc(k);
-                TermRef[k] := (j - 1) * fNconds + 1;  // fNconds = 2
+                TermRef[k] := (j - 1) * FNConds + 1;  // FNConds = 2
                 Inc(k);
-                TermRef[k] := j * fNconds;
+                TermRef[k] := j * FNConds;
             end;
     else
         // Typical array for 3-phase auto
@@ -1159,9 +1159,9 @@ begin
 
                     TAutoTransConnection.Delta:
                     begin   // Delta
-                        TermRef[k] := (j - 1) * fNconds + i;
+                        TermRef[k] := (j - 1) * FNConds + i;
                         Inc(k);
-                        TermRef[k] := (j - 1) * fNconds + RotatePhases(i);  // connect to next phase in sequence
+                        TermRef[k] := (j - 1) * FNConds + RotatePhases(i);  // connect to next phase in sequence
                     end;
 
                     TAutoTransConnection.Series:
@@ -1221,7 +1221,7 @@ begin
     // For any conductor that is open, zero out row and column
     inherited CalcYPrim();
 
-    YprimInvalid := FALSE;
+    SetYprimInvalid(false);
 end;
 
 procedure TAutoTransObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
@@ -1428,7 +1428,7 @@ begin
             if TempVal <> puTap then
             begin    // Only if there's been a change
                 puTap := TempVal;
-                YPrimInvalid := TRUE;  // this property triggers setting SystemYChanged=true
+                SetYprimInvalid(true);  // this property triggers setting SystemYChanged=true
                 RecalcElementData();
             end;
         end;
@@ -1501,7 +1501,7 @@ var
     ITerm_NL: pComplexArray;
 
 begin
-    if (not Enabled) or (NodeRef = NIL) or (ActiveCircuit.Solution.NodeV = NIL) then
+    if (not FEnabled) or (NodeRef = NIL) or (ActiveCircuit.Solution.NodeV = NIL) then
         Exit;
 
     try
@@ -1527,18 +1527,18 @@ begin
                 case Winding[iWind].Connection of
                     TAutoTransConnection.Wye:
                     begin   // Wye  (Common winding usually)
-                        VTerm[i] := Vterminal[iphase + (iWind - 1) * FNconds];
-                        VTerm[i + 1] := Vterminal[iphase + (iWind - 1) * FNconds + FNphases];
+                        VTerm[i] := Vterminal[iphase + (iWind - 1) * FNConds];
+                        VTerm[i + 1] := Vterminal[iphase + (iWind - 1) * FNConds + FNphases];
                     end;
                     TAutoTransConnection.Delta:
                     begin   // Delta
                         jphase := RotatePhases(iphase);      // Get next phase in sequence
-                        VTerm[i] := Vterminal[iphase + (iWind - 1) * FNconds];
-                        VTerm[i + 1] := Vterminal[jphase + (iWind - 1) * FNconds];
+                        VTerm[i] := Vterminal[iphase + (iWind - 1) * FNConds];
+                        VTerm[i + 1] := Vterminal[jphase + (iWind - 1) * FNConds];
                     end;
                     TAutoTransConnection.Series:
                     begin    // Series Winding
-                        VTerm[i] := Vterminal[iphase + (iWind - 1) * FNconds];
+                        VTerm[i] := Vterminal[iphase + (iWind - 1) * FNConds];
                         VTerm[i + 1] := Vterminal[iphase + Fnphases];
                     end;
                 end; // CASE
@@ -1573,14 +1573,14 @@ procedure TAutoTransObj.GetWindingVoltages(iWind: Integer; VBuffer: pComplexArra
 var
     i, ii, k, NeutTerm: Integer;
 begin
-    if (not Enabled) or (NodeRef = NIL) or (ActiveCircuit.Solution.NodeV = NIL) then
+    if (not FEnabled) or (NodeRef = NIL) or (ActiveCircuit.Solution.NodeV = NIL) then
         Exit;
 
     try
         // return Zero if winding number improperly specified
         if (iWind < 1) or (iWind > NumWindings) then
         begin
-            for i := 1 to FNconds do
+            for i := 1 to FNConds do
                 VBuffer[i] := 0;
             Exit;
         end;
@@ -1590,7 +1590,7 @@ begin
             Vterminal[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
 
 
-        k := (iWind - 1) * FNconds;    // Offset for winding
+        k := (iWind - 1) * FNConds;    // Offset for winding
         NeutTerm := Fnphases + k + 1;
         for i := 1 to Fnphases do
             case Winding[iWind].Connection of
@@ -1605,7 +1605,7 @@ begin
                 end;
                 TAutoTransConnection.Series:
                 begin      // Series   (winding 1)
-                    VBuffer[i] := Vterminal[i + k] - Vterminal[i + Fnconds];
+                    VBuffer[i] := Vterminal[i + k] - Vterminal[i + FNConds];
                 end;
             end;
 
@@ -1633,7 +1633,7 @@ begin
 
     // Combine Series (wdg 1) and Common winding (2) Currents to get X Terminal Currents
     for i := 1 to Fnphases do
-        Curr[i + FnConds] += Curr[i + Fnphases];
+        Curr[i + FNConds] += Curr[i + Fnphases];
 end;
 
 procedure TAutoTransObj.GetLosses(var TotalLosses, LoadLosses, NoLoadLosses: Complex);
@@ -1712,7 +1712,7 @@ begin
                     OnPhase1 := TRUE;
             if not OnPhase1 then
             begin
-                Enabled := FALSE;   // We won't use this one
+                SetEnabled(FALSE);   // We won't use this one
                 Exit;
             end;
         end;
@@ -1731,7 +1731,7 @@ begin
 
     for i := 1 to NumWindings do
         with Winding[i] do
-            if (NPhases > 1) or (Connection <> TAutoTransConnection.Wye) then
+            if (FNPhases > 1) or (Connection <> TAutoTransConnection.Wye) then
                 new_kVs[i - 1] := kVLL / SQRT3
             else
                 new_kVs[i - 1] := kVLL;
@@ -1772,7 +1772,7 @@ begin
         for j := 1 to i do
         begin
             Value := Y_Terminal[i, j];
-            // This value goes in Yprim nphases times
+            // This value goes in Yprim FNPhases times
             for k := 0 to Fnphases - 1 do
                 YPrim_Component.AddElemSym(TermRef[i + k * NW2], TermRef[j + k * NW2], Value);
         end;

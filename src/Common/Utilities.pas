@@ -974,7 +974,7 @@ begin
     // Go through all PC Elements
     for pcElem in DSS.ActiveCircuit.PCElements do
     begin
-        if pcElem.Enabled then
+        if pcElem.Enabled() then
         begin
             pcElem.InitHarmonics();   // Virtual function
             if DSS.SolutionAbort() then
@@ -1002,7 +1002,7 @@ begin
     Result := 0;
     for ControlDevice in DSS.ActiveCircuit.DSSControls do
     begin
-        if ControlDevice.Enabled then
+        if ControlDevice.Enabled() then
             ControlDevice.Reset();
     end;
 end;
@@ -1117,7 +1117,7 @@ begin
             // something else
             if Flg.HasBeenSaved in TDSSCktElement(DSS.ActiveDSSObject).Flags then
                 continue;
-            if (not includeDisabled) and (not TDSSCktElement(DSS.ActiveDSSObject).Enabled) then
+            if (not includeDisabled) and (not TDSSCktElement(DSS.ActiveDSSObject).Enabled()) then
                 continue;
             // Skip disabled circuit elements; write all general DSS objects
             WriteDSSObject(DSS.ActiveDSSObject, F, 'New');    // sets HasBeenSaved := TRUE
@@ -1179,7 +1179,7 @@ begin
         begin
             // Skip Cktelements that have been checked before and written out by
             // something else
-            if IsCktElement and (not includeDisabled) and (not TDSSCktElement(obj).Enabled) then
+            if IsCktElement and (not includeDisabled) and (not TDSSCktElement(obj).Enabled()) then
                 continue;
             if (Flg.HasBeenSaved in obj.Flags) then
                 continue;
@@ -1230,7 +1230,7 @@ begin
 
     // Handle disabled circuit elements;   Modified to allow applets to save disabled elements 12-28-06
     if (obj.DSSObjType and ClassMask) <> DSS_Object then
-        if not TDSSCktElement(obj).Enabled then
+        if not TDSSCktElement(obj).Enabled() then
             FSWrite(F, ' ENABLED=NO');
     FSWriteln(F); // Terminate line
 
@@ -1357,7 +1357,7 @@ begin
     for i := 1 to Count do
     begin
         pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-        if pLoad.Enabled then
+        if pLoad.Enabled() then
         begin
             if DoGenerators then
                 FSWrite(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
@@ -1391,7 +1391,7 @@ begin
     for i := 1 to Count do
     begin
         pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-        if pLoad.Enabled then
+        if pLoad.Enabled() then
             inc(LoadCount);
     end;
 
@@ -1406,7 +1406,7 @@ begin
     for i := 1 to Count do
     begin
         pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-        if pLoad.Enabled then
+        if pLoad.Enabled() then
         begin
             if DoGenerators then
                 FSWrite(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
@@ -1443,7 +1443,7 @@ begin
     for i := 1 to Count do
     begin
         pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-        if pLoad.Enabled then
+        if pLoad.Enabled() then
             // Do not count skipped loads
             if Skipcount = 0 then
             begin
@@ -1463,7 +1463,7 @@ begin
     for i := 1 to Count do
     begin
         pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-        if pLoad.Enabled then
+        if pLoad.Enabled() then
             if SkipCount = 0 then
             begin
                 if DoGenerators then
@@ -1501,7 +1501,7 @@ begin
     for i := 1 to Count do
     begin
         pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-        if pLoad.Enabled then
+        if pLoad.Enabled() then
         begin
             TotalkW := TotalkW + pLoad.kWBase;  // will be right value if pos seq, too
         end;
@@ -1515,7 +1515,7 @@ begin
     for i := 1 to Count do
     begin
         pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-        if pLoad.Enabled then
+        if pLoad.Enabled() then
         begin
             if DoGenerators then
                 FSWrite(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
@@ -1664,7 +1664,7 @@ begin
             // ----------------LINES---------------------------------------------------
             if IsLineElement(pPDelem) then
             begin
-                for i := 1 to pPDElem.NTerms do
+                for i := 1 to pPDElem.NTerms() do
                 begin
                     S := S + Format(' Bus%d=%s%s', [i, StripExtension(pPDelem.GetBus(i)), PhaseString]);
                     //  Parser.SetCmdString(Format('Bus$d=%s%s',[i, StripExtension(pPDelem.GetBus(i)), PhaseString]));
@@ -1850,7 +1850,7 @@ begin
             if (BaseClass = PC_ELEMENT) or (BaseClass = PD_ELEMENT) then
             begin
                 S := '';
-                for i := 1 to pCktElem.NTerms do
+                for i := 1 to pCktElem.NTerms() do
                 begin
                     OldBusName := pCktElem.GetBus(i);
                     dotpos := pos('.', OldBusName);

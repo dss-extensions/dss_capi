@@ -236,7 +236,7 @@ begin
         ord(TProp.phases):
             if Fnphases <> previousIntVal then
             begin
-                NConds := Fnphases;  // Force Reallocation of terminal info
+                SetNConds(Fnphases);  // Force Reallocation of terminal info
                 ActiveCircuit.SetBusNameRedefined();  // Set Global Flag to signal circuit to rebuild busdefs
             end;
         ord(TProp.bus1):
@@ -290,7 +290,7 @@ begin
         //YPrim invalidation on anything that changes impedance values
     case Idx of
         3, 4, 6:
-            YprimInvalid := TRUE;
+            SetYprimInvalid(true);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -315,10 +315,10 @@ begin
     if Fnphases <> Other.Fnphases then
     begin
         Fnphases := Other.Fnphases;
-        NConds := Fnphases; // force reallocation of terminals and conductors
+        SetNConds(Fnphases); // force reallocation of terminals and conductors
 
-        Yorder := Fnconds * Fnterms;
-        YPrimInvalid := TRUE;
+        Yorder := FNConds * Fnterms;
+        SetYprimInvalid(true);
     end;
     BaseFrequency := Other.BaseFrequency;
     G := Other.G;
@@ -347,8 +347,8 @@ begin
 
      // Default to SLG fault
     FNPhases := 1;  // Directly set conds and phases
-    Fnconds := 1;
-    Nterms := 2;  // Force allocation of terminals and conductors
+    FNConds := 1;
+    SetNTerms(2);  // Force allocation of terminals and conductors
 
     Setbus(2, (GetBus(1) + '.0'));  // Default to grounded
     IsShunt := TRUE;
@@ -376,7 +376,7 @@ begin
     PctPerm := 100.0;
     HrsToRepair := 0.0;
 
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
     RecalcElementData();
 end;
 
@@ -408,7 +408,7 @@ begin
      // Give the multiplier some skew to approximate more uniform/Gaussian current distributions
      //  RandomMult :=  Cube(RandomMult);   removed 12/7/04
 
-    YPrimInvalid := TRUE;    // force rebuilding of matrix
+    SetYprimInvalid(true);    // force rebuilding of matrix
 end;
 
 procedure TFaultObj.CalcYPrim();
@@ -420,7 +420,7 @@ var
 
     YPrimTemp: TCMatrix;
 begin
-    if YPrimInvalid then
+    if YprimInvalid() then
     begin    // Reallocate YPrim if something has invalidated old allocation
         if YPrim_Series <> NIL then
             YPrim_Series.Free;
@@ -495,7 +495,7 @@ begin
     YPrim.CopyFrom(YPrimTemp);
 
     inherited CalcYPrim();
-    YprimInvalid := FALSE;
+    SetYprimInvalid(false);
 end;
 
 procedure TFaultObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
@@ -560,7 +560,7 @@ begin
                 if (PresentTimeInSec(DSS) > On_Time) and not Cleared then
                 begin
                     Is_ON := TRUE;
-                    YPrimInvalid := TRUE;
+                    SetYprimInvalid(true);
                     AppendtoEventLog(FullName(), '**APPLIED**');
                 end;
             end
@@ -571,7 +571,7 @@ begin
                     begin
                         Is_ON := FALSE;
                         Cleared := TRUE;
-                        YPrimInvalid := TRUE;
+                        SetYprimInvalid(true);
                         AppendtoEventLog(FullName(), '**CLEARED**');
                     end;
             end;

@@ -601,7 +601,7 @@ begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
-    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    SetNConds(Other.FNConds); // Force Reallocation of terminal stuff
     ShowEventLog := Other.ShowEventLog; // but leave DebugTrace off
 
     ElementTerminal := Other.ElementTerminal;
@@ -684,8 +684,8 @@ begin
     DebugTrace := FALSE;
 
     FNPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors in base class
+    FNConds := 3;
+    SetNTerms(1);  // this forces allocation of terminals and conductors in base class
 
     SetControlledElement(NIL);
     PreviousControlledElement := NIL;
@@ -805,7 +805,7 @@ begin
     if MonitoredElement() <> NIL then
     begin
         FNphases := MonitoredElement().NPhases;       // Force number of phases to be same
-        if MonitoredElementTerminal > MonitoredElement().Nterms then
+        if MonitoredElementTerminal > MonitoredElement().NTerms() then
         begin
             DoErrorMsg(Format(_('Relay: "%s"'), [Name]),
                 Format(_('Terminal no. "%d" does not exist.'), [MonitoredElementTerminal]),
@@ -822,7 +822,7 @@ begin
             if (ControlType = Distance) or (ControlType = TD21) or (ControlType = DOC) then
                 ReAllocMem(cvBuffer, SizeOf(cvBuffer[1]) * MonitoredElement().Yorder);
 
-            CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement().NConds; // for speedy sampling
+            CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement().NConds(); // for speedy sampling
 
             case ControlType of
                 Generic:
@@ -855,10 +855,10 @@ begin
 
     if controlledElement <> NIL then
     begin  // Both CktElement and monitored element must already exist
-        controlledElement.ActiveTerminalIdx := ElementTerminal;  // Make the 1 st terminal active
+        controlledElement.SetActiveTerminalIdx(ElementTerminal);  // Make the 1 st terminal active
 
         // If the relay becomes disabled, leave at False
-        if Enabled then
+        if FEnabled then
         begin
             Include(controlledElement.Flags, Flg.HasOCPDevice);  // For Reliability calcs
             Include(controlledElement.Flags, Flg.HasAutoOCPDevice);  // For Reliability calcs
@@ -914,7 +914,7 @@ begin
     if MonitoredElement() <> NIL then
     begin
         FNphases := MonitoredElement().NPhases;
-        Nconds := FNphases;
+        SetNConds(FNphases);
         Setbus(1, MonitoredElement().GetBus(ElementTerminal));
 
         // Allocate a buffer big enough to hold everything from the monitored element
@@ -923,7 +923,7 @@ begin
         if (ControlType = Distance) or (ControlType = TD21) or (ControlType = DOC) then
             ReAllocMem(cvBuffer, SizeOf(cvBuffer[1]) * MonitoredElement().Yorder);
 
-        CondOffset := (ElementTerminal - 1) * MonitoredElement().NConds; // for speedy sampling
+        CondOffset := (ElementTerminal - 1) * MonitoredElement().NConds(); // for speedy sampling
     end;
     case FNPhases of
         1:
@@ -949,7 +949,7 @@ begin
                 NumReclose
         ]));
 
-    controlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal of CktElement to terminal 1
+    controlledElement.SetActiveTerminalIdx(ElementTerminal);  // Set active terminal of CktElement to terminal 1
 
     case Code of
         Integer(CTRL_OPEN):
@@ -1010,7 +1010,7 @@ end;
 
 procedure TRelayObj.Sample();
 begin
-    controlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.SetActiveTerminalIdx(ElementTerminal);
     if controlledElement.ConductorClosed(0) // Check state of phases of active terminal
     then
         FPresentState := CTRL_CLOSE
@@ -1057,7 +1057,7 @@ begin
     if controlledElement = NIL then
         Exit;
 
-    controlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.SetActiveTerminalIdx(ElementTerminal);
 
     if NormalState = CTRL_OPEN then
     begin
@@ -1077,7 +1077,7 @@ function TRelayObj.PresentState(): EControlAction;
 begin
     if controlledElement <> NIL then
     begin
-        controlledElement.ActiveTerminalIdx := ElementTerminal;
+        controlledElement.SetActiveTerminalIdx(ElementTerminal);
 
         if not controlledElement.ConductorClosed(0) then
             FPresentState:= CTRL_OPEN
@@ -1097,7 +1097,7 @@ begin
     if controlledElement = NIL then
         Exit;
 
-    controlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.SetActiveTerminalIdx(ElementTerminal);
     if Value = CTRL_OPEN then
     begin
         controlledElement.SetConductorClosed(0, FALSE);
@@ -1152,9 +1152,9 @@ var
     iOffset: Integer;
     I012: array[1..3] of Complex;
 begin
-    MonitoredElement().ActiveTerminalIdx := MonitoredElementTerminal;
+    MonitoredElement().SetActiveTerminalIdx(MonitoredElementTerminal);
     MonitoredElement().GetCurrents(cBuffer);
-    iOffset := (MonitoredElementTerminal - 1) * MonitoredElement().NConds;  // offset for active terminal
+    iOffset := (MonitoredElementTerminal - 1) * MonitoredElement().NConds();  // offset for active terminal
     Phase2SymComp(pComplexArray(@cBuffer[iOffset + 1]), pComplexArray(@I012));
     NegSeqCurrentMag := Cabs(I012[3]);
     if NegSeqCurrentMag >= PickupAmps46 then
@@ -1716,7 +1716,7 @@ begin
 
     for i := 1 to 3 do
     begin
-        k := (MonitoredElementTerminal - 1) * MonitoredElement().NConds + i;
+        k := (MonitoredElementTerminal - 1) * MonitoredElement().NConds() + i;
         Iph[i] := cBuffer[k];
         Vph[i] := cvBuffer[i];
     end;
@@ -2167,7 +2167,7 @@ procedure TRelayObj.RevPowerLogic;
 var
     S: Complex;
 begin
-    // MonitoredElement().ActiveTerminalIdx := MonitoredElementTerminal;
+    // MonitoredElement().SetActiveTerminalIdx(MonitoredElementTerminal);
     S := MonitoredElement().Power(MonitoredElementTerminal);
     if S.re < 0.0 then
     begin

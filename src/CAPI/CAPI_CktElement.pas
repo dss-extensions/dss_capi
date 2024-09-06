@@ -176,7 +176,7 @@ begin
     Result := 0;
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
-    Result := elem.NConds
+    Result := elem.NConds()
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_NumPhases(): Integer; CDECL;
@@ -186,7 +186,7 @@ begin
     Result := 0;
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
-    Result := elem.NPhases
+    Result := elem.NPhases()
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_NumTerminals(): Integer; CDECL;
@@ -198,7 +198,7 @@ begin
         Result := 0;
         Exit;
     end;
-    Result := elem.NTerms
+    Result := elem.NTerms()
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Set_BusNames(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
@@ -276,7 +276,7 @@ begin
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
 
-    Result := elem.Enabled;
+    Result := elem.Enabled();
 end;
 
 //------------------------------------------------------------------------------
@@ -381,7 +381,7 @@ var
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement(DSSPrime, elem) then // or (not elem.Enabled)
+    if InvalidCktElement(DSSPrime, elem) then // or (not elem.Enabled())
         Exit;
 
     Alt_CE_Get_SeqPowers(ResultPtr, ResultCount, elem);
@@ -457,7 +457,7 @@ var
 begin
     if InvalidCktElement(DSSPrime, elem) then
         Exit;
-    elem.Enabled := Value;
+    elem.SetEnabled(Value);
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Set_NormalAmps(Value: Double); CDECL;
@@ -531,15 +531,15 @@ begin
         Exit;
     end;
 
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * elem.NTerms, 2, elem.NTerms);    // 2 values per terminal
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * elem.NTerms(), 2, elem.NTerms());    // 2 values per terminal
     cBuffer := Allocmem(sizeof(Complex) * elem.Yorder);
     elem.GetCurrents(cBuffer);
     iV := 0;
-    for i := 1 to elem.NTerms do
+    for i := 1 to elem.NTerms() do
     begin
         cResid := 0;
-        k := (i - 1) * elem.Nconds;
-        for j := 1 to elem.Nconds do
+        k := (i - 1) * elem.NConds();
+        for j := 1 to elem.NConds() do
         begin
             inc(k);
             cResid += CBuffer[k];
@@ -877,11 +877,11 @@ begin
         Exit;
     end;
 
-    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, elem.NTerms * elem.Nconds, elem.NTerms, elem.Nconds);
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, elem.NTerms() * elem.NConds(), elem.NTerms(), elem.NConds());
     k := 0;
-    for i := 1 to elem.Nterms do
+    for i := 1 to elem.NTerms() do
     begin
-        for j := (i - 1) * elem.NConds + 1 to i * elem.Nconds do
+        for j := (i - 1) * elem.NConds() + 1 to i * elem.NConds() do
         begin
             Result[k] := GetNodeNum(DSSPrime, elem.NodeRef[j]);
             inc(k);

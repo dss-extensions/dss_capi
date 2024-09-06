@@ -175,7 +175,7 @@ begin
             begin
                 for i := 1 to cls.ElementList.Count do 
                 begin
-                    if TDSSCktElement(objlist^).Enabled then
+                    if TDSSCktElement(objlist^).Enabled() then
                         json.Add(Obj_ToJSONData(objlist^, joptions));
                     inc(objlist);
                 end;

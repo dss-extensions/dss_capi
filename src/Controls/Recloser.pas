@@ -302,7 +302,7 @@ begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
-    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    SetNConds(Other.FNConds); // Force Reallocation of terminal stuff
 
     ElementTerminal := Other.ElementTerminal;
     SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
@@ -339,8 +339,8 @@ begin
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors in base class
+    FNConds := 3;
+    SetNTerms(1);  // this forces allocation of terminals and conductors in base class
 
     SetControlledElement(NIL);
     ElementTerminal := 1;
@@ -405,7 +405,7 @@ begin
     if MonitoredElement() <> NIL then
     begin
         FNphases := MonitoredElement().NPhases;       // Force number of phases to be same
-        if MonitoredElementTerminal > MonitoredElement().Nterms then
+        if MonitoredElementTerminal > MonitoredElement().NTerms() then
         begin
             DoErrorMsg(Format(_('Recloser: "%s"'), [Name]),
                 Format(_('Terminal no. "%d" does not exist.'), [MonitoredElementTerminal]),
@@ -416,7 +416,7 @@ begin
         Setbus(1, MonitoredElement().GetBus(MonitoredElementTerminal));
         // Allocate a buffer bigenough to hold everything from the monitored element
         ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement().Yorder);
-        CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement().NConds; // for speedy sampling
+        CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement().NConds(); // for speedy sampling
     end;
 
     // Check for existence of Controlled Element
@@ -428,10 +428,10 @@ begin
         Exclude(controlledElement.Flags, Flg.HasAutoOCPDevice);
     
         // Both CktElement and monitored element must already exist
-        controlledElement.ActiveTerminalIdx := ElementTerminal;  // Make the 1 st terminal active
+        controlledElement.SetActiveTerminalIdx(ElementTerminal);  // Make the 1 st terminal active
 
         // If the recloser becomes disabled, leave at False
-        if Enabled then
+        if FEnabled then
         begin 
             Include(controlledElement.Flags, Flg.HasOCPDevice); // For Reliability calcs
             Include(controlledElement.Flags, Flg.HasAutoOCPDevice); // For Reliability calcs
@@ -460,18 +460,18 @@ begin
     if MonitoredElement() <> NIL then
     begin
         FNphases := MonitoredElement().NPhases;
-        Nconds := FNphases;
+        SetNConds(FNphases);
         Setbus(1, MonitoredElement().GetBus(ElementTerminal));
         // Allocate a buffer bigenough to hold everything from the monitored element
         ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement().Yorder);
-        CondOffset := (ElementTerminal - 1) * MonitoredElement().NConds; // for speedy sampling
+        CondOffset := (ElementTerminal - 1) * MonitoredElement().NConds(); // for speedy sampling
     end;
     inherited;
 end;
 
 procedure TRecloserObj.DoPendingAction(const Code, ProxyHdl: Integer);
 begin
-    controlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal of CktElement to terminal 1
+    controlledElement.SetActiveTerminalIdx(ElementTerminal);  // Set active terminal of CktElement to terminal 1
     case Code of
         Integer(CTRL_OPEN):
             case FPresentState of
@@ -533,7 +533,7 @@ var
     Groundtime, PhaseTime, TripTime, TimeTest: Double;
     TDPhase, TDGround: Double;
 begin
-    controlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.SetActiveTerminalIdx(ElementTerminal);
 
     if controlledElement.ConductorClosed(0) // Check state of phases of active terminal
     then
@@ -670,7 +670,7 @@ begin
     if controlledElement = NIL then
         Exit;
 
-    controlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal
+    controlledElement.SetActiveTerminalIdx(ElementTerminal);  // Set active terminal
 
     if NormalState = CTRL_OPEN then
     begin
@@ -690,7 +690,7 @@ function TRecloserObj.PresentState(): EControlAction; //TODO: why PropertyValue 
 begin
     if controlledElement <> NIL then
     begin
-        controlledElement.ActiveTerminalIdx := ElementTerminal;
+        controlledElement.SetActiveTerminalIdx(ElementTerminal);
         if controlledElement.ConductorClosed(0) then
             FPresentState := CTRL_CLOSE
         else
@@ -710,7 +710,7 @@ Begin
     if controlledElement = NIL then
         Exit;
 
-    controlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.SetActiveTerminalIdx(ElementTerminal);
     if Value = CTRL_OPEN then
     begin
         controlledElement.SetConductorClosed(0, FALSE);

@@ -80,7 +80,7 @@ begin
     MeteredElement.GetCurrents(CalculatedCurrent);
 
     // The Phase Allocation Factor is the amount that the load must change to match the measured peak
-    iOffset := (MeteredTerminal - 1) * MeteredElement.NConds;
+    iOffset := (MeteredTerminal - 1) * MeteredElement.NConds();
     AvgAllocFactor := 0.0;
     for i := 1 to Fnphases do
     begin
@@ -136,7 +136,7 @@ procedure TMeterElement.GetCurrents(Curr: pComplexArray);
 var
     i: Integer;
 begin
-    for i := 1 to Fnconds do
+    for i := 1 to FNConds do
         Curr[i] := 0;
 end;
 

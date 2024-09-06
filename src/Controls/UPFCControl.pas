@@ -140,7 +140,7 @@ begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
-    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    SetNConds(Other.FNConds); // Force Reallocation of terminal stuff
 
     SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
     SetMonitoredElement(Other.MonitoredElement());  // Pointer to target circuit element
@@ -180,7 +180,7 @@ begin
     if MonitoredElement() <> NIL then
     begin
         FNphases := controlledElement.NPhases;
-        Nconds := FNphases;
+        SetNConds(FNphases);
         Setbus(1, MonitoredElement().GetBus(ElementTerminal));
     end;
     inherited;
@@ -248,7 +248,7 @@ begin
         for i := 1 to ListSize do 
         begin
             obj := clsUPFC.Find(FUPFCNameList.Strings[i - 1]);
-            if Assigned(obj) and obj.Enabled then 
+            if Assigned(obj) and obj.Enabled() then 
                 UPFCList.Add(obj);
         end;
     end
@@ -261,7 +261,7 @@ begin
             obj := clsUPFC.ElementList.Get(i);
          
             // Checks if it's enabled
-            if obj.Enabled then
+            if obj.Enabled() then
                 UPFCList.Add(obj);
         end;
 

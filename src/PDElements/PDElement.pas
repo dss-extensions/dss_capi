@@ -203,7 +203,7 @@ var
 begin
     try
 
-        if Enabled then
+        if FEnabled then
         begin
             for i := 1 to Yorder do
                 Vterminal[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
@@ -227,7 +227,7 @@ var
     Factor: Double;
     kVA: Complex;
 begin
-    if (NormAmps = 0.0) or not Enabled then
+    if (NormAmps = 0.0) or not FEnabled then
     begin
         OverLoad_EEN := 0.0;  // bug fixed 1/10/00
         Result := 0;
@@ -254,7 +254,7 @@ var
     Factor: Double;
     kVA: Complex;
 begin
-    if (EmergAmps = 0.0) or not Enabled then
+    if (EmergAmps = 0.0) or not FEnabled then
     begin
         Overload_UE := 0.0;  // bug fixed 1/10/00
         Result := 0;

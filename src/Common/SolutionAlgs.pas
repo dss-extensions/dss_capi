@@ -715,10 +715,10 @@ begin
         if i = Whichone then
         begin
             DSS.ActiveFaultObj := FaultObj; // in Fault Unit
-            FaultObj.Enabled := TRUE;
+            FaultObj.SetEnabled(TRUE);
         end
         else
-            FaultObj.Enabled := FALSE;
+            FaultObj.SetEnabled(FALSE);
     end;
 end;
 
@@ -845,7 +845,7 @@ begin
     for obj in ckt.Faults do
     begin
         DSS.ActiveFaultObj := obj; // for backwards compatibility
-        obj.Enabled := FALSE;
+        obj.SetEnabled(FALSE);
     end
 end;
 
@@ -969,7 +969,7 @@ begin
     // Check Sources -- each could have a different base frequency
     for p in ckt.Sources do
     begin
-        if not p.Enabled then
+        if not p.Enabled() then
             continue;
 
         if p.SpectrumObj <> NIL then
@@ -988,7 +988,7 @@ begin
     SetLength(SpectrumInUse, DSS.SpectrumClass.ElementCount()); // Allocate and zero
     for p in ckt.PCelements  do
     begin
-        if p.enabled then
+        if p.Enabled() then
             if (p.SpectrumObj <> NIL) and (DSS.SpectrumClass.Find(p.SpectrumObj.Name()) <> NIL) then
                 SpectrumInUse[DSS.SpectrumClass.ActiveIndex() - 1] := true;
     end;

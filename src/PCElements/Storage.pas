@@ -717,13 +717,13 @@ procedure SetNcondsForConnection(obj: TObj);
 begin
     case obj.Connection of
         TGeneralConnection.Wye:
-            obj.NConds := obj.Fnphases + 1;
+            obj.SetNConds(obj.Fnphases + 1);
         TGeneralConnection.Delta:
             case obj.Fnphases of
                 1, 2:
-                    obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
+                    obj.SetNConds(obj.Fnphases + 1); // L-L and Open-delta
             else
-                obj.NConds := obj.Fnphases;
+                obj.SetNConds(obj.Fnphases);
             end;
     end;
 end;
@@ -733,7 +733,7 @@ var
     obj: TStorageObj;
 begin
     for obj in ElementList do
-        if obj.Enabled then
+        if obj.Enabled() then
             obj.UpdateStorage();
 end;
 
@@ -758,8 +758,8 @@ begin
                 VBaseMin := Vminpu * VBase;
                 VBaseMax := Vmaxpu * VBase;
 
-                Yorder := Fnconds * Fnterms;
-                YprimInvalid := TRUE;
+                Yorder := FNConds * Fnterms;
+                SetYprimInvalid(true);
             end;
 
         ord(TProp.kv):
@@ -846,11 +846,11 @@ begin
                 FreeAndNil(TraceFile);
                 TraceFile := TBufferedFileStream.Create(DSS.OutputDirectory + 'STOR_' + Name + '.csv', fmCreate);
                 FSWrite(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, StorageModel,  Qnominalperphase, Pnominalperphase, CurrentType');
-                for i := 1 to nphases do
+                for i := 1 to FNPhases do
                     FSWrite(Tracefile, ', |Iinj' + IntToStr(i) + '|');
-                for i := 1 to nphases do
+                for i := 1 to FNPhases do
                     FSWrite(Tracefile, ', |Iterm' + IntToStr(i) + '|');
-                for i := 1 to nphases do
+                for i := 1 to FNPhases do
                     FSWrite(Tracefile, ', |Vterm' + IntToStr(i) + '|');
                 for i := 1 to NumVariables() do
                     FSWrite(Tracefile, ', ' + VariableName(i));
@@ -868,7 +868,7 @@ begin
         begin
             if GFM_mode then
                 dynVars.ResetIBR := FALSE;
-            YprimInvalid := TRUE;
+            SetYprimInvalid(true);
         end;
         ord(TProp.DynamicEq):
             if DynamicEqObj <> NIL then
@@ -883,7 +883,7 @@ var
 begin
     obj := TObj(ptr);
     obj.RecalcElementData();
-    obj.YPrimInvalid := TRUE;
+    obj.SetYprimInvalid(true);
     Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
@@ -898,9 +898,9 @@ begin
     if (Fnphases <> Other.Fnphases) then
     begin
         FNphases := Other.Fnphases;
-        NConds := Fnphases;  // Forces reallocation of terminal stuff
-        Yorder := Fnconds * Fnterms;
-        YprimInvalid := TRUE;
+        SetNConds(Fnphases);  // Forces reallocation of terminal stuff
+        Yorder := FNConds * Fnterms;
+        SetYprimInvalid(true);
     end;
 
     StorageVars.kVStorageBase := Other.StorageVars.kVStorageBase;
@@ -1019,7 +1019,7 @@ var
     elem: TStorageObj;
 begin
     for elem in ElementList do
-        if elem.Enabled then
+        if elem.Enabled() then
             elem.TakeSample();
 end;
 
@@ -1030,9 +1030,9 @@ begin
     TraceFile := nil;
 
     FNphases := 3;
-    Fnconds := 4;  // defaults to wye
+    FNConds := 4;  // defaults to wye
     Yorder := 0;  // To trigger an initial allocation
-    Nterms := 1;  // forces allocations
+    SetNTerms(1);  // forces allocations
 
     // Connection := 0;    // Wye (star) -- now done in PCE
     VoltageModel := 1;  // Typical fixed kW negative load
@@ -1044,7 +1044,7 @@ begin
     Vmaxpu := 1.10;
     VBaseMin := Vminpu * Vbase;
     VBaseMax := Vmaxpu * Vbase;
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
 
     varMode := VARMODEPF;
     InverterON := TRUE; // start with inverterON
@@ -1356,7 +1356,7 @@ begin
     // If Storage element state changes, force re-calc of Y matrix
     if StateChanged then
     begin
-        YprimInvalid := TRUE;
+        SetYprimInvalid(true);
         StateChanged := FALSE;  // reset the flag
     end;
 end;
@@ -1728,9 +1728,9 @@ begin
                 TGeneralConnection.Wye:
                 begin
                     Ymatrix[i, i] := Y;
-                    Ymatrix.AddElement(Fnconds, Fnconds, Y);
-                    Ymatrix[i, Fnconds] := Yij;
-                    Ymatrix[Fnconds, i] := Yij;
+                    Ymatrix.AddElement(FNConds, FNConds, Y);
+                    Ymatrix[i, FNConds] := Yij;
+                    Ymatrix[FNConds, i] := Yij;
                 end;
                 TGeneralConnection.Delta:
                 begin
@@ -1763,7 +1763,7 @@ begin
                 RatedkVLL := PresentkV();
                 Discharging := (FState = STORE_DISCHARGING);
                 mKVARating := FkVArating;
-                CalcGFMYprim(NPhases, @YMatrix);
+                CalcGFMYprim(FNPhases, @YMatrix);
             end;
     end;
     //---DEBUG--- WriteDLLDebugFile(Format('t=%.8g, Change To State=%s, Y=%.8g +j %.8g',[ActiveCircuit.Solution.dblHour, StateToStr, Y.re, Y.im]));
@@ -1779,9 +1779,9 @@ begin
                 for i := 1 to Fnphases do
                 begin
                     YMatrix[i, i] := Y;
-                    YMatrix.AddElement(Fnconds, Fnconds, Y);
-                    YMatrix[i, Fnconds] := Yij;
-                    YMatrix[Fnconds, i] := Yij;
+                    YMatrix.AddElement(FNConds, FNConds, Y);
+                    YMatrix[i, FNConds] := Yij;
+                    YMatrix[FNConds, i] := Yij;
                 end;
             end;
         TGeneralConnection.Delta:
@@ -1791,7 +1791,7 @@ begin
                 for i := 1 to Fnphases do
                 begin
                     j := i + 1;
-                    if j > Fnconds then
+                    if j > FNConds then
                         j := 1;  // wrap around for closed connections
                     YMatrix.AddElement(i, i, Y);
                     YMatrix.AddElement(j, j, Y);
@@ -1863,7 +1863,7 @@ begin
     if OldState <> Fstate then
     begin
         StateChanged := TRUE;
-        YprimInvalid := TRUE;
+        SetYprimInvalid(true);
     end;
 end;
 
@@ -1873,7 +1873,7 @@ var
 begin
     // Build only shunt Yprim
     // Build a dummy Yprim Series so that CalcV Does not fail
-    if YprimInvalid then
+    if YprimInvalid() then
     begin
         if YPrim_Shunt <> NIL then
             YPrim_Shunt.Free;
@@ -1925,17 +1925,17 @@ begin
             s, ', ');
         FSWrite(TraceFile, sout);
         
-        for i := 1 to nphases do
+        for i := 1 to FNPhases do
         begin
             WriteStr(sout, (Cabs(InjCurrent[i])): 8: 1, ', ');
             FSWrite(TraceFile, sout);
         end;
-        for i := 1 to nphases do
+        for i := 1 to FNPhases do
         begin
             WriteStr(sout, (Cabs(ITerminal[i])): 8: 1, ', ');
             FSWrite(TraceFile, sout);
         end;
-        for i := 1 to nphases do
+        for i := 1 to FNPhases do
         begin
             WriteStr(sout, (Cabs(Vterminal[i])): 8: 1, ', ');
             FSWrite(TraceFile, sout);
@@ -2074,7 +2074,7 @@ begin
         UserModel.FCalc(Vterminal, Iterminal);
         SetITerminalUpdated(TRUE);
         // Negate currents from user model for power flow Storage element model
-        for i := 1 to FnConds do
+        for i := 1 to FNConds do
             InjCurrent[i] -= Iterminal[i];
     end
     else
@@ -2107,7 +2107,7 @@ begin
     if GFM_Mode then
     begin
         dynVars.BaseV := dynVars.BasekV * 1000 * (dynVars.it[0] / dynVars.iMaxPPhase);
-        dynVars.CalcGFMVoltage(NPhases, Vterminal);
+        dynVars.CalcGFMVoltage(FNPhases, Vterminal);
         YPrim.MVMult(InjCurrent, Vterminal);
         Exit;
     end;
@@ -2131,7 +2131,7 @@ begin
                 iActual := 0;                 // To mach with the %CutOut property
 
             if FState <> STORE_DISCHARGING then
-                iActual := (PIdling / Vgrid[i - 1].mag) / NPhases;
+                iActual := (PIdling / Vgrid[i - 1].mag) / FNPhases;
 
             PolarN := topolar(iActual, Vgrid[i - 1].ang + AngCmp);     // Output Current estimated for active power
             Curr := -ptocomplex(PolarN);
@@ -2139,11 +2139,11 @@ begin
             Iterminal[i] := Curr;
         end;
 
-    if FnConds > FNphases then
-        Iterminal[FnConds] := NeutAmps;
+    if FNConds > FNphases then
+        Iterminal[FNConds] := NeutAmps;
 
     // Add it into inj current array
-    for i := 1 to FnConds do
+    for i := 1 to FNConds do
         InjCurrent[i] -= Iterminal[i];
 
     SetITerminalUpdated(TRUE);
@@ -2164,7 +2164,7 @@ begin
             ZSys := (2 * (Vbase * dynVars.ILimit)) - dynVars.IComp;
             dynVars.BaseV := (ZSys / dynVars.ILimit) * dynVars.VError;
         end;
-        dynVars.CalcGFMVoltage(NPhases, Vterminal);
+        dynVars.CalcGFMVoltage(FNPhases, Vterminal);
         YPrim.MVMult(InjCurrent, Vterminal);
         SetITerminalUpdated(FALSE);
     end;
@@ -2178,7 +2178,7 @@ begin
     // do user written dynamics model
     
     // Just pass node voltages to ground and let dynamic model take care of it
-    for i := 1 to FNconds do
+    for i := 1 to FNConds do
         VTerminal[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
     StorageVars.w_grid := TwoPi * ActiveCircuit.Solution.Frequency();
 
@@ -2225,7 +2225,7 @@ begin
 
     // Handle Wye Connection
     if Connection = TGeneralConnection.Wye then
-        pBuffer[Fnconds] := Vterminal[Fnconds];  // assume no neutral injection voltage
+        pBuffer[FNConds] := Vterminal[FNConds];  // assume no neutral injection voltage
 
     // Inj currents = Yprim (E)
     YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
@@ -2318,9 +2318,9 @@ begin
     if not GFM_Mode then
         Exit;
 
-    MaxAmps := ((StorageVars.FkVArating * 1000) / NPhases) / VBase;
+    MaxAmps := ((StorageVars.FkVArating * 1000) / FNPhases) / VBase;
     GetCurrents(Iterminal);
-    for i := 1 to NPhases do
+    for i := 1 to FNPhases do
     begin
         PhaseAmps := cabs(Iterminal[i]);
         if PhaseAmps > MaxAmps then
@@ -2365,7 +2365,7 @@ var
     IntervalHrs: Double;
 begin
     // Compute energy in Storage element branch
-    if not Enabled then
+    if not FEnabled then
         Exit;
 
     // Only tabulate discharge hours
@@ -2412,7 +2412,7 @@ begin
     Result := False;
     ComputeIterminal();
     Result := FALSE;  // Start assuming we are not delivering power
-    for i := 1 to NPhases do
+    for i := 1 to FNPhases do
     begin
         P := (ActiveCircuit.Solution.NodeV[NodeRef[i]] * cong(Iterminal[i])).re;
         if (P < 0) then // If at least 1 phase is delivering, then returns True
@@ -2498,7 +2498,7 @@ begin
     // the update is done at the end of a time step so have to force
     // a recalc of the Yprim for the next time step.  Else it will stay the same.
     if StateChanged then
-        YprimInvalid := TRUE;
+        SetYprimInvalid(true);
 end;
 
 procedure TStorageObj.ComputeDCkW;
@@ -2655,7 +2655,7 @@ procedure TStorageObj.InitHarmonics();
 var
     E, Va: complex;
 begin
-    YprimInvalid := TRUE;  // Force rebuild of YPrims
+    SetYprimInvalid(true);  // Force rebuild of YPrims
     StorageFundamental := ActiveCircuit.Solution.Frequency();  // Whatever the frequency is when we enter here.
 
     Yeq := Cinv(Cmplx(StorageVars.RThev, StorageVars.XThev));      // used for current calcs  Always L-N
@@ -2667,7 +2667,7 @@ begin
     case Connection of
         TGeneralConnection.Wye:
         begin // wye - neutral is explicit
-            Va := ActiveCircuit.Solution.NodeV[NodeRef[1]] - ActiveCircuit.Solution.NodeV[NodeRef[Fnconds]];
+            Va := ActiveCircuit.Solution.NodeV[NodeRef[1]] - ActiveCircuit.Solution.NodeV[NodeRef[FNConds]];
         end;
         TGeneralConnection.Delta:
         begin  // delta -- assume neutral is at zero
@@ -2690,7 +2690,7 @@ var
 //    Vabc: array[1..3] of Complex;
     BaseZt: Double;
 begin
-    YprimInvalid := TRUE; // Force rebuild of YPrims
+    SetYprimInvalid(true); // Force rebuild of YPrims
 
     if (Length(PICtrl) = 0) or (Length(PICtrl) < Fnphases) then
     begin
@@ -2717,7 +2717,7 @@ begin
         with StorageVars do
         begin
             NumPhases := Fnphases;
-            NumConductors := Fnconds;
+            NumConductors := FNConds;
             w_grid := twopi * ActiveCircuit.Solution.Frequency();
         end;
         DynaModel.FInit(Vterminal, Iterminal);
@@ -2731,7 +2731,7 @@ begin
     with StorageVars, dynVars do
     begin
         NumPhases := Fnphases;     // set Publicdata vars
-        NumConductors := Fnconds;
+        NumConductors := FNConds;
         Conn := ord(Connection);
 
         // Sets the length of State vars to cover the num of phases
@@ -2759,7 +2759,7 @@ begin
         ComputePresentkW();
 
         LS := ZThev.im / (2 * PI * DSS.DefaultBaseFreq);
-        for i := 0 to (NPhases - 1) do
+        for i := 0 to (FNPhases - 1) do
         begin
             Vgrid[i] := ctopolar(ActiveCircuit.Solution.NodeV[NodeRef[i + 1]]);
             dit[i] := 0;
@@ -2836,9 +2836,9 @@ begin
                     // Checks if there is current limit set
                     if ILimit > 0 then
                     begin
-                        SetLength(curr, NPhases + 1);
+                        SetLength(curr, FNPhases + 1);
                         GetCurrents(pComplexArray(@curr[0]));
-                        for j := 0 to (Nphases - 1) do
+                        for j := 0 to (FNPhases - 1) do
                         begin
                             IPresent := cabs(curr[j]);
                             GFMUpdate := GFMUpdate and (IPresent < (ILimit * VError));
@@ -3023,7 +3023,7 @@ begin
                 else
                     Result := 0.0;
             (NumBaseStorageVariables + 1)..NumStorageVariables:
-                Result := dynVars.Get_InvDynValue(i - NumBaseStorageVariables - 1, NPhases);
+                Result := dynVars.Get_InvDynValue(i - NumBaseStorageVariables - 1, FNPhases);
         else
             if UserModel.Exists() then   // Checks for existence and Selects
             begin

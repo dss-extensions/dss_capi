@@ -331,7 +331,7 @@ begin
         ord(TProp.bus1):
         begin
             // Default Bus2 to zero node of Bus1 if not already defined. (Wye Grounded connection)
-            if (not Bus2Defined) and (Nterms > 1) then
+            if (not Bus2Defined) and (FNTerms > 1) then
             begin
                 // Strip node designations from S
                 S := GetBus(1);
@@ -361,21 +361,21 @@ begin
                 if (Connection = TReactorConnection.Delta) then
                 begin
                     if (Fnphases = 1) or (Fnphases = 2) then
-                        NConds := Fnphases + 1
+                        SetNConds(Fnphases + 1)
                     else
-                        NConds := Fnphases;
+                        SetNConds(Fnphases);
                 end
                 else
-                    NConds := Fnphases;
+                    SetNConds(Fnphases);
 
-                Yorder := Fnterms * Fnconds;
+                Yorder := Fnterms * FNConds;
             end
             else
             // Probably don't need to check this, but just to be sure...
-            if (Connection = TReactorConnection.Delta) and (NConds <> (Fnphases + 1)) then 
+            if (Connection = TReactorConnection.Delta) and (FNConds <> (Fnphases + 1)) then 
             begin
-                NConds := Fnphases + 1;
-                Yorder := Fnterms * Fnconds;
+                SetNConds(Fnphases + 1);
+                Yorder := Fnterms * FNConds;
             end;
         ord(TProp.kvar):
         begin
@@ -397,20 +397,20 @@ begin
             case Connection of
                 TReactorConnection.Delta:
                 begin
-                    Nterms := 1;  // Force reallocation of terminals
+                    SetNTerms(1);  // Force reallocation of terminals
                     if (Fnphases = 1) or (Fnphases = 2) then
-                        NConds := Fnphases + 1
+                        SetNConds(Fnphases + 1)
                     else
-                        NConds := Fnphases;
+                        SetNConds(Fnphases);
                 end;
                 TReactorConnection.Wye:
                 begin
                     if Fnterms <> 2 then
                     begin
-                        Nterms := 2;
-                        // Yorder := Fnterms * Fnconds;
+                        SetNTerms(2);
+                        // Yorder := Fnterms * FNConds;
                     end;
-                    NConds := Fnphases;
+                    SetNConds(Fnphases);
                 end;
             end;
         ord(TProp.Rmatrix),
@@ -508,7 +508,7 @@ begin
         ord(TProp.Z0),
         ord(TProp.Z),
         ord(TProp.LmH):
-            YprimInvalid := TRUE;
+            SetYprimInvalid(true);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -524,10 +524,10 @@ begin
     if Fnphases <> Other.Fnphases then
     begin
         FNPhases := Other.Fnphases;
-        NConds := Fnphases; // force reallocation of terminals and conductors
+        SetNConds(Fnphases); // force reallocation of terminals and conductors
 
-        Yorder := Fnconds * Fnterms;
-        YPrimInvalid := TRUE;
+        Yorder := FNConds * Fnterms;
+        SetYprimInvalid(true);
     end;
 
     Rp := Other.Rp;
@@ -575,8 +575,8 @@ begin
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 2;  // Force allocation of terminals and conductors
+    FNConds := 3;
+    SetNTerms(2);  // Force allocation of terminals and conductors
 
     Setbus(2, (GetBus(1) + '.0.0.0'));  // Default to grounded wye
 
@@ -603,7 +603,7 @@ begin
     FaultRate := 0.0005;
     PctPerm := 100.0;
     HrsToRepair := 3.0;
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
 
     RCurveObj := NIL;
     LCurveObj := NIL;
@@ -777,7 +777,7 @@ begin
                 for i := 1 to Fnphases do
                 begin
                     j := i + 1;
-                    if j > Fnconds then
+                    if j > FNConds then
                         j := 1;
 
                     YPrimTemp.AddElement(i, i, Value);
@@ -959,7 +959,7 @@ begin
 
     inherited CalcYPrim();
 
-    YprimInvalid := FALSE;
+    SetYprimInvalid(false);
 end;
 
 procedure TReactorObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);

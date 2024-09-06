@@ -1535,7 +1535,7 @@ var
     j1, j2: Integer;
     reverse_ground, wye_ground, wye_unground: Boolean;
 begin
-    j1 := (bus-1) * pXf.NConds + 1;
+    j1 := (bus-1) * pXf.NConds() + 1;
     j2 := j1 + pXf.Nphases;
     reverse_ground := False;
     wye_ground := False;
@@ -2047,7 +2047,7 @@ var
     Nterm, j, ref: Integer;
     BusName: String;
 begin
-    Nterm := pElem.Nterms;
+    Nterm := pElem.NTerms();
     BusName := pElem.FirstBus();
     StartFreeInstance(GeoPrf, 'Location', geoUUID);
     StringNode(GeoPrf, 'IdentifiedObject.mRID', UUIDToCIMString(geoUUID));
@@ -2078,7 +2078,7 @@ var
     TermUuid, LimiTUuid: TUuid;
     pLimit: TCIMOpLimitObject;
 begin
-    Nterm := pElem.Nterms;
+    Nterm := pElem.NTerms();
     BusName := pElem.FirstBus();
     for j := 1 to NTerm do
     begin
@@ -2429,7 +2429,7 @@ begin
             if ckt.SetElementActive(elements[j]) > 0 then
             begin
                 pElem := ckt.ActiveCktElement;
-                for k := 1 to pElem.NTerms do
+                for k := 1 to pElem.NTerms() do
                 begin
                     if CheckSignalMatch(Signals[i], pElem, k) then
                     begin
@@ -2453,7 +2453,7 @@ begin
                 if ckt.SetElementActive(elements[j]) > 0 then
                 begin
                     pElem := ckt.ActiveCktElement;
-                    for k := 1 to pElem.NTerms do
+                    for k := 1 to pElem.NTerms() do
                     begin
                         if CheckSignalMatch(Signals[i], pElem, k) then
                         begin
@@ -3042,7 +3042,7 @@ begin
     begin
         for pBat in ckt.StorageElements do
         begin
-            if pBat.Enabled then
+            if pBat.Enabled() then
             begin
                 ex.RefNode(prf, 'DERDynamics.PowerElectronicsConnection', pBat);
                 SetStorageNameplate(pBat);
@@ -3050,7 +3050,7 @@ begin
         end;
         for pPV in ckt.PVSystems do
         begin
-            if pPV.Enabled then
+            if pPV.Enabled() then
             begin
                 ex.RefNode(prf, 'DERDynamics.PowerElectronicsConnection', pPV);
                 SetPhotovoltaicNameplate(pPV);
@@ -3488,7 +3488,7 @@ begin
         begin
             if pVsrc.ClassNameIs('TVSourceObj') then
             begin
-                if not pVsrc.Enabled then
+                if not pVsrc.Enabled() then
                     continue;
 
                 i := pVsrc.Terminals[0].BusRef;
@@ -3503,7 +3503,7 @@ begin
 
         for pGen in ActiveCircuit.Generators do
         begin
-            if not pGen.Enabled then
+            if not pGen.Enabled() then
                 continue;
 
             StartInstance(FunPrf, 'SynchronousMachine', pGen);
@@ -3524,7 +3524,7 @@ begin
 
         for pPV in ActiveCircuit.PVSystems do
         begin
-            if not pPV.Enabled then
+            if not pPV.Enabled() then
                 continue;
 
             pName1.LocalName := pPV.Name(); // + '_PVPanels';
@@ -3543,7 +3543,7 @@ begin
             DoubleNode(SshPrf, 'PowerElectronicsConnection.q', pPV.Presentkvar * 1000.0);
             ConverterControlEnum(SshPrf, pPV.VarMode, pPV.UsingCIMDynamics);
             DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedS', pPV.PVSystemVars.fkvarating * 1000.0);
-            if pPV.nphases = 1 then
+            if pPV.NPhases() = 1 then
                 DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedU', pPV.Presentkv * 1000.0 * sqrt(3.0))
             else
                 DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedU', pPV.Presentkv * 1000.0);
@@ -3571,7 +3571,7 @@ begin
 
         for pBat in ActiveCircuit.StorageElements do
         begin
-            if not pBat.Enabled then
+            if not pBat.Enabled() then
                 continue;
 
             pName1.LocalName := pBat.Name(); // + '_Cells';
@@ -3593,7 +3593,7 @@ begin
             DoubleNode(SshPrf, 'PowerElectronicsConnection.q', pBat.Presentkvar() * 1000.0);
             ConverterControlEnum(SshPrf, pBat.VarMode, pBat.UsingCIMDynamics);
             DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedS', pBat.StorageVars.FkVARating * 1000.0);
-            if pBat.nphases = 1 then
+            if pBat.NPhases() = 1 then
                 DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedU', pBat.PresentkV() * 1000.0 * sqrt(3.0))
             else
                 DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedU', pBat.PresentkV() * 1000.0);
@@ -3617,7 +3617,7 @@ begin
             pI1547 := TIEEE1547Controller.Create(self);
             for pInv in ActiveCircuit.InvControls do
             begin
-                if pInv.Enabled then
+                if pInv.Enabled() then
                 begin
                     pI1547.PullFromInvControl(pInv);
                     pI1547.WriteCIM(DynPrf);
@@ -3625,7 +3625,7 @@ begin
             end;
             for pExp in ActiveCircuit.ExpControls do
             begin
-                if pExp.Enabled then
+                if pExp.Enabled() then
                 begin
                     pI1547.PullFromExpControl(pExp);
                     pI1547.WriteCIM(DynPrf);
@@ -3640,7 +3640,7 @@ begin
                 continue;
 
             pVsrc := TVSourceObj(src);
-            if not pVsrc.Enabled then
+            if not pVsrc.Enabled() then
                 continue;
 
             Zs := pVsrc.Z.AvgDiagonal;
@@ -3684,7 +3684,7 @@ begin
 
         for pCap in ActiveCircuit.ShuntCapacitors do
         begin
-            if not pCap.Enabled then
+            if not pCap.Enabled() then
                 continue;
             
             StartInstance(FunPrf, 'LinearShuntCompensator', pCap);
@@ -3775,7 +3775,7 @@ begin
                     RegulatingControlEnum(EpPrf, 'userDefined'); // i.e. unsupported in CIM
             end;
             BooleanNode(EpPrf, 'RegulatingControl.discrete', TRUE);
-            BooleanNode(EpPrf, 'RegulatingControl.enabled', pCapC.Enabled);
+            BooleanNode(EpPrf, 'RegulatingControl.enabled', pCapC.Enabled());
             DoubleNode(EpPrf, 'RegulatingControl.targetValue', val * 0.5 * (v1 + v2));
             DoubleNode(EpPrf, 'RegulatingControl.targetDeadband', val * (v2 - v1));
             EndInstance(FunPrf, 'RegulatingControl');
@@ -3785,7 +3785,7 @@ begin
         maxWdg := 3; // start with the size of autos
         for pXf in ActiveCircuit.Transformers do
         begin
-            if pXf.Enabled then
+            if pXf.Enabled() then
                 if pXf.NumWindings > maxWdg then
                     maxWdg := pXf.NumWindings;
         end;
@@ -3806,7 +3806,7 @@ begin
         // only considering 2 windings, vector group YNa, or 3 windings, vector group YNad1
         for pAuto in ActiveCircuit.AutoTransformers do
         begin
-            if not pAuto.Enabled then
+            if not pAuto.Enabled() then
                 continue;
 
             with pAuto do
@@ -3941,7 +3941,7 @@ begin
         //    TODO: side effect is that these transformers will reference XfmrCode until the text file is reloaded. Solution results should be the same.
         for pXf in ActiveCircuit.Transformers do
         begin
-            if pXf.Enabled then
+            if pXf.Enabled() then
             begin
                 if (pXf.XfmrCodeObj = NIL) and (pXf.NPhases <> 3) then
                 begin
@@ -3965,7 +3965,7 @@ begin
         // create all the banks (CIM PowerTransformer) for regular transformers
         for pXf in ActiveCircuit.Transformers do
         begin
-            if not pXf.Enabled then
+            if not pXf.Enabled() then
                 continue;
 
             if pXf.XfmrBank = '' then
@@ -3985,7 +3985,7 @@ begin
         // write all the transformers, according to the three cases
         for pXf in ActiveCircuit.Transformers do
         begin
-            if not pXf.Enabled then
+            if not pXf.Enabled() then
                 continue;
 
             with pXf do
@@ -4096,7 +4096,7 @@ begin
                             IntegerNode(FunPrf, 'PowerTransformerEnd.phaseAngleClock', 1)
                         else
                             IntegerNode(FunPrf, 'PowerTransformerEnd.phaseAngleClock', 0);
-                        j := (i - 1) * pXf.NConds + pXf.Nphases + 1;
+                        j := (i - 1) * pXf.NConds() + pXf.Nphases + 1;
                         if (Winding[i].Connection = 1) then
                         begin // delta
                             BooleanNode(FunPrf, 'TransformerEnd.grounded', FALSE);
@@ -4212,7 +4212,7 @@ begin
                 RegulatingControlEnum(FunPrf, 'voltage');
                 UuidNode(FunPrf, 'RegulatingControl.Terminal', GetTermUuid(tr, pReg.TrWinding()));
                 MonitoredPhaseNode(FunPrf, FirstPhaseString(tr, pReg.TrWinding()));
-                BooleanNode(FunPrf, 'RegulatingControl.enabled', pReg.Enabled);
+                BooleanNode(FunPrf, 'RegulatingControl.enabled', pReg.Enabled());
                 BooleanNode(EpPrf, 'RegulatingControl.discrete', TRUE);
                 DoubleNode(EpPrf, 'RegulatingControl.targetValue', Vreg);
                 DoubleNode(EpPrf, 'RegulatingControl.targetDeadband', Bandwidth);
@@ -4259,7 +4259,7 @@ begin
                 DoubleNode(EpPrf, 'TapChanger.initialDelay', TimeDelay);
                 DoubleNode(EpPrf, 'TapChanger.subsequentDelay', TapDelay);
                 BooleanNode(EpPrf, 'TapChanger.ltcFlag', TRUE);
-                BooleanNode(SshPrf, 'TapChanger.controlEnabled', pReg.Enabled);
+                BooleanNode(SshPrf, 'TapChanger.controlEnabled', pReg.Enabled());
                 DoubleNode(SshPrf, 'TapChanger.step', TapNum());
                 DoubleNode(EpPrf, 'TapChanger.ptRatio', PTRatio);
                 DoubleNode(EpPrf, 'TapChanger.ctRatio', CTRating / 0.2);
@@ -4274,7 +4274,7 @@ begin
         // series reactors, exported as SeriesCompensators
         for pReac in ActiveCircuit.Reactors do
         begin
-            if not pReac.Enabled then
+            if not pReac.Enabled() then
                 continue;
 
             StartInstance(FunPrf, 'SeriesCompensator', pReac);
@@ -4293,7 +4293,7 @@ begin
 
         for pLine in ActiveCircuit.Lines do
         begin
-            if not pLine.Enabled then
+            if not pLine.Enabled() then
                 continue;
 
             with pLine do
@@ -4312,7 +4312,7 @@ begin
                     DoubleNode(EpPrf, 'Switch.ratedCurrent', ratedAmps);
                     // some OpenDSS models have enabled=false to signal open switches, but we can't actually
                     // export them because disabled elements don't have terminal references in memory
-                    if Enabled then
+                    if pLine.Enabled() then
                     begin
                         BooleanNode(FunPrf, 'Switch.normalOpen', not pLine.ConductorClosed(0));
                         BooleanNode(SshPrf, 'Switch.open', not pLine.ConductorClosed(0));
@@ -4447,7 +4447,7 @@ begin
 
         for pLoad in ActiveCircuit.Loads do
         begin
-            if not pLoad.Enabled then
+            if not pLoad.Enabled() then
                 continue;
 
             StartInstance(FunPrf, 'EnergyConsumer', pLoad);
@@ -4496,7 +4496,7 @@ begin
             begin // we need the real units for CIM
                 for pLine in ActiveCircuit.Lines do
                 begin
-                    if pLine.Enabled then
+                    if pLine.Enabled() then
                     begin
                         if (pLine.LineCodeObj <> NIL) and (pLine.LineCodeObj.Name() = pLnCd.LocalName) then
                         begin

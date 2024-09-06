@@ -151,10 +151,10 @@ procedure SetBusX(obj: TObj; busDef: String);
 begin
     // Make sure we have enough terminals defined
     // Set Bus2 = Bus1.0.0.0
-    if obj.Nterms <> 4 then   // have to have 4 terminals to set this property
+    if obj.NTerms() <> 4 then   // have to have 4 terminals to set this property
     begin
-        obj.Nterms := 4;
-        obj.NConds := obj.Fnphases; // force reallocation of terminals and conductors
+        obj.SetNTerms(4);
+        obj.SetNConds(obj.Fnphases); // force reallocation of terminals and conductors
     end;
     obj.SetBus(3, busDef);
 end;
@@ -296,17 +296,17 @@ begin
         ord(TProp.phases):
             if Fnphases <> previousIntVal then
             begin
-                NConds := Fnphases;  // Force Reallocation of terminal info if different size
+                SetNConds(Fnphases);  // Force Reallocation of terminal info if different size
                 ActiveCircuit.SetBusNameRedefined();  // Set Global Flag to signal circuit to rebuild busdefs
             end;
         ord(TProp.Typ):
             case Spectype of
                 SPEC_AUTO:
                 begin
-                    if Nterms = 2 then
+                    if FNTerms = 2 then
                     begin
-                        Nterms := 4;
-                        NConds := Fnphases;
+                        SetNTerms(4);
+                        SetNConds(Fnphases);
                     end;
                     SetBus(2, GetBus(3));
                 end;
@@ -344,7 +344,7 @@ begin
         ord(TProp.Typ),
         ord(TProp.R1),
         ord(TProp.R2):
-            YprimInvalid := TRUE;
+            SetYprimInvalid(true);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -359,10 +359,10 @@ begin
     begin
         Fnphases := Other.Fnphases;
         FnTerms := Other.FnTerms;
-        NConds := Fnphases; // force reallocation of terminals and conductors
+        SetNConds(Fnphases); // force reallocation of terminals and conductors
 
-        Yorder := Fnconds * Fnterms;
-        YPrimInvalid := TRUE;
+        Yorder := FNConds * Fnterms;
+        SetYprimInvalid(true);
     end;
 
     BaseFrequency := Other.BaseFrequency;
@@ -389,8 +389,8 @@ begin
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 2;  // Force allocation of terminals and conductors
+    FNConds := 3;
+    SetNTerms(2);  // Force allocation of terminals and conductors
 
     Setbus(2, (GetBus(1) + '.0'));  // Default to grounded
     IsShunt := TRUE;
@@ -417,7 +417,7 @@ begin
     PctPerm := 100.0;
     HrsToRepair := 0.0;
 
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
 
     FpctRSpecified := TRUE;  // Force computation of G1, G2
     RecalcElementData();
@@ -485,7 +485,7 @@ var
     i: Integer;
     YPrimTemp: TCMatrix;
 begin
-    if YPrimInvalid then
+    if YprimInvalid() then
     begin    // Reallocate YPrim if something has invalidated old allocation
         if YPrim_Series <> NIL then
             YPrim_Series.Free;
@@ -579,7 +579,7 @@ begin
     YPrim.CopyFrom(YPrimTemp);
 
     inherited CalcYPrim();
-    YprimInvalid := FALSE;
+    SetYprimInvalid(false);
 end;
 
 procedure TGICTransformerObj.MakePosSequence();

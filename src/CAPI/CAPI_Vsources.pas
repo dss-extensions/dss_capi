@@ -151,7 +151,7 @@ begin
     begin
         elem.PropertySideEffects(ord(TVsourceProp.BasekV), 0, []);
         elem.RecalcElementData();
-        elem.YPrimInvalid := true;
+        elem.SetYprimInvalid(true);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -192,7 +192,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.NPhases;
+    Result := elem.NPhases();
 end;
 //------------------------------------------------------------------------------
 procedure Vsources_Set_AngleDeg(Value: Double); CDECL;
@@ -232,7 +232,7 @@ begin
     begin
         elem.PropertySideEffects(ord(TVsourceProp.phases), prev, []);
         elem.RecalcElementData();
-        elem.YPrimInvalid := true;
+        elem.SetYprimInvalid(true);
     end;
 end;
 //------------------------------------------------------------------------------

@@ -643,7 +643,7 @@ var
     i: Integer;
 begin
     Result := FALSE;
-    for i := 1 to cktElem.NTerms do
+    for i := 1 to cktElem.NTerms() do
     begin
         if cktElem.Terminals[i - 1].BusRef = BusReference then
         begin

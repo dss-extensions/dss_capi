@@ -255,7 +255,7 @@ begin
             if controlledElement = NIL then
                 Exit;
 
-            controlledElement.ActiveTerminalIdx := ElementTerminal;
+            controlledElement.SetActiveTerminalIdx(ElementTerminal);
             for i := 1 to controlledElement.NPhases do
                 controlledElement.SetConductorClosed(i, FPresentState[i] <> CTRL_OPEN);
         end;
@@ -272,7 +272,7 @@ begin
 
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
-    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    SetNConds(Other.FNConds); // Force Reallocation of terminal stuff
 
     ElementTerminal := Other.ElementTerminal;
     SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
@@ -299,8 +299,8 @@ begin
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors in base class
+    FNConds := 3;
+    SetNTerms(1);  // this forces allocation of terminals and conductors in base class
     SetControlledElement(NIL);
     ElementTerminal := 1;
 
@@ -353,7 +353,7 @@ begin
         FNphases := MonitoredElement().NPhases; // Force number of phases to be same
         if Fnphases > FUSEMAXDIM then
             DoSimpleMsg('Warning: Fuse %s: Number of phases > Max fuse dimension.', [Self.Name], 404);
-        if MonitoredElementTerminal > MonitoredElement().Nterms then
+        if MonitoredElementTerminal > MonitoredElement().NTerms() then
         begin
             DoErrorMsg(Format(_('Fuse: "%s"'), [Name]),
                 Format(_('Terminal no. "%d" does not exist.'), [MonitoredElementTerminal]),
@@ -365,7 +365,7 @@ begin
             Setbus(1, MonitoredElement().GetBus(MonitoredElementTerminal));
             // Allocate a buffer big enough to hold everything from the monitored element
             ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement().Yorder);
-            CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement().NConds; // for speedy sampling
+            CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement().NConds(); // for speedy sampling
         end;
     end;
 
@@ -380,9 +380,9 @@ begin
 
     if controlledElement <> NIL then
     begin  // Both CktElement and monitored element must already exist
-        controlledElement.ActiveTerminalIdx := ElementTerminal;  // Make the 1 st terminal active
+        controlledElement.SetActiveTerminalIdx(ElementTerminal);  // Make the 1 st terminal active
 
-        if Enabled then
+        if FEnabled then
             Include(controlledElement.Flags, Flg.HasOCPDevice);  // For Reliability calcs
 
         // Open/Close State of controlled element based on state assigned to the control
@@ -417,7 +417,7 @@ procedure TFuseObj.GetCurrents(Curr: pComplexArray);
 var
     i: Integer;
 begin
-    for i := 1 to Fnconds do
+    for i := 1 to FNConds do
         Curr[i] := 0;
 end;
 
@@ -430,7 +430,7 @@ begin
     if Phs > FUSEMAXDIM then
         Exit;
 
-    controlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.SetActiveTerminalIdx(ElementTerminal);
     if FPresentState[Phs] = CTRL_CLOSE then
         if ReadyToBlow[Phs] then
         begin   // ignore if we became disarmed in meantime
@@ -446,7 +446,7 @@ var
     Cmag: Double;
     TripTime: Double;
 begin
-    controlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.SetActiveTerminalIdx(ElementTerminal);
     MonitoredElement().GetCurrents(cBuffer);
 
     for i := 1 to Min(FUSEMAXDIM, MonitoredElement().Nphases) do
@@ -498,7 +498,7 @@ begin
     if controlledElement = NIL then
         Exit;
 
-    controlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.SetActiveTerminalIdx(ElementTerminal);
 
     for i := 1 to Min(FUSEMAXDIM, controlledElement.Nphases) do
     begin
@@ -518,7 +518,7 @@ begin
     //TODO: do we need to validate Idx?
     if controlledElement <> NIL then
     begin
-        controlledElement.ActiveTerminalIdx := ElementTerminal; 
+        controlledElement.SetActiveTerminalIdx(ElementTerminal); 
         if not controlledElement.ConductorClosed(Idx) then
             FPresentState[Idx]:= CTRL_OPEN
         else

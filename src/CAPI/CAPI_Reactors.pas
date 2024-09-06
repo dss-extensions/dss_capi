@@ -414,7 +414,7 @@ begin
         DoSimpleMsg(DSSPrime, '%s: Number of phases must be a positive integer!', [elem.FullName()], 6568);
         Exit;
     end;
-    if Value = elem.NPhases then
+    if Value = elem.NPhases() then
         Exit;
     prevVal := elem.FNPhases;
     elem.FNPhases := Value;

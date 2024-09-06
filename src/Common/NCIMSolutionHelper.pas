@@ -87,7 +87,7 @@ begin
 
     for pElem in DSS.ActiveCircuit.PCElements do
     begin
-        if (not pElem.Enabled) then
+        if (not pElem.Enabled()) then
             continue;
 
         for Idx := 1 to pElem.NPhases do
@@ -426,7 +426,7 @@ var
 begin
     for pGen in DSS.ActiveCircuit.Generators do
     begin
-        if (pGen.Enabled) and (pGen.GenModel <> 3) then
+        if (pGen.Enabled()) and (pGen.GenModel <> 3) then
         begin
             SetLength(pGen.GenVars.deltaQNom, 1);
             pGen.GenVars.deltaQNom[0] := pGen.GenVars.Qnominalperphase;
@@ -444,7 +444,7 @@ var
 begin
     for pGen in DSS.ActiveCircuit.Generators do
     begin
-        if not pGen.Enabled then
+        if not pGen.Enabled() then
             continue;
 
         if (NCIM_NodeNumGen[pGen.NodeRef[1]] > 1) and ((pGen.GenModel = 3) or (pGen.GenModel = 4)) then
@@ -608,7 +608,7 @@ begin
     for pGen in DSS.ActiveCircuit.Generators do
     begin
         inc(i);
-        if not pGen.Enabled then
+        if not pGen.Enabled() then
             continue;
 
         Add2Limits := false;
@@ -724,7 +724,7 @@ begin
 
     for pGen in DSS.ActiveCircuit.Generators do
     begin
-        if not pGen.Enabled then
+        if not pGen.Enabled() then
             continue;
 
         if (pGen.GenModel = 3) then
@@ -965,7 +965,7 @@ begin
     // Update 03/05/2024 - not needed any more
     for pGen in DSS.ActiveCircuit.Generators do
     begin
-        if ((pGen.Enabled) and (pGen.GenModel = 3)) then
+        if ((pGen.Enabled()) and (pGen.GenModel = 3)) then
             pGen.NCIM_InitPVBusJac();
     end;
 

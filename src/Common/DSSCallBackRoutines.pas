@@ -239,7 +239,7 @@ begin
     TotalPower := 0;
     if DSSPrime.ActiveCircuit.ActiveCktElement() = NIL then
         Exit;
-    //----ActiveTerminalIdx := Terminal;
+    //----SetActiveTerminalIdx(Terminal);
     TotalPower := DSSPrime.ActiveCircuit.ActiveCktElement.Power(Terminal);
 end;
 
@@ -298,9 +298,9 @@ begin
     if elem = NIL then
         Exit;
 
-    NumTerminals := elem.Nterms;
-    NumConds := elem.Nconds;
-    NumPhases := elem.NPhases;
+    NumTerminals := elem.NTerms();
+    NumConds := elem.NConds();
+    NumPhases := elem.NPhases();
 end;
 
 
@@ -334,7 +334,7 @@ begin
     elem := DSSPrime.ActiveCircuit.ActiveCktElement;
     if elem = NIL then
         Exit;
-    Result := elem.Enabled;
+    Result := elem.Enabled();
 end;
 
 

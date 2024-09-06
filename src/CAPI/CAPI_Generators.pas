@@ -258,7 +258,7 @@ begin
     if not _activeObj(DSSPrime, pGen) then
         Exit;
 
-    Result := pGen.nphases;
+    Result := pGen.NPhases();
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_kV(Value: Double); CDECL;
@@ -321,7 +321,7 @@ begin
     begin
         elem.PropertySideEffects(ord(TGeneratorProp.Phases), 0, []);
         elem.RecalcElementData();
-        elem.YPrimInvalid := true;
+        elem.SetYprimInvalid(true);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -586,7 +586,7 @@ begin
 
     elem.PropertySideEffects(ord(TGeneratorProp.Conn), 0, []);
     elem.RecalcElementData();
-    elem.YPrimInvalid := true;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_kva(Value: Double); CDECL;

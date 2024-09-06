@@ -82,7 +82,7 @@ end;
 
 procedure CE_Set_Enabled(obj: TObj; value: WordBool);
 begin
-    obj.Set_Enabled(value);
+    obj.SetEnabled(value);
 end;
 
 procedure TCktElementClass.DefineProperties();

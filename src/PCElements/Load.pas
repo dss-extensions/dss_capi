@@ -476,13 +476,13 @@ procedure SetNcondsForConnection(obj: TObj);
 begin
     case obj.Connection of
         TLoadConnection.Wye:
-            obj.NConds := obj.Fnphases + 1;
+            obj.SetNConds(obj.Fnphases + 1);
         TLoadConnection.Delta:
             case obj.Fnphases of
                 1, 2:
-                    obj.NConds := obj.Fnphases + 1; // L-L and Open-delta
+                    obj.SetNConds(obj.Fnphases + 1); // L-L and Open-delta
             else
-                obj.NConds := obj.Fnphases;
+                obj.SetNConds(obj.Fnphases);
             end;
     end;
 end;
@@ -525,9 +525,9 @@ begin
                     VBase := kVLoadBase * 1000.0;
                 end;
             end;
-            Yorder := Fnconds * Fnterms;
+            Yorder := FNConds * Fnterms;
             Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
-            YPrimInvalid := TRUE;
+            SetYprimInvalid(true);
         end;
 
         ord(TProp.kV), ord(TProp.phases):
@@ -722,7 +722,7 @@ begin
     obj.RecalcElementData();
     if Flg.NeedsYprim in obj.Flags then
     begin
-        obj.YPrimInvalid := TRUE;
+        obj.SetYprimInvalid(true);
         Exclude(obj.Flags, Flg.NeedsYprim);
     end;
     Exclude(obj.Flags, Flg.EditingActive);
@@ -743,8 +743,8 @@ begin
     begin
         FNphases := Other.Fnphases;
         SetNCondsForConnection(self); // Forces reallocation of terminal stuff
-        Yorder := Fnconds * Fnterms;
-        YPrimInvalid := TRUE;
+        Yorder := FNConds * Fnterms;
+        SetYprimInvalid(true);
     end;
 
     kVLoadBase := Other.kVLoadBase;
@@ -798,9 +798,9 @@ begin
     DSSObjType := ParClass.DSSClassType;
 
     Fnphases := 3;
-    Fnconds := 4;  // defaults to wye  so it has a 4th conductor
+    FNConds := 4;  // defaults to wye  so it has a 4th conductor
     Yorder := 0;  // To trigger an initial allocation
-    Nterms := 1;  // forces allocations
+    SetNTerms(1);  // forces allocations
     kWBase := 10.0;
     kvarBase := 5.0;
     PFNominal := 0.88;
@@ -852,7 +852,7 @@ begin
     VBaseLow := VLowpu * Vbase;
     VBase95 := VminPu * Vbase;
     VBase105 := VMaxPU * Vbase;
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
 
     RandomMult := 1.0;
     status := TLoadStatus.Variable;
@@ -1284,23 +1284,23 @@ begin
             for i := 1 to Fnphases do
             begin
                 Ymatrix[i, i] := Y;
-                Ymatrix.AddElement(Fnconds, Fnconds, Y);
-                Ymatrix[i, Fnconds] := Yij;
-                Ymatrix[Fnconds, i] := Yij;
+                Ymatrix.AddElement(FNConds, FNConds, Y);
+                Ymatrix[i, FNConds] := Yij;
+                Ymatrix[FNConds, i] := Yij;
             end;
-            Ymatrix.AddElement(Fnconds, Fnconds, YNeut);  // Neutral
+            Ymatrix.AddElement(FNConds, FNConds, YNeut);  // Neutral
 
             // If neutral is floating, make sure there is some small
             // connection to ground  by increasing the last diagonal slightly
             if Rneut < 0.0 then
-                Ymatrix[Fnconds, Fnconds] := Ymatrix[Fnconds, Fnconds] * 1.000001
+                Ymatrix[FNConds, FNConds] := Ymatrix[FNConds, FNConds] * 1.000001
         end;
         TLoadConnection.Delta:
         begin  // Delta  or L-L
             for i := 1 to Fnphases do
             begin
                 j := i + 1;
-                if j > Fnconds then
+                if j > FNConds then
                     j := 1;  // wrap around for closed connections
                 Ymatrix.AddElement(i, i, Y);
                 Ymatrix.AddElement(j, j, Y);
@@ -1318,7 +1318,7 @@ var
 begin
     // Build only YPrim Shunt for a Load  then Copy to YPrim
     // Build a dummy Yprim Series so that CalcV does not fail
-    if YPrimInvalid then
+    if YprimInvalid() then
     begin
         if YPrim_Shunt <> NIL then
             Yprim_Shunt.Free;
@@ -1372,14 +1372,14 @@ begin
         TLoadConnection.Wye:
         begin  //Wye
             TermArray[i] -= Curr;
-            TermArray[Fnconds] += Curr; // Neutral
+            TermArray[FNConds] += Curr; // Neutral
         end;
 
         TLoadConnection.Delta:
         begin //DELTA
             TermArray[i] -= Curr;
             j := i + 1;
-            if j > Fnconds then
+            if j > FNConds then
                 j := 1;  // rotate the phases
             TermArray[j] += Curr;
         end;
@@ -1568,7 +1568,7 @@ begin
     case Connection of
         TLoadConnection.Wye:
         begin
-            Vaux := Vterminal[Fnconds];
+            Vaux := Vterminal[FNConds];
             for i := 1 to Fnphases do
                 Vterminal[i] -= Vaux;
         end;
@@ -1577,7 +1577,7 @@ begin
             Vaux := Vterminal[1];
             for i := 1 to Fnphases do
             begin
-                if i >= Fnconds then
+                if i >= FNConds then
                     Vterminal[i] -= Vaux
                 else
                     Vterminal[i] -= Vterminal[i + 1]; // VDiff(NodeRef[i], NodeRef[j]);
@@ -1932,7 +1932,7 @@ begin
         k := 0;
         for i := 1 to Fnterms do
         begin
-            for j := 1 to Fnconds do
+            for j := 1 to FNConds do
             begin
                 if not Terminals[i - 1].ConductorsClosed[j - 1] then
                 begin
@@ -1941,7 +1941,7 @@ begin
                     YPrimOpenCond[j + k, j + k] := 1.0e-12;  // In case node gets isolated
                 end;
             end;
-            k := k + Fnconds;
+            k := k + FNConds;
         end;
         OpenLoadSolutionCount := ActiveCircuit.Solution.SolutionCount;
 
@@ -1967,7 +1967,7 @@ function TLoadObj.InjCurrents: Integer;
 // Get the injection currents and add them directly into the Currents array
 begin
     Result := 0;
-    if not Enabled then
+    if not FEnabled then
         Exit;
 
     if ActiveCircuit.Solution.LoadsNeedUpdating then

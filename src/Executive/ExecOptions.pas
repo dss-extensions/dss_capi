@@ -568,8 +568,8 @@ begin
                     if ActiveCktElement() <> NIL then
                         with ActiveCktElement() do
                         begin
-                            ActiveTerminalIdx := DSS.Parser.MakeInteger();
-                            SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx)));   // bus connected to terminal
+                            SetActiveTerminalIdx(DSS.Parser.MakeInteger());
+                            SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx())));   // bus connected to terminal
                         end;
             53:
             begin
@@ -818,8 +818,8 @@ begin
                 begin
                     for LineObj in Lines do
                     begin
-                        if LineObj.Enabled and LineObj.SymComponentsModel then
-                            LineObj.YprimInvalid := True;
+                        if LineObj.Enabled() and LineObj.SymComponentsModel then
+                            LineObj.SetYprimInvalid(true);
                     end;
                 end;            
         end;
@@ -978,7 +978,7 @@ begin
                 51:
                     AppendGlobalResult(DSS, NameIfNotNil(DSS.ActiveCircuit.PriceCurveObj));
                 52:
-                    AppendGlobalResult(DSS, DSS.ActiveCircuit.ActiveCktElement.ActiveTerminalIdx);
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.ActiveCktElement.ActiveTerminalIdx());
                 53:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.Fundamental);
                 54:

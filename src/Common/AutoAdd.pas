@@ -156,7 +156,7 @@ begin
             PDElem := pMeter.BranchList.First();
             while PDElem <> NIL do
             begin // add only unique busnames
-                for i := 1 to PDElem.Nterms do
+                for i := 1 to PDElem.NTerms() do
                 begin
                     Bname := StripExtension(PDElem.GetBus(i));
                     retval := FBusList.Find(Bname);

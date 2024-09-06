@@ -1280,7 +1280,7 @@ begin
             begin
                 // NOTE: Default objects are circuit elements, so we can skip the check here.
                 // if ((not (Flg.DefaultAndUnedited in batch^.Flags)) or exportDefaultObjs) and
-                if TDSSCktElement(batch^).Enabled then
+                if TDSSCktElement(batch^).Enabled() then
                     json.Add(Obj_ToJSONData(batch^, joptions));
 
                 inc(batch);
@@ -2524,10 +2524,10 @@ begin
             continue;
 
         name := CheckForBlanks(elem.FullName());
-        for termIdx := 0 to elem.NTerms - 1 do
+        for termIdx := 0 to elem.NTerms() - 1 do
         begin
             numCondOpen := 0;
-            for i := 0 to elem.NConds - 1 do 
+            for i := 0 to elem.NConds() - 1 do 
             begin
                 if not elem.Terminals[termIdx].ConductorsClosed[i] then
                     numCondOpen += 1;
@@ -2535,7 +2535,7 @@ begin
             if numCondOpen = 0 then
                 continue;
 
-            if numCondOpen = elem.NConds then
+            if numCondOpen = elem.NConds() then
             begin   
                 // Open all conductors in the terminal, easy path
                 cmds.Add(Format('Open %s %d', [name, termIdx + 1]));
@@ -2543,7 +2543,7 @@ begin
             end;
 
             // Open specific conductors
-            for i := 0 to elem.NConds - 1 do 
+            for i := 0 to elem.NConds() - 1 do 
             begin
                 if elem.Terminals[termIdx].ConductorsClosed[i] then
                     continue;

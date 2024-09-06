@@ -57,7 +57,7 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure Set_Enabled(Value: WordBool); OVERRIDE;
+        procedure SetEnabled(Value: WordBool); OVERRIDE;
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
         procedure RecalcElementData(); OVERRIDE;
 
@@ -130,7 +130,7 @@ begin
         Result := ord(CTRL_NONE);
         Exit;
     end;
-    Obj.controlledElement.ActiveTerminalIdx := Obj.ElementTerminal;
+    Obj.controlledElement.SetActiveTerminalIdx(Obj.ElementTerminal);
     if Obj.controlledElement.ConductorClosed(0) then
         Result := ord(CTRL_CLOSE)
     else
@@ -225,7 +225,7 @@ begin
                 NormalState := PresentState;
             if controlledElement <> NIL then
             begin
-                controlledElement.ActiveTerminalIdx := ElementTerminal;
+                controlledElement.SetActiveTerminalIdx(ElementTerminal);
                 case PresentState of     // Force state
                     CTRL_OPEN:
                         controlledElement.SetConductorClosed(0, FALSE);
@@ -245,7 +245,7 @@ begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
-    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    SetNConds(Other.FNConds); // Force Reallocation of terminal stuff
 
     ElementTerminal := Other.ElementTerminal;
     SetControlledElement(Other.ControlledElement);  // Pointer to target circuit element
@@ -263,8 +263,8 @@ begin
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors in base class
+    FNConds := 3;
+    SetNTerms(1);  // this forces allocation of terminals and conductors in base class
 
     SetControlledElement(NIL);
     ElementTerminal := 1;
@@ -294,8 +294,8 @@ begin
     end;
 
     FNphases := controlledElement.NPhases;
-    Nconds := FNphases;
-    controlledElement.ActiveTerminalIdx := ElementTerminal;
+    SetNConds(FNphases);
+    controlledElement.SetActiveTerminalIdx(ElementTerminal);
 
     // Include(controlledElement.Flags, Flg.HasSwtControl);  // For Reliability calcs
     // attach controller bus to the switch bus - no space allocated for monitored variables
@@ -307,7 +307,7 @@ begin
     if controlledElement <> NIL then
     begin
         FNphases := controlledElement.NPhases;
-        Nconds := FNphases;
+        SetNConds(FNphases);
         Setbus(1, controlledElement.GetBus(ElementTerminal));
     end;
     inherited;
@@ -318,7 +318,7 @@ var
     ctrl_code: EControlAction;
 begin
     ctrl_code := EControlAction(Code);  // change type
-    controlledElement.ActiveTerminalIdx := ElementTerminal;
+    controlledElement.SetActiveTerminalIdx(ElementTerminal);
     case Ctrl_Code of
         CTRL_LOCK:
             Locked := TRUE;
@@ -369,7 +369,7 @@ begin
         Armed := FALSE;
         if controlledElement <> NIL then
         begin
-            controlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal
+            controlledElement.SetActiveTerminalIdx(ElementTerminal);  // Set active terminal
             case NormalState of
                 CTRL_OPEN:
                     controlledElement.SetConductorClosed(0, FALSE);
@@ -381,7 +381,7 @@ begin
     end;
 end;
 
-procedure TSwtControlObj.Set_Enabled(Value: WordBool);
+procedure TSwtControlObj.SetEnabled(Value: WordBool);
 begin
     // Do nothing else besides toggling the flag,
     // we don't need BusNameRedefined from CktElement.pas

@@ -803,7 +803,7 @@ var
 begin
     for pElem in ckt.Sources do
     begin
-        if pElem.Enabled then
+        if pElem.Enabled() then
             pElem.InjCurrents(); // uses NodeRef to add current into InjCurr Array;
     end;
 
@@ -871,7 +871,7 @@ begin
 
     for pGen in ckt.Generators do
     begin
-        if not pGen.Enabled then
+        if not pGen.Enabled() then
             continue;
 
         // for PV generator models only ...
@@ -1401,7 +1401,7 @@ begin
     // This rouitne adds the Lines to the incidence matrix vectors
     for elem in ckt.Lines do
     begin
-        if not elem.Enabled then
+        if not elem.Enabled() then
             continue;
 
         ActiveIncCell[2] := 1;
@@ -1440,7 +1440,7 @@ begin
     // This routine adds the Transformers to the incidence matrix vectors
     for elem in ckt.Transformers do
     begin
-        if not elem.Enabled then
+        if not elem.Enabled() then
             continue;
         
         ActiveIncCell[2] := 1;
@@ -1479,7 +1479,7 @@ begin
     // This routine adds the series capacitors to the incidence matrix vectors
     for elem in ckt.ShuntCapacitors do
     begin
-        if not (elem.NumTerm > 1) or not elem.Enabled then
+        if not (elem.NumTerm > 1) or not elem.Enabled() then
             continue;
 
         inc(temp_counter);
@@ -1666,8 +1666,8 @@ begin
             PDE_Name := PDElem.FullName();
             // Gets the buses to which the PDE is connected
             ckt.SetElementActive(PDE_Name);
-            SetLength(PDE_Buses, ckt.ActiveCktElement.Nterms);
-            for i := 1 to ckt.ActiveCktElement.Nterms do
+            SetLength(PDE_Buses, ckt.ActiveCktElement.NTerms());
+            for i := 1 to ckt.ActiveCktElement.NTerms() do
             begin
                 PDE_Buses[i - 1] := ckt.ActiveCktElement.GetBus(i);
                 BusdotIdx := ansipos('.', PDE_Buses[i - 1]);
@@ -1686,7 +1686,7 @@ begin
                 inc(nPDE);
                 setlength(Inc_Mat_Rows, nPDE);
                 Inc_Mat_Rows[nPDE - 1] := PDE_Name;
-                for j := 0 to ckt.ActiveCktElement.Nterms - 1 do
+                for j := 0 to ckt.ActiveCktElement.NTerms() - 1 do
                 begin
                     row := ActiveIncCell[0];                 //Sets the row
                     BusdotIdx := -1;               // Flag to not create a new variable
@@ -1803,7 +1803,7 @@ begin
     for pElem in ckt.PCElements do
     begin
         onGFM := ((pElem is TInvBasedPCE) and (TInvBasedPCE(pElem).GFM_Mode));
-        valid := (not (GFMOnly xor onGFM)) and pElem.Enabled;
+        valid := (not (GFMOnly xor onGFM)) and pElem.Enabled();
         //TODO: depending on the system size, a dedicated list could be faster/better
         // e.g. could check the lists from Circuit directly instead of looping through all elements
         if valid then
@@ -2052,7 +2052,7 @@ begin
         // Sample all controls and set action times in control Queue
         for ControlDevice in ckt.DSSControls do
         begin
-            if ControlDevice.Enabled then
+            if ControlDevice.Enabled() then
                 ControlDevice.Sample();
         end;
 
@@ -2238,7 +2238,7 @@ begin
     // If state variables not defined for a PC class, does nothing
     for pcelem in DSS.ActiveCircuit.PCElements do
     begin
-        if pcelem.Enabled then
+        if pcelem.Enabled() then
             pcelem.InitStateVars();
     end;
 end;
@@ -2831,13 +2831,13 @@ begin
     begin
         BusName := AnsiLowerCase(VSourceObj.Name());
         if (BusName = 'source') then
-            VSourceObj.Enabled := FALSE // Disables the artificial VSource phase 1
+            VSourceObj.SetEnabled(FALSE) // Disables the artificial VSource phase 1
         else
         if (BusName = 'vph_2') then
-            VSourceObj.Enabled := FALSE // Disables the artificial VSource phase 2
+            VSourceObj.SetEnabled(FALSE) // Disables the artificial VSource phase 2
         else
         if (BusName = 'vph_3') then
-            VSourceObj.Enabled := FALSE; // Disables the artificial VSource phase 3
+            VSourceObj.SetEnabled(FALSE); // Disables the artificial VSource phase 3
     end;
 end;
 
@@ -2915,7 +2915,7 @@ end;
 //             // Starts looking for VSource
 //             for VSourceObj in DSS.VsourceClass.ElementList do
 //             begin
-//                 if VSourceObj.enabled then
+//                 if VSourceObj.Enabled() then
 //                 begin
 //                     Result := TRUE;
 //                     break;
@@ -2926,7 +2926,7 @@ end;
 //                 // Goes for ISources
 //                 for ISourceObj in DSS.IsourceClass.ElementList do
 //                 begin
-//                     if ISourceObj.enabled then
+//                     if ISourceObj.Enabled() then
 //                     begin
 //                         Result := TRUE;
 //                         break;

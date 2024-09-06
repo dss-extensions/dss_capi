@@ -491,7 +491,7 @@ begin
     
     if (elem.ActiveWinding > 0) and (elem.ActiveWinding <= elem.NumWindings) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * elem.nphases);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * elem.NPhases());
         elem.GetWindingVoltages(elem.ActiveWinding, pComplexArray(ResultPtr));
         Exit;
     end;
@@ -516,7 +516,7 @@ begin
         Exit;
     end;
 
-    NumCurrents := 2 * elem.NPhases * elem.NumWindings; // 2 currents per winding
+    NumCurrents := 2 * elem.NPhases() * elem.NumWindings; // 2 currents per winding
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumCurrents);
     elem.GetAllWindingCurrents(pComplexArray(ResultPtr));
 end;
@@ -623,9 +623,9 @@ begin
     k := 1;
     for elem in lst do
     begin
-        if elem.Enabled or (DSS_CAPI_ITERATE_DISABLED = 1) then
+        if elem.Enabled() or (DSS_CAPI_ITERATE_DISABLED = 1) then
         begin
-            if elem.Enabled then
+            if elem.Enabled() then
                 elem.GetLosses(CResult[k], CResult[k + 1], CResult[k + 2]);
             Inc(k, 3);
         end;

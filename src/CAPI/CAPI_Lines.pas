@@ -229,7 +229,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.Nphases;
+    Result := elem.NPhases();
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_R1(): Double; CDECL;
@@ -282,7 +282,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Len := Value;
-    elem.YprimInvalid := TRUE;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_LineCode(const Value: PAnsiChar); CDECL;
@@ -303,7 +303,7 @@ begin
         elem.SetAsNextSeq(ord(TLineProp.LineCode));
     end;
     elem.FetchLineCode(); // Note: original didn't reproduce all side-effects from parser
-    elem.YprimInvalid := TRUE;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Name(const Value: PAnsiChar); CDECL;
@@ -333,7 +333,7 @@ begin
         Exit;
     end;
     elem.FNphases := Value;
-    elem.YprimInvalid := TRUE;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_R1(Value: Double); CDECL;
@@ -344,7 +344,7 @@ begin
         Exit;
     elem.R1 := Value * elem.unitsFactor;
     elem.SymComponentsChanged := TRUE;
-    elem.YprimInvalid := TRUE;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_X1(Value: Double); CDECL;
@@ -355,7 +355,7 @@ begin
         Exit;
     elem.X1 := Value * elem.unitsFactor;
     elem.SymComponentsChanged := TRUE;
-    elem.YprimInvalid := TRUE;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_C0(): Double; CDECL;
@@ -391,7 +391,7 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    nph := elem.Nphases;
+    nph := elem.NPhases();
     Factor := TwoPi * elem.BaseFrequency * 1.0e-9 * elem.unitsFactor;  // corrected 2.9.2018 RCD
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, nph * nph, nph, nph);
     k := 0;
@@ -436,7 +436,7 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    nph := elem.Nphases;
+    nph := elem.NPhases();
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, nph * nph, nph, nph);
     k := 0;
     for i := 1 to nph do
@@ -480,7 +480,7 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    nph := elem.Nphases;
+    nph := elem.NPhases();
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, nph * nph, nph, nph);
     k := 0;
     for i := 1 to nph do
@@ -509,7 +509,7 @@ begin
         Exit;
     elem.C0 := Value * 1.0e-9 * elem.unitsFactor;
     elem.SymComponentsChanged := TRUE;
-    elem.YprimInvalid := TRUE;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_C1(Value: Double); CDECL;
@@ -520,7 +520,7 @@ begin
         Exit;
     elem.C1 := Value * 1.0e-9 * elem.unitsFactor;
     elem.SymComponentsChanged := TRUE;
-    elem.YprimInvalid := TRUE;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Cmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -534,7 +534,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     Value := PDoubleArray0(ValuePtr);
-    nph := elem.Nphases;
+    nph := elem.NPhases();
 
     if (nph * nph) <> ValueCount then
     begin
@@ -553,7 +553,7 @@ begin
             elem.Yc[i, j] := Cmplx(0.0, Value[k] * Factor);
             Inc(k);
         end;
-    elem.YprimInvalid := TRUE;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_R0(Value: Double); CDECL;
@@ -564,7 +564,7 @@ begin
         Exit;
     elem.R0 := Value * elem.unitsFactor;
     elem.SymComponentsChanged := TRUE;
-    elem.YprimInvalid := TRUE;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Rmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -578,7 +578,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     Value := PDoubleArray0(ValuePtr);
-    nph := elem.Nphases;
+    nph := elem.NPhases();
     if (nph * nph) <> ValueCount then
     begin
         DoSimpleMsg(DSSPrime,
@@ -596,7 +596,7 @@ begin
             elem.Z[i, j] := Cmplx(Value[k], ZTemp.im);
             Inc(k);
         end;
-    elem.YprimInvalid := TRUE;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_X0(Value: Double); CDECL;
@@ -607,7 +607,7 @@ begin
         Exit;
     elem.X0 := Value * elem.unitsFactor;
     elem.SymComponentsChanged := TRUE;
-    elem.YprimInvalid := TRUE;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Xmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -622,7 +622,7 @@ begin
         Exit;
     Value := PDoubleArray0(ValuePtr);
     
-    nph := elem.Nphases;
+    nph := elem.NPhases();
     if (nph * nph) <> ValueCount then
     begin
         DoSimpleMsg(DSSPrime,
@@ -641,7 +641,7 @@ begin
             Inc(k);
         end;
 
-    elem.YprimInvalid := TRUE;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_EmergAmps(): Double; CDECL;
@@ -743,7 +743,7 @@ begin
     //       to ensure it happens if the user has SkipSideEffects enabled,
     //       since the original code in Line.pas did not set YprimInvalid
     //       when changing the properties. 
-    elem.YprimInvalid := TRUE;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Rho(Value: Double); CDECL;
@@ -753,7 +753,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.SetDouble(ord(TLineProp.rho), Value, []);
-    elem.YprimInvalid := TRUE;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Xg(Value: Double); CDECL;
@@ -763,7 +763,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.SetDouble(ord(TLineProp.xg), Value, []);
-    elem.YprimInvalid := TRUE;
+    elem.SetYprimInvalid(true);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Get_Yprim(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -842,7 +842,7 @@ begin
     if other = NIL then
         Exit;
         
-    if (other.Enabled and ((other.DssObjtype and CLASSMASK) = LINE_ELEMENT)) then
+    if (other.Enabled() and ((other.DssObjtype and CLASSMASK) = LINE_ELEMENT)) then
     begin
         DSSPrime.ActiveCircuit.SetActiveCktElement(other);
         if ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.ActiveLine)) = 0) then
@@ -901,7 +901,7 @@ begin
     if (Value >= dssLineUnitsNone) and (Value < dssLineUnitsMaxnum) then
     begin
         elem.ParsePropertyValue(ord(TLineProp.units), LineUnitsStr(Value), []);
-        elem.YprimInvalid := TRUE;
+        elem.SetYprimInvalid(true);
     end
     else
         DoSimpleMsg(DSSPrime, _('Invalid line units code. Please enter a value within range.'), 183);

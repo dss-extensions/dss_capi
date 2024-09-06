@@ -374,7 +374,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := elem.nphases;
+    Result := elem.NPhases();
 end;
 
 //------------------------------------------------------------------------------
@@ -396,7 +396,7 @@ begin
     // begin
     elem.PropertySideEffects(ord(TWindGenProp.Phases), 0, []);
     elem.RecalcElementData();
-    elem.YPrimInvalid := true;
+    elem.SetYprimInvalid(true);
     // end;
 end;
 
@@ -721,7 +721,7 @@ begin
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
         elem.ReCalcElementData();
-        elem.YPrimInvalid := True;
+        elem.SetYprimInvalid(true);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -751,7 +751,7 @@ begin
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
         elem.RecalcElementData();
-        elem.YPrimInvalid := true;
+        elem.SetYprimInvalid(true);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -766,7 +766,7 @@ begin
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
         elem.RecalcElementData();
-        elem.YPrimInvalid := true;
+        elem.SetYprimInvalid(true);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -781,7 +781,7 @@ begin
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
         elem.RecalcElementData();
-        elem.YPrimInvalid := true;
+        elem.SetYprimInvalid(true);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -796,7 +796,7 @@ begin
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
         elem.RecalcElementData();
-        elem.YPrimInvalid := true;
+        elem.SetYprimInvalid(true);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -811,7 +811,7 @@ begin
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
         elem.RecalcElementData();
-        elem.YPrimInvalid := true;
+        elem.SetYprimInvalid(true);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -851,7 +851,7 @@ begin
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
         elem.RecalcElementData();
-        elem.YPrimInvalid := true;
+        elem.SetYprimInvalid(true);
         //TODO: do we need to reinit the dyn model?
     end;
 end;
@@ -881,7 +881,7 @@ begin
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
         elem.RecalcElementData();
-        elem.YPrimInvalid := true;
+        elem.SetYprimInvalid(true);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -911,7 +911,7 @@ begin
         if ((elem.ShapeFactor.re < prev) <> (elem.ShapeFactor.re < elem.GenVars.VCutin)) then
         begin
             elem.RecalcElementData();
-            elem.YPrimInvalid := true;
+            elem.SetYprimInvalid(true);
         end;
     end;
 end;
@@ -931,7 +931,7 @@ begin
         if ((prev > elem.GenVars.VCutout) <> (elem.ShapeFactor.re > elem.GenVars.VCutout)) then
         begin
             elem.RecalcElementData();
-            elem.YPrimInvalid := true;
+            elem.SetYprimInvalid(true);
         end;
     end;
 end;
@@ -957,7 +957,7 @@ begin
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
         elem.RecalcElementData();
-        elem.YPrimInvalid := true;
+        elem.SetYprimInvalid(true);
     end;
 end;
 //------------------------------------------------------------------------------

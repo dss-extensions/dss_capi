@@ -282,7 +282,7 @@ begin
             SetBus(2, S2);    // default setting for Bus2  is same as Bus1
         end;
         ord(TProp.phases):
-            NConds := Fnphases;  // Force Reallocation of terminal info
+            SetNConds(Fnphases);  // Force Reallocation of terminal info
         ord(TProp.Volts),
         ord(TProp.Angle):
             VoltsSpecified := TRUE;
@@ -304,7 +304,7 @@ var
 begin
     obj := TObj(ptr);
     obj.RecalcElementData();
-    obj.YPrimInvalid := TRUE;
+    obj.SetYprimInvalid(true);
     Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
@@ -319,10 +319,10 @@ begin
     if Fnphases <> Other.Fnphases then
     begin
         FNphases := Other.Fnphases;
-        NConds := Fnphases;  // Forces reallocation of terminal stuff
+        SetNConds(Fnphases);  // Forces reallocation of terminal stuff
 
-        Yorder := Fnconds * Fnterms;
-        YPrimInvalid := TRUE;
+        Yorder := FNConds * Fnterms;
+        SetYprimInvalid(true);
 
         if Z <> NIL then
             Z.Free;
@@ -365,8 +365,8 @@ begin
     DSSObjType := ParClass.DSSClassType; //SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
 
     FNphases := 3;
-    Fnconds := 3;
-    Nterms := 2;   // Now a 2-terminal device
+    FNConds := 3;
+    SetNTerms(2);   // Now a 2-terminal device
     Z := NIL;
     Zinv := NIL;
     // Basefrequency := 60.0; // set in base class
@@ -391,7 +391,7 @@ begin
 
     SpectrumObj := NIL;  // no default
 
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
     RecalcElementData();
 end;
 
@@ -517,7 +517,7 @@ begin
      // For any conductor that is open, zero out row and column
     inherited CalcYPrim();
 
-    YPrimInvalid := FALSE;
+    SetYprimInvalid(false);
 end;
 
 procedure TGICLineObj.GetVterminalForSource;

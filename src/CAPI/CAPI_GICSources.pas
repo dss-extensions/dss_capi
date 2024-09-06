@@ -135,7 +135,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     
-    Result := elem.NPhases;
+    Result := elem.NPhases();
 end;
 //------------------------------------------------------------------------------
 procedure GICSources_Set_Phases(Value: Integer); CDECL;
@@ -151,7 +151,7 @@ begin
         Exit;
     end;
     elem.Fnphases := Value;
-    Elem.NConds := Value;  // Force reallocation of terminal info
+    Elem.SetNConds(Value);  // Force reallocation of terminal info
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Bus1(): PAnsiChar; CDECL;

@@ -722,11 +722,11 @@ begin
                         DSS.Parser.NextParam;
                         Param := DSS.Parser.MakeString();
                         if Length(Param) > 0 then
-                            ActiveCktElement.ActiveTerminalIdx := DSS.Parser.MakeInteger()
+                            ActiveCktElement.SetActiveTerminalIdx(DSS.Parser.MakeInteger())
                         else
-                            ActiveCktElement.ActiveTerminalIdx := 1;  {default to 1}
+                            ActiveCktElement.SetActiveTerminalIdx(1);  {default to 1}
                         with ActiveCktElement() do
-                            SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx)));
+                            SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx())));
                     end;
                     end;
                 end;
@@ -1108,7 +1108,7 @@ var
     i: Integer;
 begin
   //   Result := SetActiveCktElement;
-  //  IF Result>0 THEN DSS.ActiveCircuit.ActiveCktElement.Enabled := True;
+  //  IF Result>0 THEN DSS.ActiveCircuit.ActiveCktElement.SetEnabled(True);
 
     Result := 0;
 
@@ -1134,7 +1134,7 @@ begin
                     for i := 1 to ClassPtr.ElementCount do
                     begin
                         CktElem := ClassPtr.ElementList.Get(i);
-                        CktElem.Enabled := TRUE;
+                        CktElem.SetEnabled(TRUE);
                     end;
 
                 end
@@ -1181,7 +1181,7 @@ begin
                     for i := 1 to ClassPtr.ElementCount do
                     begin
                         CktElem := ClassPtr.ElementList.Get(i);
-                        CktElem.Enabled := FALSE;
+                        CktElem.SetEnabled(FALSE);
                     end;
 
                 end
@@ -1196,7 +1196,7 @@ begin
         end;
     end;
 //     Result := SetActiveCktElement;
-//     IF Result>0 THEN DSS.ActiveCircuit.ActiveCktElement.Enabled := False;
+//     IF Result>0 THEN DSS.ActiveCircuit.ActiveCktElement.SetEnabled(False);
 end;
 
 function TExecHelper.DoPropertyDump: Integer;
@@ -1476,10 +1476,10 @@ begin
 
         with DSS.ActiveCircuit do
         begin
-            ActiveCktElement.ActiveTerminalIdx := Terminal;
+            ActiveCktElement.SetActiveTerminalIdx(Terminal);
             ActiveCktElement.SetConductorClosed(Conductor, FALSE);
             with ActiveCktElement() do
-                SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx)));
+                SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx())));
         end;
     end
     else
@@ -1509,10 +1509,10 @@ begin
 
         with DSS.ActiveCircuit do
         begin
-            ActiveCktElement.ActiveTerminalIdx := Terminal;
+            ActiveCktElement.SetActiveTerminalIdx(Terminal);
             ActiveCktElement.SetConductorClosed(Conductor, TRUE);
             with ActiveCktElement() do
-                SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx)));
+                SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx())));
         end;
 
     end
@@ -1592,7 +1592,7 @@ begin
         begin
             if pCapElement.IsShunt then
             begin
-                if pCapElement.Enabled then
+                if pCapElement.Enabled() then
                     DSS.ActiveCircuit.Buses[pCapElement.Terminals[0].Busref].Keep := TRUE;
             end;
         end;
@@ -1606,7 +1606,7 @@ begin
         begin
             if pReacElement.IsShunt then
                 try
-                    if pReacElement.Enabled then
+                    if pReacElement.Enabled() then
                         DSS.ActiveCircuit.Buses[pReacElement.Terminals[0].Busref].Keep := TRUE;
                 except
                     On E: Exception do
@@ -2128,7 +2128,7 @@ begin
     if DSS.ActiveCircuit <> NIL then
         with DSS.ActiveCircuit.ActiveCktElement() do
         begin
-            NValues := NConds * Nterms;
+            NValues := NConds() * NTerms();
             DSS.GlobalResult := '';
             cBuffer := Allocmem(sizeof(Complex) * NValues);
             GetCurrents(cBuffer);
@@ -2160,7 +2160,7 @@ begin
         if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
             with DSS.ActiveCircuit.ActiveCktElement() do
             begin
-                NValues := NConds * Nterms;
+                NValues := NConds() * NTerms();
                 DSS.GlobalResult := '';
                 for i := 1 to NValues do
                 begin
@@ -2241,7 +2241,7 @@ begin
     if DSS.ActiveCircuit <> NIL then
         with DSS.ActiveCircuit.ActiveCktElement() do
         begin
-            NValues := NConds * Nterms;
+            NValues := NConds() * NTerms();
             DSS.GlobalResult := '';
             cBuffer := Allocmem(sizeof(Complex) * NValues);
             GetPhasePower(cBuffer);
@@ -2254,12 +2254,12 @@ begin
             end
             else
             begin
-                setlength(myBuffer, Nterms);
-                for j := 1 to Nterms do
+                setlength(myBuffer, NTerms());
+                for j := 1 to NTerms() do
                 begin
                     myBuffer[j - 1] := 0;
-                    myInit := (j - 1) * NConds + 1;
-                    myEnd := NConds * j;
+                    myInit := (j - 1) * NConds() + 1;
+                    myEnd := NConds() * j;
                     for i := myInit to myEnd do
                     begin
                         myBuffer[j - 1] := myBuffer[j - 1] + cBuffer[i];
@@ -2292,16 +2292,16 @@ begin
                 begin
                     DSS.GlobalResult := '';
                     if Nphases < 3 then
-                        for i := 0 to 3 * Nterms - 1 do
+                        for i := 0 to 3 * NTerms() - 1 do
                             DSS.GlobalResult := DSS.GlobalResult + ' -1.0,'  // Signify n/A
                     else
                     begin
-                        NValues := NConds * Nterms;
+                        NValues := NConds() * NTerms();
                         cBuffer := Allocmem(sizeof(Complex) * NValues);
                         GetCurrents(cBuffer);
-                        for j := 1 to Nterms do
+                        for j := 1 to NTerms() do
                         begin
-                            k := (j - 1) * NConds;
+                            k := (j - 1) * NConds();
                             for i := 1 to 3 do
                             begin
                                 Iph[i] := cBuffer[k + i];
@@ -2341,16 +2341,16 @@ begin
                 begin
                     DSS.GlobalResult := '';
                     if NPhases < 3 then
-                        for i := 0 to 2 * 3 * Nterms - 1 do
+                        for i := 0 to 2 * 3 * NTerms() - 1 do
                             DSS.GlobalResult := DSS.GlobalResult + '-1.0, '  // Signify n/A
                     else
                     begin
-                        NValues := NConds * Nterms;
+                        NValues := NConds() * NTerms();
                         cBuffer := Allocmem(sizeof(Complex) * NValues);
                         GetCurrents(cBuffer);
-                        for j := 1 to Nterms do
+                        for j := 1 to NTerms() do
                         begin
-                            k := (j - 1) * NConds;
+                            k := (j - 1) * NConds();
                             for i := 1 to 3 do
                             begin
                                 Vph[i] := Solution.NodeV[Terminals[j - 1].TermNodeRef[i - 1]];
@@ -2395,19 +2395,19 @@ begin
         begin
             if ActiveCktElement() <> NIL then
                 with ActiveCktElement() do
-                    if Enabled then
+                    if Enabled() then
                     begin
                         try
                             Nvalues := NPhases;
                             DSS.GlobalResult := '';
                             if Nvalues < 3 then
-                                for i := 1 to 3 * Nterms do
+                                for i := 1 to 3 * NTerms() do
                                     DSS.GlobalResult := DSS.GlobalResult + '-1.0, '  // Signify n/A
                             else
                             begin
-                                for j := 1 to Nterms do
+                                for j := 1 to NTerms() do
                                 begin
-                                    k := (j - 1) * NConds;
+                                    k := (j - 1) * NConds();
                                     for i := 1 to 3 do
                                     begin
                                         Vph[i] := Solution.NodeV[NodeRef[i + k]];
@@ -2428,8 +2428,8 @@ begin
                                 S := E.message + CRLF +
                                     'Element=' + ActiveCktElement().Name()+ CRLF +
                                     'Nvalues=' + IntToStr(NValues) + CRLF +
-                                    'Nterms=' + IntToStr(Nterms) + CRLF +
-                                    'NConds =' + IntToStr(NConds) + CRLF +
+                                    'Nterms=' + IntToStr(NTerms()) + CRLF +
+                                    'NConds =' + IntToStr(NConds()) + CRLF +
                                     'noderef=' + IntToStr(N);
                                 DoSimpleMsg(S, 270);
                             end;
@@ -3145,7 +3145,7 @@ begin
         begin
             for metobj in DSS.ActiveCircuit.EnergyMeters do
             begin
-                if MetObj.Enabled then
+                if MetObj.Enabled() then
                     MetObj.InterpolateCoordinates;
             end;
         end;
@@ -3159,7 +3159,7 @@ begin
             if MeterClass.SetActive(Param) then   // Try to set it active
             begin
                 MetObj := MeterClass.GetActiveObj;
-                if MetObj.Enabled then
+                if MetObj.Enabled() then
                     MetObj.InterpolateCoordinates
                 else
                     DoSimpleMsg(DSS, 'EnergyMeter "%s" is disabled.', [Param], 283);
@@ -3530,7 +3530,7 @@ begin
     for i := 1 to Count do
     begin
         pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-        if pLoad.Enabled then
+        if pLoad.Enabled() then
         begin
             if DoGenerators then
                 FSWrite(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
@@ -3564,7 +3564,7 @@ begin
     for i := 1 to Count do
     begin
         pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-        if pLoad.Enabled then
+        if pLoad.Enabled() then
             inc(LoadCount);
     end;
 
@@ -3579,7 +3579,7 @@ begin
     for i := 1 to Count do
     begin
         pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-        if pLoad.Enabled then
+        if pLoad.Enabled() then
         begin
             if DoGenerators then
                 FSWrite(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
@@ -3616,7 +3616,7 @@ begin
     for i := 1 to Count do
     begin
         pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-        if pLoad.Enabled then
+        if pLoad.Enabled() then
             // Do not count skipped loads
             if Skipcount = 0 then
             begin
@@ -3636,7 +3636,7 @@ begin
     for i := 1 to Count do
     begin
         pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-        if pLoad.Enabled then
+        if pLoad.Enabled() then
             if SkipCount = 0 then
             begin
                 if DoGenerators then
@@ -3674,7 +3674,7 @@ begin
     for i := 1 to Count do
     begin
         pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-        if pLoad.Enabled then
+        if pLoad.Enabled() then
         begin
             TotalkW := TotalkW + pLoad.kWBase;  // will be right value if pos seq, too
         end;
@@ -3688,7 +3688,7 @@ begin
     for i := 1 to Count do
     begin
         pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-        if pLoad.Enabled then
+        if pLoad.Enabled() then
         begin
             if DoGenerators then
                 FSWrite(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))

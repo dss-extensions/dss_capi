@@ -758,7 +758,7 @@ begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
-    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    SetNConds(Other.FNConds); // Force Reallocation of terminal stuff
 
     MeteredElement := Other.MeteredElement;  // Pointer to target circuit element
     MeteredTerminal := Other.MeteredTerminal;
@@ -805,7 +805,7 @@ begin
     begin
         Exclude(pCktElement.Flags, Flg.Checked);
         Include(pCktElement.Flags, Flg.IsIsolated);
-        for i := 1 to pCktElement.NTerms do
+        for i := 1 to pCktElement.NTerms() do
             pCktElement.TerminalsChecked[i - 1] := FALSE;
     end;
 
@@ -836,7 +836,7 @@ begin
 
     for mtr in ActiveCircuit.EnergyMeters do
     begin
-        //if Mtr.Enabled then
+        //if Mtr.Enabled() then
         mtr.MakeMeterZoneLists;
     end;
 
@@ -899,7 +899,7 @@ var
 begin
     for mtr in DSS.ActiveCircuit.EnergyMeters do
     begin
-        if mtr.enabled then
+        if mtr.Enabled() then
             mtr.TakeSample;
     end;
 
@@ -939,7 +939,7 @@ var
 begin
     for mtr in DSS.ActiveCircuit.EnergyMeters do
     begin
-        if mtr.enabled then
+        if mtr.Enabled() then
             mtr.SaveRegisters;
     end;
 
@@ -954,8 +954,8 @@ begin
     DSSObjType := ParClass.DSSClassType; //ENERGY_METER;
 
     FNPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors in base class
+    FNConds := 3;
+    SetNTerms(1);  // this forces allocation of terminals and conductors in base class
     ExcessFlag := TRUE;  // Default to Excess energy FOR UE
     MeteredElement := TDSSCktElement(ActiveCircuit.CktElements.Get(1)); // Default to first circuit element (source)
     BranchList := NIL;  // initialize to NIL, set later when inited
@@ -1150,7 +1150,7 @@ begin
             Exit;
         end;
 
-        if MeteredTerminal > MeteredElement.Nterms then
+        if MeteredTerminal > MeteredElement.NTerms() then
         begin
             DoErrorMsg(
                 Format(_('EnergyMeter: "%s"'), [Self.Name]), 
@@ -1165,7 +1165,7 @@ begin
                // This value will be used to set the NodeRef array (see TakeSample)
                 Setbus(1, MeteredElement.GetBus(MeteredTerminal));
                 FNphases := MeteredElement.NPhases;
-                Nconds := MeteredElement.Nconds;
+                SetNConds(MeteredElement.NConds());
                 AllocateSensorArrays;
 
                  // If we come through here, throw branchlist away
@@ -1189,7 +1189,7 @@ begin
     begin
         Setbus(1, MeteredElement.GetBus(MeteredTerminal));
         FNphases := MeteredElement.NPhases;
-        Nconds := MeteredElement.Nconds;
+        SetNConds(MeteredElement.NConds());
         AllocateSensorArrays;
         if BranchList <> NIL then
             BranchList.Free;
@@ -1339,7 +1339,7 @@ begin
     buses := DSS.ActiveCircuit.Buses;
     // Compute energy in branch  to which meter is connected
 
-     //----MeteredElement.ActiveTerminalIdx := MeteredTerminal;  // needed for Excess kVA calcs
+     //----MeteredElement.SetActiveTerminalIdx(MeteredTerminal);  // needed for Excess kVA calcs
     S_Local := MeteredElement.Power(MeteredTerminal) * 0.001;
     S_Local_kVA := Cabs(S_Local);
     DSS.EnergyMeterClass.Delta_Hrs := DSS.ActiveCircuit.Solution.IntervalHrs;
@@ -1406,10 +1406,10 @@ begin
         while CktElem <> NIL do
         begin       // loop thru all ckt elements on zone
 
-            CktElem.ActiveTerminalIdx := BranchList.Presentbranch.FromTerminal;
+            CktElem.SetActiveTerminalIdx(BranchList.Presentbranch.FromTerminal);
             // Invoking this property sets the Overload_UE flag in the PD Element
-            EEN := Abs(CktElem.GetExcesskVANorm(CktElem.ActiveTerminalIdx).re);
-            UE := Abs(CktElem.GetExcesskVAEmerg(CktElem.ActiveTerminalIdx).re);
+            EEN := Abs(CktElem.GetExcesskVANorm(CktElem.ActiveTerminalIdx()).re);
+            UE := Abs(CktElem.GetExcesskVAEmerg(CktElem.ActiveTerminalIdx()).re);
 
             // For radial circuits just keep the maximum overload; for mesh, add 'em up
             if (ZoneIsRadial) then
@@ -1761,7 +1761,7 @@ begin
     for i := 1 to DSS.ActiveCircuit.EnergyMeters.Count do
     begin
         ThisMeter := DSS.ActiveCircuit.EnergyMeters.Get(i);
-        if ThisMeter.Enabled and (ThisMeter.MeteredElement <> NIL) then
+        if ThisMeter.Enabled() and (ThisMeter.MeteredElement <> NIL) then
             Include(ThisMeter.MeteredElement.Flags, Flg.HasEnergyMeter);
     end;
 end;
@@ -1796,7 +1796,7 @@ begin
     if BranchList <> NIL then
         BranchList.Free;
     
-    if Enabled then
+    if FEnabled then
         BranchList := TCktTree.Create // Instantiates ZoneEndsList, too
     else
     begin
@@ -1877,7 +1877,7 @@ begin
 
         TPDElement(ActiveBranch).BranchNumCustomers := 0;   // Init counter
 
-        for iTerm := 1 to ActiveBranch.Nterms do
+        for iTerm := 1 to ActiveBranch.NTerms() do
         begin
             if ActiveBranch.TerminalsChecked[iTerm - 1] then
                 continue;
@@ -1899,7 +1899,7 @@ begin
             for iPC := 0 to adjLst.Count - 1 do
             begin
                 pPCelem := adjLst[iPC];
-                //  IF pPCelem.Enabled Then Begin   only enabled elements in the search list
+                //  IF pPCelem.Enabled() then Begin   only enabled elements in the search list
                 if not (Flg.Checked in pPCelem.Flags) then
                 begin
                     ; // skip ones we already checked
@@ -1912,7 +1912,7 @@ begin
                         BranchList.AddNewObject(pPCelem); // This adds element to the Shunt list in CktTree
                         Include(pPCelem.Flags, Flg.Checked);    // So we don't pick this element up again
                         Exclude(pPCelem.Flags, Flg.IsIsolated);
-                        pPCelem.ActiveTerminalIdx := 1;
+                        pPCelem.SetActiveTerminalIdx(1);
                         // Totalize Number of Customers if Load Type
                         if (pPCelem is TLoadObj) then
                         begin
@@ -1942,7 +1942,7 @@ begin
                     if not (TestElement = ActiveBranch) then  // Skip self
                         if not (Flg.HasEnergyMeter in TestElement.Flags) then
                         begin  // Stop at other meters  so zones don't interfere
-                            for j := 1 to TestElement.Nterms do
+                            for j := 1 to TestElement.NTerms() do
                             begin     // Check each terminal
                                 if TestBusNum = TestElement.Terminals[j - 1].BusRef then
                                 begin
@@ -1992,7 +1992,7 @@ begin
                     end;
 
                     TestCE := ActiveCircuit.ActiveCktElement;
-                    if (not TestCE.Enabled) or ((TestCE.DSSObjType and BaseClassMask) <> PD_ELEMENT) then
+                    if (not TestCE.Enabled()) or ((TestCE.DSSObjType and BaseClassMask) <> PD_ELEMENT) then
                     begin
                         Inc(ZoneListCounter);  // Lets ignore disabled devices and non-PD elements
                         continue;
@@ -2185,7 +2185,7 @@ procedure TEnergyMeterObj.Accumulate_Gen;
 var
     S: Complex;
 begin
-     //----pGen.ActiveTerminalIdx := 1;
+     //----pGen.SetActiveTerminalIdx(1);
     S := -pGen.Power(1) * 0.001;
     TotalZonekw := TotalZonekW + S.re;
     TotalZonekvar := TotalZonekvar + S.im;
@@ -2199,7 +2199,7 @@ var
     Load_EEN,
     Load_UE: Double;
 begin
-    //----ActiveTerminalIdx := 1;
+    //----SetActiveTerminalIdx(1);
     S_Load := pLoad.Power(1) * 0.001;   // Get Power in Terminal 1
     kW_Load := S_Load.re;
     Result := kw_Load;
@@ -2671,7 +2671,7 @@ begin
     cktElem := BranchList.First();
     while cktElem <> NIL do
     begin
-        if (skipDisabled) and (not cktElem.Enabled) then
+        if (skipDisabled) and (not cktElem.Enabled()) then
         begin
             cktElem := BranchList.GoForward();
             continue;
@@ -2818,7 +2818,7 @@ begin
     cktElem := BranchList.First();
     while cktElem <> NIL do
     begin
-        if CktElem.Enabled Then
+        if CktElem.Enabled() then
         begin
             ActiveCircuit.SetActiveCktElement(cktElem);
             shuntElement := Branchlist.FirstObject;
@@ -3010,7 +3010,7 @@ begin
         // Close all the DI file for each meter
         for mtr in DSS.ActiveCircuit.EnergyMeters do
         begin
-            if mtr.enabled then
+            if mtr.Enabled() then
                 mtr.CloseDemandIntervalFile;
         end;
 
@@ -3114,7 +3114,7 @@ begin
 
         for mtr in DSS.ActiveCircuit.EnergyMeters do
         begin
-            if mtr.enabled then
+            if mtr.Enabled() then
                 mtr.AppendDemandIntervalFile;
         end;
 
@@ -3190,7 +3190,7 @@ begin
     // CHECK PDELEMENTS ONLY
     for PDelem in DSS.ActiveCircuit.PDElements do
     begin
-        if (not PDelem.Enabled) or PDelem.IsShunt then
+        if (not PDelem.Enabled()) or PDelem.IsShunt then
             continue;
 
         // Ignore shunts
@@ -3226,7 +3226,7 @@ begin
             if (Cmax > NormAmps) or (Cmax > EmergAmps) then
             begin
                 // Gets the currents for the active Element
-                dBuffer := Allocmem(sizeof(Double) * PDElem.NPhases * PDElem.NTerms);
+                dBuffer := Allocmem(sizeof(Double) * PDElem.NPhases * PDElem.NTerms());
                 PDElem.Get_Current_Mags(dBuffer);
                 dVector := Allocmem(sizeof(Double) * 10); // for storing
                 for i := 1 to 3 do
@@ -3569,7 +3569,7 @@ begin
 
     for mtr in DSS.ActiveCircuit.EnergyMeters do
     begin
-        if mtr.enabled then
+        if mtr.Enabled() then
             for i := 1 to NumEMRegisters do
                 Regsum[i] := Regsum[i] + mtr.Registers[i] * mtr.TotalsMask[i];
     end;
@@ -3748,7 +3748,7 @@ begin
 
     for mtr in DSS.ActiveCircuit.EnergyMeters do
     begin
-        if mtr.enabled then
+        if mtr.Enabled() then
             mtr.OpenDemandIntervalFile;
     end;
 

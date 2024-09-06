@@ -605,20 +605,20 @@ begin
     case Idx of
         ord(TProp.phases):
         if FNPhases <> previousIntVal then
-            NConds := Fnphases + 1;  // Force redefinition of number of conductors and reallocation of matrices
+            SetNConds(Fnphases + 1);  // Force redefinition of number of conductors and reallocation of matrices
             // default all winding kVAs to first winding so latter Donot have to be specified
         ord(TProp.conn):
         begin
-            Yorder := fNConds * fNTerms;
-            YPrimInvalid := TRUE;
+            Yorder := FNConds * fNTerms;
+            SetYprimInvalid(true);
         end;
         ord(TProp.windings):
         begin
             OldXSCSize := (previousIntVal - 1) * previousIntVal div 2;
             MaxWindings := NumWindings;
             NewXSCSize := (NumWindings - 1) * NumWindings div 2;
-            FNconds := Fnphases + 1;
-            Nterms := NumWindings;
+            FNConds := Fnphases + 1;
+            SetNTerms(NumWindings);
             Reallocmem(Winding, Sizeof(TWinding) * MaxWindings);  // Reallocate collector array
             for i := 1 to MaxWindings do
                 Winding[i].Init();
@@ -710,7 +710,7 @@ begin
             if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
                 (not ActiveCircuit.Solution.SystemYChanged) and 
                 (YPrim <> NIL) and 
-                (not YPrimInvalid)
+                (not YPrimInvalid())
             then
                 // Mark this to incrementally update the matrix.
                 // If the matrix is already being rebuilt, there is 
@@ -718,7 +718,7 @@ begin
                 ActiveCircuit.IncrCktElements.Add(self) 
             else
 {$ENDIF}
-            YprimInvalid := TRUE;
+            SetYprimInvalid(true);
         ord(TProp.kV), ord(TProp.kVA),
         ord(TProp.pctR),
         ord(TProp.Rneut),
@@ -731,10 +731,10 @@ begin
         ord(TProp.pctimag), ord(TProp.ppm_antifloat), ord(TProp.pctRs), 
         ord(TProp.XHL), ord(TProp.XHT), ord(TProp.XLT),
         ord(TProp.X12), ord(TProp.X13), ord(TProp.X23):
-            YprimInvalid := TRUE;
+            SetYprimInvalid(true);
         ord(TProp.Xscarray):
             if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
-                YprimInvalid := TRUE;
+                SetYprimInvalid(true);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -758,10 +758,10 @@ begin
     Other := TObj(OtherPtr);
     FNphases := Other.Fnphases;
     SetNumWindings(Other.NumWindings);
-    NConds := Fnphases + 1; // forces reallocation of terminals and conductors
+    SetNConds(Fnphases + 1); // forces reallocation of terminals and conductors
 
-    Yorder := fNConds * fNTerms;
-    YPrimInvalid := TRUE;
+    Yorder := FNConds * fNTerms;
+    SetYprimInvalid(true);
 
     for i := 1 to NumWindings do
         Winding[i] := Other.Winding[i];
@@ -809,7 +809,7 @@ begin
     DSSObjType := ParClass.DSSClassType; //DSSObjType + XFMR; // override PDElement   (kept in both actually)
 
     FNphases := 3;  // Directly set conds and phases
-    fNConds := Fnphases + 1;
+    FNConds := Fnphases + 1;
 
     ZB := NIL;
     Y_1Volt := NIL;
@@ -819,7 +819,7 @@ begin
     SetNumWindings(2);  // must do this after setting number of phases
     ActiveWinding := 1;
 
-    Nterms := NumWindings;  // Force allocation of terminals and conductors
+    SetNTerms(NumWindings);  // Force allocation of terminals and conductors
 
     XHL := 0.07;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
@@ -864,7 +864,7 @@ begin
 
     Y_Terminal_FreqMult := 0.0;
 
-    Yorder := fNTerms * fNconds;
+    Yorder := fNTerms * FNConds;
     
     NumAmpRatings := 1;
     SetLength(kVARatings, NumAmpRatings);
@@ -1117,9 +1117,9 @@ begin
             for j := 1 to NumWindings do
             begin
                 Inc(k);
-                TermRef[k] := (j - 1) * fNconds + 1;
+                TermRef[k] := (j - 1) * FNConds + 1;
                 Inc(k);
-                TermRef[k] := j * fNconds;
+                TermRef[k] := j * FNConds;
             end;
     else
         for i := 1 to Fnphases do
@@ -1130,16 +1130,16 @@ begin
                 case Winding[j].Connection of
                     0:
                     begin      // Wye
-                        TermRef[k] := (j - 1) * fNconds + i;
+                        TermRef[k] := (j - 1) * FNConds + i;
                         Inc(k);
-                        TermRef[k] := j * fNconds;
+                        TermRef[k] := j * FNConds;
                     end;
                     // **** WILL THIS WORK for 2-PHASE OPEN DELTA ???? Need to check this sometime
                     1:
                     begin   // Delta
-                        TermRef[k] := (j - 1) * fNconds + i;
+                        TermRef[k] := (j - 1) * FNConds + i;
                         Inc(k);
-                        TermRef[k] := (j - 1) * fNconds + RotatePhases(i);  // connect to next phase in sequence
+                        TermRef[k] := (j - 1) * FNConds + RotatePhases(i);  // connect to next phase in sequence
                     end;
                 end;
             end;
@@ -1192,7 +1192,7 @@ begin
     // For any conductor that is open, zero out row and column
     inherited CalcYPrim();
 
-    YprimInvalid := FALSE;
+    SetYprimInvalid(false);
 end;
 
 procedure TTransfObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);
@@ -1391,7 +1391,7 @@ begin
                 if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
                    (not ActiveCircuit.Solution.SystemYChanged) and 
                    (YPrim <> NIL) and 
-                   (not YPrimInvalid)
+                   (not YPrimInvalid())
                 then
                     // Mark this to incrementally update the matrix.
                     // If the matrix is already being rebuilt, there is 
@@ -1399,7 +1399,7 @@ begin
                     ActiveCircuit.IncrCktElements.Add(Self) 
                 else
 {$ENDIF}
-                    YPrimInvalid := TRUE;  // this property triggers setting SystemYChanged=true
+                    SetYprimInvalid(true);  // this property triggers setting SystemYChanged=true
 
                 RecalcElementData();
             end;
@@ -1474,7 +1474,7 @@ var
     ITerm_NL: pComplexArray;
 
 begin
-    if (not Enabled) or (NodeRef = NIL) or (ActiveCircuit.Solution.NodeV = NIL) then
+    if (not FEnabled) or (NodeRef = NIL) or (ActiveCircuit.Solution.NodeV = NIL) then
         Exit;
 
     Vterm := Allocmem(SizeOf(Complex) * 2 * NumWindings);
@@ -1500,14 +1500,14 @@ begin
             case Winding[iWind].Connection of
                 0:
                 begin   // Wye
-                    VTerm[i] := Vterminal[iphase + (iWind - 1) * FNconds];
+                    VTerm[i] := Vterminal[iphase + (iWind - 1) * FNConds];
                     VTerm[i + 1] := Vterminal[NeutTerm];
                 end;
                 1:
                 begin   // Delta
                     jphase := RotatePhases(iphase);      // Get next phase in sequence
-                    VTerm[i] := Vterminal[iphase + (iWind - 1) * FNconds];
-                    VTerm[i + 1] := Vterminal[jphase + (iWind - 1) * FNconds];
+                    VTerm[i] := Vterminal[iphase + (iWind - 1) * FNConds];
+                    VTerm[i + 1] := Vterminal[jphase + (iWind - 1) * FNConds];
                 end
             end;
         end;
@@ -1532,13 +1532,13 @@ procedure TTransfObj.GetWindingVoltages(iWind: Integer; VBuffer: pComplexArray);
 var
     i, ii, k, NeutTerm: Integer;
 begin
-    if (not Enabled) or (NodeRef = NIL) or (ActiveCircuit.Solution.NodeV = NIL) then
+    if (not FEnabled) or (NodeRef = NIL) or (ActiveCircuit.Solution.NodeV = NIL) then
         Exit;
 
     // return Zero if winding number improperly specified
     if (iWind < 1) or (iWind > NumWindings) then
     begin
-        for i := 1 to FNconds do
+        for i := 1 to FNConds do
             VBuffer[i] := 0;
         
         Exit;
@@ -1549,7 +1549,7 @@ begin
         for i := 1 to Yorder do
             Vterminal[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
 
-        k := (iWind - 1) * FNconds;    // Offset for winding
+        k := (iWind - 1) * FNConds;    // Offset for winding
         NeutTerm := Fnphases + k + 1;
         for i := 1 to Fnphases do
             case Winding[iWind].Connection of
@@ -1654,7 +1654,7 @@ begin
                     OnPhase1 := TRUE;
             if not OnPhase1 then
             begin
-                Enabled := FALSE;   // We won't use this one
+                SetEnabled(FALSE);   // We won't use this one
                 Exit;
             end;
         end;
@@ -1721,14 +1721,14 @@ begin
                     else
                         // 1 microohm resistor
                         Value := Cinv(Cmplx(Rneut, XNeut * FreqMultiplier));
-                    j := i * fNconds;
+                    j := i * FNConds;
                     YPrim_Series.AddElement(j, j, Value);
                 end
 
                 else
                 begin
                     // Bump up neutral admittance a bit in case neutral is floating
-                    j := i * fNconds;
+                    j := i * FNConds;
                     if ppm_FloatFactor <> 0.0 then
                         YPrim_Series.AddElement(j, j, Cmplx(0.0, Y_PPM));
                         // SetElement(j, j, CmulReal_im(GetElement(j, j), ppm_FloatFactorPlusOne));
@@ -1992,7 +1992,7 @@ begin
     // set sizes and copy parameters
     FNphases := Obj.Fnphases;
     SetNumWindings(Obj.NumWindings);
-    NConds := Fnphases + 1; // forces reallocation of terminals and conductors
+    SetNConds(Fnphases + 1); // forces reallocation of terminals and conductors
     for i := 1 to NumWindings do
         // Records can be copied
         Winding[i] := Obj.Winding[i];
@@ -2028,8 +2028,8 @@ begin
     NormMaxHkVA := Obj.NormMaxHkVA;
     EmergMaxHkVA := Obj.EmergMaxHkVA;
     ppm_FloatFactor := Obj.ppm_FloatFactor;
-    Yorder := fNConds * fNTerms;
-    YPrimInvalid := TRUE;
+    Yorder := FNConds * fNTerms;
+    SetYprimInvalid(true);
     Y_Terminal_FreqMult := 0.0;
 
     NumAmpRatings := Obj.NumkVARatings;

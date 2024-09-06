@@ -277,7 +277,7 @@ begin
         ord(TProp.phases):
             if Fnphases <> previousIntVal then
             begin
-                NConds := Fnphases;  // Force Reallocation of terminal info
+                SetNConds(Fnphases);  // Force Reallocation of terminal info
                 SetLength(OutCurr, FNphases + 1);
                 SetLength(InCurr, FNphases + 1);
             end;
@@ -291,7 +291,7 @@ var
 begin
     obj := TObj(ptr);
     obj.RecalcElementData();
-    obj.YPrimInvalid := TRUE;
+    obj.SetYprimInvalid(true);
     Exclude(obj.Flags, Flg.EditingActive);
     Result := True;
 end;
@@ -306,10 +306,10 @@ begin
     if Fnphases <> Other.Fnphases then
     begin
         FNphases := Other.Fnphases;
-        NConds := Fnphases;  // Forces reallocation of terminal stuff
+        SetNConds(Fnphases);  // Forces reallocation of terminal stuff
 
-        Yorder := Fnconds * Fnterms;
-        YPrimInvalid := TRUE;
+        Yorder := FNConds * Fnterms;
+        SetYprimInvalid(true);
 
         if Z <> NIL then
             Z.Free;
@@ -347,8 +347,8 @@ begin
     DSSObjType := ParClass.DSSClassType; //SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
 
     FNphases := 1;
-    Fnconds := 1;   // number conductors per terminal
-    Nterms := 2;   // A 2-terminal device
+    FNConds := 1;   // number conductors per terminal
+    SetNTerms(2);   // A 2-terminal device
 
     Z := NIL;
     Zinv := NIL;
@@ -357,7 +357,7 @@ begin
     Xs := 0.7540; // Xfmr series inductace 2e-3 H
     Tol1 := 0.02;
     Freq := Round(ActiveCircuit.Fundamental);
-    enabled := TRUE;
+    SetEnabled(TRUE);
     ModeUPFC := 1;
     VpqMax := 24.0;     // From the data provided
     UPFCLossCurveObj := NIL;
@@ -399,7 +399,7 @@ begin
         ctrl.ListSize := 0;
     end;
 
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
     RecalcElementData();
 end;
 
@@ -517,7 +517,7 @@ begin
     // For any conductor that is open, zero out row and column
     inherited CalcYPrim();
 
-    YPrimInvalid := FALSE;
+    SetYprimInvalid(false);
 end;
 
 function TUPFCObj.CalcUPFCLosses(Vpu: Double): Double;

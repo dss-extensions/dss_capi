@@ -78,7 +78,7 @@ begin
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
     for pElem in Ckt.IncrCktElements do
     begin
-        if pElem.YprimInvalid then
+        if pElem.YprimInvalid() then
         begin
             pElem.CalcYPrim();
         end;
@@ -86,7 +86,7 @@ begin
 {$ENDIF}
     for pElem in Ckt.CktElements do
     begin
-        if pElem.YprimInvalid then // or ((DSSObjType and CLASSMASK) = LOAD_ELEMENT)
+        if pElem.YprimInvalid() then // or ((DSSObjType and CLASSMASK) = LOAD_ELEMENT)
         begin
             pElem.CalcYPrim();
         end;
@@ -157,13 +157,13 @@ begin
          ) then
             continue;
 
-        if (pElem.Enabled and (pElem.Yprim = NIL)) then
+        if (pElem.Enabled() and (pElem.Yprim = NIL)) then
         begin
             abortIncremental := True;
             break;
         end;
 
-        if (not pElem.Enabled) or (pElem.Yprim = NIL) then
+        if (not pElem.Enabled()) or (pElem.Yprim = NIL) then
             continue;
 
         if IncrYprim <> NIL then
@@ -231,7 +231,7 @@ begin
     begin
         if abortIncremental then break;
 
-        if (not pElem.Enabled) or (pElem.Yprim = NIL) then
+        if (not pElem.Enabled()) or (pElem.Yprim = NIL) then
             continue;
 
         for i := 1 to pElem.Yprim.order do
@@ -394,7 +394,7 @@ begin
             // Full method, handles all elements
             for pElem in CktElements do
             begin
-                if not pElem.Enabled then
+                if not pElem.Enabled() then
                     continue;
 
                 // Add stuff only if enabled

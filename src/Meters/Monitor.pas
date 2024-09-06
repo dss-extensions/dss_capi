@@ -374,7 +374,7 @@ var
 begin
     for Mon in ActiveCircuit.Monitors do
     begin
-        if Mon.enabled then
+        if Mon.Enabled() then
             Mon.ResetIt;
     end;
 end;
@@ -386,7 +386,7 @@ var
 begin
     for Mon in ActiveCircuit.Monitors do
     begin
-        if Mon.enabled then
+        if Mon.Enabled() then
             if Mon.Mode <> 5 then
                 Mon.TakeSample;
     end;
@@ -399,7 +399,7 @@ var
 begin
     for Mon in ActiveCircuit.Monitors do
     begin
-        if Mon.enabled then
+        if Mon.Enabled() then
             if Mon.Mode = 5 then
                 Mon.TakeSample;
     end;
@@ -411,7 +411,7 @@ var
 begin
     for Mon in ActiveCircuit.Monitors do
     begin
-        if Mon.Enabled then
+        if Mon.Enabled() then
             Mon.PostProcess;
     end;
 end;
@@ -422,7 +422,7 @@ var
 begin
     for Mon in ActiveCircuit.Monitors do
     begin
-        if Mon.Enabled then
+        if Mon.Enabled() then
             Mon.Save;
     end;
 end;
@@ -434,7 +434,7 @@ begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
-    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    SetNConds(Other.FNConds); // Force Reallocation of terminal stuff
 
     Buffersize := Other.Buffersize;
     MeteredElement := Other.MeteredElement;  // Pointer to target circuit element
@@ -450,8 +450,8 @@ begin
     inherited Create(ParClass, MonitorName);
 
     FNphases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors
+    FNConds := 3;
+    SetNTerms(1);  // this forces allocation of terminals and conductors
                          // in base class
 
     // Current Buffer has to be big enough to hold all terminals
@@ -571,7 +571,7 @@ begin
             end;
         end;
 
-        if MeteredTerminal > MeteredElement.Nterms then
+        if MeteredTerminal > MeteredElement.NTerms() then
         begin
             DoErrorMsg(
                 Format(_('Monitor: "%s"'), [Name]),
@@ -581,7 +581,7 @@ begin
         else
         begin
             FNphases := MeteredElement.NPhases;
-            Nconds := MeteredElement.NConds;
+            SetNConds(MeteredElement.NConds());
 
             // Sets name of i-th terminal's connected bus in monitor's buslist
             // This value will be used to set the NodeRef array (see TakeSample)
@@ -608,15 +608,15 @@ begin
                 8:
                 begin
                     tr := TControlledTransformerObj(MeteredElement);
-                    NumTransformerCurrents := 2 * tr.NumWindings * tr.nphases;
+                    NumTransformerCurrents := 2 * tr.NumWindings * tr.NPhases();
                     ReallocMem(WdgCurrentsBuffer, Sizeof(Complex) * NumTransformerCurrents);
                 end;
                 10:
                 begin
                     tr := TControlledTransformerObj(MeteredElement);
-                    NumWindingVoltages := tr.NumWindings * tr.nphases;
+                    NumWindingVoltages := tr.NumWindings * tr.NPhases();
                     ReallocMem(WdgVoltagesBuffer, Sizeof(Complex) * NumWindingVoltages);   // total all phases, all windings
-                    ReallocMem(PhsVoltagesBuffer, Sizeof(Complex) * nphases);
+                    ReallocMem(PhsVoltagesBuffer, Sizeof(Complex) * FNPhases);
                 end;
                 11:
                 begin
@@ -630,7 +630,7 @@ begin
                 end;
             else
                 ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer[1]) * MeteredElement.Yorder);
-                ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer[1]) * MeteredElement.NConds);
+                ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer[1]) * MeteredElement.NConds());
             end;
 
             ClearMonitorStream;
@@ -653,7 +653,7 @@ begin
     begin
         Setbus(1, MeteredElement.GetBus(MeteredTerminal));
         FNphases := MeteredElement.NPhases;
-        Nconds := MeteredElement.Nconds;
+        SetNConds(MeteredElement.NConds());
         case (Mode and MODEMASK) of
             3:
             begin
@@ -670,7 +670,7 @@ begin
             end;
         else
             ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer[1]) * MeteredElement.Yorder);
-            ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer[1]) * MeteredElement.NConds);
+            ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer[1]) * MeteredElement.NConds());
         end;
         ClearMonitorStream;
         ValidMonitor := TRUE;
@@ -824,16 +824,16 @@ begin
                 Recordsize := 2 * 2 * MeteredElement.Yorder;  // V and I
 
                 // Voltages
-                for j := 1 to MeteredElement.NTerms do
-                    for i := 1 to MeteredElement.NConds do
+                for j := 1 to MeteredElement.NTerms() do
+                    for i := 1 to MeteredElement.NConds() do
                     begin
                         addHeaderColumn(Format('V%dT%d', [i, j]), false);
                         addHeaderColumn('Deg');
                     end;
 
                 // Currents
-                for j := 1 to MeteredElement.NTerms do
-                    for i := 1 to MeteredElement.NConds do
+                for j := 1 to MeteredElement.NTerms() do
+                    for i := 1 to MeteredElement.NConds() do
                     begin
                         addHeaderColumn(Format('I%dT%d', [i, j]), false);
                         addHeaderColumn('Deg');
@@ -841,7 +841,7 @@ begin
             end;
             12: // All terminal voltages LL and currents  *****
             begin 
-                Recordsize := 2 * ((MeteredElement.NPhases * MeteredElement.NTerms) + MeteredElement.Yorder);  // V and I
+                Recordsize := 2 * ((MeteredElement.NPhases * MeteredElement.NTerms()) + MeteredElement.Yorder);  // V and I
                 SetLength(PhaseLoc, MeteredElement.NPhases + 1);
 
                 // Creates the map of phase combinations (LL)
@@ -851,7 +851,7 @@ begin
                 PhaseLoc[High(PhaseLoc)] := 1;
 
                 // Voltages
-                for j := 1 to MeteredElement.NTerms do
+                for j := 1 to MeteredElement.NTerms() do
                     for i := 1 to MeteredElement.NPhases do
                     begin
                         addHeaderColumn(Format('V%d-%dT%d', [PhaseLoc[i-1], PhaseLoc[i], j]), false);
@@ -859,8 +859,8 @@ begin
                     end;
 
                 // Currents
-                for j := 1 to MeteredElement.NTerms do
-                    for i := 1 to MeteredElement.NConds do
+                for j := 1 to MeteredElement.NTerms() do
+                    for i := 1 to MeteredElement.NConds() do
                     begin
                         addHeaderColumn(Format('I%dT%d', [i, j]), false);
                         addHeaderColumn('Deg');
@@ -878,7 +878,7 @@ begin
             end
             else
             begin
-                NumVI := Fnconds;
+                NumVI := FNConds;
             end;
           // Convert Voltage Buffer to power kW, kvar
             if ((Mode and MODEMASK) = 1) then
@@ -1214,7 +1214,7 @@ var
     tr: TControlledTransformerObj;
     tmp: Double;
 begin
-    if not (ValidMonitor and Enabled) then
+    if not (ValidMonitor and FEnabled) then
         Exit;
 
     inc(SampleCount);
@@ -1222,7 +1222,7 @@ begin
     Hour := ActiveCircuit.Solution.DynaVars.intHour;
     Sec := ActiveCircuit.Solution.Dynavars.t;
 
-    Offset := (MeteredTerminal - 1) * MeteredElement.NConds;
+    Offset := (MeteredTerminal - 1) * MeteredElement.NConds();
 
     //Save time unless Harmonics mode and then save Frequency and Harmonic
     if ActiveCircuit.Solution.IsHarmonicModel then
@@ -1249,7 +1249,7 @@ begin
                 CurrentBuffer[i] := MeteredElement.Iterminal[i];
 
             try
-                for i := 1 to Fnconds do
+                for i := 1 to FNConds do
                 begin
                 // NodeRef is set by the main Circuit object
                 // It is the index of the terminal into the system node list
@@ -1367,7 +1367,7 @@ begin
             for i := 1 to tr.NumWindings do
             begin
                 tr.GetWindingVoltages(i, PhsVoltagesBuffer);
-                for j := 1 to tr.nphases do
+                for j := 1 to tr.NPhases() do
                     WdgVoltagesBuffer[i + (j - 1) * tr.NumWindings] := PhsVoltagesBuffer[j];
             end;
             ConvertComplexArrayToPolar(WdgVoltagesBuffer, NumWindingVoltages);
@@ -1402,17 +1402,17 @@ begin
             // Get All node voltages at all terminals
             MeteredElement.ComputeVterminal();
 
-            for k := 1 to MeteredElement.NTerms do // Adds each term separately
+            for k := 1 to MeteredElement.NTerms() do // Adds each term separately
             begin
                 BuffInit := 1 + MeteredElement.NPhases * (k - 1);
                 BuffEnd := NPhases * k;
                 for i := BuffInit to BuffEnd do
                     VoltageBuffer[i - (BuffInit - 1)] := MeteredElement.Vterminal[i];
 
-                if MeteredElement.NPhases = MeteredElement.NConds then
+                if MeteredElement.NPhases = MeteredElement.NConds() then
                     myRefIdx := MeteredElement.NPhases + 1
                 else
-                    myRefIdx := MeteredElement.NConds;
+                    myRefIdx := MeteredElement.NConds();
 
                 //Brings the first phase to the last place for calculations
                 VoltageBuffer[myRefIdx] := VoltageBuffer[1];
@@ -1459,7 +1459,7 @@ begin
     end
     else
     begin
-        NumVI := Fnconds;
+        NumVI := FNConds;
         IsSequence := FALSE;
     end;
 
@@ -1854,7 +1854,7 @@ begin
             WriteStr(sout, MonBuffer[i]: 0: 1, ', ');
             FSWrite(F, sout);
             Inc(k);
-            if k = (2 + Fnconds * 4) then
+            if k = (2 + FNConds * 4) then
             begin
                 FSWriteln(F);
                 k := 0;

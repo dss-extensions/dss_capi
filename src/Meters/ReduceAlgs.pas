@@ -59,7 +59,7 @@ begin
         if BranchList.PresentBranch.IsParallel then
         begin
             // There will always be two lines in parallel.  The first operation will disable the second
-            if LineElement.Enabled then
+            if LineElement.Enabled() then
                 LineElement.MergeWith(TLineObj(BranchList.PresentBranch.LoopLineObj), PARALLELMERGE);  // Guaranteed to be a line
         end;
         LineElement := BranchList.GoForward();
@@ -81,8 +81,8 @@ begin
         if BranchList.PresentBranch.IsLoopedHere then
         begin
             // There will always be two lines in the loop.  The first operation will disable the second
-            if LineElement.Enabled then
-                TLineObj(BranchList.PresentBranch.LoopLineObj).Enabled := FALSE; // Disable the other
+            if LineElement.Enabled() then
+                TLineObj(BranchList.PresentBranch.LoopLineObj).SetEnabled(FALSE); // Disable the other
         end;
         LineElement := BranchList.GoForward();
     end;
@@ -110,7 +110,7 @@ begin
                     ToBusRef := GetToBusReference();  // only access this property once!
                     if ToBusRef > 0 then
                         if not (DSS.ActiveCircuit.Buses[ToBusRef].Keep) then
-                            pLineElem1.Enabled := FALSE;
+                            pLineElem1.SetEnabled(FALSE);
                 end;
             end;
         pLineElem1 := BranchList.GoForward();
@@ -171,7 +171,7 @@ begin
     LineElement1 := BranchList.GoForward(); // Always keep the first element in the Tree
     while LineElement1 <> NIL do
     begin
-        if LineElement1.enabled then    // else skip
+        if LineElement1.Enabled() then    // else skip
 
             if not (Flg.HasControl in LineElement1.Flags) then
                 if not (Flg.IsMonitored in LineElement1.Flags) then   // Skip if controlled element or control is monitoring ,,,
@@ -182,7 +182,7 @@ begin
                         begin
                             if (PresentBranch.NumChildBranches() = 0) and (PresentBranch.NumShuntObjects() = 0) and 
                                 (not DSS.ActiveCircuit.Buses[PresentBranch.GetToBusReference()].Keep) then
-                                LineElement1.Enabled := FALSE     // just discard it
+                                LineElement1.SetEnabled(FALSE)     // just discard it
                             else
                             if (PresentBranch.NumChildBranches() = 0) then //Merge with Parent and move shunt elements to TO node on parent branch
                             begin
@@ -213,7 +213,7 @@ begin
                                             if MergeOK then
                                             begin
                                                 LineElement2 := ParentNode.CktObject;
-                                                if LineElement2.enabled then  // Check to make sure it hasn't been merged out
+                                                if LineElement2.Enabled() then  // Check to make sure it hasn't been merged out
                                                     if IsLineElement(LineElement2) then
                                                         if LineElement2.MergeWith(LineElement1, SERIESMERGE) then
                                                         begin // Move any loads to ToBus Reference of parent branch
@@ -261,7 +261,7 @@ begin
                                     if MergeOK then
                                     begin
                                         LineElement2 := PresentBranch.FirstChildBranch().CktObject; // child of PresentBranch
-                                        if LineElement2.enabled then  // Check to make sure it hasn't been merged out
+                                        if LineElement2.Enabled() then  // Check to make sure it hasn't been merged out
                                             if IsLineElement(LineElement2) then
                                                 if LineElement2.MergeWith(LineElement1, SERIESMERGE) then
                                                 begin
@@ -306,7 +306,7 @@ begin
     LineElement1 := BranchList.GoForward(); // Always keep the first element
     while LineElement1 <> NIL do
     begin
-        if LineElement1.Enabled then   // maybe we threw it away already
+        if LineElement1.Enabled() then   // maybe we threw it away already
             if IsLineElement(LineElement1) then
                 if LineElement1.IsSwitch then
                     with BranchList.PresentBranch do
@@ -314,7 +314,7 @@ begin
                         case NumChildBranches() of
                             0: // Throw away if dangling
                                 if NumShuntObjects() = 0 then
-                                    LineElement1.Enabled := FALSE;
+                                    LineElement1.SetEnabled(FALSE);
 
                             1:
                                 if NumShuntObjects() = 0 then
@@ -349,7 +349,7 @@ begin
             if not LineElement1.IsSwitch then         // Exceptions
                 if not (Flg.HasControl in LineElement1.Flags) then
                     if not (Flg.IsMonitored in LineElement1.Flags) then
-                        if LineElement1.Enabled then   // maybe we threw it away already
+                        if LineElement1.Enabled() then   // maybe we threw it away already
                             with BranchList do
                             begin
                                 // see if eligible for merging
@@ -427,12 +427,12 @@ begin
                 pShunt := PresentBranch.FirstShuntObject();
                 while pShunt <> NIL do
                 begin
-                    pShunt.Enabled := FALSE;
+                    pShunt.SetEnabled(FALSE);
                     pShunt := PresentBranch.NextShuntObject();
                 end;
             end;
 
-            PDElem.Enabled := FALSE;
+            PDElem.SetEnabled(FALSE);
             PDElem := BranchList.GoForward();
 
          // Check to see if we are back where we started. If so, stop.
@@ -465,7 +465,7 @@ begin
 
     while PDElem <> NIL do
     begin
-        if PDElem.nphases = 1 then   // ELIMINATE THIS LATERAL
+        if PDElem.NPhases() = 1 then   // ELIMINATE THIS LATERAL
         begin
             // Check to see if this is a 1-phase switch or other branch in the middle of a 3-phase branch and go on
             // If the To bus has more than 1 phase, keep this branch else lump the load at the From node
@@ -512,7 +512,7 @@ begin
                         end;
                     end;
 
-                    PDElem.Enabled := FALSE;
+                    PDElem.SetEnabled(FALSE);
                     PDElem := BranchList.GoForward();
 
                     // Check to see if we are back where we started. If so, stop with this lateral and get on to the next.

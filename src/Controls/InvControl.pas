@@ -728,7 +728,7 @@ begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
-    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    SetNConds(Other.FNConds); // Force Reallocation of terminal stuff
 
     ControlledElements := Copy(Other.ControlledElements, Length(Other.ControlledElements));
     for i := 1 to FDERPointerList.Count do
@@ -804,8 +804,8 @@ begin
     // RecalcElementData routine if necessary. This allocates arrays for voltages
     // and currents and gives more direct access to the values,if needed
     FNPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors in base class
+    FNConds := 3;
+    SetNTerms(1);  // this forces allocation of terminals and conductors in base class
     ControlMode := NONE_MODE; // TODO: The docs say the default is "VoltVar"
     CombiMode := NONE_COMBMODE;
     ControlledElements := NIL;
@@ -905,13 +905,13 @@ begin
     begin
         // User ControlledElements[] as the pointer to the PVSystem/Storage elements
         ControlledElements[i] := TInvBasedPCE(FDERPointerList.Get(i));  // pointer to i-th PVSystem/Storage element
-        ControlledElements[i].ActiveTerminalIdx := 1; // Make the 1 st terminal active
+        ControlledElements[i].SetActiveTerminalIdx(1); // Make the 1 st terminal active
 
         with CtrlVars[i] do
         begin
             SetLength(cBuffer, SizeOf(Complex) * ControlledElements[i].Yorder);
             FNphases := ControlledElements[i].NPhases;
-            Nconds := Nphases; //TODO: check
+            SetNConds(Nphases); //TODO: check
             FRollAvgWindow.SetLength(FRollAvgWindowLength);
             FDRCRollAvgWindow.SetLength(FDRCRollAvgWindowLength);
 
@@ -943,7 +943,7 @@ begin
     if FDERPointerList.Count = 0 then
         RecalcElementData();
     FNphases := 3;
-    Nconds := 3;
+    SetNConds(3);
     Setbus(1, MonitoredElement().GetBus(ElementTerminal));
 
     if FDERPointerList.Count > 0 then
@@ -953,7 +953,7 @@ begin
         SetMonitoredElement(TInvBasedPCE(FDERPointerList.Get(1)));   // Set MonitoredElement() to 1st PVSystem/Storage in list
         Setbus(1, MonitoredElement().FirstBus());
         FNphases := MonitoredElement().NPhases;
-        Nconds := Nphases;
+        SetNConds(Nphases);
     end;
     inherited;
 end;
@@ -1555,7 +1555,7 @@ begin
                     if DER_OL then
                     begin
                         DERElem.GFM_Mode := False;
-                        DERElem.YprimInvalid := TRUE;
+                        DERElem.SetYprimInvalid(true);
                     end;
                 end;
             end;
@@ -1666,7 +1666,7 @@ begin
         begin
             with TPVSystemObj(DERElem) do
             begin
-                CondOffset := (NTerms - 1) * NCondsDER; // for speedy sampling
+                CondOffset := (NTerms() - 1) * NCondsDER; // for speedy sampling
 
                 FVBase := Vbase;
                 FVarFollowInverter := VarFollowInverter;
@@ -2290,7 +2290,7 @@ begin
 
                     if Assigned(PVSys) then
                     begin
-                        if PVSys.Enabled then
+                        if PVSys.Enabled() then
                             FDERPointerList.Add(PVSys)
                     end
                     else
@@ -2307,7 +2307,7 @@ begin
 
                     if Assigned(Storage) then
                     begin
-                        if Storage.Enabled then
+                        if Storage.Enabled() then
                             FDERPointerList.Add(Storage)
                     end
                     else
@@ -2327,7 +2327,7 @@ begin
         for i := 1 to PVSysClass.ElementCount() do
         begin
             PVSys := PVSysClass.ElementList.Get(i);
-            if PVSys.Enabled then
+            if PVSys.Enabled() then
                 FDERPointerList.Add(PVSys);
             DERNameList.Add(PVSys.FullName());
         end;
@@ -2335,7 +2335,7 @@ begin
         for i := 1 to StorageClass.ElementCount() do
         begin
             Storage := StorageClass.ElementList.Get(i);
-            if Storage.Enabled then
+            if Storage.Enabled() then
                 FDERPointerList.Add(Storage);
             DERNameList.Add(Storage.FullName());
         end;
@@ -2360,11 +2360,11 @@ begin
             for j := 1 to 6 do
                 cBuffer[j] := 0;
 
-            Set_NTerms(DERElem.NTerms);
+            SetNTerms(DERElem.NTerms());
 
             CondOffset := 0;
             NPhasesDER := DERElem.NPhases;
-            NCondsDER := DERElem.NConds;
+            NCondsDER := DERElem.NConds();
             FAvgpVpuPrior := 0.0;
             FAvgpDRCVpuPrior := 0.0;
             FPresentVpu := 0.0;
@@ -3527,7 +3527,7 @@ begin
     for i := 1 to ElementList.Count do
     begin
         obj := TInvControlObj(ElementList.Get(i));
-        if obj.Enabled then
+        if obj.Enabled() then
             obj.UpdateInvControl(i);
     end;
 end;

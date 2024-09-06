@@ -800,7 +800,7 @@ var
 begin
     for FMon in ElementList do
     begin
-        if FMon.enabled then
+        if FMon.Enabled() then
             FMon.ResetIt();
     end;
 end;
@@ -818,7 +818,7 @@ begin
         //update all agents information:
         //synchronous: voltage to agents
         //asynchronous: aphga, ahphaP, highest/lowest voltage
-        if FMon.enabled then
+        if FMon.Enabled() then
         begin
             FMon.update_node_info_each_time_step(); //update old z_dfs, vl_alpha_dgn
             FMon.update_ld_dly(); //with delay
@@ -869,7 +869,7 @@ var
 begin
     for FMon in ElementList do
     begin
-        if FMon.enabled and FMon.eg_defed then
+        if FMon.Enabled() and FMon.eg_defed then
             FMon.Calc_P_freq_fm(); //w
     end;
 end;
@@ -880,7 +880,7 @@ var
 begin
     for FMon in ElementList do
     begin
-        if FMon.enabled and FMon.atk then
+        if FMon.Enabled() and FMon.atk then
             FMon.update_attack(); //w
     end;
 end;
@@ -891,7 +891,7 @@ var
 begin
     for FMon in ElementList do
     begin
-        if FMon.enabled and FMon.dfs then
+        if FMon.Enabled() and FMon.dfs then
             FMon.update_defense(); //w
     end;
 end;
@@ -903,7 +903,7 @@ begin
     OtherMonitor := TObj(OtherPtr);
     // See if we can find this Monitor name in the present collection
     FNPhases := OtherMonitor.Fnphases;
-    FNConds := OtherMonitor.Fnconds; // Force Reallocation of terminal stuff
+    FNConds := OtherMonitor.FNConds; // Force Reallocation of terminal stuff
     MeteredElement := OtherMonitor.MeteredElement;  // Pointer to target circuit element
     MeteredTerminal := OtherMonitor.MeteredTerminal;
 end;
@@ -916,8 +916,8 @@ begin
 
     FMonClass := TFMonitor(ParClass);
     FNphases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors in base class
+    FNConds := 3;
+    SetNTerms(1);  // this forces allocation of terminals and conductors in base class
     // Current Buffer has to be big enough to hold all terminals
     MeteredElement := TDSSCktElement(ActiveCircuit.CktElements.Get(1)); // Default to first circuit element (source)
     MeteredTerminal := 1;
@@ -1004,7 +1004,7 @@ begin
         Exit;
     end;
 
-    if MeteredTerminal > MeteredElement.Nterms then
+    if MeteredTerminal > MeteredElement.NTerms() then
     begin
         DoErrorMsg('FMonitor: "' + Name + '"',
             Format(_('Terminal number %d does not exist.'), [MeteredTerminal]),
@@ -1013,7 +1013,7 @@ begin
     else
     begin
         FNphases := MeteredElement.NPhases;
-        FNconds := MeteredElement.NConds;
+        FNConds := MeteredElement.NConds();
 
         // Sets name of i-th terminal's connected bus in monitor's buslist
         // This value will be used to set the NodeRef array (see TakeSample)
@@ -1027,7 +1027,7 @@ begin
     begin
         Setbus(1, MeteredElement.GetBus(MeteredTerminal));
         FNphases := MeteredElement.NPhases;
-        FNconds := MeteredElement.Nconds;
+        FNConds := MeteredElement.NConds();
     end;
     inherited;
 end;
@@ -1164,7 +1164,7 @@ begin
         PCindex_ld := ActiveCircuit.PCElements.ActiveIndex;
         while pElem <> nil do
         begin
-            if not pElem.Enabled then
+            if not pElem.Enabled() then
             begin
                 pElem := ActiveCircuit.PCElements.Next;
                 PCindex_ld := ActiveCircuit.PCElements.ActiveIndex;
@@ -1512,8 +1512,8 @@ begin
     TPDElement(MeteredElement).GetCurrents(MeteredElement.Iterminal); //Curr
     pTerminal := MeteredElement.Terminals[MeteredTerminal - 1];
     tempCplx := 0;
-    k := (MeteredTerminal - 1) * MeteredElement.NConds;
-    for j := 1 to MeteredElement.NConds do// how many conds of this element
+    k := (MeteredTerminal - 1) * MeteredElement.NConds();
+    for j := 1 to MeteredElement.NConds() do// how many conds of this element
     begin
         i := pTerminal.TermNodeRef[j - 1];  // global node number
         tempCplx += ActiveCircuit.Solution.NodeV[i] * cong(MeteredElement.Iterminal[k + j])//power

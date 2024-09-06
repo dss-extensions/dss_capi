@@ -234,7 +234,7 @@ begin
         ord(TProp.phases):
             if Fnphases <> previousIntVal then
             begin
-                NConds := Fnphases;
+                SetNConds(Fnphases);
                 ActiveCircuit.SetBusNameRedefined();
             end;
         ord(TProp.bus1):
@@ -252,7 +252,7 @@ begin
     end;
     case Idx of
         1..16:
-            YprimInvalid := TRUE;
+            SetYprimInvalid(true);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -267,11 +267,11 @@ begin
     begin
         Fnphases := Other.Fnphases;
         FnTerms := Other.FnTerms;
-        NConds := Fnphases;
+        SetNConds(Fnphases);
     end;
     Ndc := Other.Ndc;
-    Yorder := FnConds * FnTerms;
-    YPrimInvalid := TRUE;
+    Yorder := FNConds * FnTerms;
+    SetYprimInvalid(true);
     FkVac := Other.FkVac;
     FkVdc := Other.FkVdc;
     FkW := Other.FkW;
@@ -300,8 +300,8 @@ begin
 
     // typically the first 3 "phases" are AC, and the last one is DC
     FNPhases := 4;
-    Fnconds := 4;
-    Nterms := 2; // two-terminal device, like the voltage source
+    FNConds := 4;
+    SetNTerms(2); // two-terminal device, like the voltage source
     Ndc := 1;
 
     FkVac := 1.0;
@@ -322,7 +322,7 @@ begin
     FmaxIac := 2.0;
     FmaxIdc := 2.0;
 
-    Yorder := Fnterms * Fnconds;
+    Yorder := Fnterms * FNConds;
     RecalcElementData();
 end;
 
@@ -383,7 +383,7 @@ begin
     end;
     YPrim.CopyFrom(YPrim_Series);
     inherited CalcYPrim(); // may open some conductors
-    YprimInvalid := FALSE;
+    SetYprimInvalid(false);
 end;
 
 function TVSConverterObj.InjCurrents: Integer;

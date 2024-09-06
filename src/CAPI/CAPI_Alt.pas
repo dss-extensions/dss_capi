@@ -242,21 +242,21 @@ var
     DSS: TDSSContext;
 begin
     DSS := elem.DSS;
-    if elem.NPhases <> 3 then
+    if elem.NPhases() <> 3 then
     begin
         // Handle non-3 phase elements
-        if (elem.Nphases = 1) and DSS.ActiveCircuit.PositiveSequence then
+        if (elem.NPhases() = 1) and DSS.ActiveCircuit.PositiveSequence then
         begin
-            cBuffer := Allocmem(sizeof(Complex) * elem.NConds * elem.NTerms);
+            cBuffer := Allocmem(sizeof(Complex) * elem.NConds() * elem.NTerms());
             elem.GetCurrents(cBuffer);
 
-            for i := 1 to 3 * elem.NTerms do
+            for i := 1 to 3 * elem.NTerms() do
                 i012[i] := 0;   // Initialize Result
             iV := 2;  // pos seq is 2nd element in array
             // Populate only phase 1 quantities in Pos seq
-            for j := 1 to elem.NTerms do
+            for j := 1 to elem.NTerms() do
             begin
-                k := (j - 1) * elem.NConds;
+                k := (j - 1) * elem.NConds();
                 i012[iV] := cBuffer[1 + k];
                 Inc(iV, 3);  // inc to pos seq of next terminal
             end;
@@ -264,7 +264,7 @@ begin
         end
         // if neither 3-phase or pos seq model, just put in -1.0 for each element
         else
-            for i := 1 to 3 * elem.NTerms do
+            for i := 1 to 3 * elem.NTerms() do
                 i012[i] := -1;  // Signify n/A
 
         Exit;
@@ -272,11 +272,11 @@ begin
     
     // for 3-phase elements
     iV := 1;
-    cBuffer := Allocmem(sizeof(Complex) * elem.NConds * elem.NTerms);
+    cBuffer := Allocmem(sizeof(Complex) * elem.NConds() * elem.NTerms());
     elem.GetCurrents(cBuffer);
-    for j := 1 to elem.NTerms do
+    for j := 1 to elem.NTerms() do
     begin
-        k := (j - 1) * elem.NConds;
+        k := (j - 1) * elem.NConds();
         for i := 1 to 3 do
             Iph[i] := cBuffer[k + i];
         Phase2SymComp(@Iph, @I012a);
@@ -302,25 +302,25 @@ begin
     DSS := elem.DSS;
     NodeV := elem.DSS.ActiveCircuit.Solution.NodeV;
 
-    if elem.NPhases <> 3 then
+    if elem.NPhases() <> 3 then
     begin
         // Handle non-3 phase elements
-        if (elem.Nphases = 1) and DSS.ActiveCircuit.PositiveSequence then
+        if (elem.NPhases() = 1) and DSS.ActiveCircuit.PositiveSequence then
         begin
-            for i := 1 to 3 * elem.NTerms do
+            for i := 1 to 3 * elem.NTerms() do
                 V012[i] := 0;   // Initialize Result
             iV := 2;  // pos seq is 2nd element in array
             // Populate only phase 1 quantities in Pos seq
-            for j := 1 to elem.NTerms do
+            for j := 1 to elem.NTerms() do
             begin
-                k := (j - 1) * elem.NConds;
+                k := (j - 1) * elem.NConds();
                 V012[iV] := NodeV[elem.NodeRef[1 + k]];
                 Inc(iV, 3);  // inc to pos seq of next terminal
             end;
         end
         // if neither 3-phase or pos seq model, just put in -1.0 for each element
         else
-            for i := 1 to 3 * elem.NTerms do
+            for i := 1 to 3 * elem.NTerms() do
                 V012[i] := -1;  // Signify n/A
 
         Exit;
@@ -328,9 +328,9 @@ begin
     
     // for 3-phase elements
     iV := 1;
-    for j := 1 to elem.NTerms do
+    for j := 1 to elem.NTerms() do
     begin
-        k := (j - 1) * elem.NConds;
+        k := (j - 1) * elem.NConds();
         for i := 1 to 3 do
             Vph[i] := NodeV[elem.NodeRef[i + k]];
 
@@ -350,20 +350,20 @@ var
     Result: PPAnsiCharArray0;
     i: Integer;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, elem.Nterms);
-    for i := 1 to elem.Nterms do
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, elem.NTerms());
+    for i := 1 to elem.NTerms() do
         Result[i - 1] := DSS_CopyStringAsPChar(elem.GetBus(i));
 
 end;
 //------------------------------------------------------------------------------
 function Alt_CE_Get_NumConductors(elem: TDSSCktElement): Integer; CDECL;
 begin
-    Result := elem.NConds
+    Result := elem.NConds()
 end;
 //------------------------------------------------------------------------------
 function Alt_CE_Get_NumTerminals(elem: TDSSCktElement): Integer; CDECL;
 begin
-    Result := elem.NTerms
+    Result := elem.NTerms()
 end;
 //------------------------------------------------------------------------------
 procedure Alt_CE_Set_BusNames(elem: TDSSCktElement; ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
@@ -374,14 +374,14 @@ var
 begin
     value := PPAnsiCharArray0(ValuePtr);
     Count := ValueCount;
-    if (Count <> elem.NTerms) AND (DSS_CAPI_EXT_ERRORS) then
+    if (Count <> elem.NTerms()) AND (DSS_CAPI_EXT_ERRORS) then
     begin
-        DoSimpleMsg(elem.DSS, 'The number of buses provided (%d) does not match the number of terminals (%d).', [ValueCount, Integer(elem.NTerms)], 97895);
+        DoSimpleMsg(elem.DSS, 'The number of buses provided (%d) does not match the number of terminals (%d).', [ValueCount, Integer(elem.NTerms())], 97895);
         Exit;
     end;
     
-    if Count > elem.NTerms then
-        Count := elem.NTerms;
+    if Count > elem.NTerms() then
+        Count := elem.NTerms();
     for i := 1 to Count do
     begin
         elem.SetBus(i, value[i - 1]);
@@ -396,7 +396,7 @@ begin
     if MissingSolution(elem) then
         Exit;
         
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * (elem.NConds * elem.NTerms), elem.NConds, elem.NTerms);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * (elem.NConds() * elem.NTerms()), elem.NConds(), elem.NTerms());
     elem.GetCurrents(pComplexArray(Result));
 end;
 //------------------------------------------------------------------------------
@@ -416,10 +416,10 @@ begin
         Exit;
 
     NodeV := elem.ActiveCircuit.Solution.NodeV;
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * (elem.NConds * elem.Nterms), elem.NConds, elem.Nterms);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * (elem.NConds() * elem.NTerms()), elem.NConds(), elem.NTerms());
     // k := (Terminal-1)*numcond;    // RCD 8-30-00 Changed
     iV := 0;
-    for i := 1 to elem.NConds * elem.Nterms do
+    for i := 1 to elem.NConds() * elem.NTerms() do
     begin
         n := elem.NodeRef[i];
         Volts := NodeV[n]; // ok if =0
@@ -458,7 +458,7 @@ begin
         Exit;
     end;
 
-    NValues := elem.NPhases;
+    NValues := elem.NPhases();
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
     elem.GetPhaseLosses(NValues, pComplexArray(Result));
     for i := 0 to (2 * NValues - 1) do
@@ -480,8 +480,8 @@ begin
         Exit;
     end;
 
-    NValues := elem.NConds * elem.Nterms;
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues, elem.NConds, elem.NTerms);
+    NValues := elem.NConds() * elem.NTerms();
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues, elem.NConds(), elem.NTerms());
     elem.GetPhasePower(pComplexArray(ResultPtr));
     for i := 0 to (2 * NValues - 1) do
         Result[i] *= 0.001;
@@ -498,17 +498,17 @@ var
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if MissingSolution(elem) or (not elem.Enabled) then
+    if MissingSolution(elem) or (not elem.Enabled()) then
         Exit;
 
     try
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 3 * elem.NTerms, 3, elem.NTerms);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 3 * elem.NTerms(), 3, elem.NTerms());
 
-        i012 := Allocmem(sizeof(Complex) * 3 * elem.Nterms);
+        i012 := Allocmem(sizeof(Complex) * 3 * elem.NTerms());
         // get complex seq voltages
         _CalcSeqCurrents(elem, i012);
         // return 0 based array
-        for i := 1 to 3 * elem.Nterms do
+        for i := 1 to 3 * elem.NTerms() do
             Result[i - 1] := Cabs(i012[i]);  // return mag only
 
         Reallocmem(i012, 0);  // throw away temp memory
@@ -518,9 +518,9 @@ begin
         begin
             S := E.message + CRLF +
                 'Element=' + elem.Name() + CRLF +
-                'Nphases=' + IntToStr(elem.Nphases) + CRLF +
-                'NTerms=' + IntToStr(elem.NTerms) + CRLF +
-                'NConds =' + IntToStr(elem.NConds);
+                'Nphases=' + IntToStr(elem.NPhases()) + CRLF +
+                'NTerms=' + IntToStr(elem.NTerms()) + CRLF +
+                'NConds =' + IntToStr(elem.NConds());
             DoSimpleMsg(elem.DSS, S, 5012);
         end;
     end;
@@ -539,39 +539,39 @@ var
     Nvalues, i, j, k, n, icount: Integer;
     S: Complex;
 begin
-    NValues := 3 * elem.NTerms;
+    NValues := 3 * elem.NTerms();
     nextPos := NValues;
-    if (not elem.Enabled) or (elem.NodeRef = NIL) then
+    if (not elem.Enabled()) or (elem.NodeRef = NIL) then
         Exit;
 
     if Length(cBuffer) < elem.Yorder then
         SetLength(cBuffer, elem.Yorder);
     elem.GetCurrents(cBuffer);
     
-    if elem.NPhases <> 3 then
+    if elem.NPhases() <> 3 then
     begin
-        if (elem.Nphases = 1) and elem.DSS.ActiveCircuit.PositiveSequence then
+        if (elem.NPhases() = 1) and elem.DSS.ActiveCircuit.PositiveSequence then
         begin
             iCount := 1;  // Start with kVA1
             // Put only phase 1 quantities in Pos seq
-            for j := 1 to elem.NTerms do
+            for j := 1 to elem.NTerms() do
             begin
-                k := (j - 1) * elem.NConds;
+                k := (j - 1) * elem.NConds();
                 n := elem.NodeRef[k + 1];
                 Result[icount] := (NodeV[n] * cong(cBuffer[k])) * 0.003; // 3-phase kVA conversion
                 inc(icount, 3);
             end;
         end
         else
-            for i := 0 to 3 * elem.NTerms - 1 do
+            for i := 0 to 3 * elem.NTerms() - 1 do
                 Result[i] := cmplx(-1.0, -1.0);  // Signify n/A
         Exit;
     end;
 
     icount := 0;
-    for j := 1 to elem.NTerms do
+    for j := 1 to elem.NTerms() do
     begin
-        k := (j - 1) * elem.NConds;
+        k := (j - 1) * elem.NConds();
         for i := 1 to 3 do
             Vph[i] := NodeV[elem.NodeRef[i + k]];
         for i := 1 to 3 do
@@ -601,11 +601,11 @@ var
     cBuffer: ArrayOfComplex = NIL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if MissingSolution(elem) or (elem.NodeRef = NIL) then // or (not elem.Enabled)
+    if MissingSolution(elem) or (elem.NodeRef = NIL) then // or (not elem.Enabled())
         Exit;
 
     SetLength(cBuffer, 4 * 3);
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * elem.NTerms, 3, elem.NTerms); // allocate for kW and kvar
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * elem.NTerms(), 3, elem.NTerms()); // allocate for kW and kvar
     Alt_CE_Get_SeqPowers_(
         cBuffer, 
         elem.DSS.ActiveCircuit.Solution.NodeV,
@@ -630,17 +630,17 @@ var
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if MissingSolution(elem) or (not elem.Enabled) or (elem.NodeRef = NIL) then
+    if MissingSolution(elem) or (not elem.Enabled()) or (elem.NodeRef = NIL) then
         Exit;
 
     try
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 3 * elem.NTerms, 3, elem.NTerms);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 3 * elem.NTerms(), 3, elem.NTerms());
 
-        V012 := Allocmem(sizeof(Complex) * 3 * elem.Nterms);
+        V012 := Allocmem(sizeof(Complex) * 3 * elem.NTerms());
         // get complex seq voltages
         CalcSeqVoltages(elem, V012);
         // return 0 based array
-        for i := 1 to 3 * elem.Nterms do
+        for i := 1 to 3 * elem.NTerms() do
             Result[i - 1] := Cabs(V012[i]);  // return mag only
 
         Reallocmem(V012, 0);  // throw away temp memory
@@ -650,9 +650,9 @@ begin
         begin
             S := E.message + CRLF +
                 'Element=' + elem.Name() + CRLF +
-                'Nphases=' + IntToStr(elem.Nphases) + CRLF +
-                'NTerms=' + IntToStr(elem.NTerms) + CRLF +
-                'NConds =' + IntToStr(elem.NConds);
+                'Nphases=' + IntToStr(elem.NPhases()) + CRLF +
+                'NTerms=' + IntToStr(elem.NTerms()) + CRLF +
+                'NConds =' + IntToStr(elem.NConds());
             DoSimpleMsg(elem.DSS, S, 5012);
         end;
     end;
@@ -662,7 +662,7 @@ procedure Alt_CE_Close(elem: TDSSCktElement; Term, Phs: Integer); CDECL;
 begin
     if (Term <= 0) or (Term > elem.fNterms) then
     begin
-        elem.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals.', [Term, elem.FullName(), elem.NTerms], 97804);
+        elem.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals.', [Term, elem.FullName(), elem.NTerms()], 97804);
         Exit;
     end;
 
@@ -675,7 +675,7 @@ procedure Alt_CE_Open(elem: TDSSCktElement; Term, Phs: Integer); CDECL;
 begin
     if (Term <= 0) or (Term > elem.fNterms) then
     begin
-        elem.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals.', [Term, elem.FullName(), elem.NTerms], 97805);
+        elem.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals.', [Term, elem.FullName(), elem.NTerms()], 97805);
         Exit;
     end;
 
@@ -692,7 +692,7 @@ begin
     
     if (Term <= 0) or (Term > elem.fNterms) then
     begin
-        elem.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals.', [Term, elem.FullName(), elem.NTerms], 97806);
+        elem.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals.', [Term, elem.FullName(), elem.NTerms()], 97806);
         Exit;
     end;
 
@@ -701,7 +701,7 @@ begin
     if Phs = 0 then // At least one must be open
     begin
         Result := FALSE;
-        for i := 1 to elem.NConds do
+        for i := 1 to elem.NConds() do
             if not elem.ConductorClosed(i) then
             begin
                 Result := TRUE;
@@ -725,15 +725,15 @@ begin
         Exit;
     end;
 
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * elem.NTerms, 2, elem.NTerms);    // 2 values per terminal
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * elem.NTerms(), 2, elem.NTerms());    // 2 values per terminal
     cBuffer := Allocmem(sizeof(Complex) * elem.Yorder);
     elem.GetCurrents(cBuffer);
     iV := 0;
-    for i := 1 to elem.NTerms do
+    for i := 1 to elem.NTerms() do
     begin
         cResid := 0;
-        k := (i - 1) * elem.Nconds;
-        for j := 1 to elem.Nconds do
+        k := (i - 1) * elem.NConds();
+        for j := 1 to elem.NConds() do
         begin
             inc(k);
             cResid += CBuffer[k];
@@ -875,11 +875,11 @@ var
 begin
     DefaultResult(ResultPtr, ResultCount);
 
-    if MissingSolution(elem) or (not elem.Enabled) or (elem.NodeRef = NIL) then
+    if MissingSolution(elem) or (not elem.Enabled()) or (elem.NodeRef = NIL) then
         Exit;
 
     try
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * elem.NTerms, 3, elem.NTerms);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * elem.NTerms(), 3, elem.NTerms());
         CalcSeqVoltages(elem, pComplexArray(ResultPtr));
 
     except
@@ -887,9 +887,9 @@ begin
         begin
             S := E.message + CRLF +
                 'Element=' + elem.Name() + CRLF +
-                'Nphases=' + IntToStr(elem.Nphases) + CRLF +
-                'NTerms=' + IntToStr(elem.NTerms) + CRLF +
-                'NConds =' + IntToStr(elem.NConds);
+                'Nphases=' + IntToStr(elem.NPhases()) + CRLF +
+                'NTerms=' + IntToStr(elem.NTerms()) + CRLF +
+                'NConds =' + IntToStr(elem.NConds());
             DoSimpleMsg(elem.DSS, S, 5012);
         end;
     end;
@@ -903,11 +903,11 @@ var
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if MissingSolution(elem) or (not elem.Enabled) then
+    if MissingSolution(elem) or (not elem.Enabled()) then
         Exit;
 
     try
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * elem.NTerms, 3, elem.NTerms);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * elem.NTerms(), 3, elem.NTerms());
         i012 := pComplexArray(Result);
         // get complex seq voltages
         _CalcSeqCurrents(elem, i012);
@@ -917,9 +917,9 @@ begin
         begin
             S := E.message + CRLF +
                 'Element=' + elem.Name() + CRLF +
-                'Nphases=' + IntToStr(elem.Nphases) + CRLF +
-                'NTerms=' + IntToStr(elem.NTerms) + CRLF +
-                'NConds =' + IntToStr(elem.NConds);
+                'Nphases=' + IntToStr(elem.NPhases()) + CRLF +
+                'NTerms=' + IntToStr(elem.NTerms()) + CRLF +
+                'NConds =' + IntToStr(elem.NConds());
             DoSimpleMsg(elem.DSS, S, 5012);
         end;
     end;
@@ -965,11 +965,11 @@ begin
         Exit;
     end;
 
-    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, elem.NTerms * elem.Nconds, elem.NTerms, elem.Nconds);
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, elem.NTerms() * elem.NConds(), elem.NTerms(), elem.NConds());
     k := 0;
-    for i := 1 to elem.Nterms do
+    for i := 1 to elem.NTerms() do
     begin
-        for j := (i - 1) * elem.NConds + 1 to i * elem.Nconds do
+        for j := (i - 1) * elem.NConds() + 1 to i * elem.NConds() do
         begin
             Result[k] := GetNodeNum(elem.DSS, elem.NodeRef[j]);
             inc(k);
@@ -1054,7 +1054,7 @@ begin
         Exit;
     end;
 
-    NValues := elem.NConds * elem.NTerms;
+    NValues := elem.NConds() * elem.NTerms();
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues, 2, NValues);
     cBuffer := PComplexArray(ResultPtr);
     elem.GetCurrents(cBuffer);
@@ -1085,7 +1085,7 @@ begin
     end;
     NodeV := elem.DSS.ActiveCircuit.Solution.NodeV;
 
-    numcond := elem.NConds * elem.Nterms;
+    numcond := elem.NConds() * elem.NTerms();
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * numcond, 2, numcond);
     // k := (Terminal-1)*numcond;    // RCD 8-30-00 Changed
     iV := 0;
@@ -1122,16 +1122,16 @@ begin
         Exit;
     end;
 
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * elem.Nterms);
-    cBuffer := Allocmem(2 * SizeOf(Double) * elem.NConds * elem.Nterms);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * elem.NTerms());
+    cBuffer := Allocmem(2 * SizeOf(Double) * elem.NConds() * elem.NTerms());
     //TODO: Array dimensions
     elem.GetPhasePower(cBuffer);
     iV := 0;
-    for j := 1 to elem.Nterms do
+    for j := 1 to elem.NTerms() do
     Begin
         total := 0;
-        myInit := (j - 1) * elem.NConds + 1;
-        myEnd := elem.NConds * j;
+        myInit := (j - 1) * elem.NConds() + 1;
+        myEnd := elem.NConds() * j;
         for i := myInit to myEnd do
         begin
             total += cBuffer[i];
@@ -1166,19 +1166,19 @@ var
     minTerm, maxTerm: Integer;
 begin
     Result := 0.0;
-    if (not obj.Enabled) or (obj.NodeRef = NIL) then
+    if (not obj.Enabled()) or (obj.NodeRef = NIL) then
         Exit;
 
     if terminalIdx = -1 then
     begin
         minTerm := 1;
-        maxTerm := obj.NTerms;
+        maxTerm := obj.NTerms();
     end
     else
     begin
-        if (terminalIdx <= 0) or (terminalIdx > obj.NTerms) then
+        if (terminalIdx <= 0) or (terminalIdx > obj.NTerms()) then
         begin
-            obj.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals. Use -1 for all terminals.', [terminalIdx, obj.FullName(), obj.NTerms], 97803);
+            obj.DoSimpleMsg('Invalid terminal index (%d) provided for "%s". Element has %d terminals. Use -1 for all terminals.', [terminalIdx, obj.FullName(), obj.NTerms()], 97803);
             Exit;
         end;
         minTerm := terminalIdx;
@@ -1189,7 +1189,7 @@ begin
     // Method: Get max current at terminal (magnitude)
     for terminalIdx := minTerm to maxTerm do
     begin
-        k := (terminalIdx - 1) * obj.NConds; // starting index of terminal
+        k := (terminalIdx - 1) * obj.NConds(); // starting index of terminal
         for i := 1 to obj.Fnphases do
         begin
             CurrMag := Cabs(obj.Iterminal[k + i]);
@@ -1267,7 +1267,7 @@ end;
 //------------------------------------------------------------------------------
 function Alt_CE_Get_NumPhases(elem: TDSSCktElement): Integer; CDECL;
 begin
-    Result := elem.NPhases
+    Result := elem.NPhases()
 end;
 //------------------------------------------------------------------------------
 function Alt_CE_Get_DisplayName(elem: TDSSCktElement): PAnsiChar; CDECL;
@@ -1625,8 +1625,8 @@ procedure Alt_Transformer_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: P
 begin
     if (winding > 0) and (winding <= elem.NumWindings) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * elem.nphases);
-        if elem.Enabled then
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * elem.NPhases());
+        if elem.Enabled() then
             elem.GetWindingVoltages(winding, pComplexArray(ResultPtr));
         Exit;
     end;
@@ -1638,9 +1638,9 @@ procedure Alt_Transformer_Get_WdgCurrents(var ResultPtr: PDouble; ResultCount: P
 var
     NumCurrents: Integer;
 begin
-    NumCurrents := 2 * elem.NPhases * elem.NumWindings; // 2 currents per winding
+    NumCurrents := 2 * elem.NPhases() * elem.NumWindings; // 2 currents per winding
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumCurrents);
-    if elem.Enabled then
+    if elem.Enabled() then
         elem.GetAllWindingCurrents(pComplexArray(ResultPtr));
 end;
 //------------------------------------------------------------------------------
@@ -1701,8 +1701,8 @@ var
     Result: PDoubleArray0;
     k: Integer;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
-    for k := 0 to elem.NPhases - 1 do
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases());
+    for k := 0 to elem.NPhases() - 1 do
         Result[k] := Cabs(elem.CalculatedCurrent[k + 1]);
 end;
 //------------------------------------------------------------------------------
@@ -1711,19 +1711,19 @@ var
     value: PDoubleArray0;
     i: Integer;
 begin
-    if ValueCount <> elem.NPhases then
+    if ValueCount <> elem.NPhases() then
     begin
         elem.DoSimpleMsg(_('The provided number of values does not match the element''s number of phases.'), 5025);
         Exit;
     end;
     value := PDoubleArray0(ValuePtr);
-    for i := 1 to elem.NPhases do
+    for i := 1 to elem.NPhases() do
         elem.CalculatedCurrent[i] := value[i - 1];   // Just set the real part
 end;
 //------------------------------------------------------------------------------
 procedure Alt_Meter_Get_AllocFactors(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TEnergyMeterObj); CDECL;
 begin
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases());
     Move(elem.PhsAllocationFactor[1], ResultPtr^, ResultCount^ * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
@@ -1733,12 +1733,12 @@ var
     i: Integer;
 begin
     value := PDoubleArray0(ValuePtr);
-    if ValueCount <> elem.NPhases then
+    if ValueCount <> elem.NPhases() then
     begin
         elem.DoSimpleMsg(_('The provided number of values does not match the element''s number of phases.'), 5026);
         Exit;
     end;
-    for i := 1 to elem.NPhases do
+    for i := 1 to elem.NPhases() do
     begin
         elem.PhsAllocationFactor[i] := value[i - 1];
     end;
@@ -2896,8 +2896,8 @@ begin
     pElem := TDSSCktElementPtr(batch);
     for idx := 1 to batchSize do
     begin
-        Inc(NTermsTotal, pElem^.NTerms);
-        maxSize := max(maxSize, pElem^.NConds * pElem^.Nterms);
+        Inc(NTermsTotal, pElem^.NTerms());
+        maxSize := max(maxSize, pElem^.NConds() * pElem^.NTerms());
         inc(pElem);
     end;
 
@@ -2909,18 +2909,18 @@ begin
     for idx := 1 to batchSize do
     begin
         inc(pElem);
-        if (not pElem^.Enabled) or (pElem^.NodeRef = NIL) then
+        if (not pElem^.Enabled()) or (pElem^.NodeRef = NIL) then
         begin
-            Inc(iV, 2 * pElem^.NTerms);
+            Inc(iV, 2 * pElem^.NTerms());
             continue
         end;
         FillByte(cBuffer^, pElem^.Yorder * (SizeOf(Double) * 2), 0);
         pElem^.GetPhasePower(cBuffer);    
-        for j := 1 to pElem^.Nterms do
+        for j := 1 to pElem^.NTerms() do
         Begin
             total := 0;
-            myInit := (j - 1) * pElem^.NConds + 1;
-            myEnd := pElem^.NConds * j;
+            myInit := (j - 1) * pElem^.NConds() + 1;
+            myEnd := pElem^.NConds() * j;
             for i := myInit to myEnd do
             begin
                 total += cBuffer[i];
@@ -2952,7 +2952,7 @@ begin
     pElem := TDSSCktElementPtr(batch);
     for i := 1 to batchSize do
     begin
-        Inc(NValuesTotal, pElem^.NConds * pElem^.NTerms);
+        Inc(NValuesTotal, pElem^.NConds() * pElem^.NTerms());
         inc(pElem);
     end;
 
@@ -2963,9 +2963,9 @@ begin
     pElem := TDSSCktElementPtr(batch);
     for i := 1 to batchSize do
     begin
-        NValues := pElem^.NConds * pElem^.NTerms;
+        NValues := pElem^.NConds() * pElem^.NTerms();
         
-        if pElem^.Enabled then
+        if pElem^.Enabled() then
             pElem^.GetPhasePower(pComplexArray(CResultPtr));
             
         Inc(CResultPtr, NValues);
@@ -2998,7 +2998,7 @@ begin
     pElem := TDSSCktElementPtr(batch);
     for i := 1 to batchSize do
     begin
-        NtermsTotal += pElem^.NTerms;
+        NtermsTotal += pElem^.NTerms();
         inc(pElem);
     end;
 
@@ -3046,7 +3046,7 @@ begin
     maxSize := 0;
     for idx := 1 to batchSize do
     begin
-        Inc(NTermsTotal, pElem^.NTerms);
+        Inc(NTermsTotal, pElem^.NTerms());
         maxSize := max(maxSize, pElem^.Yorder);
         inc(pElem);
     end;
@@ -3061,15 +3061,15 @@ begin
     begin
         inc(pElem);
         FillByte(cBuffer^, SizeOf(Complex) * maxSize, 0);
-        if pElem^.Enabled then
+        if pElem^.Enabled() then
             pElem^.GetCurrents(cBuffer);
             
         // _CalcSeqCurrents(pElem, i012);
         if pElem^.NPhases = 3 then
         begin    // for 3-phase elements
-            for j := 1 to pElem^.NTerms do
+            for j := 1 to pElem^.NTerms() do
             begin
-                k := (j - 1) * pElem^.NConds;
+                k := (j - 1) * pElem^.NConds();
                 Phase2SymComp(pComplexArray(@cBuffer[1 + k]), pComplexArray(i012));
                 Inc(i012, 3);
             end;
@@ -3081,9 +3081,9 @@ begin
         begin
             // Populate only phase 1 quantities in Pos seq
             i012 += 1;
-            for j := 1 to pElem^.NTerms do
+            for j := 1 to pElem^.NTerms() do
             begin
-                k := (j - 1) * pElem^.NConds;
+                k := (j - 1) * pElem^.NConds();
                 i012^ := cBuffer[1 + k];
                 Inc(i012, 3);  // inc to pos seq of next terminal
             end;
@@ -3092,7 +3092,7 @@ begin
         // if neither 3-phase or pos seq model, just put in -1.0 for each element
         else
         begin
-            for i := 1 to 3 * pElem^.NTerms do
+            for i := 1 to 3 * pElem^.NTerms() do
             begin
                 i012^ := -1;  // Signify n/A
                 Inc(i012);
@@ -3152,8 +3152,8 @@ begin
     pElem := TDSSCktElementPtr(batch);
     for idx := 1 to batchSize do
     begin
-        Inc(NTermsTotal, pElem^.NTerms);
-        maxTerms := max(maxTerms, pElem^.Nterms);
+        Inc(NTermsTotal, pElem^.NTerms());
+        maxTerms := max(maxTerms, pElem^.NTerms());
         inc(pElem);
     end;
 
@@ -3168,10 +3168,10 @@ begin
         begin
             FillByte(V012^, V012Bytes, 0);
             CalcSeqVoltages(pElem^, pComplexArray(V012));
-            for i := 1 to 3 * pElem^.Nterms do
+            for i := 1 to 3 * pElem^.NTerms() do
                 outPtr[i - 1] := Cabs(V012[i - 1]);  // return mag only
 
-            inc(outPtr, 3 * pElem^.NTerms);
+            inc(outPtr, 3 * pElem^.NTerms());
             inc(pElem);
         end;
         Reallocmem(V012, 0);  // throw away temp memory
@@ -3186,7 +3186,7 @@ begin
     begin
         // No need to zero the buffer since it's the result vector, already zeroed.
         CalcSeqVoltages(pElem^, pComplexArray(V012));
-        inc(V012, 3 * pElem^.NTerms);
+        inc(V012, 3 * pElem^.NTerms());
         inc(pElem);
     end;
 end;
@@ -3225,7 +3225,7 @@ begin
     pElem := TDSSCktElementPtr(batch);
     for idx := 1 to batchSize do
     begin
-        Inc(NValuesTotal, pElem^.NConds * pElem^.NTerms);
+        Inc(NValuesTotal, pElem^.NConds() * pElem^.NTerms());
         inc(pElem);
     end;
 
@@ -3240,8 +3240,8 @@ begin
         // Currents
         for idx := 1 to batchSize do
         begin
-            NValues := pElem^.NConds * pElem^.NTerms;
-            if pElem^.Enabled then
+            NValues := pElem^.NConds() * pElem^.NTerms();
+            if pElem^.Enabled() then
                 pElem^.GetCurrents(pComplexArray(CResultPtr));
                 
             Inc(CResultPtr, NValues);
@@ -3254,10 +3254,10 @@ begin
         NodeV := pElem^.ActiveCircuit.Solution.NodeV;
         for idx := 1 to batchSize do
         begin
-            NValues := pElem^.NConds * pElem^.NTerms;
-            if pElem^.Enabled then
+            NValues := pElem^.NConds() * pElem^.NTerms();
+            if pElem^.Enabled() then
             begin
-                for i := 1 to pElem^.NConds * pElem^.Nterms do
+                for i := 1 to pElem^.NConds() * pElem^.NTerms() do
                 begin
                     CResultPtr^ := NodeV[pElem^.NodeRef[i]]; // ok if =0
                     inc(CResultPtr);
@@ -3325,7 +3325,7 @@ begin
     MaxCurrent := 0.0;
     
     if AllNodes then
-        NumNodes := pElem.NConds * pElem.NTerms
+        NumNodes := pElem.NConds() * pElem.NTerms()
     else
         NumNodes := pElem.Nphases;
     
@@ -3365,7 +3365,7 @@ var
     DSS: TDSSContext;
 begin
     Result := 0;
-    if (not pElem.Enabled) or (pElem.NodeRef = NIL) or MissingSolution(pElem) then
+    if (not pElem.Enabled()) or (pElem.NodeRef = NIL) or MissingSolution(pElem) then
         Exit;
 
     case What of // MaxCurrent (0), CapacityNorm (1), CapacityEmerg (2), Power (3)
@@ -3433,7 +3433,7 @@ begin
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, batchSize * 2); // complex
             for idx := 1 to batchSize do
             begin
-                if pElem^.Enabled then
+                if pElem^.Enabled() then
                 begin
                     LocalPower := pElem^.Power(1);
                     Result[k] := Localpower.re * 0.001;
@@ -3474,7 +3474,7 @@ begin
             pElem := TPDElementPtr(batch);
             for idx := 1 to batchSize do
             begin
-                if pElem^.Enabled then
+                if pElem^.Enabled() then
                 begin
                     FillByte(cBuffer^, sizeof(Complex) * maxSize, 0);
                     pElem^.GetCurrents(cBuffer);

@@ -154,7 +154,7 @@ type
 
     TCapControlObj = class(TControlElem)
     PUBLIC
-        procedure Set_Enabled(Value: WordBool); OVERRIDE;
+        procedure SetEnabled(Value: WordBool); OVERRIDE;
     PRIVATE
         ControlledCapacitor: TCapacitorObj;
         cBuffer: pComplexArray;    // Complexarray buffer
@@ -432,7 +432,7 @@ begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
-    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    SetNConds(Other.FNConds); // Force Reallocation of terminal stuff
 
     ControlVars.CapacitorName := Other.ControlVars.CapacitorName;
     SetControlledElement(Other.controlledElement);  // Pointer to target circuit element
@@ -477,8 +477,8 @@ begin
     DSSObjType := ParClass.DSSClassType;
 
     FNPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors in base class
+    FNConds := 3;
+    SetNTerms(1);  // this forces allocation of terminals and conductors in base class
     ctrlSignalShape := NIL;
 
     with ControlVars do
@@ -564,8 +564,8 @@ begin
     // Both capacitor and monitored element must already exist
     ControlledCapacitor := controlledElement as TCapacitorObj;
     FNphases := controlledElement.NPhases;  // Force number of phases to be same   Added 5/21/01  RCD
-    Nconds := FNphases;
-    controlledElement.ActiveTerminalIdx := 1;  // Make the 1 st terminal active
+    SetNConds(FNphases);
+    controlledElement.SetActiveTerminalIdx(1);  // Make the 1 st terminal active
     // Get control synched up with capacitor
     controlledElement.SetConductorClosed(0, ControlVars.AvailableSteps <> ControlledCapacitor.NumSteps());
     if controlledElement.ConductorClosed(0)      // Check state of phases of active terminal
@@ -589,7 +589,7 @@ begin
         ElementTerminal := 1;
     end;
 
-    if ElementTerminal > effElement.Nterms then
+    if ElementTerminal > effElement.NTerms() then
     begin
         DoErrorMsg(FullName(),
             Format(_('Terminal number %d does not exist in "%s".'), [ElementTerminal, effElement.FullName()]),
@@ -601,7 +601,7 @@ begin
     Setbus(1, effElement.GetBus(ElementTerminal));
     // Allocate a buffer big enough to hold everything from the monitored element
     ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * effElement.Yorder);
-    ControlVars.CondOffset := (ElementTerminal - 1) * effElement.NConds; // for speedy sampling
+    ControlVars.CondOffset := (ElementTerminal - 1) * effElement.NConds(); // for speedy sampling
 
     // Alternative override bus
     if ControlVars.VoverrideBusSpecified then
@@ -629,9 +629,9 @@ begin
 
     if controlledElement <> NIL then
     begin
-        Enabled := controlledElement.Enabled;
+        SetEnabled(controlledElement.Enabled());
         FNphases := controlledElement.NPhases;
-        Nconds := FNphases;
+        SetNConds(FNphases);
     end;
     if MonitoredElement() <> NIL then
     begin
@@ -650,7 +650,7 @@ begin
         Setbus(1, effElement.GetBus(ElementTerminal));
         // Allocate a buffer big enough to hold everything from the monitored element
         ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * effElement.Yorder);
-        ControlVars.CondOffset := (ElementTerminal - 1) * effElement.NConds; // for speedy sampling
+        ControlVars.CondOffset := (ElementTerminal - 1) * effElement.NConds(); // for speedy sampling
     end;
 
     inherited;
@@ -701,7 +701,7 @@ end;
 
 procedure TCapControlObj.DoPendingAction(const Code, ProxyHdl: Integer);
 begin
-    controlledElement.ActiveTerminalIdx := 1;  // Set active terminal of capacitor to terminal 1
+    controlledElement.SetActiveTerminalIdx(1);  // Set active terminal of capacitor to terminal 1
 
     // Allow user control to do something
     case ControlType of
@@ -847,7 +847,7 @@ var
     end;
 
 begin
-    controlledElement.ActiveTerminalIdx := 1;
+    controlledElement.SetActiveTerminalIdx(1);
     if controlledElement.ConductorClosed(0)      // Check state of phases of active terminal
     then
         ControlVars.PresentState := CTRL_CLOSE
@@ -971,7 +971,7 @@ begin
 
                 KVARCONTROL:
                 begin
-                    //----MonitoredElement().ActiveTerminalIdx := ElementTerminal;
+                    //----MonitoredElement().SetActiveTerminalIdx(ElementTerminal);
                     S := MonitoredElement().Power(ElementTerminal);
                     Q := S.im * 0.001;  // kvar
 
@@ -1091,7 +1091,7 @@ begin
 
                 PFCONTROL: // PF
                 begin
-                      //----MonitoredElement().ActiveTerminalIdx := ElementTerminal;
+                      //----MonitoredElement().SetActiveTerminalIdx(ElementTerminal);
                     S := MonitoredElement().Power(ElementTerminal);
                     PF := PF1to2(S);
 
@@ -1187,7 +1187,7 @@ end;
 procedure TCapControlObj.Reset();
 begin
     SetPendingChange(CTRL_NONE);
-    controlledElement.ActiveTerminalIdx := 1;
+    controlledElement.SetActiveTerminalIdx(1);
     with ControlVars do
     begin
         case InitialState of
@@ -1208,7 +1208,7 @@ begin
     DblTraceParameter := Integer(Value);
 end;
 
-procedure TCapControlObj.Set_Enabled(Value: WordBool);
+procedure TCapControlObj.SetEnabled(Value: WordBool);
 begin
     // Do nothing else besides toggling the flag,
     // we don't need BusNameRedefined from CktElement.pas

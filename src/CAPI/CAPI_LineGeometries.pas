@@ -138,7 +138,7 @@ begin
     if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
 
-    Result := pLineGeometry.FNconds;
+    Result := pLineGeometry.FNConds;
 end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Set_Nconds(Value: Integer); CDECL;
@@ -390,7 +390,7 @@ var
 begin
     if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
-    if pLineGeometry.FNconds <> ValueCount then
+    if pLineGeometry.FNConds <> ValueCount then
     begin
         DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, pLineGeometry.FNConds], 183);
         Exit;
@@ -409,8 +409,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    DSS_RecreateArray_PInteger(Result, ResultPtr, ResultCount, pLineGeometry.FNconds);
-    Move(pLineGeometry.units[1], ResultPtr[0], pLineGeometry.FNconds * SizeOf(Integer));
+    DSS_RecreateArray_PInteger(Result, ResultPtr, ResultCount, pLineGeometry.FNConds);
+    Move(pLineGeometry.units[1], ResultPtr[0], pLineGeometry.FNConds * SizeOf(Integer));
 end;
 
 procedure LineGeometries_Get_Units_GR(); CDECL;
@@ -426,7 +426,7 @@ var
 begin
     if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
-    if pLineGeometry.FNconds <> ValueCount then
+    if pLineGeometry.FNConds <> ValueCount then
     begin
         DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, pLineGeometry.FNConds], 188);
         Exit;
@@ -445,8 +445,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pLineGeometry.FNconds);
-    Move(pLineGeometry.yCoord[1], ResultPtr[0], pLineGeometry.FNconds * SizeOf(Double));
+    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pLineGeometry.FNConds);
+    Move(pLineGeometry.yCoord[1], ResultPtr[0], pLineGeometry.FNConds * SizeOf(Double));
 end;
 
 procedure LineGeometries_Get_Ycoords_GR(); CDECL;
@@ -462,7 +462,7 @@ var
 begin
     if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
-    if pLineGeometry.FNconds <> ValueCount then
+    if pLineGeometry.FNConds <> ValueCount then
     begin
         DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, pLineGeometry.FNConds], 187);
         Exit;
@@ -481,8 +481,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pLineGeometry.FNconds);
-    Move(pLineGeometry.xCoord[1], ResultPtr[0], pLineGeometry.FNconds * SizeOf(Double));
+    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pLineGeometry.FNConds);
+    Move(pLineGeometry.xCoord[1], ResultPtr[0], pLineGeometry.FNConds * SizeOf(Double));
 end;
 
 procedure LineGeometries_Get_Xcoords_GR(); CDECL;
@@ -504,8 +504,8 @@ begin
         Exit;
     end;
     
-    DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pLineGeometry.FNconds);
-    for i := 1 to pLineGeometry.FNconds do
+    DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pLineGeometry.FNConds);
+    for i := 1 to pLineGeometry.FNConds do
         Result[i - 1] := DSS_CopyStringAsPChar(NameIfNotNil(pLineGeometry.ConductorData[i]));
 end;
 //------------------------------------------------------------------------------
