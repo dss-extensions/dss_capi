@@ -96,9 +96,9 @@ type
         FMean,
         FStdDev: Double;
 
-        procedure SaveToDblFile;
-        procedure SaveToSngFile;
-        procedure CalcMeanandStdDev;
+        procedure SaveToDblFile();
+        procedure SaveToSngFile();
+        procedure CalcMeanandStdDev();
     PUBLIC
         numPoints: Integer;  // Number of points in curve
 
@@ -438,7 +438,7 @@ begin
     Result := TValues[numPoints];
 end;
 
-procedure TTShapeObj.CalcMeanandStdDev;
+procedure TTShapeObj.CalcMeanandStdDev();
 begin
     if numPoints > 0 then
         if Interval > 0.0 then
@@ -463,7 +463,7 @@ begin
     Result := FStdDev;
 end;
 
-procedure TTShapeObj.SaveToDblFile;
+procedure TTShapeObj.SaveToDblFile();
 var
     F: TStream = nil;
     Fname: String;
@@ -483,7 +483,7 @@ begin
     end;
 end;
 
-procedure TTShapeObj.SaveToSngFile;
+procedure TTShapeObj.SaveToSngFile();
 var
     F: TStream = nil;
     i: Integer;

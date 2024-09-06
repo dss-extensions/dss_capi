@@ -25,7 +25,7 @@ type
 
     TPCClass = class(TCktElementClass)
     PROTECTED
-        procedure CountPropertiesAndAllocate; override;
+        procedure CountPropertiesAndAllocate(); override;
         procedure DefineProperties(); override;
 
     PUBLIC
@@ -79,7 +79,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TPCClass.CountPropertiesAndAllocate;
+procedure TPCClass.CountPropertiesAndAllocate();
 begin
     NumProperties := NumProperties + NumPropsThisClass;
     inherited CountPropertiesAndAllocate;

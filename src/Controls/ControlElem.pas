@@ -100,7 +100,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TControlElem.DoPendingAction;
+procedure TControlElem.DoPendingAction();
 begin
   // virtual function - should be overridden
     DoSimpleMsg('Programming Error:  Reached base class for DoPendingAction.' + CRLF + 'Device: ' + FullName(), 460);

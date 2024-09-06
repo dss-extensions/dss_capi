@@ -16,35 +16,35 @@ type
     private
         function get_ckt(): TDSSCircuit; inline;
     public
-        function SolveMonte1: Integer;   // Solve Monte Carlo Solution
-        function SolveMonte2: Integer;   // Solve Monte Carlo Solution
-        function SolveMonte3: Integer;   // Solve Monte Carlo Solution
-        function SolveMonteFault: Integer;  // Solve Monte Carlo Fault Study
-        function SolveFaultStudy: Integer;  // Full Fault Study
-        function SolveDaily: Integer;    // Solve Following Daily Cycle
-        function SolvePeakDay: Integer;   // Solve Following Daily Cycle at peak load
-        function SolveYearly: Integer;   // Solve Following Yearly Cycle
-        function SolveDuty: Integer;     // Solve Following Duty Cycle
-        function SolveDynamic: Integer;  // Solve Dynamics
-        function SolveLD1: Integer;      // solve Load-Duration Curve, 1
-        function SolveLD2: Integer;      // solve Load-Duration Curve, 2
-        function SolveHarmonic: Integer;
-        function SolveHarmonicT: Integer;  // Sequential-Time Harmonics, Added 07-06-2015
-        function SolveHarmTime: Integer;  // solve harmonics vs time (like general time mode) created by Davis Montenegro 25/06/2014
-        function SolveGeneralTime: Integer;
+        function SolveMonte1(): Integer;   // Solve Monte Carlo Solution
+        function SolveMonte2(): Integer;   // Solve Monte Carlo Solution
+        function SolveMonte3(): Integer;   // Solve Monte Carlo Solution
+        function SolveMonteFault(): Integer;  // Solve Monte Carlo Fault Study
+        function SolveFaultStudy(): Integer;  // Full Fault Study
+        function SolveDaily(): Integer;    // Solve Following Daily Cycle
+        function SolvePeakDay(): Integer;   // Solve Following Daily Cycle at peak load
+        function SolveYearly(): Integer;   // Solve Following Yearly Cycle
+        function SolveDuty(): Integer;     // Solve Following Duty Cycle
+        function SolveDynamic(): Integer;  // Solve Dynamics
+        function SolveLD1(): Integer;      // solve Load-Duration Curve, 1
+        function SolveLD2(): Integer;      // solve Load-Duration Curve, 2
+        function SolveHarmonic(): Integer;
+        function SolveHarmonicT(): Integer;  // Sequential-Time Harmonics, Added 07-06-2015
+        function SolveHarmTime(): Integer;  // solve harmonics vs time (like general time mode) created by Davis Montenegro 25/06/2014
+        function SolveGeneralTime(): Integer;
 
         procedure ComputeYsc(pBus: TDSSBus);
-        procedure ComputeAllYsc;
-        procedure IntegratePCStates;
+        procedure ComputeAllYsc();
+        procedure IntegratePCStates();
         procedure EndOfTimeStepCleanup();
-        procedure FinishTimeStep;
+        procedure FinishTimeStep();
         property ckt: TDSSCircuit read get_ckt;
     private
         procedure Show10PctProgress(i, N: Integer);
-        procedure PickAFault;
-        procedure AllocateAllSCParms;
-        procedure ComputeIsc;
-        procedure DisableAllFaults;
+        procedure PickAFault();
+        procedure AllocateAllSCParms();
+        procedure ComputeIsc();
+        procedure DisableAllFaults();
         procedure AddFrequency(var FreqList: ArrayOfDouble; var NumFreq, MaxFreq: Integer; F: Double);
         function GetSourceFrequency(pc: TPCElement): Double;
         procedure CollectAllFrequencies(var FreqList: ArrayOfDouble);
@@ -71,7 +71,7 @@ function TSolutionAlgs.get_ckt(): TDSSCircuit;
 begin
     Result := TDSSCircuit(cktptr);
 end;
-procedure TSolutionAlgs.FinishTimeStep;
+procedure TSolutionAlgs.FinishTimeStep();
 // Sample Cleanup and increment time
 // For custom solutions.
 begin
@@ -109,7 +109,7 @@ begin
     end;
 end;
 
-function TSolutionAlgs.SolveYearly: Integer;
+function TSolutionAlgs.SolveYearly(): Integer;
 var
     N, Twopct: Integer;
 begin
@@ -157,7 +157,7 @@ begin
     end;
 end;
 
-function TSolutionAlgs.SolveDaily: Integer;
+function TSolutionAlgs.SolveDaily(): Integer;
 // Solves following the daily load curve.
 // Stepsize defaults to 1 hr and number of times = 24.
 // Load is modified by yearly growth, time of day, and global load multiplier.
@@ -201,7 +201,7 @@ begin
     end; // Try
 end;
 
-function TSolutionAlgs.SolvePeakDay: Integer;
+function TSolutionAlgs.SolvePeakDay(): Integer;
 //  Solves peak day
 // 
 //     Takes the given load kW and assumes it represents the peak value.
@@ -246,7 +246,7 @@ begin
     end;
 end;
 
-function TSolutionAlgs.SolveDuty: Integer;
+function TSolutionAlgs.SolveDuty(): Integer;
 var
     N, TwoPct: Integer;
 begin
@@ -295,7 +295,7 @@ begin
     end;
 end;
 
-function TSolutionAlgs.SolveGeneralTime: Integer;
+function TSolutionAlgs.SolveGeneralTime(): Integer;
 // For Rolling your own solution modes
 var
     N: Integer;
@@ -318,7 +318,7 @@ begin
             end;
 end;
 
-procedure TSolutionAlgs.IntegratePCStates;
+procedure TSolutionAlgs.IntegratePCStates();
 // Integrate states in all PC Elements.  At present, only PC Elements
 // can have dynamic states
 var
@@ -330,7 +330,7 @@ begin
     end;
 end;
 
-function TSolutionAlgs.SolveDynamic: Integer;
+function TSolutionAlgs.SolveDynamic(): Integer;
 var
     N: Integer;
 begin
@@ -364,7 +364,7 @@ begin
     end;
 end;
 
-function TSolutionAlgs.SolveMonte1: Integer;
+function TSolutionAlgs.SolveMonte1(): Integer;
 var
     N: Integer;
 begin
@@ -415,7 +415,7 @@ begin
     end;
 end;
 
-function TSolutionAlgs.SolveMonte2: Integer;
+function TSolutionAlgs.SolveMonte2(): Integer;
 // Do a daily load solution for several Random days
 var
     i, N, Ndaily: Integer;
@@ -488,7 +488,7 @@ begin
     end;
 end;
 
-function TSolutionAlgs.SolveMonte3: Integer;
+function TSolutionAlgs.SolveMonte3(): Integer;
 // Hold time fixed and just vary the global load multiplier
 var
     N: Integer;
@@ -554,7 +554,7 @@ begin
     end;
 end;
 
-function TSolutionAlgs.SolveLD1: Integer;
+function TSolutionAlgs.SolveLD1(): Integer;
 // Do a Daily Simulation based on a load duration curve
 var
     N, Ndaily, i: Integer;
@@ -639,7 +639,7 @@ begin
     end;
 end;
 
-function TSolutionAlgs.SolveLD2: Integer;
+function TSolutionAlgs.SolveLD2(): Integer;
 
 // Hold time fixed and just vary the global load multiplier according to the global
 // Load-Duration Curve
@@ -698,7 +698,7 @@ begin
     end;
 end;
 
-procedure TSolutionAlgs.PickAFault;
+procedure TSolutionAlgs.PickAFault();
 // Enable one of the faults in the circuit.  Disable the rest
 var
     NumFaults, i, Whichone: Integer;
@@ -722,7 +722,7 @@ begin
     end;
 end;
 
-function TSolutionAlgs.SolveMonteFault: Integer;
+function TSolutionAlgs.SolveMonteFault(): Integer;
 var
     N: Integer;
 begin
@@ -767,7 +767,7 @@ begin
     end;
 end;
 
-procedure TSolutionAlgs.AllocateAllSCParms;
+procedure TSolutionAlgs.AllocateAllSCParms();
 var
     i: Integer;
 begin
@@ -776,7 +776,7 @@ begin
 end;
 
 
-procedure TSolutionAlgs.ComputeIsc;
+procedure TSolutionAlgs.ComputeIsc();
 //  Compute Isc at all buses for current values of Voc and Ysc 
 var
     i: Integer;
@@ -815,7 +815,7 @@ begin
     pBus.Ysc.Invert(); // Save as admittance
 end;
 
-procedure TSolutionAlgs.ComputeAllYsc;
+procedure TSolutionAlgs.ComputeAllYsc();
 var
     iB, j: Integer;
 begin
@@ -838,7 +838,7 @@ begin
     end;
 end;
 
-procedure TSolutionAlgs.DisableAllFaults;
+procedure TSolutionAlgs.DisableAllFaults();
 var 
     obj: TFaultObj;
 begin
@@ -849,7 +849,7 @@ begin
     end
 end;
 
-function TSolutionAlgs.SolveFaultStudy: Integer;
+function TSolutionAlgs.SolveFaultStudy(): Integer;
 begin
     Result := 0;
 
@@ -1008,7 +1008,7 @@ begin
     SetLength(FreqList, NumFreq);
 end;
 
-function TSolutionAlgs.SolveHarmonic: Integer;
+function TSolutionAlgs.SolveHarmonic(): Integer;
 var
     FrequencyList: Array Of Double;
     i: Integer;
@@ -1076,7 +1076,7 @@ begin
     end;
 end;
 
-function TSolutionAlgs.SolveHarmTime: Integer;     // It is based in SolveGeneralTime routine
+function TSolutionAlgs.SolveHarmTime(): Integer;     // It is based in SolveGeneralTime routine
 begin
     Result := 0;
 
@@ -1094,7 +1094,7 @@ begin
     end;
 end;
 
-function TSolutionAlgs.SolveHarmonicT: Integer;
+function TSolutionAlgs.SolveHarmonicT(): Integer;
 var
     FrequencyList: Array Of Double;
     i: Integer;

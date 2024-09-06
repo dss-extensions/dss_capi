@@ -202,7 +202,7 @@ type
 
         procedure ResetRegistersAll();
         procedure SampleAll();
-        procedure UpdateAll;
+        procedure UpdateAll();
         function GetRegisterNames(obj: TDSSObject): ArrayOfString; override;
         function GetRegisterValues(obj: TDSSObject; var numRegisters: Integer): pDoubleArray; override;
     end;
@@ -233,9 +233,9 @@ type
         procedure CalcDutyTemperature(Hr: Double);
         procedure CalcYearlyTemperature(Hr: Double);
 
-        procedure ComputePanelPower;
-        procedure ComputeInverterPower;
-        procedure ComputekWkvar;
+        procedure ComputePanelPower();
+        procedure ComputeInverterPower();
+        procedure ComputekWkvar();
 
         procedure CalcPVSystemModelContribution();   // This is where the power gets computed
         procedure CalcInjCurrentArray();
@@ -254,9 +254,9 @@ type
 
         procedure WriteTraceRecord(const s: String);
 
-        procedure UpdatePVSystem;    // Update PVSystem elements based on present kW and IntervalHrs variable
+        procedure UpdatePVSystem();    // Update PVSystem elements based on present kW and IntervalHrs variable
 
-        procedure kWOut_Calc;
+        procedure kWOut_Calc();
 
     PROTECTED
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
@@ -296,7 +296,7 @@ type
 
         procedure SetNominalDEROutput(); OVERRIDE;
 
-        procedure ResetRegisters;
+        procedure ResetRegisters();
         procedure TakeSample();
 
         // Support for Dynamics Mode
@@ -603,7 +603,7 @@ begin
     end;
 end;
 
-procedure TPVsystem.UpdateAll;
+procedure TPVsystem.UpdateAll();
 var
     obj: TObj;
 begin
@@ -1331,7 +1331,7 @@ begin
     end;
 end;
 
-procedure TPVsystemObj.ComputeInverterPower;
+procedure TPVsystemObj.ComputeInverterPower();
 var
     kVA_Gen: Double;
     Qramp_limit: Double = 0.0;
@@ -1552,13 +1552,13 @@ begin
 end;
 
 
-procedure TPVsystemObj.ComputekWkvar;
+procedure TPVsystemObj.ComputekWkvar();
 begin
     ComputePanelPower;   // apply irradiance
     ComputeInverterPower; // apply inverter eff after checking for cutin/cutout
 end;
 
-procedure TPVsystemObj.ComputePanelPower;
+procedure TPVsystemObj.ComputePanelPower();
 begin
     with PVSystemVars do
     begin
@@ -1761,7 +1761,7 @@ begin
     end;
 end;
 
-procedure TPVsystemObj.DoConstantZPVsystemObj;
+procedure TPVsystemObj.DoConstantZPVsystemObj();
 // constant Z model
 var
     i: Integer;
@@ -1798,7 +1798,7 @@ begin
     end;
 end;
 
-procedure TPVsystemObj.DoUserModel;
+procedure TPVsystemObj.DoUserModel();
 // Compute total terminal Current from User-written model
 var
     i: Integer;
@@ -1818,7 +1818,7 @@ begin
         DoSimpleMsg('%s model designated to use user-written model, but user-written model is not defined.', [FullName()], 567);
 end;
 
-procedure TPVsystemObj.DoDynamicMode;
+procedure TPVsystemObj.DoDynamicMode();
 // Compute Total Current and add into InjTemp
 var
     PolarN: Polar;
@@ -2018,7 +2018,7 @@ begin
     Result := inherited InjCurrents();
 end;
 
-procedure TPVsystemObj.ResetRegisters;
+procedure TPVsystemObj.ResetRegisters();
 var
     i: Integer;
 begin
@@ -2071,7 +2071,7 @@ begin
     FirstSampleAfterReset := FALSE;
 end;
 
-procedure TPVsystemObj.UpdatePVSystem;
+procedure TPVsystemObj.UpdatePVSystem();
 // Update PVSystem levels
 begin
     // Do Nothing
@@ -2417,7 +2417,7 @@ begin
         end;
 end;
 
-procedure TPVsystemObj.kWOut_Calc;
+procedure TPVsystemObj.kWOut_Calc();
 var
     Pac: Double;
     PpctLimit: Double;

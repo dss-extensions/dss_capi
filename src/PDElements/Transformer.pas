@@ -203,7 +203,7 @@ type
         function GetXsc(i: Integer): Double;
 
         procedure CalcY_Terminal(FreqMult: Double);
-        procedure GICBuildYTerminal;
+        procedure GICBuildYTerminal();
 
         procedure BuildYPrimComponent(YPrim_Component, Y_Terminal: TCMatrix);
         procedure AddNeutralToY(FreqMultiplier: Double);
@@ -231,7 +231,7 @@ type
         XHLChanged: Boolean;
         kVARatings: Array Of Double;
 
-        procedure SetTermRef;
+        procedure SetTermRef();
     PUBLIC
         ActiveWinding: Integer;  // public for COM interface
 
@@ -1103,7 +1103,7 @@ begin
     end;
 end;
 
-procedure TTransfObj.SetTermRef;
+procedure TTransfObj.SetTermRef();
 // sets an array which maps the two conductors of each winding to the
 // phase and neutral conductors of the transformer according to the winding connection
 var
@@ -1763,7 +1763,7 @@ begin
     end;
 end;
 
-procedure TTransfObj.GICBuildYTerminal;
+procedure TTransfObj.GICBuildYTerminal();
 // Build YTerminal considering on resistance and no coupling to other winding.
 var
     i, j, idx: Integer;

@@ -193,19 +193,19 @@ type
 
         LoadShapeMult: Complex;
 
-        procedure SetAllFleetValues;
+        procedure SetAllFleetValues();
         procedure SetFleetkWRate(pctkw: Double);
-        procedure SetFleetChargeRate;
-        procedure SetFleetToCharge;
-        procedure SetFleetToDisCharge;
-        procedure SetFleetToIdle;
-        procedure SetFleetToExternal;
+        procedure SetFleetChargeRate();
+        procedure SetFleetToCharge();
+        procedure SetFleetToDisCharge();
+        procedure SetFleetToIdle();
+        procedure SetFleetToExternal();
         procedure SetFleetDesiredState(state: Integer);
         procedure CalcYearlyMult(Hr: Double);
         procedure CalcDailyMult(Hr: Double);
         procedure CalcDutyMult(Hr: Double);
 
-        function MakeFleetList: Boolean;
+        function MakeFleetList(): Boolean;
         procedure DoLoadFollowMode();
         procedure DoLoadShapeMode();
         procedure DoTimeMode(Opt: Integer);
@@ -1775,7 +1775,7 @@ begin
         PushTimeOntoControlQueue(0);
 end;
 
-procedure TStorageControllerObj.SetAllFleetValues;
+procedure TStorageControllerObj.SetAllFleetValues();
 var
     obj: TStorageObj;
 begin
@@ -1788,7 +1788,7 @@ begin
     end;
 end;
 
-procedure TStorageControllerObj.SetFleetChargeRate;
+procedure TStorageControllerObj.SetFleetChargeRate();
 var
     i: Integer;
 begin
@@ -1796,7 +1796,7 @@ begin
         TStorageObj(FleetPointerList.Get(i)).pctkWin := pctChargeRate;
 end;
 
-//PROCEDURE TStorageControllerObj.SetFleetkvarRate;
+//PROCEDURE TStorageControllerObj.SetFleetkvarRate();
 //VAR
 //      i   :Integer;
 //Begin
@@ -1813,7 +1813,7 @@ begin
         obj.pctkWout := pctkw;
 end;
 
-procedure TStorageControllerObj.SetFleetToCharge;
+procedure TStorageControllerObj.SetFleetToCharge();
 var
     obj: TStorageObj;
 begin
@@ -1822,7 +1822,7 @@ begin
     FleetState := STORE_CHARGING;
 end;
 
-procedure TStorageControllerObj.SetFleetToDisCharge;
+procedure TStorageControllerObj.SetFleetToDisCharge();
 var
     obj: TStorageObj;
 begin
@@ -1831,7 +1831,7 @@ begin
     FleetState := STORE_DISCHARGING;
 end;
 
-procedure TStorageControllerObj.SetFleetToIdle;
+procedure TStorageControllerObj.SetFleetToIdle();
 var
     obj: TStorageObj;
 begin
@@ -1852,7 +1852,7 @@ begin
     for i := 1 to FleetPointerList.Count do
         TStorageObj(FleetPointerList.Get(i)).StateDesired := state;
 end;
-procedure TStorageControllerObj.SetFleetToExternal;
+procedure TStorageControllerObj.SetFleetToExternal();
 var
     i: Integer;
 begin
@@ -1860,7 +1860,7 @@ begin
         TStorageObj(FleetPointerList.Get(i)).DispatchMode := STORE_EXTERNALMODE;
 end;
 
-function TStorageControllerObj.MakeFleetList: Boolean;
+function TStorageControllerObj.MakeFleetList(): Boolean;
 var
     StorageObj: TStorageObj;
     i: Integer;

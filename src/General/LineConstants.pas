@@ -72,7 +72,7 @@ type
         function ConductorsInSameSpace(var ErrorMessage: String): Boolean; VIRTUAL;
         procedure Calc(f: Double; EarthModel: Integer); VIRTUAL; // force a calc of impedances
         procedure Kron(Norder: Integer); VIRTUAL; // Performs a Kron reduction leaving first Norder  rows
-        procedure Reduce;  // Kron reduce to Numphases only
+        procedure Reduce();  // Kron reduce to Numphases only
 
         procedure SetX(i, units: Integer; const Value: Double);
         procedure SetY(i, units: Integer; const Value: Double);
@@ -504,7 +504,7 @@ begin
     end;
 end;
 
-procedure TLineConstants.Reduce;
+procedure TLineConstants.Reduce();
 // Performs a Kron reduction to get rid of neutral conductors
 begin
     Kron(nPhases);

@@ -60,11 +60,11 @@ type
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present values of terminal
 
-        procedure CalcFltRate; VIRTUAL;  // Calc failure rates for section and buses
-        procedure AccumFltRate;
+        procedure CalcFltRate(); VIRTUAL;  // Calc failure rates for section and buses
+        procedure AccumFltRate();
         procedure CalcNum_Int(var SectionCount: Integer; AssumeRestoration: Boolean);  // Calc Number of Interruptions in forward sweep
-        procedure CalcCustInterrupts;
-        procedure ZeroReliabilityAccums; // Zero out reliability accumulators
+        procedure CalcCustInterrupts();
+        procedure ZeroReliabilityAccums(); // Zero out reliability accumulators
 
         function GetExcessKVANorm(idxTerm: Integer): Complex;
         function GetExcessKVAEmerg(idxTerm: Integer): Complex;
@@ -86,7 +86,7 @@ uses
 type
     TObj = TPDElement;    
 
-procedure TPDElement.AccumFltRate;
+procedure TPDElement.AccumFltRate();
 var
     FromBus: TDSSBus;
     ToBus: TDSSBus;
@@ -111,7 +111,7 @@ begin
         FromBus.BusFltRate += AccumulatedBrFltRate;
 end;
 
-procedure TPDElement.CalcFltRate;   // Virtual function  -- LINE is different, for one
+procedure TPDElement.CalcFltRate();   // Virtual function  -- LINE is different, for one
 
 begin
     // Default base algorithm for radial fault rate calculation
@@ -120,7 +120,7 @@ begin
     BranchFltRate := Faultrate * pctperm * 0.01;
 end;
 
-procedure TPDElement.CalcCustInterrupts;
+procedure TPDElement.CalcCustInterrupts();
 var
     FromBus: TDSSBus;
 begin
@@ -277,7 +277,7 @@ begin
     end;
 end;
 
-procedure TPDElement.ZeroReliabilityAccums;
+procedure TPDElement.ZeroReliabilityAccums();
 begin
     // acummulated in the first terminal
     ActiveCircuit.Buses[Terminals[FromTerminal - 1].BusRef].ZeroReliabilityAccums();

@@ -149,7 +149,7 @@ type
 
         procedure SaveToDblFile();
         procedure SaveToSngFile();
-        procedure CalcMeanandStdDev;
+        procedure CalcMeanandStdDev();
         function GetMultAtHourSingle(Hr: Double): Complex;
         function HasData(): Boolean;
     PUBLIC
@@ -201,8 +201,8 @@ type
         function MultAtIndex(i: Integer): Double;  // get multiplier by index
         function PMultAtIndex(i: Integer): Double;  // get multiplier by index
         function QMultAtIndex(i: Integer; var m: Double): Boolean;  // get multiplier by index
-        procedure Normalize;
-        procedure SetMaxPandQ;
+        procedure Normalize();
+        procedure SetMaxPandQ();
 
         procedure LoadMMFView(const Parmname: String; Destination: TMMShapeType);
         procedure LoadFileFeatures(ShapeType: TMMShapeType);
@@ -216,8 +216,8 @@ type
         procedure SetStdDev(const Value: Double);  // Normalize the curve presently in memory
         procedure SetDataPointers(HoursPtr: PDouble; PMultPtr: PDouble; QMultPtr: PDouble; DStride: Integer);
         procedure SetDataPointersSingle(HoursPtr: PSingle; PMultPtr: PSingle; QMultPtr: PSingle; SStride: Integer);
-        procedure UseFloat32;
-        procedure UseFloat64;
+        procedure UseFloat32();
+        procedure UseFloat64();
         procedure ReadDblFile(const FileName: String);
         procedure ReadSngFile(const FileName: String);
         procedure ReadCSVFile(const FileName: String);
@@ -1613,7 +1613,7 @@ begin
     Result := False;
 end;
 
-procedure TLoadShapeObj.Normalize;
+procedure TLoadShapeObj.Normalize();
 // normalize this load shape
 var
     MaxMult: Double;
@@ -1687,7 +1687,7 @@ begin
     UseActual := FALSE;  // not likely that you would want to use the actual if you normalized it.
 end;
 
-procedure TLoadShapeObj.CalcMeanandStdDev;
+procedure TLoadShapeObj.CalcMeanandStdDev();
 begin
     if UseMMF or ExternalMemory then
         Exit;
@@ -1844,7 +1844,7 @@ begin
     end;
 end;
 
-procedure TLoadShapeObj.SaveToDblFile;
+procedure TLoadShapeObj.SaveToDblFile();
 var
     myDBL: Double;
     F: TStream = nil;
@@ -1903,7 +1903,7 @@ begin
     end;
 end;
 
-procedure TLoadShapeObj.SaveToSngFile;
+procedure TLoadShapeObj.SaveToSngFile();
 var
     F: TStream = nil;
     i: Integer;
@@ -2008,7 +2008,7 @@ begin
             Result := i;   // save index
         end;
 end;
-procedure TLoadShapeObj.SetMaxPandQ;
+procedure TLoadShapeObj.SetMaxPandQ();
 var
     iMaxP: Integer;
 begin
@@ -2122,7 +2122,7 @@ begin
         SetMaxPandQ;
 end;
 
-procedure TLoadShapeObj.UseFloat32;
+procedure TLoadShapeObj.UseFloat32();
 var
     i: Integer;
 begin
@@ -2164,7 +2164,7 @@ begin
     end;
 end;
 
-procedure TLoadShapeObj.UseFloat64;
+procedure TLoadShapeObj.UseFloat64();
 var 
     i: Integer;
 begin

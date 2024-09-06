@@ -29,7 +29,7 @@ type
     PROTECTED
         PropertyOffset_CableData: Integer;
 
-        procedure CountPropertiesAndAllocate; override;
+        procedure CountPropertiesAndAllocate(); override;
         procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
@@ -91,7 +91,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TCableData.CountPropertiesAndAllocate;
+procedure TCableData.CountPropertiesAndAllocate();
 begin
     NumProperties := NumProperties + NumPropsThisClass;
     inherited CountPropertiesAndAllocate;

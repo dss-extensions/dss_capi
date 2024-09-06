@@ -69,7 +69,7 @@ type
     PROTECTED
         PropertyOffset_ConductorData: Integer;
 
-        procedure CountPropertiesAndAllocate; override;
+        procedure CountPropertiesAndAllocate(); override;
         procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
@@ -140,7 +140,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TConductorData.CountPropertiesAndAllocate;
+procedure TConductorData.CountPropertiesAndAllocate();
 begin
     NumProperties := NumProperties + NumPropsThisClass;
     inherited CountPropertiesAndAllocate;

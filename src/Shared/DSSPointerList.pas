@@ -39,7 +39,7 @@ type
         constructor Create(Size: Integer);
         destructor Destroy; OVERRIDE;
 
-        procedure Clear;
+        procedure Clear();
 
         function Add(p: Pointer): Integer;  // Returns index of item
         function Get(i: Integer): Pointer; // Changes active item
@@ -149,7 +149,7 @@ begin
     end;
 end;
 
-procedure TDSSPointerList.Clear;
+procedure TDSSPointerList.Clear();
 begin
     activeIndex := 0;
     count := 0;

@@ -184,7 +184,7 @@ type
         XRConst: LongBool;
 
         procedure CalcY_Terminal(FreqMult: Double);
-        procedure GICBuildYTerminal;
+        procedure GICBuildYTerminal();
 
         procedure BuildYPrimComponent(YPrim_Component, Y_Terminal: TCMatrix);
 
@@ -219,7 +219,7 @@ type
 
         XHXChanged: Boolean;
 
-        procedure SetTermRef;
+        procedure SetTermRef();
         function PresentTap(i: Integer): Double; override;
         procedure SetPresentTap(i: Integer; const Value: Double); override;
         function MinTap(i: Integer): Double; override;
@@ -1107,7 +1107,7 @@ begin
     end;
 end;
 
-procedure TAutoTransObj.SetTermRef;
+procedure TAutoTransObj.SetTermRef();
 
 // sets an array which maps the two conductors of each winding to the
 // phase and neutral conductors of the AutoTrans according to the winding connection
@@ -1779,7 +1779,7 @@ begin
     end;
 end;
 
-procedure TAutoTransObj.GICBuildYTerminal;
+procedure TAutoTransObj.GICBuildYTerminal();
 // Build YTerminal considering only resistance and no coupling to other winding.
 var
     i, j, idx: Integer;

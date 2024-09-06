@@ -26,11 +26,11 @@ type
         constructor CreateMatrixInplace(N: Integer; pValues: pComplex);
 
         destructor Destroy; OVERRIDE;
-        procedure Invert;
-        procedure Negate;
-        function IsZero: Boolean;
+        procedure Invert();
+        procedure Negate();
+        function IsZero(): Boolean;
         function IsColRowZero(n: Integer): Boolean;
-        procedure Clear; inline; // Zero out matrix
+        procedure Clear(); inline; // Zero out matrix
         procedure AddFrom(OtherMatrix: TcMatrix);
         procedure CopyFrom(OtherMatrix: TcMatrix);
         procedure SetElement(i, j: Integer; Value: Complex);
@@ -38,13 +38,13 @@ type
         procedure AddElement(i, j: Integer; Value: Complex);
         procedure AddElemsym(i, j: Integer; Value: Complex);
         function GetElement(i, j: Integer): Complex;
-        function GetErrorCode: Integer;
+        function GetErrorCode(): Integer;
         procedure MVmult(b, x: pComplexArray); inline; // b = Ax
         function GetValuesArrayPtr(var orderOut: Integer): pComplexArray;
         procedure ZeroRow(iRow: Integer);
         procedure ZeroCol(iCol: Integer);
-        function AvgDiagonal: Complex;   // Average of Diagonal Elements
-        function AvgOffDiagonal: Complex;
+        function AvgDiagonal(): Complex;   // Average of Diagonal Elements
+        function AvgOffDiagonal(): Complex;
         function MtrxMult(B: TcMatrix): TcMatrix; // Multiply two square matrices of same order.  Result = A*B
 
         function Kron(EliminationRow: Integer): TcMatrix;  // Perform Kron reduction on last row/col and return new matrix
@@ -91,12 +91,12 @@ begin
     inherited Destroy;
 end;
 
-procedure TcMatrix.Clear; inline;
+procedure TcMatrix.Clear(); inline;
 begin
     FillByte(Values^, Sizeof(Complex) * order * order, 0);
 end;
 
-function TcMatrix.IsZero: Boolean; // This only check for exactly zero, no epsilon is used on purpose
+function TcMatrix.IsZero(): Boolean; // This only check for exactly zero, no epsilon is used on purpose
 var 
     i: integer;
     v: pComplex;
@@ -163,14 +163,14 @@ begin
 end;
 {$ENDIF}
 
-procedure TcMatrix.Negate;
+procedure TcMatrix.Negate();
 var i: integer;
 begin
     for i := 1 to order * order do
         Values[i] := -Values[i];
 end;
 
-procedure TcMatrix.Invert;
+procedure TcMatrix.Invert();
 type
     pIntArray = ^IntArray;
     IntArray = array [1..1] of Integer;
@@ -291,7 +291,7 @@ begin
     Result := Values[((j - 1) * order + i)];
 end;
 
-function TcMatrix.GetErrorCode: Integer;
+function TcMatrix.GetErrorCode(): Integer;
 begin
     Result := InvertError;
 end;
@@ -353,7 +353,7 @@ begin
     end;
 end;
 
-function TcMatrix.AvgDiagonal: Complex;
+function TcMatrix.AvgDiagonal(): Complex;
 var
     i: Integer;
 begin
@@ -367,7 +367,7 @@ begin
         Result := Result / order;
 end;
 
-function TcMatrix.AvgOffDiagonal: Complex;
+function TcMatrix.AvgOffDiagonal(): Complex;
 // Average the upper triangle off diagonals
 var
     i, j, Ntimes: Integer;

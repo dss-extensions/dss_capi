@@ -88,7 +88,7 @@ type
         Multiplier: pDoubleArray;  // Multipliers
         csvfile, dblfile, sngfile: String;
 
-        procedure ReCalcYearMult;
+        procedure ReCalcYearMult();
     PUBLIC
         constructor Create(ParClass: TDSSClass; const GrowthShapeName: String);
         destructor Destroy; OVERRIDE;
@@ -326,7 +326,7 @@ begin
     end;
 end;
 
-procedure TGrowthShapeObj.ReCalcYearMult;
+procedure TGrowthShapeObj.ReCalcYearMult();
 var
     i, DataPtr, Yr: Integer;
     Mult, MultInc: Double;

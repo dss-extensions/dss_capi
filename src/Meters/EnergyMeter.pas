@@ -192,22 +192,22 @@ type
         cPower, cLosses: Complex;
         DSS: TDSSContext;
 
-        procedure Clear;
+        procedure Clear();
         procedure Integrate(var Reg: Double; Value: Double; var Deriv: Double);
         procedure WriteRegisters();
 
     PROTECTED
 
-        procedure OpenDemandIntervalFile;
-        procedure WriteDemandIntervalData;
-        procedure CloseDemandIntervalFile;
-        procedure AppendDemandIntervalFile;
+        procedure OpenDemandIntervalFile();
+        procedure WriteDemandIntervalData();
+        procedure CloseDemandIntervalFile();
+        procedure AppendDemandIntervalFile();
 
     PUBLIC
 
-        procedure TakeSample;
+        procedure TakeSample();
         procedure Reset();
-        procedure Save;
+        procedure Save();
 
         constructor Create(EnergyMeterClass: TEnergyMeter);
         destructor Destroy; OVERRIDE;
@@ -218,14 +218,14 @@ type
         FSaveDemandInterval: Boolean;
         FDI_Verbose: Boolean;
 
-        procedure CreateMeterTotals;
-        procedure CreateFDI_Totals;
-        procedure ClearDI_Totals;
-        procedure WriteTotalsFile;
-        procedure OpenOverloadReportFile;
-        procedure OpenVoltageReportFile;
-        procedure WriteOverloadReport;
-        procedure WriteVoltageReport;
+        procedure CreateMeterTotals();
+        procedure CreateFDI_Totals();
+        procedure ClearDI_Totals();
+        procedure WriteTotalsFile();
+        procedure OpenOverloadReportFile();
+        procedure OpenVoltageReportFile();
+        procedure WriteOverloadReport();
+        procedure WriteVoltageReport();
 
     PROTECTED
         // Moved from global unit vars
@@ -271,7 +271,7 @@ type
 
 
         procedure DefineProperties(); override;
-        procedure SetHasMeterFlag;
+        procedure SetHasMeterFlag();
 
     PUBLIC
 
@@ -293,10 +293,10 @@ type
         function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
         Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
 
-        procedure ResetMeterZonesAll;
-        procedure ResetAll; OVERRIDE;  // Reset all meters in active circuit to zero
-        procedure SampleAll; OVERRIDE;   // Force all meters in active circuit to sample
-        procedure SaveAll; OVERRIDE;
+        procedure ResetMeterZonesAll();
+        procedure ResetAll(); OVERRIDE;  // Reset all meters in active circuit to zero
+        procedure SampleAll(); OVERRIDE;   // Force all meters in active circuit to sample
+        procedure SaveAll(); OVERRIDE;
 
         procedure AppendAllDIFiles();
         procedure OpenAllDIFiles();
@@ -359,8 +359,8 @@ type
         procedure Accumulate_Gen(pGen: TGeneratorObj; var TotalZonekW, TotalZonekvar: Double);
         procedure CalcBusCoordinates(StartBranch: TCktTreeNode; FirstCoordRef, SecondCoordRef, LineCount: Integer);
         function AddToVoltBaseList(BusRef: Integer): Integer;
-        function MakeDIFileName: String;
-        function MakeVPhaseReportFileName: String;
+        function MakeDIFileName(): String;
+        function MakeVPhaseReportFileName(): String;
         procedure AssignVoltBaseRegisterNames();
 
         procedure TotalupDownstreamCustomers();
@@ -368,10 +368,10 @@ type
 
     PROTECTED
 
-        procedure OpenDemandIntervalFile;
-        procedure WriteDemandIntervalData;
-        procedure CloseDemandIntervalFile;
-        procedure AppendDemandIntervalFile;
+        procedure OpenDemandIntervalFile();
+        procedure WriteDemandIntervalData();
+        procedure CloseDemandIntervalFile();
+        procedure AppendDemandIntervalFile();
 
     PUBLIC
     // ********************************************************************************
@@ -431,15 +431,15 @@ type
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model, reset nphases
         procedure RecalcElementData(); OVERRIDE;
         function CheckBranchList(code: Integer): Boolean;
-        procedure ResetRegisters;
-        procedure TakeSample; OVERRIDE;
-        procedure SaveRegisters;
-        procedure MakeMeterZoneLists;
-        procedure ZoneDump;
-        procedure InterpolateCoordinates;
+        procedure ResetRegisters();
+        procedure TakeSample(); OVERRIDE;
+        procedure SaveRegisters();
+        procedure MakeMeterZoneLists();
+        procedure ZoneDump();
+        procedure InterpolateCoordinates();
 
-        procedure AllocateLoad;
-        procedure ReduceZone;  // Reduce Zone by eliminating buses and merging lines
+        procedure AllocateLoad();
+        procedure ReduceZone();  // Reduce Zone by eliminating buses and merging lines
         procedure SaveZone(saveFlags: DSSSaveFlags);
         procedure GetPCEatZone(const allowEmpty: Boolean = False);
 
@@ -789,7 +789,7 @@ begin
     FPhaseVoltageReport := Other.FPhaseVoltageReport;
 end;
 
-procedure TEnergyMeter.ResetMeterZonesAll;  // Force all EnergyMeters in the circuit to reset their meter zones
+procedure TEnergyMeter.ResetMeterZonesAll();  // Force all EnergyMeters in the circuit to reset their meter zones
 var
     mtr: TEnergyMeterObj;
     pCktElement: TDSSCktElement;
@@ -843,7 +843,7 @@ begin
     FreeAndNilBusAdjacencyLists(BusAdjPD, BusAdjPC);
 end;
 
-procedure TEnergyMeter.ResetAll;  // Force all EnergyMeters in the circuit to reset
+procedure TEnergyMeter.ResetAll();  // Force all EnergyMeters in the circuit to reset
 var
     mtr: TEnergyMeterObj;
     CasePath: String;
@@ -892,7 +892,7 @@ begin
     DSS.PVSystemClass.ResetRegistersAll;
 end;
 
-procedure TEnergyMeter.SampleAll;  // Force all EnergyMeters in the circuit to take a sample
+procedure TEnergyMeter.SampleAll();  // Force all EnergyMeters in the circuit to take a sample
 var
     mtr: TEnergyMeterObj;
     i: Integer;
@@ -933,7 +933,7 @@ begin
     DSS.PVSystemClass.SampleAll;
 end;
 
-procedure TEnergyMeter.SaveAll;  // Force all EnergyMeters in the circuit to take a sample
+procedure TEnergyMeter.SaveAll();  // Force all EnergyMeters in the circuit to take a sample
 var
     mtr: TEnergyMeterObj;
 begin
@@ -1198,12 +1198,12 @@ begin
     inherited;
 end;
 
-function TEnergyMeterObj.MakeVPhaseReportFileName: String;
+function TEnergyMeterObj.MakeVPhaseReportFileName(): String;
 begin
     Result := DSS.EnergyMeterClass.DI_Dir + PathDelim + Name + '_PhaseVoltageReport' + DSS._Name + '.csv';
 end;
 
-procedure TEnergyMeterObj.ResetRegisters;
+procedure TEnergyMeterObj.ResetRegisters();
 var
     i: Integer;
 begin
@@ -1228,7 +1228,7 @@ begin
    // Removed .. open in solution loop See Solve Yearly If EnergyMeterClass.SaveDemandInterval() Then OpenDemandIntervalFile;
 end;
 
-procedure TEnergyMeterObj.SaveRegisters;
+procedure TEnergyMeterObj.SaveRegisters();
 var
     CSVName: String;
     F: TStream = nil;
@@ -1282,7 +1282,7 @@ begin
     Derivatives[Reg] := Deriv;
 end;
 
-procedure TEnergyMeterObj.TakeSample;
+procedure TEnergyMeterObj.TakeSample();
 // Update registers from metered zone
 // Assumes one time period has taken place since last sample.
 var
@@ -1745,7 +1745,7 @@ begin
     end;
 end;
 
-procedure TEnergyMeter.SetHasMeterFlag;
+procedure TEnergyMeter.SetHasMeterFlag();
 // Set the HasMeter Flag for all cktElement;
 var
     i: Integer;
@@ -1766,7 +1766,7 @@ begin
     end;
 end;
 
-procedure TEnergyMeterObj.MakeMeterZoneLists;
+procedure TEnergyMeterObj.MakeMeterZoneLists();
 // This gets fired off whenever the buslists are rebuilt
 // Must be updated whenever there is a change in the circuit
 var
@@ -2012,7 +2012,7 @@ begin
     AssignVoltBaseRegisterNames();
 end;
 
-procedure TEnergyMeterObj.ZoneDump;
+procedure TEnergyMeterObj.ZoneDump();
 var
     CSVName: String;
     F: TStream = nil;
@@ -2130,7 +2130,7 @@ begin
         Result := 0;
 end;
 
-procedure TEnergyMeterObj.AllocateLoad;
+procedure TEnergyMeterObj.AllocateLoad();
 var
     ConnectedPhase: Integer;
     CktElem: TPDElement;
@@ -2181,7 +2181,7 @@ begin
     end;
 end;
 
-procedure TEnergyMeterObj.Accumulate_Gen;
+procedure TEnergyMeterObj.Accumulate_Gen();
 var
     S: Complex;
 begin
@@ -2240,7 +2240,7 @@ begin
 end;
 
 
-procedure TEnergyMeterObj.ReduceZone;
+procedure TEnergyMeterObj.ReduceZone();
 // Reduce the zone by merging lines
 begin
      // Make  sure zone list is built
@@ -2281,7 +2281,7 @@ begin
 end;
 
 
-procedure TEnergyMeterObj.InterpolateCoordinates;
+procedure TEnergyMeterObj.InterpolateCoordinates();
 // Start at the ends of the zone and work toward the start
 // interpolating between known coordinates
 var
@@ -2850,7 +2850,7 @@ begin
     end;
 end;
 
-procedure TEnergyMeterObj.CloseDemandIntervalFile;
+procedure TEnergyMeterObj.CloseDemandIntervalFile();
 var
     i: Integer;
 begin
@@ -2877,7 +2877,7 @@ begin
     WriteintoMemStr(DSS.EnergyMeterClass.EMT_MHandle, Char(10));
 end;
 
-procedure TEnergyMeterObj.OpenDemandIntervalFile;
+procedure TEnergyMeterObj.OpenDemandIntervalFile();
 var
     i, j: Integer;
     vbase: Double;
@@ -2927,7 +2927,7 @@ begin
     end;
 end;
 
-procedure TEnergyMeterObj.WriteDemandIntervalData;
+procedure TEnergyMeterObj.WriteDemandIntervalData();
 var
     i, j: Integer;
 
@@ -3037,7 +3037,7 @@ begin
     end;
 end;
 
-procedure TEnergyMeterObj.AppendDemandIntervalFile;
+procedure TEnergyMeterObj.AppendDemandIntervalFile();
 var
     FileNm: String;
 begin
@@ -3154,7 +3154,7 @@ begin
     Result := FSaveDemandInterval;
 end;
 
-procedure TEnergyMeter.WriteOverloadReport;
+procedure TEnergyMeter.WriteOverloadReport();
 var
     PDelem: TPDelement;
     EmergAmps,
@@ -3283,7 +3283,7 @@ begin
     end;
 end;
 
-procedure TEnergyMeter.ClearDI_Totals;
+procedure TEnergyMeter.ClearDI_Totals();
 var
     i: Integer;
 begin
@@ -3291,7 +3291,7 @@ begin
         DI_RegisterTotals[i] := 0.0;
 end;
 
-procedure TEnergyMeter.CreateFDI_Totals;
+procedure TEnergyMeter.CreateFDI_Totals();
 var
     mtr: TEnergyMeterObj;
     regName: String;
@@ -3315,7 +3315,7 @@ begin
     end;
 end;
 
-procedure TSystemMeter.AppendDemandIntervalFile;
+procedure TSystemMeter.AppendDemandIntervalFile();
 var
     FileNm: String;
 begin
@@ -3343,7 +3343,7 @@ begin
     end;
 end;
 
-procedure TSystemMeter.Clear;
+procedure TSystemMeter.Clear();
 begin
     kWh := 0.0;
     kvarh := 0.0;
@@ -3359,7 +3359,7 @@ begin
     FirstSampleAfterReset := TRUE;
 end;
 
-procedure TSystemMeter.CloseDemandIntervalFile;
+procedure TSystemMeter.CloseDemandIntervalFile();
 var
     File_Path: String;
 begin
@@ -3410,7 +3410,7 @@ begin
     Deriv := Value;
 end;
 
-procedure TSystemMeter.OpenDemandIntervalFile;
+procedure TSystemMeter.OpenDemandIntervalFile();
 var
     cls: TEnergyMeter;
 begin
@@ -3435,7 +3435,7 @@ begin
    // removed - open in solution If EnergyMeterClass.SaveDemandInterval() Then OpenDemandIntervalFile;
 end;
 
-procedure TSystemMeter.Save;
+procedure TSystemMeter.Save();
 var
     CSVName, Folder: String;
     cls: TEnergyMeter;
@@ -3474,7 +3474,7 @@ begin
     end;
 end;
 
-procedure TSystemMeter.TakeSample;
+procedure TSystemMeter.TakeSample();
 begin
     // Get total system energy out of the sources
 
@@ -3500,7 +3500,7 @@ begin
         WriteDemandIntervalData;
 end;
 
-procedure TEnergyMeter.CreateMeterTotals;
+procedure TEnergyMeter.CreateMeterTotals();
 var
     mtr: TEnergyMeterObj;
     regName: String;
@@ -3515,7 +3515,7 @@ begin
     WriteintoMemStr(EMT_MHandle, Char(10));
 end;
 
-procedure TSystemMeter.WriteDemandIntervalData;
+procedure TSystemMeter.WriteDemandIntervalData();
 var
     SDI_MHandle: TBytesStream;
 begin
@@ -3556,7 +3556,7 @@ begin
     Result := FDI_Verbose;
 end;
 
-procedure TEnergyMeter.WriteTotalsFile;
+procedure TEnergyMeter.WriteTotalsFile();
 var
     mtr: TEnergyMeterObj;
     Regsum: TRegisterArray;
@@ -3595,7 +3595,7 @@ begin
     end;
 end;
 
-procedure TEnergyMeter.WriteVoltageReport;
+procedure TEnergyMeter.WriteVoltageReport();
 var
     i, j: Integer;
     Vmagpu: Double;
@@ -3735,7 +3735,7 @@ begin
     WriteintoMemStr(VR_MHandle, Char(10));
 end;
 
-procedure TEnergyMeter.OpenAllDIFiles;
+procedure TEnergyMeter.OpenAllDIFiles();
 // Similar to Append, by creates the files.
 var
     mtr: TEnergyMeterObj;
@@ -3772,7 +3772,7 @@ begin
     DSS.DIFilesAreOpen := TRUE;
 end;
 
-procedure TEnergyMeter.OpenOverloadReportFile;
+procedure TEnergyMeter.OpenOverloadReportFile();
 begin
     try
         if OverloadFileIsOpen then
@@ -3787,7 +3787,7 @@ begin
     end;
 end;
 
-procedure TEnergyMeter.OpenVoltageReportFile;
+procedure TEnergyMeter.OpenVoltageReportFile();
 begin
     try
         if VoltageFileIsOpen then

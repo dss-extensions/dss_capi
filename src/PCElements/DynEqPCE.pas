@@ -43,7 +43,7 @@ type
         function GetDynOutputNames(): TStringList;
         function SetDynVars(Parser: TDSSParser; dynInit: TJSONObject): Boolean;
 
-        function NumVariables: Integer; OVERRIDE;
+        function NumVariables(): Integer; OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
     end;
 
@@ -229,7 +229,7 @@ begin
     end;
 end;
 
-function TDynEqPCE.NumVariables: Integer;
+function TDynEqPCE.NumVariables(): Integer;
 begin
     Result := 0;
     if DynamicEqObj = NIL then

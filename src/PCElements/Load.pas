@@ -221,27 +221,27 @@ type
 
         procedure CalcDailyMult(Hr: Double);
         procedure CalcDutyMult(Hr: Double);
-        procedure CalcInjCurrentArray;
-        procedure CalcLoadModelContribution;
+        procedure CalcInjCurrentArray();
+        procedure CalcLoadModelContribution();
         procedure CalcYearlyMult(Hr: Double);
         procedure CalcCVRMult(Hr: Double);
         procedure CalcYPrimMatrix(Ymatrix: TcMatrix);
-        procedure DoConstantILoad;
-        procedure DoConstantPQLoad;
-        procedure DoConstantZLoad;
-        procedure DoFixedQ;
-        procedure DoFixedQZ;
-        procedure DoHarmonicMode;
-        procedure DoCVRModel;
-        procedure DoZIPVModel;
-        procedure DoMotorTypeLoad;
+        procedure DoConstantILoad();
+        procedure DoConstantPQLoad();
+        procedure DoConstantZLoad();
+        procedure DoFixedQ();
+        procedure DoFixedQZ();
+        procedure DoHarmonicMode();
+        procedure DoCVRModel();
+        procedure DoZIPVModel();
+        procedure DoMotorTypeLoad();
         function GrowthFactor(year: Integer): Double;
         procedure StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer); inline;
         function InterpolateY95_YLow(const Vmag: Double): Complex; inline;
         function InterpolateY95I_YLow(const Vmag: Double): Complex; inline; // ***Added by Celso & Paulo
         function Unserved(): Boolean;
         function ExceedsNormal(): Boolean;
-        procedure ComputeAllocatedLoad;
+        procedure ComputeAllocatedLoad();
         // Set kWh properties ...
         procedure Set_CFactor(const Value: Double);
         procedure Set_kVAAllocationFactor(const Value: Double);
@@ -287,10 +287,10 @@ type
 
         procedure RecalcElementData(); OVERRIDE;
         procedure CalcYPrim(); OVERRIDE;
-        function InjCurrents: Integer; OVERRIDE;
-        procedure InitHarmonics; OVERRIDE;
+        function InjCurrents(): Integer; OVERRIDE;
+        procedure InitHarmonics(); OVERRIDE;
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
-        procedure SetNominalLoad;
+        procedure SetNominalLoad();
         procedure Randomize(Opt: Integer);
                   // 0 = reset to 1.0
                   // 1 = Gaussian around mean and std Dev
@@ -1025,7 +1025,7 @@ begin
         LoadSpecType := TLoadSpec.kW_kvar;
 end;
 
-procedure TLoadObj.SetNominalLoad;
+procedure TLoadObj.SetNominalLoad();
 var
     Factor: Double;
     dblHour: Double;
@@ -1386,7 +1386,7 @@ begin
     end;
 end;
 
-procedure TLoadObj.DoConstantPQLoad;
+procedure TLoadObj.DoConstantPQLoad();
 var
     i: Integer;
     Curr: Complex;
@@ -1422,7 +1422,7 @@ begin
     end;
 end;
 
-procedure TLoadObj.DoConstantZLoad;
+procedure TLoadObj.DoConstantZLoad();
 var
     i: Integer;
     Curr: Complex;
@@ -1446,7 +1446,7 @@ begin
     end;
 end;
 
-procedure TLoadObj.DoMotorTypeLoad;
+procedure TLoadObj.DoMotorTypeLoad();
 // Constant P, quadratic Q
 var
     i: Integer;
@@ -1486,7 +1486,7 @@ begin
     end;
 end;
 
-procedure TLoadObj.DoConstantILoad;
+procedure TLoadObj.DoConstantILoad();
 // Constant Current Load
 var
     i: Integer;
@@ -1534,7 +1534,7 @@ function pow(x, y: double): double; cdecl; external;
 {$DEFINE pow:=Math.Power}
 {$ENDIF}
 
-procedure TLoadObj.DoZIPVModel;
+procedure TLoadObj.DoZIPVModel();
 var
     i: Integer;
     Curr: Complex;
@@ -1671,7 +1671,7 @@ begin
     end;
 end;
 
-procedure TLoadObj.DoCVRModel;
+procedure TLoadObj.DoCVRModel();
 // Linear P, quadratic Q
 var
     i: Integer;
@@ -1756,7 +1756,7 @@ begin
     end;
 end;
 
-procedure TLoadObj.DoFixedQ;
+procedure TLoadObj.DoFixedQ();
 // Constant P, Fixed Q  Q is always kvarBase
 var
     i: Integer;
@@ -1794,7 +1794,7 @@ begin
     end;
 end;
 
-procedure TLoadObj.DoFixedQZ;
+procedure TLoadObj.DoFixedQZ();
 // Constant P, Fixed Q  Q is always a fixed Z derived from kvarBase
 var
     i: Integer;
@@ -1833,7 +1833,7 @@ begin
     end;
 end;
 
-procedure TLoadObj.DoHarmonicMode;
+procedure TLoadObj.DoHarmonicMode();
 // Compute Injection Current Only when in harmonics mode
 // Assumes spectrum is an ideal current source based on the fundamental current and spectrum
 var
@@ -1860,7 +1860,7 @@ begin
     end;
 end;
 
-procedure TLoadObj.CalcLoadModelContribution;
+procedure TLoadObj.CalcLoadModelContribution();
 // Calculates total load current and adds it properly into the InjCurrent array
 
 // Need to implement DynamicMode sometime ...
@@ -1896,7 +1896,7 @@ begin
     end;
 end;
 
-procedure TLoadObj.CalcInjCurrentArray;
+procedure TLoadObj.CalcInjCurrentArray();
 // Fill InjCurrent array with the current values to use for injections.
 var
     i, j, k: Integer;
@@ -1963,7 +1963,7 @@ begin
     inherited GetTerminalCurrents(Curr);
 end;
 
-function TLoadObj.InjCurrents: Integer;
+function TLoadObj.InjCurrents(): Integer;
 // Get the injection currents and add them directly into the Currents array
 begin
     Result := 0;
@@ -2147,7 +2147,7 @@ begin
     HasBeenAllocated := TRUE;
 end;
 
-procedure TLoadObj.ComputeAllocatedLoad;
+procedure TLoadObj.ComputeAllocatedLoad();
 begin
 // Fixed loads defined by kW, kvar or kW, pf are ignored
 
@@ -2174,7 +2174,7 @@ begin
 end;
 
 
-procedure TLoadObj.InitHarmonics;
+procedure TLoadObj.InitHarmonics();
 // Get the present terminal currents and store for harmonics base reference;
 var
     i: Integer;

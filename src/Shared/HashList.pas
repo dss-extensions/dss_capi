@@ -48,7 +48,7 @@ type
 
         procedure ResizeSubList(var SubList: TSubList);
         function Hash(const S: String): Cardinal;
-        procedure ResizeStrPtr;
+        procedure ResizeStrPtr();
     PUBLIC
         InitialAllocation: Cardinal;
         count: Cardinal;
@@ -57,11 +57,11 @@ type
         destructor Destroy; OVERRIDE;
         function Add(const S: String): Integer;
         function Find(const S: String): Integer;
-        function FindNext: Integer;  //  repeat find for duplicate string in same hash list
+        function FindNext(): Integer;  //  repeat find for duplicate string in same hash list
         function NameOfIndex(i: Cardinal): String;
         // procedure Expand(NewSize: Cardinal);   // Expands number of elements
         procedure DumpToFile(F: TStream);
-        procedure Clear;
+        procedure Clear();
     end;
 
     TAltHashList = class (TFPHashList)
@@ -193,7 +193,7 @@ begin
 end;
 
 
-procedure THashList.ResizeStrPtr;
+procedure THashList.ResizeStrPtr();
 
 // make linear string list larger
 
@@ -268,7 +268,7 @@ begin
     end;
 end;
 
-function THashList.FindNext: Integer;
+function THashList.FindNext(): Integer;
 
 // Begin search in same list as last
 var
@@ -343,7 +343,7 @@ begin
     end;
 end;
 
-procedure THashList.Clear;
+procedure THashList.Clear();
 var
     i, j: Integer;
 begin

@@ -150,17 +150,17 @@ type
         procedure set_Localslip(const Value: Double);
 
         procedure Get_PFlowModelCurrent(const V: Complex; const S: Double; var Istator, Irotor: Complex);
-        procedure Get_DynamicModelCurrent;
+        procedure Get_DynamicModelCurrent();
         
-        function GetRotorLosses: Double;
-        function GetStatorLosses: Double;
-        function Compute_dSdP: Double;
+        function GetRotorLosses(): Double;
+        function GetStatorLosses(): Double;
+        function Compute_dSdP(): Double;
         procedure InitModel(V012, I012: TSymCompArray);
 
         procedure CalcYPrimMatrix(Ymatrix: TcMatrix);
-        procedure CalcIndMach012ModelContribution;
+        procedure CalcIndMach012ModelContribution();
 
-        procedure DoIndMach012Model;
+        procedure DoIndMach012Model();
 
         procedure CalcModel(V, I: pComplexArray);
 
@@ -168,14 +168,14 @@ type
         procedure CalcYearlyMult(Hr: Double);
         procedure CalcDutyMult(Hr: Double);
 
-        procedure InitTraceFile;
-        procedure WriteTraceRecord;
+        procedure InitTraceFile();
+        procedure WriteTraceRecord();
         procedure SetPowerkW(const PkW: Double);
 
     PROTECTED
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
-        procedure DoDynamicMode;
-        procedure DoHarmonicMode;
+        procedure DoDynamicMode();
+        procedure DoHarmonicMode();
     PUBLIC
         DailyDispShapeObj: TLoadShapeObj;  // Daily Generator Shape for this load
         DutyShapeObj: TLoadShapeObj;  // Shape for this generator
@@ -189,23 +189,23 @@ type
         procedure SetConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure RecalcElementData(); OVERRIDE;   // Generally called after Edit is complete to recompute variables
         procedure CalcYPrim(); OVERRIDE;   // Calculate Primitive Y matrix
-        procedure Integrate;
+        procedure Integrate();
         procedure CalcDynamic(var V012, I012: TSymCompArray);
         procedure CalcPFlow(var V012, I012: TSymCompArray);
-        procedure SetNominalPower;
+        procedure SetNominalPower();
 
-        function InjCurrents: Integer; OVERRIDE;
-        function NumVariables: Integer; OVERRIDE;
+        function InjCurrents(): Integer; OVERRIDE;
+        function NumVariables(): Integer; OVERRIDE;
         procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
         function GetVariable(i: Integer): Double; OVERRIDE;
         procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
 
         // Support for Dynamics Mode
-        procedure InitStateVars; OVERRIDE;
-        procedure IntegrateStates; OVERRIDE;
+        procedure InitStateVars(); OVERRIDE;
+        procedure IntegrateStates(); OVERRIDE;
         // Support for Harmonics Mode
-        procedure InitHarmonics; OVERRIDE;
+        procedure InitHarmonics(); OVERRIDE;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model, if possible
     end;
@@ -564,7 +564,7 @@ begin
     kWBase := PkW;
 end;
 
-procedure TIndMach012Obj.Integrate;
+procedure TIndMach012Obj.Integrate();
 var
     h2: Double;
 begin
@@ -649,7 +649,7 @@ begin
     dE2dtn := dE2dt;
 end;
 
-procedure TIndMach012Obj.InitStateVars;
+procedure TIndMach012Obj.InitStateVars();
 var
     i: Integer;
     V012,
@@ -808,7 +808,7 @@ begin
 end;
 
 // --- Notes Andres: Added according to IndMach012.dll model 
-function TIndMach012Obj.Compute_dSdP: Double;
+function TIndMach012Obj.Compute_dSdP(): Double;
 begin
 // dSdP based on rated slip and rated voltage
     V1 := MachineData.kvGeneratorBase * 1000.0 / 1.732;
@@ -880,7 +880,7 @@ end;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 
-procedure TIndMach012Obj.DoIndMach012Model;
+procedure TIndMach012Obj.DoIndMach012Model();
 // Compute total terminal Current 
 var
     i: Integer;
@@ -921,7 +921,7 @@ begin
 
 end;
 
-procedure TIndMach012Obj.DoDynamicMode;
+procedure TIndMach012Obj.DoDynamicMode();
 //  This is an example taken from Generator illustrating how a PC element might
 //  handle Dynamics mode with a Thevenin equivalent
 //
@@ -943,7 +943,7 @@ begin
         InjCurrent[i] -= ITerminal[i];
 end;
 
-procedure TIndMach012Obj.DoHarmonicMode;
+procedure TIndMach012Obj.DoHarmonicMode();
 //  Example taken from Generator illustrating how a PC element might handle
 //  current calcs for Harmonics mode
 //
@@ -988,7 +988,7 @@ begin
     YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
 end;
 
-procedure TIndMach012Obj.CalcIndMach012ModelContribution;
+procedure TIndMach012Obj.CalcIndMach012ModelContribution();
 // Main dispatcher for computing PC Element currents
 //
 
@@ -1021,7 +1021,7 @@ begin
     inherited GetTerminalCurrents(Curr); // add in inherited contribution
 end;
 
-function TIndMach012Obj.InjCurrents: Integer;
+function TIndMach012Obj.InjCurrents(): Integer;
 // Required function for managing computing of InjCurrents
 begin
     // Generators and Loads use logic like this:
@@ -1043,7 +1043,7 @@ begin
     Result := inherited InjCurrents;
 end;
 
-procedure TIndMach012Obj.SetNominalPower;
+procedure TIndMach012Obj.SetNominalPower();
 // Set shaft power
 var
     Factor: Double;
@@ -1178,13 +1178,13 @@ begin
 
 end;
 
-procedure TIndMach012Obj.InitHarmonics;
+procedure TIndMach012Obj.InitHarmonics();
 // Procedure to initialize for Harmonics solution
 begin
     SetYprimInvalid(true);  // Force rebuild of YPrims
 end;
 
-procedure TIndMach012Obj.IntegrateStates;
+procedure TIndMach012Obj.IntegrateStates();
 // This is a virtual function. You do not need to write this routine
 // if you are not integrating state variables in dynamics mode.
 //
@@ -1226,7 +1226,7 @@ begin
     end;
 end;
 
-procedure TIndMach012Obj.Get_DynamicModelCurrent;
+procedure TIndMach012Obj.Get_DynamicModelCurrent();
 begin
     Is1 := (V1 - E1) / Zsp; // I = (V-E')/Z'
     Is2 := (V2 - E2) / Zsp; // I = (V-E')/Z'
@@ -1253,7 +1253,7 @@ begin
     Irotor := Istator - (V - (Zs * Istator)) / Zm;
 end;
 
-function TIndMach012Obj.NumVariables: Integer;
+function TIndMach012Obj.NumVariables(): Integer;
 // Return the number of state variables
 //
 // This is a virtual function. You do not need to write this routine
@@ -1409,12 +1409,12 @@ begin
         States[i - 1] := GetVariable(i);
 end;
 
-function TIndMach012Obj.GetRotorLosses: Double;
+function TIndMach012Obj.GetRotorLosses(): Double;
 begin
     Result := 3.0 * (Sqr(Ir1.re) + Sqr(Ir1.im) + Sqr(Ir2.re) + Sqr(Ir2.im)) * Zr.re;
 end;
 
-function TIndMach012Obj.GetStatorLosses: Double;
+function TIndMach012Obj.GetStatorLosses(): Double;
 begin
     Result := 3.0 * (Sqr(Is1.re) + Sqr(Is1.im) + Sqr(Is2.re) + Sqr(Is2.im)) * Zs.re;
 end;
@@ -1449,7 +1449,7 @@ begin
     S2 := 2.0 - S1;
 end;
 
-procedure TIndMach012Obj.InitTraceFile;
+procedure TIndMach012Obj.InitTraceFile();
 begin
     FreeAndNil(TraceFile);
     TraceFile := TBufferedFileStream.Create(DSS.OutputDirectory + Format('%s_IndMach012_Trace.csv', [Name]), fmCreate);
@@ -1460,7 +1460,7 @@ begin
     FSFlush(TraceFile);
 end;
 
-procedure TIndMach012Obj.WriteTraceRecord;
+procedure TIndMach012Obj.WriteTraceRecord();
 begin
     FSWrite(TraceFile, Format('%-.6g, %d, %-.6g, ', [ActiveCircuit.Solution.Dynavars.dblHour * 3600.0, ActiveCircuit.Solution.Iteration, S1]));
 

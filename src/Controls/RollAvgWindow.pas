@@ -20,8 +20,8 @@ type
         destructor Destroy; OVERRIDE;
         procedure Add(IncomingSampleValue: Double; IncomingSampleTime: Double; VAvgWindowLengthSec: Double);
         procedure SetLength(const Value: Integer);
-        function AvgVal: Double;
-        function AccumSec: Double;
+        function AvgVal(): Double;
+        function AccumSec(): Double;
     end;
 {$POP}
 
@@ -87,7 +87,7 @@ begin
     bufferlength := Value;
 end;
 
-function TRollAvgWindow.AvgVal: Double;
+function TRollAvgWindow.AvgVal(): Double;
 begin
     if (sample.size = 0) then
         Result := 0.0
@@ -95,7 +95,7 @@ begin
         Result := runningsumsample / sample.size;
 end;
 
-function TRollAvgWindow.AccumSec: Double;
+function TRollAvgWindow.AccumSec(): Double;
 begin
     if (sample.size = 0) then
         Result := 0.0

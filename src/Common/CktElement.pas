@@ -79,13 +79,13 @@ type
         function AllConductorsClosed(): Boolean;
         function GetYPrim(var Ymatrix: TCmatrix; Opt: Integer): Integer; VIRTUAL;  //returns values of array
         function GetYPrimValues(Opt: Integer): pComplexArray; VIRTUAL;
-        function MaxTerminalOneIMag: Double;   // Max of Iterminal 1 phase currents
-        procedure ComputeIterminal; VIRTUAL;   // Computes Iterminal for this device
-        procedure ComputeVterminal;
-        procedure ZeroITerminal; inline;
+        function MaxTerminalOneIMag(): Double;   // Max of Iterminal 1 phase currents
+        procedure ComputeIterminal(); VIRTUAL;   // Computes Iterminal for this device
+        procedure ComputeVterminal();
+        procedure ZeroITerminal(); inline;
         procedure GetCurrents(Curr: pComplexArray); VIRTUAL; OVERLOAD; ABSTRACT; //Get present value of terminal Curr for reports
         procedure GetCurrents(Curr: ArrayOfComplex); VIRTUAL; OVERLOAD; //Get present value of terminal Curr for reports
-        function InjCurrents: Integer; VIRTUAL; // Applies to PC Elements Puts straight into Solution Array
+        function InjCurrents(): Integer; VIRTUAL; // Applies to PC Elements Puts straight into Solution Array
 
         function GetBus(i: Integer): String;  // Get bus name by index
         procedure SetBus(i: Integer; const s: String); virtual;  // Set bus name by index
@@ -461,7 +461,7 @@ begin
     NoLoadLosses := 0;
 end;
 
-function TDSSCktElement.InjCurrents: Integer;  // Applies to PC Elements
+function TDSSCktElement.InjCurrents(): Integer;  // Applies to PC Elements
 begin
     Result := 0;
     DoErrorMsg(Format(_('Improper call to InjCurrents for Element: "%s".'), [FullName()]), '****',
@@ -545,7 +545,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TDSSCktElement.ComputeIterminal;
+procedure TDSSCktElement.ComputeIterminal();
 begin
     // to save time, only recompute if a different solution than last time it was computed.
     if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
@@ -555,7 +555,7 @@ begin
     end;
 end;
 
-function TDSSCktElement.MaxTerminalOneIMag: Double;
+function TDSSCktElement.MaxTerminalOneIMag(): Double;
 // Get max of phase currents on the first terminal; Requires computing Iterminal
 var
     i: Integer;
@@ -1137,7 +1137,7 @@ begin
     end;
 end;
 
-procedure TDSSCktElement.ComputeVterminal;
+procedure TDSSCktElement.ComputeVterminal();
 // Put terminal voltages in an array
 var
     i: Integer;
@@ -1162,7 +1162,7 @@ begin
     end;
 end;
 
-procedure TDSSCktElement.ZeroITerminal; inline;
+procedure TDSSCktElement.ZeroITerminal(); inline;
 var
     i: Integer;
     it: PDouble;

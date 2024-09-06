@@ -132,18 +132,18 @@ type
         procedure RecalcElementData(); OVERRIDE;
         procedure CalcYPrim(); OVERRIDE;
 
-        function InjCurrents: Integer; OVERRIDE;
+        function InjCurrents(): Integer; OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         // Uploads the input/output currents when commanded by the controller - 09/02/2021
-        procedure UploadCurrents;
-        function CheckStatus: Boolean;
+        procedure UploadCurrents();
+        function CheckStatus(): Boolean;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
-        function NumVariables: Integer; OVERRIDE;
+        function NumVariables(): Integer; OVERRIDE;
         procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
 
         function VariableName(i: Integer): String; OVERRIDE;
@@ -527,7 +527,7 @@ begin
     Result := UPFCLossCurveObj.GetYValue(Vpu);
 end;
 
-function TUPFCObj.InjCurrents: Integer;
+function TUPFCObj.InjCurrents(): Integer;
 begin
     GetInjCurrents(InjCurrent);
     // This is source injection
@@ -884,7 +884,7 @@ begin
 end;
 
 // Checks if the UPFC control needs an update, returns true if so
-function TUPFCObj.CheckStatus: Boolean;
+function TUPFCObj.CheckStatus(): Boolean;
 var
     Error,
     VinMag,
@@ -995,7 +995,7 @@ begin
 end;
 
 // Uploads the calculated currents into memeory for further use
-procedure TUPFCObj.UploadCurrents;
+procedure TUPFCObj.UploadCurrents();
 var
    i: Integer;
 begin
@@ -1058,7 +1058,7 @@ procedure TUPFCObj.MakePosSequence();
 begin
 end;
 
-function TUPFCObj.NumVariables: Integer;
+function TUPFCObj.NumVariables(): Integer;
 begin
     Result := NumUPFCVariables;
 end;

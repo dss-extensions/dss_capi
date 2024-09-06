@@ -75,7 +75,7 @@ type
         ShapeFactor: Complex;
         Bus2Defined: Boolean;
 
-        function GetBaseCurr: Complex;
+        function GetBaseCurr(): Complex;
         procedure CalcDailyMult(Hr: Double);
         procedure CalcDutyMult(Hr: Double);
         procedure CalcYearlyMult(Hr: Double);
@@ -103,7 +103,7 @@ type
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
-        function InjCurrents: Integer; OVERRIDE;
+        function InjCurrents(): Integer; OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
     end;
 
@@ -366,7 +366,7 @@ begin
     SetYprimInvalid(false);
 end;
 
-function TIsourceObj.GetBaseCurr: Complex;
+function TIsourceObj.GetBaseCurr(): Complex;
 var
     SrcHarmonic: Double;
     NAmps: Double;
@@ -432,7 +432,7 @@ begin
     end;
 end;
 
-function TIsourceObj.InjCurrents: Integer;
+function TIsourceObj.InjCurrents(): Integer;
 // Sum Currents directly into solution array
 begin
     GetInjCurrents(InjCurrent);

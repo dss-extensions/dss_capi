@@ -312,7 +312,7 @@ end;
 
 
 
-function GetActiveElementIndexCallBack: Integer; STDCALL;
+function GetActiveElementIndexCallBack(): Integer; STDCALL;
 // Usually just checking to see if this result >0
 var
     elem: TDSSCktElement;
@@ -325,7 +325,7 @@ begin
 end;
 
 
-function IsActiveElementEnabledCallBack: Boolean; STDCALL;
+function IsActiveElementEnabledCallBack(): Boolean; STDCALL;
 
 var
     elem: TDSSCktElement;
@@ -382,7 +382,7 @@ begin
     end;
 end;
 
-function GetStepSizeCallBack: Double; STDCALL;
+function GetStepSizeCallBack(): Double; STDCALL;
 begin
     Result := 0.0;
     if Assigned(DSSPrime.ActiveCircuit) then
@@ -391,7 +391,7 @@ begin
     end;
 end;
 
-function GetTimeSecCallBack: Double; STDCALL;
+function GetTimeSecCallBack(): Double; STDCALL;
 begin
     Result := 0.0;
     if DSSPrime.ActiveCircuit = NIL then
@@ -399,7 +399,7 @@ begin
     Result := DSSPrime.ActiveCircuit.Solution.DynaVars.t;
 end;
 
-function GetTimeHrCallBack: Double; STDCALL;
+function GetTimeHrCallBack(): Double; STDCALL;
 begin
     Result := 0.0;
     if DSSPrime.ActiveCircuit = NIL then

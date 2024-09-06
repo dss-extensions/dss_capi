@@ -104,7 +104,7 @@ type
     PRIVATE
         FNeutralConductor: Integer;
 
-        procedure DoKronReduction;
+        procedure DoKronReduction();
 
     PUBLIC
         NumAmpRatings,
@@ -142,7 +142,7 @@ type
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
         
-        procedure CalcMatricesFromZ1Z0;
+        procedure CalcMatricesFromZ1Z0();
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
         procedure SetNumPhases(Value: Integer);
@@ -540,7 +540,7 @@ begin
     end;
 end;
 
-procedure TLineCodeObj.CalcMatricesFromZ1Z0;
+procedure TLineCodeObj.CalcMatricesFromZ1Z0();
 var
     Zs, Zm, Ys, Ym, Ztemp: Complex;
     i, j: Integer;
@@ -651,7 +651,7 @@ begin
     FSWriteln(F, Format('~ %s=%s', [ParentClass.PropertyName[27], PropertyValue(27)]));
 end;
 
-procedure TLineCodeObj.DoKronReduction;
+procedure TLineCodeObj.DoKronReduction();
 var
     NewZ, NewYC: TcMatrix;
 begin

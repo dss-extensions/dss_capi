@@ -163,7 +163,7 @@ VAR
 
     PropNameStyle: TDSSPropertyNameStyle = TDSSPropertyNameStyle.Modern;
 
-function VersionString: String;
+function VersionString(): String;
 procedure DoErrorMsg(DSS: TDSSContext; Const S, Emsg, ProbCause :String; ErrNum:Integer);
 procedure DoSimpleMsg(DSS: TDSSContext; Const S :String; ErrNum:Integer);overload;
 procedure DoSimpleMsg(DSS: TDSSContext; Const S :String; fmtArgs: Array of Const; ErrNum:Integer);overload;
@@ -219,7 +219,7 @@ USES
      ExecOptions,
      DSSHelper;
 
-FUNCTION GetDefaultDataDirectory: String;
+FUNCTION GetDefaultDataDirectory(): String;
 Begin
 {$IFDEF UNIX}
   Result := SysUtils.GetEnvironmentVariable('HOME') + PathDelim + 'Documents';
@@ -229,7 +229,7 @@ Begin
 {$ENDIF}
 end;
 
-FUNCTION GetDefaultScratchDirectory: String;
+FUNCTION GetDefaultScratchDirectory(): String;
 Begin
   {$IFDEF UNIX}
   Result := '/tmp';
@@ -477,7 +477,7 @@ Begin
 End;
 
 
-function VersionString: String;
+function VersionString(): String;
 var
     timestamp: String;
 BEGIN

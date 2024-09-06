@@ -63,8 +63,8 @@ TYPE
         procedure Edit(const Value: String);
         function Exists(): Boolean;
 
-        Procedure Select;
-        Procedure Integrate;
+        Procedure Select();
+        Procedure Integrate();
         
         constructor Create(dssContext: TDSSContext; ActiveGeneratorVars: Pointer);
         destructor  Destroy; override;
@@ -119,13 +119,13 @@ begin
         Else Result := False;
 end;
 
-procedure TGenUserModel.Integrate;
+procedure TGenUserModel.Integrate();
 begin
         FSelect(FID);
         Fintegrate;
 end;
 
-procedure TGenUserModel.Select;
+procedure TGenUserModel.Select();
 begin
         Fselect(FID);
 end;

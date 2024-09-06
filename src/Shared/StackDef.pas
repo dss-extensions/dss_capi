@@ -22,8 +22,8 @@ type
     PUBLIC
         constructor Create(initSize: Integer);
         destructor Destroy; OVERRIDE;
-        procedure Clear;
-        function Size: Integer;
+        procedure Clear();
+        function Size(): Integer;
     end;
 
 
@@ -35,7 +35,7 @@ type
         destructor Destroy; OVERRIDE;
 
         procedure Push(p: Pointer);
-        function Pop: Pointer;
+        function Pop(): Pointer;
     end;
 
 
@@ -57,12 +57,12 @@ begin
     inherited Destroy;
 end;
 
-procedure TStackBase.Clear;
+procedure TStackBase.Clear();
 begin
     NumItems := 0;
 end;
 
-function TStackBase.Size: Integer;
+function TStackBase.Size(): Integer;
 begin
     Result := NumItems;
 end;
@@ -91,7 +91,7 @@ begin
     Items[NumItems] := p;
 end;
 
-function TPstack.Pop: Pointer;
+function TPstack.Pop(): Pointer;
 begin
     if NumItems > 0 then
     begin

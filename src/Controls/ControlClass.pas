@@ -15,7 +15,7 @@ uses
 type
     TControlClass = class(TCktElementClass)
     PROTECTED
-        procedure CountPropertiesAndAllocate; override;
+        procedure CountPropertiesAndAllocate(); override;
         procedure DefineProperties(); override;
 
     PUBLIC
@@ -45,7 +45,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TControlClass.CountPropertiesAndAllocate;
+procedure TControlClass.CountPropertiesAndAllocate();
 begin
     NumProperties := NumProperties + NumPropsThisClass;
     inherited CountPropertiesAndAllocate;

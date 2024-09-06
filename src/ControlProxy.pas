@@ -17,8 +17,8 @@ type
     TControlProxyObj = class(TControlElem)
     PUBLIC
         ActionList: TList;
-        procedure ClearActionList;
-        function PopAction: Boolean;
+        procedure ClearActionList();
+        function PopAction(): Boolean;
 
         constructor Create(context: TDSSContext);
         destructor Destroy; OVERRIDE;
@@ -49,7 +49,7 @@ begin
     raise Exception.Create('This procedure should not be called');
 end;
 
-procedure TControlProxyObj.ClearActionList;
+procedure TControlProxyObj.ClearActionList();
 begin
     while PopAction do
     begin
@@ -74,7 +74,7 @@ begin
     inherited;
 end;
 
-function TControlProxyObj.PopAction: Boolean;
+function TControlProxyObj.PopAction(): Boolean;
 begin
     if DSS.ActiveAction <> NIL then
     begin

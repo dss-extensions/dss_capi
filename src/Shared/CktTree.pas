@@ -444,7 +444,7 @@ begin
     TobusList[NumToBuses] := Value;
 end;
 
-procedure TCktTreeNode.ResetToBusList;
+procedure TCktTreeNode.ResetToBusList();
 begin
     ToBusPtr := 0;
 end;

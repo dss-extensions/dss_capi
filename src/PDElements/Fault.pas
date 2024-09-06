@@ -86,7 +86,7 @@ type
         Bus2Defined: Boolean;
         On_Time: Double;
         RandomMult: Double;
-        function FaultStillGoing: Boolean;
+        function FaultStillGoing(): Boolean;
     PROTECTED
         G: Double; // single G per phase (line rating) if Gmatrix not specified
         Gmatrix: pDoubleArray;  // If not nil then overrides G
@@ -103,7 +103,7 @@ type
         procedure RecalcElementData(); OVERRIDE;
         procedure CalcYPrim(); OVERRIDE;
 
-        procedure Randomize;
+        procedure Randomize();
         procedure CheckStatus(ControlMode: Integer);
         procedure Reset();
 
@@ -391,7 +391,7 @@ begin
 // Nothing to do
 end;
 
-procedure TFaultObj.Randomize;
+procedure TFaultObj.Randomize();
 // called from solveMontefault Procedure
 begin
     case ActiveCircuit.Solution.RandomType of
@@ -579,7 +579,7 @@ begin
     end;
 end;
 
-function TFaultObj.FaultStillGoing: Boolean;
+function TFaultObj.FaultStillGoing(): Boolean;
 var
     i: Integer;
 begin

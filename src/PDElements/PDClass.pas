@@ -33,7 +33,7 @@ type
 
     TPDClass = class(TCktElementClass)
     PROTECTED
-        procedure CountPropertiesAndAllocate; override;
+        procedure CountPropertiesAndAllocate(); override;
         procedure DefineProperties(); override;
     PUBLIC
         PropertyOffset_PDClass: Integer;
@@ -83,7 +83,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TPDClass.CountPropertiesAndAllocate;
+procedure TPDClass.CountPropertiesAndAllocate();
 begin
     NumProperties := NumProperties + NumPropsThisClass;
     inherited CountPropertiesAndAllocate;

@@ -72,8 +72,8 @@ type
 
         LineClass: Tline;
 
-        procedure GetVterminalForSource;
-        function Compute_VLine: Double;
+        procedure GetVterminalForSource();
+        function Compute_VLine(): Double;
         procedure GetInjCurrents(Curr: pComplexArray);
     PUBLIC
 
@@ -96,7 +96,7 @@ type
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
-        function InjCurrents: Integer; OVERRIDE;
+        function InjCurrents(): Integer; OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
     end;
 
@@ -309,7 +309,7 @@ begin
     inherited Destroy;
 end;
 
-function TGICSourceObj.Compute_VLine: Double;
+function TGICSourceObj.Compute_VLine(): Double;
 var
     Phi: Double;
     DeltaLat, DeltaLon: Double;
@@ -399,7 +399,7 @@ begin
     SetYprimInvalid(false);
 end;
 
-procedure TGICSourceObj.GetVterminalForSource;
+procedure TGICSourceObj.GetVterminalForSource();
 var
     Vmag: Double;
     i: Integer;
@@ -424,7 +424,7 @@ begin
     end;
 end;
 
-function TGICSourceObj.InjCurrents: Integer;
+function TGICSourceObj.InjCurrents(): Integer;
 // Sum Currents directly into solution array
 begin
     GetInjCurrents(InjCurrent);

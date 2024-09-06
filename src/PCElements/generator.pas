@@ -230,8 +230,8 @@ type
         function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
         Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
 
-        procedure ResetRegistersAll;
-        procedure SampleAll;
+        procedure ResetRegistersAll();
+        procedure SampleAll();
         function GetRegisterNames(obj: TDSSObject): ArrayOfString; override;
         function GetRegisterValues(obj: TDSSObject; var numRegisters: Integer): pDoubleArray; override;
     end;
@@ -280,22 +280,22 @@ type
 
         procedure CalcDailyMult(Hr: Double);
         procedure CalcDutyMult(Hr: Double);  // now incorporates DutyStart offset
-        procedure CalcGenModelContribution;
-        procedure CalcInjCurrentArray;
-        procedure CalcVthev_Dyn;      // 3-phase Voltage behind transient reactance
+        procedure CalcGenModelContribution();
+        procedure CalcInjCurrentArray();
+        procedure CalcVthev_Dyn();      // 3-phase Voltage behind transient reactance
         procedure CalcVthev_Dyn_Mod7(const V: Complex);
         procedure CalcYearlyMult(Hr: Double);
         procedure CalcYPrimMatrix(Ymatrix: TcMatrix);
 
-        procedure DoConstantPQGen;
-        procedure DoConstantZGen;
-        procedure DoCurrentLimitedPQ;
-        procedure DoDynamicMode;
-        procedure DoFixedQGen;
-        procedure DoFixedQZGen;
-        procedure DoHarmonicMode;
-        procedure DoPVTypeGen;
-        procedure DoUserModel;
+        procedure DoConstantPQGen();
+        procedure DoConstantZGen();
+        procedure DoCurrentLimitedPQ();
+        procedure DoDynamicMode();
+        procedure DoFixedQGen();
+        procedure DoFixedQZGen();
+        procedure DoHarmonicMode();
+        procedure DoPVTypeGen();
+        procedure DoUserModel();
         function CheckOnFuel(const Deriv: Double; Const Interval: Double): Boolean;
 
         procedure Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
@@ -304,7 +304,7 @@ type
 
         procedure WriteTraceRecord(const s: String);
 
-        procedure SyncUpPowerQuantities;
+        procedure SyncUpPowerQuantities();
 
         procedure SetkWkvar(const PkW, Qkvar: Double);
 
@@ -352,17 +352,17 @@ type
         procedure CalcYPrim(); OVERRIDE;
 
         procedure SetConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
-        function InjCurrents: Integer; OVERRIDE;
+        function InjCurrents(): Integer; OVERRIDE;
         function NumVariables(): Integer; OVERRIDE;
         procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
         function GetVariable(i: Integer): Double; OVERRIDE;
         procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
 
-        procedure SetNominalGeneration;
+        procedure SetNominalGeneration();
 
-        procedure ResetRegisters;
-        procedure TakeSample;
+        procedure ResetRegisters();
+        procedure TakeSample();
 
         // Procedures for setting the DQDV used by the Solution Object
         procedure InitDQDVCalc();
@@ -880,7 +880,7 @@ begin
     ShaftModelNameStr := Other.ShaftModelNameStr;
 end;
 
-procedure TGenerator.ResetRegistersAll;  // Force all EnergyMeters in the circuit to reset
+procedure TGenerator.ResetRegistersAll();  // Force all EnergyMeters in the circuit to reset
 var
     pGen: TGeneratorObj;
 begin
@@ -890,7 +890,7 @@ begin
     end;
 end;
 
-procedure TGenerator.SampleAll;  // Force all EnergyMeters in the circuit to take a sample
+procedure TGenerator.SampleAll();  // Force all EnergyMeters in the circuit to take a sample
 var
     pGen: TGeneratorObj;
 begin
@@ -1063,7 +1063,7 @@ begin
         ShapeFactor := CDOUBLEONE;  // Defaults to no variation
 end;
 
-procedure TGeneratorObj.SetNominalGeneration;
+procedure TGeneratorObj.SetNominalGeneration();
 var
     Factor: Double;
     GenOn_Saved: Boolean;
@@ -1484,7 +1484,7 @@ Begin
     end;
 end;
 
-procedure TGeneratorObj.DoConstantPQGen;
+procedure TGeneratorObj.DoConstantPQGen();
 // Compute total terminal current for Constant PQ
 var
     i: Integer;
@@ -1546,7 +1546,7 @@ begin
     end;
 end;
 
-procedure TGeneratorObj.DoConstantZGen;
+procedure TGeneratorObj.DoConstantZGen();
 var
     i: Integer;
     Curr,
@@ -1575,7 +1575,7 @@ begin
     end;
 end;
 
-procedure TGeneratorObj.DoPVTypeGen;
+procedure TGeneratorObj.DoPVTypeGen();
 // Compute total terminal current for Constant P,|V|
 
 // Constant P, constant |V|
@@ -1634,7 +1634,7 @@ begin
     end; // With
 end;
 
-procedure TGeneratorObj.DoFixedQGen;
+procedure TGeneratorObj.DoFixedQGen();
 // Compute total terminal current for Fixed Q
 // Constant P, Fixed Q  Q is always kvarBase
 var
@@ -1692,7 +1692,7 @@ begin
     end;
 end;
 
-procedure TGeneratorObj.DoFixedQZGen;
+procedure TGeneratorObj.DoFixedQZGen();
 // Compute total terminal current for
 // Constant P, Fixed Q  Q is always a fixed Z derived from kvarBase
 var
@@ -1756,7 +1756,7 @@ begin
     end;
 end;
 
-procedure TGeneratorObj.DoUserModel;
+procedure TGeneratorObj.DoUserModel();
 // Compute total terminal Current from User-written model
 var
     i: Integer;
@@ -1778,7 +1778,7 @@ begin
     end;
 end;
 
-procedure TGeneratorObj.DoCurrentLimitedPQ;
+procedure TGeneratorObj.DoCurrentLimitedPQ();
 // Compute total terminal current for Constant PQ, but limit to max current below Vminpu
 var
     i: Integer;
@@ -1863,7 +1863,7 @@ begin
     end;
 end;
 
-procedure TGeneratorObj.DoDynamicMode;
+procedure TGeneratorObj.DoDynamicMode();
 // Compute Total Current and add into InjTemp
 var
     i: Integer;
@@ -1982,7 +1982,7 @@ begin
     end;
 end;
 
-procedure TGeneratorObj.DoHarmonicMode;
+procedure TGeneratorObj.DoHarmonicMode();
 // Compute Injection Current Only when in harmonics mode
 
 // Assumes spectrum is a voltage source behind subtransient reactance and YPrim has been built
@@ -2014,7 +2014,7 @@ begin
     YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
 end;
 
-procedure TGeneratorObj.CalcGenModelContribution;
+procedure TGeneratorObj.CalcGenModelContribution();
 // Calculates generator current and adds it properly into the injcurrent array
 // routines may also compute ITerminal  (ITerminalUpdated flag)
 begin
@@ -2053,7 +2053,7 @@ begin
    // When this is done, ITerminal is up to date
 end;
 
-procedure TGeneratorObj.CalcInjCurrentArray;
+procedure TGeneratorObj.CalcInjCurrentArray();
 // Difference between currents in YPrim and total current
 begin
     // Now Get Injection Currents
@@ -2080,7 +2080,7 @@ begin
         WriteTraceRecord('TotalCurrent');
 end;
 
-function TGeneratorObj.InjCurrents: Integer;
+function TGeneratorObj.InjCurrents(): Integer;
 begin
     if ActiveCircuit.Solution.LoadsNeedUpdating then
         SetNominalGeneration(); // Set the nominal kW, etc for the type of solution being done
@@ -2093,7 +2093,7 @@ begin
     Result := inherited InjCurrents;
 end;
 
-procedure TGeneratorObj.ResetRegisters;
+procedure TGeneratorObj.ResetRegisters();
 var
     i: Integer;
 begin
@@ -2119,7 +2119,7 @@ begin
     Derivatives[Reg] := Deriv;
 end;
 
-procedure TGeneratorObj.TakeSample;
+procedure TGeneratorObj.TakeSample();
 // Update Energy from metered zone
 var
     S: Complex;
@@ -2221,7 +2221,7 @@ begin
     FSWriteLn(F);
 end;
 
-procedure TGeneratorObj.InitHarmonics;
+procedure TGeneratorObj.InitHarmonics();
 var
     E, Va: complex;
     NodeV: pNodeVarray;
@@ -2255,7 +2255,7 @@ begin
     end;
 end;
 
-procedure TGeneratorObj.InitStateVars;
+procedure TGeneratorObj.InitStateVars();
 var
     // VNeut,
     i, NumData: Integer;
@@ -2382,7 +2382,7 @@ begin
     end;
 end;
 
-procedure TGeneratorObj.IntegrateStates;
+procedure TGeneratorObj.IntegrateStates();
 var
     TracePower: Complex;
     i, NumData: Integer;
@@ -2784,7 +2784,7 @@ begin
     SyncUpPowerQuantities;
 end;
 
-procedure TGeneratorObj.SyncUpPowerQuantities;
+procedure TGeneratorObj.SyncUpPowerQuantities();
 begin
     // keep kvar nominal up to date with kW and PF
     if (PFNominal = 0.0) then
@@ -2817,7 +2817,7 @@ begin
     PropertySideEffects(ord(TProp.kvar), 0, []); //TODO: this may benefit from setterFlags
 end;
 
-procedure TGeneratorObj.CalcVthev_Dyn;
+procedure TGeneratorObj.CalcVthev_Dyn();
 begin
     if GenSwitchOpen then
         GenVars.VThevMag := 0.0;

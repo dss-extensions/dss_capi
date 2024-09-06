@@ -134,7 +134,7 @@ type
 
         ShapeFactor: Complex;
         ShapeIsActual: Boolean;
-        procedure GetVterminalForSource;
+        procedure GetVterminalForSource();
 
         procedure CalcDailyMult(Hr: Double);
         procedure CalcDutyMult(Hr: Double);
@@ -164,7 +164,7 @@ type
         procedure RecalcElementData(); OVERRIDE;
         procedure CalcYPrim(); OVERRIDE;
 
-        function InjCurrents: Integer; OVERRIDE;
+        function InjCurrents(): Integer; OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
@@ -974,7 +974,7 @@ begin
     SetYprimInvalid(false);
 end;
 
-procedure TVsourceObj.GetVterminalForSource;
+procedure TVsourceObj.GetVterminalForSource();
 var
     i: Integer;
     Vharm: Complex;
@@ -1095,7 +1095,7 @@ begin
     end;
 end;
 
-function TVsourceObj.InjCurrents: Integer;
+function TVsourceObj.InjCurrents(): Integer;
 begin
     GetInjCurrents(InjCurrent);
     // This is source injection

@@ -124,7 +124,7 @@ type
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
         procedure Reset(); OVERRIDE;  // Reset to initial defined state
 
-        function MakeLocalControlList: Boolean;
+        function MakeLocalControlList(): Boolean;
     end;
 
 implementation
@@ -364,7 +364,7 @@ begin
     inherited;
 end;
 
-procedure TESPVLControlObj.DoPendingAction;
+procedure TESPVLControlObj.DoPendingAction();
 begin
     // Do Nothing
 end;
@@ -405,7 +405,7 @@ begin
     end;
 end;
 
-function TESPVLControlObj.MakeLocalControlList: Boolean;
+function TESPVLControlObj.MakeLocalControlList(): Boolean;
 var
     pESPVLControl: TESPVLControlObj;
     i: Integer;

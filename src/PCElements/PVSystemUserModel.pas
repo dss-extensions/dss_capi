@@ -55,8 +55,8 @@ TYPE
         procedure Edit(const Value: String);
         function Exists(): Boolean;
 
-        Procedure   Select;
-        Procedure   Integrate;
+        Procedure   Select();
+        Procedure   Integrate();
 
         constructor Create(dssContext: TDSSContext);
         destructor  Destroy; override;
@@ -106,13 +106,13 @@ begin
         Else Result := False;
 end;
 
-procedure TPVsystemUserModel.Integrate;
+procedure TPVsystemUserModel.Integrate();
 begin
         FSelect(FID);
         Fintegrate;
 end;
 
-procedure TPVsystemUserModel.Select;
+procedure TPVsystemUserModel.Select();
 begin
         Fselect(FID);
 end;

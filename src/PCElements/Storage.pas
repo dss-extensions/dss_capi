@@ -1361,13 +1361,13 @@ begin
     end;
 end;
 
-procedure TStorageObj.ComputekWkvar;
+procedure TStorageObj.ComputekWkvar();
 begin
     ComputePresentkW();
     ComputeInverterPower(); // apply inverter eff after checking for cutin/cutout
 end;
 
-procedure TStorageObj.ComputePresentkW;
+procedure TStorageObj.ComputePresentkW();
 var
     OldState: Integer;
 begin
@@ -1417,7 +1417,7 @@ begin
         stateChanged := TRUE;
 end;
 
-procedure TStorageObj.ComputeInverterPower;
+procedure TStorageObj.ComputeInverterPower();
 var
     kVA_Gen: Double;
     OldState: Integer;
@@ -2083,7 +2083,7 @@ begin
     end;
 end;
 
-procedure TStorageObj.DoDynamicMode;
+procedure TStorageObj.DoDynamicMode();
 var
     i: Integer;
     PolarN: Polar;
@@ -2092,7 +2092,7 @@ var
     AngCmp, // Required in this context to force the idling losses
     iActual: Double;
 
-    procedure CalcVthev_Dyn;
+    procedure CalcVthev_Dyn();
     begin
         with StorageVars do
             Vthev := pclx(VthevMag, Theta);   // keeps theta constant
@@ -2501,7 +2501,7 @@ begin
         SetYprimInvalid(true);
 end;
 
-procedure TStorageObj.ComputeDCkW;
+procedure TStorageObj.ComputeDCkW();
 // Computes actual DCkW to Update Storage SOC
 var
     coefGuess: TCoeff;
@@ -2634,7 +2634,7 @@ begin
     end;
 end;
 
-procedure TStorageObj.Update_EfficiencyFactor;
+procedure TStorageObj.Update_EfficiencyFactor();
 begin
     with StorageVars do
     begin

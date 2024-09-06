@@ -145,21 +145,21 @@ type
         procedure KillLineCodeSpecified();
 
         procedure FMakeZFromGeometry(f: Double); // make new Z, Zinv, Yc, etc
-        procedure KillGeometrySpecified;
+        procedure KillGeometrySpecified();
 
         procedure FMakeZFromSpacing(f: Double); // make new Z, Zinv, Yc, etc
-        procedure KillSpacingSpecified;
+        procedure KillSpacingSpecified();
 
-        procedure ClearYPrim;
-        procedure ResetLengthUnits;
+        procedure ClearYPrim();
+        procedure ResetLengthUnits();
 
         function CIM_NumConductorData(): Integer;
         function CIM_GetConductorData(i: Integer): TConductorDataObj;
 
-        procedure ReallocZandYcMatrices;
+        procedure ReallocZandYcMatrices();
 
         procedure DoLongLine(Frequency: Double; R: Double; X: Double; C: Double; var R_h: Double; var X_h: Double; var C_h: Double; var G_h: Double);  // Long Line Correction for 1=phase
-        procedure ConvertZinvToPosSeqR;  // for GIC analysis, primarily
+        procedure ConvertZinvToPosSeqR();  // for GIC analysis, primarily
 
         // procedure GetLosses(var TotalLosses, LoadLosses, NoLoadLosses: Complex); OVERRIDE;
         procedure GetSeqLosses(var PosSeqLosses, NegSeqLosses, ZeroSeqLosses: complex); OVERRIDE;
@@ -185,9 +185,9 @@ type
         procedure FetchLineSpacing();
 
         // Reliability calcs
-        procedure CalcFltRate; OVERRIDE;  // Calc failure rates for section and buses
+        procedure CalcFltRate(); OVERRIDE;  // Calc failure rates for section and buses
 
-        function SpacingSpecified: Boolean;  // TODO: use PrpSpecified
+        function SpacingSpecified(): Boolean;  // TODO: use PrpSpecified
     end;
 
 implementation
@@ -1014,7 +1014,7 @@ begin
     inherited destroy;
 end;
 
-procedure TLineObj.ReallocZandYcMatrices;
+procedure TLineObj.ReallocZandYcMatrices();
 begin
     if (Z <> NIL) and (Z.order = Fnphases) then 
         Exit;
@@ -1115,7 +1115,7 @@ begin
     // values in ohms per unit length
 end;
 
-procedure TLineObj.CalcFltRate;
+procedure TLineObj.CalcFltRate();
 begin
     // inherited;
     // Assume Faultrate specified in same units as length
@@ -2016,7 +2016,7 @@ begin
         PrpSequence[ord(TProp.LineCode)] := 0;
 end;
 
-procedure TLineObj.KillGeometrySpecified;
+procedure TLineObj.KillGeometrySpecified();
 begin
     // Indicate No Line Geometry specification if this is called
     if LineGeometryObj = NIL then
@@ -2028,7 +2028,7 @@ begin
     FZFrequency := -1.0;
 end;
 
-procedure TLineObj.KillSpacingSpecified;
+procedure TLineObj.KillSpacingSpecified();
 begin
     if not SpacingSpecified then
         Exit;
@@ -2047,7 +2047,7 @@ begin
     end;
 end;
 
-procedure TLineObj.ClearYPrim;
+procedure TLineObj.ClearYPrim();
 begin
     // Line Object needs both Series and Shunt YPrims built
     if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) then // YPrimInvalid
@@ -2071,7 +2071,7 @@ begin
     end;
 end;
 
-procedure TLineObj.ConvertZinvToPosSeqR;
+procedure TLineObj.ConvertZinvToPosSeqR();
 // For GIC Analysis, use only real part of Z
 var
     Z1, ZS, Zm: Complex;
@@ -2095,7 +2095,7 @@ begin
 
 end;
 
-procedure TLineObj.ResetLengthUnits;
+procedure TLineObj.ResetLengthUnits();
 // If specify the impedances always assume the length units match
 begin
     unitsFactor := 1.0;
@@ -2127,7 +2127,7 @@ begin
     end;
 end;
 
-function TLineObj.SpacingSpecified: Boolean;
+function TLineObj.SpacingSpecified(): Boolean;
 begin
     Result := Assigned(LineSpacingObj) and Assigned(lineConductorData);
 end;

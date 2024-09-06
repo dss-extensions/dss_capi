@@ -63,7 +63,7 @@ type
         function DoNearestActions(var Hour: Integer; var Sec: Double): Boolean;  // Do only actions with lowest time
         function DoActions(const Hour: Integer; const sec: Double): Boolean;  // Do actions with time <= t
         function DoMultiRate(const Hour: Integer; const sec: Double): Boolean;  // Do actions with time <= t
-        function IsEmpty: Boolean;
+        function IsEmpty(): Boolean;
         procedure Delete(Hdl: Integer);  // Delete queue item by handle
         function QueueSize(): Integer;
 
@@ -189,7 +189,7 @@ begin
     DebugTrace := FALSE;
 end;
 
-procedure TControlQueue.Dispose;
+procedure TControlQueue.Dispose();
 begin
     Clear();
     ActionList.Free;
@@ -235,7 +235,7 @@ begin
     end;
 end;
 
-function TControlQueue.IsEmpty: Boolean;
+function TControlQueue.IsEmpty(): Boolean;
 begin
     if ActionList.Count = 0 then
         Result := TRUE
@@ -438,7 +438,7 @@ begin
     Restore_Time_Step(); // Restores Time to keep going with the simulation
 end;
 
-procedure TControlQueue.Recalc_Time_Step;
+procedure TControlQueue.Recalc_Time_Step();
 begin
     Temp_dbl[2] := Temp_dbl[2] + Temp_dbl[4]; // Time window moves forward
     while Temp_Dbl[2] >= 3600.0 do // Adjusts the window
@@ -453,7 +453,7 @@ begin
     DSS.ActiveCircuit.solution.Update_dblHour();
 end;
 
-procedure TControlQueue.Restore_Time_Step;
+procedure TControlQueue.Restore_Time_Step();
 begin
     DSS.ActiveCircuit.solution.DynaVars.intHour := Temp_Int[2];
     DSS.ActiveCircuit.solution.DynaVars.t := Temp_dbl[7];

@@ -1660,7 +1660,7 @@ var
     pSensorObj: TSensorObj;
     TempX: array[1..3] of Double; // temp number buffer
 
-    procedure ZeroTempXArray;
+    procedure ZeroTempXArray();
     var
         ii: Integer;
     begin

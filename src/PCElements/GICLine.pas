@@ -110,8 +110,8 @@ type
         SequenceType: Integer;
         VoltsSpecified: Boolean;
 
-        procedure GetVterminalForSource;
-        function Compute_VLine: Double;
+        procedure GetVterminalForSource();
+        function Compute_VLine(): Double;
     PUBLIC
         Z: TCmatrix;  // Base Frequency Series Z matrix
         Zinv: TCMatrix;
@@ -125,7 +125,7 @@ type
         procedure RecalcElementData(); OVERRIDE;
         procedure CalcYPrim(); OVERRIDE;
 
-        function InjCurrents: Integer; OVERRIDE;
+        function InjCurrents(): Integer; OVERRIDE;
         procedure GetInjCurrents(Curr: pComplexArray);
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
@@ -346,7 +346,7 @@ begin
     Sequencetype := Other.Sequencetype;
 end;
 
-function TGICLineObj.Compute_VLine: Double;
+function TGICLineObj.Compute_VLine(): Double;
 var
     Phi: Double;
     DeltaLat, DeltaLon: Double;
@@ -520,7 +520,7 @@ begin
     SetYprimInvalid(false);
 end;
 
-procedure TGICLineObj.GetVterminalForSource;
+procedure TGICLineObj.GetVterminalForSource();
 var
     i: Integer;
     Vharm: Complex;
@@ -579,7 +579,7 @@ begin
     end;
 end;
 
-function TGICLineObj.InjCurrents: Integer;
+function TGICLineObj.InjCurrents(): Integer;
 begin
     GetInjCurrents(InjCurrent);
     // This is source injection

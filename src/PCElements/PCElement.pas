@@ -38,21 +38,21 @@ type
         constructor Create(ParClass: TDSSClass; objName: String);
         destructor Destroy; OVERRIDE;
         procedure MakeLike(OtherObj: Pointer); override;
-        procedure ZeroInjCurrent;
+        procedure ZeroInjCurrent();
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present values of terminal
-        procedure ComputeIterminal; OVERRIDE;
-        function InjCurrents: Integer; OVERRIDE;
+        procedure ComputeIterminal(); OVERRIDE;
+        function InjCurrents(): Integer; OVERRIDE;
         procedure CalcYPrimContribution(Curr: pComplexArray); INLINE;
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
         // For Harmonics Mode
-        procedure InitHarmonics; VIRTUAL;
+        procedure InitHarmonics(); VIRTUAL;
 
         // For Dynamics Mode and Control Devices
-        procedure InitStateVars; VIRTUAL;
-        procedure IntegrateStates; VIRTUAL;
-        function NumVariables: Integer; VIRTUAL;
+        procedure InitStateVars(); VIRTUAL;
+        procedure IntegrateStates(); VIRTUAL;
+        function NumVariables(): Integer; VIRTUAL;
         procedure GetAllVariables(var States: ArrayOfDouble); VIRTUAL;
 
         function VariableName(i: Integer): String; VIRTUAL;
@@ -100,7 +100,7 @@ begin
     inherited Destroy;
 end;
 
-function TPCElement.InjCurrents: Integer;
+function TPCElement.InjCurrents(): Integer;
 // Add injection currents into System currents array
 var
     i: Integer;
@@ -172,17 +172,17 @@ begin
     YPrim.MVMult(Curr, Vterminal);
 end;
 
-procedure TPCElement.InitHarmonics;
+procedure TPCElement.InitHarmonics();
 begin
   // By default do nothing in the base class
 end;
 
-procedure TPCElement.InitStateVars;
+procedure TPCElement.InitStateVars();
 begin
     // By default do nothing
 end;
 
-procedure TPCElement.IntegrateStates;
+procedure TPCElement.IntegrateStates();
 begin
  // inherited;
  // By default do nothing
@@ -193,7 +193,7 @@ begin
     // Do Nothing
 end;
 
-function TPCElement.NumVariables: Integer;
+function TPCElement.NumVariables(): Integer;
 begin
     Result := 0;
 end;
@@ -279,7 +279,7 @@ begin
     // Do Nothing
 end;
 
-procedure TPCElement.ComputeIterminal;
+procedure TPCElement.ComputeIterminal();
 begin
     if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
     begin
@@ -288,7 +288,7 @@ begin
     end;
 end;
 
-procedure TPCElement.ZeroInjCurrent;
+procedure TPCElement.ZeroInjCurrent();
 var
     i: Integer;
 begin

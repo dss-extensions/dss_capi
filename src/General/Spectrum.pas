@@ -66,7 +66,7 @@ type
         MultArray: pComplexArray;
         csvfile: string;
 
-        procedure SetMultArray;
+        procedure SetMultArray();
         function HarmArrayHasaZero(var zeropoint: Integer): Boolean;
 
     PUBLIC
@@ -378,7 +378,7 @@ begin
         end;
 end;
 
-procedure TSpectrumObj.SetMultArray;
+procedure TSpectrumObj.SetMultArray();
 // Rotate all phase angles so that the fundamental is at zero
 var
     i: Integer;

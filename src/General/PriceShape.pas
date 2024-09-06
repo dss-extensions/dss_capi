@@ -96,9 +96,9 @@ type
         FMean,
         FStdDev: Double;
 
-        procedure SaveToDblFile;
-        procedure SaveToSngFile;
-        procedure CalcMeanandStdDev;
+        procedure SaveToDblFile();
+        procedure SaveToSngFile();
+        procedure CalcMeanandStdDev();
     PUBLIC
         Interval: Double;  //=0.0 then random interval     (hr)
         Hours,          // Time values (hr) if Interval > 0.0  Else nil
@@ -459,7 +459,7 @@ begin
     Result := PriceValues[numPoints];
 end;
 
-procedure TPriceShapeObj.CalcMeanandStdDev;
+procedure TPriceShapeObj.CalcMeanandStdDev();
 begin
     if numPoints > 0 then
         if Interval > 0.0 then
@@ -494,7 +494,7 @@ begin
         Result := 0.0;
 end;
 
-procedure TPriceShapeObj.SaveToDblFile;
+procedure TPriceShapeObj.SaveToDblFile();
 var
     F: TStream = nil;
     Fname: String;
@@ -515,7 +515,7 @@ begin
     end;
 end;
 
-procedure TPriceShapeObj.SaveToSngFile;
+procedure TPriceShapeObj.SaveToSngFile();
 var
     F: TStream = nil;
     i: Integer;

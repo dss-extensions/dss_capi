@@ -86,7 +86,7 @@ type
         function SaveOpenTerminals(circF: TStream; saveFlags: DSSSaveFlags): Boolean;
         function SaveVoltageBases(circF: TStream; saveFlags: DSSSaveFlags): Boolean;
 
-        procedure ReallocDeviceList;
+        procedure ReallocDeviceList();
     PUBLIC
         DSS: TDSSContext;
         MaxBusNameLength, MaxDeviceNameLength: Integer;
@@ -299,18 +299,18 @@ type
         destructor Destroy; OVERRIDE;
 
         procedure AddCktElement(Obj: TDSSCktElement);
-        procedure ClearBusMarkers;
+        procedure ClearBusMarkers();
 
-        procedure TotalizeMeters;
-        function ComputeCapacity: Boolean;
+        procedure TotalizeMeters();
+        function ComputeCapacity(): Boolean;
 
         function Save(Dir: String; psaveFlags: PDSSSaveFlags = NIL; outString: PString = NIL): Boolean;
 
         procedure ProcessBusDefs(element: TDSSCktElement);
-        procedure ReprocessBusDefs;
-        procedure DoResetMeterZones;
+        procedure ReprocessBusDefs();
+        procedure DoResetMeterZones();
         function SetElementActive(const FullObjectName: String): Integer;
-        procedure InvalidateAllPCElements;
+        procedure InvalidateAllPCElements();
 
         procedure DebugDump(F: TStream);
 
@@ -319,10 +319,10 @@ type
         function GetUniqueNodeNumber(bus: TDSSBus; StartNode: Integer): Integer;
 
         // Access to topology from the first source
-        function GetTopology: TCktTree;
-        procedure FreeTopology;
-        function GetBusAdjacentPDLists: TAdjArray;
-        function GetBusAdjacentPCLists: TAdjArray;
+        function GetTopology(): TCktTree;
+        procedure FreeTopology();
+        function GetBusAdjacentPDLists(): TAdjArray;
+        function GetBusAdjacentPCLists(): TAdjArray;
         function getPCEatBus(BusIdx: Integer; useNone: Boolean = TRUE): ArrayOfString; overload;
         function getPDEatBus(BusIdx: Integer; useNone: Boolean = TRUE): ArrayOfString; overload;
         function getPCEatBus(BusName: String; useNone: Boolean = TRUE; busIdx: Integer = 0): ArrayOfString; overload;
@@ -2155,7 +2155,7 @@ begin
     Obj.Handle := CktElements.Count;
 end;
 
-procedure TDSSCircuit.DoResetMeterZones;
+procedure TDSSCircuit.DoResetMeterZones();
 begin
     // Do this only if meterzones unlocked .  Normally, Zones will remain unlocked
     // so that all changes to the circuit will result in rebuilding the lists
@@ -2171,7 +2171,7 @@ begin
     FreeTopology;
 end;
 
-procedure TDSSCircuit.ReprocessBusDefs;
+procedure TDSSCircuit.ReprocessBusDefs();
 // Redo all Buslists, nodelists
 var
     element: TDSSCktElement;
@@ -2336,7 +2336,7 @@ begin
     end;
 end;
 
-procedure TDSSCircuit.InvalidateAllPCElements;
+procedure TDSSCircuit.InvalidateAllPCElements();
 var
     p: TDSSCktElement;
 begin
@@ -2367,7 +2367,7 @@ begin
     FLoadMultiplier := Value;
 end;
 
-procedure TDSSCircuit.TotalizeMeters;
+procedure TDSSCircuit.TotalizeMeters();
 //  Totalize all energymeters in the problem
 var
     pEM: TEnergyMeterObj;
@@ -2382,7 +2382,7 @@ begin
         
 end;
 
-function TDSSCircuit.ComputeCapacity: Boolean;
+function TDSSCircuit.ComputeCapacity(): Boolean;
 var
     CapacityFound: Boolean;
 
@@ -3010,7 +3010,7 @@ begin
         FreeAndNil(F);
 end;
 
-procedure TDSSCircuit.ReallocDeviceList;
+procedure TDSSCircuit.ReallocDeviceList();
 var
     TempList: THashList;
     i: Integer;
@@ -3040,21 +3040,21 @@ begin
     DSS.CircuitName_ := Value + '_';
 end;
 
-function TDSSCircuit.GetBusAdjacentPDLists: TAdjArray;
+function TDSSCircuit.GetBusAdjacentPDLists(): TAdjArray;
 begin
     if not Assigned(BusAdjPD) then
         BuildActiveBusAdjacencyLists(self, BusAdjPD, BusAdjPC);
     Result := BusAdjPD;
 end;
 
-function TDSSCircuit.GetBusAdjacentPCLists: TAdjArray;
+function TDSSCircuit.GetBusAdjacentPCLists(): TAdjArray;
 begin
     if not Assigned(BusAdjPC) then
         BuildActiveBusAdjacencyLists(self, BusAdjPD, BusAdjPC);
     Result := BusAdjPC;
 end;
 
-function TDSSCircuit.GetTopology: TCktTree;
+function TDSSCircuit.GetTopology(): TCktTree;
 var
     i: Integer;
     elem: TDSSCktElement;
@@ -3076,7 +3076,7 @@ begin
     Result := Branch_List;
 end;
 
-procedure TDSSCircuit.FreeTopology;
+procedure TDSSCircuit.FreeTopology();
 begin
     if Assigned(Branch_List) then
         Branch_List.Free;
@@ -3085,7 +3085,7 @@ begin
         FreeAndNilBusAdjacencyLists(BusAdjPD, BusAdjPC);
 end;
 
-procedure TDSSCircuit.ClearBusMarkers;
+procedure TDSSCircuit.ClearBusMarkers();
 var
     i: Integer;
 begin

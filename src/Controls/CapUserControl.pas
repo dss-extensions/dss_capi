@@ -46,8 +46,8 @@ TYPE
 
         FEdit:    Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
 
-        Procedure Select;
-        Procedure UpdateModel;
+        Procedure Select();
+        Procedure UpdateModel();
         Procedure DoPending(Const Code, ProxyHdl:integer);
         Procedure Sample();
 
@@ -127,7 +127,7 @@ begin
      If FID <> 0 Then FSample;
 end;
 
-procedure TCapUserControl.Select;
+procedure TCapUserControl.Select();
 begin
         Fselect(FID);
 end;
@@ -196,7 +196,7 @@ begin
         End;
 end;
 
-procedure TCapUserControl.UpdateModel;
+procedure TCapUserControl.UpdateModel();
 begin
      If FID <> 0 Then FUpdateModel;
 end;

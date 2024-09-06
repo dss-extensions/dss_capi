@@ -117,7 +117,7 @@ procedure DSS_SetMessagesMO(Value: PChar); CDECL;
 procedure DSS_SetPropertiesMO(Value: PChar); CDECL;
 
 // internal function
-procedure DSS_InitThreads;
+procedure DSS_InitThreads();
 
 implementation
 
@@ -139,14 +139,14 @@ type
 
 {$IFDEF DSS_CAPI_CONTEXT}
     TDummyThread = class(TThread)
-        procedure Execute; override;
+        procedure Execute(); override;
     end;
 
-procedure TDummyThread.Execute;
+procedure TDummyThread.Execute();
 begin
 end;
 
-procedure DSS_InitThreads;
+procedure DSS_InitThreads();
 {$J+}
 const
     AlreadyCalled: Boolean = False; // "writeable constant" :D

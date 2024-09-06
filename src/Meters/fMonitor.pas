@@ -301,8 +301,8 @@ type
         procedure Get_PDElem_terminal_voltage(nd_num_in_cluster: Integer; devName: String; Tern_num: Integer); //
         procedure Calc_Alpha_for_PDNode(NodeNum: Integer);
         procedure update_all_nodes_info();
-        // function AvgPmax: Double;
-        // function AvgQmax: Double;
+        // function AvgPmax(): Double;
+        // function AvgQmax(): Double;
         procedure Get_PQ_DI(var nodeVars: TVLNodeVars);
         function Calc_Grdt_for_Alpha(NodeNuminClstr, phase_num: Integer): Double;
         function Calc_Grdt_for_Alpha_vivj(NodeNuminClstr, phase_num: Integer): Double;
@@ -1021,7 +1021,7 @@ begin
     end;
 end;
 
-procedure TFMonitorObj.MakePosSequence;
+procedure TFMonitorObj.MakePosSequence();
 begin
     if MeteredElement <> nil then
     begin
@@ -2400,7 +2400,7 @@ begin
     end;
 end;
 
-// function TFMonitorObj.AvgPmax: Double;
+// function TFMonitorObj.AvgPmax(): Double;
 // var
 //     i, k: Integer;
 // begin
@@ -2418,7 +2418,7 @@ end;
 //     end;
 // end;
 
-// function TFMonitorObj.AvgQmax: Double;
+// function TFMonitorObj.AvgQmax(): Double;
 // var
 //     i, k: Integer;
 // begin

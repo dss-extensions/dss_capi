@@ -22,45 +22,45 @@ uses
 type
     TExecHelper = class helper for TExecutive
     PUBLIC
-        function DoNewCmd: Integer;
-        function DoEditCmd: Integer;
-        function DoBatchEditCmd: Integer;
-        function DoSelectCmd: Integer;
-        function DoMoreCmd: Integer;
+        function DoNewCmd(): Integer;
+        function DoEditCmd(): Integer;
+        function DoBatchEditCmd(): Integer;
+        function DoSelectCmd(): Integer;
+        function DoMoreCmd(): Integer;
         function DoRedirect(IsCompile: Boolean; inputStrings: TStringList = NIL): Integer;
-        function DoSaveCmd: Integer;
-        function DoSampleCmd: Integer;
+        function DoSaveCmd(): Integer;
+        function DoSampleCmd(): Integer;
 
 
-        function DoSolveCmd: Integer;
-        function DoEnableCmd: Integer;
-        function DoDisableCmd: Integer;
+        function DoSolveCmd(): Integer;
+        function DoEnableCmd(): Integer;
+        function DoDisableCmd(): Integer;
 
-        function DoOpenCmd: Integer;
-        function DoResetCmd: Integer;
-        function DoNextCmd: Integer;
-        function DoFormEditCmd: Integer;
-        function DoClassesCmd: Integer;
-        function DoUserClassesCmd: Integer;
-        function DoHelpCmd: Integer;
-        function DoClearCmd: Integer;
+        function DoOpenCmd(): Integer;
+        function DoResetCmd(): Integer;
+        function DoNextCmd(): Integer;
+        function DoFormEditCmd(): Integer;
+        function DoClassesCmd(): Integer;
+        function DoUserClassesCmd(): Integer;
+        function DoHelpCmd(): Integer;
+        function DoClearCmd(): Integer;
 {$IFDEF DSS_CAPI_PM}
-        function DoClearAllCmd: Integer;
+        function DoClearAllCmd(): Integer;
 {$ENDIF}
-        function DoReduceCmd: Integer;
-        function DoInterpolateCmd: Integer;
+        function DoReduceCmd(): Integer;
+        function DoInterpolateCmd(): Integer;
 
-        function DoCloseCmd: Integer;
-        function DoResetMonitors: Integer;
+        function DoCloseCmd(): Integer;
+        function DoResetMonitors(): Integer;
 
-        function DoFileEditCmd: Integer;
-        function DoQueryCmd: Integer;
-        function DoResetMeters: Integer;
-        procedure DoAboutBox;
-        function DoSetVoltageBases: Integer;
-        function DoSetkVBase: Integer;
+        function DoFileEditCmd(): Integer;
+        function DoQueryCmd(): Integer;
+        function DoResetMeters(): Integer;
+        procedure DoAboutBox();
+        function DoSetVoltageBases(): Integer;
+        function DoSetkVBase(): Integer;
 
-        procedure DoLegalVoltageBases;
+        procedure DoLegalVoltageBases();
         procedure DoAutoAddBusList(const S: String);
         procedure DoKeeperBusList(const S: String);
         procedure DoSetReduceStrategy(const S: String);
@@ -68,59 +68,59 @@ type
         procedure DoSetCFactors(const X: Double);
 
         function DovoltagesCmd(const PerUnit: Boolean): Integer;
-        function DocurrentsCmd: Integer;
+        function DocurrentsCmd(): Integer;
         function DopowersCmd(Total: Integer): Integer;
-        function DoseqvoltagesCmd: Integer;
-        function DoseqcurrentsCmd: Integer;
-        function DoseqpowersCmd: Integer;
-        function DolossesCmd: Integer;
-        function DophaselossesCmd: Integer;
-        function DocktlossesCmd: Integer;
-        function DoAllocateLoadsCmd: Integer;
+        function DoseqvoltagesCmd(): Integer;
+        function DoseqcurrentsCmd(): Integer;
+        function DoseqpowersCmd(): Integer;
+        function DolossesCmd(): Integer;
+        function DophaselossesCmd(): Integer;
+        function DocktlossesCmd(): Integer;
+        function DoAllocateLoadsCmd(): Integer;
         function DoHarmonicsList(const S: String): Integer;
-        function DoMeterTotals: Integer;
-        function DoCapacityCmd: Integer;
+        function DoMeterTotals(): Integer;
+        function DoCapacityCmd(): Integer;
         function DoZscCmd(Zmatrix: Boolean): Integer;
-        function DoZsc10Cmd: Integer;
+        function DoZsc10Cmd(): Integer;
         function DoZscRefresh(bus: TDSSBus = NIL): Integer;
-        function DoZsc012Cmd: Integer;
+        function DoZsc012Cmd(): Integer;
 
         function DoBusCoordsCmd(SwapXY: Boolean): Integer;
-        function DoUuidsCmd: Integer;
-        function DoSetLoadAndGenKVCmd: Integer;
-        function DoVarValuesCmd: Integer;
-        function DoVarNamesCmd: Integer;
+        function DoUuidsCmd(): Integer;
+        function DoSetLoadAndGenKVCmd(): Integer;
+        function DoVarValuesCmd(): Integer;
+        function DoVarNamesCmd(): Integer;
 
-        function DoMakePosSeq: Integer;
-        function DoAlignFileCmd: Integer;
-        function DoRotateCmd: Integer;
-        function DoVDiffCmd: Integer;
-        function DoSummaryCmd: Integer;
-        function DoDistributeCmd: Integer;
-        function DoDI_PlotCmd: Integer;
-        function DoCompareCasesCmd: Integer;
-        function DoYearlyCurvesCmd: Integer;
-        function DoVisualizeCmd: Integer;
-        function DoCloseDICmd: Integer;
-        function DoADOScmd: Integer;
-        function DoEstimateCmd: Integer;
-        function DoReconductorCmd: Integer;
-        function DoAddMarkerCmd: Integer;
-        function DoCvrtLoadshapesCmd: Integer;
-        function DoNodeDiffCmd: Integer;
-        function DoRephaseCmd: Integer;
-        function DoSetBusXYCmd: Integer;
-        function DoUpdateStorageCmd: Integer;
-        function DoPstCalc: Integer;
-        function DoValVarCmd: Integer;
-        function DoLambdaCalcs: Integer;
-        function DoVarCmd: Integer;
-        function DoNodeListCmd: Integer;
-        function DoRemoveCmd: Integer;
+        function DoMakePosSeq(): Integer;
+        function DoAlignFileCmd(): Integer;
+        function DoRotateCmd(): Integer;
+        function DoVDiffCmd(): Integer;
+        function DoSummaryCmd(): Integer;
+        function DoDistributeCmd(): Integer;
+        function DoDI_PlotCmd(): Integer;
+        function DoCompareCasesCmd(): Integer;
+        function DoYearlyCurvesCmd(): Integer;
+        function DoVisualizeCmd(): Integer;
+        function DoCloseDICmd(): Integer;
+        function DoADOScmd(): Integer;
+        function DoEstimateCmd(): Integer;
+        function DoReconductorCmd(): Integer;
+        function DoAddMarkerCmd(): Integer;
+        function DoCvrtLoadshapesCmd(): Integer;
+        function DoNodeDiffCmd(): Integer;
+        function DoRephaseCmd(): Integer;
+        function DoSetBusXYCmd(): Integer;
+        function DoUpdateStorageCmd(): Integer;
+        function DoPstCalc(): Integer;
+        function DoValVarCmd(): Integer;
+        function DoLambdaCalcs(): Integer;
+        function DoVarCmd(): Integer;
+        function DoNodeListCmd(): Integer;
+        function DoRemoveCmd(): Integer;
 
         procedure DoSetNormal(pctNormal: Double);
 
-        procedure Set_Time;
+        procedure Set_Time();
 
         procedure ParseObjName(const fullname: String; var objname, propname: String);
 
@@ -132,13 +132,13 @@ type
 
         procedure SetActiveCircuit(const cktname: String);
 
-        function SetActiveCktElement: Integer;
+        function SetActiveCktElement(): Integer;
 
-        function DoPropertyDump: Integer;
+        function DoPropertyDump(): Integer;
 
     PRIVATE
 
-        procedure MarkCapandReactorBuses;
+        procedure MarkCapandReactorBuses();
     end;
 
 implementation
@@ -224,7 +224,7 @@ begin
 end;
 
 
-function TExecHelper.DoNewCmd: Integer;
+function TExecHelper.DoNewCmd(): Integer;
 
 // Process the New Command
 // new type=xxxx name=xxxx  editstring
@@ -266,7 +266,7 @@ begin
 
 end;
 
-function TExecHelper.DoEditCmd: Integer;
+function TExecHelper.DoEditCmd(): Integer;
 
 // edit type=xxxx name=xxxx  editstring
 var
@@ -289,7 +289,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoBatchEditCmd: Integer;
+function TExecHelper.DoBatchEditCmd(): Integer;
 // batchedit type=xxxx name=pattern  editstring
 var
     ObjType, Pattern: String;
@@ -675,7 +675,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoSelectCmd: Integer;
+function TExecHelper.DoSelectCmd(): Integer;
 
 // select active object
 // select element=elementname terminal=terminalnumber
@@ -740,7 +740,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoMoreCmd: Integer;
+function TExecHelper.DoMoreCmd(): Integer;
 // more editstring  (assumes active circuit element)
 begin
     if DSS.ActiveDSSClass <> NIL then
@@ -749,7 +749,7 @@ begin
         Result := 0;
 end;
 
-function TExecHelper.DoSaveCmd: Integer;
+function TExecHelper.DoSaveCmd(): Integer;
 // Save current values in both monitors and Meters
 var
     pMon: TMonitorObj;
@@ -849,14 +849,14 @@ begin
     DSS.GlobalResult := SaveFile;
 end;
 
-function TExecHelper.DoClearCmd: Integer;
+function TExecHelper.DoClearCmd(): Integer;
 begin
     DSS.DSSExecutive.Clear;
     Result := 0;
 end;
 
 {$IFDEF DSS_CAPI_PM}
-function TExecHelper.DoClearAllCmd: Integer;
+function TExecHelper.DoClearAllCmd(): Integer;
 begin
     DSS.DSSExecutive.ClearAll;
     Result := 0;
@@ -1010,7 +1010,7 @@ begin
     AddHelpForClasses(DSS, DSSClassList, NON_PCPD_ELEM, FALSE);
 end;
 
-function TExecHelper.DoHelpCmd: Integer;
+function TExecHelper.DoHelpCmd(): Integer;
 var
     Param, OptName: String;
 begin
@@ -1038,7 +1038,7 @@ begin
     Result := 0;
 end;
 
-function TExecHelper.DoSampleCmd: Integer;
+function TExecHelper.DoSampleCmd(): Integer;
 // Force all monitors and meters in active circuit to take a sample
 begin
     DSS.MonitorClass.SampleAll;
@@ -1046,13 +1046,13 @@ begin
     Result := 0;
 end;
 
-function TExecHelper.DoSolveCmd: Integer;
+function TExecHelper.DoSolveCmd(): Integer;
 begin
     Result := 0;
     DSS.ActiveCircuit.Solution.Solve();
 end;
 
-function TExecHelper.SetActiveCktElement: Integer;
+function TExecHelper.SetActiveCktElement(): Integer;
 // Parses the object off the line and sets it active as a circuitelement.
 var
     ObjType, ObjName: String;
@@ -1100,7 +1100,7 @@ begin
 end;
 
 
-function TExecHelper.DoEnableCmd: Integer;
+function TExecHelper.DoEnableCmd(): Integer;
 var
     Objtype, ObjName: String;
     ClassPtr: TDSSClass;
@@ -1150,7 +1150,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoDisableCmd: Integer;
+function TExecHelper.DoDisableCmd(): Integer;
 var
     Objtype, ObjName: String;
     ClassPtr: TDSSClass;
@@ -1199,7 +1199,7 @@ begin
 //     IF Result>0 THEN DSS.ActiveCircuit.ActiveCktElement.SetEnabled(False);
 end;
 
-function TExecHelper.DoPropertyDump: Integer;
+function TExecHelper.DoPropertyDump(): Integer;
 
 var
     pObject: TDSSObject;
@@ -1403,7 +1403,7 @@ begin
     FireOffEditor(DSS, FileName);
 end;
 
-procedure TExecHelper.Set_Time;
+procedure TExecHelper.Set_Time();
 // for interpreting time specified as an array "hour, sec"
 var
     TimeArray: array[1..2] of Double;
@@ -1436,7 +1436,7 @@ begin
 end;
 
 
-procedure TExecHelper.DoLegalVoltageBases;
+procedure TExecHelper.DoLegalVoltageBases();
 var
     Dummy: pDoubleArray;
     i,
@@ -1456,7 +1456,7 @@ begin
     Reallocmem(Dummy, 0);
 end;
 
-function TExecHelper.DoOpenCmd: Integer;
+function TExecHelper.DoOpenCmd(): Integer;
 // Opens a terminal and conductor of a ckt Element
 var
     retval: Integer;
@@ -1489,7 +1489,7 @@ begin
     Result := 0;
 end;
 
-function TExecHelper.DoCloseCmd: Integer;
+function TExecHelper.DoCloseCmd(): Integer;
 // Closes a terminal and conductor of a ckt Element
 var
     retval: Integer;
@@ -1532,7 +1532,7 @@ begin
             Buses[i].Keep := FALSE;
 end;
 
-function TExecHelper.DoResetCmd: Integer;
+function TExecHelper.DoResetCmd(): Integer;
 var
     Param: String;
 begin
@@ -1578,7 +1578,7 @@ begin
         end;
 end;
 
-procedure TExecHelper.MarkCapandReactorBuses;
+procedure TExecHelper.MarkCapandReactorBuses();
 var
     pClass: TDSSClass;
     pCapElement: TCapacitorObj;
@@ -1619,7 +1619,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoReduceCmd: Integer;
+function TExecHelper.DoReduceCmd(): Integer;
 var
     MetObj: TEnergyMeterObj;
     MeterClass: TEnergyMeter;
@@ -1670,7 +1670,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoResetMonitors: Integer;
+function TExecHelper.DoResetMonitors(): Integer;
 var
     pMon: TMonitorObj;
 
@@ -1686,7 +1686,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoFileEditCmd: Integer;
+function TExecHelper.DoFileEditCmd(): Integer;
 var
     Param: String;
 begin
@@ -1745,7 +1745,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoQueryCmd: Integer;
+function TExecHelper.DoQueryCmd(): Integer;
 // ? Command
 // Syntax:  ? Line.Line1.R1
 var
@@ -1784,14 +1784,14 @@ begin
 
 end;
 
-function TExecHelper.DoResetMeters: Integer;
+function TExecHelper.DoResetMeters(): Integer;
 begin
     Result := 0;
     DSS.EnergyMeterClass.ResetAll
 end;
 
 
-function TExecHelper.DoNextCmd: Integer;
+function TExecHelper.DoNextCmd(): Integer;
 var
     Param: String;
 begin
@@ -1815,7 +1815,7 @@ begin
         end;
 end;
 
-procedure TExecHelper.DoAboutBox;
+procedure TExecHelper.DoAboutBox();
 begin
     if NoFormsAllowed then
         Exit;
@@ -1833,7 +1833,7 @@ begin
     );
 end;
 
-function TExecHelper.DoSetVoltageBases: Integer;
+function TExecHelper.DoSetVoltageBases(): Integer;
 begin
     Result := 0;
     DSS.ActiveCircuit.Solution.SetVoltageBases;
@@ -1954,7 +1954,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoSetkVBase: Integer;
+function TExecHelper.DoSetkVBase(): Integer;
 var
     ParamName, BusName: String;
     kVValue: Double;
@@ -2102,7 +2102,7 @@ begin
     end;
 end;
 
-function TExecHelper.DocktlossesCmd: Integer;
+function TExecHelper.DocktlossesCmd(): Integer;
 var
     LossValue: complex;
 begin
@@ -2117,7 +2117,7 @@ begin
         DSS.GlobalResult := 'No Active Circuit.';
 end;
 
-function TExecHelper.DocurrentsCmd: Integer;
+function TExecHelper.DocurrentsCmd(): Integer;
 var
     cBuffer: pComplexArray;
     NValues, i: Integer;
@@ -2142,7 +2142,7 @@ begin
         DSS.GlobalResult := 'No Active Circuit.';
 end;
 
-function TExecHelper.DoNodeListCmd: Integer;
+function TExecHelper.DoNodeListCmd(): Integer;
 var
     NValues, i: Integer;
     CktElementName: String;
@@ -2173,7 +2173,7 @@ begin
 end;
 
 
-function TExecHelper.DolossesCmd: Integer;
+function TExecHelper.DolossesCmd(): Integer;
 var
     LossValue: complex;
 begin
@@ -2192,7 +2192,7 @@ begin
         DSS.GlobalResult := 'No Active Circuit.';
 end;
 
-function TExecHelper.DophaselossesCmd: Integer;
+function TExecHelper.DophaselossesCmd(): Integer;
 
 // Returns Phase losses in kW, kVar
 
@@ -2273,7 +2273,7 @@ begin
         DSS.GlobalResult := 'No Active Circuit';
 end;
 
-function TExecHelper.DoseqcurrentsCmd: Integer;
+function TExecHelper.DoseqcurrentsCmd(): Integer;
 // All sequence currents of active ciruit element
 // returns magnitude only.
 
@@ -2320,7 +2320,7 @@ begin
         DSS.GlobalResult := 'No Active Circuit';
 end;
 
-function TExecHelper.DoSeqpowersCmd: Integer;
+function TExecHelper.DoSeqpowersCmd(): Integer;
 // All seq Powers of active 3-phase ciruit element
 // returns kW + j kvar
 
@@ -2375,7 +2375,7 @@ begin
         DSS.GlobalResult := 'No Active Circuit';
 end;
 
-function TExecHelper.DoseqvoltagesCmd: Integer;
+function TExecHelper.DoseqvoltagesCmd(): Integer;
 
 // All voltages of active ciruit element
 // magnitude only
@@ -2524,7 +2524,7 @@ begin
         DSS.GlobalResult := 'No Active Circuit.';
 end;
 
-function TExecHelper.DoZsc012Cmd: Integer;
+function TExecHelper.DoZsc012Cmd(): Integer;
 // Bus Short Circuit matrix
 var
     // i: Integer;
@@ -2576,7 +2576,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoZsc10Cmd: Integer;
+function TExecHelper.DoZsc10Cmd(): Integer;
 // Bus Short Circuit matrix
 var
     ActiveBus: TDSSBus;
@@ -2610,7 +2610,7 @@ begin
 end;
 
 
-function TExecHelper.DoAllocateLoadsCmd: Integer;
+function TExecHelper.DoAllocateLoadsCmd(): Integer;
 // Requires an EnergyMeter Object at the head of the feeder
 // Adjusts loads defined by connected kVA or kWh billing
 var
@@ -2722,7 +2722,7 @@ begin
 end;
 
 
-function TExecHelper.DoFormEditCmd: Integer;
+function TExecHelper.DoFormEditCmd(): Integer;
 
 begin
     Result := 0;
@@ -2741,7 +2741,7 @@ begin
 end;
 
 
-function TExecHelper.DoMeterTotals: Integer;
+function TExecHelper.DoMeterTotals(): Integer;
 var
     i: Integer;
 begin
@@ -2757,7 +2757,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoCapacityCmd: Integer;
+function TExecHelper.DoCapacityCmd(): Integer;
 
 var
     ParamPointer: Integer;
@@ -2810,7 +2810,7 @@ begin
         end;
 end;
 
-function TExecHelper.DoClassesCmd: Integer;
+function TExecHelper.DoClassesCmd(): Integer;
 
 var
     i: Integer;
@@ -2822,7 +2822,7 @@ begin
     Result := 0;
 end;
 
-function TExecHelper.DoUserClassesCmd: Integer;
+function TExecHelper.DoUserClassesCmd(): Integer;
 begin
     Result := 0;
     AppendGlobalResult(DSS, 'No User Classes Defined.');
@@ -2860,7 +2860,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoVarValuesCmd: Integer;
+function TExecHelper.DoVarValuesCmd(): Integer;
 var
     i: Integer;
   // PcElem:TPCElement;
@@ -2883,7 +2883,7 @@ begin
         end;
 end;
 
-function TExecHelper.DoValVarCmd: Integer;
+function TExecHelper.DoValVarCmd(): Integer;
 // Get value of specified variable by name of index
 var
     ParamName, Param: String;
@@ -2937,7 +2937,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoVarNamesCmd: Integer;
+function TExecHelper.DoVarNamesCmd(): Integer;
 
 var
     i: Integer;
@@ -3040,7 +3040,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoMakePosSeq: Integer;
+function TExecHelper.DoMakePosSeq(): Integer;
 var
     CktElem: TDSSCktElement;
 begin
@@ -3111,7 +3111,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoInterpolateCmd: Integer;
+function TExecHelper.DoInterpolateCmd(): Integer;
 
 {Interpolate bus coordinates in meter zones}
 
@@ -3283,7 +3283,7 @@ begin
     DSS.GlobalResult := AlignedFile;
 end;
 
-function TExecHelper.DoAlignFileCmd: Integer;
+function TExecHelper.DoAlignFileCmd(): Integer;
 {Rewrites designated file, aligning the fields into columns}
 var
     Param: String;
@@ -3327,7 +3327,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoRotateCmd: Integer;
+function TExecHelper.DoRotateCmd(): Integer;
 // rotate about the center of the coordinates
 var
     i: Integer;
@@ -3382,7 +3382,7 @@ begin
 end;
 
 
-function TExecHelper.DoVDiffCmd: Integer;
+function TExecHelper.DoVDiffCmd(): Integer;
 var
     Fin: TBufferedFileStream = NIL;
     Fout: TFileStream = NIL;
@@ -3454,7 +3454,7 @@ begin
         DoSimpleMsg(DSS, _('Error: No Saved Voltages.'), 281);
 end;
 
-function TExecHelper.DoSummaryCmd: Integer;
+function TExecHelper.DoSummaryCmd(): Integer;
 
 // Returns summary in global result String
 
@@ -3760,7 +3760,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoDistributeCmd: Integer;
+function TExecHelper.DoDistributeCmd(): Integer;
 var
     ParamPointer: Integer;
     ParamName,
@@ -3826,7 +3826,7 @@ begin
     makeDistributedGenerators(DSS, kW, PF, How, Skip, FilName, DoGenerators);  // in Utilities
 end;
 
-function TExecHelper.DoDI_PlotCmd: Integer;
+function TExecHelper.DoDI_PlotCmd(): Integer;
 var
     ParamName, Param: String;
     ParamPointer, i: Integer;
@@ -3917,7 +3917,7 @@ begin
     Result := 0;
 end;
 
-function TExecHelper.DoCompareCasesCmd: Integer;
+function TExecHelper.DoCompareCasesCmd(): Integer;
 var
     ParamName, Param: String;
     ParamPointer: Integer;
@@ -4001,7 +4001,7 @@ begin
     Result := 0;
 end;
 
-function TExecHelper.DoYearlyCurvesCmd: Integer;
+function TExecHelper.DoYearlyCurvesCmd(): Integer;
 var
     ParamName, Param: String;
     ParamPointer, i: Integer;
@@ -4104,7 +4104,7 @@ begin
     Result := 0;
 end;
 
-function TExecHelper.DoVisualizeCmd: Integer;
+function TExecHelper.DoVisualizeCmd(): Integer;
 var
     DevIndex: Integer;
     Param: String;
@@ -4204,21 +4204,21 @@ begin
     end;
 end;
 
-function TExecHelper.DoCloseDICmd: Integer;
+function TExecHelper.DoCloseDICmd(): Integer;
 
 begin
     Result := 0;
     DSS.EnergyMeterClass.CloseAllDIFiles;
 end;
 
-function TExecHelper.DoADOScmd: Integer;
+function TExecHelper.DoADOScmd(): Integer;
 
 begin
     Result := 0;
     DoDOScmd(DSS, DSS.Parser.Remainder());
 end;
 
-function TExecHelper.DoEstimateCmd: Integer;
+function TExecHelper.DoEstimateCmd(): Integer;
 
 
 begin
@@ -4250,7 +4250,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoReconductorCmd: Integer;
+function TExecHelper.DoReconductorCmd(): Integer;
 var
     Param: String;
     ParamName: String;
@@ -4387,7 +4387,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoAddMarkerCmd: Integer;
+function TExecHelper.DoAddMarkerCmd(): Integer;
 var
     ParamPointer: Integer;
     ParamName,
@@ -4430,7 +4430,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoSetLoadAndGenKVCmd: Integer;
+function TExecHelper.DoSetLoadAndGenKVCmd(): Integer;
 var
     pLoad: TLoadObj;
     pGen: TGeneratorObj;
@@ -4470,7 +4470,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoUuidsCmd: Integer;
+function TExecHelper.DoUuidsCmd(): Integer;
 var
     F: TStream = NIL;
     Param, S, NameVal, UuidVal, DevClass, DevName: String;
@@ -4542,7 +4542,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoCvrtLoadshapesCmd: Integer;
+function TExecHelper.DoCvrtLoadshapesCmd(): Integer;
 var
     pLoadshape: TLoadShapeObj;
     LoadShapeClass: TLoadShape;
@@ -4584,7 +4584,7 @@ begin
     Result := 0;
 end;
 
-function TExecHelper.DoNodeDiffCmd: Integer;
+function TExecHelper.DoNodeDiffCmd(): Integer;
 
 var
     ParamName: String;
@@ -4650,7 +4650,7 @@ begin
     DSS.GlobalResult := Format('%.7g, V,    %.7g, deg  ', [Cabs(VNodeDiff), CDang(VNodeDiff)]);
 end;
 
-function TExecHelper.DoRephaseCmd: Integer;
+function TExecHelper.DoRephaseCmd(): Integer;
 var
     Param: String;
     ParamName: String;
@@ -4721,7 +4721,7 @@ begin
     GoForwardandRephase(DSS, pStartLine, NewPhases, MyEditString, ScriptfileName, TransfStop);
 end;
 
-function TExecHelper.DoSetBusXYCmd: Integer;
+function TExecHelper.DoSetBusXYCmd(): Integer;
 
 var
     Param: String;
@@ -4777,7 +4777,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoUpdateStorageCmd: Integer;
+function TExecHelper.DoUpdateStorageCmd(): Integer;
 begin
     DSS.StorageClass.UpdateAll();
     Result := 0;
@@ -4852,7 +4852,7 @@ begin
         DoSimpleMsg(DSS, _('Insuffient number of points for Pst Calculation.'), 28723);
 end;
 
-function TExecHelper.DoLambdaCalcs: Integer;
+function TExecHelper.DoLambdaCalcs(): Integer;
 // Execute fault rate and bus number of interruptions calc
 var
     pMeter: TEnergyMeterObj;
@@ -4894,7 +4894,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoVarCmd: Integer;
+function TExecHelper.DoVarCmd(): Integer;
 // Process Script variables
 var
     ParamName: String;
@@ -4944,7 +4944,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoRemoveCmd: Integer;
+function TExecHelper.DoRemoveCmd(): Integer;
 var
     ParamName: String;
     Param: String;

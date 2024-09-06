@@ -444,7 +444,7 @@ type
         ElementNameList: THashListType;
 
         Function AddObjectToList(Obj:Pointer; Activate: Boolean = True):Integer;  // Used by NewObject
-        Procedure CountPropertiesAndAllocate;virtual;
+        Procedure CountPropertiesAndAllocate();virtual;
         procedure DefineProperties();virtual;
 
         procedure PopulatePropertyNames(PropOffset: Integer; NumProps: Integer; EnumInfo: Pointer; EnumInfoLegacy: Pointer; ReplacePct: Boolean = True; PropSource: String = '');
@@ -519,7 +519,7 @@ type
         function First(): Integer;
         function Next(): Integer;
 
-        function GetEnumerator: TDSSPointerEnumerator;
+        function GetEnumerator(): TDSSPointerEnumerator;
         procedure SetPropertyNameStyle(style: TDSSPropertyNameStyle);
         procedure CopySharedItems(other: TDSSClass);
     protected
@@ -820,7 +820,7 @@ type
         procedure ShowPctProgress(Count: Integer);
         procedure ProgressCaption(const S: String);
         procedure ProgressFormCaption(const S: String);
-        procedure ProgressHide;
+        procedure ProgressHide();
     end;
 
 VAR
@@ -1800,7 +1800,7 @@ begin
     END;
 END;
 
-Procedure TDSSClass.CountPropertiesAndAllocate;
+Procedure TDSSClass.CountPropertiesAndAllocate();
 var 
     i: Integer;
 begin

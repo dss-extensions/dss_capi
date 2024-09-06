@@ -53,8 +53,8 @@ TYPE
          procedure Edit(const Value: String);
          function Exists(): Boolean;
 
-         Procedure   Select;
-         Procedure   Integrate;
+         Procedure   Select();
+         Procedure   Integrate();
 
          constructor Create(dssContext: TDSSContext);
          destructor  Destroy; override;
@@ -106,8 +106,8 @@ TYPE
         procedure Edit(const Value: String);
         function Exists(): Boolean;
 
-        Procedure   Select;
-        Procedure   Integrate;
+        Procedure   Select();
+        Procedure   Integrate();
 
         constructor Create(dssContext: TDSSContext);
         destructor  Destroy; override;
@@ -159,13 +159,13 @@ begin
         Else Result := False;
 end;
 
-procedure TStoreUserModel.Integrate;
+procedure TStoreUserModel.Integrate();
 begin
         FSelect(FID);
         Fintegrate;
 end;
 
-procedure TStoreUserModel.Select;
+procedure TStoreUserModel.Select();
 begin
         Fselect(FID);
 end;
@@ -286,13 +286,13 @@ begin
         Else Result := False;
 end;
 
-procedure TStoreDynaModel.Integrate;
+procedure TStoreDynaModel.Integrate();
 begin
         FSelect(FID);
         Fintegrate;
 end;
 
-procedure TStoreDynaModel.Select;
+procedure TStoreDynaModel.Select();
 begin
      Fselect(FID);
 end;

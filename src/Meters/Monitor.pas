@@ -127,11 +127,11 @@ type
         function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
         Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
 
-        procedure ResetAll; OVERRIDE;
-        procedure SampleAll; OVERRIDE;  // Force all monitors to take a sample
-        procedure SampleAllMode5;  // Sample just Mode 5 monitors
-        procedure SaveAll; OVERRIDE;   // Force all monitors to save their buffers to disk
-        procedure PostProcessAll;
+        procedure ResetAll(); OVERRIDE;
+        procedure SampleAll(); OVERRIDE;  // Force all monitors to take a sample
+        procedure SampleAllMode5();  // Sample just Mode 5 monitors
+        procedure SaveAll(); OVERRIDE;   // Force all monitors to save their buffers to disk
+        procedure PostProcessAll();
 
     end;
 
@@ -178,7 +178,7 @@ type
         procedure AddDblsToBuffer(Dbl: pDoubleArray; Ndoubles: Integer);
         procedure AddDblToBuffer(const Dbl: Double);
 
-        procedure DoFlickerCalculations;  // call from CloseMonitorStream
+        procedure DoFlickerCalculations();  // call from CloseMonitorStream
 
 
     PUBLIC
@@ -195,14 +195,14 @@ type
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model, reset nphases
         procedure RecalcElementData(); OVERRIDE;
-        procedure TakeSample; OVERRIDE; // Go add a sample to the buffer
-        procedure ResetIt;
-        procedure Save;     // Saves present buffer to file
-        procedure PostProcess; // calculates Pst or other post-processing
+        procedure TakeSample(); OVERRIDE; // Go add a sample to the buffer
+        procedure ResetIt();
+        procedure Save();     // Saves present buffer to file
+        procedure PostProcess(); // calculates Pst or other post-processing
 
-        procedure OpenMonitorStream;
-        procedure ClearMonitorStream;
-        procedure CloseMonitorStream;
+        procedure OpenMonitorStream();
+        procedure ClearMonitorStream();
+        procedure CloseMonitorStream();
 
         procedure TranslateToCSV(Show: Boolean);
 
@@ -368,7 +368,7 @@ begin
     Result := True;
 end;
 
-procedure TDSSMonitor.ResetAll;  // Force all monitors in the circuit to reset
+procedure TDSSMonitor.ResetAll();  // Force all monitors in the circuit to reset
 var
     Mon: TMonitorObj;
 begin
@@ -379,7 +379,7 @@ begin
     end;
 end;
 
-procedure TDSSMonitor.SampleAll;  // Force all monitors in the circuit to take a sample
+procedure TDSSMonitor.SampleAll();  // Force all monitors in the circuit to take a sample
 var
     Mon: TMonitorObj;
     // sample all monitors except mode 5 monitors
@@ -392,7 +392,7 @@ begin
     end;
 end;
 
-procedure TDSSMonitor.SampleAllMode5;  // Force all mode=5 monitors in the circuit to take a sample
+procedure TDSSMonitor.SampleAllMode5();  // Force all mode=5 monitors in the circuit to take a sample
 var
     Mon: TMonitorObj;
     // sample all Mode 5 monitors except monitors
@@ -405,7 +405,7 @@ begin
     end;
 end;
 
-procedure TDSSMonitor.PostProcessAll;
+procedure TDSSMonitor.PostProcessAll();
 var
     Mon: TMonitorObj;
 begin
@@ -416,7 +416,7 @@ begin
     end;
 end;
 
-procedure TDSSMonitor.SaveAll;     // Force all monitors in the circuit to save their buffers to disk
+procedure TDSSMonitor.SaveAll();     // Force all monitors in the circuit to save their buffers to disk
 var
     Mon: TMonitorObj;
 begin
@@ -678,7 +678,7 @@ begin
     inherited;
 end;
 
-procedure TMonitorObj.ClearMonitorStream;
+procedure TMonitorObj.ClearMonitorStream();
 var
     PhaseLoc: Array of Integer;
     i, j: Integer;
@@ -1113,7 +1113,7 @@ begin
     end;
 end;
 
-procedure TMonitorObj.OpenMonitorStream;
+procedure TMonitorObj.OpenMonitorStream();
 begin
     if not IsFileOpen then
     begin
@@ -1122,7 +1122,7 @@ begin
     end;
 end;
 
-procedure TMonitorObj.CloseMonitorStream;
+procedure TMonitorObj.CloseMonitorStream();
 begin
     try
         if IsFileOpen then
@@ -1139,7 +1139,7 @@ begin
     end;
 end;
 
-procedure TMonitorObj.Save;
+procedure TMonitorObj.Save();
 // Saves present buffer to monitor file, resets bufferptrs and continues
 begin
     if not IsFileOpen then
@@ -1151,13 +1151,13 @@ begin
     BufPtr := 0; // reset Buffer for next
 end;
 
-procedure TMonitorObj.ResetIt;
+procedure TMonitorObj.ResetIt();
 begin
     BufPtr := 0;
     ClearMonitorStream;
 end;
 
-procedure TMonitorObj.PostProcess;
+procedure TMonitorObj.PostProcess();
 begin
     if IsProcessed = FALSE then
     begin
@@ -1191,7 +1191,7 @@ begin
     Result.im := Cdang(x);
 end;
 
-procedure TMonitorObj.TakeSample;
+procedure TMonitorObj.TakeSample();
 var
     dHour: Double;
     dSum: Double;
@@ -1625,7 +1625,7 @@ begin
     MonBuffer[BufPtr] := Dbl;
 end;
 
-procedure TMonitorObj.DoFlickerCalculations;
+procedure TMonitorObj.DoFlickerCalculations();
 var
     FSignature: Integer;
     Fversion: Integer;
@@ -1864,7 +1864,7 @@ begin
     end;
 end;
 
-function TMonitorObj.GetCSVFileName: String;
+function TMonitorObj.GetCSVFileName(): String;
 {$IFDEF DSS_CAPI_PM}
 var
     PMParent: TDSSContext;

@@ -25,7 +25,7 @@ TYPE
          FRecorderFile:String;
          RecorderFile: TFileStream;
 
-         function Get_Command: String;
+         function Get_Command(): String;
          
      public
          ExecCommand: ArrayOfString;
@@ -64,8 +64,8 @@ TYPE
          procedure ZipRedirect(FileInZip: String);
          procedure ZipExtract(var ResultPtr: PByte; ResultCount: PAPISize; FileInZip: String);
          function ZipHashes(var Hashes: TFPHashList): Boolean;
-         function InZip: Boolean;
-         function CurrentZipFileName: String;
+         function InZip(): Boolean;
+         function CurrentZipFileName(): String;
          procedure SetInZipPath(path: String);
          function GetZipStream(fn: String): TStream;
      end;
@@ -95,12 +95,12 @@ type
         procedure PrepareHashmap();
     end;
 
-function TExecutive.InZip: Boolean;
+function TExecutive.InZip(): Boolean;
 begin
     Result := (DSS.unzipper <> NIL) and (TDSSUnZipper(DSS.unzipper).Enabled);
 end;
 
-function TExecutive.CurrentZipFileName: String;
+function TExecutive.CurrentZipFileName(): String;
 begin
     Result := TDSSUnZipper(DSS.unzipper).FileName;
 end;
@@ -210,7 +210,7 @@ begin
         Include(obj.Flags, Flg.DefaultAndUnedited);
 end;
 
-function TExecutive.Get_Command: String;
+function TExecutive.Get_Command(): String;
 begin
     Result := DSS.LastCmdLine;
 end;

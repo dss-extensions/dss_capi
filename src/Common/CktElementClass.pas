@@ -29,7 +29,7 @@ type
 
     TCktElementClass = class(TDSSClass)
     PROTECTED
-        procedure CountPropertiesAndAllocate; override;
+        procedure CountPropertiesAndAllocate(); override;
         procedure DefineProperties(); override;
     PUBLIC
         PropertyOffset_CktElementClass: Integer;
@@ -61,7 +61,7 @@ var
     PropInfo: Pointer = NIL;
     PropInfoLegacy: Pointer = NIL;
 
-procedure TCktElementClass.CountPropertiesAndAllocate;
+procedure TCktElementClass.CountPropertiesAndAllocate();
 begin
     NumProperties := NumProperties + NumPropsThisClass;
     inherited CountPropertiesAndAllocate;

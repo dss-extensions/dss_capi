@@ -265,15 +265,15 @@ type
         DebugTrace: LongBool;
         PreviousControlledElement: TDSSCktElement;
 
-        procedure OvercurrentLogic;
-        procedure VoltageLogic;
-        procedure RevPowerLogic;
-        procedure NegSeq46Logic;
-        procedure NegSeq47Logic;
-        procedure GenericLogic;
-        procedure DistanceLogic;
-        procedure TD21Logic;
-        procedure DirectionalOvercurrentLogic;
+        procedure OvercurrentLogic();
+        procedure VoltageLogic();
+        procedure RevPowerLogic();
+        procedure NegSeq46Logic();
+        procedure NegSeq47Logic();
+        procedure GenericLogic();
+        procedure DistanceLogic();
+        procedure TD21Logic();
+        procedure DirectionalOvercurrentLogic();
         function GetControlPower(): Complex;
     PUBLIC
         MonitoredElementTerminal: Integer;
@@ -1116,7 +1116,7 @@ begin
     end;
 end;
 
-procedure TRelayObj.GenericLogic;
+procedure TRelayObj.GenericLogic();
 // Generic relays only work on PC Elements With control terminals
 var
     VarValue: Double;
@@ -1144,7 +1144,7 @@ begin
     end;
 end;
 
-procedure TRelayObj.NegSeq46Logic;
+procedure TRelayObj.NegSeq46Logic();
 // Negative Sequence Current Relay
 // Patterned after Basler relay
 var
@@ -1182,7 +1182,7 @@ begin
     end;
 end;
 
-procedure TRelayObj.OvercurrentLogic;
+procedure TRelayObj.OvercurrentLogic();
 var
     i: Integer;
     Cmag: Double;
@@ -1320,7 +1320,7 @@ begin
     end;
 end;
 
-procedure TRelayObj.DistanceLogic;
+procedure TRelayObj.DistanceLogic();
 var
     i, j: Integer;
     Vloop, Iloop, Zloop, Ires, kIres, Zreach: Complex;
@@ -1441,7 +1441,7 @@ begin
     end;
 end;
 
-procedure TRelayObj.TD21Logic;
+procedure TRelayObj.TD21Logic();
 var
     i, j: Integer;
     Vloop, Iloop, Zhsd, Zdir, Uhsd, Uref, Ires, kIres: Complex;
@@ -2163,7 +2163,7 @@ begin
     end;
 end;
 
-procedure TRelayObj.RevPowerLogic;
+procedure TRelayObj.RevPowerLogic();
 var
     S: Complex;
 begin
@@ -2190,7 +2190,7 @@ begin
     end;
 end;
 
-procedure TRelayObj.VoltageLogic;
+procedure TRelayObj.VoltageLogic();
 var
     i: Integer;
     VMax,
@@ -2314,7 +2314,7 @@ begin
     end;
 end;
 
-procedure TRelayObj.NegSeq47Logic;
+procedure TRelayObj.NegSeq47Logic();
 // Neg Seq voltage Relay
 var
     NegSeqVoltageMag: Double;

@@ -105,7 +105,7 @@ type
         procedure CalcYPrim(); OVERRIDE;
 
         // these three functions make it a PCElement
-        function InjCurrents: Integer; OVERRIDE;
+        function InjCurrents(): Integer; OVERRIDE;
         procedure GetInjCurrents(Curr: pComplexArray);
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
@@ -386,7 +386,7 @@ begin
     SetYprimInvalid(false);
 end;
 
-function TVSConverterObj.InjCurrents: Integer;
+function TVSConverterObj.InjCurrents(): Integer;
 begin
     GetInjCurrents(InjCurrent);
     Result := inherited InjCurrents; // Add into system array

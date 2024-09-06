@@ -333,7 +333,7 @@ type
 
         function InjCurrents(): Integer; OVERRIDE;
 
-        function NumVariables: Integer; OVERRIDE;
+        function NumVariables(): Integer; OVERRIDE;
         procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
         function GetVariable(i: Integer): Double; OVERRIDE;
         procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
@@ -2334,7 +2334,7 @@ begin
     Result := inherited InjCurrents();
 end;
 
-procedure TGeneric5Obj.InitHarmonics;
+procedure TGeneric5Obj.InitHarmonics();
 begin
     SetYprimInvalid(true); // Force rebuild of YPrims
 end;
@@ -2347,7 +2347,7 @@ begin
     IntegrateABCD();
 end;
 
-function TGeneric5Obj.NumVariables: Integer;
+function TGeneric5Obj.NumVariables(): Integer;
 begin
     Result := NumGeneric5Variables;
 end;
@@ -2538,7 +2538,7 @@ begin
         States[i - 1] := GetVariable(i);
 end;
 
-procedure TGeneric5Obj.MakePosSequence;
+procedure TGeneric5Obj.MakePosSequence();
 begin
     DoSimpleMsg('%s: TGeneric5Obj.MakePosSequence is not implemented. Aborting.', [FullName()], 202406011);
     DSS.SetSolutionAbort(true);

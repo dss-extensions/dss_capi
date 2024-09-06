@@ -98,8 +98,8 @@ type
 
     TSolver = class(TThread)
         constructor Create(sol: TSolutionObj; Susp: Boolean; local_CPU: Integer; AEvent: TEvent); OVERLOAD;
-        procedure Execute; OVERRIDE;
-        procedure Doterminate; OVERRIDE;
+        procedure Execute(); OVERRIDE;
+        procedure Doterminate(); OVERRIDE;
         destructor Destroy; OVERRIDE;
 
     PROTECTED
@@ -141,9 +141,9 @@ type
         function OK_for_Harmonics(const Value: TSolveMode): Boolean;
 
 
-        procedure DoNewtonSolution;
-        procedure DoNormalSolution;
-        procedure SumAllCurrents;
+        procedure DoNewtonSolution();
+        procedure DoNormalSolution();
+        procedure SumAllCurrents();
     PUBLIC
         DSS: TDSSContext;
         cktptr: Pointer;
@@ -285,7 +285,7 @@ type
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
         function SolveAD(Initialize: Boolean): Integer;    // solve one of the A-Diakoptics stages locally
         procedure SendCmd2Actors(Msg: Integer); // Sends a message to other actors different than 1
-        procedure UpdateISrc; // Updates the local ISources using the data available at Ic for actor 1
+        procedure UpdateISrc(); // Updates the local ISources using the data available at Ic for actor 1
         function VoltInActor1(NodeIdx: Integer): complex; // returns the voltage indicated in NodeIdx in the context of the actor 1
 {$ENDIF}
 
@@ -605,7 +605,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TSolutionObj.Solve;
+procedure TSolutionObj.Solve();
 var
 {$IFDEF DSS_CAPI_PM}
     PMParent: TDSSContext;
@@ -745,7 +745,7 @@ begin
     end;
 end;
 
-function TSolutionObj.Converged: Boolean;
+function TSolutionObj.Converged(): Boolean;
 var
     i: Integer;
     VMag: Double;
@@ -900,7 +900,7 @@ begin
     end;
 end;
 
-procedure TSolutionObj.DoNormalSolution;
+procedure TSolutionObj.DoNormalSolution();
 // Normal fixed-point solution
 //
 //   Vn+1 = [Y]-1 Injcurr
@@ -954,7 +954,7 @@ begin
     until (Converged and (Iteration >= MinIterations)) or (Iteration >= MaxIterations);
 end;
 
-procedure TSolutionObj.DoNewtonSolution;
+procedure TSolutionObj.DoNewtonSolution();
 // Newton Iteration
 //
 //   Vn+1 =  Vn - [Y]-1 Termcurr
@@ -1009,7 +1009,7 @@ begin
     until (Converged and (Iteration >= MinIterations)) or (Iteration >= MaxIterations);
 end;
 
-procedure TSolutionObj.DoPFLOWsolution;
+procedure TSolutionObj.DoPFLOWsolution();
 begin
     Inc(SolutionCount);    //Unique number for this solution
 
@@ -1161,7 +1161,7 @@ begin
     end;
 end;
 
-procedure TSolutionObj.SnapShotInit;
+procedure TSolutionObj.SnapShotInit();
 begin
     SetGeneratorDispRef();
     ControlIteration := 0;
@@ -2000,7 +2000,7 @@ begin
     FSWriteln(F, sout);
 end;
 
-procedure TSolutionObj.SumAllCurrents;
+procedure TSolutionObj.SumAllCurrents();
 var
     pelem: TDSSCktElement;
 begin
@@ -2572,7 +2572,7 @@ begin
 end;
 
 // Executes the selected solution algorithm
-procedure TSolver.Execute;
+procedure TSolver.Execute();
 var
     MsgType: TActorMessage;
 begin
@@ -2739,7 +2739,7 @@ begin
     end; // while ActorIsActive
 end;
 
-procedure TSolver.DoTerminate; // Is the end of the thread
+procedure TSolver.DoTerminate(); // Is the end of the thread
 begin
     ActorIsActive := FALSE;
     Processing := FALSE;
@@ -2843,7 +2843,7 @@ end;
 
 // // Uploads the local voltage array in the masters
 // // using the index map obtained in previous steps
-// procedure TSolutionObj.UploadV2Master;
+// procedure TSolutionObj.UploadV2Master();
 // var
 //     idx,
 //     i: Integer;
@@ -2870,7 +2870,7 @@ end;
 
 // Updates the local ISources using the data obtained
 // for Ic in actor 1
-procedure TSolutionObj.UpdateISrc;
+procedure TSolutionObj.UpdateISrc();
 var
     idx,
     i: Integer;

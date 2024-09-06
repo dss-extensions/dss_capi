@@ -20,7 +20,7 @@ type
         destructor Destroy; OVERRIDE;
         function GetCommand(const Cmd: String): Integer;
         function Get(i: Integer): String;
-        function Count: Integer;
+        function Count(): Integer;
     end;
 
 implementation
@@ -78,7 +78,7 @@ begin
     Result := CommandList.NameOfIndex(i);
 end;
 
-function TCommandList.Count: Integer;
+function TCommandList.Count(): Integer;
 begin
     Result := CommandList.Count;
 end;

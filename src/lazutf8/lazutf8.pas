@@ -38,7 +38,7 @@ uses
 // AnsiToUTF8 and UTF8ToAnsi need a widestring manager under Linux, BSD, MacOSX
 // but normally these OS use UTF-8 as system encoding so the widestringmanager
 // is not needed.
-function NeedRTLAnsi: boolean;// true if system encoding is not UTF-8
+function NeedRTLAnsi(): boolean;// true if system encoding is not UTF-8
 procedure SetNeedRTLAnsi(NewValue: boolean);
 
 // UTF8ToSys works like UTF8ToAnsi but more independent of widestringmanager
@@ -63,11 +63,11 @@ function UTF8ToWinCP(const s: string): string; {$ifdef WinCe}inline;{$endif}
 function ParamStrUTF8(Param: Integer): string;
 
 {$ifdef windows}
-procedure GetFormatSettingsUTF8;
+procedure GetFormatSettingsUTF8();
 procedure GetLocaleFormatSettingsUTF8(LCID: Integer; var aFormatSettings: TFormatSettings);
 {$endif}
 
-Function GetEnvironmentVariableCountUTF8: Integer; inline;
+Function GetEnvironmentVariableCountUTF8(): Integer; inline;
 function GetEnvironmentStringUTF8(Index: Integer): string; inline;
 function GetEnvironmentVariableUTF8(const EnvVar: string): String;
 function SysErrorMessageUTF8(ErrorCode: Integer): String;
@@ -252,7 +252,7 @@ var
   FNeedRTLAnsi: boolean = false;
   FNeedRTLAnsiValid: boolean = false;
 
-function NeedRTLAnsi: boolean;
+function NeedRTLAnsi(): boolean;
 {$IFNDEF Windows}
 var
   Lang: String;
@@ -367,7 +367,7 @@ begin
   {$ENDIF}
 end;
 
-function GetEnvironmentVariableCountUTF8: Integer; inline;
+function GetEnvironmentVariableCountUTF8(): Integer; inline;
 begin
   {$IF defined(FPC_RTL_UNICODE) or not defined(MSWindows)} //also WinCE, issue #0031788
   Result:=SysUtils.GetEnvironmentVariableCount;
@@ -640,7 +640,7 @@ end;
 
 function UnicodeToUTF8(CodePoint: cardinal; Buf: PChar): integer;
 
-  procedure RaiseInvalidUnicode;
+  procedure RaiseInvalidUnicode();
   begin
     raise Exception.Create('UnicodeToUTF8: invalid unicode: '+IntToStr(CodePoint));
   end;
@@ -983,7 +983,7 @@ var
   SourceCopied: PChar;
 
   // Copies from SourceStart till Source to Dest and updates Dest
-  procedure CopyPart; inline;
+  procedure CopyPart(); inline;
   var
     CopyLength: SizeInt;
   begin
@@ -3533,7 +3533,7 @@ var
   W: Word;
   C: Cardinal;
 
-  function UnfinishedCharError: Boolean;
+  function UnfinishedCharError(): Boolean;
   begin
     if toUnfinishedCharToSymbol in Options then
     begin
@@ -3724,7 +3724,7 @@ var
   W1, W2: Word;
   C: Cardinal;
 
-  function UnfinishedCharError: Boolean;
+  function UnfinishedCharError(): Boolean;
   begin
     if toUnfinishedCharToSymbol in Options then
     begin
@@ -3924,7 +3924,7 @@ end;
 procedure LazGetLanguageIDs(var Lang, FallbackLang: String);
 
   {$IFDEF DARWIN}
-  function GetLanguage: boolean;
+  function GetLanguage(): boolean;
   var
     Ref: CFStringRef;
     LangArray: CFMutableArrayRef;
@@ -4043,7 +4043,7 @@ begin
     System.Move(PByte(Insertion)^,(PByte(s)+StartPos-1)^,InsertionLen);
 end;
 
-procedure InitFPUpchars;
+procedure InitFPUpchars();
 var
   c: Char;
 begin

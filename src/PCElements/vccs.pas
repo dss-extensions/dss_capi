@@ -103,11 +103,11 @@ type
         sIdxU: Integer; // ring buffer index for z and whist
         sIdxY: Integer; // ring buffer index for y2 (rms current)
         y2sum: Double;
-        procedure InitPhasorStates;
+        procedure InitPhasorStates();
         procedure GetInjCurrents(Curr: pComplexArray);
-        procedure IntegratePhasorStates;
-        procedure ShutoffInjections;
-        procedure UpdateSequenceVoltage;
+        procedure IntegratePhasorStates();
+        procedure ShutoffInjections();
+        procedure UpdateSequenceVoltage();
 
     PROTECTED
         function GetVariable(i: Integer): Double; OVERRIDE;
@@ -124,13 +124,13 @@ type
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
-        function InjCurrents: Integer; OVERRIDE;
+        function InjCurrents(): Integer; OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         // Support for Dynamics Mode
-        procedure InitStateVars; OVERRIDE;
-        procedure IntegrateStates; OVERRIDE;
-        function NumVariables: Integer; OVERRIDE;
+        procedure InitStateVars(); OVERRIDE;
+        procedure IntegrateStates(); OVERRIDE;
+        function NumVariables(): Integer; OVERRIDE;
         procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
     end;
@@ -405,7 +405,7 @@ begin
     SetYprimInvalid(false);
 end;
 
-function TVCCSObj.InjCurrents: Integer;
+function TVCCSObj.InjCurrents(): Integer;
 // Sum Currents directly into solution array
 begin
     GetInjCurrents(InjCurrent);
@@ -429,7 +429,7 @@ begin
     end;
 end;
 
-procedure TVCCSObj.UpdateSequenceVoltage;
+procedure TVCCSObj.UpdateSequenceVoltage();
 begin
     if FNPhases = 3 then
         sV1 := (Vterminal[1] + (ALPHA1 * Vterminal[2] + ALPHA2 * Vterminal[3])) / 3.0
@@ -500,7 +500,7 @@ end;
 
 // support for DYNAMICMODE
 // NB: in phasor mode, use load convention for OpenDSS
-procedure TVCCSObj.ShutoffInjections; // stop injecting if the terminal opens
+procedure TVCCSObj.ShutoffInjections(); // stop injecting if the terminal opens
 var
     i: integer;
 begin
@@ -522,7 +522,7 @@ begin
     s6 := 0;
 end;
 
-procedure TVCCSObj.InitPhasorStates;
+procedure TVCCSObj.InitPhasorStates();
 var
     i, k: Integer;
 begin
@@ -559,7 +559,7 @@ end;
 // support for DYNAMICMODE
 // NB: The test data and HW model used source convention (I and V in phase)
 //     However, OpenDSS uses the load convention
-procedure TVCCSObj.InitStateVars;
+procedure TVCCSObj.InitStateVars();
 var
     d, wt, wd, val, iang, vang: Double;
     i, k: Integer;
@@ -610,7 +610,7 @@ begin
     sIdxY := 0;
 end;
 
-procedure TVCCSObj.IntegratePhasorStates;
+procedure TVCCSObj.IntegratePhasorStates();
 var
     vpu, ipwr, imax, h, d: Double;
     iu, i, k, nstep, corrector: Integer;
@@ -672,7 +672,7 @@ begin
 end;
 
 // this is called twice per dynamic time step; predictor then corrector
-procedure TVCCSObj.IntegrateStates;
+procedure TVCCSObj.IntegrateStates();
 var
     t, h, d, f, w, wt: Double;
     vre, vim, vin, scale, y: Double;
@@ -764,7 +764,7 @@ begin
     end;
 end;
 
-function TVCCSObj.NumVariables: Integer;
+function TVCCSObj.NumVariables(): Integer;
 begin
     Result := 6;
 end;

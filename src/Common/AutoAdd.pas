@@ -39,11 +39,11 @@ type
         kWLosses, BaseLosses, puLossImprovement: Double;
         kWEEN, BaseEEN, puEENImprovement: Double;
 
-        procedure ComputekWLosses_EEN;
-        procedure SetBaseLosses;
+        procedure ComputekWLosses_EEN();
+        procedure SetBaseLosses();
 
-        function GetUniqueGenName: String;
-        function GetUniqueCapName: String;
+        function GetUniqueGenName(): String;
+        function GetUniqueCapName(): String;
     PUBLIC
         // Autoadd mode Variables
         GenkW,
@@ -58,11 +58,11 @@ type
 
         procedure Init(dssContext: TDSSContext);
 
-        procedure MakeBusList;
+        procedure MakeBusList();
         procedure AppendToFile(const WhichFile, S: String);
         procedure AddCurrents(SolveType: Integer);
 
-        function Solve: Integer; // Automatically add caps or generators
+        function Solve(): Integer; // Automatically add caps or generators
 
         function GetWeightedLosses(): Double;
     end;
@@ -110,7 +110,7 @@ begin
     ModeChanged := TRUE;
 end;
 
-procedure TAutoAdd.MakeBusList;
+procedure TAutoAdd.MakeBusList();
 // Make a list of unique busnames
 // IF AutoAddBusList in ActiveCircuit is not nil, use this list.
 // ELSE, Use the element lists in Energy Meters
@@ -230,7 +230,7 @@ begin
         F.Free();
 end;
 
-function TAutoAdd.GetUniqueGenName: String;
+function TAutoAdd.GetUniqueGenName(): String;
 var
     TrialName: String;
     Done: Boolean;
@@ -245,7 +245,7 @@ begin
     Result := TrialName;
 end;
 
-function TAutoAdd.GetUniqueCapName: String;
+function TAutoAdd.GetUniqueCapName(): String;
 var
     TrialName: String;
     Done: Boolean;
@@ -262,7 +262,7 @@ begin
 end;
 
 
-function TAutoAdd.Solve: Integer; // Automatically add caps or generators
+function TAutoAdd.Solve(): Integer; // Automatically add caps or generators
 // Automatically add a specified size of generator or capacitor at the location
 // that results in the lowest losses in either metered part of circuit or
 // total circuit, if no meters.
@@ -644,7 +644,7 @@ begin
     end;
 end;
 
-procedure TAutoAdd.ComputekWLosses_EEN;
+procedure TAutoAdd.ComputekWLosses_EEN();
 var
     pMeter: TEnergyMeterObj;
 begin
@@ -667,7 +667,7 @@ begin
     end;
 end;
 
-procedure TAutoAdd.SetBaseLosses;
+procedure TAutoAdd.SetBaseLosses();
 begin
     ComputekWLosses_EEN;
     BaseLosses := kWLosses;

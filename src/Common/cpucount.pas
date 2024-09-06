@@ -3,7 +3,7 @@
 unit cpucount;
 interface
 //returns number of cores: a computer with two hyperthreaded cores will report 4
-function GetLogicalCpuCount: Integer;
+function GetLogicalCpuCount(): Integer;
 
 implementation
  
@@ -23,7 +23,7 @@ function sysconf(i: cint): clong; cdecl; external name 'sysconf';
 {$ENDIF}
  
  
-function GetLogicalCpuCount: integer;
+function GetLogicalCpuCount(): integer;
 // returns a good default for the number of threads on this system
 {$IF defined(windows)}
 //returns total number of processors available to system including logical hyperthreaded processors

@@ -21,7 +21,7 @@ type
         Nodes: pIntegerArray;
         Allocation: SmallInt;
 
-        procedure AddANode;
+        procedure AddANode();
 
     PUBLIC
         numNodesThisBus: SmallInt;
@@ -54,8 +54,8 @@ type
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
-        procedure AllocateBusQuantities;
-        procedure AllocateBusState;
+        procedure AllocateBusQuantities();
+        procedure AllocateBusState();
         procedure ZeroReliabilityAccums();
 
         function Add(Circuit: TNamedObject; NodeNum: SmallInt): Integer;
@@ -141,7 +141,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TDSSBus.AddANode;
+procedure TDSSBus.AddANode();
 begin
     Inc(numNodesThisBus);
     if numNodesThisBus > Allocation then
@@ -205,7 +205,7 @@ begin
         Result := Nodes[NodeIndex];
 end;
 
-procedure TDSSBus.AllocateBusQuantities;
+procedure TDSSBus.AllocateBusQuantities();
 // Have to perform a short circuit study to get this allocated
 begin
     if Assigned(Ysc) then
@@ -254,7 +254,7 @@ begin
     Result := 0;
 end;
 
-procedure TDSSBus.AllocateBusState;
+procedure TDSSBus.AllocateBusState();
 begin
     FreeMem(VBus);
     FreeMem(BusCurrent);

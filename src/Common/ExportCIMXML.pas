@@ -59,7 +59,7 @@ type
 
         procedure AddTransformer(CE: TCIMExporter; pXf: TTransfObj);
         procedure AddAutoTransformer(CE: TCIMExporter; pAuto: TAutoTransObj);
-        procedure BuildVectorGroup;
+        procedure BuildVectorGroup();
     end;
 
     TCIMOpLimitObject = class(TNamedObject)
@@ -96,7 +96,7 @@ type
     TCIMExporter = class(TObject)
     public
         procedure StartUuidList(size: Integer);
-        procedure FreeUuidList;
+        procedure FreeUuidList();
         procedure WriteHashedUUIDs(F: TStream);
         procedure AddHashedUUID(key: String; UuidVal: String);
         procedure DefaultCircuitUUIDs(var fdrID: TUuid; var subID: TUuid; var rgnID: TUuid; var subGeoID: TUuid);
@@ -180,12 +180,12 @@ type
         bNameplateSet: Boolean;
         ex: TCIMExporter;
 
-        procedure FinishNameplate;
+        procedure FinishNameplate();
         procedure SetStorageNameplate(pBat: TStorageObj);
         procedure SetPhotovoltaicNameplate(pPV: TPVSystemObj);
         procedure SetElementNameplate(pElem: TDSSCktElement);
         procedure SetDefaults(bCatB: Boolean);
-        procedure FindSignalTerminals;
+        procedure FindSignalTerminals();
         function CheckSignalMatch(sig: TRemoteSignalObject; pElm:TDSSCktElement; seq: Integer) : Boolean;
     public
         constructor Create(exporter: TCIMExporter);
@@ -248,9 +248,9 @@ type
         procedure StartOpLimitList(size: Integer);
         procedure StartBankList(size: Integer);
         procedure StartECPList(size: Integer);
-        procedure FreeECPList;
-        procedure FreeBankList;
-        procedure FreeOpLimitList;
+        procedure FreeECPList();
+        procedure FreeBankList();
+        procedure FreeOpLimitList();
         procedure AddBank(pBank: TCIMBankObject);
         procedure AddECP(pECP: TECPObject);
         function GetECP(key: String): TECPObject;        
@@ -331,11 +331,11 @@ type
         procedure WriteWireData(pWire: TConductorDataObj);
         procedure ConverterControlEnum(prf: ProfileChoice; varMode: Integer; CIMdynamics: Boolean);
 
-        procedure FD_Destroy;
+        procedure FD_Destroy();
         procedure FD_Create(Combined: Boolean; FileName: String);
 
-        function ActiveCircuit: TDSSCircuit;inline;
-        function FD: TCIMExporter;inline;
+        function ActiveCircuit(): TDSSCircuit;inline;
+        function FD(): TCIMExporter;inline;
     end;
 
 constructor TECPObject.Create(choice: ECPChoice);
@@ -364,12 +364,12 @@ begin
     Inc(nconn);
 end;
 
-function TCIMExporterHelper.FD: TCIMExporter;
+function TCIMExporterHelper.FD(): TCIMExporter;
 begin
     Result := self;
 end;
 
-function TCIMExporterHelper.ActiveCircuit: TDSSCircuit;
+function TCIMExporterHelper.ActiveCircuit(): TDSSCircuit;
 begin
     Result := DSS.ActiveCircuit;
 end;
@@ -722,7 +722,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TCIMBankObject.BuildVectorGroup;
+procedure TCIMBankObject.BuildVectorGroup();
 var
     i: Integer;
 begin
@@ -847,14 +847,14 @@ begin
     SetLength(OpLimitList, size);
 end;
 
-procedure TCIMExporter.FreeUuidList;
+procedure TCIMExporter.FreeUuidList();
 begin
     UuidHash.Free;
     UuidList := NIL;
     UuidKeyList := NIL;
 end;
 
-procedure TCIMExporterHelper.FreeBankList;
+procedure TCIMExporterHelper.FreeBankList();
 var 
     i: integer;
 begin
@@ -865,7 +865,7 @@ begin
     BankList := NIL;
 end;
 
-procedure TCIMExporterHelper.FreeECPList;
+procedure TCIMExporterHelper.FreeECPList();
 var
     i: Integer;
 begin
@@ -876,7 +876,7 @@ begin
     ECPList := NIL;
 end;
 
-procedure TCIMExporterHelper.FreeOpLimitList;
+procedure TCIMExporterHelper.FreeOpLimitList();
 var 
     i: integer;
 begin
@@ -2374,7 +2374,7 @@ begin
     end;
 end;
 
-procedure TIEEE1547Controller.FindSignalTerminals;
+procedure TIEEE1547Controller.FindSignalTerminals();
 var
     i, j, k, dotpos, busIdx: Integer;
     bus, phase: String;
@@ -2956,7 +2956,7 @@ begin
     VV_vRefAutoModeEnabled := FALSE;
 end;
 
-procedure TIEEE1547Controller.FinishNameplate;
+procedure TIEEE1547Controller.FinishNameplate();
 begin
     AD_overPF := AD_pMaxOverPF / AD_sMax;
     AD_underPF := AD_pMaxUnderPF / AD_sMax;
@@ -4749,7 +4749,7 @@ begin
     end;
 end;
 
-procedure TCIMEXporterHelper.FD_Destroy;
+procedure TCIMEXporterHelper.FD_Destroy();
 begin
     FSWriteLn(F_FUN, '</rdf:RDF>');
     FreeAndNil(F_FUN);

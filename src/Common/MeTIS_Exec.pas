@@ -68,7 +68,7 @@ end;
 
 procedure TFileSearchReplace.Replace(const AFrom, ATo: string;
   ReplaceFlags: TReplaceFlags);
-  procedure CopyPreamble;
+  procedure CopyPreamble();
   var
     PreambleSize: Integer;
     PreambleBuf: TBytes;

@@ -73,7 +73,7 @@ type
         destructor Destroy; OVERRIDE;
 
         function NewObject(const ObjName: String; Activate: Boolean = TRUE): Pointer; OVERRIDE;
-        procedure UpdateAll;
+        procedure UpdateAll();
     end;
 
     TExpControlObj = class(TControlElem)
@@ -434,7 +434,7 @@ begin
     inherited;
 end;
 
-procedure TExpControlObj.DoPendingAction;
+procedure TExpControlObj.DoPendingAction();
 var
     i: Integer;
     Qset, DeltaQ: Double;
@@ -722,7 +722,7 @@ begin
 end;
 
 //Called at end of main power flow solution loop
-procedure TExpControl.UpdateAll;
+procedure TExpControl.UpdateAll();
 var
     i: Integer;
     obj: TExpControlObj;

@@ -62,7 +62,7 @@ type
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
         procedure Reset(); OVERRIDE;  // Reset to initial defined state
 
-        function MakeUPFCList: Boolean;
+        function MakeUPFCList(): Boolean;
     end;
 
 implementation
@@ -186,7 +186,7 @@ begin
     inherited;
 end;
 
-procedure TUPFCControlObj.DoPendingAction;
+procedure TUPFCControlObj.DoPendingAction();
 var
     i: Integer;
     obj: TUPFCObj;
@@ -229,7 +229,7 @@ begin
     end;
 end;
 
-function TUPFCControlObj.MakeUPFCList: Boolean;
+function TUPFCControlObj.MakeUPFCList(): Boolean;
 var
     obj: TUPFCObj;
     i: Integer;

@@ -80,7 +80,7 @@ type
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
         procedure Reset(); OVERRIDE;  // Reset to initial defined state
 
-        function MakeGenList: Boolean;
+        function MakeGenList(): Boolean;
     end;
 
 implementation
@@ -270,7 +270,7 @@ begin
     inherited;
 end;
 
-procedure TGenDispatcherObj.DoPendingAction;
+procedure TGenDispatcherObj.DoPendingAction();
 begin
     // Do Nothing
 end;
@@ -346,7 +346,7 @@ begin
     end;
 end;
 
-function TGenDispatcherObj.MakeGenList: Boolean;
+function TGenDispatcherObj.MakeGenList(): Boolean;
 var
     GenClass: TDSSClass;
     Gen: TGeneratorObj;

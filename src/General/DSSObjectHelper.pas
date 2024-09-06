@@ -36,7 +36,7 @@ type
 
     TDSSClassHelper = class helper for TDSSClass
     private
-        function GetCircuit: TDSSCircuit; inline;
+        function GetCircuit(): TDSSCircuit; inline;
     protected
         property ActiveCircuit: TDSSCircuit read GetCircuit;
     public
@@ -75,7 +75,7 @@ type
 
     TDSSObjectHelper = class helper for TDSSObject
     private
-        function GetCircuit: TDSSCircuit; inline;
+        function GetCircuit(): TDSSCircuit; inline;
     protected
         property ActiveCircuit: TDSSCircuit read GetCircuit;
     public
@@ -140,7 +140,7 @@ type
     TDSSObjectPtrPtr = ^TDSSObjectPtr;
     PStringList = ^TStringList;
 
-function TDSSClassHelper.GetCircuit: TDSSCircuit;
+function TDSSClassHelper.GetCircuit(): TDSSCircuit;
 begin
     Result := DSS.ActiveCircuit;
 end;
@@ -3024,7 +3024,7 @@ begin
         integerPtr^ := Value;
 end;
 
-function TDSSObjectHelper.GetCircuit: TDSSCircuit;
+function TDSSObjectHelper.GetCircuit(): TDSSCircuit;
 begin
     Result := DSS.ActiveCircuit;
 end;
