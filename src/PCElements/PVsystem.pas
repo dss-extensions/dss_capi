@@ -256,10 +256,6 @@ type
 
         procedure UpdatePVSystem;    // Update PVSystem elements based on present kW and IntervalHrs variable
 
-        function Get_PresentIrradiance: Double;
-
-        procedure Set_Pmpp(const Value: Double);
-
         procedure kWOut_Calc;
 
     PROTECTED
@@ -317,18 +313,19 @@ type
         procedure SetPFPriority(value: Boolean); OVERRIDE;
         function CheckOLInverter(): Boolean; OVERRIDE;
 
-        property PresentIrradiance: Double READ Get_PresentIrradiance WRITE PVSystemVars.FIrradiance;
+        function PresentIrradiance(): Double;
         function PresentkW(): Double;
         function PresentkV(): Double;
         function PowerFactor(): Double;
         procedure SetPowerFactor(const Value: Double);
 
+        function kVARating(): Double;
         procedure SetkVARating(const Value: Double);
-        property kVARating: Double READ PVSystemVars.FkVARating;
-        property Pmpp: Double READ PVSystemVars.FPmpp WRITE Set_pmpp;
-        property puPmpp: Double READ PVSystemVars.FpuPmpp WRITE PVSystemVars.FpuPmpp;
-        property kvarLimit: Double READ PVSystemVars.Fkvarlimit;
-        property IrradianceNow: Double READ ShapeFactor.re;
+        function PMPP(): Double;
+        function PUPMPP(): Double;
+        procedure SetPUPMPP(value: Double);
+        function kvarLimit(): Double;
+        function IrradianceNow(): Double;
     end;
 
 implementation
@@ -2090,7 +2087,7 @@ begin
     Result := Pnominalperphase * 0.001 * Fnphases;
 end;
 
-function TPVsystemObj.Get_PresentIrradiance: Double;
+function TPVsystemObj.PresentIrradiance(): Double;
 begin
     Result := PVSystemVars.FIrradiance * ShapeFactor.re;
 end;
@@ -2379,7 +2376,7 @@ begin
     with PVSystemVars do
         case i of
             1:
-                Result := PresentIrradiance;
+                Result := PresentIrradiance();
             2:
                 Result := PanelkW;
             3:
@@ -2640,16 +2637,15 @@ begin
     PVsystemObjSwitchOpen := not Value;
 end;
 
+function TPVsystemObj.kVARating(): Double;
+begin
+    result := PVSystemVars.FkVARating;
+end;
+
 procedure TPVsystemObj.SetkVARating(const Value: Double);
 begin
     PVSystemVars.FkVARating := Value;
     SetAsNextSeq(ord(TProp.kVA));
-end;
-
-procedure TPVsystemObj.Set_Pmpp(const Value: Double);
-begin
-    PVSystemVars.FPmpp := Value;
-    SetAsNextSeq(ord(TProp.Pmpp));
 end;
 
 function TPVsystemObj.PowerFactor(): Double;
@@ -2661,6 +2657,31 @@ procedure TPVsystemObj.SetPowerFactor(const Value: Double);
 begin
     PFnominal := Value;
     varMode := VARMODEPF;
+end;
+
+function TPVsystemObj.PMPP(): Double;
+begin 
+    result := PVSystemVars.FPmpp;
+end;
+
+function TPVsystemObj.kvarLimit(): Double;
+begin
+    result := PVSystemVars.Fkvarlimit;
+end;
+
+function TPVsystemObj.PUPMPP(): Double;
+begin
+    result := PVSystemVars.FpuPmpp;
+end;
+
+procedure TPVsystemObj.SetPUPMPP(value: Double);
+begin
+    PVSystemVars.FpuPmpp := value;
+end;
+
+function TPVsystemObj.IrradianceNow(): Double;
+begin
+    result := ShapeFactor.re;
 end;
 
 procedure TPVsystemObj.SetDragHandRegister(Reg: Integer; const Value: Double);

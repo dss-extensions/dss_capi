@@ -492,7 +492,7 @@ begin
                         AppendtoEventLog(Self.FullName() + ',' + PVSys.Name(),
                             Format(' curtailing %.3f to %.3f kW', [PVSys.PresentkW, Plimit]));
                     PVSys.kWRequested := Plimit;
-                    PVSys.puPmpp := Plimit / PVSys.Pmpp;
+                    PVSys.SetPUPMPP(Plimit / PVSys.PMPP());
                 end;
             end;
 

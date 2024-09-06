@@ -436,7 +436,7 @@ begin
     Result := -1.0;  // not set
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.pmpp;
+    Result := elem.PMPP();
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Pmpp(Value: Double); CDECL;
@@ -445,7 +445,8 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.pmpp := Value;
+    elem.PVSystemVars.FPmpp := Value;
+    elem.SetAsNextSeq(ord(TPVSystemProp.Pmpp));
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_IrradianceNow(): Double; CDECL;
@@ -455,7 +456,7 @@ begin
     Result := -1.0;  // not set
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.IrradianceNow;
+    Result := elem.IrradianceNow();
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Sensor(): PAnsiChar; CDECL;

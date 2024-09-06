@@ -1678,8 +1678,8 @@ begin
                 FkvarLimitNeg := PVSystemVars.FkvarLimitNeg;
                 FCurrentkvarLimit := CurrentkvarLimit;
                 FCurrentkvarLimitNeg := CurrentkvarLimitNeg;
-                FDCkWRated := Pmpp;
-                FpctDCkWRated := puPmpp;
+                FDCkWRated := PMPP();
+                FpctDCkWRated := PUPMPP();
                 FEffFactor := PVSystemVars.EffFactor;
                 FDCkW := PVSystemVars.PanelkW;
                 FPPriority := PVSystemVars.P_Priority;

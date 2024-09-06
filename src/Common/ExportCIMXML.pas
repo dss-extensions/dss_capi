@@ -3000,7 +3000,7 @@ begin
         ND_acVmax := pPV.PresentKV * pPV.Vmaxpu * 1000.0;
         ND_acVmin := pPV.PresentKV * pPV.Vminpu * 1000.0;
         AD_sMax := pPV.kVARating * 1000.0;
-        AD_pMax := pPV.Pmpp * 1000.0;
+        AD_pMax := pPV.PMPP() * 1000.0;
         AD_pMaxOverPF := (sqrt(FKvaRating * FKvaRating - qmaxinj * qmaxinj)) * 1000.0;
         AD_pMaxUnderPF := (sqrt(FKvaRating * FKvaRating - qmaxabs * qmaxabs)) * 1000.0;
         AD_pMaxCharge := (0.0) * 1000.0;
@@ -3532,7 +3532,7 @@ begin
             StartInstance(FunPrf, 'PhotovoltaicUnit', pName1);
             geoUUID := GetDevUuid(SolarLoc, pPV.localName, 1);
             UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
-            DoubleNode(EpPrf, 'PowerElectronicsUnit.maxP', pPV.Pmpp * 1000.0);
+            DoubleNode(EpPrf, 'PowerElectronicsUnit.maxP', pPV.PMPP() * 1000.0);
             DoubleNode(EpPrf, 'PowerElectronicsUnit.minP', (min(pPV.FPctCutIn, pPV.FPctCutOut) * pPV.kVARating / 100.0) * 1000.0);
             EndInstance(FunPrf, 'PhotovoltaicUnit');
             StartInstance(FunPrf, 'PowerElectronicsConnection', pPV);
