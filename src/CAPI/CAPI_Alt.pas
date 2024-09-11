@@ -21,7 +21,7 @@ type
     dss_ctx_bus_int32_function_t = function (ctx: Pointer; obj: Pointer): Integer; CDECL;
     TDSSCktElementPtr = ^TDSSCktElement;
 
-procedure Alt_CE_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; elem: TDSSCktElement; removeNodes: TAltAPIBoolean); CDECL;
 function Alt_CE_Get_NumConductors(elem: TDSSCktElement): Integer; CDECL;
 function Alt_CE_Get_NumPhases(elem: TDSSCktElement): Integer; CDECL;
 function Alt_CE_Get_NumTerminals(elem: TDSSCktElement): Integer; CDECL;
@@ -345,12 +345,20 @@ begin
     Result := ((elem.DSSObjType and 3) = PD_ELEMENT)
 end;
 //------------------------------------------------------------------------------
-procedure Alt_CE_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+procedure Alt_CE_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; elem: TDSSCktElement; removeNodes: TAltAPIBoolean); CDECL;
 var
     Result: PPAnsiCharArray0;
     i: Integer;
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, elem.NTerms());
+    if removeNodes then
+    begin
+        for i := 1 to elem.NTerms() do
+            Result[i - 1] := DSS_CopyStringAsPChar(StripExtension(elem.GetBus(i)));
+
+        Exit;
+    end;
+
     for i := 1 to elem.NTerms() do
         Result[i - 1] := DSS_CopyStringAsPChar(elem.GetBus(i));
 

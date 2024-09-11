@@ -3533,10 +3533,28 @@ ALTDSS_ODDIE_DLL void ctx_CktElement_Get_AllVariableValues_GR(const void* ctx)
     oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->CktElementV, 16, &((OddieContext*) ctx)->GR_DataPtr_PDouble, &((OddieContext*) ctx)->GR_Counts_PDouble[0], NULL);
 }
 
-ALTDSS_ODDIE_DLL void ctx_CktElement_Get_BusNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims)
+ALTDSS_ODDIE_DLL void ctx_CktElement_Get_BusNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims, uint16_t removeNodes)
 {
+    int i;
+    char* s;
     CTX_OR_PRIME
     oddie_vararray_stringarray_func((OddieContext*) ctx, ((OddieContext*) ctx)->CktElementV, 0, ResultPtr, ResultDims, NULL);
+    if (removeNodes)
+    {
+        for (i = 0; i < ResultDims[0]; ++i)
+        {
+            s = (*ResultPtr)[i];
+            while (*s != 0)
+            {
+                if (*s == '.')
+                {
+                    *s = 0;
+                    break;
+                }
+                ++s;
+            }
+        }
+    }
 }
 
 ALTDSS_ODDIE_DLL const char* ctx_CktElement_Get_Controller(const void* ctx, int32_t idx)

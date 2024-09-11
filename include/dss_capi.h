@@ -1581,8 +1581,11 @@ extern "C" {
 
     /*! 
     Array of strings. Get  Bus definitions to which each terminal is connected. 0-based array.
+
+    The `removeNodes` argument is an **API Extension**. Use it to get only the bus names, 
+    without the connection/node specification, if present.
     */
-    DSS_CAPI_DLL void CktElement_Get_BusNames(char*** ResultPtr, int32_t* ResultDims);
+    DSS_CAPI_DLL void CktElement_Get_BusNames(char*** ResultPtr, int32_t* ResultDims, uint16_t removeNodes);
 
     /*! 
     Full Name of Active Circuit Element
@@ -8390,7 +8393,7 @@ extern "C" {
     // Relevant functions from the CktElement and PDElements API, working directly on the elements
     //TODO: copy comments and adapt
 
-    DSS_CAPI_DLL void Alt_CE_Get_BusNames(char*** resultPtr, int32_t *resultDims, void* elem);
+    DSS_CAPI_DLL void Alt_CE_Get_BusNames(char*** resultPtr, int32_t *resultDims, void* elem, int32_t removeNodes);
     DSS_CAPI_DLL int32_t Alt_CE_Get_NumConductors(void* elem);
     DSS_CAPI_DLL int32_t Alt_CE_Get_NumPhases(void* elem);
     DSS_CAPI_DLL int32_t Alt_CE_Get_NumTerminals(void* elem);

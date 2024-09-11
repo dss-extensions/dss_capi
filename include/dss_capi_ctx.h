@@ -978,8 +978,11 @@ extern "C" {
 
     /*! 
     Array of strings. Get  Bus definitions to which each terminal is connected. 0-based array.
+
+    The `removeNodes` argument is an **API Extension**. Use it to get only the bus names, 
+    without the connection/node specification, if present.
     */
-    DSS_CAPI_DLL void ctx_CktElement_Get_BusNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims);
+    DSS_CAPI_DLL void ctx_CktElement_Get_BusNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims, uint16_t removeNodes);
 
     /*! 
     Full Name of Active Circuit Element

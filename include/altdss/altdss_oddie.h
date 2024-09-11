@@ -361,7 +361,7 @@ ALTDSS_ODDIE_DLL void ctx_CktElement_Get_AllPropertyNames(const void* ctx, char*
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_AllVariableNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims);
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_AllVariableValues(const void* ctx, double** ResultPtr, int32_t* ResultDims);
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_AllVariableValues_GR(const void* ctx);
-ALTDSS_ODDIE_DLL void ctx_CktElement_Get_BusNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims);
+ALTDSS_ODDIE_DLL void ctx_CktElement_Get_BusNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims, uint16_t removeNodes);
 ALTDSS_ODDIE_DLL const char* ctx_CktElement_Get_Controller(const void* ctx, int32_t idx);
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_CplxSeqCurrents(const void* ctx, double** ResultPtr, int32_t* ResultDims);
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_CplxSeqCurrents_GR(const void* ctx);

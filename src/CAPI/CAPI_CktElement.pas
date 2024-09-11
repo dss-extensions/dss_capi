@@ -7,7 +7,7 @@ uses
     CktElement,
     CAPI_Types;
 
-procedure CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; removeNodes: TAPIBoolean); CDECL;
 function CktElement_Get_Name(): PAnsiChar; CDECL;
 function CktElement_Get_NumConductors(): Integer; CDECL;
 function CktElement_Get_NumPhases(): Integer; CDECL;
@@ -147,7 +147,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; removeNodes: TAPIBoolean); CDECL;
 var
     elem: TDSSCktElement;
 begin
@@ -156,7 +156,7 @@ begin
         DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
-    Alt_CE_Get_BusNames(ResultPtr, ResultCount, elem);
+    Alt_CE_Get_BusNames(ResultPtr, ResultCount, elem, removeNodes);
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_Name(): PAnsiChar; CDECL;
