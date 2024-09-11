@@ -1557,7 +1557,7 @@ begin
     CalcVTerminalPhase(); // get actual voltage across each phase of the load
 {$ELSE}
     //->CalcYPrimContribution
-    ComputeVTerminal;
+    ComputeVTerminal();
 
     // Apply these voltages to Yprim
     YPrim.MVMult(InjCurrent, Vterminal);

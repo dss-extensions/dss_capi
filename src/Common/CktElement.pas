@@ -80,8 +80,8 @@ type
         function GetYPrim(var Ymatrix: TCmatrix; Opt: Integer): Integer; VIRTUAL;  //returns values of array
         function GetYPrimValues(Opt: Integer): pComplexArray; VIRTUAL;
         function MaxTerminalOneIMag(): Double;   // Max of Iterminal 1 phase currents
-        procedure ComputeIterminal(); VIRTUAL;   // Computes Iterminal for this device
-        procedure ComputeVterminal();
+        procedure ComputeITerminal(); VIRTUAL;   // Computes Iterminal for this device
+        procedure ComputeVTerminal();
         procedure ZeroITerminal(); inline;
         procedure GetCurrents(Curr: pComplexArray); VIRTUAL; OVERLOAD; ABSTRACT; //Get present value of terminal Curr for reports
         procedure GetCurrents(Curr: ArrayOfComplex); VIRTUAL; OVERLOAD; //Get present value of terminal Curr for reports
@@ -169,7 +169,7 @@ begin
 
     Handle := -1;
     BusIndex := 0;
-    FNterms := 0;
+    FNTerms := 0;
     FNConds := 0;
     Fnphases := 0;
     DSSObjType := 0;
@@ -244,7 +244,7 @@ end;
 
 procedure TDSSCktElement.SetActiveTerminalIdx(value: Int8);
 begin
-    if (Value > 0) and (Value <= fNterms) then
+    if (Value > 0) and (Value <= FNTerms) then
     begin
         FActiveTerminal := Value - 1;
         ActiveTerminal := @Terminals[FActiveTerminal];
@@ -314,7 +314,7 @@ begin
     if Value <> FNConds then
         ActiveCircuit.SetBusNameRedefined();
     FNConds := Value;
-    SetNTerms(fNterms);  // ReallocTerminals    NEED MORE EFFICIENT WAY TO DO THIS
+    SetNTerms(FNTerms);  // ReallocTerminals    NEED MORE EFFICIENT WAY TO DO THIS
 end;
 
 function TDSSCktElement.NPhases(): Integer;
@@ -324,7 +324,7 @@ end;
 
 function TDSSCktElement.NTerms(): Int8;
 begin
-    result := Fnterms;
+    result := FNTerms;
 end;
 
 procedure TDSSCktElement.SetNTerms(Value: Int8);
@@ -342,7 +342,7 @@ begin
 
     // If value is same as present value, no reallocation necessary;
     // If either NTerms() or Nconds has changed then reallocate
-    if (value = FNterms) and ((Value * FNConds) = Yorder) then
+    if (Value = FNTerms) and ((Value * FNConds) = Yorder) then
         Exit;
     
     // Sanity Check
@@ -488,7 +488,7 @@ end;
 
 function TDSSCktElement.FirstBus(): String;
 begin
-    if FNterms > 0 then
+    if FNTerms > 0 then
     begin
         BusIndex := 1;
         Result := FBusNames[BusIndex];
@@ -500,13 +500,13 @@ end;
 function TDSSCktElement.NextBus(): String;
 begin
     Result := '';
-    if FNterms > 0 then
+    if FNTerms > 0 then
     begin
         Inc(BusIndex);
-        if BusIndex <= FNterms then
+        if BusIndex <= FNTerms then
             Result := FBusNames[BusIndex]
         else
-            BusIndex := FNterms;
+            BusIndex := FNTerms;
     end;
 end;
 
@@ -521,7 +521,7 @@ end;
 
 procedure TDSSCktElement.SetBus(i: Integer; const s: String); // Set bus name by index
 begin
-    if i <= FNterms then
+    if i <= FNTerms then
     begin
         FBusNames[i] := AnsiLowerCase(S);
         ActiveCircuit.SetBusNameRedefined();  // Set Global Flag to signal circuit to rebuild busdefs
@@ -545,7 +545,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TDSSCktElement.ComputeIterminal();
+procedure TDSSCktElement.ComputeITerminal();
 begin
     // to save time, only recompute if a different solution than last time it was computed.
     if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
@@ -588,7 +588,7 @@ begin
     if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
-    ComputeIterminal();
+    ComputeITerminal();
 
     // Method: Sum complex power going into phase conductors of active terminal
     NodeV := ActiveCircuit.Solution.NodeV;
@@ -615,7 +615,7 @@ begin
     if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
-    ComputeIterminal();
+    ComputeITerminal();
 
     // Method: Sum complex power going into all conductors of all terminals
     // Special for AutoTransformer - sum based on NPhases rather then Yorder
@@ -672,7 +672,7 @@ begin
     if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
-    ComputeIterminal();
+    ComputeITerminal();
 
     // Method: Checks what's the phase with maximum current
     // retunrs the voltage for that phase
@@ -731,7 +731,7 @@ end;
 //     if (not FEnabled) or (NodeRef = NIL) then
 //         Exit;
         
-//     ComputeIterminal();
+//     ComputeITerminal();
 
 //     // Method: Get power in the phase with max current of active terminal
 //     // Multiply by Nphases and return
@@ -782,7 +782,7 @@ begin
     if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
-    ComputeIterminal;
+    ComputeITerminal();
     // Method: Get max current at terminal (magnitude)
     // MaxPhase := 1;  // Init this so it has a non zero value
     k := (idxTerm - 1) * FNConds; // starting index of terminal
@@ -813,7 +813,7 @@ begin
         Exit;
 
     CurrAng := 0.0;
-    ComputeIterminal();
+    ComputeITerminal();
     // Method: Get max current at terminal (magnitude)
     MaxCurr := 0.0;
     // MaxPhase := 1;  // Init this so it has a non zero value
@@ -866,7 +866,7 @@ begin
         Exit;
     end;
     
-    ComputeIterminal();
+    ComputeITerminal();
 
     NodeV := ActiveCircuit.Solution.NodeV;
     for i := 1 to Yorder do
@@ -899,7 +899,7 @@ begin
         Exit;
     end;
     
-    ComputeIterminal();
+    ComputeITerminal();
 
     NodeV := ActiveCircuit.Solution.NodeV;
     for i := 1 to Num_Phases do
@@ -935,7 +935,7 @@ begin
     begin
         FSWriteln(F, '! NPhases = ', IntToStr(Fnphases));
         FSWriteln(F, '! Nconds = ', IntToStr(FNConds));
-        FSWriteln(F, '! NTerms() = ', IntToStr(fNterms));
+        FSWriteln(F, '! NTerms() = ', IntToStr(FNTerms));
         FSWriteln(F, '! Yorder = ', IntToStr(Yorder));
         FSWrite(F, '! NodeRef = "');
         if NodeRef = NIL then
@@ -945,7 +945,7 @@ begin
                 FSWrite(F, IntToStr(NodeRef[i]), ' ');
         FSWriteln(F, '"');
         FSWrite(F, '! Terminal Status: [');
-        for i := 1 to fNTerms do
+        for i := 1 to FNTerms do
             for j := 1 to FNConds do
             begin
                 if Terminals[i - 1].ConductorsClosed[j - 1] then
@@ -955,7 +955,7 @@ begin
             end;
         FSWriteln(F, ']');
         FSWrite(F, '! Terminal Bus Ref: [');
-        for i := 1 to fNTerms do
+        for i := 1 to FNTerms do
             for j := 1 to FNConds do
             begin
                 FSWrite(F, IntToStr(Terminals[i - 1].BusRef), ' ');
@@ -997,7 +997,7 @@ begin
     // Then for any conductor that is open, zero out row and column.
     ElementOpen := FALSE;
     k := 0;
-    for i := 1 to fNTerms do
+    for i := 1 to FNTerms do
     begin
         for j := 1 to FNConds do
         begin
@@ -1061,7 +1061,7 @@ begin
     if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
-    ComputeIterminal();
+    ComputeITerminal();
     Currents := ActiveCircuit.Solution.Currents;
     for i := 1 to Yorder do
         Currents[NodeRef[i]] += Iterminal[i];  // Noderef=0 is OK
@@ -1078,7 +1078,7 @@ begin
         ncond := FNConds;
 
         // return Zero if terminal number improperly specified
-        if (iTerm < 1) or (iTerm > fNterms) then
+        if (iTerm < 1) or (iTerm > FNTerms) then
         begin
             for i := 1 to ncond do
                 VBuffer[i] := 0;
@@ -1128,7 +1128,7 @@ var
     i: Integer;
     grnd: Boolean;
 begin
-    for i := 1 to FNterms do
+    for i := 1 to FNTerms do
     begin
         grnd := IsGroundBus(FBusNames[i]);
         FBusNames[i] := StripExtension(FBusNames[i]);
@@ -1137,7 +1137,7 @@ begin
     end;
 end;
 
-procedure TDSSCktElement.ComputeVterminal();
+procedure TDSSCktElement.ComputeVTerminal();
 // Put terminal voltages in an array
 var
     i: Integer;

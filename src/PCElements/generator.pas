@@ -1994,7 +1994,7 @@ var
     pBuffer: PCBuffer24;
 begin
     pBuffer := @TGenerator(ParentClass).cBuffer;
-    ComputeVterminal();
+    ComputeVTerminal();
 
     GenHarmonic := ActiveCircuit.Solution.Frequency() / GenFundamental;
     E := SpectrumObj.GetMult(GenHarmonic) * GenVars.VThevHarm; // Get base harmonic magnitude
@@ -2240,7 +2240,7 @@ begin
             ThetaHarm := 0.0;
             Exit;
         end;
-        ComputeIterminal();  // Get present value of current
+        ComputeITerminal();  // Get present value of current
         NodeV := ActiveCircuit.Solution.NodeV;
         case Connection of
             TGeneralConnection.Wye:// wye - neutral is explicit
@@ -2292,7 +2292,7 @@ begin
 
         NodeV := ActiveCircuit.Solution.NodeV;
 
-        ComputeIterminal();
+        ComputeITerminal();
 
         case Fnphases of
 
@@ -2390,7 +2390,7 @@ var
 begin
    // Compute Derivatives and then integrate
 
-    ComputeIterminal();
+    ComputeITerminal();
 
     // Check for user-written exciter model.
     //Function(V, I:pComplexArray; const Pshaft,Theta,Speed,dt,time:Double)

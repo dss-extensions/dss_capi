@@ -1499,7 +1499,7 @@ begin
     
     if Fnphases = 3 then
     begin // 3-phase lines only
-        ComputeIterminal;
+        ComputeITerminal();
         for i := 1 to 2 do
         begin
             k := (i - 1) * Fnphases + 1;

@@ -435,7 +435,7 @@ begin
     // Iaclim := FMaxIac * Fkw / FkVac / Nac;
 
   // obtain the terminal control quantities
-    ComputeVterminal;
+    ComputeVTerminal();
     SetITerminalUpdated(FALSE);
     GetTerminalCurrents(ITerminal);
 

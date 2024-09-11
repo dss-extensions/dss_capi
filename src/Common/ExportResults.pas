@@ -818,7 +818,7 @@ begin
         if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
             with DSS.ActiveCircuit.ActiveCktElement() do
             begin
-                ComputeIterminal;
+                ComputeITerminal();
                 FSWrite(F, Format('"%s", %d, %d', [CktElementName, NTerms(), NConds()]));
                 NValues := NConds() * NTerms();
                 for i := 1 to NValues do
@@ -899,7 +899,7 @@ begin
         if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
             with DSS.ActiveCircuit.ActiveCktElement() do
             begin
-                ComputeVterminal;
+                ComputeVTerminal();
                 FSWrite(F, Format('"%s", %d, %d', [CktElementName, NTerms(), NConds()]));
                 NValues := NConds() * NTerms();
                 for i := 1 to NValues do
@@ -981,8 +981,8 @@ begin
         if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
             with DSS.ActiveCircuit.ActiveCktElement() do
             begin
-                ComputeVterminal;
-                ComputeIterminal;
+                ComputeVTerminal();
+                ComputeITerminal();
                 FSWrite(F, Format('"%s", %d, %d', [CktElementName, NTerms(), NConds()]));
                 NValues := NConds() * NTerms();
                 for i := 1 to NValues do
@@ -1260,8 +1260,8 @@ begin
             begin
                 with PDElem do
                 begin
-                    ComputeITerminal;
-                    ComputeVTerminal;
+                    ComputeITerminal();
+                    ComputeVTerminal();
                     FSWrite(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, AnsiUpperCase(Name), NTerms(), NConds(), Nphases]));
                     for i := 1 to Yorder do
                     begin
@@ -1285,8 +1285,8 @@ begin
             begin
                 with PCelem do
                 begin
-                    ComputeITerminal;
-                    ComputeVTerminal;
+                    ComputeITerminal();
+                    ComputeVTerminal();
                     FSWrite(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, AnsiUpperCase(Name), NTerms(), NConds(), NPhases]));
                     for i := 1 to Yorder do
                     begin

@@ -2545,7 +2545,7 @@ begin
             priorDRCRollAvgWindow := FDRCRollAvgWindow.AvgVal;
 
             // compute the present terminal voltage
-            DERElem.ComputeVterminal();
+            DERElem.ComputeVTerminal();
             //PVSys.SetVariable(5,FDRCRollAvgWindow.AvgVal); // save rolling average voltage in monitor
 
             solnvoltage := 0.0;

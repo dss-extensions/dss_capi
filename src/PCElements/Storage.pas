@@ -2207,7 +2207,7 @@ var
     pBuffer: PCBuffer24;
 begin
     pBuffer := @TStorage(ParentClass).cBuffer;
-    ComputeVterminal();
+    ComputeVTerminal();
 
     StorageHarmonic := ActiveCircuit.Solution.Frequency() / StorageFundamental;
     if SpectrumObj <> NIL then
@@ -2410,7 +2410,7 @@ var
 begin
     // If in GFM mode, check if we are actually delivering power
     Result := False;
-    ComputeIterminal();
+    ComputeITerminal();
     Result := FALSE;  // Start assuming we are not delivering power
     for i := 1 to FNPhases do
     begin
@@ -2662,7 +2662,7 @@ begin
 
     // Compute reference Thevinen voltage from phase 1 current
 
-    ComputeIterminal();  // Get present value of current
+    ComputeITerminal();  // Get present value of current
 
     case Connection of
         TGeneralConnection.Wye:
@@ -2712,8 +2712,8 @@ begin
 
     if DynaModel.Exists() then   // Checks existence and selects
     begin
-        ComputeIterminal();
-        ComputeVterminal();
+        ComputeITerminal();
+        ComputeVTerminal();
         with StorageVars do
         begin
             NumPhases := Fnphases;
@@ -2790,7 +2790,7 @@ var
 begin
     NodeV := ActiveCircuit.Solution.NodeV;
     // Compute Derivatives and Then integrate
-    ComputeIterminal();
+    ComputeITerminal();
 
     if DynaModel.Exists() then   // Checks for existence and Selects
     begin

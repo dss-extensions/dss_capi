@@ -1045,7 +1045,7 @@ begin
 
     ComputePanelPower();
     MaxAmps := ((PVSystemvars.PanelkW * 1000) / FNPhases) / VBase;
-    ComputeIterminal();
+    ComputeITerminal();
     for i := 1 to FNPhases do
     begin
         PhaseAmps := cabs(Iterminal[i]);
@@ -1917,7 +1917,7 @@ var
 begin
     pBuffer := @TPVsystem(ParentClass).cBuffer; // TODO: not thread-safe
 
-    ComputeVterminal();
+    ComputeVTerminal();
 
     with PVSystemVars do
     begin
@@ -2102,7 +2102,7 @@ begin
 
     // Compute reference Thevinen voltage from phase 1 current
 
-    ComputeIterminal();  // Get present value of current
+    ComputeITerminal();  // Get present value of current
 
     case Connection of
         TGeneralConnection.Wye:
@@ -2193,7 +2193,7 @@ begin
         Zthev := Cmplx(RS, XThev);
         YEQ := 1 / Zthev; // used for current calcs  Always L-N
 
-        ComputeIterminal();
+        ComputeITerminal();
 
         LS := XThev / (2 * PI * DSS.DefaultBaseFreq);
 
@@ -2228,7 +2228,7 @@ var
     curr: array of Complex; // For storing the present currents when using current limiter
 begin
     // Compute Derivatives and Then integrate
-    ComputeIterminal();
+    ComputeITerminal();
     if UserModel.Exists() then
     begin
         Usermodel.Integrate(); // Checks for existence and Selects

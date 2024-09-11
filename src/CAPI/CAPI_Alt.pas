@@ -1185,7 +1185,7 @@ begin
         maxTerm := terminalIdx;
     end;
 
-    obj.ComputeIterminal();
+    obj.ComputeITerminal();
     // Method: Get max current at terminal (magnitude)
     for terminalIdx := minTerm to maxTerm do
     begin

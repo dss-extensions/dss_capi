@@ -1654,7 +1654,7 @@ begin
 
     // Compute No load losses in Yprim_Shunt
     cTempIterminal := AllocMem(Sizeof(Complex) * Yorder);
-    ComputeVterminal;
+    ComputeVTerminal();
     Yprim_Shunt.MVmult(cTempIterminal, Vterminal);
     // No Load Losses are sum of all powers coming into YPrim_Shunt from each terminal
     NoLoadLosses := 0;

@@ -676,7 +676,7 @@ begin
         // Compute nominal Positive sequence voltage behind transient reactance
         Yeq := Cinv(Zsp);
 
-        ComputeIterminal();
+        ComputeITerminal();
 
         case Fnphases of
 
@@ -963,7 +963,7 @@ begin
     E := 0;  // because of the ??? line commented out below, E is never assigned a good value
     pBuffer := @TIndMach012(ParentClass).cBuffer;
    // Set the VTerminal array
-    ComputeVterminal;
+    ComputeVTerminal();
 
     GenHarmonic := ActiveCircuit.Solution.Frequency() / BaseFrequency; // harmonic based on the fundamental for this object
     // get the spectrum multiplier and multiply by the V thev (or Norton current for load objects)
@@ -1199,7 +1199,7 @@ var
     TracePower: Complex;
 begin
     // Compute Derivatives and then integrate
-    ComputeIterminal();
+    ComputeITerminal();
 
     with MachineData do
     begin

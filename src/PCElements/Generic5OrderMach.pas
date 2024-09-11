@@ -2009,7 +2009,7 @@ begin
     // if MachineON then
     // begin
         Yeq := Cinv(Zsp);
-        ComputeIterminal();
+        ComputeITerminal();
         case Fnphases of
             1:
             begin
@@ -2342,7 +2342,7 @@ end;
 procedure TGeneric5Obj.IntegrateStates();
 begin
     // Compute Derivatives and then integrate
-    ComputeIterminal();
+    ComputeITerminal();
     // Pshaft := P_DG; // P_DG is calculated in CalcDynamic or CalcDynamicVIabc
     IntegrateABCD();
 end;

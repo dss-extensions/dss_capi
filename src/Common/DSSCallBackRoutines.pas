@@ -215,7 +215,7 @@ begin
     if DSSPrime.ActiveCircuit.ActiveCktElement() = NIL then
         Exit;
     elem := DSSPrime.ActiveCircuit.ActiveCktElement;
-    elem.ComputeIterminal();
+    elem.ComputeITerminal();
     NumCurrents := Min(elem.Yorder, NumCurrents); // Reset to actual number of elements returned
     for i := 1 to NumCurrents do
         Curr[i] := elem.ITerminal[i];

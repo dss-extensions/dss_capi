@@ -1244,7 +1244,7 @@ begin
         begin
             // MeteredElement.GetCurrents(CurrentBuffer);
             // To save some time, call ComputeITerminal
-            MeteredElement.ComputeIterminal();   // only does calc if needed
+            MeteredElement.ComputeITerminal();   // only does calc if needed
             for i := 1 to MeteredElement.Yorder do
                 CurrentBuffer[i] := MeteredElement.Iterminal[i];
 
@@ -1379,7 +1379,7 @@ begin
         11: 
         begin    // Get all terminal voltages and currents of this device
             // Get All node voltages at all terminals
-            MeteredElement.ComputeVterminal();
+            MeteredElement.ComputeVTerminal();
             For i := 1 to MeteredElement.Yorder do 
                 VoltageBuffer[i] := MeteredElement.Vterminal[i];
 
@@ -1388,7 +1388,7 @@ begin
             AddDblsToBuffer(pDoubleArray(@VoltageBuffer[1].re), 2 * MeteredElement.Yorder);
 
             // Get all terminsl currents
-            MeteredElement.ComputeIterminal();   // only does calc if needed
+            MeteredElement.ComputeITerminal();   // only does calc if needed
             for i := 1 to MeteredElement.Yorder do 
                 CurrentBuffer[i] := MeteredElement.Iterminal[i];
 
@@ -1400,7 +1400,7 @@ begin
         12: 
         begin // Get all terminal voltages LL and currents of this device - 05192021
             // Get All node voltages at all terminals
-            MeteredElement.ComputeVterminal();
+            MeteredElement.ComputeVTerminal();
 
             for k := 1 to MeteredElement.NTerms() do // Adds each term separately
             begin
@@ -1428,7 +1428,7 @@ begin
             end;
 
             // Get all terminsl currents
-            MeteredElement.ComputeIterminal();   // only does calc if needed
+            MeteredElement.ComputeITerminal();   // only does calc if needed
             
             for i := 1 to Yorder do 
                 CurrentBuffer[i] := MeteredElement.Iterminal[i];

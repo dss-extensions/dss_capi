@@ -1142,7 +1142,7 @@ begin
 
         if Dischargemode = CURRENTPEAKSHAVE then    // convert Pdiff from Amps to kW
         begin
-            MonitoredElement().ComputeVterminal();
+            MonitoredElement().ComputeVTerminal();
             VoltsArr := MonitoredElement().Vterminal;
             ElemVolts := cabs(VoltsArr[1]);
             kWNeeded := ((MonitoredElement().NPhases * Pdiff * ElemVolts) / 1000.0);
@@ -1178,7 +1178,7 @@ begin
 //                      Pdiff :=  Pdiff + FleetkW  // ignore overload due to charging
 //                     else
 //                     Begin
-//                       MonitoredElement().ComputeVterminal();
+//                       MonitoredElement().ComputeVTerminal();
 //                       VoltsArr     :=  MonitoredElement().Vterminal;
 //                       ElemVolts    :=  cabs(VoltsArr[1]);
 //                       Pdiff        :=  Pdiff + (FleetkW * 1000 / ElemVolts);
@@ -1192,7 +1192,7 @@ begin
                     Pdiff := Pdiff + GetFleetkW()
                 else
                 begin
-                    MonitoredElement().ComputeVterminal();
+                    MonitoredElement().ComputeVTerminal();
                     VoltsArr := MonitoredElement().Vterminal;
                     ElemVolts := cabs(VoltsArr[1]);
                     Pdiff := Pdiff + (GetFleetkW() * 1000 / (ElemVolts * MonitoredElement().NPhases));
@@ -1431,7 +1431,7 @@ begin
 
     if Chargemode = CURRENTPEAKSHAVELOW then   // convert Pdiff from Amps to kW
     begin
-        MonitoredElement().ComputeVterminal();
+        MonitoredElement().ComputeVTerminal();
         VoltsArr := MonitoredElement().Vterminal;
         ElemVolts := cabs(VoltsArr[1]);     // LN voltage
         kWNeeded := ((MonitoredElement().NPhases * PDiff * ElemVolts) / 1000.0);
@@ -1473,7 +1473,7 @@ begin
             Pdiff := Pdiff + GetFleetkW()
         else
         begin
-            MonitoredElement().ComputeVterminal();
+            MonitoredElement().ComputeVTerminal();
             VoltsArr := MonitoredElement().Vterminal;
             ElemVolts := cabs(VoltsArr[1]);
             Pdiff := Pdiff + (GetFleetkW() * 1000 / (ElemVolts * MonitoredElement().NPhases));   // get actual Pdiff in Currents (discount FleetkW)  (assuming same number of phases of Fleet and Monitored Element)

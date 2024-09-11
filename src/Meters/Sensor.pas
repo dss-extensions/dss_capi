@@ -522,7 +522,7 @@ begin
         Exit;
 
     MeteredElement.GetCurrents(CalculatedCurrent);
-    ComputeVterminal;
+    ComputeVTerminal();
     case Fconn of
         1:
             for i := 1 to Fnphases do

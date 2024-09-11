@@ -583,7 +583,7 @@ function TFaultObj.FaultStillGoing(): Boolean;
 var
     i: Integer;
 begin
-    ComputeIterminal;
+    ComputeITerminal();
     Result := FALSE;
     for i := 1 to FNphases do
     begin

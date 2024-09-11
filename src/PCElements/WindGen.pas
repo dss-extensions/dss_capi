@@ -1634,7 +1634,7 @@ begin
     DoSimpleMsg('%s: WindGen harmonics model is not fully implemented. Please use the Generator model instead.', [FullName()], 5674);
 
     // pBuffer := @TWindGen(ParentClass).cBuffer;
-    // ComputeVterminal();
+    // ComputeVTerminal();
 
     // GenHarmonic := ActiveCircuit.Solution.Frequency() / GenFundamental;
     // E := SpectrumObj.GetMult(GenHarmonic) * GenVars.VThevHarm; // Get base harmonic magnitude
@@ -1814,7 +1814,7 @@ begin
     //         Exit;
     //     end;
 
-    //     ComputeIterminal(); // Get present value of current
+    //     ComputeITerminal(); // Get present value of current
     //     NodeV := ActiveCircuit.Solution.NodeV;
     //     case Connection of
     //         TGeneralConnection.Wye:// wye - neutral is explicit
@@ -1857,7 +1857,7 @@ begin
             Exit;
         end;
 
-        ComputeIterminal();
+        ComputeITerminal();
 
         case Fnphases of
             1:
@@ -1937,7 +1937,7 @@ var
 begin
     // Compute Derivatives and then integrate
 
-    ComputeIterminal();
+    ComputeITerminal();
 
     // Check for user-written exciter model.
 

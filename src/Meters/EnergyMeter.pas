@@ -3197,7 +3197,7 @@ begin
         
         if (PdElem.Normamps > 0.0) or (PdElem.Emergamps > 0.0) then
         begin
-            PDelem.ComputeIterminal;
+            PDelem.ComputeITerminal();
             Cmax := PDelem.MaxTerminalOneImag; // For now, check only terminal 1 for overloads
             
             // Section introduced in 02/20/2019 for allowing the automatic change of ratings

@@ -3633,7 +3633,7 @@ begin
                 if pCktElement.Enabled() then
                     with pCktElement do
                     begin
-                        ComputeIterminal;
+                        ComputeITerminal();
                         IF (CLASSMASK AND pCktElement.DSSObjType) =  AUTOTRANS_ELEMENT   Then 
                         Begin
                             k:=0; // Special for Autotransformer

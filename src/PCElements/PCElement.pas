@@ -41,7 +41,7 @@ type
         procedure ZeroInjCurrent();
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present values of terminal
-        procedure ComputeIterminal(); OVERRIDE;
+        procedure ComputeITerminal(); OVERRIDE;
         function InjCurrents(): Integer; OVERRIDE;
         procedure CalcYPrimContribution(Curr: pComplexArray); INLINE;
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
@@ -167,7 +167,7 @@ end;
 
 procedure TPCElement.CalcYPrimContribution(Curr: pComplexArray);
 begin
-    ComputeVTerminal;
+    ComputeVTerminal();
       // Apply these voltages to Yprim
     YPrim.MVMult(Curr, Vterminal);
 end;
@@ -279,7 +279,7 @@ begin
     // Do Nothing
 end;
 
-procedure TPCElement.ComputeIterminal();
+procedure TPCElement.ComputeITerminal();
 begin
     if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
     begin

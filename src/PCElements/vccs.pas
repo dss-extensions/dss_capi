@@ -449,7 +449,7 @@ begin
         Exit;
     end;
 
-    ComputeVterminal;
+    ComputeVTerminal();
     UpdateSequenceVoltage;
 
     // SetITerminalUpdated(FALSE);
@@ -526,7 +526,7 @@ procedure TVCCSObj.InitPhasorStates();
 var
     i, k: Integer;
 begin
-    ComputeIterminal;
+    ComputeITerminal();
     s1 := cabs(Vterminal[1]) / BaseVolt;
     s4 := cabs(Iterminal[1]) / BaseCurr;
     s2 := s4;
@@ -570,7 +570,7 @@ begin
         InitPhasorStates;
         exit;
     end;
-    ComputeIterminal;
+    ComputeITerminal();
     iang := cang(Iterminal[1]);
     vang := cang(Vterminal[1]);
     s1 := cabs(Vterminal[1]) / BaseVolt;
@@ -615,7 +615,7 @@ var
     vpu, ipwr, imax, h, d: Double;
     iu, i, k, nstep, corrector: Integer;
 begin
-    ComputeIterminal;
+    ComputeITerminal();
     UpdateSequenceVoltage;
     vpu := cabs(sV1) / BaseVolt;
     if vpu > 0.0 then
@@ -691,7 +691,7 @@ begin
         exit;
     end;
 
-    ComputeIterminal;
+    ComputeITerminal();
 
     t := ActiveCircuit.Solution.DynaVars.t;
     h := ActiveCircuit.Solution.DynaVars.h;

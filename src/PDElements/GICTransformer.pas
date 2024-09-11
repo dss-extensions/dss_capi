@@ -454,7 +454,7 @@ var
     puCurrMag: Double;
     i: Integer;
 begin
-    ComputeIterminal;
+    ComputeITerminal();
     Curr := 0;
     for i := 1 to Fnphases do
         Curr += Iterminal[i];

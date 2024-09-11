@@ -4187,7 +4187,7 @@ begin
     end;
 
     try
-        // pElem.ComputeIterminal(); 
+        // pElem.ComputeITerminal(); 
         // pElem.ComputeVTerminal();
         plotParams := TJSONObject.Create([
             'PlotType', 'Visualize',

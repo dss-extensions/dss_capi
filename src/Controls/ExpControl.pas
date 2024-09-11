@@ -541,7 +541,7 @@ begin
         begin
             PVSys := ControlledElements[i];   // Use local variable in loop
       // Calculate the present average voltage  magnitude
-            PVSys.ComputeVTerminal;
+            PVSys.ComputeVTerminal();
             for j := 1 to PVSys.Yorder do
                 cBuffer[j] := PVSys.Vterminal[j];
             BasekV := ActiveCircuit.Buses[PVSys.terminals[0].busRef].kVBase;

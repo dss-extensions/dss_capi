@@ -986,7 +986,7 @@ begin
     if UsingRegulatedBus then
     begin
         TransformerConnection := ControlledTransformer.WdgConnection(ElementTerminal);
-        ComputeVTerminal;   // Computes the voltage at the bus being regulated
+        ComputeVTerminal();   // Computes the voltage at the bus being regulated
         for i := 1 to Fnphases do
         begin
             case TransformerConnection of
