@@ -44,7 +44,7 @@ function StrYOrN(const b: Boolean): String; inline;
 function CompareTextShortest(const S1, S2: String): Integer;
 procedure FireOffEditor(DSS: TDSSContext; FileNm: String);
 procedure DoDOSCmd(DSS: TDSSContext; CmdString: String);
-function StripExtension(const S: String): String;
+function StripExtension(S: String): String;
 function StripClassName(const S: String): String;  // Return only element name sans class.
 function GetNodeString(const Busname: String): String;
 function Pad(const S: String; Width: Integer): String;
@@ -204,7 +204,7 @@ begin
   // For i := 1 to Width-Length(S) DO Result := Result + ' ';
 end;
 
-function StripExtension(const S: String): String;
+function StripExtension(S: String): String;
 // Strips off everything up to a period.
 var
     dotpos: Integer;
@@ -212,7 +212,10 @@ var
 begin
     dotpos := pos('.', S) - 1;
     if dotpos = (-1) then
-        dotpos := Length(S);
+    begin
+        Result := S;
+        Exit;
+    end;
     Result := Copy(S, 1, dotpos);
 end;
 
