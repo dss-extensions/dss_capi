@@ -24,7 +24,7 @@ type
     PUBLIC
         FEnabled: WordBool;
     PRIVATE
-        FBusNames: pStringArray; // Bus + Nodes (a.1.2.3.0)
+        FBusNames: ArrayOfString; // Bus + Nodes (a.1.2.3.0)
         FYPrimInvalid: Boolean;
 
         procedure DoYprimCalcs(Ymatrix: TCMatrix);
@@ -188,20 +188,14 @@ begin
 end;
 
 destructor TDSSCktElement.Destroy;
-var
-    i: Integer;
 begin
     if DSS = NIL then
     begin
         inherited Destroy;
         exit;
     end;
-    for i := 1 to FNTerms do
-        FBusNames[i] := ''; // Free up strings
-
     SetLength(Terminals, 0);
     SetLength(TerminalsChecked, 0);
-    Reallocmem(FBusNames, 0);
     Reallocmem(Iterminal, 0);
     Reallocmem(Vterminal, 0);
     Reallocmem(NodeRef, 0);
@@ -326,7 +320,6 @@ end;
 procedure TDSSCktElement.SetNTerms(Value: Int8);
 var
     i: Integer;
-    NewBusNames: pStringArray;
 begin
     // Check for an almost certain programming error
     if Value <= 0 then
@@ -352,48 +345,31 @@ begin
      // ReAllocate BusNames
      // because they are Strings, we have to do it differently
 
-    if Value < fNterms then
-        ReallocMem(FBusNames, Sizeof(FBusNames[1]) * Value)  // Keeps old values; truncates storage
-    else
+    if FBusNames = NIL then
+        FNTerms := 0;
+
+    SetLength(FBusNames, Value); // Keeps old values; may truncate storage
+    // First allocation
+    for i := FNTerms to Value - 1 do
     begin
-        if FBusNames = NIL then
-        begin
-            // First allocation
-            //  Always allocate  arrays of strings with AllocMem so that the pointers are all nil
-            // else Delphi thinks non-zero values are pointing to an existing string.
-            FBusNames := AllocMem(Sizeof(FBusNames[1]) * Value); //    fill with zeros or strings will crash
-            for i := 1 to Value do
-                FBusNames[i] := Name + '_' + IntToStr(i);  // Make up a bus name to stick in.
-                 // This is so devices like transformers which may be defined on multiple commands
-                 // will have something in the BusNames array.
-        end
-        else
-        begin
-            NewBusNames := AllocMem(Sizeof(FBusNames[1]) * Value);  // make some new space
-            for i := 1 to fNterms do
-                NewBusNames[i] := FBusNames[i];   // copy old into new
-            for i := 1 to fNterms do
-                FBusNames[i] := '';   // decrement usage counts by setting to nil string
-            for i := fNterms + 1 to Value do
-                NewBusNames[i] := Name + '_' + IntToStr(i);  // Make up a bus name to stick in.
-            ReAllocMem(FBusNames, 0);  // dispose of old array storage
-            FBusNames := NewBusNames;
-        end;
+        FBusNames[i] := Name + '_' + IntToStr(i + 1);
+        // Make up a bus name to stick in.
+        // This is so devices like transformers which may be defined on multiple commands
+        // will have something in the BusNames array.
     end;
 
     // Reallocate Terminals if Nconds or NTerms() changed
     SetLength(Terminals, Value);
     SetLength(TerminalsChecked, Value);
-    for i := 1 to Value do
-        TerminalsChecked[i - 1] := False;
+    for i := 0 to Value - 1 do
+        TerminalsChecked[i] := False;
 
-    FNterms := Value;    // Set new number of terminals
-    Yorder := FNterms * FNConds;
-    ReallocMem(Vterminal, Sizeof(Vterminal[1]) * Yorder);
-    ReallocMem(Iterminal, Sizeof(Iterminal[1]) * Yorder);
-
-    for i := 1 to Value do
-        Terminals[i - 1].Init(FNConds);
+    FNTerms := Value;    // Set new number of terminals
+    Yorder := FNTerms * FNConds;
+    ReallocMem(Vterminal, Sizeof(Complex) * Yorder);
+    ReallocMem(Iterminal, Sizeof(Complex) * Yorder);
+    for i := 0 to Value - 1 do
+        Terminals[i].Init(FNConds);
 end;
 
 function TDSSCktElement.Enabled(): WordBool;
@@ -485,7 +461,7 @@ begin
     if FNTerms > 0 then
     begin
         BusIndex := 1;
-        Result := FBusNames[BusIndex];
+        Result := FBusNames[BusIndex - 1];
     end
     else
         Result := '';
@@ -498,7 +474,7 @@ begin
     begin
         Inc(BusIndex);
         if BusIndex <= FNTerms then
-            Result := FBusNames[BusIndex]
+            Result := FBusNames[BusIndex - 1]
         else
             BusIndex := FNTerms;
     end;
@@ -508,7 +484,7 @@ function TDSSCktElement.GetBus(i: Integer): String;  // Get bus name by index
 
 begin
     if i <= FNTerms then
-        Result := FBusNames[i]
+        Result := FBusNames[i - 1]
     else
         Result := '';
 end;
@@ -517,7 +493,7 @@ procedure TDSSCktElement.SetBus(i: Integer; const s: String); // Set bus name by
 begin
     if i <= FNTerms then
     begin
-        FBusNames[i] := AnsiLowerCase(S);
+        FBusNames[i - 1] := AnsiLowerCase(S);
         ActiveCircuit.SetBusNameRedefined();  // Set Global Flag to signal circuit to rebuild busdefs
     end
     else
@@ -1122,7 +1098,7 @@ var
     i: Integer;
     grnd: Boolean;
 begin
-    for i := 1 to FNTerms do
+    for i := 0 to FNTerms - 1 do
     begin
         grnd := IsGroundBus(FBusNames[i]);
         FBusNames[i] := StripExtension(FBusNames[i]);
