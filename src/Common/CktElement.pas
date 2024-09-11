@@ -440,7 +440,6 @@ begin
 end;
 
 procedure TDSSCktElement.SetNodeRef(iTerm: Integer; NodeRefArray: pIntegerArray);
-// Also allocates VTemp  & Itemp
 var
     Size, Size2: Integer;
 begin
@@ -450,10 +449,6 @@ begin
     ReallocMem(NodeRef, Size);  // doesn't do anything if already properly allocated
     Move(NodeRefArray[1], NodeRef[(iTerm - 1) * FNConds + 1], Size2);  // Zap
     Move(NodeRefArray[1], Terminals[iTerm - 1].TermNodeRef[0], Size2);  // Copy in Terminal as well
-
-    // Allocate temp array used to hold voltages and currents for calcs
-    ReallocMem(Vterminal, Yorder * SizeOf(Vterminal[1]));
-    ReallocMem(Iterminal, Yorder * SizeOf(Iterminal[1]));
 end;
 
 function TDSSCktElement.FirstBus(): String;
