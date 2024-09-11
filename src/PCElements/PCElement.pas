@@ -24,7 +24,9 @@ type
         procedure GetTerminalCurrents(Curr: pComplexArray); VIRTUAL;
         procedure CalcVTerminalPhase();
         procedure StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer); // This base version uses the Generator convention (the version in Load.pas negates Curr)
+        procedure SetNTerms(Value: Int8);
     PUBLIC
+        ComplexBuffer: pComplexArray;
         Connection: TGeneralConnection;
         SpectrumObj: TSpectrumObj;
 
@@ -83,6 +85,7 @@ begin
     SensorObj := NIL;
     MeterObj := NIL;
     InjCurrent := NIL;
+    ComplexBuffer := NIL;
     FIterminalUpdated := FALSE;
     Connection := TGeneralConnection.Wye;
 
@@ -95,6 +98,7 @@ end;
 
 destructor TPCElement.Destroy;
 begin
+    Reallocmem(ComplexBuffer, 0);
     if Assigned(InjCurrent) then
         Reallocmem(InjCurrent, 0);
     inherited Destroy;
@@ -368,6 +372,12 @@ begin
             TermArray[j] -= Curr;
         end;
     end;
+end;
+
+procedure TPCElement.SetNTerms(Value: Int8);
+begin
+    inherited SetNTerms(Value);
+    ReallocMem(ComplexBuffer, Sizeof(Complex) * Yorder);
 end;
 
 end.

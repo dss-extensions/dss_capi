@@ -28,13 +28,12 @@ type
         FYPrimInvalid: Boolean;
 
         procedure DoYprimCalcs(Ymatrix: TCMatrix);
-
+    PROTECTED
+        procedure SetNTerms(Value: Int8);
     PUBLIC
         FActiveTerminal: Int8;
         FNTerms: Int8;
         FNConds: Int8;  // no. conductors per terminal
-
-        ComplexBuffer: pComplexArray;
 
         IterminalSolutionCount: Integer;
 
@@ -117,7 +116,6 @@ type
         function YPrimInvalid(): Boolean;
         procedure SetYprimInvalid(const Value: Boolean);
         function NTerms(): Int8;
-        procedure SetNTerms(Value: Int8);
         function NConds(): Int8;
         procedure SetNConds(Value: Int8);
         function NPhases(): Integer;
@@ -163,7 +161,6 @@ begin
     Terminals := NIL;
     TerminalsChecked := NIL;
 
-    ComplexBuffer := NIL;
     PublicDataStruct := NIL;   // pointer to fixed struct of data to be shared
     PublicDataSize := 0;
 
@@ -208,7 +205,6 @@ begin
     Reallocmem(Iterminal, 0);
     Reallocmem(Vterminal, 0);
     Reallocmem(NodeRef, 0);
-    Reallocmem(ComplexBuffer, 0);
 
     if assigned(ControlElementList) then
         ControlElementList.Free;
@@ -395,7 +391,6 @@ begin
     Yorder := FNterms * FNConds;
     ReallocMem(Vterminal, Sizeof(Vterminal[1]) * Yorder);
     ReallocMem(Iterminal, Sizeof(Iterminal[1]) * Yorder);
-    ReallocMem(ComplexBuffer, Sizeof(ComplexBuffer[1]) * Yorder);    // used by both PD and PC elements
 
     for i := 1 to Value do
         Terminals[i - 1].Init(FNConds);
@@ -483,7 +478,6 @@ begin
     // Allocate temp array used to hold voltages and currents for calcs
     ReallocMem(Vterminal, Yorder * SizeOf(Vterminal[1]));
     ReallocMem(Iterminal, Yorder * SizeOf(Iterminal[1]));
-    ReallocMem(ComplexBuffer, Yorder * SizeOf(ComplexBuffer[1]));
 end;
 
 function TDSSCktElement.FirstBus(): String;
