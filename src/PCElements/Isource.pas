@@ -447,10 +447,10 @@ var
     i: Integer;
 begin
     try
-        GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
-        // Add Together  with yprim currents
+        GetInjCurrents(Curr);  // Get present value of inj currents
+        // No YPrim currents here, just negate the values
         for i := 1 to Yorder do
-            Curr[i] := -ComplexBuffer[i];
+            Curr[i] := -Curr[i];
 
     except
         On E: Exception do

@@ -1016,7 +1016,7 @@ begin
         GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
         // Add Together  with yprim currents
         for i := 1 to Yorder do
-            Curr[i] := Curr[i] - ComplexBuffer[i];
+            Curr[i] -= ComplexBuffer[i];
     except
         On E: Exception do
             DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName()]), E.Message,

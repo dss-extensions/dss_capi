@@ -404,7 +404,7 @@ begin
         GetInjCurrents(ComplexBuffer);
         for i := 1 to Yorder do
         begin
-            Curr[i] := Curr[i] - ComplexBuffer[i];
+            Curr[i] -= ComplexBuffer[i];
             LastCurrents[i] := Curr[i];
         end;
     except

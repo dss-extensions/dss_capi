@@ -1948,9 +1948,9 @@ begin
     end;
 
     ComputeVTerminal();
-    YPrimOpenCond.MVmult(ComplexBuffer, Vterminal);
-    for i := 1 to Yorder do
-        ComplexBuffer[i] := -ComplexBuffer[i];
+    // YPrimOpenCond.MVmult(ComplexBuffer, Vterminal);
+    // for i := 1 to Yorder do
+    //     ComplexBuffer[i] := -ComplexBuffer[i];
 end;
 
 procedure TLoadObj.GetTerminalCurrents(Curr: pComplexArray);
