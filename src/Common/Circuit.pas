@@ -298,7 +298,7 @@ type
         constructor Create(dssContext: TDSSContext; const aName: String);
         destructor Destroy; OVERRIDE;
 
-        procedure AddCktElement(Obj: TDSSCktElement);
+        procedure AddCktElement(obj: TDSSCktElement);
         procedure ClearBusMarkers();
 
         procedure TotalizeMeters();
@@ -2026,7 +2026,7 @@ var
     element: TDSSObject;
 begin
     Result := 0;
-    ParseObjectClassandName(DSS, FullObjectName, DevType, DevName);
+    ParseObjectClassAndName(DSS, FullObjectName, DevType, DevName);
     DevClassIndex := DSS.ClassNames.Find(DevType);
     if DevClassIndex = 0 then
         DevClassIndex := DSS.LastClassReferenced;
@@ -2075,7 +2075,7 @@ begin
     DSS.ActiveDSSObject := Value;
 end;
 
-procedure TDSSCircuit.AddCktElement(Obj: TDSSCktElement);
+procedure TDSSCircuit.AddCktElement(obj: TDSSCktElement);
 begin
     // Update lists that keep track of individual circuit elements
     Inc(NumDevices);
@@ -2083,76 +2083,76 @@ begin
     // Resize DeviceList if no. of devices greatly exceeds allocation
     if Cardinal(NumDevices) > 2 * DeviceList.InitialAllocation then
         ReAllocDeviceList;
-    DeviceList.Add(Obj.Name());
-    CktElements.Add(Obj);
+    DeviceList.Add(obj.Name());
+    CktElements.Add(obj);
 
     // Build Lists of PC and PD elements
-    case (Obj.DSSObjType and BaseClassMask) of
+    case (obj.DSSObjType and BaseClassMask) of
         PD_ELEMENT:
-            PDElements.Add(Obj);
+            PDElements.Add(obj);
         PC_ELEMENT:
-            PCElements.Add(Obj);
+            PCElements.Add(obj);
         CTRL_ELEMENT:
-            DSSControls.Add(Obj);
+            DSSControls.Add(obj);
         METER_ELEMENT:
-            MeterElements.Add(Obj);
+            MeterElements.Add(obj);
     else
        // Nothing
     end;
 
     // Build  lists of Special elements and generic types
-    case (Obj.DSSObjType and CLASSMASK) of
+    case (obj.DSSObjType and CLASSMASK) of
         MON_ELEMENT:
-            Monitors.Add(Obj);
+            Monitors.Add(obj);
         ENERGY_METER:
-            EnergyMeters.Add(Obj);
+            EnergyMeters.Add(obj);
         SENSOR_ELEMENT:
-            Sensors.Add(Obj);
+            Sensors.Add(obj);
         GEN_ELEMENT:
-            Generators.Add(Obj);
+            Generators.Add(obj);
         SOURCE:
-            Sources.Add(Obj);
+            Sources.Add(obj);
         CAP_CONTROL:
-            CapControls.Add(Obj);
+            CapControls.Add(obj);
         SWT_CONTROL:
-            SwtControls.Add(Obj);
+            SwtControls.Add(obj);
         REG_CONTROL:
-            RegControls.Add(Obj);
+            RegControls.Add(obj);
         LOAD_ELEMENT:
-            Loads.Add(Obj);
+            Loads.Add(obj);
         CAP_ELEMENT:
-            ShuntCapacitors.Add(Obj);
+            ShuntCapacitors.Add(obj);
         REACTOR_ELEMENT:
-            Reactors.Add(Obj);
+            Reactors.Add(obj);
         RELAY_CONTROL:
-            Relays.Add(Obj);
+            Relays.Add(obj);
         FUSE_CONTROL:
-            Fuses.Add(Obj);
+            Fuses.Add(obj);
         RECLOSER_CONTROL:
-            Reclosers.Add(Obj);
+            Reclosers.Add(obj);
 
        // Keep Lines, Transformer, and Lines and Faults in PDElements and separate lists
        // so we can find them quickly.
         AUTOTRANS_ELEMENT:
-            AutoTransformers.Add(Obj);
+            AutoTransformers.Add(obj);
         XFMR_ELEMENT:
-            Transformers.Add(Obj);
+            Transformers.Add(obj);
         LINE_ELEMENT:
-            Lines.Add(Obj);
+            Lines.Add(obj);
         FAULTOBJECT:
-            Faults.Add(Obj);
+            Faults.Add(obj);
 
         STORAGE_ELEMENT:
-            StorageElements.Add(Obj);
+            StorageElements.Add(obj);
         PVSYSTEM_ELEMENT:
-            PVSystems.Add(Obj);
+            PVSystems.Add(obj);
         INV_CONTROL:
-            InvControls.Add(Obj);
+            InvControls.Add(obj);
         EXP_CONTROL:
-            ExpControls.Add(Obj);
+            ExpControls.Add(obj);
     end;
 
-    Obj.Handle := CktElements.Count;
+    obj.Handle := CktElements.Count;
 end;
 
 procedure TDSSCircuit.DoResetMeterZones();

@@ -231,23 +231,23 @@ end;
 
 function obj_NewFromClass(DSS: TDSSContext; Cls: TDSSClass; Name: String; Activate: TAltAPIBoolean; BeginEdit: TAltAPIBoolean): Pointer;
 var
-    Obj: TDSSObject;
+    obj: TDSSObject;
 begin
     Result := NIL;
     if DSS = NIL then DSS := DSSPrime;
-    Obj := Cls.NewObject(Name, Activate);
-    if Obj = NIL then
+    obj := Cls.NewObject(Name, Activate);
+    if obj = NIL then
         Exit;
 
     if BeginEdit then
-        Cls.BeginEdit(Obj, False);
+        Cls.BeginEdit(obj, False);
 
     if Cls.DSSClassType = DSS_OBJECT then
-        DSS.DSSObjs.Add(Obj)
+        DSS.DSSObjs.Add(obj)
     else
-        DSS.ActiveCircuit.AddCktElement(TDSSCktElement(Obj));
+        DSS.ActiveCircuit.AddCktElement(TDSSCktElement(obj));
 
-    Result := Obj;
+    Result := obj;
 end;
 
 
@@ -311,19 +311,19 @@ begin
     obj.ParentClass.EndEdit(obj, NumChanges);
 end;
 
-procedure activateOnList(Obj: TDSSObject; List: TDSSPointerList);
+procedure activateOnList(obj: TDSSObject; List: TDSSPointerList);
 var
     prev: Integer;
     p: TDSSObject;
 begin
-    if List.Active = Obj then
+    if List.Active = obj then
         Exit;
 
     prev := List.ActiveIndex;
     p := List.First();
     while p <> NIL do
     begin
-        if List.Active = Obj then
+        if List.Active = obj then
             Exit;
 
         p := List.Next();
@@ -349,7 +349,7 @@ begin
     with obj.DSS.ActiveCircuit do
     begin
         // Update lists of PC and PD elements
-        case (Obj.DSSObjType and BaseClassMask) of
+        case (obj.DSSObjType and BaseClassMask) of
             PD_ELEMENT:
                 activateOnList(obj, PDElements);
             PC_ELEMENT:
@@ -365,7 +365,7 @@ begin
         //TODO: note that most of these lists are kind of redundant
         //      with our current implementation
 
-        case (Obj.DSSObjType and CLASSMASK) of
+        case (obj.DSSObjType and CLASSMASK) of
             MON_ELEMENT:
                 activateOnList(obj, Monitors);
             ENERGY_METER:
@@ -918,7 +918,7 @@ end;
 
 procedure Batch_CreateFromNew(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; Names: PPAnsiChar; Count: Integer; BeginEdit: TAltAPIBoolean); CDECL;
 var
-    // Obj: TDSSObject;
+    // obj: TDSSObject;
     Cls: TDSSClass;
     outptr: TDSSObjectPtr;
     i: Integer;

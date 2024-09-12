@@ -43,7 +43,7 @@ type
         procedure AddProperties_Double(props: Array of Integer; ptrs: Array of PDouble);
         procedure AddProperties_Object(props: Array of Integer; ptrs: Array of TDSSObjectPtr; clss: Array of TDSSClass);
 
-        function ParseObjPropertyValue(Obj: Pointer; Index: Integer; const Value: String; out prevInt: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
+        function ParseObjPropertyValue(obj: Pointer; Index: Integer; const Value: String; out prevInt: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
         function GetObjPropertyValue(obj: Pointer; Index: Integer; out PropStr: String): Boolean;
         function GetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; var val: TJSONData; preferArray: Boolean = False): Boolean;
         function SetObjPropertyJSONValue(obj: Pointer; var Index: Integer; joptions: Integer; val: TJSONData; setterFlags: TDSSPropertySetterFlags; var prevInt: Integer): Boolean;
@@ -60,15 +60,15 @@ type
         procedure SetObjStrings(ptr: Pointer; Index: Integer; Value: PPAnsiChar; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
         procedure SetObjObjects(ptr: Pointer; Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 
-        function GetObjDouble(Obj: Pointer; Index: Integer): Double;
-        function GetObjInteger(Obj: Pointer; Index: Integer): Integer;
-        function GetObjString(Obj: Pointer; Index: Integer): String;
-        function GetObjObject(Obj: Pointer; Index: Integer): TDSSObject;
+        function GetObjDouble(obj: Pointer; Index: Integer): Double;
+        function GetObjInteger(obj: Pointer; Index: Integer): Integer;
+        function GetObjString(obj: Pointer; Index: Integer): String;
+        function GetObjObject(obj: Pointer; Index: Integer): TDSSObject;
 
-        procedure GetObjDoubles(Obj: Pointer; Index: Integer; var ResultPtr: PDouble; ResultCount: PAPISize);
-        procedure GetObjIntegers(Obj: Pointer; Index: Integer; var ResultPtr: PInteger; ResultCount: PAPISize);
-        procedure GetObjStrings(Obj: Pointer; Index: Integer; var ResultPtr: PPAnsiChar; ResultCount: PAPISize);
-        procedure GetObjObjects(Obj: Pointer; Index: Integer; var ResultPtr: PPointer; ResultCount: PAPISize);
+        procedure GetObjDoubles(obj: Pointer; Index: Integer; var ResultPtr: PDouble; ResultCount: PAPISize);
+        procedure GetObjIntegers(obj: Pointer; Index: Integer; var ResultPtr: PInteger; ResultCount: PAPISize);
+        procedure GetObjStrings(obj: Pointer; Index: Integer; var ResultPtr: PPAnsiChar; ResultCount: PAPISize);
+        procedure GetObjObjects(obj: Pointer; Index: Integer; var ResultPtr: PPointer; ResultCount: PAPISize);
 
         function FillObjFromJSON(obj: Pointer; json: TJSONObject; joptions: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
     end;
@@ -151,11 +151,11 @@ function constructElemName(DSS: TDSSContext; const Param: String): String;
 var
     FClassName, FObjName: String;
 begin
-    ParseObjectClassandName(DSS, AnsiLowerCase(param), FClassName, FObjName);  // insert @var test
+    ParseObjectClassAndName(DSS, AnsiLowerCase(param), FClassName, FObjName);  // insert @var test
     result := Format('%s.%s', [FClassName, FObjName]);
 end;
 
-function TDSSClassHelper.ParseObjPropertyValue(Obj: Pointer; Index: Integer; const Value: String; out prevInt: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
+function TDSSClassHelper.ParseObjPropertyValue(obj: Pointer; Index: Integer; const Value: String; out prevInt: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
 // This handles most of the parsing and passes the processed values to 
 // the specific functions (e.g. SetObjInteger) if possible, to reduce code duplication.
 var
@@ -260,7 +260,7 @@ begin
             if flags = [] then
             begin
                 // Most properties don't have any flags set, just skip the checks
-                SetObjDouble(Obj, Index, GetDouble(Value), setterFlags);
+                SetObjDouble(obj, Index, GetDouble(Value), setterFlags);
                 Result := True;
                 Exit;
             end;
@@ -306,17 +306,17 @@ begin
             else
                 doubleVal := GetDouble(Value);
 
-            SetObjDouble(Obj, index, doubleVal, setterFlags);
+            SetObjDouble(obj, index, doubleVal, setterFlags);
             Result := True;
         end;
         TPropertyType.MappedStringEnumOnStructArrayProperty:
         begin
-            SetObjInteger(Obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt, setterFlags);
+            SetObjInteger(obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt, setterFlags);
             Result := True;
         end;
         TPropertyType.StringEnumActionProperty:
         begin
-            SetObjInteger(Obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt, setterFlags);
+            SetObjInteger(obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt, setterFlags);
             Result := True;
         end;
         TPropertyType.IntegerOnStructArrayProperty,
@@ -359,7 +359,7 @@ begin
             else
                 intVal := GetInteger(Value);
 
-            SetObjInteger(Obj, Index, intVal, @prevInt, setterFlags);
+            SetObjInteger(obj, Index, intVal, @prevInt, setterFlags);
             Result := True;
         end;
         TPropertyType.MappedStringEnumProperty:
@@ -369,7 +369,7 @@ begin
                 Result := True;
                 Exit;
             end;
-            SetObjInteger(Obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt, setterFlags);
+            SetObjInteger(obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt, setterFlags);
             Result := True;
         end;
         TPropertyType.MappedIntEnumProperty:
@@ -385,13 +385,13 @@ begin
                 // DoSimpleMsg('Invalid value (%d).', [intVal], 5004);
                 Exit;
             end;
-            SetObjInteger(Obj, Index, intVal, @prevInt, setterFlags);
+            SetObjInteger(obj, Index, intVal, @prevInt, setterFlags);
             Result := True;
         end;
         TPropertyType.BooleanActionProperty,
         TPropertyType.BooleanProperty:
         begin
-            SetObjInteger(Obj, Index, Integer(InterpretYesNo(Value)), @prevInt, setterFlags);
+            SetObjInteger(obj, Index, Integer(InterpretYesNo(Value)), @prevInt, setterFlags);
             Result := True;
         end;
         TPropertyType.StringListProperty:
@@ -429,7 +429,7 @@ begin
         TPropertyType.StringProperty,
         TPropertyType.MakeLikeProperty:
         begin
-            SetObjString(Obj, Index, Value, setterFlags);
+            SetObjString(obj, Index, Value, setterFlags);
             Result := True;
         end;
         TPropertyType.BusesOnStructArrayProperty:
@@ -2467,7 +2467,7 @@ begin
 
             TPropertyType.DSSObjectReferenceProperty:
             begin
-                otherObj := GetObjObject(Obj, Index);
+                otherObj := GetObjObject(obj, Index);
                 if otherObj <> NIL then
                 begin
                     if PropertyOffset2[Index] = 0 then
@@ -2588,9 +2588,9 @@ var
     i, maxCount: Integer;
     positionPtr: PInteger;
     flags: TPropertyFlags;
-    Obj: TDSSObject;
+    obj: TDSSObject;
 begin
-    Obj := TDSSObject(ptr);
+    obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
     if TPropertyType.DSSObjectReferenceArrayProperty <> PropertyType[Index] then
     begin
@@ -2657,9 +2657,9 @@ var
     otherObjPtr: TDSSObjectPtr;
     flags: TPropertyFlags;
     posPtr: PInteger;
-    Obj: TDSSObject;
+    obj: TDSSObject;
 begin
-    Obj := TDSSObject(ptr);
+    obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
 
     if TPropertyType.DSSObjectReferenceProperty <> PropertyType[Index] then
@@ -2688,9 +2688,9 @@ var
     otherObj: TDSSObject;
     prevInt: Integer;
     flags: TPropertyFlags;
-    Obj: TDSSObject;
+    obj: TDSSObject;
 begin
-    Obj := TDSSObject(ptr);
+    obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
     //TODO: if IsFilename, validate path here
     if TPropertyFlag.Transform_LowerCase in flags then
@@ -2698,7 +2698,7 @@ begin
 
     case PropertyType[Index] of
         TPropertyType.DSSObjectReferenceProperty:
-            ParseObjPropertyValue(Obj, Index, Value, prevInt, setterFlags);
+            ParseObjPropertyValue(obj, Index, Value, prevInt, setterFlags);
 
         TPropertyType.MakeLikeProperty:
         begin
@@ -2737,7 +2737,7 @@ begin
         begin
             if (TPropertyFlag.ConditionalReadOnly in flags) and (PLongBool(PByte(obj) + PropertyOffset3[Index])^) then
                 Exit;
-            SetObjInteger(Obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt, setterFlags);
+            SetObjInteger(obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt, setterFlags);
         end;            
     end;
 end;
@@ -2747,9 +2747,9 @@ var
     flags: TPropertyFlags;
     scale: Double;
     doublePtr: PDouble;
-    Obj: TDSSObject;
+    obj: TDSSObject;
 begin
-    Obj := TDSSObject(ptr);
+    obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
     scale := PropertyScale[Index];
     if (flags = []) and (PropertyType[Index] = TPropertyType.DoubleProperty) then
@@ -2854,9 +2854,9 @@ var
     integerPtr: PInteger = NIL;
     boolPtr: PLongBool;
     ptype: TPropertyType;
-    Obj: TDSSObject;
+    obj: TDSSObject;
 begin
-    Obj := TDSSObject(ptr);
+    obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
     ptype := PropertyType[Index];
 
@@ -3337,7 +3337,7 @@ var
     integerPtr, positionPtr, sizePtr: PInteger;
     dataPtr: PPInteger;
     flags: TPropertyFlags;
-    Obj: TDSSObject;
+    obj: TDSSObject;
 
     function checkSize(): Boolean;
     begin
@@ -3382,7 +3382,7 @@ begin
     begin
         Index := PropertyArrayAlternative[Index];
     end;
-    Obj := TDSSObject(ptr);
+    obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
     case PropertyType[Index] of
         TPropertyType.IntegerArrayProperty:
@@ -3494,7 +3494,7 @@ var
     flags: TPropertyFlags;
     doubleVals: Array of Double = NIL;
     mat: TCMatrix;
-    Obj: TDSSObject;
+    obj: TDSSObject;
 
     function checkSize(): Boolean;
     begin
@@ -3538,7 +3538,7 @@ begin
     begin
         Index := PropertyArrayAlternative[Index];
     end;
-    Obj := TDSSObject(ptr);
+    obj := TDSSObject(ptr);
     ptype := PropertyType[Index];
     flags := PropertyFlags[Index];
     case ptype of
@@ -3867,7 +3867,7 @@ var
     stringListPtr: PStringList;
     stringList: TStringList;
     stringPtr: PString;
-    Obj: TDSSObject;
+    obj: TDSSObject;
     cls: TDSSClass;
     elemClassName, ElemName: String;
     objs: Array of TDSSObject = NIL;
@@ -3914,7 +3914,7 @@ var
     end;
 
 begin
-    Obj := TDSSObject(ptr);
+    obj := TDSSObject(ptr);
 
     if (PropertyArrayAlternative[Index] <> 0) then
     begin
@@ -3959,7 +3959,7 @@ begin
                 begin
                     for i := 1 to ValueCount do
                     begin
-                        ParseObjectClassandName(DSS, AnsiLowerCase(Value^), ElemClassName, ElemName);
+                        ParseObjectClassAndName(DSS, AnsiLowerCase(Value^), ElemClassName, ElemName);
                         otherObj := NIL;
                         if elemClassName = 'wiredata' then
                         begin
@@ -4193,7 +4193,7 @@ begin
     end;
 end;
 
-function TDSSClassHelper.GetObjDouble(Obj: Pointer; Index: Integer): Double;
+function TDSSClassHelper.GetObjDouble(obj: Pointer; Index: Integer): Double;
 var
     scale: Double;
 begin
@@ -4251,7 +4251,7 @@ begin
     end;
 end;
 
-function TDSSClassHelper.GetObjString(Obj: Pointer; Index: Integer): String;
+function TDSSClassHelper.GetObjString(obj: Pointer; Index: Integer): String;
 var
     integerPtr: PInteger;
     otherObj: TDSSObject;
@@ -4299,7 +4299,7 @@ begin
 
         TPropertyType.DSSObjectReferenceProperty:
         begin
-            otherObj := GetObjObject(Obj, Index);
+            otherObj := GetObjObject(obj, Index);
             if otherObj <> NIL then
                 Result := otherObj.Name()
             else
@@ -4308,7 +4308,7 @@ begin
     end;
 end;
 
-function TDSSClassHelper.GetObjInteger(Obj: Pointer; Index: Integer): Integer;
+function TDSSClassHelper.GetObjInteger(obj: Pointer; Index: Integer): Integer;
 begin
     Result := -1;
     if not ((Index > 0) and (Index <= NumProperties) and (PropertyOffset[Index] <> -1)) then
@@ -4355,7 +4355,7 @@ begin
     end;
 end;
 
-function TDSSClassHelper.GetObjObject(Obj: Pointer; Index: Integer): TDSSObject;
+function TDSSClassHelper.GetObjObject(obj: Pointer; Index: Integer): TDSSObject;
 var
     otherObjPtr: TDSSObjectPtr;
     posPtr: PInteger;
@@ -4380,7 +4380,7 @@ begin
     end;
 end;
 
-procedure TDSSClassHelper.GetObjDoubles(Obj: Pointer; Index: Integer; var ResultPtr: PDouble; ResultCount: PAPISize); //TODO: check for missing array sizes, especially when ReadByFunction
+procedure TDSSClassHelper.GetObjDoubles(obj: Pointer; Index: Integer; var ResultPtr: PDouble; ResultCount: PAPISize); //TODO: check for missing array sizes, especially when ReadByFunction
 var
     c: PComplex;
     i, j, count, dim1, dim2, step: Integer;
@@ -4566,7 +4566,7 @@ begin
     end;
 end;
 
-procedure TDSSClassHelper.GetObjIntegers(Obj: Pointer; Index: Integer; var ResultPtr: PInteger; ResultCount: PAPISize);
+procedure TDSSClassHelper.GetObjIntegers(obj: Pointer; Index: Integer; var ResultPtr: PInteger; ResultCount: PAPISize);
 var
     integerPtr: PInteger;
     i, count, step: Integer;
@@ -4654,7 +4654,7 @@ begin
     end;
 end;
 
-procedure TDSSClassHelper.GetObjStrings(Obj: Pointer; Index: Integer; var ResultPtr: PPAnsiChar; ResultCount: PAPISize);
+procedure TDSSClassHelper.GetObjStrings(obj: Pointer; Index: Integer; var ResultPtr: PPAnsiChar; ResultCount: PAPISize);
 var
     i, count, step: Integer;
     stringList: TStringList;
@@ -4856,7 +4856,7 @@ begin
     end;
 end;
 
-procedure TDSSClassHelper.GetObjObjects(Obj: Pointer; Index: Integer; var ResultPtr: PPointer; ResultCount: PAPISize);
+procedure TDSSClassHelper.GetObjObjects(obj: Pointer; Index: Integer; var ResultPtr: PPointer; ResultCount: PAPISize);
 var
     i, count: Integer;
     otherObjPtr: TDSSObjectPtr;

@@ -218,13 +218,13 @@ end;
 
 function TFault.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.SetActiveCktElement(Obj);
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        ActiveCircuit.SetActiveCktElement(obj);
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure TFaultObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
@@ -297,12 +297,12 @@ end;
 
 function TFault.BeginEdit(ptr: Pointer; SetActive: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj(inherited BeginEdit(ptr, SetActive));
+    obj := TObj(inherited BeginEdit(ptr, SetActive));
     if SetActive then
-        DSS.ActiveFaultObj := Obj;
-    Result := Obj;
+        DSS.ActiveFaultObj := obj;
+    Result := obj;
 end;
 
 procedure TFaultObj.MakeLike(OtherPtr: Pointer);

@@ -170,13 +170,13 @@ begin
     inherited Destroy;
 end;
 
-procedure DoAction(Obj: TObj; action: TPriceShapeAction);
+procedure DoAction(obj: TObj; action: TPriceShapeAction);
 begin
     case action of
         TPriceShapeAction.DblSave:
-            Obj.SaveToDblFile;
+            obj.SaveToDblFile;
         TPriceShapeAction.SngSave:
-            Obj.SaveToSngFile;
+            obj.SaveToSngFile;
     end;
 end;
 
@@ -292,13 +292,13 @@ end;
 
 function TPriceShape.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        DSS.ActiveDSSObject := Obj;
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        DSS.ActiveDSSObject := obj;
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure TPriceShapeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);

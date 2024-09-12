@@ -275,10 +275,10 @@ begin
     Result := obj.TapNum();
 end;
 
-procedure DoReset(Obj: TObj);
+procedure DoReset(obj: TObj);
 begin
     // force a reset
-    Obj.Reset();
+    obj.Reset();
     //PropertyValue(29) := 'n'; // so it gets reported properly
 end;
 
@@ -387,13 +387,13 @@ end;
 
 function TRegControl.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.SetActiveCktElement(Obj);
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        ActiveCircuit.SetActiveCktElement(obj);
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure TRegControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
@@ -717,21 +717,21 @@ begin
     end;
 end;
 
-function OneInDirectionOf(Obj: TObj; var ProposedChange: Double; Increment: Double): Double;
+function OneInDirectionOf(obj: TObj; var ProposedChange: Double; Increment: Double): Double;
 // Computes the amount of one tap change in the direction of the pending tapchange
 // Automatically decrements the proposed change by that amount
 begin
-    Obj.LastChange := 0;
+    obj.LastChange := 0;
     if ProposedChange > 0.0 then
     begin
         Result := Increment;
-        Obj.LastChange := 1;
+        obj.LastChange := 1;
         ProposedChange := ProposedChange - Increment;
     end
     else
     begin
         Result := -Increment;
-        Obj.LastChange := -1;
+        obj.LastChange := -1;
         ProposedChange := ProposedChange + Increment;
     end;
 

@@ -220,7 +220,7 @@ begin
             Exit;
         end;
     end;
-    ParseObjectClassandName(DSS, Param, ObjClass, ObjName);     // see DSSGlobals
+    ParseObjectClassAndName(DSS, Param, ObjClass, ObjName);     // see DSSGlobals
 end;
 
 
@@ -1863,7 +1863,7 @@ end;
 
 function TExecHelper.AddObject(Cls: TDSSClass; const Name: String): Integer;
 var
-    Obj: TDSSObject = NIL;
+    obj: TDSSObject = NIL;
 begin
     Result := 0;
 
@@ -1903,8 +1903,8 @@ begin
         // Duplicates not allowed in general DSS objects;
         if not Cls.SetActive(Name) then
         begin
-            Obj := Cls.NewObject(Name, TRUE, Result);
-            DSS.DSSObjs.Add(Obj);  // Stick in pointer list to keep track of it
+            obj := Cls.NewObject(Name, TRUE, Result);
+            DSS.DSSObjs.Add(obj);  // Stick in pointer list to keep track of it
         end;
     end
     else
@@ -1913,15 +1913,15 @@ begin
         // IF Object already exists.  Treat as an Edit IF dulicates not allowed
         if DSS.ActiveCircuit.DuplicatesAllowed then
         begin
-            Obj := Cls.NewObject(Name, TRUE, Result); // Returns index into this class
-            DSS.ActiveCircuit.AddCktElement(TDSSCktElement(Obj));   // Adds active object to active circuit
+            obj := Cls.NewObject(Name, TRUE, Result); // Returns index into this class
+            DSS.ActiveCircuit.AddCktElement(TDSSCktElement(obj));   // Adds active object to active circuit
         end
         else
         begin // Check to see if we can set it active first
             if not Cls.SetActive(Name) then
             begin
-                Obj := Cls.NewObject(Name, TRUE, Result);   // Returns index into this class
-                DSS.ActiveCircuit.AddCktElement(TDSSCktElement(Obj));   // Adds active object to active circuit
+                obj := Cls.NewObject(Name, TRUE, Result);   // Returns index into this class
+                DSS.ActiveCircuit.AddCktElement(TDSSCktElement(obj));   // Adds active object to active circuit
             end
             else
             begin

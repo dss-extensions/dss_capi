@@ -171,13 +171,13 @@ begin
     inherited Destroy;
 end;
 
-procedure DoAction(Obj: TObj; action: TTShapeAction);
+procedure DoAction(obj: TObj; action: TTShapeAction);
 begin
     case action of
         TTShapeAction.DblSave:
-            Obj.SaveToDblFile;
+            obj.SaveToDblFile;
         TTShapeAction.SngSave:
-            Obj.SaveToSngFile;
+            obj.SaveToSngFile;
     end;
 end;
 
@@ -291,13 +291,13 @@ end;
 
 function TTShape.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        DSS.ActiveDSSObject := Obj;
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        DSS.ActiveDSSObject := obj;
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure TTShapeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);

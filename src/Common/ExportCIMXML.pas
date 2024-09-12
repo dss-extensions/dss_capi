@@ -136,7 +136,7 @@ type
     public
         Separate: Boolean;
         procedure WriteCimLn(prf: ProfileChoice; const s: String);
-        procedure StartInstance(prf: ProfileChoice; Root: String; Obj: TNamedObject);
+        procedure StartInstance(prf: ProfileChoice; Root: String; obj: TNamedObject);
         procedure StartFreeInstance(prf: ProfileChoice; Root: String; uuid: TUUID);
         procedure EndInstance(prf: ProfileChoice; Root: String);
     end;
@@ -273,12 +273,12 @@ type
         procedure DoubleNode(prf: ProfileChoice; Node: String; val: Double);
         procedure IntegerNode(prf: ProfileChoice; Node: String; val: Integer);
         procedure BooleanNode(prf: ProfileChoice; Node: String; val: Boolean);
-        procedure RefNode(prf: ProfileChoice; Node: String; Obj: TNamedObject);
+        procedure RefNode(prf: ProfileChoice; Node: String; obj: TNamedObject);
         procedure UuidNode(prf: ProfileChoice; Node: String; ID: TUuid);
-        procedure LineCodeRefNode(prf: ProfileChoice; List: TLineCode; Obj: TLineCodeObj);
-        procedure LineSpacingRefNode(prf: ProfileChoice; Obj: TDSSObject);
-        procedure PhaseWireRefNode(prf: ProfileChoice; Obj: TConductorDataObj);
-        procedure CircuitNode(prf: ProfileChoice; Obj: TNamedObject);
+        procedure LineCodeRefNode(prf: ProfileChoice; List: TLineCode; obj: TLineCodeObj);
+        procedure LineSpacingRefNode(prf: ProfileChoice; obj: TDSSObject);
+        procedure PhaseWireRefNode(prf: ProfileChoice; obj: TConductorDataObj);
+        procedure CircuitNode(prf: ProfileChoice; obj: TNamedObject);
         function FirstPhaseString(pElem: TDSSCktElement; bus: Integer): String;
         procedure GeneratorControlEnum(prf: ProfileChoice; val: String);
         procedure BatteryStateEnum(prf: ProfileChoice; val: Integer);
@@ -408,16 +408,16 @@ begin
     end;
 end;
 
-procedure TCIMExporter.StartInstance(prf: ProfileChoice; Root: String; Obj: TNamedObject);
+procedure TCIMExporter.StartInstance(prf: ProfileChoice; Root: String; obj: TNamedObject);
 begin
     if Separate then
     begin // must be first to avoid stack overflow in WriteCimLn
         roots[prf] := Root;
-        ids[prf] := Obj.GetUUID();
+        ids[prf] := obj.GetUUID();
     end;
-    WriteCimLn(prf, Format('<cim:%s rdf:about="urn:uuid:%s">', [Root, Obj.GetCIM_ID()]));
-    WriteCimLn(prf, Format('  <cim:IdentifiedObject.mRID>%s</cim:IdentifiedObject.mRID>', [Obj.GetCIM_ID()]));
-    WriteCimLn(prf, Format('  <cim:IdentifiedObject.name>%s</cim:IdentifiedObject.name>', [Obj.localName]));
+    WriteCimLn(prf, Format('<cim:%s rdf:about="urn:uuid:%s">', [Root, obj.GetCIM_ID()]));
+    WriteCimLn(prf, Format('  <cim:IdentifiedObject.mRID>%s</cim:IdentifiedObject.mRID>', [obj.GetCIM_ID()]));
+    WriteCimLn(prf, Format('  <cim:IdentifiedObject.name>%s</cim:IdentifiedObject.name>', [obj.localName]));
 end;
 
 procedure TCIMExporter.StartFreeInstance(prf: ProfileChoice; Root: String; uuid: TUUID);
@@ -1359,9 +1359,9 @@ begin
     FD.WriteCimLn(prf, Format('  <cim:%s>%s</cim:%s>', [Node, i, Node]));
 end;
 
-procedure TCIMExporterHelper.RefNode(prf: ProfileChoice; Node: String; Obj: TNamedObject);
+procedure TCIMExporterHelper.RefNode(prf: ProfileChoice; Node: String; obj: TNamedObject);
 begin
-    FD.WriteCimLn(prf, Format('  <cim:%s rdf:resource="urn:uuid:%s"/>', [Node, Obj.GetCIM_ID()]));
+    FD.WriteCimLn(prf, Format('  <cim:%s rdf:resource="urn:uuid:%s"/>', [Node, obj.GetCIM_ID()]));
 end;
 
 procedure TCIMExporterHelper.UuidNode(prf: ProfileChoice; Node: String; ID: TUuid);
@@ -1369,24 +1369,24 @@ begin
     FD.WriteCimLn(prf, Format('  <cim:%s rdf:resource="urn:uuid:%s"/>', [Node, UUIDToCIMString(ID)]));
 end;
 
-procedure TCIMExporterHelper.LineCodeRefNode(prf: ProfileChoice; List: TLineCode; Obj: TLineCodeObj);
+procedure TCIMExporterHelper.LineCodeRefNode(prf: ProfileChoice; List: TLineCode; obj: TLineCodeObj);
 begin
-    FD.WriteCimLn(prf, Format('  <cim:ACLineSegment.PerLengthImpedance rdf:resource="urn:uuid:%s"/>', [Obj.GetCIM_ID()]));
+    FD.WriteCimLn(prf, Format('  <cim:ACLineSegment.PerLengthImpedance rdf:resource="urn:uuid:%s"/>', [obj.GetCIM_ID()]));
 end;
 
-procedure TCIMExporterHelper.LineSpacingRefNode(prf: ProfileChoice; Obj: TDSSObject);
+procedure TCIMExporterHelper.LineSpacingRefNode(prf: ProfileChoice; obj: TDSSObject);
 begin
-    FD.WriteCimLn(prf, Format('  <cim:ACLineSegment.WireSpacingInfo rdf:resource="urn:uuid:%s"/>', [Obj.GetCIM_ID()]));
+    FD.WriteCimLn(prf, Format('  <cim:ACLineSegment.WireSpacingInfo rdf:resource="urn:uuid:%s"/>', [obj.GetCIM_ID()]));
 end;
 
-procedure TCIMExporterHelper.PhaseWireRefNode(prf: ProfileChoice; Obj: TConductorDataObj);
+procedure TCIMExporterHelper.PhaseWireRefNode(prf: ProfileChoice; obj: TConductorDataObj);
 begin
-    FD.WriteCimLn(prf, Format('  <cim:ACLineSegmentPhase.WireInfo rdf:resource="urn:uuid:%s"/>', [Obj.GetCIM_ID()]));
+    FD.WriteCimLn(prf, Format('  <cim:ACLineSegmentPhase.WireInfo rdf:resource="urn:uuid:%s"/>', [obj.GetCIM_ID()]));
 end;
 
-procedure TCIMExporterHelper.CircuitNode(prf: ProfileChoice; Obj: TNamedObject);
+procedure TCIMExporterHelper.CircuitNode(prf: ProfileChoice; obj: TNamedObject);
 begin
-    FD.WriteCimLn(prf, Format('  <cim:Equipment.EquipmentContainer rdf:resource="urn:uuid:%s"/>', [Obj.GetCIM_ID()]));
+    FD.WriteCimLn(prf, Format('  <cim:Equipment.EquipmentContainer rdf:resource="urn:uuid:%s"/>', [obj.GetCIM_ID()]));
 end;
 
 function TCIMExporterHelper.FirstPhaseString(pElem: TDSSCktElement; bus: Integer): String;

@@ -163,12 +163,12 @@ begin
     inherited Destroy;
 end;
 
-procedure DoClearSensor(Obj: TObj);
+procedure DoClearSensor(obj: TObj);
 begin
-    Obj.Vspecified := FALSE;
-    Obj.Ispecified := FALSE;
-    Obj.Pspecified := FALSE;
-    Obj.Qspecified := FALSE;
+    obj.Vspecified := FALSE;
+    obj.Ispecified := FALSE;
+    obj.Pspecified := FALSE;
+    obj.Qspecified := FALSE;
 end;
 
 procedure TSensorObj.ClearSensor();
@@ -249,13 +249,13 @@ end;
 
 function TSensor.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.SetActiveCktElement(Obj);
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        ActiveCircuit.SetActiveCktElement(obj);
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure TSensorObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
@@ -440,12 +440,12 @@ begin
             // This value will be used to set the NodeRef array (see TakeSample)
             Setbus(1, MeteredElement.GetBus(MeteredTerminal));
 
-            ClearSensor;
+            ClearSensor();
 
             ValidSensor := TRUE;
 
-            AllocateSensorObjArrays;
-            ZeroSensorArrays;
+            AllocateSensorObjArrays();
+            ZeroSensorArrays();
             RecalcVbase();
         end;
         Exit;
@@ -465,10 +465,10 @@ begin
         Setbus(1, MeteredElement.GetBus(MeteredTerminal));
         FNphases := MeteredElement.NPhases;
         SetNConds(MeteredElement.NConds());
-        ClearSensor;
+        ClearSensor();
         ValidSensor := TRUE;
-        AllocateSensorObjArrays;
-        ZeroSensorArrays;
+        AllocateSensorObjArrays();
+        ZeroSensorArrays();
         RecalcVbase();
     end;
     inherited;
@@ -491,7 +491,7 @@ end;
 procedure TSensorObj.ResetIt();
 // What does it mean to reset a sensor?
 begin
-    ClearSensor;
+    ClearSensor();
 end;
 
 function TSensorObj.RotatePhases(const j: Integer): Integer;
@@ -619,7 +619,7 @@ procedure TSensorObj.AllocateSensorObjArrays();
 begin
     ReAllocMem(SensorkW, Sizeof(SensorkW[1]) * Fnphases);
     ReAllocMem(Sensorkvar, Sizeof(Sensorkvar[1]) * Fnphases);
-    AllocateSensorArrays;
+    AllocateSensorArrays();
 end;
 
 procedure TSensorObj.ZeroSensorArrays();

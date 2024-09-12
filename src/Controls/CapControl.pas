@@ -239,10 +239,10 @@ begin
     inherited Destroy;
 end;
 
-procedure DoReset(Obj: TObj);
+procedure DoReset(obj: TObj);
 begin
     // force a reset
-    Obj.Reset();
+    obj.Reset();
     //PropertyValue(22) := 'n'; // so it gets reported properly
 end;
 
@@ -337,13 +337,13 @@ end;
 
 function TCapControl.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.SetActiveCktElement(Obj);
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        ActiveCircuit.SetActiveCktElement(obj);
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure TCapControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);

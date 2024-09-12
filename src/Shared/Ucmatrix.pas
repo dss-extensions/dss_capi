@@ -156,7 +156,7 @@ begin
         Sum := Cmplx(0.0, 0.0);
         for j := 1 to order do
         begin
-            Sum += (Values[((j - 1) * order + i)]) * x[j]);
+            Sum += Values[((j - 1) * order + i)] * x[j];
         end;
         b[i] := Sum;
     end;

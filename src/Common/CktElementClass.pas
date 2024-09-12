@@ -109,23 +109,23 @@ end;
 
 function TCktElementClass.BeginEdit(ptr: Pointer; SetActive_: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj(inherited BeginEdit(ptr, False));
+    obj := TObj(inherited BeginEdit(ptr, False));
     if SetActive_ then
     begin
-        //TODO: e.g. DSS.ActiveCapControlObj := Obj; -- if ever required for all elements
-        ActiveCircuit.SetActiveCktElement(Obj);
+        //TODO: e.g. DSS.ActiveCapControlObj := obj; -- if ever required for all elements
+        ActiveCircuit.SetActiveCktElement(obj);
     end;
-    Result := Obj;
+    Result := obj;
 end;
 
 function TCktElementClass.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj(ptr);
-    Exclude(Obj.Flags, Flg.EditingActive);
+    obj := TObj(ptr);
+    Exclude(obj.Flags, Flg.EditingActive);
 
     // This is the default action, many classes do more.
     TObj(ptr).RecalcElementData();

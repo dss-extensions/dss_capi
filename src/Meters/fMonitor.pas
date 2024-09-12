@@ -423,7 +423,7 @@ procedure DoAction(obj: TObj; action: Integer);
 begin
     if action <> 0 then
         Exit;
-    Obj.ResetIt();
+    obj.ResetIt();
 end;
 
 function getProp_Empty(obj: TObj): String;
@@ -775,13 +775,13 @@ end;
 
 function TFMonitor.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then
-        ActiveCircuit.SetActiveCktElement(Obj);
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        ActiveCircuit.SetActiveCktElement(obj);
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 function TFMonitor.EndEdit(ptr: Pointer; const NumChanges: Integer): Boolean;

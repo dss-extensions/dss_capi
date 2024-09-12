@@ -463,13 +463,13 @@ end;
 
 function TLoad.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.SetActiveCktElement(Obj);
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        ActiveCircuit.SetActiveCktElement(obj);
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure SetNcondsForConnection(obj: TObj);
@@ -1210,7 +1210,7 @@ begin
     else
     end;
 
-    SetNominalLoad;
+    SetNominalLoad();
 
     if Rneut < 0.0 then  // flag FOR open neutral
         YNeut := 0
@@ -1340,14 +1340,14 @@ begin
 
     if ActiveCircuit.Solution.LoadModel = POWERFLOW then
     begin
-        SetNominalLoad;         // same as admittance model
+        SetNominalLoad();         // same as admittance model
         CalcYPrimMatrix(YPrim_Shunt);
 
     end
     else
     begin   // ADMITTANCE model wanted
 
-        SetNominalLoad;
+        SetNominalLoad();
         CalcYPrimMatrix(YPrim_Shunt);
 
     end;

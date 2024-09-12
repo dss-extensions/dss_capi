@@ -148,19 +148,19 @@ begin
     case action of 
         CTRL_OPEN:
             for i := 1 to FUSEMAXDIM do
-                Obj.FPresentState[i] := CTRL_OPEN;
+                obj.FPresentState[i] := CTRL_OPEN;
         CTRL_CLOSE:
             for i := 1 to FUSEMAXDIM do
-                Obj.FPresentState[i] := CTRL_CLOSE;
+                obj.FPresentState[i] := CTRL_CLOSE;
     end;
-    Obj.PropertySideEffects(ord(TProp.State), 0, []);
+    obj.PropertySideEffects(ord(TProp.State), 0, []);
 end;
 
-function GetFuseStateSize(Obj: TObj): Integer;
+function GetFuseStateSize(obj: TObj): Integer;
 begin
-    Result := Min(FUSEMAXDIM, Obj.FNPhases); // NOTE: DSS-Extensions: changed from FUSEMAXDIM to avoid invalid access
-    if Obj.controlledElement <> NIL then
-        Result := Obj.controlledElement.NPhases;
+    Result := Min(FUSEMAXDIM, obj.FNPhases); // NOTE: DSS-Extensions: changed from FUSEMAXDIM to avoid invalid access
+    if obj.controlledElement <> NIL then
+        Result := obj.controlledElement.NPhases;
 end;
 
 procedure TFuse.DefineProperties();
@@ -222,13 +222,13 @@ end;
 
 function TFuse.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.SetActiveCktElement(Obj);
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        ActiveCircuit.SetActiveCktElement(obj);
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure TFuseObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);

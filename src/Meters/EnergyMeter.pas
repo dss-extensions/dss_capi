@@ -556,61 +556,61 @@ begin
     inherited Destroy;
 end;
 
-procedure DoAction(Obj: TObj; action: TEnergyMeterAction);
+procedure DoAction(obj: TObj; action: TEnergyMeterAction);
 begin
     case action of
         TEnergyMeterAction.Allocate:
-            Obj.AllocateLoad();
+            obj.AllocateLoad();
         TEnergyMeterAction.Clear:
-            Obj.ResetRegisters();
+            obj.ResetRegisters();
         TEnergyMeterAction.Reduce:
-            Obj.ReduceZone();
+            obj.ReduceZone();
         TEnergyMeterAction.Save:
-            Obj.SaveRegisters();
+            obj.SaveRegisters();
         TEnergyMeterAction.Take:
-            Obj.TakeSample();
+            obj.TakeSample();
         TEnergyMeterAction.Zonedump:
-            Obj.ZoneDump();
+            obj.ZoneDump();
     end;
 end;
 
-procedure SetOptions(Obj: TObj; Value: TStringList);
+procedure SetOptions(obj: TObj; Value: TStringList);
 var
     i: Integer;
 begin
     for i := 0 to Value.Count - 1 do
         case AnsiLowerCase(Value.Strings[i][1])[1] of
             'e':
-                Obj.ExcessFlag := TRUE;
+                obj.ExcessFlag := TRUE;
             't':
-                Obj.ExcessFlag := FALSE;
+                obj.ExcessFlag := FALSE;
             'r':
-                Obj.ZoneIsRadial := TRUE;
+                obj.ZoneIsRadial := TRUE;
             'm':
-                Obj.ZoneIsRadial := FALSE;
+                obj.ZoneIsRadial := FALSE;
             'c':
-                Obj.VoltageUEOnly := FALSE;
+                obj.VoltageUEOnly := FALSE;
             'v':
-                Obj.VoltageUEOnly := TRUE;
+                obj.VoltageUEOnly := TRUE;
         end;
     Value.Free;
 end;
 
-function GetOptions(Obj: TObj; Index: Integer): TStringList;
+function GetOptions(obj: TObj; Index: Integer): TStringList;
 begin
     Result := TStringList.Create();
     
-    if Obj.ExcessFlag then
+    if obj.ExcessFlag then
         Result.Add('E')
     else
         Result.Add('T');
     
-    if Obj.ZoneIsRadial then
+    if obj.ZoneIsRadial then
         Result.Add('R')
     else
         Result.Add('M');
     
-    if Obj.VoltageUEOnly then
+    if obj.VoltageUEOnly then
         Result.Add('V')
     else
         Result.Add('C');
@@ -702,13 +702,13 @@ end;
 
 function TEnergyMeter.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.SetActiveCktElement(Obj);
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        ActiveCircuit.SetActiveCktElement(obj);
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure TEnergyMeterObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
@@ -730,13 +730,13 @@ end;
 
 function TEnergyMeter.BeginEdit(ptr: Pointer; SetActive_: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj(inherited BeginEdit(ptr, SetActive_));
+    obj := TObj(inherited BeginEdit(ptr, SetActive_));
     if SetActive_ then
-        DSS.ActiveEnergyMeterObj := Obj;
-    Obj.MeteredElementChanged := FALSE;
-    Result := Obj;
+        DSS.ActiveEnergyMeterObj := obj;
+    obj.MeteredElementChanged := FALSE;
+    Result := obj;
 end;
 
 function TEnergyMeter.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
@@ -1081,7 +1081,7 @@ begin
     for i := 1 to NumEMRegisters do
         TotalsMask[i] := 1.0;
 
-    AllocateSensorArrays;
+    AllocateSensorArrays();
 
     for i := 1 to Fnphases do
         SensorCurrent[i] := 400.0;
@@ -1166,7 +1166,7 @@ begin
                 Setbus(1, MeteredElement.GetBus(MeteredTerminal));
                 FNphases := MeteredElement.NPhases;
                 SetNConds(MeteredElement.NConds());
-                AllocateSensorArrays;
+                AllocateSensorArrays();
 
                  // If we come through here, throw branchlist away
                 if BranchList <> NIL then
@@ -1190,7 +1190,7 @@ begin
         Setbus(1, MeteredElement.GetBus(MeteredTerminal));
         FNphases := MeteredElement.NPhases;
         SetNConds(MeteredElement.NConds());
-        AllocateSensorArrays;
+        AllocateSensorArrays();
         if BranchList <> NIL then
             BranchList.Free;
         BranchList := NIL;

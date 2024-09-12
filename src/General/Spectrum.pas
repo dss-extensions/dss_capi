@@ -105,7 +105,7 @@ var
     PropInfo: Pointer = NIL;
     PropInfoLegacy: Pointer = NIL;    
 
-procedure DoCSVFile(Obj: TObj; const FileName: String);forward;
+procedure DoCSVFile(obj: TObj; const FileName: String);forward;
 
 constructor TSpectrum.Create(dssContext: TDSSContext);
 begin
@@ -183,13 +183,13 @@ end;
 
 function TSpectrum.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        DSS.ActiveDSSObject := Obj;
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        DSS.ActiveDSSObject := obj;
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure TSpectrumObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
@@ -317,7 +317,7 @@ begin
     end;
 end;
 
-procedure DoCSVFile(Obj: TObj; const FileName: String);
+procedure DoCSVFile(obj: TObj; const FileName: String);
 begin
     obj.ReadCSVFile(FileName);
 end;

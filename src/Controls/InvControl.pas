@@ -458,9 +458,9 @@ begin
     inherited Destroy;
 end;
 
-function GetMonBusesCount(Obj: TObj): Integer;
+function GetMonBusesCount(obj: TObj): Integer;
 begin
-    Result := Obj.MonBusesNameList.Count;
+    Result := obj.MonBusesNameList.Count;
 end;
 
 procedure TInvControl.DefineProperties();
@@ -590,13 +590,13 @@ end;
 
 function TInvControl.NewObject(const ObjName: Ansistring; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then
-        ActiveCircuit.SetActiveCktElement(Obj);
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        ActiveCircuit.SetActiveCktElement(obj);
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure ValidateXYCurve(dss: TDSSContext; var curve: TXYcurveObj; InvControlMode: TInvControlControlMode);

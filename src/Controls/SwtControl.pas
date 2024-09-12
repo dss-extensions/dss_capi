@@ -115,23 +115,23 @@ begin
     inherited Destroy;
 end;
 
-procedure DoReset(Obj: TObj);
+procedure DoReset(obj: TObj);
 begin
     // force a reset
-    Obj.Locked := FALSE;
-    Obj.Reset();
+    obj.Locked := FALSE;
+    obj.Reset();
 end;
 
-function GetState(Obj: TObj): Integer;
+function GetState(obj: TObj): Integer;
 begin
-    if Obj.controlledElement = NIL then
+    if obj.controlledElement = NIL then
     begin
         // If no element is attached, return CTRL_NONE to indicate we cannot tell the state            
         Result := ord(CTRL_NONE);
         Exit;
     end;
-    Obj.controlledElement.SetActiveTerminalIdx(Obj.ElementTerminal);
-    if Obj.controlledElement.ConductorClosed(0) then
+    obj.controlledElement.SetActiveTerminalIdx(obj.ElementTerminal);
+    if obj.controlledElement.ConductorClosed(0) then
         Result := ord(CTRL_CLOSE)
     else
         Result := ord(CTRL_OPEN);
@@ -195,13 +195,13 @@ end;
 
 function TSwtControl.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.SetActiveCktElement(Obj);
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        ActiveCircuit.SetActiveCktElement(obj);
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure TSwtControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);

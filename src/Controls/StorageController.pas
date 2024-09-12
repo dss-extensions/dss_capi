@@ -304,17 +304,17 @@ begin
     inherited Destroy;
 end;
 
-function GetkWActual(Obj: TObj): Double;
+function GetkWActual(obj: TObj): Double;
 begin
-    Result := Obj.GetFleetkW();
+    Result := obj.GetFleetkW();
 end;
 
-function GetkWhActual(Obj: TObj): Double;
+function GetkWhActual(obj: TObj): Double;
 begin
-    Result := Obj.GetFleetkWh();
+    Result := obj.GetFleetkWh();
 end;
 
-function GetkWhTotal(Obj: TObj): Double;
+function GetkWhTotal(obj: TObj): Double;
 var
     pStorage: TStorageObj;
 begin
@@ -325,7 +325,7 @@ begin
     end;
 end;
 
-function GetkWTotal(Obj: TObj): Double;
+function GetkWTotal(obj: TObj): Double;
 var
     pStorage: TStorageObj;
 begin
@@ -468,13 +468,13 @@ end;
 
 function TStorageController.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.SetActiveCktElement(Obj);
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        ActiveCircuit.SetActiveCktElement(obj);
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure TStorageControllerObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);

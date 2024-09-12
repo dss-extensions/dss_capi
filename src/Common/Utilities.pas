@@ -53,7 +53,7 @@ function StringListToString(lst: TStringList): String;
 function EncloseQuotes(const s: String): String;
 
 // Parsing Utilities
-procedure ParseObjectClassandName(DSS: TDSSContext; const FullObjName: String; var ClassName, ObjName: String);
+procedure ParseObjectClassAndName(DSS: TDSSContext; const FullObjName: String; var ClassName, ObjName: String);
 function InterpretYesNo(const s: String): Boolean;
 procedure InitDblArray(NumValues: Integer; Xarray: pDoubleArray; Value: Double);
 function InterpretDblArray(DSS: TDSSContext; const s: String; MaxValues: Integer; ResultArray: pDoubleArray): Integer;
@@ -705,7 +705,7 @@ begin
     end;
 end;
 
-procedure ParseObjectClassandName(DSS: TDSSContext; const FullObjName: String; var ClassName, ObjName: String);
+procedure ParseObjectClassAndName(DSS: TDSSContext; const FullObjName: String; var ClassName, ObjName: String);
 var
     dotpos: Integer;
 begin
@@ -748,7 +748,7 @@ var
     element: TDSSCktElement;
 begin
     Result := 0;
-    ParseObjectClassandName(DSS, FullObjName, DevType, DevName);
+    ParseObjectClassAndName(DSS, FullObjName, DevType, DevName);
     DevClassIndex := DSS.ClassNames.Find(DevType);
     if DevClassIndex = 0 then 
         DevClassIndex := DSS.LastClassReferenced;

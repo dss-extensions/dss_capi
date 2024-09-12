@@ -267,10 +267,10 @@ var
     PropInfoLegacy: Pointer = NIL;    
     ActionEnum, InterpEnum: TDSSEnum;
 
-procedure Do2ColCSVFile(Obj: TObj; const FileName: String);forward;
-procedure DoDblFile(Obj: TObj; const FileName: String);forward;
-procedure DoSngFile(Obj: TObj; const FileName: String);forward;
-procedure DoCSVFile(Obj: TObj; const FileName: String);forward;
+procedure Do2ColCSVFile(obj: TObj; const FileName: String);forward;
+procedure DoDblFile(obj: TObj; const FileName: String);forward;
+procedure DoSngFile(obj: TObj; const FileName: String);forward;
+procedure DoCSVFile(obj: TObj; const FileName: String);forward;
 
 constructor TLoadShape.Create(dssContext: TDSSContext);
 begin
@@ -530,13 +530,13 @@ end;
 
 function TLoadShape.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        DSS.ActiveDSSObject := Obj;
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        DSS.ActiveDSSObject := obj;
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 // Loads the mapped file features into local variables for further use

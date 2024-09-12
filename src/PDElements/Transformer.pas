@@ -588,13 +588,13 @@ end;
 
 function TTransf.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.SetActiveCktElement(Obj);
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        ActiveCircuit.SetActiveCktElement(obj);
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure TTransfObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
@@ -741,11 +741,11 @@ end;
 
 function TTransf.BeginEdit(ptr: Pointer; SetActive: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj(inherited BeginEdit(ptr, SetActive));
-    Obj.XHLChanged := FALSE;
-    Result := Obj;
+    obj := TObj(inherited BeginEdit(ptr, SetActive));
+    obj.XHLChanged := FALSE;
+    Result := obj;
 end;
 
 procedure TTransfObj.MakeLike(OtherPtr: Pointer);
@@ -1982,29 +1982,29 @@ end;
 
 procedure TTransfObj.FetchXfmrCode();
 var
-    Obj: TXfmrCodeObj;
+    obj: TXfmrCodeObj;
     i: Integer;
 begin
     if XfmrCodeObj = NIL then
         Exit;
 
-    Obj := TXfmrCodeObj(XfmrCodeObj);
+    obj := TXfmrCodeObj(XfmrCodeObj);
     // set sizes and copy parameters
-    FNphases := Obj.Fnphases;
-    SetNumWindings(Obj.NumWindings);
+    FNphases := obj.Fnphases;
+    SetNumWindings(obj.NumWindings);
     SetNConds(Fnphases + 1); // forces reallocation of terminals and conductors
     for i := 1 to NumWindings do
         // Records can be copied
-        Winding[i] := Obj.Winding[i];
+        Winding[i] := obj.Winding[i];
 
     SetTermRef;
 
     // Parameters for all windings
-    XHL := Obj.XHL;
-    XHT := Obj.XHT;
-    XLT := Obj.XLT;
+    XHL := obj.XHL;
+    XHT := obj.XHT;
+    XLT := obj.XLT;
     for i := 1 to (NumWindings * (NumWindings - 1) div 2) do
-        XSc[i] := Obj.XSC[i];
+        XSc[i] := obj.XSC[i];
 
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
@@ -2017,25 +2017,25 @@ begin
         PrpSequence[ord(TProp.Xscarray)] := 0;
     end;
 
-    ThermalTimeConst := Obj.ThermalTimeConst;
-    n_thermal := Obj.n_thermal;
-    m_thermal := Obj.m_thermal;
-    FLrise := Obj.FLrise;
-    HSrise := Obj.HSrise;
-    pctLoadLoss := Obj.pctLoadLoss;
-    pctNoLoadLoss := Obj.pctNoLoadLoss;
-    pctImag := Obj.pctImag;  // Omission corrected 12-14-18
-    NormMaxHkVA := Obj.NormMaxHkVA;
-    EmergMaxHkVA := Obj.EmergMaxHkVA;
-    ppm_FloatFactor := Obj.ppm_FloatFactor;
+    ThermalTimeConst := obj.ThermalTimeConst;
+    n_thermal := obj.n_thermal;
+    m_thermal := obj.m_thermal;
+    FLrise := obj.FLrise;
+    HSrise := obj.HSrise;
+    pctLoadLoss := obj.pctLoadLoss;
+    pctNoLoadLoss := obj.pctNoLoadLoss;
+    pctImag := obj.pctImag;  // Omission corrected 12-14-18
+    NormMaxHkVA := obj.NormMaxHkVA;
+    EmergMaxHkVA := obj.EmergMaxHkVA;
+    ppm_FloatFactor := obj.ppm_FloatFactor;
     Yorder := FNConds * fNTerms;
     SetYprimInvalid(true);
     Y_Terminal_FreqMult := 0.0;
 
-    NumAmpRatings := Obj.NumkVARatings;
+    NumAmpRatings := obj.NumkVARatings;
     SetLength(kVARatings, NumAmpRatings);
     for i := 0 to High(kVARatings) do
-        kVARatings[i] := Obj.kVARatings[i];
+        kVARatings[i] := obj.kVARatings[i];
 
     RecalcElementData();
 end;

@@ -160,29 +160,29 @@ begin
     inherited Destroy;
 end;
 
-procedure SetX(Obj: TObj; Value: Double);
+procedure SetX(obj: TObj; Value: Double);
 begin
-    Obj.SetX(Value);
+    obj.SetX(Value);
 end;
 
-procedure SetY(Obj: TObj; Value: Double);
+procedure SetY(obj: TObj; Value: Double);
 begin
-    Obj.SetY(Value);
+    obj.SetY(Value);
 end;
 
-function GetX(Obj: TObj): Double;
+function GetX(obj: TObj): Double;
 begin
-    Result := Obj.GetX();
+    Result := obj.GetX();
 end;
 
-function GetY(Obj: TObj): Double;
+function GetY(obj: TObj): Double;
 begin
-    Result := Obj.GetY();
+    Result := obj.GetY();
 end;
 
-function Get2xNumPoints(Obj: TObj): Integer;
+function Get2xNumPoints(obj: TObj): Integer;
 begin
-    Result := Obj.numPoints * 2;
+    Result := obj.numPoints * 2;
 end;
 
 procedure SetPoints(obj: TObj; Values: PDouble; ValueCount: Integer);
@@ -312,13 +312,13 @@ end;
 
 function TXYcurve.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        DSS.ActiveDSSObject := Obj;
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        DSS.ActiveDSSObject := obj;
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure TXYcurveObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);

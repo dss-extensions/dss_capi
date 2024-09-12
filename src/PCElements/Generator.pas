@@ -473,10 +473,10 @@ begin
     inherited Destroy;
 end;
 
-procedure DoRefuel(Obj: TObj);
+procedure DoRefuel(obj: TObj);
 begin
-    Obj.pctFuel := 100.0;
-    Obj.GenActive := True;
+    obj.pctFuel := 100.0;
+    obj.GenActive := True;
 end;
 
 procedure ObjSetDynOutputNames(obj: TObj; variables: TStringList);
@@ -645,13 +645,13 @@ end;
 
 function TGenerator.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.SetActiveCktElement(Obj);
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        ActiveCircuit.SetActiveCktElement(obj);
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 procedure SetNcondsForConnection(obj: TObj);

@@ -443,7 +443,7 @@ type
         ActiveProperty: Integer;
         ElementNameList: THashListType;
 
-        Function AddObjectToList(Obj:Pointer; Activate: Boolean = True):Integer;  // Used by NewObject
+        Function AddObjectToList(obj: Pointer; Activate: Boolean = True):Integer;  // Used by NewObject
         Procedure CountPropertiesAndAllocate();virtual;
         procedure DefineProperties();virtual;
 
@@ -1611,31 +1611,31 @@ function TDSSClass.BeginEdit(ptr: Pointer; SetActive: Boolean): Pointer;
 type
     TObj = TDSSObject;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
     Result := NIL;
     if ptr <> NIL then
-        Obj := TObj(ptr)
+        obj := TObj(ptr)
     else
-        Obj := ElementList.Active;
+        obj := ElementList.Active;
 
-    Exclude(Obj.Flags, Flg.DefaultAndUnedited);
+    Exclude(obj.Flags, Flg.DefaultAndUnedited);
 
-    Result := Obj;
+    Result := obj;
     if SetActive then
     begin
-        //TODO: e.g. DSS.ActiveConductorDataObj := Obj; -- if ever required later
-        DSS.ActiveDSSObject := Obj;
+        //TODO: e.g. DSS.ActiveConductorDataObj := obj; -- if ever required later
+        DSS.ActiveDSSObject := obj;
     end;
 
-    if (Obj <> NIL) and (Flg.EditingActive in Obj.Flags) then
+    if (obj <> NIL) and (Flg.EditingActive in obj.Flags) then
     begin
         //TODO: refine the logic to throw the error
-        DosimpleMsg('%s: Object already being edited!', [Obj.FullName()], 37737);
+        DosimpleMsg('%s: Object already being edited!', [obj.FullName()], 37737);
         Exit;
     end;
-    if (Obj <> NIL) then
-        Include(Obj.Flags, Flg.EditingActive);
+    if (obj <> NIL) then
+        Include(obj.Flags, Flg.EditingActive);
 end;
 
 function TDSSClass.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
@@ -1648,15 +1648,15 @@ Function TDSSClass.Edit(Parser: TDSSParser): Integer;
 var
     ParamPointer: Integer;
     ParamName, Param: String;
-    Obj: TDSSObject;
+    obj: TDSSObject;
     prevInt: Integer;
 begin
     Result := 0;
 
     // Get the target object and initialize the editing process
-    Obj := TDSSObject(BeginEdit(NIL, True));
+    obj := TDSSObject(BeginEdit(NIL, True));
 
-    if Obj = NIL then
+    if obj = NIL then
     begin
         Result := -1;
         DoSimpleMsg(_('There is no active element to edit.'), 37738);
@@ -1677,17 +1677,17 @@ begin
         if (ParamPointer <= 0) or (ParamPointer > NumProperties) then
         begin
             // Not a class property, but may still be a dyn.eq. for some classes
-            if not Obj.ParseDynVar(Parser, ParamName) then
+            if not obj.ParseDynVar(Parser, ParamName) then
             begin
                 if Length(ParamName) > 0 then
-                    DoSimpleMsg('Unknown parameter "%s" (value "%s") for object "%s"', [ParamName, Param, TDSSObject(Obj).FullName()], 110)
+                    DoSimpleMsg('Unknown parameter "%s" (value "%s") for object "%s"', [ParamName, Param, TDSSObject(obj).FullName()], 110)
                 else
-                    DoSimpleMsg('Unknown parameter for value "%s" in object "%s"', [Param, TDSSObject(Obj).FullName()], 110);
+                    DoSimpleMsg('Unknown parameter for value "%s" in object "%s"', [Param, TDSSObject(obj).FullName()], 110);
 
                 if DSS_CAPI_EARLY_ABORT then
                 begin
                     Result := -1;
-                    EndEdit(Obj, Result);
+                    EndEdit(obj, Result);
                     Exit;
                 end;
             end;
@@ -1699,12 +1699,12 @@ begin
 
         Inc(Result);
 
-        if not ParseObjPropertyValue(Obj, ParamPointer, Param, prevInt, []) then
+        if not ParseObjPropertyValue(obj, ParamPointer, Param, prevInt, []) then
         begin
             if DSS_CAPI_EARLY_ABORT then
             begin
                 Result := -1;
-                EndEdit(Obj, Result);
+                EndEdit(obj, Result);
                 Exit;
             end;
 
@@ -1714,25 +1714,25 @@ begin
         end;
         
         if not (PropertyType[ParamPointer] in [TPropertyType.StringEnumActionProperty, TPropertyType.BooleanActionProperty]) then
-            Obj.SetAsNextSeq(ParamPointer);
+            obj.SetAsNextSeq(ParamPointer);
 
-        Obj.PropertySideEffects(ParamPointer, prevInt, []);
+        obj.PropertySideEffects(ParamPointer, prevInt, []);
 
-//            GetObjPropertyValue(Obj, ParamPointer, tmp);
-//            WriteLn(TDSSObject(Obj).FullName(), '.', PropertyName[ParamPointer], ' = ', tmp);
+//            GetObjPropertyValue(obj, ParamPointer, tmp);
+//            WriteLn(TDSSObject(obj).FullName(), '.', PropertyName[ParamPointer], ' = ', tmp);
 
         ParamName := Parser.NextParam();
         Param := Parser.MakeString();
     end;
 
     // Finalize it
-    EndEdit(Obj, Result);
+    EndEdit(obj, Result);
 end;
 
-function TDSSClass.AddObjectToList(Obj:Pointer; Activate: Boolean): Integer;
+function TDSSClass.AddObjectToList(obj:Pointer; Activate: Boolean): Integer;
 begin
-    ElementList.Add(Obj); // Stuff it in this collection's element list
-    ElementNameList.Add(TDSSObject(Obj).Name());
+    ElementList.Add(obj); // Stuff it in this collection's element list
+    ElementNameList.Add(TDSSObject(obj).Name());
     if Activate then
     begin
         ActiveElement := ElementList.Count;

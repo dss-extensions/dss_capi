@@ -287,15 +287,15 @@ procedure DoAction(obj: TObj; action: TMonitorAction);
 begin
     case action of 
         TMonitorAction.Save:
-            Obj.Save();
+            obj.Save();
         TMonitorAction.Clear:
-            Obj.ResetIt();
+            obj.ResetIt();
         TMonitorAction.Take:
-            Obj.TakeSample();
+            obj.TakeSample();
         TMonitorAction.Process:
         begin
-            Obj.PostProcess();
-            dec(Obj.recalc)
+            obj.PostProcess();
+            dec(obj.recalc)
         end
     end;
 end;
@@ -339,22 +339,22 @@ end;
 
 function TDSSMonitor.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj.Create(Self, ObjName);
+    obj := TObj.Create(Self, ObjName);
     if Activate then 
-        ActiveCircuit.SetActiveCktElement(Obj);
-    Obj.ClassIndex := AddObjectToList(Obj, Activate);
-    Result := Obj;
+        ActiveCircuit.SetActiveCktElement(obj);
+    obj.ClassIndex := AddObjectToList(obj, Activate);
+    Result := obj;
 end;
 
 function TDSSMonitor.BeginEdit(ptr: Pointer; SetActive_: Boolean): Pointer;
 var
-    Obj: TObj;
+    obj: TObj;
 begin
-    Obj := TObj(inherited BeginEdit(ptr, SetActive_));
-    Obj.recalc := 0;
-    Result := Obj;
+    obj := TObj(inherited BeginEdit(ptr, SetActive_));
+    obj.recalc := 0;
+    Result := obj;
 end;
 
 function TDSSMonitor.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
