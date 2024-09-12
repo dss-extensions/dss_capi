@@ -1,4 +1,4 @@
-unit generator;
+unit Generator;
 
 // ----------------------------------------------------------
 // Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
