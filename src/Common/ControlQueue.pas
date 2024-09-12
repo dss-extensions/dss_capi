@@ -317,7 +317,7 @@ begin
             S := 'by Pop function'
         else
             S := 'by control device';
-        WriteTraceRecord(pElem.Name(), actionRec^.ActionCode, pelem.dbltraceParameter,
+        WriteTraceRecord(pElem.Name(), actionRec^.ActionCode, pElem.dbltraceParameter,
             Format('Handle %d deleted from Queue %s', [actionRec^.ActionHandle, S]));
     end;
 
@@ -346,7 +346,7 @@ begin
         while pElem <> NIL do
         begin
             if (DebugTrace) then
-                WriteTraceRecord(pElem.Name(), Code, pelem.dbltraceParameter, Format('Pop Handle %d Do Action', [Hdl]));
+                WriteTraceRecord(pElem.Name(), Code, pElem.dbltraceParameter, Format('Pop Handle %d Do Action', [Hdl]));
             pElem.DoPendingAction(code, ProxyHdl);
             Result := TRUE;
             pElem := Pop(t, Code, ProxyHdl, hdl);
@@ -386,7 +386,7 @@ begin
     while pElem <> NIL do
     begin
         if (DebugTrace) then
-            WriteTraceRecord(pElem.Name(), Code, pelem.dbltraceParameter, Format('Pop Handle %d Do Action', [Hdl]));
+            WriteTraceRecord(pElem.Name(), Code, pElem.dbltraceParameter, Format('Pop Handle %d Do Action', [Hdl]));
         pElem.DoPendingAction(code, ProxyHdl);
         Result := TRUE;
         pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], FALSE);
@@ -408,7 +408,7 @@ begin
         begin
             pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], FALSE); // Removes the CtrlAction from The Queue
             if (DebugTrace) then
-                WriteTraceRecord(pElem.Name(), Code, pelem.dbltraceParameter, Format('Pop Handle %d Do Action', [Hdl]));
+                WriteTraceRecord(pElem.Name(), Code, pElem.dbltraceParameter, Format('Pop Handle %d Do Action', [Hdl]));
             pElem.DoPendingAction(code, ProxyHdl);
             // Downloads the next CtrlAction without removing it from the Queue
             pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], TRUE);   

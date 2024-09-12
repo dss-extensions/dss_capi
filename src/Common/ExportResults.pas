@@ -352,7 +352,7 @@ begin
 end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure CalcAndWriteSeqCurrents(DSS: TDSSContext; F: TFileStream; j: Integer; pelem: TDSSCktElement; cBuffer: pComplexArray; DoRatings: Boolean);
+procedure CalcAndWriteSeqCurrents(DSS: TDSSContext; F: TFileStream; j: Integer; pElem: TDSSCktElement; cBuffer: pComplexArray; DoRatings: Boolean);
 var
     I0, I1, I2, I2I1, I0I1, iNormal, iEmerg: Double;
     i, k, NCond: Integer;
@@ -362,8 +362,8 @@ var
 
 
 begin
-    NCond := pelem.NConds();
-    if (pelem.Nphases >= 3) then
+    NCond := pElem.NConds();
+    if (pElem.Nphases >= 3) then
     begin
         for i := 1 to 3 do
         begin
@@ -409,10 +409,10 @@ begin
     if DoRatings and (j = 1)  // Only for 1st Terminal
     then
     begin
-        iNormal := TPDElement(Pelem).NormAmps;
+        iNormal := TPDElement(pElem).NormAmps;
         if iNormal > 0.0 then
             iNormal := I1 / iNormal * 100.0;
-        iEmerg := TPDElement(Pelem).EmergAmps;
+        iEmerg := TPDElement(pElem).EmergAmps;
         if iEmerg > 0.0 then
             iEmerg := I1 / iEmerg * 100.0;
     end
@@ -428,7 +428,7 @@ begin
 
 
     FSWriteln(F, Format('"%s", %3d, %10.6g, %8.4g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g',
-        [(pelem.DSSClassName + '.' + AnsiUpperCase(pelem.Name())), j, I1, iNormal, iEmerg, I2, I2I1, I0, I0I1, Cabs(Iresidual), I_NEMA]));
+        [(pElem.DSSClassName + '.' + AnsiUpperCase(pElem.Name())), j, I1, iNormal, iEmerg, I2, I2I1, I0, I0I1, Cabs(Iresidual), I_NEMA]));
 end;
 
 procedure ExportSeqCurrents(DSS: TDSSContext; FileNm: String);
@@ -452,16 +452,16 @@ begin
 
 
         //Sources First
-        Pelem := DSS.ActiveCircuit.Sources.First;
-        while pelem <> NIL do
+        pElem := DSS.ActiveCircuit.Sources.First;
+        while pElem <> NIL do
         begin
-            if (pelem.Enabled()) then
+            if (pElem.Enabled()) then
             begin
-                pelem.GetCurrents(cBuffer);
-                for j := 1 to pelem.NTerms() do
-                    CalcAndWriteSeqCurrents(DSS, F, j, pelem, cBuffer, FALSE);
+                pElem.GetCurrents(cBuffer);
+                for j := 1 to pElem.NTerms() do
+                    CalcAndWriteSeqCurrents(DSS, F, j, pElem, cBuffer, FALSE);
             end;
-            pelem := DSS.ActiveCircuit.Sources.Next;
+            pElem := DSS.ActiveCircuit.Sources.Next;
         end;
 
 
@@ -495,16 +495,16 @@ begin
 
 
         //Faults Next
-        Pelem := DSS.ActiveCircuit.Faults.First;
-        while pelem <> NIL do
+        pElem := DSS.ActiveCircuit.Faults.First;
+        while pElem <> NIL do
         begin
-            if (pelem.Enabled()) then
+            if (pElem.Enabled()) then
             begin
-                pelem.GetCurrents(cBuffer);
-                for j := 1 to pelem.NTerms() do
-                    CalcAndWriteSeqCurrents(DSS, F, j, pelem, cBuffer, FALSE);
+                pElem.GetCurrents(cBuffer);
+                for j := 1 to pElem.NTerms() do
+                    CalcAndWriteSeqCurrents(DSS, F, j, pElem, cBuffer, FALSE);
             end;
-            pelem := DSS.ActiveCircuit.Faults.Next;
+            pElem := DSS.ActiveCircuit.Faults.Next;
         end;
 
         DSS.GlobalResult := FileNm;
@@ -524,7 +524,7 @@ var
     Iresid: Complex;
 begin
     k := 0;
-    FSWrite(F, Format('%s', [pelem.DSSClassName + '.' + AnsiUpperCase(pElem.Name())]));
+    FSWrite(F, Format('%s', [pElem.DSSClassName + '.' + AnsiUpperCase(pElem.Name())]));
     for      j := 1 to pElem.NTerms() do
     begin
         Iresid := CZERO;
@@ -576,7 +576,7 @@ begin
             begin
                 RatingIdx := trunc(RSignal.GetYValue(DSS.ActiveCircuit.Solution.DynaVars.intHour));
           // Brings the seasonal ratings for the PDElement
-                if (RatingIdx <= PElem.NumAmpRatings) and (PElem.NumAmpRatings > 1) then
+                if (RatingIdx <= pElem.NumAmpRatings) and (pElem.NumAmpRatings > 1) then
                 begin
                     NormAmps := pElem.AmpRatings[RatingIdx];
                     EmergAmps := pElem.AmpRatings[RatingIdx];
@@ -589,7 +589,7 @@ begin
             DSS.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
     end;
 
-    FSWrite(F, Format('%s.%s', [pelem.DSSClassName, AnsiUpperCase(pElem.Name())]));
+    FSWrite(F, Format('%s.%s', [pElem.DSSClassName, AnsiUpperCase(pElem.Name())]));
     MaxCurrent := 0.0;
     for    i := 1 to pElem.Nphases do
     begin
@@ -606,7 +606,7 @@ begin
 
     FSWrite(F, Format(', %10.6g, %10.6g, %d, %d, %d', [Localpower.re, Localpower.im, pElem.BranchNumCustomers, pElem.BranchTotalCustomers, pElem.NPhases]));
     with DSS.ActiveCircuit do
-        FSWrite(F, Format(', %-.3g ', [Buses^[MapNodeToBus^[PElem.NodeRef^[1]].BusRef].kVBase]));
+        FSWrite(F, Format(', %-.3g ', [Buses^[MapNodeToBus^[pElem.NodeRef^[1]].BusRef].kVBase]));
     FSWriteln(F);
 end;
 
@@ -635,10 +635,10 @@ begin
         pElem := DSS.ActiveCircuit.CktElements.First;
         while pElem <> NIL do
         begin
-            if pelem.NTerms() > MaxTerm then
-                MaxTerm := pelem.NTerms();
-            if pelem.NConds() > MaxCond then
-                MaxCond := pelem.NConds();
+            if pElem.NTerms() > MaxTerm then
+                MaxTerm := pElem.NTerms();
+            if pElem.NConds() > MaxCond then
+                MaxCond := pElem.NConds();
             pElem := DSS.ActiveCircuit.CktElements.Next;
         end;
 
@@ -1799,7 +1799,7 @@ begin
                     F := TBufferedFileStream.Create(FileNm, fmCreate);
                 {Write New Header}
                     FSWrite(F, 'Year, LDCurve, Hour, Meter');
-                    for regName in pelem.RegisterNames do
+                    for regName in pElem.RegisterNames do
                         FSWrite(F, Separator, '"' + regName + '"');
                     FSWriteln(F);
                     FreeAndNil(F);
@@ -1812,7 +1812,7 @@ begin
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.DynaVars.intHour), Separator);
                 FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
                 for j := 1 to NumEMRegisters do
-                    FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
+                    FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));
                 FSWriteln(F);
                 AppendGlobalResult(DSS, FileNm);
             finally
@@ -1871,7 +1871,7 @@ begin
             // Write New Header
             pElem := DSS.ActiveCircuit.energyMeters.First;
             FSWrite(F, 'Year, LDCurve, Hour, Meter');
-            for regName in pelem.RegisterNames do
+            for regName in pElem.RegisterNames do
                 FSWrite(F, Separator, '"' + regName + '"');
             FSWriteln(F);
         end
@@ -1893,7 +1893,7 @@ begin
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.DynaVars.intHour), Separator);
                 FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
                 for j := 1 to NumEMRegisters do
-                    FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
+                    FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));
                 FSWriteln(F);
             end;
             pElem := DSS.ActiveCircuit.EnergyMeters.Next;
@@ -1970,7 +1970,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
                     for j := 1 to NumGenRegisters do
-                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
+                        FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));
                     FSWriteln(F);
                 end;
                 AppendGlobalResult(DSS, FileNm);
@@ -2059,7 +2059,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
                     for j := 1 to NumGenRegisters do
-                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));                        
+                        FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));                        
                     FSWriteln(F);
                 end;
 
@@ -2118,7 +2118,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
                     for j := 1 to NumPVSystemRegisters do
-                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
+                        FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));
                     FSWriteln(F);
                 end;
                 AppendGlobalResult(DSS, FileNm);
@@ -2203,7 +2203,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
                     for j := 1 to NumPVSystemRegisters do
-                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
+                        FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));
                     FSWriteln(F);
                 end;
 
@@ -2263,7 +2263,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
                     for j := 1 to NumStorageRegisters do
-                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
+                        FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));
                     FSWriteln(F);
                 end;
                 AppendGlobalResult(DSS, FileNm);
@@ -2347,7 +2347,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
                     for j := 1 to NumStorageRegisters do
-                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
+                        FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));
                     FSWriteln(F);
                 end;
 
@@ -3598,7 +3598,7 @@ begin
 
         FSWriteln(F, 'Bus, Mvar, GIC Amps per phase');
         pElem := TGICTransformerObj(GICClass.ElementList.First);
-        while PElem <> NIL do
+        while pElem <> NIL do
         begin
             pElem.WriteVarOutputRecord(F);
             pElem := TGICTransformerObj(GICClass.ElementList.Next);
