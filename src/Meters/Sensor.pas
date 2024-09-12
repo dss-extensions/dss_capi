@@ -319,7 +319,7 @@ begin
     for pSensor in ActiveCircuit.Sensors do
     begin
         if pSensor.Enabled() then
-            pSensor.ResetIt;
+            pSensor.ResetIt();
     end;
 end;
 
@@ -330,7 +330,7 @@ begin
     for pSensor in ActiveCircuit.Sensors do
     begin
         if pSensor.Enabled() then
-            pSensor.TakeSample;
+            pSensor.TakeSample();
     end;
 end;
 

@@ -287,14 +287,14 @@ procedure DoAction(obj: TObj; action: TMonitorAction);
 begin
     case action of 
         TMonitorAction.Save:
-            Obj.Save;
+            Obj.Save();
         TMonitorAction.Clear:
-            Obj.ResetIt;
+            Obj.ResetIt();
         TMonitorAction.Take:
-            Obj.TakeSample;
+            Obj.TakeSample();
         TMonitorAction.Process:
         begin
-            Obj.PostProcess;
+            Obj.PostProcess();
             dec(Obj.recalc)
         end
     end;
@@ -375,7 +375,7 @@ begin
     for Mon in ActiveCircuit.Monitors do
     begin
         if Mon.Enabled() then
-            Mon.ResetIt;
+            Mon.ResetIt();
     end;
 end;
 
@@ -388,7 +388,7 @@ begin
     begin
         if Mon.Enabled() then
             if Mon.Mode <> 5 then
-                Mon.TakeSample;
+                Mon.TakeSample();
     end;
 end;
 
@@ -401,7 +401,7 @@ begin
     begin
         if Mon.Enabled() then
             if Mon.Mode = 5 then
-                Mon.TakeSample;
+                Mon.TakeSample();
     end;
 end;
 
@@ -412,7 +412,7 @@ begin
     for Mon in ActiveCircuit.Monitors do
     begin
         if Mon.Enabled() then
-            Mon.PostProcess;
+            Mon.PostProcess();
     end;
 end;
 
@@ -423,7 +423,7 @@ begin
     for Mon in ActiveCircuit.Monitors do
     begin
         if Mon.Enabled() then
-            Mon.Save;
+            Mon.Save();
     end;
 end;
 
@@ -633,7 +633,7 @@ begin
                 ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer[1]) * MeteredElement.NConds());
             end;
 
-            ClearMonitorStream;
+            ClearMonitorStream();
 
             ValidMonitor := TRUE;
         end;
@@ -672,7 +672,7 @@ begin
             ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer[1]) * MeteredElement.Yorder);
             ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer[1]) * MeteredElement.NConds());
         end;
-        ClearMonitorStream;
+        ClearMonitorStream();
         ValidMonitor := TRUE;
     end;
     inherited;
@@ -1127,7 +1127,7 @@ begin
     try
         if IsFileOpen then
         begin  // only close open files
-            PostProcess;
+            PostProcess();
             MonitorStream.Seek(0, soFromBeginning);   // just move stream position to the beginning
             IsFileOpen := FALSE;
         end;
@@ -1143,7 +1143,7 @@ procedure TMonitorObj.Save();
 // Saves present buffer to monitor file, resets bufferptrs and continues
 begin
     if not IsFileOpen then
-        OpenMonitorStream; // Position to end of stream
+        OpenMonitorStream(); // Position to end of stream
 
     // Write present monitor buffer to monitorstream
     MonitorStream.Write(MonBuffer^, SizeOF(MonBuffer[1]) * BufPtr);
@@ -1154,7 +1154,7 @@ end;
 procedure TMonitorObj.ResetIt();
 begin
     BufPtr := 0;
-    ClearMonitorStream;
+    ClearMonitorStream();
 end;
 
 procedure TMonitorObj.PostProcess();
@@ -1620,7 +1620,7 @@ begin
     // first check to see if there's enough room
     // if not, save to monitorstream first.
     if BufPtr = BufferSize then
-        Save;
+        Save();
     Inc(BufPtr);
     MonBuffer[BufPtr] := Dbl;
 end;
@@ -1736,8 +1736,8 @@ begin
 begin
 {$ENDIF}
 
-    Save;  // Save present buffer
-    CloseMonitorStream;   // Position at beginning
+    Save();  // Save present buffer
+    CloseMonitorStream();   // Position at beginning
 
     CSVName := GetCSVFileName();
 
@@ -1810,7 +1810,7 @@ begin
         end;
 
     finally
-        CloseMonitorStream;
+        CloseMonitorStream();
         FreeAndNil(F);
 {$IFDEF DSS_CAPI_PM}
         if PMParent.ConcatenateReports then

@@ -403,7 +403,7 @@ begin
         // Handle Quotes and Parentheses around tokens
         IsQuotedString := FALSE;
         if IsBeginQuote(LineBuffer[LinePos]) then
-            ParseToEndQuote
+            ParseToEndQuote()
         else // Copy to next delimiter or whitespace
         begin
             TokenStart := LinePos;

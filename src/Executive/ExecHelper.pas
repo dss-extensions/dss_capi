@@ -801,14 +801,14 @@ begin
             for i := 1 to Count do
             begin
                 pMon := Get(i);
-                pMon.Save;
+                pMon.Save();
             end;
 
         with DSS.ActiveCircuit.EnergyMeters do
             for i := 1 to Count do
             begin
                 pMtr := Get(i);
-                pMtr.SaveRegisters;
+                pMtr.SaveRegisters();
             end;
 
         Exit;
@@ -1649,7 +1649,7 @@ begin
         begin
             for MetObj in DSS.ActiveCircuit.EnergyMeters do
             begin
-                MetObj.ReduceZone;
+                MetObj.ReduceZone();
             end;
         end;
 
@@ -1662,7 +1662,7 @@ begin
             if MeterClass.SetActive(Param) then   // Try to set it active
             begin
                 MetObj := MeterClass.GetActiveObj;
-                MetObj.ReduceZone;
+                MetObj.ReduceZone();
             end
             else
                 DoSimpleMsg(DSS, 'EnergyMeter "%s" not found.', [Param], 262);
@@ -1679,7 +1679,7 @@ begin
     begin
         for pMon in Monitors do
         begin
-            pMon.ResetIt;
+            pMon.ResetIt();
         end;
         Result := 0;
 
@@ -2648,7 +2648,7 @@ begin
             // Now let the EnergyMeters run down the circuit setting the loads
             for pMeter in EnergyMeters do
             begin
-                pMeter.AllocateLoad;
+                pMeter.AllocateLoad();
             end;
             Solution.Solve;  {Update the solution}
 

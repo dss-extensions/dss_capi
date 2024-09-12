@@ -560,17 +560,17 @@ procedure DoAction(Obj: TObj; action: TEnergyMeterAction);
 begin
     case action of
         TEnergyMeterAction.Allocate:
-            Obj.AllocateLoad;
+            Obj.AllocateLoad();
         TEnergyMeterAction.Clear:
-            Obj.ResetRegisters;
+            Obj.ResetRegisters();
         TEnergyMeterAction.Reduce:
-            Obj.ReduceZone;
+            Obj.ReduceZone();
         TEnergyMeterAction.Save:
-            Obj.SaveRegisters;
+            Obj.SaveRegisters();
         TEnergyMeterAction.Take:
-            Obj.TakeSample;
+            Obj.TakeSample();
         TEnergyMeterAction.Zonedump:
-            Obj.ZoneDump;
+            Obj.ZoneDump();
     end;
 end;
 
@@ -881,7 +881,7 @@ begin
 
     for mtr in DSS.ActiveCircuit.EnergyMeters do
     begin
-        mtr.ResetRegisters;
+        mtr.ResetRegisters();
     end;
 
     SystemMeter.Reset();
@@ -900,10 +900,10 @@ begin
     for mtr in DSS.ActiveCircuit.EnergyMeters do
     begin
         if mtr.Enabled() then
-            mtr.TakeSample;
+            mtr.TakeSample();
     end;
 
-    SystemMeter.TakeSample;
+    SystemMeter.TakeSample();
 
     if FSaveDemandInterval then
     begin  
@@ -940,10 +940,10 @@ begin
     for mtr in DSS.ActiveCircuit.EnergyMeters do
     begin
         if mtr.Enabled() then
-            mtr.SaveRegisters;
+            mtr.SaveRegisters();
     end;
 
-    SystemMeter.Save;
+    SystemMeter.Save();
 end;
 
 constructor TEnergyMeterObj.Create(ParClass: TDSSClass; const EnergyMeterName: String);
@@ -3016,7 +3016,7 @@ begin
 
         WriteTotalsFile;  // Sum all energymeter registers to "Totals_{}.csv"
         SystemMeter.CloseDemandIntervalFile;
-        SystemMeter.Save;
+        SystemMeter.Save();
         if EMT_MHandle <> NIL then
             CloseMHandler(DSS, EMT_MHandle, DI_Dir + PathDelim + 'EnergyMeterTotals' + DSS._Name + '.csv', EMT_Append);
         if TDI_MHandle <> NIL then

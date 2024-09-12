@@ -242,7 +242,7 @@ begin
         DSS.LastCommandWasCompile := FALSE;
 
         ParamPointer := 0;
-        ParamName := DSS.Parser.NextParam;
+        ParamName := DSS.Parser.NextParam();
         Param := DSS.Parser.MakeString();
         if Length(Param) = 0 then
             Exit;  // Skip blank line
@@ -319,7 +319,7 @@ begin
                 DSS.CmdResult := DSS.DSSExecutive.DoYearlyCurvesCmd;
             ord(Cmd.CD):
             begin
-                ParamName := DSS.Parser.NextParam;
+                ParamName := DSS.Parser.NextParam();
                 Param := DSS.Parser.MakeString();
                 if DirectoryExists(Param) then
                 begin
@@ -673,7 +673,7 @@ begin
                 ADiakoptics_Tearing(DSS, False);
             ord(Cmd.AggregateProfiles):
             begin
-                DSS.Parser.NextParam;
+                DSS.Parser.NextParam();
                 DSS.ActiveCircuit.AggregateProfiles(DSS.Parser.MakeString());
             end;
 {$ENDIF}
@@ -684,12 +684,12 @@ begin
                 DSS.CmdResult := DSS.DSSExecutive.DoZsc012Cmd; // Get full symmetrical component transformation of Zsc
             ord(Cmd.AllPCEatBus):
             begin
-                DSS.Parser.NextParam;
+                DSS.Parser.NextParam();
                 DSS.GlobalResult  :=  DSS.ActiveCircuit.ReportPCEatBus(DSS.Parser.MakeString());
             end;
             ord(Cmd.AllPDEatBus):
             begin
-                DSS.Parser.NextParam;
+                DSS.Parser.NextParam();
                 DSS.GlobalResult  :=  DSS.ActiveCircuit.ReportPDEatBus(DSS.Parser.MakeString());
             end;
             ord(Cmd.TotalPowers): 

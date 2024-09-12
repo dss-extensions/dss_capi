@@ -886,7 +886,7 @@ var
 begin
     for pGen in ActiveCircuit.Generators do
     begin
-        pGen.ResetRegisters;
+        pGen.ResetRegisters();
     end;
 end;
 
@@ -897,7 +897,7 @@ begin
     for pGen in ActiveCircuit.Generators do
     begin
         if pGen.Enabled() then
-            pGen.TakeSample;
+            pGen.TakeSample();
     end;
 end;
 

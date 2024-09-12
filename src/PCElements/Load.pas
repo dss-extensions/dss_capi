@@ -588,7 +588,7 @@ begin
                 PrpSequence[ord(TProp.kW)] := 0;
                 PrpSequence[ord(TProp.kWh)] := 0;
             end;
-            ComputeAllocatedLoad;
+            ComputeAllocatedLoad();
             HasBeenAllocated := TRUE;
         end;
 
@@ -605,7 +605,7 @@ begin
                 PrpSequence[ord(TProp.kW)] := 0;
                 PrpSequence[ord(TProp.xfkVA)] := 0;
             end;
-            ComputeAllocatedLoad;
+            ComputeAllocatedLoad();
             HasBeenAllocated := TRUE;
         end;
 
@@ -646,7 +646,7 @@ begin
                 PrpSequence[ord(TProp.xfkVA)] := 0;
             end;
             FAllocationFactor := FCFactor;
-            ComputeAllocatedLoad;
+            ComputeAllocatedLoad();
         end;
         ord(TProp.kvar):
         begin
@@ -678,7 +678,7 @@ begin
                 PrpSequence[ord(TProp.kWh)] := 0;
             end;
             FAllocationFactor := FkVAAllocationFactor;
-            ComputeAllocatedLoad;
+            ComputeAllocatedLoad();
         end;
         ord(TProp.kwhdays):
         begin
@@ -692,7 +692,7 @@ begin
                 PrpSequence[ord(TProp.kW)] := 0;
                 PrpSequence[ord(TProp.xfkVA)] := 0;
             end;
-            ComputeAllocatedLoad;
+            ComputeAllocatedLoad();
         end;
         ord(TProp.kVA):
         begin
@@ -1206,7 +1206,7 @@ begin
                     kvarBase := -kvarBase;
                 kVABase := SQRT(SQR(kWref) + SQR(kVARref));
             end;
-         // done automagically in Property set...      3, 4: ComputeAllocatedLoad;
+         // done automagically in Property set...      3, 4: ComputeAllocatedLoad();
     else
     end;
 
@@ -2111,7 +2111,7 @@ begin
         PrpSequence[ord(TProp.kW)] := 0;
         PrpSequence[ord(TProp.kWh)] := 0;
     end;
-    ComputeAllocatedLoad;
+    ComputeAllocatedLoad();
     HasBeenAllocated := TRUE;
 end;
 
@@ -2125,7 +2125,7 @@ begin
         TLoadSpec.kWh_PF:
             FCFactor := Value;
     end;
-    ComputeAllocatedLoad;  // update kWbase
+    ComputeAllocatedLoad();  // update kWbase
     HasBeenAllocated := TRUE;
 end;
 
@@ -2143,7 +2143,7 @@ begin
         PrpSequence[ord(TProp.kW)] := 0;
         PrpSequence[ord(TProp.xfkVA)] := 0;
     end;
-    ComputeAllocatedLoad;
+    ComputeAllocatedLoad();
     HasBeenAllocated := TRUE;
 end;
 
