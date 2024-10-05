@@ -39,6 +39,7 @@ typedef struct
     int32_t error_number;
     char error_desc[DSS_ERR_NUM_CHR + 1];
     char char_buffer[DSS_STR_BUFFER_NUM_CHR + 1];
+    int32_t strict;
     int32_t PropIndex;
     int32_t map_errors;
 
@@ -93,6 +94,7 @@ typedef struct
     oddie_str_func_t ParserS;
     oddie_str_func_t PDElementsS;
     oddie_str_func_t PVsystemsS;
+    oddie_str_func_t ReactorsS;
     oddie_str_func_t ReclosersS;
     oddie_str_func_t ReduceCktS;
     oddie_str_func_t RegControlsS;
@@ -124,6 +126,7 @@ typedef struct
     oddie_float64_func_t ParserF;
     oddie_float64_func_t PDElementsF;
     oddie_float64_func_t PVsystemsF;
+    oddie_float64_func_t ReactorsF;
     oddie_float64_func_t ReclosersF;
     oddie_float64_func_t ReduceCktF;
     oddie_float64_func_t RegControlsF;
@@ -165,6 +168,7 @@ typedef struct
     oddie_int32_func_t ParserI;
     oddie_int32_func_t PDElementsI;
     oddie_int32_func_t PVsystemsI;
+    oddie_int32_func_t ReactorsI;
     oddie_int32_func_t ReclosersI;
     oddie_int32_func_t ReduceCktI;
     oddie_int32_func_t RegControlsI;
@@ -203,6 +207,7 @@ typedef struct
     oddie_variant_func_t ParallelV;
     oddie_variant_func_t ParserV;
     oddie_variant_func_t PVsystemsV;
+    oddie_variant_func_t ReactorsV;
     oddie_variant_func_t ReclosersV;
     oddie_variant_func_t RegControlsV;
     oddie_variant_func_t RelaysV;

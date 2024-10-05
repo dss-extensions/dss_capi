@@ -7368,7 +7368,7 @@ extern "C" {
     DSS_CAPI_DLL double Reactors_Get_kvar(void);
     DSS_CAPI_DLL void Reactors_Set_kvar(double Value);
     DSS_CAPI_DLL int32_t Reactors_Get_Phases(void);
-    DSS_CAPI_DLL void Reactors_Set_Phases(int32_t Integer);
+    DSS_CAPI_DLL void Reactors_Set_Phases(int32_t Value);
     DSS_CAPI_DLL uint16_t Reactors_Get_IsDelta(void);
     DSS_CAPI_DLL void Reactors_Set_IsDelta(uint16_t Value);
     DSS_CAPI_DLL uint16_t Reactors_Get_Parallel(void);
