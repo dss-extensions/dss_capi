@@ -2,9 +2,9 @@
 
 if [[ "${GITHUB_REF}" == "refs/tags/"* ]]; then
     export DSS_CAPI_VERSION="${GITHUB_REF/refs\/tags\//}"
-    sed -i'' -e "s/#define DSS_CAPI_VERSION .*/#define DSS_CAPI_VERSION \"${DSS_CAPI_VERSION}\"/" include/dss_capi.h
+    echo "#define ALTDSS_CAPI_VERSION \"${DSS_CAPI_VERSION}\"" > include/altdss/capi/version.h
 else
-    export DSS_CAPI_VERSION=`grep DSS_CAPI_VERSION include/dss_capi.h | grep -o '".*"' | tr -d '"'`
+    export DSS_CAPI_VERSION=`grep ALTDSS_CAPI_VERSION include/altdss/capi/version.h | grep -o '".*"' | tr -d '"'`
 fi
 
 export DSS_CAPI_REV=`git rev-parse HEAD`

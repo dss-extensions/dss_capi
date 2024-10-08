@@ -14,11 +14,11 @@ fi
 
 if [[ "x${DSS_CAPI_BUILD_DBG}" != "x1" ]]; then
     mkdir -p build/units_arm64
-    fpc @src/linux-arm64.cfg ${FPC_FLAGS} src/dss_capi.lpr
+    fpc @src/linux-arm64.cfg ${FPC_FLAGS} src/altdss_capi.pas
 fi
 
 mkdir -p build/units_arm64_dbg
-fpc @src/linux-arm64-dbg.cfg ${FPC_FLAGS} src/dss_capid.lpr
+fpc @src/linux-arm64-dbg.cfg ${FPC_FLAGS} src/altdss_capid.pas
 
 if [[ "x${DSS_CAPI_BUILD_DBG}" != "x1" ]]; then
     mkdir -p release/dss_capi/lib

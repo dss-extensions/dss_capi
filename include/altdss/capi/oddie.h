@@ -1,5 +1,5 @@
-#ifndef ALTDSS_ODDIE_CAPI_H
-#define ALTDSS_ODDIE_CAPI_H
+#ifndef ALTDSS_CAPI_ODDIE_H
+#define ALTDSS_CAPI_ODDIE_H
 #ifdef WIN32
 #if defined(altdss_oddie_capi_EXPORTS)
 #define ALTDSS_ODDIE_DLL __declspec(dllexport)
@@ -28,6 +28,9 @@ extern "C" {
 
 ALTDSS_ODDIE_DLL void Oddie_SetLibOptions(const char* libname, uint32_t* liboptions);
 ALTDSS_ODDIE_DLL void Oddie_SetOptions(const void *ctx, uint32_t flags);
+
+// TODO: for the following, migrate to dss.h and dss_ctx.h
+
 ALTDSS_ODDIE_DLL void* ctx_New(void);
 ALTDSS_ODDIE_DLL void ctx_Dispose(const void *ctx);
 ALTDSS_ODDIE_DLL const void* ctx_Get_Prime(void);
@@ -1641,4 +1644,4 @@ ALTDSS_ODDIE_DLL void ctx_YMatrix_SetGeneratordQdV(const void* ctx);
 } } } // namespace altdss::oddie::capi
 #endif
 #endif
-#endif // #ifndef ALTDSS_ODDIE_CAPI_H
+#endif // #ifndef ALTDSS_CAPI_ODDIE_H

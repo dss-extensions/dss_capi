@@ -27,7 +27,7 @@
 ///    work from DSS-Extensions.
 
 #include "dss_GenUserModel.h" // for user-model structures and function declarations
-#include "dss_capi.h" // For SolveModes enum
+#include "altdss/capi/enums.h" // For SolveModes enum
 
 #ifdef _MSC_VER
 #define _USE_MATH_DEFINES

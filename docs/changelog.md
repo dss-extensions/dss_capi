@@ -21,7 +21,10 @@
 
 *not released*
 
-- As planned for a while, drop the GR API for strings (bytes, integers and floats will continue).
+- As planned for a while:
+    - Drop the GR API for strings (bytes, integers and floats will continue).
+    - Rename the library to `altdss`, e.g. on Linux we now get `libaltdss_capi.so` instead of `libdss_capi.so`; this avoids conflicts with other unrelated "DSS" libraries and with Oddie (see below).
+    - Start reorganizing the header files. We now have a folder `include/altdss/capi` with the main C headers.
 
 - Introduce a new subproject: **AltDSS Oddie**. Oddie wraps the official OpenDSS binaries (i.e. the official OpenDSS Engine), exposing them with the same API as AltDSS/DSS C-API. There is, Oddie is a thing compatibility layer that allows consuming EPRI's OpenDSSDirect.DLL (and in the future `libOpenDSSDirect.so` on Linux etc.) through the projects on DSS-Extensions downstream to AltDSS/DSS C-API. Check its [README](https://github.com/dss-extensions/dss_capi/blob/master/src/altdss_oddie/README.md) for some more info.
 - CapControl: handle phase checks better in `PTPhase` and `CTPhase`.

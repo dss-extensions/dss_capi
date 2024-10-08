@@ -16,9 +16,9 @@ if errorlevel 1 (
 
 rd /s /q build\units_x64
 mkdir .\build\units_x64
-fpc -Px86_64 @src\windows-x64.cfg -B src\dss_capi.lpr
+fpc -Px86_64 @src\windows-x64.cfg -B src\altdss_capi.pas
 if errorlevel 1 exit /B 1
-if exist lib\win_x64\dss_capi.dll (
+if exist lib\win_x64\altdss_capi.dll (
     where /q dumpbin
     if errorlevel 1 (
         echo WARNING: dumpbin.exe is not in your path. Be sure to run this script on 
@@ -26,26 +26,26 @@ if exist lib\win_x64\dss_capi.dll (
         echo          equivalent for your Visual Studio version.
         exit /B 1
     )
-    dumpbin /exports "lib\win_x64\dss_capi.dll" > lib\win_x64\exports.txt
-    echo LIBRARY DSS_CAPI > lib\win_x64\dss_capi.def
-    echo EXPORTS >> lib\win_x64\dss_capi.def
-    for /f "skip=19 tokens=4" %%A in (lib\win_x64\exports.txt) do echo %%A >> lib\win_x64\dss_capi.def
-    lib /def:lib\win_x64\dss_capi.def /out:lib\win_x64\dss_capi.lib /machine:X64
-    dlltool --as-flags=--64 -d lib\win_x64\dss_capi.def -m i386:x86-64 -l lib\win_x64\dss_capi.dll.a
+    dumpbin /exports "lib\win_x64\altdss_capi.dll" > lib\win_x64\exports.txt
+    echo LIBRARY ALTDSS_CAPI > lib\win_x64\altdss_capi.def
+    echo EXPORTS >> lib\win_x64\altdss_capi.def
+    for /f "skip=19 tokens=4" %%A in (lib\win_x64\exports.txt) do echo %%A >> lib\win_x64\altdss_capi.def
+    lib /def:lib\win_x64\altdss_capi.def /out:lib\win_x64\altdss_capi.lib /machine:X64
+    dlltool --as-flags=--64 -d lib\win_x64\altdss_capi.def -m i386:x86-64 -l lib\win_x64\altdss_capi.dll.a
     
-    del /s lib\win_x64\dss_capi.exp
-    del /s lib\win_x64\dss_capi.def
+    del /s lib\win_x64\altdss_capi.exp
+    del /s lib\win_x64\altdss_capi.def
     del /s lib\win_x64\exports.txt
 ) else (
-    echo ERROR: DSS_CAPI.DLL file not found. Check previous messages for possible causes.
+    echo ERROR: ALTDSS_CAPI.DLL file not found. Check previous messages for possible causes.
     exit /B 1
 )
 
 rd /s /q build\units_x64
 mkdir .\build\units_x64
-fpc -Px86_64 @src\windows-x64-dbg.cfg -B src\dss_capid.lpr
+fpc -Px86_64 @src\windows-x64-dbg.cfg -B src\altdss_capid.pas
 if errorlevel 1 exit /B 1
-if exist lib\win_x64\dss_capid.dll (
+if exist lib\win_x64\altdss_capid.dll (
     where /q dumpbin
     if errorlevel 1 (
         echo WARNING: dumpbin.exe is not in your path. Be sure to run this script on 
@@ -53,15 +53,15 @@ if exist lib\win_x64\dss_capid.dll (
         echo          equivalent for your Visual Studio version.
         exit /B 1
     )
-    dumpbin /exports "lib\win_x64\dss_capid.dll" > lib\win_x64\exports.txt
-    echo LIBRARY DSS_CAPID > lib\win_x64\dss_capid.def
-    echo EXPORTS >> lib\win_x64\dss_capid.def
-    for /f "skip=19 tokens=4" %%A in (lib\win_x64\exports.txt) do echo %%A >> lib\win_x64\dss_capid.def
-    lib /def:lib\win_x64\dss_capid.def /out:lib\win_x64\dss_capid.lib /machine:X64
-    dlltool --as-flags=--64 -d lib\win_x64\dss_capid.def -m i386:x86-64 -l lib\win_x64\dss_capid.dll.a
+    dumpbin /exports "lib\win_x64\altdss_capid.dll" > lib\win_x64\exports.txt
+    echo LIBRARY DSS_CAPID > lib\win_x64\altdss_capid.def
+    echo EXPORTS >> lib\win_x64\altdss_capid.def
+    for /f "skip=19 tokens=4" %%A in (lib\win_x64\exports.txt) do echo %%A >> lib\win_x64\altdss_capid.def
+    lib /def:lib\win_x64\altdss_capid.def /out:lib\win_x64\altdss_capid.lib /machine:X64
+    dlltool --as-flags=--64 -d lib\win_x64\altdss_capid.def -m i386:x86-64 -l lib\win_x64\altdss_capid.dll.a
     
-    del /s lib\win_x64\dss_capid.exp
-    del /s lib\win_x64\dss_capid.def
+    del /s lib\win_x64\altdss_capid.exp
+    del /s lib\win_x64\altdss_capid.def
     del /s lib\win_x64\exports.txt
     
     where /q cv2pdb
@@ -69,10 +69,10 @@ if exist lib\win_x64\dss_capid.dll (
         echo WARNING: cv2pdb not found, PDB file will not be created.
     ) else (
         echo Creating PDB file...
-        cv2pdb lib\win_x64\dss_capid.dll
+        cv2pdb lib\win_x64\altdss_capid.dll
     )
 ) else (
-    echo ERROR: DSS_CAPID.DLL file not found. Check previous messages for possible causes.
+    echo ERROR: ALTDSS_CAPID.DLL file not found. Check previous messages for possible causes.
     exit /B 1
 )
 

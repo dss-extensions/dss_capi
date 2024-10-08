@@ -1,5 +1,5 @@
 {$IFNDEF DSS_CAPI_DEBUG_BUILD}
-library dss_capi;
+library altdss_capi;
 {$ENDIF}
 
 {$MODE Delphi}

@@ -145,7 +145,7 @@ O código fonte da DSS-Python e da OpenDSSDirect.py são exemplos de uso mais co
 ```c
 #include <stdint.h>
 #include <stdio.h>
-#include "dss_capi.h"
+#include "altdss/capi/dss.h"
 
 int main(void)
 {
@@ -201,7 +201,7 @@ Para usar a nova API empregando resultados globais (GR), os pointeiros para os G
 ```c
 #include <stdint.h>
 #include <stdio.h>
-#include "dss_capi.h"
+#include "altdss/capi/dss.h"
 
 int main(void)
 {

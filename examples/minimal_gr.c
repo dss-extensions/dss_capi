@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
-#include "dss_capi.h"
+#include "altdss/capi/dss.h"
 
 int main(void)
 {

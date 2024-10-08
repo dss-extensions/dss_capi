@@ -13,11 +13,11 @@ fi
 
 if [[ "x${DSS_CAPI_BUILD_DBG}" != "x1" ]]; then
     mkdir -p build/units_x64
-    fpc -Px86_64 @src/linux-x64.cfg ${FPC_FLAGS} src/dss_capi.lpr
+    fpc -Px86_64 @src/linux-x64.cfg ${FPC_FLAGS} src/altdss_capi.pas
 fi
 
 mkdir -p build/units_x64_dbg
-fpc -Px86_64 @src/linux-x64-dbg.cfg ${FPC_FLAGS} src/dss_capid.lpr
+fpc -Px86_64 @src/linux-x64-dbg.cfg ${FPC_FLAGS} src/altdss_capid.pas
 
 if [[ "x${DSS_CAPI_BUILD_ODDIE}" == "x1" ]]; then
     mkdir -p build/oddie

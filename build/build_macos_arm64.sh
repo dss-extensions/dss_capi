@@ -15,24 +15,24 @@ fi
 
 if [[ "x${DSS_CAPI_BUILD_DBG}" != "x1" ]]; then
     mkdir -p build/units_arm64
-    fpc -Paarch64 @src/darwin-arm64.cfg ${FPC_FLAGS} src/dss_capi.lpr
+    fpc -Paarch64 @src/darwin-arm64.cfg ${FPC_FLAGS} src/altdss_capi.pas
     # Make the lib look in the same folder for KLUSolveX
-    DSS_CAPI_LIB="lib/darwin_arm64/libdss_capi.dylib"
+    DSS_CAPI_LIB="lib/darwin_arm64/libaltdss_capi.dylib"
     CURRENT_LIBKLUSOLVE=`otool -L "$DSS_CAPI_LIB" | grep libklusolvex | cut -f 1 -d ' ' | sed $'s/^[ \t]*//'`
     NEW_LIBKLUSOLVE="@loader_path/./libklusolvex.dylib"
     install_name_tool -change "$CURRENT_LIBKLUSOLVE" "$NEW_LIBKLUSOLVE" "$DSS_CAPI_LIB"
-    install_name_tool -id "@loader_path/./libdss_capi.dylib" "$DSS_CAPI_LIB"
+    install_name_tool -id "@loader_path/./libaltdss_capi.dylib" "$DSS_CAPI_LIB"
 fi
 
 mkdir -p build/units_arm64_dbg
-fpc -Paarch64 @src/darwin-arm64-dbg.cfg ${FPC_FLAGS} src/dss_capid.lpr
+fpc -Paarch64 @src/darwin-arm64-dbg.cfg ${FPC_FLAGS} src/altdss_capid.pas
 
 # Make the lib look in the same folder for KLUSolveX
-DSS_CAPI_LIB="lib/darwin_arm64/libdss_capid.dylib"
+DSS_CAPI_LIB="lib/darwin_arm64/libaltdss_capid.dylib"
 CURRENT_LIBKLUSOLVE=`otool -L "$DSS_CAPI_LIB" | grep libklusolvex | cut -f 1 -d ' ' | sed $'s/^[ \t]*//'`
 NEW_LIBKLUSOLVE="@loader_path/./libklusolvex.dylib"
 install_name_tool -change "$CURRENT_LIBKLUSOLVE" "$NEW_LIBKLUSOLVE" "$DSS_CAPI_LIB"
-install_name_tool -id "@loader_path/./libdss_capi.dylib" "$DSS_CAPI_LIB"
+install_name_tool -id "@loader_path/./libaltdss_capi.dylib" "$DSS_CAPI_LIB"
 
 if [[ "x${DSS_CAPI_BUILD_DBG}" != "x1" ]]; then
     mkdir -p release/dss_capi/lib
