@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdbool.h> 
 #include <math.h>
-#include "altdss_oddie.h"
+#include <altdss/capi/oddie.h>
 #include "./altdss_oddie_private.h"
 
 #ifdef WIN32
@@ -738,7 +738,7 @@ void oddie_set_int_command(const void* ctx, const char* cmd_fmt, int32_t value)
 const char *oddie_get_str_property(const void* ctx, const char* className, const char* name, const char* queryCmd)
 {
     OddieContext* oddie_ctx = (OddieContext*) ctx;
-    const char *res;
+    char *res, *it;
     if (oddie_ctx->error_number || name == NULL || name[0] == 0)
     {
         return NULL;
@@ -757,6 +757,22 @@ const char *oddie_get_str_property(const void* ctx, const char* className, const
     if (oddie_ctx->error_number || res == NULL || res[0] == 0)
     {
         return NULL;
+    }
+
+    // Workaround to remove the extra \n added in recent OpenDSS revisions (October 2024)
+    it = res;
+    while (*it && (it - res) < 10000)
+    {
+        ++it;
+        if (!*it && (it != res))
+        {
+            --it;
+            if (*it == '\n')
+            {
+                *it = 0;
+                break;
+            }
+        }
     }
     return res;
 }

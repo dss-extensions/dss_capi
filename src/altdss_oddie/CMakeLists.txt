@@ -34,9 +34,9 @@ endif ()
 
 SET(ALTDSS_ODDIE_OUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/${ALTDSS_ODDIE_OUT_DIR_PREFIX}_${ALTDSS_ODDIE_OUT_DIR_SUFFIX}")
 
-add_library(altdss_oddie_capi SHARED altdss_oddie.c "${CMAKE_CURRENT_SOURCE_DIR}/../../include/altdss/altdss_oddie.h" altdss_oddie_private.h)
+add_library(altdss_oddie_capi SHARED altdss_oddie.c "${CMAKE_CURRENT_SOURCE_DIR}/../../include/altdss/capi/oddie.h" altdss_oddie_private.h)
 
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../include/altdss/")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../include/")
 
 set_target_properties(altdss_oddie_capi PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ALTDSS_ODDIE_OUT_DIR})
 set_target_properties(altdss_oddie_capi PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ALTDSS_ODDIE_OUT_DIR})
