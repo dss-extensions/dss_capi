@@ -338,8 +338,8 @@ begin
             SERIESONLY, PDE_ONLY:
             begin
                 ResetSparseMatrix(hYseries, YMatrixSize);
-{$IFDEF DSS_CAPI_INCREMENTAL_Y}                
-                KLUSolve.SetOptions(hYsystem, SolverOptions);
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+                KLUSolve.SetOptions(hYseries, SolverOptions);
 {$ENDIF}
                 hY := hYSeries;
             end;
