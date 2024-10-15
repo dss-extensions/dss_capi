@@ -793,6 +793,9 @@ initialization
     DSS_CAPI_ALLOW_CHANGE_DIR := (SysUtils.GetEnvironmentVariable('DSS_CAPI_ALLOW_CHANGE_DIR') <> '0');
 
 try
+   FormatSettings.ThousandSeparator := ',';
+   FormatSettings.DecimalSeparator := '.';
+   FormatSettings.ListSeparator := ',';
    DSSPrime := TDSSContext.Create(nil, True);
 except 
     on E: Exception do

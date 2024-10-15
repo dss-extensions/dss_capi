@@ -143,10 +143,6 @@ begin
 
      FRecorderOn := FALSE;
      FrecorderFile := '';
-
-     // Override Locale defaults so that CSV files get written properly
-     FormatSettings.DecimalSeparator  := '.';
-     FormatSettings.ThousandSeparator := ',';
 end;
 
 destructor TExecutive.Destroy;
