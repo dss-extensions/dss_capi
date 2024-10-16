@@ -759,21 +759,6 @@ const char *oddie_get_str_property(const void* ctx, const char* className, const
         return NULL;
     }
 
-    // Workaround to remove the extra \n added in recent OpenDSS revisions (October 2024)
-    it = res;
-    while (*it && (it - res) < 10000)
-    {
-        ++it;
-        if (!*it && (it != res))
-        {
-            --it;
-            if (*it == '\n')
-            {
-                *it = 0;
-                break;
-            }
-        }
-    }
     return res;
 }
 
