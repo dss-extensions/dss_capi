@@ -469,7 +469,7 @@ begin
             ord(TExecOption.Loadmult):
             begin
                 DSS.ActiveCircuit.SetLoadMultiplier(DSS.Parser.MakeDouble());  // Set using LoadMultiplier property
-                DSS.ActiveCircuit.Solution.SystemYChanged := True;
+                DSS.ActiveCircuit.Solution.InvalidateSystemY();
             end;
             21:
                 DSS.ActiveCircuit.NormalMinVolts := DSS.Parser.MakeDouble();

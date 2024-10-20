@@ -224,7 +224,7 @@ begin
     FYPrimInvalid := value;
     if Value and FEnabled then
         // If this device is in the circuit, then we have to rebuild Y on a change in Yprim
-        ActiveCircuit.Solution.SystemYChanged := TRUE;
+        ActiveCircuit.Solution.InvalidateSystemY();
 end;
 
 function TDSSCktElement.ActiveTerminalIdx(): Int8; inline;
@@ -269,19 +269,47 @@ end;
 procedure TDSSCktElement.SetConductorClosed(Index: Integer; Value: Boolean);
 var
     i: Integer;
+    numOpenPrev, numOpenAfter: Integer;
+    prevValue: Boolean;
 begin
     if (Index = 0) then
     begin  // Do all conductors
         for i := 0 to Fnphases - 1 do
-            Terminals[FActiveTerminal].ConductorsClosed[i] := Value;
+        begin
+            prevValue := Terminals[FActiveTerminal].ConductorsClosed[i];
+            if (prevValue <> Value) then
+            begin
+                Terminals[FActiveTerminal].ConductorsClosed[i] := Value;
+                if (Value) then
+                begin
+                    Dec(ActiveCircuit.numConductorsOpen);
+                end
+                else
+                begin
+                    Inc(ActiveCircuit.numConductorsOpen);
+                end;
+            end;
+        end;
         SetYprimInvalid(true); // this also sets the global SystemYChanged flag
     end
     else
     begin
         if (Index > 0) and (Index <= FNConds) then
         begin
-            Terminals[FActiveTerminal].ConductorsClosed[index - 1] := Value;
-            SetYprimInvalid(true);
+            prevValue := Terminals[FActiveTerminal].ConductorsClosed[index - 1];
+            if (prevValue <> Value) then
+            begin
+                Terminals[FActiveTerminal].ConductorsClosed[index - 1] := Value;
+                if (Value) then
+                begin
+                    Dec(ActiveCircuit.numConductorsOpen);
+                end
+                else
+                begin
+                    Inc(ActiveCircuit.numConductorsOpen);
+                end;
+            end;
+            SetYprimInvalid(true); // DSS-Extensions: kept outside the "if" for compatibility
         end;
     end;
 end;

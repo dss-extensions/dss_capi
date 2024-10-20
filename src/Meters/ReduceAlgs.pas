@@ -291,7 +291,7 @@ begin
 
     DSS.ActiveCircuit.ReprocessBusDefs();  // to get new load added and account for disabled devices
     // DSS.ActiveCircuit.DoResetMeterZones();  // without eliminated devices -- already called in ReprocessBusDefs
-    DSS.ActiveCircuit.Solution.SystemYChanged := TRUE; // force rebuild of Y
+    DSS.ActiveCircuit.Solution.InvalidateSystemY(true); // force rebuild of Y
 end;
 
 procedure DoReduceSwitches(DSS: TDSSContext; var Branchlist: TCktTree);
@@ -443,7 +443,7 @@ begin
 
     DSS.ActiveCircuit.ReprocessBusDefs();  // to get new load added and account for disabled devices
     // DSS.ActiveCircuit.DoResetMeterZones();  // without eliminated devices -- already called in ReprocessBusDefs
-    DSS.ActiveCircuit.Solution.SystemYChanged := TRUE; // force rebuild of Y
+    DSS.ActiveCircuit.Solution.InvalidateSystemY(true); // force rebuild of Y
 end;
 
 procedure DoRemoveAll_1ph_Laterals(DSS: TDSSContext; var Branchlist: TCktTree);
@@ -534,7 +534,7 @@ begin
 
     DSS.ActiveCircuit.ReprocessBusDefs();  // to get new load added and account for disabled devices
     // DSS.ActiveCircuit.DoResetMeterZones();  // without eliminated devices -- already called in ReprocessBusDefs
-    DSS.ActiveCircuit.Solution.SystemYChanged := TRUE; // force rebuild of Y
+    DSS.ActiveCircuit.Solution.InvalidateSystemY(true); // force rebuild of Y
 end;
 
 end.

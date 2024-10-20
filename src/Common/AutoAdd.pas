@@ -309,7 +309,7 @@ begin
         if (solution.LoadModel = ADMITTANCE) then
         begin
             solution.LoadModel := POWERFLOW;
-            solution.SystemYChanged := TRUE;  // Force rebuild of System Y without Loads
+            solution.InvalidateSystemY();  // Force rebuild of System Y without Loads
         end;
 
         // Do a preliminary snapshot solution to Force definition of meter zones

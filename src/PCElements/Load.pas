@@ -1902,7 +1902,7 @@ var
     i, j, k: Integer;
 begin
     // IF a terminal is open, THEN standard load models don't apply, so check it out first
-    if (not DSS_CAPI_LOADS_TERMINAL_CHECK) OR AllConductorsClosed() then
+    if (not DSS_CAPI_LOADS_TERMINAL_CHECK) OR (ActiveCircuit.numConductorsOpen = 0) OR AllConductorsClosed() then
     begin
         // Now Get Injection Currents
         CalcLoadModelContribution();

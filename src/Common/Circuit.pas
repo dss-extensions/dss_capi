@@ -95,6 +95,8 @@ type
         Fundamental: Double;    // fundamental and default base frequency
 
         Control_BusNameRedefined: Boolean;  // Flag for use by control elements to detect redefinition of buses
+        topologyCacheTag: Integer; // Cache tag used to invalidate topology in meters
+        numConductorsOpen: Integer;
 
         BusList,
         AutoAddBusList: TBusHashListType;
@@ -342,6 +344,8 @@ type
         procedure SetBusNameRedefined(Value: Boolean = true);
         function LoadMultiplier(): Double;
         procedure SetLoadMultiplier(Value: Double);
+
+        procedure InvalidateTopology();
     end;
 
 implementation
@@ -385,6 +389,8 @@ begin
 
     MaxDeviceNameLength := 30;
     MaxBusNameLength := 12;
+    numConductorsOpen := 0;
+    topologyCacheTag := 0;
     DSS := dssContext;
 
     IsSolved := FALSE;
@@ -2273,7 +2279,7 @@ begin
 
     if Value then
     begin
-        Solution.SystemYChanged := TRUE;  // Force Rebuilding of SystemY if bus def has changed
+        Solution.InvalidateSystemY(true);  // Force Rebuilding of SystemY if bus def has changed
         Control_BusNameRedefined := TRUE;  // So controls will know buses redefined
     end;
 end;
@@ -2346,7 +2352,7 @@ begin
         p.SetYprimInvalid(true);
     end;
 
-    Solution.SystemYChanged := TRUE;  // Force rebuild of matrix on next solution
+    Solution.InvalidateSystemY();  // Force rebuild of matrix on next solution
 end;
 
 function TDSSCircuit.LoadMultiplier(): Double;
@@ -3110,6 +3116,12 @@ begin
     while bus.FindIdx(Result) <> 0 do
         Inc(Result);
     bus.Add(self, result);  // add it to the list so next call will be unique
+end;
+
+procedure TDSSCircuit.InvalidateTopology();
+begin
+    // For meters: mark the topology/branchlist cache as invalid (each meter will take care of updating its cache)
+    inc(topologyCacheTag);
 end;
 
 constructor TBusMarker.Create;

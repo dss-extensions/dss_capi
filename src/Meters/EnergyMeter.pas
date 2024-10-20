@@ -45,6 +45,7 @@ uses
     MeterClass,
     MeterElement,
     CktElement,
+    PCElement,
     PDElement,
     arrayDef,
     DSSPointerList,
@@ -213,6 +214,16 @@ type
         destructor Destroy; OVERRIDE;
     end;
 
+    TCachedCktTreeNode = record
+        cktElem: TPDElement;
+        parentElem: TPDElement;
+        fromTerminal: Integer;
+        fromBusReference: Integer;
+        voltBaseIndex: Integer;
+        firstCachedLoad: Integer;
+        lastCachedLoad: Integer;
+    end;
+
     TEnergyMeter = class(TMeterClass)    // derive strait from base class
     PRIVATE
         FSaveDemandInterval: Boolean;
@@ -352,6 +363,12 @@ type
         // Demand Interval File variables
         This_Meter_DIFileIsOpen: Boolean;
 
+        cacheTag: Integer; // Cache generation tag (must match current circuit; can cycle/overflow)
+        cachedLoadsGens: Array Of TPCElement;
+        cachedLoadGenVoltBaseIndex: Array Of Integer;
+        cachedLoads: Array Of TLoadObj;
+        cachedCktTreeNodes: Array Of TCachedCktTreeNode;
+
 
         procedure Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
         procedure SetDragHandRegister(Reg: Integer; const Value: Double);
@@ -364,7 +381,7 @@ type
         procedure AssignVoltBaseRegisterNames();
 
         procedure TotalupDownstreamCustomers();
-
+        procedure EnsureCache();
 
     PROTECTED
 
@@ -461,7 +478,6 @@ uses
     MathUtil,
     UCMatrix,
     Utilities,
-    PCElement,
     StackDef,
     Circuit,
     Line,
@@ -837,7 +853,7 @@ begin
     for mtr in ActiveCircuit.EnergyMeters do
     begin
         //if Mtr.Enabled() then
-        mtr.MakeMeterZoneLists;
+        mtr.MakeMeterZoneLists();
     end;
 
     FreeAndNilBusAdjacencyLists(BusAdjPD, BusAdjPC);
@@ -953,6 +969,7 @@ begin
     inherited Create(ParClass, EnergyMeterName);
     DSSObjType := ParClass.DSSClassType; //ENERGY_METER;
 
+    cacheTag := -1;
     FNPhases := 3;  // Directly set conds and phases
     FNConds := 3;
     SetNTerms(1);  // this forces allocation of terminals and conductors in base class
@@ -1282,6 +1299,81 @@ begin
     Derivatives[Reg] := Deriv;
 end;
 
+procedure TEnergyMeterObj.EnsureCache();
+var
+    numPCEs: Integer;
+    numLoads: Integer;
+    numNodes: Integer;
+    cktElem: TPDElement;
+    pcElem: TPCElement;
+begin
+    if (cacheTag = ActiveCircuit.topologyCacheTag) then
+        Exit; // Nothing to do
+
+    numPCEs := 0;
+    numLoads := 0;
+    numNodes := 0;
+    cktElem := BranchList.First();
+    while cktElem <> NIL do
+    begin
+        inc(numNodes);
+        pcElem := Branchlist.FirstObject;
+        while (pcElem <> NIL) do
+        begin
+            if (PCElem.DSSObjType and CLASSMASK) = LOAD_ELEMENT then
+            begin
+                inc(numLoads);
+            end;
+            if ((PCElem.DSSObjType and CLASSMASK) = LOAD_ELEMENT) or ((PCElem.DSSObjType and CLASSMASK) = GEN_ELEMENT) then
+            begin
+                inc(numPCEs);
+            end;
+            pcElem := BranchList.NextObject;
+        end;
+        cktElem := BranchList.GoForward();
+    end;
+
+    SetLength(cachedLoadsGens, numPCEs);
+    SetLength(cachedLoadGenVoltBaseIndex, numPCEs);
+    SetLength(cachedLoads, numLoads);
+    SetLength(cachedCktTreeNodes, numNodes);
+
+    numPCEs := 0;
+    numLoads := 0;
+    numNodes := 0;
+    cktElem := BranchList.First();
+    while cktElem <> NIL do
+    begin
+        cachedCktTreeNodes[numNodes].cktElem := cktElem;
+        cachedCktTreeNodes[numNodes].voltBaseIndex := BranchList.PresentBranch.voltBaseIndex;
+        cachedCktTreeNodes[numNodes].fromBusReference := BranchList.PresentBranch.fromBusReference;
+        cachedCktTreeNodes[numNodes].fromTerminal := BranchList.PresentBranch.fromTerminal;
+        cachedCktTreeNodes[numNodes].parentElem := BranchList.Parent;
+        cachedCktTreeNodes[numNodes].firstCachedLoad := numLoads;
+        pcElem := Branchlist.FirstObject;
+        while (pcElem <> NIL) do
+        begin
+            if (PCElem.DSSObjType and CLASSMASK) = LOAD_ELEMENT then
+            begin
+                cachedLoads[numLoads] := pcElem as TLoadObj;
+                inc(numLoads);
+            end;
+            if ((PCElem.DSSObjType and CLASSMASK) = LOAD_ELEMENT) or ((PCElem.DSSObjType and CLASSMASK) = GEN_ELEMENT) then
+            begin
+                cachedLoadsGens[numPCEs] := pcElem;
+                cachedLoadGenVoltBaseIndex[numPCEs] := BranchList.PresentBranch.voltBaseIndex;
+                inc(numPCEs);
+            end;
+            pcElem := BranchList.NextObject;
+        end;
+        cachedCktTreeNodes[numNodes].lastCachedLoad := numLoads - 1;
+        inc(numNodes);
+        cktElem := BranchList.GoForward();
+    end;
+    cacheTag := ActiveCircuit.topologyCacheTag;
+end;
+
+
 procedure TEnergyMeterObj.TakeSample();
 // Update registers from metered zone
 // Assumes one time period has taken place since last sample.
@@ -1331,6 +1423,7 @@ var
     Delta_hrs_local: Double;
     buses: PBusArray;
     NodeV: pNodeVarray;
+    cachedNode: TCachedCktTreeNode;
 begin
     if not CheckBranchList(545) then
         Exit;
@@ -1374,39 +1467,46 @@ begin
 
      // Phase Voltage arrays
     if FPhaseVoltageReport then
+    begin
         for i := 1 to MaxVBaseCount do
-            if VBaseList[i] > 0.0 then
-            begin
-                for j := 1 to 3 do
-                begin
-                    VphaseMax[jiIndex(j, i)] := 0.0;
-                    VphaseMin[jiIndex(j, i)] := 9999.0;
-                    VphaseAccum[jiIndex(j, i)] := 0.0;
-                    VphaseAccumCount[jiIndex(j, i)] := 0;   // Keep track of counts for average
-                end;
-            end;
+        begin
+            if VBaseList[i] <= 0.0 then
+                continue;
 
-    CktElem := BranchList.First();
+            for j := 1 to 3 do
+            begin
+                idx := jiIndex(j, i);
+                VphaseMax[idx] := 0.0;
+                VphaseMin[idx] := 9999.0;
+                VphaseAccum[idx] := 0.0;
+                VphaseAccumCount[idx] := 0;   // Keep track of counts for average
+            end;
+        end;
+    end;
     MaxExcesskWNorm := 0.0;
     MaxExcesskWEmerg := 0.0;
+    EnsureCache();
 
-    //--------------------------------------------------------------------------
-    //------------------------ Local Zone  Only --------------------------------
-    //--------------------------------------------------------------------------
     if LocalOnly then
     begin
+        //--------------------------------------------------------------------------
+        //------------------------ Local Zone  Only --------------------------------
+        //--------------------------------------------------------------------------
+        // (i.e., single element)
+        CktElem := BranchList.First();
         CktElem := MeteredElement as TPDElement;
         MaxExcesskWNorm := Abs(CktElem.GetExcesskVANorm(MeteredTerminal).re);
         MaxExcesskWEmerg := Abs(CktElem.GetExcesskVAEmerg(MeteredTerminal).re);
     end
     else
+    begin
         //--------------------------------------------------------------------------
         //--------Cyle Through Entire Zone Setting EEN/UE --------------------------
         //--------------------------------------------------------------------------
-        while CktElem <> NIL do
-        begin       // loop thru all ckt elements on zone
-
-            CktElem.SetActiveTerminalIdx(BranchList.Presentbranch.FromTerminal);
+        for cachedNode in cachedCktTreeNodes do
+        begin // loop thru all ckt elements on zone
+            CktElem := cachedNode.cktElem;
+            CktElem.SetActiveTerminalIdx(cachedNode.fromTerminal);
             // Invoking this property sets the Overload_UE flag in the PD Element
             EEN := Abs(CktElem.GetExcesskVANorm(CktElem.ActiveTerminalIdx()).re);
             UE := Abs(CktElem.GetExcesskVAEmerg(CktElem.ActiveTerminalIdx()).re);
@@ -1421,14 +1521,14 @@ begin
             end
             else
             begin
-                MaxExcesskWEmerg := MaxExcesskWEmerg + UE;
-                MaxExcesskWNorm := MaxExcesskWNorm + EEN;
+                MaxExcesskWEmerg += UE;
+                MaxExcesskWNorm += EEN;
             end;
 
             // Even if this branch is not overloaded, if the parent element is overloaded
             // mark load on this branch as unserved also
             // Use the larger of the two factors
-            ParenElem := BranchList.Parent;
+            ParenElem := cachedNode.parentElem;
             if (ParenElem <> NIL) then
             begin
                 CktElem.OverLoad_EEN := Max(CktElem.Overload_EEN, ParenElem.Overload_EEN);
@@ -1438,28 +1538,21 @@ begin
             // Mark loads (not generators) by the degree of overload if the meter's zone is to be considered radial
             // This overrides and supercedes the load's own determination of unserved based on voltage
             // If voltage only is to be used for Load UE/EEN, don't mark (set to 0.0 and load will calc UE based on voltage)
-            PCElem := Branchlist.FirstObject;
-            while (PCElem <> NIL) do
+            for i := cachedNode.firstCachedLoad to cachedNode.lastCachedLoad do
             begin
-                if (PCElem.DSSObjType and CLASSMASK) = LOAD_ELEMENT then
-                begin
-                    pLoad := PCElem as TLoadObj;
-                    if (CktElem.Overload_EEN > 0.0) and (ZoneIsRadial) and not (VoltageUEOnly) then
-                        pLoad.EEN_Factor := CktElem.Overload_EEN
-                    else
-                        pLoad.EEN_Factor := 0.0;
+                pLoad := cachedLoads[i];
+                if (CktElem.Overload_EEN > 0.0) and (ZoneIsRadial) and (not VoltageUEOnly) then
+                    pLoad.EEN_Factor := CktElem.Overload_EEN
+                else
+                    pLoad.EEN_Factor := 0.0;
 
-                    if (CktElem.Overload_UE > 0.0) and (ZoneIsRadial) and not (VoltageUEOnly) then
-                        pLoad.UE_Factor := CktElem.Overload_UE
-                    else
-                        pLoad.UE_Factor := 0.0;
-                end;
-                PCElem := BranchList.NextObject
+                if (CktElem.Overload_UE > 0.0) and (ZoneIsRadial) and (not VoltageUEOnly) then
+                    pLoad.UE_Factor := CktElem.Overload_UE
+                else
+                    pLoad.UE_Factor := 0.0;
             end;
-
-            CktElem := BranchList.GoForward();
         end;
-
+    end;
 
     // Get the Losses, and unserved bus energies
     TotalZonekw := 0.0;
@@ -1473,36 +1566,35 @@ begin
     //--------------------------------------------------------------------------
     //--------       Cycle Through Zone Accumulating Load and Losses    --------
     //--------------------------------------------------------------------------
-    CktElem := BranchList.First();
-    while (CktElem <> NIL) do
+    for i := 0 to High(cachedLoadsGens) do
     begin
-        PCElem := Branchlist.FirstObject;
-        while (PCElem <> NIL) do
-        begin
-            case (PCElem.DSSObjType and CLASSMASK) of
-                LOAD_ELEMENT:
-                    if not LocalOnly then
-                    begin   // Dont check for load EEN/UE if Local only
-                        pLoad := PCElem as TLoadObj;
-                        load_kw := Accumulate_Load(pLoad, TotalZonekW, TotalZonekvar, TotalLoad_EEN, TotalLoad_UE);
-                        if FVbaseLosses then
-                            with BranchList.PresentBranch do
-                                if VoltBaseIndex > 0 then
-                                    VBaseLoad[VoltBaseIndex] := VBaseLoad[VoltBaseIndex] + load_kw;
-                    end;
-                GEN_ELEMENT:
-                begin
-                    pGen := PCElem as TGeneratorObj;
-                    Accumulate_Gen(pGen, TotalGenkW, TotalGenkvar);
+        PCElem := cachedLoadsGens[i];
+        case (PCElem.DSSObjType and CLASSMASK) of
+            LOAD_ELEMENT:
+                if not LocalOnly then
+                begin   // Dont check for load EEN/UE if Local only
+                    pLoad := PCElem as TLoadObj;
+                    load_kw := Accumulate_Load(pLoad, TotalZonekW, TotalZonekvar, TotalLoad_EEN, TotalLoad_UE);
+                    if FVbaseLosses then
+                        if cachedLoadGenVoltBaseIndex[i] > 0 then
+                            VBaseLoad[cachedLoadGenVoltBaseIndex[i]] += load_kw;
                 end;
-            else
-                //Ignore other types of PC Elements
+            GEN_ELEMENT:
+            begin
+                pGen := PCElem as TGeneratorObj;
+                Accumulate_Gen(pGen, TotalGenkW, TotalGenkvar);
             end;
-            PCElem := BranchList.NextObject
+        else
+            //Ignore other types of PC Elements
         end;
+    end;
 
-        if Flosses then
-        begin  // Compute and Report Losses
+
+    if Flosses then // Compute and Report Losses
+    begin
+        for cachedNode in cachedCktTreeNodes do
+        begin
+            CktElem := cachedNode.cktElem;
 
             // Get losses from the present circuit element
             CktElem.GetLosses(S_TotalLosses, S_LoadLosses, S_NoLoadLosses);  // returns watts, vars
@@ -1516,7 +1608,7 @@ begin
             TotalNoLoadLosses += S_NoLoadLosses; // Accumulate total no load losses in meter zone
 
             // Line and Transformer Elements
-            if IsLineElement(Cktelem) and FLineLosses then
+            if FLineLosses and IsLineElement(Cktelem) then
             begin
                 TotalLineLosses += S_TotalLosses; // Accumulate total losses in meter zone
                 if FseqLosses then
@@ -1538,59 +1630,59 @@ begin
                 end;
             end
             else
-            if IsTransformerElement(Cktelem) and FXfmrLosses then
+            if FXfmrLosses and IsTransformerElement(Cktelem) then
             begin
                 TotalTransformerLosses += S_TotalLosses; // Accumulate total losses in meter zone
             end;
 
-            if FVbaseLosses then
-                with BranchList.PresentBranch do
-                    if VoltBaseIndex > 0 then
+            if FVbaseLosses and (cachedNode.voltBaseIndex > 0) then
+            begin
+                VBaseTotalLosses[cachedNode.voltBaseIndex] += S_TotalLosses.re;
+                if IsLineElement(CktElem) then
+                    VBaseLineLosses[cachedNode.voltBaseIndex] += S_TotalLosses.re
+                else
+                if IsTransformerElement(CktElem) then
+                begin
+                    VBaseLoadLosses[cachedNode.voltBaseIndex] += S_LoadLosses.re;
+                    VBaseNoLoadLosses[cachedNode.voltBaseIndex] += S_NoLoadLosses.re
+                end;
+            end;
+        end;
+        
+        // Compute min, max, and average pu voltages for 1st 3 phases  (nodes designated 1, 2, or 3)
+        if FPhaseVoltageReport then
+        begin
+            for cachedNode in cachedCktTreeNodes do
+            begin
+                if not ((cachedNode.voltBaseIndex > 0) and (buses[cachedNode.fromBusReference].kVBase > 0.0)) then
+                    continue;
+
+                for i := 1 to buses[cachedNode.fromBusReference].numNodesThisBus do
+                begin
+                    j := buses[cachedNode.fromBusReference].GetNum(i);
+                    if (j <= 0) or (j > 3) then
+                        continue;
+
+                    puV := Cabs(NodeV[buses[cachedNode.fromBusReference].RefNo[i]]) / buses[cachedNode.fromBusReference].kVBase;
+                    idx := jiIndex(j, cachedNode.voltBaseIndex);
+                    if puV > VphaseMax[idx] then
                     begin
-                        VBaseTotalLosses[VoltBaseIndex] := VBaseTotalLosses[VoltBaseIndex] + S_TotalLosses.re;
-                        if IsLineElement(CktElem) then
-                            VBaseLineLosses[VoltBaseIndex] := VBaseLineLosses[VoltBaseIndex] + S_TotalLosses.re
-                        else
-                        if IsTransformerElement(CktElem) then
-                        begin
-                            VBaseLoadLosses[VoltBaseIndex] := VBaseLoadLosses[VoltBaseIndex] + S_LoadLosses.re;
-                            VBaseNoLoadLosses[VoltBaseIndex] := VBaseNoLoadLosses[VoltBaseIndex] + S_NoLoadLosses.re
-                        end;
+                        VphaseMax[idx] := puV;
+                        // VmaxBus := cachedNode.fromBusReference;
                     end;
 
-            // Compute min, max, and average pu voltages for 1st 3 phases  (nodes designated 1, 2, or 3)
-            if FPhaseVoltageReport then
-                with BranchList.PresentBranch do
-                    if (VoltBaseIndex > 0) and (buses[FromBusReference].kVBase > 0.0) then
+                    if puV < VphaseMin[idx] then
                     begin
-                        for i := 1 to buses[FromBusReference].numNodesThisBus do
-                        begin
-                            j := buses[FromBusReference].GetNum(i);
-                            if (j <= 0) or (j > 3) then
-                                continue;
-
-                            puV := Cabs(NodeV[buses[FromBusReference].RefNo[i]]) / buses[FromBusReference].kVBase;
-                            idx := jiIndex(j, VoltBaseIndex);
-                            if puV > VphaseMax[idx] then
-                            begin
-                                VphaseMax[jiIndex(j, VoltBaseIndex)] := puV;
-                                // VmaxBus := FromBusReference;
-                            end;
-
-                            if puV < VphaseMin[idx] then
-                            begin
-                                VphaseMin[jiIndex(j, VoltBaseIndex)] := puV;
-                                // VminBus := FromBusReference;
-                            end;
-
-                            VphaseAccum[jiIndex(j, VoltBaseIndex)] += puV;
-                            Inc(VphaseAccumCount[jiIndex(j, VoltBaseIndex)]);   // Keep track of counts for average
-                        end;
+                        VphaseMin[idx] := puV;
+                        // VminBus := cachedNode.fromBusReference;
                     end;
-        end; // If FLosses
 
-        CktElem := BranchList.GoForward();
-    end;
+                    VphaseAccum[idx] += puV;
+                    Inc(VphaseAccumCount[idx]);   // Keep track of counts for average
+                end;
+            end;
+        end;
+    end; // If FLosses
 
     Delta_hrs_local := DSS.EnergyMeterClass.Delta_Hrs;
     
@@ -1683,7 +1775,7 @@ begin
 
     FirstSampleAfterReset := FALSE;
     if DSS.EnergyMeterClass.SaveDemandInterval() then
-        WriteDemandIntervalData;
+        WriteDemandIntervalData();
 end;
 
 procedure TEnergyMeterObj.TotalUpDownstreamCustomers();
@@ -2156,7 +2248,7 @@ begin
     CktElem := BranchList.First();
     while CktElem <> NIL do
     begin
-        LoadElem := Branchlist.FirstObject;
+        LoadElem := Branchlist.FirstObject; //TODO: cachedLoads
         while (LoadElem <> NIL) do
         begin
             if (LoadElem.DSSObjType and CLASSMASK) = LOAD_ELEMENT then  // only for loads not other shunts
@@ -2191,8 +2283,7 @@ begin
     TotalZonekvar := TotalZonekvar + S.im;
 end;
 
-function TEnergyMeterObj.Accumulate_Load(pLoad: TLoadObj;
-    var TotalZonekW, TotalZonekvar, TotalLoad_EEN, TotalLoad_UE: Double): Double;
+function TEnergyMeterObj.Accumulate_Load(pLoad: TLoadObj; var TotalZonekW, TotalZonekvar, TotalLoad_EEN, TotalLoad_UE: Double): Double;
 var
     S_Load: Complex;
     kW_Load: Double;
@@ -2205,8 +2296,8 @@ begin
     Result := kw_Load;
 
     // Accumulate load in zone
-    TotalZonekw := TotalZonekW + kW_Load;
-    TotalZonekvar := TotalZonekvar + S_Load.im;
+    TotalZonekW += kW_Load;
+    TotalZonekvar += S_Load.im;
 
     // always integrate even if the value is 0.0
     // otherwise the Integrate function is not correct
@@ -2235,8 +2326,8 @@ begin
             Load_UE := 0.0;
     end;
 
-    TotalLoad_EEN := TotalLoad_EEN + Load_EEN;
-    TotalLoad_UE := TotalLoad_UE + Load_UE;
+    TotalLoad_EEN += Load_EEN;
+    TotalLoad_UE += Load_UE;
 end;
 
 
@@ -2245,7 +2336,7 @@ procedure TEnergyMeterObj.ReduceZone();
 begin
      // Make  sure zone list is built
     if not assigned(BranchList) then
-        MakeMeterZoneLists;
+        MakeMeterZoneLists();
 
     case DSS.ActiveCircuit.ReductionStrategy of
 
@@ -2354,8 +2445,7 @@ begin
     end; // For
 end;
 
-procedure TEnergyMeterObj.CalcBusCoordinates(StartBranch: TCktTreeNode;
-    FirstCoordRef, SecondCoordref, LineCount: Integer);
+procedure TEnergyMeterObj.CalcBusCoordinates(StartBranch: TCktTreeNode; FirstCoordRef, SecondCoordref, LineCount: Integer);
 var
     X, Y, Xinc, Yinc: Double;
     buses: PBusArray;
@@ -2858,11 +2948,11 @@ begin
         if This_Meter_DIFileIsOpen then
         begin
             if DI_MHandle <> NIL then
-                CloseMHandler(DSS, DI_MHandle, MakeDIFileName, DI_Append);
+                CloseMHandler(DSS, DI_MHandle, MakeDIFileName(), DI_Append);
             This_Meter_DIFileIsOpen := FALSE;
             if PHV_MHandle <> NIL then
                 if VPhaseReportFileIsOpen then
-                    CloseMHandler(DSS, PHV_MHandle, MakeVPhaseReportFileName, PHV_Append);
+                    CloseMHandler(DSS, PHV_MHandle, MakeVPhaseReportFileName(), PHV_Append);
             VPhaseReportFileIsOpen := FALSE;
         end;
     except
@@ -2958,6 +3048,7 @@ begin
     begin
         WriteintoMem(PHV_MHandle, DSS.ActiveCircuit.Solution.DynaVars.dblHour);
         for i := 1 to MaxVBaseCount do
+        begin
             if VBaseList[i] > 0.0 then
             begin
                 for j := 1 to 3 do
@@ -2967,6 +3058,7 @@ begin
                 for j := 1 to 3 do
                     WriteintoMem(PHV_MHandle, 0.001 * MyCount_Avg(VPhaseAccum[jiIndex(j, i)], VPhaseAccumCount[jiIndex(j, i)]));
             end;
+        end;
         WriteintoMemStr(PHV_MHandle, Char(10));
     end;
 end;
@@ -2997,43 +3089,43 @@ procedure TEnergyMeter.CloseAllDIFiles();
 var
     mtr: TEnergyMeterObj;
 begin
-    if FSaveDemandInterval then
+    if not FSaveDemandInterval then
+        Exit;
+
+    // While closing DI files, write all meter registers to one file
+    try
+        CreateMeterTotals;
+    except
+        On E: Exception do
+            DoSimpleMsg('Error on Rewrite of totals file: %s', [E.Message], 536);
+    end;
+
+    // Close all the DI file for each meter
+    for mtr in DSS.ActiveCircuit.EnergyMeters do
     begin
-        // While closing DI files, write all meter registers to one file
-        try
-            CreateMeterTotals;
-        except
-            On E: Exception do
-                DoSimpleMsg('Error on Rewrite of totals file: %s', [E.Message], 536);
-        end;
+        if mtr.Enabled() then
+            mtr.CloseDemandIntervalFile;
+    end;
 
-        // Close all the DI file for each meter
-        for mtr in DSS.ActiveCircuit.EnergyMeters do
-        begin
-            if mtr.Enabled() then
-                mtr.CloseDemandIntervalFile;
-        end;
-
-        WriteTotalsFile;  // Sum all energymeter registers to "Totals_{}.csv"
-        SystemMeter.CloseDemandIntervalFile;
-        SystemMeter.Save();
-        if EMT_MHandle <> NIL then
-            CloseMHandler(DSS, EMT_MHandle, DI_Dir + PathDelim + 'EnergyMeterTotals' + DSS._Name + '.csv', EMT_Append);
-        if TDI_MHandle <> NIL then
-            CloseMHandler(DSS, TDI_MHandle, DI_Dir + PathDelim + 'DI_Totals' + DSS._Name + '.csv', TDI_Append);
-        DSS.DIFilesAreOpen := FALSE;
-        if OverloadFileIsOpen then
-        begin
-            if OV_MHandle <> NIL then
-                CloseMHandler(DSS, OV_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads' + DSS._Name + '.csv', OV_Append);
-            OverloadFileIsOpen := FALSE;
-        end;
-        if VoltageFileIsOpen then
-        begin
-            if VR_MHandle <> NIL then
-                CloseMHandler(DSS, VR_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions' + DSS._Name + '.csv', VR_Append);
-            VoltageFileIsOpen := FALSE;
-        end;
+    WriteTotalsFile();  // Sum all energymeter registers to "Totals_{}.csv"
+    SystemMeter.CloseDemandIntervalFile;
+    SystemMeter.Save();
+    if EMT_MHandle <> NIL then
+        CloseMHandler(DSS, EMT_MHandle, DI_Dir + PathDelim + 'EnergyMeterTotals' + DSS._Name + '.csv', EMT_Append);
+    if TDI_MHandle <> NIL then
+        CloseMHandler(DSS, TDI_MHandle, DI_Dir + PathDelim + 'DI_Totals' + DSS._Name + '.csv', TDI_Append);
+    DSS.DIFilesAreOpen := FALSE;
+    if OverloadFileIsOpen then
+    begin
+        if OV_MHandle <> NIL then
+            CloseMHandler(DSS, OV_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads' + DSS._Name + '.csv', OV_Append);
+        OverloadFileIsOpen := FALSE;
+    end;
+    if VoltageFileIsOpen then
+    begin
+        if VR_MHandle <> NIL then
+            CloseMHandler(DSS, VR_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions' + DSS._Name + '.csv', VR_Append);
+        VoltageFileIsOpen := FALSE;
     end;
 end;
 
@@ -3046,19 +3138,19 @@ begin
     if This_Meter_DIFileIsOpen then
         Exit;
 
+    if not DSS.Energymeterclass.FDI_Verbose then
+        Exit;
+
     try
-        if DSS.Energymeterclass.FDI_Verbose then
-        begin
-            FileNm := MakeDIFileName;   // Creates directory if it doesn't exist
-            if FileExists(FileNm) then
-                DI_Append := TRUE
-            else
-                DI_Append := FALSE;
-            if DI_MHandle <> NIL then
-                DI_MHandle.Free;
-            DI_MHandle := Create_Meter_Space(' ');
-            This_Meter_DIFileIsOpen := TRUE;
-        end;
+        FileNm := MakeDIFileName();   // Creates directory if it doesn't exist
+        if FileExists(FileNm) then
+            DI_Append := TRUE
+        else
+            DI_Append := FALSE;
+        if DI_MHandle <> NIL then
+            DI_MHandle.Free;
+        DI_MHandle := Create_Meter_Space(' ');
+        This_Meter_DIFileIsOpen := TRUE;
     except
         On E: Exception do
             DoSimpleMsg('Error opening demand interval file "%s.csv" for appending. %s', [Name + DSS._Name, CRLF + E.Message], 537);

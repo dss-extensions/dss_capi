@@ -357,6 +357,8 @@ type
         procedure AddSeriesReac2IncMatrix(); // Adds Reactors in series to the Incidence matrix arrays
 
         function TimeOfDay(useEpsilon: Boolean = false): Double;
+
+        procedure InvalidateSystemY(invalidateTopology: Boolean = false);
     end;
 
 implementation
@@ -2322,7 +2324,7 @@ begin
     if FFrequency <> Value then
     begin
         FrequencyChanged := TRUE;  // Force Rebuild of all Y Primitives
-        SystemYChanged := TRUE;  // Force rebuild of System Y
+        SystemYChanged := TRUE;  // Force rebuild of System Y (but no need to force other actions, e.g. related to meters)
     end;
 
     FFrequency := Value;
@@ -3054,6 +3056,13 @@ begin
     Result := HourOfDay + sec / 3600.0;
     if Result > 24.0 then
         Result := Result - 24.0; // Wrap around
+end;
+
+procedure TSolutionObj.InvalidateSystemY(invalidateTopology: Boolean);
+begin
+    SystemYChanged := true;
+    if invalidateTopology then
+        ckt.InvalidateTopology();
 end;
 
 end.
