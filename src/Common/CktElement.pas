@@ -455,7 +455,7 @@ begin
     // For no override, Default behavior is:
     // Just return total losses and set LoadLosses=total losses and noload losses =0
 
-    TotalLosses := Losses;  // Watts, vars
+    TotalLosses := Losses();  // Watts, vars
     LoadLosses := TotalLosses;
     NoLoadLosses := 0;
 end;

@@ -66,8 +66,8 @@ type
         procedure CalcCustInterrupts();
         procedure ZeroReliabilityAccums(); // Zero out reliability accumulators
 
-        function GetExcessKVANorm(idxTerm: Integer): Complex;
-        function GetExcessKVAEmerg(idxTerm: Integer): Complex;
+        function GetExcessKVANorm(idxTerm: Integer; powerOut: PComplex = NIL): Complex;
+        function GetExcessKVAEmerg(idxTerm: Integer; powerIn: PComplex = NIL): Complex;
     end;
 
 
@@ -222,7 +222,7 @@ begin
     end;
 end;
 
-function TPDElement.GetExcessKVANorm(idxTerm: Integer): Complex;
+function TPDElement.GetExcessKVANorm(idxTerm: Integer; powerOut: PComplex = NIL): Complex;
 var
     Factor: Double;
     kVA: Complex;
@@ -235,6 +235,10 @@ begin
     end;
 
     kVA := Power(idxTerm) * 0.001;  // Also forces computation of Current into Itemp
+    if powerOut <> NIL then
+    begin
+        powerOut^ := kVA;
+    end;
     Factor := (MaxTerminalOneIMag / NormAmps - 1.0);
     if (Factor > 0.0) then
     begin
@@ -249,7 +253,7 @@ begin
     end;
 end;
 
-function TPDElement.GetExcessKVAEmerg(idxTerm: Integer): Complex;
+function TPDElement.GetExcessKVAEmerg(idxTerm: Integer; powerIn: PComplex = NIL): Complex;
 var
     Factor: Double;
     kVA: Complex;
@@ -261,7 +265,14 @@ begin
         Exit;
     end;
 
-    kVA := Power(idxTerm) * 0.001;  // Also forces computation of Current into Itemp
+    if powerIn <> NIL then
+    begin
+        kVA := powerIn^;
+    end
+    else
+    begin
+        kVA := Power(idxTerm) * 0.001;  // Also forces computation of Current into Itemp
+    end;
 
     Factor := (MaxTerminalOneIMag / EmergAmps - 1.0);
     if Factor > 0.0 then

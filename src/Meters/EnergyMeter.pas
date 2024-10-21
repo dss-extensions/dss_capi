@@ -1418,6 +1418,7 @@ var
     S_PosSeqLosses: Complex;
     S_ZeroSeqLosses: Complex;
     S_NegSeqLosses: Complex;
+    tmp_kVA: Complex;
 
     puV: Double;
     Delta_hrs_local: Double;
@@ -1495,8 +1496,8 @@ begin
         // (i.e., single element)
         CktElem := BranchList.First();
         CktElem := MeteredElement as TPDElement;
-        MaxExcesskWNorm := Abs(CktElem.GetExcesskVANorm(MeteredTerminal).re);
-        MaxExcesskWEmerg := Abs(CktElem.GetExcesskVAEmerg(MeteredTerminal).re);
+        MaxExcesskWNorm := Abs(CktElem.GetExcesskVANorm(MeteredTerminal, @tmp_kVA).re);
+        MaxExcesskWEmerg := Abs(CktElem.GetExcesskVAEmerg(MeteredTerminal, @tmp_kVA).re);
     end
     else
     begin
@@ -1508,8 +1509,8 @@ begin
             CktElem := cachedNode.cktElem;
             CktElem.SetActiveTerminalIdx(cachedNode.fromTerminal);
             // Invoking this property sets the Overload_UE flag in the PD Element
-            EEN := Abs(CktElem.GetExcesskVANorm(CktElem.ActiveTerminalIdx()).re);
-            UE := Abs(CktElem.GetExcesskVAEmerg(CktElem.ActiveTerminalIdx()).re);
+            EEN := Abs(CktElem.GetExcesskVANorm(CktElem.ActiveTerminalIdx(), @tmp_kVA).re);
+            UE := Abs(CktElem.GetExcesskVAEmerg(CktElem.ActiveTerminalIdx(), @tmp_kVA).re);
 
             // For radial circuits just keep the maximum overload; for mesh, add 'em up
             if (ZoneIsRadial) then
