@@ -56,7 +56,7 @@ if exist lib\win_x86\altdss_capid.dll (
         exit /B 1
     )
     dumpbin /exports "lib\win_x86\altdss_capid.dll" > lib\win_x86\exports.txt
-    echo LIBRARY DSS_CAPID > lib\win_x86\altdss_capid.def
+    echo LIBRARY ALTDSS_CAPID > lib\win_x86\altdss_capid.def
     echo EXPORTS >> lib\win_x86\altdss_capid.def
     for /f "skip=19 tokens=4" %%A in (lib\win_x86\exports.txt) do echo %%A >> lib\win_x86\altdss_capid.def
     lib /def:lib\win_x86\altdss_capid.def /out:lib\win_x86\altdss_capid.lib /machine:X86
