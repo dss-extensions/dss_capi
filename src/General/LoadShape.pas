@@ -729,7 +729,7 @@ begin
             MaxQSpecified := TRUE;
         ord(TProp.MemoryMapping):
             if UseMMF then
-                UseFloat64;
+                UseFloat64();
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -755,7 +755,7 @@ begin
             end;
 
             // Otherwise, follow the traditional technique for loading up load shapes
-            UseFloat64;
+            UseFloat64();
             ReAllocmem(dP, Sizeof(Double) * NumPoints);
             // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
             NumPoints := InterpretDblArray(DSS, Value, NumPoints, PDoubleArray(dP)); // TODO: different from the rest and conditional
@@ -767,7 +767,7 @@ begin
                 DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
                 Exit;
             end;
-            UseFloat64;
+            UseFloat64();
             ReAllocmem(dH, Sizeof(Double) * NumPoints);
             InterpretDblArray(DSS, Value, NumPoints, PDoubleArray(dH)); // TODO: different from the rest and conditional
             Interval := 0.0;
@@ -792,7 +792,7 @@ begin
                 Exit;
             end;
             // Otherwise, follow the traditional technique for loading up load shapes                    
-            UseFloat64;
+            UseFloat64();
             ReAllocmem(dQ, Sizeof(Double) * NumPoints);
             InterpretDblArray(DSS, Value, NumPoints, PDoubleArray(dQ));   // Parser.ParseAsVector(Npts, Multipliers);
         end;
@@ -919,10 +919,13 @@ end;
 procedure TLoadShapeObj.Read2ColCSVFile(const FileName: String);
 //   Process 2-column CSV file (3-col if time expected)
 var
-    F: TStream = nil;
+    F: TStream;
     i: Integer;
     s: String;
+    maxValues, remainingBytes: Integer;
 begin
+    F := nil;
+    maxValues := NumPoints;
     if ExternalMemory then
     begin
         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
@@ -958,7 +961,7 @@ begin
         end;
 
         // Allocate both P and Q multipliers
-        UseFloat64;
+        UseFloat64();
         ReAllocmem(dP, sizeof(Double) * NumPoints);
         ReAllocmem(dQ, Sizeof(Double) * NumPoints);
         if Interval = 0.0 then
@@ -980,15 +983,33 @@ begin
             DSS.AuxParser.NextParam();
             dQ[i] := DSS.AuxParser.MakeDouble();  // second parm
         end;
+        remainingBytes := F.Size - (F.Position + 1);
         FreeAndNil(F);
         inc(i);
         if i <> NumPoints then
             NumPoints := i;
+
+        if ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 1) then
+        begin
+            Exit;
+        end;
+
+        if (remainingBytes > 5) then // 5 = enough for line ending plus some chars, indicating extra data
+        begin
+            DoSimpleMsg('%s: 2-column CSV file "%s" contains more items than expected (%d). Extra data: %d bytes.', [FullName(), FileName, maxValues, remainingBytes], 20241024);
+            Exit;
+        end;
+
+        if (NumPoints < maxValues) then
+        begin
+            DoSimpleMsg('%s: 2-column CSV file "%s" contains fewer items (%d) than expected (%d).', [FullName(), FileName, NumPoints, maxValues], 20241025);
+            Exit;
+        end;
     except
         On E: Exception do
         begin
-            DoSimpleMsg(_('Error Processing CSV File: "%s". %s'), [FileName, E.Message], 614);
             FreeAndNil(F);
+            DoSimpleMsg(_('Error Processing CSV File: "%s". %s'), [FileName, E.Message], 614);
             Exit;
         end;
     end;
@@ -1001,10 +1022,13 @@ end;
 
 procedure TLoadShapeObj.ReadCSVFile(const FileName: String);
 var
-    F: TStream = nil;
+    F: TStream;
     i: Integer;
     s: String;
+    maxValues, remainingBytes: Integer;
 begin
+    F := NIL;
+    maxValues := NumPoints;
     if ExternalMemory then
     begin
         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
@@ -1032,7 +1056,7 @@ begin
             Exit;
         end;
 
-        UseFloat64;
+        UseFloat64();
         ReAllocmem(dP, sizeof(Double) * NumPoints);
         if Interval = 0.0 then
             ReAllocmem(dH, Sizeof(Double) * NumPoints);
@@ -1051,15 +1075,33 @@ begin
             DSS.AuxParser.NextParam();
             dP[i] := DSS.AuxParser.MakeDouble();
         end;
+        remainingBytes := F.Size - (F.Position + 1);
         FreeAndNil(F);
         inc(i);
         if i <> NumPoints then
             NumPoints := i;
+
+        if ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 1) then
+        begin
+            Exit;
+        end;
+
+        if (remainingBytes > 5) then // 5 = enough for line ending plus some chars, indicating extra data
+        begin
+            DoSimpleMsg('%s: CSV file "%s" contains more items than expected (%d). Extra data: %d bytes.', [FullName(), FileName, maxValues, remainingBytes], 20241022);
+            Exit;
+        end;
+
+        if (NumPoints < maxValues) then
+        begin
+            DoSimpleMsg('%s: CSV file "%s" contains fewer items (%d) than expected (%d).', [FullName(), FileName, NumPoints, maxValues], 20241023);
+            Exit;
+        end;
     except
         On E: Exception do
         begin
-            DoSimpleMsg(_('Error Processing CSV File: "%s". %s'), [FileName, E.Message], 614);
             FreeAndNil(F);
+            DoSimpleMsg(_('Error Processing CSV File: "%s". %s'), [FileName, E.Message], 614);
             Exit;
         end;
     end;
@@ -1073,11 +1115,14 @@ end;
 procedure TLoadShapeObj.ReadSngFile(const FileName: String);
 var
     s: String;
-    F: TStream = NIL;
+    F: TStream;
     Hr, M: Single;
     i: Integer;
     bytesRead: Int64;
+    maxValues, remainingBytes: Integer;
 begin
+    F := NIL;
+    maxValues := NumPoints;
     if ExternalMemory then
     begin
         DoSimpleMsg(_('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61102);
@@ -1133,7 +1178,7 @@ begin
             Exit;
         end;
 
-        UseFloat64;
+        UseFloat64();
         ReAllocmem(dP, sizeof(Double) * NumPoints);
         if Interval = 0.0 then
             ReAllocmem(dH, Sizeof(Double) * NumPoints);
@@ -1162,11 +1207,28 @@ begin
                 dP[i] := sP[i];
             ReallocMem(sP, 0);
         end;
+        remainingBytes := F.Size - (F.Position + 1);
         FreeAndNil(F);
+
+        if ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 1) then
+        begin
+            Exit;
+        end;
+
+        if (remainingBytes >= 4) then
+        begin
+            DoSimpleMsg('%s: File of singles "%s" contains more items than expected (%d). Extra data: %d bytes.', [FullName(), FileName, maxValues, remainingBytes], 20241020);
+            Exit;
+        end;
+
+        if (NumPoints < maxValues) then
+        begin
+            DoSimpleMsg('%s: File of singles "%s" contains fewer items (%d) than expected (%d).', [FullName(), FileName, NumPoints, maxValues], 20241021);
+            Exit;
+        end;
     except
+        FreeAndNil(F);
         DoSimpleMsg('Error Processing LoadShape File: "%s"', [FileName], 616);
-        if F <> nil then
-            F.Free();
     end;
 end;
 
@@ -1178,10 +1240,13 @@ end;
 procedure TLoadShapeObj.ReadDblFile(const FileName: String);
 var
     s: String;
-    F: TStream = NIL;
+    F: TStream;
     i: Integer;
     bytesRead: Int64;
+    maxValues, remainingBytes: Integer;
 begin
+    F := NIL;
+    maxValues := NumPoints;
     if ExternalMemory then
     begin
         DoSimpleMsg(_('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61102);
@@ -1231,10 +1296,27 @@ begin
             bytesRead := F.Read(dP[0], NumPoints * sizeof(Double));
             NumPoints := min(bytesRead div sizeof(Double), NumPoints);
         end;
+        remainingBytes := F.Size - (F.Position + 1);
         FreeAndNil(F);
-        if F <> nil then
-            F.Free();
+
+        if ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 1) then
+        begin
+            Exit;
+        end;
+
+        if (remainingBytes >= 8) then
+        begin
+            DoSimpleMsg('%s: File of doubles "%s" contains more items than expected (%d). Extra data: %d bytes.', [FullName(), FileName, maxValues, remainingBytes], 20241018);
+            Exit;
+        end;
+
+        if (NumPoints < maxValues) then
+        begin
+            DoSimpleMsg('%s: File of doubles "%s" contains fewer items (%d) than expected (%d).', [FullName(), FileName, NumPoints, maxValues], 20241019);
+            Exit;
+        end;
     except
+        FreeAndNil(F);
         DoSimpleMsg('Error Processing LoadShape File: "%s"', [FileName], 618);
     end;
 end;
@@ -1852,7 +1934,7 @@ var
     Fname: String;
 begin
     //TODO: disallow when ExternalMemory?
-    UseFloat64;
+    UseFloat64();
     if not Assigned(dP) then
     begin
         DoSimpleMsg('%s P multipliers not defined.', [FullName()], 622);
@@ -1910,7 +1992,7 @@ var
     Fname: String;
     Temp: Single;
 begin
-    UseFloat64;
+    UseFloat64();
     if not Assigned(dP) then
     begin
         DoSimpleMsg('%s P multipliers not defined.', [FullName()], 623);

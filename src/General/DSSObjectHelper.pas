@@ -250,7 +250,14 @@ begin
         TPropertyType.StringSilentROFunctionProperty:
         //TPropertyType.DoubleArraySilentROFunctionProperty:
         begin
-            //TODO: error message, optionally
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0 then
+            begin
+                DoSimpleMsg(
+                    '%s.%s: This DSS property is read-only.',
+                    [TDSSObject(obj).FullName(), PropertyName[Index]],
+                    2024104);
+                Exit;
+            end;
             Result := True;
         end;
         TPropertyType.DoubleOnArrayProperty,
@@ -266,6 +273,15 @@ begin
             end;
             if TPropertyFlag.SilentReadOnly in flags then
             begin
+                if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0 then
+                begin
+                    DoSimpleMsg(
+                        '%s.%s: This DSS property is read-only.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index]],
+                        2024101);
+                    Result := False;
+                    Exit;
+                end;
                 Result := True;
                 Exit;
             end;
@@ -366,6 +382,14 @@ begin
             begin
             if (TPropertyFlag.ConditionalReadOnly in flags) and (PLongBool(PByte(obj) + PropertyOffset3[Index])^) then
             begin
+                if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0 then
+                begin
+                    DoSimpleMsg(
+                        '%s.%s: This DSS property is curently read-only.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index]],
+                        2024106);
+                    Exit;
+                end;
                 Result := True;
                 Exit;
             end;
@@ -2736,7 +2760,16 @@ begin
         TPropertyType.MappedStringEnumProperty:
         begin
             if (TPropertyFlag.ConditionalReadOnly in flags) and (PLongBool(PByte(obj) + PropertyOffset3[Index])^) then
+            begin
+                if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0 then
+                begin
+                    DoSimpleMsg(
+                        '%s.%s: This DSS property is curently read-only.',
+                        [obj.FullName(), PropertyName[Index]],
+                        2024107);
+                end;
                 Exit;
+            end;
             SetObjInteger(obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt, setterFlags);
         end;            
     end;
@@ -2761,7 +2794,17 @@ begin
     end;
 
     if TPropertyFlag.SilentReadOnly in flags then
+    begin
+        if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0 then
+        begin
+            DoSimpleMsg(
+                '%s.%s: This DSS property is read-only.',
+                [obj.FullName(), PropertyName[Index]],
+                2024102);
+            Exit;
+        end;
         Exit; // Just in case a user calls this by error, no need to do anything
+    end;
 
     if TPropertyFlag.ScaledByFunction in flags then
         scale := TPropertyScaleFunction(Pointer(PropertyOffset2[Index]))(obj, False); // False = Setter scale
@@ -2773,7 +2816,7 @@ begin
             if not (TPropertyFlag.IgnoreInvalid in flags) then
                 DoSimpleMsg(
                     '%s.%s: Value (%g) must be greater than one.', 
-                    [TDSSObject(obj).FullName(), PropertyName[Index], Value],
+                    [obj.FullName(), PropertyName[Index], Value],
                 2020031);
             Exit;
         end;
@@ -2782,7 +2825,7 @@ begin
             if not (TPropertyFlag.IgnoreInvalid in flags) then
                 DoSimpleMsg(
                     '%s.%s: Value (%g) cannot be zero.', 
-                    [TDSSObject(obj).FullName(), PropertyName[Index], Value],
+                    [obj.FullName(), PropertyName[Index], Value],
                 2020031);
 
             Exit;
@@ -2792,7 +2835,7 @@ begin
             if not (TPropertyFlag.IgnoreInvalid in flags) then
                 DoSimpleMsg(
                     '%s.%s: Value (%g) cannot be negative.', 
-                    [TDSSObject(obj).FullName(), PropertyName[Index], Value],
+                    [obj.FullName(), PropertyName[Index], Value],
                 2020032);
                 
             Exit;
@@ -2802,7 +2845,7 @@ begin
             if not (TPropertyFlag.IgnoreInvalid in flags) then
                 DoSimpleMsg(
                     '%s.%s: Value (%g) cannot be positive.', 
-                    [TDSSObject(obj).FullName(), PropertyName[Index], Value],
+                    [obj.FullName(), PropertyName[Index], Value],
                 2020033);
                 
             Exit;
@@ -2861,7 +2904,16 @@ begin
     ptype := PropertyType[Index];
 
     if (TPropertyFlag.ConditionalReadOnly in flags) and (PLongBool(PByte(obj) + PropertyOffset3[Index])^) then
+    begin
+        if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0 then
+        begin
+            DoSimpleMsg(
+                '%s.%s: This DSS property is curently read-only.',
+                [obj.FullName(), PropertyName[Index]],
+                2024105);
+        end;
         Exit;
+    end;
 
     if ptype in [TPropertyType.BooleanProperty, TPropertyType.BooleanActionProperty] then
     begin
@@ -4951,7 +5003,17 @@ begin
             continue;
         end;
         if (ptype = TPropertyType.StringSilentROFunctionProperty) or (TPropertyFlag.SilentReadOnly in propFlags) then
-            continue; // ignore... TODO: error or warning
+        begin
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0 then
+            begin
+                DoSimpleMsg(
+                    '%s.%s: This DSS property is read-only.',
+                    [dssObj.FullName(), propName],
+                    2024103);
+                Exit;
+            end;
+            continue; // ignore on compatibility mode...
+        end;        
 
         if propData.IsNull and (not (TPropertyFlag.AllowNone in PropertyFlags[propIndex])) then
             continue;

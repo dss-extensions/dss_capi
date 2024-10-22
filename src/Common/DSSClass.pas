@@ -55,7 +55,8 @@ type
         NoPropertyTracking = 32,
         SkipSideEffects = 64,
         MonitorHeader = 128,
-        InvControlDeltaV = 256
+        InvControlDeltaV = 256,
+        PermissiveProperties = 512
     );
 
     DSSSaveFlag = (

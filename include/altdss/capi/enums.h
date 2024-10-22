@@ -510,12 +510,28 @@ extern "C" {
             discard the extra column.
         */
 
-        DSSCompatFlags_InvControlDeltaV = 0x00000100 /*!<
+        DSSCompatFlags_InvControlDeltaV = 0x00000100, /*!<
             An issue with the voltage delta across iterations was found and fixed in AltDSS/DSS C-API 0.15.0.
             Use this flag to restore the previous behavior, which also matches the official OpenDSS.
 
             The issue affects situations where an InvControl object tracks multiple DERs, while using one of the volt-var modes.
             It is not always apparent and does not always affect the end results.
+        */
+
+        DSSCompatFlags_PermissiveProperties = 0x00000200 /*!<
+            Starting AltDSS/DSS C-API v0.15.0, the way some properties are handled has been tweaked to try
+            to provide a better experience for general users.
+
+            - The arrays provided in the text interface, scripts or the Alt APIs are required to match the provided sizes. 
+              For example, if a LoadShape has `NPts` set to 12 and the user provides 24 values for `PMult`, an error is generated.
+
+            - Some properties in Transformer and AutoTrans that previously silently replaced zeros with default values now error
+
+            - Some properties are read-only, but previously silent ignored input values. Errors are now generated if the user 
+              tries to set them. This includes some properties that are read-only on certain conditions. For example, if a 
+              SwtControl is locked, its state cannot be set.
+
+            Set this compatibility flag to silently ignore the errors listed above and restore the original behavior.
         */
     };
 

@@ -56,8 +56,8 @@ function EncloseQuotes(const s: String): String;
 procedure ParseObjectClassAndName(DSS: TDSSContext; const FullObjName: String; var ClassName, ObjName: String);
 function InterpretYesNo(const s: String): Boolean;
 procedure InitDblArray(NumValues: Integer; Xarray: pDoubleArray; Value: Double);
-function InterpretDblArray(DSS: TDSSContext; const s: String; MaxValues: Integer; ResultArray: pDoubleArray): Integer;
-function InterpretIntArray(DSS: TDSSContext; const s: String; MaxValues: Integer; ResultArray: pIntegerArray): Integer;
+function InterpretDblArray(DSS: TDSSContext; const s: String; maxValues: Integer; ResultArray: pDoubleArray): Integer;
+function InterpretIntArray(DSS: TDSSContext; const s: String; maxValues: Integer; ResultArray: pIntegerArray): Integer;
 procedure InterpretTStringListArray(DSS: TDSSContext; const s: String; var ResultList: TStringList; ApplyLower: Boolean = False);
 function InterpretColorName(DSS: TDSSContext; const s: String): Integer;
 
@@ -202,6 +202,17 @@ function Pad(const S: String; Width: Integer): String;
 begin
     Result := Copy(S, 1, Length(S)) + Copy(padString, 1, (Width - Length(S)));
   // For i := 1 to Width-Length(S) DO Result := Result + ' ';
+end;
+
+function Ellipsize(const S: string; maxLen: Integer): String;
+begin
+    if Length(S) <= maxLen then
+    begin
+        Result := S;
+        Exit;
+    end;
+
+    Result := Copy(S, 1, maxLen) + ' (...)';
 end;
 
 function StripExtension(S: String): String;
@@ -425,9 +436,9 @@ begin
         Xarray[i] := Value;
 end;
 
-function InterpretDblArray(DSS: TDSSContext; const s: String; MaxValues: Integer; ResultArray: pDoubleArray): Integer;
+function InterpretDblArray(DSS: TDSSContext; const s: String; maxValues: Integer; ResultArray: pDoubleArray): Integer;
 //  Get numeric values from an array specified either as a list on numbers or a text file spec.
-//  ResultArray must be allocated to MaxValues by calling routine.
+//  ResultArray must be allocated to maxValues by calling routine.
 //
 //  9/7/2011 Modified to allow multi-column CSV files and result file
 //
@@ -452,15 +463,15 @@ var
     CSVFileName: String;
     CSVColumn: Integer;
     CSVHeader: Boolean;
-    InputLIne: String;
+    inputLine: String;
     iskip: Integer;
     sngArray: ArrayDef.PSingleArray;
-
+    actualCount: Integer;
 begin
     DSS.AuxParser.SetCmdString(S);
     ParmName := DSS.AuxParser.NextParam();
     Param := DSS.AuxParser.MakeString();
-    Result := MaxValues; // Default Return Value;
+    Result := maxValues; // Default Return Value;
 
     // Syntax can be either a list of numeric values or a file specification:  File= ...
 
@@ -500,15 +511,15 @@ begin
 
         try
             if CSVHeader then
-                FSReadln(F, InputLIne);  // skip the header row
+                FSReadln(F, inputLine);  // skip the header row
 
-            for i := 1 to MaxValues do
+            for i := 1 to maxValues do
             begin
                 try
                     if (F.Position + 1) < F.Size then
                     begin
-                        FSReadln(F, InputLIne);
-                        DSS.AuxParser.SetCmdString(InputLine);
+                        FSReadln(F, inputLine);
+                        DSS.AuxParser.SetCmdString(inputLine);
                         for iskip := 1 to CSVColumn do
                             ParmName := DSS.AuxParser.NextParam();
                         ResultArray[i] := DSS.AuxParser.MakeDouble();
@@ -526,13 +537,10 @@ begin
                         Break;
                     end;
                 end;
-
             end;
 
         finally
-
             FreeAndNil(F);
-
         end;
     end
     else if (Length(Parmname) > 0) and (CompareTextShortest(Parmname, 'dblfile') = 0) then
@@ -544,9 +552,14 @@ begin
             DoSimpleMsg(DSS, 'File of doubles "%s" could not be opened.', [Param], 70501);
             Exit;
         end;
-        Result := Min(Maxvalues, F.Size div sizeof(ResultArray[1]));  // no. of doubles
-        F.ReadBuffer(ResultArray[1], SizeOf(ResultArray[1]) * Result);
+        actualCount := F.Size div sizeof(Double);
+        Result := Min(maxValues, actualCount);  // no. of doubles
+        F.ReadBuffer(ResultArray[1], SizeOf(Double * Result));
         F.Free;
+        if (actualCount <> maxValues) and ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0) then
+        begin
+            DoSimpleMsg(DSS, 'File of doubles "%s" contains %d items, expected %d.', [Param, actualCount, maxValues], 2024108);
+        end;
     end
     else if (Length(Parmname) > 0) and (CompareTextShortest(Parmname, 'sngfile') = 0) then
     begin
@@ -554,7 +567,7 @@ begin
         try
             F := DSS.GetInputStreamEx(Param)
         except
-            DoSimpleMsg(DSS, 'File of Singles "%s" could not be opened.', [Param], 70502);
+            DoSimpleMsg(DSS, 'File of singles "%s" could not be opened.', [Param], 70502);
             Exit;
         end;
        
@@ -562,28 +575,64 @@ begin
         MStream.LoadFromStream(F);
         F.Free;
         sngArray := ArrayDef.PSingleArray(MStream.Memory);
+        actualCount := MStream.Size div sizeof(Single);
         // Now move the singles from the file into the destination array
-        Result := Min(Maxvalues, MStream.Size div sizeof(Single));  // no. of singles
+        Result := Min(maxValues, actualCount);  // no. of singles
         for i := 1 to Result do
         begin
             ResultArray[i] := sngArray[i];  // Single to Double
         end;
         MStream.Free;
+        if (actualCount <> maxValues) and ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0) then
+        begin
+            DoSimpleMsg(DSS, 'File of singles "%s" contains %d items, expected %d.', [Param, actualCount, maxValues], 2024109);
+        end;
     end
     else
     begin  // Parse list of values off input string
          // Parse Values of array list
-        for i := 1 to MaxValues do
+
+        if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 1 then
         begin
-            ResultArray[i] := DSS.AuxParser.MakeDouble();    // Fills array with zeros if we run out of numbers
+            // Backwards compatible mode
+            for i := 1 to maxValues do
+            begin
+                ResultArray[i] := DSS.AuxParser.MakeDouble();    // Fills array with zeros if we run out of numbers
+                DSS.AuxParser.NextParam();
+            end;
+            Exit;
+        end;
+        // New default, strict mode
+        Result := 0;
+        i := 0;
+        while true do
+        begin
+            if Length(DSS.AuxParser.tokenBuffer) = 0 then
+                break;
+
+            inc(i);
+            if i > maxValues then
+                break;
+
+            ResultArray[i] := DSS.AuxParser.MakeDouble();
             DSS.AuxParser.NextParam();
+        end;
+
+        Result := i;
+        if Result < maxValues then
+        begin
+            DoSimpleMsg(DSS, 'Array "%s" contains %d items, fewer than expected (%d).', [Ellipsize(s, 20), Result, maxValues], 20241010);
+        end
+        else if Result > maxValues then
+        begin
+            DoSimpleMsg(DSS, 'Array "%s" contains more items than expected (%d).', [Ellipsize(s, 20), maxValues], 20241011);
         end;
     end;
 end;
 
-function InterpretIntArray(DSS: TDSSContext; const s: String; MaxValues: Integer; ResultArray: pIntegerArray): Integer;
+function InterpretIntArray(DSS: TDSSContext; const s: String; maxValues: Integer; ResultArray: pIntegerArray): Integer;
 //  Get numeric values from an array specified either as a list on numbers or a text file spec.
-//  ResultArray must be allocated to MaxValues by calling routine.
+//  ResultArray must be allocated to maxValues by calling routine.
 //  File is assumed to have one value per line.
 var
     ParmName,
@@ -595,7 +644,7 @@ begin
     DSS.AuxParser.SetCmdString(S);
     ParmName := DSS.AuxParser.NextParam();
     Param := DSS.AuxParser.MakeString();
-    Result := Maxvalues;  // Default return value
+    Result := maxValues;  // Default return value
 
     // Syntax can be either a list of numeric values or a file specification:  File= ...
 
@@ -604,7 +653,7 @@ begin
          // load the list from a file
         try
             F := DSS.GetInputStreamEx(Param);
-            for i := 1 to MaxValues do
+            for i := 1 to maxValues do
             begin
                 if (F.Position + 1) < F.Size then
                 begin
@@ -626,16 +675,44 @@ begin
                 DoSimpleMsg(DSS, 'Error trying to read numeric array values from file "%s". Error is: %s', [Param, E.Message], 706);
             end;
         end;
-    end
-    else
-    begin  // Parse list of values off input string
+        Exit;
+    end;
 
-         // Parse Values of array list
-        for i := 1 to MaxValues do
+    // Parse list of values off input string
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 1 then
+    begin
+        // Backwards compatible mode
+        for i := 1 to maxValues do
         begin
             ResultArray[i] := DSS.AuxParser.MakeInteger();    // Fills array with zeros if we run out of numbers
             DSS.AuxParser.NextParam();
         end;
+        Exit;
+    end;
+    // New default, strict mode
+    Result := 0;
+    i := 0;
+    while true do
+    begin
+        if Length(DSS.AuxParser.tokenBuffer) = 0 then
+            break;
+
+        inc(i);
+        if i > maxValues then
+            break;
+
+        ResultArray[i] := DSS.AuxParser.MakeInteger();
+        DSS.AuxParser.NextParam();
+    end;
+
+    Result := i;
+    if Result < maxValues then
+    begin
+        DoSimpleMsg(DSS, 'Array "%s" contains %d items, fewer than expected (%d).', [Ellipsize(s, 20), Result, maxValues], 20241012);
+    end
+    else if Result > maxValues then
+    begin
+        DoSimpleMsg(DSS, 'Array "%s" contains more items than expected (%d).', [Ellipsize(s, 20), maxValues], 20241013);
     end;
 end;
 
@@ -2144,6 +2221,7 @@ var
     sA, 
     sB: Single;
     i: Integer;
+    actualCount, maxValues: Integer;
 begin
     try
         try
@@ -2151,6 +2229,20 @@ begin
         except
             DoSimpleMsg(DSS, 'Error opening file: "%s"', [FileName], 615);
             FreeAndNil(F);
+            Exit;
+        end;
+
+        maxValues := NumPoints;
+        actualCount := F.Size div sizeof(Single);
+        if not OnlyLoadB then
+        begin
+            maxValues *= 2;
+        end;
+
+        if (actualCount <> maxValues) and ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0) then
+        begin
+            FreeAndNil(F);
+            DoSimpleMsg(DSS, 'File of singles "%s" contains %d items, expected %d.', [FileName, actualCount, maxValues], 20241015);
             Exit;
         end;
 
@@ -2206,6 +2298,7 @@ procedure DoDblFile(DSS: TDSSContext; var pA, pB: PDoubleArray; var NumPoints: I
 var
     F: TStream = nil;
     i: Integer;
+    actualCount, maxValues: Integer;
 begin
     try
         try
@@ -2216,8 +2309,22 @@ begin
             Exit;
         end;
 
-        ReAllocmem(pB, Sizeof(Double) * NumPoints);
+        maxValues := NumPoints;
+        actualCount := F.Size div sizeof(Double);
+        if not OnlyLoadB then
+        begin
+            maxValues *= 2;
+        end;
+
+        if (actualCount <> maxValues) and ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0) then
+        begin
+            FreeAndNil(F);
+            DoSimpleMsg(DSS, 'File of doubles "%s" contains %d items, expected %d.', [FileName, actualCount, maxValues], 20241014);
+            Exit;
+        end;
+
         i := 0;
+        ReAllocmem(pB, Sizeof(Double) * NumPoints);
         if not OnlyLoadB then
         begin
             ReAllocmem(pA, Sizeof(Double) * NumPoints);
@@ -2263,6 +2370,7 @@ var
     F: TStream = nil;
     i: Integer;
     s: String;
+    remainingBytes: Integer;
 begin
     try
         F := DSS.GetInputStreamEx(FileName);
@@ -2303,8 +2411,25 @@ begin
         end;
 
         FreeAndNil(F);
-        NumPoints := i;
 
+        if ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 1) then
+        begin
+            NumPoints := i;
+            Exit;
+        end;
+
+        if (i < NumPoints) then
+        begin
+            DoSimpleMsg(DSS, 'CSV file "%s" contains %d items, fewer than expected (%d).', [FileName, i, NumPoints], 20241016);
+            Exit;
+        end;
+
+        remainingBytes := F.Size - (F.Position + 1);
+        if (remainingBytes > 5) then // 5 = enough for line ending plus some chars, indicating extra data
+        begin
+            DoSimpleMsg(DSS, 'CSV file "%s" contains more items than expected (%d). Extra data: %d bytes.', [FileName, NumPoints, remainingBytes], 20241017);
+            Exit;
+        end;
     except
         On E: Exception do
         begin
