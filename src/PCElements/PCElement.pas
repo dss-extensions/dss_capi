@@ -43,7 +43,6 @@ type
         procedure ZeroInjCurrent();
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present values of terminal
-        procedure ComputeITerminal(); OVERRIDE;
         function InjCurrents(): Integer; OVERRIDE;
         procedure CalcYPrimContribution(Curr: pComplexArray); INLINE;
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
@@ -281,15 +280,6 @@ end;
 procedure TPCElement.SetVariable(i: Integer; Value: Double);
 begin
     // Do Nothing
-end;
-
-procedure TPCElement.ComputeITerminal();
-begin
-    if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
-    begin
-        GetCurrents(Iterminal);
-        IterminalSolutionCount := ActiveCircuit.Solution.SolutionCount;
-    end;
 end;
 
 procedure TPCElement.ZeroInjCurrent();

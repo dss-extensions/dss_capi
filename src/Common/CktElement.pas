@@ -26,6 +26,7 @@ type
     PRIVATE
         FBusNames: ArrayOfString; // Bus + Nodes (a.1.2.3.0)
         FYPrimInvalid: Boolean;
+        cachedLosses: Complex;
 
         procedure DoYprimCalcs(Ymatrix: TCMatrix);
     PROTECTED
@@ -79,7 +80,7 @@ type
         function GetYPrim(var Ymatrix: TCmatrix; Opt: Integer): Integer; VIRTUAL;  //returns values of array
         function GetYPrimValues(Opt: Integer): pComplexArray; VIRTUAL;
         function MaxTerminalOneIMag(): Double;   // Max of Iterminal 1 phase currents
-        procedure ComputeITerminal(); VIRTUAL;   // Computes Iterminal for this device
+        procedure ComputeITerminal();  // Computes Iterminal for this device
         procedure ComputeVTerminal();
         procedure ZeroITerminal(); inline;
         procedure GetCurrents(Curr: pComplexArray); VIRTUAL; OVERLOAD; ABSTRACT; //Get present value of terminal Curr for reports
@@ -121,7 +122,7 @@ type
         function NPhases(): Integer;
         function Losses(): Complex;   // Get total losses for property...
         function ActiveTerminalIdx(): Int8; inline;
-        procedure SetActiveTerminalIdx(value: Int8);
+        procedure SetActiveTerminalIdx(value: Int8); inline;
 
         function ConductorClosed(Index: Integer): Boolean; inline;
         procedure SetConductorClosed(Index: Integer; Value: Boolean); VIRTUAL;
@@ -545,6 +546,7 @@ begin
     begin
         GetCurrents(Iterminal);
         IterminalSolutionCount := ActiveCircuit.Solution.SolutionCount;
+        Exclude(flags, TDSSObjectFlag.CachedLosses);
     end;
 end;
 
@@ -607,7 +609,13 @@ begin
     Result := 0;
     if (not FEnabled) or (NodeRef = NIL) then
         Exit;
-        
+
+    if (IterminalSolutionCount = ActiveCircuit.Solution.SolutionCount) and (TDSSObjectFlag.CachedLosses in flags) then
+    begin
+        Result := cachedLosses;
+        Exit;
+    end;
+
     ComputeITerminal();
 
     // Method: Sum complex power going into all conductors of all terminals
@@ -645,6 +653,9 @@ begin
 
     if ActiveCircuit.PositiveSequence then
         Result *= 3.0;
+
+    cachedLosses := Result;
+    Include(flags, TDSSObjectFlag.CachedLosses);
 end;
 
 function TDSSCktElement.MaxVoltageC(idxTerm: Integer): Complex;

@@ -158,7 +158,8 @@ type
         // IsPartofFeeder,  -- UNUSED
         // Drawn,  // Flag used in tree searches etc  -- UNUSED
         // HasSwtControl // Has a remotely-controlled Switch -- UNUSED
-        NCIM_ExPV
+        NCIM_ExPV,
+        CachedLosses
     );
     TDSSObjectFlags = set of TDSSObjectFlag;
     Flg = TDSSObjectFlag;
