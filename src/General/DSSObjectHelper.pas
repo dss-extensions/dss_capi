@@ -2076,10 +2076,10 @@ begin
             // Allow both the full matrix or the triangle
             if (ValueCount <> (Norder * Norder)) and (ValueCount <> (Norder * (Norder + 1)) div 2) then
             begin
-                DoSimpleMsg(
-                    '%s.%s: Invalid number of elements. Provide either the full matrix or a triangle (lower or upper).', 
-                    [TDSSObject(obj).FullName(), PropertyName[Index]],
-                2020037);
+                raise Exception.Create(Format(
+                    _('%s.%s: Invalid number of elements. Provide either the full matrix or a triangle (lower or upper).'), 
+                    [TDSSObject(obj).FullName(), PropertyName[Index]]
+                ));
                 Exit;
             end;
 
