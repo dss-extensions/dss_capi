@@ -17,6 +17,10 @@
 #define ODDIE_LOAD_FUNC(FUNCNAME, FUNCTYPE) ctx->FUNCNAME = (FUNCTYPE) dlsym(ctx->dll_handle, #FUNCNAME); if (ctx->FUNCNAME == NULL && ctx->strict) goto CTX_NEW_ERROR;
 #endif
 
+#ifdef ALTDSS_ODDIE_LINK_OPENDSSDIRECT_API
+#define ODDIE_SET_FUNC(FUNCNAME, FUNCTYPE) ctx->FUNCNAME = /*(FUNCTYPE)*/ FUNCNAME;
+#endif
+
 #define CTX_OR_PRIME if (!ctx) ctx = ctxPrime;
 
 #define ODDIE_CHECK_FUNC_VOID(FUNCNAME) if (((OddieContext*) ctx)->FUNCNAME == NULL) { oddie_set_local_error(ctx, 40, "Function " #FUNCNAME " was not found in the provided OpenDSS library."); return; }
@@ -112,6 +116,186 @@ ALTDSS_ODDIE_DLL void* ctx_New(void)
 
     // This fills "map_errors" and "strict"
     Oddie_SetOptions(ctx, ODDIE_DEFAULT_CTX_OPTIONS);
+
+    ctx->error_number = 0;
+    ctx->error_desc[0] = '\0';
+    ctx->error_desc[DSS_ERR_NUM_CHR] = '\0';
+    ctx->PropIndex = 0;
+
+#ifdef ALTDSS_ODDIE_LINK_OPENDSSDIRECT_API
+    // Try to use the already linked functions (no dynamic lookup)
+    if (ODDIE_LIB_NAME == NULL)
+    {
+        ODDIE_SET_FUNC(GetPCInjCurr, oddie_void_void_func_t)
+        ODDIE_SET_FUNC(GetSourceInjCurrents, oddie_void_void_func_t)
+        ODDIE_SET_FUNC(ZeroInjCurr, oddie_void_void_func_t)
+        ODDIE_SET_FUNC(getIpointer, oddie_void_ppdouble_func_t)
+        ODDIE_SET_FUNC(getVpointer, oddie_void_ppdouble_func_t)
+        ODDIE_SET_FUNC(SolveSystem, oddie_int32_ppdouble_func_t)
+        ODDIE_SET_FUNC(GetCompressedYMatrix, oddie_get_y_csc_func_t)
+        ODDIE_SET_FUNC(AddInAuxCurrents, oddie_add_in_aux_currents_func_t)
+        ODDIE_SET_FUNC(BuildYMatrixD, oddie_build_y_matrix_func_t)
+        ODDIE_SET_FUNC(InitAndGetYparams, oddie_y_params_func_t)
+        ODDIE_SET_FUNC(SystemYChanged, oddie_int32_func_t)
+        ODDIE_SET_FUNC(UseAuxCurrents, oddie_int32_func_t)
+        ODDIE_SET_FUNC(ErrorCode, oddie_int32_void_func_t)
+        ODDIE_SET_FUNC(ErrorDesc, oddie_str_void_func_t)
+        ODDIE_SET_FUNC(DSSPut_Command, oddie_str_str_func_t)
+        ODDIE_SET_FUNC(ActiveClassS, oddie_str_func_t)
+        ODDIE_SET_FUNC(BUSS, oddie_str_func_t)
+        ODDIE_SET_FUNC(CapacitorsS, oddie_str_func_t)
+        ODDIE_SET_FUNC(CapControlsS, oddie_str_func_t)
+        ODDIE_SET_FUNC(CircuitS, oddie_str_func_t)
+        ODDIE_SET_FUNC(CktElementS, oddie_str_func_t)
+        ODDIE_SET_FUNC(DSSElementS, oddie_str_func_t)
+        ODDIE_SET_FUNC(DSSExecutiveS, oddie_str_func_t)
+        ODDIE_SET_FUNC(DSSLoadsS, oddie_str_func_t)
+        ODDIE_SET_FUNC(DSSProgressS, oddie_str_func_t)
+        ODDIE_SET_FUNC(DSSProperties, oddie_str_func_t)
+        ODDIE_SET_FUNC(DSSS, oddie_str_func_t)
+        ODDIE_SET_FUNC(FusesS, oddie_str_func_t)
+        ODDIE_SET_FUNC(GeneratorsS, oddie_str_func_t)
+        ODDIE_SET_FUNC(GICSourcesS, oddie_str_func_t)
+        ODDIE_SET_FUNC(IsourceS, oddie_str_func_t)
+        ODDIE_SET_FUNC(LineCodesS, oddie_str_func_t)
+        ODDIE_SET_FUNC(LinesS, oddie_str_func_t)
+        ODDIE_SET_FUNC(LoadShapeS, oddie_str_func_t)
+        ODDIE_SET_FUNC(MetersS, oddie_str_func_t)
+        ODDIE_SET_FUNC(MonitorsS, oddie_str_func_t)
+        ODDIE_SET_FUNC(ParserS, oddie_str_func_t)
+        ODDIE_SET_FUNC(PDElementsS, oddie_str_func_t)
+        ODDIE_SET_FUNC(PVsystemsS, oddie_str_func_t)
+        ODDIE_SET_FUNC(ReactorsS, oddie_str_func_t)
+        ODDIE_SET_FUNC(ReclosersS, oddie_str_func_t)
+        ODDIE_SET_FUNC(ReduceCktS, oddie_str_func_t)
+        ODDIE_SET_FUNC(RegControlsS, oddie_str_func_t)
+        ODDIE_SET_FUNC(RelaysS, oddie_str_func_t)
+        ODDIE_SET_FUNC(SensorsS, oddie_str_func_t)
+        ODDIE_SET_FUNC(SettingsS, oddie_str_func_t)
+        ODDIE_SET_FUNC(SolutionS, oddie_str_func_t)
+        ODDIE_SET_FUNC(StoragesS, oddie_str_func_t)
+        ODDIE_SET_FUNC(SwtControlsS, oddie_str_func_t)
+        ODDIE_SET_FUNC(TopologyS, oddie_str_func_t)
+        ODDIE_SET_FUNC(TransformersS, oddie_str_func_t)
+        ODDIE_SET_FUNC(VsourcesS, oddie_str_func_t)
+        ODDIE_SET_FUNC(WindGensS, oddie_str_func_t)
+        ODDIE_SET_FUNC(XYCurvesS, oddie_str_func_t)
+        ODDIE_SET_FUNC(BUSF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(CapacitorsF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(CapControlsF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(CktElementF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(DSSLoadsF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(FusesF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(GeneratorsF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(GICSourcesF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(IsourceF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(LineCodesF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(LinesF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(LoadShapeF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(MetersF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(ParserF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(PDElementsF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(PVsystemsF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(ReactorsF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(ReclosersF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(ReduceCktF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(RegControlsF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(SensorsF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(SettingsF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(SolutionF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(StoragesF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(SwtControlsF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(TransformersF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(VsourcesF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(WindGensF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(XYCurvesF, oddie_float64_func_t)
+        ODDIE_SET_FUNC(CircuitF, oddie_float64_func2_t)
+        ODDIE_SET_FUNC(CmathLibF, oddie_float64_func2_t)
+        ODDIE_SET_FUNC(ActiveClassI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(BUSI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(CapacitorsI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(CapControlsI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(CircuitI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(CktElementI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(CtrlQueueI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(DSSElementI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(DSSExecutiveI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(DSSI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(DSSLoads, oddie_int32_func_t)
+        ODDIE_SET_FUNC(DSSProgressI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(FusesI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(GeneratorsI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(GICSourcesI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(IsourceI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(LineCodesI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(LinesI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(LoadShapeI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(MetersI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(MonitorsI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(ParallelI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(ParserI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(PDElementsI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(PVsystemsI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(ReactorsI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(ReclosersI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(ReduceCktI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(RegControlsI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(RelaysI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(SensorsI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(SettingsI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(SolutionI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(SwtControlsI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(StoragesI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(TopologyI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(TransformersI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(VsourcesI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(WindGensI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(XYCurvesI, oddie_int32_func_t)
+        ODDIE_SET_FUNC(ActiveClassV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(BUSV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(CapacitorsV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(CapControlsV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(CircuitV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(CktElementV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(CmathLibV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(CtrlQueueV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(DSSElementV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(DSSLoadsV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(DSSV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(FusesV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(GeneratorsV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(GICSourcesV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(IsourceV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(LineCodesV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(LinesV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(LoadShapeV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(MetersV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(MonitorsV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(ParallelV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(ParserV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(PVsystemsV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(ReactorsV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(ReclosersV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(RegControlsV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(RelaysV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(SensorsV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(SettingsV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(SolutionV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(StoragesV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(SwtControlsV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(TopologyV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(TransformersV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(VsourcesV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(WindGensV, oddie_variant_func_t)
+        ODDIE_SET_FUNC(XYCurvesV, oddie_variant_func_t)
+
+        if (ctxPrime == NULL)
+        {
+            ctxPrime = ctx;
+        }
+        return ctx;
+    }
+#endif
 
 #ifdef WIN32
     ctx->dll_handle = LoadLibraryEx(ODDIE_LIB_NAME != NULL ? ODDIE_LIB_NAME : "OpenDSSDirect.dll", NULL, ODDIE_LIB_OPTIONS);
@@ -291,10 +475,6 @@ ALTDSS_ODDIE_DLL void* ctx_New(void)
     ODDIE_LOAD_FUNC(WindGensV, oddie_variant_func_t)
     ODDIE_LOAD_FUNC(XYCurvesV, oddie_variant_func_t)
 
-    ctx->error_number = 0;
-    ctx->error_desc[0] = '\0';
-    ctx->error_desc[DSS_ERR_NUM_CHR] = '\0';
-    ctx->PropIndex = 0;
     if (ctxPrime == NULL)
     {
         ctxPrime = ctx;
@@ -738,7 +918,7 @@ void oddie_set_int_command(const void* ctx, const char* cmd_fmt, int32_t value)
 const char *oddie_get_str_property(const void* ctx, const char* className, const char* name, const char* queryCmd)
 {
     OddieContext* oddie_ctx = (OddieContext*) ctx;
-    char *res, *it;
+    char const *res;
     if (oddie_ctx->error_number || name == NULL || name[0] == 0)
     {
         return NULL;
