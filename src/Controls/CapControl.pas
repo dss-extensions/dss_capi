@@ -311,7 +311,9 @@ begin
     PropertyOffset[ord(TProp.CTratio)] := ptruint(@obj.ControlVars.CTRatio);
     PropertyOffset[ord(TProp.ONsetting)] := ptruint(@obj.ControlVars.ON_Value);
     PropertyOffset[ord(TProp.OFFsetting)] := ptruint(@obj.ControlVars.OFF_Value);
+    
     PropertyOffset[ord(TProp.Delay)] := ptruint(@obj.ControlVars.ONDelay);
+    PropertyFlags[ord(TProp.Delay)] := [TPropertyFlag.Units_s];
 
     PropertyOffset[ord(TProp.Vmax)] := ptruint(@obj.ControlVars.Vmax);
     PropertyFlags[ord(TProp.Vmax)] := [TPropertyFlag.Units_V];

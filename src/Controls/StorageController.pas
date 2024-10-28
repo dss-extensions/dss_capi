@@ -421,7 +421,7 @@ begin
     PropertyReadFunction[ord(TProp.kWActual)] := @GetkWActual;
 
     // double read-only
-    PropertyFlags[ord(TProp.kWneed)] := [TPropertyFlag.SilentReadOnly];
+    PropertyFlags[ord(TProp.kWneed)] := [TPropertyFlag.SilentReadOnly, TPropertyFlag.Units_kW];
     PropertyOffset[ord(TProp.kWneed)] := ptruint(@obj.kWNeeded);
 
     // double properties
@@ -429,21 +429,26 @@ begin
     //PropertyFlags[ord(TProp.DispFactor)] := [TPropertyFlag.NonNegative, TPropertyFlag.NotZero];
     // >0,<=1
 
+    PropertyFlags[ord(TProp.kWTarget)] := [TPropertyFlag.Units_kW];
     PropertyOffset[ord(TProp.kWTarget)] := ptruint(@obj.FkWTarget);
+    PropertyFlags[ord(TProp.kWTargetLow)] := [TPropertyFlag.Units_kW];
     PropertyOffset[ord(TProp.kWTargetLow)] := ptruint(@obj.FkWTargetLow);
     PropertyOffset[ord(TProp.pctkWBand)] := ptruint(@obj.FpctkWBand);
     PropertyOffset[ord(TProp.pctkWBandLow)] := ptruint(@obj.FpctkWBandLow);
 
     PropertyOffset[ord(TProp.kWBandLow)] := ptruint(@obj.FkWBandLow);
-    PropertyFlags[ord(TProp.kWBandLow)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.kWBandLow)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Redundant, TPropertyFlag.Units_kW];
     PropertyRedundantWith[ord(TProp.kWBandLow)] := ord(TProp.pctkWBandLow);
 
     PropertyOffset[ord(TProp.kWBand)] := ptruint(@obj.FkWBand);
-    PropertyFlags[ord(TProp.kWBand)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.kWBand)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Redundant, TPropertyFlag.Units_kW];
     PropertyRedundantWith[ord(TProp.kWBand)] := ord(TProp.pctkWBand);
 
     PropertyOffset[ord(TProp.TimeDischargeTrigger)] := ptruint(@obj.DischargeTriggerTime);
+    PropertyFlags[ord(TProp.TimeDischargeTrigger)] := [TPropertyFlag.Units_ToD_hour];
     PropertyOffset[ord(TProp.TimeChargeTrigger)] := ptruint(@obj.ChargeTriggerTime);
+    PropertyFlags[ord(TProp.TimeChargeTrigger)] := [TPropertyFlag.Units_ToD_hour];
+
     PropertyOffset[ord(TProp.pctRatekW)] := ptruint(@obj.pctkWRate);
     PropertyOffset[ord(TProp.pctRateCharge)] := ptruint(@obj.pctChargeRate);
     PropertyOffset[ord(TProp.pctReserve)] := ptruint(@obj.pctFleetReserve);
@@ -458,7 +463,7 @@ begin
     PropertyFlags[ord(TProp.Tdn)] := [TPropertyFlag.Units_hour, TPropertyFlag.NonNegative];
 
     PropertyOffset[ord(TProp.kWThreshold)] := ptruint(@obj.FkWThreshold);
-    PropertyFlags[ord(TProp.kWThreshold)] := [TPropertyFlag.DynamicDefault];
+    PropertyFlags[ord(TProp.kWThreshold)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_kW];
 
     PropertyOffset[ord(TProp.ResetLevel)] := ptruint(@obj.ResetLevel);
 

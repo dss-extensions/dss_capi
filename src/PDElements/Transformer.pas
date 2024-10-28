@@ -580,10 +580,9 @@ begin
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();
 
-    //TODO: fully remove some inherited properties like normamps/emergamps?
-    // Currently, this just suppresses them from the JSON output/schema
-    PropertyFlags[PropertyOffset_PDClass + ord(TPDElementProp.normamps)] := [TPropertyFlag.SuppressJSON];
-    PropertyFlags[PropertyOffset_PDClass + ord(TPDElementProp.emergamps)] := [TPropertyFlag.SuppressJSON];
+    // These properties are overwritten by RecalcElementData()
+    PropertyFlags[PropertyOffset_PDClass + ord(TPDElementProp.normamps)] := [TPropertyFlag.SilentReadOnly];
+    PropertyFlags[PropertyOffset_PDClass + ord(TPDElementProp.emergamps)] := [TPropertyFlag.SilentReadOnly];
 end;
 
 function TTransf.NewObject(const ObjName: String; Activate: Boolean): Pointer;

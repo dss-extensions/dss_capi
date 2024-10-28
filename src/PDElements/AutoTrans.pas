@@ -540,6 +540,10 @@ begin
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();
+
+    // These properties are overwritten by RecalcElementData()
+    PropertyFlags[PropertyOffset_PDClass + ord(TPDElementProp.normamps)] := [TPropertyFlag.SilentReadOnly];
+    PropertyFlags[PropertyOffset_PDClass + ord(TPDElementProp.emergamps)] := [TPropertyFlag.SilentReadOnly];
 end;
 
 function TAutoTrans.NewObject(const ObjName: String; Activate: Boolean): Pointer;

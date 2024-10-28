@@ -620,8 +620,8 @@ begin
     // adv doubles
     PropertyOffset[ord(TProp.kvarMax)] := ptruint(@obj.StorageVars.Fkvarlimit);
     PropertyOffset[ord(TProp.kvarMaxAbs)] := ptruint(@obj.StorageVars.Fkvarlimitneg);
-    PropertyFlags[ord(TProp.kvarMax)] := [TPropertyFlag.Transform_Abs, TPropertyFlag.DynamicDefault];
-    PropertyFlags[ord(TProp.kvarMaxAbs)] := [TPropertyFlag.Transform_Abs, TPropertyFlag.DynamicDefault];
+    PropertyFlags[ord(TProp.kvarMax)] := [TPropertyFlag.Units_kvar, TPropertyFlag.Transform_Abs, TPropertyFlag.DynamicDefault];
+    PropertyFlags[ord(TProp.kvarMaxAbs)] := [TPropertyFlag.Units_kvar, TPropertyFlag.Transform_Abs, TPropertyFlag.DynamicDefault];
 
     PropertyType[ord(TProp.pctIdlingkvar)] := TPropertyType.DeprecatedAndRemoved; //TODO: fully remove
     PropertyDeprecatedMessage[ord(TProp.pctIdlingkvar)] := '"%Idlingkvar" was deprecated in 2020. It does nothing since then; please update your scripts.';
@@ -694,7 +694,7 @@ begin
     PropertyOffset[ord(TProp.SafeVoltage)] := ptruint(@obj.dynVars.SMThreshold);
 
     PropertyOffset[ord(TProp.AmpLimit)] := ptruint(@obj.dynVars.ILimit);
-    PropertyFlags[ord(TProp.AmpLimit)] := [TPropertyFlag.NoDefault];
+    PropertyFlags[ord(TProp.AmpLimit)] := [TPropertyFlag.NoDefault, TPropertyFlag.Units_A];
 
     PropertyOffset[ord(TProp.AmpLimitGain)] := ptruint(@obj.dynVars.VError);
 
