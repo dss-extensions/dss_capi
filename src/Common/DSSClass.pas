@@ -1972,6 +1972,8 @@ begin
 
     PropertyType[ActiveProperty + ord(TProp.Like)] := TPropertyType.MakeLikeProperty;
     PropertyOffset[ActiveProperty + ord(TProp.Like)] := 1; // dummy value
+    PropertyDeprecatedMessage[ActiveProperty + ord(TProp.Like)] := '`Like` has been deprecated since at least 2021, see https://sourceforge.net/p/electricdss/discussion/861977/thread/8b59d21eb6/#b57c/f668';
+    PropertyFlags[ActiveProperty + ord(TProp.Like)] := [TPropertyFlag.Deprecated];
 
     ActiveProperty := ActiveProperty + NumPropsThisClass;
 
