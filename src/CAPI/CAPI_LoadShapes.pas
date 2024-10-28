@@ -75,7 +75,7 @@ begin
     obj := DSS.LoadshapeClass.GetActiveObj();
     if obj = NIL then
     begin
-        DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['Loadshape'], 61001);
+        DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['LoadShape'], 61001);
         Exit;
     end;
     

@@ -448,8 +448,8 @@ begin
         GenStatusEnum.DefaultValue := 0;
 
         GenModelEnum := TDSSEnum.Create('Generator: Model', True, 0, 0, [
-            'Constant PQ', 'Constant Z', 'Constant P|V|', 'Constant P, fixed Q', 
-            'Constant P, fixed X', 'User model', 'Approximate inverter model'],
+            'Constant PQ', 'Constant Z', 'Constant P|V|', 'Constant P, Fixed Q', 
+            'Constant P, Fixed X', 'User Model', 'Approximate Inverter Model'],
             [1, 2, 3, 4, 5, 6, 7],
             ['ConstantPQ', 'ConstantZ', 'ConstantPV', 'ConstantP_FixedQ', 'ConstantP_FixedX', 'UserModel', 'ApproxInverter']);
         GenModelEnum.JSONUseNumbers := true;

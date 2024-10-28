@@ -288,13 +288,13 @@ begin
         PropInfo := TypeInfo(TProp);
         PropInfoLegacy := TypeInfo(TPropLegacy);
         DischargeModeEnum := TDSSEnum.Create('StorageController: Discharge Mode', False, 1, 2, 
-            ['Peakshave', 'Follow', 'Support', 'Loadshape', 'Time', 'Schedule', 'I-Peakshave'],
+            ['PeakShave', 'Follow', 'Support', 'LoadShape', 'Time', 'Schedule', 'I-PeakShave'],
             [MODEPEAKSHAVE, MODEFOLLOW, MODESUPPORT, MODELOADSHAPE, MODETIME, MODESCHEDULE, CURRENTPEAKSHAVE],
-            ['Peakshave', 'Follow', 'Support', 'Loadshape', 'Time', 'Schedule', 'IPeakshave']);
+            ['PeakShave', 'Follow', 'Support', 'LoadShape', 'Time', 'Schedule', 'IPeakShave']);
         ChargeModeEnum := TDSSEnum.Create('StorageController: Charge Mode', False, 1, 1, 
-            ['Loadshape', 'Time', 'PeakshaveLow', 'I-PeakshaveLow'],
+            ['LoadShape', 'Time', 'PeakShaveLow', 'I-PeakShaveLow'],
             [MODELOADSHAPE, MODETIME, MODEPEAKSHAVELOW, CURRENTPEAKSHAVELOW],
-            ['Loadshape', 'Time', 'PeakshaveLow', 'IPeakshaveLow']);
+            ['LoadShape', 'Time', 'PeakShaveLow', 'IPeakShaveLow']);
     end;
     inherited Create(dssContext, Storage_CONTROL, 'StorageController');
 end;

@@ -2995,17 +2995,17 @@ extern "C" {
     ALTDSS_CAPI_DLL const char* Loads_Get_Sensor(void);
 
     /*! 
-    Get the Name of the active Loadshape
+    Get the Name of the active LoadShape
     */
     ALTDSS_CAPI_DLL const char* LoadShapes_Get_Name(void);
 
     /*! 
-    Set the active Loadshape by name
+    Set the active LoadShape by name
     */
     ALTDSS_CAPI_DLL void LoadShapes_Set_Name(const char* Value);
 
     /*! 
-    Number of Loadshape objects currently defined in Loadshape collection
+    Number of LoadShape objects currently defined in the LoadShape collection
     */
     ALTDSS_CAPI_DLL int32_t LoadShapes_Get_Count(void);
 
@@ -3015,22 +3015,22 @@ extern "C" {
     ALTDSS_CAPI_DLL int32_t LoadShapes_Get_First(void);
 
     /*! 
-    Advance active Loadshape to the next on in the collection. Returns 0 if no more loadshapes.
+    Advance active LoadShape to the next on in the collection. Returns 0 if no more loadshapes.
     */
     ALTDSS_CAPI_DLL int32_t LoadShapes_Get_Next(void);
 
     /*! 
-    Array of strings containing names of all Loadshape objects currently defined.
+    Array of strings containing names of all LoadShape objects currently defined.
     */
     ALTDSS_CAPI_DLL void LoadShapes_Get_AllNames(char*** ResultPtr, int32_t* ResultDims);
 
     /*! 
-    Get Number of points in active Loadshape.
+    Get Number of points in active LoadShape.
     */
     ALTDSS_CAPI_DLL int32_t LoadShapes_Get_Npts(void);
 
     /*! 
-    Array of Doubles for the P multiplier in the Loadshape.
+    Array of Doubles for the P multiplier in the LoadShape.
     */
     ALTDSS_CAPI_DLL void LoadShapes_Get_Pmult(double** ResultPtr, int32_t* ResultDims);
     /*! 
@@ -3048,12 +3048,12 @@ extern "C" {
     ALTDSS_CAPI_DLL void LoadShapes_Get_Qmult_GR(void);
 
     /*! 
-    Set number of points to allocate for active Loadshape.
+    Set number of points to allocate for active LoadShape.
     */
     ALTDSS_CAPI_DLL void LoadShapes_Set_Npts(int32_t Value);
 
     /*! 
-    Array of doubles containing the P array for the Loadshape.
+    Array of doubles containing the P array for the LoadShape.
     */
     ALTDSS_CAPI_DLL void LoadShapes_Set_Pmult(const double* ValuePtr, int32_t ValueCount);
 
