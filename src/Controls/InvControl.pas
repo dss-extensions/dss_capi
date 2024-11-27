@@ -693,6 +693,11 @@ begin
             begin
                 FMonBuses[i] := DSS.AuxParser.ParseAsBusName(MonBusesNameList.Strings[i], NNode, pIntegerArray(@NodeBuffer));
                 SetLength(FMonBusesNodes[i], NNode);
+                if NNode = 0 then
+                begin
+                    DoSimpleMsg('%s.%s: Bus nodes are missing in "%s".', [ParentClass.PropertyName[Idx], FullName(), MonBusesNameList.Strings[i]], 2024111);
+                    Exit;
+                end;
                 for j := 0 to NNode - 1 do
                     FMonBusesNodes[i, j] := NodeBuffer[j + 1];
             end;
@@ -1582,6 +1587,13 @@ begin
             for j := 0 to Length(FMonBuses) - 1 do
             begin
                 FMonBusesIndex := ActiveCircuit.BusList.Find(FMonBuses[j]);
+                if FMonBusesIndex = 0 then
+                begin
+                    DoSimpleMsg('%s.%s: Invalid bus "%s" found. Aborting.', [ParentClass.PropertyName[ord(TProp.MonBus)], FullName(), FMonBuses[j]], 2024112);
+                    DSS.SetSolutionAbort(true);
+                    Exit;
+                end;
+
                 rBus := ActiveCircuit.Buses[FMonBusesIndex];
 
                 if (length(FMonBusesNodes[j]) = 2) then
