@@ -240,9 +240,7 @@ extern "C" {
     ALTDSS_CAPI_DLL const void* ctx_New(void);
 
     /*!
-    Dispose an existing DSS engine context. 
-    
-    Pass a pointer to the variable, which will be zeroed on success.
+    Dispose an existing DSS engine context.
     */
     ALTDSS_CAPI_DLL void ctx_Dispose(const void *ctx);
 
