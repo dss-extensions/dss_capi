@@ -10800,7 +10800,7 @@ ALTDSS_ODDIE_DLL int32_t ctx_Settings_Get_CktModel(const void* ctx)
     CTX_OR_PRIME
     ODDIE_CHECK_FUNC_INT32(SettingsI)
     int32_t res;
-    res = ((OddieContext*) ctx)->SettingsI(4, 0);
+    res = ((OddieContext*) ctx)->SettingsI(4, 0) - 1;
     oddie_map_error(ctx);
     return res;
 }
@@ -10969,7 +10969,7 @@ ALTDSS_ODDIE_DLL void ctx_Settings_Set_CktModel(const void* ctx, int32_t Value)
 {
     CTX_OR_PRIME
     ODDIE_CHECK_FUNC_VOID(SettingsI)
-    ((OddieContext*) ctx)->SettingsI(5, Value);
+    ((OddieContext*) ctx)->SettingsI(5, Value + 1);
     oddie_map_error(ctx);
 }
 
