@@ -31,17 +31,60 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Text_Set_Command(const Value: PAnsiChar); CDECL;
+var
+    res: String;
+    posCurrent, posNext: Integer;
+    full: String;
+    s: String;
+    i: Integer;
+    outputs: TStringList;
 begin
+    i := 1;
     DSSPrime.SetSolutionAbort(FALSE);  // Reset for commands entered from outside
-    DSSPrime.DSSExecutive.ParseCommand(Value);  // Convert to String
+    full := Value;
+    posCurrent := 1;
+    posNext := Pos(#10, full, posCurrent);
+    if posNext = 0 then
+    begin
+        // Nothing special, handle as the original implementation
+        DSSPrime.DSSExecutive.ParseCommand(full);
+        Exit;
+    end;
+
+    // Collect the strings and replace GlobalResult at the end
+    outputs := TStringList.Create();
+    try
+        while posCurrent < Length(full) do
+        begin
+            s := Copy(full, posCurrent, (posNext - posCurrent));
+            DSSPrime.DSSExecutive.ParseCommand(s, i);
+            if Length(DSSPrime.GlobalResult) <> 0 then
+                outputs.Add(DSSPrime.GlobalResult);
+            
+            if DSSPrime.ErrorNumber <> 0 then
+            begin
+                //TODO: complement error message?
+                Exit;
+            end;
+            posCurrent := posNext + 1;
+            posNext := Pos(#10, full, posCurrent);
+            if posNext = 0 then
+                posNext := Length(full) + 1;
+            inc(i);
+        end;
+    finally
+        if outputs <> NIL then
+        begin
+            DSSPrime.GlobalResult := outputs.GetText();
+        end;
+        FreeAndNil(outputs);
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Text_CommandBlock(const Value: PAnsiChar); CDECL;
 var
     posCurrent, posNext: Integer;
     full: String;
-    // s: String;
-    // i: Integer = 1;
     strs: TStringList;
 begin
     DSSPrime.SetSolutionAbort(FALSE);  // Reset for commands entered from outside
@@ -56,22 +99,6 @@ begin
     strs := TStringList.Create();
     strs.AddText(Value);
     DSSPrime.DSSExecutive.DoRedirect(false, strs); // DoRedirect will free the stringlist.
-//     while posCurrent < Length(full) do
-//     begin
-//         s := Copy(full, posCurrent, (posNext - posCurrent));
-//         DSSPrime.DSSExecutive.ParseCommand(s, i);  // Convert to String
-//         if DSSPrime.ErrorNumber <> 0 then
-//         begin
-//             //TODO: complement error message?
-//             Exit;
-//         end;
-//         posCurrent := posNext + 1;
-//         posNext := Pos(#10, full, posCurrent);
-//         if posNext = 0 then
-//             posNext := Length(full) + 1;
-//         inc(i);
-//     end;
-// end;
 end;
 //------------------------------------------------------------------------------
 procedure Text_CommandArray(const Value: PPAnsiChar; ValueCount: TAPISize); CDECL;

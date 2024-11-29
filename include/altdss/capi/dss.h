@@ -5655,6 +5655,14 @@ extern "C" {
 
     /*! 
     Input command string for the DSS.
+
+    Since November 2024, this function also accepts multiple commands, separated by line breaks. The 
+    results for each command, if not not empty, are collected and joined by line breaks in a big string,
+    make available in the `Text.Result` API (`Text_Get_Result` in the low-level API).
+
+    If you don't need the output of the individual commands, use the `Text.Commands` function or 
+    equivalent (`Text_CommandBlock` in the low-level API). That alternative can provide more
+    precise error messages, and can handle block comments.
     */
     ALTDSS_CAPI_DLL void Text_Set_Command(const char* Value);
 
