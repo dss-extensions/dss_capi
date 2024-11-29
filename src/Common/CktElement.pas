@@ -533,10 +533,9 @@ begin
     if YPrim <> NIL then
         DoYPrimCalcs(YPrim);
 
-{$IFDEF DSS_CAPI_INCREMENTAL_Y}
-    if ((ActiveCircuit.Solution.SolverOptions and ord(TSolverOptions.AlwaysResetYPrimInvalid)) <> 0) then
-        SetYprimInvalid(false);
-{$ENDIF}
+    // This is now also the behavior in the official OpenDSS since r3859
+    // if ((ActiveCircuit.Solution.SolverOptions and ord(TSolverOptions.AlwaysResetYPrimInvalid)) <> 0) then
+    FYPrimInvalid := false;
 end;
 
 procedure TDSSCktElement.ComputeITerminal();
