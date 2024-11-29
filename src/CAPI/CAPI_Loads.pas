@@ -1004,8 +1004,8 @@ begin
     if not _activeObj(DSSPrime, pLoad) then
         Exit;
 
-    if (pLoad.SensorObj <> NIL) and (pLoad.SensorObj.MeteredElement <> NIL) then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(pLoad.SensorObj.MeteredElement.FullName()));
+    if (pLoad.SensorObj <> NIL) and (pLoad.SensorObj <> NIL) then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(pLoad.SensorObj.Name()));
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Pointer(): Pointer; CDECL;
