@@ -1579,6 +1579,14 @@ var
     vi: Complex;
     vj: Complex;
     DERElem: TInvBasedPCE;
+
+    function NextDeltaPhase(iphs: Integer): Integer;
+    begin
+        Result := iphs + 1;
+        if Result > CtrlVars[i].NCondsDER then
+            Result := 1;
+    end;
+
 begin
     DERElem := ControlledElements[i];
     with CtrlVars[i] do
@@ -1638,9 +1646,18 @@ begin
 
             numNodes := DERElem.NPhases;
 
-            for j := 1 to numNodes do
-                cBuffer[j] := DERElem.Vterminal[j];
-
+            case DERElem.Connection of
+                TGeneralConnection.Delta:
+                    for j := 1 to numNodes do
+                    begin
+                        cBuffer[j] := DERElem.Vterminal[j] - DERElem.Vterminal[NextDeltaPhase(j)];
+                    end;
+            else
+                for j := 1 to numNodes do
+                begin
+                    cBuffer[j] := DERElem.Vterminal[j]; // Wye - Default
+                end;
+            end;
 
             case FMonBusesPhase of
                 AVGPHASES:
