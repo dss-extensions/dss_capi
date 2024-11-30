@@ -260,7 +260,7 @@ begin
     X0 := 5.7;
     X1R1 := X1 / R1;
     X0R0 := X0 / R0;
-    Isc1 := (mKVARating * 1000.0 / (sqrt(3) * RatedkVLL)) / NPhases;
+    Isc1 := (mKVARating / (sqrt(3) * RatedkVLL)) / NPhases;
     // Compute R0, X0
     a := 10;
     b := (4.0 * (R1 + (X1 * X0R0)));
