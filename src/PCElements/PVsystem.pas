@@ -2260,7 +2260,7 @@ begin
     
     with PVSystemVars, dynVars do
     begin
-        IMaxPPhase := (PanelkW / BasekV) / NumPhases;
+        IMaxPPhase := (FkVArating / BasekV) / NumPhases;
         for i := 0 to (NumPhases - 1) do // multiphase approach
         begin
             if (ActiveCircuit.Solution.DynaVars.IterationFlag = 0) then
