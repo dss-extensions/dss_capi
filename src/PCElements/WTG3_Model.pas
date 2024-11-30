@@ -449,7 +449,7 @@ begin
     begin
         if (x >= xTable[ii]) and (x <= xTable[ii + 1]) then
         begin
-            Result := (yTable[ii + 1] - yTable[ii]) / (xTable[ii + 1] - xTable[ii]) * (x - xTable[ii]) + yTable[ii];
+            Result := ((yTable[ii + 1] - yTable[ii]) / (xTable[ii + 1] - xTable[ii])) * (x - xTable[ii]) + yTable[ii];
             break;
         end;
     end;
