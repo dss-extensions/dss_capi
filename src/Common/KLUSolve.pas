@@ -2,7 +2,11 @@ unit KLUSolve;
 
 {$MACRO ON}
 {$IFDEF MSWINDOWS}
-    {$DEFINE KLUSOLVEX_CALL:=cdecl;external 'libklusolvex'}
+    {$IFDEF CPU32}
+        {$DEFINE KLUSOLVEX_CALL:=stdcall;external 'libklusolvex'}
+    {$ELSE}
+        {$DEFINE KLUSOLVEX_CALL:=cdecl;external 'libklusolvex'}
+    {$ENDIF}
 {$ELSE} // Unix in general
     {$DEFINE KLUSOLVEX_CALL:=cdecl;external}
 {$ENDIF}
