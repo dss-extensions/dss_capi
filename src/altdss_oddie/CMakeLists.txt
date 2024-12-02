@@ -34,15 +34,28 @@ endif ()
 
 SET(ALTDSS_ODDIE_OUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/${ALTDSS_ODDIE_OUT_DIR_PREFIX}_${ALTDSS_ODDIE_OUT_DIR_SUFFIX}")
 
-option(ALTDSS_ODDIE_LINK_ODD "OpenDSS(Direct API) library to link at build time, if any" "")
+set(ALTDSS_ODDIE_LINK_ODD "" CACHE STRING "OpenDSS(Direct API) library to link at build time, if any. Keep as an empty string otherwise.")
 set_property(CACHE ALTDSS_ODDIE_LINK_ODD PROPERTY STRINGS "" "OpenDSSC" "OpenDSSDirect") 
 
-add_library(altdss_oddie_capi SHARED altdss_oddie.c "${CMAKE_CURRENT_SOURCE_DIR}/../../include/altdss/capi/oddie.h" altdss_oddie_private.h)
+#TODO: Use FetchContent to integrate the build process
+
+add_library(altdss_oddie_capi altdss_oddie.c "${CMAKE_CURRENT_SOURCE_DIR}/../../include/altdss/capi/oddie.h" altdss_oddie_private.h)
 if (NOT "${ALTDSS_ODDIE_LINK_ODD}" STREQUAL "")
-    message("Linking ${ALTDSS_ODDIE_LINK_ODD}")
+    message("Linking Oddie to \"${ALTDSS_ODDIE_LINK_ODD}\"")
     find_library(ODD_LIBRARY NAMES lib${ALTDSS_ODDIE_LINK_ODD}.a ${ALTDSS_ODDIE_LINK_ODD}.lib ${ALTDSS_ODDIE_LINK_ODD} HINTS "${CMAKE_PREFIX_PATH}")
     target_compile_definitions(altdss_oddie_capi PRIVATE ALTDSS_ODDIE_LINK_OPENDSSDIRECT_API)
-    target_link_libraries(altdss_oddie_capi ${ODD_LIBRARY})
+    target_link_libraries(altdss_oddie_capi "${ODD_LIBRARY}")
+    if ("${ALTDSS_ODDIE_LINK_ODD}-" STREQUAL "OpenDSSC-")
+        if (NOT WIN32)
+            find_library(ODD_KLUSOLVE_LIBRARY NAMES klusolvex klusolve libklusolvex.a libklusolve.a libklusolvex libklusolve HINTS "${CMAKE_PREFIX_PATH}" REQUIRED)
+            find_library(UUID_LIBRARY NAMES uuid REQUIRED)
+            set(CMAKE_SHARED_LINKER_FLAGS "-static-libgcc -static-libstdc++")
+            # find_library(ICONV_LIBRARY NAMES iconv libiconv libiconv.so.2 HINTS "${CMAKE_PREFIX_PATH}")
+            message("LIBS: ${ODD_LIBRARY} ${UUID_LIBRARY} ${ODD_KLUSOLVE_LIBRARY}")
+            target_link_libraries(altdss_oddie_capi c stdc++ ${UUID_LIBRARY} ${ODD_KLUSOLVE_LIBRARY})
+            #TODO: linker script / hide most symbols
+        endif()
+    endif()
     string(TOLOWER ${ALTDSS_ODDIE_LINK_ODD} ODDIE_LIB_SUFFIX)
     set(ODDIE_LIB_SUFFIX "-${ODDIE_LIB_SUFFIX}")
 else()

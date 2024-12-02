@@ -28,6 +28,7 @@ typedef void (*oddie_get_y_csc_func_t)(void *hY, uint32_t nBus, uint32_t nNz, in
 typedef void (*oddie_add_in_aux_currents_func_t)(int32_t SType);
 typedef void (*oddie_build_y_matrix_func_t)(int32_t BuildOps, int32_t AllocateVI);
 typedef uint32_t (*oddie_y_params_func_t)(void **hY, uint32_t* nBus, uint32_t *nNZ);
+typedef void (*oddie_void_str_func_t)(const char *a);
 
 typedef struct
 {
@@ -39,6 +40,7 @@ typedef struct
     int32_t error_number;
     char error_desc[DSS_ERR_NUM_CHR + 1];
     char char_buffer[DSS_STR_BUFFER_NUM_CHR + 1];
+    const char* currentString;
     int32_t strict;
     int32_t PropIndex;
     int32_t map_errors;
@@ -52,6 +54,8 @@ typedef struct
     int32_t GR_Counts_PByte[4];
 
     uint32_t compat_flags;
+
+    oddie_void_str_func_t DSSDisposeString;
 
     oddie_void_void_func_t GetPCInjCurr;
     oddie_void_void_func_t GetSourceInjCurrents;
@@ -423,4 +427,7 @@ ODDIE_VARIANT_FUNC(TransformersV)
 ODDIE_VARIANT_FUNC(VsourcesV)
 ODDIE_VARIANT_FUNC(WindGensV)
 ODDIE_VARIANT_FUNC(XYCurvesV)
+
+ODDIE_ODD_EXTERN void DSSDisposeString(const char *a);
+
 #endif
