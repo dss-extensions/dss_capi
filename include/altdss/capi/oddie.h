@@ -31,7 +31,7 @@ ALTDSS_ODDIE_DLL void Oddie_SetOptions(const void *ctx, uint32_t flags);
 
 // TODO: for the following, migrate to dss.h and dss_ctx.h
 
-ALTDSS_ODDIE_DLL void* ctx_New(void);
+ALTDSS_ODDIE_DLL const void* ctx_New(void);
 ALTDSS_ODDIE_DLL void ctx_Dispose(const void *ctx);
 ALTDSS_ODDIE_DLL const void* ctx_Get_Prime(void);
 ALTDSS_ODDIE_DLL const void* ctx_Set_Prime(const void *ctx);

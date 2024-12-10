@@ -120,7 +120,7 @@ void DummyDisposeString(const char* value)
     // Intentionally left blank
 }
 
-ALTDSS_ODDIE_DLL void* ctx_New(void)
+ALTDSS_ODDIE_DLL const void* ctx_New(void)
 {
     OddieContext *ctx = (OddieContext*) calloc(1, sizeof(OddieContext));
     if (ctx == NULL)

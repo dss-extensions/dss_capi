@@ -262,7 +262,20 @@ uses
 {$ENDIF}
     ;
 
+const 
+    CAPI_VERSION_SIGNATURE = 1;
+    CAPI_ENGINE_NAME = 'AltDSS-FPC';
+
+{$PUSH}
+
+{$PACKRECORDS C} 
+
+{$I 'CAPI/CAPI.inc.pas'}
+
+{$POP}
+
 exports
+    AltDSSCAPIInit,
 
     DSS_ResetStringBuffer,
     DSS_Dispose_PByte,

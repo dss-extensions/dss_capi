@@ -36,7 +36,7 @@ typedef struct
     HMODULE dll_handle;
 #else
     void* dll_handle;
-#endif    
+#endif
     int32_t error_number;
     char error_desc[DSS_ERR_NUM_CHR + 1];
     char char_buffer[DSS_STR_BUFFER_NUM_CHR + 1];

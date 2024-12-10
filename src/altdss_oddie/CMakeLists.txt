@@ -39,7 +39,7 @@ set_property(CACHE ALTDSS_ODDIE_LINK_ODD PROPERTY STRINGS "" "OpenDSSC" "OpenDSS
 
 #TODO: Use FetchContent to integrate the build process
 
-add_library(altdss_oddie_capi altdss_oddie.c "${CMAKE_CURRENT_SOURCE_DIR}/../../include/altdss/capi/oddie.h" altdss_oddie_private.h)
+add_library(altdss_oddie_capi altdss_oddie.c altdss_oddie_init.c "${CMAKE_CURRENT_SOURCE_DIR}/../../include/altdss/capi/oddie.h" altdss_oddie_private.h)
 if (NOT "${ALTDSS_ODDIE_LINK_ODD}" STREQUAL "")
     message("Linking Oddie to \"${ALTDSS_ODDIE_LINK_ODD}\"")
     find_library(ODD_LIBRARY NAMES lib${ALTDSS_ODDIE_LINK_ODD}.a ${ALTDSS_ODDIE_LINK_ODD}.lib ${ALTDSS_ODDIE_LINK_ODD} HINTS "${CMAKE_PREFIX_PATH}")

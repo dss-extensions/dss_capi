@@ -32,7 +32,7 @@ if(MSVC)
     set(CMAKE_SHARED_LINKER_FLAGS "/NOEXP")
 endif()
 
-add_definitions(-DDSS_CAPI_DLL=) # Silence warnings, we won't use AltDSS/DSS C-API functions directly anyway.
+add_definitions(-DALTDSS_CAPI_DLL=) # Silence warnings, we won't use AltDSS/DSS C-API functions directly anyway.
 
 target_compile_definitions(CppIndMach012_AltDSS PUBLIC ALTDSS_USERMODEL)
 target_compile_definitions(CppIndMach012_OpenDSSv7 PUBLIC OPENDSS_USERMODEL_V7)
