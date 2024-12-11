@@ -349,7 +349,7 @@ function TExecHelper.DoRedirect(IsCompile: Boolean; inputStrings: TStringList): 
 
 var
     Fin: TextFile;
-    InputLine, CurrDir, SaveDir, ReDirFileExp: String;
+    InputLine, CurrDir, SaveDir, ReDirFileExp, fn: String;
     LocalCompFileName: String;
     InBlockComment: Boolean;
     strings: TStringList;
@@ -376,12 +376,13 @@ begin
     if (not gotTheFile) then
     begin
         // Get next parm and try to interpret as a file name
-        DSS.Parser.NextParam;
+        DSS.Parser.NextParam();
+        fn := DSS.Parser.MakeString();
     end;
 
     if (not gotTheFile) and (DSS.skipFileRegExp <> NIL) then
     begin
-        if DSS.skipFileRegExp.Exec(DSS.Parser.MakeString()) then
+        if DSS.skipFileRegExp.Exec(fn) then
         begin
             Exit;
         end;
@@ -389,25 +390,29 @@ begin
 
     if (not gotTheFile) and InZip then
     begin
-        if DSS.Parser.MakeString() = '' then
+        if fn = '' then
             exit;  // ignore altogether IF null filename
 
+        if ((DSS.skipFileRegExp <> NIL) and DSS.skipFileRegExp.Exec(fn)) then
+        begin
+            exit;
+        end;
+
         try
-            Fstream := GetZipStream(DSS.Parser.MakeString());
+            Fstream := GetZipStream(fn);
         except
             on E: Exception do
             begin
-                DoSimpleMsg(DSS, 'Redirect File "%s" could not be read: %s', [DSS.Parser.MakeString(), E.Message], 2202);
+                DoSimpleMsg(DSS, 'Redirect File "%s" could not be read: %s', [fn, E.Message], 2202);
                 DSS.SetSolutionAbort(true);
                 Exit;
             end;
         end;
 
-
         strings := TStringList.Create;
         strings.LoadFromStream(Fstream);
         Fstream.Free;
-        ReDirFileExp := DSS.inZipPath + DSS.Parser.MakeString();
+        ReDirFileExp := DSS.inZipPath + fn;
         gotTheFile := TRUE;
         SaveDir := DSS.inZipPath;
     end
@@ -416,15 +421,15 @@ begin
     begin
         // Expanded path is required later as other Free Pascal functions 
         // may fail with relative paths
-        ReDirFileExp := ExpandFileName(DSS.Parser.MakeString());
+        ReDirFileExp := ExpandFileName(fn);
 
         // First check if we need to workaround the SetCurrentDir issues
         if (not DSS_CAPI_ALLOW_CHANGE_DIR) then
         begin
-            ReDirFileExp := ExpandFileName(AdjustInputFilePath(DSS, DSS.Parser.MakeString()));
+            ReDirFileExp := ExpandFileName(AdjustInputFilePath(DSS, fn));
         end;
 
-        DSS.ReDirFile := ReDirFileExp;// DSS.Parser.MakeString();
+        DSS.ReDirFile := ReDirFileExp;// fn;
         if DSS.ReDirFile = '' then
             exit;  // ignore altogether IF null filename
 
@@ -521,7 +526,7 @@ begin
                 AssignFile(Fin, DSS.ReDirFile);
                 Reset(Fin);
             except
-                DoSimpleMsg(DSS, 'Redirect file not found: "%s"', [DSS.Parser.MakeString()], 242);
+                DoSimpleMsg(DSS, 'Redirect file not found: "%s"', [fn], 242);
                 DSS.SetSolutionAbort(true);
                 Exit;
             end;
@@ -531,7 +536,7 @@ begin
 
     if not gotTheFile then
     begin
-        DoSimpleMsg(DSS, 'Redirect file not found: "%s"', [DSS.Parser.MakeString()], 243);
+        DoSimpleMsg(DSS, 'Redirect file not found: "%s"', [fn], 243);
         DSS.SetSolutionAbort(true);
         exit;  // Already had an extension, so just bail
     end;
