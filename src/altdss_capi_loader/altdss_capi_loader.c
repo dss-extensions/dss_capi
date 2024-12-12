@@ -30,7 +30,7 @@ ALTDSS_CAPI_DLL int32_t AltDSSCAPILibInit(const char* libName, uint64_t* libOpti
     }
 
 #ifdef WIN32
-    funcs->libHandle = LoadLibraryEx(libname, NULL, (DWORD) (libOptions ? *libOptions : ALTDSS_LOADER_LIB_OPTIONS));
+    funcs->libHandle = LoadLibraryEx(libName, NULL, (DWORD) (libOptions ? *libOptions : ALTDSS_LOADER_LIB_OPTIONS));
 #else
     funcs->libHandle = dlopen(libName, (int) (libOptions ? *libOptions : ALTDSS_LOADER_LIB_OPTIONS));
 #endif
