@@ -7,6 +7,16 @@ python3 src/classic_to_ctx.py
 
 export LDFLAGS=-L`pwd`/lib/darwin_arm64/
 
+if [[ "x${DSS_CAPI_BUILD_CMAKE}" == "x1" ]]; then
+    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -B build/cmake -DUSE_SYSTEM_EIGEN=OFF -DUSE_SYSTEM_SUITESPARSE=OFF -DBUILD_KLUSOLVEX=ON
+    cmake --build build/cmake --config Release -j
+
+    #TODO: if we decide to build OpenDSS-C here, share any downloads from build/cmake to build/cmake-debug
+
+    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -B build/cmake-debug -DUSE_SYSTEM_EIGEN=OFF -DUSE_SYSTEM_SUITESPARSE=OFF -DBUILD_KLUSOLVEX=ON
+    cmake --build build/cmake-debug --config Debug -j
+fi
+
 FPC_FLAGS=
 if [[ "x${DSS_CAPI_BUILD_INC}" != "x1" ]]; then
     rm -rf build/units_arm64 build/units_arm64_dbg
@@ -33,16 +43,6 @@ CURRENT_LIBKLUSOLVE=`otool -L "$DSS_CAPI_LIB" | grep libklusolvex | cut -f 1 -d 
 NEW_LIBKLUSOLVE="@loader_path/./libklusolvex.dylib"
 install_name_tool -change "$CURRENT_LIBKLUSOLVE" "$NEW_LIBKLUSOLVE" "$DSS_CAPI_LIB"
 install_name_tool -id "@loader_path/./libaltdss_capi.dylib" "$DSS_CAPI_LIB"
-
-if [[ "x${DSS_CAPI_BUILD_CMAKE}" == "x1" ]]; then
-    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -B build/cmake
-    cmake --build build/cmake --config Release -j
-
-    #TODO: if we decide to build OpenDSS-C here, share any downloads from build/cmake to build/cmake-debug
-
-    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -B build/cmake-debug
-    cmake --build build/cmake-debug --config Debug -j
-fi
 
 if [[ "x${DSS_CAPI_BUILD_DBG}" != "x1" ]]; then
     mkdir -p release/dss_capi/lib

@@ -63,6 +63,11 @@ else()
 endif ()
 set_target_properties(altdss_oddie_capi PROPERTIES OUTPUT_NAME "altdss_oddie_capi${ODDIE_LIB_SUFFIX}")
 
+if(MSVC)
+    # We don't need .EXP files, clutter...
+    set(CMAKE_SHARED_LINKER_FLAGS "/NOEXP")
+endif()
+
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../include/")
 
 set_target_properties(altdss_oddie_capi PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ALTDSS_ODDIE_OUT_DIR})

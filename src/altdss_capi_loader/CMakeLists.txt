@@ -38,6 +38,11 @@ SET(ALTDSS_CAPI_LOADER_OUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/${ALTDSS_C
 
 add_library(altdss_capi_loader altdss_capi_loader.c "${CMAKE_CURRENT_SOURCE_DIR}/../../include/altdss/capi/capi.h" "${CMAKE_CURRENT_SOURCE_DIR}/../../include/altdss/capi/common.h" "${CMAKE_CURRENT_SOURCE_DIR}/../../include/altdss/capi/enums.h")
 
+if(MSVC)
+    # We don't need .EXP files, clutter...
+    set(CMAKE_SHARED_LINKER_FLAGS "/NOEXP")
+endif()
+
 target_compile_options(altdss_capi_loader PRIVATE "-DHAS_ALTDSS_LOADER_FUNC")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../include/")
 

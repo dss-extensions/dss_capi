@@ -14,6 +14,16 @@ if errorlevel 1 (
     )
 )
 
+IF DEFINED DSS_CAPI_BUILD_CMAKE (
+    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -B build/cmake -DUSE_SYSTEM_EIGEN=OFF -DUSE_SYSTEM_SUITESPARSE=OFF -DBUILD_KLUSOLVEX=ON
+    cmake --build build/cmake --config Release -j
+
+    REM TODO: if we decide to build OpenDSS-C here, share any downloads from build/cmake to build/cmake-debug
+
+    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -B build/cmake-debug -DUSE_SYSTEM_EIGEN=OFF -DUSE_SYSTEM_SUITESPARSE=OFF -DBUILD_KLUSOLVEX=ON
+    cmake --build build/cmake-debug --config Debug -j
+)
+
 rd /s /q build\units_x64
 mkdir .\build\units_x64
 fpc -Px86_64 @src\windows-x64.cfg -B src\altdss_capi.pas
@@ -77,16 +87,6 @@ if exist lib\win_x64\altdss_capid.dll (
 )
 
 SETLOCAL ENABLEEXTENSIONS
-
-IF DEFINED DSS_CAPI_BUILD_CMAKE (
-    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -B build/cmake
-    cmake --build build/cmake --config Release -j
-
-    REM TODO: if we decide to build OpenDSS-C here, share any downloads from build/cmake to build/cmake-debug
-
-    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -B build/cmake-debug
-    cmake --build build/cmake-debug --config Debug -j
-)
 
 IF DEFINED CI (
     mkdir release
