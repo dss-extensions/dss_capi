@@ -137,6 +137,7 @@ ALTDSS_ODDIE_DLL const void* ctx_New(void)
     ctx->error_desc[DSS_ERR_NUM_CHR] = '\0';
     ctx->PropIndex = 0;
     ctx->currentString = NULL;
+    ctx->DSSDisposeString = DummyDisposeString;
 
 #ifdef ALTDSS_ODDIE_LINK_OPENDSSDIRECT_API
     // Try to use the already linked functions (no dynamic lookup)
