@@ -19,12 +19,14 @@ fi
 mkdir -p build/units_x64_dbg
 fpc -Px86_64 @src/linux-x64-dbg.cfg ${FPC_FLAGS} src/altdss_capid.pas
 
-if [[ "x${DSS_CAPI_BUILD_ODDIE}" == "x1" ]]; then
-    mkdir -p build/oddie
-    cd build/oddie
-    cmake -DCMAKE_BUILD_TYPE=Release ../../src/altdss_oddie
-    cmake --build . --config Release
-    cd ../..
+if [[ "x${DSS_CAPI_BUILD_CMAKE}" == "x1" ]]; then
+    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -B build/cmake
+    cmake --build build/cmake --config Release -j
+
+    #TODO: if we decide to build OpenDSS-C here, share any downloads from build/cmake to build/cmake-debug
+
+    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -B build/cmake-debug
+    cmake --build build/cmake-debug --config Debug -j
 fi
 
 if [[ "x${DSS_CAPI_BUILD_DBG}" != "x1" ]]; then

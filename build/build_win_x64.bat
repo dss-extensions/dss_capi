@@ -78,13 +78,14 @@ if exist lib\win_x64\altdss_capid.dll (
 
 SETLOCAL ENABLEEXTENSIONS
 
-IF DEFINED DSS_CAPI_BUILD_ODDIE (
-    rd /s /q build\oddie
-    mkdir build\oddie
-    cd build\oddie
-    cmake -DCMAKE_BUILD_TYPE=Release ..\..\src\altdss_oddie
-    cmake --build . --config Release
-    cd ..\..
+IF DEFINED DSS_CAPI_BUILD_CMAKE (
+    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -B build/cmake
+    cmake --build build/cmake --config Release -j
+
+    REM TODO: if we decide to build OpenDSS-C here, share any downloads from build/cmake to build/cmake-debug
+
+    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -B build/cmake-debug
+    cmake --build build/cmake-debug --config Debug -j
 )
 
 IF DEFINED CI (
