@@ -72,4 +72,4 @@ __pycache__
 docs/doxygen
 docs/build
 
-src/altdss_oddie/build*
+*/*/build*
