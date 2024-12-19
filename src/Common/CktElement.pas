@@ -128,7 +128,7 @@ type
         procedure SetConductorClosed(Index: Integer; Value: Boolean); VIRTUAL;
         function PCEValue(idxTerm:Integer; ValType:Integer): Double; // Get a value for the active PCE such as P, Q, Vmag, IMag, etc.
         procedure SumCurrents();
-        procedure Get_Current_Mags(cMBuffer: pDoubleArray); // Returns the Currents vector in magnitude
+        procedure Get_Current_Mags(var cMBuffer: ArrayOfDouble); // Returns the Currents vector in magnitude
     end;
 
 
@@ -564,12 +564,13 @@ begin
     Result := Sqrt(Result);  // just do the sqrt once and save a little time
 end;
 
-procedure TDSSCktElement.Get_Current_Mags(cMBuffer: pDoubleArray);
+procedure TDSSCktElement.Get_Current_Mags(var cMBuffer: ArrayOfDouble);
 var
     i: Integer;
 begin
+    SetLength(cMBuffer, Fnphases);
     for i := 1 to Fnphases do
-        cMBuffer[i] := cabs(Iterminal[i]);
+        cMBuffer[i - 1] := cabs(Iterminal[i]);
 end;
 
 function TDSSCktElement.Power(idxTerm: Integer): Complex;    // Get total complex power in active terminal

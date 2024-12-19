@@ -3248,6 +3248,8 @@ begin
 end;
 
 procedure TEnergyMeter.WriteOverloadReport();
+const
+    DVECTOR_SIZE = 10;
 var
     PDelem: TPDelement;
     EmergAmps,
@@ -3257,9 +3259,8 @@ var
     RSignal: TXYCurveObj;
     i, j, k,
     RatingIdx: Integer;
-    dVector,
-    dBuffer: pDoubleArray;
-
+    dBuffer: ArrayOfDouble;
+    dVector: Array[1..DVECTOR_SIZE] of Double;
 begin
 // Scans the active circuit for overloaded PD elements and writes each to a file
 // This is called only if in Demand Interval (DI) mode and the file is open.
@@ -3319,10 +3320,8 @@ begin
             if (Cmax > NormAmps) or (Cmax > EmergAmps) then
             begin
                 // Gets the currents for the active Element
-                dBuffer := Allocmem(sizeof(Double) * PDElem.NPhases * PDElem.NTerms());
                 PDElem.Get_Current_Mags(dBuffer);
-                dVector := Allocmem(sizeof(Double) * 10); // for storing
-                for i := 1 to 3 do
+                for i := 1 to DVECTOR_SIZE do
                     dVector[i] := 0.0;
                 if PDElem.NPhases < 3 then
                 begin
@@ -3335,13 +3334,23 @@ begin
                         if j = 0 then
                         begin
                             k := strtoint(ClassName);
-                            dVector[k] := dBuffer[i];
-                            break
+                            if (k < 1) or (k > DVECTOR_SIZE) then
+                            begin
+                                DoSimpleMsg('Error Writing the OV report in memory: unhandled phase number (%d) for element "%s".', [k, PDElem.FullName()], 20241201);
+                                exit;
+                            end;
+                            dVector[k] := dBuffer[i - 1];
+                            break;
                         end
                         else
                         begin
                             k := strtoint(ClassName.Substring(0, j - 1));
-                            dVector[k] := dBuffer[i];
+                            if (k < 1) or (k > DVECTOR_SIZE) then
+                            begin
+                                DoSimpleMsg('Error Writing the OV report in memory: unhandled phase number (%d) for element "%s".', [k, PDElem.FullName()], 20241202);
+                                exit;
+                            end;
+                            dVector[k] := dBuffer[i - 1];
                             ClassName := ClassName.Substring(j);
                         end;
                     end;
@@ -3349,7 +3358,7 @@ begin
                 else
                 begin
                     for i := 1 to 3 do
-                        dVector[i] := dBuffer[i];
+                        dVector[i] := dBuffer[i - 1];
                 end;
 
                 WriteintoMem(OV_MHandle, DSS.ActiveCircuit.Solution.DynaVars.dblHour);
