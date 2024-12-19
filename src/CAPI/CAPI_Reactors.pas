@@ -328,7 +328,10 @@ begin
     
     prevVal := Integer(pReactor.IsParallel);
     pReactor.IsParallel := Value;
-    pReactor.PropertySideEffects(ord(TReactorProp.Parallel), prevVal, []);
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        pReactor.PropertySideEffects(ord(TReactorProp.Parallel), prevVal, []);
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Bus1(const Value: PAnsiChar); CDECL;
@@ -428,7 +431,10 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.Z.re := Value;
-    pReactor.PropertySideEffects(ord(TReactorProp.R), 0, []);
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then    
+    begin
+        pReactor.PropertySideEffects(ord(TReactorProp.R), 0, []);
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_X(Value: Double); CDECL;
@@ -438,7 +444,10 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.Z.im := Value;
-    pReactor.PropertySideEffects(ord(TReactorProp.X), 0, []);
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        pReactor.PropertySideEffects(ord(TReactorProp.X), 0, []);
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Rp(Value: Double); CDECL;
@@ -448,7 +457,10 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.Rp := Value;
-    pReactor.PropertySideEffects(ord(TReactorProp.Rp), 0, []);
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then    
+    begin
+        pReactor.PropertySideEffects(ord(TReactorProp.Rp), 0, []);
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Rmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
