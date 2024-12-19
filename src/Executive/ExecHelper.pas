@@ -1320,7 +1320,7 @@ begin
             // IF DoSelectCmd=0 THEN Exit;  8-17-00
                 if SetObjectClass(DSS, ObjClass) then
                 begin
-                    DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
+                    // DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced); -- already done in SetObjectClass
                     if DSS.ActiveDSSClass = NIL then
                         Exit;
                 end

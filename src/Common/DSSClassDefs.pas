@@ -280,6 +280,7 @@ begin
         Exit;
     end;
     DSS.LastClassReferenced := Classref;
+    DSS.ActiveDSSClass := DSS.DSSClassList.Get(Classref);
     Result := TRUE;
 end;
 

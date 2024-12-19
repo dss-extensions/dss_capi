@@ -2086,7 +2086,7 @@ begin
                 FSWriteln(F);
                 FSWriteln(Fdisabled, 'All DISABLED Elements in Class "', ClassName, '"');
                 FSWriteln(Fdisabled);
-                DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
+                // DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced); -- already done in SetObjectClass
                 for i := 1 to DSS.ActiveDSSClass.ElementCount do
                 begin
                     DSS.ActiveDSSClass.SetActiveIndex(i);
