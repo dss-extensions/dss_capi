@@ -1,6 +1,8 @@
 unit ParserDel;
 // ----------------------------------------------------------
-// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// Copyright (c) 2018-2024, Paulo Meira
+// Copyright (c) 2018-2024, DSS-Extensions contributors
+// Copyright (c) 2008-2024, Electric Power Research Institute, Inc.
 // All rights reserved.
 // ----------------------------------------------------------
 interface
@@ -71,6 +73,7 @@ type
         function MakeInteger(): Integer;
         function Remainder(): String;
         function NextParam(): String;
+        function PrevParam(): Integer; 
         function ParseAsBusName(Param: String; var NumNodes: Integer; NodeArray: pIntegerArray): String;//TODO: make it a separate function
         function ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray; DoRound: Boolean=False): Integer;
         function ParseAsVector(var VectorBuffer: ArrayOfDouble; DoRound: Boolean=False): Integer;
@@ -909,5 +912,22 @@ procedure TDSSParser.SetVars(vars: TParserVar);
 begin
     ParserVars := vars;
 end;
+
+function TDSSParser.PrevParam(): Integer;
+begin
+    //TODO: remove this after we have validation tests. Note: the original doesn't handle tabs
+    if position > 0 then
+    begin
+        dec(position); // Right before the last space char
+        while (CmdBuffer[position] <> ' ') and (CmdBuffer[position] <> #9) and (position > 0) do
+        begin
+            dec(position);
+        end;
+
+        inc(position); // This to prevent discrepancies with NextParam
+    end;
+    Result := position;
+end;
+
 
 end.

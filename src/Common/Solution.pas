@@ -119,8 +119,6 @@ type
         actorMessagesLock: TCriticalSection;
 
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
-        AD_Init: Boolean;          // used to know if the actors require a partial solution
-
         procedure Start_Diakoptics();
         procedure IndexBuses(); // Locates the actor buses within the bus array in Actor 1 (interconnected)
 {$ENDIF}

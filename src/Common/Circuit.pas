@@ -250,7 +250,6 @@ type
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
         VIndex: Integer; // To store the index of the sub-circuit in the interconnected system
         VLength: Integer; // To store the length of the sub-circuit in the interconnected system
-        AD_Init: Boolean; // This is used only by the A-Diakoptics coordiantor (ID = 1)
 
         Coverage,                     // Used for the user to stablish the coverage for the algorithm
         Actual_Coverage: Double;   // Indicates the actual coverage of the circuit after running the tearing algorithm

@@ -138,7 +138,12 @@ type
         TotalPowers,
         GISCoords,
         ClearAll,
-        COMHelp
+        COMHelp,
+        FirstObj,
+        NextObj,
+        CountObj,
+        ActiveObj,
+        ClassMembers
 {$IFDEF DSS_CAPI_PM}
         ,
         NewActor,
@@ -221,6 +226,8 @@ var
     ParamName: String;
     Param: String;
     ObjName, PropName: String;
+    ObjIdx: Integer;
+    ObjList: String;
 {$IFDEF DSS_CAPI_PM}
     i: Integer;
     PMParent, DSS: TDSSContext;
@@ -235,6 +242,9 @@ begin
         DSS.CmdResult := 0;
         DSS.ErrorNumber := 0;  // Reset Error number
         DSS.GlobalResult := '';
+
+        ObjIdx := 0;
+        ObjList := '[]';
 
         // Load up the parser and process the first parameter only
         DSS.LastCmdLine := CmdLine;
@@ -294,7 +304,15 @@ begin
             ord(Cmd.Panel):
                 DoSimpleMsg(DSS, _('Command "panel" supported in DSS-Extensions.'), 999);
             ord(Cmd.Clear):
-                DSS.DSSExecutive.DoClearCmd;
+            begin
+                // modifier added to make the command compatible with both, clear and clear all
+                ParamName := DSS.Parser.NextParam();
+                Param := DSS.Parser.MakeString();
+                if LowerCase(Param) = 'all' then
+                    DSS.DSSExecutive.DoClearAllCmd
+                else
+                    DSS.DSSExecutive.DoClearCmd;
+            end;
             ord(Cmd.About):
                 DSS.DSSExecutive.DoAboutBox;
             ord(Cmd.Get):
@@ -348,15 +366,6 @@ begin
             ord(Cmd.Wait):
                 if PMParent.Parallel_enabled then
                     Wait4Actors(DSS, ALL_ACTORS);
-            ord(Cmd.SolveAll):
-            begin
-                PMParent.IsSolveAll := TRUE;
-                for i := 0 to PMParent.NumOfActors() - 1 do
-                begin
-                    PMParent.ActiveChild := PMParent.Children[i];
-                    PMParent.ActiveChild.CmdResult := DoSetCmd(PMParent.ActiveChild, 1);
-                end;
-            end;
 {$ELSE}
             ord(Cmd.ClearAll):
                 DSS.DSSExecutive.DoClearCmd;
@@ -446,15 +455,59 @@ begin
                 DSS.CmdResult := DSS.DSSExecutive.DoSaveCmd; //'save';
             ord(Cmd.Show):
                 DSS.CmdResult := DoShowCmd(DSS); //'show';
-            ord(Cmd.Solve):
+            ord(Cmd.Solve), ord(Cmd.SolveAll):
+
             begin
-{$IFDEF DSS_CAPI_PM}
-                PMParent.IsSolveAll := FALSE;
+                if ParamPointer = ord(Cmd.Solve) then
+                begin
+                    // modifier added to make the command compatible with both, Solve and Solve all
+                    ParamName := DSS.Parser.NextParam();
+                    Param := DSS.Parser.MakeString();
+
+                    if LowerCase(Param) = 'all' then
+                    begin
+                        ParamPointer := ord(Cmd.SolveAll);
+                    end
+                    else
+                    begin
+                        if Param <> '' then
+                            DSS.Parser.PrevParam(); // This means that there are more options
+                    end;
+                end;
+
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
-                DSS.ActiveCircuit.AD_Init := FALSE;
+                if PMParent.ActiveCircuit.Solution.ADiakoptics then
+                begin
+                    // Added to avoid crashes when in A-Diakoptics mode but the user
+                    // uses the SolveAll command
+
+                    // Enable the first actor
+                    DSSPrime.ActiveChildIndex := 0;
+                    PMParent.ActiveChild := PMParent.Children[0];
+                    DSS := PMParent.ActiveChild; // ActiveActor := 1;
+
+                    // Do a simple solve even if SolveAll was called
+                    ParamPointer := ord(Cmd.Solve);
+                end;
 {$ENDIF}
-{$ENDIF}
-                DSS.CmdResult := DoSetCmd(DSS, 1);  // changed from DoSolveCmd; //'solve';
+
+                if (ParamPointer = ord(Cmd.SolveAll)) then
+                begin
+                    // Execution area
+                    for i := 0 to PMParent.NumOfActors() - 1 do
+                    begin
+                        PMParent.ActiveChild := PMParent.Children[i];
+                        PMParent.ActiveChild.CmdResult := DoSetCmd(PMParent.ActiveChild, 1);
+                    end;
+                end
+                else
+                begin
+                    DSS.CmdResult := DoSetCmd(DSS, 1); // changed from DoSolveCmd; //'solve';
+                end;
+
+                // If the parallel mode is not active, Waits until the actor finishes
+                if PMParent.Parallel_enabled then
+                    Wait4Actors(DSS, ALL_ACTORS);
             end;
             ord(Cmd.Enable):
                 DSS.CmdResult := DSS.DSSExecutive.DoEnableCmd;
@@ -694,6 +747,64 @@ begin
             end;
             ord(Cmd.TotalPowers): 
                 DSS.CmdResult := DSS.DSSExecutive.DopowersCmd(1);
+            ord(Cmd.FirstObj):
+            begin
+                if (DSS.ActiveDSSClass <> nil) then
+                begin
+                    AppendGlobalResult(DSS, DSS.ActiveDSSClass.First());  // sets active objects
+                end
+                else
+                    AppendGlobalResult(DSS, 'Enable a class before using this command. See "Set Class".');
+            end;
+            ord(Cmd.NextObj):
+            begin
+                if (DSS.ActiveDSSClass <> nil) then
+                begin
+                    AppendGlobalResult(DSS, DSS.ActiveDSSClass.Next());  // sets active objects
+                end
+                else
+                begin
+                    AppendGlobalResult(DSS, 'Enable a class before using this command. See "Set Class".');
+                end;
+            end;
+            ord(Cmd.CountObj):
+            begin
+                if (DSS.ActiveDSSClass <> nil) then
+                begin
+                    AppendGlobalResult(DSS, DSS.ActiveDSSClass.ElementCount());  // sets active objects
+                end
+                else
+                begin
+                    AppendGlobalResult(DSS, 'Enable a class before using this command. See "Set Class".');
+                end;
+            end;
+            ord(Cmd.ActiveObj):
+            begin
+                if DSS.ActiveDSSObject <> nil then
+                begin
+                    AppendGlobalResult(DSS, DSS.ActiveDSSObject.Name);
+                end
+                else
+                begin
+                    AppendGlobalResult(DSS, 'None');
+                end;
+            end;
+            ord(Cmd.ClassMembers):
+            begin
+                ObjList := '[';
+                if (DSS.ActiveDSSClass <> nil) then
+                begin
+                    ObjIdx := DSS.ActiveDSSClass.First();
+                    while ObjIdx > 0 do
+                    begin
+                        ObjList += DSS.ActiveDSSObject.Name + ',';
+                        ObjIdx := DSS.ActiveDSSClass.Next();
+                    end;
+                end;
+                // Closes the list (str)
+                ObjList := ObjList + ']';
+                AppendGlobalResult(DSS, ObjList);
+            end;
         else
        // Ignore excess parameters
         end;

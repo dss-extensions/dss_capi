@@ -677,7 +677,6 @@ type
         ActiveChildIndex: Integer;
         CPU: Integer;
 
-        IsSolveAll: Boolean;
         AllActors: Boolean;
         Parallel_enabled: Boolean;
         ConcatenateReports: Boolean;
@@ -1232,7 +1231,6 @@ begin
     ActiveChildIndex := 0;
     Children := nil;
     
-    IsSolveAll := False;
     AllActors := False;
     ConcatenateReports := False;
     ConcatenateReportsLock := TCriticalSection.Create();
@@ -2484,6 +2482,7 @@ var
     s: String;
     errCode: Word;
 begin
+    Result := DefaultValue;
     if (MinChars <> 0) and (MinChars > Length(Value)) then
     begin
         if Hybrid then
@@ -2565,7 +2564,7 @@ begin
     // TODO: Error handling or do nothing
     if DefaultValue = -9999999 then
        raise Exception.Create(Format('Could not match enum ("%s") value "%s"', [Name, Value]));
-    Result := DefaultValue;    
+    Result := DefaultValue;
 end;
 
 function TDSSClass.GetEnumerator(): TDSSPointerEnumerator;

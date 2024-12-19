@@ -270,7 +270,6 @@ end;
 procedure TDSSCktElement.SetConductorClosed(Index: Integer; Value: Boolean);
 var
     i: Integer;
-    numOpenPrev, numOpenAfter: Integer;
     prevValue: Boolean;
 begin
     if (Index = 0) then
