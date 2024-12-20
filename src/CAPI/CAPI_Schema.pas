@@ -68,6 +68,7 @@ begin
     if TPropertyFlag.ApplyRound in flags then Result.Add('ApplyRound');
     if TPropertyFlag.CheckForVar in flags then Result.Add('CheckForVar');
     if TPropertyFlag.AllowNone in flags then Result.Add('AllowNone');
+    if TPropertyFlag.AllowNoneItem in flags then Result.Add('AllowNoneItem');
     if TPropertyFlag.ArrayMaxSize in flags then Result.Add('ArrayMaxSize');
     if TPropertyFlag.ValueOffset in flags then Result.Add('ValueOffset');
     if TPropertyFlag.Redundant in flags then Result.Add('Redundant');
