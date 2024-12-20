@@ -1628,16 +1628,21 @@ end;
 procedure TCIMExporterHelper.AttachLinePhases(pLine: TLineObj);
 var
     s, phs: String;
-    i: Integer;
+    i, j: Integer;
     pPhase: TNamedObject;
 begin
     pPhase := TNamedObject.Create('dummy');
     s := PhaseOrderString(pLine, 1);
     if pLine.CIM_NumConductorData() > length(s) then
         s := s + 'N'; // so we can specify the neutral conductor
-    for i := 1 to length(s) do
+    
+    j := 0;
+    for i := 1 to pLine.NumConductorsAvailable do
     begin
-        phs := s[i];
+        if pLine.ConductorData[i] = nil then
+            continue; // If using Spacing an unused position will be Nil.
+        j := j + 1;  // j is the phase index in the line, i is the conductor index in the spacing.
+        phs := s[j];
         if phs = 's' then
             continue;
         if phs = '1' then
