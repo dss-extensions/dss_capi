@@ -43,7 +43,7 @@ type
         FDiaStrand: pDoubleArray;
         FGmrStrand: pDoubleArray;
         FRStrand: pDoubleArray;
-        Semicon: pBooleanArray;
+        semiconLayer: pBooleanArray;
 
         // For TS
         FDiaShield: pDoubleArray;
@@ -68,11 +68,12 @@ type
         procedure SetDiaStrand(i, units: Integer; const Value: Double);
         procedure SetGmrStrand(i, units: Integer; const Value: Double);
         procedure SetRStrand(i, units: Integer; const Value: Double);
-        procedure SetSemicon(i: Integer; const Value: Boolean);
+        procedure SetSemiconLayer(i: Integer; const Value: Boolean);
 
         procedure SetDiaShield(i, units: Integer; const Value: Double);
         procedure SetTapeLayer(i, units: Integer; const Value: Double);
         procedure SetTapeLap(i: Integer; const Value: Double);
+        procedure SetCondType(i: Integer; const Value: TConductorType);
     end;
 
 implementation
@@ -227,7 +228,7 @@ begin
     FDiaStrand := Allocmem(Sizeof(Double) * numConductors);
     FGmrStrand := Allocmem(Sizeof(Double) * numConductors);
     FRStrand := Allocmem(Sizeof(Double) * numConductors);
-    semicon := Allocmem(Sizeof(Boolean) * numConductors);
+    semiconLayer := Allocmem(Sizeof(Boolean) * numConductors);
 
     FDiaShield := Allocmem(Sizeof(Double) * numConductors);
     FTapeLayer := Allocmem(Sizeof(Double) * numConductors);
@@ -247,7 +248,7 @@ begin
     Reallocmem(FDiaStrand, 0);
     Reallocmem(FGmrStrand, 0);
     Reallocmem(FRStrand, 0);
-    Reallocmem(semicon, 0);
+    Reallocmem(semiconLayer, 0);
 
     Reallocmem(FDiaShield, 0);
     Reallocmem(FTapeLayer, 0);
@@ -262,10 +263,10 @@ begin
         FkStrand[i] := Value;
 end;
 
-procedure TCableConstants.SetSemicon(i: Integer; const Value: Boolean);
+procedure TCableConstants.SetSemiconLayer(i: Integer; const Value: Boolean);
 begin
     if (i > 0) and (i <= FNumConds) then
-        semicon[i] := Value;
+        semiconLayer[i] := Value;
 end;
 
 procedure TCableConstants.SetDiaStrand(i, units: Integer; const Value: Double);
@@ -465,7 +466,7 @@ begin
     Zmat.Free;
 
     // for shielded cables, build the capacitance matrix directly
-    // assumes the insulation may lie between semicon layers
+    // assumes the insulation may lie between semiconLayer layers
     for i := 1 to nPhases do
     begin
         Yfactor := twopi * e0 * FEpsR[i] * Fw; // includes frequency so C==>Y
@@ -474,14 +475,14 @@ begin
         case FCondType[i] of
             TConductorType.CN:
             begin
-                if semicon[i] then
+                if semiconLayer[i] then
                 begin
-                    // Semicon layer (default)
+                    // semiconLayer layer (default)
                     Denom := ln(RadOut / RadIn);
                 end
                 else
                 begin
-                    // No semicon layer (Synergi and Kersting/Kerestes' book)
+                    // No semiconLayer layer (Synergi and Kersting/Kerestes' book)
                     RadCN := 0.5 * (FDiaCable[i] - FDiaStrand[i]);
                     RadStrand := 0.5 * FDiaStrand[i];
                     Denom := ln(RadCN / RadIn) - (1 / FkStrand[i]) * ln(FkStrand[i] * RadStrand / RadCN);
@@ -518,6 +519,12 @@ procedure TCableConstants.SetTapeLap(i: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= numConductors) then
         FTapeLap[i] := Value;
+end;
+
+procedure TCableConstants.SetCondType(i: Integer; const Value: TConductorType);
+begin
+    if (i > 0) and (i <= numConductors) then
+        FCondType[i] := Value;
 end;
 
 end.
