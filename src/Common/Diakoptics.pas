@@ -51,7 +51,7 @@ begin
     with DSS.ActiveCircuit, Solution do
     begin
         // Solves the partial systems to find the voltages at the edges of the sub-systems
-        SendCmd2Actors(SOLVE_AD1);
+        SendADCommandToActors(SOLVE_AD1);
 
         Vpartial := Tsparse_Complex.Create;
         Vpartial.sparse_matrix_Cmplx(Contours.NCols, 1);
@@ -67,7 +67,7 @@ begin
         Ic := Contours.multiply(VPartial);  // Calculates the new Injecting Currents
 
         // Commands the actors to complement the solution
-        SendCmd2Actors(SOLVE_AD2);
+        SendADCommandToActors(SOLVE_AD2);
     end;
     DSS.ActiveCircuit.IsSolved := TRUE;
     DSS.ActiveCircuit.SetBusNameRedefined(FALSE);
@@ -673,7 +673,7 @@ begin
                 DSS.ActiveCircuit.SetBusNameRedefined(FALSE);
                 Ymatrix.BuildYMatrix(DSS, WHOLEMATRIX, FALSE);
 
-                DSS.ActiveCircuit.Solution.SendCmd2Actors(INIT_ADIAKOPTICS);
+                DSS.ActiveCircuit.Solution.SendADCommandToActors(INIT_ADIAKOPTICS);
                 DSS.ActiveCircuit.Solution.ADiak_init := TRUE;
             end
         end;

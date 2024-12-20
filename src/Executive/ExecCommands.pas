@@ -365,7 +365,13 @@ begin
                 DSS.DSSExecutive.DoClearAllCmd;
             ord(Cmd.Wait):
                 if PMParent.Parallel_enabled then
-                    Wait4Actors(DSS, ALL_ACTORS);
+                begin
+                    {$IFDEF DSS_CAPI_ADIAKOPTICS}
+                    WaitForActors(DSS, (PMParent.ActiveCircuit.Solution.ADiakoptics and (PMParent.ActiveChildIndex = 0))) // To let know the wait routine that this is the caller for ADiakoptics
+                    {$ELSE}
+                    WaitForActors(DSS);
+                    {$ENDIF}
+                end;
 {$ELSE}
             ord(Cmd.ClearAll):
                 DSS.DSSExecutive.DoClearCmd;
@@ -456,7 +462,6 @@ begin
             ord(Cmd.Show):
                 DSS.CmdResult := DoShowCmd(DSS); //'show';
             ord(Cmd.Solve), ord(Cmd.SolveAll):
-
             begin
                 if ParamPointer = ord(Cmd.Solve) then
                 begin
@@ -505,9 +510,8 @@ begin
                     DSS.CmdResult := DoSetCmd(DSS, 1); // changed from DoSolveCmd; //'solve';
                 end;
 
-                // If the parallel mode is not active, Waits until the actor finishes
-                if PMParent.Parallel_enabled then
-                    Wait4Actors(DSS, ALL_ACTORS);
+                // If the parallel mode is not active, each solver will run in the current thread,
+                // sequentially, no need to wait later (contrary to the official impl.)
             end;
             ord(Cmd.Enable):
                 DSS.CmdResult := DSS.DSSExecutive.DoEnableCmd;

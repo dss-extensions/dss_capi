@@ -533,6 +533,10 @@ begin
                 begin
                     ControlMode := DSS.ControlModeEnum.StringToOrdinal(Param);
                     DefaultControlMode := ControlMode;  // always revert to last one specified in a script
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+                    if PMParent.ActiveCircuit.Solution.ADiakoptics and (PMParent.ActiveChildIndex = 0) then
+                        SendADCommandToActors(PMParent, GETCTRLMODE);
+{$ENDIF}
                 end;
             44:
                 DSS.ActiveCircuit.ControlQueue.SetTraceLog(InterpretYesNo(Param));
@@ -579,7 +583,13 @@ begin
             54:
                 DSS.DSSExecutive.DoHarmonicsList(Param);
             55:
+            begin
                 DSS.ActiveCircuit.Solution.MaxControlIterations := DSS.Parser.MakeInteger();
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+                if PMParent.ActiveCircuit.Solution.ADiakoptics and (PMParent.ActiveChildIndex = 0) then
+                    SendADCommandToActors(PMParent, GETCTRLMODE);
+{$ENDIF}
+            end;
             56:
                 Result := SetActiveBus(DSS, Param);   // See DSSGlobals
             57:

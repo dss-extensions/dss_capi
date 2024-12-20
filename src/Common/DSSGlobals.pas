@@ -191,7 +191,11 @@ procedure ResetQueryLogFile(DSS: TDSSContext);
 procedure WriteQueryLogFile(DSS: TDSSContext; Const Prop, S:String);
 
 {$IFDEF DSS_CAPI_PM}
-procedure Wait4Actors(MainDSS: TDSSContext; ActorOffset: Integer);
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+procedure WaitForActors(MainDSS: TDSSContext; ADiakoptics: Boolean = False; ADWorkers: Boolean = False); // original: Wait4Actors
+{$ELSE}
+procedure WaitForActors(MainDSS: TDSSContext); // original: Wait4Actors
+{$ENDIF}
 procedure DoClone(MainDSS: TDSSContext);
 procedure New_Actor_Slot(MainDSS: TDSSContext);
 {$ENDIF}
@@ -606,14 +610,39 @@ End;
 
 {$IFDEF DSS_CAPI_PM}
 // Waits for all the actors running tasks
-procedure Wait4Actors(MainDSS: TDSSContext; ActorOffset: Integer);
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+procedure WaitForActors(MainDSS: TDSSContext; ADiakoptics: Boolean = False; ADWorkers: Boolean = False);
+{$ELSE}
+procedure WaitForActors(MainDSS: TDSSContext);
+{$ENDIF}
 var
     i: Integer;
     PMParent, Child, DSS: TDSSContext;
+    ActorOffset, ActorLimit: Integer;
 begin
     PMParent := MainDSS.GetPrime();
     DSS := MainDSS.ActiveChild;
-    for i := ActorOffset to High(PMParent.Children) do
+
+    ActorOffset := 0;
+    ActorLimit := High(PMParent.Children);
+
+{$IFDEF DSS_CAPI_ADIAKOPTICS} //TODO: update later when we enable DSS_CAPI_ADIAKOPTICS
+    if (ADiakoptics) then
+    begin
+        if (ADWorkers) then
+        begin
+            // Skip the worker coordinator
+            ADOffset := 1;
+        end
+        else
+        begin
+            // Only the worker coordinator
+            ActorLimit := 0;
+        end;
+    end;
+{$ENDIF}
+
+    for i := ActorOffset to ActorLimit do
     begin
         try
             Child := PMParent.Children[i];
@@ -623,7 +652,7 @@ begin
             Child.ThreadStatusEvent.ResetEvent();
             while (Child.ActorStatus <> TActorStatus.Idle) do
             begin
-                if Child.ThreadStatusEvent.WaitFor(10) = TWaitResult.wrTimeout then
+                if Child.ThreadStatusEvent.WaitFor(1) = TWaitResult.wrTimeout then
                     continue;
             end;
         except

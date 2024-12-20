@@ -42,11 +42,6 @@ const
     NEWTONSOLVE = 1;
     NCIMSOLVE = 2;
 
-{$IFDEF DSS_CAPI_ADIAKOPTICS}
-    AD_ACTORS = 1; // Wait flag to wait only for the A-Diakoptics actors
-{$ENDIF}
-    ALL_ACTORS = 0; // Wait flag for all the actors
-
      // Constants for the NCIM solution algorithm
     NCIM_PQ_Node = 0; // For indicating if the node is PQ (NCIM solver)
     NCIM_PV_Node = 1; // For indicating if the node is PV (NCIM solver)
@@ -282,7 +277,7 @@ type
 
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
         function SolveAD(Initialize: Boolean): Integer;    // solve one of the A-Diakoptics stages locally
-        procedure SendCmd2Actors(Msg: Integer); // Sends a message to other actors different than 1
+        procedure SendADCommandToActors(Msg: Integer); // Sends a message to other actors different than 1 -- ORIGINAL CODE: SendCmd2Actors
         procedure UpdateISrc(); // Updates the local ISources using the data available at Ic for actor 1
         function VoltInActor1(NodeIdx: Integer): complex; // returns the voltage indicated in NodeIdx in the context of the actor 1
 {$ENDIF}
@@ -703,6 +698,8 @@ begin
             Exit;
 {$IFDEF DSS_CAPI_PM}
         end;
+
+
         // Creates the actor again in case of being terminated due to an error before
         if (DSS.ActorThread() = NIL) or DSS.ActorThread().Terminated then
         begin
@@ -730,10 +727,6 @@ begin
 
         // Sends message to start the Simulation
         DSS.ActorThread().Send_Message(TActorMessage.SIMULATE);
-
-        // If the parallel mode is not active, Waits until the actor finishes
-        if not DSS.GetPrime().Parallel_enabled then
-            Wait4Actors(DSS, ALL_ACTORS);
 {$ENDIF} // DSS_CAPI_PM
     except
         On E: Exception do
@@ -1211,7 +1204,7 @@ begin
             if ckt.LogEvents then
                 DSS.LogThisEvent('Control Iteration ' + IntToStr(ControlIteration));
 
-            SendCmd2Actors(DO_CTRL_ACTIONS);
+            SendADCommandToActors(DO_CTRL_ACTIONS);
             // Checks if there are pending ctrl actions at the actors
             ControlActionsDone := TRUE;
             for i := 2 to DSS.NumOfActors() do
@@ -2791,7 +2784,7 @@ begin
     ckt.IsSolved := TRUE;
 end;
 
-procedure TSolutionObj.SendCmd2Actors(Msg: Integer);
+procedure TSolutionObj.SendADCommandToActors(Msg: Integer);
 var
     i: Integer;
     ChDSS: TDSSContext;
@@ -2803,7 +2796,7 @@ begin
         if ChDSS.ActorThread() <> NIL then
             ChDSS.ActorThread().Send_Message(Msg);
     end;
-    Wait4Actors(DSS, AD_ACTORS);
+    WaitForActors(DSS, True, True);
 end;
 
 // Initializes the variables of the A-Diakoptics worker
