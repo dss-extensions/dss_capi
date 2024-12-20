@@ -53,7 +53,8 @@ type
         tscables = 16,
         Seasons = 17,
         Ratings = 18,
-        LineType = 19
+        LineType = 19,
+        conductors = 20
     );
     TLineGeometryProp = (
         INVALID = 0,
@@ -75,7 +76,8 @@ type
         TSCables = 16,
         Seasons = 17,
         Ratings = 18,
-        LineType = 19
+        LineType = 19,
+        Conductors = 20
     );
 {$SCOPEDENUMS OFF}
 
@@ -83,6 +85,8 @@ type
 
     TLineGeometry = class(TDSSClass)
     PROTECTED
+        ConductorProxyClass: TProxyClass;
+
         procedure DefineProperties(); override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
@@ -172,12 +176,15 @@ begin
         PropInfoLegacy := TypeInfo(TPropLegacy);
     end;
 
+    ConductorProxyClass := TProxyClass.Create(dssContext, ['WireData', 'CNData', 'TSData']);
+
     inherited Create(dssContext, DSS_OBJECT, 'LineGeometry');
     RequiresCircuit := true;
 end;
 
 destructor TLineGeometry.Destroy;
 begin
+    ConductorProxyClass.Free;
     inherited Destroy;
 end;
 
@@ -262,11 +269,19 @@ begin
     PropertyOffset2[ord(TProp.wires)] := ptruint(DSS.WireDataClass);
     PropertyOffset3[ord(TProp.wires)] := ptruint(@obj.FNConds);
     PropertyWriteFunction[ord(TProp.wires)] := @SetWires;
-    PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.FullNameAsArray, TPropertyFlag.FullNameAsJSONArray];
+    PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.SuppressJSON];
+    // PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.FullNameAsArray, TPropertyFlag.FullNameAsJSONArray];
     // PropertyRedundantWith[ord(TProp.wires)] := ord(TProp.wire);
-    PropertyNameJSON[ord(TProp.wires)] := 'Conductors';
+    // PropertyNameJSON[ord(TProp.wires)] := 'Conductors';
 
     PropertyArrayAlternative[ord(TProp.wire)] := ord(TProp.wires);
+
+    PropertyType[ord(TProp.conductors)] := TPropertyType.DSSObjectReferenceArrayProperty;
+    PropertyOffset[ord(TProp.conductors)] := ptruint(@obj.conductorData);
+    PropertyOffset2[ord(TProp.conductors)] := ptruint(ConductorProxyClass);
+    PropertyOffset3[ord(TProp.conductors)] := ptruint(@obj.FNConds);
+    PropertyWriteFunction[ord(TProp.conductors)] := @SetWires;
+    PropertyFlags[ord(TProp.conductors)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.FullNameAsArray, TPropertyFlag.FullNameAsJSONArray, TPropertyFlag.AllowNoneItem];
 
     // enums
     PropertyType[ord(TProp.units)] := TPropertyType.MappedStringEnumProperty;

@@ -206,6 +206,7 @@ type
         ApplyRound, // for double arrays -- read doubles and then round the values
         CheckForVar, // for object references
         AllowNone, // for arrays, only used in Relay.RecloseIntervals
+        AllowNoneItem, // for single objects in arrays, only used in LineGeometry
         ArrayMaxSize, // for arrays
         ValueOffset, // only implemented for integers
         FullNameAsArray, // special case for LineGeometry, when reading wire as an array of strings through the Obj_* API
