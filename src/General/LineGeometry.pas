@@ -109,7 +109,7 @@ type
         FLastUnit: Integer;
         dataChanged: Boolean;
         FReduce: LongBool;
-        FActiveCond: Integer;
+        FActiveCond, firstValidCond: Integer;
 
         lineConstants: TLineConstants;
 
@@ -180,6 +180,7 @@ begin
     end;
 
     ConductorProxyClass := TProxyClass.Create(dssContext, ['WireData', 'CNData', 'TSData']);
+    ConductorProxyClass.Name := 'Conductor';
 
     inherited Create(dssContext, DSS_OBJECT, 'LineGeometry');
     RequiresCircuit := true;
@@ -283,8 +284,7 @@ begin
     PropertyOffset[ord(TProp.conductors)] := ptruint(@obj.conductorData);
     PropertyOffset2[ord(TProp.conductors)] := ptruint(ConductorProxyClass);
     PropertyOffset3[ord(TProp.conductors)] := ptruint(@obj.FNConds);
-    PropertyWriteFunction[ord(TProp.conductors)] := @SetWires;
-    PropertyFlags[ord(TProp.conductors)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.FullNameAsArray, TPropertyFlag.FullNameAsJSONArray, TPropertyFlag.AllowNoneItem];
+    PropertyFlags[ord(TProp.conductors)] := [TPropertyFlag.FullNameAsArray, TPropertyFlag.FullNameAsJSONArray, TPropertyFlag.AllowNoneItem];
 
     // enums
     PropertyType[ord(TProp.units)] := TPropertyType.MappedStringEnumProperty;
@@ -375,6 +375,7 @@ var
     tmpName: String;
     i: Integer;
     conductorObj: TConductorDataObj = NIL;
+    anyConductor: Boolean;
 begin
     case Idx of
         ord(TProp.nphases):
@@ -436,6 +437,7 @@ begin
             end;
             // Reset the active conductor
             FActiveCond := 1;
+            firstValidCond := FNConds + 1;
 
             // Initialize Allocations
             for i := 1 to FNConds do
@@ -480,19 +482,34 @@ begin
                     end;
                 end
                 else
+                begin
                     DoSimpleMsg('LineSpacing object %s has the wrong number of wires.', [LineSpacingObj.Name], 10103);
+                end;
             end;
     end;
     case Idx of 
         ord(TProp.wires), ord(TProp.cncables), ord(TProp.tscables):
         begin
-            if (TSetterFlag.AllowAllConductors in setterFlags) then // Special handling for "Conductors"
+            if (Idx = ord(TProp.Conductors)) or (TSetterFlag.AllowAllConductors in setterFlags) then // Special handling for "Conductors"
             begin
                 // Simulate setting the conductors one by one
                 // Much easier/safer than reproducing the whole code paths
+                anyConductor := false;
                 for i := 1 to NConds() do
                 begin
                     SetActiveCond(i);
+                    if (Idx = ord(TProp.Conductors)) and (conductorData[FActiveCond] = NIL) then
+                    begin
+                        // The new "Conductors" property (after OpenDSS 10.1) accepts empty conductors; we just skip them.
+                        continue;
+                    end;
+
+                    if not anyConductor then
+                    begin
+                        anyConductor := true;
+                        firstValidCond := i;
+                    end;
+
                     if conductorData[FActiveCond] is TWireDataObj then 
                     begin
                         PropertySideEffects(ord(TProp.wire), 0, setterFlags);
@@ -509,6 +526,11 @@ begin
                         continue;
                     end;
                 end;
+                if not anyConductor then
+                begin
+                    DoSimpleMsg('%s.%s: At least one valid conductor must be provided.', [FullName(), ParentClass.PropertyName[Idx]], 10103);
+                    Exit;
+                end;
             end
             else
             begin
@@ -522,9 +544,11 @@ begin
                     end
                     else 
                     if phaseChoice[FActiveCond] <> Overhead then
+                    begin
                         // these are buried neutral wires
                         // (only when the phase conductors not overhead)
                         i := FNPhases + 1;
+                    end;
                 end;
                 if i = 1 then
                 begin
@@ -548,11 +572,16 @@ begin
         ord(TProp.wire), ord(TProp.cncable), ord(TProp.tscable):
         begin
             conductorObj := conductorData[FActiveCond];
-            if Assigned(conductorObj) then
+            if conductorObj <> nil then
             begin
+                if FActiveCond < firstValidCond then
+                begin
+                    firstValidCond := FActiveCond;
+                end;
+
                 // conductorData[ActiveCond] := conductorObj;
                 // Default the current ratings for this geometry to the rating of the first conductor
-                if (FActiveCond = 1) then
+                if (FActiveCond = firstValidCond) then
                 begin
                     if (conductorObj.NormAmps > 0.0) and (Normamps = 0.0) then
                         Normamps := conductorObj.NormAmps;
@@ -570,7 +599,9 @@ begin
                 end;
             end
             else
+            begin
                 DoSimpleMsg('WireData/CNData/TSData object was not defined. Must be previously defined.', [tmpName], 10103);
+            end;
         end;
         ord(TProp.Seasons):
             setlength(AmpRatings, NumAmpRatings);
@@ -888,7 +919,7 @@ begin
     end;
     if not anyConductor then
     begin
-        raise Exception.Create(Format(_('%s: conductors arenot correctly initialized (at least one conductor is required). Check the object definition.'), [FullName()]));
+        raise Exception.Create(Format(_('%s: conductors are not correctly initialized (at least one conductor is required). Check the object definition.'), [FullName()]));
     end;
 
     for i := 1 to FNConds do

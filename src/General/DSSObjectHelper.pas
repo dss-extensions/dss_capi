@@ -37,6 +37,7 @@ type
     TDSSClassHelper = class helper for TDSSClass
     private
         function GetCircuit(): TDSSCircuit; inline;
+        function ValidateObjectItem(Index: Integer; ElemName: String; var otherObj: TDSSObject): Boolean;
     protected
         property ActiveCircuit: TDSSCircuit read GetCircuit;
     public
@@ -835,17 +836,11 @@ begin
                     begin
                         ElemName := PropParser.MakeString();
                         if TPropertyFlag.CheckForVar in flags then
-                            PropParser.CheckforVar(ElemName);
+                            PropParser.CheckForVar(ElemName);
 
-                        otherObj := cls.Find(ElemName, False);
-                        if otherObj = NIL then
-                        begin
-                            DoSimpleMsg(
-                                Format('%s.%s: %s object "%s" not found.',
-                                    [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name, PropParser.MakeString()]
-                                ), 40303);
+                        if not ValidateObjectItem(Index, ElemName, otherObj) then
                             Exit;
-                        end;
+
                         SetLength(objs, Length(objs) + 1);
                         objs[High(objs)] := otherObj;
                         PropParser.NextParam();
@@ -863,10 +858,8 @@ begin
 
                         if otherObj = NIL then
                         begin
-                            DoSimpleMsg(
-                                Format('%s.%s: object "%s" not found.',
-                                    [TDSSObject(obj).FullName(), PropertyName[Index], ElemName]
-                                ), 40304);
+                            DoSimpleMsg('%s.%s: object "%s" not found.',
+                                [TDSSObject(obj).FullName(), PropertyName[Index], ElemName], 40304);
                             Exit;
                         end;
                         SetLength(objs, Length(objs) + 1);
@@ -884,10 +877,8 @@ begin
 
             if intVal < 1 then
             begin
-                DoSimpleMsg(
-                    Format('%s.%s: No objects are expected! Check if the order of property assignments is correct.',
-                        [TDSSObject(obj).FullName(), PropertyName[Index]]
-                    ), 402);
+                DoSimpleMsg('%s.%s: No objects are expected! Check if the order of property assignments is correct.',
+                    [TDSSObject(obj).FullName(), PropertyName[Index]], 402);
                 Exit;
             end;
 
@@ -912,23 +903,20 @@ begin
                 if Length(PropParser.MakeString()) = 0 then
                     break;
 
-                otherObj := cls.Find(PropParser.MakeString(), False);
-                if otherObj = NIL then
+                if not ValidateObjectItem(Index, PropParser.MakeString(), TDSSObject(obj), otherObj) then
                 begin
-                    DoSimpleMsg(
-                        Format('%s.%s: %s object "%s" not found.',
-                            [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name, PropParser.MakeString()]
-                        ), 40305);
-                    //TODO: stop?
-                end
-                else
-                    otherObjPtr^ := otherObj;
+                    //TODO: might need a compat flag to continue processing items if one fails
+                    Exit;
+                end;
 
+                otherObjPtr^ := otherObj;
                 Inc(otherObjPtr);
             end;
 
             if positionPtr <> NIL then
                 positionPtr^ := i;
+
+            //TODO: with strict, generate error if more items than expected!
 
             Result := True;
         end;
@@ -4962,6 +4950,73 @@ begin
             end;
         end;
     end;
+end;
+
+function TDSSClassHelper.ValidateObjectItem(Index: Integer; InputElemName: String; obj: TDSSObject; var otherObj: TDSSObject): Boolean;
+var
+    elemClassName, validClasses: String;
+    flags: TPropertyFlags;
+    cls, subcls: TDSSClass;
+    elemName: String;
+begin
+    Result := false;
+    elemName := InputElemName;
+    cls := Pointer(PropertyOffset2[Index]);
+    subcls := cls;
+    flags := PropertyFlags[Index];
+    if (TPropertyFlag.AllowNoneItem in flags) and (LowerCase(elemName) = 'none') then
+    begin
+        otherObj := NIL;
+        Result := true;
+        Exit;
+    end
+
+    if (TPropertyFlag.FullNameAsArray in flags) then
+    begin
+        ParseObjectClassAndName(DSS, AnsiLowerCase(InputElemName), elemClassName, elemName);
+        if elemClassName = '' then
+        begin
+            validClasses := '';
+            if (TPropertyFlag.AllowNoneItem in flags) then
+            begin
+                DoSimpleMsg('%s.%s: You must define the %s class for all the valid items in the array.',
+                    [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name,], 10103);
+            end
+            else
+            begin
+                DoSimpleMsg('%s.%s: You must define the %s class for all the items in the array.',
+                    [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name], 10103);
+            end;
+            Exit;
+        end;
+        validClasses := '';
+        if cls is TProxyClass then
+        begin
+            subcls := TProxyClass(cls).GetDSSClass(elemClassName);
+            validClasses := ' Valid classes: ' + TProxyClass(cls).TargetClassNamesStr;
+        end
+        else
+        begin
+            subcls := cls;
+            validClasses := '';
+        end;
+        if subcls = NIL then
+        begin
+            DoSimpleMsg('%s.%s: Invalid class (%s) for item.%s', 
+                [obj.FullName(), PropertyName[Index], elemClassName, validClasses], 10103);
+            Exit;
+        end;
+    end;
+
+    otherObj := subcls.Find(elemName, False);
+    if otherObj = NIL then
+    begin
+        DoSimpleMsg('%s.%s: %s object "%s" not found.', 
+            [obj.FullName(), PropertyName[Index], subcls.Name, InputElemName], 40305);
+        Exit;
+    end;
+
+    Result := true;
 end;
 
 function TDSSClassHelper.FillObjFromJSON(obj: Pointer; json: TJSONObject; joptions: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
