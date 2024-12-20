@@ -192,7 +192,7 @@ Item_107=../src/Executive/ShowOptions.pas
 Item_108=../src/General/CableConstants.pas
 Item_109=../src/General/CableData.pas
 Item_110=../src/General/CNData.pas
-Item_111=../src/General/CNLineConstants.pas
+Item_111=../src/Shared/Ucmatrix.pas
 Item_112=../src/General/ConductorData.pas
 Item_113=../src/General/DSSObjectHelper.pas
 Item_114=../src/General/DSSObject.pas
@@ -209,7 +209,7 @@ Item_124=../src/General/Spectrum.pas
 Item_125=../src/General/TCC_Curve.pas
 Item_126=../src/General/TempShape.pas
 Item_127=../src/General/TSData.pas
-Item_128=../src/General/TSLineConstants.pas
+Item_128=../src/Shared/StackDef.pas
 Item_129=../src/General/WireData.pas
 Item_130=../src/General/XfmrCode.pas
 Item_131=../src/General/XYcurve.pas
@@ -259,8 +259,6 @@ Item_176=../src/Shared/HashList.pas
 Item_177=../src/Shared/LineUnits.pas
 Item_178=../src/Shared/mathutil.pas
 Item_179=../src/Shared/Pstcalc.pas
-Item_180=../src/Shared/StackDef.pas
-Item_181=../src/Shared/Ucmatrix.pas
 
 [AdditionalFiles]
 Count=0

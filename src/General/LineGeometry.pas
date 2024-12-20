@@ -148,8 +148,7 @@ uses
     LineUnits,
     WireData,
     OHLineConstants,
-    CNLineConstants,
-    TSLineConstants,
+    CableConstants,
     Math,
     DSSHelper,
     DSSObjectHelper,
@@ -769,9 +768,9 @@ begin
             Overhead:
                 newLineData := TOHLineConstants.Create(FNConds);
             ConcentricNeutral:
-                newLineData := TCNLineConstants.Create(FNConds);
+                newLineData := TCableConstants.Create(FNConds);
             TapeShield:
-                newLineData := TTSLineConstants.Create(FNConds);
+                newLineData := TCableConstants.Create(FNConds);
         end;
 
     if Assigned(newLineData) then
@@ -816,8 +815,7 @@ var
     LineGeomErrMsg: String;
     cnd: TCNDataObj;
     tsd: TTSDataObj;
-    cnconsts: TCNLineConstants;
-    tsconsts: TTSLineConstants;
+    cableconsts: TCableConstants;
 begin
     for i := 1 to FNConds do
     begin
@@ -833,7 +831,7 @@ begin
         lineConstants.SetRac(i, conductorData[i].resistanceUnits, conductorData[i].RAC);
         if (conductorData[i] is TCNDataObj) then
         begin
-            cnconsts := (lineConstants as TCNLineConstants);
+            cnconsts := (lineConstants as TCableConstants);
             cnd := (conductorData[i] as TCNDataObj);
             cnconsts.SetEpsR(i, cnd.EpsR);
             cnconsts.SetInsLayer(i, cnd.radiusUnits, cnd.insLayer);
@@ -847,7 +845,7 @@ begin
         else
         if (conductorData[i] is TTSDataObj) then
         begin
-            tsconsts := (lineConstants as TTSLineConstants);
+            tsconsts := (lineConstants as TCableConstants);
             tsd := (conductorData[i] as TTSDataObj);
             tsconsts.SetEpsR(i, tsd.EpsR);
             tsconsts.SetInsLayer(i, tsd.radiusUnits, tsd.insLayer);

@@ -21,14 +21,16 @@ type
         k = 1,
         DiaStrand = 2,
         GmrStrand = 3,
-        Rstrand = 4
+        Rstrand = 4,
+        SemiconLayer = 5
     );
     TCNDataProp = (
         INVALID = 0,
         k = 1,
         DiaStrand = 2,
         GMRStrand = 3,
-        RStrand = 4
+        RStrand = 4,
+        SemiconLayer = 5
     );
 {$SCOPEDENUMS OFF}
 
@@ -48,6 +50,7 @@ type
         diaStrand: Double;
         gmrStrand: Double;
         rStrand: Double;
+        semiconLayer: LongBool;
 
         constructor Create(ParClass: TDSSClass; const CNDataName: String);
         destructor Destroy; OVERRIDE;
@@ -108,6 +111,10 @@ begin
     PropertyOffset[ActiveProperty + ord(TProp.k)] := ptruint(@obj.kStrand);
     // PropertyMinimum[ActiveProperty + ord(TProp.k)] := 2; //TODO: add support for minimum value
 
+    // boolean properties
+    PropertyType[ActiveProperty + ord(TProp.SemiconLayer)] := TPropertyType.BooleanProperty;
+    PropertyOffset[ActiveProperty + ord(TProp.SemiconLayer)] := ptruint(@obj.semiconLayer);
+
     // double properties (default type)
     PropertyOffset[ActiveProperty + ord(TProp.DiaStrand)] := ptruint(@obj.diaStrand);
     PropertyFlags[ActiveProperty + ord(TProp.DiaStrand)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
@@ -166,6 +173,7 @@ begin
     diaStrand := Other.diaStrand;
     gmrStrand := Other.gmrStrand;
     rStrand := Other.rStrand;
+    semiconLayer := OtherData.semiconLayer;
 end;
 
 constructor TCNDataObj.Create(ParClass: TDSSClass; const CNDataName: String);
@@ -176,6 +184,7 @@ begin
     diaStrand := -1.0;
     gmrStrand := -1.0;
     rStrand := -1.0;
+    semiconLayer := true;
 end;
 
 destructor TCNDataObj.Destroy;
