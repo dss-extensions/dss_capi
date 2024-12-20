@@ -1183,34 +1183,41 @@ begin
                 Check_Fault_Status();
             end
             else
+            begin
                 ControlActionsDone := TRUE; // Stop solution process if failure to converge
+            end;
         end;
 
         if (SystemYChanged and (Algorithm = NCIMSOLVE)) then
         begin
-            NCIM_Ready := false
-        end
-        else
+            NCIM_Ready := false;
+            Exit;
+        end;
+
         if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (ckt.IncrCktElements.Count <> 0){$ENDIF} then
         begin
             BuildYMatrix(DSS, WHOLEMATRIX, FALSE); // Rebuild Y matrix, but V stays same
         end;
-{$IFDEF DSS_CAPI_ADIAKOPTICS}
-    end
-    else
-    begin
-        if ControlIteration < MaxControlIterations then
-        begin
-            if ckt.LogEvents then
-                DSS.LogThisEvent('Control Iteration ' + IntToStr(ControlIteration));
 
-            SendADCommandToActors(DO_CTRL_ACTIONS);
-            // Checks if there are pending ctrl actions at the actors
-            ControlActionsDone := TRUE;
-            for i := 2 to DSS.NumOfActors() do
-                ControlActionsDone := ControlActionsDone and DSS.Children[i - 1].ActiveCircuit.Solution.ControlActionsDone;
-        end;
+        Exit;
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
     end;
+
+    if ControlIteration >= MaxControlIterations then
+        Exit;
+
+    ControlActionsDone := TRUE;
+    if (ControlMode = CONTROLSOFF) or (not ConvergedFlag) then
+        Exit;
+
+    if ckt.LogEvents then
+        DSS.LogThisEvent('Control Iteration ' + IntToStr(ControlIteration));
+
+    SendADCommandToActors(DO_CTRL_ACTIONS);
+
+    // Checks if there are pending ctrl actions at the actors
+    for i := 2 to DSS.NumOfActors() do
+        ControlActionsDone := ControlActionsDone and DSS.Children[i - 1].ActiveCircuit.Solution.ControlActionsDone;
 {$ENDIF}
 end;
 
