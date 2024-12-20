@@ -101,9 +101,10 @@ type
         procedure SetEqDist(i, units: Integer; Value: Double);
         procedure SetHeightOffset(const Value: Double);
         procedure SetUserHeightUnit(const Value: Integer);
-        procedure SetEquivalentSpacing(const Value: Boolean);        
+        procedure SetEquivalentSpacing(const Value: Boolean);
         procedure SetEpsRMedium(const Value: Double);
         function GetHeightOffset(): Double;        
+        function GetEpsRMedium(): Double;
 
         constructor Create(NConductors: Integer);
         destructor Destroy; OVERRIDE;
@@ -705,6 +706,11 @@ begin
 
     rhoChanged := true;  // using this for both EpsRMedium, Rho, heightOffset and userHeightUnit
     epsRMedium := Value;
+end;
+
+function TLineConstants.GetEpsRMedium(): Double;
+begin
+    Result := epsRMedium;
 end;
 
 procedure TLineConstants.SetHeightOffset(const Value: Double);

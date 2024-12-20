@@ -102,6 +102,9 @@ type
         conductorData: pConductorDataArray; // was originally FWireData
         xCoord: pDoubleArray;
         yCoord: pDoubleArray;
+        eqDistPhPh, eqDistPhN, avgHeightPh, avgHeightN: Double;
+        equivalentSpacing: Boolean;  // to tell the calcs when to use equivalent spacing info
+        
         units: pIntegerArray;
         FLastUnit: Integer;
         dataChanged: Boolean;
@@ -415,7 +418,13 @@ begin
                 for i := 1 to FNConds do
                     conductorData[i] := NIL;
             end;
-                
+
+            // For compatibility with the official version, always zero the eq dist values
+            eqDistPhPh := 0;
+            eqDistPhN := 0;
+            avgHeightPh := 0;
+            avgHeightN := 0;
+
             if FNConds > previousIntVal then
                 for i := Max(1, previousIntVal) to FNConds do
                     phaseChoice[i] := Unknown;
@@ -447,11 +456,22 @@ begin
                 if (FNConds = LineSpacingObj.NConds) then
                 begin
                     FLastUnit := LineSpacingObj.Units;
-                    for i := 1 to FNConds do
+                    equivalentSpacing := ActiveLineSpacingObj.EquivalentSpacing();
+                    if equivalentSpacing then
                     begin
-                        xCoord[i] := LineSpacingObj.GetXCoord(i);
-                        yCoord[i] := LineSpacingObj.GetYCoord(i);
-                        units[i] := FLastUnit;
+                        eqDistPhPh := LineSpacingObj.eqDistPhPh;
+                        eqDistPhN := LineSpacingObj.eqDistPhN;
+                        avgHeightPh := LineSpacingObj.avgHeightPh;
+                        avgHeightN := LineSpacingObj.avgHeightN;
+                    end
+                    else                    
+                    begin
+                        for i := 1 to FNConds do
+                        begin
+                            xCoord[i] := LineSpacingObj.GetXCoord(i);
+                            yCoord[i] := LineSpacingObj.GetYCoord(i);
+                            units[i] := FLastUnit;
+                        end;
                     end;
                     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
                     begin
@@ -567,7 +587,8 @@ begin
         ord(TProp.CNCable),
         ord(TProp.TSCable),
         ord(TProp.CNCables),
-        ord(TProp.TSCables):
+        ord(TProp.TSCables),
+        ord(TProp.Conductors):
             dataChanged := TRUE;
     end;
 
@@ -583,7 +604,14 @@ begin
     Other := TObj(OtherPtr);
     SetNConds(Other.FNConds); // allocates
     FNphases := Other.FNphases;
+
     LineSpacingObj := Other.LineSpacingObj;
+    eqDistPhPh := Other.eqDistPhPh;
+    eqDistPhN := Other.eqDistPhN;
+    avgHeightPh := Other.avgHeightPh;
+    avgHeightN := Other.avgHeightN;
+    equivalentSpacing := Other.equivalentSpacing;
+
     FLineType := Other.FLineType;
     for i := 1 to FNConds do
         phaseChoice[i] := Other.phaseChoice[i];
@@ -595,6 +623,8 @@ begin
         yCoord[i] := Other.yCoord[i];
     for i := 1 to FNConds do
         units[i] := Other.units[i];
+
+    FLastUnit := Other.FLastUnit; // Useful if template geometry uses a spacing
     dataChanged := TRUE;
     NormAmps := Other.NormAmps;
     EmergAmps := Other.EmergAmps;
@@ -617,6 +647,11 @@ begin
     units := NIL;
     lineConstants := NIL;
     LineSpacingObj := NIL;
+    equivalentSpacing := False;
+    eqDistPhPh := NaN;
+    eqDistPhN := NaN;
+    avgHeightPh := NaN;
+    avgHeightN := NaN;
 
     // was causing unnecessary allocations (was leaving dangling memory)
     // Nconds      := 3;  // Allocates terminals
@@ -765,10 +800,10 @@ end;
 
 procedure TLineGeometryObj.ChangeLineConstantsType(newPhaseChoice: ConductorChoice);
 var
-    newLineData: TLineConstants;
+    newLineConstants: TLineConstants;
     needNew: Boolean;
 begin
-    newLineData := NIL;
+    newLineConstants := NIL;
     needNew := FALSE;
 
     if (FActiveCond > 0) and (FActiveCond <= FNConds) and 
@@ -781,22 +816,22 @@ begin
     if needNew then
         case newPhaseChoice of
             Overhead:
-                newLineData := TOHLineConstants.Create(FNConds);
-            ConcentricNeutral:
-                newLineData := TCableConstants.Create(FNConds);
+                newLineConstants := TOHLineConstants.Create(FNConds);
+            ConcentricNeutral,
             TapeShield:
-                newLineData := TCableConstants.Create(FNConds);
+                newLineConstants := TCableConstants.Create(FNConds);
         end;
 
-    if Assigned(newLineData) then
+    if Assigned(newLineConstants) then
     begin
         if Assigned(lineConstants) then
         begin
-            newLineData.Nphases := lineConstants.Nphases;
-            newLineData.SetRhoEarth(lineConstants.FrhoEarth);
+            newLineConstants.Nphases := lineConstants.Nphases;
+            newLineConstants.SetRhoEarth(lineConstants.FrhoEarth);
+            newLineConstants.SetEpsRMedium(lineConstants.GetEpsRMedium());
         end;
         FreeAndNil(lineConstants);
-        lineConstants := newLineData;
+        lineConstants := newLineConstants;
     end;
     if (FActiveCond > 0) and (FActiveCond <= FNConds) then
         phaseChoice[FActiveCond] := newPhaseChoice;
@@ -831,23 +866,50 @@ var
     cnd: TCNDataObj;
     tsd: TTSDataObj;
     cableconsts: TCableConstants;
+    anyConductor: Boolean;
 begin
+    lineConstants.SetEquivalentSpacing(equivalentSpacing);
+    if equivalentSpacing then
+    begin
+        lineConstants.SetEqDist(1, FLastUnit, eqDistPhPh);
+        lineConstants.SetEqDist(2, FLastUnit, eqDistPhN);
+        lineConstants.SetEqDist(3, FLastUnit, avgHeightPh + lineConstants.heightOffset * To_Meters(lineConstants.userHeightUnit) * From_Meters(FLastUnit));
+        lineConstants.SetEqDist(4, FLastUnit, avgHeightN + lineConstants.heightOffset * To_Meters(lineConstants.userHeightUnit) * From_Meters(FLastUnit));
+    end;
+
+    anyConductor := false;
     for i := 1 to FNConds do
     begin
-        if conductorData[i] = NIL then
-            raise Exception.Create(Format(_('%s: WireData is not correctly initialized. Check the object definition.'), [FullName()]));
+        if conductorData[i] <> NIL then
+        begin
+            anyConductor := true;
+            break
+        end;
+    end;
+    if not anyConductor then
+    begin
+        raise Exception.Create(Format(_('%s: conductors arenot correctly initialized (at least one conductor is required). Check the object definition.'), [FullName()]));
+    end;
 
-        lineConstants.SetX(i, units[i], xCoord[i]);
-        lineConstants.SetY(i, units[i], yCoord[i]);
+    for i := 1 to FNConds do
+    begin
+        if not equivalentSpacing then
+        begin
+            lineConstants.SetX(i, units[i], xCoord[i]);
+            lineConstants.SetY(i, units[i], yCoord[i]);
+        end;
         lineConstants.SetRadius(i, conductorData[i].radiusUnits, conductorData[i].Radius);
         lineConstants.SetCapRadius(i, conductorData[i].radiusUnits, conductorData[i].capRadius);
         lineConstants.SetGMR(i, conductorData[i].GMRUnits, conductorData[i].GMRAC);
         lineConstants.SetRdc(i, conductorData[i].resistanceUnits, conductorData[i].RDC);
         lineConstants.SetRac(i, conductorData[i].resistanceUnits, conductorData[i].RAC);
+
+        //TODO: does it make more sense for the cable constants obj to copy the data?
         if (conductorData[i] is TCNDataObj) then
         begin
             cnconsts := (lineConstants as TCableConstants);
             cnd := (conductorData[i] as TCNDataObj);
+            cnconsts.SetCondType(i, TConductorType.CN);
             cnconsts.SetEpsR(i, cnd.EpsR);
             cnconsts.SetInsLayer(i, cnd.radiusUnits, cnd.insLayer);
             cnconsts.SetDiaIns(i, cnd.radiusUnits, cnd.diaIns);
@@ -856,12 +918,14 @@ begin
             cnconsts.SetDiaStrand(i, cnd.radiusUnits, cnd.DiaStrand);
             cnconsts.SetGmrStrand(i, cnd.GMRUnits, cnd.GmrStrand);
             cnconsts.SetRStrand(i, cnd.resistanceUnits, cnd.RStrand);
+            cnconsts.SetSemiconLayer(i, cnd.semiconLayer);
         end
         else
         if (conductorData[i] is TTSDataObj) then
         begin
             tsconsts := (lineConstants as TCableConstants);
             tsd := (conductorData[i] as TTSDataObj);
+            tsconsts.SetCondType(i, TConductorType.TS);
             tsconsts.SetEpsR(i, tsd.EpsR);
             tsconsts.SetInsLayer(i, tsd.radiusUnits, tsd.insLayer);
             tsconsts.SetDiaIns(i, tsd.radiusUnits, tsd.diaIns);
@@ -892,17 +956,37 @@ end;
 procedure TLineGeometryObj.LoadSpacingAndWires(Spc: TLineSpacingObj; Wires: pConductorDataArray; earthModel: Integer);
 var
     i: Integer;
+    j, actualNConds, actualNPhases: Integer;    
     newPhaseChoice: ConductorChoice;
 begin
-    SetNConds(Spc.NConds);   // allocates
-    FNphases := Spc.Nphases;
+    // check the actual number of existing positions with conductors before allocating
+    actualNConds := 0;
+    actualNPhases := 0;
+    for i := 1 to Spc.NConds do
+    begin
+        if Wires[i] = nil then
+        begin
+            continue;
+        end;
+
+        actualNConds += 1;
+        if i <= Spc.Nphases then
+        begin
+            actualNPhases += 1;
+        end;
+    end;
+
+    SetNConds(actualNConds);   // allocates
+    FNphases := actualNPhasess;
     LineSpacingObj := Spc;
     if FNConds > FNPhases then
         FReduce := TRUE;
 
     newPhaseChoice := Overhead;
-    for i := 1 to FNConds do
+    for i := 1 to Spc.NConds do
     begin
+        if Wires[i] = nil then
+            continue;
         if Wires[i] is TCNDataObj then
             newPhaseChoice := ConcentricNeutral;
         if Wires[i] is TTSDataObj then
@@ -910,19 +994,43 @@ begin
     end;
     ChangeLineConstantsType(newPhaseChoice);
 
-    for i := 1 to FNConds do
-        conductorData[i] := Wires[i];
-    for i := 1 to FNConds do
-        xCoord[i] := Spc.GetXCoord(i);
-    for i := 1 to FNConds do
-        yCoord[i] := Spc.GetYCoord(i);
-    for i := 1 to FNConds do
-        units[i] := Spc.Units;
-    dataChanged := TRUE;
-    NormAmps := Wires[1].NormAmps;
-    EmergAmps := Wires[1].EmergAmps;
+    equivalentSpacing := Spc.EquivalentSpacing();
+    if equivalentSpacing then
+    begin
+        eqDistPhPh := Spc.eqDistPhPh;
+        eqDistPhN := Spc.eqDistPhN;
+        avgHeightPh := Spc.avgHeightPh;
+        avgHeightN := Spc.avgHeightN;
+        FLastUnit := Spc.Units;
+    end;
 
-    UpdateLineGeometryData(activecircuit.Solution.Frequency(), earthModel);
+    j := 0;
+    for i := 1 to Spc.NWires do
+    begin
+        if Wires[i] = nil then
+            continue;
+
+        j += 1;
+        conductorData[j] := Wires[i];
+        if not equivalentSpacing then
+        begin
+            xCoord[j] := Spc.GetXCoord(i);
+            yCoord[j] := Spc.GetYCoord(i);
+            units[j] := Spc.Units;
+        end;
+        if ((Wires[i].NormAmps < NormAmps) or (NormAmps = 0)) and (j <= FNPhases) then
+        begin
+            NormAmps := Wires[i].NormAmps;
+            EmergAmps := Wires[i].EmergAmps;
+        end;
+    end;
+
+    dataChanged := true;
+
+    // UpdateLineGeometryData will be called when we get the impedance matrix for the line.
+    // No need to call it one here because this function has already set DataChanged and also
+    // LoadSpacingAndWires is only ever called from TLineObj.FMakeZFromSpacing which retrieves Z
+    // after calling it.
 end;
 
 end.
