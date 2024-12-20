@@ -61,6 +61,9 @@ type
     PArrayOfInteger = ^ArrayOfInteger;
     PArrayOfString = ^ArrayOfString;
 
+    BooleanArray = Array[1..100] of Boolean;
+    pBooleanArray = ^BooleanArray;
+
 function AllocStringArray(Size: Integer): pStringArray;
 procedure FreeStringArray(var pS: pStringArray; Size: Integer);
 

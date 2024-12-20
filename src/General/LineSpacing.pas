@@ -23,7 +23,12 @@ type
         nphases = 2,
         x = 3,
         h = 4,
-        units = 5
+        units = 5,
+        detailed = 6,
+        EqDistPhPh = 7,
+        EqDistPhN = 8,
+        AvgPhaseHeight = 9,
+        AvgNeutralHeight = 10
     );
     TLineSpacingProp = (
         INVALID = 0,
@@ -31,7 +36,12 @@ type
         NPhases = 2,
         X = 3,
         H = 4,
-        Units = 5
+        Units = 5,
+        Detailed = 6,
+        EqDistPhPh = 7,
+        EqDistPhN = 8,
+        AvgPhaseHeight = 9,
+        AvgNeutralHeight = 10
     );
 {$SCOPEDENUMS OFF}
 
@@ -55,6 +65,12 @@ type
         NPhases: Integer;
         Units: Integer;
 
+        detailed: LongBool;
+        eqDistPhPh,
+        eqDistPhN,
+        avgPhaseHeight,
+        avgNeutralHeight: Double;
+
         // CIM Accessors
         function GetXCoord(i: Integer): Double;
         function GetYCoord(i: Integer): Double;
@@ -64,6 +80,7 @@ type
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
+        function EquivalentSpacing(): Boolean;
     end;
 
 implementation
@@ -117,6 +134,10 @@ begin
     PropertyOffset[ord(TProp.units)] := ptruint(@obj.Units);
     PropertyOffset2[ord(TProp.units)] := PtrInt(DSS.UnitsEnum);
 
+    // boolean
+    PropertyType[ord(TProp.Detailed)] := TPropertyType.BooleanProperty;
+    PropertyOffset[ord(TProp.Detailed)] := ptruint(@obj.detailed);
+
     // integers
     PropertyType[ord(TProp.nphases)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.nphases)] := ptruint(@obj.Nphases);
@@ -133,6 +154,12 @@ begin
     PropertyType[ord(TProp.H)] := TPropertyType.DoubleVArrayProperty;
     PropertyOffset[ord(TProp.H)] := ptruint(@obj.FY);
     PropertyOffset2[ord(TProp.H)] := ptruint(@obj.NConds);
+
+    // doubles (default type)
+    PropertyOffset[ord(TProp.EqDistPhPh)] := ptruint(@obj.eqDistPhPh);
+    PropertyOffset[ord(TProp.EqDistPhN)] := ptruint(@obj.eqDistPhN);
+    PropertyOffset[ord(TProp.AvgPhaseHeight)] := ptruint(@obj.avgPhaseHeight);
+    PropertyOffset[ord(TProp.AvgNeutralHeight)] := ptruint(@obj.avgNeutralHeight);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();
@@ -203,6 +230,11 @@ begin
         FY[i] := 0;
     end;
     NPhases := 3;
+    eqDistPhPh := 0.0;
+    eqDistPhN := 0.0;
+    avgPhaseHeight := 0.0;
+    avgNeutralHeight := 0.0;
+    detailed := true;
 end;
 
 destructor TLineSpacingObj.Destroy;
@@ -239,6 +271,11 @@ begin
         Result := FY[i]
     else
         Result := 0.0;
+end;
+
+function TLineSpacingObj.EquivalentSpacing(): Boolean;
+begin
+    Result := not detailed;
 end;
 
 end.

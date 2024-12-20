@@ -370,9 +370,6 @@ type
     TEnumActionProcedure = TWriteIntegerPropertyFunction;
     TActionProcedure = procedure (obj: Pointer);
 
-    BooleanArray = Array[1..100] of Boolean;
-    pBooleanArray = ^BooleanArray;
-
     TDSSEnum = class(TObject)
     public
         AltNamesValid: Boolean;
