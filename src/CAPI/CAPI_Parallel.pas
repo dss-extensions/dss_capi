@@ -95,7 +95,7 @@ end;
 procedure Parallel_Wait(); CDECL;
 begin
     if DSSPrime.Parallel_enabled then
-        Wait4Actors(DSSPrime, 0);
+        WaitForActors(DSSPrime);
 end;
 //------------------------------------------------------------------------------
 procedure Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;

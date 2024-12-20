@@ -306,7 +306,9 @@ procedure Solution_Solve(); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    DSSPrime.ActiveCircuit.Solution.Solve;
+    DSSPrime.ActiveCircuit.Solution.Solve();
+    // If the parallel mode is not active, the solver will run in the current thread,
+    // no need to wait (contrary to the official impl.)
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_ModeID(): PAnsiChar; CDECL;
@@ -836,11 +838,31 @@ var
     PMParent: TDSSContext;
 begin
     PMParent := DSSPrime.GetPrime();
-    for i := 0 to High(PMParent.Children) do
+    //TODO: reuse command directly after the big refactor
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+    if PMParent.ActiveCircuit.Solution.ADiakoptics then
+    begin
+        // Added to avoid crashes when in A-Diakoptics mode but the user
+        // uses the SolveAll command
+
+        // Enable the first actor
+        DSSPrime.ActiveChildIndex := 0;
+        PMParent.ActiveChild := PMParent.Children[0];
+        // TODO: update when the new arch is done
+        PMParent.ActiveChild.ActiveCircuit.Solution.Solve();
+        Exit;
+    end;
+{$ENDIF}
+
+    // Execution area
+    for i := 0 to PMParent.NumOfActors() - 1 do
     begin
         PMParent.ActiveChild := PMParent.Children[i];
-        DSSPrime.CmdResult := DoSetCmd(PMParent.Children[i], 1);
+        PMParent.ActiveCircuit.Solution.Solve();
     end;
+
+    // If the parallel mode is not active, each solver will run in the current thread,
+    // sequentially, no need to wait later (contrary to the official impl.)
 {$ELSE}
 begin
     DoSimpleMsg(DSSPrime, _('Parallel machine functions were not compiled'), 7983);
