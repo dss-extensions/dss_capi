@@ -533,11 +533,13 @@ type
     public
         TargetClasses: Array Of TDSSClass;
         TargetClassNames: Array Of String;
+        TargetClassNamesStr: String;
 
         constructor Create(dssContext: TDSSContext; Targets: Array Of String);
         destructor Destroy; override;
         procedure DefineProperties(); override;
         function Find(const ObjName: String; const ChangeActive: Boolean): Pointer; override;
+        function GetDSSClass(const clsName: String): TDSSClass;
     end;
 
     TDSSContext = class(TObject)
@@ -2589,8 +2591,24 @@ begin
         TargetClassNames[i] := Targets[i];
     end;
     s := s + ')';
+    TargetClassNamesStr := s;
 
     inherited Create(dssContext, 0, s, false);
+end;
+
+function TProxyClass.GetDSSClass(const clsName: String): TDSSClass;
+var
+    i: Integer;
+begin
+    for i := 0 to High(TargetClassNames) do
+    begin
+        if ClsName = TargetClassNames[i] then
+        begin
+            Result := TargetClasses[i];
+            Exit;
+        end;
+    end;
+    Result := NIL;
 end;
 
 function TProxyClass.Find(const ObjName: String; const ChangeActive: Boolean): Pointer;
