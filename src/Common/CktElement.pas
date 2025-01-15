@@ -534,7 +534,8 @@ begin
 
     // This is now also the behavior in the official OpenDSS since r3859
     // if ((ActiveCircuit.Solution.SolverOptions and ord(TSolverOptions.AlwaysResetYPrimInvalid)) <> 0) then
-    FYPrimInvalid := false;
+    if ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.DontResetYPrimInvalid)) = 0) then
+        FYPrimInvalid := false;
 end;
 
 procedure TDSSCktElement.ComputeITerminal();

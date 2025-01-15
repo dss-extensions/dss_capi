@@ -56,7 +56,8 @@ type
         SkipSideEffects = 64,
         MonitorHeader = 128,
         InvControlDeltaV = 256,
-        PermissiveProperties = 512
+        PermissiveProperties = 512,
+        DontResetYPrimInvalid = 1024
     );
 
     DSSSaveFlag = (
