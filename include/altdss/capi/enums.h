@@ -439,7 +439,7 @@ extern "C" {
         SolverOptions_ReuseCompressedMatrix = 1, ///< Reuse only the prepared CSC matrix
         SolverOptions_ReuseSymbolicFactorization = 2, ///< Reuse the symbolic factorization, implies ReuseCompressedMatrix
         SolverOptions_ReuseNumericFactorization = 3, ///< Reuse the numeric factorization, implies ReuseSymbolicFactorization
-        SolverOptions_AlwaysResetYPrimInvalid = 0x10000000 ///< Bit flag, see CktElement.pas
+        SolverOptions_AlwaysResetYPrimInvalid = 0x10000000 ///< This was a bit flag in previous releases; **does nothing since v0.15.0**. See the compat flag `DontResetYPrimInvalid` for an alternative
     };
 
     enum DSSCompatFlags {
@@ -464,13 +464,13 @@ extern "C" {
             releases, in case users need to investigate differences across versions.
         */
 
-       DSSCompatFlags_SaveCalcVoltageBases = 0x00000008, /*!< 
+        DSSCompatFlags_SaveCalcVoltageBases = 0x00000008, /*!< 
             When using "save circuit", the official OpenDSS always includes the "CalcVoltageBases" command in the
             saved script. We found that it is not always a good idea, so we removed the command (leaving it commented).
             Use this flag to enable the command in the saved script.
         */
 
-       DSSCompatFlags_ActiveLine = 0x00000010, /*!< 
+        DSSCompatFlags_ActiveLine = 0x00000010, /*!< 
             In the official OpenDSS implementation, the Lines API use the active circuit element instead of the
             active line. This can lead to unexpected behavior if the user is not aware of this detail.
             For example, if the user accidentally enables any other circuit element, the next time they use
@@ -481,7 +481,7 @@ extern "C" {
             list. This change was done for DSS C-API v0.13.5, as well as the introduction of this flag.
         */
 
-       DSSCompatFlags_NoPropertyTracking = 0x00000020, /*!< 
+        DSSCompatFlags_NoPropertyTracking = 0x00000020, /*!< 
             On DSS-Extensions/AltDSS, when setting a property invalidates a previous input value, the engine
             will try to mark the invalidated data as unset. This allows for better exports and tracking of 
             the current state of DSS objects.
@@ -491,16 +491,16 @@ extern "C" {
             and will be further developed for future versions.
         */
 
-       DSSCompatFlags_SkipSideEffects = 0x00000040, /*!< 
+        DSSCompatFlags_SkipSideEffects = 0x00000040, /*!< 
             Some specific functions on the official OpenDSS APIs and internal code skip important side-effects.
             By default, on DSS-Extensions/AltDSS, those side-effects are enabled. Use this flag
             to try to follow the behavior of the official APIs. Beware that some side-effects are
             important and skipping them may result in incorrect results.
-            This flag affects some of the classic API functions (Loads, Generators, Vsources)
+            This flag affects some of the classic API functions, especially Loads and Generators,
             as well as the behavior of some DSS properties (Line: Rg, Xg, rho, Transformer/AutoTrans: XscArray).
         */
 
-       DSSCompatFlags_MonitorHeader = 0x00000080, /*!< 
+        DSSCompatFlags_MonitorHeader = 0x00000080, /*!< 
             Add extra spaces (and trailing comma) to the monitor headers to match the official OpenDSS implementation.
             This affects both the Header function/property in the API, and the exported CSVs.
 
@@ -518,7 +518,7 @@ extern "C" {
             It is not always apparent and does not always affect the end results.
         */
 
-        DSSCompatFlags_PermissiveProperties = 0x00000200 /*!<
+        DSSCompatFlags_PermissiveProperties = 0x00000200, /*!<
             Starting AltDSS/DSS C-API v0.15.0, the way some properties are handled has been tweaked to try
             to provide a better experience for general users.
 
@@ -532,6 +532,18 @@ extern "C" {
               SwtControl is locked, its state cannot be set.
 
             Set this compatibility flag to silently ignore the errors listed above and restore the original behavior.
+        */
+
+        DSSCompatFlags_DontResetYPrimInvalid = 0x00000400 /*!<
+            Starting AltDSS/DSS C-API v0.15.0, the default behavior is that all components have their YPrim-invalid flags cleared when 
+            their YPrim matrices are updated. That means that our original solver option `AlwaysResetYPrimInvalid` does nothing now.
+
+            The new behavior should be more correct, i.e., reset the YPrim-invalid flag as expected, but it can change the convergence 
+            pattern for some circuits. This flag could potentially be used to investigate issues when upgrading versions. For example,
+            if a circuit that did not converge in previous versions now converges, a user can set this bit flag to investigate if the 
+            difference is due to the YPrim flag change, or something else.
+
+            Set this compatibility flag to restore the default behavior of previous versions. Note: this flag might be removed in a future release.
         */
     };
 

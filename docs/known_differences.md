@@ -90,13 +90,13 @@ Starting on version 0.13.0, we started introducing explicit compatibility flags 
             but needs further investigation, so we added this flag in the time being.
         */
 
-       DSSCompatFlags_SaveCalcVoltageBases = 0x00000008, /*!< 
+        DSSCompatFlags_SaveCalcVoltageBases = 0x00000008, /*!< 
             When using "save circuit", the official OpenDSS always includes the "CalcVoltageBases" command in the
             saved script. We found that it is not always a good idea, so we removed the command (leaving it commented).
             Use this flag to enable the command in the saved script.
         */
 
-       DSSCompatFlags_ActiveLine = 0x00000010, /*!< 
+        DSSCompatFlags_ActiveLine = 0x00000010, /*!< 
             In the official OpenDSS implementation, the Lines API use the active circuit element instead of the
             active line. This can lead to unexpected behavior if the user is not aware of this detail.
             For example, if the user accidentally enables any other circuit element, the next time they use
@@ -107,7 +107,7 @@ Starting on version 0.13.0, we started introducing explicit compatibility flags 
             list. This change was done for DSS C-API v0.13.5, as well as the introduction of this flag.
         */
 
-       DSSCompatFlags_NoPropertyTracking = 0x00000020, /*!< 
+        DSSCompatFlags_NoPropertyTracking = 0x00000020, /*!< 
             On DSS-Extensions/AltDSS, when setting a property invalidates a previous input value, the engine
             will try to mark the invalidated data as unset. This allows for better exports and tracking of 
             the current state of DSS objects.
@@ -117,7 +117,7 @@ Starting on version 0.13.0, we started introducing explicit compatibility flags 
             and will be further developed for future versions.
         */
 
-       DSSCompatFlags_SkipSideEffects = 0x00000040 /*!< 
+        DSSCompatFlags_SkipSideEffects = 0x00000040 /*!< 
             Some specific functions on the official OpenDSS APIs and internal code skip important side-effects.
             By default, on DSS-Extensions/AltDSS, those side-effects are enabled. Use this flag
             to try to follow the behavior of the official APIs. Beware that some side-effects are
@@ -125,5 +125,51 @@ Starting on version 0.13.0, we started introducing explicit compatibility flags 
             This flag affects some of the classic API functions, especially Loads and Generators,
             as well as the behavior of some DSS properties (Line: Rg, Xg, rho, Transformer/AutoTrans: XscArray).
         */
+
+        DSSCompatFlags_MonitorHeader = 0x00000080, /*!< 
+            Add extra spaces (and trailing comma) to the monitor headers to match the official OpenDSS implementation.
+            This affects both the Header function/property in the API, and the exported CSVs.
+
+            The extra spaces can cause issues with third-party software. For example, Pandas adds 
+            an extra empty column for monitor exports, and keeps the spaces in the column names.
+            This typically requires extra steps to both remove the spaces in the column names, and 
+            discard the extra column.
+        */
+
+        DSSCompatFlags_InvControlDeltaV = 0x00000100, /*!<
+            An issue with the voltage delta across iterations was found and fixed in AltDSS/DSS C-API 0.15.0.
+            Use this flag to restore the previous behavior, which also matches the official OpenDSS.
+
+            The issue affects situations where an InvControl object tracks multiple DERs, while using one of the volt-var modes.
+            It is not always apparent and does not always affect the end results.
+        */
+
+        DSSCompatFlags_PermissiveProperties = 0x00000200, /*!<
+            Starting AltDSS/DSS C-API v0.15.0, the way some properties are handled has been tweaked to try
+            to provide a better experience for general users.
+
+            - The arrays provided in the text interface, scripts or the Alt APIs are required to match the provided sizes. 
+              For example, if a LoadShape has `NPts` set to 12 and the user provides 24 values for `PMult`, an error is generated.
+
+            - Some properties in Transformer and AutoTrans that previously silently replaced zeros with default values now error
+
+            - Some properties are read-only, but previously silent ignored input values. Errors are now generated if the user 
+              tries to set them. This includes some properties that are read-only on certain conditions. For example, if a 
+              SwtControl is locked, its state cannot be set.
+
+            Set this compatibility flag to silently ignore the errors listed above and restore the original behavior.
+        */
+
+        DSSCompatFlags_DontResetYPrimInvalid = 0x00000400 /*!<
+            Starting AltDSS/DSS C-API v0.15.0, the default behavior is that all components have their YPrim-invalid flags cleared when 
+            their YPrim matrices are updated. That means that our original solver option `AlwaysResetYPrimInvalid` does nothing now.
+
+            The new behavior should be more correct, i.e., reset the YPrim-invalid flag as expected, but it can change the convergence 
+            pattern for some circuits. This flag could potentially be used to investigate issues when upgrading versions. For example,
+            if a circuit that did not converge in previous versions now converges, a user can set this bit flag to investigate if the 
+            difference is due to the YPrim flag change, or something else.
+
+            Set this compatibility flag to restore the default behavior of previous versions. Note: this flag might be removed in a future release.
+        */        
     };
 ```
