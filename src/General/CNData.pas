@@ -173,7 +173,7 @@ begin
     diaStrand := Other.diaStrand;
     gmrStrand := Other.gmrStrand;
     rStrand := Other.rStrand;
-    semiconLayer := OtherData.semiconLayer;
+    semiconLayer := Other.semiconLayer;
 end;
 
 constructor TCNDataObj.Create(ParClass: TDSSClass; const CNDataName: String);

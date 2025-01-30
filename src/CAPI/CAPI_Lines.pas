@@ -398,7 +398,7 @@ begin
     for i := 1 to nph do
         for j := 1 to nph do
         begin
-            if (elem.LineGeometryObj <> NIL) or elem.SpacingSpecified then  
+            if (elem.lineGeometryObj <> NIL) or elem.SpacingSpecified then  
                 Result[k] := elem.Yc[i, j].im / Factor / elem.Len
             else 
                 Result[k] := elem.Yc[i, j].im / Factor;
@@ -442,7 +442,7 @@ begin
     for i := 1 to nph do
         for j := 1 to nph do
         begin
-            if (elem.LineGeometryObj <> NIL) Or elem.SpacingSpecified then
+            if (elem.lineGeometryObj <> NIL) Or elem.SpacingSpecified then
                 Result[k] := elem.Z[i, j].Re / elem.Len
             else 
                 Result[k] := elem.Z[i, j].Re / elem.unitsFactor;
@@ -486,7 +486,7 @@ begin
     for i := 1 to nph do
         for j := 1 to nph do
         begin
-            if (elem.LineGeometryObj <> NIL) Or elem.SpacingSpecified then
+            if (elem.lineGeometryObj <> NIL) Or elem.SpacingSpecified then
                 Result[k] := elem.Z[i, j].im / elem.Len
             else
                 Result[k] := elem.Z[i, j].im / elem.unitsFactor;
@@ -689,8 +689,8 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    if elem.LineGeometryObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.LineGeometryObj.Name());
+    if elem.lineGeometryObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.lineGeometryObj.Name());
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Geometry(const Value: PAnsiChar); CDECL;
@@ -867,8 +867,8 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    if elem.LineSpacingObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.LineSpacingObj.Name());
+    if elem.lineSpacingObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.lineSpacingObj.Name());
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Spacing(const Value: PAnsiChar); CDECL;

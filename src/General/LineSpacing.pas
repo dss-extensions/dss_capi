@@ -75,7 +75,6 @@ type
         function GetXCoord(i: Integer): Double;
         function GetYCoord(i: Integer): Double;
     PUBLIC
-        DataChanged: Boolean;
         constructor Create(ParClass: TDSSClass; const LineSpacingName: String);
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
@@ -179,16 +178,35 @@ end;
 procedure TLineSpacingObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of
-        ord(TProp.nconds):
+        ord(TProp.NConds):
         begin
-            ReAllocmem(FX, Sizeof(FX[1]) * NConds);
-            ReAllocmem(FY, Sizeof(FY[1]) * NConds);
+            ReAllocmem(FX, Sizeof(Double) * NConds);
+            ReAllocmem(FY, Sizeof(Double) * NConds);
             Units := UNITS_FT;
-            DataChanged := TRUE;
         end;
-        2..5:
-            DataChanged := TRUE;
+        ord(TProp.Detailed):
+        begin
+            // use Detailed to clear the unused properties
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
+            begin
+                if detailed then
+                begin
+                    // Using detailed distances, clear the equivalent data in EqDistPhPh, EqDistPhN, AvgPhaseHeight, AvgNeutralHeight
+                    PrpSequence[ord(TProp.EqDistPhPh)] := 0;
+                    PrpSequence[ord(TProp.EqDistPhN)] := 0;
+                    PrpSequence[ord(TProp.AvgPhaseHeight)] := 0;
+                    PrpSequence[ord(TProp.AvgNeutralHeight)] := 0;
+                end
+                else
+                begin
+                    // Using equivalent distances, clear X and H
+                    PrpSequence[ord(TProp.X)] := 0;
+                    PrpSequence[ord(TProp.H)] := 0;
+                end;
+            end;
+        end;
     end;
+
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
@@ -207,7 +225,6 @@ begin
     for i := 1 to NConds do
         FY[i] := Other.FY[i];
     Units := Other.Units;
-    DataChanged := TRUE;
 end;
 
 constructor TLineSpacingObj.Create(ParClass: TDSSClass; const LineSpacingName: String);
@@ -217,7 +234,6 @@ begin
     inherited Create(ParClass, LineSpacingName);
     DSSObjType := ParClass.DSSClassType;
 
-    DataChanged := TRUE;
     FX := NIL;
     FY := NIL;
     units := UNITS_FT;

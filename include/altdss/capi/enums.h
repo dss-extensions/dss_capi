@@ -600,9 +600,8 @@ extern "C" {
         */
         
         SetterFlags_AllowAllConductors = 0x40000000 /*!< 
-            Used internally for the "Wires" property ("Conductors").
-            This was left public in case someone tries to implement some internal aspects in
-            external functions.
+            Deprecated, **does nothing since v0.15.0**, since a new property ("Conductors")
+            was introduced (hence no need to reuse the "Wires" property).
         */
     };
 

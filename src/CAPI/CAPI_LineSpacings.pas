@@ -154,7 +154,6 @@ begin
     if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
         
-    pLineSpacing.DataChanged := TRUE;
     pLineSpacing.NPhases := Value;
 end;
 
@@ -167,7 +166,6 @@ begin
         Exit;
 
     pLineSpacing.Units := Value;
-    pLineSpacing.DataChanged := TRUE;
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_Units(): Integer; CDECL;
@@ -197,7 +195,6 @@ begin
         Exit;
     end;
     Move(ValuePtr^, pLineSpacing.FY[1], ValueCount * SizeOf(Double));
-    pLineSpacing.DataChanged := TRUE;
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -237,7 +234,6 @@ begin
         Exit;
     end;
     Move(ValuePtr^, pLineSpacing.FX[1], ValueCount * SizeOf(Double));
-    pLineSpacing.DataChanged := TRUE;
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Get_Xcoords(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;

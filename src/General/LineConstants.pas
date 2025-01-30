@@ -42,7 +42,7 @@ type
 
         FX: pDoubleArray;
         FY: pDoubleArray;
-        eqDist: Array[0..3] of Double;
+
         equivalentSpacing: Boolean;
 
         FRdc: pDoubleArray;   // ohms/m
@@ -63,17 +63,15 @@ type
         Fme: Complex; // factor for earth impedance
         rhoChanged: Boolean;
         epsRMedium: Double;  // unit-less
-        heightOffset: Double;  // m
         userHeightUnit: Integer;
 
         function GetZearth(i, j, EarthModel: Integer): Complex;
         function GetZint(i, EarthModel: Integer): Complex;
         procedure SetFrequency(const Value: Double);
-
-        // Auxiliary for height offset
-        procedure RemoveHeightOffset();
-        procedure AddHeightOffset();
     PUBLIC
+        heightOffset: Double;  // stored in meters
+        eqDistPhPh, eqDistPhN, avgPhaseHeight, avgNeutralHeight: Double; // stored in meters
+
         FrhoEarth: Double;  // ohm-m
         nPhases: Integer;
         numConductors: Integer;
@@ -98,13 +96,13 @@ type
         function GetZMatrix(f, Lngth: Double; Units, EarthModel: Integer): Tcmatrix;
         function GetYCMatrix(f, Lngth: Double; Units: Integer): Tcmatrix;
 
-        procedure SetEqDist(i, units: Integer; Value: Double);
         procedure SetHeightOffset(const Value: Double);
         procedure SetUserHeightUnit(const Value: Integer);
         procedure SetEquivalentSpacing(const Value: Boolean);
         procedure SetEpsRMedium(const Value: Double);
         function GetHeightOffset(): Double;        
         function GetEpsRMedium(): Double;
+        function GetUserHeightUnit(): Integer;
 
         constructor Create(NConductors: Integer);
         destructor Destroy; OVERRIDE;
@@ -206,7 +204,7 @@ begin
             end
             else
             begin
-                if ((j <= FNumPhases) and (i > FNumPhases)) then
+                if ((j <= nPhases) and (i > nPhases)) then
                     Dij := eqDistPhN // EqDistPhN
                 else
                     Dij := eqDistPhPh;  // EqDistPhPh (including N-N conductorss)
@@ -218,7 +216,7 @@ begin
 
     // Capacitance Matrix
 
-    Pfactor := -1.0 / twopi / (e0 * FEpsRMedium) / Fw; // include frequency   // FEpsRMedium = 0.9993366876323544 to match Synergi
+    Pfactor := -1.0 / twopi / (e0 * epsRMedium) / Fw; // include frequency   // epsRMedium = 0.9993366876323544 to match Synergi
 
     // Construct P matrix and then invert
 
@@ -237,10 +235,10 @@ begin
             continue;
         end;
         
-        if (i > FNumPhases) then
-            FYCMatrix.SetElement(i, i, cmplx(0.0, pfactor * ln(2.0 * avgHeightN / Fcapradius[i])))
+        if (i > nPhases) then
+            FYCMatrix.SetElement(i, i, cmplx(0.0, pfactor * ln(2.0 * avgNeutralHeight / Fcapradius[i])))
         else
-            FYCMatrix.SetElement(i, i, cmplx(0.0, pfactor * ln(2.0 * avgHeightPh / Fcapradius[i])));
+            FYCMatrix.SetElement(i, i, cmplx(0.0, pfactor * ln(2.0 * avgPhaseHeight / Fcapradius[i])));
     end;
 
     for i := 1 to numConductors do
@@ -254,18 +252,18 @@ begin
             end
             else
             begin
-                if ((j <= FNumPhases) and (i > FNumPhases)) then
+                if ((j <= nPhases) and (i > nPhases)) then
                     Dij := eqDistPhN // EqDistPhN
                 else
                     Dij := eqDistPhPh;  // EqDistPhPh (including N-N conductorss)
 
-                if ((j <= FNumPhases) and (i > FNumPhases)) then
-                    Dijp := (avgHeightPh + avgHeightN) // AvgHeightPhase + AvgHeightNeutral
+                if ((j <= nPhases) and (i > nPhases)) then
+                    Dijp := (avgPhaseHeight + avgNeutralHeight) // AvgHeightPhase + AvgHeightNeutral
                 else
-                if ((i <= FNumPhases) and (j <= FNumPhases)) then
-                    Dijp := (2 * avgHeightPh) // 2 * AvgHeightPhase
+                if ((i <= nPhases) and (j <= nPhases)) then
+                    Dijp := (2 * avgPhaseHeight) // 2 * AvgHeightPhase
                 else
-                    Dijp := (2 * avgHeightN) // 2 * AvgHeightNeutral
+                    Dijp := (2 * avgNeutralHeight) // 2 * AvgHeightNeutral
             end;
 
             FYCMatrix[i, j] := cmplx(0.0, pfactor * ln(Dijp / Dij));
@@ -294,18 +292,18 @@ begin
     if equivalentSpacing then
     begin
         // Check for 0 Y coordinate
-        if (avgHeightPh <= 0.0) or (avgHeightN <= 0.0) then
+        if (avgPhaseHeight <= 0.0) or (avgNeutralHeight <= 0.0) then
         begin
             Result := true;
             ErrorMessage := 'Conductor average heights (overhead equivalent spacing) must be > 0.';
             Exit
         end;
         // Check for overlapping conductors
-        for i := 1 to FNumConds do
+        for i := 1 to numConductors do
         begin
-            for j := i + 1 to FNumConds do
+            for j := i + 1 to numConductors do
             begin
-                if ((i <= FNumPhases) and (j > FNumPhases)) then
+                if ((i <= nPhases) and (j > nPhases)) then
                     Dij := eqDistPhN
                 else
                     Dij := eqDistPhPh;
@@ -444,27 +442,27 @@ begin
     Fyi := Abs(Fy[i]);
     Fyj := Abs(Fy[j]);
 
-    if not FEquivalentSpacing then
+    if not equivalentSpacing then
         Fyi := Abs(Fy[i])
     else
-    if i <= FNumPhases then
-        Fyi := Abs(avgHeightPh)
+    if i <= nPhases then
+        Fyi := Abs(avgPhaseHeight)
     else
-        Fyi := Abs(avgHeightN);
+        Fyi := Abs(avgNeutralHeight);
 
-    if not FEquivalentSpacing then
+    if not equivalentSpacing then
         Fyj := Abs(Fy[j])
     else
-    if j <= FNumPhases then
-        Fyj := Abs(avgHeightPh)
+    if j <= nPhases then
+        Fyj := Abs(avgPhaseHeight)
     else
-        Fyj := Abs(avgHeightN);
+        Fyj := Abs(avgNeutralHeight);
 
     // If the spacing uses equivalent distance, assume the equivalent distance is on the X axis.
-    if not FEquivalentSpacing then
+    if not equivalentSpacing then
         Fxi_Fxj := Fx[i] - Fx[j]
     else
-    if ((i <= FNumPhases) and (j <= FNumPhases)) or ((i > FNumPhases) and (j > FNumPhases)) then
+    if ((i <= nPhases) and (j <= nPhases)) or ((i > nPhases) and (j > nPhases)) then
         Fxi_Fxj := eqDistPhPh
     else
         Fxi_Fxj := eqDistPhN;
@@ -723,20 +721,26 @@ begin
     if NewHeightOffset_m <> heightOffset then
         rhoChanged := true;  // using this for both EpsRMedium, Rho, heightOffset and userHeightUnit
     // Remove old value from Y positions first
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
     begin
-        if (i > 0) and (i <= FNumConds) then
+        if (i > 0) and (i <= numConductors) then
             FY[i] -= heightOffset;  // Offset is already in meters
     end;
 
     heightOffset := NewHeightOffset_m;  // Replace old value with new value
 
     // Add new value to Y positions
-    for i := 1 to FNumConds do
+    for i := 1 to numConductors do
     begin
-        if (i > 0) and (i <= FNumConds) then
+        if (i > 0) and (i <= numConductors) then
             FY[i] += heightOffset;  // Offset is already in meters
     end;
+end;
+
+
+function TLineConstants.GetUserHeightUnit(): Integer;
+begin
+    Result := userHeightUnit;
 end;
 
 procedure TLineConstants.SetUserHeightUnit(const Value: Integer);
@@ -745,7 +749,7 @@ begin
         Exit;
 
     userHeightUnit := Value;
-    Set_FheightOffset(heightOffset);  // This updates the existing value to fit the new user units
+    SetHeightOffset(heightOffset);  // This updates the existing value to fit the new user units
 end;
 
 procedure TLineConstants.SetEquivalentSpacing(const Value: Boolean);
@@ -755,23 +759,6 @@ begin
 
     equivalentSpacing := Value;
     rhoChanged := true;  // using this for both EpsRMedium, Rho, heightOffset and userHeightUnit and for this one as well.
-end;
-
-procedure TLineConstants.SetEqDist(i, units: Integer; Value: Double);
-begin
-    Value *= To_Meters(units);
-    case i of
-        1: 
-            eqDistPhPh := Value;
-        2:
-            eqDistPhN := Value;
-        3:
-            avgHeightPh := Value;
-        4:
-            avgHeightN := Value;
-        default:
-            raise Exception.Create('Invalid index in SetEqDist!');
-    end;
 end;
 
 end.

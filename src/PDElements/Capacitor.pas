@@ -97,10 +97,10 @@ type
 
     TCapacitorObj = class(TPDElement)
     PUBLIC
-        FC,
-        FXL,
+        C, // [F]
+        XL,
         Fkvarrating,
-        FR,
+        R,
         FHarm: pDoubleArray;  // single C per phase (line rating) if Cmatrix not specified
         FStates: pIntegerArray;
 
@@ -222,15 +222,15 @@ begin
     PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kvar];
 
     PropertyType[ord(TProp.R)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.R)] := ptruint(@obj.FR);
+    PropertyOffset[ord(TProp.R)] := ptruint(@obj.R);
     PropertyOffset2[ord(TProp.R)] := ptruint(@obj.FNumSteps);
 
     PropertyType[ord(TProp.XL)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.XL)] := ptruint(@obj.FXL);
+    PropertyOffset[ord(TProp.XL)] := ptruint(@obj.XL);
     PropertyOffset2[ord(TProp.XL)] := ptruint(@obj.FNumSteps);
 
     PropertyType[ord(TProp.cuf)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.cuf)] := ptruint(@obj.FC);
+    PropertyOffset[ord(TProp.cuf)] := ptruint(@obj.C);
     PropertyOffset2[ord(TProp.cuf)] := ptruint(@obj.FNumSteps);
     PropertyScale[ord(TProp.cuf)] := 1.0e-6;
     PropertyFlags[ord(TProp.cuf)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault, TPropertyFlag.Units_uF];
@@ -385,15 +385,15 @@ begin
             begin
                 // Save total values to be divided up
                 totalkvar := Fkvarrating[1];
-                Rstep := FR[1] * FNumSteps;
-                XLstep := FXL[1] * FNumSteps;
+                Rstep := R[1] * FNumSteps;
+                XLstep := XL[1] * FNumSteps;
             end;
 
             // Reallocate arrays  (Must be initialized to nil for first call)
-            Reallocmem(FC, Sizeof(FC[1]) * FNumSteps);
-            Reallocmem(FXL, Sizeof(FXL[1]) * FNumSteps);
+            Reallocmem(C, Sizeof(C[1]) * FNumSteps);
+            Reallocmem(XL, Sizeof(XL[1]) * FNumSteps);
             Reallocmem(Fkvarrating, Sizeof(Fkvarrating[1]) * FNumSteps);
-            Reallocmem(FR, Sizeof(FR[1]) * FNumSteps);
+            Reallocmem(R, Sizeof(R[1]) * FNumSteps);
             Reallocmem(FHarm, Sizeof(FHarm[1]) * FNumSteps);
             Reallocmem(FStates, Sizeof(FStates[1]) * FNumSteps);
 
@@ -413,7 +413,7 @@ begin
                     2:
                     begin  // Cuf           // We'll make a multi-step bank with all the same as first
                         for i := 2 to FNumSteps do
-                            FC[i] := FC[1];  // Make same as first step
+                            C[i] := C[1];  // Make same as first step
                     end;
 
                     3:
@@ -428,17 +428,17 @@ begin
                     1:
                     begin
                         for i := 1 to FNumSteps do
-                            FR[i] := Rstep;
+                            R[i] := Rstep;
                         for i := 1 to FNumSteps do
-                            FXL[i] := XLstep;
+                            XL[i] := XLstep;
                     end;
 
                     2, 3:
                     begin   // Make R and XL same as first step
                         for i := 2 to FNumSteps do
-                            FR[i] := FR[1];
+                            R[i] := R[1];
                         for i := 2 to FNumSteps do
-                            FXL[i] := FXL[1];
+                            XL[i] := XL[1];
                     end;
 
                 end;
@@ -454,9 +454,9 @@ begin
         ord(TProp.XL):
         begin
             for i := 1 to Fnumsteps do
-                if FXL[i] <> 0.0 then
-                    if FR[i] = 0.0 then
-                        FR[i] := Abs(FXL[i]) / 1000.0;  // put in something so it doesn't fail
+                if XL[i] <> 0.0 then
+                    if R[i] = 0.0 then
+                        R[i] := Abs(XL[i]) / 1000.0;  // put in something so it doesn't fail
             DoHarmonicRecalc := FALSE;  // XL is specified
         end;
         ord(TProp.Harm):
@@ -512,11 +512,11 @@ begin
 
     for i := 1 to FNumSteps do
     begin
-        FC[i] := Other.FC[i];
+        C[i] := Other.C[i];
         Fkvarrating[i] := Other.Fkvarrating[i];
-        FR[i] := Other.FR[i];
-        FXL[i] := Other.FXL[i];
-        FXL[i] := Other.FXL[i];
+        R[i] := Other.R[i];
+        XL[i] := Other.XL[i];
+        XL[i] := Other.XL[i];
         FHarm[i] := Other.FHarm[i];
         Fstates[i] := Other.Fstates[i];
     end;
@@ -543,7 +543,7 @@ begin
     FNPhases := 3;  // Directly set conds and phases
     FNConds := 3;
     SetNTerms(2);  // Force allocation of terminals and conductors
-
+    
     Setbus(2, (GetBus(1) + '.0.0.0'));  // Default to grounded wye
 
     IsShunt := TRUE;  // defaults to shunt capacitor
@@ -551,25 +551,26 @@ begin
     Cmatrix := NIL;
 
     // Initialize these pointers to Nil so reallocmem will work reliably
-    FC := NIL;
-    FXL := NIL;
+    C := NIL;
+    XL := NIL;
     Fkvarrating := NIL;
-    FR := NIL;
+    R := NIL;
     FHarm := NIL;
     FStates := NIL;
 
+    FNumSteps := -1; // Ensure initialization
     SetNumSteps(1);  // Initial Allocation for the Arrays, too
     SetLastStepInService(FNumSteps);
 
-    InitDblArray(FNumSteps, FR, 0.0);
-    InitDblArray(FNumSteps, FXL, 0.0);
+    InitDblArray(FNumSteps, R, 0.0);
+    InitDblArray(FNumSteps, XL, 0.0);
     InitDblArray(FNumSteps, FHarm, 0.0);
     InitDblArray(FNumSteps, Fkvarrating, 1200.0);
 
     Fstates[1] := 1;
 
     kVRating := 12.47;
-    InitDblArray(FNumSteps, FC, 1.0 / (TwoPi * BaseFrequency * SQR(kVRating) * 1000.0 / Fkvarrating[1]));
+    InitDblArray(FNumSteps, C, 1.0 / (TwoPi * BaseFrequency * SQR(kVRating) * 1000.0 / Fkvarrating[1]));
 
     Connection := TCapacitorConnection.Wye;
     SpecType := 1; // 1=kvar, 2=Cuf, 3=Cmatrix
@@ -592,10 +593,10 @@ destructor TCapacitorObj.Destroy;
 begin
     ReallocMem(Cmatrix, 0);
 
-    Reallocmem(FC, 0);
-    Reallocmem(FXL, 0);
+    Reallocmem(C, 0);
+    Reallocmem(XL, 0);
     Reallocmem(Fkvarrating, 0);
-    Reallocmem(FR, 0);
+    Reallocmem(R, 0);
     Reallocmem(FHarm, 0);
     Reallocmem(FStates, 0);
 
@@ -630,7 +631,7 @@ begin
             end;
 
             for i := 1 to FNumSteps do
-                FC[i] := 1.0 / (w * SQR(PhasekV) * 1000.0 / (FkvarRating[1] / Fnphases));
+                C[i] := 1.0 / (w * SQR(PhasekV) * 1000.0 / (FkvarRating[1] / Fnphases));
             for i := 1 to FNumSteps do
                 totalkvar := totalkvar + FkvarRating[i];
         end;
@@ -652,7 +653,7 @@ begin
                 end;
             end;
             for i := 1 to FNumSteps do
-                totalkvar := totalkvar + w * FC[i] * SQR(PhasekV) / 1000.0;
+                totalkvar := totalkvar + w * C[i] * SQR(PhasekV) / 1000.0;
         end;
         3:
         begin // Cmatrix
@@ -665,11 +666,11 @@ begin
         for i := 1 to FNumsteps do
         begin
             if FHarm[i] <> 0.0 then
-                FXL[i] := (1.0 / (w * FC[i])) / SQR(FHarm[i])
+                XL[i] := (1.0 / (w * C[i])) / SQR(FHarm[i])
             else
-                FXL[i] := 0.0;   // Assume 0 harmonic means no filter
-            if FR[i] = 0.0 then
-                FR[i] := FXL[i] / 1000.0;
+                XL[i] := 0.0;   // Assume 0 harmonic means no filter
+            if R[i] = 0.0 then
+                R[i] := XL[i] / 1000.0;
         end;
 
     kvarPerPhase := totalkvar / Fnphases;
@@ -914,11 +915,11 @@ begin
     FYprimFreq := ActiveCircuit.Solution.Frequency();
     FreqMultiple := FYprimFreq / BaseFrequency;
     w := TwoPi * FYprimFreq;
-    HasZL := (FR[iStep] + Abs(FXL[iSTep])) > 0.0;
+    HasZL := (R[iStep] + Abs(XL[iStep])) > 0.0;
 
     if HasZL then
     begin
-        ZL := Cmplx(FR[iSTep], FXL[iSTep] * FreqMultiple);
+        ZL := Cmplx(R[iStep], XL[iStep] * FreqMultiple);
     end;
 
     // Now, Put C into in Yprim matrix
@@ -926,7 +927,7 @@ begin
     case SpecType of
         1, 2:
         begin
-            Value := Cmplx(0.0, FC[iSTep] * w);
+            Value := Cmplx(0.0, C[iStep] * w);
             case Connection of
                 TCapacitorConnection.Delta:
                 begin   // Line-Line
@@ -983,7 +984,6 @@ begin
         Exit;
 
     case SpecType of
-
         1, 2:
             case Connection of
                 TCapacitorConnection.Delta: // Line-Line
@@ -1007,6 +1007,11 @@ begin
 
         3:
         begin
+            // Add a little bit to each phase so it will invert
+            for i := 1 to Fnphases do
+            begin
+                YprimWork[i, i] := YprimWork[i, i] * 1.000001;
+            end;
             YprimWork.Invert();
             for i := 1 to Fnphases do
             begin

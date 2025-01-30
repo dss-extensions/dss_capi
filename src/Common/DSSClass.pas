@@ -130,10 +130,10 @@ type
         Reserved25 = 25,
         Reserved27 = 27,
         Reserved28 = 28,
-        Reserved29 = 29,
+        Reserved29 = 29
         
-        // Used internally for the "Wires" property ("Conductors").
-        AllowAllConductors = 30
+        // REMOVED: Used internally for the "Wires" property ("Conductors").
+        // AllowAllConductors = 30 -- removed since there is not a dedicated Conductors property
 
         // Leave the last bit alone; it creates some issues elsewhere.
     );

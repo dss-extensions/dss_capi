@@ -1637,9 +1637,9 @@ begin
         s := s + 'N'; // so we can specify the neutral conductor
     
     j := 0;
-    for i := 1 to pLine.NumConductorsAvailable do
+    for i := 1 to pLine.CIM_NumConductorData() do
     begin
-        if pLine.ConductorData[i] = nil then
+        if pLine.CIM_GetConductorData(i) = nil then
             continue; // If using Spacing an unused position will be Nil.
         j := j + 1;  // j is the phase index in the line, i is the conductor index in the spacing.
         phs := s[j];
@@ -4345,16 +4345,16 @@ begin
                         LineCodeRefNode(EpPrf, clsLnCd, pLine.LineCodeObj);
                     end
                     else
-                    if (LineGeometryObj <> NIL) then
+                    if (lineGeometryObj <> NIL) then
                     begin
                         DoubleNode(FunPrf, 'Conductor.length', Len * v1);
-                        LineSpacingRefNode(CatPrf, pLine.LineGeometryObj);
+                        LineSpacingRefNode(CatPrf, pLine.lineGeometryObj);
                     end
                     else
                     if SpacingSpecified then
                     begin
                         DoubleNode(FunPrf, 'Conductor.length', Len * v1);
-                        LineSpacingRefNode(CatPrf, pLine.LineSpacingObj);
+                        LineSpacingRefNode(CatPrf, pLine.lineSpacingObj);
                     end
                     else
                     begin
