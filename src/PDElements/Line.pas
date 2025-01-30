@@ -55,7 +55,11 @@ type
         B0 = 27,
         Seasons = 28,
         Ratings = 29,
-        LineType = 30
+        LineType = 30,
+        EpsRmedium = 31,
+        HeightOffset = 32,
+        HeightUnit = 33,
+        conductors = 34
     );
     TLineProp = (
         INVALID = 0,
@@ -88,7 +92,11 @@ type
         B0 = 27,
         Seasons = 28,
         Ratings = 29,
-        LineType = 30
+        LineType = 30,
+        EpsRMedium = 31,
+        HeightOffset = 32,
+        HeightUnit = 33,
+        Conductors = 34
     );
 {$SCOPEDENUMS OFF}
 
@@ -108,7 +116,7 @@ type
         FZFrequency: Double; // keep track of last frequency computed for geometry
         FLineCodeUnits: Integer;
         unitsFactor: Double; // units conversion factor, previously FUnitsConvert
-        FWireDataSize: Integer;
+        conductorDataSize: Integer; // previously FWireDataSize
         phaseChoice: ConductorChoice;
         FEarthModel: Integer;
 
@@ -131,24 +139,23 @@ type
         C1: Double;
         C0: Double;
         Len: Double;
-        LengthUnits: Integer;
+        LengthUnits, heightUnits: Integer;
 
         Rg, Xg, KXg, rho: Double;
+        epsRMedium, heightOffset: Double;
         GeneralPlotQuantity: Double;  // For general circuit plotting
         
         LineCodeObj: TLineCodeObj;
-        LineGeometryObj: TLineGeometryObj;
-        LineSpacingObj: TLineSpacingObj;
+        lineGeometryObj: TLineGeometryObj;
+        lineSpacingObj: TLineSpacingObj;
 
-        lineConductorData: pConductorDataArray;
+        conductors: pConductorDataArray;
 
-        procedure KillLineCodeSpecified();
-
-        procedure FMakeZFromGeometry(f: Double); // make new Z, Zinv, Yc, etc
-        procedure KillGeometrySpecified();
-
-        procedure FMakeZFromSpacing(f: Double); // make new Z, Zinv, Yc, etc
-        procedure KillSpacingSpecified();
+        procedure makeZFromGeometry(f: Double); // make new Z, Zinv, Yc, etc
+        procedure makeZFromSpacing(f: Double); // make new Z, Zinv, Yc, etc
+        procedure killGeometrySpecified();
+        procedure killLineCodeSpecified();
+        procedure killSpacingSpecified();
 
         procedure ClearYPrim();
         procedure ResetLengthUnits();
@@ -180,9 +187,8 @@ type
         procedure SaveWrite(F: TStream); OVERRIDE;        
         procedure SetWires(Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 
-        procedure FetchLineCode();
-        procedure FetchGeometryCode();
-        procedure FetchLineSpacing();
+        procedure fetchLineCode();
+        procedure fetchGeometryCode();
 
         // Reliability calcs
         procedure CalcFltRate(); OVERRIDE;  // Calc failure rates for section and buses
@@ -254,7 +260,7 @@ begin
     Result := 1;
     if getter then
     begin
-        if (obj.LineGeometryObj <> NIL) or obj.SpacingSpecified then
+        if (obj.lineGeometryObj <> NIL) or obj.SpacingSpecified then
             Result := Result * obj.Len
         else
             Result := Result * obj.unitsFactor
@@ -266,7 +272,7 @@ begin
     Result := TwoPi * obj.BaseFrequency * 1.0e-9;
     if getter then
     begin
-        if (obj.LineGeometryObj <> NIL) or obj.SpacingSpecified then
+        if (obj.lineGeometryObj <> NIL) or obj.SpacingSpecified then
             Result := Result * obj.Len
         else
             Result := Result * obj.unitsFactor
@@ -293,7 +299,7 @@ begin
     SpecSetNames := ArrayOfString.Create(
         'LineCode',
         'LineGeometry',
-        'Spacing, Wires',
+        'Spacing, Conductors',
         // 'Z0, Z1',
         'Z0, Z1, C0, C1',
         'Z0, Z1, B0, B1',
@@ -302,7 +308,7 @@ begin
     SpecSets := TSpecSets.Create(
         TSpecSet.Create(ord(TProp.linecode), ord(TProp.length)),
         TSpecSet.Create(ord(TProp.geometry), ord(TProp.length)),
-        TSpecSet.Create(ord(TProp.spacing), ord(TProp.wires), ord(TProp.length)),
+        TSpecSet.Create(ord(TProp.spacing), ord(TProp.Conductors), ord(TProp.length)),
         // TSpecSet.Create(ord(TProp.spacing), ord(TProp.wires), ord(TProp.cncables), ord(TProp.tscables), ord(TProp.length)),
         // TSpecSet.Create(ord(TProp.r1), ord(TProp.x1), ord(TProp.r0), ord(TProp.x0)),
         TSpecSet.Create(ord(TProp.r1), ord(TProp.x1), ord(TProp.r0), ord(TProp.x0), ord(TProp.C1), ord(TProp.C0)),
@@ -310,27 +316,32 @@ begin
         TSpecSet.Create(ord(TProp.rmatrix), ord(TProp.xmatrix), ord(TProp.cmatrix))
     );
     // list of objects
-    PropertyStructArrayCountOffset := ptruint(@obj.FWireDataSize);
+    PropertyStructArrayCountOffset := ptruint(@obj.conductorDataSize);
     //PropertyStructArrayIndexOffset := ptruint(@obj.FActiveCond);
 
     PropertyType[ord(TProp.tscables)] := TPropertyType.DSSObjectReferenceArrayProperty;
-    PropertyOffset[ord(TProp.tscables)] := ptruint(@obj.lineConductorData);
+    PropertyOffset[ord(TProp.tscables)] := ptruint(@obj.conductors);
     PropertyOffset2[ord(TProp.tscables)] := ptruint(DSS.TSDataClass);
-    PropertyFlags[ord(TProp.tscables)] := [TPropertyFlag.Redundant, TPropertyFlag.SuppressJSON];
-    PropertyRedundantWith[ord(TProp.tscables)] := ord(TProp.wires);
+    PropertyFlags[ord(TProp.tscables)] := [TPropertyFlag.Redundant, TPropertyFlag.SuppressJSON, TPropertyFlag.AllowNoneItem];
+    PropertyRedundantWith[ord(TProp.tscables)] := ord(TProp.Conductors);
 
     PropertyType[ord(TProp.cncables)] := TPropertyType.DSSObjectReferenceArrayProperty;
-    PropertyOffset[ord(TProp.cncables)] := ptruint(@obj.lineConductorData);
+    PropertyOffset[ord(TProp.cncables)] := ptruint(@obj.conductors);
     PropertyOffset2[ord(TProp.cncables)] := ptruint(DSS.CNDataClass);
-    PropertyFlags[ord(TProp.cncables)] := [TPropertyFlag.Redundant, TPropertyFlag.SuppressJSON];
-    PropertyRedundantWith[ord(TProp.cncables)] := ord(TProp.wires);
+    PropertyFlags[ord(TProp.cncables)] := [TPropertyFlag.Redundant, TPropertyFlag.SuppressJSON, TPropertyFlag.AllowNoneItem];
+    PropertyRedundantWith[ord(TProp.cncables)] := ord(TProp.Conductors);
 
     PropertyType[ord(TProp.wires)] := TPropertyType.DSSObjectReferenceArrayProperty;
-    PropertyOffset[ord(TProp.wires)] := ptruint(@obj.lineConductorData);
+    PropertyOffset[ord(TProp.wires)] := ptruint(@obj.conductors);
     PropertyOffset2[ord(TProp.wires)] := ptruint(DSS.WireDataClass);
     PropertyWriteFunction[ord(TProp.wires)] := @SetWires;
-    PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.FullNameAsArray, TPropertyFlag.FullNameAsJSONArray, TPropertyFlag.RequiredInSpecSet];
-    PropertyNameJSON[ord(TProp.wires)] := 'Conductors';
+    PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.Redundant, TPropertyFlag.WriteByFunction, TPropertyFlag.AllowNoneItem];
+    PropertyRedundantWith[ord(TProp.wires)] := ord(TProp.Conductors);
+    
+    PropertyType[ord(TProp.Conductors)] := TPropertyType.DSSObjectReferenceArrayProperty;
+    PropertyOffset[ord(TProp.Conductors)] := ptruint(@obj.conductors);
+    PropertyOffset2[ord(TProp.Conductors)] := ptruint(DSS.LineGeometryClass.ConductorProxyClass); // LineGeometryClass is always created before LineClass, we're safe to use it here.
+    PropertyFlags[ord(TProp.Conductors)] := [TPropertyFlag.FullNameAsArray, TPropertyFlag.FullNameAsJSONArray, TPropertyFlag.AllowNoneItem, TPropertyFlag.RequiredInSpecSet];
 
     // matrices
     PropertyType[ord(TProp.rmatrix)] := TPropertyType.ComplexPartSymMatrixProperty;
@@ -361,6 +372,10 @@ begin
     PropertyOffset[ord(TProp.units)] := ptruint(@obj.LengthUnits);
     PropertyOffset2[ord(TProp.units)] := PtrInt(DSS.UnitsEnum);
 
+    PropertyType[ord(TProp.HeightUnit)] := TPropertyType.MappedStringEnumProperty;
+    PropertyOffset[ord(TProp.HeightUnit)] := ptruint(@obj.heightUnits);
+    PropertyOffset2[ord(TProp.HeightUnit)] := PtrInt(DSS.UnitsEnum);
+
     PropertyType[ord(TProp.linetype)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.linetype)] := ptruint(@obj.FLineType);
     PropertyOffset2[ord(TProp.linetype)] := PtrInt(DSS.LineTypeEnum);
@@ -375,8 +390,8 @@ begin
     PropertyType[ord(TProp.spacing)] := TPropertyType.DSSObjectReferenceProperty;
     
     PropertyOffset[ord(TProp.linecode)] := ptruint(@obj.LineCodeObj);
-    PropertyOffset[ord(TProp.geometry)] := ptruint(@obj.LineGeometryObj);
-    PropertyOffset[ord(TProp.spacing)] := ptruint(@obj.LineSpacingObj);
+    PropertyOffset[ord(TProp.geometry)] := ptruint(@obj.lineGeometryObj);
+    PropertyOffset[ord(TProp.spacing)] := ptruint(@obj.lineSpacingObj);
     
     PropertyOffset2[ord(TProp.linecode)] := ptruint(DSS.LineCodeClass);
     PropertyOffset2[ord(TProp.geometry)] := ptruint(DSS.LineGeometryClass);
@@ -410,6 +425,11 @@ begin
     PropertyFlags[ord(TProp.Seasons)] := [TPropertyFlag.SuppressJSON]; // can be derived trivially from length(Ratings)
 
     // double properties (default type)
+    PropertyOffset[ord(TProp.EpsRMedium)] := ptruint(@obj.epsRMedium);
+    
+    PropertyOffset[ord(TProp.HeightOffset)] := ptruint(@obj.heightOffset);
+    // PropertyFlags[ord(TProp.HeightOffset)] := [TPropertyFlag.Units...];
+
     PropertyOffset[ord(TProp.length)] := ptruint(@obj.Len);
     
     PropertyOffset[ord(TProp.r1)] := ptruint(@obj.r1);
@@ -480,7 +500,7 @@ begin
     Result := obj;
 end;
 
-procedure TLineObj.FetchLineCode();
+procedure TLineObj.fetchLineCode();
 var
     i: Integer;
 begin
@@ -559,7 +579,7 @@ begin
     begin
         FNPhases := LineCodeObj.FNPhases;
 
-        ReallocZandYcMatrices;
+        ReallocZandYcMatrices();
     end;
 
     if not SymComponentsModel then
@@ -569,7 +589,9 @@ begin
         Yc.CopyFrom(LineCodeObj.Yc);
     end
     else
+    begin
         RecalcElementData();    // Compute matrices
+    end;
 
     SetNConds(Fnphases);  // Force Reallocation of terminal info
     //FNConds := Fnphases;
@@ -578,25 +600,33 @@ begin
 
     FLineType := LineCodeObj.FLineType;
 
-    KillSpacingSpecified;
-    KillGeometrySpecified;
+    killSpacingSpecified();
+    killGeometrySpecified();
 end;
 
 procedure TLineObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
+var
+    newNumRat, i: Integer;
+    ratingsArrayChanged, ratingsChanged: Boolean;    
+    condObj: TConductorDataObj;
 begin
     case Idx of
-        ord(TProp.C1), ord(TProp.C0), ord(TProp.cmatrix), ord(TProp.B1), ord(TProp.B0):
+        ord(TProp.C1),
+        ord(TProp.C0),
+        ord(TProp.cmatrix),
+        ord(TProp.B1),
+        ord(TProp.B0):
             FCapSpecified := TRUE;
-        ord(TProp.cncables):
+        ord(TProp.CNCables):
         begin
-            KillLineCodeSpecified();
-            KillGeometrySpecified;
+            killLineCodeSpecified();
+            killGeometrySpecified();
             phaseChoice := ConcentricNeutral;
         end;
-        ord(TProp.tscables):
+        ord(TProp.TSCables):
         begin
-            KillLineCodeSpecified();
-            KillGeometrySpecified;
+            killLineCodeSpecified();
+            killGeometrySpecified();
             phaseChoice := TapeShield;
         end;
         ord(TProp.units):
@@ -610,6 +640,11 @@ begin
             if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
                 SetYprimInvalid(true);
         end;
+        ord(TProp.HeightUnit):
+        begin
+            if heightUnits = UNITS_NONE then
+                heightUnits := UNITS_M;
+        end;
     end;
 
     case Idx of
@@ -620,7 +655,7 @@ begin
         ord(TProp.phases): // Change the number of phases ... only valid if SymComponentsModel=TRUE
             if Fnphases <> previousIntVal then
             begin
-                if (LineGeometryObj = NIL) and SymComponentsModel then
+                if (lineGeometryObj = NIL) and SymComponentsModel then
                 begin  
                     SetNConds(Fnphases);  // Force Reallocation of terminal info
                     Yorder := Fnterms * FNConds;
@@ -643,16 +678,16 @@ begin
         ord(TProp.B1),
         ord(TProp.B0):
         begin
-            KillLineCodeSpecified();
-            KillGeometrySpecified;
-            KillSpacingSpecified;
-            ResetLengthUnits;
+            killLineCodeSpecified();
+            killGeometrySpecified();
+            killSpacingSpecified();
+            ResetLengthUnits();
             SymComponentsChanged := TRUE;
             SymComponentsModel := TRUE;
         end;
         ord(TProp.rmatrix), ord(TProp.xmatrix), ord(TProp.cmatrix):
         begin
-            KillLineCodeSpecified();
+            killLineCodeSpecified();
             SymComponentsModel := FALSE;
             if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
@@ -665,18 +700,18 @@ begin
                 PrpSequence[ord(TProp.B1)] := 0;
                 PrpSequence[ord(TProp.B0)] := 0;
             end;
-            ResetLengthUnits;
-            KillGeometrySpecified;
-            KillSpacingSpecified;
+            ResetLengthUnits();
+            killGeometrySpecified();
+            killSpacingSpecified();
         end;
         ord(TProp.Switch):
             if IsSwitch then
             begin
                 SymComponentsChanged := TRUE;
                 SetYprimInvalid(true);
-                KillLineCodeSpecified(); //TODO: check if this missing is relevant bug
-                KillGeometrySpecified();
-                KillSpacingSpecified();
+                killLineCodeSpecified(); //TODO: check if this missing is relevant bug
+                killGeometrySpecified();
+                killSpacingSpecified();
                 r1 := 1.0;
                 x1 := 1.0;
                 r0 := 1.0;
@@ -699,30 +734,118 @@ begin
                     SetAsNextSeq(ord(TProp.units));
                 end;
             end;
+
         ord(TProp.Xg),
         ord(TProp.rho):
             Kxg := Xg / ln(658.5 * sqrt(rho / BaseFrequency));
+
         ord(TProp.geometry):
-            FetchGeometryCode();
-        ord(TProp.spacing), 
-        ord(TProp.wires), 
-        ord(TProp.cncables), 
-        ord(TProp.tscables):
+            fetchGeometryCode();
+
+        ord(TProp.Spacing), 
+        ord(TProp.Wires), 
+        ord(TProp.CNCables), 
+        ord(TProp.TSCables),
+        ord(TProp.Conductors):
         begin
-            if Idx = ord(TProp.spacing) then
-                FetchLineSpacing();
-            if (LineSpacingObj <> NIL) and (lineConductorData <> NIL) then
+            SetYprimInvalid(true);
+
+            if (Idx = ord(TProp.spacing)) and (lineSpacingObj <> NIL) then
+            begin
+                // Previously in FetchLineSpacing()
+                killLineCodeSpecified();
+                killGeometrySpecified();
+
+                // need to establish Yorder before makeZFromSpacing
+                FNPhases := lineSpacingObj.NPhases;
+                SetNConds(FNPhases);  // Force Reallocation of terminal info
+                Yorder := FNConds * Fnterms;
+                SetYprimInvalid(true);       // Force Rebuild of Y matrix
+
+                conductors := Allocmem(Sizeof(Pointer) * lineSpacingObj.NConds); // allocmem zero-inits
+                conductorDataSize := lineSpacingObj.NConds;
+            end;
+
+            if (Idx = ord(TProp.Conductors)) and (conductors <> NIL) then
+            begin
+                if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
+                begin
+                    // Unset other properties that also define conductors
+                    PrpSequence[ord(TProp.Wires)] := 0;
+                    PrpSequence[ord(TProp.CNCables)] := 0;
+                    PrpSequence[ord(TProp.TSCables)] := 0;
+                end;
+
+                // Try to simulate using TSCables=... or CNCables=..., potentially followed
+                // with Wires=... by checking what is the kind of the first conductor
+                phaseChoice := Unknown;
+                if (FNPhases <= conductorDataSize) then
+                begin
+                    // This will use the last valid phase conductor to determine the phaseChoice
+                    // (somewhere else, the **first** conductor is used)
+                    for i := 1 to FNPhases do
+                    begin
+                        condObj := conductors[i];
+                        if condObj = NIL then
+                            continue;
+                        if condObj is TCNDataObj then
+                            phaseChoice := ConcentricNeutral
+                        else
+                        if condObj is TTSDataObj then
+                            phaseChoice := TapeShield
+                        else
+                            phaseChoice := Overhead;
+                    end;
+                end;
+            end;
+
+            if (lineSpacingObj <> NIL) and (conductors <> NIL) then
             begin
                 SymComponentsModel := FALSE;
                 SymComponentsChanged := FALSE;
-                KillGeometrySpecified;
+                killLineCodeSpecified();
+                killGeometrySpecified();
                 gotRatingsAfterSpacingConds := FALSE;
+
+                if phaseChoice = Unknown then
+                begin
+                    // it's an overhead line
+                    phaseChoice := Overhead;
+                end;
+
+                newNumRat := 1;
+                ratingsArrayChanged := FALSE; // So far we don't know if there are seasonal ratings
+                ratingsChanged := FALSE;
+                for i := 1 to conductorDataSize do
+                begin
+                    if (conductors[i] = NIL) or (i > lineSpacingObj.NPhases) then
+                        continue;
+
+                    // Assign ratings to line from phase conductors only
+                    if conductors[i].NumAmpRatings > newNumRat then
+                    begin
+                        AmpRatings := Copy(conductors[i].AmpRatings);
+                        NumAmpRatings := Length(AmpRatings);
+                        newNumRat := NumAmpRatings;
+                        ratingsArrayChanged := TRUE;
+                    end;
+                    NormAmps := conductors[i].NormAmps;
+                    EmergAmps := conductors[i].EmergAmps;
+                    ratingsChanged := TRUE;
+                end;
+
                 if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
                 begin
-                    PrpSequence[ord(TProp.Seasons)] := 0;
-                    PrpSequence[ord(TProp.Ratings)] := 0;
-                    PrpSequence[(NumPropsThisClass + ord(TPDElementProp.NormAmps))] := 0;
-                    PrpSequence[(NumPropsThisClass + ord(TPDElementProp.EmergAmps))] := 0;
+                    if ratingsArrayChanged then
+                    begin
+                        PrpSequence[ord(TProp.Seasons)] := 0;
+                        PrpSequence[ord(TProp.Ratings)] := 0;
+                    end;
+                    if ratingsChanged then
+                    begin
+                        PrpSequence[(NumPropsThisClass + ord(TPDElementProp.NormAmps))] := 0;
+                        PrpSequence[(NumPropsThisClass + ord(TPDElementProp.EmergAmps))] := 0;
+                    end;
                     PrpSequence[ord(TProp.r1)] := 0;
                     PrpSequence[ord(TProp.x1)] := 0;
                     PrpSequence[ord(TProp.r0)] := 0;
@@ -731,9 +854,21 @@ begin
                     PrpSequence[ord(TProp.C0)] := 0;
                     PrpSequence[ord(TProp.B1)] := 0;
                     PrpSequence[ord(TProp.B0)] := 0;
+                end
+                else
+                begin
+                    if ratingsChanged then
+                    begin
+                        SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
+                        SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
+                    end;
+                    if ratingsArrayChanged then
+                    begin
+                        SetAsNextSeq(ord(TProp.Seasons));
+                        SetAsNextSeq(ord(TProp.Ratings));
+                    end;
                 end;
             end;
-            SetYprimInvalid(true);
         end;
         ord(TProp.Seasons):
             setlength(AmpRatings, NumAmpRatings);
@@ -762,9 +897,9 @@ begin
 
         ord(TProp.rho):
         begin
-            if LineGeometryObj <> NIL then
+            if lineGeometryObj <> NIL then
             begin
-                LineGeometryObj.lineConstants.SetRhoEarth(rho); // TODO: This is weird
+                lineGeometryObj.lineConstants.SetRhoEarth(rho); // TODO: This is weird
                 if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
                     SetYprimInvalid(true);
             end;
@@ -793,78 +928,43 @@ end;
 
 procedure TLineObj.SetWires(Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 var
-    RatingsInc: Boolean;
-    NewNumRat, i, istart: Integer;
-    NewRatings: array of Double = NIL;
+    i, istart: Integer;
     condObj: TConductorDataObj;
-    allConductors: Boolean;
 begin
     // Previously in "FetchWireList"
-    if not assigned(LineSpacingObj) then
+    if not assigned(lineSpacingObj) then
     begin
-        DoSimpleMsg('You must assign the LineSpacing before the Wires Property ("%s").', [FullName()], 18102);
+        DoSimpleMsg('You must assign the LineSpacing before the "Wires" property ("%s").', [FullName()], 18102);
         Exit;
     end;
 
-    allConductors := ((TDSSPropertySetterFlag.AllowAllConductors in setterFlags) and (LineSpacingObj.NConds = ValueCount));
-    if (phaseChoice = Unknown) or allConductors then
-    begin // it's an overhead line
-        KillLineCodeSpecified();
-        KillGeometrySpecified;
+    if (phaseChoice = Unknown) then
+    begin 
+        // it's an overhead line since we don't have a phase choice yet (no cables provided before the wires)
+        killLineCodeSpecified();
+        killGeometrySpecified();
         istart := 1;
-        if allConductors then
-        begin
-            // Try to simulate using TSCables=... or CNCables=..., potentially followed
-            // with Wires=... by checking what is the kind of the first conductor
-            condObj := TConductorDataObj(Value^);
-            if condObj is TCNDataObj then
-                phaseChoice := ConcentricNeutral
-            else
-            if condObj is TTSDataObj then
-                phaseChoice := TapeShield
-            else
-                phaseChoice := Overhead;
-        end;
     end
     else
-    begin // adding bare neutrals to an underground line - TODO what about repeat invocation?
-        istart := LineSpacingObj.NPhases + 1;
+    begin
+        // adding bare neutrals to an underground line - TODO what about repeat invocation?
+        istart := lineSpacingObj.NPhases + 1;
     end;
 
-    NewNumRat := 1;
-    RatingsInc := FALSE; // So far we don't know if there are seasonal ratings
-
     // Validate number of elements
-    if (LineSpacingObj.NConds - istart + 1) <> ValueCount then
+    if (lineSpacingObj.NConds - istart + 1) <> ValueCount then
     begin
         DoSimpleMsg('%s: Unexpected number (%d) of wires; expected %d objects.', 
-            [FullName(), ValueCount, (LineSpacingObj.NConds - istart + 1)], 18102);
+            [FullName(), ValueCount, (lineSpacingObj.NConds - istart + 1)], 18102);
         Exit;
     end;
 
-    for i := istart to LineSpacingObj.NConds do
+    // Ratings stuff move to PropertySideEffects to reduce code duplication
+    for i := istart to lineSpacingObj.NConds do
     begin
-        lineConductorData[i] := TConductorDataObj(Value^);
-        if lineConductorData[i].NumAmpRatings > NewNumRat then
-        begin
-            NewNumRat := lineConductorData[i].NumAmpRatings;
-            NewRatings := Copy(lineConductorData[i].AmpRatings, 0, NewNumRat);
-            RatingsInc := TRUE; // Yes, there are seasonal ratings
-        end;
-        NormAmps := lineConductorData[i].NormAmps;
-        EmergAmps := lineConductorData[i].EmergAmps;
+        conductors[i] := TConductorDataObj(Value^);
         Inc(Value);
     end;
-
-    if RatingsInc then
-    begin
-        NumAmpRatings := NewNumRat;
-        AmpRatings := NewRatings;
-    end;
-
-    SetAsNextSeq(ord(TProp.Ratings));
-    SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
-    SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
 end;
 
 // A Line Defaults to 3-phases and some typical symmetrical component data
@@ -953,6 +1053,8 @@ begin
     Rg := 0.01805;    //ohms per 1000 ft
     Xg := 0.155081;
     rho := 100.0;
+    epsRmedium := 1.0;
+    heightOffset := 0.0;
     Kxg := Xg / ln(658.5 * sqrt(rho / BaseFrequency));
     FCapSpecified := FALSE;
 
@@ -979,17 +1081,18 @@ begin
     SymComponentsModel := TRUE;
     gotRatingsAfterSpacingConds := FALSE;
 
-    LineGeometryObj := NIL;
+    lineGeometryObj := NIL;
     LengthUnits := UNITS_NONE; // Assume everything matches
     UserLengthUnits := UNITS_NONE;
+    heightUnits := UNITS_M; // Meters by default
     unitsFactor := 1.0;
     FLineCodeUnits := UNITS_NONE;
     FEarthModel := DSS.DefaultEarthModel;
     FLineType := 1;  // Default to OH Line
 
-    LineSpacingObj := NIL;
-    lineConductorData := NIL;
-    FWireDataSize := 0;
+    lineSpacingObj := NIL;
+    conductors := NIL;
+    conductorDataSize := 0;
     phaseChoice := Unknown;
 
     FZFrequency := -1.0; // indicate Z not computed.
@@ -1010,7 +1113,7 @@ begin
         Zinv.Free;
     if Assigned(Yc) then
         Yc.Free;
-    Reallocmem(lineConductorData, 0);
+    Reallocmem(conductors, 0);
     inherited destroy;
 end;
 
@@ -1161,9 +1264,9 @@ begin
     // Build Series YPrim
 
     // Build Zmatrix
-    if LineGeometryObj <> NIL then
+    if lineGeometryObj <> NIL then
     begin
-        FMakeZFromGeometry(ActiveCircuit.Solution.Frequency()); // Includes length in proper units
+        makeZFromGeometry(ActiveCircuit.Solution.Frequency()); // Includes length in proper units
         if DSS.SolutionAbort() then
             Exit;
 
@@ -1171,7 +1274,7 @@ begin
     else
     if SpacingSpecified then
     begin
-        FMakeZFromSpacing(ActiveCircuit.Solution.Frequency()); // Includes length in proper units
+        makeZFromSpacing(ActiveCircuit.Solution.Frequency()); // Includes length in proper units
         if DSS.SolutionAbort() then
             Exit;
     end
@@ -1333,7 +1436,7 @@ begin
         // Put half the Shunt Capacitive Admittance at each end
         YValues := Yc.GetValuesArrayPtr(Norder);
 
-        if (LineGeometryObj <> NIL) or SpacingSpecified then
+        if (lineGeometryObj <> NIL) or SpacingSpecified then
         begin
             // Values are already compensated for length and frequency
             k := 0;
@@ -1428,7 +1531,7 @@ begin
     FSWriteln(F, '~ ' + ParentClass.PropertyName[ord(TProp.C0)] + '=' + Rslt);
 
     // If GeometrySpecified Or SpacingSpecified then length is embedded in Z and Yc    4-9-2020
-    if (LineGeometryObj <> NIL) or SpacingSpecified then
+    if (lineGeometryObj <> NIL) or SpacingSpecified then
         LengthMult := Len
     else
         LengthMult := 1.0;
@@ -1549,7 +1652,7 @@ begin
         PrpSequence[ord(TProp.CMatrix)] := 0;
 
         // If GeometrySpecified Or SpacingSpecified then length is embedded in Z and Yc    4-9-2020
-        if (LineGeometryObj <> NIL) or SpacingSpecified then
+        if (lineGeometryObj <> NIL) or SpacingSpecified then
             LengthMult := Len
         else
             LengthMult := 1.0;
@@ -1788,9 +1891,9 @@ begin
                 Exit;  // OOps.  Lines not same size for some reason
 
             // If Geometry specified, length is already included; so reset to 1.0
-            if (LineGeometryObj <> NIL) or SpacingSpecified then
+            if (lineGeometryObj <> NIL) or SpacingSpecified then
                 LenSelf := 1.0;
-            if (Other.LineGeometryObj <> NIL) or Other.SpacingSpecified then
+            if (Other.lineGeometryObj <> NIL) or Other.SpacingSpecified then
                 LenOther := 1.0;
 
             // Z <= (Z1 + Z2 )/TotalLen   to get equiv ohms per unit length
@@ -1839,40 +1942,23 @@ begin
     end;
 end;
 
-procedure TLineObj.FetchLineSpacing();
-begin
-    if LineSpacingObj = NIL then
-        Exit;
-
-    KillLineCodeSpecified();
-    KillGeometrySpecified;
-    // need to establish Yorder before FMakeZFromSpacing
-    FNPhases := LineSpacingObj.NPhases;
-    SetNConds(FNPhases);  // Force Reallocation of terminal info
-    Yorder := FNConds * Fnterms;
-    SetYprimInvalid(true);       // Force Rebuild of Y matrix
-
-    lineConductorData := Allocmem(Sizeof(lineConductorData[1]) * LineSpacingObj.NConds);
-    FWireDataSize := LineSpacingObj.NConds;
-end;
-
-procedure TLineObj.FetchGeometryCode();
+procedure TLineObj.fetchGeometryCode();
 var
     i: Integer;
 begin
-    if LineGeometryObj = NIL then
+    if lineGeometryObj = NIL then
         Exit;
 
-    KillLineCodeSpecified();
-    KillSpacingSpecified();
+    killLineCodeSpecified();
+    killSpacingSpecified();
 
     FZFrequency := -1.0;  // Init to signify not computed
 
     if PrpSpecified(ord(TProp.rho)) then
-        LineGeometryObj.lineConstants.SetRhoEarth(rho);
+        lineGeometryObj.lineConstants.SetRhoEarth(rho);
 
-    NormAmps := LineGeometryObj.NormAmps;
-    EmergAmps := LineGeometryObj.EmergAmps;
+    NormAmps := lineGeometryObj.NormAmps;
+    EmergAmps := lineGeometryObj.EmergAmps;
 
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) <> 0 then
     begin
@@ -1897,30 +1983,36 @@ begin
         PrpSequence[(ord(TProp.Ratings))] := 0;
         PrpSequence[(NumPropsThisClass + ord(TPDElementProp.NormAmps))] := 0;
         PrpSequence[(NumPropsThisClass + ord(TPDElementProp.EmergAmps))] := 0;
+        // killSpacingSpecified() already 
+        PrpSequence[ord(TProp.Wires)] := 0;
+        PrpSequence[ord(TProp.Conductors)] := 0;
+        PrpSequence[ord(TProp.TSCables)] := 0;
+        PrpSequence[ord(TProp.CNCables)] := 0;
+        PrpSequence[ord(TProp.Spacing)] := 0;
     end;
 
-    FNPhases := LineGeometryObj.NConds();
+    FNPhases := lineGeometryObj.NConds();
     SetNConds(FNPhases);  // Force Reallocation of terminal info
     Yorder := FNConds * Fnterms;
     SetYprimInvalid(true);       // Force Rebuild of Y matrix
 
-    NumAmpRatings := LineGeometryObj.NumAmpRatings;
+    NumAmpRatings := lineGeometryObj.NumAmpRatings;
     setlength(AmpRatings, NumAmpRatings);
     for i := 0 to High(AmpRatings) do
-        AmpRatings[i] := LineGeometryObj.AmpRatings[i];
+        AmpRatings[i] := lineGeometryObj.AmpRatings[i];
 
-    FLineType := LineGeometryObj.FLineType;
+    FLineType := lineGeometryObj.FLineType;
 
     SymComponentsModel := FALSE;
     SymComponentsChanged := FALSE;
 end;
 
-procedure TLineObj.FMakeZFromGeometry(f: Double); // make new Z, Zinv, Yc, etc
+procedure TLineObj.makeZFromGeometry(f: Double); // make new Z, Zinv, Yc, etc
 begin
     if f = FZFrequency then
         exit;  // Already Done for this frequency, no need to do anything
 
-    if LineGeometryObj = NIL then
+    if lineGeometryObj = NIL then
         Exit;
 
     // This will make a New Z; Throw away present allocations
@@ -1929,14 +2021,17 @@ begin
         FreeAndNil(Z);
     if assigned(Zinv) then
         FreeAndNil(Zinv);
-
     if assigned(Yc) then
         FreeAndNil(Yc);
 
     DSS.ActiveEarthModel := FEarthModel; // Left for upstream compatibility
 
-    Z := LineGeometryObj.GetZMatrix(f, len, LengthUnits, FEarthModel);
-    Yc := LineGeometryObj.GetYCMatrix(f, len, LengthUnits, FEarthModel);
+    lineGeometryObj.lineConstants.SetEpsRMedium(epsRMedium);
+    lineGeometryObj.lineConstants.SetHeightOffset(heightOffset);
+    lineGeometryObj.lineConstants.SetUserHeightUnit(heightUnits);
+
+    Z := lineGeometryObj.GetZMatrix(f, len, LengthUnits, FEarthModel);
+    Yc := lineGeometryObj.GetYCMatrix(f, len, LengthUnits, FEarthModel);
     // Init Zinv
     if Assigned(Z) then
     begin
@@ -1950,7 +2045,7 @@ begin
     FZFrequency := f;
 end;
 
-procedure TLineObj.FMakeZFromSpacing(f: Double); // make new Z, Zinv, Yc, etc
+procedure TLineObj.makeZFromSpacing(f: Double); // make new Z, Zinv, Yc, etc
 var
     pGeo: TLineGeometryObj;
 begin
@@ -1975,7 +2070,27 @@ begin
 
     // make a temporary LineGeometry to calculate line constants
     pGeo := TLineGeometryObj.Create(DSS.LineGeometryClass, Name);
-    pGeo.LoadSpacingAndWires(LineSpacingObj, lineConductorData, DSS.ActiveEarthModel); // this sets OH, CN, or TS
+    pGeo.LoadSpacingAndWires(lineSpacingObj, conductors, DSS.ActiveEarthModel); // this sets OH, CN, or TS
+
+    // Call out discrepancy and let the user correct it
+    if FNPhases <> pGeo.FNPhases then
+    begin
+        DoSimpleMsg(
+            '%s: The number of valid phase conductors (not "None") in the line definition is different than the number defined in its spacing. In this case, you must set the phases parameter of the line to the correct number (Phases=%d).', 
+            [FullName(), pGeo.FNPhases], 181021);
+        Exit;
+    end;
+
+    // need to establish Yorder before makeZFromSpacing
+    FNPhases := pGeo.NConds;
+    SetNConds(FNPhases);
+    Yorder := FNConds * Fnterms;
+    SetYprimInvalid(true);
+
+    // Setting these before recalculating the impedances
+    pGeo.lineConstants.SetEpsRMedium(epsRMedium);
+    pGeo.lineConstants.SetHeightOffset(heightOffset);
+    pGeo.lineConstants.SetUserHeightUnit(heightUnits);
 
     if PrpSpecified(ord(TProp.rho)) then
         pGeo.lineConstants.SetRhoEarth(rho);
@@ -2009,41 +2124,38 @@ begin
     FZFrequency := f;
 end;
 
-procedure TLineObj.KillLineCodeSpecified();
+procedure TLineObj.killLineCodeSpecified();
 begin
     LineCodeObj := NIL;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
         PrpSequence[ord(TProp.LineCode)] := 0;
 end;
 
-procedure TLineObj.KillGeometrySpecified();
+procedure TLineObj.killGeometrySpecified();
 begin
-    // Indicate No Line Geometry specification if this is called
-    if LineGeometryObj = NIL then
-        Exit;
-
-    LineGeometryObj := NIL;
+    lineGeometryObj := NIL;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
         PrpSequence[ord(TProp.geometry)] := 0;
     FZFrequency := -1.0;
 end;
 
-procedure TLineObj.KillSpacingSpecified();
+procedure TLineObj.killSpacingSpecified();
 begin
     if not SpacingSpecified then
         Exit;
 
-    LineSpacingObj := NIL;
-    FWireDataSize := 0;
-    Reallocmem(lineConductorData, 0);
+    lineSpacingObj := NIL;
+    conductorDataSize := 0;
+    Reallocmem(conductors, 0);
     phaseChoice := Unknown;
     FZFrequency := -1.0;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
     begin
         PrpSequence[ord(TProp.Spacing)] := 0;
         PrpSequence[ord(TProp.Wires)] := 0;
-        PrpSequence[ord(TProp.cncables)] := 0;
-        PrpSequence[ord(TProp.tscables)] := 0;
+        PrpSequence[ord(TProp.CNCables)] := 0;
+        PrpSequence[ord(TProp.TSCables)] := 0;
+        PrpSequence[ord(TProp.Conductors)] := 0;
     end;
 end;
 
@@ -2105,31 +2217,31 @@ end;
 function TLineObj.CIM_NumConductorData(): Integer;
 begin
     Result := 0;
-    if Assigned(lineConductorData) then
-        Result := LineSpacingObj.NConds;
-    if Assigned(LineGeometryObj) then
-        Result := LineGeometryObj.FNConds;
+    if Assigned(conductors) then
+        Result := lineSpacingObj.NConds;
+    if Assigned(lineGeometryObj) then
+        Result := lineGeometryObj.FNConds;
 end;
 
 function TLineObj.CIM_GetConductorData(i: Integer): TConductorDataObj;
 begin
     Result := NIL;
-    if Assigned(lineConductorData) then
+    if conductors <> NIL then
     begin
-        if i <= LineSpacingObj.NConds then
-            Result := lineConductorData[i];
+        if i <= lineSpacingObj.NConds then
+            Result := conductors[i];
     end
     else
-    if Assigned(LineGeometryObj) then
+    if lineGeometryObj <> NIL then
     begin
-        if i <= LineGeometryObj.FNConds then
-            Result := LineGeometryObj.conductorData[i];
+        if i <= lineGeometryObj.FNConds then
+            Result := lineGeometryObj.conductors[i];
     end;
 end;
 
 function TLineObj.SpacingSpecified(): Boolean;
 begin
-    Result := Assigned(LineSpacingObj) and Assigned(lineConductorData);
+    Result := Assigned(lineSpacingObj) and Assigned(conductors);
 end;
 
 procedure TLineObj.SaveWrite(F: TStream);
@@ -2153,17 +2265,17 @@ begin
                 if not wroteConds then
                 begin   // if cond=, spacing, or wires were ever used write out arrays ...
                     i := 1;
-                    while i <= FWireDataSize do
+                    while i <= conductorDataSize do
                     begin
                         i0 := i;
                         strConductors := '';
                         strPhaseChoice := '';
-                        if lineConductorData[i] = NIL then
+                        if conductors[i] = NIL then
                         begin
                             inc(i);
                             continue; // shouldn't happen in normal conditions
                         end;
-                        conductorCls := lineConductorData[i].ParentClass;
+                        conductorCls := conductors[i].ParentClass;
                         if conductorCls = DSS.TSDataClass then
                             strPhaseChoice := 'TSCables'
                         else if conductorCls = DSS.CNDataClass then
@@ -2171,13 +2283,13 @@ begin
                         else
                             strPhaseChoice := 'Wires';
 
-                        strConductors := CheckForBlanks(lineConductorData[i].Name());
-                        for i := i0 + 1 to FWireDataSize do
+                        strConductors := CheckForBlanks(conductors[i].Name());
+                        for i := i0 + 1 to conductorDataSize do
                         begin
-                            if (conductorCls <> lineConductorData[i].ParentClass) then
+                            if (conductorCls <> conductors[i].ParentClass) then
                                 break;
 
-                            strConductors += ', ' + CheckForBlanks(lineConductorData[i].Name());
+                            strConductors += ', ' + CheckForBlanks(conductors[i].Name());
                             i0 := i;
                         end;
                         FSWrite(F, Format(' %s=[%s]', [strPhaseChoice, strConductors]));

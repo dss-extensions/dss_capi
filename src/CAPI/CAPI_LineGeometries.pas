@@ -506,7 +506,7 @@ begin
     
     DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pLineGeometry.FNConds);
     for i := 1 to pLineGeometry.FNConds do
-        Result[i - 1] := DSS_CopyStringAsPChar(NameIfNotNil(pLineGeometry.ConductorData[i]));
+        Result[i - 1] := DSS_CopyStringAsPChar(NameIfNotNil(pLineGeometry.conductors[i]));
 end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;

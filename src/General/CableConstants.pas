@@ -79,7 +79,8 @@ type
 implementation
 
 uses
-    SysUtils;
+    SysUtils,
+    Math;
 
 const
     // For TS
@@ -135,21 +136,21 @@ begin
 //  End;
     if equivalentSpacing then
     begin
-        for i := 1 to FNumConds do
+        for i := 1 to numConductors do
         begin
-            if i <= FNumPhases then
+            if i <= nPhases then
                 Ri := FRadius[i]
             else
                 Ri := 0.5 * FDiaCable[i];
 
-            for j := i + 1 to FNumConds do
+            for j := i + 1 to numConductors do
             begin
-                if j <= FNumPhases then
+                if j <= nPhases then
                     Rj := FRadius[j]
                 else
                     Rj := 0.5 * FDiaCable[j];
 
-                if ((i <= FNumPhases) and (j > FNumPhases)) then
+                if ((i <= nPhases) and (j > nPhases)) then
                     Dij := eqDistPhN
                 else
                     Dij := eqDistPhPh;
@@ -217,7 +218,7 @@ constructor TCableConstants.Create(NConductors: Integer);
 begin
     inherited Create(NConductors);
 
-    FCondType := Allocmem(Sizeof(TConductorType) * FNumConds);
+    FCondType := Allocmem(Sizeof(TConductorType) * numConductors);
 
     FEpsR := Allocmem(Sizeof(Double) * numConductors);
     FInsLayer := Allocmem(Sizeof(Double) * numConductors);
@@ -265,7 +266,7 @@ end;
 
 procedure TCableConstants.SetSemiconLayer(i: Integer; const Value: Boolean);
 begin
-    if (i > 0) and (i <= FNumConds) then
+    if (i > 0) and (i <= numConductors) then
         semiconLayer[i] := Value;
 end;
 
@@ -310,13 +311,13 @@ var
 
     function GetDij(i, j: Integer): Double;
     begin
-        if not FEquivalentSpacing then
+        if not equivalentSpacing then
         begin
             Result := sqrt(sqr(Fx[i] - Fx[j]) + sqr(Fy[i] - Fy[j]));
             Exit;
         end;
 
-        if ((j <= FNumPhases) and (i > FNumPhases)) then
+        if ((j <= nPhases) and (i > nPhases)) then
         begin
             Result := eqDistPhN;
             Exit;

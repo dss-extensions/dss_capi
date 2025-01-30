@@ -37,7 +37,7 @@ type
     TDSSClassHelper = class helper for TDSSClass
     private
         function GetCircuit(): TDSSCircuit; inline;
-        function ValidateObjectItem(Index: Integer; ElemName: String; var otherObj: TDSSObject): Boolean;
+        function ValidateObjectItem(Index: Integer; InputElemName: String; obj: TDSSObject; var otherObj: TDSSObject): Boolean;
     protected
         property ActiveCircuit: TDSSCircuit read GetCircuit;
     public
@@ -838,7 +838,7 @@ begin
                         if TPropertyFlag.CheckForVar in flags then
                             PropParser.CheckForVar(ElemName);
 
-                        if not ValidateObjectItem(Index, ElemName, otherObj) then
+                        if not ValidateObjectItem(Index, ElemName, TDSSObject(obj), otherObj) then
                             Exit;
 
                         SetLength(objs, Length(objs) + 1);
@@ -3913,7 +3913,6 @@ var
     objs: Array of TDSSObject = NIL;
     otherObj: TDSSObject;
     otherObjPtr: TDSSObjectPtr;
-    allowAllConductors: Boolean = false;
 
     function checkSize(): Boolean;
     begin
@@ -3968,13 +3967,10 @@ begin
             // Class of the objects
             cls := Pointer(PropertyOffset2[Index]);
 
-            allowAllConductors := (TSetterFlag.AllowAllConductors in setterFlags) and
-                ((self = DSS.LineGeometryClass) or (self = DSS.LineClass));
-
             if TPropertyFlag.WriteByFunction in flags then
             begin
                 SetLength(objs, ValueCount);
-                if (cls <> NIL) and (not allowAllConductors) then
+                if cls <> NIL then
                 begin
                     for i := 1 to ValueCount do
                     begin
@@ -3989,44 +3985,6 @@ begin
                                 Format('%s.%s: %s object "%s" not found.',
                                     [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name, ElemName]
                                 ), 40306);
-                            Exit;
-                        end;
-                        objs[i - 1] := otherObj;
-                        Inc(Value);
-                    end;
-                end
-                else if allowAllConductors then // Special case for Line, LineGeometry -- TODO: extend and use TProxyClass instead
-                begin
-                    for i := 1 to ValueCount do
-                    begin
-                        ParseObjectClassAndName(DSS, AnsiLowerCase(Value^), ElemClassName, ElemName);
-                        otherObj := NIL;
-                        if elemClassName = 'wiredata' then
-                        begin
-                            otherObj := DSS.WireDataClass.Find(ElemName, False);
-                        end
-                        else if elemClassName = 'cndata' then
-                        begin
-                            otherObj := DSS.CNDataClass.Find(ElemName, False);
-                        end
-                        else if elemClassName = 'tsdata' then
-                        begin
-                            otherObj := DSS.TSDataClass.Find(ElemName, False);
-                        end
-                        else if elemClassName = '' then // Try all
-                        begin
-                            otherObj := DSS.WireDataClass.Find(ElemName, False);
-                            if otherObj = NIL then
-                                otherObj := DSS.CNDataClass.Find(ElemName, False);
-                            if otherObj = NIL then
-                                otherObj := DSS.TSDataClass.Find(ElemName, False);
-                        end;
-                        if otherObj = NIL then
-                        begin
-                            DoSimpleMsg(
-                                Format('%s.%s: conductor object "%s" not found. Please provide the full name of a conductor object (types WireData, CNData, TSData) which is already defined.',
-                                    [TDSSObject(obj).FullName(), PropertyName[Index], ElemName]
-                                ), 40300);
                             Exit;
                         end;
                         objs[i - 1] := otherObj;
@@ -4969,7 +4927,7 @@ begin
         otherObj := NIL;
         Result := true;
         Exit;
-    end
+    end;
 
     if (TPropertyFlag.FullNameAsArray in flags) then
     begin
@@ -4980,7 +4938,7 @@ begin
             if (TPropertyFlag.AllowNoneItem in flags) then
             begin
                 DoSimpleMsg('%s.%s: You must define the %s class for all the valid items in the array.',
-                    [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name,], 10103);
+                    [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name], 10103);
             end
             else
             begin
@@ -5037,7 +4995,6 @@ begin
     propIndex := -1;
     Result := false;
     dssObj := TDSSObject(obj);
-    Include(setterFlags, TSetterFlag.AllowAllConductors);
     if not (TSetterFlag.ImplicitSizes in setterFlags) then
         Include(setterFlags, TSetterFlag.ImplicitSizes);
 

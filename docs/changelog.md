@@ -48,6 +48,10 @@
     - Fix `Bus_Get_Lines`/`Bus_Get_PDElements`. Only one terminal was being checked due to a typo.
     - Fix `Batch_Int32Array` when used to set the `Enabled` property.
 
+
+- Property SetterFlags:
+    - `AllowAllConductors` was removed, together with the special handling of `Wires`. The new dedicated property `Conductors`, equivalent, was implemented in the upstream OpenDSS and ported here.
+
 # Versions 0.14.x
 
 ## Version 0.14.5 (2024-03-29)
