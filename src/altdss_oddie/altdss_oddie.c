@@ -664,6 +664,8 @@ void oddie_vararray_float64_func(OddieContext* ctx, oddie_variant_func_t func, i
     {
         ctx->error_number = 36;
         ctx_Error_Set_Description(ctx, "(Oddie) Variant processing error: invalid function pointer.");
+        resultDims[0] = 0;
+        return;
     }
 
     func(mode, &ptr, &ptrType, &ptrSize);
@@ -713,6 +715,8 @@ void oddie_vararray_int32_func(OddieContext* ctx, oddie_variant_func_t func, int
     {
         ctx->error_number = 37;
         ctx_Error_Set_Description(ctx, "(Oddie) Variant processing error: invalid function pointer.");
+        resultDims[0] = 0;
+        return;
     }
 
     func(mode, &ptr, &ptrType, &ptrSize);
@@ -768,6 +772,8 @@ void oddie_vararray_stringarray_func(OddieContext* ctx, oddie_variant_func_t fun
     {
         ctx->error_number = 38;
         ctx_Error_Set_Description(ctx, "(Oddie) Variant processing error: invalid function pointer.");
+        resultDims[0] = 0;
+        return;
     }
 
     func(mode, &ptr, &ptrType, &ptrSize);
@@ -838,6 +844,8 @@ void oddie_vararray_int8_func(OddieContext* ctx, oddie_variant_func_t func, int3
     {
         ctx->error_number = 39;
         ctx_Error_Set_Description(ctx, "(Oddie) Variant processing error: invalid function pointer.");
+        resultDims[0] = 0;
+        return;
     }
 
     func(mode, &ptr, &ptrType, &ptrSize);
@@ -1467,6 +1475,8 @@ ALTDSS_ODDIE_DLL double ctx_CktElement_Get_Variablei(const void* ctx, int32_t Id
 ALTDSS_ODDIE_DLL double ctx_CktElement_Get_Variable(const void* ctx, const char* MyVarName, int32_t *Code)
 {
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_FLOAT64(CktElementF)
+
     OddieContext* oddie_ctx = (OddieContext*) ctx;
     double res = 0;
 
@@ -1491,6 +1501,7 @@ ALTDSS_ODDIE_DLL double ctx_CktElement_Get_Variable(const void* ctx, const char*
 ALTDSS_ODDIE_DLL void ctx_CktElement_Set_Variable(const void* ctx, const char* MyVarName, int32_t *Code, double Value)
 {
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_VOID(CktElementF)
     OddieContext* oddie_ctx = (OddieContext*) ctx;
     
     ctx_CktElement_Set_VariableName(ctx, MyVarName);
@@ -1520,6 +1531,7 @@ ALTDSS_ODDIE_DLL void ctx_CktElement_Set_Variable(const void* ctx, const char* M
 ALTDSS_ODDIE_DLL void ctx_CktElement_Set_VariableName(const void* ctx, const char* Value)
 {
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_VOID(CktElementS)
     OddieContext* oddie_ctx = (OddieContext*) ctx;
     const char* res = oddie_keep_str(oddie_ctx, oddie_ctx->CktElementS(6, Value));
     oddie_map_error(ctx);
@@ -1580,6 +1592,7 @@ ALTDSS_ODDIE_DLL void ctx_CktElement_Set_BusNames(const void* ctx, const char** 
     int32_t total_chars = 0;
     void *inPtr = NULL;
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_VOID(CktElementV)
     if (oddie_join_to_char_buffer(ctx, ValuePtr, ValueCount, &total_chars))
     {
         return;
@@ -1595,6 +1608,7 @@ ALTDSS_ODDIE_DLL void ctx_Fuses_Set_NormalState(const void* ctx, const char** Va
     int32_t total_chars = 0;
     void *inPtr = NULL;
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_VOID(FusesV)
     if (oddie_join_to_char_buffer(ctx, ValuePtr, ValueCount, &total_chars))
     {
         return;
@@ -1610,6 +1624,7 @@ ALTDSS_ODDIE_DLL void ctx_Fuses_Set_State(const void* ctx, const char** ValuePtr
     int32_t total_chars = 0;
     void *inPtr = NULL;
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_VOID(FusesV)
     if (oddie_join_to_char_buffer(ctx, ValuePtr, ValueCount, &total_chars))
     {
         return;
@@ -1622,6 +1637,7 @@ ALTDSS_ODDIE_DLL void ctx_Fuses_Set_State(const void* ctx, const char** ValuePtr
 ALTDSS_ODDIE_DLL int32_t ctx_Circuit_SetActiveBus(const void* ctx, const char* BusName)
 {
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_INT32(CircuitS)
     const char *res = oddie_keep_str((OddieContext*) ctx, ((OddieContext*) ctx)->CircuitS(4, BusName));
     oddie_map_error(ctx);
     return (res != NULL && *res != 0) ? atoi(res) : -1;
@@ -1634,6 +1650,7 @@ ALTDSS_ODDIE_DLL int32_t ctx_CtrlQueue_Push(const void* ctx, int32_t Hour, doubl
     int32_t var_type = ODDIE_PTR_VAR_TYPE_DOUBLE;
     int32_t queueSize = -1;
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_INT32(CtrlQueueV)
     ((OddieContext*) ctx)->CtrlQueueV(1, &inPtr, &var_type, &queueSize);
     oddie_map_error(ctx);
     return queueSize;
@@ -1642,6 +1659,7 @@ ALTDSS_ODDIE_DLL int32_t ctx_CtrlQueue_Push(const void* ctx, int32_t Hour, doubl
 ALTDSS_ODDIE_DLL int32_t ctx_Circuit_SetActiveClass(const void* ctx, const char* ClassName)
 {
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_INT32(CircuitS)
     const char *res = oddie_keep_str((OddieContext*) ctx, ((OddieContext*) ctx)->CircuitS(5, ClassName));
     oddie_map_error(ctx);
     return (res != NULL && *res != 0) ? atoi(res) : -1;
@@ -1650,6 +1668,7 @@ ALTDSS_ODDIE_DLL int32_t ctx_Circuit_SetActiveClass(const void* ctx, const char*
 ALTDSS_ODDIE_DLL int32_t ctx_Circuit_SetActiveElement(const void* ctx, const char* FullName)
 {
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_INT32(CircuitS)
     const char *res = oddie_keep_str((OddieContext*) ctx, ((OddieContext*) ctx)->CircuitS(3, FullName));
     oddie_map_error(ctx);
     return (res != NULL && *res != 0) ? atoi(res) : -1;
@@ -1661,6 +1680,7 @@ ALTDSS_ODDIE_DLL void ctx_Relays_Set_NormalState(const void* ctx, int32_t Value)
     action[0] = Value == CTRL_CLOSE ? 'c' : 'o';
     action[1] = 0;
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_VOID(RelaysS)
     ((OddieContext*) ctx)->RelaysS(9, action);
     oddie_map_error(ctx);
 }
@@ -1671,6 +1691,7 @@ ALTDSS_ODDIE_DLL void ctx_Relays_Set_State(const void* ctx, int32_t Value)
     action[0] = Value == CTRL_CLOSE ? 'c' : 'o';
     action[1] = 0;
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_VOID(RelaysS)
     ((OddieContext*) ctx)->RelaysS(7, action);
     oddie_map_error(ctx);
 }
@@ -1681,6 +1702,7 @@ ALTDSS_ODDIE_DLL void ctx_Reclosers_Set_NormalState(const void* ctx, int32_t Val
     action[0] = Value == CTRL_CLOSE ? 'c' : 'o';
     action[1] = 0;
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_VOID(ReclosersS)
     ((OddieContext*) ctx)->ReclosersS(9, action);
     oddie_map_error(ctx);
 }
@@ -1691,6 +1713,7 @@ ALTDSS_ODDIE_DLL void ctx_Reclosers_Set_State(const void* ctx, int32_t Value)
     action[0] = Value == CTRL_CLOSE ? 'c' : 'o';
     action[1] = 0;
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_VOID(ReclosersS)
     ((OddieContext*) ctx)->ReclosersS(7, action);
     oddie_map_error(ctx);
 }
@@ -1707,6 +1730,7 @@ int32_t oddie_map_ctrl_state(const char* state)
 ALTDSS_ODDIE_DLL int32_t ctx_Reclosers_Get_NormalState(const void* ctx)
 {
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_INT32(ReclosersS)
     const char* res = ((OddieContext*) ctx)->ReclosersS(8, NULL);
     oddie_map_error(ctx);
     return oddie_map_ctrl_state(res);
@@ -1715,6 +1739,7 @@ ALTDSS_ODDIE_DLL int32_t ctx_Reclosers_Get_NormalState(const void* ctx)
 ALTDSS_ODDIE_DLL int32_t ctx_Reclosers_Get_State(const void* ctx)
 {
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_INT32(ReclosersS)
     const char *res = ((OddieContext*) ctx)->ReclosersS(6, NULL);
     oddie_map_error(ctx);
     return oddie_map_ctrl_state(res);
@@ -1723,6 +1748,7 @@ ALTDSS_ODDIE_DLL int32_t ctx_Reclosers_Get_State(const void* ctx)
 ALTDSS_ODDIE_DLL int32_t ctx_Relays_Get_NormalState(const void* ctx)
 {
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_INT32(RelaysS)
     const char *res = ((OddieContext*) ctx)->RelaysS(8, 0);
     oddie_map_error(ctx);
     return oddie_map_ctrl_state(res);
@@ -1731,6 +1757,7 @@ ALTDSS_ODDIE_DLL int32_t ctx_Relays_Get_NormalState(const void* ctx)
 ALTDSS_ODDIE_DLL int32_t ctx_Relays_Get_State(const void* ctx)
 {
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_INT32(RelaysS)
     const char *res = ((OddieContext*) ctx)->RelaysS(6, 0);
     oddie_map_error(ctx);
     return oddie_map_ctrl_state(res);
@@ -1763,6 +1790,7 @@ ALTDSS_ODDIE_DLL void ctx_XYCurves_Set_Xarray(const void* ctx, const double* Val
 {
     int32_t var_type = ODDIE_PTR_VAR_TYPE_DOUBLE;
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_VOID(XYCurvesV)
     int32_t expected_cnt = ctx_XYCurves_Get_Npts(ctx);
     // Limit number of elements to avoid crash.
     // TODO: maybe change this to an error?
@@ -1813,9 +1841,25 @@ ALTDSS_ODDIE_DLL int32_t ctx_LoadShapes_New(const void* ctx, const char* Name)
 ALTDSS_ODDIE_DLL int32_t ctx_DSS_SetActiveClass(const void* ctx, const char* ClassName)
 {
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_INT32(CircuitS)
     const char* res = oddie_keep_str((OddieContext*) ctx, ((OddieContext*) ctx)->CircuitS(5, ClassName));
     oddie_map_error(ctx);
     return (res != NULL && *res != 0) ? atoi(res) : -1;
+}
+
+ALTDSS_ODDIE_DLL int32_t ctx_Lines_Get_TotalCust(const void* ctx)
+{
+    CTX_OR_PRIME
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    (void) ctx_Lines_Get_Units(ctx);
+    if (oddie_ctx->error_number)
+    {
+        return 0;
+    }
+    // NOTE:
+    // Since the Lines API always use ActiveCktElement, this is valid; 
+    // if that changes, we have to adjust this function.
+    return ctx_PDElements_Get_Totalcustomers(ctx);
 }
 
 ALTDSS_ODDIE_DLL void ctx_Lines_Set_IsSwitch(const void* ctx, uint16_t Value)
@@ -1999,6 +2043,7 @@ ALTDSS_ODDIE_DLL void ctx_DSSProperty_Set_Name(const void* ctx, const char* Valu
 ALTDSS_ODDIE_DLL const char* ctx_DSSProperty_Get_Description(const void* ctx)
 {
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_STR(DSSProperties)
     const char* res;
     OddieContext* oddie_ctx = (OddieContext*) ctx;
     res = oddie_ctx->DSSProperties(1, oddie_int32_to_pchar(oddie_ctx, oddie_ctx->PropIndex));
@@ -2009,6 +2054,7 @@ ALTDSS_ODDIE_DLL const char* ctx_DSSProperty_Get_Description(const void* ctx)
 ALTDSS_ODDIE_DLL const char* ctx_DSSProperty_Get_Name(const void* ctx)
 {
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_STR(DSSProperties)
     const char* res;
     OddieContext* oddie_ctx = (OddieContext*) ctx;
     res = oddie_ctx->DSSProperties(0, oddie_int32_to_pchar(oddie_ctx, oddie_ctx->PropIndex));
@@ -2019,6 +2065,7 @@ ALTDSS_ODDIE_DLL const char* ctx_DSSProperty_Get_Name(const void* ctx)
 ALTDSS_ODDIE_DLL const char* ctx_DSSProperty_Get_Val(const void* ctx)
 {
     CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_STR(DSSProperties)
     const char* res;
     OddieContext* oddie_ctx = (OddieContext*) ctx;
     res = oddie_ctx->DSSProperties(2, oddie_int32_to_pchar(oddie_ctx, oddie_ctx->PropIndex));
@@ -2038,6 +2085,7 @@ ALTDSS_ODDIE_DLL void ctx_CktElement_Close(const void* ctx, int32_t Term, int32_
     CTX_OR_PRIME
     /*
     TODO: This is a custom impl. since DDLL affects only phase 3; COM works OK.
+    ODDIE_CHECK_FUNC_VOID(CktElementI)
     ((OddieContext*) ctx)->CktElementI(4, Term);
     */
     OddieContext* oddie_ctx = (OddieContext*) ctx;
@@ -2060,6 +2108,7 @@ ALTDSS_ODDIE_DLL void ctx_CktElement_Open(const void* ctx, int32_t Term, int32_t
     CTX_OR_PRIME
     /* 
     TODO: This is a custom impl. since DDLL affects only phase 3; COM works OK.
+    ODDIE_CHECK_FUNC_VOID(CktElementI)
     ((OddieContext*) ctx)->CktElementI(3, Term);
     */
     OddieContext* oddie_ctx = (OddieContext*) ctx;
@@ -2081,6 +2130,7 @@ ALTDSS_ODDIE_DLL uint16_t ctx_CktElement_IsOpen(const void* ctx, int32_t Term, i
 {
     CTX_OR_PRIME
     uint16_t res;
+    ODDIE_CHECK_FUNC_UINT16(CktElementI)
     OddieContext* oddie_ctx = (OddieContext*) ctx;
     if (Phs <= 0)
     {
@@ -4551,6 +4601,11 @@ ALTDSS_ODDIE_DLL uint16_t ctx_CktElement_Get_HasVoltControl(const void* ctx)
     res = ((OddieContext*) ctx)->CktElementI(8, 0);
     oddie_map_error(ctx);
     return res;
+}
+
+ALTDSS_ODDIE_DLL uint16_t ctx_CktElement_Get_HasOCPDevice(const void* ctx)
+{
+    return (ctx_CktElement_Get_OCPDevIndex(ctx) != 0) ? -1 : 0;
 }
 
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_Losses(const void* ctx, double** ResultPtr, int32_t* ResultDims)
@@ -11526,6 +11581,11 @@ ALTDSS_ODDIE_DLL double ctx_Solution_Get_StepSize(const void* ctx)
     return res;
 }
 
+ALTDSS_ODDIE_DLL double ctx_Solution_Get_IntervalHrs(const void* ctx)
+{
+    return ctx_Solution_Get_StepSize(ctx) / 3600.0;
+}
+
 ALTDSS_ODDIE_DLL uint16_t ctx_Solution_Get_SystemYChanged(const void* ctx)
 {
     CTX_OR_PRIME
@@ -11592,6 +11652,16 @@ ALTDSS_ODDIE_DLL double ctx_Solution_Get_pctGrowth(const void* ctx)
     ODDIE_CHECK_FUNC_FLOAT64(SolutionF)
     double res;
     res = ((OddieContext*) ctx)->SolutionF(10, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Solution_Get_Time_of_Step(const void* ctx)
+{
+    CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_FLOAT64(SolutionF)
+    double res;
+    res = ((OddieContext*) ctx)->SolutionF(27, 0);
     oddie_map_error(ctx);
     return res;
 }
@@ -11810,6 +11880,11 @@ ALTDSS_ODDIE_DLL void ctx_Solution_Set_StepSize(const void* ctx, double Value)
     ODDIE_CHECK_FUNC_VOID(SolutionF)
     ((OddieContext*) ctx)->SolutionF(5, Value);
     oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Solution_Set_IntervalHrs(const void* ctx, double Value)
+{
+    ctx_Solution_Set_StepSize(ctx, Value * 3600.0);
 }
 
 ALTDSS_ODDIE_DLL void ctx_Solution_Set_StepsizeHr(const void* ctx, double Value)
@@ -14084,13 +14159,6 @@ ALTDSS_ODDIE_DLL int32_t ctx_CktElement_Get_Handle(const void* ctx)
     return 0;
 }
 
-ALTDSS_ODDIE_DLL uint16_t ctx_CktElement_Get_HasOCPDevice(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "CktElement_Get_HasOCPDevice");
-    return 0;
-}
-
 ALTDSS_ODDIE_DLL uint16_t ctx_CktElement_Get_IsIsolated(const void* ctx)
 {
     CTX_OR_PRIME
@@ -14260,13 +14328,6 @@ ALTDSS_ODDIE_DLL int32_t ctx_Lines_Get_idx(const void* ctx)
 {
     CTX_OR_PRIME
     oddie_error_not_implemented((OddieContext*) ctx, "Lines_Get_idx");
-    return 0;
-}
-
-ALTDSS_ODDIE_DLL int32_t ctx_Lines_Get_TotalCust(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Lines_Get_TotalCust");
     return 0;
 }
 
@@ -14608,26 +14669,6 @@ ALTDSS_ODDIE_DLL void ctx_Settings_SetPropertyNameStyle(const void* ctx, int32_t
 {
     CTX_OR_PRIME
     oddie_error_not_implemented((OddieContext*) ctx, "Settings_SetPropertyNameStyle");
-}
-
-ALTDSS_ODDIE_DLL double ctx_Solution_Get_IntervalHrs(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Solution_Get_IntervalHrs");
-    return 0;
-}
-
-ALTDSS_ODDIE_DLL double ctx_Solution_Get_Time_of_Step(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Solution_Get_Time_of_Step");
-    return 0;
-}
-
-ALTDSS_ODDIE_DLL void ctx_Solution_Set_IntervalHrs(const void* ctx, double Value)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Solution_Set_IntervalHrs");
 }
 
 ALTDSS_ODDIE_DLL void ctx_Solution_SolveSnap(const void* ctx)

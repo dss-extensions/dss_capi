@@ -13,13 +13,6 @@ ALTDSS_ODDIE_DLL int32_t AltDSSOddieCAPIInit(AltDSSCAPI *funcs, uint64_t size, u
         return 0;
     }
 
-    funcs->DSS_Dispose_PByte = DSS_Dispose_PByte;
-    funcs->DSS_Dispose_PDouble = DSS_Dispose_PDouble;
-    funcs->DSS_Dispose_PInteger = DSS_Dispose_PInteger;
-    funcs->DSS_Dispose_PPAnsiChar = DSS_Dispose_PPAnsiChar;
-    funcs->DSS_Get_PAnsiChar = DSS_Get_PAnsiChar;
-    funcs->DSS_Dispose_String = DSS_Dispose_String;
-    funcs->DSS_Dispose_PPointer = DSS_Dispose_PPointer;
     funcs->Oddie_SetLibOptions = Oddie_SetLibOptions;
     funcs->Oddie_SetOptions = Oddie_SetOptions;
     funcs->ctx_New = ctx_New;
