@@ -6129,6 +6129,8 @@ extern "C" {
 
     /*! 
     Array of strings with all XYCurve names.
+
+    (API Extension)
     */
     ALTDSS_CAPI_DLL void ctx_XYCurves_Get_AllNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims);
 
