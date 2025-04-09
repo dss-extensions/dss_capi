@@ -41,6 +41,8 @@ add_library(altdss_capi_loader altdss_capi_loader.c "${CMAKE_CURRENT_SOURCE_DIR}
 if(MSVC)
     # We don't need .EXP files, clutter...
     set(CMAKE_SHARED_LINKER_FLAGS "/NOEXP")
+else()    
+    add_definitions(-fPIC)
 endif()
 
 target_compile_options(altdss_capi_loader PRIVATE "-DHAS_ALTDSS_LOADER_FUNC")
