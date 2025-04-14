@@ -17,6 +17,10 @@
 #endif
 
 #ifdef __cplusplus
+#ifdef ALTDSS_CAPI_NAMESPACE
+namespace altdss { namespace capi {
+#endif
+
 extern "C" {
 #endif
 #include "./common.h"
@@ -2391,6 +2395,9 @@ ALTDSS_CAPI_DLL void AltDSSCAPILibClose(AltDSSCAPI *funcs);
 
 #ifdef __cplusplus
 } // extern "C"
+#ifdef ALTDSS_CAPI_NAMESPACE
+} } // namespace altdss { namespace capi {
+#endif
 #endif
 
 #endif //#ifdef ALTDSS_CAPI_FUNCS_H

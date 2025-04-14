@@ -17,7 +17,7 @@ Version: 0.5.1 (2024-07)
 
 namespace dss { namespace obj {
 
-#ifdef DSS_CAPI_NAMESPACE
+#ifdef ALTDSS_CAPI_NAMESPACE
 using namespace dss::capi;
 #endif
 

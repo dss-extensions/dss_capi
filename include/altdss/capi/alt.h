@@ -3,7 +3,7 @@
 #define ALTDSS_OBJ_CAPI_DLL_H
 
 #ifdef __cplusplus
-#ifdef DSS_CAPI_NAMESPACE
+#ifdef ALTDSS_CAPI_NAMESPACE
 namespace altdss { namespace capi {
 #endif
 extern "C" {
@@ -398,7 +398,7 @@ extern "C" {
 
 #ifdef __cplusplus
 } // extern "C"
-#ifdef DSS_CAPI_NAMESPACE
+#ifdef ALTDSS_CAPI_NAMESPACE
 } } // namespace altdss::capi
 #endif
 #endif
