@@ -1,6 +1,17 @@
 /*! \file dss.h */
 #ifndef ALTDSS_CAPI_COMMON_H
 #define ALTDSS_CAPI_COMMON_H
+
+#ifndef ALTDSS_CAPI_DLL
+#ifdef HAS_ALTDSS_LOADER_FUNC
+#if defined(altdss_capi_loader_EXPORTS)
+#define ALTDSS_CAPI_DLL __declspec(dllexport)
+#else
+#define ALTDSS_CAPI_DLL __declspec(dllimport)
+#endif
+#endif
+#endif
+
 #ifndef ALTDSS_CAPI_DLL
 //#define ALTDSS_CAPI_DLL __declspec(dllimport)
 #define ALTDSS_CAPI_DLL
