@@ -7,6 +7,8 @@
 
 #ifdef WIN32
 #define strcasecmp _stricmp
+#include <tlhelp32.h> 
+#include <tchar.h>
 #else
 #include <strings.h>
 #endif
@@ -517,9 +519,43 @@ ALTDSS_ODDIE_DLL const void* ctx_New(void)
 
 CTX_NEW_ERROR:
     ctx_Dispose(ctx);
-    free(ctx);
     return NULL;
 }
+
+#ifdef WIN32
+int oddie_win32_get_mod_refcount(HMODULE targetHandle) 
+{
+    int result = -1;
+    HANDLE hModuleSnap = INVALID_HANDLE_VALUE; 
+    MODULEENTRY32 me32; 
+
+    hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0); 
+    if (hModuleSnap == INVALID_HANDLE_VALUE) 
+    {
+        return -2; 
+    } 
+
+    me32.dwSize = sizeof(MODULEENTRY32); 
+    if (!Module32First(hModuleSnap, &me32))
+    {
+        CloseHandle(hModuleSnap);
+        return -3;
+    }
+
+    //  Now walk the module list of the process, 
+    //  and display information about each module 
+    do 
+    {
+        if (targetHandle == me32.hModule)
+        {
+            result = me32.ProccntUsage;
+        }
+    } while (Module32Next(hModuleSnap, &me32)); 
+
+    CloseHandle(hModuleSnap); 
+    return result;
+}
+#endif
 
 ALTDSS_ODDIE_DLL void ctx_Dispose(const void *ctx)
 {
@@ -528,15 +564,36 @@ ALTDSS_ODDIE_DLL void ctx_Dispose(const void *ctx)
         return;
     }
     OddieContext* oddie_ctx = (OddieContext*) ctx;
+#ifdef WIN32
+    HMODULE dll_handle = oddie_ctx->dll_handle;
+    int refcount = dll_handle ? oddie_win32_get_mod_refcount(dll_handle) : 0;
+
+    if (refcount <= 1 && oddie_ctx->dll_handle && (ctx_DSS_Get_NumCircuits(ctx) >= 1))
+    {
+        // Force a clear all to avoid issues unloading the Delphi DLL.
+        // Since EPRI's engine is used as a singleton, if users find
+        // this has an overhead, they can just close/terminate the hosting 
+        // process instead of calling ctx_Dispose.
+        ctx_DSS_ClearAll(ctx);
+    }
+#else
+    void* dll_handle = oddie_ctx->dll_handle;
+    int refcount = 1;
+#endif
+
     ctx_DSS_ResetStringBuffer(ctx);
+    free(oddie_ctx);
+
+    if (!oddie_ctx->dll_handle)
+    {
+        return;
+    }
 
 #ifdef WIN32
-    FreeLibrary(oddie_ctx->dll_handle);
+    FreeLibrary(dll_handle);
 #else
-    if (oddie_ctx->dll_handle)
-        dlclose(oddie_ctx->dll_handle);
+    dlclose(dll_handle);
 #endif
-    oddie_ctx->dll_handle = NULL;
 }
 
 const char* oddie_int32_to_pchar(OddieContext* ctx, int32_t value)
@@ -1487,7 +1544,7 @@ ALTDSS_ODDIE_DLL double ctx_CktElement_Get_Variable(const void* ctx, const char*
         return res;
     }
 
-    res = oddie_ctx->CktElementF(5, 0);
+    res = oddie_ctx->CktElementF(6, 0);
     oddie_map_error(ctx);
     if (oddie_ctx->error_number)
     {
@@ -1535,7 +1592,7 @@ ALTDSS_ODDIE_DLL void ctx_CktElement_Set_VariableName(const void* ctx, const cha
     OddieContext* oddie_ctx = (OddieContext*) ctx;
     const char* res = oddie_keep_str(oddie_ctx, oddie_ctx->CktElementS(6, Value));
     oddie_map_error(ctx);
-    if (!oddie_ctx->error_number && res != NULL && res[0] != 0 && res[0] == 'O' && res[1] == 'K' && res[2] == 0)
+    if (!oddie_ctx->error_number && res != NULL && res[0] != 0 && !(res[0] == 'O' && res[1] == 'K' && res[2] == 0))
     {
         oddie_ctx->error_number = 100002;
         strncpy(oddie_ctx->error_desc, "(Oddie) Invalid variable name.", DSS_ERR_NUM_CHR);
@@ -2576,7 +2633,7 @@ ALTDSS_ODDIE_DLL void ctx_Circuit_Get_SystemY(const void* ctx, double** ResultPt
 ALTDSS_ODDIE_DLL void ctx_Circuit_Get_SystemY_GR(const void* ctx)
 {  
     CTX_OR_PRIME
-    oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->CircuitV, 11, &((OddieContext*) ctx)->GR_DataPtr_PDouble, &((OddieContext*) ctx)->GR_Counts_PDouble[0], NULL);
+    ctx_Circuit_Get_SystemY(ctx, &((OddieContext*) ctx)->GR_DataPtr_PDouble, &((OddieContext*) ctx)->GR_Counts_PDouble[0]);
 }
 
 ALTDSS_ODDIE_DLL void ctx_Bus_Get_ZscMatrix(const void* ctx, double** ResultPtr, int32_t* ResultDims)
@@ -9316,12 +9373,20 @@ ALTDSS_ODDIE_DLL void ctx_Reactors_Get_Rmatrix(const void* ctx, double** ResultP
 {
     CTX_OR_PRIME
     oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->ReactorsV, 1, ResultPtr, ResultDims, NULL);
+    if (ResultDims[0])
+    {
+        ResultDims[3] = ResultDims[2] = ctx_Reactors_Get_Phases(ctx);
+        if (ResultDims[3]*ResultDims[3] != ResultDims[0])
+        {
+            ResultDims[3] = ResultDims[2] = 0;
+        }
+    }
 }
 
 ALTDSS_ODDIE_DLL void ctx_Reactors_Get_Rmatrix_GR(const void* ctx)
 {  
     CTX_OR_PRIME
-    oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->ReactorsV, 1, &((OddieContext*) ctx)->GR_DataPtr_PDouble, &((OddieContext*) ctx)->GR_Counts_PDouble[0], NULL);
+    ctx_Reactors_Get_Rmatrix(ctx, &((OddieContext*) ctx)->GR_DataPtr_PDouble, &((OddieContext*) ctx)->GR_Counts_PDouble[0]);
 }
 
 ALTDSS_ODDIE_DLL double ctx_Reactors_Get_Rp(const void* ctx)
@@ -9348,12 +9413,20 @@ ALTDSS_ODDIE_DLL void ctx_Reactors_Get_Xmatrix(const void* ctx, double** ResultP
 {
     CTX_OR_PRIME
     oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->ReactorsV, 3, ResultPtr, ResultDims, NULL);
+    if (ResultDims[0])
+    {
+        ResultDims[3] = ResultDims[2] = ctx_Reactors_Get_Phases(ctx);
+        if (ResultDims[3]*ResultDims[3] != ResultDims[0])
+        {
+            ResultDims[3] = ResultDims[2] = 0;
+        }
+    }
 }
 
 ALTDSS_ODDIE_DLL void ctx_Reactors_Get_Xmatrix_GR(const void* ctx)
 {  
     CTX_OR_PRIME
-    oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->ReactorsV, 3, &((OddieContext*) ctx)->GR_DataPtr_PDouble, &((OddieContext*) ctx)->GR_Counts_PDouble[0], NULL);
+    ctx_Reactors_Get_Xmatrix(ctx, &((OddieContext*) ctx)->GR_DataPtr_PDouble, &((OddieContext*) ctx)->GR_Counts_PDouble[0]);
 }
 
 ALTDSS_ODDIE_DLL void ctx_Reactors_Get_Z(const void* ctx, double** ResultPtr, int32_t* ResultDims)

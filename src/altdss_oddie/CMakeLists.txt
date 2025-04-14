@@ -39,11 +39,12 @@ set_property(CACHE ALTDSS_ODDIE_LINK_ODD PROPERTY STRINGS "" "OpenDSSC" "OpenDSS
 
 #TODO: Use FetchContent to integrate the build process
 
+SET(EXPORT_DEF altdss_oddie_capi_EXPORTS) # For the time being, always use dllexport on Windows, even when build static libs.
 add_library(altdss_oddie_capi altdss_oddie.c altdss_oddie_init.c "${CMAKE_CURRENT_SOURCE_DIR}/../../include/altdss/capi/oddie.h" altdss_oddie_private.h)
 if (NOT "${ALTDSS_ODDIE_LINK_ODD}" STREQUAL "")
     message("Linking Oddie to \"${ALTDSS_ODDIE_LINK_ODD}\"")
     find_library(ODD_LIBRARY NAMES lib${ALTDSS_ODDIE_LINK_ODD}.a ${ALTDSS_ODDIE_LINK_ODD}.lib ${ALTDSS_ODDIE_LINK_ODD} HINTS "${CMAKE_PREFIX_PATH}")
-    target_compile_definitions(altdss_oddie_capi PRIVATE ALTDSS_ODDIE_LINK_OPENDSSDIRECT_API)
+    target_compile_definitions(altdss_oddie_capi PRIVATE ALTDSS_ODDIE_LINK_OPENDSSDIRECT_API ${EXPORT_DEF})
     target_link_libraries(altdss_oddie_capi "${ODD_LIBRARY}")
     if ("${ALTDSS_ODDIE_LINK_ODD}-" STREQUAL "OpenDSSC-")
         if (NOT WIN32)
@@ -60,6 +61,7 @@ if (NOT "${ALTDSS_ODDIE_LINK_ODD}" STREQUAL "")
     set(ODDIE_LIB_SUFFIX "-${ODDIE_LIB_SUFFIX}")
 else()
     set(ODDIE_LIB_SUFFIX "")
+    target_compile_definitions(altdss_oddie_capi PRIVATE ${EXPORT_DEF})
 endif ()
 set_target_properties(altdss_oddie_capi PROPERTIES OUTPUT_NAME "altdss_oddie_capi${ODDIE_LIB_SUFFIX}")
 

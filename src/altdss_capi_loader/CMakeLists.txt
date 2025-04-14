@@ -37,6 +37,7 @@ endif ()
 SET(ALTDSS_CAPI_LOADER_OUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/${ALTDSS_CAPI_LOADER_OUT_DIR_PREFIX}_${ALTDSS_CAPI_LOADER_OUT_DIR_SUFFIX}")
 
 add_library(altdss_capi_loader altdss_capi_loader.c "${CMAKE_CURRENT_SOURCE_DIR}/../../include/altdss/capi/capi.h" "${CMAKE_CURRENT_SOURCE_DIR}/../../include/altdss/capi/common.h" "${CMAKE_CURRENT_SOURCE_DIR}/../../include/altdss/capi/enums.h")
+target_compile_definitions(altdss_capi_loader PRIVATE altdss_capi_loader_EXPORTS) # For the time being, always use dllexport on Windows, even when build static libs.
 
 if(MSVC)
     # We don't need .EXP files, clutter...
