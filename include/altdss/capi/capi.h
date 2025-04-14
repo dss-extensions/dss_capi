@@ -16,14 +16,16 @@
 #endif
 #endif
 
-#ifdef __cplusplus
-#ifdef ALTDSS_CAPI_NAMESPACE
-namespace altdss { namespace capi {
-#endif
+#include "./common.h"
 
+#ifdef __cplusplus
 extern "C" {
 #endif
-#include "./common.h"
+
+#ifdef ALTDSS_CAPI_NAMESPACE
+    namespace altdss {
+        namespace capi {
+#endif
 
 typedef void (*altdss_func_DSS_Dispose_PByte)(int8_t **p);
 typedef void (*altdss_func_DSS_Dispose_PDouble)(double **p);
