@@ -13,6 +13,13 @@ ALTDSS_ODDIE_DLL int32_t AltDSSOddieCAPIInit(AltDSSCAPI *funcs, uint64_t size, u
         return 0;
     }
 
+    funcs->DSS_Dispose_PByte = DSS_Dispose_PByte;
+    funcs->DSS_Dispose_PDouble = DSS_Dispose_PDouble;
+    funcs->DSS_Dispose_PInteger = DSS_Dispose_PInteger;
+    funcs->DSS_Dispose_PPAnsiChar = DSS_Dispose_PPAnsiChar;
+    funcs->DSS_Get_PAnsiChar = DSS_Get_PAnsiChar;
+    funcs->DSS_Dispose_String = DSS_Dispose_String;
+    funcs->DSS_Dispose_PPointer = DSS_Dispose_PPointer;
     funcs->Oddie_SetLibOptions = Oddie_SetLibOptions;
     funcs->Oddie_SetOptions = Oddie_SetOptions;
     funcs->ctx_New = ctx_New;
@@ -20,13 +27,6 @@ ALTDSS_ODDIE_DLL int32_t AltDSSOddieCAPIInit(AltDSSCAPI *funcs, uint64_t size, u
     funcs->ctx_Get_Prime = ctx_Get_Prime;
     funcs->ctx_Set_Prime = ctx_Set_Prime;
     funcs->DSS_GetGRPointers = ctx_DSS_GetGRPointers;
-    funcs->DSS_Get_PAnsiChar = DSS_Get_PAnsiChar;
-    funcs->DSS_Dispose_PByte = DSS_Dispose_PByte;
-    funcs->DSS_Dispose_PDouble = DSS_Dispose_PDouble;
-    funcs->DSS_Dispose_PInteger = DSS_Dispose_PInteger;
-    funcs->DSS_Dispose_PPAnsiChar = DSS_Dispose_PPAnsiChar;
-    funcs->DSS_Dispose_PPointer = DSS_Dispose_PPointer;
-    funcs->DSS_Dispose_String = DSS_Dispose_String;
     funcs->DSS_GR_DataPtr_PByte = ctx_DSS_GR_DataPtr_PByte;
     funcs->DSS_GR_DataPtr_PDouble = ctx_DSS_GR_DataPtr_PDouble;
     funcs->DSS_GR_DataPtr_PInteger = ctx_DSS_GR_DataPtr_PInteger;
@@ -274,6 +274,10 @@ ALTDSS_ODDIE_DLL int32_t AltDSSOddieCAPIInit(AltDSSCAPI *funcs, uint64_t size, u
     funcs->Bus_Get_y = ctx_Bus_Get_y;
     funcs->Bus_Set_x = ctx_Bus_Set_x;
     funcs->Bus_Set_y = ctx_Bus_Set_y;
+    funcs->Bus_Get_Longitude = ctx_Bus_Get_Longitude;
+    funcs->Bus_Get_Latitude = ctx_Bus_Get_Latitude;
+    funcs->Bus_Set_Longitude = ctx_Bus_Set_Longitude;
+    funcs->Bus_Set_Latitude = ctx_Bus_Set_Latitude;
     funcs->Bus_ZscRefresh = ctx_Bus_ZscRefresh;
     funcs->CapControls_Get_AllNames = ctx_CapControls_Get_AllNames;
     funcs->CapControls_Get_CTratio = ctx_CapControls_Get_CTratio;

@@ -289,6 +289,34 @@ extern "C" {
     ALTDSS_CAPI_DLL void ctx_Bus_Set_y(const void* ctx, double Value);
 
     /*! 
+    Longitude for bus (double)
+
+    On the AltDSS engine, this is currently a synonym to the X coordinate.
+    */
+    ALTDSS_CAPI_DLL void ctx_Bus_Set_Longitude(const void* ctx, double Value);
+
+    /*! 
+    Latitude for bus (double)
+
+    On the AltDSS engine, this is currently a synonym to the Y coordinate.
+    */
+    ALTDSS_CAPI_DLL void ctx_Bus_Set_Latitude(const void* ctx, double Value);
+
+    /*! 
+    Longitude for bus (double)
+
+    On the AltDSS engine, this is currently a synonym to the X coordinate.
+    */
+    ALTDSS_CAPI_DLL double ctx_Bus_Get_Longitude(const void* ctx);
+
+    /*! 
+    Latitude for bus (double)
+
+    On the AltDSS engine, this is currently a synonym to the Y coordinate.
+    */
+    ALTDSS_CAPI_DLL double ctx_Bus_Get_Latitude(const void* ctx);
+
+    /*! 
     Distance from EnergyMeter (if non-zero)
     */
     ALTDSS_CAPI_DLL double ctx_Bus_Get_Distance(const void* ctx);

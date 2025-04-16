@@ -4,10 +4,14 @@
 
 #ifndef ALTDSS_CAPI_DLL
 #ifdef HAS_ALTDSS_LOADER_FUNC
+#ifdef _WIN32
 #if defined(altdss_capi_loader_EXPORTS)
 #define ALTDSS_CAPI_DLL __declspec(dllexport)
 #else
 #define ALTDSS_CAPI_DLL __declspec(dllimport)
+#endif
+#else
+#define ALTDSS_CAPI_DLL
 #endif
 #endif
 #endif

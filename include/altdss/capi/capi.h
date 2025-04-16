@@ -19,12 +19,10 @@
 #include "./common.h"
 
 #ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifdef ALTDSS_CAPI_NAMESPACE
-    namespace altdss {
-        namespace capi {
+namespace altdss { namespace capi {
+#endif
+extern "C" {
 #endif
 
 typedef void (*altdss_func_DSS_Dispose_PByte)(int8_t **p);
@@ -525,8 +523,10 @@ typedef struct AltDSSCAPI {
     altdss_func_void_constVoidPtr_doublePtrPtr_int32Ptr Bus_Get_Isc;
     altdss_func_void_constVoidPtr Bus_Get_Isc_GR;
     altdss_func_double_constVoidPtr Bus_Get_Lambda;
+    altdss_func_double_constVoidPtr Bus_Get_Latitude;
     altdss_func_void_constVoidPtr_charPtrPtrPtr_int32Ptr Bus_Get_LineList;
     altdss_func_void_constVoidPtr_charPtrPtrPtr_int32Ptr Bus_Get_LoadList;
+    altdss_func_double_constVoidPtr Bus_Get_Longitude;
     altdss_func_int32_constVoidPtr Bus_Get_N_Customers;
     altdss_func_double_constVoidPtr Bus_Get_N_interrupts;
     altdss_func_constCharPtr_constVoidPtr Bus_Get_Name;
@@ -566,6 +566,8 @@ typedef struct AltDSSCAPI {
     altdss_func_void_constVoidPtr Bus_Get_puVoltages_GR;
     altdss_func_double_constVoidPtr Bus_Get_x;
     altdss_func_double_constVoidPtr Bus_Get_y;
+    altdss_func_void_constVoidPtr_double Bus_Set_Latitude;
+    altdss_func_void_constVoidPtr_double Bus_Set_Longitude;
     altdss_func_void_constVoidPtr_double Bus_Set_x;
     altdss_func_void_constVoidPtr_double Bus_Set_y;
     altdss_func_uint16_constVoidPtr Bus_ZscRefresh;
