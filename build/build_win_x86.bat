@@ -54,8 +54,8 @@ if exist lib\win_x86\altdss_capi.dll (
     exit /B 1
 )
 
-rd /s /q build\units_x86
-mkdir .\build\units_x86
+rd /s /q build\units_x86_dbg
+mkdir .\build\units_x86_dbg
 
 fpc -Pi386 @src\windows-x86-dbg.cfg -B src\altdss_capid.pas
 if errorlevel 1 exit /B 1
