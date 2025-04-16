@@ -61,6 +61,10 @@ procedure Bus_Get_ZSC012Matrix(var ResultPtr: PDouble; ResultCount: PAPISize); C
 procedure Bus_Get_ZSC012Matrix_GR(); CDECL;
 procedure Bus_Get_AllPCEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_AllPDEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+function Bus_Get_Longitude(): Double; CDECL;
+procedure Bus_Set_Longitude(Value: Double); CDECL;
+function Bus_Get_Latitude(): Double; CDECL;
+procedure Bus_Set_Latitude(Value: Double); CDECL;
 
 // Extensions
 function Bus_Get_Next(): Integer; CDECL;
@@ -804,6 +808,26 @@ begin
     begin
         Result := -1;
     end;
+end;
+//------------------------------------------------------------------------------
+function Bus_Get_Longitude(): Double; CDECL;
+begin
+    Result := Bus_Get_x();
+end;
+//------------------------------------------------------------------------------
+procedure Bus_Set_Longitude(Value: Double); CDECL;
+begin
+    Bus_Set_x(Value);
+end;
+//------------------------------------------------------------------------------
+function Bus_Get_Latitude(): Double; CDECL;
+begin
+    Result := Bus_Get_y();
+end;
+//------------------------------------------------------------------------------
+procedure Bus_Set_Latitude(Value: Double); CDECL;
+begin
+    Bus_Set_y(Value);
 end;
 //------------------------------------------------------------------------------
 end.

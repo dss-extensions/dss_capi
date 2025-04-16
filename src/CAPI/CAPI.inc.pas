@@ -246,8 +246,10 @@ TAltDSSCAPI = packed record
     Bus_Get_Isc: Pointer;
     Bus_Get_Isc_GR: Pointer;
     Bus_Get_Lambda: Pointer;
+    Bus_Get_Latitude: Pointer;
     Bus_Get_LineList: Pointer;
     Bus_Get_LoadList: Pointer;
+    Bus_Get_Longitude: Pointer;
     Bus_Get_N_Customers: Pointer;
     Bus_Get_N_interrupts: Pointer;
     Bus_Get_Name: Pointer;
@@ -287,6 +289,8 @@ TAltDSSCAPI = packed record
     Bus_Get_puVoltages_GR: Pointer;
     Bus_Get_x: Pointer;
     Bus_Get_y: Pointer;
+    Bus_Set_Latitude: Pointer;
+    Bus_Set_Longitude: Pointer;
     Bus_Set_x: Pointer;
     Bus_Set_y: Pointer;
     Bus_ZscRefresh: Pointer;
@@ -2348,8 +2352,10 @@ begin
     funcs.Bus_Get_Isc := Pointer(@ctx_Bus_Get_Isc);
     funcs.Bus_Get_Isc_GR := Pointer(@ctx_Bus_Get_Isc_GR);
     funcs.Bus_Get_Lambda := Pointer(@ctx_Bus_Get_Lambda);
+    funcs.Bus_Get_Latitude := Pointer(@ctx_Bus_Get_Latitude);
     funcs.Bus_Get_LineList := Pointer(@ctx_Bus_Get_LineList);
     funcs.Bus_Get_LoadList := Pointer(@ctx_Bus_Get_LoadList);
+    funcs.Bus_Get_Longitude := Pointer(@ctx_Bus_Get_Longitude);
     funcs.Bus_Get_N_Customers := Pointer(@ctx_Bus_Get_N_Customers);
     funcs.Bus_Get_N_interrupts := Pointer(@ctx_Bus_Get_N_interrupts);
     funcs.Bus_Get_Name := Pointer(@ctx_Bus_Get_Name);
@@ -2389,6 +2395,8 @@ begin
     funcs.Bus_Get_puVoltages_GR := Pointer(@ctx_Bus_Get_puVoltages_GR);
     funcs.Bus_Get_x := Pointer(@ctx_Bus_Get_x);
     funcs.Bus_Get_y := Pointer(@ctx_Bus_Get_y);
+    funcs.Bus_Set_Latitude := Pointer(@ctx_Bus_Set_Latitude);
+    funcs.Bus_Set_Longitude := Pointer(@ctx_Bus_Set_Longitude);
     funcs.Bus_Set_x := Pointer(@ctx_Bus_Set_x);
     funcs.Bus_Set_y := Pointer(@ctx_Bus_Set_y);
     funcs.Bus_ZscRefresh := Pointer(@ctx_Bus_ZscRefresh);

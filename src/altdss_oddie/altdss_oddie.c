@@ -3659,6 +3659,42 @@ ALTDSS_ODDIE_DLL void ctx_Bus_Set_y(const void* ctx, double Value)
     oddie_map_error(ctx);
 }
 
+ALTDSS_ODDIE_DLL double ctx_Bus_Get_Longitude(const void* ctx)
+{
+    CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_FLOAT64(BUSF)
+    double res;
+    res = ((OddieContext*) ctx)->BUSF(14, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL double ctx_Bus_Get_Latitude(const void* ctx)
+{
+    CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_FLOAT64(BUSF)
+    double res;
+    res = ((OddieContext*) ctx)->BUSF(12, 0);
+    oddie_map_error(ctx);
+    return res;
+}
+
+ALTDSS_ODDIE_DLL void ctx_Bus_Set_Longitude(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_VOID(BUSF)
+    ((OddieContext*) ctx)->BUSF(15, Value);
+    oddie_map_error(ctx);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Bus_Set_Latitude(const void* ctx, double Value)
+{
+    CTX_OR_PRIME
+    ODDIE_CHECK_FUNC_VOID(BUSF)
+    ((OddieContext*) ctx)->BUSF(13, Value);
+    oddie_map_error(ctx);
+}
+
 ALTDSS_ODDIE_DLL uint16_t ctx_Bus_ZscRefresh(const void* ctx)
 {
     CTX_OR_PRIME

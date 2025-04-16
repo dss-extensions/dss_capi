@@ -27,6 +27,7 @@
     - Start reorganizing the header files. We now have a folder `include/altdss/capi` with the main C headers.
 
 - Introduce a new subproject: **AltDSS Oddie**. Oddie wraps the official OpenDSS binaries (i.e. the official OpenDSS Engine), exposing them with the same API as AltDSS/DSS C-API. There is, Oddie is a thing compatibility layer that allows consuming EPRI's OpenDSSDirect.DLL (and in the future `libOpenDSSDirect.so` on Linux etc.) through the projects on DSS-Extensions downstream to AltDSS/DSS C-API. Check its [README](https://github.com/dss-extensions/dss_capi/blob/master/src/altdss_oddie/README.md) for some more info.
+- Bus: introduce `Latitude` and `Longitude` as synomyns for `Y` and `X`.
 - CapControl: handle phase checks better in `PTPhase` and `CTPhase`.
 - InvControl: 
     - When multiple InvControl objects and DERs are in the circuit, use the correct base voltage for each DER. 

@@ -39,8 +39,8 @@ library altdss_capi;
 // Copyright (c) 2016 Battelle Memorial Institute
 
 
-// Copyright (c) 2017-2023, Paulo Meira
-// Copyright (c) 2017-2023, DSS C-API contributors
+// Copyright (c) 2017-2025, Paulo Meira
+// Copyright (c) 2017-2025, DSS C-API contributors
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -324,6 +324,10 @@ exports
     Bus_Set_x,
     Bus_Get_y,
     Bus_Set_y,
+    Bus_Get_Longitude,
+    Bus_Set_Longitude,
+    Bus_Get_Latitude,
+    Bus_Set_Latitude,
     Bus_Get_Distance,
     Bus_GetUniqueNodeNumber,
     Bus_Get_CplxSeqVoltages,
