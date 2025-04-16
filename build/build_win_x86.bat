@@ -40,7 +40,9 @@ if exist lib\win_x86\altdss_capi.dll (
     dumpbin /exports "lib\win_x86\altdss_capi.dll" > lib\win_x86\exports.txt
     echo LIBRARY DSS_CAPI > lib\win_x86\altdss_capi.def
     echo EXPORTS >> lib\win_x86\altdss_capi.def
+    @echo off
     for /f "skip=19 tokens=4" %%A in (lib\win_x86\exports.txt) do echo %%A >> lib\win_x86\altdss_capi.def
+    @echo on
     lib /def:lib\win_x86\altdss_capi.def /out:lib\win_x86\altdss_capi.lib /machine:X86
     dlltool -d lib\win_x86\altdss_capi.def -m i386 -l lib\win_x86\altdss_capi.dll.a
     
@@ -68,7 +70,9 @@ if exist lib\win_x86\altdss_capid.dll (
     dumpbin /exports "lib\win_x86\altdss_capid.dll" > lib\win_x86\exports.txt
     echo LIBRARY ALTDSS_CAPID > lib\win_x86\altdss_capid.def
     echo EXPORTS >> lib\win_x86\altdss_capid.def
+    @echo off
     for /f "skip=19 tokens=4" %%A in (lib\win_x86\exports.txt) do echo %%A >> lib\win_x86\altdss_capid.def
+    @echo on
     lib /def:lib\win_x86\altdss_capid.def /out:lib\win_x86\altdss_capid.lib /machine:X86
     dlltool -d lib\win_x86\altdss_capid.def -m i386 -l lib\win_x86\altdss_capid.dll.a
     
