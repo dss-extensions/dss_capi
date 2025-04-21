@@ -1,6 +1,8 @@
 #include <altdss/capi/oddie.h>
 #include <altdss/capi/capi.h>
 
+static const char* engineName = "AltDSS Oddie";
+
 ALTDSS_ODDIE_DLL int32_t AltDSSOddieCAPIInit(AltDSSCAPI *funcs, uint64_t size, uint64_t version, uint64_t reserved1, void* reserved2)
 {
     if (size < sizeof(AltDSSCAPI))
@@ -13,6 +15,9 @@ ALTDSS_ODDIE_DLL int32_t AltDSSOddieCAPIInit(AltDSSCAPI *funcs, uint64_t size, u
         return 0;
     }
 
+    funcs->isAltDSS = 0;
+    funcs->engineName = engineName;
+    
     funcs->DSS_Dispose_PByte = DSS_Dispose_PByte;
     funcs->DSS_Dispose_PDouble = DSS_Dispose_PDouble;
     funcs->DSS_Dispose_PInteger = DSS_Dispose_PInteger;

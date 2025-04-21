@@ -46,11 +46,6 @@ enum DSSCompatFlags {
     DSSCompatFlags_MonitorHeader = 0x80
 };
 
-enum OddieLibFlags {
-    OddieLibFlags_DoNotMapErrors = 1 << 0,
-    OddieLibFlags_Strict = 1 << 1
-};
-
 static void* ctxPrime = NULL;
 static const char* ODDIE_LIB_NAME = NULL;
 #ifdef WIN32
@@ -1839,8 +1834,8 @@ ALTDSS_ODDIE_DLL void Oddie_SetOptions(const void *ctx, uint32_t flags)
         return;
     }
 
-    ((OddieContext*) ctx)->map_errors = (flags & OddieLibFlags_DoNotMapErrors) == 0;
-    ((OddieContext*) ctx)->strict = (flags & OddieLibFlags_Strict) != 0;
+    ((OddieContext*) ctx)->map_errors = (flags & OddieOptionFlags_DoNotMapErrors) == 0;
+    ((OddieContext*) ctx)->strict = (flags & OddieOptionFlags_Strict) != 0;
 }
 
 ALTDSS_ODDIE_DLL void ctx_XYCurves_Set_Xarray(const void* ctx, const double* ValuePtr, int32_t ValueCount)

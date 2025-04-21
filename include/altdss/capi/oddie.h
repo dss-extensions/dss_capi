@@ -26,6 +26,11 @@ extern "C" {
 #else
 #endif
 
+enum OddieOptionFlags {
+    OddieOptionFlags_DoNotMapErrors = 1 << 0,
+    OddieOptionFlags_Strict = 1 << 1
+};
+
 ALTDSS_ODDIE_DLL void Oddie_SetLibOptions(const char* libname, uint32_t* liboptions);
 ALTDSS_ODDIE_DLL void Oddie_SetOptions(const void *ctx, uint32_t flags);
 
