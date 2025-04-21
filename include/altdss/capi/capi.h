@@ -283,7 +283,7 @@ typedef struct AltDSSCAPI {
 
     uint64_t versionSignature;
     uint64_t isAltDSS;
-    const char* engineName;
+    char const* engineName;
 
     altdss_func_constCharPtr_constVoidPtr ActiveClass_Get_ActiveClassName;
     altdss_func_constCharPtr_constVoidPtr ActiveClass_Get_ActiveClassParent;
