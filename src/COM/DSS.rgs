@@ -1,0 +1,26 @@
+HKCR
+{
+    DSSExtensions.DSS.1 = s 'DSS class'
+    {
+        CLSID = s '{c924b382-18c2-11f0-a417-c87f5452571c}'
+    }
+    DSSExtensions.DSS = s 'DSS class'
+    {
+        CurVer = s 'DSSExtensions.DSS.1'
+    }
+    NoRemove CLSID
+    {
+        ForceRemove {c924b382-18c2-11f0-a417-c87f5452571c} = s 'DSS class'
+        {
+            ProgID = s 'DSSExtensions.DSS.1'
+            VersionIndependentProgID = s 'DSSExtensions.DSS'
+            ForceRemove Programmable
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+            TypeLib = s '{c924b0f8-18c2-11f0-a417-c87f5452571c}'
+            Version = s '1.0'
+        }
+    }
+}
