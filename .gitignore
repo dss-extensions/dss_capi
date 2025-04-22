@@ -59,6 +59,7 @@ klusolve/build
 build/generated
 build/cmake
 build/cmake-debug
+build/oddie
 release/
 
 *.dcu
@@ -75,3 +76,8 @@ docs/doxygen
 docs/build
 
 */*/build*
+.vs
+src/COM/x64
+src/COM/x86
+src/COM/DSSExtensions
+*.vcxproj.user
