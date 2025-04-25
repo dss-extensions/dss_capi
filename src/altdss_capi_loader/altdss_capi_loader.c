@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: (C) 2023-2025 Paulo Meira & contributors to DSS-Extensions
+// SPDX-License-Identifier: BSD-3
+
 #include <altdss/capi/capi.h>
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -25,7 +28,7 @@ ALTDSS_CAPI_DLL int32_t AltDSSCAPILibInit(const char* libName, uint64_t* libOpti
     altdss_func_Init init = NULL;
 
     if (funcs == NULL)
-    { 
+    {
         return -3;
     }
 
@@ -46,9 +49,9 @@ ALTDSS_CAPI_DLL int32_t AltDSSCAPILibInit(const char* libName, uint64_t* libOpti
     }
 
 #ifdef WIN32
-    init = (altdss_func_Init) GetProcAddress(funcs->libHandle, libInitFuncName ? libInitFuncName : defaultInitFuncName);
+    init = (altdss_func_Init) GetProcAddress(funcs->libHandle, (libInitFuncName && *libInitFuncName) ? libInitFuncName : defaultInitFuncName);
 #else
-    init = (altdss_func_Init) dlsym(funcs->libHandle, libInitFuncName ? libInitFuncName : defaultInitFuncName);
+    init = (altdss_func_Init) dlsym(funcs->libHandle, (libInitFuncName && *libInitFuncName) ? libInitFuncName : defaultInitFuncName);
 #endif
 
     if (init == NULL)

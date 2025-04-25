@@ -52,6 +52,8 @@ funcnames = [
     'ctx_Get_Prime',
     'ctx_Set_Prime',
     'ctx_ShareGeneral',
+    'ctx_DSS_GetMem',
+    'ctx_DSS_FreeMem',
 ]
 
 usefns = [

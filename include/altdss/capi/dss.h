@@ -49,6 +49,9 @@ extern "C" {
     ALTDSS_CAPI_DLL int32_t* DSS_GR_CountPtr_PInteger(void);
     ALTDSS_CAPI_DLL int32_t* DSS_GR_CountPtr_PByte(void);
 
+    ALTDSS_CAPI_DLL void* DSS_GetMem(uint64_t NumBytes);
+    ALTDSS_CAPI_DLL void DSS_FreeMem(void* ptr);
+    
     ALTDSS_CAPI_DLL void DSS_RegisterPlotCallback(altdss_callback_plot_t cb);
     ALTDSS_CAPI_DLL void DSS_RegisterMessageCallback(altdss_callback_message_t cb);
 
@@ -794,8 +797,19 @@ extern "C" {
     */
     ALTDSS_CAPI_DLL void Circuit_Get_AllBusVmagPu_GR(void);
 
+    /*!
+    Sets Active bus by name. 
+      
+    Ignores node list. Returns bus index (zero based) compatible with `AllBusNames` and Buses collection.
+    */
     ALTDSS_CAPI_DLL int32_t Circuit_SetActiveBus(const char* BusName);
 
+    /*!
+    Set ActiveBus by an integer value. 
+    
+    0-based index compatible with SetActiveBus return value and AllBusNames indexing. 
+    Returns 0 if OK.
+    */
     ALTDSS_CAPI_DLL int32_t Circuit_SetActiveBusi(int32_t BusIndex);
 
     /*! 
