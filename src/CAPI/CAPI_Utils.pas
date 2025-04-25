@@ -116,6 +116,11 @@ procedure DSS_WaitPascalThread(handle: PtrUInt); CDECL;
 procedure DSS_SetMessagesMO(Value: PChar); CDECL;
 procedure DSS_SetPropertiesMO(Value: PChar); CDECL;
 
+function DSS_GetMem(NumBytes: UInt64): Pointer; CDECL;
+procedure DSS_FreeMem(Ptr: Pointer); CDECL;
+function ctx_DSS_GetMem(ctx: Pointer; NumBytes: UInt64): Pointer; CDECL;
+procedure ctx_DSS_FreeMem(ctx: Pointer; Ptr: Pointer); CDECL;
+
 // internal function
 procedure DSS_InitThreads();
 
@@ -314,31 +319,31 @@ end;
 //------------------------------------------------------------------------------
 procedure DSS_Dispose_PByte(var p: PByte); CDECL;
 begin
-    Dispose(p);
+    FreeMem(p);
     p := NIL;
 end;
 
 procedure DSS_Dispose_PSingle(var p: PSingle); CDECL;
 begin
-    Dispose(p);
+    FreeMem(p);
     p := NIL;
 end;
 
 procedure DSS_Dispose_PDouble(var p: PDouble); CDECL;
 begin
-    Dispose(p);
+    FreeMem(p);
     p := NIL;
 end;
 
 procedure DSS_Dispose_PInteger(var p: PInteger); CDECL;
 begin
-    Dispose(p);
+    FreeMem(p);
     p := NIL;
 end;
 
 procedure DSS_Dispose_PPointer(var p: PPointer); CDECL;
 begin
-    Dispose(p);
+    FreeMem(p);
     p := NIL;
 end;
 
@@ -790,5 +795,26 @@ begin
         DSSPropertyHelp := NIL;
     end;
 end;
+
+function DSS_GetMem(NumBytes: UInt64): Pointer; CDECL;
+begin
+    Result := GetMem(NumBytes);
+end;
+
+procedure DSS_FreeMem(Ptr: Pointer); CDECL;
+begin
+    FreeMem(Ptr);
+end;
+
+function ctx_DSS_GetMem(ctx: Pointer; NumBytes: UInt64): Pointer; CDECL;
+begin
+    Result := GetMem(NumBytes);
+end;
+
+procedure ctx_DSS_FreeMem(ctx: Pointer; Ptr: Pointer); CDECL;
+begin
+    FreeMem(Ptr);
+end;
+
 
 end.

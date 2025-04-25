@@ -17,7 +17,7 @@ ALTDSS_ODDIE_DLL int32_t AltDSSOddieCAPIInit(AltDSSCAPI *funcs, uint64_t size, u
 
     funcs->isAltDSS = 0;
     funcs->engineName = engineName;
-    
+
     funcs->DSS_Dispose_PByte = DSS_Dispose_PByte;
     funcs->DSS_Dispose_PDouble = DSS_Dispose_PDouble;
     funcs->DSS_Dispose_PInteger = DSS_Dispose_PInteger;

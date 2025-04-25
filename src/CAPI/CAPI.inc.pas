@@ -606,6 +606,7 @@ TAltDSSCAPI = packed record
     DSS_Executive_Get_OptionHelp: Pointer;
     DSS_Executive_Get_OptionValue: Pointer;
     DSS_ExtractSchema: Pointer;
+    DSS_FreeMem: Pointer;
     DSS_GR_CountPtr_PByte: Pointer;
     DSS_GR_CountPtr_PDouble: Pointer;
     DSS_GR_CountPtr_PInteger: Pointer;
@@ -613,6 +614,7 @@ TAltDSSCAPI = packed record
     DSS_GR_DataPtr_PDouble: Pointer;
     DSS_GR_DataPtr_PInteger: Pointer;
     DSS_GetGRPointers: Pointer;
+    DSS_GetMem: Pointer;
     DSS_Get_AllowChangeDir: Pointer;
     DSS_Get_AllowDOScmd: Pointer;
     DSS_Get_AllowEditor: Pointer;
@@ -2712,6 +2714,7 @@ begin
     funcs.DSS_Executive_Get_OptionHelp := Pointer(@ctx_DSS_Executive_Get_OptionHelp);
     funcs.DSS_Executive_Get_OptionValue := Pointer(@ctx_DSS_Executive_Get_OptionValue);
     funcs.DSS_ExtractSchema := Pointer(@DSS_ExtractSchema);
+    funcs.DSS_FreeMem := Pointer(@ctx_DSS_FreeMem);
     funcs.DSS_GR_CountPtr_PByte := Pointer(@ctx_DSS_GR_CountPtr_PByte);
     funcs.DSS_GR_CountPtr_PDouble := Pointer(@ctx_DSS_GR_CountPtr_PDouble);
     funcs.DSS_GR_CountPtr_PInteger := Pointer(@ctx_DSS_GR_CountPtr_PInteger);
@@ -2719,6 +2722,7 @@ begin
     funcs.DSS_GR_DataPtr_PDouble := Pointer(@ctx_DSS_GR_DataPtr_PDouble);
     funcs.DSS_GR_DataPtr_PInteger := Pointer(@ctx_DSS_GR_DataPtr_PInteger);
     funcs.DSS_GetGRPointers := Pointer(@ctx_DSS_GetGRPointers);
+    funcs.DSS_GetMem := Pointer(@ctx_DSS_GetMem);
     funcs.DSS_Get_AllowChangeDir := Pointer(@ctx_DSS_Get_AllowChangeDir);
     funcs.DSS_Get_AllowDOScmd := Pointer(@ctx_DSS_Get_AllowDOScmd);
     funcs.DSS_Get_AllowEditor := Pointer(@ctx_DSS_Get_AllowEditor);
