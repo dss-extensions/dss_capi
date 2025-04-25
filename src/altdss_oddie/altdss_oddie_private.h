@@ -54,6 +54,7 @@ typedef struct
     int32_t GR_Counts_PByte[4];
 
     uint32_t compat_flags;
+    int32_t bus_idx;
 
     oddie_void_str_func_t DSSDisposeString;
 
