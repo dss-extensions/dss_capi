@@ -1692,7 +1692,8 @@ ALTDSS_ODDIE_DLL int32_t ctx_Circuit_SetActiveBus(const void* ctx, const char* B
     ODDIE_CHECK_FUNC_INT32(CircuitS)
     const char *res = oddie_keep_str((OddieContext*) ctx, ((OddieContext*) ctx)->CircuitS(4, BusName));
     oddie_map_error(ctx);
-    return (res != NULL && *res != 0) ? atoi(res) : -1;
+    ((OddieContext*) ctx)->bus_idx = (res != NULL && *res != 0) ? atoi(res) : -1;
+    return ((OddieContext*) ctx)->bus_idx;
 }
 
 ALTDSS_ODDIE_DLL int32_t ctx_CtrlQueue_Push(const void* ctx, int32_t Hour, double Seconds, int32_t ActionCode, int32_t DeviceHandle)
@@ -4576,6 +4577,10 @@ ALTDSS_ODDIE_DLL int32_t ctx_Circuit_SetActiveBusi(const void* ctx, int32_t BusI
     int32_t res;
     res = ((OddieContext*) ctx)->CircuitI(9, BusIndex);
     oddie_map_error(ctx);
+    if (!((OddieContext*) ctx)->error_number)
+    {
+        ((OddieContext*) ctx)->bus_idx = BusIndex;
+    }
     return res;
 }
 
@@ -14189,8 +14194,18 @@ ALTDSS_ODDIE_DLL void ctx_XYCurves_Set_y(const void* ctx, double Value)
 ALTDSS_ODDIE_DLL int32_t ctx_Bus_Get_Next(const void* ctx)
 {
     CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Bus_Get_Next");
-    return 0;
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    
+    ++oddie_ctx->bus_idx;
+    if (oddie_ctx->bus_idx < ctx_Circuit_Get_NumBuses(ctx))
+    {
+        if (!oddie_ctx->error_number && -1 != ctx_Circuit_SetActiveBusi(ctx, oddie_ctx->bus_idx))
+        {
+            return oddie_ctx->bus_idx;
+        }
+    }
+    // oddie_error_not_implemented((OddieContext*) ctx, "Bus_Get_Next");
+    return -1;
 }
 
 ALTDSS_ODDIE_DLL int32_t ctx_Capacitors_Get_idx(const void* ctx)
