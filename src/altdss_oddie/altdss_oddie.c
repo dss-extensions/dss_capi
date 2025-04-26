@@ -3005,13 +3005,22 @@ ALTDSS_ODDIE_DLL void ctx_CktElement_Get_VoltagesMagAng_GR(const void* ctx)
     }
 }
 
+ALTDSS_ODDIE_DLL int32_t CktElement_Get_YprimOrder(const void* ctx)
+{
+    return ctx_CktElement_Get_NumConductors(ctx) * ctx_CktElement_Get_NumTerminals(ctx); // valid as of 2025-04
+}
+
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_Yprim(const void* ctx, double** ResultPtr, int32_t* ResultDims)
 {
     CTX_OR_PRIME
     oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->CktElementV, 12, ResultPtr, ResultDims, NULL);
     if (ResultDims[0])
     {
-        ResultDims[3] = ResultDims[2] = isqrt(ResultDims[0] / 2);
+        ResultDims[3] = ResultDims[2] = CktElement_Get_YprimOrder(ctx);
+        if ((ResultDims[3] * ResultDims[2] * 2) != ResultDims[0])
+        {
+            ResultDims[3] = ResultDims[2] = isqrt(ResultDims[0] / 2);
+        }
     }
 }
 
@@ -3019,11 +3028,7 @@ ALTDSS_ODDIE_DLL void ctx_CktElement_Get_Yprim_GR(const void* ctx)
 {  
     CTX_OR_PRIME
     OddieContext* oddie_ctx = (OddieContext*) ctx;
-    oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->CktElementV, 12, &((OddieContext*) ctx)->GR_DataPtr_PDouble, &((OddieContext*) ctx)->GR_Counts_PDouble[0], NULL);
-    if (oddie_ctx->GR_Counts_PDouble[0])
-    {
-        oddie_ctx->GR_Counts_PDouble[3] = oddie_ctx->GR_Counts_PDouble[2] = isqrt(oddie_ctx->GR_Counts_PDouble[0] / 2);
-    }
+    ctx_CktElement_Get_Yprim(ctx, &((OddieContext*) ctx)->GR_DataPtr_PDouble, &((OddieContext*) ctx)->GR_Counts_PDouble[0]);
 }
 
 ALTDSS_ODDIE_DLL void ctx_LineCodes_Get_Cmatrix(const void* ctx, double** ResultPtr, int32_t* ResultDims)

@@ -227,6 +227,7 @@ ALTDSS_ODDIE_DLL void ctx_CktElement_Get_Voltages(const void* ctx, double** Resu
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_Voltages_GR(const void* ctx);
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_VoltagesMagAng(const void* ctx, double** ResultPtr, int32_t* ResultDims);
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_VoltagesMagAng_GR(const void* ctx);
+ALTDSS_ODDIE_DLL int32_t CktElement_Get_YprimOrder(const void* ctx);
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_Yprim(const void* ctx, double** ResultPtr, int32_t* ResultDims);
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_Yprim_GR(const void* ctx);
 ALTDSS_ODDIE_DLL void ctx_LineCodes_Get_Cmatrix(const void* ctx, double** ResultPtr, int32_t* ResultDims);

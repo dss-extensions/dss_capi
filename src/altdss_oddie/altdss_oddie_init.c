@@ -200,6 +200,7 @@ ALTDSS_ODDIE_DLL int32_t AltDSSOddieCAPIInit(AltDSSCAPI *funcs, uint64_t size, u
     funcs->CktElement_Get_Voltages_GR = ctx_CktElement_Get_Voltages_GR;
     funcs->CktElement_Get_VoltagesMagAng = ctx_CktElement_Get_VoltagesMagAng;
     funcs->CktElement_Get_VoltagesMagAng_GR = ctx_CktElement_Get_VoltagesMagAng_GR;
+    funcs->CktElement_Get_YprimOrder = CktElement_Get_YprimOrder;
     funcs->CktElement_Get_Yprim = ctx_CktElement_Get_Yprim;
     funcs->CktElement_Get_Yprim_GR = ctx_CktElement_Get_Yprim_GR;
     funcs->LineCodes_Get_Cmatrix = ctx_LineCodes_Get_Cmatrix;

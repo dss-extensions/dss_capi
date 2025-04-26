@@ -114,6 +114,7 @@ TAltDSSCAPI = packed record
     Alt_CE_Get_Voltages: Pointer;
     Alt_CE_Get_VoltagesMagAng: Pointer;
     Alt_CE_Get_YPrim: Pointer;
+    Alt_CE_Get_YPrimOrder: Pointer;
     Alt_CE_IsOpen: Pointer;
     Alt_CE_MaxCurrent: Pointer;
     Alt_CE_Open: Pointer;
@@ -534,6 +535,7 @@ TAltDSSCAPI = packed record
     CktElement_Get_VoltagesMagAng_GR: Pointer;
     CktElement_Get_Voltages_GR: Pointer;
     CktElement_Get_Yprim: Pointer;
+    CktElement_Get_YprimOrder: Pointer;
     CktElement_Get_Yprim_GR: Pointer;
     CktElement_IsOpen: Pointer;
     CktElement_Open: Pointer;
@@ -2222,6 +2224,7 @@ begin
     funcs.Alt_CE_Get_Voltages := Pointer(@Alt_CE_Get_Voltages);
     funcs.Alt_CE_Get_VoltagesMagAng := Pointer(@Alt_CE_Get_VoltagesMagAng);
     funcs.Alt_CE_Get_YPrim := Pointer(@Alt_CE_Get_YPrim);
+    funcs.Alt_CE_Get_YPrimOrder := Pointer(@Alt_CE_Get_YPrimOrder);
     funcs.Alt_CE_IsOpen := Pointer(@Alt_CE_IsOpen);
     funcs.Alt_CE_MaxCurrent := Pointer(@Alt_CE_MaxCurrent);
     funcs.Alt_CE_Open := Pointer(@Alt_CE_Open);
@@ -2642,6 +2645,7 @@ begin
     funcs.CktElement_Get_VoltagesMagAng_GR := Pointer(@ctx_CktElement_Get_VoltagesMagAng_GR);
     funcs.CktElement_Get_Voltages_GR := Pointer(@ctx_CktElement_Get_Voltages_GR);
     funcs.CktElement_Get_Yprim := Pointer(@ctx_CktElement_Get_Yprim);
+    funcs.CktElement_Get_YprimOrder := Pointer(@ctx_CktElement_Get_YprimOrder);
     funcs.CktElement_Get_Yprim_GR := Pointer(@ctx_CktElement_Get_Yprim_GR);
     funcs.CktElement_IsOpen := Pointer(@ctx_CktElement_IsOpen);
     funcs.CktElement_Open := Pointer(@ctx_CktElement_Open);
