@@ -343,6 +343,7 @@ typedef struct AltDSSCAPI {
     altdss_func_v_f64pp_i32p_vp Alt_CE_Get_Voltages;
     altdss_func_v_f64pp_i32p_vp Alt_CE_Get_VoltagesMagAng;
     altdss_func_v_f64pp_i32p_vp Alt_CE_Get_YPrim;
+    altdss_func_i32_vp Alt_CE_Get_YPrimOrder;
     altdss_func_b_vp_i32_i32 Alt_CE_IsOpen;
     altdss_func_f64_vp_i32 Alt_CE_MaxCurrent;
     altdss_func_v_vp_i32_i32 Alt_CE_Open;
@@ -763,6 +764,7 @@ typedef struct AltDSSCAPI {
     altdss_func_v_cvp CktElement_Get_VoltagesMagAng_GR;
     altdss_func_v_cvp CktElement_Get_Voltages_GR;
     altdss_func_v_cvp_f64pp_i32p CktElement_Get_Yprim;
+    altdss_func_i32_cvp CktElement_Get_YprimOrder;
     altdss_func_v_cvp CktElement_Get_Yprim_GR;
     altdss_func_u16_cvp_i32_i32 CktElement_IsOpen;
     altdss_func_v_cvp_i32_i32 CktElement_Open;

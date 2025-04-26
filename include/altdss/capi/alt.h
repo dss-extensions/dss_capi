@@ -239,6 +239,7 @@ extern "C" {
     ALTDSS_CAPI_DLL void Alt_CE_Open(void* elem, int32_t terminal, int32_t phase);
     ALTDSS_CAPI_DLL altdss_bool_t Alt_CE_IsOpen(void* elem, int32_t terminal, int32_t phase);
     ALTDSS_CAPI_DLL void Alt_CE_Get_Residuals(double** resultPtr, int32_t *resultDims, void* elem);
+    ALTDSS_CAPI_DLL int32_t Alt_CE_Get_YPrimOrder(void* elem);
     ALTDSS_CAPI_DLL void Alt_CE_Get_YPrim(double** resultPtr, int32_t *resultDims, void* elem);
     ALTDSS_CAPI_DLL int32_t Alt_CE_Get_Handle(void* elem);
     ALTDSS_CAPI_DLL void Alt_CE_Get_Controllers(void*** resultPtr, int32_t* resultDims, void* elem);

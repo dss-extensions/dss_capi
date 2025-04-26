@@ -38,6 +38,7 @@ procedure Alt_CE_Close(elem: TDSSCktElement; Term, Phs: Integer); CDECL;
 procedure Alt_CE_Open(elem: TDSSCktElement; Term, Phs: Integer); CDECL;
 function Alt_CE_IsOpen(elem: TDSSCktElement; Term, Phs: Integer): TAltAPIBoolean; CDECL;
 procedure Alt_CE_Get_Residuals(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
+function Alt_CE_Get_YPrimOrder(elem: TDSSCktElement): Integer; CDECL;
 procedure Alt_CE_Get_YPrim(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
 function Alt_CE_Get_Handle(elem: TDSSCktElement): Integer; CDECL;
 // function Alt_CE_Get_ControllerName(elem: TDSSCktElement; idx: Integer): PAnsiChar; CDECL;
@@ -752,6 +753,11 @@ begin
         Inc(iV);
     end;
     Reallocmem(cBuffer, 0);
+end;
+//------------------------------------------------------------------------------
+function Alt_CE_Get_YPrimOrder(elem: TDSSCktElement): Integer; CDECL;
+begin
+    Result := elem.YOrder;
 end;
 //------------------------------------------------------------------------------
 procedure Alt_CE_Get_YPrim(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;

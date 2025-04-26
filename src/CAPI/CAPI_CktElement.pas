@@ -95,6 +95,7 @@ procedure CktElement_Set_VariableIdx(Value: Integer); CDECL;
 function CktElement_Get_IsIsolated(): TAPIBoolean; CDECL;
 procedure CktElement_Get_NodeRef(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_NodeRef_GR(); CDECL;
+function CktElement_Get_YprimOrder(): Integer; CDECL;
 
 // API Extensions -- Obj API
 function Obj_CktElement_MaxCurrent(obj: TDSSCktElement; terminalIdx: Integer): Double; CDECL;
@@ -556,6 +557,16 @@ procedure CktElement_Get_Residuals_GR(); CDECL;
 // Same as CktElement_Get_Residuals but uses global result (GR) pointers
 begin
     CktElement_Get_Residuals(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
+end;
+//------------------------------------------------------------------------------
+function CktElement_Get_YprimOrder(): Integer; CDECL;
+var
+    elem: TDSSCktElement;
+begin
+    Result := 0;
+    if InvalidCktElement(DSSPrime, elem) then
+        Exit;
+    Result := elem.YOrder;
 end;
 
 //------------------------------------------------------------------------------

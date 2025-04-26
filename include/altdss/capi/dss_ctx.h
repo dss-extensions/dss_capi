@@ -1165,6 +1165,13 @@ extern "C" {
     ALTDSS_CAPI_DLL void ctx_CktElement_Get_Residuals_GR(const void* ctx);
 
     /*! 
+    Order (size) of the YPrim matrix, typically `NumConductors * NumTerminals`
+
+    (API Extension)
+    */
+    ALTDSS_CAPI_DLL int32_t ctx_CktElement_Get_YprimOrder(const void* ctx);
+
+    /*! 
     YPrim matrix, column order, complex numbers (paired)
     */
     ALTDSS_CAPI_DLL void ctx_CktElement_Get_Yprim(const void* ctx, double** ResultPtr, int32_t* ResultDims);
