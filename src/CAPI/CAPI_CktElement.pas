@@ -75,6 +75,8 @@ procedure CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PAP
 procedure CktElement_Get_VoltagesMagAng_GR(); CDECL;
 procedure CktElement_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_TotalPowers_GR(); CDECL;
+procedure CktElement_Get_AllLosses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure CktElement_Get_AllLosses_GR(); CDECL;
 
 //
 // These are the same as CktElement_Get/Set_Variable and CktElement_Get/Set_Variablei.
@@ -1184,6 +1186,30 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
     Result := DSSPrime.ActiveCircuit.ActiveCktElement
+end;
+//------------------------------------------------------------------------------
+procedure CktElement_Get_AllLosses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+// Returns an array with (TotalLosses, LoadLosses, NoLoadLosses) for the current active CktElement, in VA
+var 
+    CResult: PComplexArray; // this array is one-based, see DSSUcomplex
+    cktelem: TDSSCktElement;
+begin
+    if InvalidCktElement(DSSPrime, cktelem, False) or MissingSolution(DSSPrime) then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
+        Exit;
+    end;
+    
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3);
+
+    CResult := PComplexArray(ResultPtr);
+    cktelem.GetLosses(CResult[1], CResult[2], CResult[3]);
+    // Keep the results in VA (NOT kVA) for consistency with CktElement_Get_Losses
+end;
+//------------------------------------------------------------------------------
+procedure CktElement_Get_AllLosses_GR(); CDECL;
+begin
+    CktElement_Get_AllLosses(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 //------------------------------------------------------------------------------
 end.

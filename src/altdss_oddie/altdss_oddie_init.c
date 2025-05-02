@@ -395,6 +395,8 @@ ALTDSS_ODDIE_DLL int32_t AltDSSOddieCAPIInit(AltDSSCAPI *funcs, uint64_t size, u
     funcs->Circuit_SaveSample = ctx_Circuit_SaveSample;
     funcs->Circuit_SetActiveBusi = ctx_Circuit_SetActiveBusi;
     funcs->Circuit_UpdateStorage = ctx_Circuit_UpdateStorage;
+    funcs->CktElement_Get_AllLosses = ctx_CktElement_Get_AllLosses;
+    funcs->CktElement_Get_AllLosses_GR = ctx_CktElement_Get_AllLosses_GR;
     funcs->CktElement_Get_AllPropertyNames = ctx_CktElement_Get_AllPropertyNames;
     funcs->CktElement_Get_AllVariableNames = ctx_CktElement_Get_AllVariableNames;
     funcs->CktElement_Get_AllVariableValues = ctx_CktElement_Get_AllVariableValues;

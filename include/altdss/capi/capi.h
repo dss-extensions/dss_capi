@@ -700,6 +700,8 @@ typedef struct AltDSSCAPI {
     altdss_func_cstr_cvp_i32 Circuit_ToJSON;
     altdss_func_v_cvp Circuit_UpdateStorage;
     altdss_func_v_cvp_i32_i32 CktElement_Close;
+    altdss_func_v_cvp_f64pp_i32p CktElement_Get_AllLosses;
+    altdss_func_v_cvp CktElement_Get_AllLosses_GR;
     altdss_func_v_cvp_strs_i32p CktElement_Get_AllPropertyNames;
     altdss_func_v_cvp_strs_i32p CktElement_Get_AllVariableNames;
     altdss_func_v_cvp_f64pp_i32p CktElement_Get_AllVariableValues;

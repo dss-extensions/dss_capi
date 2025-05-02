@@ -3,17 +3,17 @@
 #include "pch.h"
 #include "DSS.h"
 
-CComPtr<IActiveClass> FActiveClass;
-CComPtr<IDSS_Executive> FDSS_Executive;
-CComPtr<IDSSProgress> FDSSProgress;
-CComPtr<IParser> FParser;
-CComPtr<IYMatrix> FYMatrix;
-CComPtr<ICircuit> FCircuit;
-CComPtr<IError> FError;
-CComPtr<IText> FText;
-CComPtr<IZIP> FZIP;
-CComPtr<IDSSimComs> FDSSimComs;
 CComPtr<ICmathLib> FCmathLib;
+CComPtr<IActiveClass> FActiveClass;
+CComPtr<IDSSProgress> FDSSProgress;
+CComPtr<IDSS_Executive> FDSS_Executive;
+CComPtr<IError> FError;
+CComPtr<IYMatrix> FYMatrix;
+CComPtr<IZIP> FZIP;
+CComPtr<ICircuit> FCircuit;
+CComPtr<IDSSimComs> FDSSimComs;
+CComPtr<IText> FText;
+CComPtr<IParser> FParser;
 
 
 STDMETHODIMP CDSS::InterfaceSupportsErrorInfo(REFIID riid)
