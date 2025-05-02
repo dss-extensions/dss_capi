@@ -1,0 +1,220 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "COM_Resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "COM_targetver.h"
+#endif
+#include "winres.h"
+#include "verrsrc.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "COM_Resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""COM_targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""winres.h""\r\n"
+    "#include ""verrsrc.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "1 TYPELIB ""DSSExtensions.tlb""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "DSS-Extensions.org"
+            VALUE "FileDescription", "DSS-Extensions COM Bridge for DSS Engines (AltDSS, OpenDSS-C and OpenDSS Delphi)"
+            VALUE "FileVersion", "0.15.0.1"
+            VALUE "LegalCopyright", "(c) DSS-Extensions contributors. "
+            VALUE "InternalName", "DSSExtensions.dll"
+            VALUE "OriginalFilename", "DSSExtensions.dll"
+            VALUE "ProductName", "DSS-Extensions COM Bridge"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGISTRY
+//
+
+IDR_DSSEXTENSIONS       REGISTRY                "COM_DSSExtensions.rgs"
+
+IDR_DSS                 REGISTRY                "COM_DSS.rgs"
+
+IDR_CIRCUIT                 REGISTRY                "COM_Circuit.rgs"
+
+IDR_ACTIVECLASS                 REGISTRY                "COM_ActiveClass.rgs"
+
+IDR_BUS                 REGISTRY                "COM_Bus.rgs"
+
+IDR_CAPCONTROLS                 REGISTRY                "COM_CapControls.rgs"
+
+IDR_CAPACITORS                 REGISTRY                "COM_Capacitors.rgs"
+
+IDR_CKTELEMENT                 REGISTRY                "COM_CktElement.rgs"
+
+IDR_CMATHLIB                 REGISTRY                "COM_CmathLib.rgs"
+
+IDR_CTRLQUEUE                 REGISTRY                "COM_CtrlQueue.rgs"
+
+IDR_DSSELEMENT                 REGISTRY                "COM_DSSElement.rgs"
+
+IDR_DSSPROGRESS                 REGISTRY                "COM_DSSProgress.rgs"
+
+IDR_DSSPROPERTY                 REGISTRY                "COM_DSSProperty.rgs"
+
+IDR_DSS_EXECUTIVE                 REGISTRY                "COM_DSS_Executive.rgs"
+
+IDR_DSSIMCOMS                 REGISTRY                "COM_DSSimComs.rgs"
+
+IDR_ERROR                 REGISTRY                "COM_Error.rgs"
+
+IDR_FUSES                 REGISTRY                "COM_Fuses.rgs"
+
+IDR_GICSOURCES                 REGISTRY                "COM_GICSources.rgs"
+
+IDR_GENERATORS                 REGISTRY                "COM_Generators.rgs"
+
+IDR_ISOURCES                 REGISTRY                "COM_ISources.rgs"
+
+IDR_LINECODES                 REGISTRY                "COM_LineCodes.rgs"
+
+IDR_LINES                 REGISTRY                "COM_Lines.rgs"
+
+IDR_LOADSHAPES                 REGISTRY                "COM_LoadShapes.rgs"
+
+IDR_LOADS                 REGISTRY                "COM_Loads.rgs"
+
+IDR_METERS                 REGISTRY                "COM_Meters.rgs"
+
+IDR_MONITORS                 REGISTRY                "COM_Monitors.rgs"
+
+IDR_PDELEMENTS                 REGISTRY                "COM_PDElements.rgs"
+
+IDR_PVSYSTEMS                 REGISTRY                "COM_PVSystems.rgs"
+
+IDR_PARALLEL                 REGISTRY                "COM_Parallel.rgs"
+
+IDR_PARSER                 REGISTRY                "COM_Parser.rgs"
+
+IDR_REACTORS                 REGISTRY                "COM_Reactors.rgs"
+
+IDR_RECLOSERS                 REGISTRY                "COM_Reclosers.rgs"
+
+IDR_REDUCECKT                 REGISTRY                "COM_ReduceCkt.rgs"
+
+IDR_REGCONTROLS                 REGISTRY                "COM_RegControls.rgs"
+
+IDR_RELAYS                 REGISTRY                "COM_Relays.rgs"
+
+IDR_SENSORS                 REGISTRY                "COM_Sensors.rgs"
+
+IDR_SETTINGS                 REGISTRY                "COM_Settings.rgs"
+
+IDR_SOLUTION                 REGISTRY                "COM_Solution.rgs"
+
+IDR_STORAGES                 REGISTRY                "COM_Storages.rgs"
+
+IDR_SWTCONTROLS                 REGISTRY                "COM_SwtControls.rgs"
+
+IDR_TEXT                 REGISTRY                "COM_Text.rgs"
+
+IDR_TOPOLOGY                 REGISTRY                "COM_Topology.rgs"
+
+IDR_TRANSFORMERS                 REGISTRY                "COM_Transformers.rgs"
+
+IDR_VSOURCES                 REGISTRY                "COM_Vsources.rgs"
+
+IDR_WINDGENS                 REGISTRY                "COM_WindGens.rgs"
+
+IDR_XYCURVES                 REGISTRY                "COM_XYCurves.rgs"
+
+IDR_YMATRIX                 REGISTRY                "COM_YMatrix.rgs"
+
+IDR_ZIP                 REGISTRY                "COM_ZIP.rgs"
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_PROJNAME            "DSSExtensions"
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+1 TYPELIB "DSSExtensions.tlb"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
