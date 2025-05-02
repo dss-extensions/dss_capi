@@ -422,6 +422,8 @@ ALTDSS_ODDIE_DLL void ctx_Circuit_Sample(const void* ctx);
 ALTDSS_ODDIE_DLL void ctx_Circuit_SaveSample(const void* ctx);
 ALTDSS_ODDIE_DLL int32_t ctx_Circuit_SetActiveBusi(const void* ctx, int32_t BusIndex);
 ALTDSS_ODDIE_DLL void ctx_Circuit_UpdateStorage(const void* ctx);
+ALTDSS_ODDIE_DLL void ctx_CktElement_Get_AllLosses(const void* ctx, double** ResultPtr, int32_t* ResultDims);
+ALTDSS_ODDIE_DLL void ctx_CktElement_Get_AllLosses_GR(const void* ctx);
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_AllPropertyNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims);
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_AllVariableNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims);
 ALTDSS_ODDIE_DLL void ctx_CktElement_Get_AllVariableValues(const void* ctx, double** ResultPtr, int32_t* ResultDims);

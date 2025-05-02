@@ -602,6 +602,15 @@ STDMETHODIMP CCktElement::put_VariableIdx(long Value)
     return AltDSS_COM_CheckError();
 }
 
+STDMETHODIMP CCktElement::get_AllLosses(VARIANT* Value)
+{
+    if (Value == nullptr)
+    {
+        return E_POINTER;
+    }
+    return AltDSS_COM_GetDoubles(dss_capi.CktElement_Get_AllLosses_GR, Value);
+}
+
 STDMETHODIMP CCktElement::get_IsIsolated(VARIANT_BOOL* Value)
 {
     if (Value == nullptr)

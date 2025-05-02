@@ -1075,6 +1075,17 @@ extern "C" {
     ALTDSS_CAPI_DLL void ctx_CktElement_Get_Losses_GR(const void* ctx);
 
     /*! 
+    Returns a complex array of the 3 types of losses (total losses, load losses, no-load losses) for the active circuit element, in VA.
+
+    Added in May 2025. Same as `LossesByType` introduced for Transformers in AltDSS/DSS C-API in May 2019.
+    */
+    ALTDSS_CAPI_DLL void ctx_CktElement_Get_AllLosses(const void* ctx, double** ResultPtr, int32_t* ResultDims);
+    /*! 
+    Same as CktElement_Get_AllLosses but using the global buffer interface for results
+    */
+    ALTDSS_CAPI_DLL void ctx_CktElement_Get_AllLosses_GR(const void* ctx);
+
+    /*! 
     Normal ampere rating for PD Elements
     */
     ALTDSS_CAPI_DLL double ctx_CktElement_Get_NormalAmps(const void* ctx);

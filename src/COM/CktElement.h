@@ -107,6 +107,7 @@ public:
     STDMETHOD_(HRESULT, put_VariableValue)(double Value);
     STDMETHOD(get_VariableIdx)(long* Value);
     STDMETHOD_(HRESULT, put_VariableIdx)(long Value);
+    STDMETHOD(get_AllLosses)(VARIANT* Value);
     STDMETHOD(get_IsIsolated)(VARIANT_BOOL* Value);
     STDMETHOD(get_NodeRef)(VARIANT* Nodes);
 };

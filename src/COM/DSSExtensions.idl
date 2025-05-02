@@ -421,11 +421,13 @@ library DSSExtensions
         HRESULT VariableIdx([out, retval] long* Value);
         [id(0x000000e2), propput, helpstring("Gets the index of the active state variable if any, otherwise, returns -1")]
         HRESULT VariableIdx([in] long Value);
+        [id(0x000000e3), propget, helpstring("Complex array with the losses by type (total losses, load losses, no-load losses), in VA, for the active circuit element.\nAdded in May 2025. Same as `LossesByType` introduced for Transformers in AltDSS/DSS C-API in May 2019.")]
+        HRESULT AllLosses([out, retval] VARIANT* Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000e3), propget, helpstring("Returns true if the current active element is isolated. Note that this only fetches the current value. See also the Topology interface. **(API Extension)**.")]
+        [id(0x00000a01), propget, helpstring("Returns true if the current active element is isolated. Note that this only fetches the current value. See also the Topology interface. **(API Extension)**.")]
         HRESULT IsIsolated([out, retval] VARIANT_BOOL* Value);
-        [id(0x000000e4), propget, helpstring("Array of integers, a copy of the internal NodeRef of the CktElement. Be sure to run a solution to initialize the values after the circuit is created or modified. **(API Extension)**")] // AltDSS element type: int32
+        [id(0x00000a02), propget, helpstring("Array of integers, a copy of the internal NodeRef of the CktElement. Be sure to run a solution to initialize the values after the circuit is created or modified. **(API Extension)**")] // AltDSS element type: int32
         HRESULT NodeRef([out, retval] VARIANT* Nodes);
     };
 
@@ -454,13 +456,13 @@ library DSSExtensions
         HRESULT Description([out, retval] BSTR* Description);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x00000003), propget, helpstring("EarlyAbort controls whether all errors halts the DSS script processing (Compile/Redirect), defaults to True. **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("EarlyAbort controls whether all errors halts the DSS script processing (Compile/Redirect), defaults to True. **(API Extension)**")]
         HRESULT EarlyAbort([out, retval] VARIANT_BOOL* Value);
-        [id(0x00000003), propput, helpstring("EarlyAbort controls whether all errors halts the DSS script processing (Compile/Redirect), defaults to True. **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("EarlyAbort controls whether all errors halts the DSS script processing (Compile/Redirect), defaults to True. **(API Extension)**")]
         HRESULT EarlyAbort([in] VARIANT_BOOL Value);
-        [id(0x00000004), propget, helpstring("Specifies whether the DSS errors are automatically translated into corresponding COM errors/exceptions. **(API Extension)**")]
+        [id(0x00000a02), propget, helpstring("Specifies whether the DSS errors are automatically translated into corresponding COM errors/exceptions. **(API Extension)**")]
         HRESULT UseExceptions([out, retval] VARIANT_BOOL* Value);
-        [id(0x00000004), propput, helpstring("Specifies whether the DSS errors are automatically translated into corresponding COM errors/exceptions. **(API Extension)**")]
+        [id(0x00000a02), propput, helpstring("Specifies whether the DSS errors are automatically translated into corresponding COM errors/exceptions. **(API Extension)**")]
         HRESULT UseExceptions([in] VARIANT_BOOL Value);
     };
 
@@ -649,13 +651,13 @@ library DSSExtensions
         HRESULT Reactors([out, retval] IReactors** Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000f5), helpstring("Array of total losses (complex) in a selection of elements. Use the element indices (starting at 1) as parameter. **(API Extension)**")] // AltDSS element type: int32, float64
+        [id(0x00000a01), helpstring("Array of total losses (complex) in a selection of elements. Use the element indices (starting at 1) as parameter. **(API Extension)**")] // AltDSS element type: int32, float64
         HRESULT ElementLosses([in] VARIANT Elements, [out, retval] VARIANT* Value);
-        [id(0x000000f6), helpstring("Returns data for all objects and basic circuit properties as a JSON-encoded string.\nThe `options` parameter contains bit-flags to toggle specific features.\nSee also the enum `DSSJSONFlags`.\nThe JSON data is organized using the JSON schema proposed at https://github.com/dss-extensions/AltDSS-Schema \n**(API Extension)**")]
+        [id(0x00000a02), helpstring("Returns data for all objects and basic circuit properties as a JSON-encoded string.\nThe `options` parameter contains bit-flags to toggle specific features.\nSee also the enum `DSSJSONFlags`.\nThe JSON data is organized using the JSON schema proposed at https://github.com/dss-extensions/AltDSS-Schema \n**(API Extension)**")]
         HRESULT ToJSON([in, defaultvalue(0)] long options, [out, retval] BSTR* Value);
-        [id(0x000000f7), helpstring("Replaces the circuit, if any, with the one provided from a JSON-encoded string.\nThe expected layout is defined from the JSON schema proposed at https://github.com/dss-extensions/AltDSS-Schema \nThe `options` parameter contains bit-flags to toggle specific features. See the enum `DSSJSONFlags`.\n**(API Extension)**")]
+        [id(0x00000a03), helpstring("Replaces the circuit, if any, with the one provided from a JSON-encoded string.\nThe expected layout is defined from the JSON schema proposed at https://github.com/dss-extensions/AltDSS-Schema \nThe `options` parameter contains bit-flags to toggle specific features. See the enum `DSSJSONFlags`.\n**(API Extension)**")]
         HRESULT FromJSON([in] BSTR data, [in] long options);
-        [id(0x000000f8), helpstring("Equivalent of the `save circuit` DSS command, but allows customization through the `saveFlags` argument, which is a set of bit flags.\nSee the `DSSSaveFlags` enumeration for available flags.\nIf the `SingleFile` flag is enabled, the first argument (`dirOrFilePath`) is the file path, otherwise it is the folder path. For string output, the argument is not used.\n**(API Extension)**")]
+        [id(0x00000a04), helpstring("Equivalent of the `save circuit` DSS command, but allows customization through the `saveFlags` argument, which is a set of bit flags.\nSee the `DSSSaveFlags` enumeration for available flags.\nIf the `SingleFile` flag is enabled, the first argument (`dirOrFilePath`) is the file path, otherwise it is the folder path. For string output, the argument is not used.\n**(API Extension)**")]
         HRESULT Save([in] BSTR dirOrFilePath, [in, defaultvalue(0)] long saveFlags, [out, retval] BSTR* Value);
     };
 
@@ -843,13 +845,13 @@ library DSSExtensions
         HRESULT DSSim_Coms([out, retval] IDSSimComs** Value);
         
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000f4), propget, helpstring("Connect to ZIP file Interface **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Connect to ZIP file Interface **(API Extension)**")]
         HRESULT ZIP([out, retval] IZIP** Value);
-        [id(0x000000f7), propget, helpstring("Connect to YMatrix Interface **(API Extension)**")]
+        [id(0x00000a02), propget, helpstring("Connect to YMatrix Interface **(API Extension)**")]
         HRESULT YMatrix([out, retval] IYMatrix** Value);
-        [id(0x000000f5), helpstring("Using AltDSS Oddie, load a OpenDSS library which uses EPRI's DCSL API, notably EPRI's OpenDSSDirect.DLL or OpenDSSC.DLL, including custom builds that do not affect the API and ABI of the DLL. Must be compatible or it could crash the process! Provide the file path for a specific DLL, or leave empty to use the internal DLL selection logic. Note: by default, AltDSS is already loaded when this COM module is created. **(API Extension)**")]
+        [id(0x00000a03), helpstring("Using AltDSS Oddie, load a OpenDSS library which uses EPRI's DCSL API, notably EPRI's OpenDSSDirect.DLL or OpenDSSC.DLL, including custom builds that do not affect the API and ABI of the DLL. Must be compatible or it could crash the process! Provide the file path for a specific DLL, or leave empty to use the internal DLL selection logic. Note: by default, AltDSS is already loaded when this COM module is created. **(API Extension)**")]
         HRESULT LoadOpenDSS([in, defaultvalue("")] BSTR dllpath, [in, defaultvalue(0)] hyper liboptions);
-        [id(0x000000f6), helpstring("Load AltDSS or a library that uses the AltDSS/C-API. Provide the file path for a specific DLL, or leave empty to use the internal DLL selection logic. Note: by default, AltDSS is already loaded when this COM module is created. **(API Extension)**")]
+        [id(0x00000a04), helpstring("Load AltDSS or a library that uses the AltDSS/C-API. Provide the file path for a specific DLL, or leave empty to use the internal DLL selection logic. Note: by default, AltDSS is already loaded when this COM module is created. **(API Extension)**")]
         HRESULT LoadAltDSS([in, defaultvalue("")] BSTR dllpath, [in, defaultvalue(0)] hyper liboptions);
 
     };
@@ -1143,9 +1145,9 @@ library DSSExtensions
         HRESULT Terminal([in] long Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000d7), propget, helpstring("Get/Set active Monitor by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Get/Set active Monitor by index.  1..Count **(API Extension)**")]
         HRESULT idx([out, retval] long* Value);
-        [id(0x000000d7), propput, helpstring("Get/Set Monitor by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Get/Set Monitor by index.  1..Count **(API Extension)**")]
         HRESULT idx([in] long Value);
     };
 
@@ -1273,9 +1275,9 @@ library DSSExtensions
         HRESULT ZonePCE([out, retval] VARIANT* Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000eb), propget, helpstring("Get/Set active Meter by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Get/Set active Meter by index.  1..Count **(API Extension)**")]
         HRESULT idx([out, retval] long* Value);
-        [id(0x000000eb), propput, helpstring("Get/Set Meter by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Get/Set Meter by index.  1..Count **(API Extension)**")]
         HRESULT idx([in] long Value);
     };
 
@@ -1359,37 +1361,37 @@ library DSSExtensions
         HRESULT Vminpu([in] double Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000d4), propget, helpstring("Bus to which the Generator is connected. May include specific node specification. **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Bus to which the Generator is connected. May include specific node specification. **(API Extension)**")]
         HRESULT Bus1([out, retval] BSTR* Value);
-        [id(0x000000d4), propput, helpstring("Bus to which the Generator is connected. May include specific node specification. **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Bus to which the Generator is connected. May include specific node specification. **(API Extension)**")]
         HRESULT Bus1([in] BSTR Value);
-        [id(0x000000d5), propget, helpstring("An arbitrary integer number representing the class of Generator so that Generator values may be segregated by class. No effect on the solution. **(API Extension)**")]
+        [id(0x00000a02), propget, helpstring("An arbitrary integer number representing the class of Generator so that Generator values may be segregated by class. No effect on the solution. **(API Extension)**")]
         HRESULT Class([out, retval] long* Value);
-        [id(0x000000d5), propput, helpstring("An arbitrary integer number representing the class of Generator so that Generator values may be segregated by class. No effect on the solution. **(API Extension)**")]
+        [id(0x00000a02), propput, helpstring("An arbitrary integer number representing the class of Generator so that Generator values may be segregated by class. No effect on the solution. **(API Extension)**")]
         HRESULT Class([in] long Value);
-        [id(0x000000d6), propget, helpstring("Name of the loadshape for a daily generation profile. **(API Extension)**")]
+        [id(0x00000a03), propget, helpstring("Name of the loadshape for a daily generation profile. **(API Extension)**")]
         HRESULT daily([out, retval] BSTR* Value);
-        [id(0x000000d6), propput, helpstring("Name of the loadshape for a daily generation profile. **(API Extension)**")]
+        [id(0x00000a03), propput, helpstring("Name of the loadshape for a daily generation profile. **(API Extension)**")]
         HRESULT daily([in] BSTR Value);
-        [id(0x000000d7), propget, helpstring("Name of the loadshape for a duty cycle simulation. **(API Extension)**")]
+        [id(0x00000a04), propget, helpstring("Name of the loadshape for a duty cycle simulation. **(API Extension)**")]
         HRESULT duty([out, retval] BSTR* Value);
-        [id(0x000000d7), propput, helpstring("Name of the loadshape for a duty cycle simulation. **(API Extension)**")]
+        [id(0x00000a04), propput, helpstring("Name of the loadshape for a duty cycle simulation. **(API Extension)**")]
         HRESULT duty([in] BSTR Value);
-        [id(0x000000d8), propget, helpstring("Generator connection. True/1 if delta connection, False/0 if wye. **(API Extension)**")]
+        [id(0x00000a05), propget, helpstring("Generator connection. True/1 if delta connection, False/0 if wye. **(API Extension)**")]
         HRESULT IsDelta([out, retval] VARIANT_BOOL* Value);
-        [id(0x000000d8), propput, helpstring("Generator connection. True/1 if delta connection, False/0 if wye. **(API Extension)**")]
+        [id(0x00000a05), propput, helpstring("Generator connection. True/1 if delta connection, False/0 if wye. **(API Extension)**")]
         HRESULT IsDelta([in] VARIANT_BOOL Value);
-        [id(0x000000d9), propget, helpstring("kVA rating of electrical machine. Applied to machine or inverter definition for Dynamics mode solutions. **(API Extension)**")]
+        [id(0x00000a06), propget, helpstring("kVA rating of electrical machine. Applied to machine or inverter definition for Dynamics mode solutions. **(API Extension)**")]
         HRESULT kva([out, retval] double* Value);
-        [id(0x000000d9), propput, helpstring("kVA rating of electrical machine. Applied to machine or inverter definition for Dynamics mode solutions. **(API Extension)**")]
+        [id(0x00000a06), propput, helpstring("kVA rating of electrical machine. Applied to machine or inverter definition for Dynamics mode solutions. **(API Extension)**")]
         HRESULT kva([in] double Value);
-        [id(0x000000da), propget, helpstring("Response to dispatch multipliers: Fixed=1 (dispatch multipliers do not apply), Variable=0 (follows curves). **(API Extension)**")]
+        [id(0x00000a07), propget, helpstring("Response to dispatch multipliers: Fixed=1 (dispatch multipliers do not apply), Variable=0 (follows curves). **(API Extension)**")]
         HRESULT Status([out, retval] LoadStatus* Value);
-        [id(0x000000da), propput, helpstring("Response to dispatch multipliers: Fixed=1 (dispatch multipliers do not apply), Variable=0 (follows curves). **(API Extension)**")]
+        [id(0x00000a07), propput, helpstring("Response to dispatch multipliers: Fixed=1 (dispatch multipliers do not apply), Variable=0 (follows curves). **(API Extension)**")]
         HRESULT Status([in] LoadStatus Value);
-        [id(0x000000db), propget, helpstring("Name of yearly loadshape. **(API Extension)**")]
+        [id(0x00000a08), propget, helpstring("Name of yearly loadshape. **(API Extension)**")]
         HRESULT Yearly([out, retval] BSTR* Value);
-        [id(0x000000db), propput, helpstring("Name of yearly loadshape. **(API Extension)**")]
+        [id(0x00000a08), propput, helpstring("Name of yearly loadshape. **(API Extension)**")]
         HRESULT Yearly([in] BSTR Value);
     };
 
@@ -1511,43 +1513,43 @@ library DSSExtensions
         HRESULT PriceCurve([in] BSTR Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x0000001b), propget, helpstring("Only affects the AltDSS engine. If disabled, the engine will not change the active working directory during execution. E.g. a `compile` command will not `chdir` to the file path.\n\nIf you have issues with long paths, enabling this might help in some scenarios.\n\nDefaults to True (allow changes, backwards compatible) in the 0.10.x versions of AltDSS/DSS C-API. This might change to False in future versions.\n\nThis can also be set through the environment variable DSS_CAPI_ALLOW_CHANGE_DIR. Set it to 0 to disallow changing the active working directory.\n\n**(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Only affects the AltDSS engine. If disabled, the engine will not change the active working directory during execution. E.g. a `compile` command will not `chdir` to the file path.\n\nIf you have issues with long paths, enabling this might help in some scenarios.\n\nDefaults to True (allow changes, backwards compatible) in the 0.10.x versions of AltDSS/DSS C-API. This might change to False in future versions.\n\nThis can also be set through the environment variable DSS_CAPI_ALLOW_CHANGE_DIR. Set it to 0 to disallow changing the active working directory.\n\n**(API Extension)**")]
         HRESULT AllowChangeDir([out, retval] VARIANT_BOOL* Value);
-        [id(0x0000001b), propput, helpstring("If disabled, the engine will not change the active working directory during execution. E.g. a `compile` command will not `chdir` to the file path.\n\nIf you have issues with long paths, enabling this might help in some scenarios.\n\nDefaults to True (allow changes, backwards compatible) in the 0.10.x versions of AltDSS/DSS C-API. This might change to False in future versions.\n\nThis can also be set through the environment variable DSS_CAPI_ALLOW_CHANGE_DIR. Set it to 0 to disallow changing the active working directory.\n\n**(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("If disabled, the engine will not change the active working directory during execution. E.g. a `compile` command will not `chdir` to the file path.\n\nIf you have issues with long paths, enabling this might help in some scenarios.\n\nDefaults to True (allow changes, backwards compatible) in the 0.10.x versions of AltDSS/DSS C-API. This might change to False in future versions.\n\nThis can also be set through the environment variable DSS_CAPI_ALLOW_CHANGE_DIR. Set it to 0 to disallow changing the active working directory.\n\n**(API Extension)**")]
         HRESULT AllowChangeDir([in] VARIANT_BOOL Value);
-        [id(0x0000001a), propget, helpstring("Only affects the AltDSS engine. If enabled, the `DOScmd` command is allowed. Otherwise, an error is reported if the user tries to use it.\nDefaults to False/0 (disabled state). Users should consider DOScmd deprecated on DSS-Extensions.\nThis can also be set through the environment variable DSS_CAPI_ALLOW_DOSCMD. Setting it to 1 enables the command.\n**(API Extension)**")]
+        [id(0x00000a02), propget, helpstring("Only affects the AltDSS engine. If enabled, the `DOScmd` command is allowed. Otherwise, an error is reported if the user tries to use it.\nDefaults to False/0 (disabled state). Users should consider DOScmd deprecated on DSS-Extensions.\nThis can also be set through the environment variable DSS_CAPI_ALLOW_DOSCMD. Setting it to 1 enables the command.\n**(API Extension)**")]
         HRESULT AllowDOScmd([out, retval] VARIANT_BOOL* Value);
-        [id(0x0000001a), propput, helpstring("Only affects the AltDSS engine. If enabled, the `DOScmd` command is allowed. Otherwise, an error is reported if the user tries to use it.\nDefaults to False/0 (disabled state). Users should consider DOScmd deprecated on DSS-Extensions.\nThis can also be set through the environment variable DSS_CAPI_ALLOW_DOSCMD. Setting it to 1 enables the command.\n**(API Extension)**")]
+        [id(0x00000a02), propput, helpstring("Only affects the AltDSS engine. If enabled, the `DOScmd` command is allowed. Otherwise, an error is reported if the user tries to use it.\nDefaults to False/0 (disabled state). Users should consider DOScmd deprecated on DSS-Extensions.\nThis can also be set through the environment variable DSS_CAPI_ALLOW_DOSCMD. Setting it to 1 enables the command.\n**(API Extension)**")]
         HRESULT AllowDOScmd([in] VARIANT_BOOL Value);
-        [id(0x0000001c), propget, helpstring("Only affects AltDSS engines. Gets/sets whether running the external editor for `Show` is allowed\nAllowEditor controls whether the external editor is used in commands like `Show`. If you set to 0 (false), the editor is not executed. Note that other side effects, such as the creation of files, are not affected.\n**(API Extension)**")]
+        [id(0x00000a03), propget, helpstring("Only affects AltDSS engines. Gets/sets whether running the external editor for `Show` is allowed\nAllowEditor controls whether the external editor is used in commands like `Show`. If you set to 0 (false), the editor is not executed. Note that other side effects, such as the creation of files, are not affected.\n**(API Extension)**")]
         HRESULT AllowEditor([out, retval] VARIANT_BOOL* Value);
-        [id(0x0000001c), propput, helpstring("Only affects AltDSS engines. Gets/sets whether running the external editor for `Show` is allowed\nAllowEditor controls whether the external editor is used in commands like `Show`. If you set to 0 (false), the editor is not executed. Note that other side effects, such as the creation of files, are not affected.\n**(API Extension)**")]
+        [id(0x00000a03), propput, helpstring("Only affects AltDSS engines. Gets/sets whether running the external editor for `Show` is allowed\nAllowEditor controls whether the external editor is used in commands like `Show`. If you set to 0 (false), the editor is not executed. Note that other side effects, such as the creation of files, are not affected.\n**(API Extension)**")]
         HRESULT AllowEditor([in] VARIANT_BOOL Value);
-        [id(0x00000013), propget, helpstring("If enabled, in case of errors or empty arrays, the API returns arrays with values compatible with the official OpenDSS COM interface.\nFor example, consider the property `Loads.ZIPV`. If there is no active circuit or active load element:\n- In the disabled state (COMErrorResults=False), the function will return \"[]\", an array with 0 elements.\n- In the enabled state (COMErrorResults=True), the function will return \"[0.0]\" instead. This should be compatible with the return value of the official COM interface.\n\nDefaults to False/0 (disabled state), starting DSS-Python v0.16.\n\nThis can also be set through the environment variable `DSS_CAPI_COM_DEFAULTS`. Setting it to 0 disables the legacy/COM behavior. The value can be toggled through the API at any time.\n**(API Extension)**")]
+        [id(0x00000a04), propget, helpstring("If enabled, in case of errors or empty arrays, the API returns arrays with values compatible with the official OpenDSS COM interface.\nFor example, consider the property `Loads.ZIPV`. If there is no active circuit or active load element:\n- In the disabled state (COMErrorResults=False), the function will return \"[]\", an array with 0 elements.\n- In the enabled state (COMErrorResults=True), the function will return \"[0.0]\" instead. This should be compatible with the return value of the official COM interface.\n\nDefaults to False/0 (disabled state), starting DSS-Python v0.16.\n\nThis can also be set through the environment variable `DSS_CAPI_COM_DEFAULTS`. Setting it to 0 disables the legacy/COM behavior. The value can be toggled through the API at any time.\n**(API Extension)**")]
         HRESULT COMErrorResults([out, retval] VARIANT_BOOL* Value);
-        [id(0x00000013), propput, helpstring("If enabled, in case of errors or empty arrays, the API returns arrays with values compatible with the official OpenDSS COM interface.\nFor example, consider the property `Loads.ZIPV`. If there is no active circuit or active load element:\n- In the disabled state (COMErrorResults=False), the function will return \"[]\", an array with 0 elements.\n- In the enabled state (COMErrorResults=True), the function will return \"[0.0]\" instead. This should be compatible with the return value of the official COM interface.\n\nDefaults to False/0 (disabled state), starting DSS-Python v0.16.\n\nThis can also be set through the environment variable `DSS_CAPI_COM_DEFAULTS`. Setting it to 0 disables the legacy/COM behavior. The value can be toggled through the API at any time.\n**(API Extension)**")]
+        [id(0x00000a04), propput, helpstring("If enabled, in case of errors or empty arrays, the API returns arrays with values compatible with the official OpenDSS COM interface.\nFor example, consider the property `Loads.ZIPV`. If there is no active circuit or active load element:\n- In the disabled state (COMErrorResults=False), the function will return \"[]\", an array with 0 elements.\n- In the enabled state (COMErrorResults=True), the function will return \"[0.0]\" instead. This should be compatible with the return value of the official COM interface.\n\nDefaults to False/0 (disabled state), starting DSS-Python v0.16.\n\nThis can also be set through the environment variable `DSS_CAPI_COM_DEFAULTS`. Setting it to 0 disables the legacy/COM behavior. The value can be toggled through the API at any time.\n**(API Extension)**")]
         HRESULT COMErrorResults([in] VARIANT_BOOL Value);
-        [id(0x00000019), propget, helpstring("Controls some compatibility flags introduced to toggle some behavior from the official OpenDSS.\n\n**THE FLAGS ARE GLOBAL, affecting all AltDSS engines in the process.**\nCompatFlags for Oddie-loaded instances (EPRI's OpenDSS and OpenDSS-C engines) are handled by the Oddie code itself,\nso it is global for each Oddie library.\n\nThese flags may change for each version of DSS C-API, but the same value will not be reused. That is,\nwhen we remove a compatibility flag, it will have no effect but will also not affect anything else\nbesides raising an error if the user tries to toggle a flag that was available in a previous version.\n\nWe expect to keep a very limited number of flags. Since the flags are more transient than the other\noptions/flags, it was preferred to add this generic function instead of a separate function per\nflag.\n\nSee the enumeration `DSSCompatFlags` for available flags.\n\n**(API Extension)**")]
+        [id(0x00000a05), propget, helpstring("Controls some compatibility flags introduced to toggle some behavior from the official OpenDSS.\n\n**THE FLAGS ARE GLOBAL, affecting all AltDSS engines in the process.**\nCompatFlags for Oddie-loaded instances (EPRI's OpenDSS and OpenDSS-C engines) are handled by the Oddie code itself,\nso it is global for each Oddie library.\n\nThese flags may change for each version of DSS C-API, but the same value will not be reused. That is,\nwhen we remove a compatibility flag, it will have no effect but will also not affect anything else\nbesides raising an error if the user tries to toggle a flag that was available in a previous version.\n\nWe expect to keep a very limited number of flags. Since the flags are more transient than the other\noptions/flags, it was preferred to add this generic function instead of a separate function per\nflag.\n\nSee the enumeration `DSSCompatFlags` for available flags.\n\n**(API Extension)**")]
         HRESULT CompatFlags([out, retval] long* Value);
-        [id(0x00000019), propput, helpstring("Controls some compatibility flags introduced to toggle some behavior from the official OpenDSS.\n\n**THE FLAGS ARE GLOBAL, affecting all AltDSS engines in the process.**\nCompatFlags for Oddie-loaded instances (EPRI's OpenDSS and OpenDSS-C engines) are handled by the Oddie code itself,\nso it is global for each Oddie library.\n\nThese flags may change for each version of DSS C-API, but the same value will not be reused. That is,\nwhen we remove a compatibility flag, it will have no effect but will also not affect anything else\nbesides raising an error if the user tries to toggle a flag that was available in a previous version.\n\nWe expect to keep a very limited number of flags. Since the flags are more transient than the other\noptions/flags, it was preferred to add this generic function instead of a separate function per\nflag.\n\nSee the enumeration `DSSCompatFlags` for available flags.\n\n**(API Extension)**")]
+        [id(0x00000a05), propput, helpstring("Controls some compatibility flags introduced to toggle some behavior from the official OpenDSS.\n\n**THE FLAGS ARE GLOBAL, affecting all AltDSS engines in the process.**\nCompatFlags for Oddie-loaded instances (EPRI's OpenDSS and OpenDSS-C engines) are handled by the Oddie code itself,\nso it is global for each Oddie library.\n\nThese flags may change for each version of DSS C-API, but the same value will not be reused. That is,\nwhen we remove a compatibility flag, it will have no effect but will also not affect anything else\nbesides raising an error if the user tries to toggle a flag that was available in a previous version.\n\nWe expect to keep a very limited number of flags. Since the flags are more transient than the other\noptions/flags, it was preferred to add this generic function instead of a separate function per\nflag.\n\nSee the enumeration `DSSCompatFlags` for available flags.\n\n**(API Extension)**")]
         HRESULT CompatFlags([in] long Value);
-        [id(0x00000014), propget, helpstring("Controls whether `First`/`Next` iteration includes or skips disabled circuit elements.\nThe default behavior from OpenDSS is to skip those. The user can still activate the element by name or index.\n\nThe default value for IterateDisabled is 0, keeping the original behavior.\nSet it to 1 (or `True`) to include disabled elements.\nOther numeric values are reserved for other potential behaviors.\n**(API Extension)**")]
+        [id(0x00000a06), propget, helpstring("Controls whether `First`/`Next` iteration includes or skips disabled circuit elements.\nThe default behavior from OpenDSS is to skip those. The user can still activate the element by name or index.\n\nThe default value for IterateDisabled is 0, keeping the original behavior.\nSet it to 1 (or `True`) to include disabled elements.\nOther numeric values are reserved for other potential behaviors.\n**(API Extension)**")]
         HRESULT IterateDisabled([out, retval] VARIANT_BOOL* Value);
-        [id(0x00000014), propput, helpstring("Controls whether `First`/`Next` iteration includes or skips disabled circuit elements.\nThe default behavior from OpenDSS is to skip those. The user can still activate the element by name or index.\n\nThe default value for IterateDisabled is 0, keeping the original behavior.\nSet it to 1 (or `True`) to include disabled elements.\nOther numeric values are reserved for other potential behaviors.\n**(API Extension)**")]
+        [id(0x00000a06), propput, helpstring("Controls whether `First`/`Next` iteration includes or skips disabled circuit elements.\nThe default behavior from OpenDSS is to skip those. The user can still activate the element by name or index.\n\nThe default value for IterateDisabled is 0, keeping the original behavior.\nSet it to 1 (or `True`) to include disabled elements.\nOther numeric values are reserved for other potential behaviors.\n**(API Extension)**")]
         HRESULT IterateDisabled([in] VARIANT_BOOL Value);
-        [id(0x00000015), propget, helpstring("Controls whether the terminals are checked when updating the currents in Load component. Defaults to True. If the loads are guaranteed to have their terminals closed throughout the simulation, this can be set to False to save some time. **(API Extension)**")]
+        [id(0x00000a07), propget, helpstring("Controls whether the terminals are checked when updating the currents in Load component. Defaults to True. If the loads are guaranteed to have their terminals closed throughout the simulation, this can be set to False to save some time. **(API Extension)**")]
         HRESULT LoadsTerminalCheck([out, retval] VARIANT_BOOL* Value);
-        [id(0x00000015), propput, helpstring("Controls whether the terminals are checked when updating the currents in Load component. Defaults to True. If the loads are guaranteed to have their terminals closed throughout the simulation, this can be set to False to save some time. **(API Extension)**")]
+        [id(0x00000a07), propput, helpstring("Controls whether the terminals are checked when updating the currents in Load component. Defaults to True. If the loads are guaranteed to have their terminals closed throughout the simulation, this can be set to False to save some time. **(API Extension)**")]
         HRESULT LoadsTerminalCheck([in] VARIANT_BOOL Value);
-        [id(0x00000016), helpstring("Switch the property names according to the target style. Use this method for compatibility with code that doesn't consider that OpenDSS is case insensitive. Check the enumeration for more. **(API Extension)**")]
+        [id(0x00000a08), helpstring("Switch the property names according to the target style. Use this method for compatibility with code that doesn't consider that OpenDSS is case insensitive. Check the enumeration for more. **(API Extension)**")]
         HRESULT SetPropertyNameStyle([in] DSSPropertyNameStyle Value);
-        [id(0x00000017), propget, helpstring("Regular expression pattern to skip files.\n\nIf a file name as provided in the input for the `Redirect` and `Compile` commands\nmatches the regular expression pattern, it is skipped (the file is not read nor\ncommands contained in the file are executed).\n\nSet to an empty string to reset/disable the filter.\n\nCase-insensitive.\nSee https://regex.sorokin.engineer/en/latest/regular_expressions.html for information on\nthe expression syntax and options.\n\nEven if the `clear` command is included in `Settings.SkipCommands`, the `DSS.ClearAll()` method can\nstill be called. It resets both skip settings, `SkipCommands` and `SkipFileRegExp`.\n\n**(API Extension)**")]
+        [id(0x00000a08), propget, helpstring("Regular expression pattern to skip files.\n\nIf a file name as provided in the input for the `Redirect` and `Compile` commands\nmatches the regular expression pattern, it is skipped (the file is not read nor\ncommands contained in the file are executed).\n\nSet to an empty string to reset/disable the filter.\n\nCase-insensitive.\nSee https://regex.sorokin.engineer/en/latest/regular_expressions.html for information on\nthe expression syntax and options.\n\nEven if the `clear` command is included in `Settings.SkipCommands`, the `DSS.ClearAll()` method can\nstill be called. It resets both skip settings, `SkipCommands` and `SkipFileRegExp`.\n\n**(API Extension)**")]
         HRESULT SkipFileRegExp([out, retval] BSTR* Value);
-        [id(0x00000017), propput, helpstring("Regular expression pattern to skip files.\n\nIf a file name as provided in the input for the `Redirect` and `Compile` commands\nmatches the regular expression pattern, it is skipped (the file is not read nor\ncommands contained in the file are executed).\n\nSet to an empty string to reset/disable the filter.\n\nCase-insensitive.\nSee https://regex.sorokin.engineer/en/latest/regular_expressions.html for information on\nthe expression syntax and options.\n\nEven if the `clear` command is included in `Settings.SkipCommands`, the `DSS.ClearAll()` method can\nstill be called. It resets both skip settings, `SkipCommands` and `SkipFileRegExp`.\n\n**(API Extension)**")]
+        [id(0x00000a08), propput, helpstring("Regular expression pattern to skip files.\n\nIf a file name as provided in the input for the `Redirect` and `Compile` commands\nmatches the regular expression pattern, it is skipped (the file is not read nor\ncommands contained in the file are executed).\n\nSet to an empty string to reset/disable the filter.\n\nCase-insensitive.\nSee https://regex.sorokin.engineer/en/latest/regular_expressions.html for information on\nthe expression syntax and options.\n\nEven if the `clear` command is included in `Settings.SkipCommands`, the `DSS.ClearAll()` method can\nstill be called. It resets both skip settings, `SkipCommands` and `SkipFileRegExp`.\n\n**(API Extension)**")]
         HRESULT SkipFileRegExp([in] BSTR Value);
-        [id(0x00000018), propget, helpstring("Variant array of strings. List of commands to skip\n\nList of strings representing the command names to skip when processing DSS text commands or files.\n\nIf the `clear` command is included in `Settings.SkipCommands`, the `DSS.ClearAll()` method can\nstill be called and it will reset both skip settings, `SkipCommands` and `SkipFileRegExp`.\n\n**(API Extension)**")] // AltDSS element type: BSTR
+        [id(0x00000a09), propget, helpstring("Variant array of strings. List of commands to skip\n\nList of strings representing the command names to skip when processing DSS text commands or files.\n\nIf the `clear` command is included in `Settings.SkipCommands`, the `DSS.ClearAll()` method can\nstill be called and it will reset both skip settings, `SkipCommands` and `SkipFileRegExp`.\n\n**(API Extension)**")] // AltDSS element type: BSTR
         HRESULT SkipCommands([out, retval] VARIANT* Value);
-        [id(0x00000018), propput, helpstring("Variant array of strings. List of commands to skip\n\nList of strings representing the command names to skip when processing DSS text commands or files.\n\nIf the `clear` command is included in `Settings.SkipCommands`, the `DSS.ClearAll()` method can\nstill be called and it will reset both skip settings, `SkipCommands` and `SkipFileRegExp`.\n\n**(API Extension)**")] // AltDSS element type: BSTR
+        [id(0x00000a09), propput, helpstring("Variant array of strings. List of commands to skip\n\nList of strings representing the command names to skip when processing DSS text commands or files.\n\nIf the `clear` command is included in `Settings.SkipCommands`, the `DSS.ClearAll()` method can\nstill be called and it will reset both skip settings, `SkipCommands` and `SkipFileRegExp`.\n\n**(API Extension)**")] // AltDSS element type: BSTR
         HRESULT SkipCommands([in] VARIANT Value);
     };
 
@@ -1685,13 +1687,13 @@ library DSSExtensions
         HRESULT SeasonRating([out, retval] double* Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000d0), propget, helpstring("Sets/gets the Line element switch status. Setting it has side-effects to the line parameters. **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Sets/gets the Line element switch status. Setting it has side-effects to the line parameters. **(API Extension)**")]
         HRESULT IsSwitch([out, retval] VARIANT_BOOL* Value);
-        [id(0x000000d0), propput, helpstring("Sets/gets the Line element switch status. Setting it has side-effects to the line parameters. **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Sets/gets the Line element switch status. Setting it has side-effects to the line parameters. **(API Extension)**")]
         HRESULT IsSwitch([in] VARIANT_BOOL Value);
-        [id(0x000000d1), propget, helpstring("Get/Set active Line by index.  1..Count **(API Extension)**")]
+        [id(0x00000a02), propget, helpstring("Get/Set active Line by index.  1..Count **(API Extension)**")]
         HRESULT idx([out, retval] long* Value);
-        [id(0x000000d1), propput, helpstring("Get/Set Line by index.  1..Count **(API Extension)**")]
+        [id(0x00000a02), propput, helpstring("Get/Set Line by index.  1..Count **(API Extension)**")]
         HRESULT idx([in] long Value);
 
     };
@@ -1916,9 +1918,9 @@ library DSSExtensions
         HRESULT Sensor([out, retval] BSTR* Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000f2), propget, helpstring("Number of phases **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Number of phases **(API Extension)**")]
         HRESULT Phases([out, retval] long* Value);
-        [id(0x000000f2), propput, helpstring("Number of phases **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Number of phases **(API Extension)**")]
         HRESULT Phases([in] long Value);
     };
 
@@ -1950,7 +1952,7 @@ library DSSExtensions
         HRESULT AllPropertyNames([out, retval] VARIANT* Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000cd), helpstring("Returns the properties of the active DSS object as a JSON-encoded string.\nThe `options` parameter contains bit-flags to toggle specific features.\nSee also the enum `DSSJSONFlags`.\nThe JSON data is organized using the JSON schema proposed at https://github.com/dss-extensions/AltDSS-Schema \n**(API Extension)**")]
+        [id(0x00000a01), helpstring("Returns the properties of the active DSS object as a JSON-encoded string.\nThe `options` parameter contains bit-flags to toggle specific features.\nSee also the enum `DSSJSONFlags`.\nThe JSON data is organized using the JSON schema proposed at https://github.com/dss-extensions/AltDSS-Schema \n**(API Extension)**")]
         HRESULT ToJSON([in, defaultvalue(0)] long options, [out, retval] BSTR* Value);
     };
 
@@ -1992,7 +1994,7 @@ library DSSExtensions
         HRESULT ActiveClassParent([out, retval] BSTR* Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000d1), helpstring("Returns the data (as a list) of all elements from the active class as a JSON-encoded string.\nThe `options` parameter contains bit-flags to toggle specific features.\nAdditionally, the `ExcludeDisabled` flag can be used to excluded disabled elements from the output.\nSee also the enum `DSSJSONFlags`.\n**(API Extension)**")]
+        [id(0x00000a01), helpstring("Returns the data (as a list) of all elements from the active class as a JSON-encoded string.\nThe `options` parameter contains bit-flags to toggle specific features.\nAdditionally, the `ExcludeDisabled` flag can be used to excluded disabled elements from the output.\nSee also the enum `DSSJSONFlags`.\n**(API Extension)**")]
         HRESULT ToJSON([in, defaultvalue(0)] long options, [out, retval] BSTR* Value);
     };
 
@@ -2058,9 +2060,9 @@ library DSSExtensions
         HRESULT Close();
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000d8), propget, helpstring("Get/Set active Capacitor by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Get/Set active Capacitor by index.  1..Count **(API Extension)**")]
         HRESULT idx([out, retval] long* Value);
-        [id(0x000000d8), propput, helpstring("Get/Set Capacitor by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Get/Set Capacitor by index.  1..Count **(API Extension)**")]
         HRESULT idx([in] long Value);
     };
 
@@ -2173,13 +2175,13 @@ library DSSExtensions
         HRESULT RdcOhms([in] double Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000e3), propget, helpstring("Get/Set active Transformer by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Get/Set active Transformer by index.  1..Count **(API Extension)**")]
         HRESULT idx([out, retval] long* Value);
-        [id(0x000000e3), propput, helpstring("Get/Set Transformer by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Get/Set Transformer by index.  1..Count **(API Extension)**")]
         HRESULT idx([in] long Value);
-        [id(0x000000e4), propget, helpstring("Complex array with the losses by type (total losses, load losses, no-load losses), in VA, for the current active transformer **(API Extension)**")]
+        [id(0x00000a02), propget, helpstring("Complex array with the losses by type (total losses, load losses, no-load losses), in VA, for the current active transformer **(API Extension)**")]
         HRESULT LossesByType([out, retval] VARIANT* Value);
-        [id(0x000000e5), propget, helpstring("Complex array with the losses by type (total losses, load losses, no-load losses), in VA, concatenated for ALL transformers **(API Extension)**")]
+        [id(0x00000a03), propget, helpstring("Complex array with the losses by type (total losses, load losses, no-load losses), in VA, concatenated for ALL transformers **(API Extension)**")]
         HRESULT AllLossesByType([out, retval] VARIANT* Value);
 
     };
@@ -2237,9 +2239,9 @@ library DSSExtensions
         HRESULT Reset();
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000d6), propget, helpstring("Get/Set active SwtControl by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Get/Set active SwtControl by index.  1..Count **(API Extension)**")]
         HRESULT idx([out, retval] long* Value);
-        [id(0x000000d6), propput, helpstring("Get/Set SwtControl by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Get/Set SwtControl by index.  1..Count **(API Extension)**")]
         HRESULT idx([in] long Value);
     };
 
@@ -2324,9 +2326,9 @@ library DSSExtensions
         HRESULT Reset();
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000dd), propget, helpstring("Get/Set active CapControl by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Get/Set active CapControl by index.  1..Count **(API Extension)**")]
         HRESULT idx([out, retval] long* Value);
-        [id(0x000000dd), propput, helpstring("Get/Set CapControl by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Get/Set CapControl by index.  1..Count **(API Extension)**")]
         HRESULT idx([in] long Value);
     };
 
@@ -2439,9 +2441,9 @@ library DSSExtensions
         HRESULT Reset();
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000e4), propget, helpstring("Get/Set active RegControl by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Get/Set active RegControl by index.  1..Count **(API Extension)**")]
         HRESULT idx([out, retval] long* Value);
-        [id(0x000000e4), propput, helpstring("Get/Set RegControl by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Get/Set RegControl by index.  1..Count **(API Extension)**")]
         HRESULT idx([in] long Value);
     };
 
@@ -2677,9 +2679,9 @@ library DSSExtensions
         HRESULT AllocationFactor([out, retval] VARIANT* Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000dc), propget, helpstring("Get/Set active Sensor by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Get/Set active Sensor by index.  1..Count **(API Extension)**")]
         HRESULT idx([out, retval] long* Value);
-        [id(0x000000dc), propput, helpstring("Get/Set Sensor by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Get/Set Sensor by index.  1..Count **(API Extension)**")]
         HRESULT idx([in] long Value);
     };
 
@@ -2747,9 +2749,9 @@ library DSSExtensions
         HRESULT Yscale([in] double Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000d7), propget, helpstring("Get/Set active XYCurve by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Get/Set active XYCurve by index.  1..Count **(API Extension)**")]
         HRESULT idx([out, retval] long* Value);
-        [id(0x000000d7), propput, helpstring("Get/Set XYCurve by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Get/Set XYCurve by index.  1..Count **(API Extension)**")]
         HRESULT idx([in] long Value);
     };
 
@@ -3129,13 +3131,13 @@ library DSSExtensions
         HRESULT Sinterval([in] double Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000da), propget, helpstring("Get/Set active LoadShape by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Get/Set active LoadShape by index.  1..Count **(API Extension)**")]
         HRESULT idx([out, retval] long* Value);
-        [id(0x000000da), propput, helpstring("Get/Set LoadShape by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Get/Set LoadShape by index.  1..Count **(API Extension)**")]
         HRESULT idx([in] long Value);
-        [id(0x000000db), helpstring("Converts the current LoadShape data to float32/single precision. If there is no data or the data is already represented using float32, nothing is done. **(API Extension)**")]
+        [id(0x00000a02), helpstring("Converts the current LoadShape data to float32/single precision. If there is no data or the data is already represented using float32, nothing is done. **(API Extension)**")]
         HRESULT UseFloat32();
-        [id(0x000000dc), helpstring("Converts the current LoadShape data to float64/double precision. If there is no data or the data is already represented using float64, nothing is done. **(API Extension)**")]
+        [id(0x00000a03), helpstring("Converts the current LoadShape data to float64/double precision. If there is no data or the data is already represented using float64, nothing is done. **(API Extension)**")]
         HRESULT UseFloat64();
     };
 
@@ -3261,9 +3263,9 @@ library DSSExtensions
         HRESULT Frequency([in] double Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000d1), propget, helpstring("Get/Set active ISource by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Get/Set active ISource by index.  1..Count **(API Extension)**")]
         HRESULT idx([out, retval] long* Value);
-        [id(0x000000d1), propput, helpstring("Get/Set ISource by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Get/Set ISource by index.  1..Count **(API Extension)**")]
         HRESULT idx([in] long Value);
     };
 
@@ -3353,29 +3355,29 @@ library DSSExtensions
         HRESULT Sensor([out, retval] BSTR* Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000da), propget, helpstring("Name of the dispatch shape to use for daily simulations. Must be previously defined as a Loadshape object of 24 hrs, typically. In the default dispatch mode, the PVSystem element uses this loadshape to trigger State changes. **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Name of the dispatch shape to use for daily simulations. Must be previously defined as a Loadshape object of 24 hrs, typically. In the default dispatch mode, the PVSystem element uses this loadshape to trigger State changes. **(API Extension)**")]
         HRESULT daily([out, retval] BSTR* Value);
-        [id(0x000000da), propput, helpstring("Name of the dispatch shape to use for daily simulations. Must be previously defined as a Loadshape object of 24 hrs, typically. In the default dispatch mode, the PVSystem element uses this loadshape to trigger State changes. **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Name of the dispatch shape to use for daily simulations. Must be previously defined as a Loadshape object of 24 hrs, typically. In the default dispatch mode, the PVSystem element uses this loadshape to trigger State changes. **(API Extension)**")]
         HRESULT daily([in] BSTR Value);
-        [id(0x000000db), propget, helpstring("Name of the load shape to use for duty cycle dispatch simulations such as for solar ramp rate studies. Must be previously defined as a Loadshape object. Typically would have time intervals of 1-5 seconds. **(API Extension)**")]
+        [id(0x00000a02), propget, helpstring("Name of the load shape to use for duty cycle dispatch simulations such as for solar ramp rate studies. Must be previously defined as a Loadshape object. Typically would have time intervals of 1-5 seconds. **(API Extension)**")]
         HRESULT duty([out, retval] BSTR* Value);
-        [id(0x000000db), propput, helpstring("Name of the load shape to use for duty cycle dispatch simulations such as for solar ramp rate studies. Must be previously defined as a Loadshape object. Typically would have time intervals of 1-5 seconds. **(API Extension)**")]
+        [id(0x00000a02), propput, helpstring("Name of the load shape to use for duty cycle dispatch simulations such as for solar ramp rate studies. Must be previously defined as a Loadshape object. Typically would have time intervals of 1-5 seconds. **(API Extension)**")]
         HRESULT duty([in] BSTR Value);
-        [id(0x000000dc), propget, helpstring("Dispatch shape to use for yearly simulations. Must be previously defined as a Loadshape object. If this is not specified, the Daily dispatch shape, if any, is repeated during Yearly solution modes. In the default dispatch mode, the PVSystem element uses this loadshape to trigger State changes. **(API Extension)**")]
+        [id(0x00000a03), propget, helpstring("Dispatch shape to use for yearly simulations. Must be previously defined as a Loadshape object. If this is not specified, the Daily dispatch shape, if any, is repeated during Yearly solution modes. In the default dispatch mode, the PVSystem element uses this loadshape to trigger State changes. **(API Extension)**")]
         HRESULT Yearly([out, retval] BSTR* Value);
-        [id(0x000000dc), propput, helpstring("Dispatch shape to use for yearly simulations. Must be previously defined as a Loadshape object. If this is not specified, the Daily dispatch shape, if any, is repeated during Yearly solution modes. In the default dispatch mode, the PVSystem element uses this loadshape to trigger State changes. **(API Extension)**")]
+        [id(0x00000a03), propput, helpstring("Dispatch shape to use for yearly simulations. Must be previously defined as a Loadshape object. If this is not specified, the Daily dispatch shape, if any, is repeated during Yearly solution modes. In the default dispatch mode, the PVSystem element uses this loadshape to trigger State changes. **(API Extension)**")]
         HRESULT Yearly([in] BSTR Value);
-        [id(0x000000dd), propget, helpstring("Temperature shape to use for daily simulations. Must be previously defined as a TShape object of 24 hrs, typically. The PVSystem element uses this TShape to determine the Pmpp from the Pmpp vs T curve. Units must agree with the Pmpp vs T curve. **(API Extension)**")]
+        [id(0x00000a04), propget, helpstring("Temperature shape to use for daily simulations. Must be previously defined as a TShape object of 24 hrs, typically. The PVSystem element uses this TShape to determine the Pmpp from the Pmpp vs T curve. Units must agree with the Pmpp vs T curve. **(API Extension)**")]
         HRESULT Tdaily([out, retval] BSTR* Value);
-        [id(0x000000dd), propput, helpstring("Temperature shape to use for daily simulations. Must be previously defined as a TShape object of 24 hrs, typically. The PVSystem element uses this TShape to determine the Pmpp from the Pmpp vs T curve. Units must agree with the Pmpp vs T curve. **(API Extension)**")]
+        [id(0x00000a04), propput, helpstring("Temperature shape to use for daily simulations. Must be previously defined as a TShape object of 24 hrs, typically. The PVSystem element uses this TShape to determine the Pmpp from the Pmpp vs T curve. Units must agree with the Pmpp vs T curve. **(API Extension)**")]
         HRESULT Tdaily([in] BSTR Value);
-        [id(0x000000de), propget, helpstring("Temperature shape to use for duty cycle dispatch simulations such as for solar ramp rate studies. Must be previously defined as a TShape object. Typically would have time intervals of 1-5 seconds. Designate the number of points to solve using the Set Number=xxxx command. If there are fewer points in the actual shape, the shape is assumed to repeat. The PVSystem model uses this TShape to determine the Pmpp from the Pmpp vs T curve. Units must agree with the Pmpp vs T curve. **(API Extension)**")]
+        [id(0x00000a05), propget, helpstring("Temperature shape to use for duty cycle dispatch simulations such as for solar ramp rate studies. Must be previously defined as a TShape object. Typically would have time intervals of 1-5 seconds. Designate the number of points to solve using the Set Number=xxxx command. If there are fewer points in the actual shape, the shape is assumed to repeat. The PVSystem model uses this TShape to determine the Pmpp from the Pmpp vs T curve. Units must agree with the Pmpp vs T curve. **(API Extension)**")]
         HRESULT Tduty([out, retval] BSTR* Value);
-        [id(0x000000de), propput, helpstring("Temperature shape to use for duty cycle dispatch simulations such as for solar ramp rate studies. Must be previously defined as a TShape object. Typically would have time intervals of 1-5 seconds. Designate the number of points to solve using the Set Number=xxxx command. If there are fewer points in the actual shape, the shape is assumed to repeat. The PVSystem model uses this TShape to determine the Pmpp from the Pmpp vs T curve. Units must agree with the Pmpp vs T curve. **(API Extension)**")]
+        [id(0x00000a05), propput, helpstring("Temperature shape to use for duty cycle dispatch simulations such as for solar ramp rate studies. Must be previously defined as a TShape object. Typically would have time intervals of 1-5 seconds. Designate the number of points to solve using the Set Number=xxxx command. If there are fewer points in the actual shape, the shape is assumed to repeat. The PVSystem model uses this TShape to determine the Pmpp from the Pmpp vs T curve. Units must agree with the Pmpp vs T curve. **(API Extension)**")]
         HRESULT Tduty([in] BSTR Value);
-        [id(0x000000df), propget, helpstring("Temperature shape to use for yearly simulations. Must be previously defined as a TShape object. If this is not specified, the Daily dispatch shape, if any, is repeated during Yearly solution modes. The PVSystem element uses this TShape to determine the Pmpp from the Pmpp vs T curve. Units must agree with the Pmpp vs T curve. **(API Extension)**")]
+        [id(0x00000a06), propget, helpstring("Temperature shape to use for yearly simulations. Must be previously defined as a TShape object. If this is not specified, the Daily dispatch shape, if any, is repeated during Yearly solution modes. The PVSystem element uses this TShape to determine the Pmpp from the Pmpp vs T curve. Units must agree with the Pmpp vs T curve. **(API Extension)**")]
         HRESULT Tyearly([out, retval] BSTR* Value);
-        [id(0x000000df), propput, helpstring("Temperature shape to use for yearly simulations. Must be previously defined as a TShape object. If this is not specified, the Daily dispatch shape, if any, is repeated during Yearly solution modes. The PVSystem element uses this TShape to determine the Pmpp from the Pmpp vs T curve. Units must agree with the Pmpp vs T curve. **(API Extension)**")]
+        [id(0x00000a06), propput, helpstring("Temperature shape to use for yearly simulations. Must be previously defined as a TShape object. If this is not specified, the Daily dispatch shape, if any, is repeated during Yearly solution modes. The PVSystem element uses this TShape to determine the Pmpp from the Pmpp vs T curve. Units must agree with the Pmpp vs T curve. **(API Extension)**")]
         HRESULT Tyearly([in] BSTR Value);
     };
 
@@ -3429,9 +3431,9 @@ library DSSExtensions
         HRESULT Phases([in] long Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000d7), propget, helpstring("Get/Set active VSource by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Get/Set active VSource by index.  1..Count **(API Extension)**")]
         HRESULT idx([out, retval] long* Value);
-        [id(0x000000d7), propput, helpstring("Get/Set VSource by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Get/Set VSource by index.  1..Count **(API Extension)**")]
         HRESULT idx([in] long Value);
     };
 
@@ -3566,9 +3568,9 @@ library DSSExtensions
         HRESULT AllNames([out, retval] VARIANT* Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000dc), propget, helpstring("Get/Set active LineCode by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Get/Set active LineCode by index.  1..Count **(API Extension)**")]
         HRESULT idx([out, retval] long* Value);
-        [id(0x000000dc), propput, helpstring("Get/Set LineCode by index.  1..Count **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Get/Set LineCode by index.  1..Count **(API Extension)**")]
         HRESULT idx([in] long Value);
     };
 
@@ -4042,21 +4044,21 @@ library DSSExtensions
         HRESULT AllNames([out, retval] VARIANT* Value);
 
         // Added on DSS-Extensions (API Extensions)
-        [id(0x000000dd), propget, helpstring("Name of first bus. Bus2 property will default to this bus, node 0, unless previously specified. Only Bus1 need be specified for a Yg shunt reactor. **(API Extension)**")]
+        [id(0x00000a01), propget, helpstring("Name of first bus. Bus2 property will default to this bus, node 0, unless previously specified. Only Bus1 need be specified for a Yg shunt reactor. **(API Extension)**")]
         HRESULT Bus1([out, retval] BSTR* Value);
-        [id(0x000000dd), propput, helpstring("Name of first bus. Bus2 property will default to this bus, node 0, unless previously specified. Only Bus1 need be specified for a Yg shunt reactor. **(API Extension)**")]
+        [id(0x00000a01), propput, helpstring("Name of first bus. Bus2 property will default to this bus, node 0, unless previously specified. Only Bus1 need be specified for a Yg shunt reactor. **(API Extension)**")]
         HRESULT Bus1([in] BSTR Value);
-        [id(0x000000de), propget, helpstring("Name of 2nd bus. Defaults to all phases connected to first bus, node 0, (Shunt Wye Connection) except when Bus2 is specifically defined. Not necessary to specify for delta (LL) connection. **(API Extension)**")]
+        [id(0x00000a02), propget, helpstring("Name of 2nd bus. Defaults to all phases connected to first bus, node 0, (Shunt Wye Connection) except when Bus2 is specifically defined. Not necessary to specify for delta (LL) connection. **(API Extension)**")]
         HRESULT Bus2([out, retval] BSTR* Value);
-        [id(0x000000de), propput, helpstring("Name of 2nd bus. Defaults to all phases connected to first bus, node 0, (Shunt Wye Connection) except when Bus2 is specifically defined. Not necessary to specify for delta (LL) connection. **(API Extension)**")]
+        [id(0x00000a02), propput, helpstring("Name of 2nd bus. Defaults to all phases connected to first bus, node 0, (Shunt Wye Connection) except when Bus2 is specifically defined. Not necessary to specify for delta (LL) connection. **(API Extension)**")]
         HRESULT Bus2([in] BSTR Value);
-        [id(0x000000df), propget, helpstring("Delta connection (true) or wye (false)? **(API Extension)**")]
+        [id(0x00000a03), propget, helpstring("Delta connection (true) or wye (false)? **(API Extension)**")]
         HRESULT IsDelta([out, retval] VARIANT_BOOL* Value);
-        [id(0x000000df), propput, helpstring("Delta connection (true) or wye (false)? **(API Extension)**")]
+        [id(0x00000a03), propput, helpstring("Delta connection (true) or wye (false)? **(API Extension)**")]
         HRESULT IsDelta([in] VARIANT_BOOL Value);
-        [id(0x000000e0), propget, helpstring("Number of phases **(API Extension)**")]
+        [id(0x00000a04), propget, helpstring("Number of phases **(API Extension)**")]
         HRESULT Phases([out, retval] long* Value);
-        [id(0x000000e0), propput, helpstring("Number of phases **(API Extension)**")]
+        [id(0x00000a04), propput, helpstring("Number of phases **(API Extension)**")]
         HRESULT Phases([in] long Value);
 
     };

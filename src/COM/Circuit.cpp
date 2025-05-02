@@ -3,42 +3,42 @@
 #include "pch.h"
 #include "Circuit.h"
 
-CComPtr<IReactors> FReactors;
-CComPtr<IRegControls> FRegControls;
-CComPtr<ITransformers> FTransformers;
-CComPtr<IISources> FISources;
-CComPtr<IParallel> FParallel;
-CComPtr<IPDElements> FPDElements;
-CComPtr<ISensors> FSensors;
-CComPtr<ISettings> FSettings;
-CComPtr<IReclosers> FReclosers;
-CComPtr<ICapacitors> FCapacitors;
-CComPtr<IMeters> FMeters;
-CComPtr<IBus> FBus;
-CComPtr<ILoads> FLoads;
-CComPtr<ILoadShapes> FLoadShapes;
-CComPtr<IDSSElement> FDSSElement;
-CComPtr<IRelays> FRelays;
-CComPtr<ILineCodes> FLineCodes;
-CComPtr<IPVSystems> FPVSystems;
-CComPtr<IFuses> FFuses;
-extern CComPtr<IActiveClass> FActiveClass;
-CComPtr<ISwtControls> FSwtControls;
-CComPtr<ISolution> FSolution;
-CComPtr<ICktElement> FCktElement;
 CComPtr<ICtrlQueue> FCtrlQueue;
-CComPtr<IVsources> FVsources;
-CComPtr<IXYCurves> FXYCurves;
-CComPtr<IGenerators> FGenerators;
-CComPtr<IStorages> FStorages;
-CComPtr<IGICSources> FGICSources;
-CComPtr<IMonitors> FMonitors;
-CComPtr<ILines> FLines;
 CComPtr<ITopology> FTopology;
-CComPtr<ICapControls> FCapControls;
-CComPtr<IReduceCkt> FReduceCkt;
+CComPtr<IXYCurves> FXYCurves;
+CComPtr<IISources> FISources;
+CComPtr<IBus> FBus;
+CComPtr<IGICSources> FGICSources;
 extern CComPtr<IDSSimComs> FDSSimComs;
+CComPtr<ICktElement> FCktElement;
+CComPtr<IRegControls> FRegControls;
 CComPtr<IWindGens> FWindGens;
+CComPtr<IReactors> FReactors;
+CComPtr<ILoads> FLoads;
+CComPtr<IRelays> FRelays;
+CComPtr<IMeters> FMeters;
+CComPtr<ISettings> FSettings;
+CComPtr<IMonitors> FMonitors;
+CComPtr<IReclosers> FReclosers;
+CComPtr<IReduceCkt> FReduceCkt;
+CComPtr<ISensors> FSensors;
+CComPtr<IStorages> FStorages;
+CComPtr<IPDElements> FPDElements;
+CComPtr<ILines> FLines;
+CComPtr<IDSSElement> FDSSElement;
+CComPtr<IPVSystems> FPVSystems;
+CComPtr<IParallel> FParallel;
+extern CComPtr<IActiveClass> FActiveClass;
+CComPtr<ILoadShapes> FLoadShapes;
+CComPtr<ICapacitors> FCapacitors;
+CComPtr<ITransformers> FTransformers;
+CComPtr<IGenerators> FGenerators;
+CComPtr<ILineCodes> FLineCodes;
+CComPtr<IVsources> FVsources;
+CComPtr<ISwtControls> FSwtControls;
+CComPtr<ICapControls> FCapControls;
+CComPtr<IFuses> FFuses;
+CComPtr<ISolution> FSolution;
 
 
 STDMETHODIMP CCircuit::InterfaceSupportsErrorInfo(REFIID riid)

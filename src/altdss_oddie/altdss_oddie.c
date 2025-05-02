@@ -677,7 +677,7 @@ int32_t oddie_check_vararray_complex(OddieContext* ctx, void *ptr, int32_t ptrTy
     if (ptrType != ODDIE_PTR_VAR_TYPE_COMPLEX)
     {
         ctx->error_number = 11;
-        ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, expected complex");
+        ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, expected complex. The target function may be missing in the active OpenDSS library.");
         return 1;
     }
 
@@ -697,7 +697,7 @@ int32_t oddie_check_vararray_float64(OddieContext* ctx, void *ptr, int32_t ptrTy
     if (ptrType != ODDIE_PTR_VAR_TYPE_DOUBLE && ptrType != ODDIE_PTR_VAR_TYPE_COMPLEX)
     {
         ctx->error_number = 13;
-        ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, expected complex or double");
+        ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, expected complex or double. The target function may be missing in the active OpenDSS library.");
         return 1;
     }
 
@@ -749,7 +749,7 @@ int32_t oddie_check_vararray_int32(OddieContext* ctx, void *ptr, int32_t ptrType
     if (ptrType != ODDIE_PTR_VAR_TYPE_INTEGER)
     {
         ctx->error_number = 15;
-        ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, expected integer");
+        ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, expected integer. The target function may be missing in the active OpenDSS library.");
         return 1;
     }
 
@@ -875,10 +875,10 @@ int32_t oddie_check_vararray_int8(OddieContext* ctx, void *ptr, int32_t ptrType,
         return 1;
     }
 
-    if ((ptrType != ODDIE_PTR_VAR_TYPE_STRING) && (ptrType != ODDIE_PTR_VAR_TYPE_BYTES))
+    if (/*(ptrType != ODDIE_PTR_VAR_TYPE_STRING) &&*/ (ptrType != ODDIE_PTR_VAR_TYPE_BYTES))
     {
         ctx->error_number = 19;
-        ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, expected string/bytes");
+        ctx_Error_Set_Description(ctx, "(Oddie) Variant array error, expected a byte array. The target function may be missing in the active OpenDSS library.");
         return 1;
     }
 
@@ -4716,6 +4716,18 @@ ALTDSS_ODDIE_DLL void ctx_CktElement_Get_Losses_GR(const void* ctx)
 {  
     CTX_OR_PRIME
     oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->CktElementV, 5, &((OddieContext*) ctx)->GR_DataPtr_PDouble, &((OddieContext*) ctx)->GR_Counts_PDouble[0], NULL);
+}
+
+ALTDSS_ODDIE_DLL void ctx_CktElement_Get_AllLosses(const void* ctx, double** ResultPtr, int32_t* ResultDims)
+{
+    CTX_OR_PRIME
+    oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->CktElementV, 21, ResultPtr, ResultDims, NULL);
+}
+
+ALTDSS_ODDIE_DLL void ctx_CktElement_Get_AllLosses_GR(const void* ctx)
+{  
+    CTX_OR_PRIME
+    oddie_vararray_float64_func((OddieContext*) ctx, ((OddieContext*) ctx)->CktElementV, 21, &((OddieContext*) ctx)->GR_DataPtr_PDouble, &((OddieContext*) ctx)->GR_Counts_PDouble[0], NULL);
 }
 
 ALTDSS_ODDIE_DLL const char* ctx_CktElement_Get_Name(const void* ctx)
@@ -13359,6 +13371,40 @@ ALTDSS_ODDIE_DLL void ctx_Transformers_Set_kVA(const void* ctx, double Value)
     oddie_map_error(ctx);
 }
 
+ALTDSS_ODDIE_DLL void ctx_Transformers_Get_LossesByType(const void* ctx, double** ResultPtr, int32_t* ResultDims)
+{
+    CTX_OR_PRIME
+    OddieContext* oddie_ctx = (OddieContext*) ctx;
+    char const* name = ctx_CktElement_Get_Name(ctx);
+    int32_t idx;
+    if (name == NULL || name[0] == 0 || strncmp(name, "Transformer.", 12 /*strlen("Transformer.")*/) != 0)
+    {
+        name = ctx_Transformers_Get_Name(ctx);
+        if (oddie_ctx->error_number || name == NULL || name[0] == 0)
+        {
+            ResultDims[0] = 0;
+            return;
+        }
+        ctx_Transformers_Set_Name(ctx, name);
+        if (oddie_ctx->error_number)
+        {
+            ResultDims[0] = 0;
+            return;
+        }
+    }
+    if (!ctx_CktElement_Get_Enabled(ctx))
+    {
+        ResultDims[0] = 0;
+        return;
+    }
+    ctx_CktElement_Get_AllLosses(ctx, ResultPtr, ResultDims);
+}
+
+ALTDSS_ODDIE_DLL void ctx_Transformers_Get_LossesByType_GR(const void* ctx)
+{
+    ctx_Transformers_Get_LossesByType(ctx, &((OddieContext*) ctx)->GR_DataPtr_PDouble, &((OddieContext*) ctx)->GR_Counts_PDouble[0]);
+}
+
 ALTDSS_ODDIE_DLL void ctx_Vsources_Get_AllNames(const void* ctx, char*** ResultPtr, int32_t* ResultDims)
 {
     CTX_OR_PRIME
@@ -14838,18 +14884,6 @@ ALTDSS_ODDIE_DLL int32_t ctx_Transformers_Get_idx(const void* ctx)
     CTX_OR_PRIME
     oddie_error_not_implemented((OddieContext*) ctx, "Transformers_Get_idx");
     return 0;
-}
-
-ALTDSS_ODDIE_DLL void ctx_Transformers_Get_LossesByType(const void* ctx, double** ResultPtr, int32_t* ResultDims)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Transformers_Get_LossesByType");
-}
-
-ALTDSS_ODDIE_DLL void ctx_Transformers_Get_LossesByType_GR(const void* ctx)
-{
-    CTX_OR_PRIME
-    oddie_error_not_implemented((OddieContext*) ctx, "Transformers_Get_LossesByType");
 }
 
 ALTDSS_ODDIE_DLL void ctx_Transformers_Set_idx(const void* ctx, int32_t Value)

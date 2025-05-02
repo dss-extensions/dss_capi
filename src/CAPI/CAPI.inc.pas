@@ -471,6 +471,8 @@ TAltDSSCAPI = packed record
     Circuit_ToJSON: Pointer;
     Circuit_UpdateStorage: Pointer;
     CktElement_Close: Pointer;
+    CktElement_Get_AllLosses: Pointer;
+    CktElement_Get_AllLosses_GR: Pointer;
     CktElement_Get_AllPropertyNames: Pointer;
     CktElement_Get_AllVariableNames: Pointer;
     CktElement_Get_AllVariableValues: Pointer;
@@ -2581,6 +2583,8 @@ begin
     funcs.Circuit_ToJSON := Pointer(@ctx_Circuit_ToJSON);
     funcs.Circuit_UpdateStorage := Pointer(@ctx_Circuit_UpdateStorage);
     funcs.CktElement_Close := Pointer(@ctx_CktElement_Close);
+    funcs.CktElement_Get_AllLosses := Pointer(@ctx_CktElement_Get_AllLosses);
+    funcs.CktElement_Get_AllLosses_GR := Pointer(@ctx_CktElement_Get_AllLosses_GR);
     funcs.CktElement_Get_AllPropertyNames := Pointer(@ctx_CktElement_Get_AllPropertyNames);
     funcs.CktElement_Get_AllVariableNames := Pointer(@ctx_CktElement_Get_AllVariableNames);
     funcs.CktElement_Get_AllVariableValues := Pointer(@ctx_CktElement_Get_AllVariableValues);
