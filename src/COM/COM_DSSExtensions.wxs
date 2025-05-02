@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="TARGETDIR">
+            <Component Id="DSSExtensions.dll" Guid="FB21AE00-4BFB-11F0-AC10-C87F5452571C">
+                <File Source="DSSExtensions.dll">
+                    <TypeLib Id="{C924B0F8-18C2-11F0-A417-C87F5452571C}" Description="DSS-Extensions COM Bridge for DSS Engines (AltDSS, OpenDSS-C, OpenDSS Delphi)" HelpDirectory="TARGETDIR" Language="0" MajorVersion="1" MinorVersion="0">
+                        <Interface Id="{C924B382-18C2-11F0-A417-C87F5452571C}" Name="IDSS" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B30A-18C2-11F0-A417-C87F5452571C}" Name="ICircuit" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B68E-18C2-11F0-A417-C87F5452571C}" Name="IActiveClass" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B350-18C2-11F0-A417-C87F5452571C}" Name="IBus" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B7E2-18C2-11F0-A417-C87F5452571C}" Name="ICapControls" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B6CA-18C2-11F0-A417-C87F5452571C}" Name="ICapacitors" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B242-18C2-11F0-A417-C87F5452571C}" Name="ICktElement" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BA58-18C2-11F0-A417-C87F5452571C}" Name="ICmathLib" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B5C6-18C2-11F0-A417-C87F5452571C}" Name="ICtrlQueue" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B65C-18C2-11F0-A417-C87F5452571C}" Name="IDSSElement" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B4E0-18C2-11F0-A417-C87F5452571C}" Name="IDSSProgress" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B1DE-18C2-11F0-A417-C87F5452571C}" Name="IDSSProperty" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B878-18C2-11F0-A417-C87F5452571C}" Name="IDSS_Executive" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BB98-18C2-11F0-A417-C87F5452571C}" Name="IDSSimComs" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B27E-18C2-11F0-A417-C87F5452571C}" Name="IError" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BB34-18C2-11F0-A417-C87F5452571C}" Name="IFuses" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BCE2-18C2-11F0-A417-C87F5452571C}" Name="IGICSources" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B4B8-18C2-11F0-A417-C87F5452571C}" Name="IGenerators" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BB66-18C2-11F0-A417-C87F5452571C}" Name="IISources" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BCA6-18C2-11F0-A417-C87F5452571C}" Name="ILineCodes" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B594-18C2-11F0-A417-C87F5452571C}" Name="ILines" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BAE4-18C2-11F0-A417-C87F5452571C}" Name="ILoadShapes" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B634-18C2-11F0-A417-C87F5452571C}" Name="ILoads" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B47C-18C2-11F0-A417-C87F5452571C}" Name="IMeters" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B418-18C2-11F0-A417-C87F5452571C}" Name="IMonitors" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B97C-18C2-11F0-A417-C87F5452571C}" Name="IPDElements" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BBFC-18C2-11F0-A417-C87F5452571C}" Name="IPVSystems" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BC60-18C2-11F0-A417-C87F5452571C}" Name="IParallel" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BA9E-18C2-11F0-A417-C87F5452571C}" Name="IParser" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BE18-18C2-11F0-A417-C87F5452571C}" Name="IReactors" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B9EA-18C2-11F0-A417-C87F5452571C}" Name="IReclosers" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BD14-18C2-11F0-A417-C87F5452571C}" Name="IReduceCkt" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B80A-18C2-11F0-A417-C87F5452571C}" Name="IRegControls" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BA26-18C2-11F0-A417-C87F5452571C}" Name="IRelays" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B8FA-18C2-11F0-A417-C87F5452571C}" Name="ISensors" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B53A-18C2-11F0-A417-C87F5452571C}" Name="ISettings" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B3E6-18C2-11F0-A417-C87F5452571C}" Name="ISolution" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BD78-18C2-11F0-A417-C87F5452571C}" Name="IStorages" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B7CE-18C2-11F0-A417-C87F5452571C}" Name="ISwtControls" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B198-18C2-11F0-A417-C87F5452571C}" Name="IText" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B83C-18C2-11F0-A417-C87F5452571C}" Name="ITopology" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B7BA-18C2-11F0-A417-C87F5452571C}" Name="ITransformers" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BC2E-18C2-11F0-A417-C87F5452571C}" Name="IVsources" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924BDC8-18C2-11F0-A417-C87F5452571C}" Name="IWindGens" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{C924B940-18C2-11F0-A417-C87F5452571C}" Name="IXYCurves" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{1C561F66-1F24-11F0-9D8E-C87F5452571C}" Name="IYMatrix" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                        <Interface Id="{8A3493D0-1D5F-11F0-BC79-C87F5452571C}" Name="IZIP" ProxyStubClassId32="{00020424-0000-0000-C000-000000000046}" />
+                    </TypeLib>
+                </File>
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+</Wix>

@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{AF6A393B-522A-8E76-9F0F-F31AEDD364F5}</ProjectGuid>
+    <Keyword>AtlProj</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <TargetName>DSSExtensions</TargetName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>..\..\lib\win_x64\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>..\..\lib\win_x86\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\..\lib\win_x86\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\..\lib\win_x64\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_WINDOWS;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>COM_pch.h</PrecompiledHeaderFile>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\include</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <HeaderFileName>COM_DSSExtensions_i.h</HeaderFileName>
+      <InterfaceIdentifierFileName>COM_DSSExtensions_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>COM_DSSExtensions_p.c</ProxyFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <TypeLibraryName>$(IntDir)DSSExtensions.tlb</TypeLibraryName>
+      <DllDataFileName />
+      <ValidateAllParameters>true</ValidateAllParameters>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <ModuleDefinitionFile>.\COM_DSSExtensions.def</ModuleDefinitionFile>
+      <AdditionalDependencies>comsvcs.lib;comsuppw.lib;altdss_capi_loaderd.lib;altdss_oddie_capid.lib;altdss_capid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <RegisterOutput>true</RegisterOutput>
+      <AdditionalLibraryDirectories>..\..\lib\win_x64</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>COM_pch.h</PrecompiledHeaderFile>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\include</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <HeaderFileName>COM_DSSExtensions_i.h</HeaderFileName>
+      <InterfaceIdentifierFileName>COM_DSSExtensions_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>COM_DSSExtensions_p.c</ProxyFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <TypeLibraryName>$(IntDir)DSSExtensions.tlb</TypeLibraryName>
+      <DllDataFileName />
+      <ValidateAllParameters>true</ValidateAllParameters>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <ModuleDefinitionFile>.\COM_DSSExtensions.def</ModuleDefinitionFile>
+      <AdditionalDependencies>comsvcs.lib;comsuppw.lib;altdss_capi_loaderd.lib;altdss_oddie_capid.lib;altdss_capid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <RegisterOutput>true</RegisterOutput>
+      <AdditionalLibraryDirectories>..\..\lib\win_x86</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>COM_pch.h</PrecompiledHeaderFile>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\include</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <HeaderFileName>COM_DSSExtensions_i.h</HeaderFileName>
+      <InterfaceIdentifierFileName>COM_DSSExtensions_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>COM_DSSExtensions_p.c</ProxyFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <TypeLibraryName>$(IntDir)DSSExtensions.tlb</TypeLibraryName>
+      <DllDataFileName />
+      <ValidateAllParameters>true</ValidateAllParameters>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <ModuleDefinitionFile>.\COM_DSSExtensions.def</ModuleDefinitionFile>
+      <AdditionalDependencies>comsvcs.lib;comsuppw.lib;altdss_capi_loader.lib;altdss_oddie_capi.lib;altdss_capi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <RegisterOutput>true</RegisterOutput>
+      <AdditionalLibraryDirectories>..\..\lib\win_x86</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>_WINDOWS;NDEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>COM_pch.h</PrecompiledHeaderFile>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\include</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <HeaderFileName>COM_DSSExtensions_i.h</HeaderFileName>
+      <InterfaceIdentifierFileName>COM_DSSExtensions_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>COM_DSSExtensions_p.c</ProxyFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <TypeLibraryName>$(IntDir)DSSExtensions.tlb</TypeLibraryName>
+      <DllDataFileName />
+      <ValidateAllParameters>true</ValidateAllParameters>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <ModuleDefinitionFile>.\COM_DSSExtensions.def</ModuleDefinitionFile>
+      <AdditionalDependencies>comsvcs.lib;comsuppw.lib;altdss_capi_loader.lib;altdss_oddie_capi.lib;altdss_capi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <RegisterOutput>true</RegisterOutput>
+      <AdditionalLibraryDirectories>..\..\lib\win_x64</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="COM_dllmain.h" />
+    <ClInclude Include="COM_DSSExtensions_i.h" />
+    <ClInclude Include="COM_framework.h" />
+    <ClInclude Include="COM_pch.h" />
+    <ClInclude Include="COM_Resource.h" />
+    <ClInclude Include="COM_targetver.h" />
+    <ClInclude Include="COM_AltDSS.h" />
+    <ClInclude Include="COM_DSS.h" />
+    <ClInclude Include="COM_Circuit.h" />
+    <ClInclude Include="COM_ActiveClass.h" />
+    <ClInclude Include="COM_Bus.h" />
+    <ClInclude Include="COM_CapControls.h" />
+    <ClInclude Include="COM_Capacitors.h" />
+    <ClInclude Include="COM_CktElement.h" />
+    <ClInclude Include="COM_CmathLib.h" />
+    <ClInclude Include="COM_CtrlQueue.h" />
+    <ClInclude Include="COM_DSSElement.h" />
+    <ClInclude Include="COM_DSSProgress.h" />
+    <ClInclude Include="COM_DSSProperty.h" />
+    <ClInclude Include="COM_DSS_Executive.h" />
+    <ClInclude Include="COM_DSSimComs.h" />
+    <ClInclude Include="COM_Error.h" />
+    <ClInclude Include="COM_Fuses.h" />
+    <ClInclude Include="COM_GICSources.h" />
+    <ClInclude Include="COM_Generators.h" />
+    <ClInclude Include="COM_ISources.h" />
+    <ClInclude Include="COM_LineCodes.h" />
+    <ClInclude Include="COM_Lines.h" />
+    <ClInclude Include="COM_LoadShapes.h" />
+    <ClInclude Include="COM_Loads.h" />
+    <ClInclude Include="COM_Meters.h" />
+    <ClInclude Include="COM_Monitors.h" />
+    <ClInclude Include="COM_PDElements.h" />
+    <ClInclude Include="COM_PVSystems.h" />
+    <ClInclude Include="COM_Parallel.h" />
+    <ClInclude Include="COM_Parser.h" />
+    <ClInclude Include="COM_Reactors.h" />
+    <ClInclude Include="COM_Reclosers.h" />
+    <ClInclude Include="COM_ReduceCkt.h" />
+    <ClInclude Include="COM_RegControls.h" />
+    <ClInclude Include="COM_Relays.h" />
+    <ClInclude Include="COM_Sensors.h" />
+    <ClInclude Include="COM_Settings.h" />
+    <ClInclude Include="COM_Solution.h" />
+    <ClInclude Include="COM_Storages.h" />
+    <ClInclude Include="COM_SwtControls.h" />
+    <ClInclude Include="COM_Text.h" />
+    <ClInclude Include="COM_Topology.h" />
+    <ClInclude Include="COM_Transformers.h" />
+    <ClInclude Include="COM_Vsources.h" />
+    <ClInclude Include="COM_WindGens.h" />
+    <ClInclude Include="COM_XYCurves.h" />
+    <ClInclude Include="COM_YMatrix.h" />
+    <ClInclude Include="COM_ZIP.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="COM_AltDSS.cpp" />
+    <ClCompile Include="COM_dllmain.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="COM_DSSExtensions.cpp" />
+    <ClCompile Include="COM_DSSExtensions_i.c">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="COM_pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="COM_DSS.cpp" />
+    <ClCompile Include="COM_Circuit.cpp" />
+    <ClCompile Include="COM_ActiveClass.cpp" />
+    <ClCompile Include="COM_Bus.cpp" />
+    <ClCompile Include="COM_CapControls.cpp" />
+    <ClCompile Include="COM_Capacitors.cpp" />
+    <ClCompile Include="COM_CktElement.cpp" />
+    <ClCompile Include="COM_CmathLib.cpp" />
+    <ClCompile Include="COM_CtrlQueue.cpp" />
+    <ClCompile Include="COM_DSSElement.cpp" />
+    <ClCompile Include="COM_DSSProgress.cpp" />
+    <ClCompile Include="COM_DSSProperty.cpp" />
+    <ClCompile Include="COM_DSS_Executive.cpp" />
+    <ClCompile Include="COM_DSSimComs.cpp" />
+    <ClCompile Include="COM_Error.cpp" />
+    <ClCompile Include="COM_Fuses.cpp" />
+    <ClCompile Include="COM_GICSources.cpp" />
+    <ClCompile Include="COM_Generators.cpp" />
+    <ClCompile Include="COM_ISources.cpp" />
+    <ClCompile Include="COM_LineCodes.cpp" />
+    <ClCompile Include="COM_Lines.cpp" />
+    <ClCompile Include="COM_LoadShapes.cpp" />
+    <ClCompile Include="COM_Loads.cpp" />
+    <ClCompile Include="COM_Meters.cpp" />
+    <ClCompile Include="COM_Monitors.cpp" />
+    <ClCompile Include="COM_PDElements.cpp" />
+    <ClCompile Include="COM_PVSystems.cpp" />
+    <ClCompile Include="COM_Parallel.cpp" />
+    <ClCompile Include="COM_Parser.cpp" />
+    <ClCompile Include="COM_Reactors.cpp" />
+    <ClCompile Include="COM_Reclosers.cpp" />
+    <ClCompile Include="COM_ReduceCkt.cpp" />
+    <ClCompile Include="COM_RegControls.cpp" />
+    <ClCompile Include="COM_Relays.cpp" />
+    <ClCompile Include="COM_Sensors.cpp" />
+    <ClCompile Include="COM_Settings.cpp" />
+    <ClCompile Include="COM_Solution.cpp" />
+    <ClCompile Include="COM_Storages.cpp" />
+    <ClCompile Include="COM_SwtControls.cpp" />
+    <ClCompile Include="COM_Text.cpp" />
+    <ClCompile Include="COM_Topology.cpp" />
+    <ClCompile Include="COM_Transformers.cpp" />
+    <ClCompile Include="COM_Vsources.cpp" />
+    <ClCompile Include="COM_WindGens.cpp" />
+    <ClCompile Include="COM_XYCurves.cpp" />
+    <ClCompile Include="COM_YMatrix.cpp" />
+    <ClCompile Include="COM_ZIP.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="COM_DSSExtensions.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="COM_DSSExtensions.def" />
+    <None Include="COM_DSS.rgs" />
+    <None Include="COM_Circuit.rgs" />
+    <None Include="COM_ActiveClass.rgs" />
+    <None Include="COM_Bus.rgs" />
+    <None Include="COM_CapControls.rgs" />
+    <None Include="COM_Capacitors.rgs" />
+    <None Include="COM_CktElement.rgs" />
+    <None Include="COM_CmathLib.rgs" />
+    <None Include="COM_CtrlQueue.rgs" />
+    <None Include="COM_DSSElement.rgs" />
+    <None Include="COM_DSSProgress.rgs" />
+    <None Include="COM_DSSProperty.rgs" />
+    <None Include="COM_DSS_Executive.rgs" />
+    <None Include="COM_DSSimComs.rgs" />
+    <None Include="COM_Error.rgs" />
+    <None Include="COM_Fuses.rgs" />
+    <None Include="COM_GICSources.rgs" />
+    <None Include="COM_Generators.rgs" />
+    <None Include="COM_ISources.rgs" />
+    <None Include="COM_LineCodes.rgs" />
+    <None Include="COM_Lines.rgs" />
+    <None Include="COM_LoadShapes.rgs" />
+    <None Include="COM_Loads.rgs" />
+    <None Include="COM_Meters.rgs" />
+    <None Include="COM_Monitors.rgs" />
+    <None Include="COM_PDElements.rgs" />
+    <None Include="COM_PVSystems.rgs" />
+    <None Include="COM_Parallel.rgs" />
+    <None Include="COM_Parser.rgs" />
+    <None Include="COM_Reactors.rgs" />
+    <None Include="COM_Reclosers.rgs" />
+    <None Include="COM_ReduceCkt.rgs" />
+    <None Include="COM_RegControls.rgs" />
+    <None Include="COM_Relays.rgs" />
+    <None Include="COM_Sensors.rgs" />
+    <None Include="COM_Settings.rgs" />
+    <None Include="COM_Solution.rgs" />
+    <None Include="COM_Storages.rgs" />
+    <None Include="COM_SwtControls.rgs" />
+    <None Include="COM_Text.rgs" />
+    <None Include="COM_Topology.rgs" />
+    <None Include="COM_Transformers.rgs" />
+    <None Include="COM_Vsources.rgs" />
+    <None Include="COM_WindGens.rgs" />
+    <None Include="COM_XYCurves.rgs" />
+    <None Include="COM_YMatrix.rgs" />
+    <None Include="COM_ZIP.rgs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="COM_DSSExtensions.idl" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
