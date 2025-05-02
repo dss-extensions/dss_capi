@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: (C) 2023-2025 Paulo Meira & contributors to DSS-Extensions
+// SPDX-License-Identifier: BSD-3
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h> 
