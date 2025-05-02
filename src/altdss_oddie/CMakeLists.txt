@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: (C) 2023-2025 Paulo Meira & contributors to DSS-Extensions
+# SPDX-License-Identifier: BSD-3
+
 cmake_minimum_required(VERSION 3.20)
 
 project(altdss_oddie)
