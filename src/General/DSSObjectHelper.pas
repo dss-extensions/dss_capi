@@ -4059,7 +4059,7 @@ begin
                 if otherObj = NIL then
                 begin
                     DoSimpleMsg(
-                        Format('%s.%s: %s object "%s" not found.',
+                        Format('%s.%s: %s object "%s" not found or invalid object type.',
                             [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name, Value^]
                         ), 40302);
                     Exit;

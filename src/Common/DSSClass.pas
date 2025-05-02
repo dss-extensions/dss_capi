@@ -534,9 +534,11 @@ type
     public
         TargetClasses: Array Of TDSSClass;
         TargetClassNames: Array Of String;
+        TargetClassNamesLower: Array Of String;
         TargetClassNamesStr: String;
+        FullNamesOnly: Boolean;
 
-        constructor Create(dssContext: TDSSContext; Targets: Array Of String);
+        constructor Create(dssContext: TDSSContext; Targets: Array Of String; FullNames: Boolean = False);
         destructor Destroy; override;
         procedure DefineProperties(); override;
         function Find(const ObjName: String; const ChangeActive: Boolean): Pointer; override;
@@ -2573,16 +2575,18 @@ begin
     Result := self.ElementList.GetEnumerator();
 end;
 
-constructor TProxyClass.Create(dssContext: TDSSContext; Targets: Array Of String);
+constructor TProxyClass.Create(dssContext: TDSSContext; Targets: Array Of String; fullNames: Boolean);
 var
     s: String;
     i: Integer;
 begin
+    FullNamesOnly := fullNames;
     TargetClasses := NIL;
     s := '(';
 
     // To avoid missing references, copy the names here and find the classes later
     SetLength(TargetClassNames, Length(Targets));
+    SetLength(TargetClassNamesLower, Length(Targets));
     for i := 0 to High(Targets) do
     begin
         if i <> 0 then
@@ -2590,6 +2594,7 @@ begin
 
         s := s + Targets[i];
         TargetClassNames[i] := Targets[i];
+        TargetClassNamesLower[i] := AnsiLowerCase(Targets[i]);
     end;
     s := s + ')';
     TargetClassNamesStr := s;
@@ -2615,6 +2620,8 @@ end;
 function TProxyClass.Find(const ObjName: String; const ChangeActive: Boolean): Pointer;
 var
     i: Integer;
+    className: String;
+    shortName: String;
 begin
     Result := Nil;
 
@@ -2625,11 +2632,26 @@ begin
             TargetClasses[i] := DSS.DSSClassList.Get(DSS.ClassNames.Find(TargetClassNames[i]));
     end;
 
+    if not FullNamesOnly then
+    begin
+        for i := 0 to High(TargetClasses) do
+        begin
+            Result := TargetClasses[i].Find(ObjName, ChangeActive);
+            if Result <> NIL then
+                Exit;
+        end;
+        Exit;
+    end;
+
+    ParseObjectClassAndName(DSS, ObjName, className, shortName);
+    className := AnsiLowerCase(className);
     for i := 0 to High(TargetClasses) do
     begin
-        Result := TargetClasses[i].Find(ObjName, ChangeActive);
-        if Result <> NIL then
+        if (TargetClassNamesLower[i] = className) then
+        begin
+            Result := TargetClasses[i].Find(shortName, ChangeActive);
             Exit;
+        end;
     end;
 end;
 

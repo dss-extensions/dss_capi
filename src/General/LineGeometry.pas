@@ -179,7 +179,7 @@ begin
         PropInfoLegacy := TypeInfo(TPropLegacy);
     end;
 
-    ConductorProxyClass := TProxyClass.Create(dssContext, ['WireData', 'CNData', 'TSData']);
+    ConductorProxyClass := TProxyClass.Create(dssContext, ['WireData', 'CNData', 'TSData'], True);
     ConductorProxyClass.Name := 'Conductor';
 
     inherited Create(dssContext, DSS_OBJECT, 'LineGeometry');
