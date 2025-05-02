@@ -2686,7 +2686,9 @@ begin
                 for obj in cls do
                 begin
                     if not (Flg.DefaultAndUnedited in obj.Flags) then
+                    begin
                         clsArray.Add(Obj_ToJSONData(obj, joptions));
+                    end;
                 end;
             end;
             // end;

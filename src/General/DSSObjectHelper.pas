@@ -994,7 +994,7 @@ var
     valArray, valArrayItem: TJSONArray;
     ptype: TPropertyType;
     jsonArray: TJSONArray = NIL;
-    enumAsInt: Boolean;
+    enumAsInt, allowNone: Boolean;
 begin
     if preferArray and (PropertyArrayAlternative[Index] <> 0) then
     begin
@@ -1499,13 +1499,28 @@ begin
             if count < 1 then
                 Exit;
 
+            allowNone := TPropertyFlag.AllowNoneItem in PropertyFlags[Index];
             if (Pointer(PropertyOffset2[Index]) = NIL) or 
                 ((joptions and Integer(DSSJSONOptions.FullNames)) <> 0) or 
                 (TPropertyFlag.FullNameAsJSONArray in PropertyFlags[Index]) then
             begin
                 for i := 1 to count do
                 begin
-                    jsonArray.Add(otherObjPtr^.FullName());
+                    if (otherObjPtr^ = nil) then
+                    begin
+                        if (allowNone) then
+                        begin
+                            jsonArray.Add(TJSONNull.Create());
+                        end
+                        else
+                        begin
+                            raise Exception.Create(Format('JSON/%s/%s/%s: Unexpected null object found', [Name, TDSSObject(obj).Name(), PropertyName[Index]]));
+                        end;
+                    end
+                    else
+                    begin
+                        jsonArray.Add(otherObjPtr^.FullName());
+                    end;
                     Inc(otherObjPtr);
                 end;
             end
@@ -1962,51 +1977,53 @@ begin
             if (val is TJSONArray) then
             begin
                 arrayVal := val as TJSONArray;
-                if arrayVal.Count = 0 then
+                ValueCount := arrayVal.Count;
+                if ValueCount = 0 then
                 begin
                     SetObjStrings(obj, index, NIL, 0, setterFlags);
                     Exit;
                 end;
                 arrayItem := arrayVal[0];
-                if arrayItem.JSONtype = jtString then
+                // if (arrayItem.JSONtype = jtString) then
+                // begin
+                // Array of strings
+                SetLength(strs, ValueCount);
+                if TPropertyFlag.Transform_LowerCase in flags then
                 begin
-                    // Array of strings
-                    ValueCount := arrayVal.Count;
-                    SetLength(strs, ValueCount);
-                    if TPropertyFlag.Transform_LowerCase in flags then
+                    for i := 0 to ValueCount - 1 do
                     begin
-                        for i := 0 to ValueCount - 1 do
-                        begin
-                            strs[i] := AnsiLowerCase(arrayVal[i].AsString);
-                        end;
-                    end
-                    else
-                    begin
-                        for i := 0 to ValueCount - 1 do
-                        begin
-                            strs[i] := arrayVal[i].Value;
-                        end;
+                        if arrayVal[i].IsNull then
+                            strs[i] := ''
+                        else
+                            strs[i] := AnsiLowerCase(arrayVal[i].AsString)
                     end;
-                    SetObjStrings(obj, index, PPAnsiChar(@strs[0]), Length(strs), setterFlags);
-                    Exit;
                 end
                 else
                 begin
-                    if (TPropertyFlag.OnArray in flags) then
+                    for i := 0 to ValueCount - 1 do
                     begin
-                        // Array of strings
-                        arrayVal := val as TJSONArray;
-                        ValueCount := arrayVal.Count;
-                        SetLength(ints, ValueCount);
-                        for i := 0 to ValueCount - 1 do
-                        begin
-                            ints[i] := arrayVal[i].Value;
-                        end;
-                        SetObjIntegers(obj, index, PInteger(@ints[0]), Length(ints), setterFlags);
-                        Exit;
+                        strs[i] := arrayVal[i].Value;
                     end;
-                    raise Exception.Create(_('Expected a single value, got array.'));
                 end;
+                SetObjStrings(obj, index, PPAnsiChar(@strs[0]), Length(strs), setterFlags);
+                Exit;
+                // end
+                // else
+                // begin
+                //     if (TPropertyFlag.OnArray in flags) then
+                //     begin
+                //         // Array of strings
+                //         arrayVal := val as TJSONArray;
+                //         SetLength(ints, ValueCount);
+                //         for i := 0 to ValueCount - 1 do
+                //         begin
+                //             ints[i] := arrayVal[i].Value;
+                //         end;
+                //         SetObjIntegers(obj, index, PInteger(@ints[0]), Length(ints), setterFlags);
+                //         Exit;
+                //     end;
+                //     raise Exception.Create(_('Expected a single value, got array.'));
+                // end;
             end;
 
             if (TPropertyFlag.OnArray in flags) or (ptype in [
@@ -3913,6 +3930,7 @@ var
     objs: Array of TDSSObject = NIL;
     otherObj: TDSSObject;
     otherObjPtr: TDSSObjectPtr;
+    allowNone: Boolean;
 
     function checkSize(): Boolean;
     begin
@@ -4053,20 +4071,25 @@ begin
 
             // TODO: if cls = NIL,..
             i := 0;
+            allowNone := TPropertyFlag.AllowNoneItem in PropertyFlags[Index];
             for i := 1 to intVal do
             begin
-                otherObj := cls.Find(Value^, False);
-                if otherObj = NIL then
+                if (Value^ <> NIL) and (Value^^ <> #0) then
+                    otherObj := cls.Find(Value^, False)
+                else
+                    otherObj := NIL;
+
+                if (otherObj = NIL) and (not allowNone) then
                 begin
                     DoSimpleMsg(
                         Format('%s.%s: %s object "%s" not found or invalid object type.',
                             [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name, Value^]
                         ), 40302);
                     Exit;
-                end
-                else
-                    otherObjPtr^ := otherObj;
+                end;
 
+                otherObjPtr^ := otherObj;
+                Inc(otherObjPtr);
                 Inc(Value);
             end;
 
