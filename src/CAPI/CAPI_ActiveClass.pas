@@ -19,6 +19,8 @@ function ActiveClass_Get_ActiveClassParent(): PAnsiChar; CDECL;
 // API extensions
 function ActiveClass_ToJSON(joptions: Integer): PAnsiChar; CDECL;
 function ActiveClass_Get_Pointer(): Pointer; CDECL;
+function ActiveClass_Get_idx(): Integer; CDECL;
+procedure ActiveClass_Set_idx(Value: Integer); CDECL;
 
 implementation
 
@@ -107,7 +109,7 @@ begin
     Result := 0;
     if DSSPrime.ActiveDSSClass = NIL then
         Exit;
-    Result := DSSPrime.ActiveDSSCLass.ElementCount()
+    Result := DSSPrime.ActiveDSSClass.ElementCount()
 end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_ActiveClassName(): PAnsiChar; CDECL;
@@ -115,7 +117,7 @@ begin
     Result := NIL;
     if DSSPrime.ActiveDSSClass = NIL then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSCLass.Name)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSClass.Name)
 end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_Count(): Integer; CDECL;
@@ -123,7 +125,7 @@ begin
     Result := 0;
     if DSSPrime.ActiveDSSClass = NIL then
         Exit;
-    Result := DSSPrime.ActiveDSSCLass.ElementCount()
+    Result := DSSPrime.ActiveDSSClass.ElementCount()
 end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_ActiveClassParent(): PAnsiChar; CDECL;
@@ -198,6 +200,32 @@ end;
 function ActiveClass_Get_Pointer(): Pointer; CDECL;
 begin
     Result := DSSPrime.ActiveDSSObject
+end;
+//------------------------------------------------------------------------------
+function ActiveClass_Get_idx(): Integer; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveDSSClass.ElementList.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure ActiveClass_Set_idx(Value: Integer); CDECL;
+var
+    pelem: TDSSObject;
+begin
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    pelem := DSSPrime.ActiveDSSClass.ElementList.Get(Value);
+    if pelem = NIL then
+    begin
+        DoSimpleMsg(DSSPrime, 'Invalid %s index on ActiveClass: "%d".', [DSSPrime.ActiveDSSClass.Name, Value], 656565);
+        Exit;
+    end;
+    if pelem is TDSSCktElement then
+        DSSPrime.ActiveCircuit.SetActiveCktElement(TDSSCktElement(pelem))  // sets DSSPrime.ActiveDSSObject
+    else
+        DSSPrime.ActiveDSSObject := pelem;
 end;
 //------------------------------------------------------------------------------
 end.

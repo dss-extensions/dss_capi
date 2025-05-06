@@ -304,6 +304,8 @@ exports
     ActiveClass_Get_Count,
     ActiveClass_Get_ActiveClassParent,
     ActiveClass_ToJSON, // API Extension
+    ActiveClass_Get_idx, // API Extension
+    ActiveClass_Set_idx, // API Extension
     
     Bus_Get_Name,
     Bus_Get_NumNodes,
@@ -1042,6 +1044,8 @@ exports
     PDElements_Get_TotalMiles,
     PDElements_Get_SectionID,
     PDElements_Set_RepairTime,
+    PDElements_Get_idx, // API Extension
+    PDElements_Set_idx, // API Extension
     PDElements_Get_AllNames, // API Extension
     PDElements_Get_AllMaxCurrents, // API Extension
     PDElements_Get_AllPctNorm, // API Extension
