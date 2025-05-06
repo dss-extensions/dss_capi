@@ -130,7 +130,21 @@ extern "C" {
     ALTDSS_CAPI_DLL const char* ActiveClass_ToJSON(int32_t options);
 
     /*! 
-    Name of Bus
+    Returns the current object index in ActiveClass (1-based)
+
+    (API Extension)
+    */
+    ALTDSS_CAPI_DLL int32_t ActiveClass_Get_idx(void);
+
+    /*! 
+    Activate an object in the ActiveClass by index (1-based)
+
+    (API Extension)
+    */
+    ALTDSS_CAPI_DLL void ActiveClass_Set_idx(int32_t Value);
+
+    /*! 
+    Name of the active Bus
     */
     ALTDSS_CAPI_DLL const char* Bus_Get_Name(void);
 
@@ -963,12 +977,26 @@ extern "C" {
     ALTDSS_CAPI_DLL void Circuit_FromJSON(const char *circ, int32_t options);
 
     /*
-    Flatten the circuit structures
+    Flatten the circuit
 
-    Copy the relevant data from some of the general DSS classes like LineCode, LineGeometry, LineSpacing, and XfmrCode,
-    removing the unused items afterwards. For example, if a certain LineCode is used for a selection of Line objects, 
-    all the Line data is propagated to the input properties of the Line objects, and the referenced LineCode object is
-    removed from the circuit.
+    Flatten the circuit structures, removing any object of the following types:
+
+    - XfmrCode
+    - LineCode
+    - LineSpacing
+    - LineGeometry
+    - WireData
+    - CNData
+    - TSData
+
+    The general data from those objects is propagated to the referencing Line and Transformer objects,
+    and the properties on the latter are updated to remove any references to the removed objects.
+
+    This is useful for some converting the DSS circuit to another format, without requiring the user to handle all 
+    the types listed above. This, of course, results in some limitations since a lot of detail is removed. Numerically,
+    a normal snapshot or daily solution should be the same before and after the flatten operation.
+
+    Available only on AltDSS.
 
     (API Extension)
     */
@@ -1124,6 +1152,15 @@ extern "C" {
     */
     ALTDSS_CAPI_DLL void CktElement_Set_NormalAmps(double Value);
 
+    /*
+    Indicates if the specified terminal and, optionally, a specific phase conductor is open.
+
+    Provide zero in the `Phs` argument to check if any conductor of the terminal `Term` is open.
+
+    Provide a non-zero phase number in `Phs` to check if a specific phase conductor is open.
+
+    Original COM help: https://opendss.epri.com/Open1.html
+    */
     ALTDSS_CAPI_DLL uint16_t CktElement_IsOpen(int32_t Term, int32_t Phs);
 
     /*! 
@@ -1146,7 +1183,7 @@ extern "C" {
     ALTDSS_CAPI_DLL void CktElement_Get_Residuals_GR(void);
 
     /*! 
-    Order (size) of the YPrim matrix, typically `NumConductors * NumTerminals`
+    Order (size) of the active circuit element's primite Y matrix (Yprim), typically `NumConductors * NumTerminals`
 
     (API Extension)
     */
@@ -1276,7 +1313,7 @@ extern "C" {
     ALTDSS_CAPI_DLL int32_t CktElement_Get_OCPDevType(void);
 
     /*! 
-    Currents in magnitude, angle (degrees) format as a array of doubles.
+    Currents in magnitude, angle (degrees) format as an array of doubles.
     */
     ALTDSS_CAPI_DLL void CktElement_Get_CurrentsMagAng(double** ResultPtr, int32_t* ResultDims);
     /*! 
@@ -1379,7 +1416,7 @@ extern "C" {
     ALTDSS_CAPI_DLL void CmathLib_Get_pdegtocomplex_GR(double magnitude, double angle);
 
     /*! 
-    Multiply two complex numbers: (a1, b1) * (a2, b2). Returns result as a array of two doubles.
+    Multiply two complex numbers: (a1, b1) * (a2, b2). Returns result as an array of two doubles.
     */
     ALTDSS_CAPI_DLL void CmathLib_Get_cmul(double** ResultPtr, int32_t* ResultDims, double a1, double b1, double a2, double b2);
     /*! 
@@ -1541,6 +1578,12 @@ extern "C" {
     ALTDSS_CAPI_DLL const char* DSS_Get_DefaultEditor(void);
 
     ALTDSS_CAPI_DLL int32_t DSS_SetActiveClass(const char* ClassName);
+    
+    /*!
+    Indicates whether text output is allowed or forms are used.  Disable to silence most output.
+
+    Currently, forms/windows are only used for EPRI's OpenDSS distribution on Windows.
+    */
     ALTDSS_CAPI_DLL uint16_t DSS_Get_AllowForms(void);
     ALTDSS_CAPI_DLL void DSS_Set_AllowForms(uint16_t Value);
 
@@ -1647,9 +1690,11 @@ extern "C" {
     - In the enabled state (COMErrorResults=True), the function will return "[0.0]" instead. This should
       be compatible with the return value of the official COM interface.
     
-    Defaults to false/0 (enabled state) since v0.15.x series. This will change to false in future series.
-    
-    This can also be set through the environment variable DSS_CAPI_COM_DEFAULTS. Setting it to 0 disables
+    Defaults to false (disabled state) in AltDSS since the v0.15.x series.
+
+    This does not affect the results when using EPRI's OpenDSS distribution through Oddie.
+
+    This can also be set through the environment variable `DSS_CAPI_COM_DEFAULTS`. Setting it to 1 enables
     the legacy/COM behavior. The value can be toggled through the API at any time.
     
     (API Extension)
@@ -1702,7 +1747,11 @@ extern "C" {
     ALTDSS_CAPI_DLL void DSSProgress_Set_Caption(const char* Value);
 
     /*! 
-    Percent progress to indicate [0..100]
+    Set the percent progress to indicate [0..100] on the progress form.
+
+    Typically used with EPRI's OpenDSS, on Windows. Otherwise, it could be a no-op.
+
+    Original COM help: https://opendss.epri.com/PctProgress.html
     */
     ALTDSS_CAPI_DLL void DSSProgress_Set_PctProgress(int32_t Value);
 
@@ -2756,7 +2805,7 @@ extern "C" {
     ALTDSS_CAPI_DLL double Lines_Get_SeasonRating(void);
 
     /*! 
-    Sets/gets the Line element switch status. Setting it has side-effects to the line parameters.
+    Line element switch status. Setting it has side-effects to the line parameters.
     */
     ALTDSS_CAPI_DLL uint16_t Lines_Get_IsSwitch(void);
     ALTDSS_CAPI_DLL void Lines_Set_IsSwitch(uint16_t Value);
@@ -2841,7 +2890,7 @@ extern "C" {
     ALTDSS_CAPI_DLL double Loads_Get_AllocationFactor(void);
 
     /*! 
-    Factor relates average to peak kw.  Used for allocation with kwh and kwhdays/
+    CFactor relates average to peak kw.  Used for allocation with kwh and kwhdays/
     */
     ALTDSS_CAPI_DLL double Loads_Get_Cfactor(void);
 
@@ -3032,6 +3081,9 @@ extern "C" {
 
     ALTDSS_CAPI_DLL void Loads_Set_ZIPV(const double* ValuePtr, int32_t ValueCount);
 
+    /*! 
+    Percent of Load that is modeled as series R-L for harmonics studies
+    */
     ALTDSS_CAPI_DLL double Loads_Get_pctSeriesRL(void);
 
     /*! 
@@ -3040,12 +3092,16 @@ extern "C" {
     ALTDSS_CAPI_DLL void Loads_Set_pctSeriesRL(double Value);
 
     /*! 
-    Relative Weighting factor for the active LOAD
+    Relative Weighting factor for the active load.
+
+    This value is used in reliability methods.
     */
     ALTDSS_CAPI_DLL double Loads_Get_RelWeight(void);
 
     /*! 
-    Relative Weighting factor for the active LOAD
+    Relative Weighting factor for the active load.
+
+    This value is used in reliability methods.
     */
     ALTDSS_CAPI_DLL void Loads_Set_RelWeight(double Value);
 
@@ -3471,7 +3527,7 @@ extern "C" {
     ALTDSS_CAPI_DLL int32_t Monitors_Get_First(void);
 
     /*! 
-    Set Monitor mode (bitmask integer - see DSS Help)
+    Monitor mode (bitmask integer - see DSS Help)
     */
     ALTDSS_CAPI_DLL int32_t Monitors_Get_Mode(void);
 
@@ -3921,6 +3977,20 @@ extern "C" {
     Average repair time for this element in hours
     */
     ALTDSS_CAPI_DLL void PDElements_Set_RepairTime(double Value);
+
+    /*! 
+    Returns the current object index in the PDElements list (1-based)
+
+    (API Extension)
+    */
+    ALTDSS_CAPI_DLL int32_t PDElements_Get_idx(void);
+
+    /*! 
+    Activate an object in the PDElements list by index (1-based)
+
+    (API Extension)
+    */
+    ALTDSS_CAPI_DLL void PDElements_Set_idx(int32_t Value);
 
     /*! 
     Array of strings consisting of all PD element names.
@@ -6195,7 +6265,7 @@ extern "C" {
     ALTDSS_CAPI_DLL int32_t XYCurves_Get_Npts(void);
 
     /*! 
-    Get/Set X values as a Array of doubles. Set Npts to max number expected if setting
+    Get X values as an array of doubles.
     */
     ALTDSS_CAPI_DLL void XYCurves_Get_Xarray(double** ResultPtr, int32_t* ResultDims);
     /*! 
@@ -6209,7 +6279,7 @@ extern "C" {
     ALTDSS_CAPI_DLL void XYCurves_Set_Npts(int32_t Value);
 
     /*! 
-    Get/Set X values as a Array of doubles. Set Npts to max number expected if setting
+    Set X values as an array of doubles. Remember to first set Npts to max number expected values.
     */
     ALTDSS_CAPI_DLL void XYCurves_Set_Xarray(const double* ValuePtr, int32_t ValueCount);
 
@@ -6224,7 +6294,7 @@ extern "C" {
     ALTDSS_CAPI_DLL double XYCurves_Get_y(void);
 
     /*! 
-    Get/Set Y values in curve; Set Npts to max number expected if setting
+    Get Y values in curve as an array of doubles
     */
     ALTDSS_CAPI_DLL void XYCurves_Get_Yarray(double** ResultPtr, int32_t* ResultDims);
     /*! 
@@ -6240,7 +6310,7 @@ extern "C" {
     ALTDSS_CAPI_DLL void XYCurves_Set_y(double Value);
 
     /*! 
-    Get/Set Y values in curve; Set Npts to max number expected if setting
+    Set Y values as an array of doubles. Remember to first set Npts to max number expected values.
     */
     ALTDSS_CAPI_DLL void XYCurves_Set_Yarray(const double* ValuePtr, int32_t ValueCount);
 

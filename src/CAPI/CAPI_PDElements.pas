@@ -28,6 +28,8 @@ function PDElements_Get_SectionID(): Integer; CDECL;
 procedure PDElements_Set_RepairTime(Value: Double); CDECL;
 
 // Extensions below
+function PDElements_Get_idx(): Integer; CDECL;
+procedure PDElements_Set_idx(Value: Integer); CDECL;
 procedure PDElements_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; const AllNodes: TAPIBoolean); CDECL;
 procedure PDElements_Get_AllMaxCurrents_GR(const AllNodes: TAPIBoolean); CDECL;
@@ -743,5 +745,27 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-
+function PDElements_Get_idx(): Integer; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.PDElements.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure PDElements_Set_idx(Value: Integer); CDECL;
+var
+    pelem: TPDElement;
+begin
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    pelem := DSSPrime.ActiveCircuit.PDElements.Get(Value);
+    if pelem = NIL then
+    begin
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['PDElements', Value], 656565);
+        Exit;
+    end;
+    DSSPrime.ActiveCircuit.SetActiveCktElement(pelem)  // sets DSSPrime.ActiveDSSObject
+end;
+//------------------------------------------------------------------------------
 end.

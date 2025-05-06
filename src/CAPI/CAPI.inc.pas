@@ -17,7 +17,9 @@ TAltDSSCAPI = packed record
     ActiveClass_Get_Next: Pointer;
     ActiveClass_Get_NumElements: Pointer;
     ActiveClass_Get_Pointer: Pointer;
+    ActiveClass_Get_idx: Pointer;
     ActiveClass_Set_Name: Pointer;
+    ActiveClass_Set_idx: Pointer;
     ActiveClass_ToJSON: Pointer;
     Alt_BusBatch_GetFloat64FromFunc: Pointer;
     Alt_BusBatch_GetInt32FromFunc: Pointer;
@@ -1263,10 +1265,12 @@ TAltDSSCAPI = packed record
     PDElements_Get_SectionID: Pointer;
     PDElements_Get_TotalMiles: Pointer;
     PDElements_Get_Totalcustomers: Pointer;
+    PDElements_Get_idx: Pointer;
     PDElements_Get_pctPermanent: Pointer;
     PDElements_Set_FaultRate: Pointer;
     PDElements_Set_Name: Pointer;
     PDElements_Set_RepairTime: Pointer;
+    PDElements_Set_idx: Pointer;
     PDElements_Set_pctPermanent: Pointer;
     PVSystems_Get_AllNames: Pointer;
     PVSystems_Get_Count: Pointer;
@@ -2129,7 +2133,9 @@ begin
     funcs.ActiveClass_Get_Next := Pointer(@ctx_ActiveClass_Get_Next);
     funcs.ActiveClass_Get_NumElements := Pointer(@ctx_ActiveClass_Get_NumElements);
     funcs.ActiveClass_Get_Pointer := Pointer(@ctx_ActiveClass_Get_Pointer);
+    funcs.ActiveClass_Get_idx := Pointer(@ctx_ActiveClass_Get_idx);
     funcs.ActiveClass_Set_Name := Pointer(@ctx_ActiveClass_Set_Name);
+    funcs.ActiveClass_Set_idx := Pointer(@ctx_ActiveClass_Set_idx);
     funcs.ActiveClass_ToJSON := Pointer(@ctx_ActiveClass_ToJSON);
     funcs.Alt_BusBatch_GetFloat64FromFunc := Pointer(@Alt_BusBatch_GetFloat64FromFunc);
     funcs.Alt_BusBatch_GetInt32FromFunc := Pointer(@Alt_BusBatch_GetInt32FromFunc);
@@ -3373,10 +3379,12 @@ begin
     funcs.PDElements_Get_SectionID := Pointer(@ctx_PDElements_Get_SectionID);
     funcs.PDElements_Get_TotalMiles := Pointer(@ctx_PDElements_Get_TotalMiles);
     funcs.PDElements_Get_Totalcustomers := Pointer(@ctx_PDElements_Get_Totalcustomers);
+    funcs.PDElements_Get_idx := Pointer(@ctx_PDElements_Get_idx);
     funcs.PDElements_Get_pctPermanent := Pointer(@ctx_PDElements_Get_pctPermanent);
     funcs.PDElements_Set_FaultRate := Pointer(@ctx_PDElements_Set_FaultRate);
     funcs.PDElements_Set_Name := Pointer(@ctx_PDElements_Set_Name);
     funcs.PDElements_Set_RepairTime := Pointer(@ctx_PDElements_Set_RepairTime);
+    funcs.PDElements_Set_idx := Pointer(@ctx_PDElements_Set_idx);
     funcs.PDElements_Set_pctPermanent := Pointer(@ctx_PDElements_Set_pctPermanent);
     funcs.PVSystems_Get_AllNames := Pointer(@ctx_PVSystems_Get_AllNames);
     funcs.PVSystems_Get_Count := Pointer(@ctx_PVSystems_Get_Count);
