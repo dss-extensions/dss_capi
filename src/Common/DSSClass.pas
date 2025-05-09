@@ -57,7 +57,8 @@ type
         MonitorHeader = 128,
         InvControlDeltaV = 256,
         PermissiveProperties = 512,
-        DontResetYPrimInvalid = 1024
+        DontResetYPrimInvalid = 1024,
+        LegacySMARTDS = 2048
     );
 
     DSSSaveFlag = (
@@ -133,7 +134,7 @@ type
         Reserved29 = 29
         
         // REMOVED: Used internally for the "Wires" property ("Conductors").
-        // AllowAllConductors = 30 -- removed since there is not a dedicated Conductors property
+        // AllowAllConductors = 30 -- removed since there is now a dedicated Conductors property
 
         // Leave the last bit alone; it creates some issues elsewhere.
     );

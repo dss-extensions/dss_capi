@@ -572,9 +572,13 @@ begin
 
     PropertyOffset[ord(TProp.AmpLimitGain)] := ptruint(@obj.dynVars.VError);
 
-
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();
+
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.LegacySMARTDS)) <> 0 then
+    begin
+        CommandList.AddAliasCommand('kvarlimit', ord(TProp.kvarMax));
+    end;
 end;
 
 function TPVsystem.NewObject(const ObjName: String; Activate: Boolean): Pointer;

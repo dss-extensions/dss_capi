@@ -21,6 +21,7 @@ type
         function GetCommand(const Cmd: String): Integer;
         function Get(i: Integer): String;
         function Count(): Integer;
+        procedure AddAliasCommand(cmd: String; Value: Integer);
     end;
 
 implementation
@@ -53,6 +54,12 @@ begin
             end;
         end;
     end;
+end;
+
+procedure TCommandList.AddAliasCommand(cmd: String; Value: Integer);
+begin
+    CommandList.Add(cmd, Value);
+    abbrevCommandList.Add(cmd, Value);
 end;
 
 destructor TCommandList.Destroy;
