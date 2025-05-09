@@ -28,7 +28,10 @@ type
         SkipBuses = 1 shl 10,
         State = 1 shl 11, //TODO: power flow state, state variables for the given element, if applies
         Debug = 1 shl 12, // TODO
-        Edit = 1 shl 13
+        Edit = 1 shl 13,
+        ShortCircuit = 1 shl 14,
+        Reliability = 1 shl 15,
+        SkipInput = 1 shl 16
     );
 {$SCOPEDENUMS OFF}
     
@@ -116,6 +119,10 @@ type
 
         function PrpSpecified(idx: Integer): Boolean; inline;
     end;
+
+    function GetDSSArray_JSON(n: Integer; ints: pIntegerArray; step: Integer = 4): TJSONData; overload;
+    function GetDSSArray_JSON(n: Integer; dbls: pDoubleArray; scale: Double; step: Integer = 8): TJSONData; overload;
+    function GetDSSArray_JSON(n: Integer; valsArray: pComplexArray; joptions: Integer): TJSONData; overload;
 
 implementation
 
@@ -975,6 +982,27 @@ begin
     end;
     Result := resArray;
 end;
+
+function GetDSSArray_JSON(n: Integer; valsArray: pComplexArray; joptions: Integer): TJSONData; overload;
+var
+    i: Integer;
+    resArray: TJSONArray;
+    vals: PComplex;
+begin
+    if valsArray = NIL then
+    begin
+        Result := TJSONNull.Create();
+        Exit;
+    end;
+    vals := PComplex(valsArray);
+    resArray := TJSONArray.Create([]);
+    for i := 0 to n-1 do
+    begin
+        resArray.Add(TJSONArray.Create([vals^.re, vals^.im]));
+        Inc(vals)
+    end;
+end;
+
 
 function TDSSClassHelper.GetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; var val: TJSONData; preferArray: Boolean): Boolean;
 // Lots of code reused here from TDSSClassHelper.GetObjPropertyValue below.
@@ -2063,7 +2091,7 @@ begin
                 end
                 else
                 begin
-                    raise Exception.Create(Format(_('Expected a matrix of %d rows/cols.'), [Norder]));
+                    raise Exception.Create(Format(_('Expected a square matrix of order %d.'), [Norder]));
                 end;
             end;
             if TPropertyFlag.ScaledByFunction in flags then
