@@ -24,6 +24,7 @@ TYPE
          FRecorderOn: Boolean;
          FRecorderFile:String;
          RecorderFile: TFileStream;
+         compatFlagsLastClear: LongWord;
 
          function Get_Command(): String;
          
@@ -130,6 +131,8 @@ begin
      begin
         DSS.commandFlags[i] := [];
      end;
+
+     compatFlagsLastClear := DSS_EXTENSIONS_COMPAT;
 
      // Instantiate All DSS Classe Definitions, Intrinsic and User-defined
      CreateDSSClasses(DSS);     // in DSSGlobals
@@ -265,7 +268,7 @@ begin
         Exclude(DSS.commandFlags[i], DSSCommandFlag.Skip);
     end;
 
-    if (DSS.NumCircuits > 0) then
+    if ((DSS.NumCircuits > 0) or (DSS_EXTENSIONS_COMPAT <> compatFlagsLastClear)) then
 	begin
 {$IFDEF DSS_CAPI_PM}
         // In case the actor hasn't been destroyed
@@ -292,7 +295,8 @@ begin
     end
     else if not Resetting then
         DisposeDSSClasses(DSS);
-        
+
+    compatFlagsLastClear := DSS_EXTENSIONS_COMPAT;
     if not Resetting then
         Exit;
 

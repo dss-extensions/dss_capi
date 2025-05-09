@@ -66,7 +66,6 @@ type
         voltwattCH_curve,
         wattpf_curve,
         wattvar_curve,
-        VV_RefReactivePower, // was deprecated, reintroduced for v0.12.2; TODO: TO BE REMOVED AGAIN LATER
         PVSystemList, // was 32 -- TODO: TO BE MARKED AS REMOVED
         Vsetpoint, // was 33
         ControlModel
@@ -106,7 +105,6 @@ type
         VoltWattCH_Curve,
         WattPF_Curve,
         WattVar_Curve,
-        VV_RefReactivePower, // was deprecated, reintroduced for v0.12.2; TODO: TO BE REMOVED AGAIN LATER
         PVSystemList, // was 32 -- TODO: TO BE MARKED AS REMOVED
         VSetPoint, // was 33
         ControlModel
@@ -519,11 +517,6 @@ begin
     PropertyOffset[ord(TProp.RefReactivePower)] := ptruint(@obj.FReacPower_ref);
     PropertyOffset2[ord(TProp.RefReactivePower)] := PtrInt(RefQEnum);
 
-    PropertyOffset[ord(TProp.VV_RefReactivePower)] := 0;
-    PropertyType[ord(TProp.VV_RefReactivePower)] := TPropertyType.DeprecatedAndRemoved; //TODO: fully remove
-    PropertyDeprecatedMessage[ord(TProp.VV_RefReactivePower)] := '"VV_RefReactivePower" was deprecated in 2020. Use "RefReactivePower" instead.';
-    PropertyFlags[ord(TProp.VV_RefReactivePower)] := [TPropertyFlag.Deprecated];
-
     PropertyType[ord(TProp.monVoltageCalc)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.monVoltageCalc)] := ptruint(@obj.FMonBusesPhase);
     PropertyOffset2[ord(TProp.monVoltageCalc)] := PtrInt(DSS.MonPhaseEnum);
@@ -586,6 +579,11 @@ begin
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();
+
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.LegacySMARTDS)) <> 0 then
+    begin
+        CommandList.AddAliasCommand('vv_refreactivepower', ord(TProp.RefReactivePower));
+    end;
 end;
 
 function TInvControl.NewObject(const ObjName: Ansistring; Activate: Boolean): Pointer;

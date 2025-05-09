@@ -534,7 +534,7 @@ extern "C" {
             Set this compatibility flag to silently ignore the errors listed above and restore the original behavior.
         */
 
-        DSSCompatFlags_DontResetYPrimInvalid = 0x00000400 /*!<
+        DSSCompatFlags_DontResetYPrimInvalid = 0x00000400, /*!<
             Starting AltDSS/DSS C-API v0.15.0, the default behavior is that all components have their YPrim-invalid flags cleared when 
             their YPrim matrices are updated. That means that our original solver option `AlwaysResetYPrimInvalid` does nothing now.
 
@@ -544,6 +544,20 @@ extern "C" {
             difference is due to the YPrim flag change, or something else.
 
             Set this compatibility flag to restore the default behavior of previous versions. Note: this flag might be removed in a future release.
+        */
+
+        DSSCompatFlags_LegacySMARTDS = 0x00000800 /*!<
+            Starting AltDSS/DSS C-API v0.15.0, this flag was added to try to adjust the parser to handle .DSS files from the
+            [SMART-DS](https://data.openei.org/submissions/2981) dataset.
+
+            Set this flag to add the extra handling. If you save the circuit afterwards, the saved scripts should be compatible with
+            modern DSS versions.
+
+            This flag is required since OpenDSS changed the models for a few components several years ago.
+
+            If you still cannot load a scenario from SMART-DS, please report on GitHub, e.g., for a previous discussion see:
+            https://github.com/orgs/dss-extensions/discussions/50
+            
         */
     };
 
