@@ -2569,7 +2569,14 @@ var
     i: Integer;
     exportDefaultObjs: Boolean;
     DSS: TDSSContext;
+
+    bufferPtr: PDouble; 
+    bufferDims: array[0..3] of TAPISize;
 begin
+    bufferPtr := NIL;
+    bufferDims[0] := 0;
+    bufferDims[1] := 0;
+
     DSS := ckt.DSS;
     exportDefaultObjs := (joptions and Integer(DSSJSONOptions.IncludeDefaultObjs)) <> 0;
     Result := NIL;
@@ -2591,7 +2598,7 @@ begin
             busArray := TJSONArray.Create();
             for i := 1 to ckt.NumBuses do
             begin
-                busArray.Add(alt_Bus_ToJSON_(ckt.DSS, ckt.Buses[i], joptions));
+                busArray.Add(alt_Bus_ToJSON_(ckt.DSS, ckt.Buses[i], joptions, bufferPtr, bufferDims));
             end;
         end;
 
@@ -2715,6 +2722,8 @@ begin
         clsArray.Free();
     // if vsrc <> NIL then
     //     vsrc.Free();
+
+    DSS_Dispose_PDouble(bufferPtr);
 end;
 
 procedure loadClassFromJSON(DSS: TDSSContext; cls: TDSSClass; jcls: TJSONData; joptions: Integer);

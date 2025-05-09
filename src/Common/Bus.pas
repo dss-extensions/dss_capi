@@ -18,14 +18,11 @@ uses
 type
     TDSSBus = class(TNamedObject)
     PRIVATE
-        Nodes: pIntegerArray;
-        Allocation: SmallInt;
-
         procedure AddANode();
-
     PUBLIC
+        nodes: pIntegerArray;
         numNodesThisBus: SmallInt;
-        RefNo: pIntegerArray;
+        refNo: pIntegerArray;
 
         VBus,
         BusCurrent: pComplexArray;
@@ -40,6 +37,8 @@ type
         CoordDefined,
         BusChecked,
         Keep: Boolean;  // Flag for general use in bus searches
+
+        allocation: SmallInt;
 
         // ***** Reliability Variables
         BusFltRate: Double;  // Accumulated failure rate  downstream from this bus faults per year
@@ -105,8 +104,8 @@ constructor TDSSBus.Create(dssContext: TDSSContext);
 begin
     inherited Create('Bus');
     Allocation := 4;
-    Nodes := AllocMem(Sizeof(Nodes[1]) * Allocation);
-    RefNo := AllocMem(Sizeof(RefNo[1]) * Allocation);
+    nodes := AllocMem(Sizeof(nodes[1]) * Allocation);
+    refNo := AllocMem(Sizeof(refNo[1]) * Allocation);
     numNodesThisBus := 0;
     Ysc := NIL;
     Zsc := NIL;
@@ -129,8 +128,8 @@ end;
 
 destructor TDSSBus.Destroy;
 begin
-    FreeMem(Nodes);
-    FreeMem(RefNo);
+    FreeMem(nodes);
+    FreeMem(refNo);
     if Ysc <> NIL then
         Ysc.Free;
     if Zsc <> NIL then
@@ -147,8 +146,8 @@ begin
     if numNodesThisBus > Allocation then
     begin
         Allocation := Allocation + 1;
-        ReallocMem(Nodes, Sizeof(Nodes[1]) * Allocation);
-        ReallocMem(RefNo, Sizeof(RefNo[1]) * Allocation);
+        ReallocMem(nodes, Sizeof(nodes[1]) * Allocation);
+        ReallocMem(refNo, Sizeof(refNo[1]) * Allocation);
     end;
 end;
 
@@ -165,11 +164,11 @@ begin
         begin
              // Add a node to the bus
             AddANode;
-            Nodes[numNodesThisBus] := NodeNum;
+            nodes[numNodesThisBus] := NodeNum;
 
             circ := TDSSCircuit(Circuit);
             Inc(circ.NumNodes);  // Global node number for circuit
-            RefNo[numNodesThisBus] := circ.NumNodes;
+            refNo[numNodesThisBus] := circ.NumNodes;
             Result := circ.NumNodes;  // Return global node number
         end;
     end;
@@ -182,9 +181,9 @@ var
 begin
     for i := 1 to numNodesThisBus do
     begin
-        if Nodes[i] = NodeNum then
+        if nodes[i] = NodeNum then
         begin
-            Result := RefNo[i];
+            Result := refNo[i];
             Exit;
         end;
     end;
@@ -195,14 +194,14 @@ function TDSSBus.GetRef(NodeIndex: Integer): Integer;
 begin
     Result := 0;
     if (NodeIndex > 0) and (NodeIndex <= numNodesThisBus) then
-        Result := RefNo[NodeIndex];
+        Result := refNo[NodeIndex];
 end;
 
 function TDSSBus.GetNum(NodeIndex: Integer): SmallInt;
 begin
     Result := 0;
     if (NodeIndex > 0) and (NodeIndex <= numNodesThisBus) then
-        Result := Nodes[NodeIndex];
+        Result := nodes[NodeIndex];
 end;
 
 procedure TDSSBus.AllocateBusQuantities();
@@ -245,7 +244,7 @@ var
 begin
     for i := 1 to numNodesThisBus do
     begin
-        if Nodes[i] = NodeNum then
+        if nodes[i] = NodeNum then
         begin
             Result := i;
             Exit;

@@ -7,7 +7,7 @@ unit Ucmatrix;
 interface
 
 uses
-    UComplex, DSSUcomplex;
+    UComplex, DSSUcomplex, fpjson;
 
 type
     PCMatrix = ^TCMatrix;
@@ -50,6 +50,7 @@ type
         function Kron(EliminationRow: Integer): TcMatrix;  // Perform Kron reduction on last row/col and return new matrix
 
         property GetSetElement[i, j: Integer]: Complex Read GetElement Write SetElement; Default; 
+        function ToJSON(joptions: Integer): TJSONData;
     end;
 
 implementation
@@ -440,6 +441,31 @@ begin
         Reallocmem(cTemp1, 0);    // Discard temp arrays
         Reallocmem(cTemp2, 0);
     end;
+end;
+
+function TcMatrix.ToJSON(joptions: Integer): TJSONData;
+var
+    i, j, p: Integer;
+    resArray, row: TJSONArray;
+begin
+    if (self = NIL) or (order = 0) then
+    begin
+        Result := TJSONNull.Create();
+        Exit;
+    end;
+
+    resArray := TJSONArray.Create([]);
+    for i := 1 to order do
+    begin
+        row := TJSONArray.Create([]);
+        for j := 1 to order do
+        begin
+            p := ((j - 1) * order + i);
+            row.Add(TJSONArray.Create([TJSONFloatNumber.Create(Values[p].re), TJSONFloatNumber.Create(Values[p].im)]));
+        end;
+        resArray.Add(row);
+    end;
+    Result := resArray;
 end;
 
 end.

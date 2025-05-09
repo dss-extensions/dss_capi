@@ -206,7 +206,7 @@ procedure _Alt_CEBatch_Get_AllCurrentsVoltages_x(var ResultPtr: PDouble; ResultC
 procedure _Alt_PDEBatch_Get_x(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer; const What: integer; const AllNodes: Boolean);
 
 // Used in CAPI_Obj
-function alt_Bus_ToJSON_(DSS: TDSSContext; bus: TDSSBus; joptions: Integer): TJSONObject;
+function alt_Bus_ToJSON_(DSS: TDSSContext; bus: TDSSBus; joptions: Integer; var bufferPtr: PDouble; bufferDims: PAPISize): TJSONObject;
 
 implementation
 
@@ -540,8 +540,8 @@ procedure Alt_CE_Get_SeqPowers_(
     NodeV: pNodeVArray; 
     Result: PComplex;
     elem: TDSSCktElement;
-    VPh, V012: Complex3;
-    IPh, I012: Complex3;
+    var VPh, V012: Complex3;
+    var IPh, I012: Complex3;
     var nextPos: Integer
 );
 var
@@ -2832,44 +2832,121 @@ begin
     end;
 end;
 
-function alt_Bus_ToJSON_(DSS: TDSSContext; bus: TDSSBus; joptions: Integer): TJSONObject;
+function alt_Bus_ToJSON_(DSS: TDSSContext; bus: TDSSBus; joptions: Integer; var bufferPtr: PDouble; bufferDims: PAPISize): TJSONObject;
+var
+    NodeV: pNodeVArray;
+    tmp: TJSONArray;
+    c: Complex;
+    j: Integer;
+    Zsc012Temp: TCmatrix;
 begin
     Result := TJSONObject.Create(['Name', bus.Name()]);
-    if bus.CoordDefined then
+    if (joptions and ord(DSSJSONOptions.SkipInput)) <> 0 then
     begin
-        Result.Add('X', bus.x);
-        Result.Add('Y', bus.y);
+        if bus.CoordDefined then
+        begin
+            Result.Add('X', bus.x);
+            Result.Add('Y', bus.y);
+        end;
+        if bus.kVBase <> 0 then
+            Result.Add('kVLN', bus.kVBase);
+        if bus.Keep then
+            Result.Add('Keep', true);
     end;
-    if bus.kVBase <> 0 then
-        Result.Add('kVLN', bus.kVBase);
-    if bus.Keep then
-        Result.Add('Keep', true);
+
+    if (joptions and ord(DSSJSONOptions.State)) <> 0 then
+    begin
+        Result.Add('Nodes', GetDSSArray_JSON(bus.numNodesThisBus, bus.nodes)); // TODO: mention that this is unordered to match SystemNodes
+        Result.Add('SystemNodes', GetDSSArray_JSON(bus.numNodesThisBus, bus.refNo));
+        NodeV := DSS.ActiveCircuit.Solution.NodeV;
+        if NodeV <> NIL then
+        begin
+            tmp := TJSONArray.Create([]);
+            for j := 1 to bus.numNodesThisBus do
+            begin
+                c := NodeV[bus.RefNo[j]];
+                tmp.Add(TJSONArray.Create([TJSONFloatNumber.Create(c.re), TJSONFloatNumber.Create(c.im)]));
+            end;
+            Result.Add('Voltages', tmp);
+        end;
+
+        //TODO: only if requested?
+        Alt_Bus_Get_ComplexSeqVoltages(DSS, bufferPtr, bufferDims, bus);
+        Result.Add('SequenceVoltages', GetDSSArray_JSON(bufferDims^, PDoubleArray(bufferPtr), 1));
+    end;
+
+    if (joptions and ord(DSSJSONOptions.ShortCircuit)) <> 0 then
+    begin    
+        Result.Add('YSC', bus.Ysc.ToJSON(joptions));
+        Result.Add('ZSC', bus.Zsc.ToJSON(joptions));
+        Result.Add('ISC', GetDSSArray_JSON(bus.numNodesThisBus, bus.BusCurrent, joptions));
+
+        //TODO: only if requested?
+        if bus.Zsc <> NIL then
+        begin
+            Zsc012Temp := bus.Zsc.MtrxMult(As2p);  // temp for intermediate result
+            if bus.ZSC012 <> NIL then
+            begin
+                bus.ZSC012.Free;
+            end;
+            bus.ZSC012 := Ap2s.MtrxMult(Zsc012Temp);
+            Zsc012Temp.Free;
+            Result.Add('ZSC012', bus.Zsc012.ToJSON(joptions));
+        end
+        else
+        begin
+            Result.Add('ZSC012', TJSONNull.Create());
+        end;
+    end;
+
+    if (joptions and ord(DSSJSONOptions.Reliability)) <> 0 then
+    begin
+        Result.Add('Lambda', bus.BusFltRate);
+        Result.Add('Interruptions', bus.Bus_Num_Interrupt);
+        Result.Add('Customers', bus.BusTotalNumCustomers);
+        Result.Add('CustomerDuration', bus.BusCustDurations);
+        Result.Add('CustomerInterrupts', bus.BusCustInterrupts);
+        Result.Add('InterruptionDuration', bus.Bus_Int_Duration);
+        Result.Add('Section', bus.BusSectionID);
+        Result.Add('DownstreamLength', bus.BusTotalMiles / 1.609344);
+    end;
 end;
 
 function Alt_Bus_ToJSON(DSS: TDSSContext; pBus: TDSSBus; joptions: Integer): PAnsiChar; CDECL;
 var
     json: TJSONObject = NIL;
+    bufferPtr: PDouble; 
+    bufferDims: array[0..3] of TAPISize;
 begin
     Result := NIL;
+    bufferPtr := NIL;
+    bufferDims[0] := 0;
+    bufferDims[1] := 0;
     try
-        json := alt_Bus_ToJSON_(DSS, pBus, joptions);
+        json := alt_Bus_ToJSON_(DSS, pBus, joptions, bufferPtr, @bufferDims[0]);
         if (Integer(DSSJSONOptions.Pretty) and joptions) <> 0 then
             Result := DSS_CopyStringAsPChar(json.FormatJSON([], 2))
         else
-            Result := DSS_CopyStringAsPChar(json.FormatJSON([foSingleLineArray, foSingleLineObject, foskipWhiteSpace], 0));
+            Result := DSS_CopyStringAsPChar(json.FormatJSON([foSingleLineArray, foSingleLineObject, foSkipWhiteSpace], 0));
     except
         on E: Exception do
             DoSimpleMsg(DSS, 'Error converting bus data to JSON: %s', [E.message], 5020);
     end;
     FreeAndNil(json);
+    DSS_Dispose_PDouble(bufferPtr);
 end;
 
 function Alt_BusBatch_ToJSON(DSS: TDSSContext; batch: PDSSBus; batchSize: Integer; joptions: Integer): PAnsiChar; CDECL;
 var
     json: TJSONArray = NIL;
     i: Integer;
+    bufferPtr: PDouble; 
+    bufferDims: array[0..3] of TAPISize;
 begin
     Result := NIL;
+    bufferPtr := NIL;
+    bufferDims[0] := 0;
+    bufferDims[1] := 0;
     if (batch = NIL) or (batch^ = NIL) then
         Exit;
 
@@ -2877,18 +2954,19 @@ begin
         json := TJSONArray.Create();
         for i := 1 to batchSize do
         begin
-            json.Add(alt_Bus_ToJSON_(DSS, TDSSBus(batch^), joptions));
+            json.Add(alt_Bus_ToJSON_(DSS, TDSSBus(batch^), joptions, bufferPtr, @bufferDims[0]));
             inc(batch);
         end;
         if (Integer(DSSJSONOptions.Pretty) and joptions) <> 0 then
             Result := DSS_CopyStringAsPChar(json.FormatJSON([], 2))
         else
-            Result := DSS_CopyStringAsPChar(json.FormatJSON([foSingleLineArray, foSingleLineObject, foskipWhiteSpace], 0));
+            Result := DSS_CopyStringAsPChar(json.FormatJSON([foSingleLineArray, foSingleLineObject, foSkipWhiteSpace], 0));
     except
         on E: Exception do
             DoSimpleMsg(DSS, 'Error converting bus data to JSON: %s', [E.message], 5020);
     end;
     FreeAndNil(json);
+    DSS_Dispose_PDouble(&bufferPtr);
 end;
 //------------------------------------------------------------------------------
 procedure Alt_CEBatch_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSCktElementPtr; batchSize: Integer); CDECL;
@@ -2995,8 +3073,8 @@ var
     CResultPtr: PComplex;
     pElem: TDSSCktElementPtr;
     i, NtermsTotal, Next: Integer;
-    VPh, V012: Complex3;
-    IPh, I012: Complex3;
+    var VPh, V012: Complex3;
+    var IPh, I012: Complex3;
     cBuffer: ArrayOfComplex = NIL;
     NodeV: pNodeVArray; 
 begin
