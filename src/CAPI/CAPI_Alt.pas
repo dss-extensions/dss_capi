@@ -2864,15 +2864,17 @@ begin
             tmp := TJSONArray.Create([]);
             for j := 1 to bus.numNodesThisBus do
             begin
-                c := NodeV[bus.RefNo[j]];
-                tmp.Add(TJSONArray.Create([TJSONFloatNumber.Create(c.re), TJSONFloatNumber.Create(c.im)]));
+                tmp.Add(ToJSON(NodeV[bus.RefNo[j]]));
             end;
             Result.Add('Voltages', tmp);
         end;
 
         //TODO: only if requested?
-        Alt_Bus_Get_ComplexSeqVoltages(DSS, bufferPtr, bufferDims, bus);
-        Result.Add('SequenceVoltages', GetDSSArray_JSON(bufferDims^, PDoubleArray(bufferPtr), 1));
+        if bus.numNodesThisBus >= 3 then
+        begin
+            Alt_Bus_Get_ComplexSeqVoltages(DSS, bufferPtr, bufferDims, bus);
+            Result.Add('SequenceVoltages', GetDSSArray_JSON(bufferDims^ div 2, PComplexArray(bufferPtr), joptions));
+        end;
     end;
 
     if (joptions and ord(DSSJSONOptions.ShortCircuit)) <> 0 then

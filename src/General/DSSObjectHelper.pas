@@ -123,6 +123,8 @@ type
     function GetDSSArray_JSON(n: Integer; ints: pIntegerArray; step: Integer = 4): TJSONData; overload;
     function GetDSSArray_JSON(n: Integer; dbls: pDoubleArray; scale: Double; step: Integer = 8): TJSONData; overload;
     function GetDSSArray_JSON(n: Integer; valsArray: pComplexArray; joptions: Integer): TJSONData; overload;
+    function GetDSSArray_JSON(valsArray: ArrayOfComplex; joptions: Integer): TJSONData; overload;
+    function ToJSON(c: Complex): TJSONArray;
 
 implementation
 
@@ -996,13 +998,18 @@ begin
     end;
     vals := PComplex(valsArray);
     resArray := TJSONArray.Create([]);
-    for i := 0 to n-1 do
+    for i := 1 to n do
     begin
-        resArray.Add(TJSONArray.Create([vals^.re, vals^.im]));
+        resArray.Add(ToJSON(vals^));
         Inc(vals)
     end;
+    Result := resArray;
 end;
 
+function GetDSSArray_JSON(valsArray: ArrayOfComplex; joptions: Integer): TJSONData; overload;
+begin
+    Result := GetDSSArray_JSON(Length(valsArray), pComplexArray(@valsArray[0]), joptions);
+end;
 
 function TDSSClassHelper.GetObjPropertyJSONValue(obj: Pointer; Index: Integer; joptions: Integer; var val: TJSONData; preferArray: Boolean): Boolean;
 // Lots of code reused here from TDSSClassHelper.GetObjPropertyValue below.
@@ -1125,7 +1132,7 @@ begin
         TPropertyType.ComplexProperty:
         begin
             c := PComplex(PByte(obj) + PropertyOffset[Index]);
-            val := TJSONArray.Create([c.re, c.im]);
+            val := ToJSON(c^);
             Exit;
         end;
 
@@ -5115,5 +5122,11 @@ begin
     EndEdit(dssObj, numChanges);
     Result := true;
 end;
+
+function ToJSON(c: Complex): TJSONArray;
+begin
+    Result := TJSONArray.Create([c.re, c.im])
+end;
+
 
 end.

@@ -13,7 +13,8 @@ uses
     ucmatrix,
     DSSClass,
     MeterElement,
-    Arraydef;
+    Arraydef,
+    fpjson;
 
 type
 
@@ -39,7 +40,7 @@ type
         BranchNumCustomers: Integer;
         BranchTotalCustomers: Integer;
 
-        BranchCustWeight: Double; // Weighting factor for customers on this elemebt
+        BranchCustWeight: Double; // Weighting factor for customers on this element
         BranchSectionID: Integer; // ID of the section that this PD element belongs to
 
         ParentPDElement: TPDElement;
@@ -68,6 +69,8 @@ type
 
         function GetExcessKVANorm(idxTerm: Integer; powerOut: PComplex = NIL): Complex;
         function GetExcessKVAEmerg(idxTerm: Integer; powerIn: PComplex = NIL): Complex;
+
+        procedure StateToJSON(joptions: Integer; var json: TJSONObject); override;
     end;
 
 
@@ -77,6 +80,7 @@ uses
     DSSClassDefs,
     DSSGlobals,
     Sysutils,
+    Utilities,
     Bus,
     PDClass,
     DSSHelper,
@@ -318,6 +322,41 @@ begin
             emergAmpsSpecified := True;
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
+end;
+
+procedure TPDElement.StateToJSON(joptions: Integer; var json: TJSONObject);
+begin
+    inherited StateToJSON(joptions, json);
+
+    if Flg.HasEnergyMeter in Flags then
+    begin
+        json.Add('EnergyMeter', NameIfNotNil(MeterObj));
+    end
+    else
+    begin
+        json.Add('EnergyMeter', TJSONNull.Create());
+    end;
+    if SensorObj <> NIL then
+    begin
+        json.Add('Sensor', SensorObj.FullName());
+    end
+    else
+    begin
+        json.Add('Sensor', TJSONNull.Create());
+    end;
+
+    if (joptions and ord(DSSJSONOptions.Reliability)) <> 0 then
+    begin
+        json.Add('TotalCustomers', BranchTotalCustomers);
+        json.Add('NumCustomers', BranchNumCustomers);
+        json.Add('CustomerWeight', BranchCustWeight);
+        json.Add('Overload_UE', Overload_UE);
+        json.Add('OverLoad_EEN', OverLoad_EEN);
+        json.Add('SectionID', BranchSectionID);
+        json.Add('Length', MilesThisLine / 1.609344);
+        json.Add('FailureRate', BranchFltRate);
+        json.Add('AccumulatedFailureRate', AccumulatedBrFltRate);
+    end;
 end;
 
 end.

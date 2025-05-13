@@ -16,7 +16,8 @@ uses
     DSSObject,
     DSSClass,
     DSSPointerList,
-    DSSClassDefs;
+    DSSClassDefs,
+    fpjson;
 
 type
 
@@ -129,6 +130,8 @@ type
         function PCEValue(idxTerm:Integer; ValType:Integer): Double; // Get a value for the active PCE such as P, Q, Vmag, IMag, etc.
         procedure SumCurrents();
         procedure Get_Current_Mags(var cMBuffer: ArrayOfDouble); // Returns the Currents vector in magnitude
+
+        procedure StateToJSON(joptions: Integer; var json: TJSONObject); virtual;
     end;
 
 
@@ -1200,17 +1203,109 @@ var
 begin
     Result := TRUE;
     for i := 1 to FNTerms do
+    begin
         for j := 1 to FNConds do
+        begin
             if not Terminals[i - 1].ConductorsClosed[j - 1] then
             begin
                 Result := FALSE;
                 Exit;
             end;
+        end;
+    end;
 end;
 
 procedure TDSSCktElement.GetCurrents(Curr: ArrayOfComplex);
 begin
     GetCurrents(pComplexArray(@Curr[0]));
+end;
+
+procedure TDSSCktElement.StateToJSON(joptions: Integer; var json: TJSONObject);
+var
+    tmpArray, tmpArray2: TJSONArray;
+    i, j: Integer;
+    totalLosses, loadLosses, noLoadLosses: Complex;
+    cbuffer: Array of Complex; //TODO? pass as workspace
+    NodeV: pNodeVArray;
+begin
+    //TODO: separate sections?
+    // TODO? SeqCurrents, SeqPowers, SeqVoltages
+
+    json.Add('Index', Handle);
+    json.Add('Conductors', NConds());
+    json.Add('Terminals', NTerms());
+
+    tmpArray := TJSONArray.Create();
+    for i := 1 to NTerms() do
+    begin
+        tmpArray.Add(GetBus(i));
+    end;
+    json.Add('Buses', tmpArray);
+
+    if (ControlElementList <> NIL) and (ControlElementList.Count > 0) then
+    begin
+        tmpArray := TJSONArray.Create();
+        for i := 1 to ControlElementList.Count do
+        begin
+            tmpArray.Add(TDSSObject(ControlElementList.Get(i)).FullName());
+        end;
+        json.Add('ControlElements', tmpArray);
+    end
+    else
+    begin
+        json.Add('ControlElements', TJSONNull.Create());
+    end;
+
+    SetLength(cbuffer, NConds() * NTerms());
+
+    GetCurrents(cbuffer);
+    json.Add('Currents', GetDSSArray_JSON(cbuffer, joptions));
+    
+    tmpArray := TJSONArray.Create();
+    NodeV := ActiveCircuit.Solution.NodeV;
+    for i := 1 to NConds() * NTerms() do
+    begin
+        tmpArray.Add(ToJSON(NodeV[NodeRef[i]]));
+    end;
+    json.Add('Voltages', tmpArray);
+
+    GetPhasePower(pComplexArray(@cbuffer[0]));
+    json.Add('Powers', GetDSSArray_JSON(cbuffer, joptions));
+    
+    GetLosses(totalLosses, loadLosses, noLoadLosses);
+    json.Add('Losses', TJSONObject.Create([
+        'Total', ToJSON(totalLosses),
+        'LoadLosses', ToJSON(loadLosses),
+        'NoLoadLosses', ToJSON(noLoadLosses)
+    ]));
+    
+    SetLength(cbuffer, NPhases());
+    GetPhaseLosses(i, pComplexArray(@cbuffer[0]));
+    json.Add('PhasesLosses', GetDSSArray_JSON(cbuffer, joptions));
+
+    json.Add('YPrim', YPrim.ToJSON(joptions));
+
+    if (AllConductorsClosed()) then
+    begin
+        json.Add('OpenConductors', TJSONNull.Create());
+    end
+    else
+    begin
+        tmpArray := TJSONArray.Create();
+        for i := 1 to FNTerms do
+        begin
+            tmpArray2 := TJSONArray.Create();
+            for j := 1 to FNConds do
+            begin
+                if not Terminals[i - 1].ConductorsClosed[j - 1] then
+                begin
+                    tmpArray2.Add(j);
+                end;
+            end;
+            tmpArray.Add(tmpArray2);
+        end;
+        json.Add('OpenConductors', tmpArray);
+    end;
 end;
 
 end.
