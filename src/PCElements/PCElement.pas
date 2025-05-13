@@ -14,7 +14,8 @@ uses
     DSSClass,
     Spectrum,
     Arraydef,
-    Meterelement;
+    Meterelement,
+    fpjson;
 
 type
     TPCElement = class(TDSSCktElement)
@@ -62,6 +63,8 @@ type
         procedure SetVariable(i: Integer; Value: Double); VIRTUAL;
         function ITerminalUpdated(): Boolean;
         procedure SetITerminalUpdated(const Value: Boolean);
+
+        procedure StateToJSON(joptions: Integer; var json: TJSONObject); override;
     end;
 
 implementation
@@ -368,6 +371,39 @@ procedure TPCElement.SetNTerms(Value: Int8);
 begin
     inherited SetNTerms(Value);
     ReallocMem(ComplexBuffer, Sizeof(Complex) * Yorder);
+end;
+
+procedure TPCElement.StateToJSON(joptions: Integer; var json: TJSONObject);
+var
+    tmpObj: TJSONObject;
+    i: Integer;
+begin
+    inherited StateToJSON(joptions, json);
+
+    if Flg.HasEnergyMeter in Flags then
+    begin
+        json.Add('EnergyMeter', NameIfNotNil(MeterObj));
+    end
+    else
+    begin
+        json.Add('EnergyMeter', TJSONNull.Create());
+    end;
+
+    if SensorObj <> NIL then
+    begin
+        json.Add('Sensor', SensorObj.FullName());
+    end
+    else
+    begin
+        json.Add('Sensor', TJSONNull.Create());
+    end;
+
+    tmpObj := TJSONObject.Create();
+    for i := 1 to NumVariables do
+    begin
+        tmpObj.Add(VariableName(i), GetVariable(i));
+    end;
+    json.Add('StateVariables', tmpObj);
 end;
 
 end.

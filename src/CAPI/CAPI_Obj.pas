@@ -677,7 +677,7 @@ var
     jvalue: TJSONData = NIL;
     cls: TDSSClass;
     done: array of Boolean;
-    resObj: TJSONObject;
+    resObj, stateObj: TJSONObject;
     pnames: pStringArray;
     dynObj: TDynEqPCE;
 begin
@@ -797,14 +797,24 @@ begin
                 resObj.Add(pnames[iProp], jvalue);
         end;
     end;
-    if not (obj is TDynEqPCE) then
-        Exit;
-    
-    dynObj := obj as TDynEqPCE;
-    if dynObj.UserDynInit = NIL then
-        Exit;
+    if (obj is TDynEqPCE) then
+    begin
+        dynObj := obj as TDynEqPCE;
+        if dynObj.UserDynInit = NIL then
+            Exit;
 
-    resObj.Add('DynInit', dynObj.UserDynInit.Clone());
+        resObj.Add('DynInit', dynObj.UserDynInit.Clone());
+    end;
+
+    if ((Integer(DSSJSONOptions.State) and joptions) = 0) or not (obj is TDSSCktElement) then
+    begin
+        Exit;
+    end;
+
+    stateObj := TJSONObject.Create([]);
+    TDSSCktElement(obj).StateToJSON(joptions, stateObj);
+    // TODO: Separate struct for power flow, reliability, short circuit, etc.
+    resObj.Add('$state', stateObj);
 end;
 
 function Obj_ToJSON_(obj: TDSSObject; joptions: Integer): String;
