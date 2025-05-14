@@ -1,27 +1,533 @@
 /*!
 
-dss_classic.hpp: a C++ layer for the DSS-Extensions/C-API, classic API
-Copyright (c) 2021-2024 Paulo Meira
-Copyright (c) 2021-2024 DSS-Extensions contributors
+altdss_classic.hpp: a C++ layer for the DSS-Extensions/C-API, classic API of OpenDSS and AltDSS
+Copyright (c) 2021-2025 Paulo Meira
+Copyright (c) 2021-2025 DSS-Extensions contributors
 
-Version: 0.5.1 (2024-07)
+Version: 0.6.0 (2025-05)
 
 **POTENTIAL BREAKING CHANGES UNTIL VERSION 1.0**
-
 */
         
 #pragma once
-#ifndef DSS_CPP_CLASSIC_API
-#define DSS_CPP_CLASSIC_API
+#ifndef ALTDSS_CPP_CLASSIC_API
+#define ALTDSS_CPP_CLASSIC_API
 
 #include "altdss_common.hpp"
 #include "altdss_obj.hpp"
 
-namespace dss { namespace classic {
+namespace altdss { namespace classic {
 
 #ifdef ALTDSS_CAPI_NAMESPACE
-using namespace dss::capi;
+using namespace altdss::capi;
 #endif
+#pragma region classic_enums
+    enum class ActionCodes: int32_t {
+    	none = 0,
+    	Open = 1,
+    	Close = 2,
+    	Reset = 3,
+    	Lock = 4,
+    	Unlock = 5,
+    	TapUp = 6,
+    	TapDown = 7
+    };
+
+    /// Event codes used by the event callback system
+    ///
+    /// Legacy events are the events present the classic OpenDSS COM implementation,
+    /// while the rest are extensions added here.
+    enum class AltDSSEvent: int32_t {
+    	Legacy_InitControls = 0,
+    	Legacy_CheckControls = 1,
+    	Legacy_StepControls = 2,
+    	Clear = 3,
+    	ReprocessBuses = 4,
+    	BuildSystemY = 5
+    };
+
+    enum class AutoAddTypes: int32_t {
+    	AddGen = 1,
+    	AddCap = 2
+    };
+
+    enum class CapControlModes: int32_t {
+    	Current = 0,
+    	Voltage = 1,
+    	KVAR = 2,
+    	Time = 3,
+    	PF = 4
+    };
+
+    enum class CktModels: int32_t {
+    	Multiphase = 0,
+    	PositiveSeq = 1
+    };
+
+    enum class ControlModes: int32_t {
+    	Static = 0,
+    	Event = 1,
+    	Time = 2,
+    	Multirate = 3,
+    	Off = -1
+    };
+
+    /// Transformer Core Type
+    enum class CoreType: int32_t {
+    	shell = 0,
+    	one_phase = 1,
+    	three_leg = 3,
+    	four_leg = 4,
+    	five_leg = 5,
+    	core_1_phase = 9
+    };
+
+    enum class DSSCompatFlags: uint32_t {
+    	NoSolverFloatChecks = 1,
+    	BadPrecision = 2,
+    	InvControl9611 = 4,
+    	SaveCalcVoltageBases = 8,
+    	ActiveLine = 16,
+    	NoPropertyTracking = 32,
+    	SkipSideEffects = 64,
+    	MonitorHeader = 128,
+    	InvControlDeltaV = 256,
+    	PermissiveProperties = 512,
+    	LegacySMARTDS = 2048
+    };
+
+    DSSCompatFlags operator|(DSSCompatFlags f1, DSSCompatFlags f2)
+    {
+        return static_cast<DSSCompatFlags>(static_cast<uint32_t>(f1) | static_cast<uint32_t>(f2));
+    }
+
+    enum class DSSJSONFlags: uint32_t {
+    	Full = 1,
+    	SkipRedundant = 2,
+    	EnumAsInt = 4,
+    	FullNames = 8,
+    	Pretty = 16,
+    	ExcludeDisabled = 32,
+    	IncludeDSSClass = 64,
+    	LowercaseKeys = 128,
+    	IncludeDefaultObjs = 256,
+    	SkipTimestamp = 512,
+    	SkipBuses = 1024
+    };
+
+    DSSJSONFlags operator|(DSSJSONFlags f1, DSSJSONFlags f2)
+    {
+        return static_cast<DSSJSONFlags>(static_cast<uint32_t>(f1) | static_cast<uint32_t>(f2));
+    }
+
+    /// Object flags are bit flags used by various of the internal processes of the DSS engine.
+    ///
+    /// Most are internal state, but advanced/expert users can manipulate them for some interesting uses.
+    enum class DSSObjectFlags: uint32_t {
+    	Editing = 1,
+    	HasBeenSaved = 2,
+    	DefaultAndUnedited = 4,
+    	Checked = 8,
+    	Flag = 16,
+    	HasEnergyMeter = 32,
+    	HasSensorObj = 64,
+    	IsIsolated = 128,
+    	HasControl = 256,
+    	IsMonitored = 512,
+    	HasOCPDevice = 1024,
+    	HasAutoOCPDevice = 2048,
+    	NeedsRecalc = 4096,
+    	NeedsYPrim = 8192
+    };
+
+    DSSObjectFlags operator|(DSSObjectFlags f1, DSSObjectFlags f2)
+    {
+        return static_cast<DSSObjectFlags>(static_cast<uint32_t>(f1) | static_cast<uint32_t>(f2));
+    }
+
+    /// This enum is used in the PropertyNameStyle property to control the naming convention.
+    /// Currently, this only affects capitalization, i.e., if your software already uses case
+    /// insensitive string comparisons for the property names, this is not useful. Otherwise,
+    /// you can use `Legacy` to use the older names.
+    enum class DSSPropertyNameStyle: int32_t {
+    	Modern = 0,
+    	Lowercase = 1,
+    	Legacy = 2
+    };
+
+    /// DSSSaveFlags are bit flags used in the Circuit_Save function to
+    /// customize the saved circuit.
+    enum class DSSSaveFlags: uint32_t {
+    	CalcVoltageBases = 1,
+    	SetVoltageBases = 2,
+    	IncludeOptions = 4,
+    	IncludeDisabled = 8,
+    	ExcludeDefault = 16,
+    	SingleFile = 32,
+    	KeepOrder = 64,
+    	ExcludeMeterZones = 128,
+    	IsOpen = 256,
+    	ToString = 512
+    };
+
+    DSSSaveFlags operator|(DSSSaveFlags f1, DSSSaveFlags f2)
+    {
+        return static_cast<DSSSaveFlags>(static_cast<uint32_t>(f1) | static_cast<uint32_t>(f2));
+    }
+
+    /// Energy meter registers
+    ///
+    /// This enumeration lists the basic energy meter registers. Extra registers start
+    /// at `VBaseStart`. This is exposed to make it easier to access common registers
+    /// without needing to check the register names every time, plus makes it safer to
+    /// access the registers by index directly without introducing bugs we found in
+    /// OpenDSS code (both user code and engine code) in the past due to direct use
+    /// of magic numbers.
+    enum class EnergyMeterRegisters: int32_t {
+    	kWh = 0,
+    	kvarh = 1,
+    	MaxkW = 2,
+    	MaxkVA = 3,
+    	ZonekWh = 4,
+    	Zonekvarh = 5,
+    	ZoneMaxkW = 6,
+    	ZoneMaxkVA = 7,
+    	OverloadkWhNorm = 8,
+    	OverloadkWhEmerg = 9,
+    	LoadEEN = 10,
+    	LoadUE = 11,
+    	ZoneLosseskWh = 12,
+    	ZoneLosseskvarh = 13,
+    	LossesMaxkW = 14,
+    	LossesMaxkvar = 15,
+    	LoadLosseskWh = 16,
+    	LoadLosseskvarh = 17,
+    	NoLoadLosseskWh = 18,
+    	NoLoadLosseskvarh = 19,
+    	MaxLoadLosses = 20,
+    	MaxNoLoadLosses = 21,
+    	LineLosseskWh = 22,
+    	TransformerLosseskWh = 23,
+    	LineModeLineLoss = 24,
+    	ZeroModeLineLoss = 25,
+    	ThreePhaseLineLoss = 26,
+    	OnePhaseLineLoss = 27,
+    	GenkWh = 28,
+    	Genkvarh = 29,
+    	GenMaxkW = 30,
+    	GenMaxkVA = 31,
+    	VBaseStart = 32
+    };
+
+    /// Generator registers
+    ///
+    /// Enumeration of the generator registers by index.
+    /// Currently shared between the Generator, Storage and PVSystem models.
+    enum class GeneratorRegisters: int32_t {
+    	kWh = 0,
+    	kvarh = 1,
+    	MaxkW = 2,
+    	MaxkVA = 3,
+    	Hours = 4,
+    	Price = 5
+    };
+
+    enum class GeneratorStatus: int32_t {
+    	Variable = 0,
+    	Fixed = 1
+    };
+
+    /// Generator variables
+    ///
+    /// Enumeration of the generator *state variables* by (1-based) index.
+    /// This is the implicit list and there can be more variables used by user-models
+    /// and DynamicExp objects. For those, users can get the variable names from the
+    /// API.
+    enum class GeneratorVariables: int32_t {
+    	Frequency = 1,
+    	Theta = 2,
+    	Vd = 3,
+    	PShaft = 4,
+    	dSpeed = 5,
+    	dTheta = 6
+    };
+
+    /// IndMach012 variables
+    ///
+    /// Enumeration of the IndMach012 *state variables* by (1-based) index.
+    enum class IndMach012Variables: int32_t {
+    	Frequency = 1,
+    	Theta = 2,
+    	E1 = 3,
+    	Pshaft = 4,
+    	dSpeed = 5,
+    	dTheta = 6,
+    	Slip = 7,
+    	puRs = 8,
+    	puXs = 9,
+    	puRr = 10,
+    	puXr = 11,
+    	puXm = 12,
+    	MaxSlip = 13,
+    	Is1 = 14,
+    	Is2 = 15,
+    	Ir1 = 16,
+    	Ir2 = 17,
+    	StatorLosses = 18,
+    	RotorLosses = 19,
+    	ShaftPowerHP = 20,
+    	PowerFactor = 21,
+    	Efficiency = 22
+    };
+
+    enum class LineUnits: int32_t {
+    	none = 0,
+    	Miles = 1,
+    	kFt = 2,
+    	km = 3,
+    	meter = 4,
+    	ft = 5,
+    	inch = 6,
+    	cm = 7,
+    	mm = 8
+    };
+
+    enum class LoadModels: int32_t {
+    	ConstPQ = 1,
+    	ConstZ = 2,
+    	Motor = 3,
+    	CVR = 4,
+    	ConstI = 5,
+    	ConstPFixedQ = 6,
+    	ConstPFixedX = 7,
+    	ZIPV = 8
+    };
+
+    enum class LoadStatus: int32_t {
+    	Variable = 0,
+    	Fixed = 1,
+    	Exempt = 2
+    };
+
+    enum class MonitorModes: int32_t {
+    	VI = 0,
+    	Power = 1,
+    	Taps = 2,
+    	States = 3,
+    	Sequence = 16,
+    	Magnitude = 32,
+    	PosOnly = 64
+    };
+
+    /// Overcurrent Protection Device Type
+    enum class OCPDevType: int32_t {
+    	none = 0,
+    	Fuse = 1,
+    	Recloser = 2,
+    	Relay = 3
+    };
+
+    /// Deprecated. Please use instead:
+    /// - AutoAddTypes
+    /// - CktModels
+    /// - ControlModes
+    /// - SolutionLoadModels
+    /// - SolutionAlgorithms
+    /// - RandomModes
+    enum class Options: int32_t {
+    	PowerFlow = 1,
+    	Admittance = 2,
+    	NormalSolve = 0,
+    	LogNormal = 3,
+    	ControlOFF = -1
+    };
+
+    /// PVSystem variables
+    ///
+    /// Enumeration of the PVSystem *state variables* by (1-based) index.
+    /// This is the implicit list and there can be more variables used by user-models
+    /// and DynamicExp objects.
+    enum class PVSystemVariables: int32_t {
+    	Irradiance = 1,
+    	PanelkW = 2,
+    	P_TFactor = 3,
+    	Efficiency = 4,
+    	Vreg = 5,
+    	Vavg_DRC = 6,
+    	volt_var = 7,
+    	volt_watt = 8,
+    	DRC = 9,
+    	VV_DRC = 10,
+    	watt_pf = 11,
+    	watt_var = 12,
+    	kW_out_desired = 13,
+    	GridVoltage = 14,
+    	di_dt = 15,
+    	it = 16,
+    	itHistory = 17,
+    	RatedVDC = 18,
+    	AvgDutyCycle = 19,
+    	Target_Amps = 20,
+    	SeriesL = 21,
+    	MaxAmps_phase = 22
+    };
+
+    enum class RandomModes: int32_t {
+    	Gaussian = 1,
+    	Uniform = 2,
+    	LogNormal = 3
+    };
+
+    /// Setter flags customize how the update of DSS properties are handled by the
+    /// engine and parts of the API. Use especially in the `Obj` and `Batch` APIs
+    enum class SetterFlags: uint32_t {
+    	ImplicitSizes = 1,
+    	AvoidFullRecalc = 2,
+    	SkipNA = 4,
+    	AllowAllConductors = 1073741824
+    };
+
+    SetterFlags operator|(SetterFlags f1, SetterFlags f2)
+    {
+        return static_cast<SetterFlags>(static_cast<uint32_t>(f1) | static_cast<uint32_t>(f2));
+    }
+
+    enum class SolutionAlgorithms: int32_t {
+    	NormalSolve = 0,
+    	NewtonSolve = 1,
+    	NCIMSolve = 2
+    };
+
+    enum class SolutionLoadModels: int32_t {
+    	PowerFlow = 1,
+    	Admittance = 2
+    };
+
+    enum class SolveModes: int32_t {
+    	SnapShot = 0,
+    	Daily = 1,
+    	Yearly = 2,
+    	Monte1 = 3,
+    	LD1 = 4,
+    	PeakDay = 5,
+    	DutyCycle = 6,
+    	Direct = 7,
+    	MonteFault = 8,
+    	FaultStudy = 9,
+    	Monte2 = 10,
+    	Monte3 = 11,
+    	LD2 = 12,
+    	AutoAdd = 13,
+    	Dynamic = 14,
+    	Harmonic = 15,
+    	Time = 16,
+    	HarmonicT = 17
+    };
+
+    enum class SparseSolverOptions: int32_t {
+    	ReuseNothing = 0,
+    	ReuseCompressedMatrix = 1,
+    	ReuseSymbolicFactorization = 2,
+    	ReuseNumericFactorization = 3,
+    	AlwaysResetYPrimInvalid = 268435456
+    };
+
+    enum class StorageStates: int32_t {
+    	Charging = -1,
+    	Idling = 0,
+    	Discharging = 1
+    };
+
+    /// Storage variables
+    ///
+    /// Enumeration of the Storage state variables by (1-based) index.
+    /// This is the implicit list and there can be more variables used by user-models
+    /// and DynamicExp objects.
+    enum class StorageVariables: int32_t {
+    	kWh = 1,
+    	State = 2,
+    	kWOut = 3,
+    	kWIn = 4,
+    	kvarOut = 5,
+    	DCkW = 6,
+    	kWTotalLosses = 7,
+    	kWInvLosses = 8,
+    	kWIdlingLosses = 9,
+    	kWChDchLosses = 10,
+    	kWhChng = 11,
+    	InvEff = 12,
+    	InverterON = 13,
+    	Vref = 14,
+    	Vavg_DRC = 15,
+    	VV_Oper = 16,
+    	VW_Oper = 17,
+    	DRC_Oper = 18,
+    	VV_DRC_Oper = 19,
+    	WP_Oper = 20,
+    	WV_Oper = 21,
+    	kWDesired = 22,
+    	kW_VW_Limit = 23,
+    	Limit_kWOut_Function = 24,
+    	kVA_Exceeded = 25,
+    	GridVoltage = 26,
+    	di_dt = 27,
+    	it = 28,
+    	itHistory = 29,
+    	RatedVDC = 30,
+    	AvgDutyCycle = 31,
+    	Target_Amps = 32,
+    	SeriesL = 33,
+    	MaxAmps_phase = 34
+    };
+
+    /// UPFC variables
+    ///
+    /// Enumeration of the UPFC state variables by (1-based) index.
+    enum class UPFCVariables: int32_t {
+    	ModeUPFC = 1,
+    	IUPFC = 2,
+    	Re_Vbin = 3,
+    	Im_Vbin = 4,
+    	Re_Vbout = 5,
+    	Im_Vbout = 6,
+    	Losses = 7,
+    	P_UPFC = 8,
+    	Q_UPFC = 9,
+    	Qideal = 10,
+    	Re_Sr0_1 = 11,
+    	Im_Sr0_1 = 12,
+    	Re_Sr1_1 = 13,
+    	Im_Sr1_1 = 14
+    };
+
+    /// VCCS non-RMS variables
+    ///
+    /// Enumeration of the VCCS state variables by (1-based) index, when used in non-RMS mode (`RMSMode=false`).
+    enum class VCCSNonRMSVariables: int32_t {
+    	Vwave = 1,
+    	Iwave = 2,
+    	Irms = 3,
+    	Ipeak = 4,
+    	BP1out = 5,
+    	Hout = 6
+    };
+
+    /// VCCS RMS variables
+    ///
+    /// Enumeration of the VCCS state variables by (1-based) index, when used in RMS mode (`RMSMode=true`).
+    enum class VCCSRMSVariables: int32_t {
+    	Vrms = 1,
+    	Ipwr = 2,
+    	Hout = 3,
+    	Irms = 4
+    };
+
+    enum class YMatrixModes: int32_t {
+    	SeriesOnly = 1,
+    	WholeMatrix = 2
+    };
+
+#pragma endregion classic_enums
 
 
 
@@ -29,15 +535,25 @@ using namespace dss::capi;
     {
     public:
 
-        IDSSProgress(dss::APIUtil *util) :
+        IDSSProgress(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
+        /// 
+        /// Close progress form
+        /// 
+        /// Typically used with EPRI's OpenDSS, on Windows. Otherwise, it could be a no-op.
+        /// 
         void Close()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_DSSProgress_Close(ctx);
         }
+        /// 
+        /// Show progress form
+        /// 
+        /// Typically used with EPRI's OpenDSS, on Windows. Otherwise, it could be a no-op.
+        /// 
         void Show()
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -45,7 +561,11 @@ using namespace dss::capi;
         }
 
         /// 
-        /// (write-only) Caption to appear on the bottom of the DSS Progress form.
+        /// Set the caption to appear on the bottom of the DSS Progress form.
+        /// 
+        /// Typically used with EPRI's OpenDSS, on Windows. Otherwise, it could be a no-op.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Caption.html
         /// 
         IDSSProgress& Caption(const char *value) // setter
         {
@@ -61,7 +581,11 @@ using namespace dss::capi;
         }
 
         /// 
-        /// (write-only) Percent progress to indicate [0..100]
+        /// Set the percent progress to indicate [0..100] on the progress form.
+        /// 
+        /// Typically used with EPRI's OpenDSS, on Windows. Otherwise, it could be a no-op.
+        /// 
+        /// Original COM help: https://opendss.epri.com/PctProgress.html
         /// 
         IDSSProgress& PctProgress(int32_t value) // setter
         {
@@ -75,7 +599,7 @@ using namespace dss::capi;
     {
     public:
 
-        IDSSProperty(dss::APIUtil *util) :
+        IDSSProperty(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -101,6 +625,8 @@ using namespace dss::capi;
         /// 
         /// Description of the property.
         /// 
+        /// Original COM help: https://opendss.epri.com/Description.html
+        /// 
         string Description() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -110,12 +636,19 @@ using namespace dss::capi;
         /// 
         /// Name of Property
         /// 
+        /// Original COM help: https://opendss.epri.com/Name6.html
+        /// 
         string Name() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_DSSProperty_Get_Name(ctx);
         }
 
+        /// 
+        /// Get/set the value of the active property. The value must be specified as a string.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Val.html
+        /// 
         string Val() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -139,12 +672,14 @@ using namespace dss::capi;
     {
     public:
 
-        IDSS_Executive(dss::APIUtil *util) :
+        IDSS_Executive(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
         /// 
         /// Get i-th command
+        /// 
+        /// Original COM help: https://opendss.epri.com/Command.html
         /// 
         string Command(int32_t i)
         {
@@ -154,6 +689,8 @@ using namespace dss::capi;
         /// 
         /// Get help string for i-th command
         /// 
+        /// Original COM help: https://opendss.epri.com/CommandHelp.html
+        /// 
         string CommandHelp(int32_t i)
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -161,6 +698,8 @@ using namespace dss::capi;
         }
         /// 
         /// Get i-th option
+        /// 
+        /// Original COM help: https://opendss.epri.com/Option.html
         /// 
         string Option(int32_t i)
         {
@@ -170,6 +709,8 @@ using namespace dss::capi;
         /// 
         /// Get help string for i-th option
         /// 
+        /// Original COM help: https://opendss.epri.com/OptionHelp.html
+        /// 
         string OptionHelp(int32_t i)
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -177,6 +718,8 @@ using namespace dss::capi;
         }
         /// 
         /// Get present value of i-th option
+        /// 
+        /// Original COM help: https://opendss.epri.com/OptionValue.html
         /// 
         string OptionValue(int32_t i)
         {
@@ -187,6 +730,8 @@ using namespace dss::capi;
         /// 
         /// Number of DSS Executive Commands
         /// 
+        /// Original COM help: https://opendss.epri.com/NumCommands.html
+        /// 
         int32_t NumCommands() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -195,6 +740,8 @@ using namespace dss::capi;
 
         /// 
         /// Number of DSS Executive Options
+        /// 
+        /// Original COM help: https://opendss.epri.com/NumOptions.html
         /// 
         int32_t NumOptions() // getter
         {
@@ -231,13 +778,15 @@ using namespace dss::capi;
     {
     public:
 
-        IError(dss::APIUtil *util) :
+        IError(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
 
         /// 
         /// Description of error for last operation
+        /// 
+        /// Original COM help: https://opendss.epri.com/Description1.html
         /// 
         string Description() // getter
         {
@@ -248,6 +797,8 @@ using namespace dss::capi;
         /// 
         /// Error Number (returns current value and then resets to zero)
         /// 
+        /// Original COM help: https://opendss.epri.com/Number.html
+        /// 
         int32_t Number() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -257,12 +808,12 @@ using namespace dss::capi;
         /// 
         /// EarlyAbort controls whether all errors halts the DSS script processing (Compile/Redirect), defaults to True.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         bool EarlyAbort() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Error_Get_EarlyAbort(ctx) != 0);
+            return ctx_Error_Get_EarlyAbort(ctx);
         }
         IError& EarlyAbort(bool value) // setter
         {
@@ -284,19 +835,18 @@ using namespace dss::capi;
         /// Extended errors use the Error interface to provide a more clear message
         /// and should help users, especially new users, to find usage issues earlier.
         /// 
-        /// At Python level, an exception is raised when an error is detected through
+        /// At C++ level, an exception is raised when an error is detected through
         /// the Error interface.
         /// 
         /// The current default state is ON. For compatibility, the user can turn it
         /// off to restore the previous behavior.
         /// 
-        /// (API Extension)
-        /// 
+        /// **(API Extension)**
         /// 
         bool ExtendedErrors() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Error_Get_ExtendedErrors(ctx) != 0);
+            return ctx_Error_Get_ExtendedErrors(ctx);
         }
         IError& ExtendedErrors(bool value) // setter
         {
@@ -310,7 +860,7 @@ using namespace dss::capi;
     {
     public:
 
-        IFuses(dss::APIUtil *util) :
+        IFuses(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -394,6 +944,8 @@ using namespace dss::capi;
         /// 
         /// Close all phases of the fuse.
         /// 
+        /// Original COM help: https://opendss.epri.com/Close3.html
+        /// 
         void Close()
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -402,13 +954,17 @@ using namespace dss::capi;
         /// 
         /// Current state of the fuses. TRUE if any fuse on any phase is blown. Else FALSE.
         /// 
+        /// Original COM help: https://opendss.epri.com/IsBlown.html
+        /// 
         bool IsBlown()
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Fuses_IsBlown(ctx) != 0);
+            return ctx_Fuses_IsBlown(ctx);
         }
         /// 
         /// Manual opening of all phases of the fuse.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Open2.html
         /// 
         void Open()
         {
@@ -417,6 +973,8 @@ using namespace dss::capi;
         }
         /// 
         /// Reset fuse to normal state.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Reset7.html
         /// 
         void Reset()
         {
@@ -427,6 +985,8 @@ using namespace dss::capi;
         /// 
         /// A fixed delay time in seconds added to the fuse blowing time determined by the TCC curve. Default is 0.
         /// This represents a fuse clear or other delay.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Delay1.html
         /// 
         double Delay() // getter
         {
@@ -442,6 +1002,8 @@ using namespace dss::capi;
 
         /// 
         /// Full name of the circuit element to which the fuse is connected.
+        /// 
+        /// Original COM help: https://opendss.epri.com/MonitoredObj1.html
         /// 
         string MonitoredObj() // getter
         {
@@ -464,6 +1026,8 @@ using namespace dss::capi;
         /// 
         /// Terminal number to which the fuse is connected.
         /// 
+        /// Original COM help: https://opendss.epri.com/MonitoredTerm1.html
+        /// 
         int32_t MonitoredTerm() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -479,6 +1043,8 @@ using namespace dss::capi;
         /// 
         /// Number of phases, this fuse. 
         /// 
+        /// Original COM help: https://opendss.epri.com/NumPhases1.html
+        /// 
         int32_t NumPhases() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -487,7 +1053,10 @@ using namespace dss::capi;
 
         /// 
         /// Multiplier or actual amps for the TCCcurve object. Defaults to 1.0. 
+        /// 
         /// Multiply current values of TCC curve by this to get actual amps.
+        /// 
+        /// Original COM help: https://opendss.epri.com/RatedCurrent.html
         /// 
         double RatedCurrent() // getter
         {
@@ -504,6 +1073,8 @@ using namespace dss::capi;
         /// 
         /// Full name of the circuit element switch that the fuse controls. 
         /// Defaults to the MonitoredObj.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SwitchedObj.html
         /// 
         string SwitchedObj() // getter
         {
@@ -526,6 +1097,8 @@ using namespace dss::capi;
         /// 
         /// Number of the terminal of the controlled element containing the switch controlled by the fuse.
         /// 
+        /// Original COM help: https://opendss.epri.com/SwitchedTerm.html
+        /// 
         int32_t SwitchedTerm() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -540,6 +1113,8 @@ using namespace dss::capi;
 
         /// 
         /// Name of the TCCcurve object that determines fuse blowing.
+        /// 
+        /// Original COM help: https://opendss.epri.com/TCCcurve.html
         /// 
         string TCCcurve() // getter
         {
@@ -562,6 +1137,8 @@ using namespace dss::capi;
         /// 
         /// Array of strings indicating the state of each phase of the fuse.
         /// 
+        /// Original COM help: https://opendss.epri.com/State2.html
+        /// 
         strings State() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -576,6 +1153,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of strings indicating the normal state of each phase of the fuse.
+        /// 
+        /// Original COM help: https://opendss.epri.com/NormalState2.html
         /// 
         strings NormalState() // getter
         {
@@ -594,7 +1173,7 @@ using namespace dss::capi;
     {
     public:
 
-        IGenerators(dss::APIUtil *util) :
+        IGenerators(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -677,12 +1256,14 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Indicates whether the generator is forced ON regardles of other dispatch criteria.
+        /// Indicates whether the generator is forced ON regardless of other dispatch criteria.
+        /// 
+        /// Original COM help: https://opendss.epri.com/ForcedON.html
         /// 
         bool ForcedON() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Generators_Get_ForcedON(ctx) != 0);
+            return ctx_Generators_Get_ForcedON(ctx);
         }
         IGenerators& ForcedON(bool value) // setter
         {
@@ -693,6 +1274,8 @@ using namespace dss::capi;
 
         /// 
         /// Generator Model
+        /// 
+        /// Original COM help: https://opendss.epri.com/Model.html
         /// 
         int32_t Model() // getter
         {
@@ -709,6 +1292,8 @@ using namespace dss::capi;
         /// 
         /// Power factor (pos. = producing vars). Updates kvar based on present kW value.
         /// 
+        /// Original COM help: https://opendss.epri.com/PF.html
+        /// 
         double PF() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -723,6 +1308,8 @@ using namespace dss::capi;
 
         /// 
         /// Number of phases
+        /// 
+        /// Original COM help: https://opendss.epri.com/Phases.html
         /// 
         int32_t Phases() // getter
         {
@@ -739,6 +1326,8 @@ using namespace dss::capi;
         /// 
         /// Array of Names of all generator energy meter registers
         /// 
+        /// See also the enum `GeneratorRegisters`.
+        /// 
         strings RegisterNames() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -746,7 +1335,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Array of valus in generator energy meter registers.
+        /// Array of values in generator energy meter registers.
+        /// 
+        /// Original COM help: https://opendss.epri.com/RegisterValues.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT RegisterValues() // getter
@@ -758,6 +1349,8 @@ using namespace dss::capi;
 
         /// 
         /// Vmaxpu for generator model
+        /// 
+        /// Original COM help: https://opendss.epri.com/Vmaxpu.html
         /// 
         double Vmaxpu() // getter
         {
@@ -774,6 +1367,8 @@ using namespace dss::capi;
         /// 
         /// Vminpu for Generator model
         /// 
+        /// Original COM help: https://opendss.epri.com/Vminpu.html
+        /// 
         double Vminpu() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -788,6 +1383,8 @@ using namespace dss::capi;
 
         /// 
         /// Voltage base for the active generator, kV
+        /// 
+        /// Original COM help: https://opendss.epri.com/kV1.html
         /// 
         double kV() // getter
         {
@@ -804,6 +1401,8 @@ using namespace dss::capi;
         /// 
         /// kVA rating of the generator
         /// 
+        /// Original COM help: https://opendss.epri.com/kVArated.html
+        /// 
         double kVArated() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -818,6 +1417,8 @@ using namespace dss::capi;
 
         /// 
         /// kW output for the active generator. kvar is updated for current power factor.
+        /// 
+        /// Original COM help: https://opendss.epri.com/kW.html
         /// 
         double kW() // getter
         {
@@ -834,6 +1435,8 @@ using namespace dss::capi;
         /// 
         /// kvar output for the active generator. Updates power factor based on present kW value.
         /// 
+        /// Original COM help: https://opendss.epri.com/kvar.html
+        /// 
         double kvar() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -849,7 +1452,7 @@ using namespace dss::capi;
         /// 
         /// Name of the loadshape for a daily generation profile.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         string daily() // getter
         {
@@ -872,7 +1475,7 @@ using namespace dss::capi;
         /// 
         /// Name of the loadshape for a duty cycle simulation.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         string duty() // getter
         {
@@ -895,7 +1498,7 @@ using namespace dss::capi;
         /// 
         /// Name of yearly loadshape
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         string Yearly() // getter
         {
@@ -920,29 +1523,29 @@ using namespace dss::capi;
         /// 
         /// Related enumeration: GeneratorStatus
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
-        int32_t Status() // getter
+        GeneratorStatus Status() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_Generators_Get_Status(ctx);
+            return static_cast<GeneratorStatus>(ctx_Generators_Get_Status(ctx));
         }
-        IGenerators& Status(int32_t value) // setter
+        IGenerators& Status(GeneratorStatus value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_Generators_Set_Status(ctx, value);
+            ctx_Generators_Set_Status(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
         /// 
         /// Generator connection. True/1 if delta connection, False/0 if wye.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         bool IsDelta() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Generators_Get_IsDelta(ctx) != 0);
+            return ctx_Generators_Get_IsDelta(ctx);
         }
         IGenerators& IsDelta(bool value) // setter
         {
@@ -954,7 +1557,7 @@ using namespace dss::capi;
         /// 
         /// kVA rating of electrical machine. Applied to machine or inverter definition for Dynamics mode solutions.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         double kva() // getter
         {
@@ -970,8 +1573,9 @@ using namespace dss::capi;
 
         /// 
         /// An arbitrary integer number representing the class of Generator so that Generator values may be segregated by class.
+        /// No effect on the solution.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         int32_t Class() // getter
         {
@@ -988,7 +1592,7 @@ using namespace dss::capi;
         /// 
         /// Bus to which the Generator is connected. May include specific node specification.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         string Bus1() // getter
         {
@@ -1013,7 +1617,7 @@ using namespace dss::capi;
     {
     public:
 
-        IISources(dss::APIUtil *util) :
+        IISources(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -1098,6 +1702,8 @@ using namespace dss::capi;
         /// 
         /// Magnitude of the ISource in amps
         /// 
+        /// Original COM help: https://opendss.epri.com/Amps.html
+        /// 
         double Amps() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -1113,6 +1719,8 @@ using namespace dss::capi;
         /// 
         /// Phase angle for ISource, degrees
         /// 
+        /// Original COM help: https://opendss.epri.com/AngleDeg.html
+        /// 
         double AngleDeg() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -1127,6 +1735,8 @@ using namespace dss::capi;
 
         /// 
         /// The present frequency of the ISource, Hz
+        /// 
+        /// Original COM help: https://opendss.epri.com/Frequency.html
         /// 
         double Frequency() // getter
         {
@@ -1145,7 +1755,7 @@ using namespace dss::capi;
     {
     public:
 
-        ILineCodes(dss::APIUtil *util) :
+        ILineCodes(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -1230,6 +1840,8 @@ using namespace dss::capi;
         /// 
         /// Zero-sequence capacitance, nF per unit length
         /// 
+        /// Original COM help: https://opendss.epri.com/C2.html
+        /// 
         double C0() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -1245,6 +1857,8 @@ using namespace dss::capi;
         /// 
         /// Positive-sequence capacitance, nF per unit length
         /// 
+        /// Original COM help: https://opendss.epri.com/C3.html
+        /// 
         double C1() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -1259,6 +1873,8 @@ using namespace dss::capi;
 
         /// 
         /// Capacitance matrix, nF per unit length
+        /// 
+        /// Original COM help: https://opendss.epri.com/Cmatrix1.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Cmatrix() // getter
@@ -1278,6 +1894,8 @@ using namespace dss::capi;
         /// 
         /// Emergency ampere rating
         /// 
+        /// Original COM help: https://opendss.epri.com/EmergAmps2.html
+        /// 
         double EmergAmps() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -1293,14 +1911,18 @@ using namespace dss::capi;
         /// 
         /// Flag denoting whether impedance data were entered in symmetrical components
         /// 
+        /// Original COM help: https://opendss.epri.com/IsZ1Z0.html
+        /// 
         bool IsZ1Z0() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_LineCodes_Get_IsZ1Z0(ctx) != 0);
+            return ctx_LineCodes_Get_IsZ1Z0(ctx);
         }
 
         /// 
         /// Normal Ampere rating
+        /// 
+        /// Original COM help: https://opendss.epri.com/NormAmps1.html
         /// 
         double NormAmps() // getter
         {
@@ -1317,6 +1939,8 @@ using namespace dss::capi;
         /// 
         /// Number of Phases
         /// 
+        /// Original COM help: https://opendss.epri.com/Phases2.html
+        /// 
         int32_t Phases() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -1331,6 +1955,8 @@ using namespace dss::capi;
 
         /// 
         /// Zero-Sequence Resistance, ohms per unit length
+        /// 
+        /// Original COM help: https://opendss.epri.com/R2.html
         /// 
         double R0() // getter
         {
@@ -1347,6 +1973,8 @@ using namespace dss::capi;
         /// 
         /// Positive-sequence resistance ohms per unit length
         /// 
+        /// Original COM help: https://opendss.epri.com/R3.html
+        /// 
         double R1() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -1361,6 +1989,8 @@ using namespace dss::capi;
 
         /// 
         /// Resistance matrix, ohms per unit length
+        /// 
+        /// Original COM help: https://opendss.epri.com/Rmatrix1.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Rmatrix() // getter
@@ -1377,20 +2007,22 @@ using namespace dss::capi;
             return *this;
         }
 
-        int32_t Units() // getter
+        LineUnits Units() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_LineCodes_Get_Units(ctx);
+            return static_cast<LineUnits>(ctx_LineCodes_Get_Units(ctx));
         }
-        ILineCodes& Units(int32_t value) // setter
+        ILineCodes& Units(LineUnits value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_LineCodes_Set_Units(ctx, value);
+            ctx_LineCodes_Set_Units(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
         /// 
         /// Zero Sequence Reactance, Ohms per unit length
+        /// 
+        /// Original COM help: https://opendss.epri.com/X2.html
         /// 
         double X0() // getter
         {
@@ -1405,7 +2037,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Posiive-sequence reactance, ohms per unit length
+        /// Positive-sequence reactance, ohms per unit length
+        /// 
+        /// Original COM help: https://opendss.epri.com/X3.html
         /// 
         double X1() // getter
         {
@@ -1421,6 +2055,8 @@ using namespace dss::capi;
 
         /// 
         /// Reactance matrix, ohms per unit length
+        /// 
+        /// Original COM help: https://opendss.epri.com/Xmatrix1.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Xmatrix() // getter
@@ -1442,7 +2078,7 @@ using namespace dss::capi;
     {
     public:
 
-        ILineSpacings(dss::APIUtil *util) :
+        ILineSpacings(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -1551,15 +2187,15 @@ using namespace dss::capi;
             return *this;
         }
 
-        int32_t Units() // getter
+        LineUnits Units() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_LineSpacings_Get_Units(ctx);
+            return static_cast<LineUnits>(ctx_LineSpacings_Get_Units(ctx));
         }
-        ILineSpacings& Units(int32_t value) // setter
+        ILineSpacings& Units(LineUnits value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_LineSpacings_Set_Units(ctx, value);
+            ctx_LineSpacings_Set_Units(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
@@ -1604,7 +2240,7 @@ using namespace dss::capi;
     {
     public:
 
-        ILoadShapes(dss::APIUtil *util) :
+        ILoadShapes(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -1685,16 +2321,25 @@ using namespace dss::capi;
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_LoadShapes_Set_idx(ctx, value);
         }
+        /// 
+        /// Create a new LoadShape, with default parameters
+        /// 
         int32_t New(const char *Name)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_LoadShapes_New(ctx, Name);
         }
+        /// 
+        /// Create a new LoadShape, with default parameters
+        /// 
         int32_t New(const string &Name)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_LoadShapes_New(ctx, Name.c_str());
         }
+        /// 
+        /// Normalize the LoadShape data inplace
+        /// 
         void Normalize()
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -1702,7 +2347,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Fixed interval time value, hours.
+        /// Fixed interval time value, in hours.
+        /// 
+        /// Original COM help: https://opendss.epri.com/HrInterval.html
         /// 
         double HrInterval() // getter
         {
@@ -1719,6 +2366,8 @@ using namespace dss::capi;
         /// 
         /// Fixed Interval time value, in minutes
         /// 
+        /// Original COM help: https://opendss.epri.com/MinInterval.html
+        /// 
         double MinInterval() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -1734,6 +2383,8 @@ using namespace dss::capi;
         /// 
         /// Get/set Number of points in active Loadshape.
         /// 
+        /// Original COM help: https://opendss.epri.com/Npts.html
+        /// 
         int32_t Npts() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -1746,6 +2397,11 @@ using namespace dss::capi;
             return *this;
         }
 
+        /// 
+        /// Base P value for normalization. Default is zero, meaning the peak will be used.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Pbase.html
+        /// 
         double PBase() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -1760,6 +2416,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of doubles for the P multiplier in the Loadshape.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Pmult.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Pmult() // getter
@@ -1779,6 +2437,8 @@ using namespace dss::capi;
         /// 
         /// Base for normalizing Q curve. If left at zero, the peak value is used.
         /// 
+        /// Original COM help: https://opendss.epri.com/Qbase.html
+        /// 
         double QBase() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -1793,6 +2453,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of doubles containing the Q multipliers.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Qmult.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Qmult() // getter
@@ -1810,7 +2472,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Time array in hours correscponding to P and Q multipliers when the Interval=0.
+        /// Time array in hours corresponding to P and Q multipliers when the Interval=0.
+        /// 
+        /// Original COM help: https://opendss.epri.com/TimeArray.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT TimeArray() // getter
@@ -1830,10 +2494,12 @@ using namespace dss::capi;
         /// 
         /// Boolean flag to let Loads know to use the actual value in the curve rather than use the value as a multiplier.
         /// 
+        /// Original COM help: https://opendss.epri.com/UseActual.html
+        /// 
         bool UseActual() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_LoadShapes_Get_UseActual(ctx) != 0);
+            return ctx_LoadShapes_Get_UseActual(ctx);
         }
         ILoadShapes& UseActual(bool value) // setter
         {
@@ -1842,6 +2508,11 @@ using namespace dss::capi;
             return *this;
         }
 
+        /// 
+        /// Fixed interval time value, in seconds.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Sinterval.html
+        /// 
         double sInterval() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -1857,7 +2528,7 @@ using namespace dss::capi;
         /// Converts the current LoadShape data to float32/single precision.
         /// If there is no data or the data is already represented using float32, nothing is done.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         void UseFloat32()
         {
@@ -1868,7 +2539,7 @@ using namespace dss::capi;
         /// Converts the current LoadShape data to float64/double precision.
         /// If there is no data or the data is already represented using float64, nothing is done.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         void UseFloat64()
         {
@@ -1881,7 +2552,7 @@ using namespace dss::capi;
     {
     public:
 
-        IMonitors(dss::APIUtil *util) :
+        IMonitors(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -1975,46 +2646,97 @@ using namespace dss::capi;
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Monitors_Set_idx(ctx, value);
         }
+        /// 
+        /// Post-process monitor samples taken so far, e.g., Pst for mode=4.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Process.html
+        /// 
         void Process()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Monitors_Process(ctx);
         }
+        /// 
+        /// Post-process all monitor samples taken so far, e.g., Pst for mode=4.
+        /// 
+        /// Original COM help: https://opendss.epri.com/ProcessAll.html
+        /// 
         void ProcessAll()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Monitors_ProcessAll(ctx);
         }
+        /// 
+        /// Reset active Monitor object.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Reset3.html
+        /// 
         void Reset()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Monitors_Reset(ctx);
         }
+        /// 
+        /// Reset all Monitor objects.
+        /// 
+        /// Original COM help: https://opendss.epri.com/ResetAll1.html
+        /// 
         void ResetAll()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Monitors_ResetAll(ctx);
         }
+        /// 
+        /// Instruct the active Monitor to take a sample of the present state.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Sample2.html
+        /// 
         void Sample()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Monitors_Sample(ctx);
         }
+        /// 
+        /// Instruct all Monitor objects to take a sample of the present state.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SampleAll1.html
+        /// 
         void SampleAll()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Monitors_SampleAll(ctx);
         }
+        /// 
+        /// Instructs the active monitor to save its current sample buffer to its monitor stream. 
+        /// 
+        /// After the data is on the stream, you can access the ByteStream or channel data. 
+        /// 
+        /// **Most standard solution modes do this automatically.**
+        /// 
+        /// Original COM help: https://opendss.epri.com/Save1.html
+        /// 
         void Save()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Monitors_Save(ctx);
         }
+        /// 
+        /// Instructs the all monitor objects to save their current sample buffers to the respective monitor streams.
+        /// 
+        /// **Most standard solution modes do this automatically.**
+        /// 
+        /// Original COM help: https://opendss.epri.com/SaveAll1.html
+        /// 
         void SaveAll()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Monitors_SaveAll(ctx);
         }
+        /// 
+        /// Convert the monitor data to text and displays it with the text editor.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Show3.html
+        /// 
         void Show()
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2023,6 +2745,8 @@ using namespace dss::capi;
 
         /// 
         /// Byte Array containing monitor stream values. Make sure a "save" is done first (standard solution modes do this automatically)
+        /// 
+        /// Original COM help: https://opendss.epri.com/ByteStream.html
         /// 
         template <typename VectorT=Eigen::Matrix<int8_t, Eigen::Dynamic, 1>>
         VectorT ByteStream() // getter
@@ -2034,6 +2758,8 @@ using namespace dss::capi;
 
         /// 
         /// Full object name of element being monitored.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Element.html
         /// 
         string Element() // getter
         {
@@ -2056,6 +2782,8 @@ using namespace dss::capi;
         /// 
         /// Name of CSV file associated with active Monitor.
         /// 
+        /// Original COM help: https://opendss.epri.com/FileName.html
+        /// 
         string FileName() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2064,6 +2792,8 @@ using namespace dss::capi;
 
         /// 
         /// Monitor File Version (integer)
+        /// 
+        /// Original COM help: https://opendss.epri.com/FileVersion.html
         /// 
         int32_t FileVersion() // getter
         {
@@ -2074,6 +2804,8 @@ using namespace dss::capi;
         /// 
         /// Header string;  Array of strings containing Channel names
         /// 
+        /// Original COM help: https://opendss.epri.com/Header.html
+        /// 
         strings Header() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2081,7 +2813,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Set Monitor mode (bitmask integer - see DSS Help)
+        /// Monitor mode (bitmask integer - see DSS Help)
+        /// 
+        /// Original COM help: https://opendss.epri.com/Mode1.html
         /// 
         int32_t Mode() // getter
         {
@@ -2098,6 +2832,8 @@ using namespace dss::capi;
         /// 
         /// Number of Channels in the active Monitor
         /// 
+        /// Original COM help: https://opendss.epri.com/NumChannels.html
+        /// 
         int32_t NumChannels() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2106,6 +2842,8 @@ using namespace dss::capi;
 
         /// 
         /// Size of each record in ByteStream (Integer). Same as NumChannels.
+        /// 
+        /// Original COM help: https://opendss.epri.com/RecordSize.html
         /// 
         int32_t RecordSize() // getter
         {
@@ -2116,6 +2854,8 @@ using namespace dss::capi;
         /// 
         /// Number of Samples in Monitor at Present
         /// 
+        /// Original COM help: https://opendss.epri.com/SampleCount.html
+        /// 
         int32_t SampleCount() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2124,6 +2864,8 @@ using namespace dss::capi;
 
         /// 
         /// Terminal number of element being monitored.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Terminal.html
         /// 
         int32_t Terminal() // getter
         {
@@ -2140,6 +2882,8 @@ using namespace dss::capi;
         /// 
         /// Array of doubles containing frequency values for harmonics mode solutions; Empty for time mode solutions (use dblHour)
         /// 
+        /// Original COM help: https://opendss.epri.com/dblFreq.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT dblFreq() // getter
         {
@@ -2150,6 +2894,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of doubles containing time value in hours for time-sampled monitor values; Empty if frequency-sampled values for harmonics solution (see dblFreq)
+        /// 
+        /// Original COM help: https://opendss.epri.com/dblHour.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT dblHour() // getter
@@ -2164,7 +2910,7 @@ using namespace dss::capi;
     {
     public:
 
-        IParser(dss::APIUtil *util) :
+        IParser(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -2198,6 +2944,11 @@ using namespace dss::capi;
             ctx_Parser_Get_Vector_GR(ctx, ExpectedSize);
             return api_util->get_float64_gr_array<VectorT>();
         }
+        /// 
+        /// Reset the delimiters to their default values.
+        /// 
+        /// Original COM help: https://opendss.epri.com/ResetDelimiters.html        
+        /// 
         void ResetDelimiters()
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2205,12 +2956,14 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Default is FALSE. If TRUE parser automatically advances to next token after DblValue, IntValue, or StrValue. Simpler when you don't need to check for parameter names.
+        /// Default is FALSE. If TRUE, the parser automatically advances to next token after DblValue, IntValue, or StrValue. Simpler when you don't need to check for parameter names.
+        /// 
+        /// Original COM help: https://opendss.epri.com/AutoIncrement.html
         /// 
         bool AutoIncrement() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Parser_Get_AutoIncrement(ctx) != 0);
+            return ctx_Parser_Get_AutoIncrement(ctx);
         }
         IParser& AutoIncrement(bool value) // setter
         {
@@ -2221,6 +2974,8 @@ using namespace dss::capi;
 
         /// 
         /// Get/Set String containing the the characters for Quoting in OpenDSS scripts. Matching pairs defined in EndQuote. Default is "'([{.
+        /// 
+        /// Original COM help: https://opendss.epri.com/BeginQuote.html
         /// 
         string BeginQuote() // getter
         {
@@ -2243,6 +2998,8 @@ using namespace dss::capi;
         /// 
         /// String to be parsed. Loading this string resets the Parser to the beginning of the line. Then parse off the tokens in sequence.
         /// 
+        /// Original COM help: https://opendss.epri.com/CmdString.html
+        /// 
         string CmdString() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2264,6 +3021,8 @@ using namespace dss::capi;
         /// 
         /// Return next parameter as a double.
         /// 
+        /// Original COM help: https://opendss.epri.com/DblValue.html
+        /// 
         double DblValue() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2271,7 +3030,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// String defining hard delimiters used to separate token on the command string. Default is , and =. The = separates token name from token value. These override whitesspace to separate tokens.
+        /// String defining hard delimiters used to separate token on the command string. Default is , and =. The = separates token name from token value. These override whitespace to separate tokens.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Delimiters.html
         /// 
         string Delimiters() // getter
         {
@@ -2294,6 +3055,8 @@ using namespace dss::capi;
         /// 
         /// String containing characters, in order, that match the beginning quote characters in BeginQuote. Default is "')]}
         /// 
+        /// Original COM help: https://opendss.epri.com/EndQuote.html
+        /// 
         string EndQuote() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2315,6 +3078,8 @@ using namespace dss::capi;
         /// 
         /// Return next parameter as a long integer.
         /// 
+        /// Original COM help: https://opendss.epri.com/IntValue.html
+        /// 
         int32_t IntValue() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2323,6 +3088,8 @@ using namespace dss::capi;
 
         /// 
         /// Get next token and return tag name (before = sign) if any. See AutoIncrement.
+        /// 
+        /// Original COM help: https://opendss.epri.com/NextParam.html
         /// 
         string NextParam() // getter
         {
@@ -2333,6 +3100,8 @@ using namespace dss::capi;
         /// 
         /// Return next parameter as a string
         /// 
+        /// Original COM help: https://opendss.epri.com/StrValue.html
+        /// 
         string StrValue() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2340,8 +3109,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// (read) Get the characters used for White space in the command string.  Default is blank and Tab.
-        /// (write) Set the characters used for White space in the command string.  Default is blank and Tab.
+        /// Get/set the characters used for White space in the command string.  Default is blank and Tab.
+        /// 
+        /// Original COM help: https://opendss.epri.com/WhiteSpace.html
         /// 
         string WhiteSpace() // getter
         {
@@ -2366,13 +3136,15 @@ using namespace dss::capi;
     {
     public:
 
-        IReduceCkt(dss::APIUtil *util) :
+        IReduceCkt(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
 
         /// 
         /// Zmag (ohms) for Reduce Option for Z of short lines
+        /// 
+        /// Original COM help: https://opendss.epri.com/Zmag.html
         /// 
         double Zmag() // getter
         {
@@ -2387,12 +3159,14 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Keep load flag (T/F) for Reduction options that remove branches
+        /// Keep load flag for Reduction options that remove branches
+        /// 
+        /// Original COM help: https://opendss.epri.com/KeepLoad.html
         /// 
         bool KeepLoad() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_ReduceCkt_Get_KeepLoad(ctx) != 0);
+            return ctx_ReduceCkt_Get_KeepLoad(ctx);
         }
         IReduceCkt& KeepLoad(bool value) // setter
         {
@@ -2403,6 +3177,8 @@ using namespace dss::capi;
 
         /// 
         /// Edit String for RemoveBranches functions
+        /// 
+        /// Original COM help: https://opendss.epri.com/EditString.html
         /// 
         string EditString() // getter
         {
@@ -2425,6 +3201,8 @@ using namespace dss::capi;
         /// 
         /// Start element for Remove Branch function
         /// 
+        /// Original COM help: https://opendss.epri.com/StartPDElement.html
+        /// 
         string StartPDElement() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2444,7 +3222,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Name of Energymeter to use for reduction
+        /// Name of EnergyMeter to use for reduction
+        /// 
+        /// Original COM help: https://opendss.epri.com/EnergyMeter1.html
         /// 
         string EnergyMeter() // getter
         {
@@ -2484,6 +3264,8 @@ using namespace dss::capi;
         /// 
         /// Do Default Reduction algorithm
         /// 
+        /// Original COM help: https://opendss.epri.com/DoDefault.html
+        /// 
         void DoDefault()
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2491,6 +3273,8 @@ using namespace dss::capi;
         }
         /// 
         /// Do ShortLines algorithm: Set Zmag first if you don't want the default
+        /// 
+        /// Original COM help: https://opendss.epri.com/DoShortLines.html
         /// 
         void DoShortLines()
         {
@@ -2500,31 +3284,56 @@ using namespace dss::capi;
         /// 
         /// Reduce Dangling Algorithm; branches with nothing connected
         /// 
+        /// Original COM help: https://opendss.epri.com/DoDangling.html
+        /// 
         void DoDangling()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_ReduceCkt_DoDangling(ctx);
         }
+        /// 
+        /// Break (disable) all the loops found in the active circuit.
+        /// 
+        /// Disables one of the Line objects at the head of a loop to force the circuit to be radial.
+        /// 
         void DoLoopBreak()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_ReduceCkt_DoLoopBreak(ctx);
         }
+        /// 
+        /// Merge all parallel lines found in the circuit to facilitate its reduction.
+        /// 
         void DoParallelLines()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_ReduceCkt_DoParallelLines(ctx);
         }
+        /// 
+        /// Merge Line objects in which the IsSwitch property is true with the down-line Line object.
+        /// 
         void DoSwitches()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_ReduceCkt_DoSwitches(ctx);
         }
+        /// 
+        /// Remove all 1-phase laterals in the active EnergyMeter's zone.
+        /// 
+        /// Loads and other shunt elements are moved to the parent 3-phase bus.
+        /// 
         void Do1phLaterals()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_ReduceCkt_Do1phLaterals(ctx);
         }
+        /// 
+        /// Remove (disable) all branches down-line from the active PDElement. 
+        /// 
+        /// Circuit must have an EnergyMeter on this branch.
+        /// If KeepLoad=Y (default), a new Load element is defined and kW, kvar are set to present power flow solution for the first element eliminated. 
+        /// The EditString is applied to each new Load element defined. 
+        /// 
         void DoBranchRemove()
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2536,7 +3345,7 @@ using namespace dss::capi;
     {
     public:
 
-        IYMatrix(dss::APIUtil *util) :
+        IYMatrix(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -2569,7 +3378,7 @@ using namespace dss::capi;
         bool SystemYChanged() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_YMatrix_Get_SystemYChanged(ctx) != 0);
+            return ctx_YMatrix_Get_SystemYChanged(ctx);
         }
         IYMatrix& SystemYChanged(bool value) // setter
         {
@@ -2581,7 +3390,7 @@ using namespace dss::capi;
         bool UseAuxCurrents() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_YMatrix_Get_UseAuxCurrents(ctx) != 0);
+            return ctx_YMatrix_Get_UseAuxCurrents(ctx);
         }
         IYMatrix& UseAuxCurrents(bool value) // setter
         {
@@ -2607,7 +3416,7 @@ using namespace dss::capi;
         bool CheckConvergence()
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_YMatrix_CheckConvergence(ctx) != 0);
+            return ctx_YMatrix_CheckConvergence(ctx);
         }
         void SetGeneratordQdV()
         {
@@ -2618,7 +3427,7 @@ using namespace dss::capi;
         bool LoadsNeedUpdating() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_YMatrix_Get_LoadsNeedUpdating(ctx) != 0);
+            return ctx_YMatrix_Get_LoadsNeedUpdating(ctx);
         }
         IYMatrix& LoadsNeedUpdating(bool value) // setter
         {
@@ -2630,7 +3439,7 @@ using namespace dss::capi;
         bool SolutionInitialized() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_YMatrix_Get_SolutionInitialized(ctx) != 0);
+            return ctx_YMatrix_Get_SolutionInitialized(ctx);
         }
         IYMatrix& SolutionInitialized(bool value) // setter
         {
@@ -2656,7 +3465,7 @@ using namespace dss::capi;
     {
     public:
 
-        IMeters(dss::APIUtil *util) :
+        IMeters(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -2746,46 +3555,91 @@ using namespace dss::capi;
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Meters_Set_idx(ctx, value);
         }
+        /// 
+        /// Close All Demand Interval Files. Users are required to close the DI files at the end of a run.
+        /// 
+        /// Original COM help: https://opendss.epri.com/CloseAllDIFiles.html
+        /// 
         void CloseAllDIFiles()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Meters_CloseAllDIFiles(ctx);
         }
+        /// 
+        /// Calculate reliability indices
+        /// 
+        /// Original COM help: https://opendss.epri.com/DoReliabilityCalc.html
+        /// 
         void DoReliabilityCalc(bool AssumeRestoration)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Meters_DoReliabilityCalc(ctx, AssumeRestoration);
         }
+        /// 
+        /// Open Demand Interval (DI) files
+        /// 
+        /// Original COM help: https://opendss.epri.com/OpenAllDIFiles.html
+        /// 
         void OpenAllDIFiles()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Meters_OpenAllDIFiles(ctx);
         }
+        /// 
+        /// Resets registers of active meter.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Reset2.html
+        /// 
         void Reset()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Meters_Reset(ctx);
         }
+        /// 
+        /// Resets registers of all meter objects.
+        /// 
+        /// Original COM help: https://opendss.epri.com/ResetAll.html
+        /// 
         void ResetAll()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Meters_ResetAll(ctx);
         }
+        /// 
+        /// Forces active Meter to take a sample.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Sample1.html
+        /// 
         void Sample()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Meters_Sample(ctx);
         }
+        /// 
+        /// Causes all EnergyMeter objects to take a sample at the present time.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SampleAll.html
+        /// 
         void SampleAll()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Meters_SampleAll(ctx);
         }
+        /// 
+        /// Saves meter register values.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Save.html
+        /// 
         void Save()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Meters_Save(ctx);
         }
+        /// 
+        /// Save All EnergyMeter objects
+        /// 
+        /// Original COM help: https://opendss.epri.com/SaveAll.html
+        /// 
         void SaveAll()
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2798,7 +3652,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Wide string list of all branches in zone of the active energymeter object.
+        /// List (strings) of all branches in zone of the active EnergyMeter object.
+        /// 
+        /// Original COM help: https://opendss.epri.com/AllBranchesInZone.html
         /// 
         strings AllBranchesInZone() // getter
         {
@@ -2809,6 +3665,8 @@ using namespace dss::capi;
         /// 
         /// Array of names of all zone end elements.
         /// 
+        /// Original COM help: https://opendss.epri.com/AllEndElements.html
+        /// 
         strings AllEndElements() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2817,6 +3675,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of doubles: set the phase allocation factors for the active meter.
+        /// 
+        /// Original COM help: https://opendss.epri.com/AllocFactors.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllocFactors() // getter
@@ -2836,6 +3696,8 @@ using namespace dss::capi;
         /// 
         /// Average Repair time in this section of the meter zone
         /// 
+        /// Original COM help: https://opendss.epri.com/AvgRepairTime.html
+        /// 
         double AvgRepairTime() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2844,6 +3706,8 @@ using namespace dss::capi;
 
         /// 
         /// Set the magnitude of the real part of the Calculated Current (normally determined by solution) for the Meter to force some behavior on Load Allocation
+        /// 
+        /// Original COM help: https://opendss.epri.com/CalcCurrent.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT CalcCurrent() // getter
@@ -2861,7 +3725,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Number of branches in Active energymeter zone. (Same as sequencelist size)
+        /// Number of branches in Active EnergyMeter zone. (Same as sequence list size)
+        /// 
+        /// Original COM help: https://opendss.epri.com/CountBranches.html
         /// 
         int32_t CountBranches() // getter
         {
@@ -2872,6 +3738,8 @@ using namespace dss::capi;
         /// 
         /// Number of zone end elements in the active meter zone.
         /// 
+        /// Original COM help: https://opendss.epri.com/CountEndElements.html
+        /// 
         int32_t CountEndElements() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2880,6 +3748,8 @@ using namespace dss::capi;
 
         /// 
         /// Total customer interruptions for this Meter zone based on reliability calcs.
+        /// 
+        /// Original COM help: https://opendss.epri.com/CustInterrupts.html
         /// 
         double CustInterrupts() // getter
         {
@@ -2890,14 +3760,18 @@ using namespace dss::capi;
         /// 
         /// Global Flag in the DSS to indicate if Demand Interval (DI) files have been properly opened.
         /// 
+        /// Original COM help: https://opendss.epri.com/DIFilesAreOpen.html
+        /// 
         bool DIFilesAreOpen() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Meters_Get_DIFilesAreOpen(ctx) != 0);
+            return ctx_Meters_Get_DIFilesAreOpen(ctx);
         }
 
         /// 
         /// Sum of Fault Rate time Repair Hrs in this section of the meter zone
+        /// 
+        /// Original COM help: https://opendss.epri.com/FaultRateXRepairHrs.html
         /// 
         double FaultRateXRepairHrs() // getter
         {
@@ -2906,7 +3780,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Set Name of metered element
+        /// Name of metered element
+        /// 
+        /// Original COM help: https://opendss.epri.com/MeteredElement.html
         /// 
         string MeteredElement() // getter
         {
@@ -2927,7 +3803,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// set Number of Metered Terminal
+        /// Number of Metered Terminal
+        /// 
+        /// Original COM help: https://opendss.epri.com/MeteredTerminal.html
         /// 
         int32_t MeteredTerminal() // getter
         {
@@ -2944,6 +3822,8 @@ using namespace dss::capi;
         /// 
         /// Number of branches (lines) in this section
         /// 
+        /// Original COM help: https://opendss.epri.com/NumSectionBranches.html
+        /// 
         int32_t NumSectionBranches() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2952,6 +3832,8 @@ using namespace dss::capi;
 
         /// 
         /// Number of Customers in the active section.
+        /// 
+        /// Original COM help: https://opendss.epri.com/NumSectionCustomers.html
         /// 
         int32_t NumSectionCustomers() // getter
         {
@@ -2962,6 +3844,8 @@ using namespace dss::capi;
         /// 
         /// Number of feeder sections in this meter's zone
         /// 
+        /// Original COM help: https://opendss.epri.com/NumSections.html
+        /// 
         int32_t NumSections() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -2971,14 +3855,18 @@ using namespace dss::capi;
         /// 
         /// Type of OCP device. 1=Fuse; 2=Recloser; 3=Relay
         /// 
-        int32_t OCPDeviceType() // getter
+        /// Original COM help: https://opendss.epri.com/OCPDeviceType.html
+        /// 
+        OCPDevType OCPDeviceType() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_Meters_Get_OCPDeviceType(ctx);
+            return static_cast<OCPDevType>(ctx_Meters_Get_OCPDeviceType(ctx));
         }
 
         /// 
         /// Array of doubles to set values of Peak Current property
+        /// 
+        /// Original COM help: https://opendss.epri.com/Peakcurrent.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Peakcurrent() // getter
@@ -2998,6 +3886,12 @@ using namespace dss::capi;
         /// 
         /// Array of strings containing the names of the registers.
         /// 
+        /// See also the enum `EnergyMeterRegisters` for the standard register names.
+        /// Besides those listed in the enumeration, users may need to check `RegisterNames`
+        /// in order to find a specific register index at runtime.
+        /// 
+        /// Original COM help: https://opendss.epri.com/RegisterNames1.html
+        /// 
         strings RegisterNames() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3006,6 +3900,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of all the values contained in the Meter registers for the active Meter.
+        /// 
+        /// Original COM help: https://opendss.epri.com/RegisterValues1.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT RegisterValues() // getter
@@ -3018,6 +3914,8 @@ using namespace dss::capi;
         /// 
         /// SAIDI for this meter's zone. Execute DoReliabilityCalc first.
         /// 
+        /// Original COM help: https://opendss.epri.com/SAIDI.html
+        /// 
         double SAIDI() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3026,6 +3924,8 @@ using namespace dss::capi;
 
         /// 
         /// Returns SAIFI for this meter's Zone. Execute Reliability Calc method first.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SAIFI.html
         /// 
         double SAIFI() // getter
         {
@@ -3036,6 +3936,8 @@ using namespace dss::capi;
         /// 
         /// SAIFI based on kW rather than number of customers. Get after reliability calcs.
         /// 
+        /// Original COM help: https://opendss.epri.com/SAIFIKW.html
+        /// 
         double SAIFIKW() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3044,6 +3946,8 @@ using namespace dss::capi;
 
         /// 
         /// SequenceIndex of the branch at the head of this section
+        /// 
+        /// Original COM help: https://opendss.epri.com/SectSeqIdx.html
         /// 
         int32_t SectSeqIdx() // getter
         {
@@ -3054,6 +3958,8 @@ using namespace dss::capi;
         /// 
         /// Total Customers downline from this section
         /// 
+        /// Original COM help: https://opendss.epri.com/SectTotalCust.html
+        /// 
         int32_t SectTotalCust() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3061,7 +3967,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Size of Sequence List
+        /// Size of the Sequence List
+        /// 
+        /// Original COM help: https://opendss.epri.com/SeqListSize.html
         /// 
         int32_t SeqListSize() // getter
         {
@@ -3070,7 +3978,10 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Get/set Index into Meter's SequenceList that contains branch pointers in lexical order. Earlier index guaranteed to be upline from later index. Sets PDelement active.
+        /// Get/set Index into Meter's SequenceList that contains branch pointers in lexical order. 
+        /// Earlier index guaranteed to be upline from later index. Sets PDelement active.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SequenceIndex.html
         /// 
         int32_t SequenceIndex() // getter
         {
@@ -3087,6 +3998,8 @@ using namespace dss::capi;
         /// 
         /// Sum of the branch fault rates in this section of the meter's zone
         /// 
+        /// Original COM help: https://opendss.epri.com/SumBranchFltRates.html
+        /// 
         double SumBranchFltRates() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3096,6 +4009,8 @@ using namespace dss::capi;
         /// 
         /// Total Number of customers in this zone (downline from the EnergyMeter)
         /// 
+        /// Original COM help: https://opendss.epri.com/TotalCustomers.html
+        /// 
         int32_t TotalCustomers() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3104,6 +4019,8 @@ using namespace dss::capi;
 
         /// 
         /// Totals of all registers of all meters
+        /// 
+        /// Original COM help: https://opendss.epri.com/Totals.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Totals() // getter
@@ -3119,13 +4036,17 @@ using namespace dss::capi;
     {
     public:
 
-        IPDElements(dss::APIUtil *util) :
+        IPDElements(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
 
         /// 
-        /// accummulated failure rate for this branch on downline
+        /// Accumulated failure rate for this branch on downline
+        /// 
+        /// *Requires a previous call to `RelCalc` command*
+        /// 
+        /// Original COM help: https://opendss.epri.com/AccumulatedL.html
         /// 
         double AccumulatedL() // getter
         {
@@ -3135,6 +4056,8 @@ using namespace dss::capi;
 
         /// 
         /// Number of PD elements (including disabled elements)
+        /// 
+        /// Original COM help: https://opendss.epri.com/Count12.html
         /// 
         int32_t Count() // getter
         {
@@ -3172,6 +4095,8 @@ using namespace dss::capi;
         /// Number of the terminal of active PD element that is on the "from" 
         /// side. This is set after the meter zone is determined.
         /// 
+        /// *Requires an energy meter with an updated zone.*
+        /// 
         int32_t FromTerminal() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3186,11 +4111,15 @@ using namespace dss::capi;
         bool IsShunt() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_PDElements_Get_IsShunt(ctx) != 0);
+            return ctx_PDElements_Get_IsShunt(ctx);
         }
 
         /// 
         /// Failure rate for this branch. Faults per year including length of line.
+        /// 
+        /// *Requires a previous call to `RelCalc` command*
+        /// 
+        /// Original COM help: https://opendss.epri.com/Lambda1.html
         /// 
         double Lambda() // getter
         {
@@ -3233,6 +4162,10 @@ using namespace dss::capi;
         /// 
         /// Number of customers, this branch
         /// 
+        /// *Requires an energy meter with an updated zone.*
+        /// 
+        /// Original COM help: https://opendss.epri.com/Numcustomers.html
+        /// 
         int32_t Numcustomers() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3243,6 +4176,8 @@ using namespace dss::capi;
         /// Sets the parent PD element to be the active circuit element.
         /// Returns 0 if no more elements upline.
         /// 
+        /// *Requires an energy meter with an updated zone.*
+        /// 
         int32_t ParentPDElement() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3251,6 +4186,8 @@ using namespace dss::capi;
 
         /// 
         /// Average repair time for this element in hours
+        /// 
+        /// Original COM help: https://opendss.epri.com/RepairTime.html
         /// 
         double RepairTime() // getter
         {
@@ -3267,6 +4204,10 @@ using namespace dss::capi;
         /// 
         /// Integer ID of the feeder section that this PDElement branch is part of
         /// 
+        /// *Requires a previous call to `RelCalc` command*
+        /// 
+        /// Original COM help: https://opendss.epri.com/SectionID1.html
+        /// 
         int32_t SectionID() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3275,6 +4216,10 @@ using namespace dss::capi;
 
         /// 
         /// Total miles of line from this element to the end of the zone. For recloser siting algorithm.
+        /// 
+        /// *Requires a previous call to `RelCalc` command*
+        /// 
+        /// Original COM help: https://opendss.epri.com/TotalMiles1.html
         /// 
         double TotalMiles() // getter
         {
@@ -3285,6 +4230,10 @@ using namespace dss::capi;
         /// 
         /// Total number of customers from this branch to the end of the zone
         /// 
+        /// *Requires a circuit with an energy meter with an updated zone.*
+        /// 
+        /// Original COM help: https://opendss.epri.com/TotalCustomers1.html
+        /// 
         int32_t Totalcustomers() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3293,6 +4242,8 @@ using namespace dss::capi;
 
         /// 
         /// Get/Set percent of faults that are permanent (require repair). Otherwise, fault is assumed to be transient/temporary.
+        /// 
+        /// Original COM help: https://opendss.epri.com/pctPermanent.html
         /// 
         double pctPermanent() // getter
         {
@@ -3309,7 +4260,7 @@ using namespace dss::capi;
         /// 
         /// Array of strings consisting of all PD element names.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         strings AllNames() // getter
         {
@@ -3327,7 +4278,7 @@ using namespace dss::capi;
         /// See also: 
         /// https://sourceforge.net/p/electricdss/discussion/beginners/thread/da5b93ca/
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllMaxCurrents(bool AllNodes=false)
@@ -3347,7 +4298,7 @@ using namespace dss::capi;
         /// See also: 
         /// https://sourceforge.net/p/electricdss/discussion/beginners/thread/da5b93ca/
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllPctNorm(bool AllNodes=false)
@@ -3367,7 +4318,7 @@ using namespace dss::capi;
         /// See also: 
         /// https://sourceforge.net/p/electricdss/discussion/beginners/thread/da5b93ca/
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllPctEmerg(bool AllNodes=false)
@@ -3380,7 +4331,7 @@ using namespace dss::capi;
         /// 
         /// Complex array of currents for all conductors, all terminals, for each PD element.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllCurrents() // getter
@@ -3393,7 +4344,7 @@ using namespace dss::capi;
         /// 
         /// Complex array (magnitude and angle format) of currents for all conductors, all terminals, for each PD element.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllCurrentsMagAng() // getter
@@ -3406,7 +4357,7 @@ using namespace dss::capi;
         /// 
         /// Complex double array of Sequence Currents for all conductors of all terminals, for each PD elements.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllCplxSeqCurrents() // getter
@@ -3417,9 +4368,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Double array of the symmetrical component currents into each 3-phase terminal, for each PD element.
+        /// Double array of the symmetrical component currents (magnitudes only) into each 3-phase terminal, for each PD element.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllSeqCurrents() // getter
@@ -3432,7 +4383,7 @@ using namespace dss::capi;
         /// 
         /// Complex array of powers into each conductor of each terminal, for each PD element.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllPowers() // getter
@@ -3443,9 +4394,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Double array of sequence powers into each 3-phase teminal, for each PD element
+        /// Complex array of sequence powers into each 3-phase terminal, for each PD element
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllSeqPowers() // getter
@@ -3458,7 +4409,7 @@ using namespace dss::capi;
         /// 
         /// Integer array listing the number of phases of all PD elements
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<int32_t, Eigen::Dynamic, 1>>
         VectorT AllNumPhases() // getter
@@ -3471,7 +4422,7 @@ using namespace dss::capi;
         /// 
         /// Integer array listing the number of conductors of all PD elements
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<int32_t, Eigen::Dynamic, 1>>
         VectorT AllNumConductors() // getter
@@ -3484,7 +4435,7 @@ using namespace dss::capi;
         /// 
         /// Integer array listing the number of terminals of all PD elements
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<int32_t, Eigen::Dynamic, 1>>
         VectorT AllNumTerminals() // getter
@@ -3499,7 +4450,7 @@ using namespace dss::capi;
     {
     public:
 
-        IPVSystems(dss::APIUtil *util) :
+        IPVSystems(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -3584,6 +4535,8 @@ using namespace dss::capi;
         /// 
         /// Get/set the present value of the Irradiance property in kW/m²
         /// 
+        /// Original COM help: https://opendss.epri.com/Irradiance.html
+        /// 
         double Irradiance() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3599,6 +4552,8 @@ using namespace dss::capi;
         /// 
         /// Get/set the power factor for the active PVSystem
         /// 
+        /// Original COM help: https://opendss.epri.com/PF2.html
+        /// 
         double PF() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3612,7 +4567,11 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Array of PVSYSTEM energy meter register names
+        /// Array of PVSystem energy meter register names
+        /// 
+        /// See also the enum `GeneratorRegisters`.
+        /// 
+        /// Original COM help: https://opendss.epri.com/RegisterNames2.html
         /// 
         strings RegisterNames() // getter
         {
@@ -3622,6 +4581,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of doubles containing values in PVSystem registers.
+        /// 
+        /// Original COM help: https://opendss.epri.com/RegisterValues2.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT RegisterValues() // getter
@@ -3633,6 +4594,8 @@ using namespace dss::capi;
 
         /// 
         /// Get/set Rated kVA of the PVSystem
+        /// 
+        /// Original COM help: https://opendss.epri.com/kVArated1.html
         /// 
         double kVArated() // getter
         {
@@ -3647,7 +4610,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// get kW output
+        /// Get kW output
+        /// 
+        /// Original COM help: https://opendss.epri.com/kW2.html
         /// 
         double kW() // getter
         {
@@ -3657,6 +4622,8 @@ using namespace dss::capi;
 
         /// 
         /// Get/set kvar output value
+        /// 
+        /// Original COM help: https://opendss.epri.com/kvar2.html
         /// 
         double kvar() // getter
         {
@@ -3671,7 +4638,11 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Name of the loadshape for a daily PVSystem profile.
+        /// Name of the dispatch shape to use for daily simulations. Must be previously
+        /// defined as a Loadshape object of 24 hrs, typically. In the default dispatch
+        /// mode, the PVSystem element uses this loadshape to trigger State changes.
+        /// 
+        /// **(API Extension)**
         /// 
         string daily() // getter
         {
@@ -3695,6 +4666,8 @@ using namespace dss::capi;
         /// Name of the load shape to use for duty cycle dispatch simulations such as
         /// for solar ramp rate studies. Must be previously defined as a Loadshape
         /// object. Typically would have time intervals of 1-5 seconds.
+        /// 
+        /// **(API Extension)**
         /// 
         string duty() // getter
         {
@@ -3720,6 +4693,8 @@ using namespace dss::capi;
         /// if any, is repeated during Yearly solution modes. In the default dispatch
         /// mode, the PVSystem element uses this loadshape to trigger State changes.
         /// 
+        /// **(API Extension)**
+        /// 
         string yearly() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3743,6 +4718,8 @@ using namespace dss::capi;
         /// as a TShape object of 24 hrs, typically. The PVSystem element uses this
         /// TShape to determine the Pmpp from the Pmpp vs T curve. Units must agree
         /// with the Pmpp vs T curve.
+        /// 
+        /// **(API Extension)**
         /// 
         string Tdaily() // getter
         {
@@ -3771,6 +4748,8 @@ using namespace dss::capi;
         /// model uses this TShape to determine the Pmpp from the Pmpp vs T curve.
         /// Units must agree with the Pmpp vs T curve.
         /// 
+        /// **(API Extension)**
+        /// 
         string Tduty() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3796,6 +4775,8 @@ using namespace dss::capi;
         /// this TShape to determine the Pmpp from the Pmpp vs T curve. Units must
         /// agree with the Pmpp vs T curve.
         /// 
+        /// **(API Extension)**
+        /// 
         string Tyearly() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3818,6 +4799,8 @@ using namespace dss::capi;
         /// Returns the current irradiance value for the active PVSystem. Use it to 
         /// know what's the current irradiance value for the PV during a simulation.
         /// 
+        /// Original COM help: https://opendss.epri.com/IrradianceNow.html
+        /// 
         double IrradianceNow() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3825,8 +4808,10 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Gets/sets the rated max power of the PV array for 1.0 kW/sq-m irradiance 
+        /// Gets/sets the rated max power of the PV array for 1.0 kW/m² irradiance 
         /// and a user-selected array temperature of the active PVSystem.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Pmpp.html
         /// 
         double Pmpp() // getter
         {
@@ -3843,6 +4828,8 @@ using namespace dss::capi;
         /// 
         /// Name of the sensor monitoring this element.
         /// 
+        /// Original COM help: https://opendss.epri.com/Sensor1.html
+        /// 
         string Sensor() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3854,15 +4841,23 @@ using namespace dss::capi;
     {
     public:
 
-        IParallel(dss::APIUtil *util) :
+        IParallel(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
+        /// 
+        /// Create a new actor, if there are still cores available.
+        /// 
         void CreateActor()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Parallel_CreateActor(ctx);
         }
+        /// 
+        /// Suspends the host's thread until all the OpenDSS running jobs finish.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Wait.html
+        /// 
         void Wait()
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3871,6 +4866,8 @@ using namespace dss::capi;
 
         /// 
         /// Gets/sets the ID of the Active Actor
+        /// 
+        /// Original COM help: https://opendss.epri.com/ActiveActor.html
         /// 
         int32_t ActiveActor() // getter
         {
@@ -3888,6 +4885,8 @@ using namespace dss::capi;
         /// (read) Sets ON/OFF (1/0) Parallel features of the Engine
         /// (write) Delivers if the Parallel features of the Engine are Active
         /// 
+        /// Original COM help: https://opendss.epri.com/ActiveParallel.html
+        /// 
         int32_t ActiveParallel() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3902,6 +4901,8 @@ using namespace dss::capi;
 
         /// 
         /// Gets/sets the CPU of the Active Actor
+        /// 
+        /// Original COM help: https://opendss.epri.com/ActorCPU.html
         /// 
         int32_t ActorCPU() // getter
         {
@@ -3918,6 +4919,8 @@ using namespace dss::capi;
         /// 
         /// Gets the progress of all existing actors in pct
         /// 
+        /// Original COM help: https://opendss.epri.com/ActorProgress.html
+        /// 
         template <typename VectorT=Eigen::Matrix<int32_t, Eigen::Dynamic, 1>>
         VectorT ActorProgress() // getter
         {
@@ -3928,6 +4931,8 @@ using namespace dss::capi;
 
         /// 
         /// Gets the status of each actor
+        /// 
+        /// Original COM help: https://opendss.epri.com/ActorStatus.html
         /// 
         template <typename VectorT=Eigen::Matrix<int32_t, Eigen::Dynamic, 1>>
         VectorT ActorStatus() // getter
@@ -3940,6 +4945,8 @@ using namespace dss::capi;
         /// 
         /// (read) Reads the values of the ConcatenateReports option (1=enabled, 0=disabled)
         /// (write) Enable/Disable (1/0) the ConcatenateReports option for extracting monitors data
+        /// 
+        /// Original COM help: https://opendss.epri.com/ConcatenateReports.html
         /// 
         int32_t ConcatenateReports() // getter
         {
@@ -3956,6 +4963,8 @@ using namespace dss::capi;
         /// 
         /// Delivers the number of CPUs on the current PC
         /// 
+        /// Original COM help: https://opendss.epri.com/NumCPUs.html
+        /// 
         int32_t NumCPUs() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3965,6 +4974,8 @@ using namespace dss::capi;
         /// 
         /// Delivers the number of Cores of the local PC
         /// 
+        /// Original COM help: https://opendss.epri.com/NumCores.html
+        /// 
         int32_t NumCores() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -3973,6 +4984,8 @@ using namespace dss::capi;
 
         /// 
         /// Gets the number of Actors created
+        /// 
+        /// Original COM help: https://opendss.epri.com/NumOfActors.html
         /// 
         int32_t NumOfActors() // getter
         {
@@ -3985,7 +4998,7 @@ using namespace dss::capi;
     {
     public:
 
-        IReactors(dss::APIUtil *util) :
+        IReactors(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -4071,6 +5084,8 @@ using namespace dss::capi;
         /// How the reactor data was provided: 1=kvar, 2=R+jX, 3=R and X matrices, 4=sym components.
         /// Depending on this value, only some properties are filled or make sense in the context.
         /// 
+        /// **(API Extension)**
+        /// 
         int32_t SpecType() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -4080,10 +5095,12 @@ using namespace dss::capi;
         /// 
         /// Delta connection or wye?
         /// 
+        /// **(API Extension)**
+        /// 
         bool IsDelta() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Reactors_Get_IsDelta(ctx) != 0);
+            return ctx_Reactors_Get_IsDelta(ctx);
         }
         IReactors& IsDelta(bool value) // setter
         {
@@ -4098,7 +5115,7 @@ using namespace dss::capi;
         bool Parallel() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Reactors_Get_Parallel(ctx) != 0);
+            return ctx_Reactors_Get_Parallel(ctx);
         }
         IReactors& Parallel(bool value) // setter
         {
@@ -4155,6 +5172,8 @@ using namespace dss::capi;
         /// 
         /// Number of phases.
         /// 
+        /// **(API Extension)**
+        /// 
         int32_t Phases() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -4171,6 +5190,8 @@ using namespace dss::capi;
         /// Name of first bus.
         /// Bus2 property will default to this bus, node 0, unless previously specified.
         /// Only Bus1 need be specified for a Yg shunt reactor.
+        /// 
+        /// **(API Extension)**
         /// 
         string Bus1() // getter
         {
@@ -4192,7 +5213,9 @@ using namespace dss::capi;
 
         /// 
         /// Name of 2nd bus. Defaults to all phases connected to first bus, node 0, (Shunt Wye Connection) except when Bus2 is specifically defined.
-        /// Not necessary to specify for delta (LL) connection
+        /// Not necessary to specify for delta (LL) connection.
+        /// 
+        /// **(API Extension)**
         /// 
         string Bus2() // getter
         {
@@ -4426,7 +5449,7 @@ using namespace dss::capi;
     {
     public:
 
-        IReclosers(dss::APIUtil *util) :
+        IReclosers(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -4519,7 +5542,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Ground (3I0) instantaneous trip setting - curve multipler or actual amps.
+        /// Ground (3I0) instantaneous trip setting - curve multiplier or actual amps.
+        /// 
+        /// Original COM help: https://opendss.epri.com/GroundInst.html
         /// 
         double GroundInst() // getter
         {
@@ -4536,6 +5561,8 @@ using namespace dss::capi;
         /// 
         /// Ground (3I0) trip multiplier or actual amps
         /// 
+        /// Original COM help: https://opendss.epri.com/GroundTrip.html
+        /// 
         double GroundTrip() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -4550,6 +5577,8 @@ using namespace dss::capi;
 
         /// 
         /// Full name of object this Recloser to be monitored.
+        /// 
+        /// Original COM help: https://opendss.epri.com/MonitoredObj2.html
         /// 
         string MonitoredObj() // getter
         {
@@ -4572,6 +5601,8 @@ using namespace dss::capi;
         /// 
         /// Terminal number of Monitored object for the Recloser 
         /// 
+        /// Original COM help: https://opendss.epri.com/MonitoredTerm2.html
+        /// 
         int32_t MonitoredTerm() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -4587,6 +5618,8 @@ using namespace dss::capi;
         /// 
         /// Number of fast shots
         /// 
+        /// Original COM help: https://opendss.epri.com/NumFast.html
+        /// 
         int32_t NumFast() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -4600,7 +5633,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Phase instantaneous curve multipler or actual amps
+        /// Phase instantaneous curve multiplier or actual amps
+        /// 
+        /// Original COM help: https://opendss.epri.com/PhaseInst.html
         /// 
         double PhaseInst() // getter
         {
@@ -4617,6 +5652,8 @@ using namespace dss::capi;
         /// 
         /// Phase trip curve multiplier or actual amps
         /// 
+        /// Original COM help: https://opendss.epri.com/PhaseTrip.html
+        /// 
         double PhaseTrip() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -4632,6 +5669,8 @@ using namespace dss::capi;
         /// 
         /// Array of Doubles: reclose intervals, s, between shots.
         /// 
+        /// Original COM help: https://opendss.epri.com/RecloseIntervals.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT RecloseIntervals() // getter
         {
@@ -4642,6 +5681,8 @@ using namespace dss::capi;
 
         /// 
         /// Number of shots to lockout (fast + delayed)
+        /// 
+        /// Original COM help: https://opendss.epri.com/Shots.html
         /// 
         int32_t Shots() // getter
         {
@@ -4657,6 +5698,8 @@ using namespace dss::capi;
 
         /// 
         /// Full name of the circuit element that is being switched by the Recloser.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SwitchedObj1.html
         /// 
         string SwitchedObj() // getter
         {
@@ -4678,6 +5721,8 @@ using namespace dss::capi;
 
         /// 
         /// Terminal number of the controlled device being switched by the Recloser
+        /// 
+        /// Original COM help: https://opendss.epri.com/SwitchedTerm1.html
         /// 
         int32_t SwitchedTerm() // getter
         {
@@ -4702,7 +5747,7 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Get/Set present state of recloser. 
+        /// Present state of recloser. 
         /// If set to open (ActionCodes.Open=1), open recloser's controlled element and lock out the recloser. 
         /// If set to close (ActionCodes.Close=2), close recloser's controlled element and resets recloser to first operation.
         /// 
@@ -4721,6 +5766,8 @@ using namespace dss::capi;
         /// 
         /// Get/set normal state (ActionCodes.Open=1, ActionCodes.Close=2) of the recloser.
         /// 
+        /// Original COM help: https://opendss.epri.com/NormalState1.html
+        /// 
         int32_t NormalState() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -4738,7 +5785,7 @@ using namespace dss::capi;
     {
     public:
 
-        IRegControls(dss::APIUtil *util) :
+        IRegControls(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -4828,6 +5875,8 @@ using namespace dss::capi;
         /// 
         /// CT primary ampere rating (secondary is 0.2 amperes)
         /// 
+        /// Original COM help: https://opendss.epri.com/CTPrimary.html
+        /// 
         double CTPrimary() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -4843,6 +5892,8 @@ using namespace dss::capi;
         /// 
         /// Time delay [s] after arming before the first tap change. Control may reset before actually changing taps.
         /// 
+        /// Original COM help: https://opendss.epri.com/Delay2.html
+        /// 
         double Delay() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -4856,7 +5907,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Regulation bandwidth in forward direciton, centered on Vreg
+        /// Regulation bandwidth in forward direction, centered on Vreg
+        /// 
+        /// Original COM help: https://opendss.epri.com/ForwardBand.html
         /// 
         double ForwardBand() // getter
         {
@@ -4873,6 +5926,8 @@ using namespace dss::capi;
         /// 
         /// LDC R setting in Volts
         /// 
+        /// Original COM help: https://opendss.epri.com/ForwardR.html
+        /// 
         double ForwardR() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -4887,6 +5942,8 @@ using namespace dss::capi;
 
         /// 
         /// Target voltage in the forward direction, on PT secondary base.
+        /// 
+        /// Original COM help: https://opendss.epri.com/ForwardVreg.html
         /// 
         double ForwardVreg() // getter
         {
@@ -4903,6 +5960,8 @@ using namespace dss::capi;
         /// 
         /// LDC X setting in Volts
         /// 
+        /// Original COM help: https://opendss.epri.com/ForwardX.html
+        /// 
         double ForwardX() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -4916,12 +5975,14 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Time delay is inversely adjsuted, proportinal to the amount of voltage outside the regulating band.
+        /// Time delay is inversely adjusted, proportional to the amount of voltage outside the regulating band.
+        /// 
+        /// Original COM help: https://opendss.epri.com/IsInverseTime.html
         /// 
         bool IsInverseTime() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_RegControls_Get_IsInverseTime(ctx) != 0);
+            return ctx_RegControls_Get_IsInverseTime(ctx);
         }
         IRegControls& IsInverseTime(bool value) // setter
         {
@@ -4933,10 +5994,12 @@ using namespace dss::capi;
         /// 
         /// Regulator can use different settings in the reverse direction.  Usually not applicable to substation transformers.
         /// 
+        /// Original COM help: https://opendss.epri.com/IsReversible.html
+        /// 
         bool IsReversible() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_RegControls_Get_IsReversible(ctx) != 0);
+            return ctx_RegControls_Get_IsReversible(ctx);
         }
         IRegControls& IsReversible(bool value) // setter
         {
@@ -4946,7 +6009,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Maximum tap change per iteration in STATIC solution mode. 1 is more realistic, 16 is the default for a faster soluiton.
+        /// Maximum tap change per iteration in STATIC solution mode. 1 is more realistic, 16 is the default for a faster solution.
+        /// 
+        /// Original COM help: https://opendss.epri.com/MaxTapChange.html
         /// 
         int32_t MaxTapChange() // getter
         {
@@ -4962,6 +6027,8 @@ using namespace dss::capi;
 
         /// 
         /// Name of a remote regulated bus, in lieu of LDC settings
+        /// 
+        /// Original COM help: https://opendss.epri.com/MonitoredBus.html
         /// 
         string MonitoredBus() // getter
         {
@@ -4984,6 +6051,8 @@ using namespace dss::capi;
         /// 
         /// PT ratio for voltage control settings
         /// 
+        /// Original COM help: https://opendss.epri.com/PTratio1.html
+        /// 
         double PTratio() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -4998,6 +6067,8 @@ using namespace dss::capi;
 
         /// 
         /// Bandwidth in reverse direction, centered on reverse Vreg.
+        /// 
+        /// Original COM help: https://opendss.epri.com/ReverseBand.html
         /// 
         double ReverseBand() // getter
         {
@@ -5014,6 +6085,8 @@ using namespace dss::capi;
         /// 
         /// Reverse LDC R setting in Volts.
         /// 
+        /// Original COM help: https://opendss.epri.com/ReverseR.html
+        /// 
         double ReverseR() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -5028,6 +6101,8 @@ using namespace dss::capi;
 
         /// 
         /// Target voltage in the revese direction, on PT secondary base.
+        /// 
+        /// Original COM help: https://opendss.epri.com/ReverseVreg.html
         /// 
         double ReverseVreg() // getter
         {
@@ -5044,6 +6119,8 @@ using namespace dss::capi;
         /// 
         /// Reverse LDC X setting in volts.
         /// 
+        /// Original COM help: https://opendss.epri.com/ReverseX.html
+        /// 
         double ReverseX() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -5059,6 +6136,8 @@ using namespace dss::capi;
         /// 
         /// Time delay [s] for subsequent tap changes in a set. Control may reset before actually changing taps.
         /// 
+        /// Original COM help: https://opendss.epri.com/TapDelay.html
+        /// 
         double TapDelay() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -5072,7 +6151,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Integer number of the tap that the controlled transformer winding is currentliy on.
+        /// Integer number of the tap that the controlled transformer winding is currently on.
+        /// 
+        /// Original COM help: https://opendss.epri.com/TapNumber.html
         /// 
         int32_t TapNumber() // getter
         {
@@ -5089,6 +6170,8 @@ using namespace dss::capi;
         /// 
         /// Tapped winding number
         /// 
+        /// Original COM help: https://opendss.epri.com/TapWinding.html
+        /// 
         int32_t TapWinding() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -5103,6 +6186,8 @@ using namespace dss::capi;
 
         /// 
         /// Name of the transformer this regulator controls
+        /// 
+        /// Original COM help: https://opendss.epri.com/Transformer.html
         /// 
         string Transformer() // getter
         {
@@ -5125,6 +6210,8 @@ using namespace dss::capi;
         /// 
         /// First house voltage limit on PT secondary base.  Setting to 0 disables this function.
         /// 
+        /// Original COM help: https://opendss.epri.com/VoltageLimit.html
+        /// 
         double VoltageLimit() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -5139,6 +6226,8 @@ using namespace dss::capi;
 
         /// 
         /// Winding number for PT and CT connections
+        /// 
+        /// Original COM help: https://opendss.epri.com/Winding.html
         /// 
         int32_t Winding() // getter
         {
@@ -5157,7 +6246,7 @@ using namespace dss::capi;
     {
     public:
 
-        IRelays(dss::APIUtil *util) :
+        IRelays(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -5242,6 +6331,8 @@ using namespace dss::capi;
         /// 
         /// Full name of object this Relay is monitoring.
         /// 
+        /// Original COM help: https://opendss.epri.com/MonitoredObj3.html
+        /// 
         string MonitoredObj() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -5263,6 +6354,8 @@ using namespace dss::capi;
         /// 
         /// Number of terminal of monitored element that this Relay is monitoring.
         /// 
+        /// Original COM help: https://opendss.epri.com/MonitoredTerm3.html
+        /// 
         int32_t MonitoredTerm() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -5277,6 +6370,8 @@ using namespace dss::capi;
 
         /// 
         /// Full name of element that will be switched when relay trips.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SwitchedObj2.html
         /// 
         string SwitchedObj() // getter
         {
@@ -5299,6 +6394,8 @@ using namespace dss::capi;
         /// 
         /// Terminal number of the switched object that will be opened when the relay trips.
         /// 
+        /// Original COM help: https://opendss.epri.com/SwitchedTerm2.html
+        /// 
         int32_t SwitchedTerm() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -5313,6 +6410,8 @@ using namespace dss::capi;
         /// 
         /// Open relay's controlled element and lock out the relay.
         /// 
+        /// Original COM help: https://opendss.epri.com/Open4.html
+        /// 
         void Open()
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -5320,6 +6419,8 @@ using namespace dss::capi;
         }
         /// 
         /// Close the switched object controlled by the relay. Resets relay to first operation.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Close5.html
         /// 
         void Close()
         {
@@ -5338,7 +6439,7 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Get/Set present state of relay. 
+        /// Present state of relay. 
         /// If set to open, open relay's controlled element and lock out the relay. 
         /// If set to close, close relay's controlled element and resets relay to first operation.
         /// 
@@ -5357,6 +6458,8 @@ using namespace dss::capi;
         /// 
         /// Normal state of relay.
         /// 
+        /// Original COM help: https://opendss.epri.com/NormalState3.html
+        /// 
         int32_t NormalState() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -5374,7 +6477,7 @@ using namespace dss::capi;
     {
     public:
 
-        ISensors(dss::APIUtil *util) :
+        ISensors(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -5469,6 +6572,8 @@ using namespace dss::capi;
         /// 
         /// Array of doubles for the line current measurements; don't use with kWS and kVARS.
         /// 
+        /// Original COM help: https://opendss.epri.com/Currents2.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Currents() // getter
         {
@@ -5487,10 +6592,12 @@ using namespace dss::capi;
         /// 
         /// True if measured voltages are line-line. Currents are always line currents.
         /// 
+        /// Original COM help: https://opendss.epri.com/IsDelta2.html
+        /// 
         bool IsDelta() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Sensors_Get_IsDelta(ctx) != 0);
+            return ctx_Sensors_Get_IsDelta(ctx);
         }
         ISensors& IsDelta(bool value) // setter
         {
@@ -5501,6 +6608,8 @@ using namespace dss::capi;
 
         /// 
         /// Full Name of the measured element
+        /// 
+        /// Original COM help: https://opendss.epri.com/MeteredElement1.html
         /// 
         string MeteredElement() // getter
         {
@@ -5523,6 +6632,8 @@ using namespace dss::capi;
         /// 
         /// Number of the measured terminal in the measured element.
         /// 
+        /// Original COM help: https://opendss.epri.com/MeteredTerminal1.html
+        /// 
         int32_t MeteredTerminal() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -5537,6 +6648,8 @@ using namespace dss::capi;
 
         /// 
         /// Assumed percent error in the Sensor measurement. Default is 1.
+        /// 
+        /// Original COM help: https://opendss.epri.com/PctError.html
         /// 
         double PctError() // getter
         {
@@ -5553,10 +6666,12 @@ using namespace dss::capi;
         /// 
         /// True if voltage measurements are 1-3, 3-2, 2-1.
         /// 
+        /// Original COM help: https://opendss.epri.com/ReverseDelta.html
+        /// 
         bool ReverseDelta() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Sensors_Get_ReverseDelta(ctx) != 0);
+            return ctx_Sensors_Get_ReverseDelta(ctx);
         }
         ISensors& ReverseDelta(bool value) // setter
         {
@@ -5567,6 +6682,8 @@ using namespace dss::capi;
 
         /// 
         /// Weighting factor for this Sensor measurement with respect to other Sensors. Default is 1.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Weight.html
         /// 
         double Weight() // getter
         {
@@ -5582,6 +6699,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of doubles for Q measurements. Overwrites Currents with a new estimate using kWS.
+        /// 
+        /// Original COM help: https://opendss.epri.com/kVARS.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT kVARS() // getter
@@ -5601,6 +6720,8 @@ using namespace dss::capi;
         /// 
         /// Array of doubles for the LL or LN (depending on Delta connection) voltage measurements.
         /// 
+        /// Original COM help: https://opendss.epri.com/kVS.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT kVS() // getter
         {
@@ -5619,6 +6740,8 @@ using namespace dss::capi;
         /// 
         /// Voltage base for the sensor measurements. LL for 2 and 3-phase sensors, LN for 1-phase sensors.
         /// 
+        /// Original COM help: https://opendss.epri.com/kVBase1.html
+        /// 
         double kVbase() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -5633,6 +6756,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of doubles for P measurements. Overwrites Currents with a new estimate using kVARS.
+        /// 
+        /// Original COM help: https://opendss.epri.com/kWS.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT kWS() // getter
@@ -5652,6 +6777,8 @@ using namespace dss::capi;
         /// 
         /// Array of doubles for the allocation factors for each phase.
         /// 
+        /// Original COM help: https://opendss.epri.com/AllocationFactor1.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllocationFactor() // getter
         {
@@ -5665,7 +6792,7 @@ using namespace dss::capi;
     {
     public:
 
-        ISwtControls(dss::APIUtil *util) :
+        ISwtControls(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -5755,6 +6882,8 @@ using namespace dss::capi;
         /// 
         /// Open or Close the switch. No effect if switch is locked.  However, Reset removes any lock and then closes the switch (shelf state).
         /// 
+        /// Original COM help: https://opendss.epri.com/Action1.html
+        /// 
         int32_t Action() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -5768,7 +6897,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Time delay [s] betwen arming and opening or closing the switch.  Control may reset before actually operating the switch.
+        /// Time delay [s] between arming and opening or closing the switch.  Control may reset before actually operating the switch.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Delay3.html
         /// 
         double Delay() // getter
         {
@@ -5785,10 +6916,12 @@ using namespace dss::capi;
         /// 
         /// The lock prevents both manual and automatic switch operation.
         /// 
+        /// Original COM help: https://opendss.epri.com/IsLocked.html
+        /// 
         bool IsLocked() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_SwtControls_Get_IsLocked(ctx) != 0);
+            return ctx_SwtControls_Get_IsLocked(ctx);
         }
         ISwtControls& IsLocked(bool value) // setter
         {
@@ -5798,22 +6931,24 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Get/set Normal state of switch (see actioncodes) dssActionOpen or dssActionClose
+        /// Get/set Normal state of switch (see ActionCodes) dssActionOpen or dssActionClose
         /// 
-        int32_t NormalState() // getter
+        ActionCodes NormalState() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_SwtControls_Get_NormalState(ctx);
+            return static_cast<ActionCodes>(ctx_SwtControls_Get_NormalState(ctx));
         }
-        ISwtControls& NormalState(int32_t value) // setter
+        ISwtControls& NormalState(ActionCodes value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_SwtControls_Set_NormalState(ctx, value);
+            ctx_SwtControls_Set_NormalState(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
         /// 
         /// Set it to force the switch to a specified state, otherwise read its present state.
+        /// 
+        /// Original COM help: https://opendss.epri.com/State.html
         /// 
         int32_t State() // getter
         {
@@ -5829,6 +6964,8 @@ using namespace dss::capi;
 
         /// 
         /// Full name of the switched element.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SwitchedObj3.html
         /// 
         string SwitchedObj() // getter
         {
@@ -5851,6 +6988,8 @@ using namespace dss::capi;
         /// 
         /// Terminal number where the switch is located on the SwitchedObj
         /// 
+        /// Original COM help: https://opendss.epri.com/SwitchedTerm3.html
+        /// 
         int32_t SwitchedTerm() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -5868,7 +7007,7 @@ using namespace dss::capi;
     {
     public:
 
-        ITSData(dss::APIUtil *util) :
+        ITSData(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -6165,7 +7304,7 @@ using namespace dss::capi;
     {
     public:
 
-        IText(dss::APIUtil *util) :
+        IText(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -6174,6 +7313,11 @@ using namespace dss::capi;
         /// Intermediate results are ignored.
         /// 
         /// (API Extension)
+        void Commands(const char *value)
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Text_CommandBlock(ctx, value);
+        }
         void Commands(const string &value)
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6192,6 +7336,8 @@ using namespace dss::capi;
 
         /// 
         /// Input command string for the DSS.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Command1.html
         /// 
         string Command() // getter
         {
@@ -6214,6 +7360,8 @@ using namespace dss::capi;
         /// 
         /// Result string for the last command.
         /// 
+        /// Original COM help: https://opendss.epri.com/Result.html
+        /// 
         string Result() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6225,13 +7373,15 @@ using namespace dss::capi;
     {
     public:
 
-        ITopology(dss::APIUtil *util) :
+        ITopology(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
 
         /// 
         /// Returns index of the active branch
+        /// 
+        /// Original COM help: https://opendss.epri.com/ActiveBranch.html
         /// 
         int32_t ActiveBranch() // getter
         {
@@ -6242,6 +7392,8 @@ using namespace dss::capi;
         /// 
         /// Topological depth of the active branch
         /// 
+        /// Original COM help: https://opendss.epri.com/ActiveLevel.html
+        /// 
         int32_t ActiveLevel() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6250,6 +7402,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of all isolated branch names.
+        /// 
+        /// Original COM help: https://opendss.epri.com/AllIsolatedBranches.html
         /// 
         strings AllIsolatedBranches() // getter
         {
@@ -6260,6 +7414,8 @@ using namespace dss::capi;
         /// 
         /// Array of all isolated load names.
         /// 
+        /// Original COM help: https://opendss.epri.com/AllIsolatedLoads.html
+        /// 
         strings AllIsolatedLoads() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6269,6 +7425,8 @@ using namespace dss::capi;
         /// 
         /// Array of all looped element names, by pairs.
         /// 
+        /// Original COM help: https://opendss.epri.com/AllLoopedPairs.html
+        /// 
         strings AllLoopedPairs() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6276,7 +7434,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// MOve back toward the source, return index of new active branch, or 0 if no more.
+        /// Move back toward the source, return index of new active branch, or 0 if no more.
+        /// 
+        /// Original COM help: https://opendss.epri.com/BackwardBranch.html
         /// 
         int32_t BackwardBranch() // getter
         {
@@ -6286,6 +7446,8 @@ using namespace dss::capi;
 
         /// 
         /// Name of the active branch.
+        /// 
+        /// Original COM help: https://opendss.epri.com/BranchName.html
         /// 
         string BranchName() // getter
         {
@@ -6308,6 +7470,8 @@ using namespace dss::capi;
         /// 
         /// Set the active branch to one containing this bus, return index or 0 if not found
         /// 
+        /// Original COM help: https://opendss.epri.com/BusName.html
+        /// 
         string BusName() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6329,6 +7493,8 @@ using namespace dss::capi;
         /// 
         /// Sets the first branch active, returns 0 if none.
         /// 
+        /// Original COM help: https://opendss.epri.com/First19.html
+        /// 
         int32_t First() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6337,6 +7503,8 @@ using namespace dss::capi;
 
         /// 
         /// First load at the active branch, return index or 0 if none.
+        /// 
+        /// Original COM help: https://opendss.epri.com/FirstLoad.html
         /// 
         int32_t FirstLoad() // getter
         {
@@ -6347,6 +7515,8 @@ using namespace dss::capi;
         /// 
         /// Move forward in the tree, return index of new active branch or 0 if no more
         /// 
+        /// Original COM help: https://opendss.epri.com/ForwardBranch.html
+        /// 
         int32_t ForwardBranch() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6355,6 +7525,8 @@ using namespace dss::capi;
 
         /// 
         /// Move to looped branch, return index or 0 if none.
+        /// 
+        /// Original COM help: https://opendss.epri.com/LoopedBranch.html
         /// 
         int32_t LoopedBranch() // getter
         {
@@ -6365,6 +7537,8 @@ using namespace dss::capi;
         /// 
         /// Sets the next branch active, returns 0 if no more.
         /// 
+        /// Original COM help: https://opendss.epri.com/Next18.html
+        /// 
         int32_t Next() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6373,6 +7547,8 @@ using namespace dss::capi;
 
         /// 
         /// Next load at the active branch, return index or 0 if no more.
+        /// 
+        /// Original COM help: https://opendss.epri.com/NextLoad.html
         /// 
         int32_t NextLoad() // getter
         {
@@ -6383,6 +7559,8 @@ using namespace dss::capi;
         /// 
         /// Number of isolated branches (PD elements and capacitors).
         /// 
+        /// Original COM help: https://opendss.epri.com/NumIsolatedBranches.html
+        /// 
         int32_t NumIsolatedBranches() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6391,6 +7569,8 @@ using namespace dss::capi;
 
         /// 
         /// Number of isolated loads
+        /// 
+        /// Original COM help: https://opendss.epri.com/NumIsolatedLoads.html
         /// 
         int32_t NumIsolatedLoads() // getter
         {
@@ -6401,6 +7581,8 @@ using namespace dss::capi;
         /// 
         /// Number of loops
         /// 
+        /// Original COM help: https://opendss.epri.com/NumLoops.html
+        /// 
         int32_t NumLoops() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6409,6 +7591,8 @@ using namespace dss::capi;
 
         /// 
         /// Move to directly parallel branch, return index or 0 if none.
+        /// 
+        /// Original COM help: https://opendss.epri.com/ParallelBranch.html
         /// 
         int32_t ParallelBranch() // getter
         {
@@ -6421,7 +7605,7 @@ using namespace dss::capi;
     {
     public:
 
-        ITransformers(dss::APIUtil *util) :
+        ITransformers(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -6506,10 +7690,12 @@ using namespace dss::capi;
         /// 
         /// Active Winding delta or wye connection?
         /// 
+        /// Original COM help: https://opendss.epri.com/IsDelta3.html
+        /// 
         bool IsDelta() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Transformers_Get_IsDelta(ctx) != 0);
+            return ctx_Transformers_Get_IsDelta(ctx);
         }
         ITransformers& IsDelta(bool value) // setter
         {
@@ -6520,6 +7706,8 @@ using namespace dss::capi;
 
         /// 
         /// Active Winding maximum tap in per-unit.
+        /// 
+        /// Original COM help: https://opendss.epri.com/MaxTap.html
         /// 
         double MaxTap() // getter
         {
@@ -6536,6 +7724,8 @@ using namespace dss::capi;
         /// 
         /// Active Winding minimum tap in per-unit.
         /// 
+        /// Original COM help: https://opendss.epri.com/MinTap.html
+        /// 
         double MinTap() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6549,7 +7739,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Active Winding number of tap steps betwein MinTap and MaxTap.
+        /// Active Winding number of tap steps between MinTap and MaxTap.
+        /// 
+        /// Original COM help: https://opendss.epri.com/NumTaps.html
         /// 
         int32_t NumTaps() // getter
         {
@@ -6566,6 +7758,8 @@ using namespace dss::capi;
         /// 
         /// Number of windings on this transformer. Allocates memory; set or change this property first.
         /// 
+        /// Original COM help: https://opendss.epri.com/NumWindings.html
+        /// 
         int32_t NumWindings() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6580,6 +7774,8 @@ using namespace dss::capi;
 
         /// 
         /// Active Winding resistance in %
+        /// 
+        /// Original COM help: https://opendss.epri.com/R.html
         /// 
         double R() // getter
         {
@@ -6596,6 +7792,8 @@ using namespace dss::capi;
         /// 
         /// Active Winding neutral resistance [ohms] for wye connections. Set less than zero for ungrounded wye.
         /// 
+        /// Original COM help: https://opendss.epri.com/Rneut1.html
+        /// 
         double Rneut() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6610,6 +7808,8 @@ using namespace dss::capi;
 
         /// 
         /// Active Winding tap in per-unit.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Tap.html
         /// 
         double Tap() // getter
         {
@@ -6626,6 +7826,8 @@ using namespace dss::capi;
         /// 
         /// Active Winding Number from 1..NumWindings. Update this before reading or setting a sequence of winding properties (R, Tap, kV, kVA, etc.)
         /// 
+        /// Original COM help: https://opendss.epri.com/Wdg.html
+        /// 
         int32_t Wdg() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6639,7 +7841,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Name of an XfrmCode that supplies electircal parameters for this Transformer.
+        /// Name of an XfrmCode that supplies electrical parameters for this Transformer.
+        /// 
+        /// Original COM help: https://opendss.epri.com/XfmrCode1.html
         /// 
         string XfmrCode() // getter
         {
@@ -6662,6 +7866,8 @@ using namespace dss::capi;
         /// 
         /// Percent reactance between windings 1 and 2, on winding 1 kVA base. Use for 2-winding or 3-winding transformers.
         /// 
+        /// Original COM help: https://opendss.epri.com/Xhl.html
+        /// 
         double Xhl() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6675,7 +7881,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Percent reactance between windigns 1 and 3, on winding 1 kVA base.  Use for 3-winding transformers only.
+        /// Percent reactance between windings 1 and 3, on winding 1 kVA base.  Use for 3-winding transformers only.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Xht.html
         /// 
         double Xht() // getter
         {
@@ -6692,6 +7900,8 @@ using namespace dss::capi;
         /// 
         /// Percent reactance between windings 2 and 3, on winding 1 kVA base. Use for 3-winding transformers only.
         /// 
+        /// Original COM help: https://opendss.epri.com/Xlt.html
+        /// 
         double Xlt() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6706,6 +7916,8 @@ using namespace dss::capi;
 
         /// 
         /// Active Winding neutral reactance [ohms] for wye connections.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Xneut1.html
         /// 
         double Xneut() // getter
         {
@@ -6722,6 +7934,8 @@ using namespace dss::capi;
         /// 
         /// Active Winding kV rating.  Phase-phase for 2 or 3 phases, actual winding kV for 1 phase transformer.
         /// 
+        /// Original COM help: https://opendss.epri.com/kV3.html
+        /// 
         double kV() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6736,6 +7950,8 @@ using namespace dss::capi;
 
         /// 
         /// Active Winding kVA rating. On winding 1, this also determines normal and emergency current ratings for all windings.
+        /// 
+        /// Original COM help: https://opendss.epri.com/kva1.html
         /// 
         double kVA() // getter
         {
@@ -6752,6 +7968,11 @@ using namespace dss::capi;
         /// 
         /// Complex array of voltages for active winding
         /// 
+        /// **WARNING:** If the transformer has open terminal(s), results may be wrong, i.e. avoid using this
+        /// in those situations. For more information, see https://github.com/dss-extensions/dss-extensions/issues/24
+        /// 
+        /// Original COM help: https://opendss.epri.com/WdgVoltages.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT WdgVoltages() // getter
         {
@@ -6762,6 +7983,11 @@ using namespace dss::capi;
 
         /// 
         /// All Winding currents (ph1, wdg1, wdg2,... ph2, wdg1, wdg2 ...)
+        /// 
+        /// **WARNING:** If the transformer has open terminal(s), results may be wrong, i.e. avoid using this
+        /// in those situations. For more information, see https://github.com/dss-extensions/dss-extensions/issues/24
+        /// 
+        /// Original COM help: https://opendss.epri.com/WdgCurrents.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT WdgCurrents() // getter
@@ -6774,6 +8000,9 @@ using namespace dss::capi;
         /// 
         /// All winding currents in CSV string form like the WdgCurrents property
         /// 
+        /// **WARNING:** If the transformer has open terminal(s), results may be wrong, i.e. avoid using this
+        /// in those situations. For more information, see https://github.com/dss-extensions/dss-extensions/issues/24
+        /// 
         string strWdgCurrents() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6781,14 +8010,16 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Transformer Core Type: 0=shell;1 = 1-phase; 3= 3-leg; 5= 5-leg
+        /// Transformer Core Type: 0=Shell; 1=1ph; 3-3leg; 4=4-Leg; 5=5-leg; 9=Core-1-phase
         /// 
-        int32_t CoreType() // getter
+        /// Original COM help: https://opendss.epri.com/CoreType.html
+        /// 
+        TransformerCoreType CoreType() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_Transformers_Get_CoreType(ctx);
+            return TransformerCoreType(ctx_Transformers_Get_CoreType(ctx));
         }
-        ITransformers& CoreType(int32_t value) // setter
+        ITransformers& CoreType(TransformerCoreType value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Transformers_Set_CoreType(ctx, value);
@@ -6797,6 +8028,8 @@ using namespace dss::capi;
 
         /// 
         /// dc Resistance of active winding in ohms for GIC analysis
+        /// 
+        /// Original COM help: https://opendss.epri.com/RdcOhms.html
         /// 
         double RdcOhms() // getter
         {
@@ -6811,7 +8044,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Complex array with the losses by type (total losses, load losses, no-load losses), in VA
+        /// Complex array with the losses by type (total losses, load losses, no-load losses), in VA, for the current active transformer
+        /// 
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT LossesByType() // getter
@@ -6823,6 +8058,8 @@ using namespace dss::capi;
 
         /// 
         /// Complex array with the losses by type (total losses, load losses, no-load losses), in VA, concatenated for ALL transformers
+        /// 
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllLossesByType() // getter
@@ -6837,7 +8074,7 @@ using namespace dss::capi;
     {
     public:
 
-        IVsources(dss::APIUtil *util) :
+        IVsources(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -6922,6 +8159,8 @@ using namespace dss::capi;
         /// 
         /// Phase angle of first phase in degrees
         /// 
+        /// Original COM help: https://opendss.epri.com/AngleDeg1.html
+        /// 
         double AngleDeg() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6936,6 +8175,8 @@ using namespace dss::capi;
 
         /// 
         /// Source voltage in kV
+        /// 
+        /// Original COM help: https://opendss.epri.com/BasekV.html
         /// 
         double BasekV() // getter
         {
@@ -6952,6 +8193,8 @@ using namespace dss::capi;
         /// 
         /// Source frequency in Hz
         /// 
+        /// Original COM help: https://opendss.epri.com/Frequency2.html
+        /// 
         double Frequency() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6967,6 +8210,8 @@ using namespace dss::capi;
         /// 
         /// Number of phases
         /// 
+        /// Original COM help: https://opendss.epri.com/Phases3.html
+        /// 
         int32_t Phases() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -6981,6 +8226,8 @@ using namespace dss::capi;
 
         /// 
         /// Per-unit value of source voltage
+        /// 
+        /// Original COM help: https://opendss.epri.com/pu.html
         /// 
         double pu() // getter
         {
@@ -6999,7 +8246,7 @@ using namespace dss::capi;
     {
     public:
 
-        IWireData(dss::APIUtil *util) :
+        IWireData(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -7147,15 +8394,15 @@ using namespace dss::capi;
             return *this;
         }
 
-        int32_t GMRUnits() // getter
+        LineUnits GMRUnits() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_WireData_Get_GMRUnits(ctx);
+            return static_cast<LineUnits>(ctx_WireData_Get_GMRUnits(ctx));
         }
-        IWireData& GMRUnits(int32_t value) // setter
+        IWireData& GMRUnits(LineUnits value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_WireData_Set_GMRUnits(ctx, value);
+            ctx_WireData_Set_GMRUnits(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
@@ -7183,15 +8430,15 @@ using namespace dss::capi;
             return *this;
         }
 
-        int32_t ResistanceUnits() // getter
+        LineUnits ResistanceUnits() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_WireData_Get_ResistanceUnits(ctx);
+            return static_cast<LineUnits>(ctx_WireData_Get_ResistanceUnits(ctx));
         }
-        IWireData& ResistanceUnits(int32_t value) // setter
+        IWireData& ResistanceUnits(LineUnits value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_WireData_Set_ResistanceUnits(ctx, value);
+            ctx_WireData_Set_ResistanceUnits(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
@@ -7227,7 +8474,7 @@ using namespace dss::capi;
     {
     public:
 
-        IXYCurves(dss::APIUtil *util) :
+        IXYCurves(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -7312,6 +8559,8 @@ using namespace dss::capi;
         /// 
         /// Get/Set Number of points in X-Y curve
         /// 
+        /// Original COM help: https://opendss.epri.com/Npts1.html
+        /// 
         int32_t Npts() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -7325,7 +8574,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Get/set X values as a Array of doubles. Set Npts to max number expected if setting
+        /// Get/set X values as an array of doubles. When setting, remember to set Npts to max number expected values.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Xarray.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Xarray() // getter
@@ -7345,6 +8596,8 @@ using namespace dss::capi;
         /// 
         /// Factor to scale X values from original curve
         /// 
+        /// Original COM help: https://opendss.epri.com/Xscale.html
+        /// 
         double Xscale() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -7360,6 +8613,8 @@ using namespace dss::capi;
         /// 
         /// Amount to shift X value from original curve
         /// 
+        /// Original COM help: https://opendss.epri.com/Xshift.html
+        /// 
         double Xshift() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -7373,7 +8628,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Get/Set Y values in curve; Set Npts to max number expected if setting
+        /// Get/set Y values as an array of doubles. When setting, remember to set Npts to max number expected values.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Yarray.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Yarray() // getter
@@ -7393,6 +8650,8 @@ using namespace dss::capi;
         /// 
         /// Factor to scale Y values from original curve
         /// 
+        /// Original COM help: https://opendss.epri.com/Yscale.html
+        /// 
         double Yscale() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -7407,6 +8666,8 @@ using namespace dss::capi;
 
         /// 
         /// Amount to shift Y value from original curve
+        /// 
+        /// Original COM help: https://opendss.epri.com/Yshift.html
         /// 
         double Yshift() // getter
         {
@@ -7423,6 +8684,8 @@ using namespace dss::capi;
         /// 
         /// Set X value or get interpolated value after setting Y
         /// 
+        /// Original COM help: https://opendss.epri.com/x4.html
+        /// 
         double x() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -7437,6 +8700,8 @@ using namespace dss::capi;
 
         /// 
         /// Set Y value or get interpolated Y value after setting X
+        /// 
+        /// Original COM help: https://opendss.epri.com/y1.html
         /// 
         double y() // getter
         {
@@ -7455,7 +8720,7 @@ using namespace dss::capi;
     {
     public:
 
-        IZIP(dss::APIUtil *util) :
+        IZIP(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -7482,7 +8747,7 @@ using namespace dss::capi;
         /// Besides that, the full filenames inside the ZIP must be shorter than 256 characters.
         /// The limitations should be removed in a future revision.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         void Open(const char *FileName)
         {
@@ -7495,7 +8760,7 @@ using namespace dss::capi;
         /// Besides that, the full filenames inside the ZIP must be shorter than 256 characters.
         /// The limitations should be removed in a future revision.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         void Open(const string &FileName)
         {
@@ -7505,7 +8770,7 @@ using namespace dss::capi;
         /// 
         /// Closes the current open ZIP file
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         void Close()
         {
@@ -7518,7 +8783,7 @@ using namespace dss::capi;
         /// be present inside the ZIP, using relative paths. The only exceptions are
         /// memory-mapped files.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         void Redirect(const char *FileInZip)
         {
@@ -7531,7 +8796,7 @@ using namespace dss::capi;
         /// be present inside the ZIP, using relative paths. The only exceptions are
         /// memory-mapped files.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         void Redirect(const string &FileInZip)
         {
@@ -7542,7 +8807,7 @@ using namespace dss::capi;
         /// Extracts the contents of the file "FileName" from the current (open) ZIP file.
         /// Returns a byte-string.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<int8_t, Eigen::Dynamic, 1>>
         VectorT Extract(const char *FileName)
@@ -7555,7 +8820,7 @@ using namespace dss::capi;
         /// Extracts the contents of the file "FileName" from the current (open) ZIP file.
         /// Returns a byte-string.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<int8_t, Eigen::Dynamic, 1>>
         VectorT Extract(const string &FileName)
@@ -7567,22 +8832,22 @@ using namespace dss::capi;
         /// 
         /// Check if the given path name is present in the current ZIP file.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         bool Contains(const char *Name)
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_ZIP_Contains(ctx, Name) != 0);
+            return ctx_ZIP_Contains(ctx, Name);
         }
         /// 
         /// Check if the given path name is present in the current ZIP file.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         bool Contains(const string &Name)
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_ZIP_Contains(ctx, Name.c_str()) != 0);
+            return ctx_ZIP_Contains(ctx, Name.c_str());
         }
     };
 
@@ -7590,13 +8855,15 @@ using namespace dss::capi;
     {
     public:
 
-        IActiveClass(dss::APIUtil *util) :
+        IActiveClass(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
 
         /// 
         /// Returns name of active class.
+        /// 
+        /// Original COM help: https://opendss.epri.com/ActiveClassName.html
         /// 
         string ActiveClassName() // getter
         {
@@ -7607,6 +8874,8 @@ using namespace dss::capi;
         /// 
         /// Array of strings consisting of all element names in the active class.
         /// 
+        /// Original COM help: https://opendss.epri.com/AllNames.html
+        /// 
         strings AllNames() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -7616,6 +8885,8 @@ using namespace dss::capi;
         /// 
         /// Number of elements in Active Class. Same as NumElements Property.
         /// 
+        /// Original COM help: https://opendss.epri.com/Count.html
+        /// 
         int32_t Count() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -7623,7 +8894,12 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Sets first element in the active class to be the active DSS object. If object is a CktElement, ActiveCktELment also points to this element. Returns 0 if none.
+        /// Sets first element in the active class to be the active DSS object. 
+        /// If the object is a CktElement, ActiveCktElement also points to this element. 
+        /// 
+        /// Returns 0 if none.
+        /// 
+        /// Original COM help: https://opendss.epri.com/First.html
         /// 
         int32_t First() // getter
         {
@@ -7633,6 +8909,8 @@ using namespace dss::capi;
 
         /// 
         /// Name of the Active Element of the Active Class
+        /// 
+        /// Original COM help: https://opendss.epri.com/Name.html
         /// 
         string Name() // getter
         {
@@ -7653,7 +8931,12 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Sets next element in active class to be the active DSS object. If object is a CktElement, ActiveCktElement also points to this element.  Returns 0 if no more.
+        /// Sets next element in active class to be the active DSS object. 
+        /// If the object is a CktElement, ActiveCktElement also points to this element.
+        /// 
+        /// Returns 0 if no more.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Next.html
         /// 
         int32_t Next() // getter
         {
@@ -7664,6 +8947,8 @@ using namespace dss::capi;
         /// 
         /// Number of elements in this class. Same as Count property.
         /// 
+        /// Original COM help: https://opendss.epri.com/NumElements.html
+        /// 
         int32_t NumElements() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -7672,6 +8957,8 @@ using namespace dss::capi;
 
         /// 
         /// Get the name of the parent class of the active class
+        /// 
+        /// Original COM help: https://opendss.epri.com/ActiveClassParent.html
         /// 
         string ActiveClassParent() // getter
         {
@@ -7686,7 +8973,7 @@ using namespace dss::capi;
         /// 
         /// Additionally, the `ExcludeDisabled` flag can be used to excluded disabled elements from the output.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         string ToJSON(int32_t options=0)
         {
@@ -7699,7 +8986,7 @@ using namespace dss::capi;
     {
     public:
 
-        IBus(dss::APIUtil *util) :
+        IBus(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -7739,28 +9026,43 @@ using namespace dss::capi;
             APIUtil::ErrorChecker error_checker(api_util);
             return api_util->get_string_array(ctx_Bus_Get_AllPDEatBus);
         }
+        /// 
+        /// Return a unique node number at the active bus to avoid node collisions and adds 
+        /// it to the node list for the bus.
+        /// 
+        /// Original COM help: https://opendss.epri.com/GetUniqueNodeNumber.html
+        /// 
         int32_t GetUniqueNodeNumber(int32_t StartNumber)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_Bus_GetUniqueNodeNumber(ctx, StartNumber);
         }
+        /// 
+        /// Refreshes the Zsc matrix for the active bus.
+        /// 
+        /// Original COM help: https://opendss.epri.com/ZscRefresh.html
+        /// 
         bool ZscRefresh()
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Bus_ZscRefresh(ctx) != 0);
+            return ctx_Bus_ZscRefresh(ctx);
         }
 
         /// 
-        /// False=0 else True. Indicates whether a coordinate has been defined for this bus
+        /// Indicates whether a coordinate has been defined for this bus
+        /// 
+        /// Original COM help: https://opendss.epri.com/Coorddefined.html
         /// 
         bool Coorddefined() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Bus_Get_Coorddefined(ctx) != 0);
+            return ctx_Bus_Get_Coorddefined(ctx);
         }
 
         /// 
-        /// Complex Double array of Sequence Voltages (0, 1, 2) at this Bus.
+        /// Complex array of Sequence Voltages (0, 1, 2) at this Bus.
+        /// 
+        /// Original COM help: https://opendss.epri.com/CplxSeqVoltages.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT CplxSeqVoltages() // getter
@@ -7773,6 +9075,10 @@ using namespace dss::capi;
         /// 
         /// Accumulated customer outage durations
         /// 
+        /// *Requires a previous call to `RelCalc` command*
+        /// 
+        /// Original COM help: https://opendss.epri.com/Cust_Duration.html
+        /// 
         double Cust_Duration() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -7782,6 +9088,10 @@ using namespace dss::capi;
         /// 
         /// Annual number of customer-interruptions from this bus
         /// 
+        /// *Requires a previous call to `RelCalc` command*
+        /// 
+        /// Original COM help: https://opendss.epri.com/Cust_Interrupts.html
+        /// 
         double Cust_Interrupts() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -7789,7 +9099,11 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Distance from energymeter (if non-zero)
+        /// Distance from EnergyMeter (if non-zero)
+        /// 
+        /// *Requires an energy meter with an updated zone.*
+        /// 
+        /// Original COM help: https://opendss.epri.com/Distance.html
         /// 
         double Distance() // getter
         {
@@ -7798,7 +9112,11 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Average interruption duration, hr.
+        /// Average interruption duration, hours.
+        /// 
+        /// *Requires a previous call to `RelCalc` command*
+        /// 
+        /// Original COM help: https://opendss.epri.com/Int_Duration.html
         /// 
         double Int_Duration() // getter
         {
@@ -7808,6 +9126,10 @@ using namespace dss::capi;
 
         /// 
         /// Short circuit currents at bus; Complex Array.
+        /// 
+        /// *Requires a previous solution in `FaultStudy` mode.*
+        /// 
+        /// Original COM help: https://opendss.epri.com/Isc.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Isc() // getter
@@ -7820,6 +9142,10 @@ using namespace dss::capi;
         /// 
         /// Accumulated failure rate downstream from this bus; faults per year
         /// 
+        /// *Requires a previous call to `RelCalc` command*
+        /// 
+        /// Original COM help: https://opendss.epri.com/Lambda.html
+        /// 
         double Lambda() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -7828,6 +9154,10 @@ using namespace dss::capi;
 
         /// 
         /// Total numbers of customers served downline from this bus
+        /// 
+        /// *Requires a previous call to `RelCalc` command*
+        /// 
+        /// Original COM help: https://opendss.epri.com/N_Customers.html
         /// 
         int32_t N_Customers() // getter
         {
@@ -7838,6 +9168,10 @@ using namespace dss::capi;
         /// 
         /// Number of interruptions this bus per year
         /// 
+        /// *Requires a previous call to `RelCalc` command*
+        /// 
+        /// Original COM help: https://opendss.epri.com/N_interrupts.html
+        /// 
         double N_interrupts() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -7845,7 +9179,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Name of Bus
+        /// Name of the active Bus
+        /// 
+        /// Original COM help: https://opendss.epri.com/Name1.html
         /// 
         string Name() // getter
         {
@@ -7855,6 +9191,8 @@ using namespace dss::capi;
 
         /// 
         /// Integer Array of Node Numbers defined at the bus in same order as the voltages.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Nodes.html
         /// 
         template <typename VectorT=Eigen::Matrix<int32_t, Eigen::Dynamic, 1>>
         VectorT Nodes() // getter
@@ -7867,6 +9205,8 @@ using namespace dss::capi;
         /// 
         /// Number of Nodes this bus.
         /// 
+        /// Original COM help: https://opendss.epri.com/NumNodes.html
+        /// 
         int32_t NumNodes() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -7876,6 +9216,10 @@ using namespace dss::capi;
         /// 
         /// Integer ID of the feeder section in which this bus is located.
         /// 
+        /// *Requires a previous call to `RelCalc` command*
+        /// 
+        /// Original COM help: https://opendss.epri.com/SectionID.html
+        /// 
         int32_t SectionID() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -7883,7 +9227,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Double Array of sequence voltages at this bus.
+        /// Double Array of sequence voltages at this bus. Magnitudes only.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SeqVoltages.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT SeqVoltages() // getter
@@ -7896,6 +9242,10 @@ using namespace dss::capi;
         /// 
         /// Total length of line downline from this bus, in miles. For recloser siting algorithm.
         /// 
+        /// *Requires a previous call to `RelCalc` command*
+        /// 
+        /// Original COM help: https://opendss.epri.com/TotalMiles.html
+        /// 
         double TotalMiles() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -7903,7 +9253,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// For 2- and 3-phase buses, returns array of complex numbers represetin L-L voltages in volts. Returns -1.0 for 1-phase bus. If more than 3 phases, returns only first 3.
+        /// For 2- and 3-phase buses, returns array of complex numbers representing L-L voltages in volts. Returns -1.0 for 1-phase bus. If more than 3 phases, returns only first 3.
+        /// 
+        /// Original COM help: https://opendss.epri.com/VLL.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT VLL() // getter
@@ -7914,7 +9266,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Array of doubles containing voltages in Magnitude (VLN), angle (deg) 
+        /// Array of doubles containing voltages in Magnitude (VLN), angle (degrees) 
+        /// 
+        /// Original COM help: https://opendss.epri.com/VMagAngle.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT VMagAngle() // getter
@@ -7927,6 +9281,10 @@ using namespace dss::capi;
         /// 
         /// Open circuit voltage; Complex array.
         /// 
+        /// *Requires a previous solution in `FaultStudy` mode.*
+        /// 
+        /// Original COM help: https://opendss.epri.com/Voc.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Voc() // getter
         {
@@ -7937,6 +9295,8 @@ using namespace dss::capi;
 
         /// 
         /// Complex array of voltages at this bus.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Voltages.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Voltages() // getter
@@ -7949,6 +9309,10 @@ using namespace dss::capi;
         /// 
         /// Complex array of Ysc matrix at bus. Column by column.
         /// 
+        /// *Requires a previous solution in `FaultStudy` mode or a call to `ZSCRefresh`.*
+        /// 
+        /// Original COM help: https://opendss.epri.com/YscMatrix.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT YscMatrix() // getter
         {
@@ -7960,6 +9324,10 @@ using namespace dss::capi;
         /// 
         /// Complex Zero-Sequence short circuit impedance at bus.
         /// 
+        /// *Requires a previous solution in `FaultStudy` mode or a call to `ZSCRefresh`.*
+        /// 
+        /// Original COM help: https://opendss.epri.com/Zsc0.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Zsc0() // getter
         {
@@ -7969,7 +9337,11 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Complex Positive-Sequence short circuit impedance at bus..
+        /// Complex Positive-Sequence short circuit impedance at bus.
+        /// 
+        /// *Requires a previous solution in `FaultStudy` mode or a call to `ZSCRefresh`.*
+        /// 
+        /// Original COM help: https://opendss.epri.com/Zsc1.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Zsc1() // getter
@@ -7982,6 +9354,10 @@ using namespace dss::capi;
         /// 
         /// Complex array of Zsc matrix at bus. Column by column.
         /// 
+        /// *Requires a previous solution in `FaultStudy` mode or a call to `ZSCRefresh`.*
+        /// 
+        /// Original COM help: https://opendss.epri.com/ZscMatrix.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT ZscMatrix() // getter
         {
@@ -7993,6 +9369,8 @@ using namespace dss::capi;
         /// 
         /// Base voltage at bus in kV
         /// 
+        /// Original COM help: https://opendss.epri.com/kVBase.html
+        /// 
         double kVBase() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -8001,6 +9379,8 @@ using namespace dss::capi;
 
         /// 
         /// Returns Complex array of pu L-L voltages for 2- and 3-phase buses. Returns -1.0 for 1-phase bus. If more than 3 phases, returns only 3 phases.
+        /// 
+        /// Original COM help: https://opendss.epri.com/puVLL.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT puVLL() // getter
@@ -8011,7 +9391,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Array of doubles containig voltage magnitude, angle pairs in per unit
+        /// Array of doubles containing voltage magnitude, angle (degrees) pairs in per unit
+        /// 
+        /// Original COM help: https://opendss.epri.com/puVmagAngle.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT puVmagAngle() // getter
@@ -8024,6 +9406,8 @@ using namespace dss::capi;
         /// 
         /// Complex Array of pu voltages at the bus.
         /// 
+        /// Original COM help: https://opendss.epri.com/puVoltages.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT puVoltages() // getter
         {
@@ -8033,7 +9417,13 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Array of doubles (complex) containing the complete 012 Zsc matrix
+        /// Complex array containing the complete 012 Zsc matrix. 
+        /// Only available after Zsc is computed, either through the "ZscRefresh" command, or running a "FaultStudy" solution.
+        /// Only available for buses with 3 nodes.
+        /// 
+        /// *Requires a previous solution in `FaultStudy` mode or a call to `ZSCRefresh`.*
+        /// 
+        /// Original COM help: https://opendss.epri.com/ZSC012Matrix.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT ZSC012Matrix() // getter
@@ -8044,7 +9434,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// X Coordinate for bus (double)
+        /// X Coordinate for bus
+        /// 
+        /// Original COM help: https://opendss.epri.com/x.html
         /// 
         double x() // getter
         {
@@ -8059,7 +9451,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Y coordinate for bus(double)
+        /// Y coordinate for bus
+        /// 
+        /// Original COM help: https://opendss.epri.com/y.html
         /// 
         double y() // getter
         {
@@ -8076,6 +9470,8 @@ using namespace dss::capi;
         /// 
         /// List of strings: Full Names of LOAD elements connected to the active bus.
         /// 
+        /// Original COM help: https://opendss.epri.com/LoadList.html
+        /// 
         strings LoadList() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -8084,6 +9480,8 @@ using namespace dss::capi;
 
         /// 
         /// List of strings: Full Names of LINE elements connected to the active bus.
+        /// 
+        /// Original COM help: https://opendss.epri.com/LineList.html
         /// 
         strings LineList() // getter
         {
@@ -8097,7 +9495,7 @@ using namespace dss::capi;
     {
     public:
 
-        ICNData(dss::APIUtil *util) :
+        ICNData(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -8245,15 +9643,15 @@ using namespace dss::capi;
             return *this;
         }
 
-        int32_t GMRUnits() // getter
+        LineUnits GMRUnits() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_CNData_Get_GMRUnits(ctx);
+            return static_cast<LineUnits>(ctx_CNData_Get_GMRUnits(ctx));
         }
-        ICNData& GMRUnits(int32_t value) // setter
+        ICNData& GMRUnits(LineUnits value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_CNData_Set_GMRUnits(ctx, value);
+            ctx_CNData_Set_GMRUnits(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
@@ -8269,27 +9667,27 @@ using namespace dss::capi;
             return *this;
         }
 
-        int32_t RadiusUnits() // getter
+        LineUnits RadiusUnits() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_CNData_Get_RadiusUnits(ctx);
+            return static_cast<LineUnits>(ctx_CNData_Get_RadiusUnits(ctx));
         }
-        ICNData& RadiusUnits(int32_t value) // setter
+        ICNData& RadiusUnits(LineUnits value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_CNData_Set_RadiusUnits(ctx, value);
+            ctx_CNData_Set_RadiusUnits(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
-        int32_t ResistanceUnits() // getter
+        LineUnits ResistanceUnits() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_CNData_Get_ResistanceUnits(ctx);
+            return static_cast<LineUnits>(ctx_CNData_Get_ResistanceUnits(ctx));
         }
-        ICNData& ResistanceUnits(int32_t value) // setter
+        ICNData& ResistanceUnits(LineUnits value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_CNData_Set_ResistanceUnits(ctx, value);
+            ctx_CNData_Set_ResistanceUnits(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
@@ -8406,7 +9804,7 @@ using namespace dss::capi;
     {
     public:
 
-        ICapControls(dss::APIUtil *util) :
+        ICapControls(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -8487,6 +9885,11 @@ using namespace dss::capi;
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_CapControls_Set_idx(ctx, value);
         }
+        /// 
+        /// Force a reset of this CapControl.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Reset.html
+        /// 
         void Reset()
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -8494,7 +9897,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Transducer ratio from pirmary current to control current.
+        /// Transducer ratio from primary current to control current.
+        /// 
+        /// Original COM help: https://opendss.epri.com/CTratio.html
         /// 
         double CTratio() // getter
         {
@@ -8510,6 +9915,8 @@ using namespace dss::capi;
 
         /// 
         /// Name of the Capacitor that is controlled.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Capacitor.html
         /// 
         string Capacitor() // getter
         {
@@ -8529,6 +9936,13 @@ using namespace dss::capi;
             return *this;
         }
 
+        /// 
+        /// Dead time after capacitor is turned OFF before it can be turned back ON for the active CapControl.
+        /// 
+        /// Default is 300 sec.
+        /// 
+        /// Original COM help: https://opendss.epri.com/DeadTime.html
+        /// 
         double DeadTime() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -8544,6 +9958,8 @@ using namespace dss::capi;
         /// 
         /// Time delay [s] to switch on after arming.  Control may reset before actually switching.
         /// 
+        /// Original COM help: https://opendss.epri.com/Delay.html
+        /// 
         double Delay() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -8557,7 +9973,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Time delay [s] before swithcing off a step. Control may reset before actually switching.
+        /// Time delay [s] before switching off a step. Control may reset before actually switching.
+        /// 
+        /// Original COM help: https://opendss.epri.com/DelayOff.html
         /// 
         double DelayOff() // getter
         {
@@ -8574,20 +9992,24 @@ using namespace dss::capi;
         /// 
         /// Type of automatic controller.
         /// 
-        int32_t Mode() // getter
+        /// Original COM help: https://opendss.epri.com/Mode.html
+        /// 
+        CapControlModes Mode() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_CapControls_Get_Mode(ctx);
+            return static_cast<CapControlModes>(ctx_CapControls_Get_Mode(ctx));
         }
-        ICapControls& Mode(int32_t value) // setter
+        ICapControls& Mode(CapControlModes value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_CapControls_Set_Mode(ctx, value);
+            ctx_CapControls_Set_Mode(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
         /// 
         /// Full name of the element that PT and CT are connected to.
+        /// 
+        /// Original COM help: https://opendss.epri.com/MonitoredObj.html
         /// 
         string MonitoredObj() // getter
         {
@@ -8610,6 +10032,8 @@ using namespace dss::capi;
         /// 
         /// Terminal number on the element that PT and CT are connected to.
         /// 
+        /// Original COM help: https://opendss.epri.com/MonitoredTerm.html
+        /// 
         int32_t MonitoredTerm() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -8624,6 +10048,8 @@ using namespace dss::capi;
 
         /// 
         /// Threshold to switch off a step. See Mode for units.
+        /// 
+        /// Original COM help: https://opendss.epri.com/OFFSetting.html
         /// 
         double OFFSetting() // getter
         {
@@ -8640,6 +10066,8 @@ using namespace dss::capi;
         /// 
         /// Threshold to arm or switch on a step.  See Mode for units.
         /// 
+        /// Original COM help: https://opendss.epri.com/ONSetting.html
+        /// 
         double ONSetting() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -8654,6 +10082,8 @@ using namespace dss::capi;
 
         /// 
         /// Transducer ratio from primary feeder to control voltage.
+        /// 
+        /// Original COM help: https://opendss.epri.com/PTratio.html
         /// 
         double PTratio() // getter
         {
@@ -8670,10 +10100,12 @@ using namespace dss::capi;
         /// 
         /// Enables Vmin and Vmax to override the control Mode
         /// 
+        /// Original COM help: https://opendss.epri.com/UseVoltOverride.html
+        /// 
         bool UseVoltOverride() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_CapControls_Get_UseVoltOverride(ctx) != 0);
+            return ctx_CapControls_Get_UseVoltOverride(ctx);
         }
         ICapControls& UseVoltOverride(bool value) // setter
         {
@@ -8684,6 +10116,8 @@ using namespace dss::capi;
 
         /// 
         /// With VoltOverride, swtich off whenever PT voltage exceeds this level.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Vmax.html
         /// 
         double Vmax() // getter
         {
@@ -8699,6 +10133,8 @@ using namespace dss::capi;
 
         /// 
         /// With VoltOverride, switch ON whenever PT voltage drops below this level.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Vmin.html
         /// 
         double Vmin() // getter
         {
@@ -8717,7 +10153,7 @@ using namespace dss::capi;
     {
     public:
 
-        ICapacitors(dss::APIUtil *util) :
+        ICapacitors(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -8801,7 +10237,7 @@ using namespace dss::capi;
         bool AddStep()
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Capacitors_AddStep(ctx) != 0);
+            return ctx_Capacitors_AddStep(ctx);
         }
         void Close()
         {
@@ -8816,11 +10252,13 @@ using namespace dss::capi;
         bool SubtractStep()
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Capacitors_SubtractStep(ctx) != 0);
+            return ctx_Capacitors_SubtractStep(ctx);
         }
 
         /// 
         /// Number of Steps available in cap bank to be switched ON.
+        /// 
+        /// Original COM help: https://opendss.epri.com/AvailableSteps.html
         /// 
         int32_t AvailableSteps() // getter
         {
@@ -8831,10 +10269,12 @@ using namespace dss::capi;
         /// 
         /// Delta connection or wye?
         /// 
+        /// Original COM help: https://opendss.epri.com/IsDelta.html
+        /// 
         bool IsDelta() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Capacitors_Get_IsDelta(ctx) != 0);
+            return ctx_Capacitors_Get_IsDelta(ctx);
         }
         ICapacitors& IsDelta(bool value) // setter
         {
@@ -8845,6 +10285,8 @@ using namespace dss::capi;
 
         /// 
         /// Number of steps (default 1) for distributing and switching the total bank kVAR.
+        /// 
+        /// Original COM help: https://opendss.epri.com/NumSteps.html
         /// 
         int32_t NumSteps() // getter
         {
@@ -8859,7 +10301,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// A array of  integer [0..numsteps-1] indicating state of each step. If the read value is -1 an error has occurred.
+        /// An array of integers [0..NumSteps-1] indicating state of each step. If the read value is -1 an error has occurred.
+        /// 
+        /// Original COM help: https://opendss.epri.com/States.html
         /// 
         template <typename VectorT=Eigen::Matrix<int32_t, Eigen::Dynamic, 1>>
         VectorT States() // getter
@@ -8878,6 +10322,8 @@ using namespace dss::capi;
 
         /// 
         /// Bank kV rating. Use LL for 2 or 3 phases, or actual can rating for 1 phase.
+        /// 
+        /// Original COM help: https://opendss.epri.com/kV.html
         /// 
         double kV() // getter
         {
@@ -8911,30 +10357,59 @@ using namespace dss::capi;
     {
     public:
 
-        ICtrlQueue(dss::APIUtil *util) :
+        ICtrlQueue(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
+        /// 
+        /// Clear all actions from the Control Proxy's Action List (they are popped off the list). 
+        /// 
+        /// Original COM help: https://opendss.epri.com/ClearActions.html
+        /// 
         void ClearActions()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_CtrlQueue_ClearActions(ctx);
         }
+        /// 
+        /// Clear the control queue.
+        /// 
+        /// Original COM help: https://opendss.epri.com/ClearQueue.html
+        /// 
         void ClearQueue()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_CtrlQueue_ClearQueue(ctx);
         }
+        /// 
+        /// Delete an Action from the DSS Control Queue by the handle that is returned when the action is added.
+        /// 
+        /// (The Push function returns the handle.)
+        /// 
+        /// Original COM help: https://opendss.epri.com/Delete.html
+        /// 
         void Delete(int32_t ActionHandle)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_CtrlQueue_Delete(ctx, ActionHandle);
         }
+        /// 
+        /// Execute all actions currently on the Control Queue. 
+        /// 
+        /// Side effect: clears the queue.
+        /// 
+        /// Original COM help: https://opendss.epri.com/DoAllQueue.html
+        /// 
         void DoAllQueue()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_CtrlQueue_DoAllQueue(ctx);
         }
+        /// 
+        /// Export the queue to a CSV table and show it.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Show.html
+        /// 
         void Show()
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -8942,7 +10417,12 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Code for the active action. Long integer code to tell the control device what to do
+        /// Code for the active action. Integer code to tell the control device what to do.
+        /// 
+        /// Use this to determine what the user-defined controls are supposed to do.
+        /// It can be any 32-bit integer of the user's choosing and is the same value that the control pushed onto the control queue earlier.
+        /// 
+        /// Original COM help: https://opendss.epri.com/ActionCode.html
         /// 
         int32_t ActionCode() // getter
         {
@@ -8953,6 +10433,13 @@ using namespace dss::capi;
         /// 
         /// Handle (User defined) to device that must act on the pending action.
         /// 
+        /// The user-written code driving the interface may support more than one 
+        /// control element as necessary to perform the simulation. This handle is
+        /// an index returned to the user program that lets the program know which
+        /// control is to perform the active action.
+        /// 
+        /// Original COM help: https://opendss.epri.com/DeviceHandle.html   
+        /// 
         int32_t DeviceHandle() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -8960,7 +10447,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Number of Actions on the current actionlist (that have been popped off the control queue by CheckControlActions)
+        /// Number of Actions on the current action list (that have been popped off the control queue by CheckControlActions)
+        /// 
+        /// Original COM help: https://opendss.epri.com/NumActions.html
         /// 
         int32_t NumActions() // getter
         {
@@ -8969,6 +10458,8 @@ using namespace dss::capi;
         }
         /// 
         /// Push a control action onto the DSS control queue by time, action code, and device handle (user defined). Returns Control Queue handle.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Push.html
         /// 
         int32_t Push(int32_t Hour, double Seconds, int32_t ActionCode, int32_t DeviceHandle)
         {
@@ -8979,6 +10470,8 @@ using namespace dss::capi;
         /// 
         /// Pops next action off the action list and makes it the active action. Returns zero if none.
         /// 
+        /// Original COM help: https://opendss.epri.com/PopAction.html
+        /// 
         int32_t PopAction() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -8987,6 +10480,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of strings containing the entire queue in CSV format
+        /// 
+        /// Original COM help: https://opendss.epri.com/Queue.html
         /// 
         strings Queue() // getter
         {
@@ -8997,6 +10492,8 @@ using namespace dss::capi;
         /// 
         /// Number of items on the OpenDSS control Queue
         /// 
+        /// Original COM help: https://opendss.epri.com/QueueSize.html
+        /// 
         int32_t QueueSize() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9005,6 +10502,8 @@ using namespace dss::capi;
 
         /// 
         /// (write-only) Set the active action by index
+        /// 
+        /// Original COM help: https://opendss.epri.com/Action.html
         /// 
         ICtrlQueue& Action(int32_t value) // setter
         {
@@ -9019,7 +10518,7 @@ using namespace dss::capi;
     public:
         IDSSProperty Properties;
 
-        IDSSElement(dss::APIUtil *util) :
+        IDSSElement(altdss::APIUtil *util) :
             ContextState(util),
             Properties(util)
         {
@@ -9027,6 +10526,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of strings containing the names of all properties for the active DSS object.
+        /// 
+        /// Original COM help: https://opendss.epri.com/AllPropertyNames1.html
         /// 
         strings AllPropertyNames() // getter
         {
@@ -9037,6 +10538,8 @@ using namespace dss::capi;
         /// 
         /// Full Name of Active DSS Object (general element or circuit element).
         /// 
+        /// Original COM help: https://opendss.epri.com/Name5.html
+        /// 
         string Name() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9045,6 +10548,8 @@ using namespace dss::capi;
 
         /// 
         /// Number of Properties for the active DSS object.
+        /// 
+        /// Original COM help: https://opendss.epri.com/NumProperties1.html
         /// 
         int32_t NumProperties() // getter
         {
@@ -9057,7 +10562,7 @@ using namespace dss::capi;
         /// The `options` parameter contains bit-flags to toggle specific features.
         /// See `Obj_ToJSON` (C-API) for more, or `DSSObj.to_json` in Python.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         string ToJSON(int32_t options=0)
         {
@@ -9070,7 +10575,7 @@ using namespace dss::capi;
     {
     public:
 
-        ILineGeometries(dss::APIUtil *util) :
+        ILineGeometries(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -9206,7 +10711,7 @@ using namespace dss::capi;
         bool Reduce() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_LineGeometries_Get_Reduce(ctx) != 0);
+            return ctx_LineGeometries_Get_Reduce(ctx);
         }
         ILineGeometries& Reduce(bool value) // setter
         {
@@ -9341,7 +10846,7 @@ using namespace dss::capi;
     {
     public:
 
-        ILines(dss::APIUtil *util) :
+        ILines(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -9422,11 +10927,17 @@ using namespace dss::capi;
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Lines_Set_idx(ctx, value);
         }
+        /// 
+        /// Create new Line object with the given `Name`
+        /// 
         int32_t New(const char *Name)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_Lines_New(ctx, Name);
         }
+        /// 
+        /// Create new Line object with the given `Name`
+        /// 
         int32_t New(const string &Name)
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9435,6 +10946,8 @@ using namespace dss::capi;
 
         /// 
         /// Name of bus for terminal 1.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Bus1.html
         /// 
         string Bus1() // getter
         {
@@ -9457,6 +10970,8 @@ using namespace dss::capi;
         /// 
         /// Name of bus for terminal 2.
         /// 
+        /// Original COM help: https://opendss.epri.com/Bus2.html
+        /// 
         string Bus2() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9478,6 +10993,8 @@ using namespace dss::capi;
         /// 
         /// Zero Sequence capacitance, nanofarads per unit length.
         /// 
+        /// Original COM help: https://opendss.epri.com/C0.html
+        /// 
         double C0() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9492,6 +11009,8 @@ using namespace dss::capi;
 
         /// 
         /// Positive Sequence capacitance, nanofarads per unit length.
+        /// 
+        /// Original COM help: https://opendss.epri.com/C1.html
         /// 
         double C1() // getter
         {
@@ -9523,6 +11042,8 @@ using namespace dss::capi;
         /// 
         /// Emergency (maximum) ampere rating of Line.
         /// 
+        /// Original COM help: https://opendss.epri.com/EmergAmps1.html
+        /// 
         double EmergAmps() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9537,6 +11058,8 @@ using namespace dss::capi;
 
         /// 
         /// Line geometry code
+        /// 
+        /// Original COM help: https://opendss.epri.com/Geometry.html
         /// 
         string Geometry() // getter
         {
@@ -9559,6 +11082,8 @@ using namespace dss::capi;
         /// 
         /// Length of line section in units compatible with the LineCode definition.
         /// 
+        /// Original COM help: https://opendss.epri.com/Length.html
+        /// 
         double Length() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9573,6 +11098,8 @@ using namespace dss::capi;
 
         /// 
         /// Name of LineCode object that defines the impedances.
+        /// 
+        /// Original COM help: https://opendss.epri.com/LineCode.html
         /// 
         string LineCode() // getter
         {
@@ -9595,6 +11122,8 @@ using namespace dss::capi;
         /// 
         /// Normal ampere rating of Line.
         /// 
+        /// Original COM help: https://opendss.epri.com/NormAmps.html
+        /// 
         double NormAmps() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9610,6 +11139,10 @@ using namespace dss::capi;
         /// 
         /// Number of customers on this line section.
         /// 
+        /// *Requires an energy meter with an updated zone.*
+        /// 
+        /// Original COM help: https://opendss.epri.com/NumCust.html
+        /// 
         int32_t NumCust() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9619,6 +11152,10 @@ using namespace dss::capi;
         /// 
         /// Sets Parent of the active Line to be the active line. Returns 0 if no parent or action fails.
         /// 
+        /// *Requires an energy meter with an updated zone.*
+        /// 
+        /// Original COM help: https://opendss.epri.com/Parent.html
+        /// 
         int32_t Parent() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9627,6 +11164,8 @@ using namespace dss::capi;
 
         /// 
         /// Number of Phases, this Line element.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Phases1.html
         /// 
         int32_t Phases() // getter
         {
@@ -9643,6 +11182,8 @@ using namespace dss::capi;
         /// 
         /// Zero Sequence resistance, ohms per unit length.
         /// 
+        /// Original COM help: https://opendss.epri.com/R0.html
+        /// 
         double R0() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9657,6 +11198,8 @@ using namespace dss::capi;
 
         /// 
         /// Positive Sequence resistance, ohms per unit length.
+        /// 
+        /// Original COM help: https://opendss.epri.com/R1.html
         /// 
         double R1() // getter
         {
@@ -9673,6 +11216,8 @@ using namespace dss::capi;
         /// 
         /// Earth return resistance value used to compute line impedances at power frequency
         /// 
+        /// Original COM help: https://opendss.epri.com/Rg.html
+        /// 
         double Rg() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9688,6 +11233,8 @@ using namespace dss::capi;
         /// 
         /// Earth Resistivity, m-ohms
         /// 
+        /// Original COM help: https://opendss.epri.com/Rho.html
+        /// 
         double Rho() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9702,6 +11249,8 @@ using namespace dss::capi;
 
         /// 
         /// Resistance matrix (full), ohms per unit length. Array of doubles.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Rmatrix.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Rmatrix() // getter
@@ -9720,6 +11269,8 @@ using namespace dss::capi;
 
         /// 
         /// Line spacing code
+        /// 
+        /// Original COM help: https://opendss.epri.com/Spacing.html
         /// 
         string Spacing() // getter
         {
@@ -9742,6 +11293,8 @@ using namespace dss::capi;
         /// 
         /// Total Number of customers served from this line section.
         /// 
+        /// Original COM help: https://opendss.epri.com/TotalCust.html
+        /// 
         int32_t TotalCust() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9751,17 +11304,19 @@ using namespace dss::capi;
         int32_t Units() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_Lines_Get_Units(ctx);
+            return static_cast<LineUnits>(ctx_Lines_Get_Units(ctx));
         }
-        ILines& Units(int32_t value) // setter
+        ILines& Units(LineUnits value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_Lines_Set_Units(ctx, value);
+            ctx_Lines_Set_Units(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
         /// 
         /// Zero Sequence reactance ohms per unit length.
+        /// 
+        /// Original COM help: https://opendss.epri.com/X0.html
         /// 
         double X0() // getter
         {
@@ -9778,6 +11333,8 @@ using namespace dss::capi;
         /// 
         /// Positive Sequence reactance, ohms per unit length.
         /// 
+        /// Original COM help: https://opendss.epri.com/X1.html
+        /// 
         double X1() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9793,6 +11350,8 @@ using namespace dss::capi;
         /// 
         /// Earth return reactance value used to compute line impedances at power frequency
         /// 
+        /// Original COM help: https://opendss.epri.com/Xg.html
+        /// 
         double Xg() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9805,6 +11364,11 @@ using namespace dss::capi;
             return *this;
         }
 
+        /// 
+        /// Reactance matrix (full), ohms per unit length. Array of doubles.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Xmatrix.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Xmatrix() // getter
         {
@@ -9821,7 +11385,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Yprimitive: Does Nothing at present on Put; Dangerous
+        /// Yprimitive for the active line object (complex array).
+        /// 
+        /// Original COM help: https://opendss.epri.com/Yprim1.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Yprim() // getter
@@ -9841,6 +11407,8 @@ using namespace dss::capi;
         /// 
         /// Delivers the rating for the current season (in Amps)  if the "SeasonalRatings" option is active
         /// 
+        /// Original COM help: https://opendss.epri.com/SeasonRating.html
+        /// 
         double SeasonRating() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9848,12 +11416,14 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Sets/gets the Line element switch status. Setting it has side-effects to the line parameters.
+        /// Line element switch status. Setting it has side-effects to the line parameters.
+        /// 
+        /// **(API Extension)**
         /// 
         bool IsSwitch() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Lines_Get_IsSwitch(ctx) != 0);
+            return ctx_Lines_Get_IsSwitch(ctx);
         }
         ILines& IsSwitch(bool value) // setter
         {
@@ -9867,7 +11437,7 @@ using namespace dss::capi;
     {
     public:
 
-        ILoads(dss::APIUtil *util) :
+        ILoads(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -9952,6 +11522,8 @@ using namespace dss::capi;
         /// 
         /// Factor for allocating loads by connected xfkva
         /// 
+        /// Original COM help: https://opendss.epri.com/AllocationFactor.html
+        /// 
         double AllocationFactor() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -9966,6 +11538,8 @@ using namespace dss::capi;
 
         /// 
         /// Name of a loadshape with both Mult and Qmult, for CVR factors as a function of time.
+        /// 
+        /// Original COM help: https://opendss.epri.com/CVRcurve.html
         /// 
         string CVRcurve() // getter
         {
@@ -9988,6 +11562,8 @@ using namespace dss::capi;
         /// 
         /// Percent reduction in Q for percent reduction in V. Must be used with dssLoadModelCVR.
         /// 
+        /// Original COM help: https://opendss.epri.com/CVRvars.html
+        /// 
         double CVRvars() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10003,6 +11579,8 @@ using namespace dss::capi;
         /// 
         /// Percent reduction in P for percent reduction in V. Must be used with dssLoadModelCVR.
         /// 
+        /// Original COM help: https://opendss.epri.com/CVRwatts.html
+        /// 
         double CVRwatts() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10016,7 +11594,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Factor relates average to peak kw.  Used for allocation with kwh and kwhdays
+        /// CFactor relates average to peak kw.  Used for allocation with kwh and kwhdays
+        /// 
+        /// Original COM help: https://opendss.epri.com/Cfactor.html
         /// 
         double Cfactor() // getter
         {
@@ -10030,6 +11610,11 @@ using namespace dss::capi;
             return *this;
         }
 
+        /// 
+        /// Code number used to separate loads by class or group. No effect on the solution.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Class.html
+        /// 
         int32_t Class() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10044,6 +11629,8 @@ using namespace dss::capi;
 
         /// 
         /// Name of the growthshape curve for yearly load growth factors.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Growth.html
         /// 
         string Growth() // getter
         {
@@ -10066,10 +11653,12 @@ using namespace dss::capi;
         /// 
         /// Delta loads are connected line-to-line.
         /// 
+        /// Original COM help: https://opendss.epri.com/IsDelta1.html
+        /// 
         bool IsDelta() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Loads_Get_IsDelta(ctx) != 0);
+            return ctx_Loads_Get_IsDelta(ctx);
         }
         ILoads& IsDelta(bool value) // setter
         {
@@ -10081,20 +11670,24 @@ using namespace dss::capi;
         /// 
         /// The Load Model defines variation of P and Q with voltage.
         /// 
-        int32_t Model() // getter
+        /// Original COM help: https://opendss.epri.com/Model1.html
+        /// 
+        LoadModels Model() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_Loads_Get_Model(ctx);
+            return static_cast<LoadModels>(ctx_Loads_Get_Model(ctx));
         }
-        ILoads& Model(int32_t value) // setter
+        ILoads& Model(LoadModels value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_Loads_Set_Model(ctx, value);
+            ctx_Loads_Set_Model(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
         /// 
         /// Number of customers in this load, defaults to one.
+        /// 
+        /// Original COM help: https://opendss.epri.com/NumCust1.html
         /// 
         int32_t NumCust() // getter
         {
@@ -10111,6 +11704,8 @@ using namespace dss::capi;
         /// 
         /// Get or set Power Factor for Active Load. Specify leading PF as negative. Updates kvar based on present value of kW
         /// 
+        /// Original COM help: https://opendss.epri.com/PF1.html
+        /// 
         double PF() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10125,6 +11720,8 @@ using namespace dss::capi;
 
         /// 
         /// Average percent of nominal load in Monte Carlo studies; only if no loadshape defined for this load.
+        /// 
+        /// Original COM help: https://opendss.epri.com/PctMean.html
         /// 
         double PctMean() // getter
         {
@@ -10141,6 +11738,8 @@ using namespace dss::capi;
         /// 
         /// Percent standard deviation for Monte Carlo load studies; if there is no loadshape assigned to this load.
         /// 
+        /// Original COM help: https://opendss.epri.com/PctStdDev.html
+        /// 
         double PctStdDev() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10154,7 +11753,11 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Relative Weighting factor for the active LOAD
+        /// Relative Weighting factor for the active load.
+        /// 
+        /// This value is used in reliability methods.
+        /// 
+        /// Original COM help: https://opendss.epri.com/RelWeight.html
         /// 
         double RelWeight() // getter
         {
@@ -10171,6 +11774,8 @@ using namespace dss::capi;
         /// 
         /// Neutral resistance for wye-connected loads.
         /// 
+        /// Original COM help: https://opendss.epri.com/Rneut.html
+        /// 
         double Rneut() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10184,7 +11789,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Name of harmonic current spectrrum shape.
+        /// Name of harmonic current spectrum shape.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Spectrum.html
         /// 
         string Spectrum() // getter
         {
@@ -10207,20 +11814,24 @@ using namespace dss::capi;
         /// 
         /// Response to load multipliers: Fixed (growth only), Exempt (no LD curve), Variable (all).
         /// 
-        int32_t Status() // getter
+        /// Original COM help: https://opendss.epri.com/Status.html
+        /// 
+        LoadStatus Status() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_Loads_Get_Status(ctx);
+            return static_cast<LoadStatus>(ctx_Loads_Get_Status(ctx));
         }
-        ILoads& Status(int32_t value) // setter
+        ILoads& Status(LoadStatus value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_Loads_Set_Status(ctx, value);
+            ctx_Loads_Set_Status(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
         /// 
         /// Maximum per-unit voltage to use the load model. Above this, constant Z applies.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Vmaxpu1.html
         /// 
         double Vmaxpu() // getter
         {
@@ -10237,6 +11848,8 @@ using namespace dss::capi;
         /// 
         /// Minimum voltage for unserved energy (UE) evaluation.
         /// 
+        /// Original COM help: https://opendss.epri.com/Vminemerg.html
+        /// 
         double Vminemerg() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10251,6 +11864,8 @@ using namespace dss::capi;
 
         /// 
         /// Minimum voltage for energy exceeding normal (EEN) evaluations.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Vminnorm.html
         /// 
         double Vminnorm() // getter
         {
@@ -10267,6 +11882,8 @@ using namespace dss::capi;
         /// 
         /// Minimum voltage to apply the load model. Below this, constant Z is used.
         /// 
+        /// Original COM help: https://opendss.epri.com/Vminpu1.html
+        /// 
         double Vminpu() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10282,6 +11899,8 @@ using namespace dss::capi;
         /// 
         /// Neutral reactance for wye-connected loads.
         /// 
+        /// Original COM help: https://opendss.epri.com/Xneut.html
+        /// 
         double Xneut() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10296,6 +11915,8 @@ using namespace dss::capi;
 
         /// 
         /// Name of yearly duration loadshape
+        /// 
+        /// Original COM help: https://opendss.epri.com/Yearly.html
         /// 
         string Yearly() // getter
         {
@@ -10318,6 +11939,8 @@ using namespace dss::capi;
         /// 
         /// Array of 7 doubles with values for ZIPV property of the load object
         /// 
+        /// Original COM help: https://opendss.epri.com/ZIPV.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT ZIPV() // getter
         {
@@ -10335,6 +11958,8 @@ using namespace dss::capi;
 
         /// 
         /// Name of the loadshape for a daily load profile.
+        /// 
+        /// Original COM help: https://opendss.epri.com/daily.html
         /// 
         string daily() // getter
         {
@@ -10357,6 +11982,8 @@ using namespace dss::capi;
         /// 
         /// Name of the loadshape for a duty cycle simulation.
         /// 
+        /// Original COM help: https://opendss.epri.com/duty.html
+        /// 
         string duty() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10376,7 +12003,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Set kV rating for active Load. For 2 or more phases set Line-Line kV. Else actual kV across terminals.
+        /// kV rating for active Load. For 2 or more phases set Line-Line kV. Else actual kV across terminals.
+        /// 
+        /// Original COM help: https://opendss.epri.com/kV2.html
         /// 
         double kV() // getter
         {
@@ -10393,6 +12022,8 @@ using namespace dss::capi;
         /// 
         /// Set kW for active Load. Updates kvar based on present PF.
         /// 
+        /// Original COM help: https://opendss.epri.com/kW1.html
+        /// 
         double kW() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10408,6 +12039,8 @@ using namespace dss::capi;
         /// 
         /// Base load kva. Also defined kw and kvar or pf input, or load allocation by kwh or xfkva.
         /// 
+        /// Original COM help: https://opendss.epri.com/kva.html
+        /// 
         double kva() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10421,7 +12054,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Get/set kvar for active Load. If set, updates PF based on present kW.
+        /// Reactive power in kvar for active Load. If set, updates PF based on present kW.
+        /// 
+        /// Original COM help: https://opendss.epri.com/kvar1.html
         /// 
         double kvar() // getter
         {
@@ -10436,7 +12071,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// kwh billed for this period. Can be used with Cfactor for load allocation.
+        /// kWh billed for this period. Can be used with Cfactor for load allocation.
+        /// 
+        /// Original COM help: https://opendss.epri.com/kwh.html
         /// 
         double kwh() // getter
         {
@@ -10451,7 +12088,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Length of kwh billing period for average demand calculation. Default 30.
+        /// Length of kWh billing period for average demand calculation. Default 30.
+        /// 
+        /// Original COM help: https://opendss.epri.com/kwhdays.html
         /// 
         double kwhdays() // getter
         {
@@ -10468,6 +12107,8 @@ using namespace dss::capi;
         /// 
         /// Percent of Load that is modeled as series R-L for harmonics studies
         /// 
+        /// Original COM help: https://opendss.epri.com/pctSeriesRL.html
+        /// 
         double pctSeriesRL() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10482,6 +12123,8 @@ using namespace dss::capi;
 
         /// 
         /// Rated service transformer kVA for load allocation, using AllocationFactor. Affects kW, kvar, and pf.
+        /// 
+        /// Original COM help: https://opendss.epri.com/xfkVA.html
         /// 
         double xfkVA() // getter
         {
@@ -10498,6 +12141,8 @@ using namespace dss::capi;
         /// 
         /// Name of the sensor monitoring this load.
         /// 
+        /// Original COM help: https://opendss.epri.com/Sensor.html
+        /// 
         string Sensor() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10506,6 +12151,8 @@ using namespace dss::capi;
 
         /// 
         /// Number of phases
+        /// 
+        /// **(API Extension)**
         /// 
         int32_t Phases() // getter
         {
@@ -10524,18 +12171,44 @@ using namespace dss::capi;
     {
     public:
 
-        ISettings(dss::APIUtil *util) :
+        ISettings(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
+        /// 
+        /// Returns a Settings context manager. 
+        /// The context manager saves the values of the tracker settings on enter, 
+        /// restoring them on exit. This allows code to change the settings within 
+        /// the context block and they are restored to the initial values automatically.
+        /// 
+        /// Note: this context manager target DSS-Python settings. Use the equivalent for OpenDSSDirect.py.
+        /// A few settings are shared at engine level.
+        /// 
+        /// Settings tracked:
+        /// - AdvancedTypes
+        /// - CompatFlags
+        /// - IterateDisabled
+        /// - PreferLists
+        /// - SkipCommands
+        /// - SkipFileRegExp
+        /// 
+        SettingsContext Context()
+        {
+            return SettingsContext(*this);
+        }
 
         /// 
-        /// {True | False*} Designates whether to allow duplicate names of objects
+        /// Designates whether to allow duplicate names of objects
+        /// 
+        /// False by default.
+        /// 
+        /// **NOTE**: for DSS-Extensions, we are considering removing this option in a future 
+        /// release since it has performance impacts even when not used.
         /// 
         bool AllowDuplicates() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Settings_Get_AllowDuplicates(ctx) != 0);
+            return ctx_Settings_Get_AllowDuplicates(ctx);
         }
         ISettings& AllowDuplicates(bool value) // setter
         {
@@ -10546,6 +12219,8 @@ using namespace dss::capi;
 
         /// 
         /// List of Buses or (File=xxxx) syntax for the AutoAdd solution mode.
+        /// 
+        /// Original COM help: https://opendss.epri.com/AutoBusList.html
         /// 
         string AutoBusList() // getter
         {
@@ -10566,27 +12241,31 @@ using namespace dss::capi;
         }
 
         /// 
-        /// {dssMultiphase (0) * | dssPositiveSeq (1) } Indicate if the circuit model is positive sequence.
+        /// Indicate if the circuit model is positive sequence.
         /// 
-        int32_t CktModel() // getter
+        /// Original COM help: https://opendss.epri.com/CktModel.html
+        /// 
+        CktModels CktModel() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_Settings_Get_CktModel(ctx);
+            return static_cast<CktModels>(ctx_Settings_Get_CktModel(ctx));
         }
-        ISettings& CktModel(int32_t value) // setter
+        ISettings& CktModel(CktModels value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_Settings_Set_CktModel(ctx, value);
+            ctx_Settings_Set_CktModel(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
         /// 
-        /// {True | False*} Denotes whether to trace the control actions to a file.
+        /// Denotes whether to trace the control actions to a file.
+        /// 
+        /// Original COM help: https://opendss.epri.com/ControlTrace.html
         /// 
         bool ControlTrace() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Settings_Get_ControlTrace(ctx) != 0);
+            return ctx_Settings_Get_ControlTrace(ctx);
         }
         ISettings& ControlTrace(bool value) // setter
         {
@@ -10597,6 +12276,8 @@ using namespace dss::capi;
 
         /// 
         /// Per Unit maximum voltage for Emergency conditions.
+        /// 
+        /// Original COM help: https://opendss.epri.com/EmergVmaxpu.html
         /// 
         double EmergVmaxpu() // getter
         {
@@ -10613,6 +12294,8 @@ using namespace dss::capi;
         /// 
         /// Per Unit minimum voltage for Emergency conditions.
         /// 
+        /// Original COM help: https://opendss.epri.com/EmergVminpu.html
+        /// 
         double EmergVminpu() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10627,6 +12310,8 @@ using namespace dss::capi;
 
         /// 
         /// Integer array defining which energy meter registers to use for computing losses
+        /// 
+        /// Original COM help: https://opendss.epri.com/LossRegs.html
         /// 
         template <typename VectorT=Eigen::Matrix<int32_t, Eigen::Dynamic, 1>>
         VectorT LossRegs() // getter
@@ -10646,6 +12331,8 @@ using namespace dss::capi;
         /// 
         /// Weighting factor applied to Loss register values.
         /// 
+        /// Original COM help: https://opendss.epri.com/LossWeight.html
+        /// 
         double LossWeight() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10660,6 +12347,8 @@ using namespace dss::capi;
 
         /// 
         /// Per Unit maximum voltage for Normal conditions.
+        /// 
+        /// Original COM help: https://opendss.epri.com/NormVmaxpu.html
         /// 
         double NormVmaxpu() // getter
         {
@@ -10676,6 +12365,8 @@ using namespace dss::capi;
         /// 
         /// Per Unit minimum voltage for Normal conditions.
         /// 
+        /// Original COM help: https://opendss.epri.com/NormVminpu.html
+        /// 
         double NormVminpu() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10690,6 +12381,8 @@ using namespace dss::capi;
 
         /// 
         /// Name of LoadShape object that serves as the source of price signal data for yearly simulations, etc.
+        /// 
+        /// Original COM help: https://opendss.epri.com/PriceCurve.html
         /// 
         string PriceCurve() // getter
         {
@@ -10712,6 +12405,8 @@ using namespace dss::capi;
         /// 
         /// Price Signal for the Circuit
         /// 
+        /// Original COM help: https://opendss.epri.com/PriceSignal.html
+        /// 
         double PriceSignal() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10725,12 +12420,14 @@ using namespace dss::capi;
         }
 
         /// 
-        /// {True | False *} Gets value of trapezoidal integration flag in energy meters.
+        /// Gets value of trapezoidal integration flag in energy meters. Defaults to `False`.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Trapezoidal.html
         /// 
         bool Trapezoidal() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Settings_Get_Trapezoidal(ctx) != 0);
+            return ctx_Settings_Get_Trapezoidal(ctx);
         }
         ISettings& Trapezoidal(bool value) // setter
         {
@@ -10741,6 +12438,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of Integers defining energy meter registers to use for computing UE
+        /// 
+        /// Original COM help: https://opendss.epri.com/UEregs.html
         /// 
         template <typename VectorT=Eigen::Matrix<int32_t, Eigen::Dynamic, 1>>
         VectorT UEregs() // getter
@@ -10760,6 +12459,8 @@ using namespace dss::capi;
         /// 
         /// Weighting factor applied to UE register values.
         /// 
+        /// Original COM help: https://opendss.epri.com/UEweight.html
+        /// 
         double UEweight() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10774,6 +12475,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of doubles defining the legal voltage bases in kV L-L
+        /// 
+        /// Original COM help: https://opendss.epri.com/VoltageBases.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT VoltageBases() // getter
@@ -10791,12 +12494,14 @@ using namespace dss::capi;
         }
 
         /// 
-        /// {True | False*}  Locks Zones on energy meters to prevent rebuilding if a circuit change occurs.
+        /// Locks Zones on energy meters to prevent rebuilding if a circuit change occurs.
+        /// 
+        /// Original COM help: https://opendss.epri.com/ZoneLock.html
         /// 
         bool ZoneLock() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Settings_Get_ZoneLock(ctx) != 0);
+            return ctx_Settings_Get_ZoneLock(ctx);
         }
         ISettings& ZoneLock(bool value) // setter
         {
@@ -10819,12 +12524,12 @@ using namespace dss::capi;
         /// Controls whether the terminals are checked when updating the currents in Load component. Defaults to True.
         /// If the loads are guaranteed to have their terminals closed throughout the simulation, this can be set to False to save some time.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         bool LoadsTerminalCheck() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Settings_Get_LoadsTerminalCheck(ctx) != 0);
+            return ctx_Settings_Get_LoadsTerminalCheck(ctx);
         }
         ISettings& LoadsTerminalCheck(bool value) // setter
         {
@@ -10841,7 +12546,7 @@ using namespace dss::capi;
         /// Set it to 1 (or `True`) to include disabled elements.
         /// Other numeric values are reserved for other potential behaviors.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         int32_t IterateDisabled() // getter
         {
@@ -10854,6 +12559,187 @@ using namespace dss::capi;
             ctx_Settings_Set_IterateDisabled(ctx, value);
             return *this;
         }
+        /// 
+        /// Switch the property names according to the target style.
+        /// 
+        /// Use this method for compatibility with code that doesn't consider that
+        /// OpenDSS is case insensitive. Check the enumeration for more:
+        /// [DSSPropertyNameStyle](
+        /// 
+        /// **(API Extension)**
+        /// 
+        void SetPropertyNameStyle(DSSPropertyNameStyle value)
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Settings_SetPropertyNameStyle(ctx, static_cast<int32_t>(value));
+        }
+
+        /// 
+        /// Regular expression pattern to skip files.
+        /// 
+        /// If a file name as provided in the input for the `Redirect` and `Compile` commands
+        /// matches the regular expression pattern, it is skipped (the file is not read nor
+        /// commands contained in the file are executed).
+        /// 
+        /// Set to an empty string to reset/disable the filter.
+        /// 
+        /// Case-insensitive.
+        /// See https://regex.sorokin.engineer/en/latest/regular_expressions.html for information on 
+        /// the expression syntax and options.
+        /// 
+        /// Even if the `clear` command is included in `Settings.SkipCommands`, the `DSS.ClearAll()` method can 
+        /// still be called. It resets both skip settings, `SkipCommands` and `SkipFileRegExp`.
+        /// 
+        /// **(API Extension)**
+        /// 
+        string SkipFileRegExp() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Settings_Get_SkipFileRegExp(ctx);
+        }
+        ISettings& SkipFileRegExp(const char *value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Settings_Set_SkipFileRegExp(ctx, (value || ""));
+            return *this;
+        }
+        ISettings& SkipFileRegExp(const string &value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Settings_Set_SkipFileRegExp(ctx, (value.c_str() || ""));
+            return *this;
+        }
+
+        /// 
+        /// Controls some compatibility flags introduced to toggle some behavior from the official OpenDSS.
+        /// 
+        /// **THE FLAGS ARE GLOBAL, affecting all AltDSS engines in the process.**  
+        /// CompatFlags for Oddie-loaded instances (OpenDSS and OpenDSS-C engines) are handled by the Oddie code itself,
+        /// so it is global for each Oddie library.
+        /// 
+        /// These flags may change for each version of DSS C-API, but the same value will not be reused. That is,
+        /// when we remove a compatibility flag, it will have no effect but will also not affect anything else
+        /// besides raising an error if the user tries to toggle a flag that was available in a previous version.
+        /// 
+        /// We expect to keep a very limited number of flags. Since the flags are more transient than the other
+        /// options/flags, it was preferred to add this generic function instead of a separate function per
+        /// flag.
+        /// 
+        /// See the enumeration `DSSCompatFlags` for available flags, including description.
+        /// 
+        /// **(API Extension)**
+        /// 
+        DSSCompatFlags CompatFlags() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_DSS_Get_CompatFlags(ctx);
+        }
+        ISettings& CompatFlags(DSSCompatFlags value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_DSS_Set_CompatFlags(ctx, static_cast<uint32_t>(value));
+            return *this;
+        }
+
+        /// 
+        /// If enabled, in case of errors or empty arrays, the API returns arrays with values compatible with the 
+        /// official OpenDSS COM interface. 
+        /// 
+        /// For example, consider the property `Loads.ZIPV`. If there is no active circuit or active load element:
+        /// 
+        /// - In the disabled state (COMErrorResults=False), the function will return "[]", an array with 0 elements.
+        /// - In the enabled state (COMErrorResults=True), the function will return "[0.0]" instead. This should
+        /// be compatible with the return value of the official COM interface.
+        /// 
+        /// Defaults to false (disabled state) in AltDSS since the v0.15.x series.
+        /// 
+        /// This does not affect the results when using EPRI's OpenDSS distribution through Oddie.
+        /// 
+        /// This can also be set through the environment variable `DSS_CAPI_COM_DEFAULTS`. Setting it to 1 enables
+        /// the legacy/COM behavior. The value can be toggled through the API at any time.
+        /// 
+        /// **(API Extension)**
+        /// 
+        bool COMErrorResults() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_DSS_Get_COMErrorResults(ctx);
+        }
+        ISettings& COMErrorResults(bool value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_DSS_Set_COMErrorResults(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// If enabled, the `DOScmd` command is allowed. Otherwise, an error is reported if the user tries to use it.
+        /// 
+        /// Defaults to False/0 (disabled state). Users should consider DOScmd deprecated on DSS-Extensions.
+        /// 
+        /// This can also be set through the environment variable DSS_CAPI_ALLOW_DOSCMD. Setting it to 1 enables
+        /// the command.
+        /// 
+        /// **(API Extension)**
+        /// 
+        bool AllowDOScmd() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_DSS_Get_AllowDOScmd(ctx);
+        }
+        ISettings& AllowDOScmd(bool value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_DSS_Set_AllowDOScmd(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// If disabled, the engine will not change the active working directory during execution. E.g. a "compile"
+        /// command will not "chdir" to the file path.
+        /// 
+        /// If you have issues with long paths, enabling this might help in some scenarios.
+        /// 
+        /// Defaults to True (allow changes, backwards compatible) in the 0.10.x versions of DSS C-API. 
+        /// This might change to False in future versions.
+        /// 
+        /// This can also be set through the environment variable DSS_CAPI_ALLOW_CHANGE_DIR. Set it to 0 to
+        /// disallow changing the active working directory.
+        /// 
+        /// **(API Extension)**
+        /// 
+        bool AllowChangeDir() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_DSS_Get_AllowChangeDir(ctx);
+        }
+        ISettings& AllowChangeDir(bool value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_DSS_Set_AllowChangeDir(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Gets/sets whether running the external editor for "Show" is allowed
+        /// 
+        /// AllowEditor controls whether the external editor is used in commands like "Show".
+        /// If you set to 0 (false), the editor is not executed. Note that other side effects,
+        /// such as the creation of files, are not affected.
+        /// 
+        /// **(API Extension)**
+        /// 
+        bool AllowEditor() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_DSS_Get_AllowEditor(ctx);
+        }
+        ISettings& AllowEditor(bool value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_DSS_Set_AllowEditor(ctx, value);
+            return *this;
+        }
     };
 
     class ICktElement: public ContextState
@@ -10861,7 +12747,7 @@ using namespace dss::capi;
     public:
         IDSSProperty Properties;
 
-        ICktElement(dss::APIUtil *util) :
+        ICktElement(altdss::APIUtil *util) :
             ContextState(util),
             Properties(util)
         {
@@ -10908,6 +12794,11 @@ using namespace dss::capi;
         {
             return setVariableByName(name.c_str(), Value);
         }
+        /// 
+        /// Close the specified terminal and phase, if non-zero, or all conductors at the terminal.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Close1.html
+        /// 
         void Close(int32_t Term, int32_t Phs)
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10921,11 +12812,25 @@ using namespace dss::capi;
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_CktElement_Get_Controller(ctx, idx);
         }
-        bool IsOpen(int32_t Term, int32_t Phs)
+        /// 
+        /// Indicates if the specified terminal and, optionally, a specific phase conductor is open.
+        /// 
+        /// Provide zero in the `Phs` argument to check if any conductor of the terminal `Term` is open.
+        /// 
+        /// Provide a non-zero phase number in `Phs` to check if a specific phase conductor is open.
+        /// 
+        /// Original COM help: https://opendss.epri.com/IsOpen.html
+        /// 
+        bool IsOpen(int32_t Term, int32_t Phs=0)
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_CktElement_IsOpen(ctx, Term, Phs) != 0);
+            return ctx_CktElement_IsOpen(ctx, Term, Phs);
         }
+        /// 
+        /// Open the specified terminal and phase, if non-zero, or all conductors at the terminal.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Open1.html
+        /// 
         void Open(int32_t Term, int32_t Phs)
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10935,6 +12840,8 @@ using namespace dss::capi;
         /// 
         /// Array containing all property names of the active device.
         /// 
+        /// Original COM help: https://opendss.epri.com/AllPropertyNames.html
+        /// 
         strings AllPropertyNames() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -10942,7 +12849,10 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Array of strings listing all the published variable names, if a PCElement. Otherwise, null string.
+        /// Array of strings listing all the published state variable names.
+        /// Valid only for PCElements.
+        /// 
+        /// Original COM help: https://opendss.epri.com/AllVariableNames.html
         /// 
         strings AllVariableNames() // getter
         {
@@ -10952,6 +12862,9 @@ using namespace dss::capi;
 
         /// 
         /// Array of doubles. Values of state variables of active element if PC element.
+        /// Valid only for PCElements.
+        /// 
+        /// Original COM help: https://opendss.epri.com/AllVariableValues.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllVariableValues() // getter
@@ -10962,12 +12875,17 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Array of strings. Get  Bus definitions to which each terminal is connected.
+        /// Bus definitions to which each terminal is connected.
         /// 
-        strings BusNames() // getter
+        /// The `removeNodes` argument is an **API Extension**. Use it to get only the bus names, 
+        /// without the connection/node specification, if present.
+        /// 
+        /// Original COM help: https://opendss.epri.com/BusNames.html
+        /// 
+        strings BusNames(bool removeNodes=false)
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return api_util->get_string_array(ctx_CktElement_Get_BusNames);
+            return api_util->get_string_array(ctx_CktElement_Get_BusNames, removeNodes);
         }
         ICktElement& BusNames(const strings &value) // setter
         {
@@ -10978,6 +12896,8 @@ using namespace dss::capi;
 
         /// 
         /// Complex double array of Sequence Currents for all conductors of all terminals of active circuit element.
+        /// 
+        /// Original COM help: https://opendss.epri.com/CplxSeqCurrents.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT CplxSeqCurrents() // getter
@@ -10990,6 +12910,8 @@ using namespace dss::capi;
         /// 
         /// Complex double array of Sequence Voltage for all terminals of active circuit element.
         /// 
+        /// Original COM help: https://opendss.epri.com/CplxSeqVoltages1.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT CplxSeqVoltages() // getter
         {
@@ -11001,6 +12923,8 @@ using namespace dss::capi;
         /// 
         /// Complex array of currents into each conductor of each terminal
         /// 
+        /// Original COM help: https://opendss.epri.com/Currents1.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Currents() // getter
         {
@@ -11010,7 +12934,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Currents in magnitude, angle format as a array of doubles.
+        /// Currents in magnitude, angle (degrees) format as an array of doubles.
+        /// 
+        /// Original COM help: https://opendss.epri.com/CurrentsMagAng.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT CurrentsMagAng() // getter
@@ -11022,6 +12948,8 @@ using namespace dss::capi;
 
         /// 
         /// Display name of the object (not necessarily unique)
+        /// 
+        /// Original COM help: https://opendss.epri.com/DisplayName.html
         /// 
         string DisplayName() // getter
         {
@@ -11044,6 +12972,8 @@ using namespace dss::capi;
         /// 
         /// Emergency Ampere Rating for PD elements
         /// 
+        /// Original COM help: https://opendss.epri.com/EmergAmps.html
+        /// 
         double EmergAmps() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -11059,10 +12989,12 @@ using namespace dss::capi;
         /// 
         /// Boolean indicating that element is currently in the circuit.
         /// 
+        /// Original COM help: https://opendss.epri.com/Enabled.html
+        /// 
         bool Enabled() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_CktElement_Get_Enabled(ctx) != 0);
+            return ctx_CktElement_Get_Enabled(ctx);
         }
         ICktElement& Enabled(bool value) // setter
         {
@@ -11074,6 +13006,10 @@ using namespace dss::capi;
         /// 
         /// Name of the Energy Meter this element is assigned to.
         /// 
+        /// *Requires an energy meter with an updated zone.*
+        /// 
+        /// Original COM help: https://opendss.epri.com/EnergyMeter.html
+        /// 
         string EnergyMeter() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -11081,7 +13017,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// globally unique identifier for this object
+        /// GUID/UUID for this object.
+        /// 
+        /// Original COM help: https://opendss.epri.com/GUID.html
         /// 
         string GUID() // getter
         {
@@ -11090,7 +13028,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Pointer to this object
+        /// Index of this element into the circuit's element list.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Handle.html
         /// 
         int32_t Handle() // getter
         {
@@ -11101,32 +13041,40 @@ using namespace dss::capi;
         /// 
         /// True if a recloser, relay, or fuse controlling this ckt element. OCP = Overcurrent Protection 
         /// 
+        /// Original COM help: https://opendss.epri.com/HasOCPDevice.html
+        /// 
         bool HasOCPDevice() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_CktElement_Get_HasOCPDevice(ctx) != 0);
+            return ctx_CktElement_Get_HasOCPDevice(ctx);
         }
 
         /// 
-        /// This element has a SwtControl attached.
+        /// True if this element has a SwtControl attached.
+        /// 
+        /// Original COM help: https://opendss.epri.com/HasSwitchControl.html
         /// 
         bool HasSwitchControl() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_CktElement_Get_HasSwitchControl(ctx) != 0);
+            return ctx_CktElement_Get_HasSwitchControl(ctx);
         }
 
         /// 
-        /// This element has a CapControl or RegControl attached.
+        /// True if this element has a CapControl or RegControl attached.
+        /// 
+        /// Original COM help: https://opendss.epri.com/HasVoltControl.html
         /// 
         bool HasVoltControl() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_CktElement_Get_HasVoltControl(ctx) != 0);
+            return ctx_CktElement_Get_HasVoltControl(ctx);
         }
 
         /// 
-        /// Total losses in the element: two-element complex array
+        /// Total losses in the element: two-element double array (complex), in VA (watts, vars)
+        /// 
+        /// Original COM help: https://opendss.epri.com/Losses1.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Losses() // getter
@@ -11137,7 +13085,22 @@ using namespace dss::capi;
         }
 
         /// 
+        /// Complex array with the losses by type (total losses, load losses, no-load losses), in VA, for the active circuit element.
+        /// 
+        /// Added in May 2025. Same as `LossesByType` introduced for Transformers in AltDSS/DSS C-API in May 2019.
+        /// 
+        template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
+        VectorT AllLosses() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_CktElement_Get_AllLosses_GR(ctx);
+            return api_util->get_float64_gr_array<VectorT>();
+        }
+
+        /// 
         /// Full Name of Active Circuit Element
+        /// 
+        /// Original COM help: https://opendss.epri.com/Name4.html
         /// 
         string Name() // getter
         {
@@ -11147,6 +13110,10 @@ using namespace dss::capi;
 
         /// 
         /// Array of integer containing the node numbers (representing phases, for example) for each conductor of each terminal. 
+        /// 
+        /// Be sure to run a solution to initialize the values after the circuit is created or modified.
+        /// 
+        /// Original COM help: https://opendss.epri.com/NodeOrder.html
         /// 
         template <typename VectorT=Eigen::Matrix<int32_t, Eigen::Dynamic, 1>>
         VectorT NodeOrder() // getter
@@ -11158,6 +13125,8 @@ using namespace dss::capi;
 
         /// 
         /// Normal ampere rating for PD Elements
+        /// 
+        /// Original COM help: https://opendss.epri.com/NormalAmps.html
         /// 
         double NormalAmps() // getter
         {
@@ -11174,6 +13143,8 @@ using namespace dss::capi;
         /// 
         /// Number of Conductors per Terminal
         /// 
+        /// Original COM help: https://opendss.epri.com/NumConductors.html
+        /// 
         int32_t NumConductors() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -11184,6 +13155,8 @@ using namespace dss::capi;
         /// Number of controls connected to this device. 
         /// Use to determine valid range for index into Controller array.
         /// 
+        /// Original COM help: https://opendss.epri.com/NumControls.html
+        /// 
         int32_t NumControls() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -11192,6 +13165,8 @@ using namespace dss::capi;
 
         /// 
         /// Number of Phases
+        /// 
+        /// Original COM help: https://opendss.epri.com/NumPhases.html
         /// 
         int32_t NumPhases() // getter
         {
@@ -11202,6 +13177,8 @@ using namespace dss::capi;
         /// 
         /// Number of Properties this Circuit Element.
         /// 
+        /// Original COM help: https://opendss.epri.com/NumProperties.html
+        /// 
         int32_t NumProperties() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -11209,7 +13186,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Number of Terminals this Circuit Element
+        /// Number of terminals in this Circuit Element
+        /// 
+        /// Original COM help: https://opendss.epri.com/NumTerminals.html
         /// 
         int32_t NumTerminals() // getter
         {
@@ -11220,6 +13199,8 @@ using namespace dss::capi;
         /// 
         /// Index into Controller list of OCP Device controlling this CktElement
         /// 
+        /// Original COM help: https://opendss.epri.com/OCPDevIndex.html
+        /// 
         int32_t OCPDevIndex() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -11229,14 +13210,18 @@ using namespace dss::capi;
         /// 
         /// 0=None; 1=Fuse; 2=Recloser; 3=Relay;  Type of OCP controller device
         /// 
-        int32_t OCPDevType() // getter
+        /// Original COM help: https://opendss.epri.com/OCPDevType.html
+        /// 
+        OCPDevType OCPDevType() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_CktElement_Get_OCPDevType(ctx);
+            return static_cast<OCPDevType>(ctx_CktElement_Get_OCPDevType(ctx));
         }
 
         /// 
-        /// Complex array of losses by phase
+        /// Complex array of losses (kVA) by phase
+        /// 
+        /// Original COM help: https://opendss.epri.com/PhaseLosses.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT PhaseLosses() // getter
@@ -11247,7 +13232,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Complex array of powers into each conductor of each terminal
+        /// Complex array of powers (kVA) into each conductor of each terminal
+        /// 
+        /// Original COM help: https://opendss.epri.com/Powers.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Powers() // getter
@@ -11258,7 +13245,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Residual currents for each terminal: (mag, angle)
+        /// Residual currents for each terminal: (magnitude, angle in degrees)
+        /// 
+        /// Original COM help: https://opendss.epri.com/Residuals.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Residuals() // getter
@@ -11269,7 +13258,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Double array of symmetrical component currents into each 3-phase terminal
+        /// Double array of symmetrical component currents (magnitudes only) into each 3-phase terminal
+        /// 
+        /// Original COM help: https://opendss.epri.com/SeqCurrents.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT SeqCurrents() // getter
@@ -11280,7 +13271,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Double array of sequence powers into each 3-phase teminal
+        /// Complex array of sequence powers (kW, kvar) into each 3-phase terminal
+        /// 
+        /// Original COM help: https://opendss.epri.com/SeqPowers.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT SeqPowers() // getter
@@ -11291,7 +13284,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Double array of symmetrical component voltages at each 3-phase terminal
+        /// Double array of symmetrical component voltages (magnitudes only) at each 3-phase terminal
+        /// 
+        /// Original COM help: https://opendss.epri.com/SeqVoltages1.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT SeqVoltages() // getter
@@ -11304,6 +13299,8 @@ using namespace dss::capi;
         /// 
         /// Complex array of voltages at terminals
         /// 
+        /// Original COM help: https://opendss.epri.com/Voltages1.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Voltages() // getter
         {
@@ -11315,6 +13312,8 @@ using namespace dss::capi;
         /// 
         /// Voltages at each conductor in magnitude, angle form as array of doubles.
         /// 
+        /// Original COM help: https://opendss.epri.com/VoltagesMagAng.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT VoltagesMagAng() // getter
         {
@@ -11324,7 +13323,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// YPrim matrix, column order, complex numbers (paired)
+        /// YPrim matrix, column order, complex numbers
+        /// 
+        /// Original COM help: https://opendss.epri.com/Yprim.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Yprim() // getter
@@ -11335,17 +13336,32 @@ using namespace dss::capi;
         }
 
         /// 
+        /// Order (size) of the active circuit element's primite Y matrix (Yprim), typically `NumConductors * NumTerminals`
+        /// 
+        /// **(API Extension)**
+        /// 
+        int32_t YprimOrder() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_CktElement_Get_YprimOrder(ctx);
+        }
+
+        /// 
         /// Returns true if the current active element is isolated.
         /// Note that this only fetches the current value. See also the Topology interface.
+        /// 
+        /// **(API Extension)**
         /// 
         bool IsIsolated() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_CktElement_Get_IsIsolated(ctx) != 0);
+            return ctx_CktElement_Get_IsIsolated(ctx);
         }
 
         /// 
-        /// Returns the total powers (complex) at ALL terminals of the active circuit element.
+        /// Returns an array with the total powers (complex, kVA) at ALL terminals of the active circuit element.
+        /// 
+        /// Original COM help: https://opendss.epri.com/TotalPowers.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT TotalPowers() // getter
@@ -11357,6 +13373,10 @@ using namespace dss::capi;
 
         /// 
         /// Array of integers, a copy of the internal NodeRef of the CktElement.
+        /// 
+        /// Be sure to run a solution to initialize the values after the circuit is created or modified.
+        /// 
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<int32_t, Eigen::Dynamic, 1>>
         VectorT NodeRef() // getter
@@ -11371,7 +13391,7 @@ using namespace dss::capi;
     {
     public:
 
-        IGICSources(dss::APIUtil *util) :
+        IGICSources(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -11596,7 +13616,7 @@ using namespace dss::capi;
     {
     public:
 
-        IStorages(dss::APIUtil *util) :
+        IStorages(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -11696,22 +13716,22 @@ using namespace dss::capi;
         /// 
         /// Get/set state: 0=Idling; 1=Discharging; -1=Charging;
         /// 
-        /// Related enumeration: StorageStates
-        /// 
-        int32_t State() // getter
+        StorageStates State() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_Storages_Get_State(ctx);
+            return static_cast<StorageStates>(ctx_Storages_Get_State(ctx));
         }
-        IStorages& State(int32_t value) // setter
+        IStorages& State(StorageStates value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_Storages_Set_State(ctx, value);
+            ctx_Storages_Set_State(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
         /// 
-        /// Array of Names of all Storage energy meter registers
+        /// Array of Storage energy meter register names
+        /// 
+        /// See also the enum `GeneratorRegisters`.
         /// 
         strings RegisterNames() // getter
         {
@@ -11729,13 +13749,890 @@ using namespace dss::capi;
             ctx_Storages_Get_RegisterValues_GR(ctx);
             return api_util->get_float64_gr_array<VectorT>();
         }
+
+        /// 
+        /// Current limit per phase for the IBR when operating in GFM mode.
+        /// 
+        double AmpLimit() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_AmpLimit(ctx);
+        }
+        IStorages& AmpLimit(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_AmpLimit(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Use it for fine tuning the current limiter when active.
+        /// 
+        double AmpLimitGain() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_AmpLimitGain(ctx);
+        }
+        IStorages& AmpLimitGain(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_AmpLimitGain(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Dispatch trigger value for charging the Storage.
+        /// 
+        double ChargeTrigger() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_ChargeTrigger(ctx);
+        }
+        IStorages& ChargeTrigger(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_ChargeTrigger(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Control mode for the inverter. It can be one of {GFM = 1 | GFL* = 0}.
+        /// 
+        int32_t ControlMode() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_ControlMode(ctx);
+        }
+        IStorages& ControlMode(int32_t value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_ControlMode(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Dispatch trigger value for discharging the Storage.
+        /// 
+        double DischargeTrigger() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_DischargeTrigger(ctx);
+        }
+        IStorages& DischargeTrigger(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_DischargeTrigger(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Percentage efficiency for CHARGING the Storage element.
+        /// 
+        double EffCharge() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_EffCharge(ctx);
+        }
+        IStorages& EffCharge(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_EffCharge(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Percentage efficiency for DISCHARGING the Storage element.
+        /// 
+        double EffDischarge() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_EffDischarge(ctx);
+        }
+        IStorages& EffDischarge(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_EffDischarge(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Proportional gain for the PI controller within the inverter.
+        /// Use it to modify the controller response in dynamics simulation mode.
+        /// 
+        double Kp() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_Kp(ctx);
+        }
+        IStorages& Kp(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_Kp(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Nominal rated (1.0 per unit) voltage, kV, for Storage element.
+        /// 
+        double kV() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_kV(ctx);
+        }
+        IStorages& kV(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_kV(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Inverter nameplate capability (in kVA). Used as the base for Dynamics mode and Harmonics mode values.
+        /// 
+        double kVA() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_kVA(ctx);
+        }
+        IStorages& kVA(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_kVA(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Get/set the requested kvar value. Final kvar is subjected to the inverter ratings. Sets inverter to operate in constant kvar mode.
+        /// 
+        double kvar() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_kvar(ctx);
+        }
+        IStorages& kvar(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_kvar(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Rated voltage (kV) at the input of the inverter while the storage is discharging
+        /// 
+        double kVDC() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_kVDC(ctx);
+        }
+        IStorages& kVDC(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_kVDC(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Get/set the requested kW value. Final kW is subjected to the inverter ratings.
+        /// 
+        double kW() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_kW(ctx);
+        }
+        IStorages& kW(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_kW(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Rated Storage capacity in kWh.
+        /// 
+        double kWhRated() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_kWhRated(ctx);
+        }
+        IStorages& kWhRated(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_kWhRated(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// kW rating of power output. Base for Loadshapes when DispMode=Follow. Sets kVA property if it has not been specified yet.
+        /// 
+        double kWRated() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_kWRated(ctx);
+        }
+        IStorages& kWRated(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_kWRated(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Limits current magnitude to Vminpu value for both 1-phase and 3-phase Storage similar to Generator Model 7.
+        /// For 3-phase, limits the positive-sequence current but not the negative-sequence."
+        /// 
+        bool LimitCurrent() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_LimitCurrent(ctx);
+        }
+        IStorages& LimitCurrent(bool value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_LimitCurrent(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Get/set the requested PF value.
+        /// 
+        double PF() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_PF(ctx);
+        }
+        IStorages& PF(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_PF(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Tolerance (%) for the closed loop controller of the inverter
+        /// 
+        double PITol() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_PITol(ctx);
+        }
+        IStorages& PITol(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_PITol(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// (Read only) Indicates whether the inverter entered (Yes) or not (No) into Safe Mode.
+        /// 
+        int32_t SafeMode() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_SafeMode(ctx);
+        }
+
+        /// 
+        /// Indicates the voltage level (%) respect to the base voltage level for which the Inverter will operate.
+        /// 
+        double SafeVoltage() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_SafeVoltage(ctx);
+        }
+        IStorages& SafeVoltage(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_SafeVoltage(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Time of day in fractional hours (0230 = 2.5) at which Storage element will automatically go into charge state.
+        /// 
+        double TimeChargeTrig() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_TimeChargeTrig(ctx);
+        }
+        IStorages& TimeChargeTrig(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_TimeChargeTrig(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Indicates if the reactive power generation/absorption does not respect the inverter status
+        /// 
+        int32_t VarFollowInverter() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Storages_Get_VarFollowInverter(ctx);
+        }
+        IStorages& VarFollowInverter(int32_t value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Storages_Set_VarFollowInverter(ctx, value);
+            return *this;
+        }
+    };
+
+    class IWindGens: public ContextState
+    {
+    public:
+
+        IWindGens(altdss::APIUtil *util) :
+            ContextState(util)
+        {
+        }
+
+        ///
+        /// Number of WindGen objects in active circuit.
+        ///
+        int32_t Count() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_Count(ctx);
+        }
+
+        ///
+        /// Sets the first WindGen active. Returns 0 if no more.
+        ///
+        int32_t First() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_First(ctx);
+        }
+
+        ///
+        /// Get the name of the current active WindGen
+        ///
+        string Name() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_Name(ctx);
+        }
+
+        ///
+        /// Sets the active WindGen by Name.
+        ///
+        IWindGens& Name(const char *value)
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_Name(ctx, value);
+            return *this;
+        }
+        IWindGens& Name(const string &value)
+        {
+            return Name(value.c_str());
+        }
+
+        ///
+        /// Sets the next WindGen active. Returns 0 if no more.
+        ///
+        int32_t Next() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_Next(ctx);
+        }
+
+        ///
+        /// Get active WindGen by index; index is 1-based: 1..count
+        ///
+        int32_t idx() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_idx(ctx);
+        }
+
+        ///
+        /// Get active WindGen by index; index is 1-based: 1..count
+        ///
+        void idx(int32_t value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_idx(ctx, value);
+        }
+
+        /// 
+        /// Nominal rated (1.0 per unit) voltage for the active WindGen, in kV.
+        /// 
+        double kV() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_kV(ctx);
+        }
+        IWindGens& kV(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_kV(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Base kvar for the active WindGen.
+        /// 
+        double kvar() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_kvar(ctx);
+        }
+        IWindGens& kvar(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_kvar(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Total base kW for the active WindGen.
+        /// 
+        double kW() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_kW(ctx);
+        }
+        IWindGens& kW(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_kW(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// WindGen power factor. Power factor (pos. = producing vars).
+        /// 
+        double PF() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_PF(ctx);
+        }
+        IWindGens& PF(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_PF(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// KVA rating of the electrical machine in the WindGen.
+        /// 
+        double kVA() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_kVA(ctx);
+        }
+        IWindGens& kVA(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_kVA(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Gearbox ratio
+        /// 
+        double Ag() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_Ag(ctx);
+        }
+        IWindGens& Ag(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_Ag(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Turbine performance coefficient.
+        /// 
+        double Cp() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_Cp(ctx);
+        }
+        IWindGens& Cp(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_Cp(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Tip speed ratio
+        /// 
+        double Lamda() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_Lamda(ctx);
+        }
+        IWindGens& Lamda(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_Lamda(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Number of WTG in aggregation
+        /// 
+        int32_t N_WTG() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_N_WTG(ctx);
+        }
+        IWindGens& N_WTG(int32_t value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_N_WTG(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Number of pole pairs of the induction generator
+        /// 
+        int32_t NPoles() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_NPoles(ctx);
+        }
+        IWindGens& NPoles(int32_t value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_NPoles(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Air density in kg/m3
+        /// 
+        double pd() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_pd(ctx);
+        }
+        IWindGens& pd(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_pd(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Steady state output real power.
+        /// 
+        double PSS() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_PSS(ctx);
+        }
+        IWindGens& PSS(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_PSS(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Non-zero values enable reactive power and voltage control in the dynamic model.
+        /// 
+        int32_t QFlag() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_QFlag(ctx);
+        }
+        IWindGens& QFlag(int32_t value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_QFlag(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Q control mode (0:Q, 1:PF, 2:VV).
+        /// 
+        int32_t QMode() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_QMode(ctx);
+        }
+        IWindGens& QMode(int32_t value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_QMode(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Steady state output reactive power.
+        /// 
+        double QSS() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_QSS(ctx);
+        }
+        IWindGens& QSS(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_QSS(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Rotor radius in meters
+        /// 
+        double Rad() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_Rad(ctx);
+        }
+        IWindGens& Rad(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_Rad(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Per unit Thevenin equivalent resistance (R).
+        /// 
+        double RThev() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_RThev(ctx);
+        }
+        IWindGens& RThev(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_RThev(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Cut-in speed for the wind generator
+        /// 
+        double VCutIn() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_VCutIn(ctx);
+        }
+        IWindGens& VCutIn(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_VCutIn(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Cut-out speed for the wind generator
+        /// 
+        double VCutOut() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_VCutOut(ctx);
+        }
+        IWindGens& VCutOut(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_VCutOut(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Steady state voltage magnitude.
+        /// 
+        double Vss() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_Vss(ctx);
+        }
+        IWindGens& Vss(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_Vss(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Wind speed in m/s
+        /// 
+        double WindSpeed() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_WindSpeed(ctx);
+        }
+        IWindGens& WindSpeed(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_WindSpeed(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Per unit Thevenin equivalent reactance (X).
+        /// 
+        double XThev() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_XThev(ctx);
+        }
+        IWindGens& XThev(double value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_XThev(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Number of phases
+        /// 
+        /// (API Extension)
+        /// 
+        int32_t Phases() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_Phases(ctx);
+        }
+        IWindGens& Phases(int32_t value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_Phases(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Name of the loadshape for daily wind speed
+        /// 
+        /// (API Extension)
+        /// 
+        string daily() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_daily(ctx);
+        }
+        IWindGens& daily(const char *value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_daily(ctx, value);
+            return *this;
+        }
+        IWindGens& daily(const string &value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_daily(ctx, value.c_str());
+            return *this;
+        }
+
+        /// 
+        /// Name of the loadshape for a duty cycle simulation.
+        /// 
+        /// (API Extension)
+        /// 
+        string duty() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_duty(ctx);
+        }
+        IWindGens& duty(const char *value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_duty(ctx, value);
+            return *this;
+        }
+        IWindGens& duty(const string &value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_duty(ctx, value.c_str());
+            return *this;
+        }
+
+        /// 
+        /// Name of yearly loadshape
+        /// 
+        /// (API Extension)
+        /// 
+        string Yearly() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_Yearly(ctx);
+        }
+        IWindGens& Yearly(const char *value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_Yearly(ctx, value);
+            return *this;
+        }
+        IWindGens& Yearly(const string &value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_Yearly(ctx, value.c_str());
+            return *this;
+        }
+
+        /// 
+        /// WindGen connection. True/1 if delta connection, False/0 if wye.
+        /// 
+        /// (API Extension)
+        /// 
+        bool IsDelta() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_IsDelta(ctx);
+        }
+        IWindGens& IsDelta(bool value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_IsDelta(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// An arbitrary integer number representing the class of WindGen so that WindGen values may be segregated by class.
+        /// 
+        /// (API Extension)
+        /// 
+        int32_t Class() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_Class_(ctx);
+        }
+        IWindGens& Class(int32_t value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_Class_(ctx, value);
+            return *this;
+        }
+
+        /// 
+        /// Bus to which the WindGen is connected. May include specific node specification.
+        /// 
+        /// (API Extension)
+        /// 
+        string Bus1() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_WindGens_Get_Bus1(ctx);
+        }
+        IWindGens& Bus1(const char *value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_Bus1(ctx, value);
+            return *this;
+        }
+        IWindGens& Bus1(const string &value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_WindGens_Set_Bus1(ctx, value.c_str());
+            return *this;
+        }
     };
 
     class ISolution: public ContextState
     {
     public:
 
-        ISolution(dss::APIUtil *util) :
+        ISolution(altdss::APIUtil *util) :
             ContextState(util)
         {
         }
@@ -11818,6 +14715,8 @@ using namespace dss::capi;
         /// 
         /// Type of device to add in AutoAdd Mode: {dssGen (Default) | dssCap}
         /// 
+        /// Original COM help: https://opendss.epri.com/AddType.html
+        /// 
         int32_t AddType() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -11831,22 +14730,26 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Base Solution algorithm: {dssNormalSolve | dssNewtonSolve}
+        /// Base Solution algorithm
         /// 
-        int32_t Algorithm() // getter
+        /// Original COM help: https://opendss.epri.com/Algorithm.html
+        /// 
+        SolutionAlgorithms Algorithm() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_Solution_Get_Algorithm(ctx);
+            return static_cast<SolutionAlgorithms>(ctx_Solution_Get_Algorithm(ctx));
         }
-        ISolution& Algorithm(int32_t value) // setter
+        ISolution& Algorithm(SolutionAlgorithms value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_Solution_Set_Algorithm(ctx, value);
+            ctx_Solution_Set_Algorithm(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
         /// 
         /// Capacitor kvar for adding capacitors in AutoAdd mode
+        /// 
+        /// Original COM help: https://opendss.epri.com/Capkvar.html
         /// 
         double Capkvar() // getter
         {
@@ -11863,10 +14766,12 @@ using namespace dss::capi;
         /// 
         /// Flag indicating the control actions are done.
         /// 
+        /// Original COM help: https://opendss.epri.com/ControlActionsDone.html
+        /// 
         bool ControlActionsDone() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Solution_Get_ControlActionsDone(ctx) != 0);
+            return ctx_Solution_Get_ControlActionsDone(ctx);
         }
         ISolution& ControlActionsDone(bool value) // setter
         {
@@ -11877,6 +14782,8 @@ using namespace dss::capi;
 
         /// 
         /// Value of the control iteration counter
+        /// 
+        /// Original COM help: https://opendss.epri.com/ControlIterations.html
         /// 
         int32_t ControlIterations() // getter
         {
@@ -11891,27 +14798,31 @@ using namespace dss::capi;
         }
 
         /// 
-        /// {dssStatic* | dssEvent | dssTime}  Modes for control devices
+        /// Modes for control devices
         /// 
-        int32_t ControlMode() // getter
+        /// Original COM help: https://opendss.epri.com/ControlMode.html
+        /// 
+        ControlModes ControlMode() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_Solution_Get_ControlMode(ctx);
+            return static_cast<ControlModes>(ctx_Solution_Get_ControlMode(ctx));
         }
-        ISolution& ControlMode(int32_t value) // setter
+        ISolution& ControlMode(ControlModes value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_Solution_Set_ControlMode(ctx, value);
+            ctx_Solution_Set_ControlMode(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
         /// 
         /// Flag to indicate whether the circuit solution converged
         /// 
+        /// Original COM help: https://opendss.epri.com/Converged.html
+        /// 
         bool Converged() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Solution_Get_Converged(ctx) != 0);
+            return ctx_Solution_Get_Converged(ctx);
         }
         ISolution& Converged(bool value) // setter
         {
@@ -11922,6 +14833,8 @@ using namespace dss::capi;
 
         /// 
         /// Default daily load shape (defaults to "Default")
+        /// 
+        /// Original COM help: https://opendss.epri.com/DefaultDaily.html
         /// 
         string DefaultDaily() // getter
         {
@@ -11944,6 +14857,8 @@ using namespace dss::capi;
         /// 
         /// Default Yearly load shape (defaults to "Default")
         /// 
+        /// Original COM help: https://opendss.epri.com/DefaultYearly.html
+        /// 
         string DefaultYearly() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -11965,6 +14880,8 @@ using namespace dss::capi;
         /// 
         /// Array of strings containing the Event Log
         /// 
+        /// Original COM help: https://opendss.epri.com/EventLog.html
+        /// 
         strings EventLog() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -11973,6 +14890,8 @@ using namespace dss::capi;
 
         /// 
         /// Set the Frequency for next solution
+        /// 
+        /// Original COM help: https://opendss.epri.com/Frequency1.html
         /// 
         double Frequency() // getter
         {
@@ -11989,6 +14908,8 @@ using namespace dss::capi;
         /// 
         /// Default Multiplier applied to generators (like LoadMult)
         /// 
+        /// Original COM help: https://opendss.epri.com/GenMult.html
+        /// 
         double GenMult() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12003,6 +14924,8 @@ using namespace dss::capi;
 
         /// 
         /// PF for generators in AutoAdd mode
+        /// 
+        /// Original COM help: https://opendss.epri.com/GenPF.html
         /// 
         double GenPF() // getter
         {
@@ -12019,6 +14942,8 @@ using namespace dss::capi;
         /// 
         /// Generator kW for AutoAdd mode
         /// 
+        /// Original COM help: https://opendss.epri.com/GenkW.html
+        /// 
         double GenkW() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12033,6 +14958,8 @@ using namespace dss::capi;
 
         /// 
         /// Set Hour for time series solutions.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Hour.html
         /// 
         int32_t Hour() // getter
         {
@@ -12062,7 +14989,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Number of iterations taken for last solution. (Same as TotalIterations)
+        /// Number of iterations taken for last solution. (Same as Totaliterations)
+        /// 
+        /// Original COM help: https://opendss.epri.com/Iterations.html
         /// 
         int32_t Iterations() // getter
         {
@@ -12072,6 +15001,8 @@ using namespace dss::capi;
 
         /// 
         /// Load-Duration Curve name for LD modes
+        /// 
+        /// Original COM help: https://opendss.epri.com/LDCurve.html
         /// 
         string LDCurve() // getter
         {
@@ -12094,6 +15025,8 @@ using namespace dss::capi;
         /// 
         /// Load Model: {dssPowerFlow (default) | dssAdmittance}
         /// 
+        /// Original COM help: https://opendss.epri.com/LoadModel.html
+        /// 
         int32_t LoadModel() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12108,6 +15041,8 @@ using namespace dss::capi;
 
         /// 
         /// Default load multiplier applied to all non-fixed loads
+        /// 
+        /// Original COM help: https://opendss.epri.com/LoadMult.html
         /// 
         double LoadMult() // getter
         {
@@ -12124,6 +15059,8 @@ using namespace dss::capi;
         /// 
         /// Maximum allowable control iterations
         /// 
+        /// Original COM help: https://opendss.epri.com/MaxControlIterations.html
+        /// 
         int32_t MaxControlIterations() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12138,6 +15075,8 @@ using namespace dss::capi;
 
         /// 
         /// Max allowable iterations.
+        /// 
+        /// Original COM help: https://opendss.epri.com/MaxIterations.html
         /// 
         int32_t MaxIterations() // getter
         {
@@ -12154,6 +15093,8 @@ using namespace dss::capi;
         /// 
         /// Minimum number of iterations required for a power flow solution.
         /// 
+        /// Original COM help: https://opendss.epri.com/MinIterations.html
+        /// 
         int32_t MinIterations() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12167,22 +15108,26 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Set present solution mode (by a text code - see DSS Help)
+        /// Set present solution mode
         /// 
-        int32_t Mode() // getter
+        /// Original COM help: https://opendss.epri.com/Mode2.html
+        /// 
+        SolveModes Mode() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return ctx_Solution_Get_Mode(ctx);
+            return static_cast<SolveModes>(ctx_Solution_Get_Mode(ctx));
         }
-        ISolution& Mode(int32_t value) // setter
+        ISolution& Mode(SolveModes value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            ctx_Solution_Set_Mode(ctx, value);
+            ctx_Solution_Set_Mode(ctx, static_cast<int32_t>(value));
             return *this;
         }
 
         /// 
         /// ID (text) of the present solution mode
+        /// 
+        /// Original COM help: https://opendss.epri.com/ModeID.html
         /// 
         string ModeID() // getter
         {
@@ -12193,6 +15138,8 @@ using namespace dss::capi;
         /// 
         /// Max number of iterations required to converge at any control iteration of the most recent solution.
         /// 
+        /// Original COM help: https://opendss.epri.com/MostIterationsDone.html
+        /// 
         int32_t MostIterationsDone() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12201,6 +15148,8 @@ using namespace dss::capi;
 
         /// 
         /// Number of solutions to perform for Monte Carlo and time series simulations
+        /// 
+        /// Original COM help: https://opendss.epri.com/Number1.html
         /// 
         int32_t Number() // getter
         {
@@ -12217,6 +15166,8 @@ using namespace dss::capi;
         /// 
         /// Gets the time required to perform the latest solution (Read only)
         /// 
+        /// Original COM help: https://opendss.epri.com/Process_Time.html
+        /// 
         double Process_Time() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12225,6 +15176,8 @@ using namespace dss::capi;
 
         /// 
         /// Randomization mode for random variables "Gaussian" or "Uniform"
+        /// 
+        /// Original COM help: https://opendss.epri.com/Random.html
         /// 
         int32_t Random() // getter
         {
@@ -12241,6 +15194,8 @@ using namespace dss::capi;
         /// 
         /// Seconds from top of the hour.
         /// 
+        /// Original COM help: https://opendss.epri.com/Seconds.html
+        /// 
         double Seconds() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12255,6 +15210,8 @@ using namespace dss::capi;
 
         /// 
         /// Time step size in sec
+        /// 
+        /// Original COM help: https://opendss.epri.com/StepSize.html
         /// 
         double StepSize() // getter
         {
@@ -12271,14 +15228,18 @@ using namespace dss::capi;
         /// 
         /// Flag that indicates if elements of the System Y have been changed by recent activity.
         /// 
+        /// Original COM help: https://opendss.epri.com/SystemYChanged.html
+        /// 
         bool SystemYChanged() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_Solution_Get_SystemYChanged(ctx) != 0);
+            return ctx_Solution_Get_SystemYChanged(ctx);
         }
 
         /// 
         /// Get the solution process time + sample time for time step
+        /// 
+        /// Original COM help: https://opendss.epri.com/Time_of_Step.html
         /// 
         double Time_of_Step() // getter
         {
@@ -12288,6 +15249,8 @@ using namespace dss::capi;
 
         /// 
         /// Solution convergence tolerance.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Tolerance.html
         /// 
         double Tolerance() // getter
         {
@@ -12304,6 +15267,10 @@ using namespace dss::capi;
         /// 
         /// Gets/sets the accumulated time of the simulation
         /// 
+        /// This accumulator has to be reset manually.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Total_Time.html
+        /// 
         double Total_Time() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12319,6 +15286,8 @@ using namespace dss::capi;
         /// 
         /// Total iterations including control iterations for most recent solution.
         /// 
+        /// Original COM help: https://opendss.epri.com/Totaliterations.html
+        /// 
         int32_t Totaliterations() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12327,6 +15296,8 @@ using namespace dss::capi;
 
         /// 
         /// Set year for planning studies
+        /// 
+        /// Original COM help: https://opendss.epri.com/Year.html
         /// 
         int32_t Year() // getter
         {
@@ -12343,6 +15314,8 @@ using namespace dss::capi;
         /// 
         /// Hour as a double, including fractional part
         /// 
+        /// Original COM help: https://opendss.epri.com/dblHour1.html
+        /// 
         double dblHour() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12357,6 +15330,8 @@ using namespace dss::capi;
 
         /// 
         /// Percent default  annual load growth rate
+        /// 
+        /// Original COM help: https://opendss.epri.com/pctGrowth.html
         /// 
         double pctGrowth() // getter
         {
@@ -12390,6 +15365,16 @@ using namespace dss::capi;
             return *this;
         }
 
+        /// 
+        /// Bus levels for all the buses in the model. 
+        /// 
+        /// The bus levels are calculated after calculating the incidence branch-to-node (B2N) 
+        /// matrix and they represent the distance from the buses to a reference that goes from
+        /// the feeder head to the farthest bus in the model. The bus level index matches with
+        /// the bus list obtained with the circuit interface.
+        /// 
+        /// Original COM help: https://opendss.epri.com/BusLevels.html
+        /// 
         template <typename VectorT=Eigen::Matrix<int32_t, Eigen::Dynamic, 1>>
         VectorT BusLevels() // getter
         {
@@ -12398,6 +15383,17 @@ using namespace dss::capi;
             return api_util->get_int32_gr_array<VectorT>();
         }
 
+        /// 
+        /// Incidence branch-to-node (B2N) matrix calculated for the model as a vector of integers.
+        /// 
+        /// The vector represents a sparse matrix (non-zero values are the only ones delivered) and
+        /// can be interpreted as follows: The first element is the row number, the second one is
+        /// the column and the third is the value, this way, by dividing the number of elements
+        /// in the array by 3 the user can obtain the number of rows in case of wanting to sort 
+        /// the vector values within a matrix.
+        /// 
+        /// Original COM help: https://opendss.epri.com/IncMatrix.html
+        /// 
         template <typename VectorT=Eigen::Matrix<int32_t, Eigen::Dynamic, 1>>
         VectorT IncMatrix() // getter
         {
@@ -12406,18 +15402,40 @@ using namespace dss::capi;
             return api_util->get_int32_gr_array<VectorT>();
         }
 
+        /// 
+        /// Names of the columns of the branch-to-node (B2N) matrix.
+        /// 
+        /// Original COM help: https://opendss.epri.com/IncMatrixCols.html
+        /// 
         strings IncMatrixCols() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return api_util->get_string_array(ctx_Solution_Get_IncMatrixCols);
         }
 
+        /// 
+        /// Names of the rows of the branch-to-node (B2N) matrix.
+        /// 
+        /// Original COM help: https://opendss.epri.com/IncMatrixRows.html
+        /// 
         strings IncMatrixRows() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return api_util->get_string_array(ctx_Solution_Get_IncMatrixRows);
         }
 
+        /// 
+        /// Laplacian matrix calculated in OpenDSS based on the latest branch-to-node (B2N) matrix.
+        /// 
+        /// The vector represents a sparse matrix (non-zero values are the only ones delivered) and
+        /// can be interpreted as follows: The first element is the row number, the second one is
+        /// the column and the third is the value, this way, by dividing the number of elements
+        /// in the array by 3 the user can obtain the number of rows in case of wanting to sort
+        /// the vector values within a matrix. The tables for the columns and rows are the same
+        /// as the columns for the B2N columns (square matrix).        
+        /// 
+        /// Original COM help: https://opendss.epri.com/Laplacian.html
+        /// 
         template <typename VectorT=Eigen::Matrix<int32_t, Eigen::Dynamic, 1>>
         VectorT Laplacian() // getter
         {
@@ -12472,9 +15490,10 @@ using namespace dss::capi;
         IReduceCkt ReduceCkt;
         IStorages Storages;
         IGICSources GICSources;
+        IWindGens WindGens;
         IParallel Parallel;
 
-        ICircuit(dss::APIUtil *util) :
+        ICircuit(altdss::APIUtil *util) :
             ContextState(util),
             Buses(util),
             CktElements(util),
@@ -12518,6 +15537,7 @@ using namespace dss::capi;
             ReduceCkt(util),
             Storages(util),
             GICSources(util),
+            WindGens(util),
             Parallel(util)
         {
         }
@@ -12573,46 +15593,130 @@ using namespace dss::capi;
         {
             return get_CktElements(fullName.c_str());
         }
+
+        /// 
+        /// Replaces the circuit, if any, with the one provided from a JSON-encoded string.
+        /// 
+        /// The expected layout is defined from the JSON schema proposed at
+        /// https://github.com/dss-extensions/AltDSS-Schema
+        /// 
+        /// The `options` parameter contains bit-flags to toggle specific features.
+        /// See the enum `DSSJSONFlags`.
+        /// 
+        /// **(API Extension)**
+        /// 
+        void FromJSON(const char *data, DSSJSONFlags options=static_cast<DSSJSONFlags>(0))
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Circuit_FromJSON(ctx, data, options);
+        }
+        void FromJSON(const string &data, DSSJSONFlags options=static_cast<DSSJSONFlags>(0))
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Circuit_FromJSON(ctx, data.c_str(), options);
+        }
+    
+        /// 
+        /// Compute the maximum load the active circuit can serve in the PRESENT YEAR.
+        /// 
+        /// This method uses the EnergyMeter objects with the registers set with the 
+        /// `SET UEREGS= (...)` command for the AutoAdd functions. 
+        /// 
+        /// Returns the metered kW (load + losses - generation) and per unit load multiplier 
+        /// for the loading level at which something in the system reports an overload or 
+        /// undervoltage. If no violations, then it returns the metered kW for peak load 
+        /// for the year (1.0 multiplier). 
+        /// 
+        /// Aborts and returns 0 if no EnergyMeters.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Capacity1.html
+        /// 
         double Capacity(double Start, double Increment)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_Circuit_Capacity(ctx, Start, Increment);
         }
+        /// 
+        /// Disable a circuit element by name (removes from circuit but leave in database).
+        /// 
+        /// Original COM help: https://opendss.epri.com/Disable.html
+        /// 
         void Disable(const char *Name)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Circuit_Disable(ctx, Name);
         }
+        /// 
+        /// Disable a circuit element by name (removes from circuit but leave in database).
+        /// 
+        /// Original COM help: https://opendss.epri.com/Disable.html
+        /// 
         void Disable(const string &Name)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Circuit_Disable(ctx, Name.c_str());
         }
+        /// 
+        /// Enable a circuit element by name
+        /// 
+        /// Original COM help: https://opendss.epri.com/Enable.html
+        /// 
         void Enable(const char *Name)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Circuit_Enable(ctx, Name);
         }
+        /// 
+        /// Enable a circuit element by name
+        /// 
+        /// Original COM help: https://opendss.epri.com/Enable.html
+        /// 
         void Enable(const string &Name)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Circuit_Enable(ctx, Name.c_str());
         }
+        /// 
+        /// Call `EndOfTimeStepCleanup` in SolutionAlgs (Do cleanup, sample monitors, and increment time).
+        /// 
+        /// Original COM help: https://opendss.epri.com/EndOfTimeStepUpdate.html
+        /// 
         void EndOfTimeStepUpdate()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Circuit_EndOfTimeStepUpdate(ctx);
         }
+        /// 
+        /// Set the first element of active class to be the Active element in the active circuit.
+        /// 
+        /// Returns 0 if none.
+        /// 
+        /// Original COM help: https://opendss.epri.com/FirstElement.html
+        /// 
         int32_t FirstElement()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_Circuit_FirstElement(ctx);
         }
+        /// 
+        /// Set the first Power Conversion (PC) element to be the active element.
+        /// 
+        /// Returns 0 if none.
+        /// 
+        /// Original COM help: https://opendss.epri.com/FirstPCElement.html
+        /// 
         int32_t FirstPCElement()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_Circuit_FirstPCElement(ctx);
         }
+        /// 
+        /// Set the first Power Delivery (PD) element to be the active element.
+        /// 
+        /// Returns 0 if none.
+        /// 
+        /// Original COM help: https://opendss.epri.com/FirstPDElement.html
+        /// 
         int32_t FirstPDElement()
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12656,66 +15760,149 @@ using namespace dss::capi;
             ctx_Circuit_Get_AllNodeVmagPUByPhase_GR(ctx, Phase);
             return api_util->get_float64_gr_array<VectorT>();
         }
+        /// 
+        /// Set the next element of the active class to be the active element in the active circuit.
+        /// Returns 0 if no more elements..
+        /// 
+        /// Original COM help: https://opendss.epri.com/NextElement.html
+        /// 
         int32_t NextElement()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_Circuit_NextElement(ctx);
         }
+        /// 
+        /// Get the next Power Conversion (PC) element to be the active element.
+        /// 
+        /// Original COM help: https://opendss.epri.com/NextPCElement.html
+        /// 
         int32_t NextPCElement()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_Circuit_NextPCElement(ctx);
         }
+        /// 
+        /// Get the next Power Delivery (PD) element to be the active element.
+        /// 
+        /// Original COM help: https://opendss.epri.com/NextPDElement.html
+        /// 
         int32_t NextPDElement()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_Circuit_NextPDElement(ctx);
         }
+        /// 
+        /// Force all Meters and Monitors to take a sample.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Sample.html
+        /// 
         void Sample()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Circuit_Sample(ctx);
         }
+        /// 
+        /// Force all meters and monitors to save their current buffers.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SaveSample.html
+        /// 
         void SaveSample()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Circuit_SaveSample(ctx);
         }
+        /// 
+        /// Sets Active bus by name. 
+        /// 
+        /// Ignores node list. Returns bus index (zero based) compatible with `AllBusNames` and Buses collection.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SetActiveBus.html
+        /// 
         int32_t SetActiveBus(const char *BusName)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_Circuit_SetActiveBus(ctx, BusName);
         }
+        /// 
+        /// Sets Active bus by name. 
+        /// 
+        /// Ignores node list. Returns bus index (zero based) compatible with `AllBusNames` and Buses collection.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SetActiveBus.html
+        /// 
         int32_t SetActiveBus(const string &BusName)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_Circuit_SetActiveBus(ctx, BusName.c_str());
         }
+        /// 
+        /// Set ActiveBus by an integer value. 
+        /// 
+        /// 0-based index compatible with SetActiveBus return value and AllBusNames indexing. 
+        /// Returns 0 if OK.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SetActiveBusi.html
+        /// 
         int32_t SetActiveBusi(int32_t BusIndex)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_Circuit_SetActiveBusi(ctx, BusIndex);
         }
+        /// 
+        /// Set the active class by name. 
+        /// 
+        /// Use FirstElement, NextElement to iterate through the class. Returns -1 if fails.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SetActiveClass.html
+        /// 
         int32_t SetActiveClass(const char *ClassName)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_Circuit_SetActiveClass(ctx, ClassName);
         }
+        /// 
+        /// Set the active class by name. 
+        /// 
+        /// Use FirstElement, NextElement to iterate through the class. Returns -1 if fails.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SetActiveClass.html
+        /// 
         int32_t SetActiveClass(const string &ClassName)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_Circuit_SetActiveClass(ctx, ClassName.c_str());
         }
+        /// 
+        /// Set the Active Circuit Element using the full object name (e.g. "generator.g1"). 
+        /// 
+        /// Returns -1 if not found. Else index to be used in CktElements collection or `AllElementNames`.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SetActiveElement.html
+        /// 
         int32_t SetActiveElement(const char *FullName)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_Circuit_SetActiveElement(ctx, FullName);
         }
+        /// 
+        /// Set the Active Circuit Element using the full object name (e.g. "generator.g1"). 
+        /// 
+        /// Returns -1 if not found. Else index to be used in CktElements collection or `AllElementNames`.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SetActiveElement.html
+        /// 
         int32_t SetActiveElement(const string &FullName)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_Circuit_SetActiveElement(ctx, FullName.c_str());
         }
+        /// 
+        /// Force an update to all storage classes. 
+        /// 
+        /// Typically done after a solution. Done automatically in intrinsic solution modes.
+        /// 
+        /// Original COM help: https://opendss.epri.com/UpdateStorage.html
+        /// 
         void UpdateStorage()
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12724,6 +15911,8 @@ using namespace dss::capi;
 
         /// 
         /// Returns distance from each bus to parent EnergyMeter. Corresponds to sequence in AllBusNames.
+        /// 
+        /// Original COM help: https://opendss.epri.com/AllBusDistances.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllBusDistances() // getter
@@ -12736,6 +15925,8 @@ using namespace dss::capi;
         /// 
         /// Array of strings containing names of all buses in circuit (see AllNodeNames).
         /// 
+        /// Original COM help: https://opendss.epri.com/AllBusNames.html
+        /// 
         strings AllBusNames() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12744,6 +15935,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of magnitudes (doubles) of voltages at all buses
+        /// 
+        /// Original COM help: https://opendss.epri.com/AllBusVmag.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllBusVmag() // getter
@@ -12754,7 +15947,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Double Array of all bus voltages (each node) magnitudes in Per unit
+        /// Array of all bus voltages (each node) magnitudes in Per unit
+        /// 
+        /// Original COM help: https://opendss.epri.com/AllBusVmagPu.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllBusVmagPu() // getter
@@ -12767,6 +15962,8 @@ using namespace dss::capi;
         /// 
         /// Complex array of all bus, node voltages from most recent solution
         /// 
+        /// Original COM help: https://opendss.epri.com/AllBusVolts.html
+        /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllBusVolts() // getter
         {
@@ -12777,6 +15974,8 @@ using namespace dss::capi;
 
         /// 
         /// Array of total losses (complex) in each circuit element
+        /// 
+        /// Original COM help: https://opendss.epri.com/AllElementLosses.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllElementLosses() // getter
@@ -12789,6 +15988,8 @@ using namespace dss::capi;
         /// 
         /// Array of strings containing Full Name of all elements.
         /// 
+        /// Original COM help: https://opendss.epri.com/AllElementNames.html
+        /// 
         strings AllElementNames() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12797,6 +15998,8 @@ using namespace dss::capi;
 
         /// 
         /// Returns an array of distances from parent EnergyMeter for each Node. Corresponds to AllBusVMag sequence.
+        /// 
+        /// Original COM help: https://opendss.epri.com/AllNodeDistances.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT AllNodeDistances() // getter
@@ -12809,6 +16012,8 @@ using namespace dss::capi;
         /// 
         /// Array of strings containing full name of each node in system in same order as returned by AllBusVolts, etc.
         /// 
+        /// Original COM help: https://opendss.epri.com/AllNodeNames.html
+        /// 
         strings AllNodeNames() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12817,6 +16022,8 @@ using namespace dss::capi;
 
         /// 
         /// Complex total line losses in the circuit
+        /// 
+        /// Original COM help: https://opendss.epri.com/LineLosses.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT LineLosses() // getter
@@ -12828,6 +16035,8 @@ using namespace dss::capi;
 
         /// 
         /// Total losses in active circuit, complex number (two-element array of double).
+        /// 
+        /// Original COM help: https://opendss.epri.com/Losses.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT Losses() // getter
@@ -12849,6 +16058,8 @@ using namespace dss::capi;
         /// 
         /// Total number of Buses in the circuit.
         /// 
+        /// Original COM help: https://opendss.epri.com/NumBuses.html
+        /// 
         int32_t NumBuses() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12857,6 +16068,8 @@ using namespace dss::capi;
 
         /// 
         /// Number of CktElements in the circuit.
+        /// 
+        /// Original COM help: https://opendss.epri.com/NumCktElements.html
         /// 
         int32_t NumCktElements() // getter
         {
@@ -12867,6 +16080,8 @@ using namespace dss::capi;
         /// 
         /// Total number of nodes in the circuit.
         /// 
+        /// Original COM help: https://opendss.epri.com/NumNodes1.html
+        /// 
         int32_t NumNodes() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12876,6 +16091,8 @@ using namespace dss::capi;
         /// 
         /// Sets Parent PD element, if any, to be the active circuit element and returns index>0; Returns 0 if it fails or not applicable.
         /// 
+        /// Original COM help: https://opendss.epri.com/ParentPDElement.html
+        /// 
         int32_t ParentPDElement() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12884,6 +16101,8 @@ using namespace dss::capi;
 
         /// 
         /// Complex losses in all transformers designated to substations.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SubstationLosses.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT SubstationLosses() // getter
@@ -12896,7 +16115,9 @@ using namespace dss::capi;
         /// 
         /// System Y matrix (after a solution has been performed). 
         /// This is deprecated as it returns a dense matrix. Only use it for small systems.
-        /// For large scale systems, prefer YMatrix.GetCompressedYMatrix.
+        /// For large-scale systems, prefer YMatrix.GetCompressedYMatrix.
+        /// 
+        /// Original COM help: https://opendss.epri.com/SystemY.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT SystemY() // getter
@@ -12907,7 +16128,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Total power, kW delivered to the circuit
+        /// Total power (complex), kVA delivered to the circuit
+        /// 
+        /// Original COM help: https://opendss.epri.com/TotalPower.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT TotalPower() // getter
@@ -12918,7 +16141,9 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Array of doubles containing complex injection currents for the present solution. Is is the "I" vector of I=YV
+        /// Array of doubles containing complex injection currents for the present solution. It is the "I" vector of I=YV
+        /// 
+        /// Original COM help: https://opendss.epri.com/YCurrents.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT YCurrents() // getter
@@ -12931,6 +16156,8 @@ using namespace dss::capi;
         /// 
         /// Array of strings containing the names of the nodes in the same order as the Y matrix
         /// 
+        /// Original COM help: https://opendss.epri.com/YNodeOrder.html
+        /// 
         strings YNodeOrder() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -12939,6 +16166,8 @@ using namespace dss::capi;
 
         /// 
         /// Complex array of actual node voltages in same order as SystemY matrix.
+        /// 
+        /// Original COM help: https://opendss.epri.com/YNodeVarray.html
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>>
         VectorT YNodeVarray() // getter
@@ -12951,7 +16180,7 @@ using namespace dss::capi;
         /// Array of total losses (complex) in a selection of elements.
         /// Use the element indices (starting at 1) as parameter.
         /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         template <typename VectorT=Eigen::Matrix<double, Eigen::Dynamic, 1>, typename InVectorT=Eigen::Matrix<int32_t, Eigen::Dynamic, 1>>
         VectorT ElementLosses(const InVectorT &value)
@@ -12959,6 +16188,103 @@ using namespace dss::capi;
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_Circuit_Get_ElementLosses_GR(ctx, &value[0], value.size());
             return api_util->get_float64_gr_array<VectorT>();
+        }
+        /// 
+        /// Returns data for all objects and basic circuit properties as a JSON-encoded string.
+        /// 
+        /// The JSON data is organized using the JSON schema proposed at 
+        /// https://github.com/dss-extensions/AltDSS-Schema
+        /// 
+        /// The `options` parameter contains bit-flags to toggle specific features.
+        /// See the enum `DSSJSONFlags` or `Obj_ToJSON` (C-API) for more.
+        /// 
+        /// **(API Extension)**
+        /// 
+        string ToJSON(int32_t options=0)
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Circuit_ToJSON(ctx, options);
+        }
+        /// 
+        /// Equivalent of the "save circuit" DSS command, but allows customization
+        /// through the `saveFlags` argument, which is a set of bit flags. 
+        /// See the "DSSSaveFlags" enumeration for available flags:
+        /// 
+        /// - `CalcVoltageBases`: Include the command CalcVoltageBases.
+        /// - `SetVoltageBases`: Include commands to set the voltage bases individually.
+        /// - `IncludeOptions`: Include most of the options (from the Set/Get DSS commands).
+        /// - `IncludeDisabled`: Include disabled circuit elements (and LoadShapes).
+        /// - `ExcludeDefault`: Exclude default DSS items if they are not modified by the user.
+        /// - `SingleFile`: Use a single file instead of a folder for output.
+        /// - `KeepOrder`: Save the circuit elements in the order they were loaded in the active circuit. Guarantees better reproducibility, especially when the system is ill-conditioned. Requires "SingleFile" flag.
+        /// - `ExcludeMeterZones`: Do not export meter zones (as "feeders") separately. Has no effect when using a single file.
+        /// - `IsOpen`: Export commands to open terminals of elements.
+        /// - `ToString`: to the result string. Requires "SingleFile" flag.
+        /// 
+        /// If `SingleFile` is enabled, the path argument (`dirOrFilePath`) is the file path,
+        /// otherwise it is the folder path. For string output, the argument is not used.
+        /// 
+        /// **(API Extension)**
+        /// 
+        string Save(const char *dirOrFilePath, uint32_t saveFlags)
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_Circuit_Save(ctx, dirOrFilePath, saveFlags);
+        }
+        /// 
+        /// Equivalent of the "save circuit" DSS command, but allows customization
+        /// through the `saveFlags` argument, which is a set of bit flags. 
+        /// See the "DSSSaveFlags" enumeration for available flags:
+        /// 
+        /// - `CalcVoltageBases`: Include the command CalcVoltageBases.
+        /// - `SetVoltageBases`: Include commands to set the voltage bases individually.
+        /// - `IncludeOptions`: Include most of the options (from the Set/Get DSS commands).
+        /// - `IncludeDisabled`: Include disabled circuit elements (and LoadShapes).
+        /// - `ExcludeDefault`: Exclude default DSS items if they are not modified by the user.
+        /// - `SingleFile`: Use a single file instead of a folder for output.
+        /// - `KeepOrder`: Save the circuit elements in the order they were loaded in the active circuit. Guarantees better reproducibility, especially when the system is ill-conditioned. Requires "SingleFile" flag.
+        /// - `ExcludeMeterZones`: Do not export meter zones (as "feeders") separately. Has no effect when using a single file.
+        /// - `IsOpen`: Export commands to open terminals of elements.
+        /// - `ToString`: to the result string. Requires "SingleFile" flag.
+        /// 
+        /// If `SingleFile` is enabled, the path argument (`dirOrFilePath`) is the file path,
+        /// otherwise it is the folder path. For string output, the argument is not used.
+        /// 
+        /// **(API Extension)**
+        /// 
+        string Save(const string &dirOrFilePath, uint32_t saveFlags)
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return api_util->get_string(ctx_Circuit_Save(ctx, dirOrFilePath.c_str(), saveFlags));
+        }
+        /// 
+        /// Flatten the circuit
+        /// 
+        /// Flatten the circuit structures, removing any object of the following types:
+        /// 
+        /// - XfmrCode
+        /// - LineCode
+        /// - LineSpacing
+        /// - LineGeometry
+        /// - WireData
+        /// - CNData
+        /// - TSData
+        /// 
+        /// The general data from those objects is propagated to the referencing Line and Transformer objects,
+        /// and the properties on the latter are updated to remove any references to the removed objects.
+        /// 
+        /// This is useful for some converting the DSS circuit to another format, without requiring the user to handle all 
+        /// the types listed above. This, of course, results in some limitations since a lot of detail is removed. Numerically,
+        /// a normal snapshot or daily solution should be the same before and after the flatten operation.
+        /// 
+        /// Available only on AltDSS.
+        /// 
+        /// **(API Extension)**
+        /// 
+        void Flatten()
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            ctx_Circuit_Flatten(ctx);
         }
     };
 
@@ -12978,7 +16304,7 @@ using namespace dss::capi;
         IZIP ZIP;
         bool owns_util;
 
-        IDSS(dss::APIUtil *util, bool owns=false) :
+        IDSS(altdss::APIUtil *util, bool owns=false) :
             ContextState(util),
             ActiveCircuit(util),
             Circuits(util),
@@ -13022,12 +16348,64 @@ using namespace dss::capi;
                 delete api_util;
             }
         }
+
+        /// 
+        /// Share general DSS objects from this AltDSS context to another.
+        /// 
+        /// **WARNING:** currently, the pointers are not tracked! The user must ensure this context
+        /// and its objects are kept alive while other contexts require it.
+        /// 
+        /// Optionally, as a shortcut, the user can provide `skip_cmds` to be passed to the `Settings.SkipCommands` 
+        /// and `skip_file_regexp` to be passed to `Settings.SkipFileRegExp`, in the second DSS context. 
+        /// 
+        /// *Note*: If the `clear` command is included in `Settings.SkipCommands`, the `DSS.ClearAll()` method can still be called
+        /// and it will reset both skip settings.
+        /// 
+        /// ***EXPERIMENTAL***
+        /// 
+        /// **(API Extension)**
+        /// 
+        void ShareGeneral(IDSS* otherContext, const strings& skip_cmds={}, const string& std:skip_file_regexp="")
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            if ((api_util->_is_oddie || otherContext->api_util->_is_oddie))
+            {
+                throw std::runtime_error("Only AltDSS engine contexts can share data.");
+            }
+            ctx_ShareGeneral(ctx, otherContext.api_util->ctx);
+            if (!skip_cmds.empty())
+            {
+                otherContext.ActiveCircuit.Settings.SkipCommands(skip_cmds);
+            }
+            if (!skip_file_regexp.empty())
+            {
+                otherContext.ActiveCircuit.Settings.SkipFileRegExp(skip_file_regexp);
+            }
+        }
+
     
+        /// 
+        /// Returns True if this instance is based on the Oddie compatibility layer for
+        /// the official OpenDSS Direct API (a.k.a. DCSL).
+        /// 
+        /// Note that the default engine in DSS-Python has been based on AltDSS since
+        /// 2018, even though it was not called AltDSS then.
+        /// 
+        bool is_oddie()
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return api_util->_is_oddie;
+        }
         void ClearAll()
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_DSS_ClearAll(ctx);
         }
+        /// 
+        /// This is a no-op function, does nothing. Left for compatibility.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Reset1.html
+        /// 
         void Reset()
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -13043,14 +16421,29 @@ using namespace dss::capi;
             APIUtil::ErrorChecker error_checker(api_util);
             return ctx_DSS_SetActiveClass(ctx, ClassName.c_str());
         }
+        /// 
+        /// This is a no-op function, does nothing. Left for compatibility.
+        /// 
+        /// Calling `Start` in AltDSS/DSS-Extensions is required but that is already
+        /// handled automatically, so the users do not need to call it manually,
+        /// unless using AltDSS/DSS C-API directly without further tools.
+        /// 
+        /// On the official OpenDSS, `Start` also does nothing at all in the current
+        /// Delphi versions. It is required for OpenDSS-C, but also handled behind
+        /// the scenes on DSS-Extensions.
+        /// 
+        /// Original COM help: https://opendss.epri.com/Start.html
+        /// 
         bool Start(int32_t code)
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_DSS_Start(ctx, code) != 0);
+            return ctx_DSS_Start(ctx, code);
         }
 
         /// 
         /// List of DSS intrinsic classes (names of the classes)
+        /// 
+        /// Original COM help: https://opendss.epri.com/Classes1.html
         /// 
         strings Classes() // getter
         {
@@ -13060,6 +16453,8 @@ using namespace dss::capi;
 
         /// 
         /// DSS Data File Path.  Default path for reports, etc. from DSS
+        /// 
+        /// Original COM help: https://opendss.epri.com/DataPath.html
         /// 
         string DataPath() // getter
         {
@@ -13082,6 +16477,8 @@ using namespace dss::capi;
         /// 
         /// Returns the path name for the default text editor.
         /// 
+        /// Original COM help: https://opendss.epri.com/DefaultEditor.html
+        /// 
         string DefaultEditor() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -13090,6 +16487,8 @@ using namespace dss::capi;
 
         /// 
         /// Number of Circuits currently defined
+        /// 
+        /// Original COM help: https://opendss.epri.com/NumCircuits.html
         /// 
         int32_t NumCircuits() // getter
         {
@@ -13100,6 +16499,8 @@ using namespace dss::capi;
         /// 
         /// Number of DSS intrinsic classes
         /// 
+        /// Original COM help: https://opendss.epri.com/NumClasses.html
+        /// 
         int32_t NumClasses() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -13108,6 +16509,8 @@ using namespace dss::capi;
 
         /// 
         /// Number of user-defined classes
+        /// 
+        /// Original COM help: https://opendss.epri.com/NumUserClasses.html
         /// 
         int32_t NumUserClasses() // getter
         {
@@ -13118,6 +16521,8 @@ using namespace dss::capi;
         /// 
         /// List of user-defined classes
         /// 
+        /// Original COM help: https://opendss.epri.com/UserClasses.html
+        /// 
         strings UserClasses() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -13127,6 +16532,8 @@ using namespace dss::capi;
         /// 
         /// Get version string for the DSS.
         /// 
+        /// Original COM help: https://opendss.epri.com/Version.html
+        /// 
         string Version() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -13134,12 +16541,16 @@ using namespace dss::capi;
         }
 
         /// 
-        /// Gets/sets whether text output is allowed
+        /// Indicates whether text output is allowed or forms are used. Disable to silence most output.
+        /// 
+        /// Currently, forms/windows are only used for EPRI's OpenDSS distribution on Windows.
+        /// 
+        /// Original COM help: https://opendss.epri.com/AllowForms.html
         /// 
         bool AllowForms() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_DSS_Get_AllowForms(ctx) != 0);
+            return ctx_DSS_Get_AllowForms(ctx);
         }
         IDSS& AllowForms(bool value) // setter
         {
@@ -13155,12 +16566,15 @@ using namespace dss::capi;
         /// If you set to 0 (false), the editor is not executed. Note that other side effects,
         /// such as the creation of files, are not affected.
         /// 
-        /// (API Extension)
+        /// **Deprecated:** Use `Settings.AllowEditor` instead (same behavior, the setting was just moved there for better organization).
+        /// 
+        /// **(API Extension)**
         /// 
         bool AllowEditor() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_DSS_Get_AllowEditor(ctx) != 0);
+            // #warning (""AllowEditor" was moved to the Settings interface. This property still works, but will be removed in a future release. Please use `...Settings.AllowEditor` instead.", DeprecationWarning, stacklevel=2);
+            return ctx_DSS_Get_AllowEditor(ctx);
         }
         IDSS& AllowEditor(bool value) // setter
         {
@@ -13171,14 +16585,27 @@ using namespace dss::capi;
         void ShowPanel()
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            // #warning ("ShowPanel is not implemented.");
+            if (api_util->_is_oddie)
+            {
+                ctx_Text_Set_Command(ctx, "panel");
+            }
         }
+        /// 
+        /// Make a new circuit and returns the interface to the active circuit.
+        /// 
+        /// Original COM help: https://opendss.epri.com/NewCircuit.html
+        /// 
         ICircuit& NewCircuit(const char *name)
         {
             APIUtil::ErrorChecker error_checker(api_util);
             ctx_DSS_NewCircuit(ctx, name);
             return ActiveCircuit;
         }
+        /// 
+        /// Make a new circuit and returns the interface to the active circuit.
+        /// 
+        /// Original COM help: https://opendss.epri.com/NewCircuit.html
+        /// 
         ICircuit& NewCircuit(const string &name)
         {
             APIUtil::ErrorChecker error_checker(api_util);
@@ -13191,15 +16618,15 @@ using namespace dss::capi;
         /// StorageControl.
         /// In the official OpenDSS version 9.0, the old models were removed. They were temporarily present here
         /// but were also removed in DSS C-API v0.13.0.
+        ///     
+        /// **NOTE**: this property will be removed for v1.0. It is left to avoid breaking the current API too soon.
         /// 
-        /// NOTE: this function pair will be removed for v1.0. It is left to avoid breaking the current API too soon.
-        /// 
-        /// (API Extension)
+        /// **(API Extension)**
         /// 
         bool LegacyModels() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_DSS_Get_LegacyModels(ctx) != 0);
+            return ctx_DSS_Get_LegacyModels(ctx);
         }
         IDSS& LegacyModels(bool value) // setter
         {
@@ -13220,12 +16647,15 @@ using namespace dss::capi;
         /// This can also be set through the environment variable DSS_CAPI_ALLOW_CHANGE_DIR. Set it to 0 to
         /// disallow changing the active working directory.
         /// 
-        /// (API Extension)
+        /// **Deprecated:** Use `Settings.AllowChangeDir` instead (same behavior, the setting was just moved there for better organization).
+        /// 
+        /// **(API Extension)**
         /// 
         bool AllowChangeDir() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_DSS_Get_AllowChangeDir(ctx) != 0);
+            // #warning (""AllowChangeDir" was moved to the Settings interface. This property still works, but will be removed in a future release. Please use `...Settings.AllowChangeDir` instead.", DeprecationWarning, stacklevel=2);
+            return ctx_DSS_Get_AllowChangeDir(ctx);
         }
         IDSS& AllowChangeDir(bool value) // setter
         {
@@ -13242,12 +16672,15 @@ using namespace dss::capi;
         /// This can also be set through the environment variable DSS_CAPI_ALLOW_DOSCMD. Setting it to 1 enables
         /// the command.
         /// 
-        /// (API Extension)
+        /// **Deprecated:** Use `Settings.AllowDOScmd` instead (same behavior, the setting was just moved there for better organization).
+        /// 
+        /// **(API Extension)**
         /// 
         bool AllowDOScmd() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_DSS_Get_AllowDOScmd(ctx) != 0);
+            // #warning (""AllowDOScmd" was moved to the Settings interface. This property still works, but will be removed in a future release. Please use `...Settings.AllowDOScmd` instead.", DeprecationWarning, stacklevel=2);
+            return ctx_DSS_Get_AllowDOScmd(ctx);
         }
         IDSS& AllowDOScmd(bool value) // setter
         {
@@ -13261,30 +16694,70 @@ using namespace dss::capi;
         /// official OpenDSS COM interface. 
         /// 
         /// For example, consider the function `Loads_Get_ZIPV`. If there is no active circuit or active load element:
+        /// 
         /// - In the disabled state (COMErrorResults=False), the function will return "[]", an array with 0 elements.
         /// - In the enabled state (COMErrorResults=True), the function will return "[0.0]" instead. This should
         /// be compatible with the return value of the official COM interface.
         /// 
-        /// Defaults to True/1 (enabled state) in the v0.12.x series. This will change to false in future series.
+        /// Defaults to false (disabled state) in AltDSS since the v0.15.x series.
         /// 
-        /// This can also be set through the environment variable DSS_CAPI_COM_DEFAULTS. Setting it to 0 disables
+        /// This does not affect the results when using EPRI's OpenDSS distribution through Oddie.
+        /// 
+        /// This can also be set through the environment variable `DSS_CAPI_COM_DEFAULTS`. Setting it to 1 enables
         /// the legacy/COM behavior. The value can be toggled through the API at any time.
         /// 
-        /// (API Extension)
+        /// **Deprecated:** Use `Settings.COMErrorResults` instead (same behavior, the setting was just moved there for better organization).
+        /// 
+        /// **(API Extension)**
         /// 
         bool COMErrorResults() // getter
         {
             APIUtil::ErrorChecker error_checker(api_util);
-            return (ctx_DSS_Get_COMErrorResults(ctx) != 0);
+            // #warning (""COMErrorResults" was moved to the Settings interface. This property still works, but will be removed in a future release. Please use `...Settings.COMErrorResults` instead.", DeprecationWarning, stacklevel=2);
+            return ctx_DSS_Get_COMErrorResults(ctx);
         }
         IDSS& COMErrorResults(bool value) // setter
         {
             APIUtil::ErrorChecker error_checker(api_util);
+            // #warning (""COMErrorResults" was moved to the Settings interface. This property still works, but will be removed in a future release. Please use `...Settings.COMErrorResults` instead.", DeprecationWarning, stacklevel=2);
             ctx_DSS_Set_COMErrorResults(ctx, value);
             return *this;
         }
 
+        /// 
+        /// Controls some compatibility flags introduced to toggle some behavior from the official OpenDSS.
+        /// 
+        /// **THE FLAGS ARE GLOBAL, affecting all AltDSS engines in the process.**  
+        /// CompatFlags for Oddie-loaded instances (OpenDSS and OpenDSS-C engines) are handled by the Oddie code itself,
+        /// so it is global for each Oddie library.
+        /// 
+        /// These flags may change for each version of DSS C-API, but the same value will not be reused. That is,
+        /// when we remove a compatibility flag, it will have no effect but will also not affect anything else
+        /// besides raising an error if the user tries to toggle a flag that was available in a previous version.
+        /// 
+        /// We expect to keep a very limited number of flags. Since the flags are more transient than the other
+        /// options/flags, it was preferred to add this generic function instead of a separate function per
+        /// flag.
+        /// 
+        /// See the enumeration `DSSCompatFlags` for available flags, including description.
+        /// 
+        /// **Deprecated:** Use `Settings.CompatFlags` instead (same behavior, the setting was just moved there for better organization).
+        /// 
+        /// **(API Extension)**
+        /// 
+        DSSCompatFlags CompatFlags() // getter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            return ctx_DSS_Get_CompatFlags(ctx);
+        }
+        IDSS& CompatFlags(DSSCompatFlags value) // setter
+        {
+            APIUtil::ErrorChecker error_checker(api_util);
+            // #warning (""CompatFlags" was moved to the Settings interface. This property still works, but will be removed in a future release. Please use `...Settings.CompatFlags` instead.", DeprecationWarning, stacklevel=2);
+            ctx_DSS_Set_CompatFlags(ctx, static_cast<uint32_t>(value));
+            return *this;
+        }
     };
 
-} } // namespace dss::classic
-#endif // #ifndef DSS_CPP_CLASSIC_API
+} } // namespace altdss::classic
+#endif // #ifndef ALTDSS_CPP_CLASSIC_API
