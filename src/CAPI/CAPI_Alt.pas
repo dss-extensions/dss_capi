@@ -2121,10 +2121,12 @@ begin
 end;
 function Alt_Bus_ZscRefresh(DSS: TDSSContext; pBus: TDSSBus): TAltAPIBoolean; CDECL;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Result := (DSS.DSSExecutive.DoZscRefresh(pBus) = 0);
 end;
 function Alt_Bus_GetUniqueNodeNumber(DSS: TDSSContext; pBus: TDSSBus; StartNumber: Integer): Integer; CDECL;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Result := DSS.ActiveCircuit.GetUniqueNodeNumber(pBus, StartNumber);
 end;
 
@@ -2135,6 +2137,7 @@ var
     Nvalues, i, iV, NodeIdx, jj: Integer;
     Volts: Complex;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Nvalues := pBus.numNodesThisBus;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
     iV := 0;
@@ -2161,6 +2164,7 @@ var
     Result: PIntegerArray0;
     Nvalues, i, iV, NodeIdx, jj: Integer;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Nvalues := pBus.numNodesThisBus;
     Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, NValues);
     iV := 0;
@@ -2186,6 +2190,7 @@ var
     Nvalues, i, iV: Integer;
     VPh, V012: Complex3;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Nvalues := pBus.numNodesThisBus;
     if Nvalues > 3 then
         Nvalues := 3;
@@ -2270,6 +2275,7 @@ var
     Volts: Complex;
     BaseFactor: Double;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Nvalues := pBus.numNodesThisBus;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
     iV := 0;
@@ -2323,6 +2329,7 @@ var
     Nelements, iV, i, j: Integer;
     Z: Complex;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     DefaultResult(ResultPtr, ResultCount);
     try
         if pBus.Zsc = NIL then
@@ -2354,6 +2361,7 @@ var
     Nelements, iV, i, j: Integer;
     Y1: Complex;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     DefaultResult(ResultPtr, ResultCount);
     try
         if pBus.Ysc = NIL then
@@ -2385,6 +2393,7 @@ var
     Nvalues, i, iV: Integer;
     VPh, V012: Complex3;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Nvalues := pBus.numNodesThisBus;
     if Nvalues > 3 then
         Nvalues := 3;
@@ -2420,6 +2429,7 @@ var
     BaseFactor: Double;
     NodeV: pNodeVArray;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     NodeV := DSS.ActiveCircuit.Solution.NodeV;
     Nvalues := pBus.numNodesThisBus;
     if Nvalues > 3 then
@@ -2492,6 +2502,7 @@ var
     Volts: Complex;
     NodeV: pNodeVArray;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     NodeV := DSS.ActiveCircuit.Solution.NodeV;
     Nvalues := pBus.numNodesThisBus;
     if Nvalues > 3 then
@@ -2559,6 +2570,7 @@ var
     Volts: polar;
     Basefactor: Double;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Nvalues := pBus.numNodesThisBus;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
     iV := 0;
@@ -2591,6 +2603,7 @@ var
     Nvalues, i, iV, NodeIdx, jj: Integer;
     Volts: polar;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Nvalues := pBus.numNodesThisBus;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
     iV := 0;
@@ -2617,6 +2630,7 @@ var
     NValues: Integer;
     Norder: Integer;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     if (pBus.numNodesThisBus <> 3) or (pBus.Zsc = NIL) then
     begin
         DefaultResult(ResultPtr, ResultCount);
@@ -2649,6 +2663,8 @@ var
     maxTerm: Integer = 1;
     Result: PPointerArray0;
 begin
+    if DSS = NIL then DSS := DSSPrime;
+
     // Initially allocate a buffer for 10 elements.
     Result := DSS_RecreateArray_PPointer(ResultPtr, ResultCount, 10);
     ResultCount[0] := 0;
@@ -2762,11 +2778,13 @@ end;
 
 function Alt_Bus_GetListPtr(DSS: TDSSContext): PPointer; CDECL;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Result := PPointer(DSS.ActiveCircuit.Buses);
 end;
 
 function Alt_Bus_GetByIndex(DSS: TDSSContext; idx: Integer): TDSSBus; CDECL;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     if (idx >= 0) and (idx < DSS.ActiveCircuit.NumBuses) then
     begin
         Result := DSS.ActiveCircuit.Buses[idx + 1];
@@ -2781,6 +2799,7 @@ var
     idx: Integer;
     sname: String;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     sname := StripExtension(String(name));
     idx := DSS.ActiveCircuit.BusList.Find(sname);
     if idx = 0 then
@@ -2797,6 +2816,7 @@ var
     presult: PDouble;
     i: Integer;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     ResultCount[0] := 0;
     if (batch = NIL) or (batch^ = NIL) or ((@func) = NIL) then
         Exit;
@@ -2817,6 +2837,7 @@ var
     presult: PInteger;
     i: Integer;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     ResultCount[0] := 0;
     if (batch = NIL) or (batch^ = NIL) or ((@func) = NIL) then
     begin
@@ -2920,6 +2941,7 @@ var
     bufferPtr: PDouble; 
     bufferDims: array[0..3] of TAPISize;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Result := NIL;
     bufferPtr := NIL;
     bufferDims[0] := 0;
@@ -2945,6 +2967,7 @@ var
     bufferPtr: PDouble; 
     bufferDims: array[0..3] of TAPISize;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Result := NIL;
     bufferPtr := NIL;
     bufferDims[0] := 0;
