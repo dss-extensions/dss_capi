@@ -1223,10 +1223,15 @@ end;
 procedure TDSSCktElement.StateToJSON(joptions: Integer; var json: TJSONObject);
 var
     tmpArray, tmpArray2: TJSONArray;
+    tmpObj: TJSONObject;
     i, j: Integer;
     totalLosses, loadLosses, noLoadLosses: Complex;
     cbuffer: Array of Complex; //TODO? pass as workspace
     NodeV: pNodeVArray;
+    
+    regNames: ArrayOfString;
+    regValues: pDoubleArray;
+    numRegisters: Integer;
 begin
     //TODO: separate sections?
     // TODO? SeqCurrents, SeqPowers, SeqVoltages
@@ -1305,6 +1310,19 @@ begin
             tmpArray.Add(tmpArray2);
         end;
         json.Add('OpenConductors', tmpArray);
+    end;
+
+
+    regNames := TCktElementClass(ParentClass).GetRegisterNames(self);
+    if regNames <> NIL then
+    begin
+        regValues := TCktElementClass(ParentClass).GetRegisterValues(self, numRegisters);
+        tmpObj := TJSONObject.Create();
+        for i := 1 to numRegisters do
+        begin
+            tmpObj.Add(regNames[i - 1], regValues[i]);
+        end;
+        json.Add('Registers', tmpObj);
     end;
 end;
 
