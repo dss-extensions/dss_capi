@@ -2857,7 +2857,7 @@ function alt_Bus_ToJSON_(DSS: TDSSContext; bus: TDSSBus; joptions: Integer; var 
 var
     NodeV: pNodeVArray;
     tmp: TJSONArray;
-    c: Complex;
+    // c: Complex;
     j: Integer;
     Zsc012Temp: TCmatrix;
 begin

@@ -310,6 +310,7 @@ begin
     if Flg.NeedsRecalc in obj.Flags then
         obj.RecalcElementData();
     Exclude(obj.Flags, Flg.EditingActive);
+    Result := True;
 end;
 
 procedure TSensor.ResetAll(); // Force all Sensors in the circuit to reset
@@ -341,7 +342,6 @@ end;
 procedure TSensor.SetHasSensorFlag();
 // Set the HasSensorObj Flag for all cktElement;
 var
-    i: Integer;
     ThisSensor: TSensorObj;
     CktElem: TDSSCktElement;
 begin

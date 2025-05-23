@@ -929,7 +929,7 @@ end;
 procedure TLineObj.SetWires(Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i, istart: Integer;
-    condObj: TConductorDataObj;
+    // condObj: TConductorDataObj;
 begin
     // Previously in "FetchWireList"
     if not assigned(lineSpacingObj) then

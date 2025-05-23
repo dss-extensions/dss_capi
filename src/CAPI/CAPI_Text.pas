@@ -32,7 +32,6 @@ end;
 //------------------------------------------------------------------------------
 procedure Text_Set_Command(const Value: PAnsiChar); CDECL;
 var
-    res: String;
     posCurrent, posNext: Integer;
     full: String;
     s: String;

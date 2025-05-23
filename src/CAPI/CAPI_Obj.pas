@@ -2573,9 +2573,9 @@ var
     // vsrc: TVSourceObj = NIL;
     cls: TDSSClass;
     obj: TDSSObject;
-    first: Boolean;
+    // first: Boolean;
     // vsrccls: TDSSClass;
-    bus: TDSSBus;
+    // bus: TDSSBus;
     i: Integer;
     exportDefaultObjs: Boolean;
     DSS: TDSSContext;
@@ -2931,7 +2931,7 @@ procedure busFromJSON(DSS: TDSSContext; obj: TJSONObject; arrayIdx: Integer);
 var
     busIdx: Integer;
     bus: TDSSBus;
-    name: String;
+    // name: String;
     numVal: TJSONNumber;
     boolVal: TJSONBoolean;
     kVDone: Boolean = false;
@@ -2972,10 +2972,11 @@ end;
 
 procedure Obj_Circuit_FromJSON_(DSS: TDSSContext; jckt: TJSONObject; joptions: Integer);
 var
-    ckt: TDSSCircuit;
+    // ckt: TDSSCircuit;
     tmp: TJSONData;
     cls: TDSSClass;
-    items, item: TJSONArray;
+    items: TJSONArray;
+    // item: TJSONArray;
     i: Integer;
 begin
     DSS.DSSExecutive.Clear();

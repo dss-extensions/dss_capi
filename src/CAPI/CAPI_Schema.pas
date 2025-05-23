@@ -394,7 +394,7 @@ var
     enumPath, stype: String;
     jtype, jtype_single: String;
     poffset2: PtrInt;
-    param2: TJSONData;
+    // param2: TJSONData;
     prop: TJSONObject;
     subprop: TJSONObject;
     ptype: TPropertyType;
@@ -408,9 +408,10 @@ var
 
     // For object references
     other: TDSSObject = NIL;
-    otherName, pattern: String;
+    // otherName: String;
+    // pattern: String;
     clsParent: String;
-    ipattern: Integer;
+    // ipattern: Integer;
     allowedClasses: Array of String;
     obj: TDSSObject = NIL;
 
@@ -764,7 +765,7 @@ begin
                 if enumIds.Find(aenum.JSONName) <> 0 then
                 begin
                     enumPath := '#/$defs/' + aenum.JSONName;
-                    param2 := CreateJSON(enumIds.Find(aenum.JSONName));
+                    // param2 := CreateJSON(enumIds.Find(aenum.JSONName));
                 end
                 else
                 begin
@@ -821,10 +822,10 @@ begin
                 if poffset2 = 0 then
                 begin
                     prop.Add('type', 'string');
-                    if TPropertyFlag.PDElement in flags then 
-                        otherName := 'PDElement'
-                    else
-                        otherName := 'CktElement';
+                    // if TPropertyFlag.PDElement in flags then 
+                    //     otherName := 'PDElement'
+                    // else
+                    //     otherName := 'CktElement';
                     
                     if other <> NIL then
                         prop.Add('default', other.FullName());
@@ -890,19 +891,20 @@ begin
             end
             else if PropertyType[propIndex] = TPropertyType.DSSObjectReferenceArrayProperty then
             begin
-                if poffset2 = 0 then
-                begin
-                    if TPropertyFlag.PDElement in flags then 
-                        param2 := CreateJSON('PDElement')
-                    else
-                        param2 := CreateJSON('CktElement')
-                end
-                else
-                    param2 := CreateJSON(TDSSClass(poffset2).Name);
+                // if poffset2 = 0 then
+                // begin
+                //     if TPropertyFlag.PDElement in flags then 
+                //         param2 := CreateJSON('PDElement')
+                //     else
+                //         param2 := CreateJSON('CktElement')
+                // end
+                // else
+                //     param2 := CreateJSON(TDSSClass(poffset2).Name);
             end
             else
-                param2 := CreateJSON(poffset2);
-
+            begin
+                // param2 := CreateJSON(poffset2);
+            end;
 
             if onArray then
             begin
@@ -1256,7 +1258,7 @@ var
     dssEnum: TDSSEnum;
     enumIds: TClassNamesHashListType;
     circuitProperties: TJSONObject;
-    i: Integer;
+    // i: Integer;
     cls: TDSSClass;
     orgArrayDims: Boolean;
 begin

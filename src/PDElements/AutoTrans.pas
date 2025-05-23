@@ -220,15 +220,6 @@ type
         XHXChanged: Boolean;
 
         procedure SetTermRef();
-        function PresentTap(i: Integer): Double; override;
-        procedure SetPresentTap(i: Integer; const Value: Double); override;
-        function MinTap(i: Integer): Double; override;
-        function MaxTap(i: Integer): Double; override;
-        function TapIncrement(i: Integer): Double; override;
-        function BaseVoltage(i: Integer): Double; override;
-        function NumTaps(i: Integer): Integer; override;
-        function WdgConnection(i: Integer): Integer; override;
-
     PUBLIC
         ActiveWinding: Integer;  // public for COM interface
 
@@ -265,6 +256,15 @@ type
         procedure GetWindingVoltages(iWind: Integer; VBuffer: pComplexArray); override; // previously GetAutoWindingVoltages
         procedure GetAllWindingCurrents(CurrBuffer: pComplexArray); override;
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
+
+        function PresentTap(i: Integer): Double; override;
+        procedure SetPresentTap(i: Integer; const Value: Double); override;
+        function MinTap(i: Integer): Double; override;
+        function MaxTap(i: Integer): Double; override;
+        function TapIncrement(i: Integer): Double; override;
+        function BaseVoltage(i: Integer): Double; override;
+        function NumTaps(i: Integer): Integer; override;
+        function WdgConnection(i: Integer): Integer; override;
 
         // CIM accessors
         function GetXsc(i: Integer): Double;

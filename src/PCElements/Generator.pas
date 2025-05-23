@@ -300,7 +300,6 @@ type
 
         procedure Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
         procedure SetDragHandRegister(Reg: Integer; const Value: Double);
-        procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure WriteTraceRecord(const s: String);
 
@@ -350,6 +349,7 @@ type
 
         procedure RecalcElementData(); OVERRIDE;
         procedure CalcYPrim(); OVERRIDE;
+        procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure SetConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         function InjCurrents(): Integer; OVERRIDE;

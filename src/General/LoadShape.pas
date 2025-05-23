@@ -2400,6 +2400,12 @@ begin
             end
             else
             begin
+                // No MMF for float32
+                // if UseMMF then
+                // begin
+                // end;
+
+                prevOffset := offset - Stride;
                 hFrac := (Hr - sH[prevOffset]) / (sH[offset] - sH[prevOffset]);
                 prevValue := sP[prevOffset];
                 Result.re := prevValue + hFrac * (sP[offset] - prevValue);

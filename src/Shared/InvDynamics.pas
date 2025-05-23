@@ -240,7 +240,7 @@ var
     R1,
     // R2,
     // X2,
-    X1R1,
+    // X1R1,
     X0R0,
     Isc1,
     Xs,
@@ -258,7 +258,7 @@ begin
     // X2 := X1;
     R0 := 1.9;
     X0 := 5.7;
-    X1R1 := X1 / R1;
+    // X1R1 := X1 / R1;
     X0R0 := X0 / R0;
     Isc1 := (mKVARating / (sqrt(3) * RatedkVLL)) / NPhases;
     // Compute R0, X0

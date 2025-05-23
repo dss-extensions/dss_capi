@@ -1584,7 +1584,7 @@ var
     iskip: Integer;
     numRead: Integer = 0;
 begin
-    SetLength(Result, 0);
+    Result := NIL;
     if prevCount <= 0 then
         prevCount := 100;
     SetLength(Result, prevCount);
@@ -1642,7 +1642,7 @@ var
     sngArray: ArrayDef.PSingleArray;
     ValueCount: Integer;
 begin
-    SetLength(Result, 0);
+    Result := NIL;
     try    
         // load the list from a file of singles (no checking done on type of data)
         try
@@ -1673,7 +1673,7 @@ var
     F: TStream = NIL; // input
     ValueCount: Integer;
 begin
-    SetLength(Result, 0);
+    Result := NIL;
     try
          // load the list from a file of doubles (no checking done on type of data)
         try
@@ -1746,7 +1746,7 @@ var
     numRead: Integer = 0;
     jfn: TJSONString = NIL;
 begin
-    SetLength(Result, 0);
+    Result := NIL;
 
     if (obj = NIL) or (not obj.Find('File', jfn)) then
         raise Exception.Create('String list is not correctly specified');
@@ -1825,7 +1825,7 @@ var
     i, j: Integer;
 
     boolVal: Boolean;
-    arrayItem: TJSONData;
+    // arrayItem: TJSONData;
     arrayVal, arrayVal2: TJSONArray;
     doubleVal: Double;
     scale: Double;
@@ -2018,7 +2018,7 @@ begin
                     SetObjStrings(obj, index, NIL, 0, setterFlags);
                     Exit;
                 end;
-                arrayItem := arrayVal[0];
+                // arrayItem := arrayVal[0];
                 // if (arrayItem.JSONtype = jtString) then
                 // begin
                 // Array of strings
@@ -3958,10 +3958,11 @@ var
     flags: TPropertyFlags;
     stringListPtr: PStringList;
     stringList: TStringList;
-    stringPtr: PString;
+    // stringPtr: PString;
     obj: TDSSObject;
     cls: TDSSClass;
-    elemClassName, ElemName: String;
+    // elemClassName: String;
+    ElemName: String;
     objs: Array of TDSSObject = NIL;
     otherObj: TDSSObject;
     otherObjPtr: TDSSObjectPtr;
@@ -4712,11 +4713,12 @@ end;
 
 procedure TDSSClassHelper.GetObjStrings(obj: Pointer; Index: Integer; var ResultPtr: PPAnsiChar; ResultCount: PAPISize);
 var
-    i, count, step: Integer;
+    i, count: Integer;
+    // step: Integer;
     stringList: TStringList;
     ptype: TPropertyType;
     integerPtr: PInteger;
-    stringPtr: PString;
+    // stringPtr: PString;
     otherObjPtr: TDSSObjectPtr;
     Result: PPAnsiCharArray0;
     ObjResultPtr: TDSSObjectPtr; 
@@ -4770,12 +4772,12 @@ begin
 
             if (PropertyType[Index] = TPropertyType.MappedStringEnumProperty) and (TPropertyFlag.OnArray in PropertyFlags[Index]) then
             begin
-                step := SizeOf(Integer);
+                // step := SizeOf(Integer);
                 integerPtr := PInteger(PPByte(PByte(obj) + PropertyOffset[Index])^);
             end
             else
             begin
-                step := PropertyStructArrayStep;
+                // step := PropertyStructArrayStep;
                 integerPtr := PInteger(
                     PPByte(PByte(obj) + PropertyStructArrayOffset)^ +
                     PropertyOffset[Index]
@@ -5037,9 +5039,10 @@ end;
 
 function TDSSClassHelper.FillObjFromJSON(obj: Pointer; json: TJSONObject; joptions: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
 var
-    propIndex, propIndex0: Integer;
+    propIndex: Integer;
+    // propIndex0: Integer;
     propName: String;
-    jsonProp: TJSONEnum;
+    // jsonProp: TJSONEnum;
     propData: TJSONData = NIL;
     propFlags: TPropertyFlags;
     dssObj: TDSSObject;
