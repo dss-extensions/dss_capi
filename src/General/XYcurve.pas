@@ -204,13 +204,25 @@ begin
     obj.SetY(obj.Yvalues[1]);
 end;
 
-procedure GetPoints(obj: TObj; var ResultPtr: PDouble; ResultCount: PAPISize);
+procedure GetPoints(obj: TObj; var ResultPtr: PDouble; ResultCount: PAPISize; ElementIndex: Integer);
 var
     i: Integer;
     Result: PDoubleArray0;
 begin
     if (obj.XValues <> NIL) and (obj.YValues <> NIL) then
     begin
+        if (ElementIndex >= 0) then
+        begin
+            i := ElementIndex div 2;
+            if (ElementIndex and 1) = 1 then
+            begin
+                ResultPtr^ := obj.YValues[ElementIndex + 1];
+                Exit;
+            end;
+            ResultPtr^ := obj.XValues[ElementIndex + 1];
+            Exit;
+        end;
+
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, obj.numPoints * 2);
         for i := 1 to obj.numPoints do
         begin

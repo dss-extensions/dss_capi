@@ -192,7 +192,7 @@ begin
     inherited Destroy;
 end;
 
-procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
+procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags; ElementIndex: Integer);
 var
     i, istart, istop: Integer;
 begin
@@ -206,8 +206,22 @@ begin
         // (only when the phase conductors not overhead)
         istart := obj.FNPhases + 1;
 
+    // When replacing a single element...
+    if (ElementIndex >= 0) then
+    begin
+        if (istop - istart + 1) >= ElementIndex then
+        begin
+            obj.DoSimpleMsg('%s: Unexpected index (%d) of objects; expected range: 0-%d.', 
+                [obj.FullName(), ElementIndex, (istop - istart + 1)], 18103);
+            Exit;
+        end;
+        obj.conductors[istart + ElementIndex] := TConductorDataObj(Value^);
+        obj.FActiveCond := ElementIndex + 1;
+        Exit;
+    end;
+
     // Validate number of elements
-    if (istop - istart + 1) <> ValueCount then
+    if (istop - istart + 1) >= ValueCount then
     begin
         obj.DoSimpleMsg('%s: Unexpected number (%d) of objects; expected %d objects.', 
             [obj.FullName(), ValueCount, (istop - istart + 1)], 18102);

@@ -185,7 +185,7 @@ type
 
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
         procedure SaveWrite(F: TStream); OVERRIDE;        
-        procedure SetWires(Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
+        procedure SetWires(Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags; ElementIndex: Integer);
 
         procedure fetchLineCode();
         procedure fetchGeometryCode();
@@ -286,7 +286,7 @@ begin
         Result := Result * obj.unitsFactor
 end;
 
-procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags); forward;
+procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags; ElementIndex: Integer); forward;
 
 procedure TLine.DefineProperties();
 var 
@@ -921,12 +921,12 @@ begin
     Result := True;
 end;
 
-procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
+procedure SetWires(obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags; ElementIndex: Integer);
 begin
-    obj.SetWires(Value, ValueCount, setterFlags);
+    obj.SetWires(Value, ValueCount, setterFlags, ElementIndex);
 end;
 
-procedure TLineObj.SetWires(Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
+procedure TLineObj.SetWires(Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags; ElementIndex: Integer); //TODO: ElementIndex
 var
     i, istart: Integer;
     // condObj: TConductorDataObj;
@@ -949,6 +949,19 @@ begin
     begin
         // adding bare neutrals to an underground line - TODO what about repeat invocation?
         istart := lineSpacingObj.NPhases + 1;
+    end;
+
+    // When replacing a single element...
+    if (ElementIndex >= 0) then
+    begin
+        if (lineSpacingObj.NConds - istart + 1) >= ElementIndex then
+        begin
+            DoSimpleMsg('%s: Unexpected index (%d) of objects; expected range: 0-%d.', 
+                [FullName(), ElementIndex, (lineSpacingObj.NConds - istart + 1)], 18103);
+            Exit;
+        end;
+        conductors[istart + ElementIndex] := TConductorDataObj(Value^);
+        Exit;
     end;
 
     // Validate number of elements

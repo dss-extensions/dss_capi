@@ -338,7 +338,7 @@ begin
 end;
 
 procedure getLSArray(
-    npts: Integer; d: PDoubleArray0; s: PSingleArray0; var ResultPtr: PDouble; ResultCount: PAPISize
+    npts: Integer; d: PDoubleArray0; s: PSingleArray0; var ResultPtr: PDouble; ResultCount: PAPISize; ElementIndex: Integer
 );
 var
     i: Integer;
@@ -351,12 +351,22 @@ begin
 
     if d <> NIL then
     begin
+        if (ElementIndex >= 0) then
+        begin
+            ResultPtr^ := d[ElementIndex];
+            Exit;
+        end;
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, npts);
         Move(d[0], ResultPtr[0], npts * SizeOf(Double));
         Exit;
     end;
     if s <> NIL then
     begin
+        if (ElementIndex >= 0) then
+        begin
+            ResultPtr^ := s[ElementIndex];
+            Exit;
+        end;
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, npts);
         outPtr := PDouble(ResultPtr);
         inPtr := PSingle(s);
@@ -370,19 +380,19 @@ begin
     end;
 end;
 
-procedure getHour(obj: TObj; var ResultPtr: PDouble; ResultCount: PAPISize);
+procedure getHour(obj: TObj; var ResultPtr: PDouble; ResultCount: PAPISize; ElementIndex: Integer);
 begin
-    getLSArray(obj.NumPoints, obj.dH, obj.sH, ResultPtr, ResultCount);
+    getLSArray(obj.NumPoints, obj.dH, obj.sH, ResultPtr, ResultCount, ElementIndex);
 end;
 
-procedure getPMult(obj: TObj; var ResultPtr: PDouble; ResultCount: PAPISize);
+procedure getPMult(obj: TObj; var ResultPtr: PDouble; ResultCount: PAPISize; ElementIndex: Integer);
 begin
-    getLSArray(obj.NumPoints, obj.dP, obj.sP, ResultPtr, ResultCount);
+    getLSArray(obj.NumPoints, obj.dP, obj.sP, ResultPtr, ResultCount, ElementIndex);
 end;
 
-procedure getQMult(obj: TObj; var ResultPtr: PDouble; ResultCount: PAPISize);
+procedure getQMult(obj: TObj; var ResultPtr: PDouble; ResultCount: PAPISize; ElementIndex: Integer);
 begin
-    getLSArray(obj.NumPoints, obj.dQ, obj.sQ, ResultPtr, ResultCount);
+    getLSArray(obj.NumPoints, obj.dQ, obj.sQ, ResultPtr, ResultCount, ElementIndex);
 end;
 
 

@@ -73,6 +73,16 @@ type
         procedure GetObjIntegers(obj: Pointer; Index: Integer; var ResultPtr: PInteger; ResultCount: PAPISize);
         procedure GetObjStrings(obj: Pointer; Index: Integer; var ResultPtr: PPAnsiChar; ResultCount: PAPISize);
         procedure GetObjObjects(obj: Pointer; Index: Integer; var ResultPtr: PPointer; ResultCount: PAPISize);
+        
+        function GetObjDoubleArrayElement(obj: Pointer; Index: Integer; ElementIndex: Integer): Double;
+        function GetObjIntegerArrayElement(ptr: Pointer; Index: Integer; ElementIndex: Integer): Integer;
+        function GetObjStringArrayElement(obj: Pointer; Index: Integer; ElementIndex: Integer): String;
+        function GetObjObjectArrayElement(ptr: Pointer; Index: Integer; ElementIndex: Integer): TDSSObject;
+
+        procedure SetObjDoubleArrayElement(ptr: Pointer; Index: Integer; ElementIndex: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags);
+        procedure SetObjIntegerArrayElement(ptr: Pointer; Index: Integer; ElementIndex: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags);
+        procedure SetObjStringArrayElement(ptr: Pointer; Index: Integer; ElementIndex: Integer; Value: String; setterFlags: TDSSPropertySetterFlags);
+        procedure SetObjObjectArrayElement(ptr: Pointer; Index: Integer; ElementIndex: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags);
 
         function FillObjFromJSON(obj: Pointer; json: TJSONObject; joptions: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
     end;
@@ -113,6 +123,15 @@ type
         procedure GetObjects(Index: Integer; var ResultPtr: PPointer; ResultCount: PAPISize);
 
         function GetComplex(Index: Integer): Complex; // wraps GetDoubles
+
+        function GetDoubleArrayElement(Index: Integer; ElementIndex: Integer): Double;
+        function GetIntegerArrayElement(Index: Integer; ElementIndex: Integer): Integer;
+        function GetStringArrayElement(Index: Integer; ElementIndex: Integer): String;
+        function GetObjectArrayElement(Index: Integer; ElementIndex: Integer): TDSSObject;
+        function SetDoubleArrayElement(Index: Integer; ElementIndex: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags): Boolean;
+        function SetIntegerArrayElement(Index: Integer; ElementIndex: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
+        function SetStringArrayElement(Index: Integer; ElementIndex: Integer; Value: String; setterFlags: TDSSPropertySetterFlags): Boolean;
+        function SetObjectArrayElement(Index: Integer; ElementIndex: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags): Boolean;
 
         procedure BeginEdit(Activate: Boolean);
         procedure EndEdit(NumChanges: Integer);
@@ -726,7 +745,7 @@ begin
             if TPropertyFlag.WriteByFunction in flags then
             begin
                 SetLength(doubleVals, integerPtr^);
-                TWriteDoublesPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, @doubleVals[0], Length(doubleVals))
+                TWriteDoublesPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, @doubleVals[0], Length(doubleVals), -1)
             end
         end;
         TPropertyType.DoubleArrayOnStructArrayProperty:
@@ -876,7 +895,7 @@ begin
                         PropParser.NextParam();
                     end;
                 end;
-                TWriteObjRefsPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, PPointer(@objs[0]), Length(objs), setterFlags);
+                TWriteObjRefsPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, PPointer(@objs[0]), Length(objs), setterFlags, -1);
                 Result := True;
                 Exit;
             end;
@@ -1276,7 +1295,7 @@ begin
                     ValueCount[3] := 0;
                 end;
                 doublePtr := NIL;
-                TDoublesPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, doublePtr, @ValueCount[0]);
+                TDoublesPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, doublePtr, @ValueCount[0], -1);
                 val := GetDSSArray_JSON(
                     ValueCount[0],
                     pDoubleArray(doublePtr),
@@ -1508,17 +1527,19 @@ begin
         begin
             if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
             begin
-                ValueCount[0] := 0;
-                ValueCount[1] := 0;
-                if DSS_EXTENSIONS_ARRAY_DIMS then
-                begin
-                    ValueCount[2] := 0;
-                    ValueCount[3] := 0;
-                end;
-                otherObjPtr0 := NIL;
-                TObjRefsPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, PPointer(otherObjPtr0), @ValueCount[0]);
-                otherObjPtr := otherObjPtr0;
-                count := ValueCount[0];
+                raise Exception.Create(Format('JSON/%s/%s/%s: Read-by-function flag was not expected. Aborting...', [Name, TDSSObject(obj).Name(), PropertyName[Index]]));
+                Exit;
+                // ValueCount[0] := 0;
+                // ValueCount[1] := 0;
+                // if DSS_EXTENSIONS_ARRAY_DIMS then
+                // begin
+                //     ValueCount[2] := 0;
+                //     ValueCount[3] := 0;
+                // end;
+                // otherObjPtr0 := NIL;
+                // TObjRefsPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, PPointer(otherObjPtr0), @ValueCount[0], -1);
+                // otherObjPtr := otherObjPtr0;
+                // count := ValueCount[0];
             end
             else
             begin
@@ -2348,7 +2369,7 @@ begin
                         ValueCount[3] := 0;
                     end;
                     doublePtr := NIL;
-                    TDoublesPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, doublePtr, @ValueCount[0]);
+                    TDoublesPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, doublePtr, @ValueCount[0], -1);
                     PropStr := GetDSSArray(
                         ValueCount[0],
                         pDoubleArray(doublePtr),
@@ -2557,17 +2578,19 @@ begin
             begin
                 if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
                 begin
-                    ValueCount[0] := 0;
-                    ValueCount[1] := 0;
-                    if DSS_EXTENSIONS_ARRAY_DIMS then
-                    begin
-                        ValueCount[2] := 0;
-                        ValueCount[3] := 0;
-                    end;
-                    otherObjPtr0 := NIL;
-                    TObjRefsPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, PPointer(otherObjPtr0), @ValueCount[0]);
-                    otherObjPtr := otherObjPtr0;
-                    count := ValueCount[0];
+                    raise Exception.Create(Format('JSON/%s/%s/%s: Read-by-function flag was not expected. Aborting...', [Name, TDSSObject(obj).Name(), PropertyName[Index]]));
+                    Exit;
+                    // ValueCount[0] := 0;
+                    // ValueCount[1] := 0;
+                    // if DSS_EXTENSIONS_ARRAY_DIMS then
+                    // begin
+                    //     ValueCount[2] := 0;
+                    //     ValueCount[3] := 0;
+                    // end;
+                    // otherObjPtr0 := NIL;
+                    // TObjRefsPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, PPointer(otherObjPtr0), @ValueCount[0], -1);
+                    // otherObjPtr := otherObjPtr0;
+                    // count := ValueCount[0];
                 end
                 else
                 begin
@@ -2672,7 +2695,7 @@ begin
 
     if TPropertyFlag.WriteByFunction in flags then
     begin
-        TWriteObjRefsPropertyFunction(PropertyWriteFunction[Index])(obj, PPointer(Value), ValueCount, setterFlags);
+        TWriteObjRefsPropertyFunction(PropertyWriteFunction[Index])(obj, PPointer(Value), ValueCount, setterFlags, -1);
         Exit;
     end;
 
@@ -3377,6 +3400,110 @@ begin
     Result := ParentClass.GetObjObject(self, Index);
 end;
 
+function TDSSObjectHelper.GetDoubleArrayElement(Index: Integer; ElementIndex: Integer): Double;
+begin
+    Result := ParentClass.GetObjDoubleArrayElement(self, Index, ElementIndex);
+end;
+
+function TDSSObjectHelper.GetIntegerArrayElement(Index: Integer; ElementIndex: Integer): Integer;
+begin
+    Result := ParentClass.GetObjIntegerArrayElement(self, Index, ElementIndex);
+end;
+
+function TDSSObjectHelper.GetStringArrayElement(Index: Integer; ElementIndex: Integer): String;
+begin
+    Result := ParentClass.GetObjStringArrayElement(self, Index, ElementIndex);
+end;
+
+function TDSSObjectHelper.GetObjectArrayElement(Index: Integer; ElementIndex: Integer): TDSSObject;
+begin
+    Result := ParentClass.GetObjObjectArrayElement(self, Index, ElementIndex);
+end;
+
+function TDSSObjectHelper.SetDoubleArrayElement(Index: Integer; ElementIndex: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags): Boolean;
+var
+    singleEdit: Boolean;
+begin
+    singleEdit := not (Flg.EditingActive in Flags);
+    Include(setterFlags, TDSSPropertySetterFlag.SingleElement);
+    if singleEdit then
+        BeginEdit(True);
+
+    ParentClass.SetObjDoubleArrayElement(self, Index, ElementIndex, Value, setterFlags);
+
+    Result := (DSS.ErrorNumber = 0);
+    if Result then
+    begin
+        SetAsNextSeq(Index);
+        PropertySideEffects(Index, ElementIndex, setterFlags);
+    end;
+    if singleEdit then
+        EndEdit(1);
+end;
+
+function TDSSObjectHelper.SetIntegerArrayElement(Index: Integer; ElementIndex: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
+var
+    singleEdit: Boolean;
+begin
+    singleEdit := not (Flg.EditingActive in Flags);
+    Include(setterFlags, TDSSPropertySetterFlag.SingleElement);
+    if singleEdit then
+        BeginEdit(True);
+
+    ParentClass.SetObjIntegerArrayElement(self, Index, ElementIndex, Value, setterFlags);
+
+    Result := (DSS.ErrorNumber = 0);
+    if Result then
+    begin
+        SetAsNextSeq(Index);
+        PropertySideEffects(Index, ElementIndex, setterFlags);
+    end;
+    if singleEdit then
+        EndEdit(1);
+end;
+
+function TDSSObjectHelper.SetStringArrayElement(Index: Integer; ElementIndex: Integer; Value: String; setterFlags: TDSSPropertySetterFlags): Boolean;
+var
+    singleEdit: Boolean;
+begin
+    singleEdit := not (Flg.EditingActive in Flags);
+    Include(setterFlags, TDSSPropertySetterFlag.SingleElement);
+    if singleEdit then
+        BeginEdit(True);
+
+    ParentClass.SetObjStringArrayElement(self, Index, ElementIndex, Value, setterFlags);
+
+    Result := (DSS.ErrorNumber = 0);
+    if Result then
+    begin
+        SetAsNextSeq(Index);
+        PropertySideEffects(Index, ElementIndex, setterFlags);
+    end;
+    if singleEdit then
+        EndEdit(1);
+end;
+
+function TDSSObjectHelper.SetObjectArrayElement(Index: Integer; ElementIndex: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags): Boolean;
+var
+    singleEdit: Boolean;
+begin
+    singleEdit := not (Flg.EditingActive in Flags);
+    Include(setterFlags, TDSSPropertySetterFlag.SingleElement);
+    if singleEdit then
+        BeginEdit(True);
+
+    ParentClass.SetObjObjectArrayElement(self, Index, ElementIndex, Value, setterFlags);
+
+    Result := (DSS.ErrorNumber = 0);
+    if Result then
+    begin
+        SetAsNextSeq(Index);
+        PropertySideEffects(Index, ElementIndex, setterFlags);
+    end;
+    if singleEdit then
+        EndEdit(1);
+end;
+
 procedure TDSSObjectHelper.GetDoubles(Index: Integer; var ResultPtr: PDouble; ResultCount: PAPISize);
 begin
     ParentClass.GetObjDoubles(self, Index, ResultPtr, ResultCount);
@@ -3875,7 +4002,7 @@ begin
             begin
                 SetLength(doubleVals, sizePtr^);
                 Move(Value^, doubleVals[0], sizePtr^ * SizeOf(Double));
-                TWriteDoublesPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, @doubleVals[0], Length(doubleVals))
+                TWriteDoublesPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, @doubleVals[0], Length(doubleVals), -1)
             end
         end;
         TPropertyType.DoubleOnStructArrayProperty, // shortcut
@@ -4067,7 +4194,7 @@ begin
                         Inc(Value);
                     end;
                 end;
-                TWriteObjRefsPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, PPointer(@objs[0]), Length(objs), setterFlags);
+                TWriteObjRefsPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, PPointer(@objs[0]), Length(objs), setterFlags, -1);
                 // Result := True;
                 Exit;
             end;
@@ -4163,7 +4290,7 @@ begin
             end;
 
             if (TPropertyFlag.WriteByFunction in flags) then
-                TWriteStringListPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, stringList)                
+                TWriteStringListPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, stringList)
         end;
         TPropertyType.BusesOnStructArrayProperty,
         TPropertyType.BusOnStructArrayProperty: // allow this one as a shortcut
@@ -4491,7 +4618,7 @@ begin
 
             if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
             begin
-                TDoublesPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, ResultPtr, ResultCount);
+                TDoublesPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, ResultPtr, ResultCount, -1);
                 Result := PDoubleArray0(ResultPtr);
                 if PropertyScale[Index] <> 1 then
                     for i := 0 to ResultCount^ do
@@ -4721,8 +4848,8 @@ var
     // stringPtr: PString;
     otherObjPtr: TDSSObjectPtr;
     Result: PPAnsiCharArray0;
-    ObjResultPtr: TDSSObjectPtr; 
-    ObjResultCount: Array[0..3] of TAPISize;
+    // ObjResultPtr: TDSSObjectPtr; 
+    // ObjResultCount: Array[0..3] of TAPISize;
 begin
     if not ((Index > 0) and (Index <= NumProperties) and (PropertyOffset[Index] <> -1)) then
     begin
@@ -4826,19 +4953,21 @@ begin
         end;
         TPropertyType.DSSObjectReferenceArrayProperty:
         begin
-            ObjResultPtr := NIL;
+            // ObjResultPtr := NIL;
             if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
             begin
-                ObjResultCount[0] := 0;
-                ObjResultCount[1] := 0;
-                if DSS_EXTENSIONS_ARRAY_DIMS then
-                begin
-                    ObjResultCount[2] := 0;
-                    ObjResultCount[3] := 0;
-                end;
-                TObjRefsPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, PPointer(ObjResultPtr), PAPISize(ObjResultCount));
-                count := ObjResultCount[0];
-                otherObjPtr := ObjResultPtr;
+                raise Exception.Create(Format('JSON/%s/%s/%s: Read-by-function flag was not expected. Aborting...', [Name, TDSSObject(obj).Name(), PropertyName[Index]]));
+                Exit;
+                // ObjResultCount[0] := 0;
+                // ObjResultCount[1] := 0;
+                // if DSS_EXTENSIONS_ARRAY_DIMS then
+                // begin
+                //     ObjResultCount[2] := 0;
+                //     ObjResultCount[3] := 0;
+                // end;
+                // TObjRefsPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, PPointer(ObjResultPtr), PAPISize(ObjResultCount), -1);
+                // count := ObjResultCount[0];
+                // otherObjPtr := ObjResultPtr;
             end
             else
             begin
@@ -4864,8 +4993,8 @@ begin
                 Inc(otherObjPtr);
             end;
 
-            if ObjResultPtr <> NIL then
-                FreeMem(ObjResultPtr);
+            // if ObjResultPtr <> NIL then
+            //     FreeMem(ObjResultPtr);
         end;
         TPropertyType.MappedStringEnumArrayProperty:
         begin
@@ -4949,7 +5078,8 @@ begin
         begin
             if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
             begin
-                TObjRefsPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, ResultPtr, ResultCount);
+                // TObjRefsPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, ResultPtr, ResultCount, -1);
+                raise Exception.Create(Format('%s/%s/%s: Read-by-function flag was not expected. Aborting...', [Name, TDSSObject(obj).Name(), PropertyName[Index]]));                
                 Exit;
             end;
 
@@ -4968,6 +5098,1055 @@ begin
             end;
         end;
     end;
+end;
+
+function TDSSClassHelper.GetObjDoubleArrayElement(obj: Pointer; Index: Integer; ElementIndex: Integer): Double;
+// LOTS of properties (91+ total)
+var
+    c: PComplex;
+    count, step: Integer;
+    doublePtr: PDouble;
+    mat: TCMatrix;
+    scale: Double;
+begin
+    Result := NaN;
+    if not ((Index > 0) and (Index <= NumProperties) and (PropertyOffset[Index] <> -1)) then
+    begin
+        Exit;
+    end;
+
+    case PropertyType[Index] of
+        TPropertyType.ComplexProperty:
+        begin
+            if (ElementIndex < 0) or (ElementIndex >= 2) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, 1]
+                    ), 25052307);
+                Exit;
+            end;
+            c := PComplex(PByte(obj) + PropertyOffset[Index]);
+            if ElementIndex = 0 then
+                Result := c.re
+            else
+                Result := c.im;
+        end;
+        TPropertyType.ComplexPartsProperty:
+        begin
+            if (ElementIndex < 0) or (ElementIndex >= 2) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, 1]
+                    ), 25052307);
+                Exit;
+            end;
+            if ElementIndex = 0 then
+                Result := PDouble(PByte(obj) + PropertyOffset[Index])^
+            else
+                Result := PDouble(PByte(obj) + PropertyOffset2[Index])^;;
+        end;
+        TPropertyType.DoubleArrayProperty,
+        TPropertyType.DoubleDArrayProperty,
+        TPropertyType.DoubleVArrayProperty,
+        TPropertyType.DoubleFArrayProperty,
+        TPropertyType.DoubleSymMatrixProperty:
+        begin
+            doublePtr := NIL;
+            if PropertyType[Index] = TPropertyType.DoubleFArrayProperty then
+            begin
+                doublePtr := PDouble(PByte(obj) + PropertyOffset[Index]);
+                count := PropertyOffset2[Index]
+            end
+            else if TPropertyFlag.SizeIsFunction in PropertyFlags[Index] then
+                count := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj) //TODO: check if we can use a simple flag for this
+            else
+            if PropertyType[Index] = TPropertyType.DoubleSymMatrixProperty then
+                count := PInteger(PByte(obj) + PropertyOffset3[Index])^
+            else
+                count := PInteger(PByte(obj) + PropertyOffset2[Index])^;
+
+            if (ElementIndex < 0) or (ElementIndex >= count) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
+                    ), 25052307);
+                Exit;
+            end;
+
+            if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
+            begin
+                doublePtr := @Result;
+                TDoublesPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, doublePtr, NIL, ElementIndex);
+                if PropertyScale[Index] <> 1 then
+                    Result := Result / PropertyScale[Index];
+                Exit;
+            end;
+            
+            if doublePtr = NIL then
+                doublePtr := PPDouble(PByte(obj) + PropertyOffset[Index])^;
+
+            if PropertyType[Index] = TPropertyType.DoubleSymMatrixProperty then
+            begin
+                count := count * count;
+            end;
+
+            if (count <= 0) or (doublePtr = NIL) then
+                Exit;
+
+            inc(doublePtr, ElementIndex);
+            if PropertyScale[Index] <> 1 then
+            begin
+                Result := doublePtr^ / PropertyScale[Index];
+            end
+            else
+            begin
+                Result := doublePtr^;
+            end;
+        end;
+        TPropertyType.ComplexPartSymMatrixProperty:
+        begin
+            if TPropertyFlag.ScaledByFunction in PropertyFlags[Index] then
+                scale := TPropertyScaleFunction(Pointer(PropertyOffset2[Index]))(obj, True) // True = Getter scale
+            else
+                scale := PropertyScale[Index];
+
+            mat := PCMatrix(Pointer(PByte(obj) + PropertyOffset[Index]))^;
+            if mat = NIL then
+                Exit;
+
+            count := mat.order * mat.order;
+            if (ElementIndex < 0) or (ElementIndex >= count) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
+                    ), 25052307);
+                Exit;
+            end;
+
+            c := PComplex(mat.GetValuesArrayPtr(count));
+            Inc(c, elementIndex);
+            if TPropertyFlag.ImagPart in PropertyFlags[Index] then
+            begin
+                Result := c^.im / scale;
+            end
+            else
+            begin
+                Result := c^.re / scale;
+            end;
+        end;
+        TPropertyType.DoubleOnStructArrayProperty, // shortcut
+        TPropertyType.DoubleOnArrayProperty: // shortcut
+        begin
+            // Number of items
+            count := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+            if count <= 0 then
+                Exit;
+
+            if (ElementIndex < 0) or (ElementIndex >= count) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
+                    ), 25052307);
+                Exit;
+            end;
+
+            scale := PropertyScale[Index];
+            if PropertyType[Index] = TPropertyType.DoubleOnStructArrayProperty then
+            begin
+                step := PropertyStructArrayStep;
+                doublePtr := PDouble(
+                    PPByte(PByte(obj) + PropertyStructArrayOffset)^ + // Pointer to the pointer struct array
+                    PropertyOffset[Index] // base field
+                );
+            end
+            else
+            begin
+                step := SizeOf(Double);
+                doublePtr := PDouble(
+                    PPByte(PByte(obj) + PropertyOffset[Index])^ // Pointer to the pointer array
+                );
+            end;
+            doublePtr := PDouble(ptruint(doublePtr) + step * ElementIndex);
+            if scale <> 1 then
+            begin
+                Result := doublePtr^ / scale;
+            end
+            else
+            begin
+                Result := doublePtr^;
+            end;
+        end;
+        TPropertyType.DoubleArrayOnStructArrayProperty:
+        begin
+            // Number of items
+            count := PInteger(PByte(obj) + PropertyOffset2[Index])^;
+            if count <= 0 then
+                Exit;
+
+            if (ElementIndex < 0) or (ElementIndex >= count) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
+                    ), 25052307);
+                Exit;
+            end;
+
+            // Pointer to the first of the target fields
+            doublePtr := PDouble(
+                PPByte(PByte(obj) + PropertyStructArrayOffset)^ +
+                PropertyOffset[Index]
+            );
+            scale := PropertyScale[Index];
+            doublePtr := PDouble(ptruint(doublePtr) + PropertyStructArrayStep * ElementIndex);
+            Result := doublePtr^ / scale;
+        end;
+    end;
+end;
+
+function TDSSClassHelper.GetObjIntegerArrayElement(ptr: Pointer; Index: Integer; ElementIndex: Integer): Integer;
+// Transformer/AutoTrans/XfmrCode.NumTaps, Transformer/AutoTrans/XfmrCode.Conns: All have element versions maybe we could reuse it
+// Capacitor.States/Fuse.Normal/Fuse.State: whole array, can change single element without issues
+var
+    integerPtr: PInteger;
+    count, step: Integer;
+    obj: TDSSObject;
+begin
+    Result := -1;
+    if not ((Index > 0) and (Index <= NumProperties) and (PropertyOffset[Index] <> -1)) then
+    begin
+        Exit;
+    end;
+    obj := TDSSObject(ptr);
+
+    case PropertyType[Index] of
+        TPropertyType.IntegerArrayProperty:
+        begin
+            count := PInteger(PByte(obj) + PropertyOffset2[Index])^;
+            if (ElementIndex < 0) or (ElementIndex >= count) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
+                    ), 25052305);
+                Exit;
+            end;
+            integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
+            inc(integerPtr, ElementIndex);
+            Result := integerPtr^;
+        end;
+        TPropertyType.MappedStringEnumArrayProperty:
+        begin
+            if (TPropertyFlag.SizeIsFunction in PropertyFlags[Index]) then
+                count := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj)
+            else
+                count := PropertyOffset3[Index];
+
+            if count <= 0 then
+                Exit;
+
+            if (ElementIndex < 0) or (ElementIndex >= count) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
+                    ), 25052305);
+                Exit;
+            end;
+
+            integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
+            inc(integerPtr, ElementIndex);
+            Result := integerPtr^;
+        end;
+        TPropertyType.MappedStringEnumArrayOnStructArrayProperty:
+        begin
+            // Number of items
+            count := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+            if count <= 0 then
+                Exit;
+
+            // Pointer to the first of the target fields
+            integerPtr := PInteger(
+                PPByte(PByte(obj) + PropertyStructArrayOffset)^ +
+                PropertyOffset[Index]
+            );
+
+            if (ElementIndex < 0) or (ElementIndex >= count) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
+                    ), 25052305);
+                Exit;
+            end;
+            integerPtr := PInteger(ptruint(integerPtr) + ElementIndex * PropertyStructArrayStep);
+            Result := integerPtr^;
+        end;
+        TPropertyType.MappedStringEnumProperty, // shortcut
+        TPropertyType.IntegerOnStructArrayProperty, // shortcut
+        TPropertyType.MappedStringEnumOnStructArrayProperty: // shortcut
+        begin
+            if (PropertyType[Index] = TPropertyType.MappedStringEnumProperty) and not (TPropertyFlag.OnArray in PropertyFlags[Index]) then
+                Exit;
+
+            count := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+            if count <= 0 then
+                Exit;
+
+            if (PropertyType[Index] = TPropertyType.MappedStringEnumProperty) and (TPropertyFlag.OnArray in PropertyFlags[Index]) then
+            begin
+                step := SizeOf(Integer);
+                integerPtr := PInteger(PPByte(PByte(obj) + PropertyOffset[Index])^);
+            end
+            else
+            begin
+                step := PropertyStructArrayStep;
+                integerPtr := PInteger(
+                    PPByte(PByte(obj) + PropertyStructArrayOffset)^ +
+                    PropertyOffset[Index]
+                );
+            end;
+
+            if (ElementIndex < 0) or (ElementIndex >= count) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
+                    ), 25052305);
+                Exit;
+            end;
+            integerPtr := PInteger(ptruint(integerPtr) + ElementIndex * step);
+            Result := integerPtr^;
+        end;
+    end;
+end;
+
+function TDSSClassHelper.GetObjStringArrayElement(obj: Pointer; Index: Integer; ElementIndex: Integer): String;
+    // Transformer/AutoTrans/XfmrCode.Conns as str: All have element versions maybe we could reuse it
+    // Fuse.Normal/Fuse.State: whole array, can change single element without issues
+    // Line/LineGeometry.Conductors as str
+var
+    count: Integer;
+    // step: Integer;
+    stringList: TStringList;
+    ptype: TPropertyType;
+    integerPtr: PInteger;
+    // stringPtr: PString;
+    otherObjPtr: TDSSObjectPtr;
+    // ObjResultCount: Array[0..3] of TAPISize;
+begin
+    Result := '';
+    if not ((Index > 0) and (Index <= NumProperties) and (PropertyOffset[Index] <> -1)) then
+    begin
+        Exit;
+    end;
+    ptype := PropertyType[Index];
+    case ptype of
+        TPropertyType.BusesOnStructArrayProperty,
+        TPropertyType.BusOnStructArrayProperty: // allow this one as a shortcut
+        begin
+            // Number of items
+            count := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+            if count <= 0 then
+                Exit;
+            if (ElementIndex < 0) or (ElementIndex >= count) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
+                    ), 25052306);
+                Exit;
+            end;
+            Result := TDSSCktElement(obj).GetBus(ElementIndex + 1);
+        end;
+        TPropertyType.StringListProperty:
+        begin
+            if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
+                stringList := TStringListPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj) //TODO: read single item
+            else
+                stringList := PStringList(PByte(obj) + PropertyOffset[Index])^;
+
+            if stringList = NIL then
+                Exit;
+
+            count := stringList.Count;
+            if (ElementIndex < 0) or (ElementIndex >= count) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
+                    ), 25052306);
+                Exit;
+            end;
+            Result := stringList.Strings[ElementIndex];
+            if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
+                stringList.Free();
+        end;
+        TPropertyType.MappedStringEnumProperty, // shortcut
+        TPropertyType.MappedStringEnumOnStructArrayProperty: // shortcut
+        begin
+            if (PropertyType[Index] = TPropertyType.MappedStringEnumProperty) and not (TPropertyFlag.OnArray in PropertyFlags[Index]) then
+                Exit;
+
+            count := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+            if count <= 0 then
+                Exit;
+
+            if (ElementIndex < 0) or (ElementIndex >= count) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
+                    ), 25052306);
+                Exit;
+            end;
+
+            if (PropertyType[Index] = TPropertyType.MappedStringEnumProperty) and (TPropertyFlag.OnArray in PropertyFlags[Index]) then
+            begin
+                // step := SizeOf(Integer);
+                integerPtr := PInteger(PPByte(PByte(obj) + PropertyOffset[Index])^);
+            end
+            else
+            begin
+                // step := PropertyStructArrayStep;
+                integerPtr := PInteger(
+                    PPByte(PByte(obj) + PropertyStructArrayOffset)^ +
+                    PropertyOffset[Index]
+                );
+            end;
+            integerPtr := PInteger(ptruint(integerPtr) + PropertyStructArrayStep * ElementIndex);
+            Result := TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalToString(integerPtr^);
+        end;
+
+        TPropertyType.DSSObjectReferenceProperty:
+        begin
+            if not (TPropertyFlag.OnArray in PropertyFlags[Index]) then
+                Exit;
+
+            count := PInteger(PtrUint(obj) + PropertyStructArrayCountOffset)^;
+            if count <= 0 then
+                Exit;
+
+            otherObjPtr := TDSSObjectPtr(PPByte(PtrUint(obj) + PropertyOffset[Index])^);
+
+            if (ElementIndex < 0) or (ElementIndex >= count) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
+                    ), 25052306);
+                Exit;
+            end;
+            inc(otherObjPtr, ElementIndex);
+            if TPropertyFlag.FullNameAsArray in PropertyFlags[Index] then
+            begin
+                if otherObjPtr^ <> NIL then
+                    Result := otherObjPtr^.FullName()
+                else
+                    Result := '';
+            end
+            else
+            begin
+                if otherObjPtr^ <> NIL then
+                    Result := otherObjPtr^.Name()
+                else
+                    Result := '';
+            end;
+        end;
+        TPropertyType.DSSObjectReferenceArrayProperty:
+        begin
+            if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
+            begin
+                // ObjResultCount[0] := 0;
+                // ObjResultCount[1] := 0;
+                // if DSS_EXTENSIONS_ARRAY_DIMS then
+                // begin
+                //     ObjResultCount[2] := 0;
+                //     ObjResultCount[3] := 0;
+                // end;
+                // TObjRefsPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, PPointer(@otherObjPtr), PAPISize(ObjResultCount), ElementIndex);
+                // count := ObjResultCount[0];
+            end
+            else
+            begin
+                // Number of items
+                count := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+                // Start of array
+                otherObjPtr := TDSSObjectPtrPtr((PtrUint(obj) + PtrUint(PropertyOffset[Index])))^;
+            end;
+
+            if (ElementIndex < 0) or (ElementIndex >= count) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
+                    ), 25052306);
+                Exit;
+            end;
+            inc(otherObjPtr, ElementIndex);
+
+            if otherObjPtr^ <> NIL then
+            begin
+                if (PropertyOffset2[Index] = 0) or (TPropertyFlag.FullNameAsArray in PropertyFlags[Index]) then
+                    Result := otherObjPtr^.FullName()
+                else
+                    Result := otherObjPtr^.Name()
+            end
+            else
+            begin
+                Result := '';
+            end;
+        end;
+        TPropertyType.MappedStringEnumArrayProperty:
+        begin
+            if (TPropertyFlag.SizeIsFunction in PropertyFlags[Index]) then
+                count := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj)
+            else
+                count := PropertyOffset3[Index];
+
+            if count <= 0 then
+                Exit;
+
+            if (ElementIndex < 0) or (ElementIndex >= count) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
+                    ), 25052306);
+                Exit;
+            end;
+
+            integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
+            if integerPtr = NIL then
+                Result := ''
+            else
+            begin
+                inc(integerPtr, ElementIndex);
+                Result := TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalToString(integerPtr^);
+            end;
+        end;
+        TPropertyType.MappedStringEnumArrayOnStructArrayProperty:
+        begin
+            // Number of items
+            count := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+
+            if count <= 0 then
+                Exit;
+
+            if (ElementIndex < 0) or (ElementIndex >= count) then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
+                    ), 25052306);
+                Exit;
+            end;
+
+            // Pointer to the first of the target fields
+            integerPtr := PInteger(
+                PPByte(PByte(obj) + PropertyStructArrayOffset)^ +
+                PropertyOffset[Index]
+            );
+
+            integerPtr := PInteger(ptruint(integerPtr) + PropertyStructArrayStep * elementIndex);
+            Result := TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalToString(integerPtr^);
+        end;
+    end;
+end;
+
+function TDSSClassHelper.GetObjObjectArrayElement(ptr: Pointer; Index: Integer; ElementIndex: Integer): TDSSObject;
+// Currently used only by Line.Conductors, LineGeometry.Conductors
+var
+    otherObjPtr: TDSSObjectPtr;
+    maxCount: Integer;
+    flags: TPropertyFlags;
+    obj: TDSSObject;
+begin
+    Result := NIL;
+    obj := TDSSObject(ptr);
+    flags := PropertyFlags[Index];
+    if TPropertyType.DSSObjectReferenceArrayProperty <> PropertyType[Index] then
+    begin
+        if (PropertyArrayAlternative[Index] = 0) then
+        begin
+            Exit;
+        end;
+
+        Index := PropertyArrayAlternative[Index];
+        if TPropertyType.DSSObjectReferenceArrayProperty <> PropertyType[Index] then
+        begin
+            Exit;
+        end;
+    end;
+
+    if TPropertyFlag.ReadByFunction in flags then
+    begin
+        DoSimpleMsg(
+            Format('%s.%s: Cannot get individual elements of this property.',
+                [TDSSObject(obj).FullName(), PropertyName[Index]]
+            ), 25052304);
+        Exit;
+    end;
+
+    // Number of items
+    maxCount := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+
+    if maxCount < 1 then
+    begin
+        DoSimpleMsg(
+            Format('%s.%s: No objects are expected! Check if the order of property assignments is correct.',
+                [TDSSObject(obj).FullName(), PropertyName[Index]]
+            ), 402);
+        Exit;
+    end;
+    if (ElementIndex < 0) or (ElementIndex >= maxCount) then
+    begin
+        DoSimpleMsg(
+            Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, maxCount - 1]
+            ), 25052303);
+        Exit;
+    end;
+
+    // Directly to the element position
+    otherObjPtr := TDSSObjectPtrPtr((PtrUint(obj) + PtrUint(PropertyOffset[Index])))^;
+    inc(otherObjPtr, ElementIndex);
+
+    Result := otherObjPtr^;
+end;
+
+procedure TDSSClassHelper.SetObjDoubleArrayElement(ptr: Pointer; Index: Integer; ElementIndex: Integer; Value: Double; setterFlags: TDSSPropertySetterFlags);
+// LOTS of properties (91+ total)
+var
+    maxSize, Norder, intVal, step: Integer;
+    positionPtr, sizePtr: PInteger;
+    scale: Double;
+    doublePtr: PDouble;
+    dataPtr: PPDouble = NIL;
+    complexPtr: PComplex;
+    ptype: TPropertyType;
+    flags: TPropertyFlags;
+    mat: TCMatrix;
+    obj: TDSSObject;
+
+    function checkSize(): Boolean;
+    begin
+        Result := false;
+        if (ElementIndex < 0) or (ElementIndex >= maxSize) then
+        begin
+            DoSimpleMsg(
+                Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, maxSize - 1]
+                ), 25052309);
+            Exit;
+        end;
+        Result := true;
+    end;    
+begin
+    if (PropertyArrayAlternative[Index] <> 0) then
+    begin
+        Index := PropertyArrayAlternative[Index];
+    end;
+    obj := TDSSObject(ptr);
+    ptype := PropertyType[Index];
+    flags := PropertyFlags[Index];
+    case ptype of
+        TPropertyType.ComplexProperty:
+        begin
+            maxSize := 2;
+            if not checkSize() then
+                Exit;
+            complexPtr := PComplex(PByte(obj) + PropertyOffset[Index]);
+            if ElementIndex = 0 then
+            begin
+                complexPtr^.re := Value;
+            end
+            else
+            begin
+                complexPtr^.im := Value;
+            end;
+        end;
+        TPropertyType.ComplexPartsProperty:
+        begin
+            maxSize := 2;
+            if not checkSize() then
+                Exit;
+            if ElementIndex = 0 then
+            begin
+                doublePtr := PDouble(PByte(obj) + PropertyOffset[Index]);
+                doublePtr^ := Value;
+            end
+            else
+            begin
+                doublePtr := PDouble(PByte(obj) + PropertyOffset2[Index]);
+                doublePtr^ := Value;
+            end;
+        end;
+        TPropertyType.DoubleSymMatrixProperty:
+        begin
+            scale := PropertyScale[Index];
+            Norder := PInteger(PByte(obj) + PropertyOffset3[Index])^; // e.g. Fnphases
+            dataPtr := PPDouble(PByte(obj) + PropertyOffset[Index]);
+            maxSize := (Norder * Norder);
+            if not checkSize() then
+                Exit;
+
+            doublePtr := PPDouble(dataPtr)^;
+            if doublePtr = NIL then
+            begin
+                ReAllocMem(dataPtr^, 0);
+                doublePtr := Allocmem(Sizeof(Double) * Norder * Norder);
+                dataPtr^ := doublePtr;
+            end;
+
+            Inc(doublePtr, ElementIndex);
+            doublePtr^ := Value * scale;
+        end;
+        TPropertyType.ComplexPartSymMatrixProperty:
+        begin
+            if TPropertyFlag.ScaledByFunction in flags then
+                scale := TPropertyScaleFunction(Pointer(PropertyOffset2[Index]))(obj, False) // False = Setter scale
+            else
+                scale := PropertyScale[Index];
+
+            mat := PCMatrix(Pointer(PByte(obj) + PropertyOffset[Index]))^;
+            doublePtr := PDouble(mat.GetValuesArrayPtr(Norder));
+            if TPropertyFlag.ImagPart in flags then
+                Inc(doublePtr);
+
+            maxSize := Norder * Norder;
+            if not checkSize() then
+                Exit;
+
+            Inc(doublePtr, ElementIndex * 2);
+            doublePtr^ := Value * scale;
+        end;
+        TPropertyType.DoubleArrayProperty,
+        TPropertyType.DoubleDArrayProperty,
+        TPropertyType.DoubleFArrayProperty,
+        TPropertyType.DoubleVArrayProperty:
+        begin
+            scale := PropertyScale[Index];
+
+            sizePtr := NIL;
+            if TPropertyFlag.SizeIsFunction in flags then
+            begin
+                intVal := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj);
+                sizePtr := @intVal;
+            end
+            else
+            if (ptype <> TPropertyType.DoubleFArrayProperty) then
+            begin
+                sizePtr := PInteger(PByte(obj) + PropertyOffset2[Index]); // Size pointer
+            end;
+
+            if TPropertyFlag.WriteByFunction in flags then
+            begin
+                // doublePtr := Value;
+            end
+            else
+            begin
+                dataPtr := PPDouble(PByte(obj) + PropertyOffset[Index]);
+                if (ptype <> TPropertyType.DoubleFArrayProperty) then
+                    doublePtr := dataPtr^
+                else
+                    doublePtr := PDouble(dataPtr);
+            end;
+
+            if ((ptype = TPropertyType.DoubleArrayProperty) or (ptype = TPropertyType.DoubleVArrayProperty)) and (doublePtr = NIL) then
+            begin
+                // If not initialized, allocate here.
+                // Note that this should not be used with dynamic arrays
+                ReAllocmem(dataPtr^, Sizeof(Double) * sizePtr^);
+                doublePtr := dataPtr^;
+            end;
+
+            case ptype of
+                TPropertyType.DoubleArrayProperty,
+                TPropertyType.DoubleDArrayProperty,
+                TPropertyType.DoubleVArrayProperty:
+                begin
+                    maxSize := sizePtr^;
+                    if not checkSize() then
+                        Exit;
+                    Inc(doublePtr, ElementIndex);
+                    doublePtr^ := Value * scale;
+                end;
+                TPropertyType.DoubleFArrayProperty:
+                begin
+                    maxSize := PropertyOffset2[Index];
+                    if not checkSize() then
+                        Exit;
+                    if not (TPropertyFlag.WriteByFunction in flags) then
+                    begin
+                        Inc(doublePtr, ElementIndex);
+                        doublePtr^ := Value * scale;
+                    end;
+                end;
+            end;
+
+            if TPropertyFlag.WriteByFunction in flags then
+            begin
+                TWriteDoublesPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, @Value, 0, ElementIndex)
+            end
+        end;
+        TPropertyType.DoubleOnStructArrayProperty, // shortcut
+        TPropertyType.DoubleOnArrayProperty: // shortcut
+        begin
+            // Number of items
+            maxSize := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+            if not checkSize() then
+                Exit;
+            if PropertyType[Index] = TPropertyType.DoubleOnStructArrayProperty then
+            begin
+                step := PropertyStructArrayStep;
+                doublePtr := PDouble(
+                    PPByte(PByte(obj) + PropertyStructArrayOffset)^ + // Pointer to the pointer struct array
+                    PropertyOffset[Index] // base field
+                );
+            end
+            else
+            begin
+                step := SizeOf(Double);
+                doublePtr := PDouble(
+                    PPByte(PByte(obj) + PropertyOffset[Index])^ // Pointer to the pointer array
+                );
+            end;
+
+            scale := PropertyScale[Index];
+            doublePtr := PDouble(PByte(doublePtr) + step * ElementIndex);
+            doublePtr^ := Value * scale;
+        end;
+        TPropertyType.DoubleArrayOnStructArrayProperty:
+        begin
+            // Number of items
+            maxSize := PInteger(PByte(obj) + PropertyOffset2[Index])^;
+            if not checkSize() then
+                Exit;
+
+            // Current position
+            positionPtr := PInteger(PByte(obj) + PropertyStructArrayIndexOffset);
+
+            // Pointer to the first of the target fields
+            doublePtr := PDouble(
+                PPByte(PByte(obj) + PropertyStructArrayOffset)^ + PropertyOffset[Index]
+            );
+
+            scale := PropertyScale[Index];
+            doublePtr := PDouble(PByte(doublePtr) + PropertyStructArrayStep * ElementIndex);
+            doublePtr^ := Value * scale;
+            positionPtr^ := ElementIndex + 1; // match the effective behavior of the original code
+        end;
+    end;
+end;
+
+procedure TDSSClassHelper.SetObjIntegerArrayElement(ptr: Pointer; Index: Integer; ElementIndex: Integer; Value: Integer; setterFlags: TDSSPropertySetterFlags);
+// Transformer/AutoTrans/XfmrCode.NumTaps, Transformer/AutoTrans/XfmrCode.Conns: All have element versions maybe we could reuse it
+// Capacitor.States/Fuse.Normal/Fuse.State: whole array, can change single element without issues
+var
+    maxSize, step: Integer;
+    integerPtr, positionPtr, sizePtr: PInteger;
+    dataPtr: PPInteger;
+    flags: TPropertyFlags;
+    obj: TDSSObject;
+
+    function checkSize(): Boolean;
+    begin
+        if (ElementIndex < 0) or (ElementIndex >= maxSize) then
+        begin
+            Result := false;
+            DoSimpleMsg(
+                Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, maxSize - 1]
+                ), 25052308);
+            Exit;
+        end;
+        Result := true;
+    end;
+
+begin
+    if (PropertyArrayAlternative[Index] <> 0) then
+    begin
+        Index := PropertyArrayAlternative[Index];
+    end;
+    obj := TDSSObject(ptr);
+    flags := PropertyFlags[Index];
+    case PropertyType[Index] of
+        TPropertyType.IntegerArrayProperty:
+        begin
+            sizePtr := PInteger(PByte(obj) + PropertyOffset2[Index]);
+            dataPtr := PPInteger(PByte(obj) + PropertyOffset[Index]);
+            maxSize := sizePtr^;
+            if not checkSize() then
+                Exit;
+                
+            if dataPtr^ = NIL then
+            begin
+                // If not initialized, allocate here.
+                // Note that this should not be used with dynamic arrays
+                ReAllocmem(dataPtr^, Sizeof(Integer) * maxSize);
+            end;
+            integerPtr := dataPtr^;
+            inc(integerPtr, ElementIndex);
+            integerPtr^ := Value;
+        end;
+        TPropertyType.MappedStringEnumArrayProperty:
+        begin
+            if (TPropertyFlag.SizeIsFunction in flags) then
+                maxSize := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj)
+            else
+                maxSize := PropertyOffset3[Index];
+
+            if not checkSize() then
+                Exit;
+
+            //TODO: validate -- if not TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalIsValid(Value^) then Exit;
+
+            integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
+            inc(integerPtr, ElementIndex);
+            // TODO: validate before copying
+            integerPtr^ := Value;
+        end;
+        TPropertyType.MappedStringEnumArrayOnStructArrayProperty:
+        begin
+            // Number of items
+            maxSize := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+
+            if not checkSize() then
+                Exit;
+
+            // Current position
+            positionPtr := PInteger(PByte(obj) + PropertyStructArrayIndexOffset);
+
+            // Pointer to the first of the target fields
+            integerPtr := PInteger(PPByte(PByte(obj) + PropertyStructArrayOffset)^ + PropertyOffset[Index]);
+            integerPtr := PInteger(ptruint(integerPtr) + ElementIndex * PropertyStructArrayStep);
+                //TODO: validate -- if TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalIsValid(Value^) then 
+            integerPtr^ := Value;
+            positionPtr^ := ElementIndex + 1; // match the effective behavior of the original code
+        end;
+        TPropertyType.MappedStringEnumProperty, // shortcut
+        TPropertyType.IntegerOnStructArrayProperty, // shortcut
+        TPropertyType.MappedStringEnumOnStructArrayProperty: // shortcut
+        begin
+            if (PropertyType[Index] = TPropertyType.MappedStringEnumProperty) and not (TPropertyFlag.OnArray in PropertyFlags[Index]) then
+                Exit;
+
+            // Number of items
+            maxSize := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+
+            if not checkSize() then
+                Exit;
+
+            if (PropertyType[Index] = TPropertyType.MappedStringEnumProperty) and (TPropertyFlag.OnArray in PropertyFlags[Index]) then
+            begin
+                step := SizeOf(Integer);
+                integerPtr := PInteger(PPByte(PByte(obj) + PropertyOffset[Index])^);
+            end
+            else
+            begin
+                step := PropertyStructArrayStep;
+                integerPtr := PInteger(
+                    PPByte(PByte(obj) + PropertyStructArrayOffset)^ +
+                    PropertyOffset[Index]
+                );
+            end;
+
+            integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
+            integerPtr := PInteger(ptruint(integerPtr) + ElementIndex * step);
+            //TODO: validate -- if TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalIsValid(Value^) then 
+            integerPtr^ := Value;
+        end;
+    end;
+end;
+
+procedure TDSSClassHelper.SetObjStringArrayElement(ptr: Pointer; Index: Integer; ElementIndex: Integer; Value: String; setterFlags: TDSSPropertySetterFlags); //TODO
+begin
+    // Transformer/AutoTrans/XfmrCode.Conns as str: All have element versions maybe we could reuse it
+    // Fuse.Normal/Fuse.State: whole array, can change single element without issues
+    // Line/LineGeometry.Conductors as str
+    DoSimpleMsg(
+        Format('%s.%s: NOT IMPLEMENTED! Cannot set individual elements of this property (yet).',
+            [TDSSObject(ptr).FullName(), PropertyName[Index]]
+        ), 99999999);
+end;
+
+procedure TDSSClassHelper.SetObjObjectArrayElement(ptr: Pointer; Index: Integer; ElementIndex: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags);
+// Note: there is some duplication between this and ParseObjPropertyValue
+var
+    otherObjPtr: TDSSObjectPtr;
+    maxCount: Integer;
+    positionPtr: PInteger;
+    flags: TPropertyFlags;
+    obj: TDSSObject;
+begin
+    // Currently used only by Line.Conductors, LineGeometry.Conductors
+    obj := TDSSObject(ptr);
+    flags := PropertyFlags[Index];
+    if TPropertyType.DSSObjectReferenceArrayProperty <> PropertyType[Index] then
+    begin
+        if (PropertyArrayAlternative[Index] = 0) then
+        begin
+            Exit;
+        end;
+
+        Index := PropertyArrayAlternative[Index];
+        if TPropertyType.DSSObjectReferenceArrayProperty <> PropertyType[Index] then
+        begin
+            Exit;
+        end;
+    end;
+
+    if TPropertyFlag.WriteByFunction in flags then
+    begin
+        TWriteObjRefsPropertyFunction(PropertyWriteFunction[Index])(obj, PPointer(@Value), -1, setterFlags, ElementIndex);
+        Exit;
+    end;
+
+    // Number of items
+    maxCount := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+
+    if maxCount < 1 then
+    begin
+        DoSimpleMsg(
+            Format('%s.%s: No objects are expected! Check if the order of property assignments is correct.',
+                [TDSSObject(obj).FullName(), PropertyName[Index]]
+            ), 402);
+        Exit;
+    end;
+    if (ElementIndex < 0) or (ElementIndex >= maxCount) then
+    begin
+        DoSimpleMsg(
+            Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, maxCount - 1]
+            ), 25052301);
+        Exit;
+    end;
+
+    // Current position
+    positionPtr := NIL;
+    if (PropertyStructArrayIndexOffset2 <> 0) or (PropertyStructArrayIndexOffset <> 0)  then
+    begin
+        if TPropertyFlag.AltIndex in flags then
+            positionPtr := PInteger(PByte(obj) + PropertyStructArrayIndexOffset2)
+        else
+            positionPtr := PInteger(PByte(obj) + PropertyStructArrayIndexOffset);
+    end;
+
+    // Directly to the element position
+    otherObjPtr := TDSSObjectPtrPtr((PtrUint(obj) + PtrUint(PropertyOffset[Index])))^;
+    inc(otherObjPtr, ElementIndex);
+
+    //TODO: add type validation
+    otherObjPtr^ := Value;
+
+    if positionPtr <> NIL then
+        positionPtr^ := ElementIndex + 1;
 end;
 
 function TDSSClassHelper.ValidateObjectItem(Index: Integer; InputElemName: String; obj: TDSSObject; var otherObj: TDSSObject): Boolean;
