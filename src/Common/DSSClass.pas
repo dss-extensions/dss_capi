@@ -110,7 +110,9 @@ type
         // For batch operations, skip NA values -- values of NaN for float64, INT32_MAX (0x7fffffff) for int32, null pointers for strings.
         SkipNA = 2,
 
-        Reserved3 = 3,
+        // Use internally to handle setting single elements in arrays
+        SingleElement = 3,
+
         Reserved4 = 4,
         Reserved5 = 5,
         Reserved6 = 6,
@@ -362,8 +364,8 @@ type
     TIntegerPropertyFunction = function (obj: Pointer): Integer;
     TStringPropertyFunction = function (obj: Pointer): String;
     TStringListPropertyFunction = function (obj: Pointer): TStringList;
-    TDoublesPropertyFunction = procedure (obj: Pointer; var ResultPtr: PDouble; ResultCount: PAPISize);
-    TObjRefsPropertyFunction = procedure (obj: Pointer; var ResultPtr: PPointer; ResultCount: PAPISize);
+    TDoublesPropertyFunction = procedure (obj: Pointer; var ResultPtr: PDouble; ResultCount: PAPISize; ElementIndex: Integer);
+    // TObjRefsPropertyFunction = procedure (obj: Pointer; var ResultPtr: PPointer; ResultCount: PAPISize; ElementIndex: Integer);
 
     // TDoubleArrayPropertyFunction = function (obj: Pointer): ArrayOfDouble;
     TWriteBooleanPropertyFunction = procedure (obj: Pointer; Value: WordBool);
@@ -372,8 +374,8 @@ type
     TWriteIntegerPropertyFunction = procedure (obj: Pointer; Value: Integer);
     TWriteStringPropertyFunction = procedure (obj: Pointer; Value: String);
     TWriteStringListPropertyFunction = procedure (obj: Pointer; Value: TStringList);
-    TWriteObjRefsPropertyFunction = procedure (obj: Pointer; Values: PPointer; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
-    TWriteDoublesPropertyFunction = procedure (obj: Pointer; Values: PDouble; ValueCount: Integer);
+    TWriteObjRefsPropertyFunction = procedure (obj: Pointer; Values: PPointer; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags; ElementIndex: Integer);
+    TWriteDoublesPropertyFunction = procedure (obj: Pointer; Values: PDouble; ValueCount: Integer; ElementIndex: Integer);
     TEnumActionProcedure = TWriteIntegerPropertyFunction;
     TActionProcedure = procedure (obj: Pointer);
 
