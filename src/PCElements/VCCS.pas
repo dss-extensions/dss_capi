@@ -109,9 +109,6 @@ type
         procedure ShutoffInjections();
         procedure UpdateSequenceVoltage();
 
-    PROTECTED
-        function GetVariable(i: Integer): Double; OVERRIDE;
-        procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
     PUBLIC
         Ppct, Prated, Vrated: Double;
         constructor Create(ParClass: TDSSClass; const SourceName: String);
@@ -133,6 +130,9 @@ type
         function NumVariables(): Integer; OVERRIDE;
         procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
+
+        function GetVariable(i: Integer): Double; OVERRIDE;
+        procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
     end;
 
 

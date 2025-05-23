@@ -644,7 +644,7 @@ end;
 
 constructor TGeneric5Obj.Create(ParClass: TDSSClass; const Generic5ObjName: String);
 var
-    i, j: Integer;
+    i: Integer;
 begin
     inherited create(ParClass, Generic5ObjName);
     DSSObjType := ParClass.DSSClassType; // Same as Parent Class

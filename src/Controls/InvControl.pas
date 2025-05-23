@@ -3192,7 +3192,7 @@ procedure TInvControlObj.CalcQWPcurve_desiredpu(j: Integer);
 var
     p: Double;
     pf_priority: Boolean = False;
-    QDesiredWP: Double;
+    // QDesiredWP: Double;
     DERElem: TInvBasedPCE;
 begin
     DERElem := ControlledElements[j];
@@ -3324,7 +3324,7 @@ procedure TInvControlObj.Calc_PQ_WV(j: Integer);
 var
     coeff: TCoeff;
     var_limit_operation_value,
-    Pbase,
+    // Pbase,
     Qbase,
     A,
     B,
@@ -3339,12 +3339,12 @@ begin
         if QDesiredWV >= 0.0 then
         begin
             Qbase := QHeadroom;
-        // Qbasesign := 1.0;
+            // Qbasesign := 1.0;
         end
         else
         begin
             Qbase := QHeadroomNeg;
-        // Qbasesign := -1.0;
+            // Qbasesign := -1.0;
         end;
 
         var_limit_operation_value := 0.2;

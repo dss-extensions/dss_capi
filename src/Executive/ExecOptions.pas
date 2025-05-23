@@ -853,7 +853,7 @@ var
     pce: TPCElement;
 {$IFDEF DSS_CAPI_PM}
     PMParent, DSS: TDSSContext;
-    ckt: TDSSCircuit;
+    // ckt: TDSSCircuit;
 begin
     PMParent := MainDSS.GetPrime();
     DSS := MainDSS.ActiveChild;
@@ -1187,7 +1187,7 @@ begin
                     AppendGlobalResult(DSS, Format('%g', [DSS.ActiveCircuit.Solution.NCIM_GenGain]));
                 ord(Opt.StateVar):
                 begin
-                    ckt := DSS.ActiveCircuit;
+                    // ckt := DSS.ActiveCircuit;
 
                     DSS.Parser.NextParam;
                     TmpStr := DSS.Parser.MakeString();

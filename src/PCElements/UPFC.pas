@@ -113,10 +113,6 @@ type
         function CalcUPFCLosses(Vpu: Double): Double;
         procedure GetInjCurrents(Curr: pComplexArray);
 
-    PROTECTED
-        function GetVariable(i: Integer): Double; OVERRIDE;
-        procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
-
     PUBLIC
         InCurr, OutCurr: Array of Complex; // for storing the input and output currents
 
@@ -148,6 +144,8 @@ type
 
         function VariableName(i: Integer): String; OVERRIDE;
 
+        function GetVariable(i: Integer): Double; OVERRIDE;
+        procedure SetVariable(i: Integer; Value: Double); OVERRIDE;
     end;
 
 implementation

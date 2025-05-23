@@ -4011,7 +4011,6 @@ var
     ParamName, Param: String;
     ParamPointer, i: Integer;
     UnKnown: Boolean;
-    CaseNames: TStringList;
     dRegisters: array[1..NumEMRegisters] of Double;
     iRegisters: array of Integer;
     Nregs: Integer;

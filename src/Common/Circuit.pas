@@ -1225,13 +1225,13 @@ end;
 // Executes MeTIS and gets the names of the link branches between zones
 function TDSSCircuit.Create_MeTIS_Zones(Filename: String): String;
 var
-    MeTISCmd,
+    // MeTISCmd: String;
     TextCmd: String;
     Num_Pieces,
     j, jj,
     i: Integer;
-    Replacer: TFileSearchReplace;
-    Flag: Boolean;
+    // Replacer: TFileSearchReplace;
+    // Flag: Boolean;
 begin
     Num_pieces := Num_SubCkts;
 {$IFNDEF UNIX}
@@ -1239,9 +1239,9 @@ begin
 //    else MeTISCmd   :=  'kmetis.exe';                    // For more than 8 zonez use k-Way (kMeTIS)
 // In the past we use to use pmetis and kmetis, however, in our latest update we realized kmetis is enough
 // update 09-24-2020 by Davis Montenegro
-    MeTISCmd := 'kmetis.exe';
+    // MeTISCmd := 'kmetis.exe';
 {$ELSE}
-    MeTISCmd := 'kmetis';
+    // MeTISCmd := 'kmetis';
 {$ENDIF}
     if fileexists(Pchar(FileName + '.part.' + inttostr(Num_pieces))) then // Checks if the file exists before
         deletefile(Pchar(FileName + '.part.' + inttostr(Num_pieces)));
@@ -1731,7 +1731,7 @@ var
     found: Boolean;
     elem: TDSSCktElement;
 begin
-    SetLength(Result, 0);
+    Result := NIL;
     BusName := AnsiLowerCase(BusName);
     if busIdx <= 0 then
         busIdx := BusList.Find(BusName);
@@ -1816,7 +1816,7 @@ var
     found: Boolean;
     elem: TDSSCktElement;
 begin
-    SetLength(Result, 0);
+    Result := NIL;
     BusName := AnsiLowerCase(BusName);
 
     if busIdx <= 0 then

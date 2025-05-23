@@ -362,7 +362,6 @@ end;
 
 procedure TLineGeometryObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
-    tmpName: String;
     i: Integer;
     conductorObj: TConductorDataObj = NIL;
     anyConductor: Boolean;

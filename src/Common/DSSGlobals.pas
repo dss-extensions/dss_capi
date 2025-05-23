@@ -291,6 +291,7 @@ Begin
         if DSS.In_Redirect then
         begin
             RetVal := DSS.MessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]), FALSE);
+            //TODO: use RetVal for something if we ever implement forms?
         end
         else
             DSS.InfoMessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]));

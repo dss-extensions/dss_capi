@@ -2152,7 +2152,6 @@ end;
 procedure TStorageObj.DoGFM_Mode();
 // Implements the grid forming inverter control routine for the storage device
 var
-    W: Double;
     ZSys: Double;
 begin
     with ActiveCircuit.Solution do

@@ -2210,6 +2210,7 @@ function SliceProps(props: pStringArray; count: Integer): ArrayOfString; // The 
 var
     i: Integer;
 begin
+    Result := NIL;
     SetLength(Result, count);
     for i := 1 to count do
         Result[i - 1] := props[i];

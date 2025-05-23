@@ -2134,9 +2134,8 @@ end;
 
 procedure TWindGenObj.GetAllVariables(var States: ArrayOfDouble);
 var
-    i, N: Integer;
+    i: Integer;
 begin
-    N := 0;
     if DynamicEqObj <> NIL then
     begin
         for i := 1 to DynamicEqObj.NVariables * Length(DynamicEqVals[0]) do

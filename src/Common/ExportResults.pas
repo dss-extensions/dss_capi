@@ -3942,7 +3942,7 @@ begin
         Exit;
 
     hY := DSS.ActiveCircuit.Solution.NCIM_Jacobian;
-    if hY < 0 then
+    if hY <= 0 then
     begin
         DoSimpleMsg(DSS, _('Jacobian matrix not built.'), 222);
         Exit;

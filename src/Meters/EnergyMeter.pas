@@ -59,7 +59,11 @@ uses
 
 const
     NumEMVbase = 7;
-    NumEMRegisters = 32 + 5 * NumEMVbase;   // Total Number of energy meter registers
+    
+    // FPC doesn't love repeated values in enums, so...
+    EMRegister_VBaseStart = 32;  // anchor for the voltage base loss registers
+    
+    NumEMRegisters = EMRegister_VBaseStart + 5 * NumEMVbase;   // Total Number of energy meter registers
 
 type
 {$SCOPEDENUMS ON}
@@ -152,8 +156,7 @@ type
         GenkWh = 29,
         Genkvarh = 30,
         GenMaxkW = 31,
-        GenMaxkVA = 32,
-        VBaseStart = 32  // anchor for the voltage base loss registers
+        GenMaxkVA = 32
     );
 {$SCOPEDENUMS OFF}
 
@@ -1013,7 +1016,7 @@ begin
     VBaseNoLoadLosses := NIL;
     VBaseLoad := NIL;
     VBaseCount := 0;
-    MaxVBaseCount := (NumEMRegisters - ord(EMRegister.VBaseStart)) div 5;
+    MaxVBaseCount := (NumEMRegisters - EMRegister_VBaseStart) div 5;
     ReallocMem(VBaseList, MaxVBaseCount * SizeOf(VBaseList[1]));
     ReallocMem(VBaseTotalLosses, MaxVBaseCount * SizeOf(VBaseTotalLosses[1]));
     ReallocMem(VBaseLineLosses, MaxVBaseCount * SizeOf(VBaseLineLosses[1]));
@@ -1706,11 +1709,11 @@ begin
     Integrate(ord(EMRegister.TransformerLosseskWh), TotalTransformerLosses.re, Delta_hrs_local);
     for i := 1 to MaxVBaseCount do
     begin
-        Integrate(ord(EMRegister.VbaseStart) + i, VBaseTotalLosses[i], Delta_hrs_local);
-        Integrate(ord(EMRegister.VbaseStart) + 1 * MaxVBaseCount + i, VBaseLineLosses[i], Delta_hrs_local);
-        Integrate(ord(EMRegister.VbaseStart) + 2 * MaxVBaseCount + i, VBaseLoadLosses[i], Delta_hrs_local);
-        Integrate(ord(EMRegister.VbaseStart) + 3 * MaxVBaseCount + i, VBaseNoLoadLosses[i], Delta_hrs_local);
-        Integrate(ord(EMRegister.VbaseStart) + 4 * MaxVBaseCount + i, VBaseLoad[i], Delta_hrs_local);
+        Integrate(EMRegister_VBaseStart + i, VBaseTotalLosses[i], Delta_hrs_local);
+        Integrate(EMRegister_VBaseStart + 1 * MaxVBaseCount + i, VBaseLineLosses[i], Delta_hrs_local);
+        Integrate(EMRegister_VBaseStart + 2 * MaxVBaseCount + i, VBaseLoadLosses[i], Delta_hrs_local);
+        Integrate(EMRegister_VBaseStart + 3 * MaxVBaseCount + i, VBaseNoLoadLosses[i], Delta_hrs_local);
+        Integrate(EMRegister_VBaseStart + 4 * MaxVBaseCount + i, VBaseLoad[i], Delta_hrs_local);
     end;
 
 
@@ -3169,27 +3172,27 @@ begin
         if VBaseList[i] > 0.0 then
         begin
             vbase := VBaseList[i] * SQRT3;
-            RegisterNames[i + ord(EMRegister.VBaseStart) - 1] := Format('%.3g kV Losses', [vbase]);
-            RegisterNames[i + 1 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('%.3g kV Line Loss', [vbase]);
-            RegisterNames[i + 2 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('%.3g kV Load Loss', [vbase]);
-            RegisterNames[i + 3 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('%.3g kV No Load Loss', [vbase]);
-            RegisterNames[i + 4 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('%.3g kV Load Energy', [vbase])
+            RegisterNames[i + EMRegister_VBaseStart - 1] := Format('%.3g kV Losses', [vbase]);
+            RegisterNames[i + 1 * MaxVBaseCount + EMRegister_VBaseStart - 1] := Format('%.3g kV Line Loss', [vbase]);
+            RegisterNames[i + 2 * MaxVBaseCount + EMRegister_VBaseStart - 1] := Format('%.3g kV Load Loss', [vbase]);
+            RegisterNames[i + 3 * MaxVBaseCount + EMRegister_VBaseStart - 1] := Format('%.3g kV No Load Loss', [vbase]);
+            RegisterNames[i + 4 * MaxVBaseCount + EMRegister_VBaseStart - 1] := Format('%.3g kV Load Energy', [vbase])
         end
         else
         begin
-            RegisterNames[i + ord(EMRegister.VBaseStart) - 1] := Format('Aux%d', [ireg]);
+            RegisterNames[i + EMRegister_VBaseStart - 1] := Format('Aux%d', [ireg]);
             Inc(ireg);
-            RegisterNames[i + 1 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('Aux%d', [ireg]);
+            RegisterNames[i + 1 * MaxVBaseCount + EMRegister_VBaseStart - 1] := Format('Aux%d', [ireg]);
             Inc(ireg);
-            RegisterNames[i + 2 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('Aux%d', [ireg]);
+            RegisterNames[i + 2 * MaxVBaseCount + EMRegister_VBaseStart - 1] := Format('Aux%d', [ireg]);
             Inc(ireg);
-            RegisterNames[i + 3 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('Aux%d', [ireg]);
+            RegisterNames[i + 3 * MaxVBaseCount + EMRegister_VBaseStart - 1] := Format('Aux%d', [ireg]);
             Inc(ireg);
-            RegisterNames[i + 4 * MaxVBaseCount + ord(EMRegister.VBaseStart) - 1] := Format('Aux%d', [ireg]);
+            RegisterNames[i + 4 * MaxVBaseCount + EMRegister_VBaseStart - 1] := Format('Aux%d', [ireg]);
             Inc(ireg);
         end;
     end;
-    for i := 1 + ord(EMRegister.VBaseStart) + 5 * MaxVBaseCount to NumEMRegisters do
+    for i := 1 + EMRegister_VBaseStart + 5 * MaxVBaseCount to NumEMRegisters do
     begin
         RegisterNames[i - 1] := Format('Aux%d', [ireg]);
         Inc(ireg);

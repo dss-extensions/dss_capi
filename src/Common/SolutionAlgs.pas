@@ -111,7 +111,10 @@ end;
 
 function TSolutionAlgs.SolveYearly(): Integer;
 var
-    N, Twopct: Integer;
+    N: Integer;
+{$IFNDEF DSS_CAPI_PM}
+    Twopct: Integer;
+{$ENDIF}    
 begin
     Result := 0;
     ProgressCount := 0;
@@ -126,7 +129,9 @@ begin
         IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage elements
         if not DSS.DIFilesAreOpen then
             DSS.EnergyMeterClass.OpenAllDIFiles();   // Open Demand Interval Files, if desired   Creates DI_Totals
+{$IFNDEF DSS_CAPI_PM}
         Twopct := Max(NumberOfTimes div 50, 1);
+{$ENDIF}
         for N := 1 to NumberOfTimes do
             if not DSS.SolutionAbort() then
                 with Dynavars do
@@ -248,7 +253,10 @@ end;
 
 function TSolutionAlgs.SolveDuty(): Integer;
 var
-    N, TwoPct: Integer;
+    N: Integer;
+{$IFNDEF DSS_CAPI_PM}
+    TwoPct: Integer;
+{$ENDIF}
 begin
     Result := 0;
 
@@ -262,7 +270,9 @@ begin
 
     //   t:=0.0;
     // DSS.MonitorClass.ResetAll;
+{$IFNDEF DSS_CAPI_PM}
     TwoPct := Max(1, NumberOfTimes div 50);
+{$ENDIF}
     try
         IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
         for N := 1 to NumberOfTimes do
