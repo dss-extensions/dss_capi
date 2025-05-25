@@ -515,7 +515,12 @@ end;
 
 function TFuseObj.GetState(Idx: Integer): EControlAction;
 begin
-    //TODO: do we need to validate Idx?
+    if (Idx <= 0) or (Idx > FNPhases) then
+    begin
+        Result := CTRL_NONE;
+        Exit;
+    end;
+
     if controlledElement <> NIL then
     begin
         controlledElement.SetActiveTerminalIdx(ElementTerminal); 

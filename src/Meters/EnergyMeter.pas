@@ -673,7 +673,7 @@ begin
     // object reference
     PropertyType[ord(TProp.element)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.element)] := ptruint(@obj.MeteredElement);
-    PropertyOffset2[ord(TProp.element)] := 0;
+    PropertyOffset2[ord(TProp.element)] := ptruint(DSS.PDEProxyClass);
     PropertyFlags[ord(TProp.element)] := [TPropertyFlag.DynamicDefault];//, TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     // integer properties

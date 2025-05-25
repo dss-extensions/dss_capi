@@ -1391,7 +1391,7 @@ begin
                 Move(HoursPtr^, elem.dH[0], Npts * SizeOf(Double));
             end;
             if Assigned(elem.dP) then
-                elem.SetMaxPandQ;
+                elem.SetMaxPandQ();
         end
         else // if IsFloat32
         begin
@@ -1411,7 +1411,7 @@ begin
                 Move(HoursPtr^, elem.sH[0], Npts * SizeOf(Single));
             end;
             if Assigned(elem.sP) then
-                elem.SetMaxPandQ;
+                elem.SetMaxPandQ();
         end;
         Exit;
     end;

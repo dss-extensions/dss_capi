@@ -76,6 +76,7 @@ begin
         DSSClassType := DSSClassType or PD_ELEMENT;
 
     ClassParents.Add('PDClass');
+    dssContext.PDEProxyClass.AddClass(self);
 end;
 
 destructor TPDClass.Destroy;

@@ -168,6 +168,8 @@ begin
     DSS.XfmrCodeClass := TXfmrCode.Create(DSS);
 
     // Circuit Element Classes
+    DSS.PDEProxyClass := TProxyClass.Create(DSS, [], true, 'PDElement');
+
     DSS.LineClass := TLine.Create(DSS);
     DSS.VSourceClass := TVSource.Create(DSS);    // 2-terminal Vsource
 
@@ -250,6 +252,7 @@ begin
             end;
             TraceName := '(DSS Class List)';
             FreeAndNil(DSS.DSSClassList);
+            FreeAndNil(DSS.PDEProxyClass);
         end;
         if DSS.ClassNames <> NIL then
         begin

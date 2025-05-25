@@ -530,6 +530,7 @@ type
         function GetEnumerator(): TDSSPointerEnumerator;
         procedure SetPropertyNameStyle(style: TDSSPropertyNameStyle);
         procedure CopySharedItems(other: TDSSClass);
+        function IsValidObject(obj: Pointer): Boolean; virtual;
     protected
         // DSSContext convenience functions
         procedure DoErrorMsg(Const S, Emsg, ProbCause: String; ErrNum: Integer);inline;
@@ -545,11 +546,14 @@ type
         TargetClassNamesStr: String;
         FullNamesOnly: Boolean;
 
-        constructor Create(dssContext: TDSSContext; Targets: Array Of String; FullNames: Boolean = False);
+        constructor Create(dssContext: TDSSContext; Targets: Array Of String; FullNames: Boolean = False; ClsName: String = '');
         destructor Destroy; override;
+        procedure AddClass(cls: TDSSClass);
         procedure DefineProperties(); override;
         function Find(const ObjName: String; const ChangeActive: Boolean): Pointer; override;
         function GetDSSClass(const clsName: String): TDSSClass;
+        function IsValidObject(obj: Pointer): Boolean; override;
+        procedure EnsureClasses();        
     end;
 
     TDSSContext = class(TObject)
@@ -801,6 +805,8 @@ type
         
         // Expression to skip files in Redirect/Compile commands
         skipFileRegExp: TRegExpr;
+
+        PDEProxyClass: TProxyClass;
 
         constructor Create(_Parent: TDSSContext = nil; _IsPrime: Boolean = False);
         destructor Destroy; override;
@@ -1218,6 +1224,7 @@ begin
     ProfilePhasesEnum.Hybrid := True;
     ProfilePhasesEnum.HybridMin := 0;
     Enums.Add(ProfilePhasesEnum);
+
     // GR (global result) counters: Initialize to zero
     FillByte(GR_Counts_PDouble, sizeof(TAPISize) * 2, 0);
     FillByte(GR_Counts_PInteger, sizeof(TAPISize) * 2, 0);
@@ -1232,6 +1239,7 @@ begin
     DSSClassList := NIL;
     Circuits := NIL;
     DSSObjs := NIL;
+    PDEProxyClass := NIL;
     CurrentDSSDir_internal := '';
 
 {$IFDEF DSS_CAPI_PM}
@@ -2582,13 +2590,31 @@ begin
     Result := self.ElementList.GetEnumerator();
 end;
 
-constructor TProxyClass.Create(dssContext: TDSSContext; Targets: Array Of String; fullNames: Boolean);
+procedure TDSSClass.CopySharedItems(other: TDSSClass);
+var
+    obj: TDSSObject;
+begin
+    for obj in other do
+    begin
+        if not (Flg.DefaultAndUnedited in obj.Flags) then
+            AddObjectToList(obj, False);
+    end;
+end;
+
+function TDSSClass.IsValidObject(obj: Pointer): Boolean;
+begin
+    Result := TDSSObject(obj).ParentClass.InheritsFrom(self.ClassType);
+end;
+
+constructor TProxyClass.Create(dssContext: TDSSContext; Targets: Array Of String; fullNames: Boolean; ClsName: String);
 var
     s: String;
     i: Integer;
 begin
     FullNamesOnly := fullNames;
     TargetClasses := NIL;
+    TargetClassNamesStr := '';
+
     s := '(';
 
     // To avoid missing references, copy the names here and find the classes later
@@ -2606,7 +2632,28 @@ begin
     s := s + ')';
     TargetClassNamesStr := s;
 
-    inherited Create(dssContext, 0, s, false);
+    if Length(Targets) > 0 then
+    begin    
+        inherited Create(dssContext, 0, TargetClassNamesStr, false);
+        Exit;
+    end;
+   
+   inherited Create(dssContext, 0, ClsName, false);
+end;
+
+procedure TProxyClass.AddClass(cls: TDSSClass);
+begin
+    SetLength(TargetClassNames, Length(TargetClassNames) + 1);
+    SetLength(TargetClassNamesLower, Length(TargetClassNamesLower) + 1);
+    SetLength(TargetClasses, Length(TargetClasses) + 1);
+
+    TargetClassNames[High(TargetClassNames)] := cls.Name;
+    TargetClassNamesLower[High(TargetClassNamesLower)] := AnsiLowerCase(cls.Name);
+    TargetClasses[High(TargetClasses)] := cls;
+
+    TargetClassNamesStr[High(TargetClassNamesStr)] := '|';
+    TargetClassNamesStr += cls.Name + ')';
+    // Name := TargetClassNamesStr;
 end;
 
 function TProxyClass.GetDSSClass(const clsName: String): TDSSClass;
@@ -2624,6 +2671,18 @@ begin
     Result := NIL;
 end;
 
+procedure TProxyClass.EnsureClasses();
+var
+    i: Integer;
+begin
+    if Length(TargetClasses) <> 0 then
+        Exit;
+
+    SetLength(TargetClasses, Length(TargetClassNames));
+    for i := 0 to High(TargetClassNames) do
+        TargetClasses[i] := DSS.DSSClassList.Get(DSS.ClassNames.Find(TargetClassNames[i]));
+end;
+
 function TProxyClass.Find(const ObjName: String; const ChangeActive: Boolean): Pointer;
 var
     i: Integer;
@@ -2632,12 +2691,7 @@ var
 begin
     Result := Nil;
 
-    if Length(TargetClasses) = 0 then
-    begin
-        SetLength(TargetClasses, Length(TargetClassNames));
-        for i := 0 to High(TargetClassNames) do
-            TargetClasses[i] := DSS.DSSClassList.Get(DSS.ClassNames.Find(TargetClassNames[i]));
-    end;
+    EnsureClasses();
 
     if not FullNamesOnly then
     begin
@@ -2672,15 +2726,19 @@ begin
     inherited Destroy;
 end;
 
-procedure TDSSClass.CopySharedItems(other: TDSSClass);
+function TProxyClass.IsValidObject(obj: Pointer): Boolean;
 var
-    obj: TDSSObject;
+    cls: TDSSClass;
 begin
-    for obj in other do
+    EnsureClasses();
+
+    Result := False;
+    for cls in TargetClasses do
     begin
-        if not (Flg.DefaultAndUnedited in obj.Flags) then
-            AddObjectToList(obj, False);
-    end;
+        Result := TDSSObject(obj).ParentClass.InheritsFrom(cls.ClassType);
+        if Result then
+            Exit;
+    end
 end;
 
 end.
