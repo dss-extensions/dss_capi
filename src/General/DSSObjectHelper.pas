@@ -184,6 +184,50 @@ begin
     result := Format('%s.%s', [FClassName, FObjName]);
 end;
 
+function ValidateObjectClass(parentObj: TDSSObject; const propName: String; expectedClass: TDSSClass; Value: TDSSObject; AllowNone: Boolean): Boolean;
+begin
+    Result := false;
+    if Value = NIL then
+    begin
+        if not AllowNone then
+        begin
+            parentObj.DoSimpleMsg(
+                '%s.%s: An object reference is required.', 
+                [parentObj.FullName(), propName],
+            25052323);
+            Exit;
+        end;
+    end
+    else
+    begin
+        Result := true;
+        Exit;
+    end;
+
+    if (expectedClass <> NIL) then
+    begin
+        if expectedClass.IsValidObject(Value) then
+        begin
+            parentObj.DoSimpleMsg(
+                '%s.%s: Invalid object type (%s). Expected %s.', 
+                [parentObj.FullName(), propName, Value.DSSClassName(), expectedClass.Name],
+            25052319);
+            Exit;
+        end;
+    end
+    else
+    begin
+        if not (Value is TDSSCktElement) then
+        begin
+            parentObj.DoSimpleMsg(
+                '%s.%s: Invalid object type (%s). Expected %s.',
+                [parentObj.FullName(), propName, Value.DSSClassName(), _('a circuit element')],
+            25052320);
+            Exit;
+        end;
+    end;
+end;
+
 function TDSSClassHelper.ParseObjPropertyValue(obj: Pointer; Index: Integer; const Value: String; out prevInt: Integer; setterFlags: TDSSPropertySetterFlags): Boolean;
 // This handles most of the parsing and passes the processed values to 
 // the specific functions (e.g. SetObjInteger) if possible, to reduce code duplication.
@@ -414,7 +458,7 @@ begin
                 if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0 then
                 begin
                     DoSimpleMsg(
-                        '%s.%s: This DSS property is curently read-only.',
+                        '%s.%s: This DSS property is currently read-only.',
                         [TDSSObject(obj).FullName(), PropertyName[Index]],
                         2024106);
                     Exit;
@@ -839,7 +883,11 @@ begin
                 end;
             end;
 
+            // Type validation
             //TODO: add validation -- e.g. PD element for EnergyMeter
+            if not ValidateObjectClass(TDSSObject(obj), PropertyName[Index], TDSSClass(PtrUInt(PropertyOffset2[Index])), TDSSObject(Value), (TPropertyFlag.AllowNone in PropertyFlags[Index])) then
+                Exit;
+
             if (TPropertyFlag.WriteByFunction in flags) then
                 TWriteObjRefPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, otherObj)
             else
@@ -2671,11 +2719,11 @@ end;
 procedure TDSSClassHelper.SetObjObjects(ptr: Pointer;Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 // Note: there is some duplication between this and ParseObjPropertyValue
 var
-    otherObjPtr: TDSSObjectPtr;
+    otherObjPtr, tmpValue: TDSSObjectPtr;
     i, maxCount: Integer;
     positionPtr: PInteger;
     flags: TPropertyFlags;
-    obj: TDSSObject;
+    obj, ovalue: TDSSObject;
 begin
     obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
@@ -2724,12 +2772,31 @@ begin
     // Start of array
     otherObjPtr := TDSSObjectPtrPtr((PtrUint(obj) + PtrUint(PropertyOffset[Index])))^;
 
-    //TODO: disallow incomplete arrays?
-    maxCount := Min(ValueCount, maxCount);
+    // Disallow incomplete arrays
+    if ValueCount <> maxCount then
+    begin
+        DoSimpleMsg(
+            Format('%s.%s: The number of objects provided (%d) needs to match the expected count (%d).',
+                [TDSSObject(obj).FullName(), PropertyName[Index], ValueCount, maxCount]
+            ), 25052310);
+        Exit;
+    end;
+
+    // maxCount := Min(ValueCount, maxCount);
+
+    // Validate items before copying
+    tmpValue := Value;
+    for i := 1 to ValueCount do
+    begin
+        ovalue := TDSSObject(tmpValue^);
+        if not ValidateObjectClass(TDSSObject(obj), PropertyName[Index], TDSSClass(PtrUInt(PropertyOffset2[Index])), ovalue, (TPropertyFlag.AllowNoneItem in PropertyFlags[Index])) then
+            Exit;
+        
+        Inc(tmpValue);
+    end;
 
     for i := 1 to maxCount do
     begin
-        //TODO: add type validation
         otherObjPtr^ := Value^;
         Inc(otherObjPtr);
         Inc(Value);
@@ -2827,7 +2894,7 @@ begin
                 if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0 then
                 begin
                     DoSimpleMsg(
-                        '%s.%s: This DSS property is curently read-only.',
+                        '%s.%s: This DSS property is currently read-only.',
                         [obj.FullName(), PropertyName[Index]],
                         2024107);
                 end;
@@ -2971,7 +3038,7 @@ begin
         if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0 then
         begin
             DoSimpleMsg(
-                '%s.%s: This DSS property is curently read-only.',
+                '%s.%s: This DSS property is currently read-only.',
                 [obj.FullName(), PropertyName[Index]],
                 2024105);
         end;
@@ -3552,7 +3619,7 @@ end;
 
 procedure TDSSClassHelper.SetObjIntegers(ptr: Pointer; Index: Integer; Value: PInteger; ValueCount: Integer; setterFlags: TDSSPropertySetterFlags);
 var
-    i, sizingPropIndex, maxSize, step: Integer;
+    i, sizingPropIndex, maxSize, step, ivalue: Integer;
     integerPtr, positionPtr, sizePtr: PInteger;
     dataPtr: PPInteger;
     flags: TPropertyFlags;
@@ -3631,10 +3698,20 @@ begin
             if not checkSize() then
                 Exit;
 
-            //TODO: validate -- if not TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalIsValid(Value^) then Exit;
-
+            // Validate items before copying
+            for i := 1 to ValueCount do
+            begin
+                ivalue := Value[i - 1];
+                if not TDSSEnum(Pointer(PropertyOffset2[Index])).IsOrdinalValid(ivalue) then
+                begin
+                    DoSimpleMsg(
+                        '%s.%s: Invalid ordinal (%d) for enumeration (%s).', 
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ivalue, TDSSEnum(Pointer(PropertyOffset2[Index])).Name],
+                    25052311);
+                    Exit;
+                end;
+            end;
             integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
-            // TODO: validate before copying
             Move(Value^, integerPtr, SizeOf(Integer) * ValueCount);
         end;
         TPropertyType.MappedStringEnumArrayOnStructArrayProperty:
@@ -3651,9 +3728,22 @@ begin
             // Pointer to the first of the target fields
             integerPtr := PInteger(PPByte(PByte(obj) + PropertyStructArrayOffset)^ + PropertyOffset[Index]);
 
+            // Validate items before copying
+            for i := 1 to ValueCount do
+            begin
+                ivalue := Value[i - 1];
+                if not TDSSEnum(Pointer(PropertyOffset2[Index])).IsOrdinalValid(ivalue) then
+                begin
+                    DoSimpleMsg(
+                        '%s.%s: Invalid ordinal (%d) for enumeration (%s).', 
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ivalue, TDSSEnum(Pointer(PropertyOffset2[Index])).Name],
+                    25052312);
+                    Exit;
+                end;
+            end;
+
             for i := 1 to maxSize do
             begin
-                //TODO: validate -- if TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalIsValid(Value^) then 
                 integerPtr^ := Value^;
                 // Move to the next position
                 integerPtr := PInteger(ptruint(integerPtr) + PropertyStructArrayStep);
@@ -3689,9 +3779,22 @@ begin
                 );
             end;
 
+            // Validate items before copying
+            for i := 1 to ValueCount do
+            begin
+                ivalue := Value[i - 1];
+                if not TDSSEnum(Pointer(PropertyOffset2[Index])).IsOrdinalValid(ivalue) then
+                begin
+                    DoSimpleMsg(
+                        '%s.%s: Invalid ordinal (%d) for enumeration (%s).', 
+                        [TDSSObject(obj).FullName(), PropertyName[Index], ivalue, TDSSEnum(Pointer(PropertyOffset2[Index])).Name],
+                    25052313);
+                    Exit;
+                end;
+            end;
+
             for i := 1 to maxSize do
             begin
-                //TODO: validate -- if TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalIsValid(Value^) then 
                 integerPtr^ := Value^;
                 // Move to the next position
                 integerPtr := PInteger(ptruint(integerPtr) + step);
@@ -5755,6 +5858,21 @@ begin
     obj := TDSSObject(ptr);
     ptype := PropertyType[Index];
     flags := PropertyFlags[Index];
+
+    if (TPropertyFlag.ConditionalReadOnly in flags) and (PLongBool(PByte(obj) + PropertyOffset3[Index])^) then
+    begin
+        if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0 then
+        begin
+            DoSimpleMsg(
+                '%s.%s: This DSS property is currently read-only.',
+                [obj.FullName(), PropertyName[Index]],
+                2024105);
+        end;
+        Exit;
+    end;
+
+    // Note: If the users tries to write to data from a shared memory slice, it will crash with a seg fault and that's expected.
+
     case ptype of
         TPropertyType.ComplexProperty:
         begin
@@ -6005,11 +6123,18 @@ begin
             if not checkSize() then
                 Exit;
 
-            //TODO: validate -- if not TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalIsValid(Value^) then Exit;
+            // Validate item before copying
+            if not TDSSEnum(Pointer(PropertyOffset2[Index])).IsOrdinalValid(Value) then
+            begin
+                DoSimpleMsg(
+                    '%s.%s: Invalid ordinal (%d) for enumeration (%s).', 
+                    [TDSSObject(obj).FullName(), PropertyName[Index], Value, TDSSEnum(Pointer(PropertyOffset2[Index])).Name],
+                25052314);
+                Exit;
+            end;
 
             integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
             inc(integerPtr, ElementIndex);
-            // TODO: validate before copying
             integerPtr^ := Value;
         end;
         TPropertyType.MappedStringEnumArrayOnStructArrayProperty:
@@ -6020,13 +6145,22 @@ begin
             if not checkSize() then
                 Exit;
 
+            // Validate item before copying
+            if not TDSSEnum(Pointer(PropertyOffset2[Index])).IsOrdinalValid(Value) then
+            begin
+                DoSimpleMsg(
+                    '%s.%s: Invalid ordinal (%d) for enumeration (%s).', 
+                    [TDSSObject(obj).FullName(), PropertyName[Index], Value, TDSSEnum(Pointer(PropertyOffset2[Index])).Name],
+                25052315);
+                Exit;
+            end;
+
             // Current position
             positionPtr := PInteger(PByte(obj) + PropertyStructArrayIndexOffset);
 
             // Pointer to the first of the target fields
             integerPtr := PInteger(PPByte(PByte(obj) + PropertyStructArrayOffset)^ + PropertyOffset[Index]);
             integerPtr := PInteger(ptruint(integerPtr) + ElementIndex * PropertyStructArrayStep);
-                //TODO: validate -- if TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalIsValid(Value^) then 
             integerPtr^ := Value;
             positionPtr^ := ElementIndex + 1; // match the effective behavior of the original code
         end;
@@ -6057,9 +6191,18 @@ begin
                 );
             end;
 
+            // Validate item before copying
+            if not TDSSEnum(Pointer(PropertyOffset2[Index])).IsOrdinalValid(Value) then
+            begin
+                DoSimpleMsg(
+                    '%s.%s: Invalid ordinal (%d) for enumeration (%s).', 
+                    [TDSSObject(obj).FullName(), PropertyName[Index], Value, TDSSEnum(Pointer(PropertyOffset2[Index])).Name],
+                25052316);
+                Exit;
+            end;
+
             integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
             integerPtr := PInteger(ptruint(integerPtr) + ElementIndex * step);
-            //TODO: validate -- if TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalIsValid(Value^) then 
             integerPtr^ := Value;
         end;
     end;
@@ -6142,7 +6285,10 @@ begin
     otherObjPtr := TDSSObjectPtrPtr((PtrUint(obj) + PtrUint(PropertyOffset[Index])))^;
     inc(otherObjPtr, ElementIndex);
 
-    //TODO: add type validation
+    // Type validation
+    if not ValidateObjectClass(obj, PropertyName[Index], TDSSClass(PtrUInt(PropertyOffset2[Index])), TDSSObject(Value), (TPropertyFlag.AllowNone in PropertyFlags[Index])) then
+        Exit;
+
     otherObjPtr^ := Value;
 
     if positionPtr <> NIL then

@@ -918,7 +918,7 @@ begin
     UseMMF := Other.UseMMF;
     BaseP := Other.BaseP;
     BaseQ := Other.BaseQ;
-    SetMaxPandQ;
+    SetMaxPandQ();
 end;
 
 procedure Do2ColCSVFile(obj: TObj; const FileName: String);
@@ -2176,10 +2176,12 @@ begin
             Stride := 1;
     end
     else
+    begin
         Stride := 1;
+    end;
     
     if Assigned(dP) then
-        SetMaxPandQ;
+        SetMaxPandQ();
 end;
 
 procedure TLoadShapeObj.SetDataPointersSingle(HoursPtr: PSingle; PMultPtr: PSingle; QMultPtr: PSingle; SStride: Integer);
@@ -2208,10 +2210,12 @@ begin
             Stride := 1;
     end
     else
+    begin
         Stride := 1;
+    end;
     
     if Assigned(sP) then
-        SetMaxPandQ;
+        SetMaxPandQ();
 end;
 
 procedure TLoadShapeObj.UseFloat32();
