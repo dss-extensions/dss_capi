@@ -1727,6 +1727,7 @@ var
     Dss_Class: TDSSClass;
     i, n, nbus, t: Integer;
     myBus: array[0..1] of String;
+    busRef, busRef2: Integer;
     nodes: Array of Integer = NIL;
     found: Boolean;
     elem: TDSSCktElement;
@@ -1749,7 +1750,7 @@ begin
             continue;
 
         // Checks if it is a PDE class
-        if not (DSS_Class.ClassType.InheritsFrom(TPDClass)) then
+        if not (DSS_Class.InheritsFrom(TPDClass)) then
             continue;
 
         // If it is, checks all the elements to verify if one or more are
@@ -1770,9 +1771,13 @@ begin
                             if not found then
                                 continue;
 
-                            myBus[0] := AnsiLowerCase(StripExtension(elem.GetBus(1)));
-                            myBus[1] := AnsiLowerCase(StripExtension(elem.GetBus(2)));
-                            if (myBus[0] <> myBus[1]) then
+                            busRef := elem.Terminals[0].BusRef;
+                            if (elem.NTerms() > 1) then
+                                busRef2 := elem.Terminals[1].BusRef
+                            else
+                                busRef2 := -2;
+
+                            if (busRef <> busRef2) then
                             begin
                                 SetLength(Result, length(Result) + 1);
                                 Result[High(Result)] := elem.FullName();
@@ -1836,7 +1841,7 @@ begin
             continue;
 
         // Checks if it is a PCE class
-        if not (DSS_Class.ClassType.InheritsFrom(TPCClass) or (DSS_Class = DSS.CapacitorClass) or (DSS_Class = DSS.ReactorClass)) then
+        if not (DSS_Class.InheritsFrom(TPCClass) or (DSS_Class = DSS.CapacitorClass) or (DSS_Class = DSS.ReactorClass)) then
             continue;
 
         // If it is, checks all the elements to verify if one or more are

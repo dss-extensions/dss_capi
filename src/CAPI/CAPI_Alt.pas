@@ -2657,6 +2657,7 @@ var
     cls: TDSSClass;
     i, n, t, nbus: Integer;
     busName, elemBus, elemBus2: String;
+    busRef, busRef2: Integer;
     nodes: Array of Integer = NIL;
     found: Boolean;
     elem: TDSSCktElement;
@@ -2686,8 +2687,8 @@ begin
         if not (
             (loads and (cls = DSS.LoadClass)) or
             (lines and (cls = DSS.LineClass)) or
-            (pces and (cls.ClassType.InheritsFrom(TPCClass) or (cls = DSS.CapacitorClass) or (cls = DSS.ReactorClass))) or
-            (pdes and (cls.ClassType.InheritsFrom(TPDClass)))
+            (pces and (cls.InheritsFrom(TPCClass) or (cls = DSS.CapacitorClass) or (cls = DSS.ReactorClass))) or
+            (pdes and (cls.InheritsFrom(TPDClass)))
         ) then
             continue;
 
@@ -2711,13 +2712,16 @@ begin
 
                             if pdes then
                             begin
-                                elemBus := AnsiLowerCase(StripExtension(elem.GetBus(t + 1)));
+                                if (High(elem.Terminals) = 0) then
+                                    break;
+
+                                busRef := elem.Terminals[t].BusRef;
                                 if (t = 0) then
-                                    elemBus2 := AnsiLowerCase(StripExtension(elem.GetBus(t + 2)))
+                                    busRef2 := elem.Terminals[t + 1].BusRef
                                 else
-                                    elemBus2 := AnsiLowerCase(StripExtension(elem.GetBus(t)));
-                                    
-                                if elemBus = elemBus2 then
+                                    busRef2 := elem.Terminals[t - 1].BusRef;
+
+                                if busRef = busRef2 then
                                     break;
                             end;
                             Result := DSS_RecreateArray_PPointer(ResultPtr, ResultCount, ResultCount^ + 1, true);
