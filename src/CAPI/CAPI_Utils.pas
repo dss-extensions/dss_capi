@@ -472,11 +472,20 @@ end;
 
 //------------------------------------------------------------------------------
 function DSS_RecreateArray_PPointer(var p: PPointer; cnt: PAPISize; const incount: TAPISize; preserve: Boolean): PPointerArray0;
+var
+    oldp: PPointer;
+    oldcount: TAPISize;
 begin
+    oldcount := incount;
+    oldp := p;
     if (cnt[1] < incount) then
     begin
-        DSS_Dispose_PPointer(p);
         Result := DSS_CreateArray_PPointer(p, cnt, incount);
+        if (preserve) then
+        begin
+            Move(oldp^, p^, sizeof(Pointer) * oldcount);
+        end;
+        DSS_Dispose_PPointer(oldp);
         Exit;
     end;
     cnt[0] := incount;
