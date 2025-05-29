@@ -22,7 +22,8 @@ uses
     Dynamics,
     XYCurve,
     InvDynamics,
-    MathUtil;
+    MathUtil,
+    fpjson;
 
 const
     NumStorageRegisters = 6; // Number of energy meter registers
@@ -406,6 +407,8 @@ type
         function GetPFPriority(): Boolean; OVERRIDE;
         procedure SetPFPriority(value: Boolean); OVERRIDE;
         function CheckOLInverter(): Boolean; OVERRIDE;
+
+        procedure StateToJSON(joptions: Integer; var json: TJSONObject); override;
     end;
 
 implementation
@@ -740,6 +743,7 @@ end;
 procedure TStorageObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
     i: Integer;
+    // newIntVal: Integer;
 begin
     case Idx of
         ord(TProp.conn):
@@ -872,7 +876,17 @@ begin
         end;
         ord(TProp.DynamicEq):
             if DynamicEqObj <> NIL then
-                SetLength(DynamicEqVals, DynamicEqObj.NVariables);            
+                SetLength(DynamicEqVals, DynamicEqObj.NVariables);
+
+        // Note (AltDSS): this doesn't seem to be required since EndEdit already invalidates
+        // the matrix of the element.
+        // ord(TProp.State):
+        //     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+        //     begin
+        //         newIntVal := FState;
+        //         FState := previousIntVal;
+        //         SetStorageState(newIntVal);
+        //     end;
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -2497,7 +2511,10 @@ begin
     // the update is done at the end of a time step so have to force
     // a recalc of the Yprim for the next time step.  Else it will stay the same.
     if StateChanged then
+    begin
         SetYprimInvalid(true);
+        // StateChanged := FALSE;  // reset the flag -- TODO?
+    end;
 end;
 
 procedure TStorageObj.ComputeDCkW();
@@ -3486,6 +3503,13 @@ end;
 procedure TStorageObj.SetPFPriority(value: Boolean);
 begin
     StorageVars.PF_Priority := value;
+end;
+
+procedure TStorageObj.StateToJSON(joptions: Integer; var json: TJSONObject);
+begin
+    inherited StateToJSON(joptions, json);
+
+    json.Add('kvarRequested', kvarRequested);
 end;
 
 finalization
