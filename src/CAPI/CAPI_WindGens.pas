@@ -298,6 +298,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TWindGenProp.kV), Value, []);
+        Exit;
+    end;
+
     elem.GenVars.kVWindGenBase := Value;
     elem.PropertySideEffects(ord(TWindGenProp.kV), 0, []);
 end;
@@ -308,6 +314,12 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TWindGenProp.kvar), Value, []);
+        Exit;
+    end;
 
     elem.kvarBase := Value;
     elem.PropertySideEffects(ord(TWindGenProp.kvar), 0, []);
@@ -321,6 +333,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TWindGenProp.kW), Value, []);
+        Exit;
+    end;
+
     elem.kWBase := Value;
     elem.SyncUpPowerQuantities();
 end;
@@ -331,6 +349,12 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TWindGenProp.PF), Value, []);
+        Exit;
+    end;
 
     elem.PFNominal := Value;
 end;
@@ -353,17 +377,15 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.Genvars.kVArating := Value;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
-        elem.PropertySideEffects(ord(TWindGenProp.kVA), 0, []);
-        elem.RecalcElementData();
-    end
-    else
-    begin
-        elem.WindModelDyn.ratedKVA := Value;
-        elem.WindModelDyn.RecalcElementData();
+        elem.SetDouble(ord(TWindGenProp.kVA), Value, []);
+        Exit;
     end;
+
+    elem.Genvars.kVArating := Value;
+    elem.WindModelDyn.ratedKVA := Value;
+    elem.WindModelDyn.RecalcElementData();
 end;
 //------------------------------------------------------------------------------
 function WindGens_Get_Phases(): Integer; CDECL; // API Extension
@@ -390,14 +412,8 @@ begin
         DoSimpleMsg(DSSPrime, '%s: Number of phases must be a positive integer!', [elem.FullName()], 6568);
         Exit;
     end;
-    elem.FNphases := Value;
 
-    // if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
-    // begin
-    elem.PropertySideEffects(ord(TWindGenProp.Phases), 0, []);
-    elem.RecalcElementData();
-    elem.SetYprimInvalid(true);
-    // end;
+    elem.SetInteger(ord(TWindGenProp.Phases), Value, []);
 end;
 
 function WindGens_Get_Bus1(): PAnsiChar; CDECL; // API Extension
@@ -473,8 +489,8 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.SetBus(1, Value);
-    elem.PropertySideEffects(ord(TWindGenProp.bus1), 0, []);
+
+    elem.SetString(ord(TWindGenProp.Bus1), Value, []);
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_Class_(Value: Integer); CDECL; // API Extension
@@ -483,6 +499,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+
     elem.SetInteger(ord(TWindGenProp.cls), Value, []);
 end;
 //------------------------------------------------------------------------------
@@ -493,8 +510,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.DailyDispShapeObj := DSSPrime.LoadShapeClass.Find(Value);
-    elem.PropertySideEffects(ord(TWindGenProp.daily), 0, []);
+    elem.SetString(ord(TWindGenProp.Daily), Value, []);
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_duty(const Value: PAnsiChar); CDECL; // API Extension
@@ -504,23 +520,22 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.DutyShapeObj := DSSPrime.LoadShapeClass.Find(Value);
-    elem.PropertySideEffects(ord(TWindGenProp.duty), 0, []);
+    elem.SetString(ord(TWindGenProp.Duty), Value, []);
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_IsDelta(Value: TAPIBoolean); CDECL; // API Extension
 var
     elem: TObj;
+    conn: TGeneralConnection;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if Value then
-        elem.Connection := TGeneralConnection.Delta
+        conn := TGeneralConnection.Delta
     else
-        elem.Connection := TGeneralConnection.Wye;
+        conn := TGeneralConnection.Wye;
 
-    elem.PropertySideEffects(ord(TWindGenProp.conn), 0, []);
-    elem.RecalcElementData();
+    elem.SetInteger(ord(TWindGenProp.conn), ord(conn), []);
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_Yearly(const Value: PAnsiChar); CDECL; // API Extension
@@ -529,8 +544,8 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.YearlyShapeObj := DSSPrime.LoadShapeClass.Find(Value);
-    elem.PropertySideEffects(ord(TWindGenProp.yearly), 0, []);
+
+    elem.SetString(ord(TWindGenProp.Yearly), Value, []);
 end;
 //------------------------------------------------------------------------------
 function WindGens_Get_Ag(): Double; CDECL;
@@ -718,11 +733,6 @@ begin
         Exit;
 
     Result := elem.WindModelDyn.Zthev.im;
-    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
-    begin
-        elem.ReCalcElementData();
-        elem.SetYprimInvalid(true);
-    end;
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_Ag(Value: Double); CDECL;
@@ -732,12 +742,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.GenVars.Ag := Value;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
-        elem.RecalcElementData();
-        // doesn't affect Yprim
+        elem.SetDouble(ord(TWindGenProp.Ag), Value, []);
+        Exit;
     end;
+    elem.GenVars.Ag := Value;
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_Cp(Value: Double); CDECL;
@@ -747,12 +757,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     
-    elem.GenVars.Cp := Value;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
-        elem.RecalcElementData();
-        elem.SetYprimInvalid(true);
+        elem.SetDouble(ord(TWindGenProp.Cp), Value, []);
+        Exit;
     end;
+    elem.GenVars.Cp := Value;
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_Lamda(Value: Double); CDECL;
@@ -762,12 +772,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.GenVars.Lamda := Value;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
-        elem.RecalcElementData();
-        elem.SetYprimInvalid(true);
+        elem.SetDouble(ord(TWindGenProp.Lamda), Value, []);
+        Exit;
     end;
+    elem.GenVars.Lamda := Value;
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_N_WTG(Value: Integer); CDECL;
@@ -777,12 +787,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.WindModelDyn.N_WTG := Value;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
-        elem.RecalcElementData();
-        elem.SetYprimInvalid(true);
+        elem.SetDouble(ord(TWindGenProp.N_WTG), Value, []);
+        Exit;
     end;
+    elem.WindModelDyn.N_WTG := Value;
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_NPoles(Value: Integer); CDECL;
@@ -792,12 +802,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.GenVars.Poles := Value;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
-        elem.RecalcElementData();
-        elem.SetYprimInvalid(true);
+        elem.SetInteger(ord(TWindGenProp.P), Value, []);
+        Exit;
     end;
+    elem.GenVars.Poles := Value;
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_pd(Value: Double); CDECL;
@@ -807,12 +817,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.GenVars.pd := Value;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
-        elem.RecalcElementData();
-        elem.SetYprimInvalid(true);
+        elem.SetDouble(ord(TWindGenProp.pd), Value, []);
+        Exit;
     end;
+    elem.GenVars.pd := Value;
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_PSS(Value: Double); CDECL;
@@ -822,11 +832,13 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.WindModelDyn.PSS := Value;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
-        //TODO: do we need to reinit the dyn model?
-    end;    
+        elem.SetDouble(ord(TWindGenProp.PSS), Value, []);
+        Exit;
+    end;
+    elem.WindModelDyn.PSS := Value;
+    //TODO: do we need to reinit the dyn model?
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_QFlag(Value: Integer); CDECL;
@@ -836,6 +848,11 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TWindGenProp.QFlg), Value, []);
+        Exit;
+    end;
     elem.WindModelDyn.QFlg := Value;
     // No direct side effects, will affect the next solution
 end;
@@ -847,13 +864,13 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.WindModelDyn.QMode := Value;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
-        elem.RecalcElementData();
-        elem.SetYprimInvalid(true);
-        //TODO: do we need to reinit the dyn model?
+        elem.SetInteger(ord(TWindGenProp.QMode), Value, []);
+        Exit;
     end;
+    elem.WindModelDyn.QMode := Value;
+    //TODO: do we need to reinit the dyn model?
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_QSS(Value: Double); CDECL;
@@ -863,11 +880,13 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.WindModelDyn.QSS := Value;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
-        //TODO: do we need to reinit the dyn model?
+        elem.SetDouble(ord(TWindGenProp.QSS), Value, []);
+        Exit;
     end;
+    elem.WindModelDyn.QSS := Value;
+    //TODO: do we need to reinit the dyn model?
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_Rad(Value: Double); CDECL;
@@ -877,12 +896,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.GenVars.Rad := Value;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
-        elem.RecalcElementData();
-        elem.SetYprimInvalid(true);
+        elem.SetDouble(ord(TWindGenProp.Rad), Value, []);
+        Exit;
     end;
+    elem.GenVars.Rad := Value;
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_RThev(Value: Double); CDECL;
@@ -892,6 +911,11 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TWindGenProp.RThev), Value, []);
+        Exit;
+    end;
     elem.WindModelDyn.Zthev.re := Value;
     // No direct side effects
 end;
@@ -899,41 +923,31 @@ end;
 procedure WindGens_Set_VCutIn(Value: Double); CDECL;
 var
     elem: TObj;
-    prev: Double;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    prev := elem.GenVars.VCutIn;
     elem.GenVars.VCutIn := Value;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
-        if ((elem.ShapeFactor.re < prev) <> (elem.ShapeFactor.re < elem.GenVars.VCutin)) then
-        begin
-            elem.RecalcElementData();
-            elem.SetYprimInvalid(true);
-        end;
+        elem.SetDouble(ord(TWindGenProp.VCutIn), Value, []);
+        Exit;
     end;
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_VCutOut(Value: Double); CDECL;
 var
     elem: TObj;
-    prev: Double;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    prev := elem.GenVars.VCutOut;
-    elem.GenVars.VCutOut := Value;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
-        if ((prev > elem.GenVars.VCutout) <> (elem.ShapeFactor.re > elem.GenVars.VCutout)) then
-        begin
-            elem.RecalcElementData();
-            elem.SetYprimInvalid(true);
-        end;
+        elem.SetDouble(ord(TWindGenProp.VCutOut), Value, []);
+        Exit;
     end;
+    elem.GenVars.VCutOut := Value;
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_Vss(Value: Double); CDECL;
@@ -943,6 +957,11 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TWindGenProp.Vss), Value, []);
+        Exit;
+    end;
     elem.WindModelDyn.Vss := Value;
 end;
 //------------------------------------------------------------------------------
@@ -953,12 +972,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.WindModelDyn.VWind := Value;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
-        elem.RecalcElementData();
-        elem.SetYprimInvalid(true);
+        elem.SetDouble(ord(TWindGenProp.VWind), Value, []);
+        Exit;
     end;
+    elem.WindModelDyn.VWind := Value;
 end;
 //------------------------------------------------------------------------------
 procedure WindGens_Set_XThev(Value: Double); CDECL;
@@ -968,11 +987,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.WindModelDyn.Zthev.im := Value;
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
-        elem.RecalcElementData();
+        elem.SetDouble(ord(TWindGenProp.XThev), Value, []);
+        Exit;
     end;
+    elem.WindModelDyn.Zthev.im := Value;
 end;
 //------------------------------------------------------------------------------
 end.

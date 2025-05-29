@@ -241,6 +241,11 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.kWhstored), elem.StorageVars.kWhRating * Value, []);
+        Exit;
+    end;
     elem.Storagevars.kWhStored := elem.StorageVars.kWhRating * Value;
 end;
 //------------------------------------------------------------------------------
@@ -508,6 +513,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.AmpLimit), Value, []);
+        Exit;
+    end;
     elem.dynVars.ILimit := Value;
 end;
 //------------------------------------------------------------------------------
@@ -517,6 +527,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.AmpLimitGain), Value, []);
+        Exit;
+    end;
     elem.dynVars.VError := Value;
 end;
 //------------------------------------------------------------------------------
@@ -526,6 +541,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.ChargeTrigger), Value, []);
+        Exit;
+    end;
     elem.ChargeTrigger := Value;
 end;
 //------------------------------------------------------------------------------
@@ -535,6 +555,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetInteger(ord(TStorageProp.ControlMode), Value, []);
+        Exit;
+    end;
     elem.GFM_mode := (Value <> 0);
 end;
 //------------------------------------------------------------------------------
@@ -544,6 +569,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.DischargeTrigger), Value, []);
+        Exit;
+    end;
     elem.DischargeTrigger := Value;
 end;
 //------------------------------------------------------------------------------
@@ -553,6 +583,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.pctEffCharge), Value, []);
+        Exit;
+    end;
     elem.pctChargeEff := Value;
 end;
 //------------------------------------------------------------------------------
@@ -562,6 +597,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.pctEffDischarge), Value, []);
+        Exit;
+    end;
     elem.pctDischargeEff := Value;
 end;
 //------------------------------------------------------------------------------
@@ -571,6 +611,12 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.kP), Value, []);
+        Exit;
+    end;
     elem.dynVars.kP := Value / 1000;
 end;
 //------------------------------------------------------------------------------
@@ -584,11 +630,9 @@ begin
     if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
     begin
         elem.SetDouble(ord(TStorageProp.kV), Value, []);
-    end
-    else
-    begin
-        elem.ParentClass.SetObjDouble(elem, ord(TStorageProp.kV), Value, []);
+        Exit;
     end;
+    elem.ParentClass.SetObjDouble(elem, ord(TStorageProp.kV), Value, []);
 end;
 //------------------------------------------------------------------------------
 procedure Storages_Set_kVA(Value: Double); CDECL;
@@ -597,6 +641,12 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.kVA), Value, []);
+        Exit;
+    end;
     elem.StorageVars.FkVArating := Value;
 end;
 //------------------------------------------------------------------------------
@@ -606,6 +656,12 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.kvar), Value, []);
+        Exit;
+    end;
     elem.kvarRequested := Value;
 end;
 //------------------------------------------------------------------------------
@@ -615,6 +671,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.kVDC), Value, []);
+        Exit;
+    end;
     elem.dynVars.RatedVDC := Value * 1000;
 end;
 //------------------------------------------------------------------------------
@@ -624,6 +685,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.kW), Value, []);
+        Exit;
+    end;
     elem.SetkW(Value);
 end;
 //------------------------------------------------------------------------------
@@ -633,6 +699,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.kWhrated), Value, []);
+        Exit;
+    end;
     elem.StorageVars.kWhrating := Value;
 end;
 //------------------------------------------------------------------------------
@@ -642,6 +713,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.kWRated), Value, []);
+        Exit;
+    end;
     elem.StorageVars.kWrating := Value;
 end;
 //------------------------------------------------------------------------------
@@ -651,6 +727,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetInteger(ord(TStorageProp.LimitCurrent), Integer(Value), []);
+        Exit;
+    end;
     elem.CurrentLimited := Value;
 end;
 //------------------------------------------------------------------------------
@@ -660,6 +741,12 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.pf), Value, []);
+        Exit;
+    end;
     elem.PFnominal := Value;
 end;
 //------------------------------------------------------------------------------
@@ -669,6 +756,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.PITol), Value, []);
+        Exit;
+    end;
     elem.dynVars.CtrlTol := Value / 100;
 end;
 //------------------------------------------------------------------------------
@@ -678,6 +770,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.SafeVoltage), Value, []);
+        Exit;
+    end;
     elem.dynVars.SMThreshold := Value;
 end;
 //------------------------------------------------------------------------------
@@ -687,6 +784,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetDouble(ord(TStorageProp.TimeChargeTrig), Value, []);
+        Exit;
+    end;
     elem.ChargeTime := Value;
 end;
 //------------------------------------------------------------------------------
@@ -696,6 +798,11 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetInteger(ord(TStorageProp.VarFollowInverter), Value, []);
+        Exit;
+    end;
     elem.VarFollowInverter := (Value <> 0);
 end;
 //------------------------------------------------------------------------------

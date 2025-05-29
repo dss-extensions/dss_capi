@@ -6655,11 +6655,15 @@ extern "C" {
 
     /*! 
     Get/set the requested kvar value. Final kvar is subjected to the inverter ratings. Sets inverter to operate in constant kvar mode.
+
+    **Note:** reading the DSS property `kvar` returns the adjusted value, while this returns the original input value.
     */
     ALTDSS_CAPI_DLL double Storages_Get_kvar(void);
 
     /*! 
     Get/set the requested kvar value. Final kvar is subjected to the inverter ratings. Sets inverter to operate in constant kvar mode.
+
+    **Note:** reading the DSS property `kvar` returns the adjusted value, while this returns the original input value.
     */
     ALTDSS_CAPI_DLL void Storages_Set_kvar(double Value);
 

@@ -23,7 +23,8 @@ uses
     ArrayDef,
     Dynamics,
     InvDynamics,
-    MathUtil;
+    MathUtil,
+    fpjson;
 
 const
     NumPVSystemRegisters = 6;    // Number of energy meter registers
@@ -326,6 +327,8 @@ type
         procedure SetPUPMPP(value: Double);
         function kvarLimit(): Double;
         function IrradianceNow(): Double;
+
+        procedure StateToJSON(joptions: Integer; var json: TJSONObject); override;
     end;
 
 implementation
@@ -2707,6 +2710,13 @@ end;
 procedure TPVSystemObj.SetPFPriority(value: Boolean);
 begin
     PVSystemVars.PF_Priority := value;
+end;
+
+procedure TPVSystemObj.StateToJSON(joptions: Integer; var json: TJSONObject);
+begin
+    inherited StateToJSON(joptions, json);
+
+    json.Add('IrradianceNow', IrradianceNow());
 end;
 
 finalization
