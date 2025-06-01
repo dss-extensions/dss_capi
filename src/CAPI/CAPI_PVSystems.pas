@@ -467,7 +467,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if (elem.SensorObj <> NIL) and (elem.SensorObj.MeteredElement <> NIL) then
+    if (elem.SensorObj <> NIL) then
         Result := DSS_GetAsPAnsiChar(DSSPrime, DSSLowerCase(elem.SensorObj.Name()));
 end;
 //------------------------------------------------------------------------------

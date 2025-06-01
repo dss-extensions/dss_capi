@@ -437,6 +437,10 @@ begin
                 PrpSequence[ord(TProp.RMatrix)] := 0;
                 PrpSequence[ord(TProp.XMatrix)] := 0;
                 PrpSequence[ord(TProp.kvar)] := 0;
+                if (PrpSequence[ord(TProp.Z)] <> 0) and (PrpSequence[ord(TProp.R)] = 0)then
+                begin
+                    SetAsNextSeq(ord(TProp.R));
+                end;
                 PrpSequence[ord(TProp.Z)] := 0;
                 PrpSequence[ord(TProp.Z0)] := 0;
                 PrpSequence[ord(TProp.Z1)] := 0;
@@ -469,9 +473,32 @@ begin
             Z2Specified := TRUE;
         ord(TProp.Z0):
             Z0Specified := TRUE;
+        ord(TProp.R):
+        begin
+            // SpecType := 2;
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
+            begin
+                if (PrpSequence[ord(TProp.Z)] <> 0) and (PrpSequence[ord(TProp.X)] = 0)then
+                begin
+                    SetAsNextSeq(ord(TProp.X));
+                end;
+                PrpSequence[ord(TProp.RMatrix)] := 0;
+                PrpSequence[ord(TProp.XMatrix)] := 0;
+                PrpSequence[ord(TProp.Z)] := 0;
+            end;
+        end;
         ord(TProp.Z):
         begin
             SpecType := 2;
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
+            begin
+                PrpSequence[ord(TProp.RMatrix)] := 0;
+                PrpSequence[ord(TProp.XMatrix)] := 0;
+                PrpSequence[ord(TProp.R)] := 0;
+                PrpSequence[ord(TProp.X)] := 0;
+                PrpSequence[ord(TProp.kvar)] := 0;
+                PrpSequence[ord(TProp.LmH)] := 0;
+            end;
         end;
         ord(TProp.LmH):
         begin

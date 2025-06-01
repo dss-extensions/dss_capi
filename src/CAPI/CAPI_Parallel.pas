@@ -123,6 +123,12 @@ var
     idx: Integer;
 begin
     Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, DSSPrime.NumOfActors());
+    if (DSSPrime.ADiakoptics) then
+    begin
+        Result[0] := Ord(DSSPrime.Children[0].ActorStatus);
+        Exit;
+    end;
+
     for idx := 0 to High(DSSPrime.Children) do
         Result[idx] := Ord(DSSPrime.Children[idx].ActorStatus);
 end;

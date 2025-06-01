@@ -50,6 +50,8 @@ function GetNodeString(const Busname: String): String;
 function Pad(const S: String; Width: Integer): String;
 function IntArrayToString(iarray: ArrayOfInteger): String;
 function StringListToString(lst: TStringList): String;
+function ComplexArrayToString(data: PComplexArray; count: Integer): String;
+
 function EncloseQuotes(const s: String): String;
 
 // Parsing Utilities
@@ -2580,6 +2582,26 @@ begin
         end;
     end;
     Result := l;
+end;
+
+function ComplexArrayToString(data: PComplexArray; count: Integer): String;
+var
+    i: Integer;
+begin
+    if (data = NIL) or (count = 0) then
+    begin
+        Result := '[]';
+        Exit;
+    end;
+
+    Result := '[';
+    for i := 1 to count do
+    begin
+        Result += cstr(data[i]);
+        if i <> count then
+            Result += ', ';
+    end;
+    Result += ']';
 end;
 
 end.

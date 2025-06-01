@@ -532,6 +532,8 @@ begin
     PropertyOffset[ord(TProp.Vmaxpu)] := ptruint(@obj.VMaxPu);
     PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.PVSystemVars.FkVArating);
 
+    PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.Units_kVA, TPropertyFlag.ReplaceZero, TPropertyFlag.NonZero];
+
     PropertyOffset[ord(TProp.DutyStart)] := ptruint(@obj.DutyStart);
     PropertyFlags[ord(TProp.DutyStart)] := [TPropertyFlag.NonNegative, TPropertyFlag.Units_hour];
 
@@ -1999,7 +2001,7 @@ end;
 procedure TPVsystemObj.GetTerminalCurrents(Curr: pComplexArray);
 // Compute total Currents
 begin
-    if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+    if (IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount) and (not (Flg.ForceInjCurrents in Flags)) then
     begin     // recalc the contribution
         if not PVsystemObjSwitchOpen then
             CalcPVSystemModelContribution();  // Adds totals in Iterminal as a side effect
@@ -2015,7 +2017,10 @@ begin
     if ActiveCircuit.Solution.LoadsNeedUpdating then
         SetNominalDEROutput(); // Set the nominal kW, etc for the type of solution being Done
 
-    CalcInjCurrentArray();          // Difference between currents in YPrim and total terminal current
+    if not (Flg.ForceInjCurrents in Flags) then
+    begin
+        CalcInjCurrentArray();          // Difference between currents in YPrim and total terminal current
+    end;
 
     if (DebugTrace) then
         WriteTraceRecord('Injection');

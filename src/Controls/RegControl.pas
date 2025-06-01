@@ -64,7 +64,10 @@ type
         Reset = 29,
         LDC_Z = 30,
         rev_Z = 31,
-        Cogen = 32 
+        Cogen = 32,
+        idle = 33,
+        idleReverse = 34,
+        idleForward = 35
     );
     TRegControlProp = (
         INVALID = 0,
@@ -99,7 +102,10 @@ type
         Reset = 29,
         LDC_Z = 30,
         Rev_Z = 31,
-        Cogen = 32 
+        Cogen = 32,
+        Idle = 33,
+        IdleReverse = 34,
+        IdleForward = 35
     );
 {$SCOPEDENUMS OFF}
 
@@ -133,6 +139,9 @@ type
         ReverseNeutral: LongBool;
         CogenEnabled: LongBool;
         InCogenMode: Boolean;
+        IdleEnabled: Boolean;
+        IdleReverseEnabled: Boolean;
+        IdleForwardEnabled: Boolean;
 
         RevHandle: Integer;
         RevBackHandle: Integer;
@@ -316,12 +325,18 @@ begin
     PropertyType[ord(TProp.revNeutral)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.EventLog)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.Cogen)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.Idle)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.IdleForward)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.IdleReverse)] := TPropertyType.BooleanProperty;
     PropertyOffset[ord(TProp.reversible)] := ptruint(@obj.IsReversible);
     PropertyOffset[ord(TProp.debugtrace)] := ptruint(@obj.DebugTrace);
     PropertyOffset[ord(TProp.inversetime)] := ptruint(@obj.Inversetime);
     PropertyOffset[ord(TProp.revNeutral)] := ptruint(@obj.ReverseNeutral);
     PropertyOffset[ord(TProp.EventLog)] := ptruint(@obj.ShowEventLog);
     PropertyOffset[ord(TProp.Cogen)] := ptruint(@obj.CogenEnabled);
+    PropertyOffset[ord(TProp.Idle)] := ptruint(@obj.IdleEnabled);
+    PropertyOffset[ord(TProp.IdleForward)] := ptruint(@obj.IdleForwardEnabled);
+    PropertyOffset[ord(TProp.IdleReverse)] := ptruint(@obj.IdleReverseEnabled);
 
     // integer properties
     PropertyType[ord(TProp.winding)] := TPropertyType.IntegerProperty;
@@ -472,6 +487,10 @@ begin
     FPTphase := Other.FPTphase;
     SetTapNum(Other.TapNum());
     CogenEnabled := Other.CogenEnabled;
+    IdleEnabled := Other.IdleEnabled;
+    IdleReverseEnabled := Other.IdleReverseEnabled;
+    IdleForwardEnabled := Other.IdleForwardEnabled;
+
     LDC_Z := Other.LDC_Z;
     RevLDC_Z := Other.revLDC_Z;
 end;
@@ -522,6 +541,9 @@ begin
     ReverseNeutral := FALSE;
     InCogenMode := FALSE;
     CogenEnabled := FALSE;
+    IdleEnabled := FALSE;
+    IdleReverseEnabled := FALSE;
+    IdleForwardEnabled := FALSE;
 
     RevHandle := 0;
     RevBackHandle := 0;
@@ -1076,6 +1098,45 @@ begin
         TapChangeIsNeeded := TRUE
     else
         TapChangeIsNeeded := FALSE;
+
+    if TapChangeIsNeeded and IdleEnabled and (CogenEnabled or IsReversible) then
+    begin
+        FwdPower := -ControlledTransformer.Power(ElementTerminal).re; // W
+        if Abs(FwdPower) <= RevPowerThreshold then
+        begin
+            TapChangeIsNeeded := false; // idle in no-load zone
+        end;
+        if (not TapChangeIsNeeded) and DebugTrace then
+        begin
+            RegWriteDebugRecord(Format('Idling in No Load zone, FwdPower=%.8g', [FwdPower]));
+        end;
+    end;
+
+    if TapChangeIsNeeded and IdleReverseEnabled and IsReversible and not ReverseNeutral then
+    begin
+        FwdPower := -ControlledTransformer.Power(ElementTerminal).re; // W
+        if FwdPower < -RevPowerThreshold then
+        begin
+            TapChangeIsNeeded := false; // idle in reverse zone
+        end;
+        if (not TapChangeIsNeeded) and DebugTrace then
+        begin
+            RegWriteDebugRecord(Format('Idling in reverse flow zone, FwdPower=%.8g', [FwdPower]));
+        end;
+    end;
+
+    if TapChangeIsNeeded and IdleForwardEnabled and IsReversible then
+    begin
+        FwdPower := -ControlledTransformer.Power(ElementTerminal).re; // W
+        if FwdPower > RevPowerThreshold then
+        begin
+            TapChangeIsNeeded := false; // idle in forward zone
+        end;
+        if (not TapChangeIsNeeded) and DebugTrace then
+        begin
+            RegWriteDebugRecord(Format('Idling in forward flow zone, FwdPower=%.8g', [FwdPower]));
+        end;
+    end;
 
     if Vlimitactive() then
         if (Vlocalbus > Vlimit) then

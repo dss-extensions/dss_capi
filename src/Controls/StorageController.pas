@@ -212,8 +212,8 @@ type
         procedure DoScheduleMode();
         procedure DoPeakShaveModeLow();
         procedure PushTimeOntoControlQueue(Code: Integer);
-        procedure GetControlPower(var ControlPower: Complex);
-        procedure GetControlCurrent(var ControlCurrent: Double);
+        procedure GetControlPower(out ControlPower: Complex);
+        procedure GetControlCurrent(out ControlCurrent: Double);
         function GetFleetkW(): Double;
         function GetFleetkWh(): Double;
 
@@ -1020,33 +1020,23 @@ begin
 end;
 
 function TStorageControllerObj.Get_DynamicTarget(THigh: Integer): Double;
-var
-    // Temp, temp2: Double;
-    RatingIdx: Integer = 0;
-    RSignal: TXYCurveObj;
 begin
     Result := 0;
-    if DSS.SeasonSignal <> '' then
-    begin
-        RSignal := DSS.XYCurveClass.Find(DSS.SeasonSignal);
-        if RSignal <> NIL then
-            RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));
 
-        if (RatingIdx <= Seasons) and (Seasons > 1) then
-        begin
-            if THigh = 1 then
-                Result := SeasonTargets[RatingIdx]
-            else
-                Result := SeasonTargetsLow[RatingIdx]
-        end
+    if (DSS.SeasonalRatingIdx >= 0) and (DSS.SeasonalRatingIdx < Seasons) and (Seasons >= 1) then
+    begin
+        if THigh = 1 then
+            Result := SeasonTargets[DSS.SeasonalRatingIdx]
         else
-        begin
-            if THigh = 1 then
-                Result := FkWTarget
-            else
-                Result := FkWTargetLow
-        end;
+            Result := SeasonTargetsLow[DSS.SeasonalRatingIdx];
+
+        Exit;
     end;
+
+    if THigh = 1 then
+        Result := FkWTarget
+    else
+        Result := FkWTargetLow
 end;
 
 
@@ -1098,7 +1088,7 @@ begin
             GetControlPower(S);
 
        // In case of having seasonal targets
-        if DSS.SeasonalRating then
+        if DSS.SeasonalRatingIdx <> -1 then
             CtrlTarget := Get_DynamicTarget(1)
         else
             CtrlTarget := FkWTarget;
@@ -1409,12 +1399,10 @@ begin
     StorekWChanged := FALSE;
     SkipkWCharge := FALSE;
 
-
-    if DSS.SeasonalRating then
+    if DSS.SeasonalRatingIdx <> -1 then
         CtrlTarget := Get_DynamicTarget(0)
     else
         CtrlTarget := FkWTargetLow;
-
 
     //----MonitoredElement().SetActiveTerminalIdx(ElementTerminal);
     if Chargemode = CURRENTPEAKSHAVELOW then
@@ -1938,7 +1926,7 @@ begin
     // do we want to set fleet to 100% charged storage?
 end;
 
-procedure TStorageControllerObj.GetControlPower(var ControlPower: Complex);
+procedure TStorageControllerObj.GetControlPower(out ControlPower: Complex);
 // Get power to control based on active power
 var
     i: Integer;
@@ -1999,7 +1987,7 @@ begin
         ControlPower := ControlPower * 3.0;
 end;
 
-procedure TStorageControllerObj.GetControlCurrent(var ControlCurrent: Double);
+procedure TStorageControllerObj.GetControlCurrent(out ControlCurrent: Double);
 // Get current to control
 var
     i: Integer;

@@ -3258,8 +3258,7 @@ var
     EmergAmps,
     NormAmps,
     Cmax: Double;
-    ClassName: String;
-    RSignal: TXYCurveObj;
+    bus: String;
     i, j, k,
     RatingIdx: Integer;
     dBuffer: ArrayOfDouble;
@@ -3269,20 +3268,7 @@ begin
 // This is called only if in Demand Interval (DI) mode and the file is open.
 
     // Prepares everything for using seasonal ratings if required
-    RatingIdx := -1;
-    if DSS.SeasonalRating then
-    begin
-        if DSS.SeasonSignal <> '' then
-        begin
-            RSignal := DSS.XYCurveClass.Find(DSS.SeasonSignal);
-            if RSignal <> NIL then
-                RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour))
-            else
-                DSS.SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
-        end
-        else
-            DSS.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
-    end;
+    RatingIdx := DSS.SeasonalRatingIdx;
 
     // CHECK PDELEMENTS ONLY
     for PDelem in DSS.ActiveCircuit.PDElements do
@@ -3299,26 +3285,13 @@ begin
             
             // Section introduced in 02/20/2019 for allowing the automatic change of ratings
             // when the seasonal ratings option is active
-            ClassName := AnsiLowerCase(PDElem.DSSClassName);
-            if DSS.SeasonalRating and (ClassName = 'line') and (PDElem.NumAmpRatings > 1) then
+            NormAmps := PDElem.NormAmps;
+            EmergAmps := pdelem.EmergAmps;
+            if (RatingIdx >= 0) and (RatingIdx < PDElem.NumAmpRatings) then
             begin
-                if (RatingIdx > PDElem.NumAmpRatings) or (RatingIdx < 0) then
-                begin
-                    NormAmps := PDElem.NormAmps;
-                    EmergAmps := pdelem.EmergAmps;
-                end
-                else
-                begin
-                    NormAmps := PDElem.AmpRatings[RatingIdx];
-                    EmergAmps := PDElem.AmpRatings[RatingIdx];
-                end;
-            end
-            else
-            begin
-                NormAmps := PDElem.NormAmps;
-                EmergAmps := pdelem.EmergAmps;
+                NormAmps := PDElem.AmpRatings[RatingIdx];
+                EmergAmps := PDElem.AmpRatings[RatingIdx];
             end;
-
 
             if (Cmax > NormAmps) or (Cmax > EmergAmps) then
             begin
@@ -3328,15 +3301,15 @@ begin
                     dVector[i] := 0.0;
                 if PDElem.NPhases < 3 then
                 begin
-                    ClassName := PDElem.FirstBus();
-                    j := ansipos('.', ClassName);     // Removes the name of the bus
-                    ClassName := ClassName.Substring(j);
+                    bus := PDElem.FirstBus();
+                    j := ansipos('.', bus); // Removes the name of the bus
+                    bus := bus.Substring(j);
                     for i := 1 to 3 do
                     begin
-                        j := ansipos('.', ClassName);   // goes for the phase Number
+                        j := ansipos('.', bus);   // goes for the phase Number
                         if j = 0 then
                         begin
-                            k := strtoint(ClassName);
+                            k := strtoint(bus);
                             if (k < 1) or (k > DVECTOR_SIZE) then
                             begin
                                 DoSimpleMsg('Error Writing the OV report in memory: unhandled phase number (%d) for element "%s".', [k, PDElem.FullName()], 20241201);
@@ -3347,14 +3320,14 @@ begin
                         end
                         else
                         begin
-                            k := strtoint(ClassName.Substring(0, j - 1));
+                            k := strtoint(bus.Substring(0, j - 1));
                             if (k < 1) or (k > DVECTOR_SIZE) then
                             begin
                                 DoSimpleMsg('Error Writing the OV report in memory: unhandled phase number (%d) for element "%s".', [k, PDElem.FullName()], 20241202);
                                 exit;
                             end;
                             dVector[k] := dBuffer[i - 1];
-                            ClassName := ClassName.Substring(j);
+                            bus := bus.Substring(j);
                         end;
                     end;
                 end
@@ -3366,14 +3339,14 @@ begin
 
                 WriteintoMem(OV_MHandle, DSS.ActiveCircuit.Solution.DynaVars.dblHour);
                 WriteintoMemStr(OV_MHandle, ', ' + EncloseQuotes(PDelem.FullName()));
-                WriteintoMem(OV_MHandle, PDElem.NormAmps);
-                WriteintoMem(OV_MHandle, pdelem.EmergAmps);
-                if PDElem.Normamps > 0.0 then
-                    WriteintoMem(OV_MHandle, Cmax / PDElem.Normamps * 100.0)
+                WriteintoMem(OV_MHandle, NormAmps);
+                WriteintoMem(OV_MHandle, EmergAmps);
+                if NormAmps > 0.0 then
+                    WriteintoMem(OV_MHandle, Cmax / NormAmps * 100.0)
                 else
                     WriteintoMem(OV_MHandle, 0.0);
-                if PDElem.Emergamps > 0.0 then
-                    WriteintoMem(OV_MHandle, Cmax / PDElem.Emergamps * 100.0)
+                if EmergAmps > 0.0 then
+                    WriteintoMem(OV_MHandle, Cmax / EmergAmps * 100.0)
                 else
                     WriteintoMem(OV_MHandle, 0.0);
                 WriteintoMem(OV_MHandle, ActiveCircuit.Buses[ActiveCircuit.MapNodeToBus[PDElem.NodeRef[1]].BusRef].kVBase);
@@ -3382,7 +3355,6 @@ begin
                     WriteintoMem(OV_MHandle, dVector[i]);
 
                 WriteintoMemStr(OV_MHandle, ' ' + Char(10));
-
             end;
         end;
     end;

@@ -70,6 +70,7 @@ type
         function GetExcessKVANorm(idxTerm: Integer; powerOut: PComplex = NIL): Complex;
         function GetExcessKVAEmerg(idxTerm: Integer; powerIn: PComplex = NIL): Complex;
 
+        procedure GetRatings(var NormAmpsOut, EmergAmpsOut: Double);
         procedure StateToJSON(joptions: Integer; var json: TJSONObject); override;
     end;
 
@@ -182,6 +183,8 @@ begin
     normAmpsSpecified := False;
     emergAmpsSpecified := False;
 
+    NormAmps := 0;
+    EmergAmps := 0;
     FromTerminal := 1;
     BranchNumCustomers := 0;
     BranchTotalCustomers := 0;
@@ -324,6 +327,18 @@ begin
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
+procedure TPDElement.GetRatings(var NormAmpsOut, EmergAmpsOut: Double);
+begin
+    NormAmpsOut := NormAmps;
+    EmergampsOut := EmergAmps;
+    // Brings the seasonal ratings for the PDElement
+    if (DSS.SeasonalRatingIdx >= 0) and (DSS.SeasonalRatingIdx < NumAmpRatings) then
+    begin
+        NormAmpsOut := AmpRatings[DSS.SeasonalRatingIdx];
+        EmergAmpsOut := AmpRatings[DSS.SeasonalRatingIdx];
+    end;
+end;
+
 procedure TPDElement.StateToJSON(joptions: Integer; var json: TJSONObject);
 begin
     inherited StateToJSON(joptions, json);
@@ -345,13 +360,18 @@ begin
         json.Add('Sensor', TJSONNull.Create());
     end;
 
+    if (DSS.SeasonalRatingIdx >= 0) and (DSS.SeasonalRatingIdx < NumAmpRatings) then
+    begin
+        json.Add('SeasonalRating', AmpRatings[DSS.SeasonalRatingIdx]);
+    end;
+
     if (joptions and ord(DSSJSONOptions.Reliability)) <> 0 then
     begin
         json.Add('TotalCustomers', BranchTotalCustomers);
         json.Add('NumCustomers', BranchNumCustomers);
         json.Add('CustomerWeight', BranchCustWeight);
-        json.Add('Overload_UE', Overload_UE);
-        json.Add('OverLoad_EEN', OverLoad_EEN);
+        json.Add('OverloadUE', Overload_UE);
+        json.Add('OverLoadEEN', OverLoad_EEN);
         json.Add('SectionID', BranchSectionID);
         json.Add('Length', MilesThisLine / 1.609344);
         json.Add('FailureRate', BranchFltRate);

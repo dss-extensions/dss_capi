@@ -134,6 +134,7 @@ VAR
     DSSPropertyHelp: TMOFile = NIL;
     DSS_CAPI_INFO_SPARSE_COND: Boolean;
     DSS_CAPI_EARLY_ABORT: Boolean;
+    ALTDSS_ENABLE_GENERIC5: Boolean;
     DSS_CAPI_ITERATE_DISABLED: Integer = 0; // default to 0 for compatibility
     DSS_CAPI_EXT_ERRORS: Boolean = True;
     DSS_CAPI_ALLOW_CHANGE_DIR: Boolean = True;
@@ -824,6 +825,8 @@ initialization
     DSS_CAPI_COM_DEFAULTS := (GetEnvironmentVariable('DSS_CAPI_COM_DEFAULTS') = '1');;
     // For the 0.15.x branch, default is True, disable at initialization when DSS_CAPI_ALLOW_CHANGE_DIR = 0
     DSS_CAPI_ALLOW_CHANGE_DIR := (SysUtils.GetEnvironmentVariable('DSS_CAPI_ALLOW_CHANGE_DIR') <> '0');
+
+    ALTDSS_ENABLE_GENERIC5 := (GetEnvironmentVariable('ALTDSS_ENABLE_GENERIC5') = '1');
 
     DSSUpperCase := AnsiUpperCase;
     DSSLowerCase := AnsiLowerCase;

@@ -12,7 +12,8 @@ uses
     classes,
     Sysutils,
     RPN,
-    HashList;
+    HashList,
+    UComplex, DSSUcomplex;
 
 type
     EParserProblem = class(Exception);
@@ -59,7 +60,7 @@ type
         DSSCtx: TObject;
         tokenBuffer: String;
         autoIncrement: Boolean;
-        position: Integer;
+        position, previousPosition: Integer;
         delimiters: String;
         whiteSpace: String;
         beginQuoteChars, endQuoteChars: String;
@@ -77,6 +78,10 @@ type
         function ParseAsBusName(Param: String; var NumNodes: Integer; NodeArray: pIntegerArray): String;//TODO: make it a separate function
         function ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray; DoRound: Boolean=False): Integer;
         function ParseAsVector(var VectorBuffer: ArrayOfDouble; DoRound: Boolean=False): Integer;
+        
+        function MakeComplex(): Complex;
+        function ParseAsComplexVector(ExpectedSize: Integer; VectorBuffer: pComplexArray): Integer;
+        function ParseAsComplexMatrix(ExpectedOrder: Integer; MatrixBuffer: pComplexArray): Integer;
 
         // TODO: remove, not used in the main code, only in the COM API, kinda useless for most common programming languages
         function ParseAsMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
@@ -438,6 +443,7 @@ end;
 
 function TDSSParser.NextParam(): String;
 begin
+    previousPosition := position;
     if position <= Length(CmdBuffer) then
     begin
         LastDelimiter := ' ';
@@ -562,6 +568,88 @@ begin
             VectorBuffer[i] := Round(VectorBuffer[i]);
 end;
 
+function TDSSParser.ParseAsComplexVector(ExpectedSize: Integer; VectorBuffer: pComplexArray): Integer;
+var
+    ParseBufferPos, NumElements, i: Integer;
+    ParseBuffer, DelimSave: String;
+begin
+    if autoIncrement then
+        NextParam();
+
+    NumElements := 0;
+    Result := 0;  // return 0 if none found or error occurred
+    for i := 1 to ExpectedSize do
+        VectorBuffer[i] := 0;
+
+    // now Get Vector values
+    ParseBuffer := tokenBuffer + ' ';
+
+    ParseBufferPos := 1;
+    DelimSave := delimiters;
+    delimiters := delimiters + MatrixRowTerminator;
+
+    SkipWhiteSpace(ParseBuffer, ParseBufferPos);
+    tokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
+    CheckForVar(tokenBuffer);
+    while Length(tokenBuffer) > 0 do
+    begin
+        inc(NumElements);
+        if NumElements <= ExpectedSize then
+            VectorBuffer[NumElements] := MakeComplex();
+        //TODO: warn about extra elements
+        if LastDelimiter = MatrixRowTerminator then
+            BREAK;
+        tokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
+        CheckForVar(tokenBuffer);
+    end;
+
+    Result := NumElements;
+
+    delimiters := DelimSave;   //restore to original delimiters
+
+    tokenBuffer := copy(ParseBuffer, ParseBufferPos, Length(ParseBuffer));  // prepare for next trip
+end;
+
+function TDSSParser.ParseAsComplexMatrix(ExpectedOrder: Integer; MatrixBuffer: pComplexArray): Integer;
+var
+    i, j, k, ElementsFound: Integer;
+    RowBuf: pComplexArray;
+begin
+    Result := 0;
+    if autoIncrement then
+        NextParam();
+
+    RowBuf := Allocmem(Sizeof(Complex) * ExpectedOrder);
+    for i := 1 to (ExpectedOrder * ExpectedOrder) do
+        MatrixBuffer[i] := 0.0;
+
+    try
+        for i := 1 to ExpectedOrder do
+        begin
+            ElementsFound := ParseAsComplexVector(ExpectedOrder, RowBuf);
+
+            if ElementsFound > (ExpectedOrder * ExpectedOrder) then
+            begin
+                // DoSimpleMsg(TDSSContext(DSSCtx), _('Matrix Buffer in ParseAsMatrix too small. Check your input data, especially dimensions and number of phases.'), 65533);
+                Result := ElementsFound;
+                Exit;
+            end;
+
+            // Returns matrix in Column Order (Fortran order)
+            k := i;
+            for j := 1 to ElementsFound do
+            begin
+                MatrixBuffer[k] := RowBuf[j];
+                Inc(k, ExpectedOrder);
+            end;
+        end;
+        Result := ExpectedOrder;
+    finally
+        if Assigned(RowBuf) then
+            FreeMem(RowBuf);
+    end;
+end;
+
 function TDSSParser.ParseAsMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
 var
     i, j, k, ElementsFound: Integer;
@@ -597,7 +685,7 @@ begin
         Result := ExpectedOrder;
     finally
         if Assigned(RowBuf) then
-            FreeMem(RowBuf, (Sizeof(Double) * ExpectedOrder));
+            FreeMem(RowBuf);
     end;
 end;
 
@@ -651,7 +739,7 @@ begin
         end;
         Result := ExpectedOrder;
     finally
-        FreeMem(RowBuf, (Sizeof(Double) * ExpectedOrder));
+        FreeMem(RowBuf);
     end;
 end;
 
@@ -802,7 +890,7 @@ begin
     if OldSize > 0 then
     begin
         Move(S^, X^, OldSize);
-        Freemem(S, Oldsize);
+        Freemem(S);
     end;
     S := X;
 end;
@@ -915,19 +1003,54 @@ end;
 
 function TDSSParser.PrevParam(): Integer;
 begin
-    //TODO: remove this after we have validation tests. Note: the original doesn't handle tabs
-    if position > 0 then
-    begin
-        dec(position); // Right before the last space char
-        while (CmdBuffer[position] <> ' ') and (CmdBuffer[position] <> #9) and (position > 0) do
-        begin
-            dec(position);
-        end;
-
-        inc(position); // This to prevent discrepancies with NextParam
-    end;
+    position := previousPosition;
     Result := position;
 end;
 
+function TDSSParser.MakeComplex(): Complex;
+const
+    //errorVal: Complex = (re: NaN; im: NaN);
+    errorVal: Complex = (re: 0.0; im: 0.0);
+var
+    rest: String;
+    ipos: Integer;
+    spart: String;
+begin
+    Result := errorVal;
+    ipos := Pos('i', tokenBuffer);
+    if ipos = 0 then
+        ipos := Pos('I', tokenBuffer);
+    if ipos = 0 then
+        ipos := Pos('j', tokenBuffer);
+    if ipos = 0 then
+        ipos := Pos('J', tokenBuffer);
+
+    if ipos <> 0 then
+    begin
+        spart := Copy(tokenBuffer, 1, ipos - 1);
+        try
+            // First assume both re and im
+            ReadStr(spart, Result.re, Result.im);
+            Exit;
+        except
+            Result := errorVal;
+            try
+                // Try only im, since we have an i
+                ReadStr(spart, Result.im);
+                Exit;
+            except
+                Result := errorVal;
+                Exit;
+            end;
+        end;
+    end;
+    // Assume only real part
+    try
+        ReadStr(tokenBuffer, Result.re, rest);
+    except
+        Result := errorVal;
+        Exit;
+    end;
+end;
 
 end.

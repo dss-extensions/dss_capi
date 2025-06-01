@@ -90,6 +90,9 @@ function Alt_PCE_Get_VariableSValue(elem: TPCElement; varName: PAnsiChar): Doubl
 function Alt_PCE_Get_VariableName(elem: TPCElement; varIdx: Integer): PAnsiChar; CDECL;
 function Alt_PCE_Get_EnergyMeter(elem: TPCElement): TDSSObject; CDECL;
 function Alt_PCE_Get_EnergyMeterName(elem: TPCElement): PAnsiChar; CDECL;
+procedure Alt_PCE_ForceYPrim(elem: TPCElement; ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure Alt_PCE_ForceInjCurrents(elem: TPCElement; ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure Alt_PCE_ForceITerminal(elem: TPCElement; ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 
 //PDElements
 function Alt_PDE_Get_EnergyMeter(elem: TPDElement): TDSSObject; CDECL;
@@ -103,6 +106,8 @@ function Alt_PDE_Get_TotalCustomers(elem: TPDElement): Integer; CDECL;
 function Alt_PDE_Get_FromTerminal(elem: TPDElement): Integer; CDECL;
 function Alt_PDE_Get_TotalMiles(elem: TPDElement): Double; CDECL;
 function Alt_PDE_Get_SectionID(elem: TPDElement): Integer; CDECL;
+function Alt_PDE_Get_SeasonRatings(elem: TPDElement): Double; CDECL;
+
 // function Alt_PDE_Get_MaxCurrent(elem: TPDElement; const AllNodes: TAltAPIBoolean): Double; CDECL; -- removed in favour of the CE version
 function Alt_PDE_Get_pctNorm(elem: TPDElement; const AllNodes: TAltAPIBoolean): Double; CDECL;
 function Alt_PDE_Get_pctEmerg(elem: TPDElement; const AllNodes: TAltAPIBoolean): Double; CDECL;
@@ -114,6 +119,7 @@ procedure Alt_PDEBatch_Get_pctEmerg(var ResultPtr: PDouble; ResultCount: PAPISiz
 procedure Alt_LoadShape_Set_Points(elem: TLoadshapeObj; Npts: TAPISize; HoursPtr: Pointer; PMultPtr: Pointer; QMultPtr: Pointer; ExternalMemory: TAltAPIBoolean; IsFloat32: TAltAPIBoolean; Stride: Integer); CDECL;
 procedure Alt_LoadShape_UseFloat64(elem: TLoadshapeObj); CDECL;
 procedure Alt_LoadShape_UseFloat32(elem: TLoadshapeObj); CDECL;
+procedure Alt_LoadShape_MultAtHour(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TLoadshapeObj; hour: Double); CDECL;
 //Monitor
 procedure Alt_Monitor_Get_ByteStream(var ResultPtr: PByte; ResultCount: PAPISize; pmon: TMonitorObj); CDECL;
 function Alt_Monitor_Get_SampleCount(pmon: TMonitorObj): Integer; CDECL;
@@ -1279,6 +1285,93 @@ begin
     elem.SetVariable(varIdx, value);
 end;
 //------------------------------------------------------------------------------
+procedure Alt_PCE_ForceYPrim(elem: TPCElement; ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+var
+    cValues: PComplexArray;
+    norder: Integer;
+    expectedCount: Integer;
+begin
+    if (ValueCount = 0) then
+    begin
+        // Reset, use the element's internal matrix calcs
+        Exclude(elem.Flags, Flg.ForceYPrim);
+        elem.SetYPrimInvalid(true);
+        Exit;
+    end;
+
+    if (elem.YPrim = NIL) then
+    begin
+        DoSimpleMsg(elem.DSS, 'The element (%s) does not have a YPrim matrix allocated yet.', [elem.FullName()], 100005);
+        Exit;
+    end;
+
+    cValues := elem.YPrim.GetValuesArrayPtr(norder);
+    expectedCount := (norder * norder) * 2;
+    if (ValueCount <> expectedCount) then
+    begin
+        DoSimpleMsg(elem.DSS, _('The size of the matrix provided does not match with the number of conductors of the PCE.'), 3004);
+        Exit;
+    end;
+    Move(ValuePtr^, cValues^, SizeOf(Double) * ValueCount);
+    elem.SetYprimInvalid(false);
+    Include(elem.Flags, Flg.ForceYPrim);
+end;
+//------------------------------------------------------------------------------
+procedure Alt_PCE_ForceInjCurrents(elem: TPCElement; ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+var
+    expectedCount: Integer;
+begin
+    if (ValueCount = 0) then
+    begin
+        // Reset, use the element's internal calcs (both InjCurrents and ITerminal)
+        Exclude(elem.Flags, Flg.ForceInjCurrents);
+        Exit;
+    end;
+
+    if (elem.InjCurrent = NIL) then
+    begin
+        DoSimpleMsg(elem.DSS, 'The element (%s) does not have the InjCurrent vector allocated yet.', [elem.FullName()], 100007);
+        Exit;
+    end;
+
+    expectedCount := elem.YOrder * 2;
+    if (ValueCount <> expectedCount) then
+    begin
+        DoSimpleMsg(elem.DSS, 'The number of provided elements (%d float64 items) does not the expected (%d).', [ValueCount, expectedCount], 100006);
+        Exit;
+    end;
+    Move(ValuePtr^, elem.InjCurrent, SizeOf(Double) * ValueCount);
+    Include(elem.Flags, Flg.ForceInjCurrents);
+end;
+//------------------------------------------------------------------------------
+procedure Alt_PCE_ForceITerminal(elem: TPCElement; ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+var
+    expectedCount: Integer;
+begin
+    if (ValueCount = 0) then
+    begin
+        // Reset, use the element's internal calcs (both InjCurrents and ITerminal)
+        Exclude(elem.Flags, Flg.ForceInjCurrents);
+        Exit;
+    end;
+
+    if (elem.ITerminal = NIL) then
+    begin
+        DoSimpleMsg(elem.DSS, 'The element (%s) does not have the ITerminal vector allocated yet.', [elem.FullName()], 100007);
+        Exit;
+    end;
+
+    expectedCount := elem.YOrder * 2;
+    if (ValueCount <> expectedCount) then
+    begin
+        DoSimpleMsg(elem.DSS, 'The number of provided elements (%d float64 items) does not the expected (%d).', [ValueCount, expectedCount], 100006);
+        Exit;
+    end;
+    Move(ValuePtr^, elem.ITerminal, SizeOf(Double) * ValueCount);
+    elem.SetITerminalUpdated(true);
+    Include(elem.Flags, Flg.ForceInjCurrents);
+end;
+//------------------------------------------------------------------------------
 function Alt_CE_Get_NumPhases(elem: TDSSCktElement): Integer; CDECL;
 begin
     Result := elem.NPhases()
@@ -1346,6 +1439,18 @@ end;
 function Alt_PDE_Get_SectionID(elem: TPDElement): Integer; CDECL;
 begin
     Result := elem.BranchSectionID;
+end;
+//------------------------------------------------------------------------------
+function Alt_PDE_Get_SeasonRatings(elem: TPDElement): Double; CDECL;
+var
+    DSS: TDSSContext;
+begin
+    Result := elem.NormAmps;
+    DSS := elem.DSS;
+    if (DSS.SeasonalRatingIdx >= 0) and (DSS.SeasonalRatingIdx < elem.NumAmpRatings) then
+    begin
+        Result := elem.AmpRatings[DSS.SeasonalRatingIdx];
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Alt_LoadShape_Set_Points(elem: TLoadshapeObj; Npts: TAPISize; HoursPtr: Pointer; PMultPtr: Pointer; QMultPtr: Pointer; ExternalMemory: TAltAPIBoolean; IsFloat32: TAltAPIBoolean; Stride: Integer); CDECL;
@@ -1431,6 +1536,14 @@ end;
 procedure Alt_LoadShape_UseFloat32(elem: TLoadshapeObj); CDECL;
 begin
     elem.UseFloat32();
+end;
+//------------------------------------------------------------------------------
+procedure Alt_LoadShape_MultAtHour(var ResultPtr: PDouble; ResultCount: PAPISize; elem: TLoadshapeObj; hour: Double); CDECL;
+var
+    cResult: PComplex;
+begin
+    cResult := PComplex(DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2));
+    cResult^ := elem.MultAtHour(hour);
 end;
 //------------------------------------------------------------------------------
 procedure Alt_CE_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; elem: TDSSCktElement); CDECL;
@@ -3430,7 +3543,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function _Alt_PDElements_Get_pctCapacity_for(const AllNodes: Boolean; const What: integer; RatingIdx: Integer; pElem: TPDElement; cBuffer: pComplexArray): Double; inline;
+function _Alt_PDElements_Get_pctCapacity_for(const AllNodes: Boolean; const What: integer; pElem: TPDElement; cBuffer: pComplexArray): Double; inline;
 // What=0 -> MaxCurrent
 // What=1 -> pct of NormAmps
 // What=2 -> pct of EmergAmps
@@ -3441,10 +3554,12 @@ var
     Currmag,
     MaxCurrent: Double;
     NumNodes: Integer;
+    RatingIdx: Integer;
 begin
     Result := 0;
     MaxCurrent := 0.0;
-    
+    RatingIdx := pElem.DSS.SeasonalRatingIdx;
+
     if AllNodes then
         NumNodes := pElem.NConds() * pElem.NTerms()
     else
@@ -3464,7 +3579,7 @@ begin
     
     NormAmps := pElem.NormAmps;
     EmergAmps := pElem.EmergAmps;
-    if (RatingIdx <= pElem.NumAmpRatings) and (pElem.NumAmpRatings > 1) then
+    if (RatingIdx >= 0) and (RatingIdx < pElem.NumAmpRatings) and (pElem.NumAmpRatings > 1) then
     begin
         NormAmps := pElem.AmpRatings[RatingIdx];
         EmergAmps := pElem.AmpRatings[RatingIdx];
@@ -3479,10 +3594,8 @@ end;
 function _Alt_PDE_Get_x(pElem: TPDElement; const What: integer; const AllNodes: Boolean; cresult: PComplex=NIL): Double;
 // MaxCurrent (0), CapacityNorm (1), CapacityEmerg (2), Power (3)
 var
-    RatingIdx: Integer;
     // LocalPower: Complex;
     cBuffer: pComplexArray = NIL;
-    RSignal: TXYCurveObj;
     DSS: TDSSContext;
 begin
     Result := 0;
@@ -3496,26 +3609,10 @@ begin
         end;
     0, 1, 2:
         try
-            RatingIdx := -1;
             DSS := pElem.DSS;
-            if DSS.SeasonalRating then
-            begin
-                if DSS.SeasonSignal <> '' then
-                begin
-                    RSignal := DSS.XYCurveClass.Find(DSS.SeasonSignal);
-                    if RSignal <> NIL then
-                    begin
-                        RatingIdx := trunc(RSignal.GetYValue(DSS.ActiveCircuit.Solution.DynaVars.intHour));
-                    end
-                    else
-                        DSS.SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
-                end
-                else
-                    DSS.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
-            end;
             Getmem(cBuffer, sizeof(Complex) * pElem.Yorder);
             pElem.GetCurrents(cBuffer);
-            Result := _Alt_PDElements_Get_pctCapacity_for(AllNodes, What, RatingIdx, pElem, cBuffer);
+            Result := _Alt_PDElements_Get_pctCapacity_for(AllNodes, What, pElem, cBuffer);
         except
             on E: Exception do
                 DoSimpleMsg(DSS, 'Error processing currents: %s', [E.message], 5019);
@@ -3532,11 +3629,10 @@ type
     TPDElementPtr = ^TPDElement;
 var
     Result: PDoubleArray0;
-    k, idx, maxSize, RatingIdx: Integer;
+    k, idx, maxSize: Integer;
     pElem: TPDElementPtr;
     LocalPower: Complex;
     cBuffer: pComplexArray = NIL;
-    RSignal: TXYCurveObj;
     DSS: TDSSContext;
 begin
     if batchSize = 0 then
@@ -3566,23 +3662,6 @@ begin
         end;
     0, 1, 2: // MaxCurrent (0), CapacityNorm (1), CapacityEmerg (2),
         try
-            RatingIdx := -1;
-            if DSS.SeasonalRating then
-            begin
-                if DSS.SeasonSignal <> '' then
-                begin
-                    RSignal := DSS.XYCurveClass.Find(DSS.SeasonSignal);
-                    if RSignal <> NIL then
-                    begin
-                        RatingIdx := trunc(RSignal.GetYValue(DSS.ActiveCircuit.Solution.DynaVars.intHour));
-                    end
-                    else
-                        DSS.SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
-                end
-                else
-                    DSS.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
-            end;
-
             maxSize := 0;
             for idx := 1 to batchSize do
             begin
@@ -3599,7 +3678,7 @@ begin
                 begin
                     FillByte(cBuffer^, sizeof(Complex) * maxSize, 0);
                     pElem^.GetCurrents(cBuffer);
-                    Result[k] := _Alt_PDElements_Get_pctCapacity_for(AllNodes, What, RatingIdx, pElem^, cBuffer);
+                    Result[k] := _Alt_PDElements_Get_pctCapacity_for(AllNodes, What, pElem^, cBuffer);
                 end;
                 Inc(k);
                 inc(pElem);

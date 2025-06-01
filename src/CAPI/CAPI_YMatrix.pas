@@ -38,6 +38,16 @@ procedure YMatrix_Set_SolverOptions(opts: UInt64); CDECL;
 function YMatrix_Get_SolverOptions(): UInt64; CDECL;
 procedure YMatrix_SaveAsMarketFiles(baseFileName: PAnsiChar); CDECL;
 
+function YMatrix_Get_ControlIteration(): Integer; CDECL;
+procedure YMatrix_Set_ControlIteration(Value: Integer); CDECL;
+function YMatrix_Get_IterationFlag(): Integer; CDECL;
+procedure YMatrix_Set_IterationFlag(Value: Integer); CDECL;
+function YMatrix_Get_SolutionAbort(): TAPIBoolean; CDECL;
+procedure YMatrix_Set_SolutionAbort(Value: TAPIBoolean); CDECL;
+
+procedure YMatrix_IncrementTime(Value: Double); CDECL;
+procedure YMatrix_IntegratePCStates(); CDECL;
+
 implementation
 
 uses
@@ -46,7 +56,8 @@ uses
     KLUSolve,
     DSSClass,
     DSSHelper,
-    SysUtils;
+    SysUtils,
+    SolutionAlgs;
 
 procedure YMatrix_GetCompressedYMatrix(factor: TAPIBoolean; var nBus, nNz: Longword; var ColPtr, RowIdxPtr: pInteger; var cValsPtr: PDouble); CDECL;
 // Returns Pointers to column and row and matrix values
@@ -183,7 +194,7 @@ end;
 
 procedure YMatrix_Set_LoadsNeedUpdating(arg: TAPIBoolean); CDECL;
 begin
-   DSSPrime.ActiveCircuit.Solution.LoadsNeedUpdating := arg;
+    DSSPrime.ActiveCircuit.Solution.LoadsNeedUpdating := arg;
 end;
 
 function YMatrix_Get_LoadsNeedUpdating(): TAPIBoolean; CDECL;
@@ -198,7 +209,7 @@ procedure YMatrix_Set_SolutionInitialized(arg: TAPIBoolean); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-   DSSPrime.ActiveCircuit.Solution.SolutionInitialized := arg;
+    DSSPrime.ActiveCircuit.Solution.SolutionInitialized := arg;
 end;
 
 function YMatrix_Get_SolutionInitialized(): TAPIBoolean; CDECL;
@@ -221,7 +232,7 @@ procedure YMatrix_Set_Iteration(Value: Integer); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-   DSSPrime.ActiveCircuit.Solution.Iteration := Value;
+    DSSPrime.ActiveCircuit.Solution.Iteration := Value;
 end;
 
 function YMatrix_Get_Iteration(): Integer; CDECL;
@@ -319,6 +330,65 @@ begin
         PChar(baseFn + '_I.mtx')
     );
     Exit;
+end;
+//---------------------------------------------------------------------------------
+function YMatrix_Get_ControlIteration(): Integer; CDECL;
+begin
+    Result := -1;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.Solution.ControlIteration
+end;
+//---------------------------------------------------------------------------------
+procedure YMatrix_Set_ControlIteration(Value: Integer); CDECL;
+begin
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    DSSPrime.ActiveCircuit.Solution.ControlIteration := Value;
+end;
+//---------------------------------------------------------------------------------
+function YMatrix_Get_IterationFlag(): Integer; CDECL;
+begin
+    Result := -1;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.Solution.DynaVars.IterationFlag
+end;
+//---------------------------------------------------------------------------------
+procedure YMatrix_Set_IterationFlag(Value: Integer); CDECL;
+begin
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    DSSPrime.ActiveCircuit.Solution.DynaVars.IterationFlag := Value;
+end;
+//---------------------------------------------------------------------------------
+function YMatrix_Get_SolutionAbort(): TAPIBoolean; CDECL;
+begin
+    Result := False;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.SolutionAbort();
+end;
+//---------------------------------------------------------------------------------
+procedure YMatrix_Set_SolutionAbort(Value: TAPIBoolean); CDECL;
+begin
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    DSSPrime.SetSolutionAbort(Value);
+end;
+//---------------------------------------------------------------------------------
+procedure YMatrix_IncrementTime(Value: Double); CDECL;
+begin
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    DSSPrime.ActiveCircuit.Solution.IncrementTime(Value);
+end;
+//---------------------------------------------------------------------------------
+procedure YMatrix_IntegratePCStates(); CDECL;
+begin
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    DSSPrime.ActiveCircuit.Solution.IntegratePCStates();
 end;
 //---------------------------------------------------------------------------------
 end.

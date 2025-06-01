@@ -7565,10 +7565,19 @@ extern "C" {
     ALTDSS_CAPI_DLL int32_t ctx_YMatrix_Get_Iteration(const void* ctx);
     ALTDSS_CAPI_DLL void ctx_YMatrix_Set_Iteration(const void* ctx, int32_t Value);
     ALTDSS_CAPI_DLL void *ctx_YMatrix_Get_Handle(const void* ctx);
+    ALTDSS_CAPI_DLL void ctx_YMatrix_IncrementTime(const void* ctx, double Value);
 
     ALTDSS_CAPI_DLL void ctx_YMatrix_Set_SolverOptions(const void* ctx, uint64_t opts);
     ALTDSS_CAPI_DLL uint64_t ctx_YMatrix_Get_SolverOptions(const void* ctx);
     ALTDSS_CAPI_DLL void ctx_YMatrix_SaveAsMarketFiles(const void* ctx, const char* baseFileName);
+
+    ALTDSS_CAPI_DLL int32_t ctx_YMatrix_Get_ControlIteration(const void* ctx);
+    ALTDSS_CAPI_DLL void ctx_YMatrix_Set_ControlIteration(const void* ctx, int32_t Value);
+    ALTDSS_CAPI_DLL int32_t ctx_YMatrix_Get_IterationFlag(const void* ctx);
+    ALTDSS_CAPI_DLL void ctx_YMatrix_Set_IterationFlag(const void* ctx, int32_t Value);
+    ALTDSS_CAPI_DLL uint16_t ctx_YMatrix_Get_SolutionAbort(const void* ctx);
+    ALTDSS_CAPI_DLL void ctx_YMatrix_Set_SolutionAbort(const void* ctx, uint16_t Value);
+    ALTDSS_CAPI_DLL void ctx_YMatrix_IntegratePCStates(const void* ctx);
 
     ALTDSS_CAPI_DLL void ctx_Text_CommandBlock(const void* ctx, const char* Value);
     ALTDSS_CAPI_DLL void ctx_Text_CommandArray(const void* ctx, const char** ValuePtr, int32_t ValueCount);

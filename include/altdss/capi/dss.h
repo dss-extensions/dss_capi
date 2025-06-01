@@ -7535,10 +7535,19 @@ extern "C" {
     ALTDSS_CAPI_DLL int32_t YMatrix_Get_Iteration(void);
     ALTDSS_CAPI_DLL void YMatrix_Set_Iteration(int32_t Value);
     ALTDSS_CAPI_DLL void *YMatrix_Get_Handle(void);
+    ALTDSS_CAPI_DLL void YMatrix_IncrementTime(double Value);
 
     ALTDSS_CAPI_DLL void YMatrix_Set_SolverOptions(uint64_t opts);
     ALTDSS_CAPI_DLL uint64_t YMatrix_Get_SolverOptions(void);
     ALTDSS_CAPI_DLL void YMatrix_SaveAsMarketFiles(const char* baseFileName);
+
+    ALTDSS_CAPI_DLL int32_t YMatrix_Get_ControlIteration(void);
+    ALTDSS_CAPI_DLL void YMatrix_Set_ControlIteration(int32_t Value);
+    ALTDSS_CAPI_DLL int32_t YMatrix_Get_IterationFlag(void);
+    ALTDSS_CAPI_DLL void YMatrix_Set_IterationFlag(int32_t Value);
+    ALTDSS_CAPI_DLL uint16_t YMatrix_Get_SolutionAbort(void);
+    ALTDSS_CAPI_DLL void YMatrix_Set_SolutionAbort(uint16_t Value);
+    ALTDSS_CAPI_DLL void YMatrix_IntegratePCStates(void);
 
     ALTDSS_CAPI_DLL void Text_CommandBlock(const char* Value);
     ALTDSS_CAPI_DLL void Text_CommandArray(const char** ValuePtr, int32_t ValueCount);

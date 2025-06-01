@@ -223,6 +223,7 @@ begin
     // DSS.EnergyMeterClass.ResetAll;
     try
         DynaVars.intHour := 0;
+        DSS.SyncSeasonalRatingIdx();
         DynaVars.dblHour := 0.0;
         IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
         if not DSS.DIFilesAreOpen then
@@ -336,7 +337,7 @@ var
 begin
     for pcelem in ckt.PCelements do
     begin
-        pcelem.IntegrateStates;
+        pcelem.IntegrateStates();
     end;
 end;
 
@@ -350,25 +351,28 @@ begin
         SolutionInitialized := TRUE; // If we're in dynamics mode, no need to re-initialize.
         IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
         for N := 1 to NumberOfTimes do
-            if not DSS.SolutionAbort() then
-                with DynaVars do
-                begin
-                    IncrementTime();
-                    ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.MultAtHour(dblHour);
-                    // Assume price signal stays constant for dynamic calcs
-                    // Predictor
-                    IterationFlag := 0;
-                    IntegratePCStates();
-                    SolveSnap();
-                    // Corrector
-                    IterationFlag := 1;
-                    IntegratePCStates();
-                    SolveSnap();
-                    DSS.MonitorClass.SampleAll();  // Make all monitors take a sample
+        begin
+            if DSS.SolutionAbort() then
+                break;
 
-                    EndOfTimeStepCleanup();
+            with DynaVars do
+            begin
+                IncrementTime();
+                ckt.DefaultHourMult := ckt.DefaultDailyShapeObj.MultAtHour(dblHour);
+                // Assume price signal stays constant for dynamic calcs
+                // Predictor
+                IterationFlag := 0;
+                IntegratePCStates();
+                SolveSnap();
+                // Corrector
+                IterationFlag := 1;
+                IntegratePCStates();
+                SolveSnap();
+                DSS.MonitorClass.SampleAll();  // Make all monitors take a sample
 
-                end;
+                EndOfTimeStepCleanup();
+            end;
+        end;
     finally
         DSS.MonitorClass.SaveAll();
     end;
@@ -383,6 +387,7 @@ begin
         ckt.SetLoadMultiplier(1.0);   // Always set with prop in case matrix must be rebuilt
         IntervalHrs := 1.0;     // needed for energy meters and storage devices
         DynaVars.intHour := 0;
+        DSS.SyncSeasonalRatingIdx();
         DynaVars.dblHour := 0.0;// Use hour to denote Case number
         DynaVars.t := 0.0;
 
@@ -435,6 +440,7 @@ begin
     try
         DynaVars.t := 0.0;
         DynaVars.intHour := 0;
+        DSS.SyncSeasonalRatingIdx();
         DynaVars.dblHour := 0.0;
         // DSS.MonitorClass.ResetAll;
         // DSS.EnergyMeterClass.ResetAll;
@@ -594,7 +600,8 @@ begin
 {$ENDIF}
         // (set in Solve method) DefaultGrowthFactor :=  IntPower(DefaultGrowthRate, (Year()-1));
 
-        DynaVars.intHour := 0;
+        DynaVars.intHour := 0; // TODO/AltDSS: Why are dblHour and t not updated here? dblHour is updated in IncrementTime in the first step, but t is not set.
+        DSS.SyncSeasonalRatingIdx();
         with DynaVars do
             for i := 1 to Ndaily do
             begin
@@ -741,6 +748,7 @@ begin
         LoadModel := ADMITTANCE;   // All Direct solution
         ckt.SetLoadMultiplier(1.0);    // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
         DynaVars.intHour := 0;
+        DSS.SyncSeasonalRatingIdx();
         DynaVars.dblHour := 0.0; // Use hour to denote Case number
         DynaVars.t := 0.0;
 

@@ -230,6 +230,7 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
     DSSPrime.ActiveCircuit.Solution.DynaVars.intHour := Value;
+    DSSPrime.SyncSeasonalRatingIdx();
     DSSPrime.ActiveCircuit.Solution.Update_dblHour();
 end;
 //------------------------------------------------------------------------------
@@ -552,6 +553,7 @@ begin
         Exit;
 
     DSSPrime.ActiveCircuit.Solution.DynaVars.intHour := Trunc(Value);
+    DSSPrime.SyncSeasonalRatingIdx();
     DSSPrime.ActiveCircuit.Solution.DynaVars.dblHour := Value;
     DSSPrime.ActiveCircuit.Solution.Dynavars.t := (Value - DSSPrime.ActiveCircuit.Solution.DynaVars.intHour) * 3600.0;
 end;
@@ -763,6 +765,15 @@ procedure Solution_FinishTimeStep(); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
+
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        // Just call the proper implementation on the Solution class
+        DSSPrime.ActiveCircuit.Solution.FinishTimeStep();
+        Exit;
+    end;
+
+    // For backwards compatibility
     DSSPrime.MonitorClass.SampleAll();  // Make all monitors take a sample
     DSSPrime.ActiveCircuit.Solution.EndOfTimeStepCleanup();
     DSSPrime.ActiveCircuit.Solution.IncrementTime();
@@ -840,7 +851,7 @@ begin
     PMParent := DSSPrime.GetPrime();
     //TODO: reuse command directly after the big refactor
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
-    if PMParent.ActiveCircuit.Solution.ADiakoptics then
+    if PMParent.ADiakoptics then
     begin
         // Added to avoid crashes when in A-Diakoptics mode but the user
         // uses the SolveAll command

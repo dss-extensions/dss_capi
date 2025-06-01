@@ -2941,6 +2941,25 @@ begin
 
     if flags <> [] then
     begin
+        if (TPropertyFlag.ReplaceZero in flags) and (Value = 0) then
+        begin
+            // Only replace zeros when using the compatibility flag
+            if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) <> 0 then
+            begin
+                Value := 1e-8;
+            end
+            else
+            begin
+                if not (TPropertyFlag.IgnoreInvalid in flags) then
+                begin
+                    DoSimpleMsg(
+                        '%s.%s: Value (%g) cannot be zero.', 
+                        [obj.FullName(), PropertyName[Index], Value],
+                    2020031);
+                end;
+                Exit;
+            end;
+        end;
         if (TPropertyFlag.GreaterThanOne in flags) and (Value <= 1) then
         begin
             if not (TPropertyFlag.IgnoreInvalid in flags) then

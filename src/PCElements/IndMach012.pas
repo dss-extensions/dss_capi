@@ -1012,7 +1012,7 @@ procedure TIndMach012Obj.GetTerminalCurrents(Curr: pComplexArray);
 // Note that it only does something if the solution count has changed.
 // Otherwise, Iterminal array already contains the currents
 begin
-    if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+    if (IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount) and (not (Flg.ForceInjCurrents in Flags)) then
     begin     // recalc the contribution
         // You will likely want some logic like this
         if not IndMach012SwitchOpen then
@@ -1028,14 +1028,18 @@ begin
     if ActiveCircuit.Solution.LoadsNeedUpdating then
         SetNominalPower(); // Set the nominal kW, etc for the type of solution being done
 
-    // call the main function for doing calculation
-    // Difference between currents in YPrim and total terminal current
-    if IndMach012SwitchOpen then
-        // If the element is open, just zero the array and return
-        ZeroInjCurrent()
-    else
-        // otherwise, go to a routine that manages the calculation
-        CalcIndMach012ModelContribution();
+    if not (Flg.ForceInjCurrents in Flags) then
+    begin
+        // Previously in "CalcInjCurrentArray"...
+
+        // Difference between currents in YPrim and total terminal current
+        if IndMach012SwitchOpen then
+            // If the element is open, just zero the array and return
+            ZeroInjCurrent()
+        else
+            // otherwise, go to a routine that manages the calculation
+            CalcIndMach012ModelContribution();
+    end;
 
     // If (DebugTrace) Then WriteTraceRecord;
 

@@ -664,7 +664,7 @@ begin
     PropertyFlags[ord(TProp.pf)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.PowerFactorLimits];
 
     PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.StorageVars.FkVArating);
-    PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.Units_kVA];
+    PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.Units_kVA, TPropertyFlag.ReplaceZero, TPropertyFlag.NonZero];
 
     PropertyOffset[ord(TProp.kV)] := ptruint(@obj.StorageVars.kVStorageBase);
     PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
@@ -682,7 +682,7 @@ begin
     PropertyType[ord(TProp.kW)] := TPropertyType.DoubleProperty;
     PropertyOffset[ord(TProp.kW)] := ptruint(@obj.kW_out);
     PropertyWriteFunction[ord(TProp.kW)] := @SetkW;
-    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Units_kW];
+    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Units_kW, TPropertyFlag.ReplaceZero, TPropertyFlag.NonZero];
 
     PropertyOffset[ord(TProp.kVDC)] := ptruint(@obj.dynVars.RatedVDC);
     PropertyScale[ord(TProp.kVDC)] := 1000;
@@ -2294,7 +2294,7 @@ end;
 procedure TStorageObj.GetTerminalCurrents(Curr: pComplexArray);
 // Compute total Currents
 begin
-    if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+    if (IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount) and (not (Flg.ForceInjCurrents in Flags)) then
     begin     // recalc the contribution
         if not StorageObjSwitchOpen then
             CalcStorageModelContribution();  // Adds totals in Iterminal as a side effect
@@ -2310,7 +2310,10 @@ begin
     if ActiveCircuit.Solution.LoadsNeedUpdating then
         SetNominalDEROutput(); // Set the nominal kW, etc for the type of solution being Done
 
-    CalcInjCurrentArray(); // Difference between currents in YPrim and total terminal current
+    if not (Flg.ForceInjCurrents in Flags) then
+    begin
+        CalcInjCurrentArray(); // Difference between currents in YPrim and total terminal current
+    end;
 
     if (DebugTrace) then
         WriteTraceRecord('Injection');

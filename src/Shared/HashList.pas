@@ -134,17 +134,17 @@ begin
         begin
             for j := 1 to Nallocated do
                 Str[j] := ''; // decrement ref count on string
-            Freemem(Str, SizeOf(Str[1]) * Nallocated);
-            Freemem(Idx, SizeOf(Idx[1]) * Nallocated);
+            Freemem(Str);
+            Freemem(Idx);
         end;
     end;
 
-    Freemem(ListPtr, Sizeof(Listptr[1]) * NumLists);
+    Freemem(ListPtr);
 
     for i := 1 to NumElementsAllocated do
         StringPtr[i] := ''; // get rid of string storage
 
-    Freemem(StringPtr, Sizeof(StringPtr[1]) * NumElementsAllocated);
+    Freemem(StringPtr);
 
     inherited Destroy;
 end;
@@ -213,7 +213,7 @@ begin
     if OldAllocation > 0 then
     begin
         Move(StringPtr[1], NewPointer[1], SizeOf(StringPtr[1]) * OldAllocation);
-        Freemem(StringPtr, SizeOf(StringPtr[1]) * OldAllocation);
+        Freemem(StringPtr);
     end;
     StringPtr := NewPointer;
 end;

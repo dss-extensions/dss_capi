@@ -4,13 +4,14 @@ This document assumes some knowledge of the COM API and the basic model of AltDS
 
 ## Important notes
 
-- **This library is not supported by the original authors of OpenDSS**. If you find issues or have features specific to the library, please open [an issue ticket on GitHub](https://github.com/dss-extensions/dss_capi/issues/) or send an email (pmeira at ieee.org). For general OpenDSS issues, be sure to test with the official distribution before posting in the official forum at SourceForge. Users are welcome to post at [our own General Discussion page](https://github.com/orgs/dss-extensions/discussions/categories/general).
+- **This library is not supported by EPRI**. If you find issues or have features specific to the library, please open [an issue ticket on GitHub](https://github.com/dss-extensions/dss_capi/issues/) or send an email (pmeira at ieee.org). For general OpenDSS issues, be sure to test with the official distribution before posting in the official forum at SourceForge. Users are welcome to post at [our own General Discussion page](https://github.com/orgs/dss-extensions/discussions/categories/general).
 - Several projects that use DSS C-API, such as DSS-Python, OpenDSSDirect.py, OpenDSSDirect.jl, DSS Sharp and DSS MATLAB are hosted at [DSS-Extensions](http://github.com/dss-extensions/). These projects provide user-friendly programming interfaces for different languages. There are some non-affiliated projects that expose our engine to other languages.
 - DSS C-API is currently based on the open-source Free Pascal compiler instead of Delphi. If you find a system where the results are different between the two distributions, please share a sample with us to help identify it, allowing us to fix the issue for all users.
 - Bits and pieces of the API code, as well as some small specific changes of the main OpenDSS code, have been modified for better multi-platform compatibility and, sometimes, performance. Most of these are not explicitly listed here since they do not affect the library behavior.
 - The API is compatible with languages which support C calls and is mostly self-documented in the header files (see the folder `include/altdss/capi`). See also [the usage document](https://github.com/dss-extensions/dss_capi/blob/master/docs/usage.md) to get understand the memory model and advanced usage — including the Global Result interface, which can drastically reduce memory (re)allocations in some use-cases.
 - Most of the COM documentation can be applied to the usage of DSS C-API.
 - At the moment, there is no executable program. If you have a use-case that would benefit from an executable, please open a feature request ticket. Some other features are been slowly added to DSS-Python to complement this library.
+- Besides the main library for the AltDSS engine, our OpenDSS implementation, the main repository hosts Oddie (a compatibility layer to load binaries that use EPRI's OpenDSSDirect.DLL API), a C++ header-only wrapper, an example of user-model in C++, and a COM bridge DLL that exposes DSS engines to COM (Windows only!).
 
 ## Differences
 
@@ -51,18 +52,18 @@ This document assumes some knowledge of the COM API and the basic model of AltDS
     - Access by `idx` for many more DSS elements (21 new function pairs).
     - Experimental access to the following classes: `WireData`, `TSData`, `Reactors`, `LineSpacings`, `LineGeometries`, `CNData`.
     - `Error_Get_NumberPtr` returns a pointer to the global error number variable. This can be used to get for errors with lower overhead.
-    - `Transformers_Get_LossesByType` and `Transformers_Get_AllLossesByType` return [total losses, load losses, no-load losses] for one or all transformers, respectively.
+    - `Transformers_Get_LossesByType` and `Transformers_Get_AllLossesByType` return [total losses, load losses, no-load losses] for one or all transformers, respectively. In 2025, a similar API was introduced in EPRI's OpenDSS for CktElement.
     - `Lines_Get_IsSwitch`/`Lines_Set_IsSwitch`
     - `Loads_Get_Phases`/`Loads_Set_Phases`
     - `XYCurves_Get_AllNames` (was missing)
     - `CktElement_Get_IsIsolated`
 
 - **Notable omissions below. If you feel we should port them, please raise you concerns on our GitHub issue tracker.**
-    - `Generic5` and `FMonitor` have not been ported yet due to lack of usage examples for validation. Please open an issue ticket on GitHub if you'd like us to port those.
-    - `WindGen` is also not ported yet, waiting for it to mature.
+    - `pyControl` has not been ported yet (but the related commands have, i.e. users can already force a PC elements to use specific InjCurrents, ITerminals and YPrims, including through our Alt/Obj API).
+    - `Generic5` and `FMonitor` have not been ported yet due to lack of usage examples for validation. Please open an issue ticket on GitHub if you'd like us to port those. The code was in fact ported, refactored and cleaned-up, but the components remain disabled by default.
     - The Diakoptics features are currently disabled. The implementation will be slightly different here since we use a completely different multi-circuit organization.
 
-- Monitor headers: In the official OpenDSS, since May 2021, the monitor binary stream doesn't include the header anymore. When porting the change to DSS-Extensions, we took the opportunity to rewrite the related code. As such, the implementation in DSS-Extensions deviate from the official one. Extra spaces are not included and should be more consistent. As a recommendation, if your code needs to be compatible with both implementations, trimming the fields should be enough.
+- Monitor headers: In the official OpenDSS, since May 2021, the monitor binary stream doesn't include the header anymore. When porting the change to DSS-Extensions, we took the opportunity to rewrite the related code. As such, the implementation in DSS-Extensions deviate from the official one. Extra spaces are not included and should be more consistent. As a recommendation, if your code needs to be compatible with both implementations, trimming the fields should be enough. A compatibility flag exists to try to restore the original behavior.
 
 👉 Besides the omissions and caveats listed here, our general policy on commits/features from official OpenDSS is to port them in a matter of hours/days, if possible. If we find that a SVN commit/feature in the official OpenDSS introduces issues/bugs, we may postpone porting and/or report the issues in the official OpenDSS forum. Our releases are not coordinated with the official version.
 

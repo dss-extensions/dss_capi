@@ -224,10 +224,9 @@ type
         temp_counter: Integer;
         Active_Cols: array of Integer;
         Active_Cols_Idx: array of Integer;
-{$IFDEF DSS_CAPI_ADIAKOPTICS}
-        // A-Diakoptics variables
 
-        ADiakoptics: Boolean;
+        // A-Diakoptics variables
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
         ADiak_Init: Boolean;
         ADiak_PCInj: Boolean;
 
@@ -318,7 +317,7 @@ type
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False);
         procedure WriteConvergenceReport(F: TStream);
         procedure Update_dblHour();
-        procedure IncrementTime();
+        procedure IncrementTime(userh: Double=0);
 
         procedure UpdateLoopTime();
 
@@ -530,7 +529,6 @@ begin
         DSS.ThreadStatusEvent := TEvent.Create(NIL, TRUE, FALSE, '');
 {$ENDIF}
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
-    ADiakoptics := False;
     ADiak_Init := False;
     ADiak_PCInj := False;
 
@@ -2049,6 +2047,8 @@ var
 begin
     ControlDevice := NIL;
     try
+        DSS.SignalEvent(TAltDSSEvent.SampleControlDevices, 0);
+
         // Sample all controls and set action times in control Queue
         for ControlDevice in ckt.DSSControls do
         begin
@@ -2056,6 +2056,7 @@ begin
                 ControlDevice.Sample();
         end;
 
+        DSS.SignalEvent(TAltDSSEvent.SampleControlDevices, 1);
     except
         On E: Exception do
         begin
@@ -2088,6 +2089,7 @@ procedure TSolutionObj.SetMode(const Value: TSolveMode);
 begin
     DynaVars.intHour := 0;
     DynaVars.t := 0.0;
+    DSS.SyncSeasonalRatingIdx();
     Update_dblHour();
     ckt.TrapezoidalIntegration := FALSE;
 
@@ -2178,7 +2180,9 @@ begin
         end;
         TSolveMode.LOADDURATION2:
         begin
+            // TODO/AltDSS: Why are dblHour is not updated here? (t is updated when we enter the function)
             DynaVars.intHour := 1;
+            DSS.SyncSeasonalRatingIdx();
             ckt.TrapezoidalIntegration := TRUE;
             SampleTheMeters := TRUE;
         end;
@@ -2330,11 +2334,16 @@ begin
         Harmonic := FFrequency / ckt.Fundamental;  // Make Sure Harmonic stays in synch
 end;
 
-procedure TSolutionObj.IncrementTime();
+procedure TSolutionObj.IncrementTime(userh: Double);
 begin
     with Dynavars do
     begin
-        t := t + h;
+        if IsNaN(userh) or (userh = 0) then
+        begin
+            userh := h;
+        end;
+
+        t := t + userh;
         while t >= 3600.0 do
         begin
             Inc(intHour);
@@ -2355,6 +2364,7 @@ begin
         DSS.EnergyMeterClass.CloseAllDIFiles;
     FYear := Value;
     DynaVars.intHour := 0;  // Change year, start over
+    DSS.SyncSeasonalRatingIdx();
     Dynavars.t := 0.0;
     Update_dblHour();
     DSS.EnergyMeterClass.ResetAll;  // force any previous year data to complete

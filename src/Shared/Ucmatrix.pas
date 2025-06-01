@@ -50,6 +50,7 @@ type
         function Kron(EliminationRow: Integer): TcMatrix;  // Perform Kron reduction on last row/col and return new matrix
 
         property GetSetElement[i, j: Integer]: Complex Read GetElement Write SetElement; Default; 
+        function ToString(): String;
         function ToJSON(joptions: Integer): TJSONData;
     end;
 
@@ -88,7 +89,7 @@ end;
 destructor TcMatrix.Destroy;
 begin
     if OwnsData then
-        Freemem(Values, Sizeof(Complex) * order * order);
+        Freemem(Values);
     inherited Destroy;
 end;
 
@@ -260,7 +261,7 @@ begin
         for  k := 1 to L do
             A[Index(j, k)] := -A[Index(j, k)];
 
-    FreeMem(LT, SizeOF(LT[1]) * L);
+    FreeMem(LT);
 end;
 
 procedure TcMatrix.SetElement(i, j: Integer; Value: Complex);
@@ -441,6 +442,32 @@ begin
         Reallocmem(cTemp1, 0);    // Discard temp arrays
         Reallocmem(cTemp2, 0);
     end;
+end;
+
+function TcMatrix.ToString(): String;
+var
+    i, j, p: Integer;
+begin
+    if (self = NIL) or (order = 0) then
+    begin
+        Result := '[]';
+        Exit;
+    end;
+
+    Result := '[';
+    for i := 1 to order do
+    begin
+        for j := 1 to order do
+        begin
+            p := ((j - 1) * order + i);
+            Result += cstr(Values[p]);
+            if j <> order then
+                Result += ', ';
+        end;
+        if i <> order then
+            Result += '| ';
+    end;
+    Result += ']';
 end;
 
 function TcMatrix.ToJSON(joptions: Integer): TJSONData;

@@ -164,6 +164,9 @@ type
         HasAutoOCPDevice, // Relay or Recloser only
         NeedsRecalc, // Used for Edit command loops
         NeedsYPrim, // Used for Edit command loops + setter flags
+        ForceYPrim, // Indicates DSS to use the Y prim proposed by the user
+        ForceInjCurrents, // Indicates DSS to use the Current Injection values proposed by the user
+
         // IsPartofFeeder,  -- UNUSED
         // Drawn,  // Flag used in tree searches etc  -- UNUSED
         // HasSwtControl // Has a remotely-controlled Switch -- UNUSED
@@ -232,6 +235,7 @@ type
         NoDefault,
         DynamicDefault,
         TrapZero,
+        ReplaceZero,
 
         Ordering_First,
         Ordering_Last,
@@ -350,7 +354,8 @@ type
         Legacy_StepControls,
         Clear,
         ReprocessBuses,
-        BuildSystemY
+        BuildSystemY,
+        SampleControlDevices
         //InvalidateSystemY
     );
 {$POP}
@@ -677,6 +682,7 @@ type
         CurrentDSSDir_internal: String;
         FSolutionAbort: LongInt; // changed to LongInt to enable InterLockedIncrement and others
 
+
     public
         Parent: TDSSContext;
     
@@ -698,6 +704,8 @@ type
         ActorPctProgress: Integer;
         ActorStatus: TActorStatus;
         ThreadStatusEvent: TEvent;
+
+        ADiakoptics: Boolean;
 {$ENDIF}
         _Name: String;
     
@@ -769,8 +777,9 @@ type
         IncMat_Ordered     : Boolean;
 
         //***********************Seasonal QSTS variables********************************
-        SeasonalRating         : Boolean;    // Tells the energy meter if the seasonal rating feature is active
-        SeasonSignal           : String;     // Stores the name of the signal for selecting the rating dynamically
+        SeasonalRating: Boolean; // Tells the energy meter and PD elements if the seasonal rating feature is active
+        FSeasonSignalObj: TObject; // Stores the signal for selecting the rating dynamically
+        SeasonalRatingIdx: Integer; // AltDSS: Prepared seasonal index so we don't need to calculate it every time
 
         LastCmdLine: String;   // always has last command processed
         RedirFile: String;
@@ -1289,8 +1298,9 @@ begin
     AuxParser.SetVars(ParserVars);
     PropParser.SetVars(ParserVars);
     
-    SeasonalRating         :=  False;
-    SeasonSignal           :=  '';
+    SeasonalRating := False;
+    SeasonSignalObj := NIL;
+    SeasonalRatingIdx := -1;
     
     CmdResult             := 0;
     DIFilesAreOpen        := FALSE;
@@ -1305,6 +1315,7 @@ begin
     LastErrorMessage      := '';
     MaxAllocationIterations := 2;
     FSolutionAbort := 0;
+    ADiakoptics := False;
     AutoShowExport        := FALSE;
     AutoDisplayShowReport := TRUE;
     SolutionWasAttempted  := FALSE;

@@ -520,16 +520,23 @@ extern "C" {
 
         DSSCompatFlags_PermissiveProperties = 0x00000200, /*!<
             Starting AltDSS/DSS C-API v0.15.0, the way some properties are handled has been tweaked to try
-            to provide a better experience for general users.
+            to provide a better experience for general users based on several years of messages and bug reports,
+            collected on the DSS-Extensions projects and in the OpenDSS forum.
 
             - The arrays provided in the text interface, scripts or the Alt APIs are required to match the provided sizes. 
               For example, if a LoadShape has `NPts` set to 12 and the user provides 24 values for `PMult`, an error is generated.
 
-            - Some properties in Transformer and AutoTrans that previously silently replaced zeros with default values now error
+            - Some properties in Transformer and AutoTrans that previously silently replaced zeros with default values now error.
 
             - Some properties are read-only, but previously silent ignored input values. Errors are now generated if the user 
               tries to set them. This includes some properties that are read-only on certain conditions. For example, if a 
               SwtControl is locked, its state cannot be set.
+
+            - If the user tries to set zero to some essential DSS properties that would result in NaN values or other severe errors in
+              the solver. In EPRI's OpenDSS v10.2.0.1, these zero values are now replaced with `1e-8`. Depending on the use case, 
+              this value may or may not be OK. Set this flag the allow replacing zero with `1e-8` like in OpenDSS v10.2.0.1. Affects
+              `Generator.kVA`, `Generator.MVA`, `Generator.kW`, `Load.kVA`, `Load.kW`, `PVSystem.kVA`, `Storage.kVA`, `Storage.kW`, 
+              `WindGen.kVA`, `WindGen.MVA`, and `WindGen.kW`.
 
             Set this compatibility flag to silently ignore the errors listed above and restore the original behavior.
         */
@@ -645,7 +652,8 @@ extern "C" {
         AltDSSEvent_Legacy_StepControls = 2,
         AltDSSEvent_Clear = 3,
         AltDSSEvent_ReprocessBuses = 4,
-        AltDSSEvent_BuildSystemY = 5
+        AltDSSEvent_BuildSystemY = 5,
+        AltDSSEvent_SampleControlDevices = 6
     };
 
     /*!

@@ -225,7 +225,7 @@ end;
 
 procedure TDSSCktElement.SetYprimInvalid(const Value: Boolean);
 begin
-    FYPrimInvalid := value;
+    FYPrimInvalid := value and (not (Flg.ForceYPrim in Flags));
     if Value and FEnabled then
         // If this device is in the circuit, then we have to rebuild Y on a change in Yprim
         ActiveCircuit.Solution.InvalidateSystemY();

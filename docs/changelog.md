@@ -3,9 +3,9 @@
 **not released**
 
 - **Done**:
-    - simplify the types used by the interface. For example, dropping the `uint16_t` type (used for booleans) and using `int32_t` instead — this was an artifact to ensure initial compatibility with the COM code.
-    - extend the API to work with 64-bit integers where appropriate
-    - extend the API to allow 32-bit floats
+    - Simplify the types used by the interface. For example, dropping the `uint16_t` type (used for booleans) and using `int32_t` instead — this was an artifact to ensure initial compatibility with the COM code.
+    - Extend the API to work with 64-bit integers where appropriate
+    - Extend the API to allow 32-bit floats
 
 - **Planned**:
     - (maybe) expose/reimplement remaining PM features (diakoptics)
@@ -13,7 +13,7 @@
     - see also the GitHub milestone: https://github.com/dss-extensions/dss_capi/milestone/6
     - i18n complements
     - drop the `ctx_` prefix for most functions, leave the DSSContext API as the default version. We plan to drop the current single-instance API, but we can add a header with inline C functions, prefixed, for easier migration. 
-
+    - API evolution: The GR and general pointer API might be updated. Since there are more urgent tasks, we might leave this to v3.0.
 
 # Versions 0.15.x
 
@@ -21,39 +21,98 @@
 
 *not released*
 
+**The AltDSS/DSS C-API repository now hosts several subprojects:**
+
+- **`altdss.hpp`:** Previously just `dss.hpp`, it's the header-only C++ wrapper for our C headers. Its main files were already in the `include` folder. Some examples were added.
+- **User models:** Example for a C++ user model in `examples/UserModels`, compatible with most versions of AltDSS and OpenDSS.
+- **Oddie:** Oddie wraps the EPRI's OpenDSS binaries (i.e. the official OpenDSS Engine), exposing them with the same API as AltDSS/DSS C-API. That is, Oddie is a thing compatibility layer that allows consuming EPRI's OpenDSSDirect.DLL and in OpenDSS-C on Linux etc. through the projects on DSS-Extensions downstream to AltDSS/DSS C-API. Oddie does add some functionality expected by users on DSS-Extensions, within the limits of the engine implementations. Check the docs for some more info.
+- **AltDSS C-API Loader:** A simple library to make it easier to load multiple AltDSS and OpenDSS engines. This is coupled with a new-style API that wraps all functions in a C struct. Incremental changes are expected to further enhance the performance for some programming languages. Common code that can be reused with all engines will sit on this subproject.
+- **DSS-Extensions COM bridge DLL**: To allow using both our AltDSS engine and EPRI's OpenDSS implementations more easily through legacy use-cases, a new COM DLL was implemented. By default it uses our official AltDSS engine, but a future package will include third-party binaries to simplify installation. When using the AltDSS engine, a large part of the API extensions implemented here are available through COM. Effectivelly, this COM bridge allows loading the AltDSS/DSS C-API DLL, OpenDSSDirect.DLL (from EPRI's OpenDSS distribution), and OpenDSSC.DLL (from EPRI's OpenDSS-C code).
+- **FastDSS**: FastDSS is the new faster bindings implementation for MATLAB (AltDSS/DSS MATLAB MEX) and Python. Although the code for specific languages are hosted in their respective repositories, the common code is hosted on DSS C-API to avoid copies. Although DSS-Python and OpenDSSDirect.py were already fast compared to the alternatives, FastDSS guarantees the best API performance by integrating through MEX (on MATLAB), and NumPy and CPython's C-API.
+
+**Main DSS C-API and AltDSS engine changes:**
+
 - As planned for a while:
     - Drop the GR API for strings (bytes, integers and floats will continue).
-    - Rename the library to `altdss`, e.g. on Linux we now get `libaltdss_capi.so` instead of `libdss_capi.so`; this avoids conflicts with other unrelated "DSS" libraries and with Oddie (see below).
-    - Start reorganizing the header files. We now have a folder `include/altdss/capi` with the main C headers.
+    - Rename the library to `altdss`, e.g. on Linux we now get `libaltdss_capi.so` instead of `libdss_capi.so`; this avoids conflicts with other unrelated "DSS" libraries and with Oddie.
+    - Start reorganizing the header files. We now have a folder `include/altdss/capi` with the main C headers. Some headers now use the `ALTDSS` prefix instead of just `DSS` in some places. Function names remain the same.
 
-- Introduce a new subproject: **AltDSS Oddie**. Oddie wraps the official OpenDSS binaries (i.e. the official OpenDSS Engine), exposing them with the same API as AltDSS/DSS C-API. There is, Oddie is a thing compatibility layer that allows consuming EPRI's OpenDSSDirect.DLL (and in the future `libOpenDSSDirect.so` on Linux etc.) through the projects on DSS-Extensions downstream to AltDSS/DSS C-API. Check its [README](https://github.com/dss-extensions/dss_capi/blob/master/src/altdss_oddie/README.md) for some more info.
+- Some messages were adjusted to say AltDSS (engine) instead of DSS-Extensions, since some features are indeed supported when using EPRI's engine with DSS-Extensions.
 - Bus: introduce `Latitude` and `Longitude` as synomyns for `Y` and `X`.
+- Capacitor: When specifying a C matrix, use the same trick to allow matrix inversion when building the element's YPrim.
+- EnergyMeter: Fix a few minor memory leaks on some modes.
+- Harmonics: abort solution if a component fails to initialize in harmonics mode.
+- LoadShape: Minor fix for MM initialization (missing "not") and disposal (potential leak).
 - CapControl: handle phase checks better in `PTPhase` and `CTPhase`.
 - InvControl: 
-    - When multiple InvControl objects and DERs are in the circuit, use the correct base voltage for each DER. 
+    - When multiple InvControl objects and DERs are in the circuit, use the correct base voltage for each DER.
     - Fix voltage change calcs across iterations; see the compatibility flag `InvControlDeltaV`.
-- API/Generators: port SVN r3746, "Fixing issue when updating kvar for generator in modes 4 and 5 through the generators interface" by davismont. Effectively, call `RecalcElementData` in `Generators_Set_kvar`.
+- (AltDSS) Schema: add units and restrictions to many properties, include the new components. More will be posted later on https://github.com/dss-extensions/
 - Deprecated `DSS_Set_EnableArrayDimensions`. It will be removed in a future version, and all array size pointers will be required to be a 4-int32 array (current size, allocated size, and matrix rows/columns).
-- **`COMErrorResults` now defaults to false.** In case of errors, for array results, the behavior of the COM API was kept as the default for a number of functions, typically returning `[0]` or `[-1]` instead of an empty array. Since the recommendation has been to use the Error
+
+- **`COMErrorResults` now defaults to false.** In case of errors, for array results, the behavior of the COM API was kept as the default for a number of functions, typically returning `[0]` or `[-1]` instead of an empty array. Since the recommendation has been to use the Error API for several years, the default has been updated. For the time being, users can still toggle back the old behavior -- if that is required to your use case, please voice your opinion against the removal of this setting.
+
 - Fix some locale issues, i.e., the engine now always uses "." for decimal separators. This will be tweaked in future releases.
 
-- Compatibility flags: 
-    - `InvControl9611` is not required to match current versions of the official OpenDSS (i.e., it was confirmed as a bug). The flag effects are available but they will be removed in a future release.
-    - Add `InvControlDeltaV` flag. A bug was found with how the voltage change across iterations was tracked for some configurations; this flag enables the previous behavior, which matches the current and most previous versions of OpenDSS in the past 9 or so years.
-    - Add `MonitorHeader` flag. This flag instructs the monitor objects to keep some extra spaces and trailing comma in the monitor headers, affecting both the exported CSVs and the `Header` function/property in the Monitors API.
-    - Add `PermissiveProperties` flag. The engine now generates errors if the user tries to set a read-only DSS property or provide a number of items different than the expected for array properties (through DSS scripts or the Text interface). Set this flag to restore the previous behavior behavior.
-    - Add `DontResetYPrimInvalid` flag. Previously, the upstream OpenDSS and our implementation did not reset the YPrim flag for all components. This results in a lot of extra updates when anything in the circuit changed, basically invalidating our incremental (system) Y matrix proposal. AltDSS/DSS C-API used to have a setting to force clearing the flags in order to make incremental Y matrix updates possible, including refactorization through KLU. Since the upstream OpenDSS now clears the YPrim flag as intended, we do not need a flag here anymore (i.e., it does not have any effect anymore). On the other hand, it is important
-    to note that some circuits have a slightly different convergence pattern, which may surprise users at first. For the time being, we added this new `DontResetYPrimInvalid` compatibility flag to restore the original behavior of previous versions. This will probably be removed in a future release, but it can be used to investigate and isolate other potential issues users find when upgrading the software.
-    - Add `LegacySMARTDS` flag. This flags adds some workarounds to try to load legacy [SMART-DS](https://data.openei.org/submissions/2981) files. SMART-DS was developed for an older version of the DSS engine. Since then, some models were updated and that broke compatibility with the scripts from the dataset. On DSS-Extensions, we kept a custom `LegacyModels` flag to toggle the old models, but that was also removed after a few years. If a scenario fails to load, please report and we will try to handle it. Note that saving the loaded circuit should update it to the current version.
+- JSON Export: **new** ***experimental*** flags (user feedback is welcome). There is no JSON Schema for the fields associated to these yet.
+    - `DSSJSONOptions_State`: Include most of the state of the circuit. This flag might be split into multiple flags to allow better selection of the exported data. Currently, if exports the state of the circuit elements and buses. 
+    - `DSSJSONOptions_Reliability`: Can be used to include the reliability results on buses and PD elements.
 
+- **New:** toggle settings as bitflags. This will allows us to avoid adding function pairs for each new setting. Previous boolean settings will eventually be moved to this function, currently the only setting controlled through this is the new setting:
+    - `DSSSettings_PreserveCase`: tries to avoid modifying the case/capitalization of names (elements, buses) provided by the users. Affects API usage and reports. Some context: https://github.com/dss-extensions/OpenDSSDirect.py/issues/136
+
+- **New:** More control of the execution of DSS scripts through `Settings_Get_SkipFileRegExp`/`Settings_Set_SkipFileRegExp` and `Settings_Set_SkipCommands`/`Settings_Get_SkipCommands`. Users can now automatically skip certain files when redirecting .DSS files, and even skip the execution of certain commands.
+
+- **New:** `ctx_ShareGeneral` allows sharing loadshapes and other general DSS objects from one context to others. Examples will be added to illustrate how to use this, coupled with the new settings above, to achieve faster simulation by reusing data already loaded.
+
+- More error checks and validation in general.
+
+- Classic API:
+    - PDElements: Add `idx` (`PDElements_Get_idx`, `PDElements_Set_idx`).
+    - ActiveClass: Add `idx` (`ActiveClass_Get_idx`, `ActiveClass_Set_idx`).
+    - YMatrix: Expose some more low-level functions to emulate internal solution algorithms.
 
 - Alt API:
     - Fix `Bus_Get_Lines`/`Bus_Get_PDElements`. Only one terminal was being checked due to a typo.
     - Fix `Batch_Int32Array` when used to set the `Enabled` property.
+    - LoadShape: expose `MultAtHour`
+    - PCEs: new functions to match the ported options (`InjCurrent`, `ITerminal`, `YPrim`).
+    - Events: **new** `SampleControlDevices` events can be registered.
+    - New **experimental** functions to get/set single elements of array properties. These will be further tested and optimized for future releases as a medium/long term goal.
+    - Property SetterFlags: `AllowAllConductors` was removed, together with the special handling of `Wires`. The new dedicated property `Conductors`, equivalent, was implemented in the upstream OpenDSS and ported here.
 
+- Ported from EPRI's OpenDSS repository (note: [we now have a "full" mirror](https://github.com/dss-extensions/opendss-svn-mirror)):
+    - Generators/classic API: port SVN r3746, "Fixing issue when updating kvar for generator in modes 4 and 5 through the generators interface" by davismont. Effectively, call `RecalcElementData` in `Generators_Set_kvar`; this doesn't affect the Alt API.
+    - NCIM: new solution mode ported, as well as related commands and settings; KLUSolveX adjusted accordingly.
+    - WindGen: component and classic API. There was some clean up, and handling of our compatibility flags was added.
+    - Adapt our original Reactor interface (classic API) to include handling of our compatibility flags.
+    - Storage/PVSystem: fix to YPrim; update current limit on dynamics mode.
+    - InvControl: some fixes; part was already fixed by default here.
+    - Fixes for SeasonalRating handling in some reports. On AltDSS, we also reimplemented how SeasonalRating is tracked across all the engine to simplify the code.
+    - New set/get options: `IterNumber`, `CtrlIterNumber`, `InjCurrent`, `ITerminal`, `YPrim`, `IntegrationFlag`. 
+    - Line and related: port changes related to the new properties: 
+        - LineSpacing: `Detailed`, `EqDistPhPh`, `EqDistPhN`, `AvgPhaseHeight`, `AvgNeutralHeight`
+        - Line: `EpsRMedium`, `HeightOffset`, `HeightUnit`, `Conductors`
+        - LineGeometry: `Conductors`
+        - CNData: `SemiconLayer`
 
-- Property SetterFlags:
-    - `AllowAllConductors` was removed, together with the special handling of `Wires`. The new dedicated property `Conductors`, equivalent, was implemented in the upstream OpenDSS and ported here.
+- Compatibility flags: 
+    - `InvControl9611` is not required to match current versions of the official OpenDSS (i.e., it was confirmed as a bug). The flag effects are available but they will be removed in a future release.
+    - Add `InvControlDeltaV` flag. A bug was found with how the voltage change across iterations was tracked for some configurations; this flag enables the previous behavior, which matches the current and most previous versions of OpenDSS in the past 9 or so years.
+    - **New:** Add `MonitorHeader` flag. This flag instructs the monitor objects to keep some extra spaces and trailing comma in the monitor headers, affecting both the exported CSVs and the `Header` function/property in the Monitors API.
+    - **New:** Add `PermissiveProperties` flag. The engine now generates errors in a few situations which can typically hide other issues:
+        - If the user tries to set a read-only DSS property. Set this flag to restore the previous behavior behavior (ignore the action).
+        - If the provided number of items is different than the expected for array properties (through DSS scripts or the Text interface). Set this flag to restore the previous behavior behavior (copy only what's required).
+        - If the user tries to set zero to some essential DSS properties that would result in NaN values or other severe errors in the solver. In EPRI's OpenDSS v10.2.0.1, these zero values are now replaced with `1e-8`. Depending on the use case, this value may or may not be OK. Set this flag to follow the new behavior, replacing zero with `1e-8` like in OpenDSS v10.2.0.1.
+        - Also related to zero values, some properties in the Transformer and AutoTrans objects, since 2016 (r1496), automatically replaced zero values with default values. To restore that behavior, set this flag.
+    - **New:** Add `DontResetYPrimInvalid` flag. Previously, the upstream OpenDSS and our implementation did not reset the YPrim flag for all components. This results in a lot of extra updates when anything in the circuit changed, basically invalidating our incremental (system) Y matrix proposal. AltDSS/DSS C-API used to have a setting to force clearing the flags in order to make incremental Y matrix updates possible, including refactorization through KLU. Since the upstream OpenDSS now clears the YPrim flag as intended, we do not need a flag here anymore (i.e., it does not have any effect anymore). On the other hand, it is important
+    to note that some circuits have a slightly different convergence pattern, which may surprise users at first. For the time being, we added this new `DontResetYPrimInvalid` compatibility flag to restore the original behavior of previous versions. This will probably be removed in a future release, but it can be used to investigate and isolate other potential issues users find when upgrading the software.
+    - **New:** Add `LegacySMARTDS` flag. This flags adds some workarounds to try to load legacy [SMART-DS](https://data.openei.org/submissions/2981) files. SMART-DS was developed for an older version of the DSS engine. Since then, some models were updated and that broke compatibility with the scripts from the dataset. On DSS-Extensions, we kept a custom `LegacyModels` flag to toggle the old models, but that was also removed after a few years. If a scenario fails to load, please report and we will try to handle it. Note that saving the loaded circuit should update it to the current version.
+
+**In progress:**
+
+- As an ongoing goal since 2018, a large part of the codebase was refactored since 0.14.5. We expect to merge another big refactoring step after this release.
+- FMonitor and Generic5: A first pass on cleaning the old code, but the components were left disabled by default. Some properties deviate too much from other DSS objects, so we might change them a lot if we ever have time to work on this again.
 
 # Versions 0.14.x
 

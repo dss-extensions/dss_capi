@@ -246,7 +246,7 @@ begin
             end;
         end;
         11:
-            DoSimpleMsg(DSS, _('Command "show panel" is not supported in DSS-Extensions.'), 999);
+            DoSimpleMsg(DSS, _('Command "show panel" is not supported in AltDSS.'), 999);
         12:
         begin
             ShowOptionCode := 0;

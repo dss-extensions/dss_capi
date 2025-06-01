@@ -367,7 +367,7 @@ begin
                 if PMParent.Parallel_enabled then
                 begin
                     {$IFDEF DSS_CAPI_ADIAKOPTICS}
-                    WaitForActors(DSS, (PMParent.ActiveCircuit.Solution.ADiakoptics and (PMParent.ActiveChildIndex = 0))) // To let know the wait routine that this is the caller for ADiakoptics
+                    WaitForActors(DSS, (PMParent.ADiakoptics and (PMParent.ActiveChildIndex = 0))) // To let know the wait routine that this is the caller for ADiakoptics
                     {$ELSE}
                     WaitForActors(DSS);
                     {$ENDIF}
@@ -476,12 +476,14 @@ begin
                     else
                     begin
                         if Param <> '' then
+                        begin
                             DSS.Parser.PrevParam(); // This means that there are more options
+                        end;
                     end;
                 end;
 
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
-                if PMParent.ActiveCircuit.Solution.ADiakoptics then
+                if PMParent.ADiakoptics then
                 begin
                     // Added to avoid crashes when in A-Diakoptics mode but the user
                     // uses the SolveAll command
@@ -611,7 +613,7 @@ begin
                 DSS.CmdResult := DSS.DSSExecutive.DoInterpolateCmd;
             ord(Cmd.TOP):
             begin
-                DoSimpleMsg(DSS, _('TOP is not supported in DSS-Extensions.'), 999);
+                DoSimpleMsg(DSS, _('TOP is not supported in AltDSS.'), 999);
                 DSS.CmdResult := 0;
             end;
             ord(Cmd.Rotate):
@@ -705,12 +707,12 @@ begin
                   // at least available to users outside of EPRI.
             ord(Cmd.Connect):
             begin
-                DoSimpleMsg(DSS, _('Winsock TCP/IP connection is not supported in DSS-Extensions'), 999);
+                DoSimpleMsg(DSS, _('Winsock TCP/IP connection is not supported in AltDSS.'), 999);
                 DSS.CmdResult := 0;
             end;
             ord(Cmd.Disconnect):
             begin
-                DoSimpleMsg(DSS, _('Winsock TCP/IP connection is not supported in DSS-Extensions'), 999);
+                DoSimpleMsg(DSS, _('Winsock TCP/IP connection is not supported in AltDSS.'), 999);
                 DSS.CmdResult := 0;
             end;
             ord(Cmd.Remove):

@@ -81,6 +81,7 @@ type
         Pmult = 19,   // synonym for Mult
         PQCSVFile = 20, // Redirect to a file with p, q pairs
         MemoryMapping = 21, // Enable/disable using Memory mapping for this shape
+        // Mode = 22, -- not useful to implement this yet
         Interpolation = 22
     );
     TLoadShapeProp = (
@@ -106,6 +107,7 @@ type
         PMult = 19,   // synonym for Mult
         PQCSVFile = 20, // Redirect to a file with p, q pairs
         MemoryMapping = 21, // Enable/disable using Memory mapping for this shape
+        // Mode = 22, -- not useful to implement this yet
         Interpolation = 22
     );
 
