@@ -54,7 +54,6 @@ type
     TNodeSet = TSet<Integer, TNodeLess>;
 
 procedure ReCalcAllYPrims(Ckt: TDSSCircuit);
-
 var
     pElem: TDSSCktElement;
 
@@ -63,6 +62,9 @@ begin
         Ckt.DSS.LogThisEvent(_('Recalc All Yprims'));
     for pElem in Ckt.CktElements do
     begin
+        if Flg.ForceYPrim in pElem.Flags then
+            continue;
+
         pElem.CalcYPrim();
     end;
 end;
@@ -80,6 +82,9 @@ begin
     begin
         if pElem.YprimInvalid() then
         begin
+            if Flg.ForceYPrim in pElem.Flags then
+                continue;
+
             pElem.CalcYPrim();
         end;
     end;

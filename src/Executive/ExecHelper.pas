@@ -1417,6 +1417,7 @@ begin
     with DSS.ActiveCircuit.Solution do
     begin
         DynaVars.intHour := Round(TimeArray[1]);
+        DSS.SyncSeasonalRatingIdx();
         DynaVars.t := TimeArray[2];
         Update_dblHour();
     end;

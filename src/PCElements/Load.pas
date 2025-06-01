@@ -443,11 +443,11 @@ begin
 
     PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
-    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kW];
+    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kW, TPropertyFlag.ReplaceZero, TPropertyFlag.NonZero];
     PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault, TPropertyFlag.Units_kvar];
     PropertyFlags[ord(TProp.PF)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.PowerFactorLimits, TPropertyFlag.Ordering_Last];
 
-    PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault, TPropertyFlag.Units_kVA];
+    PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault, TPropertyFlag.Units_kVA, TPropertyFlag.ReplaceZero, TPropertyFlag.NonZero];
     PropertyFlags[ord(TProp.xfkVA)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kVA];
     
     PropertyFlags[ord(TProp.kWh)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kWh];
@@ -1956,7 +1956,7 @@ end;
 procedure TLoadObj.GetTerminalCurrents(Curr: pComplexArray);
 // Always return total terminal currents in the Curr array
 begin
-    if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+    if (IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount) and not (Flg.ForceInjCurrents in Flags) then
     begin     // recalc the contribution
         CalcLoadModelContribution();  // Adds totals in Iterminal as a side effect
     end;
@@ -1972,7 +1972,10 @@ begin
 
     if ActiveCircuit.Solution.LoadsNeedUpdating then
         SetNominalLoad(); // Set the nominal kW, etc. for the type of solution being done
-    CalcInjCurrentArray();
+    if not (Flg.ForceInjCurrents in Flags) then
+    begin
+        CalcInjCurrentArray();
+    end;
     Result := inherited Injcurrents();  // Add into Global Currents Array
 end;
 

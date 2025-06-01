@@ -932,31 +932,15 @@ end;
 //------------------------------------------------------------------------------
 function Lines_Get_SeasonRating(): Double; CDECL;
 var
-    RatingIdx: Integer;
-    RSignal: TXYCurveObj;
     elem: TLineObj;
 begin
     Result := 0;
-    RatingIdx := -1;
-
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if (not DSSPrime.SeasonalRating) or (DSSPrime.SeasonSignal = '') then 
-    begin
-        Result := elem.NormAmps;
-        Exit;
-    end;
-    
-    RSignal := DSSPrime.XYCurveClass.Find(DSSPrime.SeasonSignal);
-    if RSignal <> NIL then
-        RatingIdx := trunc(RSignal.GetYValue(DSSPrime.ActiveCircuit.Solution.DynaVars.intHour));
-    
-    // Just in case
-    if (RatingIdx >= elem.NumAmpRatings) or (RatingIdx < 0) then
-        Result := elem.NormAmps
-    else
-        Result := elem.AmpRatings[RatingIdx];
+    Result := elem.NormAmps;
+    if (DSSPrime.SeasonalRatingIdx >= 0) and (DSSPrime.SeasonalRatingIdx < elem.NumAmpRatings) then
+        Result := elem.AmpRatings[DSSPrime.SeasonalRatingIdx];
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_IsSwitch(Value: TAPIBoolean); CDECL;

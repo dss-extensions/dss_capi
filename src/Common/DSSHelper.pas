@@ -189,12 +189,17 @@ type
 
         procedure SetActiveEnergyMeterObj(val: TEnergyMeterObj); inline;
         procedure SetActiveFaultObj(val: TFaultObj); inline;
+
+        Procedure SetSeasonSignalObj(val: TXYCurveObj); inline;
+        function GetSeasonSignalObj(): TXYCurveObj; inline;
         
     public
 {$IFDEF DSS_CAPI_PM}
         function NumOfActors(): Integer; inline;
         function ActorThread(): TSolver; inline;
         procedure SetActorThread(val: TSolver); inline;
+        procedure SyncSeasonalRatingIdx();
+       
 {$ENDIF}
         property ControlProxyObj: TControlProxyObj read GetControlProxyObj;
         property DSSExecutive: TExecutive read GetDSSExecutive write SetDSSExecutive;
@@ -257,6 +262,7 @@ type
         property XfmrCodeClass: TXfmrCode read GetXfmrCodeClass write SetXfmrCodeClass;
         property GICLineClass: TGICLine read GetGICLineClass write SetGICLineClass;
         property GICTransformerClass: TGICTransformer read GetGICTransformerClass write SetGICTransformerClass;
+        property SeasonSignalObj: TXYCurveObj read GetSeasonSignalObj write SetSeasonSignalObj;
     end;    
     
 implementation
@@ -325,6 +331,7 @@ function TDSSGlobalHelper.GetGICTransformerClass(): TGICTransformer; begin Resul
 
 function TDSSGlobalHelper.GetActiveEnergyMeterObj(): TEnergyMeterObj; begin Result := TEnergyMeterObj(FActiveEnergyMeterObj); end;
 function TDSSGlobalHelper.GetActiveFaultObj(): TFaultObj; begin Result := TFaultObj(FActiveFaultObj); end;
+function TDSSGlobalHelper.GetSeasonSignalObj(): TXYCurveObj; begin Result := TXYCurveObj(FSeasonSignalObj); end;
 
 
 {$IFDEF DSS_CAPI_PM}
@@ -389,6 +396,15 @@ procedure TDSSGlobalHelper.SetGICTransformerClass(val:TGICTransformer); begin FG
 
 procedure TDSSGlobalHelper.SetActiveEnergyMeterObj(val: TEnergyMeterObj); begin FActiveEnergyMeterObj := val; end;
 procedure TDSSGlobalHelper.SetActiveFaultObj(val: TFaultObj); begin FActiveFaultObj := val; end;
+Procedure TDSSGlobalHelper.SetSeasonSignalObj(val: TXYCurveObj); begin FSeasonSignalObj := val; end;
 
+procedure TDSSGlobalHelper.SyncSeasonalRatingIdx();
+begin
+    SeasonalRatingIdx := -1;
+    if SeasonalRating and (SeasonSignalObj <> NIL) and (ActiveCircuit <> NIL) and (ActiveCircuit.Solution <> NIL) then
+    begin
+        SeasonalRatingIdx := trunc(SeasonSignalObj.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));
+    end;
+end;
 
 end.

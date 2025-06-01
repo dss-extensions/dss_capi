@@ -262,6 +262,7 @@ extern "C" {
     ALTDSS_CAPI_DLL const char* Alt_CE_Get_GUID(void* elem);
     ALTDSS_CAPI_DLL void Alt_CE_Set_DisplayName(void* elem, const char* value);
     ALTDSS_CAPI_DLL double Alt_CE_MaxCurrent(void* elem, int32_t terminalIdx);
+
     ALTDSS_CAPI_DLL void Alt_PCE_Get_VariableNames(char*** resultPtr, int32_t *resultDims, void* pce);
     ALTDSS_CAPI_DLL void Alt_PCE_Get_VariableValues(double** resultPtr, int32_t *resultDims, void* pce);
     ALTDSS_CAPI_DLL void Alt_PCE_Set_VariableValue(void* pce, int32_t varIdx, double value);
@@ -271,6 +272,10 @@ extern "C" {
     ALTDSS_CAPI_DLL const char* Alt_PCE_Get_VariableName(void* pce, int32_t varIdx);
     ALTDSS_CAPI_DLL void* Alt_PCE_Get_EnergyMeter(void* elem);
     ALTDSS_CAPI_DLL const char* Alt_PCE_Get_EnergyMeterName(void* elem);
+    ALTDSS_CAPI_DLL void Alt_PCE_ForceYPrim(void* elem, const double* ValuePtr, int32_t valueCount);
+    ALTDSS_CAPI_DLL void Alt_PCE_ForceInjCurrents(void* elem, const double* ValuePtr, int32_t valueCount);
+    ALTDSS_CAPI_DLL void Alt_PCE_ForceITerminal(void* elem, const double* ValuePtr, int32_t valueCount);
+    
     ALTDSS_CAPI_DLL void Alt_CE_Get_RegisterNames(char*** resultPtr, int32_t *resultDims, void* pce);
     ALTDSS_CAPI_DLL void Alt_CE_Get_RegisterValues(double** resultPtr, int32_t *resultDims, void* pce);
     ALTDSS_CAPI_DLL void Alt_CEBatch_Get_Losses(double** resultPtr, int32_t *resultDims, void** batch, int32_t batchSize);
@@ -296,6 +301,8 @@ extern "C" {
     ALTDSS_CAPI_DLL int32_t Alt_PDE_Get_FromTerminal(void* pde);
     ALTDSS_CAPI_DLL double Alt_PDE_Get_TotalMiles(void* pde);
     ALTDSS_CAPI_DLL int32_t Alt_PDE_Get_SectionID(void* pde);
+    ALTDSS_CAPI_DLL double Alt_PDE_Get_SeasonRatings(void* pde);
+    
     ALTDSS_CAPI_DLL void* Alt_PDE_Get_EnergyMeter(void* elem);
     ALTDSS_CAPI_DLL const char* Alt_PDE_Get_EnergyMeterName(void* elem);
     // ALTDSS_CAPI_DLL double Alt_PDE_Get_MaxCurrent(void* elem, altdss_bool_t allNodes);
@@ -308,6 +315,7 @@ extern "C" {
     ALTDSS_CAPI_DLL void Alt_LoadShape_Set_Points(void *objPtr, int32_t Npts, void *HoursPtr, void *PMultPtr, void *QMultPtr, altdss_bool_t ExternalMemory, altdss_bool_t IsFloat32, int32_t Stride);
     ALTDSS_CAPI_DLL void Alt_LoadShape_UseFloat64(void *objPtr);
     ALTDSS_CAPI_DLL void Alt_LoadShape_UseFloat32(void *objPtr);
+    ALTDSS_CAPI_DLL void Alt_LoadShape_MultAtHour(double** resultPtr, int32_t *resultDims, void *objPtr, double hour);
 
     ALTDSS_CAPI_DLL void Alt_Monitor_Get_ByteStream(int8_t** resultPtr, int32_t* resultDims, void* pmon);
     ALTDSS_CAPI_DLL int32_t Alt_Monitor_Get_SampleCount(void* pmon);

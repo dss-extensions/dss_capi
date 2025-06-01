@@ -684,13 +684,13 @@ begin
     if ErrorCode <> 0 then
     begin
         ErrorStr := _('One or more errors found');
-        DSS.ActiveCircuit.Solution.ADiakoptics := FALSE;
+        DSS.ADiakoptics := FALSE;
     end
     else
     begin
         ErrorStr := _('A-Diakoptics initialized');
         DSS.Parallel_enabled := TRUE;
-        DSS.ActiveCircuit.Solution.ADiakoptics := TRUE;
+        DSS.ADiakoptics := TRUE;
         DSS.ActiveCircuit.Solution.ADiak_Init := FALSE; // Needed to force the subzones to remove VSource.Source
     end;
     //TODO?  ProgressCmd := TRUE;

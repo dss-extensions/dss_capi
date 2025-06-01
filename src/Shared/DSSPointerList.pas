@@ -69,7 +69,7 @@ end;
 
 destructor TDSSPointerList.Destroy;
 begin
-    Freemem(listPtr, Sizeof(Pointer) * MaxAllocated);
+    Freemem(listPtr);
     inherited Destroy;
 end;
 

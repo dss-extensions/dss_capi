@@ -527,6 +527,15 @@ function TGeneric5.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
     obj: TObj;
 begin
+    if not ALTDSS_ENABLE_GENERIC5 then
+    begin
+        Result := NIL;
+        raise Exception.Create(
+            'Generic5 is currently disabled. It has not been fully validated.' + 
+            'If you wish to enable it, set the environment variable ALTDSS_ENABLE_GENERIC5=1' + 
+            'before loading the AltDSS engine.'
+        );
+    end;
     obj := TObj.Create(Self, ObjName);
     if Activate then 
         ActiveCircuit.SetActiveCktElement(obj);

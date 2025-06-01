@@ -78,7 +78,7 @@ function TControlProxyObj.PopAction(): Boolean;
 begin
     if DSS.ActiveAction <> NIL then
     begin
-        Freemem(DSS.ActiveAction, Sizeof(TAction));
+        Freemem(DSS.ActiveAction);
         DSS.ActiveAction := NIL;
     end;
     Result := TRUE;

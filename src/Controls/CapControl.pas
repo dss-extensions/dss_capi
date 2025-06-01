@@ -561,7 +561,7 @@ begin
     // 5-21-01 RCD moved this section ahead of monitored element so Nphases gets defined first
 
     if controlledElement = NIL then
-        raise Exception.Create(Format(_('"%s": Capacitor is not set, aborting.'), [FullName()]));
+        raise Exception.Create(Format(_('"%s": "Capacitor" is not set, aborting.'), [FullName()]));
 
     // Both capacitor and monitored element must already exist
     ControlledCapacitor := controlledElement as TCapacitorObj;
@@ -578,10 +578,10 @@ begin
 
     ControlVars.InitialState := ControlVars.PresentState;
 
-    if (ControlType <> TIMECONTROL) and (ControlType <> FOLLOWCONTROL) then
+    if (ControlType <> FOLLOWCONTROL) then
     begin
         if MonitoredElement() = NIL then
-            raise Exception.Create(Format(_('%s: Element is not set, aborting.'), [FullName()]));
+            raise Exception.Create(Format(_('%s: "Element" is not set, aborting.'), [FullName()]));
         effElement := MonitoredElement();
     end
     else

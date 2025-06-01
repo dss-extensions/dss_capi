@@ -333,6 +333,7 @@ begin
     PMParent.ActiveChildIndex := 0;
     PMParent.ActiveChild := PMParent;
     PMParent.DSSExecutive.Clear();
+    PMParent.ADiakoptics := False;
 end;
 {$ENDIF}
 

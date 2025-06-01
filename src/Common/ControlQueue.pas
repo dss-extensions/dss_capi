@@ -171,7 +171,7 @@ var
 begin
     // Free Allocated memory
     for i := 0 to ActionList.Count - 1 do
-        Freemem(ActionList.Items[i], Sizeof(TActionRecord));
+        Freemem(ActionList.Items[i]);
 
     ActionList.Clear();
 end;
@@ -321,7 +321,7 @@ begin
             Format('Handle %d deleted from Queue %s', [actionRec^.ActionHandle, S]));
     end;
 
-    Freemem(ActionList.Items[i], Sizeof(TActionRecord));
+    Freemem(ActionList.Items[i]);
     ActionList.Delete(i);
 end;
 
@@ -449,6 +449,7 @@ begin
     Ltimer.Hour := Temp_Int[0];
     Ltimer.sec := Temp_dbl[2];
     DSS.ActiveCircuit.solution.DynaVars.intHour := Temp_Int[0];               // Sets the simulation time
+    DSS.SyncSeasonalRatingIdx();
     DSS.ActiveCircuit.solution.DynaVars.t := Temp_dbl[2];
     DSS.ActiveCircuit.solution.Update_dblHour();
 end;
@@ -456,6 +457,7 @@ end;
 procedure TControlQueue.RestoreTimeStep();
 begin
     DSS.ActiveCircuit.solution.DynaVars.intHour := Temp_Int[2];
+    DSS.SyncSeasonalRatingIdx();
     DSS.ActiveCircuit.solution.DynaVars.t := Temp_dbl[7];
     DSS.ActiveCircuit.solution.Update_dblHour();
 end;

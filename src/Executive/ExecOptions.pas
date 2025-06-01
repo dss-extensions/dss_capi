@@ -157,7 +157,14 @@ type
 {$ENDIF}
         IgnoreGenQLimits,
         NCIMQGain,
-        StateVar
+        StateVar,
+        PyPath,
+        IterNumber,
+        CtrlIterNumber,
+        InjCurrent,
+        ITerminal,
+        YPrim,
+        IntegrationFlag
     );
 {$SCOPEDENUMS OFF}
 
@@ -189,8 +196,11 @@ uses
     DSSHelper,
     StrUtils,
     Circuit,
+    CktElement,
     PCElement,
+    DSSUcomplex,
     TypInfo
+
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
     , Diakoptics
 {$ENDIF}
@@ -260,9 +270,9 @@ begin
             73:
                 DSS.DefaultBaseFreq := DSS.Parser.MakeDouble();
             102:
-                DoSimpleMsg(DSS, _('This is not supported in DSS-Extensions.'), 302);
+                DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101);
             111:
-                DoSimpleMsg(DSS, _('This is not supported in DSS-Extensions.'), 302);
+                DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101);
 {$IFDEF DSS_CAPI_PM}
             ord(Opt.ActiveActor):
                 if DSS.Parser.MakeString() = '*' then
@@ -389,7 +399,10 @@ var
     TestLoadShapeObj: TLoadShapeObj;
     LineObj: TLineObj;
     TmpStr: String;
+    cktElem: TDSSCktElement;
     pce: TPCElement;
+    norder: Integer;
+    cvalues: pComplexArray;
 {$IFDEF DSS_CAPI_PM}
     PMParent, DSS: TDSSContext;
 begin
@@ -427,7 +440,10 @@ begin
             2, 13:
                 SetObject(DSS, Param);
             3:
+            begin
                 DSS.ActiveCircuit.Solution.DynaVars.intHour := DSS.Parser.MakeInteger();
+                DSS.SyncSeasonalRatingIdx();
+            end;
             4:
                 DSS.ActiveCircuit.Solution.DynaVars.t := DSS.Parser.MakeDouble();
             5:
@@ -534,7 +550,7 @@ begin
                     ControlMode := DSS.ControlModeEnum.StringToOrdinal(Param);
                     DefaultControlMode := ControlMode;  // always revert to last one specified in a script
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
-                    if PMParent.ActiveCircuit.Solution.ADiakoptics and (PMParent.ActiveChildIndex = 0) then
+                    if PMParent.ADiakoptics and (PMParent.ActiveChildIndex = 0) then
                         SendADCommandToActors(PMParent, GETCTRLMODE);
 {$ENDIF}
                 end;
@@ -586,7 +602,7 @@ begin
             begin
                 DSS.ActiveCircuit.Solution.MaxControlIterations := DSS.Parser.MakeInteger();
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
-                if PMParent.ActiveCircuit.Solution.ADiakoptics and (PMParent.ActiveChildIndex = 0) then
+                if PMParent.ADiakoptics and (PMParent.ActiveChildIndex = 0) then
                     SendADCommandToActors(PMParent, GETCTRLMODE);
 {$ENDIF}
             end;
@@ -694,7 +710,7 @@ begin
             101:
                 DSS.ActiveCircuit.RecloserMarkerSize := DSS.Parser.MakeInteger();
             102:
-                DoSimpleMsg(DSS, _('This is not supported in DSS-Extensions.'), 309);
+                DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101);
             103:
                 DSS.ActiveCircuit.MarkRelays := InterpretYesNo(Param);
             104:
@@ -708,15 +724,25 @@ begin
             110:
                 DSS.ActiveCircuit.Solution.MinIterations := DSS.Parser.MakeInteger();
             111:
-                DoSimpleMsg(DSS, _('This is not supported in DSS-Extensions.'), 303);
+                DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101);
             112:
                 DSS.ActiveCircuit.ReduceLateralsKeepLoad := InterpretYesNo(Param);
             113:
                 DSS.ActiveCircuit.ReductionZmag := DSS.Parser.MakeDouble();
             114:
-                DSS.SeasonalRating := InterpretYesNo(Param);
+                begin
+                    DSS.SeasonalRating := InterpretYesNo(Param);
+                    DSS.SyncSeasonalRatingIdx();
+                end;
             115:
-                DSS.SeasonSignal := Param;
+                begin
+                    DSS.SeasonSignalObj := DSS.XYCurveClass.Find(Param);
+                    DSS.SyncSeasonalRatingIdx();
+                    if DSS.SeasonSignalObj = NIL then
+                    begin
+                        DoSimpleMsg(DSS, '"XYCurve.%s" not found. Please create it before setting it as SeasonSignal.', [param], 132);
+                    end;
+                end;
 {$IFDEF DSS_CAPI_PM}                
             ord(Opt.ActiveActor):
                 if DSS.Parser.MakeString() = '*' then
@@ -770,7 +796,7 @@ begin
                 if InterpretYesNo(Param) then
                     ADiakopticsInit(DSS)  // Initalizes the parallel environment if enabled
                 else
-                    DSS.ActiveCircuit.Solution.ADiakoptics := FALSE;
+                    DSS.ADiakoptics := FALSE;
             end;
 {$ENDIF}
             ord(Opt.IgnoreGenQLimits):
@@ -815,6 +841,73 @@ begin
                 DSS.Parser.NextParam;
                 pce.SetVariable(i, DSS.Parser.MakeDouble());
             end;
+            ord(Opt.PyPath):
+            begin
+                DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101);
+                Exit;
+            end;
+            ord(Opt.IterNumber):
+            begin
+                DoSimpleMsg(DSS, _('This value is read-only.'), 25040103);
+                Exit;
+            end;
+            ord(Opt.CtrlIterNumber):
+            begin
+                DoSimpleMsg(DSS, _('This value is read-only.'), 25040103);
+                Exit;
+            end;
+            ord(Opt.InjCurrent):
+            begin
+                cktElem := DSS.ActiveCircuit.ActiveCktElement;
+                if (cktElem = NIL) or ((cktElem.DSSObjType and BASECLASSMASK) <> PC_ELEMENT) then
+                begin
+                    DoSimpleMsg(DSS, 'Active element (%s) is not a PCElement.', [FullNameIfNotNil(cktElem)], 3002);
+                    Exit;
+                end;
+                pce := TPCElement(cktElem);
+                //TODO: error out if different number of elements provided?
+                DSS.Parser.ParseAsComplexVector(pce.NPhases, pce.InjCurrent);
+                Include(pce.Flags, Flg.ForceInjCurrents); // Force use of the currents provided by the user
+            end;
+            ord(Opt.ITerminal):
+            begin
+                cktElem := DSS.ActiveCircuit.ActiveCktElement;
+                if (cktElem = NIL) or ((cktElem.DSSObjType and BASECLASSMASK) <> PC_ELEMENT) then
+                begin
+                    DoSimpleMsg(DSS, 'Active element (%s) is not a PCElement.', [FullNameIfNotNil(cktElem)], 3002);
+                    Exit;
+                end;
+                pce := TPCElement(cktElem);
+                //TODO: error out if different number of elements provided?
+                DSS.Parser.ParseAsComplexVector(pce.NPhases, pce.Iterminal);
+                pce.SetITerminalUpdated(true);
+                Include(pce.Flags, Flg.ForceInjCurrents); // Force use of the currents provided by the user
+            end;
+            ord(Opt.YPrim):
+            begin
+                cktElem := DSS.ActiveCircuit.ActiveCktElement;
+                if (cktElem = NIL) or ((cktElem.DSSObjType and BASECLASSMASK) <> PC_ELEMENT) then
+                begin
+                    DoSimpleMsg(DSS, 'Active element (%s) is not a PCElement.', [FullNameIfNotNil(cktElem)], 3003);
+                    Exit;
+                end;
+                pce := TPCElement(cktElem);
+                cvalues := pce.YPrim.GetValuesArrayPtr(norder);
+                if (DSS.Parser.ParseAsComplexMatrix(norder, cvalues)) <> norder then
+                begin
+                    // Note: we'd need to keep a copy of the old matrix here to emulate the behavior on EPRI's impl.,
+                    // but since this is an error state...
+                    DoSimpleMsg(DSS, _('The size of the matrix provided does not match with the number of conductors of the active PCE.'), 3004);
+                    Exit;
+                end;
+                pce.SetYprimInvalid(false);
+                Include(pce.Flags, Flg.ForceYPrim); // Force use of the YPrim provided by the user
+            end;
+            ord(Opt.IntegrationFlag):
+            begin
+                DoSimpleMsg(DSS, _('This value is read-only.'), 25040103);
+                Exit;
+            end;
         else
            // Ignore excess parameters
            //TODO: warn about excess parameters
@@ -829,7 +922,7 @@ begin
                     for LineObj in Lines do
                     begin
                         if LineObj.Enabled() and LineObj.SymComponentsModel then
-                            LineObj.SetYprimInvalid(true);
+                            LineObj.SetYPrimInvalid(true);
                     end;
                 end;            
         end;
@@ -850,6 +943,7 @@ var
     ParamName: String;
     Param: String;
     TmpStr: String;
+    cktElem: TDSSCktElement;
     pce: TPCElement;
 {$IFDEF DSS_CAPI_PM}
     PMParent, DSS: TDSSContext;
@@ -1124,7 +1218,7 @@ begin
                 114:
                     AppendGlobalResult(DSS, DSS.SeasonalRating);
                 115:
-                    AppendGlobalResult(DSS, DSS.SeasonSignal);
+                    AppendGlobalResult(DSS, NameIfNotNil(DSS.SeasonSignalObj));
 
 {$IFDEF DSS_CAPI_PM}
                 ord(Opt.NumCPUs):
@@ -1153,7 +1247,7 @@ begin
                 ord(Opt.ConcatenateReports):
                     AppendGlobalResult(DSS, PMParent.ConcatenateReports);
                 ord(Opt.NUMANodes):
-                    DoSimpleMsg(DSS, _('This is not supported in DSS-Extensions.'), 303); //TODO: looks like the official version has this hardcoded
+                    DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101); //TODO: looks like the official version has this hardcoded
                 ord(Opt.LineTypes):
                     DSS.GlobalResult := DSS.LineTypeEnum.Joined();
                 ord(Opt.EventLogDefault):
@@ -1169,10 +1263,10 @@ begin
                 ord(Opt.Num_SubCircuits):
                     AppendGlobalResult(DSS, Format('%d', [DSS.ActiveCircuit.Num_SubCkts]));
                 ord(Opt.ADiakoptics):
-                    AppendGlobalResult(DSS, PMParent.ActiveCircuit.Solution.ADiakoptics);
+                    AppendGlobalResult(DSS, PMParent.ADiakoptics);
                 ord(Opt.LinkBranches):
                 begin
-                    if PMParent.ActiveCircuit.Solution.ADiakoptics then
+                    if PMParent.ADiakoptics then
                     begin
                         for i := 1 to High(PMParent.ActiveCircuit.Link_Branches) do
                             AppendGlobalResult(DSS, PMParent.ActiveCircuit.Link_Branches[i]);
@@ -1221,6 +1315,74 @@ begin
                         Exit;
                     end;
                     AppendGlobalResult(DSS, Format('%g', [pce.GetVariable(i)]));
+                end;
+                ord(Opt.PyPath):
+                begin
+                    DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101);
+                    Exit;
+                end;
+                ord(Opt.IterNumber):
+                begin
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.Iteration);
+                end;
+                ord(Opt.CtrlIterNumber):
+                begin
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.ControlIteration);
+                end;
+                ord(Opt.InjCurrent):
+                begin
+                    cktElem := DSS.ActiveCircuit.ActiveCktElement;
+                    if (cktElem = NIL) or ((cktElem.DSSObjType and BASECLASSMASK) <> PC_ELEMENT) then
+                    begin
+                        // Use the same message as EPRI's OpenDSS for compatibility
+                        AppendGlobalResult(DSS, 'Error, the active element is not PCE');
+                        Exit;
+                    end;
+                    pce := TPCElement(cktElem);
+                    if (pce.NodeRef = NIL) or (pce.InjCurrent = NIL) then
+                    begin
+                        AppendGlobalResult(DSS, 'Error, the active element is not initialized yet');
+                        Exit;
+                    end;
+                    AppendGlobalResult(DSS, ComplexArrayToString(pce.InjCurrent, pce.NConds));
+                end;
+                ord(Opt.ITerminal):
+                begin
+                    cktElem := DSS.ActiveCircuit.ActiveCktElement;
+                    if (cktElem = NIL) or ((cktElem.DSSObjType and BASECLASSMASK) <> PC_ELEMENT) then
+                    begin
+                        // Use the same message as EPRI's OpenDSS for compatibility
+                        AppendGlobalResult(DSS, 'Error, the active element is not PCE');
+                        Exit;
+                    end;
+                    pce := TPCElement(cktElem);
+                    if (pce.NodeRef = NIL) or (pce.ITerminal = NIL) then
+                    begin
+                        AppendGlobalResult(DSS, 'Error, the active element is not initialized yet');
+                        Exit;
+                    end;
+                    AppendGlobalResult(DSS, ComplexArrayToString(pce.ITerminal, pce.NConds));
+                end;
+                ord(Opt.YPrim):
+                begin
+                    cktElem := DSS.ActiveCircuit.ActiveCktElement;
+                    if (cktElem = NIL) or ((cktElem.DSSObjType and BASECLASSMASK) <> PC_ELEMENT) then
+                    begin
+                        // Use the same message as EPRI's OpenDSS for compatibility
+                        AppendGlobalResult(DSS, 'Error, the active element is not PCE');
+                        Exit;
+                    end;
+                    pce := TPCElement(cktElem);
+                    if (pce.NodeRef = NIL) or (pce.YPrim = NIL) then
+                    begin
+                        AppendGlobalResult(DSS, 'Error, the active element is not initialized yet');
+                        Exit;
+                    end;
+                    AppendGlobalResult(DSS, pce.YPrim.ToString());
+                end;
+                ord(Opt.IntegrationFlag):
+                begin
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.Solution.DynaVars.IterationFlag);
                 end;
             else
            // Ignore excess parameters
@@ -1287,10 +1449,14 @@ begin
                     DSS.GlobalResult := DSS.LineTypeEnum.Joined();
                 ord(Opt.EventLogDefault):
                     AppendGlobalResult(DSS, DSS.EventLogDefault);
+                ord(Opt.PyPath):
+                begin
+                    DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101);
+                    Exit;
+                end;
                 else
                 begin
                     DoSimpleMsg(DSS, _('You must create a new circuit object first: "new circuit.mycktname" to execute this Set command.'), 301);
-                    Result := FALSE;  // Indicate that we could not process all set command
                     Exit;
                 end;
             end;
@@ -1298,7 +1464,6 @@ begin
             Param := DSS.Parser.MakeString();
 {$ELSE} 
             DoSimpleMsg(DSS, _('You must create a new circuit object first: "new circuit.mycktname" to execute this Set command.'), 301);
-            Result := FALSE;  // Indicate that we could not process all set command
             Exit;
 {$ENDIF} // DSS_CAPI_PM
         end; {WHILE}

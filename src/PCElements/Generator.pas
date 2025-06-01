@@ -611,7 +611,7 @@ begin
     PropertyOffset[ord(TProp.pctReserve)] := ptruint(@obj.pctReserve);
 
     PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.GenVars.kVArating);
-    PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.DynamicDefault];
+    PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_kVA, TPropertyFlag.ReplaceZero, TPropertyFlag.NonZero];
 
     PropertyOffset[ord(TProp.Xd)] := ptruint(@obj.GenVars.puXd);
     PropertyOffset[ord(TProp.Xdp)] := ptruint(@obj.GenVars.puXdp);
@@ -626,13 +626,13 @@ begin
     PropertyOffset[ord(TProp.kvar)] := ptruint(@obj.kvarBase);
     PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kvar];
 
-    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kW];
+    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kW, TPropertyFlag.ReplaceZero, TPropertyFlag.NonZero];
     PropertyFlags[ord(TProp.PF)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.PowerFactorLimits];
 
     // adv doubles
     PropertyOffset[ord(TProp.MVA)] := ptruint(@obj.GenVars.kVArating);
     PropertyScale[ord(TProp.MVA)] := 1000.0;
-    PropertyFlags[ord(TProp.MVA)] := [TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.MVA)] := [TPropertyFlag.Redundant, TPropertyFlag.ReplaceZero, TPropertyFlag.NonZero];
     PropertyRedundantWith[ord(TProp.MVA)] := ord(TProp.kVA);
 
     // boolean action
@@ -2069,7 +2069,7 @@ end;
 procedure TGeneratorObj.GetTerminalCurrents(Curr: pComplexArray);
 // Compute total Currents
 begin
-    if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+    if (IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount) and (not (Flg.ForceInjCurrents in Flags)) then
     begin     // recalc the contribution
         if not GenSwitchOpen then
             CalcGenModelContribution();  // Adds totals in Iterminal as a side effect
@@ -2085,7 +2085,11 @@ begin
     if ActiveCircuit.Solution.LoadsNeedUpdating then
         SetNominalGeneration(); // Set the nominal kW, etc for the type of solution being done
 
-    CalcInjCurrentArray();          // Difference between currents in YPrim and total terminal current
+    if not (Flg.ForceInjCurrents in flags) then
+    begin
+        CalcInjCurrentArray(); // Difference between currents in YPrim and total terminal current
+    end;
+
     if (DebugTrace) then
         WriteTraceRecord('Injection');
 

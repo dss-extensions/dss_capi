@@ -553,41 +553,14 @@ end;
 
 procedure CalcAndWriteMaxCurrents(DSS: TDSSContext; F: TFileStream; pElem: TPDElement; Cbuffer: pComplexArray);
 var
-    RatingIdx,
     i: Integer;
-    EmergAmps,
-    NormAmps,
+    iEmerg,
+    iNormal,
     Currmag,
     MaxCurrent: Double;
     LocalPower: Complex;
-    RSignal: TXYCurveObj;
-
 begin
-    // Initializes NomrAmps and EmergAmps with the default values for the PDElement
-    NormAmps := pElem.NormAmps;
-    EmergAmps := pElem.EmergAmps;
-
-    if DSS.SeasonalRating then
-    begin
-        if DSS.SeasonSignal <> '' then
-        begin
-            RSignal := DSS.XYCurveClass.Find(DSS.SeasonSignal);
-            if RSignal <> NIL then
-            begin
-                RatingIdx := trunc(RSignal.GetYValue(DSS.ActiveCircuit.Solution.DynaVars.intHour));
-          // Brings the seasonal ratings for the PDElement
-                if (RatingIdx <= pElem.NumAmpRatings) and (pElem.NumAmpRatings > 1) then
-                begin
-                    NormAmps := pElem.AmpRatings[RatingIdx];
-                    EmergAmps := pElem.AmpRatings[RatingIdx];
-                end;
-            end
-            else
-                DSS.SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
-        end
-        else
-            DSS.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
-    end;
+    pElem.GetRatings(iNormal, iEmerg);
 
     FSWrite(F, Format('%s.%s', [pElem.DSSClassName, DSSUpperCase(pElem.Name())]));
     MaxCurrent := 0.0;
@@ -599,10 +572,10 @@ begin
     end;
     //----pElem.SetActiveTerminalIdx(1);
     LocalPower := pElem.Power(1) * 0.001;
-    if (pElem.NormAmps = 0.0) or (pElem.EmergAmps = 0.0) then
+    if (iNormal = 0.0) or (iEmerg = 0.0) then
         FSWrite(F, Format(', %10.6g, %8.2f, %8.2f', [MaxCurrent, 0.0, 0.0]))
     else
-        FSWrite(F, Format(', %10.6g, %8.2f, %8.2f', [MaxCurrent, MaxCurrent / NormAmps * 100.0, MaxCurrent / Emergamps * 100.0]));
+        FSWrite(F, Format(', %10.6g, %8.2f, %8.2f', [MaxCurrent, MaxCurrent / iNormal * 100.0, MaxCurrent / iEmerg * 100.0]));
 
     FSWrite(F, Format(', %10.6g, %10.6g, %d, %d, %d', [Localpower.re, Localpower.im, pElem.BranchNumCustomers, pElem.BranchTotalCustomers, pElem.NPhases]));
     with DSS.ActiveCircuit do
@@ -2555,8 +2528,9 @@ begin
                             Cmax := I1;
                         end;
 
-                        if (PdElem.Normamps > 0.0) or (PdElem.Emergamps > 0.0) then
-                            if (CMax > PDElem.NormAmps) or (Cmax > pdelem.EmergAmps) then
+                        PdElem.GetRatings(iNormal, iEmerg);
+                        if (iNormal > 0.0) or (iEmerg > 0.0) then
+                            if (CMax > iNormal) or (Cmax > iEmerg) then
                             begin
                                 // Get terminal 1 power
                                 Spower := Cabs(PDElem.Power(1)) * 0.001;   // kW
@@ -2565,7 +2539,6 @@ begin
                                 FSWrite(F, Format('%8.2f, ', [I1]));
                                 if j = 1 then
                                 begin // Only for 1st Terminal
-                                    iNormal := PDelem.NormAmps;
                                     if iNormal > 0.0 then
                                     begin
                                         FSWrite(F, Format('%8.2f, %10.2f', [(Cmax - iNormal), Spower * (Cmax - iNormal) / iNormal]));
@@ -2574,7 +2547,7 @@ begin
                                     end
                                     else
                                         FSWrite(F, Separator, '     0.0');
-                                    iEmerg := PDelem.EmergAmps;
+
                                     if iEmerg > 0.0 then
                                     begin
                                         WriteStr(sout, Separator, Cmax / iEmerg * 100.0: 8: 1);
@@ -3407,7 +3380,7 @@ var
     F: TFileStream = nil;
     i: Integer;
 begin
-    if DSS.ActiveCircuit.Solution.ADiakoptics then
+    if DSS.ADiakoptics then
     begin
         with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
         begin
@@ -3428,7 +3401,7 @@ var
     F: TFileStream = nil;
     i: Integer;
 begin
-    if DSS.ActiveCircuit.Solution.ADiakoptics then
+    if DSS.ADiakoptics then
     begin
         with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
         begin
@@ -3449,7 +3422,7 @@ var
     F: TFileStream = nil;
     i: Integer;
 begin
-    if DSS.ActiveCircuit.Solution.ADiakoptics then
+    if DSS.ADiakoptics then
     begin
         with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
         begin
@@ -3470,7 +3443,7 @@ var
     F: TFileStream = nil;
     i: Integer;
 begin
-    if DSS.ActiveCircuit.Solution.ADiakoptics then
+    if DSS.ADiakoptics then
     begin
         with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
         begin

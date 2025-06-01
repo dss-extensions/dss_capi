@@ -2522,7 +2522,7 @@ var
     Iph, I012: Complex3;
     I0, I1, I2,
     Cmag, Cmax: Double;
-
+    iNormal, iEmerg: Double;
 begin
     c_Buffer := NIL;
     SetMaxDeviceNameLength(DSS);
@@ -2581,21 +2581,23 @@ begin
                             Cmax := I1;
                         end;
 
-                        if (pdElem.Normamps > 0.0) or (pdElem.Emergamps > 0.0) then
+                        pdElem.GetRatings(iNormal, iEmerg);
+
+                        if (iNormal > 0.0) or (iEmerg > 0.0) then
                             if (CMax > pdElem.NormAmps) or (Cmax > pdElem.EmergAmps) then
                             begin
                                 FSWrite(F, Pad(EncloseQuotes(pdElem.FullName()), MaxDeviceNameLength + 2));
                                 FSWrite(F, Format('%3d%8.1f', [j, I1]));
-                                if pdElem.Normamps > 0.0 then
-                                    FSWrite(F, Format('%8.2f', [Cmax - pdElem.Normamps]))
+                                if iNormal > 0.0 then
+                                    FSWrite(F, Format('%8.2f', [Cmax - iNormal]))
                                 else
                                     FSWrite(F, '     0.0');
-                                if pdElem.Normamps > 0.0 then
-                                    FSWrite(F, Format('%8.1f', [Cmax / pdElem.Normamps * 100.0]))
+                                if iNormal > 0.0 then
+                                    FSWrite(F, Format('%8.1f', [Cmax / iNormal * 100.0]))
                                 else
                                     FSWrite(F, '     0.0');
-                                if pdElem.Emergamps > 0.0 then
-                                    FSWrite(F, Format('%8.1f', [Cmax / pdElem.Emergamps * 100.0]))
+                                if iEmerg > 0.0 then
+                                    FSWrite(F, Format('%8.1f', [Cmax / iEmerg * 100.0]))
                                 else
                                     FSWrite(F, '     0.0');
                                 FSWrite(F, Format('%8.1f', [I2]));
