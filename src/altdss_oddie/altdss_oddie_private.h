@@ -43,6 +43,7 @@ typedef struct
     int32_t error_number;
     char error_desc[DSS_ERR_NUM_CHR + 1];
     char char_buffer[DSS_STR_BUFFER_NUM_CHR + 1];
+    double dbl_buffer[2];
     const char* currentString;
     int32_t strict;
     int32_t PropIndex;
