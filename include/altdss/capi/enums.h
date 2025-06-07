@@ -561,6 +561,17 @@ extern "C" {
         */
     };
 
+    enum DSSSettings {
+        DSSSettings_PreserveCase = 0x00000001 /*!< 
+            If enabled, the engine will try to preserve the case of bus and element names in most of the
+            API, reports and exports.
+
+            For buses, the first usage of the bus is used as its name.
+
+            The strings are still handled as case insensitive.
+        */
+    };
+
     /*!
     Object flags are bit flags used by various of the internal processes of the DSS engine.
 

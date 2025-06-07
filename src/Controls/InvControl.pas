@@ -2295,6 +2295,7 @@ var
     Storage: TStorageObj = NIL;
     DERElem: TPCElement;
     i, j: Integer;
+    dername: String;
 begin
     Result := FALSE;
     PVSysClass := GetDSSClassPtr(DSS, 'PVSystem');
@@ -2310,10 +2311,11 @@ begin
             with CtrlVars[i] do
             begin
                 SetLength(cBuffer, 7);
+                dername := DERNameList.Strings[i - 1];
 
-                if StripExtension(AnsiLowerCase(DERNameList.Strings[i - 1])) = 'pvsystem' then
+                if StripExtension(AnsiLowerCase(dername)) = 'pvsystem' then
                 begin
-                    PVSys := PVSysClass.Find(StripClassName(DERNameList.Strings[i - 1]));
+                    PVSys := PVSysClass.Find(StripClassName(dername));
 
                     if Assigned(PVSys) then
                     begin
@@ -2322,15 +2324,15 @@ begin
                     end
                     else
                     begin
-                        DoSimpleMsg('Error: PVSystem Element "%s" not found.', [DERNameList.Strings[i - 1]], 14403);
+                        DoSimpleMsg('Error: PVSystem Element "%s" not found.', [dername], 14403);
                         Exit;
                     end;
 
                 end
                 else
-                if StripExtension(AnsiLowerCase(DERNameList.Strings[i - 1])) = 'storage' then
+                if StripExtension(AnsiLowerCase(dername)) = 'storage' then
                 begin
-                    Storage := StorageClass.Find(StripClassName(DERNameList.Strings[i - 1]));
+                    Storage := StorageClass.Find(StripClassName(dername));
 
                     if Assigned(Storage) then
                     begin
@@ -2339,10 +2341,16 @@ begin
                     end
                     else
                     begin
-                        DoSimpleMsg('Error: Storage Element "%s" not found.', [DERNameList.Strings[i - 1]], 14403);
+                        DoSimpleMsg('Error: Storage Element "%s" not found.', [dername], 14403);
                         Exit;
                     end;
                 end
+                else
+                if DSS_CAPI_EXT_ERRORS then
+                begin
+                    DoSimpleMsg('Error: Unexpected element type in "%s"; a PVSystem or Storage element is required.', [dername], 14404);
+                    Exit;
+                end;
             end;
         end;
     end

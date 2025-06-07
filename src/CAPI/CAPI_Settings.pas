@@ -56,6 +56,9 @@ function Settings_Get_SkipFileRegExp(): PAnsiChar; CDECL;
 procedure Settings_Set_SkipCommands(ValuePtr: PInteger; ValueCount: TAPISize); CDECL;
 procedure Settings_Get_SkipCommands(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Settings_Get_SkipCommands_GR(); CDECL;
+function Settings_Get_Flag(flag: Integer): TAPIBoolean; CDECL;
+procedure Settings_Set_Flag(flag: Integer; Value: TAPIBoolean); CDECL;
+
 
 implementation
 
@@ -484,6 +487,46 @@ end;
 procedure Settings_Get_SkipCommands_GR(); CDECL;
 begin
     Settings_Get_SkipCommands(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0])
+end;
+//------------------------------------------------------------------------------
+function Settings_Get_Flag(flag: Integer): TAPIBoolean; CDECL;
+begin
+    case flag of
+        ord(DSSSettings.PreserveCase):
+        begin
+            Result := DSS_CAPI_PRESERVE_CASE;
+            Exit;
+        end
+    end;
+    Result := false;
+    DoSimpleMsg(DSSPrime, 'Unknown settings flag (%d).', [flag], 250521);
+end;
+//------------------------------------------------------------------------------
+function noOpStr(const s: string): string;
+begin
+    Result := s;
+end;
+
+procedure Settings_Set_Flag(flag: Integer; Value: TAPIBoolean); CDECL;
+begin
+    case flag of
+        ord(DSSSettings.PreserveCase):
+        begin
+            DSS_CAPI_PRESERVE_CASE := Value;
+            if Value then
+            begin
+                DSSUpperCase := noOpStr;
+                DSSLowerCase := noOpStr;
+            end
+            else
+            begin
+                DSSUpperCase := AnsiUpperCase;
+                DSSLowerCase := AnsiLowerCase;
+            end;
+            Exit;
+        end
+    end;
+    DoSimpleMsg(DSSPrime, 'Unknown settings flag (%d).', [flag], 250522);
 end;
 //------------------------------------------------------------------------------
 end.

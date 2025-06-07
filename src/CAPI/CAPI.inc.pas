@@ -1581,6 +1581,7 @@ TAltDSSCAPI = packed record
     Settings_Get_ControlTrace: Pointer;
     Settings_Get_EmergVmaxpu: Pointer;
     Settings_Get_EmergVminpu: Pointer;
+    Settings_Get_Flag: Pointer;
     Settings_Get_IterateDisabled: Pointer;
     Settings_Get_LoadsTerminalCheck: Pointer;
     Settings_Get_LossRegs: Pointer;
@@ -1608,6 +1609,7 @@ TAltDSSCAPI = packed record
     Settings_Set_ControlTrace: Pointer;
     Settings_Set_EmergVmaxpu: Pointer;
     Settings_Set_EmergVminpu: Pointer;
+    Settings_Set_Flag: Pointer;
     Settings_Set_IterateDisabled: Pointer;
     Settings_Set_LoadsTerminalCheck: Pointer;
     Settings_Set_LossRegs: Pointer;
@@ -3695,6 +3697,7 @@ begin
     funcs.Settings_Get_ControlTrace := Pointer(@ctx_Settings_Get_ControlTrace);
     funcs.Settings_Get_EmergVmaxpu := Pointer(@ctx_Settings_Get_EmergVmaxpu);
     funcs.Settings_Get_EmergVminpu := Pointer(@ctx_Settings_Get_EmergVminpu);
+    funcs.Settings_Get_Flag := Pointer(@ctx_Settings_Get_Flag);
     funcs.Settings_Get_IterateDisabled := Pointer(@ctx_Settings_Get_IterateDisabled);
     funcs.Settings_Get_LoadsTerminalCheck := Pointer(@ctx_Settings_Get_LoadsTerminalCheck);
     funcs.Settings_Get_LossRegs := Pointer(@ctx_Settings_Get_LossRegs);
@@ -3722,6 +3725,7 @@ begin
     funcs.Settings_Set_ControlTrace := Pointer(@ctx_Settings_Set_ControlTrace);
     funcs.Settings_Set_EmergVmaxpu := Pointer(@ctx_Settings_Set_EmergVmaxpu);
     funcs.Settings_Set_EmergVminpu := Pointer(@ctx_Settings_Set_EmergVminpu);
+    funcs.Settings_Set_Flag := Pointer(@ctx_Settings_Set_Flag);
     funcs.Settings_Set_IterateDisabled := Pointer(@ctx_Settings_Set_IterateDisabled);
     funcs.Settings_Set_LoadsTerminalCheck := Pointer(@ctx_Settings_Set_LoadsTerminalCheck);
     funcs.Settings_Set_LossRegs := Pointer(@ctx_Settings_Set_LossRegs);

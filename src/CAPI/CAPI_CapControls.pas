@@ -224,7 +224,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if elem.MonitoredElement() <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.MonitoredElement().FullName()));
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSLowerCase(elem.MonitoredElement().FullName()));
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_MonitoredTerm(): Integer; CDECL;

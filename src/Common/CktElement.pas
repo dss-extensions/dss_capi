@@ -519,7 +519,7 @@ procedure TDSSCktElement.SetBus(i: Integer; const s: String); // Set bus name by
 begin
     if i <= FNTerms then
     begin
-        FBusNames[i - 1] := AnsiLowerCase(S);
+        FBusNames[i - 1] := DSSLowerCase(S);
         ActiveCircuit.SetBusNameRedefined();  // Set Global Flag to signal circuit to rebuild busdefs
     end
     else

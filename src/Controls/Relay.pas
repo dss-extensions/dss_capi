@@ -531,7 +531,7 @@ begin
         //     if NumReclose = 0 then
         //         NumReclose := 1;
         ord(TProp.Variable):
-            MonitorVariable := AnsiLowerCase(MonitorVariable);
+            MonitorVariable := DSSLowerCase(MonitorVariable);
         ord(TProp.typ):
         begin // Set Default Reclose Intervals
             // Set Definite Time Defaults

@@ -973,7 +973,7 @@ begin
     begin
         if AnsiStartsStr(opt, AnsiLowerCase(cmd[i])) then
         begin
-            DSS.WriteLnCB(AnsiUpperCase(cmd[i]), DSSMessageType.Help);
+            DSS.WriteLnCB(DSSUpperCase(cmd[i]), DSSMessageType.Help);
             DSS.WriteLnCB('======================', DSSMessageType.Help);
             DSS.WriteLnCB(DSSHelp(prefix + '.' + AnsiLowerCase(cmd[i])), DSSMessageType.Help);
             DSS.WriteLnCB(msg, DSSMessageType.Help);
@@ -992,7 +992,7 @@ begin
         begin
             if AnsiStartsStr(opt, AnsiLowerCase(pDSSClass.name)) then
             begin
-                DSS.WriteLnCB(AnsiUpperCase(pDSSClass.name), DSSMessageType.Help);
+                DSS.WriteLnCB(DSSUpperCase(pDSSClass.name), DSSMessageType.Help);
                 DSS.WriteLnCB('======================', DSSMessageType.Help);
                 for i := 1 to pDSSClass.NumProperties do
                     DSS.WriteLnCB('  ' + pDSSClass.PropertyName[i] + ': ' + pDSSClass.GetPropertyHelp(i), DSSMessageType.Help);
@@ -1966,7 +1966,7 @@ var
 begin
    // Parse off next two items on line
     ParamName := DSS.Parser.NextParam;
-    BusName := AnsiLowerCase(DSS.Parser.MakeString());
+    BusName := DSSLowerCase(DSS.Parser.MakeString());
 
     ParamName := DSS.Parser.NextParam;
     kVValue := DSS.Parser.MakeDouble();

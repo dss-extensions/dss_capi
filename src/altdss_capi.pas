@@ -1278,6 +1278,8 @@ exports
     Settings_Set_SkipCommands, // API extension
     Settings_Get_SkipCommands, // API extension
     Settings_Get_SkipCommands_GR, // API extension
+    Settings_Get_Flag, // API extension
+    Settings_Set_Flag, // API extension
 
     Solution_Get_Frequency,
     Solution_Get_Hour,

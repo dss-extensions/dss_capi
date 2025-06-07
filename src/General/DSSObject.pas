@@ -82,7 +82,7 @@ constructor TDSSObject.Create(ParClass: TDSSClass; objName: String);
 begin
     inherited Create(ParClass.Name);
     DSS := ParClass.DSS;
-    LocalName := AnsiLowerCase(objName); // not need to call SetName(), no previous name here
+    LocalName := DSSLowerCase(objName); // not need to call SetName(), no previous name here
 
     DSSObjType := 0;
     ParentClass := ParClass;

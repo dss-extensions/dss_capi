@@ -1228,7 +1228,7 @@ begin
 
     excludeDefault := (DSSSaveFlag.ExcludeDefault in saveFlags);
     includeDisabled := (DSSSaveFlag.IncludeDisabled in saveFlags);
-    isLoadShape := AnsiLowerCase(DSS_Class.Name) = 'loadshape';
+    isLoadShape := (DSS_Class = DSS.LoadShapeClass);
 
     Result := TRUE;
 
@@ -1914,7 +1914,7 @@ begin
         Exit;
     with DSS.ActiveCircuit do
     begin
-        TempBusList := TBusHashListType.Create(BusList.Count);
+        TempBusList := TBusHashListType.Create(BusList.Count, DSS_CAPI_PRESERVE_CASE);
 
         // Rename Buses
         for i := 1 to BusList.Count do

@@ -248,7 +248,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if elem.MeteredElement <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.MeteredElement.FullName()));
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSLowerCase(elem.MeteredElement.FullName()));
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_MeteredTerminal(): Integer; CDECL;

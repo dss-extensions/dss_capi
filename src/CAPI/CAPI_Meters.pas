@@ -397,7 +397,7 @@ begin
         Exit;
 
     if pMeterObj.MeteredElement <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(pMeterObj.MeteredElement.FullName()));
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSLowerCase(pMeterObj.MeteredElement.FullName()));
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_MeteredTerminal(): Integer; CDECL;

@@ -81,6 +81,10 @@ type
     );
     DSSCommandFlags = set of DSSCommandFlag;
 
+    DSSSettings = (
+        PreserveCase = 1
+    );
+
     TDSSPropertyNameStyle = (
         Modern = 0,
         Lowercase = 1,

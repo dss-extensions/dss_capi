@@ -947,7 +947,7 @@ begin
     for i := 1 to DSSPrime.ActiveCircuit.NumNodes do
     begin
         nodeInfo := DSSPrime.ActiveCircuit.MapNodeToBus[i];
-        Result[k] := DSS_CopyStringAsPChar(Format('%s.%-d', [AnsiUpperCase(DSSPrime.ActiveCircuit.BusList.NameOfIndex(nodeInfo.Busref)), nodeInfo.NodeNum]));
+        Result[k] := DSS_CopyStringAsPChar(Format('%s.%-d', [DSSUpperCase(DSSPrime.ActiveCircuit.BusList.NameOfIndex(nodeInfo.Busref)), nodeInfo.NodeNum]));
         Inc(k);
     end;
 

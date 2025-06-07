@@ -436,7 +436,7 @@ begin
         Exit;
 
     if pMon.MeteredElement <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(pMon.MeteredElement.FullName()));
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSLowerCase(pMon.MeteredElement.FullName()));
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Set_Element(const Value: PAnsiChar); CDECL;

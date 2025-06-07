@@ -273,13 +273,13 @@ begin
                 begin
                     if kk > 0 then
                     begin
-                        FSWriteln(F, Format('%s %s %10.5g /_ %6.1f %9.5g %9.3f', [AnsiUpperCase(Bname), NodeNameLL, VmagLL, cdang(VoltsLL), VpuLL, kvbase * SQRT3]));
+                        FSWriteln(F, Format('%s %s %10.5g /_ %6.1f %9.5g %9.3f', [DSSUpperCase(Bname), NodeNameLL, VmagLL, cdang(VoltsLL), VpuLL, kvbase * SQRT3]));
                         Bname := Pad('   -', MaxBusNameLength);
                     end;
                 end
                 else
                 begin
-                    FSWrite(F, Format('%s %s %10.5g /_ %6.1f %9.5g %9.3f', [AnsiUpperCase(Bname), NodeName, Vmag, cdang(Volts), Vpu, kvbase * SQRT3]));
+                    FSWrite(F, Format('%s %s %10.5g /_ %6.1f %9.5g %9.3f', [DSSUpperCase(Bname), NodeName, Vmag, cdang(Volts), Vpu, kvbase * SQRT3]));
                     if (numNodesThisBus > 1) and (kk > 0) and (jj <= 4) then
                         FSWrite(F, Format('        %s %10.5g /_ %6.1f %9.5g', [NodeNameLL, VmagLL, cdang(VoltsLL), VpuLL]));
                     FSWriteln(F);
@@ -303,7 +303,7 @@ begin
     Nterm := pElem.NTerms();
     k := 0;
     BusName := Pad(StripExtension(pElem.FirstBus()), MaxBusNameLength);
-    FSWriteln(F, 'ELEMENT = "' + pElem.dssclassname + '.' + AnsiUpperCase(pElem.Name()) + '"');
+    FSWriteln(F, 'ELEMENT = "' + pElem.dssclassname + '.' + DSSUpperCase(pElem.Name()) + '"');
     for j := 1 to NTerm do
     begin
         for i := 1 to NCond do
@@ -326,7 +326,7 @@ begin
                 end;
                 if LL then
                     Vpu := Vpu / SQRT3;
-                FSWriteln(F, Format('%s  (%3d) %4d    %13.5g (%8.4g) /_ %6.1f', [AnsiUpperCase(BusName), nref, MapNodeToBus^[nref].nodenum, Vmag, Vpu, cdang(Volts)]));
+                FSWriteln(F, Format('%s  (%3d) %4d    %13.5g (%8.4g) /_ %6.1f', [DSSUpperCase(BusName), nref, MapNodeToBus^[nref].nodenum, Vmag, Vpu, cdang(Volts)]));
             end;
         end;
         if j < Nterm then
@@ -351,7 +351,7 @@ var
 begin
     NCond := pElem.NConds();
 
-    ElemName := Pad(pElem.dssclassname + '.' + AnsiUpperCase(pElem.Name()), MaxDeviceNameLength);
+    ElemName := Pad(pElem.dssclassname + '.' + DSSUpperCase(pElem.Name()), MaxDeviceNameLength);
     for i := 1 to NCond do
     begin
         Node1 := pElem.NodeRef^[i];
@@ -572,7 +572,7 @@ begin
 
     FSWriteln(F,
         Format('%s %3d  %10.5g   %10.5g %8.2f  %10.5g %8.2f  %8.2f %8.2f',
-        [AnsiUpperCase(Name), j, I1, I2, I2I1, I0, I0I1, Inormal, Iemerg]));
+        [DSSUpperCase(Name), j, I1, I2, I2I1, I0, I0I1, Inormal, Iemerg]));
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -612,12 +612,12 @@ begin
                 Inc(k);
                 if ShowResidual then
                     Ctotal += cBuffer^[k];
-                FSWriteln(F, Format('%s  %4d    %13.5g /_ %6.1f =  %9.5g +j %9.5g', [AnsiUpperCase(FromBus), GetNodeNum(DSS, pElem.NodeRef^[k]), Cabs(cBuffer^[k]), cdang(cBuffer^[k]), cBuffer^[k].re, cBuffer^[k].im]));
+                FSWriteln(F, Format('%s  %4d    %13.5g /_ %6.1f =  %9.5g +j %9.5g', [DSSUpperCase(FromBus), GetNodeNum(DSS, pElem.NodeRef^[k]), Cabs(cBuffer^[k]), cdang(cBuffer^[k]), cBuffer^[k].re, cBuffer^[k].im]));
             end;
             if ShowResidual and (pElem.NPhases > 1) then
             begin
                 ResidPolar := CtoPolardeg(-Ctotal);
-                FSWriteln(F, Format('%s Resid    %13.5g /_ %6.1f =   %9.5g +j %9.5g', [AnsiUpperCase(FromBus), ResidPolar.mag, ResidPolar.ang, -cTotal.re, -Ctotal.im]));
+                FSWriteln(F, Format('%s Resid    %13.5g /_ %6.1f =   %9.5g +j %9.5g', [DSSUpperCase(FromBus), ResidPolar.mag, ResidPolar.ang, -cTotal.re, -Ctotal.im]));
             end;
             if j < Nterm then
                 FSWriteln(F, '------------');
@@ -1161,7 +1161,7 @@ begin
                                     S := S * 0.001;
                                 Saccum += S;
                                 FSWrite(F, Format('%s %4d    %8.1f +j %8.1f', 
-                                    [AnsiUpperCase(FromBus), GetNodeNum(DSS, p_Elem.NodeRef^[k]), S.re / 1000.0, S.im / 1000.0]
+                                    [DSSUpperCase(FromBus), GetNodeNum(DSS, p_Elem.NodeRef^[k]), S.re / 1000.0, S.im / 1000.0]
                                 ));
                                 FSWriteln(F, Format('   %8.1f     %8.4f', [Cabs(S) / 1000.0, PowerFactor(S)]));
                             end;
@@ -1209,7 +1209,7 @@ begin
                                 S := S * 0.001;
                             Saccum += S;
                             
-                            WriteStr(sout, AnsiUpperCase(FromBus), '  ', GetNodeNum(DSS, p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 8: 1, ' +j ', S.im / 1000.0: 8: 1);
+                            WriteStr(sout, DSSUpperCase(FromBus), '  ', GetNodeNum(DSS, p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 8: 1, ' +j ', S.im / 1000.0: 8: 1);
                             FSWrite(F, sout);
 
                             WriteStr(sout, '   ', Cabs(S) / 1000.0: 8: 1, '     ', PowerFactor(S): 8: 4);
@@ -1238,7 +1238,7 @@ begin
                                 if Opt = 1 then
                                     S := S * 0.001;
                                 Saccum += S;
-                                WriteStr(sout, AnsiUpperCase(FromBus), '  ', GetNodeNum(DSS, p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 8: 1, ' +j ', S.im / 1000.0: 8: 1);
+                                WriteStr(sout, DSSUpperCase(FromBus), '  ', GetNodeNum(DSS, p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 8: 1, ' +j ', S.im / 1000.0: 8: 1);
                                 FSWrite(F, sout);
                                 WriteStr(sout, '   ', Cabs(S) / 1000.0: 8: 1, '     ', PowerFactor(S): 8: 4);
                                 FSWriteln(F, sout);
@@ -1295,7 +1295,7 @@ begin
                                 if Opt = 1 then
                                     S := S * 0.001;
                                 Saccum += S;
-                                WriteStr(sout, AnsiUpperCase(FromBus), '  ', GetNodeNum(DSS, p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 6: 1, ' +j ', S.im / 1000.0: 6: 1);
+                                WriteStr(sout, DSSUpperCase(FromBus), '  ', GetNodeNum(DSS, p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 6: 1, ' +j ', S.im / 1000.0: 6: 1);
                                 FSWrite(F, sout);
                                 WriteStr(sout, '   ', Cabs(S) / 1000.0: 8: 1, '     ', PowerFactor(S): 8: 4);
                                 FSWriteln(F, sout);
@@ -1476,7 +1476,7 @@ begin
                 S := S * 0.001;
             Saccum += S;
             FSWriteln(F, Format('%s %4d %10.5g +j %10.5g    %10.5g    %8.4f',
-                [AnsiUpperCase(FromBus), GetNodeNum(DSS, CktElem.NodeRef^[k]), S.re / 1000.0, S.im / 1000.0,
+                [DSSUpperCase(FromBus), GetNodeNum(DSS, CktElem.NodeRef^[k]), S.re / 1000.0, S.im / 1000.0,
                 Cabs(S) / 1000.0, PowerFactor(S)]));
         end;
         FSWriteln(F, Format(' TERMINAL TOTAL   %10.5g +j %10.5g    %10.5g    %8.4f',
@@ -1521,7 +1521,7 @@ begin
     BusReference := DSS.ActiveCircuit.BusList.Find(BusName);
     if BusReference = 0 then
     begin
-        DoSimpleMsg(DSS, 'Bus "%s" not found.', [AnsiUpperCase(BusName)], 219);
+        DoSimpleMsg(DSS, 'Bus "%s" not found.', [DSSUpperCase(BusName)], 219);
         Exit;
     end;
     try
@@ -1884,7 +1884,7 @@ begin
                     // Bus Norton Equivalent Current, Isc has been previously computed
                     with Buses^[iBus] do
                     begin
-                        WriteStr(sout, Pad(EncloseQuotes(AnsiUpperCase(BusList.NameOfIndex(iBus))) + ' ', MaxBusNameLength + 2));
+                        WriteStr(sout, Pad(EncloseQuotes(DSSUpperCase(BusList.NameOfIndex(iBus))) + ' ', MaxBusNameLength + 2));
                         FSWrite(F, sout);
                         for i := 1 to numNodesThisBus do
                         begin
@@ -1931,7 +1931,7 @@ begin
                         begin
                             IFault := VBus[iphs] / Zsc.GetElement(iphs, iphs);
 
-                            S := Format('%s %4u %12.0f ', [Pad(EncloseQuotes(AnsiUpperCase(BusList.NameOfIndex(iBus))), MaxBusNameLength + 2), GetNum(iphs), Cabs(Ifault)]);
+                            S := Format('%s %4u %12.0f ', [Pad(EncloseQuotes(DSSUpperCase(BusList.NameOfIndex(iBus))), MaxBusNameLength + 2), GetNum(iphs), Cabs(Ifault)]);
                             FSWrite(F, S, '   ');
                             for i := 1 to numNodesThisBus do
                             begin
@@ -1990,7 +1990,7 @@ begin
                                 YFault.Invert;
                                 YFault.MvMult(VFault, BusCurrent);  // Gets voltage appearing at fault
 
-                                WriteStr(sout, Pad(EncloseQuotes(AnsiUpperCase(BusList.NameOfIndex(iBus))), MaxBusNameLength + 2), GetNum(Iphs): 4, GetNum(iphs2): 4, Cabs((VFault^[iphs] - VFault^[iphs2]) * GFault): 12: 0, '   ');
+                                WriteStr(sout, Pad(EncloseQuotes(DSSUpperCase(BusList.NameOfIndex(iBus))), MaxBusNameLength + 2), GetNum(Iphs): 4, GetNum(iphs2): 4, Cabs((VFault^[iphs] - VFault^[iphs2]) * GFault): 12: 0, '   ');
                                 FSWrite(F, sout);
 
                                 for i := 1 to numNodesThisBus do
@@ -2040,7 +2040,7 @@ begin
     FSWrite(F, Pad(EncloseQuotes(pElem.FullName()), MaxDeviceNameLength + 2), ' ');
     for j := 1 to NTerm do
     begin
-        FSWrite(F, AnsiUpperCase(Busname), ' ');
+        FSWrite(F, DSSUpperCase(Busname), ' ');
         BusName := Pad(StripExtension(pElem.NextBus()), MaxBusNameLength);
     end;
     FSWriteln(F);
@@ -2093,12 +2093,12 @@ begin
                     if (DSS.ActiveDSSClass.DSSClassType and BASECLASSMASK) > 0 then
                     begin
                         if TDSSCktElement(DSS.ActiveDSSObject).Enabled() then
-                            FSWriteln(F, AnsiUpperCase(DSS.ActiveDssObject.Name()))
+                            FSWriteln(F, DSSUpperCase(DSS.ActiveDssObject.Name()))
                         else
-                            FSWriteln(Fdisabled, AnsiUpperCase(DSS.ActiveDssObject.Name()));
+                            FSWriteln(Fdisabled, DSSUpperCase(DSS.ActiveDssObject.Name()));
                     end
                     else
-                        FSWriteln(F, AnsiUpperCase(DSS.ActiveDssObject.Name()));   // non cktelements
+                        FSWriteln(F, DSSUpperCase(DSS.ActiveDssObject.Name()));   // non cktelements
                 end;
             end;
         end
@@ -3069,9 +3069,9 @@ begin
                     with pMtr.BranchList.PresentBranch do
                     begin
                         if IsParallel then
-                            FSWriteln(F, Format('(%s) %s.%s: PARALLEL WITH %s', [pMtr.Name(), pdElem.ParentClass.Name, AnsiUpperCase(pdElem.Name()), TDSSCktElement(LoopLineObj).FullName()]));
+                            FSWriteln(F, Format('(%s) %s.%s: PARALLEL WITH %s', [pMtr.Name(), pdElem.ParentClass.Name, DSSUpperCase(pdElem.Name()), TDSSCktElement(LoopLineObj).FullName()]));
                         if IsLoopedHere then
-                            FSWriteln(F, Format('(%s) %s.%s: LOOPED TO     %s', [pMtr.Name(), pdElem.ParentClass.Name, AnsiUpperCase(pdElem.Name()), TDSSCktElement(LoopLineObj).FullName()]));
+                            FSWriteln(F, Format('(%s) %s.%s: LOOPED TO     %s', [pMtr.Name(), pdElem.ParentClass.Name, DSSUpperCase(pdElem.Name()), TDSSCktElement(LoopLineObj).FullName()]));
                     end;
                     pdElem := pMtr.BranchList.GoForward;
                 end;

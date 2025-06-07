@@ -277,7 +277,7 @@ begin
         begin
             setlength(Node_Names, (length(Node_Names) + 1));
             with MapNodeToBus[i] do
-                Node_Names[High(Node_names)] := Format('%s.%-d', [AnsiLowerCase(BusList.NameOfIndex(Busref)), NodeNum]);
+                Node_Names[High(Node_names)] := Format('%s.%-d', [DSSLowerCase(BusList.NameOfIndex(Busref)), NodeNum]);
         end;
 
         Contours.sparse_matrix_Cmplx(length(Node_Names), (NLinks - 1) * 3);

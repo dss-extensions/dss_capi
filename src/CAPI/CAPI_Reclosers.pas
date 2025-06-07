@@ -197,7 +197,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if elem.controlledElement <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.controlledElement.FullName()));
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSLowerCase(elem.controlledElement.FullName()));
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
@@ -213,7 +213,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if elem.MonitoredElement() <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.MonitoredElement().FullName()));
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSLowerCase(elem.MonitoredElement().FullName()));
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_SwitchedTerm(): Integer; CDECL;
