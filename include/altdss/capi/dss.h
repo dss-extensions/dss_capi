@@ -5263,7 +5263,7 @@ extern "C" {
     also pass an empty list of commands to reset it manually, enabling the execution of all commands, besides
     DOSCmd and others that have dedicated toggles.
 
-    **Do not hardcore** the integers since they change very frequenty.
+    **Do not hardcode** the integers since they change frequently.
 
     `DSS_Executive_Get_Command` and `DSS_Executive_Get_NumCommands` can be used to list the available commands.
     Use the integer provided to `DSS_Executive_Get_Command` matching the command name returned.
@@ -5273,6 +5273,30 @@ extern "C" {
     ALTDSS_CAPI_DLL void Settings_Set_SkipCommands(const int32_t* ValuePtr, int32_t ValueCount);
     ALTDSS_CAPI_DLL void Settings_Get_SkipCommands(int32_t** ResultPtr, int32_t* ResultDims);
     ALTDSS_CAPI_DLL void Settings_Get_SkipCommands_GR(void);
+
+    /*!
+    Get the value of an option flag in the settings
+
+    This function was introduce to simplify adding new options to AltDSS.
+
+    See the `DSSSettings` enumeration for the possible flags and their behavior.
+
+    (API Extension)
+    */
+    ALTDSS_CAPI_DLL uint16_t Settings_Get_Flag(int32_t flag);
+
+    /*!
+    Set the value of an option flag in the settings
+
+    This function was introduce to simplify adding new options to AltDSS.
+
+    See the `DSSSettings` enumeration for the possible flags and their behavior.
+
+    Setting a value can have side-effects. Some side-effects require running a `Clear` command.
+
+    (API Extension)
+    */
+    ALTDSS_CAPI_DLL void Settings_Set_Flag(int32_t flag, uint16_t Value);
 
     /*! 
     Set the Frequency for next solution

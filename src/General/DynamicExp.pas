@@ -320,17 +320,17 @@ begin
     Result := -1; // error
     for idx := 0 to (VarNames.Count - 1) do
     begin
-        if AnsiLowercase(varName) = VarNames[idx] then
+        if AnsiLowercase(varName) <> VarNames[idx] then
+            continue;
+
+        // now, check if the index corresponds to an output
+        for CmdIdx := 0 to High(Cmds) do
         begin
-            // now, check if the index corresponds to an output
-            for CmdIdx := 0 to High(Cmds) do
+            if (idx = Cmds[CmdIdx]) and (CmdIdx < High(Cmds)) and (Cmds[CmdIdx + 1] = -50) then
             begin
-                if (idx = Cmds[CmdIdx]) and (CmdIdx < High(Cmds)) and (Cmds[CmdIdx + 1] = -50) then
-                begin
-                    // Means that the variable found is an output, we can leave
-                    Result := idx;
-                    Exit;
-                end;
+                // Means that the variable found is an output, we can leave
+                Result := idx;
+                Exit;
             end;
         end;
     end;

@@ -157,7 +157,7 @@ end;
 
 
 function constructElemName(DSS: TDSSContext; const Param: String): String;
-// Construct an element name, sustituting @var values if any
+// Construct an element name, substituting @var values if any
 var
     FClassName, FObjName: String;
 begin

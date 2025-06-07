@@ -414,9 +414,9 @@ begin
     IncNodes := 3000;
 
      // Allocate some nominal sizes
-    BusList := TBusHashListType.Create(900);  // Bus name list Nominal size to start; gets reallocated
+    BusList := TBusHashListType.Create(900, DSS_CAPI_PRESERVE_CASE);  // Bus name list Nominal size to start; gets reallocated
     DeviceList := THashList.Create(900);
-    AutoAddBusList := TBusHashListType.Create(100);
+    AutoAddBusList := TBusHashListType.Create(100, DSS_CAPI_PRESERVE_CASE);
 
     NumBuses := 0;  // Eventually allocate a single source
     NumDevices := 0;
@@ -2206,7 +2206,7 @@ begin
 
     // get rid of old bus lists
     BusList.Free;  // Clears hash list of Bus names for adding more
-    BusList := TBusHashListType.Create(NumDevices);  // won't have many more buses than this
+    BusList := TBusHashListType.Create(NumDevices, DSS_CAPI_PRESERVE_CASE);  // won't have many more buses than this
 
     NumBuses := 0;  // Leave allocations same, but start count over
     NumNodes := 0;

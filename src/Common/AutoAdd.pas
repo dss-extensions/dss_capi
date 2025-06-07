@@ -147,7 +147,7 @@ begin
         // Construct Bus List from Energy Meters Zone Lists
         // Include only buses in EnergyMeter lists
         // Consider all meters
-        FBusList := TBusHashListType.Create(DSS.ActiveCircuit.NumBuses);
+        FBusList := TBusHashListType.Create(DSS.ActiveCircuit.NumBuses, DSS_CAPI_PRESERVE_CASE);
         for pMeter in DSS.ActiveCircuit.EnergyMeters do
         begin
             if pMeter.BranchList = NIL then

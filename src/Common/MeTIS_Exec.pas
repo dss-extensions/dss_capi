@@ -36,7 +36,8 @@ implementation
 uses
   BufStream,
   StrUtils,
-  Math;
+  Math,
+  DSSGlobals;
 
 //  TFileSearchReplace 
 
@@ -103,8 +104,8 @@ procedure TFileSearchReplace.Replace(const AFrom, ATo: string;
       end
     else
       begin
-        tmpStr := AnsiUpperCase(Str);
-        tmpSubStr := AnsiUpperCase(SubStr);
+        tmpStr := DSSUpperCase(Str);
+        tmpSubStr := DSSUpperCase(SubStr);
         i := Pos(tmpSubStr, tmpStr);
         Result := i;
         while i > 0 do

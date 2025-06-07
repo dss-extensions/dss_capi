@@ -1419,7 +1419,7 @@ begin
             EndFlag := TRUE;
             while (ActiveIncCell[1] <= ckt.NumBuses) and (EndFlag) do
             begin
-                if LineBus = ckt.BusList.NameOfIndex(ActiveIncCell[1]) then
+                if CompareText(LineBus, ckt.BusList.NameOfIndex(ActiveIncCell[1])) = 0 then
                     EndFlag := FALSE;
                 ActiveIncCell[1] := ActiveIncCell[1] + 1;
             end;
@@ -1458,7 +1458,7 @@ begin
             EndFlag := TRUE;
             while (ActiveIncCell[1] <= ckt.NumBuses) and (EndFlag) do
             begin
-                if LineBus = ckt.BusList.NameOfIndex(ActiveIncCell[1]) then
+                if CompareText(LineBus, ckt.BusList.NameOfIndex(ActiveIncCell[1])) = 0 then
                     EndFlag := FALSE;
                 ActiveIncCell[1] := ActiveIncCell[1] + 1;
             end;
@@ -1497,7 +1497,7 @@ begin
             CapEndFlag := TRUE;
             while (ActiveIncCell[1] <= ckt.NumBuses) and (CapEndFlag) do
             begin
-                if CapBus = ckt.BusList.NameOfIndex(ActiveIncCell[1]) then
+                if CompareText(CapBus, ckt.BusList.NameOfIndex(ActiveIncCell[1])) = 0 then
                     CapEndFlag := FALSE;
                 ActiveIncCell[1] := ActiveIncCell[1] + 1;
             end;
@@ -1537,7 +1537,7 @@ begin
                 EndFlag := TRUE;
                 while (ActiveIncCell[1] <= ckt.NumBuses) and (EndFlag) do
                 begin
-                    if RBus = ckt.BusList.NameOfIndex(ActiveIncCell[1]) then
+                    if CompareText(RBus, ckt.BusList.NameOfIndex(ActiveIncCell[1])) = 0 then                    
                         EndFlag := FALSE;
                     ActiveIncCell[1] := ActiveIncCell[1] + 1;
                 end;

@@ -144,6 +144,9 @@ VAR
     CPU_Freq           : int64;   // Used to store the CPU performance counter frequency (not the actual CPU frequency)
     CPU_Cores          : integer;
 
+    DSSUpperCase: function(const s: string): string;
+    DSSLowerCase: function(const s: string): string;
+    DSS_CAPI_PRESERVE_CASE: Boolean;
 
     DSS_CAPI_ALLOW_EDITOR: Boolean; //TODO: one per context?
     DSS_CAPI_LOADS_TERMINAL_CHECK: Boolean = True; //TODO: one per context?
@@ -820,6 +823,10 @@ initialization
     DSS_CAPI_COM_DEFAULTS := (GetEnvironmentVariable('DSS_CAPI_COM_DEFAULTS') = '1');;
     // For the 0.15.x branch, default is True, disable at initialization when DSS_CAPI_ALLOW_CHANGE_DIR = 0
     DSS_CAPI_ALLOW_CHANGE_DIR := (SysUtils.GetEnvironmentVariable('DSS_CAPI_ALLOW_CHANGE_DIR') <> '0');
+
+    DSSUpperCase := AnsiUpperCase;
+    DSSLowerCase := AnsiLowerCase;
+    DSS_CAPI_PRESERVE_CASE := False;
 
 try
    FormatSettings.ThousandSeparator := ',';

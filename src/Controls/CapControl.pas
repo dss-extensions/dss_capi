@@ -408,7 +408,7 @@ begin
                     ControlVars.CapacitorName := controlledElement.FullName();
             ord(TProp.VBus):
             begin
-                ControlVars.VOverrideBusName := AnsiLowerCase(ControlVars.VOverrideBusName);
+                ControlVars.VOverrideBusName := DSSLowerCase(ControlVars.VOverrideBusName);
                 ControlVars.VoverrideBusSpecified := TRUE;
             end;
             ord(TProp.UserModel):

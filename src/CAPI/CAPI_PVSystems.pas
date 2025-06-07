@@ -468,7 +468,7 @@ begin
         Exit;
 
     if (elem.SensorObj <> NIL) and (elem.SensorObj.MeteredElement <> NIL) then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.SensorObj.Name()));
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSLowerCase(elem.SensorObj.Name()));
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Pointer(): Pointer; CDECL;

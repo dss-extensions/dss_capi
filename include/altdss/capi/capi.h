@@ -89,6 +89,7 @@ typedef void (*altdss_func_v_cvp_size)(const void *, size_t);
 typedef void (*altdss_func_v_cvp_cf64p_i32)(const void *, const double *, int32_t);
 typedef void (*altdss_func_v_cvp_i8pp_i32p)(const void *, int8_t **, int32_t *);
 typedef void (*altdss_func_v_cvp_f64pp_i32p_u16)(const void *, double **, int32_t *, uint16_t);
+typedef void (*altdss_func_v_cvp_i32_u16)(const void *, int32_t, uint16_t);
 typedef void (*altdss_func_v_cvp_u16_u32p_u32p_i32pp_i32pp_f64pp)(const void *, uint16_t, uint32_t *, uint32_t *, int32_t **, int32_t **, double **);
 typedef void (*altdss_func_v_cvp_f64pp)(const void *, double **);
 typedef int32_t (*altdss_func_i32_cvp_f64p)(const void *, double *);
@@ -1810,6 +1811,7 @@ typedef struct AltDSSCAPI {
     altdss_func_u16_cvp Settings_Get_ControlTrace;
     altdss_func_f64_cvp Settings_Get_EmergVmaxpu;
     altdss_func_f64_cvp Settings_Get_EmergVminpu;
+    altdss_func_u16_cvp_i32 Settings_Get_Flag;
     altdss_func_i32_cvp Settings_Get_IterateDisabled;
     altdss_func_u16_cvp Settings_Get_LoadsTerminalCheck;
     altdss_func_v_cvp_i32pp_i32p Settings_Get_LossRegs;
@@ -1837,6 +1839,7 @@ typedef struct AltDSSCAPI {
     altdss_func_v_cvp_u16 Settings_Set_ControlTrace;
     altdss_func_v_cvp_f64 Settings_Set_EmergVmaxpu;
     altdss_func_v_cvp_f64 Settings_Set_EmergVminpu;
+    altdss_func_v_cvp_i32_u16 Settings_Set_Flag;
     altdss_func_v_cvp_i32 Settings_Set_IterateDisabled;
     altdss_func_v_cvp_u16 Settings_Set_LoadsTerminalCheck;
     altdss_func_v_cvp_ci32p_i32 Settings_Set_LossRegs;

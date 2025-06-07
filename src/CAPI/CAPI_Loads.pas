@@ -1005,7 +1005,7 @@ begin
         Exit;
 
     if (pLoad.SensorObj <> NIL) and (pLoad.SensorObj <> NIL) then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(pLoad.SensorObj.Name()));
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSLowerCase(pLoad.SensorObj.Name()));
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Pointer(): Pointer; CDECL;

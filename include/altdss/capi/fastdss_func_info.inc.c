@@ -1451,6 +1451,7 @@ FastDSSFuncInfo info[] = {
 {fastdss_types_u16, fastdss_types_void, Collection_None, -1, -1, FASTDSS_FUNCINFO_FILL(YMatrix_Get_UseAuxCurrents)},
 {fastdss_types_u16, fastdss_types_str, Collection_None, -1, -1, FASTDSS_FUNCINFO_FILL(ZIP_Contains)},
 {fastdss_types_u16, fastdss_types_i32, Collection_None, -1, -1, FASTDSS_FUNCINFO_FILL(DSS_Start)},
+{fastdss_types_u16, fastdss_types_i32, Collection_None, -1, -1, FASTDSS_FUNCINFO_FILL(Settings_Get_Flag)},
 {fastdss_types_u16, fastdss_types_i32_i32, Collection_None, -1, -1, FASTDSS_FUNCINFO_FILL(CktElement_IsOpen)},
 {fastdss_types_void, fastdss_types_u16, Collection_CapControls, -1, -1, FASTDSS_FUNCINFO_FILL(CapControls_Set_UseVoltOverride)},
 {fastdss_types_void, fastdss_types_u16, Collection_Capacitors, -1, -1, FASTDSS_FUNCINFO_FILL(Capacitors_Set_IsDelta)},

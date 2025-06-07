@@ -66,7 +66,9 @@ type
 
     TAltHashList = class (TFPHashList)
     PUBLIC
-        constructor Create(const Nelements: Integer);
+        originalStrings: TStrings;
+
+        constructor Create(const Nelements: Integer; keepOriginal: Boolean = false);
         destructor Destroy; OVERRIDE;
         function Add(const S: String; Value: Integer=-1): Integer; inline;
         function Find(const S: String): Integer; inline;
@@ -363,10 +365,16 @@ begin
     count := 0;
 end;
 
-constructor TAltHashList.Create(const Nelements: Integer);
+constructor TAltHashList.Create(const Nelements: Integer; keepOriginal: Boolean = false);
 begin
     inherited Create();
     Capacity := Nelements;
+    if not keepOriginal then
+    begin
+        originalStrings := NIL;
+        Exit;
+    end;
+    originalStrings := TStringList.Create();
 end;
 destructor TAltHashList.Destroy;
 begin
@@ -378,6 +386,10 @@ begin
         Value := self.Count + 1;
 
     inherited Add(AnsiLowerCase(s), Pointer(Value));
+    if originalStrings <> NIL then
+    begin
+        originalStrings.Add(s);
+    end;
     Result := self.Count;
 end;
 function TAltHashList.Find(const S: String): Integer; inline;
@@ -389,9 +401,16 @@ begin
     // We need to validate since some code relies on invalid indices
     // Should be handled better in the rest of the code in the future
     if (i > 0) and (i <= Count) then
-        Result := inherited NameOfIndex(i - 1)
-    else
-        Result := '';
+    begin
+        if originalStrings <> NIL then
+        begin
+            Result := originalStrings[i - 1];
+            Exit;
+        end;
+        Result := inherited NameOfIndex(i - 1);
+        Exit;
+    end;
+    Result := '';
 end;
 procedure TAltHashList.DumpToFile(F: TStream);
 var

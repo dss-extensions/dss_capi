@@ -139,7 +139,7 @@ begin
         FSWrite(F, Format(',%d,', [j]));
         FSWrite(F, Format('%d,%d,', [NCond, pElem.NPhases]));
 
-        FSWrite(F, Format('%s,', [AnsiUpperCase(BusName)]));
+        FSWrite(F, Format('%s,', [DSSUpperCase(BusName)]));
         for i := 1 to NCond do
         begin
             Inc(k);
@@ -260,7 +260,7 @@ begin
 
                 FSWriteln(F,
                     Format('"%s", %10.6g, %9.5g, %8.2f, %10.6g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g',
-                    [AnsiUpperCase(BusList.NameOfIndex(i)), V1, Vpu, (Buses^[i].kvbase * SQRT3), V2, V2V1, V0, V0V1, Cabs(Vresidual), V_NEMA]
+                    [DSSUpperCase(BusList.NameOfIndex(i)), V1, Vpu, (Buses^[i].kvbase * SQRT3), V2, V2V1, V0, V0V1, Cabs(Vresidual), V_NEMA]
                     ));
 
 
@@ -313,7 +313,7 @@ begin
             for i := 1 to NumBuses do
             begin
                 BusName := BusList.NameOfIndex(i);
-                FSWrite(F, Format('"%s", %.5g', [AnsiUpperCase(BusName), Buses^[i].kvbase * SQRT3]));
+                FSWrite(F, Format('"%s", %.5g', [DSSUpperCase(BusName), Buses^[i].kvbase * SQRT3]));
 
                 jj := 1;
                 with Buses^[i] do
@@ -428,7 +428,7 @@ begin
 
 
     FSWriteln(F, Format('"%s", %3d, %10.6g, %8.4g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g',
-        [(pElem.DSSClassName + '.' + AnsiUpperCase(pElem.Name())), j, I1, iNormal, iEmerg, I2, I2I1, I0, I0I1, Cabs(Iresidual), I_NEMA]));
+        [(pElem.DSSClassName + '.' + DSSUpperCase(pElem.Name())), j, I1, iNormal, iEmerg, I2, I2I1, I0, I0I1, Cabs(Iresidual), I_NEMA]));
 end;
 
 procedure ExportSeqCurrents(DSS: TDSSContext; FileNm: String);
@@ -524,7 +524,7 @@ var
     Iresid: Complex;
 begin
     k := 0;
-    FSWrite(F, Format('%s', [pElem.DSSClassName + '.' + AnsiUpperCase(pElem.Name())]));
+    FSWrite(F, Format('%s', [pElem.DSSClassName + '.' + DSSUpperCase(pElem.Name())]));
     for      j := 1 to pElem.NTerms() do
     begin
         Iresid := CZERO;
@@ -589,7 +589,7 @@ begin
             DSS.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
     end;
 
-    FSWrite(F, Format('%s.%s', [pElem.DSSClassName, AnsiUpperCase(pElem.Name())]));
+    FSWrite(F, Format('%s.%s', [pElem.DSSClassName, DSSUpperCase(pElem.Name())]));
     MaxCurrent := 0.0;
     for    i := 1 to pElem.Nphases do
     begin
@@ -1114,7 +1114,7 @@ begin
 
                 for j := 1 to NTerm do
                 begin
-                    WriteStr(sout, Pad('"' + PDelem.DSSClassName + '.' + AnsiUpperCase(PDElem.Name()) + '"', 24), Separator, j: 3);
+                    WriteStr(sout, Pad('"' + PDelem.DSSClassName + '.' + DSSUpperCase(PDElem.Name()) + '"', 24), Separator, j: 3);
                     FSWrite(F, sout);
            //----PDElem.SetActiveTerminalIdx(j);
                     S := PDElem.Power(j);
@@ -1159,7 +1159,7 @@ begin
 
                 for j := 1 to NTerm do
                 begin
-                    FSWrite(F, Pad('"' + PCElem.DSSClassName + '.' + AnsiUpperCase(PCElem.Name()) + '"', 24), Separator, Format('%3d', [j]));
+                    FSWrite(F, Pad('"' + PCElem.DSSClassName + '.' + DSSUpperCase(PCElem.Name()) + '"', 24), Separator, Format('%3d', [j]));
            //----pcElem.SetActiveTerminalIdx(j);
                     S := pCElem.Power(j);
                     if Opt = 1 then
@@ -1210,7 +1210,7 @@ begin
             if (PDElem.Enabled()) then
             begin
                 PDElem.GetLosses(S_total, S_Load, S_NoLoad);
-                FSWriteln(F, Format('%s.%s, %.7g, %.7g, %.7g, %.7g, %.7g, %.7g', [PDElem.ParentClass.Name, AnsiUpperCase(PDElem.Name()), S_total.re, S_total.im, S_Load.re, S_Load.im, S_NoLoad.re, S_NoLoad.im]));
+                FSWriteln(F, Format('%s.%s, %.7g, %.7g, %.7g, %.7g, %.7g, %.7g', [PDElem.ParentClass.Name, DSSUpperCase(PDElem.Name()), S_total.re, S_total.im, S_Load.re, S_Load.im, S_NoLoad.re, S_NoLoad.im]));
             end;
             PDElem := DSS.ActiveCircuit.PDElements.Next;
         end;
@@ -1262,7 +1262,7 @@ begin
                 begin
                     ComputeITerminal();
                     ComputeVTerminal();
-                    FSWrite(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, AnsiUpperCase(Name), NTerms(), NConds(), Nphases]));
+                    FSWrite(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, DSSUpperCase(Name), NTerms(), NConds(), Nphases]));
                     for i := 1 to Yorder do
                     begin
                         S := Vterminal^[i] * cong(ITerminal^[i]) * 0.001;
@@ -1287,7 +1287,7 @@ begin
                 begin
                     ComputeITerminal();
                     ComputeVTerminal();
-                    FSWrite(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, AnsiUpperCase(Name), NTerms(), NConds(), NPhases]));
+                    FSWrite(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, DSSUpperCase(Name), NTerms(), NConds(), NPhases]));
                     for i := 1 to Yorder do
                     begin
                         S := Vterminal^[i] * cong(ITerminal^[i]) * 0.001;
@@ -1360,7 +1360,7 @@ begin
 
                 for j := 1 to NTerm do
                 begin
-                    FSWrite(F, Pad('"' + PDelem.DSSClassName + '.' + AnsiUpperCase(PDElem.Name()) + '"', 24), Separator, Format('%3d', [j]));
+                    FSWrite(F, Pad('"' + PDelem.DSSClassName + '.' + DSSUpperCase(PDElem.Name()) + '"', 24), Separator, Format('%3d', [j]));
                     for i := 1 to PDElem.NPhases do
                     begin
                         k := (j - 1) * Ncond + i;
@@ -1453,7 +1453,7 @@ begin
 
                 for j := 1 to NTerm do
                 begin
-                    FSWrite(F, Pad('"' + PCElem.DSSClassName + '.' + AnsiUpperCase(PCElem.Name()) + '"', 24), Separator, Format('%3d', [j]));
+                    FSWrite(F, Pad('"' + PCElem.DSSClassName + '.' + DSSUpperCase(PCElem.Name()) + '"', 24), Separator, Format('%3d', [j]));
                     for i := 1 to PCElem.NPhases do
                     begin
                         k := (j - 1) * Ncond + i;
@@ -1555,7 +1555,7 @@ begin
                     // Bus Norton Equivalent Current, Isc has been previously computed
                     with Buses^[iBus] do
                     begin
-                        FSWrite(F, Pad(AnsiUpperCase(BusList.NameOfIndex(iBus)), 12));
+                        FSWrite(F, Pad(DSSUpperCase(BusList.NameOfIndex(iBus)), 12));
                         MaxCurr := 0.0;
                         for i := 1 to numNodesThisBus do
                         begin
@@ -1681,7 +1681,7 @@ begin
         begin
             if pEnergyMeterObj.Enabled() then
             begin
-                FSWrite(F, Format('"Energymeter.%s"', [AnsiUpperCase(pEnergyMeterObj.Name())]));
+                FSWrite(F, Format('"Energymeter.%s"', [DSSUpperCase(pEnergyMeterObj.Name())]));
                 // Sensor currents (Target)
                 ZeroTempXArray;
                 for i := 1 to pEnergyMeterObj.Nphases do
@@ -1721,7 +1721,7 @@ begin
         begin
             if pSensorObj.Enabled() then
             begin
-                FSWrite(F, Format('"Sensor.%s"', [AnsiUpperCase(pSensorObj.Name())]));
+                FSWrite(F, Format('"Sensor.%s"', [DSSUpperCase(pSensorObj.Name())]));
                 // Sensor currents (Target)
                 ZeroTempXArray;
                 for i := 1 to pSensorObj.Nphases do
@@ -1792,7 +1792,7 @@ begin
         if pElem.Enabled() then
         begin
             try
-                FileNm := DSS.OutputDirectory + 'EXP_MTR_' + AnsiUpperCase(pElem.Name()) + '.csv';
+                FileNm := DSS.OutputDirectory + 'EXP_MTR_' + DSSUpperCase(pElem.Name()) + '.csv';
 
                 if not FileExists(FileNm) then
                 begin
@@ -1810,7 +1810,7 @@ begin
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.Year()), Separator);
                 FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.DynaVars.intHour), Separator);
-                FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
+                FSWrite(F, Pad('"' + DSSUpperCase(pElem.Name()) + '"', 14));
                 for j := 1 to NumEMRegisters do
                     FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));
                 FSWriteln(F);
@@ -1891,7 +1891,7 @@ begin
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.Year()), Separator);
                 FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.DynaVars.intHour), Separator);
-                FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
+                FSWrite(F, Pad('"' + DSSUpperCase(pElem.Name()) + '"', 14));
                 for j := 1 to NumEMRegisters do
                     FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));
                 FSWriteln(F);
@@ -1948,7 +1948,7 @@ begin
         if pElem.Enabled() then
         begin
             try
-                FileNm := DSS.OutputDirectory + 'EXP_GEN_' + AnsiUpperCase(pElem.Name()) + '.csv';
+                FileNm := DSS.OutputDirectory + 'EXP_GEN_' + DSSUpperCase(pElem.Name()) + '.csv';
 
                 if not FileExists(FileNm) then
                 begin
@@ -1968,7 +1968,7 @@ begin
                     FSWrite(F, IntToStr(Solution.Year()), Separator);
                     FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
-                    FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
+                    FSWrite(F, Pad('"' + DSSUpperCase(pElem.Name()) + '"', 14));
                     for j := 1 to NumGenRegisters do
                         FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));
                     FSWriteln(F);
@@ -2057,7 +2057,7 @@ begin
                     FSWrite(F, IntToStr(Solution.Year()), Separator);
                     FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
-                    FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
+                    FSWrite(F, Pad('"' + DSSUpperCase(pElem.Name()) + '"', 14));
                     for j := 1 to NumGenRegisters do
                         FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));                        
                     FSWriteln(F);
@@ -2095,7 +2095,7 @@ begin
         if pElem.Enabled() then
         begin
             try
-                FileNm := DSS.OutputDirectory + 'EXP_PV_' + AnsiUpperCase(pElem.Name()) + '.csv';
+                FileNm := DSS.OutputDirectory + 'EXP_PV_' + DSSUpperCase(pElem.Name()) + '.csv';
 
                 if not FileExists(FileNm) then
                 begin
@@ -2116,7 +2116,7 @@ begin
                     FSWrite(F, IntToStr(Solution.Year()), Separator);
                     FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
-                    FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
+                    FSWrite(F, Pad('"' + DSSUpperCase(pElem.Name()) + '"', 14));
                     for j := 1 to NumPVSystemRegisters do
                         FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));
                     FSWriteln(F);
@@ -2201,7 +2201,7 @@ begin
                     FSWrite(F, IntToStr(Solution.Year()), Separator);
                     FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
-                    FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
+                    FSWrite(F, Pad('"' + DSSUpperCase(pElem.Name()) + '"', 14));
                     for j := 1 to NumPVSystemRegisters do
                         FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));
                     FSWriteln(F);
@@ -2240,7 +2240,7 @@ begin
         if pElem.Enabled() then
         begin
             try
-                FileNm := DSS.OutputDirectory + 'EXP_PV_' + AnsiUpperCase(pElem.Name()) + '.csv';
+                FileNm := DSS.OutputDirectory + 'EXP_PV_' + DSSUpperCase(pElem.Name()) + '.csv';
 
                 if not FileExists(FileNm) then
                 begin
@@ -2261,7 +2261,7 @@ begin
                     FSWrite(F, IntToStr(Solution.Year()), Separator);
                     FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
-                    FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
+                    FSWrite(F, Pad('"' + DSSUpperCase(pElem.Name()) + '"', 14));
                     for j := 1 to NumStorageRegisters do
                         FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));
                     FSWriteln(F);
@@ -2345,7 +2345,7 @@ begin
                     FSWrite(F, IntToStr(Solution.Year()), Separator);
                     FSWrite(F, NameIfNotNil(DSS.ActiveCircuit.LoadDurCurveObj), Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
-                    FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name()) + '"', 14));
+                    FSWrite(F, Pad('"' + DSSUpperCase(pElem.Name()) + '"', 14));
                     for j := 1 to NumStorageRegisters do
                         FSWrite(F, Separator, Format('%10.0f', [pElem.Registers[j]]));
                     FSWriteln(F);
@@ -2426,7 +2426,7 @@ begin
                 with pElem do
                 begin
                     WriteStr(sout, 
-                        AnsiUpperCase(Name),
+                        DSSUpperCase(Name),
                         Separator, ConnectedkVA: 8: 1,
                         Separator, FkVAAllocationFactor: 5: 3,
                         Separator, NPhases: 0,
@@ -2561,7 +2561,7 @@ begin
                                 // Get terminal 1 power
                                 Spower := Cabs(PDElem.Power(1)) * 0.001;   // kW
 
-                                FSWrite(F, Format('%s, %d, ', [Pad(('"' + pDelem.DSSClassName + '.' + AnsiUpperCase(pDelem.Name()) + '"'), 22), j]));
+                                FSWrite(F, Format('%s, %d, ', [Pad(('"' + pDelem.DSSClassName + '.' + DSSUpperCase(pDelem.Name()) + '"'), 22), j]));
                                 FSWrite(F, Format('%8.2f, ', [I1]));
                                 if j = 1 then
                                 begin // Only for 1st Terminal
@@ -2657,7 +2657,7 @@ begin
                 if DoIt then
                 begin
                     WriteStr(sout, 
-                        AnsiUpperCase(pLoad.Name()), ', ',
+                        DSSUpperCase(pLoad.Name()), ', ',
                         pLoad.GetBus(1), ', ',
                         pLoad.kWBase: 8: 0, ', ',
                         pLoad.EEN_Factor: 9: 3, ', ',
@@ -2703,7 +2703,7 @@ begin
                     if (ActiveCktElement() is TPDElement) or (ActiveCktElement() is TPCElement) then
                         with ActiveCktElement() do
                         begin
-                            FSWriteln(F, ParentClass.Name, '.', AnsiUpperCase(Name));
+                            FSWriteln(F, ParentClass.Name, '.', DSSUpperCase(Name));
                             cValues := GetYprimValues(ALL_YPRIM);
                             for i := 1 to Yorder do
                             begin
@@ -2794,7 +2794,7 @@ begin
                 for i := 1 to NumNodes do
                 begin
                     j := MapNodeToBus^[i].BusRef;
-                    FSWrite(F, Format('"%s.%-d", ', [AnsiUpperCase(BusList.NameOfIndex(j)), MapNodeToBus^[i].NodeNum]));
+                    FSWrite(F, Format('"%s.%-d", ', [DSSUpperCase(BusList.NameOfIndex(j)), MapNodeToBus^[i].NodeNum]));
                     for j := 1 to NumNodes do
                     begin
                         re := 0.0;
@@ -2855,7 +2855,7 @@ begin
 
                 FSWriteln(F,
                     Format('"%s", %d, %10.6g, %10.6g, %10.6g, %10.6g, %10.6g, %10.6g, %8.4g, %8.4g',
-                    [AnsiUpperCase(BusList.NameOfIndex(i)), Buses^[i].numNodesThisBus,
+                    [DSSUpperCase(BusList.NameOfIndex(i)), Buses^[i].numNodesThisBus,
                     Z1.re, Z1.im, Z0.Re, Z0.im, Cabs(Z1), Cabs(Z0), X1R1, X0R0]
                     ));
 
@@ -3077,7 +3077,7 @@ begin
             for i := 1 to NumBuses do
             begin
                 if Buses^[i].CoordDefined then
-                    FSWriteln(F, Format('%s, %-13.11g, %-13.11g', [CheckForBlanks(AnsiUpperCase(BusList.NameOfIndex(i))), Buses^[i].X, Buses^[i].Y]));
+                    FSWriteln(F, Format('%s, %-13.11g, %-13.11g', [CheckForBlanks(DSSUpperCase(BusList.NameOfIndex(i))), Buses^[i].X, Buses^[i].Y]));
             end;
 
         DSS.GlobalResult := FileNm;
@@ -3095,7 +3095,7 @@ procedure WriteNewLine(F: TFileStream;
     CenterMarkerCode, NodeMarkerCode, NodeMarkerWidth: Integer);
 
 begin
-    FSWrite(F, Format('%s, %.6g, %.6g, %.6g, %.6g,', [AnsiUpperCase(CktElementName), DistFromMeter1, puV1, DistFromMeter2, puV2]));
+    FSWrite(F, Format('%s, %.6g, %.6g, %.6g, %.6g,', [DSSUpperCase(CktElementName), DistFromMeter1, puV1, DistFromMeter2, puV2]));
     FSWrite(F, Format('%d, %d, %d, ', [ColorCode, Thickness, LineType]));
     FSWrite(F, Format('%d, ', [MarkCenter]));
     FSWrite(F, Format('%d, %d, %d', [CenterMarkerCode, NodeMarkerCode, NodeMarkerWidth]));
@@ -3625,7 +3625,7 @@ begin
                 with Buses^[i] do
                 begin
                     FSWriteln(F, Format('%s, %-.11g, %-.11g, %d, %-.11g, %-.11g, %-.11g',
-                        [CheckForBlanks(AnsiUpperCase(BusList.NameOfIndex(i))), BusFltRate, Bus_Num_Interrupt, BusTotalNumCustomers, BusCustInterrupts, Bus_Int_Duration, BusTotalMiles]));
+                        [CheckForBlanks(DSSUpperCase(BusList.NameOfIndex(i))), BusFltRate, Bus_Num_Interrupt, BusTotalNumCustomers, BusCustInterrupts, Bus_Int_Duration, BusTotalMiles]));
                 end;
 
         DSS.GlobalResult := FileNm;
@@ -3798,7 +3798,7 @@ begin
                 for i := 1 to NumNodes do
                 begin
                     with MapNodeToBus^[i] do
-                        FSWriteln(F, Format('"%s.%-d"', [AnsiUpperCase(BusList.NameOfIndex(Busref)), NodeNum]));
+                        FSWriteln(F, Format('"%s.%-d"', [DSSUpperCase(BusList.NameOfIndex(Busref)), NodeNum]));
                 end;
             end;
 
