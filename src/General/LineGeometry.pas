@@ -423,7 +423,7 @@ begin
                     conductors[i] := NIL;
             end;
 
-            // For compatibility with the official version, always zero the eq dist values
+            // For compatibility with EPRI's version, always zero the eq dist values
             eqDistPhPh := 0;
             eqDistPhN := 0;
             avgPhaseHeight := 0;

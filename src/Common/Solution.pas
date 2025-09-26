@@ -243,7 +243,7 @@ type
 {$ENDIF}
 
         // NCIM Variables
-        // DSS-Extensions: in constrast to the official OpenDSS, most of the functions
+        // DSS-Extensions: in constrast to EPRI's OpenDSS, most of the functions
         // related to NCIM are implemented in NCIMSolutionHelper. Everything was
         // renamed to use the NCIM_ prefix, both variables and functions.
 

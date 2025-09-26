@@ -453,8 +453,8 @@ extern "C" {
         DSSCompatFlags_BadPrecision = 0x00000002, /*!< 
             If enabled, toggle worse precision for certain aspects of the engine. For example, the sequence-to-phase 
             (`As2p`) and sequence-to-phase (`Ap2s`) transform matrices. On DSS C-API, we fill the matrix explicitly
-            using higher precision, while numerical inversion of an initially worse precision matrix is used in the 
-            official OpenDSS. We will introduce better precision for other aspects of the engine in the future, 
+            using higher precision, while numerical inversion of an initially worse precision matrix is used in
+            EPRI's OpenDSS. We will introduce better precision for other aspects of the engine in the future,
             so this flag can be used to toggle the old/bad values where feasible.
         */
 
@@ -465,13 +465,13 @@ extern "C" {
         */
 
         DSSCompatFlags_SaveCalcVoltageBases = 0x00000008, /*!< 
-            When using "save circuit", the official OpenDSS always includes the "CalcVoltageBases" command in the
+            When using "save circuit", EPRI's OpenDSS always includes the "CalcVoltageBases" command in the
             saved script. We found that it is not always a good idea, so we removed the command (leaving it commented).
             Use this flag to enable the command in the saved script.
         */
 
         DSSCompatFlags_ActiveLine = 0x00000010, /*!< 
-            In the official OpenDSS implementation, the Lines API use the active circuit element instead of the
+            In EPRI's OpenDSS implementation, the Lines API use the active circuit element instead of the
             active line. This can lead to unexpected behavior if the user is not aware of this detail.
             For example, if the user accidentally enables any other circuit element, the next time they use
             the Lines API, the line object that was previously enabled is overwritten with another unrelated
@@ -492,16 +492,16 @@ extern "C" {
         */
 
         DSSCompatFlags_SkipSideEffects = 0x00000040, /*!< 
-            Some specific functions on the official OpenDSS APIs and internal code skip important side-effects.
+            Some specific functions on EPRI's OpenDSS APIs and internal code skip important side-effects.
             By default, on DSS-Extensions/AltDSS, those side-effects are enabled. Use this flag
-            to try to follow the behavior of the official APIs. Beware that some side-effects are
+            to try to follow the behavior of the EPRI's OpenDSS APIs. Beware that some side-effects are
             important and skipping them may result in incorrect results.
             This flag affects some of the classic API functions, especially Loads and Generators,
             as well as the behavior of some DSS properties (Line: Rg, Xg, rho, Transformer/AutoTrans: XscArray).
         */
 
         DSSCompatFlags_MonitorHeader = 0x00000080, /*!< 
-            Add extra spaces (and trailing comma) to the monitor headers to match the official OpenDSS implementation.
+            Add extra spaces (and trailing comma) to the monitor headers to match EPRI's OpenDSS implementation.
             This affects both the Header function/property in the API, and the exported CSVs.
 
             The extra spaces can cause issues with third-party software. For example, Pandas adds 
@@ -512,7 +512,7 @@ extern "C" {
 
         DSSCompatFlags_InvControlDeltaV = 0x00000100, /*!<
             An issue with the voltage delta across iterations was found and fixed in AltDSS/DSS C-API 0.15.0.
-            Use this flag to restore the previous behavior, which also matches the official OpenDSS.
+            Use this flag to restore the previous behavior, which also matches EPRI's OpenDSS.
 
             The issue affects situations where an InvControl object tracks multiple DERs, while using one of the volt-var modes.
             It is not always apparent and does not always affect the end results.
@@ -639,7 +639,7 @@ extern "C" {
 
     /*!
     The values from AltDSSEvent are used in the updated DSSEvents_* functions to
-    register callbacks for different events. Note that in the official OpenDSS
+    register callbacks for different events. Note that in EPRI's OpenDSS
     (COM implementation) only the first three event types (marked as Legacy) are
     available and the callback functions do not receive the extra arguments. To
     simplify our implementation, we decided to merge the legacy events in our

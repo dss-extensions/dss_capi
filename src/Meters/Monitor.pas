@@ -6,8 +6,8 @@ unit Monitor;
 // ----------------------------------------------------------
 
 // **For DSS-Extensions:**
-// Note that the header implementation is now different from the 
-// official one. Compatibility could be added if required later,
+// Note that the header implementation is now different from EPRI's.
+// Compatibility could be added if required later,
 // adding extra spaces before most fields.
 
 
@@ -692,7 +692,7 @@ var
     addSpace: Boolean;
 
     procedure addHeaderColumn(s: String; addNext: Boolean = true; trailing: Boolean = false);
-    // Handle compatibility of extra empty spaces with the official version
+    // Handle compatibility of extra empty spaces with EPRI's version
     begin
         if addSpace then
         begin
