@@ -1247,7 +1247,7 @@ begin
                 ord(Opt.ConcatenateReports):
                     AppendGlobalResult(DSS, PMParent.ConcatenateReports);
                 ord(Opt.NUMANodes):
-                    DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101); //TODO: looks like the official version has this hardcoded
+                    DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101); //TODO: looks like EPRI's version has this hardcoded
                 ord(Opt.LineTypes):
                     DSS.GlobalResult := DSS.LineTypeEnum.Joined();
                 ord(Opt.EventLogDefault):

@@ -309,7 +309,7 @@ begin
         Exit;
     DSSPrime.ActiveCircuit.Solution.Solve();
     // If the parallel mode is not active, the solver will run in the current thread,
-    // no need to wait (contrary to the official impl.)
+    // no need to wait (contrary to the EPRI's impl.)
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_ModeID(): PAnsiChar; CDECL;
@@ -873,7 +873,7 @@ begin
     end;
 
     // If the parallel mode is not active, each solver will run in the current thread,
-    // sequentially, no need to wait later (contrary to the official impl.)
+    // sequentially, no need to wait later (contrary to the EPRI's impl.)
 {$ELSE}
 begin
     DoSimpleMsg(DSSPrime, _('Parallel machine functions were not compiled'), 7983);
@@ -930,7 +930,7 @@ begin
     begin
         IncMat := DSSPrime.ActiveCircuit.Solution.IncMat;
         ArrSize := IncMat.NZero * 3;
-        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, ArrSize + 1); // TODO: remove +1? Left for compatibility with the official version
+        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, ArrSize + 1); // TODO: remove +1? Left for compatibility with the EPRI's version
         Counter := 0;
         IMIdx := 0;
         while IMIdx < ArrSize do

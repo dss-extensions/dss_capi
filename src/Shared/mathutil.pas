@@ -50,7 +50,7 @@ procedure SymComp2Phase(Vph, V012: pComplexArray);
 procedure SymComp2Phase(Vph, V012: PComplex3);
 function TerminalPowerIn(V, I: pComplexArray; Nphases: Integer): Complex;
 function PctNemaUnbalance(Vph: PComplex3): Double;
-procedure SelectAs2pVersion(useOfficial: Boolean);
+procedure SelectAs2pVersion(useEPRIs: Boolean);
 
 var
    As2p, Ap2s: TcMatrix; // Symmetrical Component Conversion Matrices
@@ -61,7 +61,7 @@ uses
     Math;
 
 var
-   As2p_official, Ap2s_official: TcMatrix; // Symmetrical Component Conversion Matrices, usptream versions
+   As2p_epri, Ap2s_epri: TcMatrix; // Symmetrical Component Conversion Matrices, usptream versions
    As2p_ours, Ap2s_ours: TcMatrix; // Symmetrical Component Conversion Matrices, better precision
 
 constructor TPICtrl.Create;
@@ -268,7 +268,7 @@ begin
     Amat_inv[3, 3] := a_3;
 end;
 
-procedure SetAMatrix_official(Amat: Tcmatrix);
+procedure SetAMatrix_epri(Amat: Tcmatrix);
 var
     a, aa: complex;
 begin
@@ -515,17 +515,17 @@ begin
         Result := 0.0;
 end;
 
-procedure SelectAs2pVersion(useOfficial: Boolean);
+procedure SelectAs2pVersion(useEPRIs: Boolean);
 begin
-    if useOfficial then
+    if useEPRIs then
     begin
-        // WriteLn('SelectAs2pVersion: selecting worse precision, but numerically compatible with official OpenDSS');
-        Ap2s := Ap2s_official;
-        As2p := As2p_official;
+        // WriteLn('SelectAs2pVersion: selecting worse precision, but numerically compatible with EPRI's OpenDSS');
+        Ap2s := Ap2s_epri;
+        As2p := As2p_epri;
     end
     else
     begin
-        // WriteLn('SelectAs2pVersion: selecting beter precision, but numerically incompatible with official OpenDSS');
+        // WriteLn('SelectAs2pVersion: selecting beter precision, but numerically incompatible with EPRI's OpenDSS');
         Ap2s := Ap2s_ours;
         As2p := As2p_ours;
     end;
@@ -538,18 +538,18 @@ initialization
     SetAMatrix(As2p_ours);
     SetAMatrix_inv(Ap2s_ours);
 
-    As2p_official := TcMatrix.CreateMatrix(3);
-    Ap2s_official := TcMatrix.CreateMatrix(3);
-    SetAMatrix_official(As2p_official);
-    SetAMatrix_official(Ap2s_official);
-    Ap2s_official.Invert();
+    As2p_epri := TcMatrix.CreateMatrix(3);
+    Ap2s_epri := TcMatrix.CreateMatrix(3);
+    SetAMatrix_epri(As2p_epri);
+    SetAMatrix_epri(Ap2s_epri);
+    Ap2s_epri.Invert();
 
     // select ours by default
     SelectAs2pVersion(False);
 
 finalization
-    As2p_official.Free;
-    Ap2s_official.Free;
+    As2p_epri.Free;
+    Ap2s_epri.Free;
     As2p_ours.Free;
     Ap2s_ours.Free;
 end.

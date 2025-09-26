@@ -1600,7 +1600,7 @@ extern "C" {
     /*! 
     LegacyModels was a flag used to toggle legacy (pre-2019) models for PVSystem, InvControl, Storage and
     StorageControl.
-    In the official OpenDSS version 9.0, the old models were removed. They were temporarily present here
+    In EPRI's OpenDSS version 9.0, the old models were removed. They were temporarily present here
     but were also removed in DSS C-API v0.13.0.
         
     NOTE: this function pair will be removed for v1.0. It is left to avoid breaking the current API too soon.
@@ -1661,7 +1661,7 @@ extern "C" {
     ALTDSS_CAPI_DLL void DSS_Set_EnableArrayDimensions(uint16_t Value);
 
     /*! 
-    Controls some compatibility flags introduced to toggle some behavior from the official OpenDSS.
+    Controls some compatibility flags introduced to toggle some behavior from EPRI's OpenDSS.
     The current bit flags are listed in the enum description.
 
     The flags may change for each version of DSS C-API, but the same value will not be reused. That is,
@@ -1682,13 +1682,13 @@ extern "C" {
     ALTDSS_CAPI_DLL void DSS_Set_CompatFlags(uint32_t Value);
 
     /*! 
-    If enabled, in case of errors or empty arrays, the API returns arrays with values compatible with the 
-    official OpenDSS COM interface. 
+    If enabled, in case of errors or empty arrays, the API returns arrays with values compatible with
+    EPRI's OpenDSS COM interface. 
     
     For example, consider the function Loads_Get_ZIPV. If there is no active circuit or active load element:
     - In the disabled state (COMErrorResults=False), the function will return "[]", an array with 0 elements.
     - In the enabled state (COMErrorResults=True), the function will return "[0.0]" instead. This should
-      be compatible with the return value of the official COM interface.
+      be compatible with the return value of the EPRI's OpenDSS COM interface.
     
     Defaults to false (disabled state) in AltDSS since the v0.15.x series.
 
@@ -7029,7 +7029,7 @@ extern "C" {
     Gets/controls the extended error behavior.
     Extended errors are errors derived from checks across the API to ensure
     a valid state. Although many of these checks are already present in the 
-    original/official COM interface, the checks do not produce any error 
+    original/EPRI's OpenDSS COM interface, the checks do not produce any error 
     message. An error value can be returned by a function but this value
     can, for many of the functions, be a valid value. As such, the user
     has no means to detect an invalid API call. 
