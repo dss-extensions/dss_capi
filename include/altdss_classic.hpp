@@ -827,7 +827,7 @@ using namespace altdss::capi;
         /// 
         /// Extended errors are errors derived from checks across the API to ensure
         /// a valid state. Although many of these checks are already present in the 
-        /// original/official COM interface, the checks do not produce any error 
+        /// original/EPRI's COM interface, the checks do not produce any error 
         /// message. An error value can be returned by a function but this value
         /// can, for many of the functions, be a valid value. As such, the user
         /// has no means to detect an invalid API call. 
@@ -12611,7 +12611,7 @@ using namespace altdss::capi;
         }
 
         /// 
-        /// Controls some compatibility flags introduced to toggle some behavior from the official OpenDSS.
+        /// Controls some compatibility flags introduced to toggle some behavior from EPRI's OpenDSS.
         /// 
         /// **THE FLAGS ARE GLOBAL, affecting all AltDSS engines in the process.**  
         /// CompatFlags for Oddie-loaded instances (OpenDSS and OpenDSS-C engines) are handled by the Oddie code itself,
@@ -12642,14 +12642,14 @@ using namespace altdss::capi;
         }
 
         /// 
-        /// If enabled, in case of errors or empty arrays, the API returns arrays with values compatible with the 
-        /// official OpenDSS COM interface. 
+        /// If enabled, in case of errors or empty arrays, the API returns arrays with values compatible with
+        /// EPRI's OpenDSS COM interface. 
         /// 
         /// For example, consider the property `Loads.ZIPV`. If there is no active circuit or active load element:
         /// 
         /// - In the disabled state (COMErrorResults=False), the function will return "[]", an array with 0 elements.
         /// - In the enabled state (COMErrorResults=True), the function will return "[0.0]" instead. This should
-        /// be compatible with the return value of the official COM interface.
+        /// be compatible with the return value of EPRI's COM interface.
         /// 
         /// Defaults to false (disabled state) in AltDSS since the v0.15.x series.
         /// 
@@ -16386,7 +16386,7 @@ using namespace altdss::capi;
     
         /// 
         /// Returns True if this instance is based on the Oddie compatibility layer for
-        /// the official OpenDSS Direct API (a.k.a. DCSL).
+        /// EPRI's OpenDSS Direct API (a.k.a. DCSL).
         /// 
         /// Note that the default engine in DSS-Python has been based on AltDSS since
         /// 2018, even though it was not called AltDSS then.
@@ -16428,7 +16428,7 @@ using namespace altdss::capi;
         /// handled automatically, so the users do not need to call it manually,
         /// unless using AltDSS/DSS C-API directly without further tools.
         /// 
-        /// On the official OpenDSS, `Start` also does nothing at all in the current
+        /// On EPRI's OpenDSS, `Start` also does nothing at all in the current
         /// Delphi versions. It is required for OpenDSS-C, but also handled behind
         /// the scenes on DSS-Extensions.
         /// 
@@ -16616,7 +16616,7 @@ using namespace altdss::capi;
         /// 
         /// LegacyModels was a flag used to toggle legacy (pre-2019) models for PVSystem, InvControl, Storage and
         /// StorageControl.
-        /// In the official OpenDSS version 9.0, the old models were removed. They were temporarily present here
+        /// In EPRI's OpenDSS version 9.0, the old models were removed. They were temporarily present here
         /// but were also removed in DSS C-API v0.13.0.
         ///     
         /// **NOTE**: this property will be removed for v1.0. It is left to avoid breaking the current API too soon.
@@ -16690,14 +16690,14 @@ using namespace altdss::capi;
         }
 
         /// 
-        /// If enabled, in case of errors or empty arrays, the API returns arrays with values compatible with the 
-        /// official OpenDSS COM interface. 
+        /// If enabled, in case of errors or empty arrays, the API returns arrays with values compatible with
+        /// EPRI's OpenDSS COM interface. 
         /// 
         /// For example, consider the function `Loads_Get_ZIPV`. If there is no active circuit or active load element:
         /// 
         /// - In the disabled state (COMErrorResults=False), the function will return "[]", an array with 0 elements.
         /// - In the enabled state (COMErrorResults=True), the function will return "[0.0]" instead. This should
-        /// be compatible with the return value of the official COM interface.
+        /// be compatible with the return value of EPRI's COM interface.
         /// 
         /// Defaults to false (disabled state) in AltDSS since the v0.15.x series.
         /// 
@@ -16725,7 +16725,7 @@ using namespace altdss::capi;
         }
 
         /// 
-        /// Controls some compatibility flags introduced to toggle some behavior from the official OpenDSS.
+        /// Controls some compatibility flags introduced to toggle some behavior from EPRI's OpenDSS.
         /// 
         /// **THE FLAGS ARE GLOBAL, affecting all AltDSS engines in the process.**  
         /// CompatFlags for Oddie-loaded instances (OpenDSS and OpenDSS-C engines) are handled by the Oddie code itself,

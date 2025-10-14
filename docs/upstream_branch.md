@@ -8,12 +8,12 @@ The upstream copy is on branch `opendss-official-svn`, while the `master` branch
 - Matching version 7 ("Classic" version, on folder `Source`) with version 8 ("Parallel Machine" version, on folder `Parallel_Version`)
 - Potentially, API extensions or performance tweaks
 
-We try to keep this repository functionally compatible with the official OpenDSS distribution, although Delphi compatibility is no longer ensured.
+We try to keep this repository functionally compatible with EPRI's OpenDSS distribution, although Delphi compatibility is no longer ensured.
 
 This branch was initially created to more easily track upstream changes without all non-essential files for building `dss_capi`, resulting in less than 20 MB in total, including the (almost full) history of the OpenDSS public source-code. The full history, including binary files and more, is almost 2.3 GB.
 
-Since the official SVN repository is partially corrupted from revisions 2142 to 2161, we skip those here to avoid further issues.
-If you need to clone the official SVN to reproduce the `opendss-official-svn` branch, you can use [`git-svn`](https://git-scm.com/docs/git-svn) like this:
+Since EPRI's OpenDSS public SVN repository is partially corrupted from revisions 2142 to 2161, we skip those here to avoid further issues.
+If you need to clone EPRI's OpenDSS SVN to reproduce the `opendss-official-svn` branch, you can use [`git-svn`](https://git-scm.com/docs/git-svn) like this:
 
 ```
 git svn clone -r1:2141 --ignore-paths="(.*\.(zip|xls|ocx|dss|DSS|CSV|csv|m|bat|Bat|BAT|ppt|dcu|pdf|PDF|doc|identcache|dll|ico|tlb|docx|bdsgroup|todo|res|png|PNG|html|bat|rc|(groupproj\.local)|groupproj|dproj|sh))|Training|Test|Deprecated_LazDSS|Doc|Distrib|Design|MyOpenDSS|(.*/__(history|recovery))|(.*Source/(cdpsm_import|x64|x86|Archive|TPerlRegEx|(DDLL/(Win32|Win64))|(CMD/lib)))" https://svn.code.sf.net/p/electricdss/code/trunk electricdss-src

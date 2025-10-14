@@ -1,6 +1,6 @@
 # Using DSS C-API
 
-Basic knowledge of OpenDSS is assumed for using DSS C-API, especially since we will reference the official COM interface. Currently, in both COM and C-API, OpenDSS is exposed as a global instance. Most of the element iteration affects the state of this global instance, usually meaning that one element of a certain class can be activated and accessed at a point in time.
+Basic knowledge of OpenDSS is assumed for using DSS C-API, especially since we will reference EPRI's COM interface. Currently, in both COM and C-API, OpenDSS is exposed as a global instance. Most of the element iteration affects the state of this global instance, usually meaning that one element of a certain class can be activated and accessed at a point in time.
 
 In both interfaces, there are three main classes of functions:
 - Simple property access
