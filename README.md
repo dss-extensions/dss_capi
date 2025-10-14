@@ -20,7 +20,7 @@ If you are looking for the bindings to other languages:
 - [DSS-Python](http://github.com/dss-extensions/DSS-Python/) is a multi-platform Python module (Windows, Linux, MacOS) very compatible with the original COM DLL. See also [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) if you don't need COM compatibility, or just would like to check its extra functionalities (you can mix DSS-Python and OpenDSSDirect.py).
 - [OpenDSSDirect.jl](http://github.com/dss-extensions/OpenDSSDirect.jl/) is a Julia module, created by Tom Short (@tshort), migrated with the help of Dheepak Krishnamurthy (@kdheepak) to DSS C-API instead of the DDLL in Feb 2019.
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) is available for .NET/C#, [packaged on NuGet](https://www.nuget.org/packages/dss_sharp/), also mimics the COM classes (drop-in replacement for `OpenDSSengine.DLL`). The current version is now multi-platform too! Soon it will be possible to use it via COM.
-- [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible with the API of the official OpenDSS COM classes.
+- [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible with the API of EPRI's OpenDSS COM classes.
 - [dss.hpp](https://dss-extensions.org/dss_capi/): header-only library for C++, also hosted in this repository (`include/` directory). Allows using DSS C-API more comfortably from C++, abstract away memory management and low-level details such as API conventions of the DSS C-API library. Currently uses Eigen and fmt.
 - New projects in 2024 include [AltDSS-Python](http://dss-extensions.org/AltDSS-Python/) (where we are testing the new API, [AltDSS-Go](https://github.com/dss-extensions/AltDSS-Go/) and [AltDSS-Rust](https://github.com/dss-extensions/AltDSS-Rust/).
 
@@ -30,7 +30,7 @@ Version 0.14.x is based on OpenDSS revision 3723 (exactly OpenDSS v9.8.0.1), wit
 
 While the main objective of COM compatibility has been reached, this is still a work-in-progress and is subject to changes. Especially, there are planned changes targeting version 1.0.
 
-Instead of using extra numeric parameters as in the official DDLL interface ("OpenDSSDirect" or "DCSL"), each original COM property is exposed as a pair of functions. For example, the load kVA property is exposed as:
+Instead of using extra numeric parameters as in the EPRI's DDLL interface ("OpenDSSDirect" or "DCSL"), each original COM property is exposed as a pair of functions. For example, the load kVA property is exposed as:
 
 ```
     double Loads_Get_kva();
@@ -41,7 +41,7 @@ Besides low-level details such as memory management, most of the COM documentati
 
 **Starting in version 0.9.8, we disabled the `opendsscmd.ini` creation. You can set the default base frequency using the environment variable DSS_BASE_FREQUENCY, or just set it in the DSS scripts (recommended). This also means that the initial datapath is set to the current working directory.**
 
-Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to build DSS C-API. After the 0.10.x series of releases, all Pascal code is contained in the `src/` folder. The `src/CAPI/` folder contains the main API code, which sits besides the general OpenDSS code. Although there have been extensive changes to the official OpenDSS code, the upstream/official code is kept in the branch named `opendss-official-svn` and is periodically ported — see also the [upstream branch](https://github.com/dss-extensions/dss_capi/blob/master/docs/upstream_branch.md) document. 
+Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to build DSS C-API. After the 0.10.x series of releases, all Pascal code is contained in the `src/` folder. The `src/CAPI/` folder contains the main API code, which sits besides the general OpenDSS code. Although there have been extensive changes to EPRI's OpenDSS code, the upstream/EPRI's code is kept in the branch named `opendss-official-svn` and is periodically ported — see also the [upstream branch](https://github.com/dss-extensions/dss_capi/blob/master/docs/upstream_branch.md) document. 
 
 ## Recent changes
 
@@ -53,16 +53,16 @@ See [the changelog](https://github.com/dss-extensions/dss_capi/blob/master/docs/
 - 2024-02-09 / version 0.14.0: Lots of changes and bugfixes, see the changelog. 
 - 2023-06-27 / version 0.13.4: Bugfix release (CapControl), incremental improvements. See the changelog or release page for details.
 - 2023-06-11 / version 0.13.3: Bugfix release for some components (notably Capacitor, Reactor, UPFC).
-- 2023-05-24 / version 0.13.2: Minor release, includes updates to JSON exports, some more error-checking, internal code refactoring, header updates, and minor ports from the official OpenDSS.
+- 2023-05-24 / version 0.13.2: Minor release, includes updates to JSON exports, some more error-checking, internal code refactoring, header updates, and minor ports from EPRI's OpenDSS.
 - 2023-04-01 / version 0.13.1: Minor release to address a few PVSystem properties
 - 2023-03-29 / version 0.13.0: Various updates, including bugfixes and several OpenDSS feature ports; the reference is now OpenDSS v9.6.1.1.
 - 2022-07-16 / version 0.12.1: Incremental release to fix address a bug found just after 0.12.0 was released.
 - 2022-07-13 / version 0.12.0: Extensive updates, includes ports of the PM functions, a new/rewritten property system, new API extensions, better performance, and other features.
 - 2021-03-09 / version 0.10.7-1: Includes a fix for some reports which presented corrupted text in version 0.10.7.
-- 2020-12-28 / version 0.10.7: Maintenance release based on on OpenDSS revision 2963. Includes fixes and new features from the official OpenDSS. [A new document describing the DSS properties](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/dss_properties.md) was added.
-- 2020-07-31 / version 0.10.6: New API extensions, and ported changes from the official OpenDSS codebase. Includes some bugfixes, a new extended validation error messages and new compatibility toggles.
-- 2020-03-03 / version 0.10.5: Maintenance release with several minor fixes. Includes changes ported from COM and the official OpenDSS codebase. Version 8 binary releases excluded.
-- 2019-11-16 / version 0.10.4: Maintenance release. Fixes issue with long paths on Linux, includes some changes ported from COM and the official OpenDSS codebase.
+- 2020-12-28 / version 0.10.7: Maintenance release based on on OpenDSS revision 2963. Includes fixes and new features from EPRI's OpenDSS. [A new document describing the DSS properties](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/dss_properties.md) was added.
+- 2020-07-31 / version 0.10.6: New API extensions, and ported changes from EPRI's OpenDSS codebase. Includes some bugfixes, a new extended validation error messages and new compatibility toggles.
+- 2020-03-03 / version 0.10.5: Maintenance release with several minor fixes. Includes changes ported from COM and EPRI's OpenDSS codebase. Version 8 binary releases excluded.
+- 2019-11-16 / version 0.10.4: Maintenance release. Fixes issue with long paths on Linux, includes some changes ported from COM and EPRI's OpenDSS codebase.
 - 2019-05-22 / version 0.10.3: Some important fixes, better general performance, new API extensions, new features ported from COM and the OpenDSS version 8 codebase.
 - 2019-03-05: the Git repository `electricdss-src` was merged into `dss_capi`.
 - 2019-02-28 / version 0.10.2: Highlights: implements the missing `CtrlQueue_Push`; reworks `LoadShapes` for performance and validation; introduces `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` to toggle the editor calls.**
@@ -81,7 +81,7 @@ See [the changelog](https://github.com/dss-extensions/dss_capi/blob/master/docs/
     - Plotting in general: initial implementation for Python is nearly complete. For notes and examples, see [DSS-Extensions — Integrated plotting in Python](https://github.com/dss-extensions/dss_python/blob/master/docs/examples/Plotting.ipynb).
     - Diakoptics and `AggregateProfiles`: see [#46](https://github.com/dss-extensions/dss_capi/issues/46). Planned.
 
-Closed-source features are not ported. New components or features without examples or tests are usually avoided until maturity is reached in the official OpenDSS.
+Closed-source features are not ported. New components or features without examples or tests are usually avoided until maturity is reached in EPRI's OpenDSS.
     
 ## Extra features
 

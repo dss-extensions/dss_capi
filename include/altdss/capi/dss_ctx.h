@@ -5289,9 +5289,9 @@ extern "C" {
 
     List of integer command codes representing the command to skip when processing DSS text commands or files.
     
-    A `clear` command, or the DSS_ClearAll` function resets the value to include all commands. The user can
+    A `clear` command, or the DSS_ClearAll` function resets the value to exclude all commands from the filter. The user can
     also pass an empty list of commands to reset it manually, enabling the execution of all commands, besides
-    DOSCmd and others that have dedicated toggles.
+    `DOSCmd` and others that have dedicated toggles.
 
     **Do not hardcode** the integers since they change frequently.
 

@@ -1,3 +1,8 @@
+// SPDX-FileCopyrightText: (C) 2024-2025 Paulo Meira & contributors to DSS-Extensions
+// SPDX-License-Identifier: LGPL-3.0-only
+// 
+// COM_AltDSS.h : various utility classes (declarations and inline functions)
+
 #pragma once
 #ifndef DSS_EXTENSIONS_ALTDSS_COM_H
 #define DSS_EXTENSIONS_ALTDSS_COM_H

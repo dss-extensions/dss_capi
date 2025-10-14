@@ -8,7 +8,7 @@ The `dss_capi.h` header is also processed in this documentation site. It targets
 has been able to support the DSS-Extensions project for several years, better integration with C++ is required to allow us to use other existing and nascent libraries
 in C++, and hopefully other languages.
 
-While the more classic API based on the original organization of the official OpenDSS COM implementation is available in the `dss::classic` namespace,
+While the more classic API based on the original organization of EPRI's OpenDSS COM implementation is available in the `dss::classic` namespace,
 we are growing a new API in the `dss::obj` namespace (which might be renamed in a future release). It currently exposes the manipulation of all DSS data classes.
 
 Some examples and more documentation will be added here, in the GitHub repository, and to https://github.com/dss-extensions/dss-extensions as the implementation progresses.
