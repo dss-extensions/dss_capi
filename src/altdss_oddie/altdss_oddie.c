@@ -566,7 +566,8 @@ ALTDSS_ODDIE_DLL void ctx_Dispose(const void *ctx)
     HMODULE dll_handle = oddie_ctx->dll_handle;
     int refcount = dll_handle ? oddie_win32_get_mod_refcount(dll_handle) : 0;
 
-    if (refcount <= 1 && oddie_ctx->dll_handle && (ctx_DSS_Get_NumCircuits(ctx) >= 1))
+    if (refcount <= 1 && oddie_ctx->dll_handle)
+    // if (refcount <= 1 && oddie_ctx->dll_handle && (ctx_DSS_Get_NumCircuits(ctx) >= 1)) -- NumCircuits is broken on ODD.DLL, we cannot use it here.
     {
         // Force a clear all to avoid issues unloading the Delphi DLL.
         // Since EPRI's engine is used as a singleton, if users find
