@@ -1628,23 +1628,34 @@ end;
 procedure TCIMExporterHelper.AttachLinePhases(pLine: TLineObj);
 var
     s, phs: String;
-    i, j: Integer;
+    i, j, k: Integer;
     pPhase: TNamedObject;
+    skipCondCheck: Boolean;
 begin
+    skipCondCheck := false;
     pPhase := TNamedObject.Create('dummy');
     s := PhaseOrderString(pLine, 1);
     if pLine.CIM_NumConductorData() > length(s) then
         s := s + 'N'; // so we can specify the neutral conductor
     
-    j := 0;
-    for i := 1 to pLine.CIM_NumConductorData() do
+    k := pLine.CIM_NumConductorData();
+    if (k = 0) then
     begin
-        if pLine.CIM_GetConductorData(i) = nil then
+        k := pLine.NPhases;
+        skipCondCheck := true;
+    end;
+
+    j := 0;
+    for i := 1 to k do
+    begin
+        if (pLine.CIM_GetConductorData(i) = nil) and (not skipCondCheck) then
             continue; // If using Spacing an unused position will be Nil.
         j := j + 1;  // j is the phase index in the line, i is the conductor index in the spacing.
         phs := s[j];
         if phs = 's' then
-            continue;
+            j := j + 1;
+        if phs = 's' then
+            phs := s[j];
         if phs = '1' then
             phs := 's1';
         if phs = '2' then
@@ -3544,8 +3555,8 @@ begin
             CircuitNode(FunPrf, ActiveCircuit);
             RefNode(FunPrf, 'PowerElectronicsConnection.PowerElectronicsUnit', pName1);
             DoubleNode(EpPrf, 'PowerElectronicsConnection.maxIFault', 1.0 / pPV.VminPu);
-            DoubleNode(SshPrf, 'PowerElectronicsConnection.p', pPV.Presentkw * 1000.0);
-            DoubleNode(SshPrf, 'PowerElectronicsConnection.q', pPV.Presentkvar * 1000.0);
+            DoubleNode(SshPrf, 'PowerElectronicsConnection.p', -pPV.Presentkw * 1000.0);
+            DoubleNode(SshPrf, 'PowerElectronicsConnection.q', -pPV.Presentkvar * 1000.0);
             ConverterControlEnum(SshPrf, pPV.VarMode, pPV.UsingCIMDynamics);
             DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedS', pPV.PVSystemVars.fkvarating * 1000.0);
             if pPV.NPhases() = 1 then
@@ -3594,8 +3605,8 @@ begin
             CircuitNode(FunPrf, ActiveCircuit);
             RefNode(FunPrf, 'PowerElectronicsConnection.PowerElectronicsUnit', pName1);
             DoubleNode(EpPrf, 'PowerElectronicsConnection.maxIFault', 1.0 / pBat.VminPu);
-            DoubleNode(SshPrf, 'PowerElectronicsConnection.p', pBat.PresentkW() * 1000.0);
-            DoubleNode(SshPrf, 'PowerElectronicsConnection.q', pBat.Presentkvar() * 1000.0);
+            DoubleNode(SshPrf, 'PowerElectronicsConnection.p', -pBat.PresentkW() * 1000.0);
+            DoubleNode(SshPrf, 'PowerElectronicsConnection.q', -pBat.Presentkvar() * 1000.0);
             ConverterControlEnum(SshPrf, pBat.VarMode, pBat.UsingCIMDynamics);
             DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedS', pBat.StorageVars.FkVARating * 1000.0);
             if pBat.NPhases() = 1 then
@@ -4229,7 +4240,7 @@ begin
                     BooleanNode(EpPrf, 'TapChangerControl.reversible', True);
                     BooleanNode(EpPrf, 'TapChangerControl.reverseToNeutral', ReverseNeutral);
                     DoubleNode(EpPrf, 'TapChangerControl.reversingDelay', revDelay);
-                    DoubleNode(EpPrf, 'TapChangerControl.reversingPowerThreshold', revPowerThreshold);
+                    DoubleNode(EpPrf, 'TapChangerControl.reversingPowerThreshold', -revPowerThreshold);
                     DoubleNode(EpPrf, 'TapChangerControl.reverseLineDropR', revR);
                     DoubleNode(EpPrf, 'TapChangerControl.reverseLineDropX', revX);
                     DoubleNode(EpPrf, 'RegulatingControl.reverseTargetValue', revVreg);
