@@ -152,6 +152,7 @@ VAR
     DSS_CAPI_ALLOW_EDITOR: Boolean; //TODO: one per context?
     DSS_CAPI_LOADS_TERMINAL_CHECK: Boolean = True; //TODO: one per context?
     NoFormsAllowed: Boolean = True; //TODO: one per context?
+    NoProgressBarFormAllowed: Boolean = True; //TODO: one per context?
     DSS_CAPI_ALLOW_DOSCMD: Boolean = False; //TODO: one per context?
     
     SQRT2: Double;
