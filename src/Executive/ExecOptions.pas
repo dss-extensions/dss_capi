@@ -270,9 +270,9 @@ begin
             73:
                 DSS.DefaultBaseFreq := DSS.Parser.MakeDouble();
             102:
-                DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101);
+                DoSimpleMsg(DSS, _('This is not supported in the AltDSS engine.'), 25040101);
             111:
-                DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101);
+                DoSimpleMsg(DSS, _('This is not supported in the AltDSS engine.'), 25040101);
 {$IFDEF DSS_CAPI_PM}
             ord(Opt.ActiveActor):
                 if DSS.Parser.MakeString() = '*' then
@@ -710,7 +710,7 @@ begin
             101:
                 DSS.ActiveCircuit.RecloserMarkerSize := DSS.Parser.MakeInteger();
             102:
-                DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101);
+                DoSimpleMsg(DSS, _('This is not supported in the AltDSS engine.'), 25040101);
             103:
                 DSS.ActiveCircuit.MarkRelays := InterpretYesNo(Param);
             104:
@@ -724,7 +724,7 @@ begin
             110:
                 DSS.ActiveCircuit.Solution.MinIterations := DSS.Parser.MakeInteger();
             111:
-                DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101);
+                DoSimpleMsg(DSS, _('This is not supported in the AltDSS engine.'), 25040101);
             112:
                 DSS.ActiveCircuit.ReduceLateralsKeepLoad := InterpretYesNo(Param);
             113:
@@ -843,7 +843,7 @@ begin
             end;
             ord(Opt.PyPath):
             begin
-                DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101);
+                DoSimpleMsg(DSS, _('This is not supported in the AltDSS engine.'), 25040101);
                 Exit;
             end;
             ord(Opt.IterNumber):
@@ -1247,7 +1247,8 @@ begin
                 ord(Opt.ConcatenateReports):
                     AppendGlobalResult(DSS, PMParent.ConcatenateReports);
                 ord(Opt.NUMANodes):
-                    DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101); //TODO: looks like EPRI's version has this hardcoded
+                    DoSimpleMsg(DSS, _('This is not supported in the AltDSS engine.'), 25040101); //TODO: looks like EPRI's version has this hardcoded
+{$ENDIF} //DSS_CAPI_PM
                 ord(Opt.LineTypes):
                     DSS.GlobalResult := DSS.LineTypeEnum.Joined();
                 ord(Opt.EventLogDefault):
@@ -1318,7 +1319,7 @@ begin
                 end;
                 ord(Opt.PyPath):
                 begin
-                    DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101);
+                    DoSimpleMsg(DSS, _('This is not supported in the AltDSS engine.'), 25040101);
                     Exit;
                 end;
                 ord(Opt.IterNumber):
@@ -1451,7 +1452,7 @@ begin
                     AppendGlobalResult(DSS, DSS.EventLogDefault);
                 ord(Opt.PyPath):
                 begin
-                    DoSimpleMsg(DSS, _('This is not supported in AltDSS.'), 25040101);
+                    DoSimpleMsg(DSS, _('This is not supported in the AltDSS engine.'), 25040101);
                     Exit;
                 end;
                 else
