@@ -197,7 +197,7 @@ type
         procedure SetFleetkWRate(pctkw: Double);
         procedure SetFleetChargeRate();
         procedure SetFleetToCharge();
-        procedure SetFleetToDisCharge();
+        procedure SetFleetToDischarge();
         procedure SetFleetToIdle();
         procedure SetFleetToExternal();
         procedure SetFleetDesiredState(state: Integer);
@@ -817,7 +817,7 @@ begin
         DoSimpleMsg('Monitored Element in %s is not set', [FullName()], 372);
 
     if FleetListChanged then
-        if not MakeFleetList then
+        if not MakeFleetList() then
             DoSimpleMsg('No unassigned Storage Elements found to assign to %s', [FullName()], 37201);
 
     // TotalkWCapacity := GetkWTotal(self);
@@ -825,8 +825,8 @@ begin
 
     if FleetSize > 0 then
     begin
-        SetFleetToExternal;
-        SetAllFleetValues;
+        SetFleetToExternal();
+        SetAllFleetValues();
     end;
 
     UpPlusFlat := UpRampTime + FlatTime;
@@ -880,7 +880,7 @@ begin
                 // Time is within 1 time step of the trigger time
                 if ShowEventLog then
                     AppendToEventLog(Self.FullName(), 'Fleet Set to Discharging (up ramp) by Schedule');
-                SetFleetToDischarge;
+                SetFleetToDischarge();
                 SetFleetDesiredState(STORE_DISCHARGING);
                 ChargingAllowed := FALSE;
                 pctDischargeRate := min(pctkWRate, max(pctKWRate * Tdiff / UpRampTime, 0.0));
@@ -900,7 +900,7 @@ begin
                 if pctDischargeRate <> LastpctDischargeRate then
                 begin
                     SetFleetkWRate(pctDischargeRate);
-                    SetFleetToDischarge;
+                    SetFleetToDischarge();
                 end;
 
             end
@@ -973,7 +973,7 @@ begin
                         // Time is within 1 time step of the trigger time
                         if ShowEventLog then
                             AppendToEventLog(Self.FullName(), 'Fleet Set to Discharging by Time Trigger');
-                        SetFleetToDischarge;
+                        SetFleetToDischarge();
                         SetFleetkWRate(pctKWRate);
                         DischargeInhibited := FALSE;
                         if DischargeMode = MODEFOLLOW then
@@ -998,7 +998,7 @@ begin
                         // Time is within 1 time step of the trigger time
                         if ShowEventLog then
                             AppendToEventLog(Self.FullName(), 'Fleet Set to Charging by Time Trigger');
-                        SetFleetToCharge;
+                        SetFleetToCharge();
                         DischargeInhibited := TRUE;
                         OutOfOomph := FALSE;
                         PushTimeOntoControlQueue(STORE_CHARGING);   // force re-solve at this time step
@@ -1068,7 +1068,7 @@ begin
 
      // If list is not defined, go make one from all storage elements in circuit
     if FleetPointerList.Count = 0 then
-        MakeFleetList;
+        MakeFleetList();
 
     if FleetSize > 0 then
     begin
@@ -1107,7 +1107,7 @@ begin
                     if not FkWBandSpecified then
                         HalfkWBand := FpctkWBand / 200.0 * FkWTarget;  // Update band to new target if absolute kWBand hasn`t been specified
                     DischargeTriggeredByTime := FALSE;  // so we don't come back in here right away
-                    SetFleetToIdle;
+                    SetFleetToIdle();
                     SetFleetDesiredState(STORE_IDLING);
                 end;
                 PDiff := S.re * 0.001 - FkWTarget;  // Assume S.re is normally positive
@@ -1220,7 +1220,7 @@ begin
 //                  Begin   // desired decrease is greater then present output; just cancel
 //                        If ShowEventLog Then  AppendToEventLog(Self.FullName(),
 //                        Format('Desired decrease is greater than present output. Pdiff = %-.6g, FleetkW = %-.6g. Setting Fleet to Idle', [PDiff, GetFleetkW()]));
-//                        SetFleetToIdle;   // also sets presentkW = 0
+//                        SetFleetToIdle();   // also sets presentkW = 0
 //                        For i := 1 to FleetSize Do Begin TStorageObj(FleetPointerList.Get(i)).SetNominalDEROutput() End; // To Update Current kvarLimit
 //                        PushTimeOntoControlQueue(STORE_IDLING);  // force a new power flow solution
 //                        ChargingAllowed := TRUE;
@@ -1244,7 +1244,8 @@ begin
                     if not (FleetState = STORE_DISCHARGING) then
                     begin
                         SetFleetToDischarge();
-                        // StorekWChanged:= TRUE;  // if not already discharging, force new power flow.
+                        if ActiveCircuit.Solution.ControlIteration = 1 then
+                            StorekWChanged := TRUE;  // if not already discharging, force new power flow.
                     end;
                     if ShowEventLog then
                         AppendToEventLog(Self.FullName(), Format('Attempting to dispatch %-.6g kW with %-.6g kWh remaining and %-.6g kWh reserve.', [kWNeeded, RemainingkWh, ReservekWh]));
@@ -1390,7 +1391,7 @@ begin
 
     // If list is not defined, go make one from all storage elements in circuit
     if FleetPointerList.Count = 0 then
-        MakeFleetList;
+        MakeFleetList();
 
     // If (FleetSize>0) And(Not(FleetState = STORE_DISCHARGING)) Then
     if (FleetSize <= 0) then
@@ -1449,16 +1450,6 @@ begin
         end;
     end;
 
-    // CASE FleetState of
-    //     STORE_CHARGING,
-    //     STORE_IDLING: If (PDiff < 0.0) or OutOfOomph Then
-    //     Begin  // Don't bother trying to dispatch
-    //         ChargingAllowed  := TRUE;
-    //         SkipkWDispatch   := TRUE;
-    //     End;
-    // END;
-
-
     // If Not (FleetState = STORE_CHARGING) Then  // ignore underload due to discharging  (FleetkW > 0) and discount idlings losses (may delay the charging)
     if (FleetState = STORE_DISCHARGING) then
     begin
@@ -1483,15 +1474,6 @@ begin
                 SkipkWCharge := TRUE;
                 Wait4Step := FALSE;
             end
-        //                End;
-        //  STORE_CHARGING: If (kWNeeded > 0.0) or (ActualkWh>=TotalRatingkWh) // old approach
-        //  STORE_CHARGING: If (Pdiff + GetFleetkW() > 0.0) or (ActualkWh >= TotalRatingkWh) Then
-        //                  Begin   // desired decrease (in absolute value) is greater than present output; just cancel
-        //                        SetFleetToIdle;   // also sets presentkW = 0
-        //                        PushTimeOntoControlQueue(STORE_IDLING);  // force a new power flow solution
-        //                        ChargingAllowed := FALSE;
-        //                        SkipkWCharge  := TRUE;
-        //                  End;
     end;
 
     if SkipkWCharge then
@@ -1504,8 +1486,9 @@ begin
         begin // Attempt to change storage kW charge
             if not (FleetState = STORE_CHARGING) then
             begin
-                SetFleetToCharge;
-                // StorekWChanged := TRUE;  // if not already charging, force new power flow.
+                SetFleetToCharge();
+                if ActiveCircuit.Solution.ControlIteration = 1 then
+                    StorekWChanged := TRUE;  // if not already charging, force new power flow.
             end;
             // If ShowEventLog Then  AppendToEventLog(Self.FullName(), Format('Attempting to charge %-.6g kW with %-.6g kWh remaining and %-.6g rating.', [kWNeeded, (TotalRatingkWh-ActualkWh), TotalRatingkWh]));
             if ShowEventLog then
@@ -1542,8 +1525,10 @@ begin
                         StorekWChanged := TRUE; // if not idling at first, force a new powerflow
 
                         if ShowEventLog then
+                        begin
                             AppendToEventLog(Self.FullName(),
                                 Format('Requesting %s to dispatch %-.6g kW. Setting %s to idling state. Final kWOut is %-.6g kW', [StorageObj.FullName(), ChargekW, StorageObj.FullName(), ActualkWDispatch]));
+                        end;
                     end
 
                 end
@@ -1565,8 +1550,10 @@ begin
                                     StorekWChanged := TRUE; // This is what keeps the control iterations going
 
                                     if ShowEventLog then
+                                    begin
                                         AppendToEventLog(Self.FullName(),
                                             Format('Requesting %s to dispatch %-.6g kW, less than CutIn/CutOut.' + ' Final kWOut is %-.6g kW', [StorageObj.FullName(), ChargekW, ActualkWDispatch]));
+                                    end;
                                 end;
                             end
                             else
@@ -1578,8 +1565,10 @@ begin
                                 StorageObj.SetNominalDEROutput(); // to update current kvarLimit
                                 ActualkWDispatch := StorageObj.PresentkW;
                                 if ShowEventLog then
+                                begin
                                     AppendToEventLog(Self.FullName(),
                                         Format('Requesting %s to dispatch %-.6g kW, less than CutIn/CutOut.' + ' Inverter is OFF. Final kWOut is %-.6g kW', [StorageObj.FullName(), ChargekW, ActualkWDispatch]));
+                                end;
                             end
                         end
                         else
@@ -1594,10 +1583,11 @@ begin
                             StorekWChanged := TRUE;     // This is what keeps the control iterations going
 
                             if ShowEventLog then
+                            begin
                                 AppendToEventLog(Self.FullName(),
                                     Format('Requesting %s to dispatch %-.6g kW. Final kWOut is %-.6g kW',
                                     [StorageObj.FullName(), ChargekW, ActualkWDispatch]));
-
+                            end;
                         end;
                     end;
                 end;
@@ -1608,7 +1598,7 @@ begin
     begin
         if not FleetState = STORE_IDLING then
         begin
-            SetFleetToIdle;
+            SetFleetToIdle();
             PushTimeOntoControlQueue(STORE_IDLING);  // force a new power flow solution
         end;
         ChargingAllowed := FALSE;
@@ -1621,7 +1611,6 @@ begin
 end;
 
 procedure TStorageControllerObj.Sample();
-
 begin
     ChargingAllowed := FALSE;
 //       UpdateFleetState;
@@ -1665,7 +1654,6 @@ end;
 
 
 procedure TStorageControllerObj.CalcDailyMult(Hr: Double);
-
 begin
     if (DailyShapeObj <> NIL) then
     begin
@@ -1677,7 +1665,6 @@ end;
 
 
 procedure TStorageControllerObj.CalcDutyMult(Hr: Double);
-
 begin
     if DutyShapeObj <> NIL then
     begin
@@ -1688,7 +1675,6 @@ begin
 end;
 
 procedure TStorageControllerObj.CalcYearlyMult(Hr: Double);
-
 begin
     if YearlyShapeObj <> NIL then
     begin
@@ -1734,14 +1720,14 @@ begin
         begin
             RateChanged := TRUE;
             pctChargeRate := NewChargeRate;
-            SetFleetChargeRate;
-            SetFleetToCharge;
+            SetFleetChargeRate();
+            SetFleetToCharge();
         end;
     end
 
     else
     if LoadShapeMult.re = 0.0 then
-        SetFleetToIdle
+        SetFleetToIdle()
     else
     begin   // Set fleet to discharging at a rate
         NewkWRate := LoadShapeMult.re * 100.0;
@@ -1757,7 +1743,7 @@ begin
 //              pctkvarRate := NewkvarRate;
             SetFleetkWRate(pctKWRate);
 //              SetFleetkvarRate(pctkvarRate);
-            SetFleetToDischarge;
+            SetFleetToDischarge();
 
             ActiveCircuit.Solution.LoadsNeedUpdating := TRUE; // Force recalc of power parms
         end;
@@ -1906,10 +1892,10 @@ begin
 
     end;
 
-   // Add up total weights
+    // Add up total weights
     TotalWeight := 0.0;
     for i := 1 to FleetSize do
-        TotalWeight := TotalWeight + FWeights[i];
+        TotalWeight += FWeights[i];
 
     if FleetPointerList.Count > 0 then
         Result := TRUE;
@@ -1921,7 +1907,7 @@ end;
 procedure TStorageControllerObj.Reset();
 begin
     // inherited;
-    SetFleetToIdle;
+    SetFleetToIdle();
 
     // do we want to set fleet to 100% charged storage?
 end;
