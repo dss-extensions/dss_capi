@@ -5,12 +5,16 @@ interface
 uses 
     PDElement,
     DSSClass,
-    DSSUcomplex;
+    DSSUcomplex,
+    Arraydef;
 
 type
     TControlledTransformerObj = class (TPDElement)
     public
         NumWindings: Integer;
+        BHPoints: Integer;
+        BHCurrent: PDoubleArray;
+        BHFlux: PDoubleArray;
 
         function RotatePhases(iPhs: Integer): Integer; virtual; abstract;
         procedure GetWindingVoltages(iWind: Integer; VBuffer: pComplexArray); virtual; abstract;
@@ -28,17 +32,46 @@ type
 
         constructor Create(ParClass: TDSSClass; objName: String);
         destructor Destroy; override;
+        procedure MakeLike(OtherPtr: Pointer); override;
     end;
 
 implementation
 
+type
+    TObj = TControlledTransformerObj;
+
 constructor TControlledTransformerObj.Create(ParClass: TDSSClass; objName: String);
 begin
     inherited Create(ParClass, objName);
+
+    BHPoints := 0;
+    BHCurrent := NIL;
+    BHFlux := NIL;
+end;
+
+procedure TControlledTransformerObj.MakeLike(OtherPtr: Pointer);
+var
+    Other: TObj;
+    i: Integer;
+begin
+    inherited MakeLike(OtherPtr);
+
+    Other := TObj(OtherPtr);
+
+    BHPoints := Other.BHPoints;
+    BHCurrent := AllocMem(SizeOf(Double) * BHPoints);
+    BHFlux := AllocMem(SizeOf(Double) * BHPoints);
+    for i := 1 to BHPoints do
+        BHCurrent[i] := Other.BHCurrent[i];
+    for i := 1 to BHPoints do
+        BHFlux[i] := Other.BHFlux[i];
 end;
 
 destructor TControlledTransformerObj.Destroy;
 begin
+    Reallocmem(BHCurrent, 0);
+    Reallocmem(BHFlux, 0);
+
     inherited Destroy;
 end;
 
