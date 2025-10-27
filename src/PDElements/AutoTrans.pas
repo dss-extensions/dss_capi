@@ -76,7 +76,11 @@ type
         //XfmrCode, // removed, unused
         XRConst,
         LeadLag,
-        WdgCurrents
+        WdgCurrents,
+
+        BHpoints,
+        BHcurrent,
+        BHflux
     );
     TAutoTransProp = (
         INVALID = 0,
@@ -125,7 +129,11 @@ type
         //XfmrCode=39, // removed, unused
         XRConst, //- was 40
         LeadLag, // was 41
-        WdgCurrents // was 42
+        WdgCurrents, // was 42
+
+        BHPoints,
+        BHCurrent,
+        BHFlux
     );
 
 {$PUSH}
@@ -376,6 +384,16 @@ begin
     PropertyFlags[ord(TProp.Xscarray)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NonZero];
     PropertyScale[ord(TProp.Xscarray)] := 0.01;
 
+    PropertyType[ord(TProp.BHCurrent)] := TPropertyType.DoubleVArrayProperty;
+    PropertyOffset[ord(TProp.BHCurrent)] := ptruint(@obj.BHCurrent);
+    PropertyOffset3[ord(TProp.BHCurrent)] := ptruint(@obj.BHPoints);
+    PropertyFlags[ord(TProp.BHCurrent)] := [TPropertyFlag.Unused];
+
+    PropertyType[ord(TProp.BHFlux)] := TPropertyType.DoubleVArrayProperty;
+    PropertyOffset[ord(TProp.BHFlux)] := ptruint(@obj.BHFlux);
+    PropertyOffset3[ord(TProp.BHFlux)] := ptruint(@obj.BHPoints);
+    PropertyFlags[ord(TProp.BHFlux)] := [TPropertyFlag.Unused];
+
     // enums
     PropertyType[ord(TProp.Core)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.Core)] := ptruint(@obj.CoreType);
@@ -455,6 +473,10 @@ begin
     PropertyType[ord(TProp.wdg)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.wdg)] := ptruint(@obj.ActiveWinding);
     PropertyFlags[ord(TProp.wdg)] := [TPropertyFlag.IntegerStructIndex];
+
+    PropertyType[ord(TProp.BHPoints)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.BHPoints)] := ptruint(@obj.BHPoints);
+    PropertyFlags[ord(TProp.BHPoints)] := [TPropertyFlag.SuppressJSON, TPropertyFlag.Unused, TPropertyFlag.NonNegative];
 
     // string properties
     PropertyType[ord(TProp.subname)] := TPropertyType.StringProperty;
@@ -597,6 +619,22 @@ begin
             
             Yorder := FNConds * fNTerms;
             // SetYprimInvalid(true); -- already done below
+        end;
+
+        ord(TProp.BHPoints):
+        begin
+            if (BHCurrent <> NIL) then
+            begin
+                FreeMem(BHCurrent);
+                BHCurrent := NIL;
+            end;
+            if (BHFlux <> NIL) then
+            begin
+                FreeMem(BHFlux);
+                BHFlux := NIL;
+            end;
+            BHCurrent := AllocMem(SizeOf(Double) * BHPoints);
+            BHFlux := AllocMem(SizeOf(Double) * BHPoints);
         end;
 
         ord(TProp.windings):
