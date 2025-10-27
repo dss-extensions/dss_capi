@@ -67,7 +67,8 @@ type
         Cogen = 32,
         idle = 33,
         idleReverse = 34,
-        idleForward = 35
+        idleForward = 35,
+        fwdThreshold
     );
     TRegControlProp = (
         INVALID = 0,
@@ -105,7 +106,8 @@ type
         Cogen = 32,
         Idle = 33,
         IdleReverse = 34,
-        IdleForward = 35
+        IdleForward = 35,
+        FwdThreshold
     );
 {$SCOPEDENUMS OFF}
 
@@ -119,6 +121,7 @@ type
         destructor Destroy; OVERRIDE;
 
         Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
+        function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
     end;
 
     TRegControlObj = class(TControlElem)
@@ -129,8 +132,8 @@ type
         LDC_Z: Double;
 
         // Reverse Power Variables
-        RevPowerThreshold,   // W
-        kWRevPowerThreshold,
+        RevPowerThreshold, // W
+        FwdPowerThreshold, // W
         revDelay,
         revLDC_Z: Double;
 
@@ -383,8 +386,13 @@ begin
     PropertyOffset[ord(TProp.LDC_Z)] := ptruint(@obj.LDC_Z);
     PropertyOffset[ord(TProp.rev_Z)] := ptruint(@obj.revLDC_Z);
 
-    PropertyOffset[ord(TProp.revThreshold)] := ptruint(@obj.kWRevPowerThreshold);
-    PropertyFlags[ord(TProp.revThreshold)] := [TPropertyFlag.Units_kW];
+    PropertyOffset[ord(TProp.RevThreshold)] := ptruint(@obj.RevPowerThreshold);
+    PropertyFlags[ord(TProp.RevThreshold)] := [TPropertyFlag.Units_kW];
+    PropertyScale[ord(TProp.RevThreshold)] := 1000;
+
+    PropertyOffset[ord(TProp.FwdThreshold)] := ptruint(@obj.FwdPowerThreshold);
+    PropertyFlags[ord(TProp.FwdThreshold)] := [TPropertyFlag.Units_kW];
+    PropertyScale[ord(TProp.FwdThreshold)] := 1000;
 
     PropertyOffset[ord(TProp.revDelay)] := ptruint(@obj.RevDelay);
     PropertyFlags[ord(TProp.revdelay)] := [TPropertyFlag.Units_s];
@@ -409,6 +417,28 @@ begin
         ActiveCircuit.SetActiveCktElement(obj);
     obj.ClassIndex := AddObjectToList(obj, Activate);
     Result := obj;
+end;
+
+function TRegControl.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    obj: TObj;
+    firstPropEdit: Integer;
+begin
+    obj := TObj(ptr);
+    firstPropEdit := obj.PrpSequence[NumProperties + 1] + 1;
+    if (obj.PrpSequence[ord(TProp.RevThreshold)] >= firstPropEdit) and (obj.PrpSequence[ord(TProp.FwdThreshold)] < firstPropEdit) then
+    begin
+        // RevThreshold was modified in this edit operation, but not FwdThreshold; follow the compatibility,
+        // setting a band around 0.
+        // "abs" added to ensure correct behavior (RevPowerThreshold < FwdPowerThreshold).
+        obj.FwdPowerThreshold := abs(obj.RevPowerThreshold);
+        obj.RevPowerThreshold := -obj.FwdPowerThreshold;
+        // Note: this is done like this `if` block to mirror the behavior from EPRI's code, but we could
+        // just check if the property was set globally (instead of just this edit context).
+    end;
+    obj.RecalcElementData();
+    Exclude(obj.Flags, Flg.EditingActive);
+    Result := True;
 end;
 
 procedure TRegControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
@@ -440,8 +470,6 @@ begin
             end;
         ord(TProp.maxtapchange):
             TapLimitPerChange := max(0, TapLimitPerChange);
-        ord(TProp.revThreshold):
-            RevPowerThreshold := kWRevPowerThreshold * 1000.0;
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -477,8 +505,8 @@ begin
     Inversetime := Other.Inversetime;
 
     TapLimitPerChange := Other.TapLimitPerChange;
-    kWRevPowerThreshold := Other.kWRevPowerThreshold;
     RevPowerThreshold := Other.RevPowerThreshold;
+    FwdPowerThreshold := Other.FwdPowerThreshold;
     RevDelay := Other.RevDelay;
     ReverseNeutral := Other.ReverseNeutral;
     ShowEventLog := Other.ShowEventLog;
@@ -533,8 +561,8 @@ begin
     revX := 0.0;
     revLDC_Z := 0.0;
     revDelay := 60.0; // Power must be reversed this long before it will reverse
-    RevPowerThreshold := 100000.0; // 100 kW
-    kWRevPowerThreshold := 100.0;
+    RevPowerThreshold := -100000.0; // -100 kW
+    FwdPowerThreshold := 100000.0; // 100 kW
     IsReversible := FALSE;
     ReversePending := FALSE;
     InReverseMode := FALSE;
@@ -922,7 +950,7 @@ begin
                 FwdPower := -ControlledTransformer.Power(ElementTerminal).re;  // watts
                 if (not ReversePending) then  // If reverse is already pending, don't send any more messages
                 begin
-                    if (FwdPower < -RevPowerThreshold) then
+                    if (FwdPower < RevPowerThreshold) then
                     begin
                         ReversePending := TRUE;
                         RevHandle := ActiveCircuit.ControlQueue.Push(RevDelay, ACTION_REVERSE, 0, Self);
@@ -932,7 +960,7 @@ begin
                             ));
                     end
                 end;
-                if ReversePending and (FwdPower >= -RevPowerThreshold) then // Reset  reverse pending
+                if ReversePending and (FwdPower >= RevPowerThreshold) then // Reset  reverse pending
                 begin
                     ReversePending := FALSE; // Reset it if power goes back
                     if RevHandle > 0 then
@@ -957,7 +985,7 @@ begin
                 FwdPower := -ControlledTransformer.Power(ElementTerminal).re;  // watts
                 if not ReversePending then
                 begin
-                    if (FwdPower > RevPowerThreshold) then
+                    if (FwdPower > FwdPowerThreshold) then
                     begin
                         ReversePending := TRUE;
                         RevBackHandle := ActiveCircuit.ControlQueue.Push(RevDelay, ACTION_REVERSE, 0, Self);
@@ -965,7 +993,7 @@ begin
                             RegWriteDebugRecord(Format('Pushed ReverseBack Action to switch back, Handle=%d, FwdPower=%.8g', [RevBackHandle, FwdPower]));
                     end
                 end;
-                if ReversePending and (FwdPower <= RevPowerThreshold) then // Reset  reverse pending                            Else
+                if ReversePending and (FwdPower <= FwdPowerThreshold) then // Reset  reverse pending                            Else
                 begin
                     ReversePending := FALSE; // Reset it if power goes back
                     if RevBackHandle > 0 then
@@ -1102,7 +1130,7 @@ begin
     if TapChangeIsNeeded and IdleEnabled and (CogenEnabled or IsReversible) then
     begin
         FwdPower := -ControlledTransformer.Power(ElementTerminal).re; // W
-        if Abs(FwdPower) <= RevPowerThreshold then
+        if (FwdPower >= RevPowerThreshold) or (FwdPower <= FwdPowerThreshold) then
         begin
             TapChangeIsNeeded := false; // idle in no-load zone
         end;
@@ -1115,7 +1143,7 @@ begin
     if TapChangeIsNeeded and IdleReverseEnabled and IsReversible and not ReverseNeutral then
     begin
         FwdPower := -ControlledTransformer.Power(ElementTerminal).re; // W
-        if FwdPower < -RevPowerThreshold then
+        if FwdPower < RevPowerThreshold then
         begin
             TapChangeIsNeeded := false; // idle in reverse zone
         end;
@@ -1128,7 +1156,7 @@ begin
     if TapChangeIsNeeded and IdleForwardEnabled and IsReversible then
     begin
         FwdPower := -ControlledTransformer.Power(ElementTerminal).re; // W
-        if FwdPower > RevPowerThreshold then
+        if FwdPower > FwdPowerThreshold then
         begin
             TapChangeIsNeeded := false; // idle in forward zone
         end;
@@ -1138,56 +1166,56 @@ begin
         end;
     end;
 
-    if Vlimitactive() then
-        if (Vlocalbus > Vlimit) then
-            TapChangeIsNeeded := TRUE;
+    if Vlimitactive() and (Vlocalbus > Vlimit) then
+        TapChangeIsNeeded := TRUE;
 
-    if TapChangeIsNeeded then
+    if not TapChangeIsNeeded then
     begin
-        // Compute tapchange
-        Vboost := (VregTest - Vactual);
-        if Vlimitactive() then
-            if (Vlocalbus > Vlimit) then
-                Vboost := (Vlimit - Vlocalbus);
-        BoostNeeded := Vboost * PTRatio / ControlledTransformer.BaseVoltage(ElementTerminal);  // per unit Winding boost needed
-        Increment := ControlledTransformer.TapIncrement(TapWinding);
-        SetPendingTapChange(Round(BoostNeeded / Increment) * Increment);  // Make sure it is an even increment
-
-        // If Tap is another winding or in REVERSE MODE, it has to move the other way to accomplish the change
-        if (TapWinding <> ElementTerminal) or InReverseMode then
-            SetPendingTapChange(-PendingTapChange());
-
-        // Send Initial Tap Change message to control queue
-        // Add Delay time to solution control queue
-        if (PendingTapChange() <> 0.0) and not Armed then
-        begin
-            // Now see if any tap change is possible in desired direction  Else ignore
-            if PendingTapChange() > 0.0 then
-            begin
-                if ControlledTransformer.PresentTap(TapWinding) < ControlledTransformer.MaxTap(TapWinding) then
-                begin
-                    ControlActionHandle := ActiveCircuit.ControlQueue.Push(ComputeTimeDelay(Vactual), ACTION_TAPCHANGE, 0, Self);
-                    Armed := TRUE;  // Armed to change taps
-                end;
-            end
-            else
-            begin
-                if ControlledTransformer.PresentTap(TapWinding) > ControlledTransformer.MinTap(TapWinding) then
-                begin
-                    ControlActionHandle := ActiveCircuit.ControlQueue.Push(ComputeTimeDelay(Vactual), ACTION_TAPCHANGE, 0, Self);
-                    Armed := TRUE;  // Armed to change taps
-                end;
-            end;
-        end;
-    end // If TapChangeIsNeeded
-    else
-    begin // Reset if back in band.
+        // Reset if back in band.
         SetPendingTapChange(0.0);
         if Armed then
         begin
             ActiveCircuit.ControlQueue.Delete(ControlActionHandle);
             Armed := FALSE;
             ControlActionHandle := 0;
+        end;
+        Exit;
+    end;
+
+    // Compute tapchange
+    Vboost := (VregTest - Vactual);
+    if Vlimitactive() and (Vlocalbus > Vlimit) then
+        Vboost := (Vlimit - Vlocalbus);
+
+    BoostNeeded := Vboost * PTRatio / ControlledTransformer.BaseVoltage(ElementTerminal);  // per unit Winding boost needed
+    Increment := ControlledTransformer.TapIncrement(TapWinding);
+    SetPendingTapChange(Round(BoostNeeded / Increment) * Increment);  // Make sure it is an even increment
+
+    // If Tap is another winding or in REVERSE MODE, it has to move the other way to accomplish the change
+    if (TapWinding <> ElementTerminal) or InReverseMode then
+        SetPendingTapChange(-PendingTapChange());
+
+    // Send Initial Tap Change message to control queue
+    // Add Delay time to solution control queue
+
+    if (PendingTapChange() = 0.0) or Armed then
+        Exit;
+
+    // Now see if any tap change is possible in desired direction  Else ignore
+    if PendingTapChange() > 0.0 then
+    begin
+        if ControlledTransformer.PresentTap(TapWinding) < ControlledTransformer.MaxTap(TapWinding) then
+        begin
+            ControlActionHandle := ActiveCircuit.ControlQueue.Push(ComputeTimeDelay(Vactual), ACTION_TAPCHANGE, 0, Self);
+            Armed := TRUE;  // Armed to change taps
+        end;
+    end
+    else
+    begin
+        if ControlledTransformer.PresentTap(TapWinding) > ControlledTransformer.MinTap(TapWinding) then
+        begin
+            ControlActionHandle := ActiveCircuit.ControlQueue.Push(ComputeTimeDelay(Vactual), ACTION_TAPCHANGE, 0, Self);
+            Armed := TRUE;  // Armed to change taps
         end;
     end;
 end;

@@ -1663,6 +1663,7 @@ begin
         DosimpleMsg('%s: Object already being edited!', [obj.FullName()], 37737);
         Exit;
     end;
+    obj.PrpSequence[NumProperties + 1] := obj.PrpSequence[0];
     if (obj <> NIL) then
         Include(obj.Flags, Flg.EditingActive);
 end;
