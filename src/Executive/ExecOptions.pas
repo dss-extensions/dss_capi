@@ -164,7 +164,9 @@ type
         InjCurrent,
         ITerminal,
         YPrim,
-        IntegrationFlag
+        IntegrationFlag,
+        AllowForms,
+        AllowProgressBar
     );
 {$SCOPEDENUMS OFF}
 
@@ -785,6 +787,10 @@ begin
                 DSS.ActiveCircuit.LongLineCorrection := InterpretYesNo(Param);
             ord(Opt.ShowReports):
                 DSS.AutoDisplayShowReport := InterpretYesNo(Param);
+            ord(Opt.AllowForms):
+                NoFormsAllowed := not InterpretYesNo(Param);
+            ord(Opt.AllowProgressBar):
+                NoProgressBarFormAllowed := not InterpretYesNo(Param);
 {$ENDIF}
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
             ord(Opt.Coverage):
@@ -1257,7 +1263,10 @@ begin
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.LongLineCorrection);
                 ord(Opt.ShowReports):
                     AppendGlobalResult(DSS, DSS.AutoDisplayShowReport);
-{$ENDIF} //DSS_CAPI_PM
+                ord(Opt.AllowForms):
+                    AppendGlobalResult(DSS, not NoFormsAllowed);
+                ord(Opt.AllowProgressBar):
+                    AppendGlobalResult(DSS, not NoProgressBarFormAllowed);
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
                 ord(Opt.Coverage):
                     AppendGlobalResult(DSS, Format('%-g', [DSS.ActiveCircuit.Actual_Coverage]));

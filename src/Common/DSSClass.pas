@@ -951,6 +951,10 @@ procedure TDSSContext.InitProgressForm();
 begin
     if (@DSSMessageCallback) = NIL then
         Exit;
+
+    if NoProgressBarFormAllowed then
+        Exit;
+
     DSSMessageCallback(self, PChar('0'), ord(DSSMessageType.ProgressPercent), 0, 2);
 end;
 
@@ -959,6 +963,9 @@ var
     msg: String;
 begin
     if (@DSSMessageCallback) = NIL then
+        Exit;
+
+    if NoProgressBarFormAllowed then
         Exit;
 
     msg := IntToStr(Count);
@@ -970,6 +977,9 @@ begin
     if NoFormsAllowed then
         Exit;
     
+    if NoProgressBarFormAllowed then
+        Exit;
+
     if (@DSSMessageCallback) <> NIL then
     begin
         DSSMessageCallback(self, PChar(S), ord(DSSMessageType.ProgressCaption), Length(S) + 1);
@@ -983,6 +993,9 @@ begin
     if NoFormsAllowed then
         Exit;
 
+    if NoProgressBarFormAllowed then
+        Exit;
+
     if (@DSSMessageCallback) <> NIL then
     begin
         DSSMessageCallback(self, PChar(S), ord(DSSMessageType.ProgressFormCaption), Length(S) + 1);
@@ -994,6 +1007,9 @@ end;
 procedure TDSSContext.ProgressHide();
 begin
     if NoFormsAllowed then
+        Exit;
+
+    if NoProgressBarFormAllowed then
         Exit;
 
     if (@DSSMessageCallback) = NIL then
