@@ -125,7 +125,7 @@ CONST
     FULLCARSON    = 2;
     DERI          = 3;
     
-    ProgramName = 'dss-extensions';
+    ProgramName = 'altdss';
     MaxCircuits = 2; //TODO: remove limit? or completely remove the concept of a separate circuit, i.e., make it so a DSSContext always contains one circuit
 
      

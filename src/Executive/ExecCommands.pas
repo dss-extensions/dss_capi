@@ -613,7 +613,7 @@ begin
                 DSS.CmdResult := DSS.DSSExecutive.DoInterpolateCmd;
             ord(Cmd.TOP):
             begin
-                DoSimpleMsg(DSS, _('TOP is not supported in AltDSS.'), 999);
+                DoSimpleMsg(DSS, _('TOP is not supported in the AltDSS engine.'), 999);
                 DSS.CmdResult := 0;
             end;
             ord(Cmd.Rotate):
@@ -707,12 +707,12 @@ begin
                   // at least available to users outside of EPRI.
             ord(Cmd.Connect):
             begin
-                DoSimpleMsg(DSS, _('Winsock TCP/IP connection is not supported in AltDSS.'), 999);
+                DoSimpleMsg(DSS, _('Winsock TCP/IP connection is not supported in the AltDSS engine.'), 999);
                 DSS.CmdResult := 0;
             end;
             ord(Cmd.Disconnect):
             begin
-                DoSimpleMsg(DSS, _('Winsock TCP/IP connection is not supported in AltDSS.'), 999);
+                DoSimpleMsg(DSS, _('Winsock TCP/IP connection is not supported in the AltDSS engine.'), 999);
                 DSS.CmdResult := 0;
             end;
             ord(Cmd.Remove):
