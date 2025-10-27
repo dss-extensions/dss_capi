@@ -87,7 +87,7 @@ begin
     DSSObjType := 0;
     ParentClass := ParClass;
     // init'd to zero when allocated
-    PrpSequence := Allocmem(SizeOf(Integer) * (ParentClass.NumProperties + 1));
+    PrpSequence := Allocmem(SizeOf(Integer) * (ParentClass.NumProperties + 2)); // 0 and last = tracking
 
     Flags := [];
 end;
