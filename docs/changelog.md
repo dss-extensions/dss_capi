@@ -30,6 +30,8 @@
 - **DSS-Extensions COM bridge DLL**: To allow using both our AltDSS engine and EPRI's OpenDSS implementations more easily through legacy use-cases, a new COM DLL was implemented. By default it uses our official AltDSS engine, but a future package will include third-party binaries to simplify installation. When using the AltDSS engine, a large part of the API extensions implemented here are available through COM. Effectivelly, this COM bridge allows loading the AltDSS/DSS C-API DLL, OpenDSSDirect.DLL (from EPRI's OpenDSS distribution), and OpenDSSC.DLL (from EPRI's OpenDSS-C code).
 - **FastDSS**: FastDSS is the new faster bindings implementation for MATLAB (AltDSS/DSS MATLAB MEX) and Python. Although the code for specific languages are hosted in their respective repositories, the common code is hosted on DSS C-API to avoid copies. Although DSS-Python and OpenDSSDirect.py were already fast compared to the alternatives, FastDSS guarantees the best API performance by integrating through MEX (on MATLAB), and NumPy and CPython's C-API.
 
+The repository will be renamed in the near future. The documentation and links will be updated to reflect this. GitHub typically handles redirecting the old name just fine and users are not required to update the repository references in the short term.
+
 **Main DSS C-API and AltDSS engine changes:**
 
 - As planned for a while:

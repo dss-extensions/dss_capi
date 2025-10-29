@@ -1,0 +1,41 @@
+# Contributing to projects on DSS-Extensions
+
+Contributions are welcome. In general, the recommendation is: **open a ticket to discuss first**. 
+
+A lot of features on DSS-Extensions are developed in private, sometimes taking a few years to land on the public repository. Discussing before contributing can save everyone a lot of time.
+
+Most projects on DSS-Extensions are language bindings, interfacing a higher level language to the plain C interface (AltDSS/DSS C-API). That means, engine bugs affect all projects. For the official engine on DSS-Extensions, the AltDSS engine, we can directly fix and change the engine code as required. The code and distribution of EPRI's OpenDSS and OpenDSS-C are not under the control of DSS-Extensions, so an update may not be promptly available for various reasons.
+
+## Bugs
+
+If you intend to report a bug or provide a bug fix, instead of focusing on fixing the bug, it is generally better to provide a test we can integrate to the test suite to ensure the behavior remains correct in the future.
+
+A short, self-contained script or sample code is greatly appreciated. See also [The SSCCE](https://www.sscce.org/).
+
+## Documentation and examples
+
+General documentation, be about OpenDSS components, or specific aspects of a project on DSS-Extensions is always welcome. 
+
+Regarding quality, as long as the docs and examples are valid and useful for the community, other users can contribute to further develop them.
+
+Translations of existing documents to other languages are also appreciated.
+
+## On licenses
+
+When contributing, users should be aware of the licenses of the component they are contributing to.
+
+On DSS-Extensions, different projects and sometimes different files in a single repository can have different licenses. For example, the license for [KLUSolveX]() is mostly LGPL -- the original upstream code was LGPL, and the main component (KLU from SuiteSparse) is LGPL. The code for the AltDSS engine is mostly BSD3, but the repository contains code for LGPL components too. Some projects use MIT or other licenses.
+
+Further reading: (The Legal Side of Open Source)[https://opensource.guide/legal/].
+
+## On generative AI contributions
+
+AI comes in various forms but, in the current scenario, no code output from generative AI tools is directly accepted. This is due to both potential code quality, and unclear (worldwide) legal scenario. If there is interest in the community to contribute large features based on AI tools, we can always create a new repository or dedicated folder to help isolate them.
+
+Please also see the Python policy in the draft contributor guide:
+
+https://devguide.python.org/contrib/project/generative-ai/
+
+In general, if you intend to contribute using AI-based tools, please first open a discussions and be upfront whenever AI is used.
+
+Note that we do encourage use of DSS-Extensions on AI research and, indeed, there are planned features that may help achieving better integration.
