@@ -3,7 +3,17 @@
 
 *Para uma versão em português deste arquivo, veja [README.pt-BR.md](https://github.com/dss-extensions/dss_capi/blob/master/README.pt-BR.md).*
 
-# AltDSS/DSS C-API: a library with a C API for an Alternative implementation of EPRI's OpenDSS
+# AltDSS and DSS C-API core projects
+
+The AltDSS engine is a library with a C API for an Alternative implementation of EPRI's OpenDSS. The AltDSS C-API, also known as just DSS C-API, is also implemented for EPRI's own distribution. To wrap it all, the DSS-Extensions COM Bridge can be used for legacy applications to use any of the compatible engines.
+
+This repository hosts several subprojects:
+
+- AltDSS engine: the main project, a community implementation of OpenDSS. Originally developed as just DSS C-API, but it is now a separate entity.
+- AltDSS/DSS C-API: the API developed to expose the engine to other programming languages
+- AltDSS Oddie: originally for **O**pen**D**SS **D**irect **I**mterface **E**xtender, it implements DSS C-API over EPRI's DCSL API, allowing us to use only DSS C-API and work with all available DSS engines.
+- DSS-Extensions COM Bridge: a COM DLL implementation to expose all engines (AltDSS, EPRI's OpenDSS, EPRI's OpenDSS-C) for legacy applications on Windows, very compatible with the original OpenDSS (Delphi version) COM DLL from EPRI, with a few extensions.
+- Portions of FastDSS: FastDSS is a new backend approach for some selected programming languages, initially Python and MATLAB. As the name implies, it is the fastest API implementation for a variety of use-cases. Language-specific code is hosted on other repositories, but common code is hosted here.
 
 Please see [FAQ](https://github.com/dss-extensions/dss-extensions#faq) for a couple of notes.
 
