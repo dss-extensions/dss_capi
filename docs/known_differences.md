@@ -82,13 +82,14 @@ Starting on version 0.13.0, we started introducing explicit compatibility flags 
             If enabled, toggle worse precision for certain aspects of the engine. For example, the sequence-to-phase 
             (`As2p`) and sequence-to-phase (`Ap2s`) transform matrices. On DSS C-API, we fill the matrix explicitly
             using higher precision, while numerical inversion of an initially worse precision matrix is used in
-            EPRI's OpenDSS. We will introduce better precision for other aspects of the engine in the future, 
+            EPRI's OpenDSS. We will introduce better precision for other aspects of the engine in the future,
             so this flag can be used to toggle the old/bad values where feasible.
         */
 
         DSSCompatFlags_InvControl9611 = 0x00000004, /*!< 
-            Toggle some InvControl behavior introduced in OpenDSS 9.6.1.1. It could be a regression 
-            but needs further investigation, so we added this flag in the time being.
+            Toggle some InvControl behavior introduced in OpenDSS 9.6.1.1. It was confirmed as a 
+            regression and was fixed in OpenDSS v10. The flag still has effects for a few more
+            releases, in case users need to investigate differences across versions.
         */
 
         DSSCompatFlags_SaveCalcVoltageBases = 0x00000008, /*!< 
@@ -118,10 +119,10 @@ Starting on version 0.13.0, we started introducing explicit compatibility flags 
             and will be further developed for future versions.
         */
 
-        DSSCompatFlags_SkipSideEffects = 0x00000040 /*!< 
+        DSSCompatFlags_SkipSideEffects = 0x00000040, /*!< 
             Some specific functions on EPRI's OpenDSS APIs and internal code skip important side-effects.
             By default, on DSS-Extensions/AltDSS, those side-effects are enabled. Use this flag
-            to try to follow the behavior of EPRI's APIs. Beware that some side-effects are
+            to try to follow the behavior of the EPRI's OpenDSS APIs. Beware that some side-effects are
             important and skipping them may result in incorrect results.
             This flag affects some of the classic API functions, especially Loads and Generators,
             as well as the behavior of some DSS properties (Line: Rg, Xg, rho, Transformer/AutoTrans: XscArray).
@@ -147,30 +148,48 @@ Starting on version 0.13.0, we started introducing explicit compatibility flags 
 
         DSSCompatFlags_PermissiveProperties = 0x00000200, /*!<
             Starting AltDSS/DSS C-API v0.15.0, the way some properties are handled has been tweaked to try
-            to provide a better experience for general users.
+            to provide a better experience for general users based on several years of messages and bug reports,
+            collected on the DSS-Extensions projects and in the OpenDSS forum.
 
             - The arrays provided in the text interface, scripts or the Alt APIs are required to match the provided sizes. 
               For example, if a LoadShape has `NPts` set to 12 and the user provides 24 values for `PMult`, an error is generated.
 
-            - Some properties in Transformer and AutoTrans that previously silently replaced zeros with default values now error
+            - Some properties in Transformer and AutoTrans that previously silently replaced zeros with default values now error.
 
             - Some properties are read-only, but previously silent ignored input values. Errors are now generated if the user 
               tries to set them. This includes some properties that are read-only on certain conditions. For example, if a 
               SwtControl is locked, its state cannot be set.
 
+            - If the user tries to set zero to some essential DSS properties that would result in NaN values or other severe errors in
+              the solver. In EPRI's OpenDSS v10.2.0.1, these zero values are now replaced with `1e-8`. Depending on the use case, 
+              this value may or may not be OK. Set this flag the allow replacing zero with `1e-8` like in OpenDSS v10.2.0.1. Affects
+              `Generator.kVA`, `Generator.MVA`, `Generator.kW`, `Load.kVA`, `Load.kW`, `PVSystem.kVA`, `Storage.kVA`, `Storage.kW`, 
+              `WindGen.kVA`, `WindGen.MVA`, and `WindGen.kW`.
+
             Set this compatibility flag to silently ignore the errors listed above and restore the original behavior.
         */
 
-        DSSCompatFlags_DontResetYPrimInvalid = 0x00000400 /*!<
-            Starting AltDSS/DSS C-API v0.15.0, the default behavior is that all components have their YPrim-invalid flags cleared when 
-            their YPrim matrices are updated. That means that our original solver option `AlwaysResetYPrimInvalid` does nothing now.
+        DSSCompatFlags_DontResetYPrimInvalid = 0x00000400, /*!<
+            **RESERVED for a future release. This does not do anything yet.**
 
-            The new behavior should be more correct, i.e., reset the YPrim-invalid flag as expected, but it can change the convergence 
-            pattern for some circuits. This flag could potentially be used to investigate issues when upgrading versions. For example,
-            if a circuit that did not converge in previous versions now converges, a user can set this bit flag to investigate if the 
-            difference is due to the YPrim flag change, or something else.
+            Starting AltDSS/DSS C-API v0.15.0, it was expected that the default behavior would be that all components have their YPrim-invalid flags cleared when 
+            their YPrim matrices are updated, but a specific change was reversed in EPRI's OpenDSS codebase. To avoid confusion, this flag was reverted until the
+            behavior on EPRI's OpenDSS is fully corrected.
+            That means that our original solver option `AlwaysResetYPrimInvalid` is still valid.
+        */
 
-            Set this compatibility flag to restore the default behavior of previous versions. Note: this flag might be removed in a future release.
-        */        
+        DSSCompatFlags_LegacySMARTDS = 0x00000800 /*!<
+            Starting AltDSS/DSS C-API v0.15.0, this flag was added to try to adjust the parser to handle .DSS files from the
+            [SMART-DS](https://data.openei.org/submissions/2981) dataset.
+
+            Set this flag to add the extra handling. If you save the circuit afterwards, the saved scripts should be compatible with
+            modern DSS versions.
+
+            This flag is required since OpenDSS changed the models for a few components several years ago.
+
+            If you still cannot load a scenario from SMART-DS, please report on GitHub, e.g., for a previous discussion see:
+            https://github.com/orgs/dss-extensions/discussions/50
+            
+        */
     };
 ```

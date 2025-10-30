@@ -439,7 +439,7 @@ extern "C" {
         SolverOptions_ReuseCompressedMatrix = 1, ///< Reuse only the prepared CSC matrix
         SolverOptions_ReuseSymbolicFactorization = 2, ///< Reuse the symbolic factorization, implies ReuseCompressedMatrix
         SolverOptions_ReuseNumericFactorization = 3, ///< Reuse the numeric factorization, implies ReuseSymbolicFactorization
-        SolverOptions_AlwaysResetYPrimInvalid = 0x10000000 ///< This was a bit flag in previous releases; **does nothing since v0.15.0**. See the compat flag `DontResetYPrimInvalid` for an alternative
+        SolverOptions_AlwaysResetYPrimInvalid = 0x10000000 ///< Mark any element's YPrim as valid after it is updated (see "Incremental system Y updates and refactorization" in the general DSS-Extensions docs)
     };
 
     enum DSSCompatFlags {
@@ -542,15 +542,12 @@ extern "C" {
         */
 
         DSSCompatFlags_DontResetYPrimInvalid = 0x00000400, /*!<
-            Starting AltDSS/DSS C-API v0.15.0, the default behavior is that all components have their YPrim-invalid flags cleared when 
-            their YPrim matrices are updated. That means that our original solver option `AlwaysResetYPrimInvalid` does nothing now.
+            **RESERVED for a future release. This does not do anything yet.**
 
-            The new behavior should be more correct, i.e., reset the YPrim-invalid flag as expected, but it can change the convergence 
-            pattern for some circuits. This flag could potentially be used to investigate issues when upgrading versions. For example,
-            if a circuit that did not converge in previous versions now converges, a user can set this bit flag to investigate if the 
-            difference is due to the YPrim flag change, or something else.
-
-            Set this compatibility flag to restore the default behavior of previous versions. Note: this flag might be removed in a future release.
+            Starting AltDSS/DSS C-API v0.15.0, it was expected that the default behavior would be that all components have their YPrim-invalid flags cleared when 
+            their YPrim matrices are updated, but a specific change was reversed in EPRI's OpenDSS codebase. To avoid confusion, this flag was reverted until the
+            behavior on EPRI's OpenDSS is fully corrected.
+            That means that our original solver option `AlwaysResetYPrimInvalid` is still valid.
         */
 
         DSSCompatFlags_LegacySMARTDS = 0x00000800 /*!<

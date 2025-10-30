@@ -57,7 +57,7 @@ type
         MonitorHeader = 128,
         InvControlDeltaV = 256,
         PermissiveProperties = 512,
-        DontResetYPrimInvalid = 1024,
+        // DontResetYPrimInvalid = 1024, -- reserved for a near future
         LegacySMARTDS = 2048
     );
 

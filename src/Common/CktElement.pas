@@ -536,8 +536,8 @@ begin
         DoYPrimCalcs(YPrim);
 
     // This is now also the behavior in EPRI's OpenDSS since r3859
-    // if ((ActiveCircuit.Solution.SolverOptions and ord(TSolverOptions.AlwaysResetYPrimInvalid)) <> 0) then
-    if ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.DontResetYPrimInvalid)) = 0) then
+    if ((ActiveCircuit.Solution.SolverOptions and ord(TSolverOptions.AlwaysResetYPrimInvalid)) <> 0) then
+    // if ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.DontResetYPrimInvalid)) = 0) then
         FYPrimInvalid := false;
 end;
 

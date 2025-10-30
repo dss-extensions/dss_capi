@@ -76,9 +76,9 @@ type
         ReuseNothing = 0,
         ReuseCompressedMatrix = 1, // Reuse only the prepared CSC matrix
         ReuseSymbolicFactorization = 2, // Reuse the symbolic factorization, implies ReuseCompressedMatrix
-        ReuseNumericFactorization = 3 // Reuse the numeric factorization, implies ReuseSymbolicFactorization
+        ReuseNumericFactorization = 3, // Reuse the numeric factorization, implies ReuseSymbolicFactorization
         
-        // AlwaysResetYPrimInvalid = $10000000 // Bit flag, see CktElement.pas
+        AlwaysResetYPrimInvalid = $10000000 // Bit flag, see CktElement.pas
     );
 {$SCOPEDENUMS OFF}
 {$ENDIF}
