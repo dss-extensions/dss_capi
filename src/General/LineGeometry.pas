@@ -221,7 +221,7 @@ begin
     end;
 
     // Validate number of elements
-    if (istop - istart + 1) >= ValueCount then
+    if (istop - istart + 1) > ValueCount then
     begin
         obj.DoSimpleMsg('%s: Unexpected number (%d) of objects; expected %d objects.', 
             [obj.FullName(), ValueCount, (istop - istart + 1)], 18102);
@@ -559,17 +559,17 @@ begin
                     i := FNPhases + 1;
                 end;
             end;
-            if i = 1 then
+            if (i <= FNPhases) and (conductors[i] <> NIL) then
             begin
-                conductorObj := conductors[1];
+                conductorObj := conductors[i];
                 if (conductorObj.NormAmps > 0.0) and (Normamps = 0.0) then 
-                    Normamps  := conductorObj.NormAmps;
+                    Normamps := conductorObj.NormAmps;
                 
                 if (conductorObj.Emergamps > 0.0) and (Emergamps = 0.0) then 
                     Emergamps := conductorObj.EmergAmps;
                 
                 if (conductorObj.NumAmpRatings > 1) and (NumAmpRatings = 1) then 
-                    NumAmpRatings  := conductorObj.NumAmpRatings;
+                    NumAmpRatings := conductorObj.NumAmpRatings;
 
                 if (Length(conductorObj.AmpRatings) > 1) and (length(AmpRatings) = 1) then
                 begin
