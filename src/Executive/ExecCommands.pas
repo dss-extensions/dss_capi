@@ -143,9 +143,8 @@ type
         NextObj,
         CountObj,
         ActiveObj,
-        ClassMembers
+        ClassMembers,
 {$IFDEF DSS_CAPI_PM}
-        ,
         NewActor,
         Wait,
         SolveAll
@@ -156,8 +155,16 @@ type
     {$ENDIF}
         ,
         Abort,
-        Clone
+        Clone,
 {$ENDIF}
+
+        // AltDSS Extensions
+        DoubleSlashBangAltDSS,
+        PushCompatFlags,
+        PopCompatFlags,
+        SetCompatFlag,
+        UnsetCompatFlag,
+        ClearCompatFlags
     );
 
 const
@@ -189,12 +196,12 @@ uses
     MemoryMap_lib,
     TypInfo,
     KLUSolve,
-    Solution
+    Solution,
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
-    , Diakoptics
-    , sparse_math
+    Diakoptics,
+    sparse_math,
 {$ENDIF}
-    ;
+    StrUtils;
     
 type
     Cmd = TExecCommand;
@@ -214,6 +221,7 @@ begin
     ExecCommand[ord(Cmd.doubleslash) - 1] := '//';
     ExecCommand[ord(Cmd.questionmark) - 1] := '?';
     ExecCommand[ord(Cmd.SetOpt) - 1] := 'Set';
+    ExecCommand[ord(Cmd.DoubleSlashBangAltDSS) - 1] := '//!AltDSS';
 end;
 
 procedure ProcessCommand({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext; const CmdLine: String; LineNum: Integer);
@@ -254,12 +262,23 @@ begin
         ParamPointer := 0;
         ParamName := DSS.Parser.NextParam();
         Param := DSS.Parser.MakeString();
+
         if Length(Param) = 0 then
-            Exit;  // Skip blank line
+        begin
+            if DSS.Parser.IsAltDSSMagicCommand() then
+            begin
+                // Handle special bypass comment; normally, the parser strips all double-slash comments.
+                ParamPointer := ord(Cmd.DoubleSlashBangAltDSS)
+            end
+            else
+            begin
+                Exit;  // Skip blank line or full comments in general
+            end;
+        end;
 
         // Check for Command verb or Property Value
         // Commands do not have equal signs so ParamName must be zero
-        if Length(ParamName) = 0 then
+        if (ParamPointer = 0) and (Length(ParamName) = 0) then
             ParamPointer := CommandList.GetCommand(Param);
 
         if (ParamPointer > 0) and (ParamPointer < NumExecCommands) and (DSSCommandFlag.Skip in DSS.commandFlags[ParamPointer]) then
@@ -269,6 +288,11 @@ begin
 
         // Check first for Compile or Redirect and get outta here
         case ParamPointer of
+            ord(Cmd.DoubleSlashBangAltDSS):
+            begin
+                ProcessCommand(DSS, StringReplace(CmdLine, '//!AltDSS', '', [rfIgnoreCase]), LineNum);
+                Exit;
+            end;
             ord(Cmd.Compile), ord(Cmd.Redirect):
             begin
                 with DSS.DSSExecutive do
@@ -381,6 +405,32 @@ begin
                 DoSimpleMsg(DSS, _('COMHelp is not available on DSS-Extensions. You can browse the docs online at https://opendss.epri.com/COMInterface.html , or download "OpenDSS_COM.chm" at https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/x64/OpenDSS_COM.chm?format=raw as well as other example and documentation files from the EPRI''s OpenDSS distribution at https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/ and subfolders. Please see https://dss-extensions.org/ for further links.'), 999);
                 DSS.CmdResult := 0;
             end;
+
+            // AltDSS Extensions
+            ord(Cmd.PushCompatFlags):
+            begin
+                SetLength(DSS.CompatFlagsStack, Length(DSS.CompatFlagsStack) + 1);
+                DSS.CompatFlagsStack[High(DSS.CompatFlagsStack)] := DSS_EXTENSIONS_COMPAT;
+            end;
+            ord(Cmd.PopCompatFlags):
+            begin
+                DSS_EXTENSIONS_COMPAT := DSS.CompatFlagsStack[High(DSS.CompatFlagsStack)];
+                SetLength(DSS.CompatFlagsStack, Length(DSS.CompatFlagsStack) - 1);
+            end;
+            ord(Cmd.SetCompatFlag):
+            begin
+                DSS.Parser.NextParam();
+                Param := DSS.Parser.MakeString();
+                DSS_EXTENSIONS_COMPAT := DSS_EXTENSIONS_COMPAT or (DSS.CompatFlagsEnum.StringToOrdinal(Param));
+            end;
+            ord(Cmd.UnsetCompatFlag):
+            begin
+                DSS.Parser.NextParam();
+                Param := DSS.Parser.MakeString();
+                DSS_EXTENSIONS_COMPAT := DSS_EXTENSIONS_COMPAT and (High(LongWord) xor LongWord(DSS.CompatFlagsEnum.StringToOrdinal(Param)));
+            end;
+            ord(Cmd.ClearCompatFlags):
+                DSS_EXTENSIONS_COMPAT := 0;
         else
             if DSS.ActiveCircuit = NIL then
             begin

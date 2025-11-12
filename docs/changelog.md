@@ -67,6 +67,17 @@ The repository will be renamed in the near future. The documentation and links w
 
 - **New:** `ctx_ShareGeneral` allows sharing loadshapes and other general DSS objects from one context to others. Examples will be added to illustrate how to use this, coupled with the new settings above, to achieve faster simulation by reusing data already loaded.
 
+- **New:** Introduce commands to modify AltDSS compatibility flags from DSS scripts: `PushCompatFlags`, `PopCompatFlags`, `SetCompatFlag`, `UnsetCompatFlag`, and `ClearCompatFlags`. Since these are specific to the AltDSS engine, using them in DSS scripts break compatibility with EPRI's distribution. To address this, a special comment prefix, `//!AltDSS` was added. Some existing sample circuits may require these to run without errors. When it is possible to toggle compatibility flags through the API, we recommend using the API instead. Here's a minimal sample of usage of these new commands:
+
+```
+//!AltDSS PushCompatFlags
+//!AltDSS SetCompatFlag PermissiveProperties
+// ...
+// ... (run commands that require the compat flag)
+// ...
+//!AltDSS PopCompatFlags
+```
+
 - More error checks and validation in general.
 
 - Classic API:
