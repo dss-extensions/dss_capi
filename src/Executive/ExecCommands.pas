@@ -378,7 +378,7 @@ begin
 {$ENDIF}
             ord(Cmd.COMHelp):
             begin
-                DoSimpleMsg(DSS, _('COMHelp is not available on DSS-Extensions. You can download "OpenDSS_COM.chm" at https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/x64/OpenDSS_COM.chm?format=raw as well as other example and documentation files from the EPRI''s OpenDSS distribution at https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/ and subfolders. Please see https://dss-extensions.org/ for further links.'), 999);
+                DoSimpleMsg(DSS, _('COMHelp is not available on DSS-Extensions. You can browse the docs online at https://opendss.epri.com/COMInterface.html , or download "OpenDSS_COM.chm" at https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/x64/OpenDSS_COM.chm?format=raw as well as other example and documentation files from the EPRI''s OpenDSS distribution at https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/ and subfolders. Please see https://dss-extensions.org/ for further links.'), 999);
                 DSS.CmdResult := 0;
             end;
         else
