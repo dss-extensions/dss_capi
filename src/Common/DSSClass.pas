@@ -46,6 +46,7 @@ type
         ShowTreeView = 11
     );
 
+    // REMINDER: also update the enum spec (CompatFlagsEnum) in TDSSClass below
     DSSCompatFlag = (
         NoSolverFloatChecks = 1,
         BadPrecision = 2,
@@ -803,7 +804,9 @@ type
         Enums: TObjectList;
         UnitsEnum, ScanTypeEnum, SequenceEnum, ConnectionEnum, LeadLagEnum, CoreTypeEnum, ReductionStrategyEnum,
         LineTypeEnum, EarthModelEnum, DefaultLoadModelEnum, RandomModeEnum, ControlModeEnum, VisualizeQuantityEnum, InvControlModeEnum,
-        SolveModeEnum, SolveAlgEnum, CktModelEnum, AddTypeEnum, LoadShapeClassEnum, MonPhaseEnum, ProfilePhasesEnum: TDSSENum;
+        SolveModeEnum, SolveAlgEnum, CktModelEnum, AddTypeEnum, LoadShapeClassEnum, MonPhaseEnum, ProfilePhasesEnum, CompatFlagsEnum: TDSSENum;
+
+        CompatFlagsStack: Array of LongInt;
 
         // ZIP file state
         unzipper: TObject;
@@ -1250,6 +1253,39 @@ begin
     ProfilePhasesEnum.HybridMin := 0;
     Enums.Add(ProfilePhasesEnum);
 
+    CompatFlagsEnum := TDSSEnum.Create('ComplatFlags: AltDSS compatibility flags', True, 3, 11,
+        [
+            'NoSolverFloatChecks',
+            'BadPrecision',
+            'InvControl9611',
+            'SaveCalcVoltageBases',
+            'ActiveLine',
+            'NoPropertyTracking',
+            'SkipSideEffects',
+            'MonitorHeader',
+            'InvControlDeltaV',
+            'PermissiveProperties',
+            // 'DontResetYPrimInvalid', -- reserved for a near future
+            'LegacySMARTDS'
+        ],            
+        [
+            ord(DSSCompatFlag.NoSolverFloatChecks), 
+            ord(DSSCompatFlag.BadPrecision),
+            ord(DSSCompatFlag.InvControl9611),
+            ord(DSSCompatFlag.SaveCalcVoltageBases),
+            ord(DSSCompatFlag.ActiveLine),
+            ord(DSSCompatFlag.NoPropertyTracking),
+            ord(DSSCompatFlag.SkipSideEffects),
+            ord(DSSCompatFlag.MonitorHeader),
+            ord(DSSCompatFlag.InvControlDeltaV),
+            ord(DSSCompatFlag.PermissiveProperties),
+            // ord(DSSCompatFlag.DontResetYPrimInvalid), -- reserved for a near future
+            ord(DSSCompatFlag.LegacySMARTDS)
+        ]
+    );
+    CompatFlagsEnum.TryExactFirst := True;
+    Enums.Add(CompatFlagsEnum);
+
     // GR (global result) counters: Initialize to zero
     FillByte(GR_Counts_PDouble, sizeof(TAPISize) * 2, 0);
     FillByte(GR_Counts_PInteger, sizeof(TAPISize) * 2, 0);
@@ -1266,6 +1302,8 @@ begin
     DSSObjs := NIL;
     PDEProxyClass := NIL;
     CurrentDSSDir_internal := '';
+
+    CompatFlagsStack := NIL;
 
 {$IFDEF DSS_CAPI_PM}
     ActorStatus := TActorStatus.Idle;

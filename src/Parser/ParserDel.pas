@@ -93,6 +93,8 @@ type
         procedure SetVars(vars: TParserVar);
         function CmdString(): String;
         procedure SetCmdString(const Value: String);
+
+        function IsAltDSSMagicCommand(): Boolean;
     end;
 
 implementation
@@ -101,7 +103,8 @@ uses
     DSSClass,
     DSSHelper,
     DSSGlobals,
-    Math;
+    Math,
+    StrUtils;
 
 const
     Commentchar = '!';
@@ -1051,6 +1054,20 @@ begin
         Result := errorVal;
         Exit;
     end;
+end;
+
+function TDSSParser.IsAltDSSMagicCommand(): Boolean;
+begin
+    Result := FALSE;
+
+    if (LastDelimiter <> CommentChar) then
+    begin
+        Exit;
+    end;
+
+    tokenBuffer := Copy(CmdBuffer, previousPosition); // previousPosition already skipped spaces, if any
+
+    Result := AnsiStartsStr('//!', tokenBuffer) and AnsiStartsStr('//!altdss', AnsiLowerCase(tokenBuffer));
 end;
 
 end.
