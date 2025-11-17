@@ -489,6 +489,7 @@ type
         PropertyDeprecatedMessage: Array of String; // For deprecated properties
 
         SpecSets: TSpecSets; // For listing alternative sets of properties that define different specifications
+        NonZeroSpecSets: TSpecSets; // Specify properties that cannot all be zero for each spec set
         SpecSetNames: ArrayOfString; // Used for attaching some name to the above sets
 
         PropertyStructArrayIndexOffset, PropertyStructArrayIndexOffset2,

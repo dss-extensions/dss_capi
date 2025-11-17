@@ -432,11 +432,14 @@ var
 
     // For handling spec sets
     toRemove: TStringList = NIL;
+    anyOf: TJSONArray = NIL;
     oneOf: TJSONArray = NIL;
     specSet: TJSONObject = NIL;
     propName: String;
     propJSON: Array of TJSONObject = NIL;
+    tmpPropJSON: TJSONObject = NIL;
     requiredInSpec: TJSONArray = NIL;
+    nonZeroSpecSet: TSpecSet;
 
     maxZorder, zorder, zorderAlt: Integer;
 begin
@@ -730,7 +733,6 @@ begin
                     prop.Add('$comment', 'TODO: use array instead of string');
                 end;
 
-
                 if TPropertyFlag.NonNegative in flags then
                 begin
                     if (PropertyTrapZero[propIndex] <> 0) or (TPropertyFlag.NonZero in flags) then
@@ -743,11 +745,17 @@ begin
                     prop.Add('minimum', -1);
                     prop.Add('maximum', 1);
                 end
-                //TODO
                 else if (PropertyTrapZero[propIndex] <> 0) or (TPropertyFlag.NonZero in flags) then
-                    prop.Add('exclusiveMinimum', 0);
+                begin
+                    prop.Add(
+                        'not', 
+                        TJSONObject.Create([
+                            'enum', 
+                            TJSONArray.Create([0])
+                        ])
+                    );
+                end;
             end;
-
 
             poffset2 := PropertyOffset2[propIndex];
             if PropertyType[propIndex] in [
@@ -1038,6 +1046,10 @@ begin
 
             for j := 0 to High(SpecSets) do
             begin
+                nonZeroSpecSet := [];
+                if High(NonZeroSpecSets) >= j then
+                    nonZeroSpecSet := NonZeroSpecSets[j];
+
                 specSet := TJSONObject.Create();
                 requiredInSpec := TJSONArray.Create();
                 for propIndex_ in SpecSets[j] do
@@ -1058,7 +1070,20 @@ begin
                         specSet := NIL;
                         break;
                     end;
-                    specSet.Add(propNameJSON, propJSON[propIndex].Clone());
+                    tmpPropJSON := propJSON[propIndex].Clone() as TJSONObject;
+                    if (Length(nonZeroSpecSet) = 1) and ((propIndex = nonZeroSpecSet[0]) or ((propIndex_ = nonZeroSpecSet[0]))) then
+                    begin
+                        // This individual property must be non-zero for this style of specification
+                        tmpPropJSON.Add(
+                            'not', 
+                            TJSONObject.Create([
+                                'enum', 
+                                TJSONArray.Create([0])
+                            ])
+                        );
+                    end;
+
+                    specSet.Add(propNameJSON, tmpPropJSON);
                     if toRemove.IndexOf(propNameJSON) < 0 then
                     begin
                         toRemove.Add(propNameJSON);
@@ -1072,6 +1097,31 @@ begin
 
                 if (specSet.Count > 0) or (specSet.Count = Length(SpecSets[j])) then
                 begin
+                    if Length(nonZeroSpecSet) > 1 then
+                    begin
+                        anyOf := TJSONArray.Create();
+                        for propIndex_ in nonZeroSpecSet do
+                        begin
+                            propIndex := propIndex_;
+                            if propJSON[propIndex] = NIL then
+                            begin
+                                if (PropertyArrayAlternative[propIndex] <> 0) then
+                                begin
+                                    propIndex := PropertyArrayAlternative[propIndex];
+                                end;
+                            end;
+
+                            anyOf.Add(TJSONObject.Create([
+                                PropertyNameJSON[propIndex], 
+                                TJSONObject.Create([
+                                    'not', 
+                                    TJSONObject.Create(['enum', TJSONArray.Create([0])])
+                                ])
+                            ]));
+                        end;
+                        specSet.Add('anyOf', anyOf); // At least one nonzero (anyOf works)
+                    end;
+
                     if requiredInSpec.Count > 0 then
                         oneOf.Add(TJSONObject.Create([
                             'title', SpecSetNames[j],

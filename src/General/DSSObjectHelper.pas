@@ -2947,18 +2947,19 @@ begin
             if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) <> 0 then
             begin
                 Value := 1e-8;
-            end
-            else
-            begin
-                if not (TPropertyFlag.IgnoreInvalid in flags) then
-                begin
-                    DoSimpleMsg(
-                        '%s.%s: Value (%g) cannot be zero.', 
-                        [obj.FullName(), PropertyName[Index], Value],
-                    2020031);
-                end;
-                Exit;
             end;
+            // Commented this code block since we decided to handle NonZero on its own
+            // else
+            // begin
+            //     if not (TPropertyFlag.IgnoreInvalid in flags) then
+            //     begin
+            //         DoSimpleMsg(
+            //             '%s.%s: Value cannot be zero.', 
+            //             [obj.FullName(), PropertyName[Index]],
+            //         2020031);
+            //     end;
+            //     Exit;
+            // end;
         end;
         if (TPropertyFlag.GreaterThanOne in flags) and (Value <= 1) then
         begin
@@ -2973,8 +2974,8 @@ begin
         begin
             if not (TPropertyFlag.IgnoreInvalid in flags) then
                 DoSimpleMsg(
-                    '%s.%s: Value (%g) cannot be zero.', 
-                    [obj.FullName(), PropertyName[Index], Value],
+                    '%s.%s: Value cannot be zero.', 
+                    [obj.FullName(), PropertyName[Index]],
                 2020031);
 
             Exit;
@@ -3114,8 +3115,8 @@ begin
     begin
         if not (TPropertyFlag.IgnoreInvalid in flags) then
             DoSimpleMsg(
-                '%s.%s: Value (%d) cannot be zero.', 
-                [TDSSObject(obj).FullName(), PropertyName[Index], Value],
+                '%s.%s: Value cannot be zero.', 
+                [TDSSObject(obj).FullName(), PropertyName[Index]],
             2020031);
 
         Exit;
