@@ -375,6 +375,13 @@ begin
         TSpecSet.Create(ord(TProp.xfkVA), ord(TProp.AllocationFactor), ord(TProp.PF)),
         TSpecSet.Create(ord(TProp.kWh), ord(TProp.PF), ord(TProp.kWhdays), ord(TProp.Cfactor))
     );
+    NonZeroSpecSets := TSpecSets.Create(
+        TSpecSet.Create(ord(TProp.kW)),
+        TSpecSet.Create(ord(TProp.kW), ord(TProp.kvar)),
+        NIL,
+        NIL,
+        NIL
+    );
 
     // enum properties
     PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumProperty;
@@ -443,7 +450,7 @@ begin
 
     PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
-    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kW, TPropertyFlag.ReplaceZero, TPropertyFlag.NonZero];
+    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kW, TPropertyFlag.ReplaceZero]; // TPropertyFlag.NonZero removed, see NonZeroSpecSets
     PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault, TPropertyFlag.Units_kvar];
     PropertyFlags[ord(TProp.PF)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.PowerFactorLimits, TPropertyFlag.Ordering_Last];
 
@@ -717,9 +724,53 @@ end;
 function TLoad.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
 var
     obj: TObj;
+    firstPropEdit: Integer;
 begin
     obj := TObj(ptr);
+
+    // For the other checks, `RecalcElementData` needs to be called first since it changes some values
     obj.RecalcElementData();
+
+    // For the time being, manual code to address the specified nonzero properties in NonZeroSpecSets
+    // We need to use property tracking for this to make any sense, but permissive properties already handles zero in kW.
+    if (((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0) and
+        ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0)) then
+    begin
+        firstPropEdit := obj.PrpSequence[NumProperties + 1] + 1;
+
+        // Check for both `kW` and `kvar` are set (second SpecSet)
+        if (obj.PrpSequence[ord(TProp.kW)] > 0) and (obj.PrpSequence[ord(TProp.kvar)] > 0) then
+        begin
+            // `kW` and `kvar` are set, but we only check if at least one of them changed in this edit operation.
+            if (obj.PrpSequence[ord(TProp.kW)] >= firstPropEdit) or (obj.PrpSequence[ord(TProp.kvar)] >= firstPropEdit) then
+            begin
+                if (obj.kWBase = 0) and (obj.kvarBase = 0) then
+                begin
+                    DoSimpleMsg(
+                        '%s: kW and kvar cannot be both zero; specify at least one non-zero value!', 
+                        [obj.FullName()],
+                    2025111);
+                    // TODO: Should we abort the edit operation here?
+                    // Exit;
+                end;
+            end;
+        end
+        // Check if `kW` is being set in this operation and `kvar` is NOT set (first SpecSet)
+        else if (obj.PrpSequence[ord(TProp.kW)] >= firstPropEdit) and (obj.PrpSequence[ord(TProp.kvar)] <= 0) then
+        begin
+            if (obj.kWBase = 0) then
+            begin
+                DoSimpleMsg(
+                    '%s.%s: Value cannot be zero in this style of specification.', 
+                    [obj.FullName(), PropertyName[ord(TProp.kW)]],
+                2025111);
+                // TODO: Should we abort the edit operation here?
+                // Exit;
+            end;
+        end;
+        // (Other nonzero values are already checked by the base system.)
+    end;
+
     if Flg.NeedsYprim in obj.Flags then
     begin
         obj.SetYprimInvalid(true);
