@@ -154,13 +154,13 @@ begin
     PropertyRedundantWith[ord(TProp.Action)] := ord(TProp.State);
 
     PropertyType[ord(TProp.Normal)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.Normal)] := ptruint(@obj.CurrentAction);
+    PropertyOffset[ord(TProp.Normal)] := ptruint(@obj.NormalState);
     PropertyOffset2[ord(TProp.Normal)] := PtrInt(StateEnum);
     PropertyOffset3[ord(TProp.Normal)] := ptruint(@obj.Locked);
     PropertyFlags[ord(TProp.Normal)] := [TPropertyFlag.ConditionalReadOnly, TPropertyFlag.DynamicDefault];
 
     PropertyType[ord(TProp.State)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.State)] := ptruint(@obj.CurrentAction);
+    PropertyOffset[ord(TProp.State)] := ptruint(@obj.PresentState);
     PropertyOffset2[ord(TProp.State)] := PtrInt(StateEnum);
     PropertyOffset3[ord(TProp.State)] := ptruint(@obj.Locked);
     PropertyReadFunction[ord(TProp.State)] := @GetState;
@@ -207,12 +207,14 @@ end;
 procedure TSwtControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of
-        // Default to first action specified for legacy scripts
         ord(TProp.Normal):
-            NormalState := CurrentAction;
+            CurrentAction := NormalState;
         ord(TProp.Action):
             if NormalState = CTRL_NONE then
+            begin
+                // Default to first action specified for legacy scripts
                 NormalState := CurrentAction;
+            end;
         ord(TProp.Lock):
             if Locked then
                 LockCommand := CTRL_LOCK
@@ -220,7 +222,7 @@ begin
                 LockCommand := CTRL_UNLOCK;
         ord(TProp.State):
         begin
-            PresentState := CurrentAction;
+            CurrentAction := PresentState;
             if NormalState = CTRL_NONE then
                 NormalState := PresentState;
             if controlledElement <> NIL then
