@@ -327,22 +327,22 @@ begin
         CTRL_UNLOCK:
             Locked := FALSE;
     else
-        if not Locked then
+        if Locked then
+            Exit;
+
+        if (Code = Integer(CTRL_OPEN)) and (PresentState = CTRL_CLOSE) then
         begin
-            if (Code = Integer(CTRL_OPEN)) and (PresentState = CTRL_CLOSE) then
-            begin
-                controlledElement.SetConductorClosed(0, FALSE); // Open all phases of active terminal
-                PresentState := CTRL_OPEN;
-                AppendtoEventLog(Self.FullName(), 'Opened');
-            end;
-            if (Code = Integer(CTRL_CLOSE)) and (PresentState = CTRL_OPEN) then
-            begin
-                controlledElement.SetConductorClosed(0, TRUE);    // Close all phases of active terminal
-                PresentState := CTRL_CLOSE;
-                AppendtoEventLog(Self.FullName(), 'Closed');
-            end;
-            Armed := FALSE;  // reset the switch
+            controlledElement.SetConductorClosed(0, FALSE); // Open all phases of active terminal
+            PresentState := CTRL_OPEN;
+            AppendtoEventLog(Self.FullName(), 'Opened');
         end;
+        if (Code = Integer(CTRL_CLOSE)) and (PresentState = CTRL_OPEN) then
+        begin
+            controlledElement.SetConductorClosed(0, TRUE);    // Close all phases of active terminal
+            PresentState := CTRL_CLOSE;
+            AppendtoEventLog(Self.FullName(), 'Closed');
+        end;
+        Armed := FALSE;  // reset the switch
     end;
 end;
 
@@ -364,22 +364,19 @@ end;
 
 procedure TSwtControlObj.Reset();
 begin
-    if not Locked then
+    if Locked then
+        Exit;
+
+    PresentState := NormalState;
+    CurrentAction := PresentState;
+    Armed := FALSE;
+    if controlledElement <> NIL then
     begin
-        PresentState := NormalState;
-        CurrentAction := PresentState;
-        Armed := FALSE;
-        if controlledElement <> NIL then
-        begin
-            controlledElement.SetActiveTerminalIdx(ElementTerminal);  // Set active terminal
-            case NormalState of
-                CTRL_OPEN:
-                    controlledElement.SetConductorClosed(0, FALSE);
-            else
-            //CTRL_CLOSE:
-                controlledElement.SetConductorClosed(0, TRUE);  // Close all phases of active terminal
-            end;
-        end;
+        controlledElement.SetActiveTerminalIdx(ElementTerminal);  // Set active terminal
+        if NormalState = CTRL_OPEN then
+            controlledElement.SetConductorClosed(0, FALSE)
+        else
+            controlledElement.SetConductorClosed(0, TRUE);  // Close all phases of active terminal
     end;
 end;
 

@@ -167,6 +167,25 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        case Value of
+            dssActionOpen,
+            dssActionClose:
+                elem.SetInteger(ord(TSwtControlProp.Action), Value, []);
+            dssActionReset:
+                elem.SetInteger(ord(TSwtControlProp.Reset), 1, []);
+            dssActionLock:
+                elem.SetInteger(ord(TSwtControlProp.Lock), 1, []);
+            dssActionUnlock:
+                elem.SetInteger(ord(TSwtControlProp.Lock), 0, []);
+        else // TapUp, TapDown, None have no effect
+        end;
+
+        Exit;
+    end;
+
+    // EPRI's implementation
     case Value of
         dssActionOpen:
             elem.CurrentAction := CTRL_OPEN;
@@ -208,6 +227,13 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetInteger(ord(TSwtControlProp.Lock), ord(Value), []);
+        Exit;
+    end;
+
+    // EPRI's implementation
     elem.Locked := Value;
 end;
 //------------------------------------------------------------------------------
@@ -271,6 +297,13 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetInteger(ord(TSwtControlProp.Normal), Value, []);
+        Exit;
+    end;
+
+    // EPRI's implementation
     case Value of
         dssActionOpen:
             elem.NormalState := CTRL_OPEN;
@@ -296,6 +329,13 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
+    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.SkipSideEffects)) = 0 then
+    begin
+        elem.SetInteger(ord(TSwtControlProp.State), Value, []);
+        Exit;
+    end;
+
+    // EPRI's implementation
     case value of
         dssActionOpen:
             elem.PresentState := CTRL_OPEN;
