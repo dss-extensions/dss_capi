@@ -2232,6 +2232,9 @@ var
     CktElem: TPDElement;
     LoadElem: TLoadobj;
 begin
+    if not Enabled then
+        Exit;
+
     // PREREQUISITE: EXECUTE CALCALLOCATIONFACTORS FOR ALL ENERGYMETERS AND SENSORS
     // ****Done in calling procedure  now ***   CalcAllocationFactors;     for this meter. Inherited from Meterelement
     // See ExecHelper
