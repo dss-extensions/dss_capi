@@ -134,6 +134,17 @@ function TTCC_Curve.NewObject(const ObjName: String; Activate: Boolean): Pointer
 var
     obj: TObj;
 begin
+    if AnsiCompareText(ObjName, 'none') = 0 then
+    begin
+        Result := NIL;
+        DoErrorMsg('TCC_Curve: "NONE"',
+            '"none" is a reserved name that means no curve specified when referenced by circuit elements. A different name must be specified.',
+            'Error in definition of object.', 
+            423
+        );
+        Exit;
+    end;
+
     obj := TObj.Create(Self, ObjName);
     if Activate then 
         DSS.ActiveDSSObject := obj;

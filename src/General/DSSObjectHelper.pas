@@ -843,7 +843,7 @@ begin
                 if TPropertyFlag.CheckForVar in flags then
                     PropParser.CheckforVar(ElemName);
 
-                if Length(Value) = 0 then //TODO: allow "none" to clear it too?
+                if (Length(Value) = 0) or ((TPropertyFlag.AllowNone in flags) and (Length(ElemName) = 4) and (Comparetext(ElemName, 'NONE') = 0)) then
                     otherObj := NIL
                 else
                     otherObj := cls.Find(ElemName); //TODO: add False?

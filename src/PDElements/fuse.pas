@@ -175,6 +175,7 @@ begin
     PropertyType[ord(TProp.FuseCurve)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.FuseCurve)] := ptruint(@obj.FuseCurve);
     PropertyOffset2[ord(TProp.FuseCurve)] := ptruint(TCC_CurveClass);
+    PropertyFlags[ord(TProp.FuseCurve)] := [TPropertyFlag.AllowNone];
 
     PropertyType[ord(TProp.MonitoredObj)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.MonitoredObj)] := ptruint(@obj.FMonitoredElement);

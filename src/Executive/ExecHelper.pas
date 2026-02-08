@@ -1910,6 +1910,8 @@ begin
         if not Cls.SetActive(Name) then
         begin
             obj := Cls.NewObject(Name, TRUE, Result);
+            if obj = NIL then
+                Exit;
             DSS.DSSObjs.Add(obj);  // Stick in pointer list to keep track of it
         end;
     end
