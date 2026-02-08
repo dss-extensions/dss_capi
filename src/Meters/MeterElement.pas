@@ -77,6 +77,9 @@ var
     i: Integer;
     Mag: Double;
 begin
+    if not Enabled then
+        Exit;
+
     MeteredElement.GetCurrents(CalculatedCurrent);
 
     // The Phase Allocation Factor is the amount that the load must change to match the measured peak
