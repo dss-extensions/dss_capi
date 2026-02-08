@@ -15,12 +15,12 @@ if errorlevel 1 (
 )
 
 IF DEFINED DSS_CAPI_BUILD_CMAKE (
-    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -B build/cmake  -DUSE_SYSTEM_EIGEN=OFF -DUSE_SYSTEM_SUITESPARSE=OFF -DBUILD_KLUSOLVEX=ON -A Win32
+    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -B build/cmake  -DUSE_SYSTEM_EIGEN=OFF -DUSE_SYSTEM_SUITESPARSE=OFF -DBUILD_KLUSOLVEX=OFF -A Win32
     cmake --build build/cmake --config Release -j
 
     REM TODO: if we decide to build OpenDSS-C here, share any downloads from build/cmake to build/cmake-debug
 
-    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -B build/cmake-debug -DUSE_SYSTEM_EIGEN=OFF -DUSE_SYSTEM_SUITESPARSE=OFF -DBUILD_KLUSOLVEX=ON -A Win32
+    cmake . -DDSS_EXTENSIONS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -B build/cmake-debug -DUSE_SYSTEM_EIGEN=OFF -DUSE_SYSTEM_SUITESPARSE=OFF -DBUILD_KLUSOLVEX=OFF -A Win32
     cmake --build build/cmake-debug --config Debug -j
 )
 
@@ -89,14 +89,14 @@ SETLOCAL ENABLEEXTENSIONS
 IF DEFINED CI (
     mkdir release
     mkdir dss_capi
-    xcopy /E lib\win_x86 release\altdss_capi\lib\win_x86\
-    xcopy /E include release\altdss_capi\include\
-    REM xcopy /E examples release\altdss_capi\examples\
-    copy LICENSE release\altdss_capi\
-    copy OPENDSS_LICENSE release\altdss_capi\
-    copy klusolvex\LICENSE release\altdss_capi\KLUSOLVE_LICENSE
+    xcopy /E lib\win_x86 release\dss_capi\lib\win_x86\
+    xcopy /E include release\dss_capi\include\
+    REM xcopy /E examples release\dss_capi\examples\
+    copy LICENSE release\dss_capi\
+    copy OPENDSS_LICENSE release\dss_capi\
+    copy klusolvex\LICENSE release\dss_capi\KLUSOLVE_LICENSE
     cd release
     7z a "dss_capi_%DSS_CAPI_VERSION%_win_x86.zip" dss_capi
     cd ..
-    rd /s /q release\altdss_capi
+    rd /s /q release\dss_capi
 )

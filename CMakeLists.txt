@@ -7,7 +7,7 @@ SET(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libs by default. Set to OFF to
 SET(DSS_EXTENSIONS_EXAMPLES ON CACHE BOOL "Build examples from DSS-Extensions. Output to the bin folder.")
 SET(BUILD_KLUSOLVEX OFF CACHE BOOL "Build KLUSolveX (otherwise, the binaries must be provided by the user).")
 
-message(WARNING "Reminder: this currently does not build the AltDSS engine. It will be integrated in 2025.")
+message(WARNING "Reminder: this currently does not build the AltDSS engine. It will be integrated in 2026.")
 
 add_subdirectory(src/altdss_capi_loader)
 add_subdirectory(src/altdss_oddie)
@@ -40,7 +40,7 @@ if (BUILD_KLUSOLVEX)
 		FetchContent_Declare(
 			klusolvex
 			GIT_REPOSITORY git@github.com:dss-extensions/klusolve.git
-			GIT_TAG 892b12bb9f0f7cd98b5e4af9f1c047133bd0f2b5
+			GIT_TAG f4723ab0d2524bda4f76f69f5f61dcf1d49bfb87
 		)
 
 		FetchContent_MakeAvailable(klusolvex)

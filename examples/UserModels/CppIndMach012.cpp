@@ -42,6 +42,9 @@
 #include <string_view>
 #include <charconv>
 #include <Eigen/Dense>
+#if __GNUC__ <= 10
+#include <cstdlib>
+#endif
 
 using std::vector;
 using std::string;
@@ -65,7 +68,13 @@ void to_double(string_view &s, double &res)
 {
     // We can ignore errors since there is no proper way to report them.
     // If you're debugging, you could add a check here.
+#if defined(__GNUC__) && (__GNUC__ <= 10)
+    string s_(s);
+    char* endp = nullptr;
+    res = std::strtod(s_.c_str(), &endp);
+#else
     std::from_chars(s.data(), s.data() + s.size(), res);
+#endif
 }
 
 #pragma region "C++ user-model implementation for IndMach012"
