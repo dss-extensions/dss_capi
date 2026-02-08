@@ -202,18 +202,22 @@ begin
     PropertyType[ord(TProp.PhaseFast)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.PhaseFast)] := ptruint(@obj.PhaseFast);
     PropertyOffset2[ord(TProp.PhaseFast)] := ptruint(TCC_CurveClass);
+    PropertyFlags[ord(TProp.PhaseFast)] := [TPropertyFlag.AllowNone];
 
     PropertyType[ord(TProp.PhaseDelayed)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.PhaseDelayed)] := ptruint(@obj.PhaseDelayed);
     PropertyOffset2[ord(TProp.PhaseDelayed)] := ptruint(TCC_CurveClass);
+    PropertyFlags[ord(TProp.PhaseDelayed)] := [TPropertyFlag.AllowNone];
 
     PropertyType[ord(TProp.GroundFast)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.GroundFast)] := ptruint(@obj.GroundFast);
     PropertyOffset2[ord(TProp.GroundFast)] := ptruint(TCC_CurveClass);
+    PropertyFlags[ord(TProp.GroundFast)] := [TPropertyFlag.AllowNone];
 
     PropertyType[ord(TProp.GroundDelayed)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.GroundDelayed)] := ptruint(@obj.GroundDelayed);
     PropertyOffset2[ord(TProp.GroundDelayed)] := ptruint(TCC_CurveClass);
+    PropertyFlags[ord(TProp.GroundDelayed)] := [TPropertyFlag.AllowNone];
 
     PropertyType[ord(TProp.MonitoredObj)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.MonitoredObj)] := ptruint(@obj.FMonitoredElement);
