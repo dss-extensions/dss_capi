@@ -1,6 +1,6 @@
 name: Builds
 
-#TODO: Windows ARM, separate macOS builds, matrix-based setup after we move from Free Pascal
+#TODO: Windows ARM, Windows matrix-based setup after we move from Free Pascal
 
 on: 
   # release:
@@ -8,13 +8,35 @@ on:
   push:
 
 jobs:
-  build_linux_x64:
-    name: 'Linux x64'
-    runs-on: ubuntu-latest
+  build_linux:
+    name: 'Linux ${{ matrix.arch }}'
+    continue-on-error: true
+    strategy:
+      matrix:
+        include:
+          - arch: x64
+            docker_image: 'pmeira/manylinux_wheel_fpc322_x86_64'
+            extra_cmake_flags: ''
+            dss_extensions_linux32: ''
+            gh_image: ubuntu-latest
+          - arch: x86
+            docker_image: 'pmeira/manylinux_wheel_fpc322_i686'
+            extra_cmake_flags: '-DCMAKE_CXX_COMPILER_ARG1=-m32 -DCMAKE_C_COMPILER_ARG1=-m32'
+            dss_extensions_linux32: linux32
+            gh_image: ubuntu-latest
+          - arch: arm64
+            docker_image: 'pmeira/manylinux_wheel_fpc322_aarch64'
+            extra_cmake_flags: ''
+            dss_extensions_linux32: ''
+            gh_image: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.gh_image }}
     env:
-      KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.1.0/klusolvex_1.1.0_linux_x64.tar.gz'
+      KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.2.0/klusolvex_1.2.0_linux_${{ matrix.arch }}.tar.gz'
       DSS_CAPI_BUILD_CMAKE: '1'
-      DOCKER_IMAGE: 'pmeira/manylinux_wheel_fpc322_x86_64'      
+      DOCKER_IMAGE: ${{ matrix.docker_image }}
+      DSS_EXTENSIONS_LINUX32: ${{ matrix.dss_extensions_linux32 }}
+      DSS_EXTENSIONS_EXTRA_CMAKE_FLAGS: ${{ matrix.extra_cmake_flags }}
     steps: 
       - name: 'Checkout'
         run: |
@@ -28,59 +50,35 @@ jobs:
         run: |
           curl -s -L "${KLUSOLVE_URL}" -o klusolve.tar.gz
           tar zxf klusolve.tar.gz
-          mkdir -p dss_capi/lib/linux_x64
+          mkdir -p dss_capi/lib/linux_${{ matrix.arch }}
           cp -r klusolvex/lib/* dss_capi/lib/
       - name: Build
         run: |
           cd dss_capi
           source ./build/make_metadata.sh
-          docker run -e DSS_CAPI_VERSION -e DSS_CAPI_BUILD_CMAKE -v "${PWD}/..:/build" $DOCKER_IMAGE bash -c 'cd /build/dss_capi; PATH=/opt/python/cp38-cp38/bin/:$PATH bash build/build_linux_x64.sh'
+          docker run -e DSS_CAPI_VERSION -e DSS_CAPI_BUILD_CMAKE -v "${PWD}/..:/build" $DOCKER_IMAGE bash -c 'cd /build/dss_capi; PATH=/opt/python/cp38-cp38/bin/:$PATH ${DSS_EXTENSIONS_LINUX32} bash build/build_linux_${{ matrix.arch }}.sh'
           ls -lR lib
       - name: 'Upload artifacts'
         uses: "actions/upload-artifact@v4"
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
-          name: 'development-build-linux_x64'
+          name: 'development-build-linux_${{ matrix.arch }}'
           path: '${{ github.workspace }}/dss_capi/release/*.tar.gz'
 
-  build_linux_x86:
-    name: 'Linux x86'
-    runs-on: ubuntu-latest
-    env:
-      KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.1.0/klusolvex_1.1.0_linux_x86.tar.gz'
-      DSS_CAPI_BUILD_CMAKE: '1'
-      DOCKER_IMAGE: 'pmeira/manylinux_wheel_fpc322_i686'
-    steps: 
-      - name: 'Checkout'
-        run: |
-          git clone $GITHUB_SERVER_URL/$GITHUB_REPOSITORY dss_capi
-          cd dss_capi
-          git checkout $GITHUB_SHA
-      - name: 'Setup Docker'
-        run: |
-          docker pull $DOCKER_IMAGE
-      - name: 'Download/extract KLUSolve(X)'
-        run: |
-          curl -s -L "${KLUSOLVE_URL}" -o klusolve.tar.gz
-          tar zxf klusolve.tar.gz
-          mkdir -p dss_capi/lib/linux_x86
-          cp -r klusolvex/lib/* dss_capi/lib/
-      - name: Build
-        run: |
-          cd dss_capi
-          source ./build/make_metadata.sh
-          docker run -e DSS_CAPI_VERSION -v "${PWD}/..:/build" $DOCKER_IMAGE bash -c 'cd /build/dss_capi; PATH=/opt/python/cp38-cp38/bin/:$PATH bash build/build_linux_x86.sh'
-          ls -lR lib
-      - name: 'Upload artifacts'
-        uses: "actions/upload-artifact@v4"
-        #if: github.event_name == 'release' && github.event.action == 'created'
-        with:
-          name: 'development-build-linux_x86'
-          path: '${{ github.workspace }}/dss_capi/release/*.tar.gz'
+  build_macos:
+    name: 'macOS ${{ matrix.arch }}'
+    continue-on-error: true
+    strategy:
+      matrix:
+        include:
+          - os: macos-15-intel
+            arch: x64
+            extra_cmake_flags: '-DCMAKE_POLICY_VERSION_MINIMUM=3.5'
+          - os: macos-latest
+            arch: arm64
+            extra_cmake_flags: '-DCMAKE_POLICY_VERSION_MINIMUM=3.5'
 
-  build_macos_x64:
-    name: 'macOS x64 and ARM64'
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
     env:
       DSS_CAPI_BUILD_CMAKE: '1'
     steps:
@@ -95,35 +93,26 @@ jobs:
           sudo installer -package /Volumes/fpc-3.2.2.intelarm64-macosx/fpc-3.2.2-intelarm64-macosx.mpkg -target /
       - name: 'Download/extract KLUSolve(X)'
         run: |
-          wget "https://github.com/dss-extensions/klusolve/releases/download/1.1.0/klusolvex_1.1.0_darwin_x64.tar.gz" -Oklusolve_x64.tar.gz -q
-          wget "https://github.com/dss-extensions/klusolve/releases/download/1.1.0/klusolvex_1.1.0_darwin_arm64.tar.gz" -Oklusolve_arm64.tar.gz -q
-          tar zxf klusolve_x64.tar.gz
-          tar zxf klusolve_arm64.tar.gz
-          mkdir -p dss_capi/lib/darwin_x64
-          mkdir -p dss_capi/lib/darwin_arm64
+          wget "https://github.com/dss-extensions/klusolve/releases/download/1.2.0/klusolvex_1.2.0_darwin_${{ matrix.arch }}.tar.gz" -Oklusolve.tar.gz -q
+          tar zxf klusolve.tar.gz
+          mkdir -p dss_capi/lib/darwin_${{ matrix.arch }}
           cp -r klusolvex/lib/* dss_capi/lib/
-      - name: Build x64
+      - name: Build
         run: |
           cd dss_capi
           source ./build/make_metadata.sh
-          ./build/build_macos_x64.sh
-          ls -lR lib
-      - name: Build ARM64
-        run: |
-          cd dss_capi
-          rm -rf build/cmake build/cmake-debug
-          source ./build/make_metadata.sh
-          ./build/build_macos_arm64.sh
+          ./build/build_macos_${{ matrix.arch }}.sh
           ls -lR lib
       - name: 'Upload artifacts'
         uses: "actions/upload-artifact@v4"
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
-          name: 'development-build-darwin'
+          name: 'development-build-darwin-${{ matrix.arch }}'
           path: '${{ github.workspace }}/dss_capi/release/*.tar.gz'
 
   build_win_x64:
     name: 'Windows x64'
+    continue-on-error: true
     runs-on: windows-2019
     env: 
       DSS_CAPI_BUILD_CMAKE: '1'
@@ -136,13 +125,13 @@ jobs:
         shell: cmd
         run: |
           "c:\Program Files\Git\mingw64\bin\curl" -s -L https://sourceforge.net/projects/freepascal/files/Win32/3.2.2/fpc-3.2.2.i386-win32.exe/download -o fpc-win32.exe
-          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://sourceforge.net/projects/freepascal/files/Win32/3.2.2/fpc-3.2.2.i386-win32.cross.x86_64-win64.exe/download  -o fpc-win32.cross.x86_64-win64.exe
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://sourceforge.net/projects/freepascal/files/Win32/3.2.2/fpc-3.2.2.i386-win32.cross.x86_64-win64.exe/download -o fpc-win32.cross.x86_64-win64.exe
           fpc-win32.exe /VERYSILENT
           fpc-win32.cross.x86_64-win64.exe /VERYSILENT
       - name: 'Download/extract KLUSolve(X)'
         shell: cmd
         run: |
-          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.1.0/klusolvex_1.1.0_win_x64-gcc8.1.zip -o klusolve_x64.zip
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.2.0/klusolvex_1.2.0_windows_x64_gcc_windows-2019.zip -o klusolve_x64.zip
           7z x -y -o. klusolve_x64.zip
           mkdir dss_capi\lib
           mkdir dss_capi\lib\win_x64
@@ -166,6 +155,7 @@ jobs:
 
   build_win_x86:
     name: 'Windows x86'
+    continue-on-error: true
     runs-on: windows-2019
     env: 
       DSS_CAPI_BUILD_CMAKE: '1'
@@ -182,7 +172,7 @@ jobs:
       - name: 'Download/extract KLUSolve(X)'
         shell: cmd
         run: |
-          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.1.0/klusolvex_1.1.0_win_x86-msvc2017.zip -o klusolve_x86.zip
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.2.0/klusolvex_1.2.0_windows_x86_msvc_windows-2019.zip -o klusolve_x86.zip
           7z x -y -o. klusolve_x86.zip
           mkdir dss_capi\lib
           mkdir dss_capi\lib\win_x86
@@ -206,10 +196,12 @@ jobs:
 
   merge:
     runs-on: ubuntu-latest
-    needs: [build_linux_x64, build_linux_x86, build_macos_x64, build_win_x64, build_win_x86]
+    needs: [build_linux, build_macos, build_win_x64, build_win_x86]
     steps:
       - name: Merge Artifacts
         uses: actions/upload-artifact/merge@v4
         with:
           name: development-build
           pattern: development-build-*
+          # delete-merged: true
+
