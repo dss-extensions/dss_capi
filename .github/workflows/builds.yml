@@ -113,7 +113,7 @@ jobs:
   build_win_x64:
     name: 'Windows x64'
     continue-on-error: true
-    runs-on: windows-2019
+    runs-on: windows-2022
     env: 
       DSS_CAPI_BUILD_CMAKE: '1'
     steps:
@@ -131,11 +131,15 @@ jobs:
       - name: 'Download/extract KLUSolve(X)'
         shell: cmd
         run: |
-          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.2.0/klusolvex_1.2.0_windows_x64_gcc_windows-2019.zip -o klusolve_x64.zip
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.2.0/klusolvex_1.2.0_windows_x64_gcc_windows-2022.zip -o klusolve_x64.zip
           7z x -y -o. klusolve_x64.zip
           mkdir dss_capi\lib
           mkdir dss_capi\lib\win_x64
           xcopy /E klusolvex\lib dss_capi\lib
+      - name: Prepare MSBUILD
+        uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: x64
       - name: Build
         #TODO? cv2pdb (generate PDB for MSVC) and dlltool (generate lib compatible with GCC)
         shell: cmd
@@ -143,7 +147,7 @@ jobs:
           cd dss_capi
           "c:\Program Files\Git\bin\bash" -c "bash ./build/make_metadata.sh write"
           set PATH=%PATH%;C:\FPC\3.2.2\bin\i386-win32
-          set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
           call build/generated/set_version.bat
           call build/build_win_x64.bat
       - name: 'Upload artifacts'
@@ -156,7 +160,7 @@ jobs:
   build_win_x86:
     name: 'Windows x86'
     continue-on-error: true
-    runs-on: windows-2019
+    runs-on: windows-2022
     env: 
       DSS_CAPI_BUILD_CMAKE: '1'
     steps:
@@ -172,11 +176,13 @@ jobs:
       - name: 'Download/extract KLUSolve(X)'
         shell: cmd
         run: |
-          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.2.0/klusolvex_1.2.0_windows_x86_msvc_windows-2019.zip -o klusolve_x86.zip
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.2.0/klusolvex_1.2.0_windows_x86_msvc_windows-2022.zip -o klusolve_x86.zip
           7z x -y -o. klusolve_x86.zip
           mkdir dss_capi\lib
           mkdir dss_capi\lib\win_x86
           xcopy /E klusolvex\lib dss_capi\lib
+      - name: Prepare MSBUILD
+        uses: microsoft/setup-msbuild@v2
       - name: Build
         #TODO? cv2pdb (generate PDB for MSVC) and dlltool (generate lib compatible with GCC)
         shell: cmd
@@ -184,7 +190,7 @@ jobs:
           cd dss_capi
           "c:\Program Files\Git\bin\bash" -c "bash ./build/make_metadata.sh write"
           set PATH=%PATH%;C:\FPC\3.2.2\bin\i386-win32
-          set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86
           call build/generated/set_version.bat
           call build/build_win_x86.bat
       - name: 'Upload artifacts'
