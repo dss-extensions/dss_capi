@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (C) 2023-2025 Paulo Meira & contributors to DSS-Extensions
+// SPDX-FileCopyrightText: (C) 2023-2026 Paulo Meira & contributors to DSS-Extensions
 // SPDX-License-Identifier: BSD-3
 
 #include <altdss/capi/oddie.h>
@@ -1494,6 +1494,10 @@ ALTDSS_ODDIE_DLL int32_t AltDSSOddieCAPIInit(AltDSSCAPI *funcs, uint64_t size, u
     funcs->XYCurves_Set_Yshift = ctx_XYCurves_Set_Yshift;
     funcs->XYCurves_Set_x = ctx_XYCurves_Set_x;
     funcs->XYCurves_Set_y = ctx_XYCurves_Set_y;
+    funcs->Fuses_Get_CurveMultiplier = ctx_Fuses_Get_CurveMultiplier;
+    funcs->Fuses_Set_CurveMultiplier = ctx_Fuses_Set_CurveMultiplier;
+    funcs->Fuses_Get_InterruptingRating = ctx_Fuses_Get_InterruptingRating;
+    funcs->Fuses_Set_InterruptingRating = ctx_Fuses_Set_InterruptingRating;
     funcs->Bus_Get_Next = ctx_Bus_Get_Next;
     funcs->Capacitors_Get_idx = ctx_Capacitors_Get_idx;
     funcs->Capacitors_Set_idx = ctx_Capacitors_Set_idx;

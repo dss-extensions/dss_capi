@@ -1,5 +1,5 @@
 
-// SPDX-FileCopyrightText: (C) 2024-2025 Paulo Meira & contributors to DSS-Extensions
+// SPDX-FileCopyrightText: (C) 2024-2026 Paulo Meira & contributors to DSS-Extensions
 // SPDX-License-Identifier: LGPL-3.0-only
 // 
 // COM_Fuses.h : Declaration of CFuses
@@ -81,6 +81,10 @@ public:
     STDMETHOD_(HRESULT, put_State)(VARIANT Value);
     STDMETHOD(get_NormalState)(VARIANT* Value);
     STDMETHOD_(HRESULT, put_NormalState)(VARIANT Value);
+    STDMETHOD(get_CurveMultiplier)(double* Value);
+    STDMETHOD_(HRESULT, put_CurveMultiplier)(double Value);
+    STDMETHOD(get_InterruptingRating)(double* Value);
+    STDMETHOD_(HRESULT, put_InterruptingRating)(double Value);
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(Fuses), CFuses)
