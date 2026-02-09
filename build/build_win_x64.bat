@@ -93,6 +93,10 @@ if exist lib\win_x64\altdss_capid.dll (
 SETLOCAL ENABLEEXTENSIONS
 
 IF DEFINED CI (
+    REM Build our COM DLL (DSSExtensions.DLL)
+    msbuild src\COM\COM_DSSExtensions.vcxproj /p:Configuration=Release /p:Platform=x64 /p:OutputPath=%cd%\lib\win_x64 /p:RegisterOutput=false
+
+    REM Pack outputs
     mkdir release
     mkdir dss_capi
     xcopy /E lib\win_x64 release\dss_capi\lib\win_x64\
