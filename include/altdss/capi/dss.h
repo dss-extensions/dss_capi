@@ -1914,12 +1914,12 @@ extern "C" {
     ALTDSS_CAPI_DLL void Fuses_Set_TCCcurve(const char* Value);
 
     /*! 
-    Multiplier or actual amps for the TCCcurve object. Defaults to 1.0.  Multiply current values of TCC curve by this to get actual amps.
+    Fuse continuous rated current in Amps. Defaults to 0. Not used internally for either power flow or reporting.
     */
     ALTDSS_CAPI_DLL double Fuses_Get_RatedCurrent(void);
 
     /*! 
-    Multiplier or actual fuse amps for the TCC curve. Defaults to 1.0. Has to correspond to the Current axis of TCCcurve object.
+    Fuse continuous rated current in Amps. Defaults to 0. Not used internally for either power flow or reporting.
     */
     ALTDSS_CAPI_DLL void Fuses_Set_RatedCurrent(double Value);
 
@@ -1987,6 +1987,26 @@ extern "C" {
     Number of phases, this fuse.
     */
     ALTDSS_CAPI_DLL int32_t Fuses_Get_NumPhases(void);
+
+    /*! 
+    Multiplier for the phase TCC curve.
+    */
+    ALTDSS_CAPI_DLL double Fuses_Get_CurveMultiplier(void);
+
+    /*! 
+    Multiplier for the phase TCC curve.
+    */
+    ALTDSS_CAPI_DLL void Fuses_Set_CurveMultiplier(double Value);
+
+    /*! 
+    Fuse rated interrupting current in amperes. Not used internally for either power flow or reporting.
+    */
+    ALTDSS_CAPI_DLL double Fuses_Get_InterruptingRating(void);
+
+    /*! 
+    Fuse rated interrupting current in amperes. Not used internally for either power flow or reporting.
+    */
+    ALTDSS_CAPI_DLL void Fuses_Set_InterruptingRating(double Value);
 
     /*! 
     Array of names of all Generator objects.

@@ -43,7 +43,9 @@ type
         Delay = 7,
         Action = 8,
         Normal = 9,
-        State = 10
+        State = 10,
+        CurveMultiplier = 11,
+        InterruptingRating = 12
     );
     TFusePropLegacy = TFuseProp;
 {$SCOPEDENUMS OFF}
@@ -75,6 +77,8 @@ type
         FuseCurve: TTCC_CurveObj;
         RatedCurrent: Double;
         DelayTime: Double;
+        CurveMultiplier: Double;
+        InterruptingRating: Double;
 
         MonitoredElementTerminal: Integer;
         FPresentState, FNormalState: pStateArray;
@@ -195,8 +199,15 @@ begin
 
     // double properties
     PropertyOffset[ord(TProp.RatedCurrent)] := ptruint(@obj.RatedCurrent);
+    PropertyFlags[ord(TProp.RatedCurrent)] := [TPropertyFlag.Unused];
+
     PropertyOffset[ord(TProp.Delay)] := ptruint(@obj.DelayTime);
     PropertyFlags[ord(TProp.Delay)] := [TPropertyFlag.Units_s];
+
+    PropertyOffset[ord(TProp.CurveMultiplier)] := ptruint(@obj.CurveMultiplier);
+
+    PropertyOffset[ord(TProp.InterruptingRating)] := ptruint(@obj.InterruptingRating);
+    PropertyFlags[ord(TProp.InterruptingRating)] := [TPropertyFlag.Unused];
 
     // enum action
     PropertyType[ord(TProp.Action)] := TPropertyType.StringEnumActionProperty;
@@ -309,9 +320,11 @@ begin
     SetMonitoredElement(NIL);
     PreviousControlledElement := NIL;
 
-    FuseCurve := TFuse(ParClass).TCC_CurveClass.Find('tlink');//TODO: is an error message ever required for this?
+    FuseCurve := NIL;
 
     RatedCurrent := 1.0;
+    CurveMultiplier := 1.0;
+    InterruptingRating := 0.0;
 
     FPresentState := NIL;
     FNormalState := NIL;
@@ -467,7 +480,7 @@ begin
             if FuseCurve <> NIL then
             begin
                 Cmag := Cabs(cBuffer[i]);
-                TripTime := FuseCurve.GetTCCTime(Cmag / RatedCurrent);
+                TripTime := FuseCurve.GetTCCTime(Cmag / CurveMultiplier);
             end;
 
             if TripTime > 0.0 then

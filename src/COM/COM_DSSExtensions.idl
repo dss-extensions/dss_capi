@@ -3189,9 +3189,9 @@ library DSSExtensions
         HRESULT TCCcurve([out, retval] BSTR* Value);
         [id(0x000000d2), propput, helpstring("Name of the TCCcurve object that determines fuse blowing.")]
         HRESULT TCCcurve([in] BSTR Value);
-        [id(0x000000d3), propget, helpstring("Multiplier or actual amps for the TCCcurve object. Defaults to 1.0.  Multipliy current values of TCC curve by this to get actual amps.")]
+        [id(0x000000d3), propget, helpstring("Fuse continuous rated current in Amps. Defaults to 0. Not used internally for either power flow or reporting.")]
         HRESULT RatedCurrent([out, retval] double* Value);
-        [id(0x000000d3), propput, helpstring("Multiplier or actual amps for the TCCcurve object. Defaults to 1.0.  Multipliy current values of TCC curve by this to get actual amps.")]
+        [id(0x000000d3), propput, helpstring("Fuse continuous rated current in Amps. Defaults to 0. Not used internally for either power flow or reporting.")]
         HRESULT RatedCurrent([in] double Value);
         [id(0x000000d4), propget, helpstring("A fixed delay time in seconds added to the fuse blowing time determined by the TCC curve. Default is 0.")]
         HRESULT Delay([out, retval] double* Value);
@@ -3219,6 +3219,14 @@ library DSSExtensions
         HRESULT NormalState([out, retval] VARIANT* Value);
         [id(0x000000dc), propput, helpstring("Variant array of strings indicating the normal state of each phase of the fuse. 0-based array.")] // AltDSS element type: BSTR
         HRESULT NormalState([in] VARIANT Value);
+        [id(0x000000dd), propget, helpstring("Multiplier for the phase TCC curve. Defaults to 1.0.")]
+        HRESULT CurveMultiplier([out, retval] double* Value);
+        [id(0x000000dd), propput, helpstring("Multiplier for the phase TCC curve. Defaults to 1.0.")]
+        HRESULT CurveMultiplier([in] double Value);
+        [id(0x000000de), propget, helpstring("Fuse rated interrupting current in Amps. Defaults to 0. Not used internally for either power flow or reporting.")]
+        HRESULT InterruptingRating([out, retval] double* Value);
+        [id(0x000000de), propput, helpstring("Fuse rated interrupting current in Amps. Defaults to 0. Not used internally for either power flow or reporting.")]
+        HRESULT InterruptingRating([in] double Value);        
     };
 
     [

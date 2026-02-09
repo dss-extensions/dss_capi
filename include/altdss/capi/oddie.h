@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: (C) 2023-2026 Paulo Meira & contributors to DSS-Extensions
+// SPDX-License-Identifier: BSD-3
+
 #ifndef ALTDSS_CAPI_ODDIE_H
 #define ALTDSS_CAPI_ODDIE_H
 #ifdef WIN32
@@ -1518,7 +1521,10 @@ ALTDSS_ODDIE_DLL void ctx_XYCurves_Set_Yscale(const void* ctx, double Value);
 ALTDSS_ODDIE_DLL void ctx_XYCurves_Set_Yshift(const void* ctx, double Value);
 ALTDSS_ODDIE_DLL void ctx_XYCurves_Set_x(const void* ctx, double Value);
 ALTDSS_ODDIE_DLL void ctx_XYCurves_Set_y(const void* ctx, double Value);
-
+ALTDSS_ODDIE_DLL double ctx_Fuses_Get_CurveMultiplier(const void* ctx);
+ALTDSS_ODDIE_DLL void ctx_Fuses_Set_CurveMultiplier(const void* ctx, double Value);
+ALTDSS_ODDIE_DLL double ctx_Fuses_Get_InterruptingRating(const void* ctx);
+ALTDSS_ODDIE_DLL void ctx_Fuses_Set_InterruptingRating(const void* ctx, double Value);
 
 /* The following may need to be implemented and will give an error when called. */
 

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (C) 2024-2025 Paulo Meira & contributors to DSS-Extensions
+// SPDX-FileCopyrightText: (C) 2024-2026 Paulo Meira & contributors to DSS-Extensions
 // SPDX-License-Identifier: LGPL-3.0-only
 // 
 // COM_Fuses.cpp : Implementation of CFuses
@@ -271,5 +271,37 @@ STDMETHODIMP CFuses::get_NormalState(VARIANT* Value)
 STDMETHODIMP CFuses::put_NormalState(VARIANT Value)
 {
     return AltDSS_COM_SetStrs(dss_capi.Fuses_Set_NormalState, Value);
+}
+
+STDMETHODIMP CFuses::get_CurveMultiplier(double* Value)
+{
+    if (Value == nullptr)
+    {
+        return E_POINTER;
+    }
+    *Value = dss_capi.Fuses_Get_CurveMultiplier(dss_capi_ctx);
+    return AltDSS_COM_CheckError();
+}
+
+STDMETHODIMP CFuses::put_CurveMultiplier(double Value)
+{
+    dss_capi.Fuses_Set_CurveMultiplier(dss_capi_ctx, Value);
+    return AltDSS_COM_CheckError();
+}
+
+STDMETHODIMP CFuses::get_InterruptingRating(double* Value)
+{
+    if (Value == nullptr)
+    {
+        return E_POINTER;
+    }
+    *Value = dss_capi.Fuses_Get_InterruptingRating(dss_capi_ctx);
+    return AltDSS_COM_CheckError();
+}
+
+STDMETHODIMP CFuses::put_InterruptingRating(double Value)
+{
+    dss_capi.Fuses_Set_InterruptingRating(dss_capi_ctx, Value);
+    return AltDSS_COM_CheckError();
 }
 

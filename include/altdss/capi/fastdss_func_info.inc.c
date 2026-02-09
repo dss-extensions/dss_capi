@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (C) 2024-2025 Paulo Meira & contributors to DSS-Extensions
+// SPDX-FileCopyrightText: (C) 2024-2026 Paulo Meira & contributors to DSS-Extensions
 // SPDX-License-Identifier: LGPL-3.0-only
 
 #ifndef FASTDSS_FUNCINFO_FILL
@@ -929,7 +929,9 @@ FastDSSFuncInfo info[] = {
 {fastdss_types_f64, fastdss_types_void, Collection_CktElement, -1, -1, FASTDSS_FUNCINFO_FILL(CktElement_Get_EmergAmps)},
 {fastdss_types_f64, fastdss_types_void, Collection_CktElement, -1, -1, FASTDSS_FUNCINFO_FILL(CktElement_Get_NormalAmps)},
 {fastdss_types_f64, fastdss_types_void, Collection_None, -1, -1, FASTDSS_FUNCINFO_FILL(CktElement_Get_VariableValue)},
+{fastdss_types_f64, fastdss_types_void, Collection_None, -1, -1, FASTDSS_FUNCINFO_FILL(Fuses_Get_CurveMultiplier)},
 {fastdss_types_f64, fastdss_types_void, Collection_Fuses, -1, -1, FASTDSS_FUNCINFO_FILL(Fuses_Get_Delay)},
+{fastdss_types_f64, fastdss_types_void, Collection_None, -1, -1, FASTDSS_FUNCINFO_FILL(Fuses_Get_InterruptingRating)},
 {fastdss_types_f64, fastdss_types_void, Collection_Fuses, -1, -1, FASTDSS_FUNCINFO_FILL(Fuses_Get_RatedCurrent)},
 {fastdss_types_f64, fastdss_types_void, Collection_GICSources, -1, -1, FASTDSS_FUNCINFO_FILL(GICSources_Get_EE)},
 {fastdss_types_f64, fastdss_types_void, Collection_GICSources, -1, -1, FASTDSS_FUNCINFO_FILL(GICSources_Get_EN)},
@@ -1186,7 +1188,9 @@ FastDSSFuncInfo info[] = {
 {fastdss_types_void, fastdss_types_f64, Collection_CktElement, -1, -1, FASTDSS_FUNCINFO_FILL(CktElement_Set_EmergAmps)},
 {fastdss_types_void, fastdss_types_f64, Collection_CktElement, -1, -1, FASTDSS_FUNCINFO_FILL(CktElement_Set_NormalAmps)},
 {fastdss_types_void, fastdss_types_f64, Collection_None, -1, -1, FASTDSS_FUNCINFO_FILL(CktElement_Set_VariableValue)},
+{fastdss_types_void, fastdss_types_f64, Collection_None, -1, -1, FASTDSS_FUNCINFO_FILL(Fuses_Set_CurveMultiplier)},
 {fastdss_types_void, fastdss_types_f64, Collection_Fuses, -1, -1, FASTDSS_FUNCINFO_FILL(Fuses_Set_Delay)},
+{fastdss_types_void, fastdss_types_f64, Collection_None, -1, -1, FASTDSS_FUNCINFO_FILL(Fuses_Set_InterruptingRating)},
 {fastdss_types_void, fastdss_types_f64, Collection_Fuses, -1, -1, FASTDSS_FUNCINFO_FILL(Fuses_Set_RatedCurrent)},
 {fastdss_types_void, fastdss_types_f64, Collection_GICSources, -1, -1, FASTDSS_FUNCINFO_FILL(GICSources_Set_EE)},
 {fastdss_types_void, fastdss_types_f64, Collection_GICSources, -1, -1, FASTDSS_FUNCINFO_FILL(GICSources_Set_EN)},
