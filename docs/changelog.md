@@ -32,6 +32,19 @@
 
 The repository will be renamed in the near future. The documentation and links will be updated to reflect this. GitHub typically handles redirecting the old name just fine and users are not required to update the repository references in the short term.
 
+**Features not yet ported from EPRI's OpenDSS:**
+
+New features from EPRI's OpenDSS **that have not been ported yet** to AltDSS are listed below. Reasons vary from quality assurance to worries about breaking backwards compatibility. We expect most features will be ported in a future release later in 2026. Most of these features landed in the SVN codebase from Nov 2025 to Jan 2026.
+
+- Conditional `BatchEdit` (SVN r4106).
+- `pyControl` has not been ported yet. The relevant commands are already ported, though, only the component and related code are missing. There will be related code in a future release.
+- The overall recent changes in `Recloser`, `Relay`, and `SwtControl` were not ported.
+    - The changes are extensive and effectively break backwards compatibility, which we will avoid for a few months. Most likely, a compatibility toggle or another mechanism will be implemented to allow loading existing files without changes in behavior, since it is not possible to map all old DSS scripts to the new versions of the components.
+    - To check what has changed, it is easier to compare the code from SVN r4079 to r4116. For convenience, here's a link to our SVN mirror, especifically the comparison through the reformatted branch: https://github.com/dss-extensions/opendss-svn-mirror/compare/r4079-fmt...r4116-fmt -- the missing changes are in all files related to these three components (e.g. for Recloser, `Recloser.pas` and `ImplRecloser.pas`).
+    - Since there are API changes, neither our Oddie wrapper nor our COM DLL correctly work with new OpenDSS v11 yet.
+
+It is important to note that, for several years, some new features from EPRI's codebase need to be reimplemented from scratch for a few reasons, mainly the evolving architecture on AltDSS.
+
 **Main DSS C-API and AltDSS engine changes:**
 
 - As planned for a while:
