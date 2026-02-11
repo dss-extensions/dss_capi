@@ -9,7 +9,7 @@ uses
     fpjson;
 
 const 
-    ALTDSS_SCHEMA_ID = 'https://dss-extensions.org/altdss-schema/2024-08-01.schema.json';
+    ALTDSS_SCHEMA_ID = 'https://dss-extensions.org/altdss-schema/2026-02-11.schema.json';
 
 function DSS_ExtractSchema(DSS: TDSSContext; jsonSchema: TAPIBoolean): PAnsiChar; CDECL;
 
