@@ -10,7 +10,7 @@ on:
 jobs:
   build_linux:
     name: 'Linux ${{ matrix.arch }}'
-    continue-on-error: true
+    continue-on-error: false
     strategy:
       matrix:
         include:
@@ -67,7 +67,7 @@ jobs:
 
   build_macos:
     name: 'macOS ${{ matrix.arch }}'
-    continue-on-error: true
+    continue-on-error: false
     strategy:
       matrix:
         include:
@@ -112,7 +112,7 @@ jobs:
 
   build_win_x64:
     name: 'Windows x64'
-    continue-on-error: true
+    continue-on-error: false
     runs-on: windows-2022
     env: 
       DSS_CAPI_BUILD_CMAKE: '1'
@@ -159,7 +159,7 @@ jobs:
 
   build_win_x86:
     name: 'Windows x86'
-    continue-on-error: true
+    continue-on-error: false
     runs-on: windows-2022
     env: 
       DSS_CAPI_BUILD_CMAKE: '1'
