@@ -18,7 +18,7 @@ else()
         cmake_policy(SET CMP0135 NEW)
     endif()    
     FetchContent_Declare(Eigen3 URL "https://gitlab.com/libeigen/eigen/-/archive/${TARGET_EIGEN_VERSION}/eigen-${TARGET_EIGEN_VERSION}.tar.gz")
-    FetchContent_Populate(Eigen3)
+    FetchContent_MakeAvailable(Eigen3)
     SET(EIGEN3_INCLUDE_DIR "${eigen3_SOURCE_DIR}")
 endif()
 
