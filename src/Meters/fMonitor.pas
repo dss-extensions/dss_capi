@@ -780,8 +780,8 @@ begin
     begin
         Result := NIL;
         raise Exception.Create(
-            'FMonitor is currently disabled. It has not been fully validated.' +
-            'If you wish to enable it, set the environment variable ALTDSS_ENABLE_GENERIC5=1' +
+            'FMonitor is currently disabled. It has not been fully validated. ' +
+            'If you wish to enable it, set the environment variable ALTDSS_ENABLE_GENERIC5=1 ' +
             'before loading the AltDSS engine.'
         );
     end;
