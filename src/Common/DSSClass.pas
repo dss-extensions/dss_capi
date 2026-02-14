@@ -1254,7 +1254,7 @@ begin
     ProfilePhasesEnum.HybridMin := 0;
     Enums.Add(ProfilePhasesEnum);
 
-    CompatFlagsEnum := TDSSEnum.Create('ComplatFlags: AltDSS compatibility flags', True, 3, 11,
+    CompatFlagsEnum := TDSSEnum.Create('AltDSSComplatFlags', True, 3, 11,
         [
             'NoSolverFloatChecks',
             'BadPrecision',
@@ -1268,7 +1268,7 @@ begin
             'PermissiveProperties',
             // 'DontResetYPrimInvalid', -- reserved for a near future
             'LegacySMARTDS'
-        ],            
+        ],
         [
             ord(DSSCompatFlag.NoSolverFloatChecks), 
             ord(DSSCompatFlag.BadPrecision),

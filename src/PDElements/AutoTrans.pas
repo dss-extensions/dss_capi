@@ -476,7 +476,7 @@ begin
 
     PropertyType[ord(TProp.BHPoints)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.BHPoints)] := ptruint(@obj.BHPoints);
-    PropertyFlags[ord(TProp.BHPoints)] := [TPropertyFlag.SuppressJSON, TPropertyFlag.Unused, TPropertyFlag.NonNegative];
+    PropertyFlags[ord(TProp.BHPoints)] := [TPropertyFlag.Unused, TPropertyFlag.NonNegative];
 
     // string properties
     PropertyType[ord(TProp.subname)] := TPropertyType.StringProperty;

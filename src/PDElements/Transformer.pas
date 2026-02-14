@@ -451,7 +451,7 @@ begin
 
     PropertyType[ord(TProp.BHPoints)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.BHPoints)] := ptruint(@obj.BHPoints);
-    PropertyFlags[ord(TProp.BHPoints)] := [TPropertyFlag.SuppressJSON, TPropertyFlag.Unused, TPropertyFlag.NonNegative];
+    PropertyFlags[ord(TProp.BHPoints)] := [TPropertyFlag.Unused, TPropertyFlag.NonNegative];
 
     // double on struct array properties
     PropertyType[ord(TProp.kV)] := TPropertyType.DoubleOnStructArrayProperty;
