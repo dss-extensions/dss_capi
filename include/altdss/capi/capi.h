@@ -908,10 +908,8 @@ typedef struct AltDSSCAPI {
     altdss_func_v_cvp Fuses_Close;
     altdss_func_v_cvp_strs_i32p Fuses_Get_AllNames;
     altdss_func_i32_cvp Fuses_Get_Count;
-    altdss_func_f64_cvp Fuses_Get_CurveMultiplier;
     altdss_func_f64_cvp Fuses_Get_Delay;
     altdss_func_i32_cvp Fuses_Get_First;
-    altdss_func_f64_cvp Fuses_Get_InterruptingRating;
     altdss_func_cstr_cvp Fuses_Get_MonitoredObj;
     altdss_func_i32_cvp Fuses_Get_MonitoredTerm;
     altdss_func_cstr_cvp Fuses_Get_Name;
@@ -928,9 +926,7 @@ typedef struct AltDSSCAPI {
     altdss_func_u16_cvp Fuses_IsBlown;
     altdss_func_v_cvp Fuses_Open;
     altdss_func_v_cvp Fuses_Reset;
-    altdss_func_v_cvp_f64 Fuses_Set_CurveMultiplier;
     altdss_func_v_cvp_f64 Fuses_Set_Delay;
-    altdss_func_v_cvp_f64 Fuses_Set_InterruptingRating;
     altdss_func_v_cvp_cstr Fuses_Set_MonitoredObj;
     altdss_func_v_cvp_i32 Fuses_Set_MonitoredTerm;
     altdss_func_v_cvp_cstr Fuses_Set_Name;

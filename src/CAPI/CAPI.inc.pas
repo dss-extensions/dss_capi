@@ -677,10 +677,8 @@ TAltDSSCAPI = packed record
     Fuses_Close: Pointer;
     Fuses_Get_AllNames: Pointer;
     Fuses_Get_Count: Pointer;
-    Fuses_Get_CurveMultiplier: Pointer;
     Fuses_Get_Delay: Pointer;
     Fuses_Get_First: Pointer;
-    Fuses_Get_InterruptingRating: Pointer;
     Fuses_Get_MonitoredObj: Pointer;
     Fuses_Get_MonitoredTerm: Pointer;
     Fuses_Get_Name: Pointer;
@@ -697,9 +695,7 @@ TAltDSSCAPI = packed record
     Fuses_IsBlown: Pointer;
     Fuses_Open: Pointer;
     Fuses_Reset: Pointer;
-    Fuses_Set_CurveMultiplier: Pointer;
     Fuses_Set_Delay: Pointer;
-    Fuses_Set_InterruptingRating: Pointer;
     Fuses_Set_MonitoredObj: Pointer;
     Fuses_Set_MonitoredTerm: Pointer;
     Fuses_Set_Name: Pointer;
@@ -2812,10 +2808,8 @@ begin
     funcs.Fuses_Close := Pointer(@ctx_Fuses_Close);
     funcs.Fuses_Get_AllNames := Pointer(@ctx_Fuses_Get_AllNames);
     funcs.Fuses_Get_Count := Pointer(@ctx_Fuses_Get_Count);
-    funcs.Fuses_Get_CurveMultiplier := Pointer(@ctx_Fuses_Get_CurveMultiplier);
     funcs.Fuses_Get_Delay := Pointer(@ctx_Fuses_Get_Delay);
     funcs.Fuses_Get_First := Pointer(@ctx_Fuses_Get_First);
-    funcs.Fuses_Get_InterruptingRating := Pointer(@ctx_Fuses_Get_InterruptingRating);
     funcs.Fuses_Get_MonitoredObj := Pointer(@ctx_Fuses_Get_MonitoredObj);
     funcs.Fuses_Get_MonitoredTerm := Pointer(@ctx_Fuses_Get_MonitoredTerm);
     funcs.Fuses_Get_Name := Pointer(@ctx_Fuses_Get_Name);
@@ -2832,9 +2826,7 @@ begin
     funcs.Fuses_IsBlown := Pointer(@ctx_Fuses_IsBlown);
     funcs.Fuses_Open := Pointer(@ctx_Fuses_Open);
     funcs.Fuses_Reset := Pointer(@ctx_Fuses_Reset);
-    funcs.Fuses_Set_CurveMultiplier := Pointer(@ctx_Fuses_Set_CurveMultiplier);
     funcs.Fuses_Set_Delay := Pointer(@ctx_Fuses_Set_Delay);
-    funcs.Fuses_Set_InterruptingRating := Pointer(@ctx_Fuses_Set_InterruptingRating);
     funcs.Fuses_Set_MonitoredObj := Pointer(@ctx_Fuses_Set_MonitoredObj);
     funcs.Fuses_Set_MonitoredTerm := Pointer(@ctx_Fuses_Set_MonitoredTerm);
     funcs.Fuses_Set_Name := Pointer(@ctx_Fuses_Set_Name);

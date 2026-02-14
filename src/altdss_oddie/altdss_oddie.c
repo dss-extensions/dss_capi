@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (C) 2023-2026 Paulo Meira & contributors to DSS-Extensions
+// SPDX-FileCopyrightText: (C) 2023-2025 Paulo Meira & contributors to DSS-Extensions
 // SPDX-License-Identifier: BSD-3
 
 #include <stdlib.h>
@@ -5816,40 +5816,6 @@ ALTDSS_ODDIE_DLL void ctx_Fuses_Set_idx(const void* ctx, int32_t Value)
     CTX_OR_PRIME
     ODDIE_CHECK_FUNC_VOID(FusesI)
     ((OddieContext*) ctx)->FusesI(11, Value);
-    oddie_map_error(ctx);
-}
-
-ALTDSS_ODDIE_DLL double ctx_Fuses_Get_CurveMultiplier(const void* ctx)
-{
-    CTX_OR_PRIME
-    ODDIE_CHECK_FUNC_FLOAT64(FusesF)
-    double res;
-    res = ((OddieContext*) ctx)->FusesF(4, 0);
-    oddie_map_error(ctx);
-    return res;
-}
-
-ALTDSS_ODDIE_DLL void ctx_Fuses_Set_CurveMultiplier(const void* ctx, double Value)
-{
-    ODDIE_CHECK_FUNC_VOID(FusesF)
-    ((OddieContext*) ctx)->FusesF(5, Value);
-    oddie_map_error(ctx);
-}
-
-ALTDSS_ODDIE_DLL double ctx_Fuses_Get_InterruptingRating(const void* ctx)
-{
-    CTX_OR_PRIME
-    ODDIE_CHECK_FUNC_FLOAT64(FusesF)
-    double res;
-    res = ((OddieContext*) ctx)->FusesF(6, 0);
-    oddie_map_error(ctx);
-    return res;
-}
-
-ALTDSS_ODDIE_DLL void ctx_Fuses_Set_InterruptingRating(const void* ctx, double Value)
-{
-    ODDIE_CHECK_FUNC_VOID(FusesF)
-    ((OddieContext*) ctx)->FusesF(7, Value);
     oddie_map_error(ctx);
 }
 

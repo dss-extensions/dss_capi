@@ -38,10 +38,6 @@ procedure Fuses_Set_NormalState(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDE
 procedure Fuses_Get_State(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Fuses_Set_State(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
 function Fuses_Get_Pointer(): Pointer; CDECL;
-function Fuses_Get_CurveMultiplier(): Double; CDECL;
-procedure Fuses_Set_CurveMultiplier(Value: Double); CDECL;
-function Fuses_Get_InterruptingRating(): Double; CDECL;
-procedure Fuses_Set_InterruptingRating(Value: Double); CDECL;
 
 implementation
 
@@ -271,7 +267,7 @@ begin
     If elem.FuseCurve <> NIL then
         Result := DSS_GetAsPAnsiChar(DSSPrime, elem.FuseCurve.Name())
     else
-        Result := 'none';
+        Result := NIL;
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_TCCcurve(const Value: PAnsiChar); CDECL;
@@ -531,48 +527,6 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
     Result := DSSPrime.ActiveCircuit.Fuses.Active
-end;
-//------------------------------------------------------------------------------
-function Fuses_Get_CurveMultiplier(): Double; CDECL;
-var
-    elem: TObj;
-begin
-    Result := 0;
-    if not _activeObj(DSSPrime, elem) then
-        Exit;
-
-    Result := elem.CurveMultiplier;
-end;
-//------------------------------------------------------------------------------
-procedure Fuses_Set_CurveMultiplier(Value: Double); CDECL;
-var
-    elem: TObj;
-begin
-    if not _activeObj(DSSPrime, elem) then
-        Exit;
-
-    elem.CurveMultiplier := Value;
-end;
-//------------------------------------------------------------------------------
-function Fuses_Get_InterruptingRating(): Double; CDECL;
-var
-    elem: TObj;
-begin
-    Result := 0;
-    if not _activeObj(DSSPrime, elem) then
-        Exit;
-
-    Result := elem.InterruptingRating;
-end;
-//------------------------------------------------------------------------------
-procedure Fuses_Set_InterruptingRating(Value: Double); CDECL;
-var
-    elem: TObj;
-begin
-    if not _activeObj(DSSPrime, elem) then
-        Exit;
-
-    elem.InterruptingRating := Value;
 end;
 //------------------------------------------------------------------------------
 end.
