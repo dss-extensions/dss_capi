@@ -3755,7 +3755,7 @@ begin
             integerPtr := dataPtr^;
             if (valuePtrIncr <> 0) then
             begin
-                Move(Value^, integerPtr, SizeOf(Integer) * ValueCount);
+                Move(Value^, integerPtr^, SizeOf(Integer) * ValueCount);
                 Exit;
             end;
             // Broadcast needs a loop (**could broadcast*)
@@ -3791,7 +3791,7 @@ begin
             integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
             if (valuePtrIncr <> 0) then
             begin
-                Move(Value^, integerPtr, SizeOf(Integer) * ValueCount);
+                Move(Value^, integerPtr^, SizeOf(Integer) * ValueCount);
                 Exit;
             end;
             // Broadcast needs a loop (**could broadcast*)

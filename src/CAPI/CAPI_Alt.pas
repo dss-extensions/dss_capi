@@ -1340,7 +1340,7 @@ begin
         DoSimpleMsg(elem.DSS, 'The number of provided elements (%d float64 items) does not the expected (%d).', [ValueCount, expectedCount], 100006);
         Exit;
     end;
-    Move(ValuePtr^, elem.InjCurrent, SizeOf(Double) * ValueCount);
+    Move(ValuePtr^, elem.InjCurrent^, SizeOf(Double) * ValueCount);
     Include(elem.Flags, Flg.ForceInjCurrents);
 end;
 //------------------------------------------------------------------------------
@@ -1367,7 +1367,7 @@ begin
         DoSimpleMsg(elem.DSS, 'The number of provided elements (%d float64 items) does not the expected (%d).', [ValueCount, expectedCount], 100006);
         Exit;
     end;
-    Move(ValuePtr^, elem.ITerminal, SizeOf(Double) * ValueCount);
+    Move(ValuePtr^, elem.ITerminal^, SizeOf(Double) * ValueCount);
     elem.SetITerminalUpdated(true);
     Include(elem.Flags, Flg.ForceInjCurrents);
 end;
