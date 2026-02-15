@@ -127,9 +127,9 @@ begin
         PropInfo := TypeInfo(TProp);
         PropInfoLegacy := TypeInfo(TPropLegacy);
         ActionEnum := TDSSEnum.Create('Fuse: Action', False, 1, 1, 
-            ['close', 'open'], [ord(CTRL_CLOSE), ord(CTRL_OPEN)]);
+            ['Close', 'Open'], [ord(CTRL_CLOSE), ord(CTRL_OPEN)]);
         StateEnum := TDSSEnum.Create('Fuse: State', False, 1, 1, 
-            ['closed', 'open'], [ord(CTRL_CLOSE), ord(CTRL_OPEN)]);
+            ['Closed', 'Open'], [ord(CTRL_CLOSE), ord(CTRL_OPEN)]);
     end;
 
     TCC_CurveClass := GetDSSClassPtr(dssContext, 'TCC_Curve');

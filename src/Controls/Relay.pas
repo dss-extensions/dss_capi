@@ -349,10 +349,10 @@ begin
         RelayTypeEnum.AltNamesValid := false;
         RelayTypeEnum.DefaultValue := 0;
         ActionEnum := TDSSEnum.Create('Relay: Action', False, 1, 1, 
-            ['close', 'open', 'trip'], 
+            ['Close', 'Open', 'Trip'], 
             [ord(CTRL_CLOSE), ord(CTRL_OPEN), ord(CTRL_OPEN)]);
         StateEnum := TDSSEnum.Create('Relay: State', False, 1, 1, 
-            ['closed', 'open', 'trip'], 
+            ['Closed', 'Open', 'Trip'], 
             [ord(CTRL_CLOSE), ord(CTRL_OPEN), ord(CTRL_OPEN)]);
     end;
     inherited Create(dssContext, RELAY_CONTROL, 'Relay');

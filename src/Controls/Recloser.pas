@@ -150,10 +150,10 @@ begin
         PropInfo := TypeInfo(TProp);
         PropInfoLegacy := TypeInfo(TPropLegacy);
         ActionEnum := TDSSEnum.Create('Recloser: Action', False, 1, 1, 
-            ['close', 'open', 'trip'], 
+            ['Close', 'Open', 'Trip'], 
             [ord(CTRL_CLOSE), ord(CTRL_OPEN), ord(CTRL_OPEN)]);
         StateEnum := TDSSEnum.Create('Recloser: State', False, 1, 1, 
-            ['closed', 'open', 'trip'], 
+            ['Closed', 'Open', 'Trip'], 
             [ord(CTRL_CLOSE), ord(CTRL_OPEN), ord(CTRL_OPEN)]);
     end;
 

@@ -98,11 +98,11 @@ begin
         PropInfo := TypeInfo(TProp);
         PropInfoLegacy := TypeInfo(TPropLegacy);
         ActionEnum := TDSSEnum.Create('SwtControl: Action', False, 1, 1, 
-            ['close', 'open'], 
+            ['Close', 'Open'], 
             [ord(CTRL_CLOSE), ord(CTRL_OPEN)]);
         ActionEnum.DefaultValue := ord(CTRL_CLOSE);
         StateEnum := TDSSEnum.Create('SwtControl: State', False, 1, 1, 
-            ['closed', 'open'], 
+            ['Closed', 'Open'], 
             [ord(CTRL_CLOSE), ord(CTRL_OPEN)]);
         StateEnum.DefaultValue := ord(CTRL_CLOSE);
     end;
