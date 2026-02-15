@@ -209,13 +209,13 @@ begin
     PropertyOffset[ord(TProp.Normal)] := ptrint(@obj.FNormalState); 
     PropertyOffset2[ord(TProp.Normal)] := ptrint(StateEnum); 
     PropertyOffset3[ord(TProp.Normal)] := ptrint(@GetFuseStateSize);
-    PropertyFlags[ord(TProp.Normal)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.DynamicDefault]; // controlledElement.NPhases
+    PropertyFlags[ord(TProp.Normal)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.DynamicDefault, TPropertyFlag.AllowBroadcast]; // controlledElement.NPhases
 
     PropertyType[ord(TProp.State)] := TPropertyType.MappedStringEnumArrayProperty;
     PropertyOffset[ord(TProp.State)] := ptrint(@obj.FPresentState); //TODO: why PropertyValue doesn't use get_State(x) in the original codebase?
     PropertyOffset2[ord(TProp.State)] := ptrint(StateEnum); 
     PropertyOffset3[ord(TProp.State)] := ptrint(@GetFuseStateSize);
-    PropertyFlags[ord(TProp.State)] := [TPropertyFlag.SizeIsFunction]; // controlledElement.NPhases
+    PropertyFlags[ord(TProp.State)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.AllowBroadcast]; // controlledElement.NPhases
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

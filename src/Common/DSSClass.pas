@@ -114,7 +114,9 @@ type
         // Use internally to handle setting single elements in arrays
         SingleElement = 3,
 
-        Reserved4 = 4,
+        // Broadcast a scalar value to all elements in an array
+        Broadcast = 4,
+
         Reserved5 = 5,
         Reserved6 = 6,
         Reserved7 = 7,
@@ -237,6 +239,7 @@ type
         DynamicDefault,
         TrapZero,
         ReplaceZero,
+        AllowBroadcast,
 
         Ordering_First,
         Ordering_Last,

@@ -294,7 +294,7 @@ begin
     PropertyType[ord(TProp.units)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.units)] := ptruint(@obj.units);
     PropertyOffset2[ord(TProp.units)] := PtrInt(DSS.UnitsEnum);
-    PropertyFlags[ord(TProp.units)] := [TPropertyFlag.OnArray];
+    PropertyFlags[ord(TProp.units)] := [TPropertyFlag.OnArray, TPropertyFlag.AllowBroadcast];
 
     PropertyType[ord(TProp.linetype)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.linetype)] := ptruint(@obj.FLineType);

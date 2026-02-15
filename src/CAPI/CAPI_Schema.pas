@@ -83,6 +83,7 @@ begin
     if TPropertyFlag.PowerFactorLimits in flags then Result.Add('PowerFactorLimits');
     if TPropertyFlag.TrapZero in flags then Result.Add('TrapZero');
     if TPropertyFlag.ReplaceZero in flags then Result.Add('ReplaceZero');
+    if TPropertyFlag.AllowBroadcast in flags then Result.Add('AllowBroadcast');
 end;
 
 function prepareEnum(e: TDSSEnum; enumIds: TClassNamesHashListType): TJSONObject;

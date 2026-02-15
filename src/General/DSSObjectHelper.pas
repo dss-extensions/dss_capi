@@ -2843,9 +2843,18 @@ var
     prevInt: Integer;
     flags: TPropertyFlags;
     obj: TDSSObject;
+    pvalue: PAnsiChar;
 begin
     obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
+
+    if (TDSSPropertySetterFlag.Broadcast in setterFlags) then
+    begin
+        pvalue := PAnsiChar(Value);
+        SetObjStrings(ptr, Index, @pvalue, 1, setterFlags);
+        Exit;
+    end;
+
     //TODO: if IsFilename, validate path here
     if TPropertyFlag.Transform_LowerCase in flags then
         Value := AnsiLowerCase(Value);
@@ -2881,7 +2890,7 @@ begin
                 TWriteStringPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, Value)
             else
             begin
-            TDSSCktElement(obj).SetBus(PropertyOffset[Index], Value);
+                TDSSCktElement(obj).SetBus(PropertyOffset[Index], Value);
             end;
         end;
         TPropertyType.BusOnStructArrayProperty:
@@ -2901,7 +2910,7 @@ begin
                 Exit;
             end;
             SetObjInteger(obj, Index, TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(AnsiLowerCase(Value)), @prevInt, setterFlags);
-        end;            
+        end;
     end;
 end;
 
@@ -2915,6 +2924,13 @@ begin
     obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
     scale := PropertyScale[Index];
+
+    if (TDSSPropertySetterFlag.Broadcast in setterFlags) then
+    begin
+        DoSimpleMsg('%s.%s: "Broadcast" is not implemented for this property.', [TDSSObject(obj).FullName(), PropertyName[Index]], 202502);
+        Exit;
+    end;
+
     if (flags = []) and (PropertyType[Index] = TPropertyType.DoubleProperty) then
     begin
         // Most properties don't have any flags set, just skip the checks
@@ -3052,6 +3068,12 @@ begin
     obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
     ptype := PropertyType[Index];
+
+    if (TDSSPropertySetterFlag.Broadcast in setterFlags) then
+    begin
+        SetObjIntegers(ptr, Index, @Value, 1, setterFlags);
+        Exit;
+    end;
 
     if (TPropertyFlag.ConditionalReadOnly in flags) and (PLongBool(PByte(obj) + PropertyOffset3[Index])^) then
     begin
@@ -3644,10 +3666,17 @@ var
     dataPtr: PPInteger;
     flags: TPropertyFlags;
     obj: TDSSObject;
+    valuePtrIncr: Integer = 1;
 
     function checkSize(): Boolean;
     begin
         Result := false;
+
+        if (TDSSPropertySetterFlag.Broadcast in setterFlags) then
+        begin
+            Result := true;
+            Exit;
+        end;
 
         if ((TPropertyFlag.ArrayMaxSize in flags) and (maxSize >= ValueCount)) or // Allow fewer elements for some properties
             ((not (TPropertyFlag.ArrayMaxSize in flags)) and (maxSize <> ValueCount)) then 
@@ -3690,6 +3719,24 @@ begin
     end;
     obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
+
+    if (not (TPropertyFlag.AllowBroadcast in flags)) and (TDSSPropertySetterFlag.Broadcast in setterFlags) then
+    begin
+        DoSimpleMsg('%s.%s: "Broadcast" is not implemented for this property.', [TDSSObject(obj).FullName(), PropertyName[Index]], 202503);
+        Exit;
+    end;
+    if (TDSSPropertySetterFlag.Broadcast in setterFlags) then
+    begin
+        if ValueCount <> 1 then
+        begin
+            Exclude(setterFlags, TDSSPropertySetterFlag.Broadcast);
+        end
+        else
+        begin
+            valuePtrIncr := 0;
+        end;
+    end;
+
     case PropertyType[Index] of
         TPropertyType.IntegerArrayProperty:
         begin
@@ -3706,7 +3753,17 @@ begin
                 ReAllocmem(dataPtr^, Sizeof(Integer) * maxSize);
             end;
             integerPtr := dataPtr^;
-            Move(Value^, integerPtr, SizeOf(Integer) * ValueCount);
+            if (valuePtrIncr <> 0) then
+            begin
+                Move(Value^, integerPtr, SizeOf(Integer) * ValueCount);
+                Exit;
+            end;
+            // Broadcast needs a loop (**could broadcast*)
+            for i := 1 to maxSize do
+            begin
+                integerPtr^ := Value^;
+                Inc(integerPtr);
+            end;
         end;
         TPropertyType.MappedStringEnumArrayProperty:
         begin
@@ -3732,7 +3789,17 @@ begin
                 end;
             end;
             integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
-            Move(Value^, integerPtr, SizeOf(Integer) * ValueCount);
+            if (valuePtrIncr <> 0) then
+            begin
+                Move(Value^, integerPtr, SizeOf(Integer) * ValueCount);
+                Exit;
+            end;
+            // Broadcast needs a loop (**could broadcast*)
+            for i := 1 to maxSize do
+            begin
+                integerPtr^ := Value^;
+                Inc(integerPtr);
+            end;
         end;
         TPropertyType.MappedStringEnumArrayOnStructArrayProperty:
         begin
@@ -3767,7 +3834,7 @@ begin
                 integerPtr^ := Value^;
                 // Move to the next position
                 integerPtr := PInteger(ptruint(integerPtr) + PropertyStructArrayStep);
-                Inc(Value);
+                Inc(Value, valuePtrIncr); // **could broadcast**
             end;
 
             positionPtr^ := maxSize; // match the effective behavior of the original code
@@ -3818,7 +3885,7 @@ begin
                 integerPtr^ := Value^;
                 // Move to the next position
                 integerPtr := PInteger(ptruint(integerPtr) + step);
-                Inc(Value);
+                Inc(Value, valuePtrIncr); // **could broadcast**
             end;
         end;
     end;
@@ -4217,10 +4284,17 @@ var
     otherObj: TDSSObject;
     otherObjPtr: TDSSObjectPtr;
     allowNone: Boolean;
+    valuePtrIncr: Integer = 1;
 
     function checkSize(): Boolean;
     begin
         Result := false;
+
+        if (TDSSPropertySetterFlag.Broadcast in setterFlags) then
+        begin
+            Result := true;
+            Exit;
+        end;
 
         if ((TPropertyFlag.ArrayMaxSize in flags) and (maxSize >= ValueCount)) or // Allow fewer elements for some properties
             ((not (TPropertyFlag.ArrayMaxSize in flags)) and (maxSize <> ValueCount)) then 
@@ -4265,6 +4339,24 @@ begin
     end;
 
     flags := PropertyFlags[Index];
+
+    if (not (TPropertyFlag.AllowBroadcast in flags)) and (TDSSPropertySetterFlag.Broadcast in setterFlags) then
+    begin
+        DoSimpleMsg('%s.%s: "Broadcast" is not implemented for this property.', [TDSSObject(obj).FullName(), PropertyName[Index]], 202501);
+        Exit;
+    end;
+    if (TDSSPropertySetterFlag.Broadcast in setterFlags) then
+    begin
+        if ValueCount <> 1 then
+        begin
+            Exclude(setterFlags, TDSSPropertySetterFlag.Broadcast);
+        end
+        else
+        begin
+            valuePtrIncr := 0;
+        end;
+    end;
+
     case PropertyType[Index] of 
         TPropertyType.DSSObjectReferenceArrayProperty:
         begin
@@ -4376,7 +4468,7 @@ begin
 
                 otherObjPtr^ := otherObj;
                 Inc(otherObjPtr);
-                Inc(Value);
+                Inc(Value, valuePtrIncr); // **could broadcast**
             end;
 
             if positionPtr <> NIL then
@@ -4431,7 +4523,7 @@ begin
             begin
                 if Length(Value^) > 0 then
                     TDSSCktElement(obj).SetBus(i, Value^);
-                Inc(Value);
+                Inc(Value, valuePtrIncr); // **could broadcast**
             end;
             positionPtr^ := maxSize; // match the effective behavior of the original code
         end;
@@ -4451,7 +4543,7 @@ begin
             begin
                 if Length(Value^) > 0 then
                     integerPtr^ := TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(Value^);
-                Inc(Value);
+                Inc(Value, valuePtrIncr); // **could broadcast**
                 Inc(integerPtr);
             end;
         end;
@@ -4491,7 +4583,7 @@ begin
                     integerPtr^ := TDSSEnum(Pointer(PropertyOffset2[Index])).StringToOrdinal(Value^);
 
                 // Move to the next position
-                Inc(Value);
+                Inc(Value, valuePtrIncr); // **could broadcast**
                 integerPtr := PInteger(ptruint(integerPtr) + step);
             end;
             if PropertyType[Index] = TPropertyType.MappedStringEnumArrayOnStructArrayProperty then
