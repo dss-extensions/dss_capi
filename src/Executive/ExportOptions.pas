@@ -90,7 +90,7 @@ type
 const
     NumExportOptions = ord(High(TExportOption));
 
-function DoExportCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Integer;
+function DoExportCmd(MainDSS: TDSSContext): Integer;
 procedure DefineOptions(var ExportOption: ArrayOfString);
 
 implementation
@@ -126,7 +126,7 @@ begin
         ExportOption[i - 1] := GetEnumName(info, i);
 end;
 
-function DoExportCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Integer;
+function DoExportCmd(MainDSS: TDSSContext): Integer;
 var
     ParamName,
     Parm1,
@@ -142,15 +142,11 @@ var
     AbortExport: Boolean;
     Substation, GeographicRegion, SubGeographicRegion: String; // for CIM export
     FdrUuid, SubUuid, SubGeoUuid, RgnUuid: TUuid;              // for CIM export
-{$IFDEF DSS_CAPI_PM}
     InitP, FinalP, idxP: Integer;
     PMParent, DSS: TDSSContext;
 begin
     PMParent := MainDSS.GetPrime();
     DSS := MainDSS.ActiveChild;
-{$ELSE}
-begin
-{$ENDIF}
 
     Result := 0;
     AbortExport := FALSE;
@@ -481,10 +477,8 @@ begin
                 DoSimpleMsg(DSS, 'Monitor name not specified. %s', [CRLF + DSS.Parser.CmdString()], 251)
             else
             begin
-{$IFDEF DSS_CAPI_PM}
                 if not PMParent.ConcatenateReports then
                 begin
-{$ENDIF}
                     if Parm2 = 'all' then
                     begin
                         for pMon in DSS.ActiveCircuit.Monitors do
@@ -504,7 +498,6 @@ begin
                         else
                             DoSimpleMsg(DSS, 'Monitor "%s" not found. %s', [Parm2, CRLF + DSS.Parser.CmdString()], 250);
                     end;
-{$IFDEF DSS_CAPI_PM}
                 end
                 else
                 begin
@@ -533,7 +526,6 @@ begin
                         end;
                     end;
                 end;
-{$ENDIF}
             end;
         16:
             ExportYprim(DSS, Filename);

@@ -59,7 +59,7 @@ type
 const
     NumShowOptions = Ord(High(TShowOption));
 
-function DoShowCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Integer;
+function DoShowCmd(MainDSS: TDSSContext): Integer;
 procedure DefineOptions(var ShowOption: ArrayOfString);
 
 implementation
@@ -87,7 +87,7 @@ begin
         ShowOption[i - 1] := GetEnumName(info, i);
 end;
 
-function DoShowCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Integer;
+function DoShowCmd(MainDSS: TDSSContext): Integer;
 var
     F: TStream = NIL;
     Param, Filname: String;
@@ -102,15 +102,11 @@ var
     Freq: Double;
     Units: Integer;
     Rho_line: Double;
-{$IFDEF DSS_CAPI_PM}
     InitP, FinalP, idxP: Integer;  // Variables added to concatenate the results in OpenDSS-PM
     PMParent, DSS: TDSSContext;
 begin
     PMParent := MainDSS.GetPrime();
     DSS := MainDSS.ActiveChild;
-{$ELSE}
-begin
-{$ENDIF}
     Result := 0;
 
     DSS.Parser.NextParam;
@@ -218,16 +214,13 @@ begin
                 DoSimpleMsg(DSS, 'Monitor Name Not Specified. %s', [CRLF + DSS.Parser.CmdString()], 249)
             else
             begin
-{$IFDEF DSS_CAPI_PM}
                 if not PMParent.ConcatenateReports then
                 begin
-{$ENDIF}
                     pMon := DSS.MonitorClass.Find(Param);
                     if pMon <> NIL then
                         pMon.TranslateToCSV(TRUE)
                     else
                         DoSimpleMsg(DSS, 'Monitor "%s" not found. %s', [param, CRLF + DSS.Parser.CmdString()], 248);
-{$IFDEF DSS_CAPI_PM}
                 end
                 else
                 begin
@@ -242,7 +235,6 @@ begin
                             DoSimpleMsg(DSS, 'Monitor "%s" not found. %s', [param, CRLF + DSS.Parser.CmdString()], 248);
                     end;
                 end;
-{$ENDIF}
             end;
         end;
         11:

@@ -1728,13 +1728,9 @@ var
     s: Single;
     sngBuffer: array[1..100] of Single;
     sout: String;
-{$IFDEF DSS_CAPI_PM}
     PMParent: TDSSContext;
 begin
     PMParent := DSS.GetPrime();
-{$ELSE}
-begin
-{$ENDIF}
 
     Save();  // Save present buffer
     CloseMonitorStream();   // Position at beginning
@@ -1742,7 +1738,6 @@ begin
     CSVName := GetCSVFileName();
 
     try
-{$IFDEF DSS_CAPI_PM}
         if PMParent.ConcatenateReports then
             // We may need to wait other threads before using the file
             PMParent.ConcatenateReportsLock.Acquire();
@@ -1753,18 +1748,15 @@ begin
             F.Seek(0, soFromEnd);
         end
         else
-{$ENDIF}
             F := DSS.GetOutputStreamEx(CSVName, fmCreate);
 
     except
         On E: Exception do
         begin
             DoSimpleMsg('Error opening CSVFile "%s" for writing: %s', [CSVName, E.Message], 672);
-{$IFDEF DSS_CAPI_PM}
             if PMParent.ConcatenateReports then
                 // We may need to wait other threads before using the file
                 PMParent.ConcatenateReportsLock.Release();
-{$ENDIF}
             Exit;
         end;
     end;
@@ -1776,11 +1768,11 @@ begin
     MonitorStream.Read(Mode, Sizeof(Mode));
     MonitorStream.Seek(SizeOf(TLegacyMonitorStrBuffer), soFromCurrent);
 
-{$IFDEF DSS_CAPI_PM}
     if not PMParent.ConcatenateReports or (PMParent = DSS) then
-{$ENDIF}
+    begin
         // Quotes are ommited from the header for backwards compatibility.
         FSWriteln(F, Header.DelimitedText);
+    end;
     RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
 
     try
@@ -1812,11 +1804,11 @@ begin
     finally
         CloseMonitorStream();
         FreeAndNil(F);
-{$IFDEF DSS_CAPI_PM}
         if PMParent.ConcatenateReports then
+        begin
             // We may need to wait other threads before using the file
             PMParent.ConcatenateReportsLock.Release();
-{$ENDIF}
+        end;
     end;
 
     if Show then
@@ -1865,19 +1857,15 @@ begin
 end;
 
 function TMonitorObj.GetCSVFileName(): String;
-{$IFDEF DSS_CAPI_PM}
 var
     PMParent: TDSSContext;
-{$ENDIF}
 begin
-{$IFDEF DSS_CAPI_PM}
     PMParent := DSS.GetPrime();
     if PMParent.ConcatenateReports then
     begin
         Result := PMParent.OutputDirectory + PMParent.CircuitName_ + 'Mon_' + Name + '.csv';
         Exit;
     end;
-{$ENDIF}
     Result := DSS.OutputDirectory + DSS.CircuitName_ + 'Mon_' + Name + DSS._Name + '.csv'
 end;
 

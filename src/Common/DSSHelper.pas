@@ -194,13 +194,11 @@ type
         function GetSeasonSignalObj(): TXYCurveObj; inline;
         
     public
-{$IFDEF DSS_CAPI_PM}
         function NumOfActors(): Integer; inline;
         function ActorThread(): TSolver; inline;
         procedure SetActorThread(val: TSolver); inline;
         procedure SyncSeasonalRatingIdx();
        
-{$ENDIF}
         property ControlProxyObj: TControlProxyObj read GetControlProxyObj;
         property DSSExecutive: TExecutive read GetDSSExecutive write SetDSSExecutive;
         property CIMExporter: TCIMExporter read GetCIMExporter write SetCIMExporter;
@@ -267,10 +265,8 @@ type
     
 implementation
 
-{$IFDEF DSS_CAPI_PM}
 function TDSSGlobalHelper.NumOfActors(): Integer; begin Result := High(Children) + 1; end;
 function TDSSGlobalHelper.ActorThread(): TSolver; begin Result := TSolver(FActorThread); end;
-{$ENDIF}
 function TDSSGlobalHelper.GetControlProxyObj(): TControlProxyObj; begin Result := TControlProxyObj(FControlProxyObj); end;
 function TDSSGlobalHelper.GetDSSExecutive(): TExecutive; begin Result := TExecutive(FDSSExecutive); end;
 function TDSSGlobalHelper.GetCIMExporter(): TCIMExporter; begin Result := TCIMExporter(FCIMExporter); end;
@@ -334,9 +330,7 @@ function TDSSGlobalHelper.GetActiveFaultObj(): TFaultObj; begin Result := TFault
 function TDSSGlobalHelper.GetSeasonSignalObj(): TXYCurveObj; begin Result := TXYCurveObj(FSeasonSignalObj); end;
 
 
-{$IFDEF DSS_CAPI_PM}
 procedure TDSSGlobalHelper.SetActorThread(val: TSolver); begin FActorThread := val; end;
-{$ENDIF}
 procedure TDSSGlobalHelper.SetDSSExecutive(val: TExecutive); begin FDSSExecutive := val; end;
 procedure TDSSGlobalHelper.SetCIMExporter(val: TCIMExporter); begin FCIMExporter := val; end;
 procedure TDSSGlobalHelper.SetActiveDSSObject(val: TDSSObject); begin FActiveDSSObject := val; end;

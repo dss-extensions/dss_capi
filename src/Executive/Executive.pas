@@ -49,9 +49,7 @@ TYPE
          Procedure Write_to_RecorderFile(const s:String);
 
          Procedure Clear(Resetting: Boolean = True);
-{$IFDEF DSS_CAPI_PM}
          Procedure ClearAll();
-{$ENDIF}
 
          procedure ParseCommand(const Value: String); overload;
          procedure ParseCommand(const Value: String; LineNum: Integer); overload;
@@ -220,7 +218,6 @@ begin
 end;
 
 procedure TExecutive.ParseCommand(const Value: String; LineNum: Integer);
-{$IFDEF DSS_CAPI_PM}
 var
     idx: Integer;
     PMParent, ChDSS: TDSSContext;
@@ -229,10 +226,6 @@ begin
     ChDSS := DSS.ActiveChild;
     if ChDSS = NIL then
         ChDSS := DSS;
-{$ELSE}
-begin
-{$ENDIF}
-{$IFDEF DSS_CAPI_PM}
     if PMParent.AllActors then
     begin
         for idx := 0 to High(PMParent.Children) do
@@ -253,8 +246,9 @@ begin
         PMParent.ActiveChildIndex := 0;
     end
     else
-{$ENDIF}
-        ProcessCommand({$IFDEF DSS_CAPI_PM}ChDSS{$ELSE}DSS{$ENDIF}, Value);
+    begin
+        ProcessCommand(ChDSS, Value);
+    end;
 end;
 
 procedure TExecutive.Clear(Resetting: Boolean = True);
@@ -270,7 +264,6 @@ begin
 
     if ((DSS.NumCircuits > 0) or (DSS_EXTENSIONS_COMPAT <> compatFlagsLastClear)) then
 	begin
-{$IFDEF DSS_CAPI_PM}
         // In case the actor hasn't been destroyed
         if DSS.ActorThread() <> NIL then
         begin
@@ -279,7 +272,7 @@ begin
             DSS.ActorThread().Free();
             DSS.SetActorThread(NIL);
         end;
-{$ENDIF}        
+
     	if DSS.DIFilesAreOpen then
         	DSS.EnergyMeterClass.CloseAllDIFiles;
 
@@ -319,7 +312,6 @@ begin
     DSS.SignalEvent(TAltDSSEvent.Clear, 1);
 end;
 
-{$IFDEF DSS_CAPI_PM}
 procedure TExecutive.ClearAll();
 var
     PMParent: TDSSContext;
@@ -335,7 +327,6 @@ begin
     PMParent.DSSExecutive.Clear();
     PMParent.ADiakoptics := False;
 end;
-{$ENDIF}
 
 function TExecutive.RecorderOn(): Boolean;
 begin

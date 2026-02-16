@@ -44,9 +44,7 @@ type
         function DoUserClassesCmd(): Integer;
         function DoHelpCmd(): Integer;
         function DoClearCmd(): Integer;
-{$IFDEF DSS_CAPI_PM}
         function DoClearAllCmd(): Integer;
-{$ENDIF}
         function DoReduceCmd(): Integer;
         function DoInterpolateCmd(): Integer;
 
@@ -860,14 +858,12 @@ begin
     Result := 0;
 end;
 
-{$IFDEF DSS_CAPI_PM}
 function TExecHelper.DoClearAllCmd(): Integer;
 begin
     DSS.DSSExecutive.ClearAll;
     Result := 0;
 end;
 
-{$ENDIF}
 function CompareClassNames(Item1, Item2: Pointer): Integer;
 begin
     Result := CompareText(TDSSClass(Item1).Name, TDSSClass(Item2).Name);

@@ -174,9 +174,7 @@ procedure DoSimpleMsg(DSS: TDSSContext; Const S :String; ErrNum:Integer);overloa
 procedure DoSimpleMsg(DSS: TDSSContext; Const S :String; fmtArgs: Array of Const; ErrNum:Integer);overload;
 
 procedure ClearAllCircuits_SingleContext(DSS: TDSSContext);
-{$IFDEF DSS_CAPI_PM}
 procedure ClearAllCircuits_AllContexts(DSS: TDSSContext);
-{$ENDIF}
 
 function SetObject(DSS: TDSSContext; const param :string): Boolean;
 function  SetActiveBus(DSS: TDSSContext; const BusName:String):Integer;
@@ -195,7 +193,6 @@ procedure AppendGlobalResultCRLF(DSS: TDSSContext; const S:String);  // Separate
 procedure ResetQueryLogFile(DSS: TDSSContext);
 procedure WriteQueryLogFile(DSS: TDSSContext; Const Prop, S:String);
 
-{$IFDEF DSS_CAPI_PM}
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
 procedure WaitForActors(MainDSS: TDSSContext; ADiakoptics: Boolean = False; ADWorkers: Boolean = False); // original: Wait4Actors
 {$ELSE}
@@ -203,7 +200,6 @@ procedure WaitForActors(MainDSS: TDSSContext); // original: Wait4Actors
 {$ENDIF}
 procedure DoClone(MainDSS: TDSSContext);
 procedure New_Actor_Slot(MainDSS: TDSSContext);
-{$ENDIF}
 
 function DSSTranslate(const s: String): String;
 function DSSHelp(const s: String): String;
@@ -218,9 +214,7 @@ USES
      {$ENDIF}
      SysUtils,
      CAPI_Metadata,
-      {$IFDEF DSS_CAPI_PM}
      syncobjs,
-     {$ENDIF}
      Solution,
      Executive,
      Utilities,
@@ -392,7 +386,7 @@ Begin
     DSS.LogQueries := false;
     DSS.MaxAllocationIterations := 2;
 End;
-{$IFDEF DSS_CAPI_PM}
+
 procedure ClearAllCircuits_AllContexts(DSS: TDSSContext);
 var
     PMParent: TDSSContext;
@@ -431,7 +425,6 @@ begin
     PMParent.ActiveChild := PMParent;
     PMParent.ActiveChildIndex := 0;
 End;
-{$ENDIF}// DSS_CAPI_PM
 
 PROCEDURE MakeNewCircuit(DSS: TDSSContext; Const Name:String);
 Var
@@ -519,9 +512,7 @@ BEGIN
     {$IFDEF DSS_CAPI_CONTEXT}
               + ' CONTEXT_API'
     {$ENDIF}
-    {$IFDEF DSS_CAPI_PM}
               + ' PM'
-    {$ENDIF}
     {$IFDEF DSS_CAPI_DEBUG_BUILD}
               + ' DEBUG'
     {$ENDIF}
@@ -614,7 +605,6 @@ Begin
       DSS.ParserVars.Add('@lastfile', Fname);
 End;
 
-{$IFDEF DSS_CAPI_PM}
 // Waits for all the actors running tasks
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
 procedure WaitForActors(MainDSS: TDSSContext; ADiakoptics: Boolean = False; ADWorkers: Boolean = False);
@@ -734,8 +724,6 @@ begin
     else 
         DoSimpleMsg(DSS, _('There are no more CPUs available'), 7001)
 End;
-{$ENDIF}
-
 
 function DSSTranslate(const s: String): String;
 begin

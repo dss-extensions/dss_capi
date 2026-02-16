@@ -107,11 +107,7 @@ end;
 //------------------------------------------------------------------------------
 procedure DSS_ClearAll(); CDECL;
 begin
-{$IFDEF DSS_CAPI_PM}
     DSSPrime.DSSExecutive.ClearAll();
-{$ELSE}
-    DSSPrime.DSSExecutive.Clear();
-{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_Version(): PAnsiChar; CDECL;

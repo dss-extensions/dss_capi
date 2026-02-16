@@ -30,10 +30,8 @@ uses
     Unix,
 {$ENDIF}
     Strings,
-{$IFDEF DSS_CAPI_PM}
     SyncObjs,
     ExecHelper,
-{$ENDIF}
     CktElement,
     DSSPointerList;
 
@@ -88,7 +86,7 @@ type
 
     TNodeVarray = array[0..1000] of Complex;
     pNodeVarray = ^TNodeVarray;
-{$IFDEF DSS_CAPI_PM}
+
     TSolutionObj = class;
 
     TSolver = class(TThread)
@@ -123,7 +121,6 @@ type
         function GetCPU(): Integer;
         procedure SetCPU(CPU: Integer);
     end;
-{$ENDIF}
 
     TSolutionObj = class(TObject)
     PRIVATE
@@ -364,10 +361,8 @@ uses
 {$IFDEF MSWINDOWS}
     SHELLAPI,
 {$ELSE}    
-    {$IFDEF DSS_CAPI_PM}
     initc, 
     cpucount, 
-    {$ENDIF}
 {$ENDIF}
     PDElement,
     ControlElem,
@@ -398,7 +393,6 @@ uses
 const
     NumPropsThisClass = 1;
 
-{$IFDEF DSS_CAPI_PM}
     {$if defined(WINDOWS)}
 function Set_Thread_Affinity(Hnd : THandle; CPU : integer): Integer;
 var
@@ -443,7 +437,6 @@ begin
     Result := Op_Result;
 end;
     {$ENDIF}
-{$ENDIF}
 
 constructor TSolutionObj.Create(dssContext: TDSSContext; dssCkt: Pointer; const SolutionName: String);
 begin
@@ -524,10 +517,10 @@ begin
     RandomType := GAUSSIAN; // default to gaussian
     NumberOfTimes := 100;
     IntervalHrs := 1.0;
-{$IFDEF DSS_CAPI_PM}
+
     if not Assigned(DSS.ThreadStatusEvent) then
         DSS.ThreadStatusEvent := TEvent.Create(NIL, TRUE, FALSE, '');
-{$ENDIF}
+
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
     ADiak_Init := False;
     ADiak_PCInj := False;
@@ -577,7 +570,7 @@ begin
     if NCIM_Jacobian <> 0 then
         DeleteSparseSet(NCIM_Jacobian);
 
-{$IFDEF DSS_CAPI_PM}    
+
     // Sends a message to the working actor
     // DSS.ThreadStatusEvent.SetEvent();
     if DSS.ActorThread() <> NIL then
@@ -590,7 +583,7 @@ begin
     end;
     DSS.ThreadStatusEvent.Free;
     DSS.ThreadStatusEvent := NIL;
-{$ENDIF}
+
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
     LockNodeV.Free;
 {$ENDIF}
@@ -600,13 +593,9 @@ end;
 
 procedure TSolutionObj.Solve();
 var
-{$IFDEF DSS_CAPI_PM}
     PMParent: TDSSContext;
-{$ENDIF}
 begin
-{$IFDEF DSS_CAPI_PM}
     PMParent := DSS.GetPrime();
-{$ENDIF}
     ckt.Issolved := FALSE;
     DSS.SolutionWasAttempted := TRUE;
 
@@ -635,12 +624,10 @@ begin
 
         // CheckFaultStatus;  ???? needed here??
 
-{$IFDEF DSS_CAPI_PM}
         // If we won't run in parallel and don't have a thread already,
         // don't use a new thread
         if (not PMParent.Parallel_enabled) and (DSS.ActorThread() = NIL) then
         begin
-{$ENDIF}
             {$IFDEF WINDOWS}
             QueryPerformanceCounter(GStartTime);
             {$ELSE}
@@ -694,7 +681,6 @@ begin
             Total_Solve_Time_Elapsed := ((GEndTime - GStartTime) / CPU_Freq) * 1000000;
             Total_Time_Elapsed += Total_Solve_Time_Elapsed;
             Exit;
-{$IFDEF DSS_CAPI_PM}
         end;
 
 
@@ -725,7 +711,6 @@ begin
 
         // Sends message to start the Simulation
         DSS.ActorThread().Send_Message(TActorMessage.SIMULATE);
-{$ENDIF} // DSS_CAPI_PM
     except
         On E: Exception do
         begin
@@ -2525,7 +2510,6 @@ begin
 {$ENDIF}    
 end;
 
-{$IFDEF DSS_CAPI_PM}
 // Used to create the OpenDSS Solver thread
 constructor TSolver.Create(sol: TSolutionObj; Susp: Boolean; local_CPU: Integer; AEvent: TEvent);
 begin
@@ -2761,7 +2745,6 @@ begin
     inherited;
 end;
 
-{$ENDIF} //DSS_CAPI_PM
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
 function TSolutionObj.SolveAD(Initialize: Boolean): Integer;  // solves a step for Adiakoptics locally
 begin

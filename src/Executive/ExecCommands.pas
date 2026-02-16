@@ -144,7 +144,6 @@ type
         CountObj,
         ActiveObj,
         ClassMembers,
-{$IFDEF DSS_CAPI_PM}
         NewActor,
         Wait,
         SolveAll
@@ -156,7 +155,6 @@ type
         ,
         Abort,
         Clone,
-{$ENDIF}
 
         // AltDSS Extensions
         DoubleSlashBangAltDSS,
@@ -170,7 +168,7 @@ type
 const
     NumExecCommands = ord(High(TExecCommand));
 
-procedure ProcessCommand({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext; const CmdLine: String; LineNum: Integer = -1);
+procedure ProcessCommand(MainDSS: TDSSContext; const CmdLine: String; LineNum: Integer = -1);
 
 procedure DefineCommands(var ExecCommand: ArrayOfString);
 
@@ -224,7 +222,7 @@ begin
     ExecCommand[ord(Cmd.DoubleSlashBangAltDSS) - 1] := '//!AltDSS';
 end;
 
-procedure ProcessCommand({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext; const CmdLine: String; LineNum: Integer);
+procedure ProcessCommand(MainDSS: TDSSContext; const CmdLine: String; LineNum: Integer);
 var
     F: TStream = NIL;
     fileName: String;
@@ -236,15 +234,11 @@ var
     ObjName, PropName: String;
     ObjIdx: Integer;
     ObjList: String;
-{$IFDEF DSS_CAPI_PM}
     i: Integer;
     PMParent, DSS: TDSSContext;
 begin
     PMParent := MainDSS.GetPrime();
     DSS := MainDSS.ActiveChild;
-{$ELSE}
-begin
-{$ENDIF}
     try
         CommandList := DSS.DSSExecutive.CommandList;
         DSS.CmdResult := 0;
@@ -380,7 +374,6 @@ begin
                 DSS.DSSExecutive.DoCvrtLoadshapesCmd;
             ord(Cmd.vr):
                 DSS.DSSExecutive.DoVarCmd;
-{$IFDEF DSS_CAPI_PM}
             ord(Cmd.NewActor):
             begin
                 New_Actor_Slot(DSS);
@@ -396,10 +389,6 @@ begin
                     WaitForActors(DSS);
                     {$ENDIF}
                 end;
-{$ELSE}
-            ord(Cmd.ClearAll):
-                DSS.DSSExecutive.DoClearCmd;
-{$ENDIF}
             ord(Cmd.COMHelp):
             begin
                 DoSimpleMsg(DSS, _('COMHelp is not available on DSS-Extensions. You can browse the docs online at https://opendss.epri.com/COMInterface.html , or download "OpenDSS_COM.chm" at https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/x64/OpenDSS_COM.chm?format=raw as well as other example and documentation files from the EPRI''s OpenDSS distribution at https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/ and subfolders. Please see https://dss-extensions.org/ for further links.'), 999);
@@ -770,13 +759,11 @@ begin
             ord(Cmd.ExportOverloads):
                 if DSS.EnergyMeterClass.OV_MHandle <> nil then
                     CloseMHandler(DSS, DSS.EnergyMeterClass.OV_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads' + '.csv', DSS.EnergyMeterClass.OV_Append);
-{$IFDEF DSS_CAPI_PM}
             ord(Cmd.Abort):
                 for i := 0 to High(PMParent.Children) do
                     PMParent.Children[i].SetSolutionAbort(true);
             ord(Cmd.Clone):
                 DoClone(DSS);
-{$ENDIF}
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
             ord(Cmd.Tear_Circuit):
                 ADiakoptics_Tearing(DSS, False);
@@ -871,9 +858,7 @@ begin
                 Format(_('ProcessCommand: Exception Raised While Processing DSS Command: %s'), [CRLF + DSS.Parser.CmdString()]),
                 E.Message, _('Error in command string or circuit data.'), 303);
     end;
-{$IFNDEF DSS_CAPI_PM}
-    DSS.ParserVars.Add('@result', DSS.GlobalResult)
-{$ENDIF}
+    // DSS.ParserVars.Add('@result', DSS.GlobalResult)
 end;
 
 end.

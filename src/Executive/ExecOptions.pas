@@ -137,7 +137,6 @@ type
         EventLogDefault,
         LongLineCorrection,
         ShowReports
-{$IFDEF DSS_CAPI_PM}
         ,
         NumCPUs,
         NumCores,
@@ -148,7 +147,6 @@ type
         Parallel,
         ConcatenateReports,
         NUMANodes,
-{$ENDIF}
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
         Coverage,
         Num_SubCircuits,
@@ -173,10 +171,10 @@ type
 const
     NumExecOptions = ord(High(TExecOption));
 
-function DoGetCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Integer;
-function DoSetCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext; SolveOption: Integer): Integer;
-function DoSetCmd_NoCircuit({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Boolean;  // Set Commands that do not require a circuit
-function DoGetCmd_NoCircuit({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Boolean;  // Get Commands that do not require a circuit
+function DoGetCmd(MainDSS: TDSSContext): Integer;
+function DoSetCmd(MainDSS: TDSSContext; SolveOption: Integer): Integer;
+function DoSetCmd_NoCircuit(MainDSS: TDSSContext): Boolean;  // Set Commands that do not require a circuit
+function DoGetCmd_NoCircuit(MainDSS: TDSSContext): Boolean;  // Get Commands that do not require a circuit
 procedure DefineOptions(var ExecOption: ArrayOfString);
 
 implementation
@@ -233,20 +231,16 @@ begin
     end;
 end;
 
-function DoSetCmd_NoCircuit({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Boolean;  // Set Commands that do not require a circuit
+function DoSetCmd_NoCircuit(MainDSS: TDSSContext): Boolean;  // Set Commands that do not require a circuit
 // This is for setting global options that do not require an active circuit
 var
     ParamPointer: Integer;
     ParamName: String;
     Param: String;
-{$IFDEF DSS_CAPI_PM}
     PMParent, DSS: TDSSContext;
 begin
     PMParent := MainDSS.GetPrime();
     DSS := MainDSS.ActiveChild;
-{$ELSE}
-begin
-{$ENDIF}
 
     Result := TRUE;
      // Continue parsing command line
@@ -275,7 +269,6 @@ begin
                 DoSimpleMsg(DSS, _('This is not supported in the AltDSS engine.'), 25040101);
             111:
                 DoSimpleMsg(DSS, _('This is not supported in the AltDSS engine.'), 25040101);
-{$IFDEF DSS_CAPI_PM}
             ord(Opt.ActiveActor):
                 if DSS.Parser.MakeString() = '*' then
                 begin
@@ -313,7 +306,6 @@ begin
                 PMParent.ConcatenateReports := InterpretYesNo(Param);
             ord(Opt.EventLogDefault):
                 DSS.EventLogDefault := InterpretYesNo(Param);
-{$ENDIF} //DSS_CAPI_PM            
         else
             begin
                 DoSimpleMsg(DSS, _('You must create a new circuit object first: "new circuit.mycktname" to execute this Set command.'), 301);
@@ -390,7 +382,7 @@ begin
     end;
 end;
 
-function DoSetCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext; SolveOption: Integer): Integer;
+function DoSetCmd(MainDSS: TDSSContext; SolveOption: Integer): Integer;
 // Set DSS Options
 // Solve Command is re-routed here first to set options beFORe solving
 var
@@ -405,14 +397,10 @@ var
     pce: TPCElement;
     norder: Integer;
     cvalues: pComplexArray;
-{$IFDEF DSS_CAPI_PM}
     PMParent, DSS: TDSSContext;
 begin
     PMParent := MainDSS.GetPrime();
     DSS := MainDSS.ActiveChild;
-{$ELSE}
-begin
-{$ENDIF}
     Result := 0;
 
     if DSS.ActiveCircuit = NIL then
@@ -745,7 +733,6 @@ begin
                         DoSimpleMsg(DSS, '"XYCurve.%s" not found. Please create it before setting it as SeasonSignal.', [param], 132);
                     end;
                 end;
-{$IFDEF DSS_CAPI_PM}                
             ord(Opt.ActiveActor):
                 if DSS.Parser.MakeString() = '*' then
                 begin
@@ -791,7 +778,6 @@ begin
                 NoFormsAllowed := not InterpretYesNo(Param);
             ord(Opt.AllowProgressBar):
                 NoProgressBarFormAllowed := not InterpretYesNo(Param);
-{$ENDIF}
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
             ord(Opt.Coverage):
                 DSS.ActiveCircuit.Coverage := DSS.Parser.MakeDouble();
@@ -941,7 +927,7 @@ begin
         DSS.DSSExecutive.DoSolveCmd;
 end;
 
-function DoGetCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Integer;
+function DoGetCmd(MainDSS: TDSSContext): Integer;
 // Get DSS Options Reguest and put it in Global Result string
 // may be retrieved by Result property of the DSSText interface
 var
@@ -951,15 +937,11 @@ var
     TmpStr: String;
     cktElem: TDSSCktElement;
     pce: TPCElement;
-{$IFDEF DSS_CAPI_PM}
     PMParent, DSS: TDSSContext;
     // ckt: TDSSCircuit;
 begin
     PMParent := MainDSS.GetPrime();
     DSS := MainDSS.ActiveChild;
-{$ELSE}
-begin
-{$ENDIF}
 
     Result := 0;
     try
@@ -1226,7 +1208,6 @@ begin
                 115:
                     AppendGlobalResult(DSS, NameIfNotNil(DSS.SeasonSignalObj));
 
-{$IFDEF DSS_CAPI_PM}
                 ord(Opt.NumCPUs):
                     AppendGlobalResult(DSS, Format('%d', [CPU_Cores]));
                 ord(Opt.NumCores):
@@ -1254,7 +1235,6 @@ begin
                     AppendGlobalResult(DSS, PMParent.ConcatenateReports);
                 ord(Opt.NUMANodes):
                     DoSimpleMsg(DSS, _('This is not supported in the AltDSS engine.'), 25040101); //TODO: looks like EPRI's version has this hardcoded
-{$ENDIF} //DSS_CAPI_PM
                 ord(Opt.LineTypes):
                     DSS.GlobalResult := DSS.LineTypeEnum.Joined();
                 ord(Opt.EventLogDefault):
@@ -1406,21 +1386,17 @@ begin
     end;
 end;
 
-function DoGetCmd_NoCircuit({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Boolean;
+function DoGetCmd_NoCircuit(MainDSS: TDSSContext): Boolean;
 // Get DSS Options Reguest and put it in Global Result string
 // may be retrieved by Result property of the DSSText interface
 var
     // ParamName: String;
     Param: String;
-{$IFDEF DSS_CAPI_PM}
     ParamPointer: Integer;
     PMParent, DSS: TDSSContext;
 begin
     PMParent := MainDSS.GetPrime();
     DSS := MainDSS.ActiveChild;
-{$ELSE}
-begin
-{$ENDIF}
 
     Result := FALSE;
     try
@@ -1433,7 +1409,6 @@ begin
         // themselves will be the parameter name to return
         while Length(Param) > 0 do
         begin
-{$IFDEF DSS_CAPI_PM}
             ParamPointer := DSS.DSSExecutive.OptionList.GetCommand(Param);
             case ParamPointer of
                 ord(Opt.NumCPUs):
@@ -1472,10 +1447,6 @@ begin
             end;
             {ParamName :=} DSS.Parser.NextParam;
             Param := DSS.Parser.MakeString();
-{$ELSE} 
-            DoSimpleMsg(DSS, _('You must create a new circuit object first: "new circuit.mycktname" to execute this Set command.'), 301);
-            Exit;
-{$ENDIF} // DSS_CAPI_PM
         end; {WHILE}
 
     except

@@ -29,11 +29,8 @@ uses
     PDClass,
     math,
     Sparse_Math,
-    Process
-     {$IFDEF DSS_CAPI_PM}
-    ,
+    Process,
     syncobjs
-     {$ENDIF}
     ;
 
 type
@@ -134,9 +131,7 @@ type
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
         IncrCktElements: TDSSPointerList;
 {$ENDIF}
-{$IFDEF DSS_CAPI_PM}
-        LockIc: TCriticalSection;
-{$ENDIF}
+        LockIc: TCriticalSection; // for DSS_CAPI_PM
 
         ControlQueue: TControlQueue;
 
@@ -591,9 +586,7 @@ begin
 
 {$ENDIF}
 
-{$IFDEF DSS_CAPI_PM}
     LockIc := syncobjs.TCriticalSection.Create;
-{$ENDIF}
 end;
 
 destructor TDSSCircuit.Destroy;
@@ -673,9 +666,7 @@ begin
     // V_0.Free;
     Ic.Free;
 {$ENDIF}
-{$IFDEF DSS_CAPI_PM}
     LockIc.Free;
-{$ENDIF}
     inherited Destroy;
 end;
 

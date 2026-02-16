@@ -843,7 +843,6 @@ end;
 
 //------------------------------------------------------------------------------
 procedure Solution_SolveAll();cdecl;
-{$IFDEF DSS_CAPI_PM}
 var
     i : Integer;
     PMParent: TDSSContext;
@@ -874,10 +873,6 @@ begin
 
     // If the parallel mode is not active, each solver will run in the current thread,
     // sequentially, no need to wait later (contrary to the EPRI's impl.)
-{$ELSE}
-begin
-    DoSimpleMsg(DSSPrime, _('Parallel machine functions were not compiled'), 7983);
-{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;

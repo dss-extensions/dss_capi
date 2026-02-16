@@ -226,7 +226,6 @@ uses
     CAPI_Meters in 'CAPI_Meters.pas',
     CAPI_Monitors in 'CAPI_Monitors.pas',
     CAPI_Parallel in 'CAPI_Parallel.pas',
-    CAPI_NoParallel in 'CAPI_NoParallel.pas',
     CAPI_Parser in 'CAPI_Parser.pas',
     CAPI_PDElements in 'CAPI_PDElements.pas',
     CAPI_PVSystems in 'CAPI_PVSystems.pas',

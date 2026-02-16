@@ -6,7 +6,6 @@ uses
     CAPI_Utils,
     CAPI_Types;
 
-{$IFDEF DSS_CAPI_PM}
 function Parallel_Get_NumCPUs(): Integer; CDECL;
 function Parallel_Get_NumCores(): Integer; CDECL;
 function Parallel_Get_ActiveActor(): Integer; CDECL;
@@ -24,9 +23,9 @@ function Parallel_Get_ActiveParallel(): Integer; CDECL;
 procedure Parallel_Set_ActiveParallel(Value: Integer); CDECL;
 function Parallel_Get_ConcatenateReports(): Integer; CDECL;
 procedure Parallel_Set_ConcatenateReports(Value: Integer); CDECL;
-{$ENDIF}
+
 implementation
-{$IFDEF DSS_CAPI_PM}
+
 uses
     CAPI_Constants,
     DSSGlobals,
@@ -166,5 +165,4 @@ begin
     DSSPrime.ConcatenateReports := (Value = 1);
 end;
 //------------------------------------------------------------------------------
-{$ENDIF}
 end.

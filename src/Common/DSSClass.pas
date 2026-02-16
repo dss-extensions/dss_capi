@@ -16,9 +16,7 @@ USES
     DSSPointerList, 
     NamedObject, 
     ParserDel, 
-{$IFDEF DSS_CAPI_PM}
     SyncObjs, 
-{$ENDIF}    
     UComplex, DSSUcomplex, 
     contnrs,
     CAPI_Types,
@@ -680,9 +678,7 @@ type
     
         FActiveCircuit: TNamedObject;
         FActiveDSSObject :TNamedObject;
-{$IFDEF DSS_CAPI_PM}
         FActorThread: TThread; //TODO: Currently only for solution, extend later (send redirect command to the other thread, etc.)
-{$ENDIF}
 
         CurrentDSSDir_internal: String;
         FSolutionAbort: LongInt; // changed to LongInt to enable InterLockedIncrement and others
@@ -696,7 +692,6 @@ type
         DSSAltEventCallbacks: Array[TAltDSSEvent] of altdss_callbacks_event_t;
     
         // Parallel Machine state
-{$IFDEF DSS_CAPI_PM}
         Children: array of TDSSContext;
         ActiveChild: TDSSContext;
         ActiveChildIndex: Integer;
@@ -711,7 +706,7 @@ type
         ThreadStatusEvent: TEvent;
 
         ADiakoptics: Boolean;
-{$ENDIF}
+
         _Name: String;
     
         // C-API pointer data (GR mode)
@@ -1072,17 +1067,10 @@ end;
 
 procedure TDSSContext.SetSolutionAbort(val: Boolean);
 begin
-{$IFDEF DSS_CAPI_PM}
     if val then
         InterlockedExchange(FSolutionAbort, 1)
     else
         InterlockedExchange(FSolutionAbort, 0);
-{$ELSE}
-    if val then
-        FSolutionAbort := 1
-    else
-        FSolutionAbort := 0;
-{$ENDIF}
 end;
 
 constructor TDSSContext.Create(_Parent: TDSSContext; _IsPrime: Boolean);
@@ -1309,7 +1297,6 @@ begin
 
     CompatFlagsStack := NIL;
 
-{$IFDEF DSS_CAPI_PM}
     ActorStatus := TActorStatus.Idle;
     ThreadStatusEvent := nil;
 
@@ -1335,10 +1322,6 @@ begin
         _Name := '_';
     end;
     CPU := -1; // left at -1 = doesn't change affinity
-{$ELSE}
-    _Name := '';
-{$ENDIF} // DSS_CAPI_PM
-
     
     LastCmdLine := '';
     RedirFile := '';
@@ -1458,9 +1441,7 @@ begin
         FreeAndNil(DSSMessages);
         FreeAndNil(DSSPropertyHelp);
     end;
-{$IFDEF DSS_CAPI_PM}
     ConcatenateReportsLock.Free();
-{$ENDIF}
 
     FreeAndNil(skipFileRegExp);
     inherited Destroy;

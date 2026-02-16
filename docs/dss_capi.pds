@@ -114,7 +114,7 @@ Item_27=../src/CAPI/CAPI_Loads.pas
 Item_28=../src/CAPI/CAPI_Metadata.pas
 Item_29=../src/CAPI/CAPI_Meters.pas
 Item_30=../src/CAPI/CAPI_Monitors.pas
-Item_31=../src/CAPI/CAPI_NoParallel.pas
+Item_31=../src/Shared/Pstcalc.pas
 Item_32=../src/CAPI/CAPI_Obj.pas
 Item_33=../src/CAPI/CAPI_Parallel.pas
 Item_34=../src/CAPI/CAPI_Parser.pas
@@ -258,7 +258,7 @@ Item_175=../src/Shared/Dynamics.pas
 Item_176=../src/Shared/HashList.pas
 Item_177=../src/Shared/LineUnits.pas
 Item_178=../src/Shared/mathutil.pas
-Item_179=../src/Shared/Pstcalc.pas
+
 
 [AdditionalFiles]
 Count=0
