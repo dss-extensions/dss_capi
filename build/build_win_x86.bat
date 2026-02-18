@@ -96,7 +96,7 @@ IF DEFINED CI (
     xcopy /E lib\win_x86 release\dss_capi\lib\win_x86\
     xcopy /E include release\dss_capi\include\
     REM xcopy /E examples release\dss_capi\examples\
-    copy LICENSE release\dss_capi\
+    copy LICENSE.* release\dss_capi\
     copy OPENDSS_LICENSE release\dss_capi\
     copy klusolvex\LICENSE release\dss_capi\KLUSOLVE_LICENSE
     cd release

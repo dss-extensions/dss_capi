@@ -37,7 +37,7 @@ if [[ "x${DSS_CAPI_BUILD_DBG}" != "x1" ]]; then
     cp -R lib/linux_arm32 release/dss_capi/lib/linux_arm32
     cp -R include release/dss_capi/
     # cp -R examples release/dss_capi/
-    cp LICENSE release/dss_capi/
+    cp LICENSE.* release/dss_capi/
     cp OPENDSS_LICENSE release/dss_capi/
     if [ -d "klusolvex" ]; then
         cp klusolvex/LICENSE release/dss_capi/KLUSOLVE_LICENSE
