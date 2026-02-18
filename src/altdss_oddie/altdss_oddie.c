@@ -2621,12 +2621,12 @@ ALTDSS_ODDIE_DLL int32_t ctx_Solution_Get_MinIterations(const void* ctx)
 {
     CTX_OR_PRIME
     ODDIE_CHECK_FUNC_UINT16(SolutionI)
-    uint16_t res;
+    int32_t res;
     res = ((OddieContext*) ctx)->SolutionI(50, 0);
     if (res != -1)
     {
         oddie_map_error(ctx);
-        return res;
+        return (uint16_t) res;
     }
     // Fallback for previous versions
     return oddie_command_to_int(ctx, "get MinIterations", false);
@@ -2636,7 +2636,7 @@ ALTDSS_ODDIE_DLL void ctx_Solution_Set_MinIterations(const void* ctx, int32_t Va
 {
     CTX_OR_PRIME
     ODDIE_CHECK_FUNC_VOID(SolutionI)
-    uint16_t res;
+    int32_t res;
     res = ((OddieContext*) ctx)->SolutionI(51, Value);
     if (res != -1)
     {
@@ -2651,12 +2651,12 @@ ALTDSS_ODDIE_DLL uint16_t ctx_Settings_Get_ControlTrace(const void* ctx)
 {
     CTX_OR_PRIME
     ODDIE_CHECK_FUNC_UINT16(SettingsI)
-    uint16_t res;
+    int32_t res;
     res = ((OddieContext*) ctx)->SettingsI(10, 0);
     if (res != -1)
     {
         oddie_map_error(ctx);
-        return res;
+        return (uint16_t) res;
     }
     // Fallback for older versions
     const char r = (char) oddie_command_to_int(ctx, "Get TraceControl", true);
@@ -2667,7 +2667,7 @@ ALTDSS_ODDIE_DLL void ctx_Settings_Set_ControlTrace(const void* ctx, uint16_t Va
 {
     CTX_OR_PRIME
     ODDIE_CHECK_FUNC_VOID(SettingsI)
-    uint16_t res = ((OddieContext*) ctx)->SettingsI(11, Value ? 1 : 0);
+    int32_t res = ((OddieContext*) ctx)->SettingsI(11, Value ? 1 : 0);
     if (res != -1)
     {
         oddie_map_error(ctx);
@@ -14521,7 +14521,7 @@ ALTDSS_ODDIE_DLL void ctx_Solution_SolveSnap(const void* ctx)
 {
     CTX_OR_PRIME
     ODDIE_CHECK_FUNC_VOID(SettingsI)
-    uint16_t res;
+    int32_t res;
     res = ((OddieContext*) ctx)->SettingsI(49, 0);
     if (res != -1)
     {
