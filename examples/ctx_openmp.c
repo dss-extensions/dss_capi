@@ -4,7 +4,7 @@ This is a simple example using the DSSContext ctx_* functions from DSS C-API wit
 
 On Linux, compile with:
 
-    gcc -fopenmp -O2 -I../include -L../lib/linux_x64 -ldss_capi -lklusolvex ctx_openmp.c -o ctx_openmp
+    gcc -fopenmp -O2 -I../include -L../lib/linux_x64 -laltdss_capi -lklusolvex ctx_openmp.c -o ctx_openmp
 
 Assuming electricdss-tst was cloned in the same folder as dss_capi, you could run it with something like:
 
