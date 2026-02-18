@@ -380,61 +380,61 @@ begin
 
     // enums
     PropertyType[ord(TProp.typ)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.typ)] := ptruint(@obj.ControlType);
+    PropertyOffset[ord(TProp.typ)] := PtrInt(@obj.ControlType);
     PropertyOffset2[ord(TProp.typ)] := PtrInt(RelayTypeEnum);
 
     PropertyType[ord(TProp.Action)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.Action)] := ptruint(@obj.FPresentState);
+    PropertyOffset[ord(TProp.Action)] := PtrInt(@obj.FPresentState);
     PropertyOffset2[ord(TProp.Action)] := PtrInt(ActionEnum);
     PropertyFlags[ord(TProp.Action)] := [TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.Action)] := ord(TProp.State);
     
     PropertyType[ord(TProp.Normal)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.Normal)] := ptruint(@obj.NormalState);
+    PropertyOffset[ord(TProp.Normal)] := PtrInt(@obj.NormalState);
     PropertyOffset2[ord(TProp.Normal)] := PtrInt(StateEnum);
     PropertyFlags[ord(TProp.Normal)] := [TPropertyFlag.DynamicDefault];
 
     PropertyType[ord(TProp.State)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.State)] := ptruint(@obj.FPresentState);
+    PropertyOffset[ord(TProp.State)] := PtrInt(@obj.FPresentState);
     PropertyOffset2[ord(TProp.State)] := PtrInt(StateEnum);
 
 
     // double arrays/vectors
     PropertyType[ord(TProp.RecloseIntervals)] := TPropertyType.DoubleVArrayProperty;
-    PropertyOffset[ord(TProp.RecloseIntervals)] := ptruint(@obj.RecloseIntervals);
-    PropertyOffset2[ord(TProp.RecloseIntervals)] := ptruint(@obj.NumReclose);
+    PropertyOffset[ord(TProp.RecloseIntervals)] := PtrInt(@obj.RecloseIntervals);
+    PropertyOffset2[ord(TProp.RecloseIntervals)] := PtrInt(@obj.NumReclose);
     PropertyOffset3[ord(TProp.RecloseIntervals)] := 4;
     PropertyFlags[ord(TProp.RecloseIntervals)] := [TPropertyFlag.AllowNone, TPropertyFlag.ArrayMaxSize, TPropertyFlag.NonNegative];
 
     // object properties
     PropertyType[ord(TProp.PhaseCurve)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.PhaseCurve)] := ptruint(@obj.PhaseCurve);
-    PropertyOffset2[ord(TProp.PhaseCurve)] := ptruint(TCC_CurveClass);
+    PropertyOffset[ord(TProp.PhaseCurve)] := PtrInt(@obj.PhaseCurve);
+    PropertyOffset2[ord(TProp.PhaseCurve)] := PtrInt(TCC_CurveClass);
 
     PropertyType[ord(TProp.Groundcurve)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.Groundcurve)] := ptruint(@obj.Groundcurve);
-    PropertyOffset2[ord(TProp.Groundcurve)] := ptruint(TCC_CurveClass);
+    PropertyOffset[ord(TProp.Groundcurve)] := PtrInt(@obj.Groundcurve);
+    PropertyOffset2[ord(TProp.Groundcurve)] := PtrInt(TCC_CurveClass);
 
     PropertyType[ord(TProp.Overvoltcurve)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.Overvoltcurve)] := ptruint(@obj.OVCurve);
-    PropertyOffset2[ord(TProp.Overvoltcurve)] := ptruint(TCC_CurveClass);
+    PropertyOffset[ord(TProp.Overvoltcurve)] := PtrInt(@obj.OVCurve);
+    PropertyOffset2[ord(TProp.Overvoltcurve)] := PtrInt(TCC_CurveClass);
 
     PropertyType[ord(TProp.Undervoltcurve)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.Undervoltcurve)] := ptruint(@obj.UVCurve);
-    PropertyOffset2[ord(TProp.Undervoltcurve)] := ptruint(TCC_CurveClass);
+    PropertyOffset[ord(TProp.Undervoltcurve)] := PtrInt(@obj.UVCurve);
+    PropertyOffset2[ord(TProp.Undervoltcurve)] := PtrInt(TCC_CurveClass);
 
     PropertyType[ord(TProp.DOC_PhaseCurveInner)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.DOC_PhaseCurveInner)] := ptruint(@obj.DOC_PhaseCurveInner);
-    PropertyOffset2[ord(TProp.DOC_PhaseCurveInner)] := ptruint(TCC_CurveClass);
+    PropertyOffset[ord(TProp.DOC_PhaseCurveInner)] := PtrInt(@obj.DOC_PhaseCurveInner);
+    PropertyOffset2[ord(TProp.DOC_PhaseCurveInner)] := PtrInt(TCC_CurveClass);
 
     PropertyType[ord(TProp.MonitoredObj)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.MonitoredObj)] := ptruint(@obj.FMonitoredElement);
+    PropertyOffset[ord(TProp.MonitoredObj)] := PtrInt(@obj.FMonitoredElement);
     PropertyOffset2[ord(TProp.MonitoredObj)] := 0;
     PropertyWriteFunction[ord(TProp.MonitoredObj)] := @SetMonitoredElement;
     PropertyFlags[ord(TProp.MonitoredObj)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Required];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     PropertyType[ord(TProp.SwitchedObj)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.SwitchedObj)] := ptruint(@obj.controlledElement);
+    PropertyOffset[ord(TProp.SwitchedObj)] := PtrInt(@obj.controlledElement);
     PropertyOffset2[ord(TProp.SwitchedObj)] := 0;
     PropertyWriteFunction[ord(TProp.SwitchedObj)] := @SetControlledElement;
     PropertyFlags[ord(TProp.SwitchedObj)] := [TPropertyFlag.WriteByFunction];
@@ -444,65 +444,65 @@ begin
     PropertyType[ord(TProp.DebugTrace)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.DistReverse)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.DOC_P1Blocking)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.EventLog)] := ptruint(@obj.ShowEventLog);
-    PropertyOffset[ord(TProp.DebugTrace)] := ptruint(@obj.DebugTrace);
-    PropertyOffset[ord(TProp.DistReverse)] := ptruint(@obj.Dist_Reverse);
-    PropertyOffset[ord(TProp.DOC_P1Blocking)] := ptruint(@obj.DOC_P1Blocking);
+    PropertyOffset[ord(TProp.EventLog)] := PtrInt(@obj.ShowEventLog);
+    PropertyOffset[ord(TProp.DebugTrace)] := PtrInt(@obj.DebugTrace);
+    PropertyOffset[ord(TProp.DistReverse)] := PtrInt(@obj.Dist_Reverse);
+    PropertyOffset[ord(TProp.DOC_P1Blocking)] := PtrInt(@obj.DOC_P1Blocking);
 
     // string properties (with lower case transformation)
     PropertyType[ord(TProp.Variable)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.Variable)] := ptruint(@obj.MonitorVariable);
+    PropertyOffset[ord(TProp.Variable)] := PtrInt(@obj.MonitorVariable);
 
     // integer properties
     PropertyType[ord(TProp.SwitchedTerm)] := TPropertyType.IntegerProperty;
     PropertyType[ord(TProp.MonitoredTerm)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.SwitchedTerm)] := ptruint(@obj.ElementTerminal);
-    PropertyOffset[ord(TProp.MonitoredTerm)] := ptruint(@obj.MonitoredElementTerminal);
+    PropertyOffset[ord(TProp.SwitchedTerm)] := PtrInt(@obj.ElementTerminal);
+    PropertyOffset[ord(TProp.MonitoredTerm)] := PtrInt(@obj.MonitoredElementTerminal);
 
     PropertyType[ord(TProp.Shots)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Shots)] := ptruint(@obj.NumReclose);
+    PropertyOffset[ord(TProp.Shots)] := PtrInt(@obj.NumReclose);
     PropertyFlags[ord(TProp.Shots)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.ValueOffset];
     PropertyValueOffset[ord(TProp.Shots)] := -1;
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.PhaseTrip)] := ptruint(@obj.PhaseTrip);
-    PropertyOffset[ord(TProp.GroundTrip)] := ptruint(@obj.GroundTrip);
-    PropertyOffset[ord(TProp.PhaseInst)] := ptruint(@obj.PhaseInst);
+    PropertyOffset[ord(TProp.PhaseTrip)] := PtrInt(@obj.PhaseTrip);
+    PropertyOffset[ord(TProp.GroundTrip)] := PtrInt(@obj.GroundTrip);
+    PropertyOffset[ord(TProp.PhaseInst)] := PtrInt(@obj.PhaseInst);
 
-    PropertyOffset[ord(TProp.GroundInst)] := ptruint(@obj.GroundInst);
+    PropertyOffset[ord(TProp.GroundInst)] := PtrInt(@obj.GroundInst);
     PropertyFlags[ord(TProp.GroundInst)] := [TPropertyFlag.Units_A];
 
-    PropertyOffset[ord(TProp.Reset)] := ptruint(@obj.ResetTime);
+    PropertyOffset[ord(TProp.Reset)] := PtrInt(@obj.ResetTime);
     PropertyFlags[ord(TProp.Reset)] := [TPropertyFlag.Units_s];
 
-    PropertyOffset[ord(TProp.kvbase)] := ptruint(@obj.kVBase);
-    PropertyOffset[ord(TProp.Breakertime)] := ptruint(@obj.Breaker_time);
-    PropertyOffset[ord(TProp.__46pctPickup)] := ptruint(@obj.PctPickup46);
-    PropertyOffset[ord(TProp.__46isqt)] := ptruint(@obj.Isqt46);
-    PropertyOffset[ord(TProp.__46BaseAmps)] := ptruint(@obj.BaseAmps46);
+    PropertyOffset[ord(TProp.kvbase)] := PtrInt(@obj.kVBase);
+    PropertyOffset[ord(TProp.Breakertime)] := PtrInt(@obj.Breaker_time);
+    PropertyOffset[ord(TProp.__46pctPickup)] := PtrInt(@obj.PctPickup46);
+    PropertyOffset[ord(TProp.__46isqt)] := PtrInt(@obj.Isqt46);
+    PropertyOffset[ord(TProp.__46BaseAmps)] := PtrInt(@obj.BaseAmps46);
 
-    PropertyOffset[ord(TProp.Delay)] := ptruint(@obj.Delay_Time);
+    PropertyOffset[ord(TProp.Delay)] := PtrInt(@obj.Delay_Time);
     PropertyFlags[ord(TProp.Delay)] := [TPropertyFlag.DynamicDefault];
 
-    PropertyOffset[ord(TProp.__47pctPickup)] := ptruint(@obj.PctPickup47);
-    PropertyOffset[ord(TProp.overtrip)] := ptruint(@obj.Overtrip);
-    PropertyOffset[ord(TProp.undertrip)] := ptruint(@obj.Undertrip);
-    PropertyOffset[ord(TProp.TDPhase)] := ptruint(@obj.TDPhase);
-    PropertyOffset[ord(TProp.TDGround)] := ptruint(@obj.TDGround);
-    PropertyOffset[ord(TProp.Z1mag)] := ptruint(@obj.Z1mag);
-    PropertyOffset[ord(TProp.Z1ang)] := ptruint(@obj.Z1ang);
-    PropertyOffset[ord(TProp.Z0mag)] := ptruint(@obj.Z0mag);
-    PropertyOffset[ord(TProp.Z0ang)] := ptruint(@obj.Z0ang);
-    PropertyOffset[ord(TProp.Mphase)] := ptruint(@obj.Mphase);
-    PropertyOffset[ord(TProp.Mground)] := ptruint(@obj.Mground);
-    PropertyOffset[ord(TProp.DOC_TiltAngleLow)] := ptruint(@obj.DOC_TiltAngleLow);
-    PropertyOffset[ord(TProp.DOC_TiltAngleHigh)] := ptruint(@obj.DOC_TiltAngleHigh);
-    PropertyOffset[ord(TProp.DOC_TripSettingLow)] := ptruint(@obj.DOC_TripSetLow);
-    PropertyOffset[ord(TProp.DOC_TripSettingHigh)] := ptruint(@obj.DOC_TripSetHigh);
-    PropertyOffset[ord(TProp.DOC_TripSettingMag)] := ptruint(@obj.DOC_TripSetMag);
-    PropertyOffset[ord(TProp.DOC_DelayInner)] := ptruint(@obj.DOC_DelayInner);
-    PropertyOffset[ord(TProp.DOC_PhaseTripInner)] := ptruint(@obj.DOC_PhaseTripInner);
-    PropertyOffset[ord(TProp.DOC_TDPhaseInner)] := ptruint(@obj.DOC_TDPhaseInner);
+    PropertyOffset[ord(TProp.__47pctPickup)] := PtrInt(@obj.PctPickup47);
+    PropertyOffset[ord(TProp.overtrip)] := PtrInt(@obj.Overtrip);
+    PropertyOffset[ord(TProp.undertrip)] := PtrInt(@obj.Undertrip);
+    PropertyOffset[ord(TProp.TDPhase)] := PtrInt(@obj.TDPhase);
+    PropertyOffset[ord(TProp.TDGround)] := PtrInt(@obj.TDGround);
+    PropertyOffset[ord(TProp.Z1mag)] := PtrInt(@obj.Z1mag);
+    PropertyOffset[ord(TProp.Z1ang)] := PtrInt(@obj.Z1ang);
+    PropertyOffset[ord(TProp.Z0mag)] := PtrInt(@obj.Z0mag);
+    PropertyOffset[ord(TProp.Z0ang)] := PtrInt(@obj.Z0ang);
+    PropertyOffset[ord(TProp.Mphase)] := PtrInt(@obj.Mphase);
+    PropertyOffset[ord(TProp.Mground)] := PtrInt(@obj.Mground);
+    PropertyOffset[ord(TProp.DOC_TiltAngleLow)] := PtrInt(@obj.DOC_TiltAngleLow);
+    PropertyOffset[ord(TProp.DOC_TiltAngleHigh)] := PtrInt(@obj.DOC_TiltAngleHigh);
+    PropertyOffset[ord(TProp.DOC_TripSettingLow)] := PtrInt(@obj.DOC_TripSetLow);
+    PropertyOffset[ord(TProp.DOC_TripSettingHigh)] := PtrInt(@obj.DOC_TripSetHigh);
+    PropertyOffset[ord(TProp.DOC_TripSettingMag)] := PtrInt(@obj.DOC_TripSetMag);
+    PropertyOffset[ord(TProp.DOC_DelayInner)] := PtrInt(@obj.DOC_DelayInner);
+    PropertyOffset[ord(TProp.DOC_PhaseTripInner)] := PtrInt(@obj.DOC_PhaseTripInner);
+    PropertyOffset[ord(TProp.DOC_TDPhaseInner)] := PtrInt(@obj.DOC_TDPhaseInner);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

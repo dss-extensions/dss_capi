@@ -202,7 +202,7 @@ begin
 
     // integer properties
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.phases)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     // bus properties
@@ -212,36 +212,36 @@ begin
 
     // boolean properties
     PropertyType[ord(TProp.rmsmode)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.rmsmode)] := ptruint(@obj.FrmsMode);
+    PropertyOffset[ord(TProp.rmsmode)] := PtrInt(@obj.FrmsMode);
 
     // object properties
     PropertyType[ord(TProp.bp1)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.bp2)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.filter)] := TPropertyType.DSSObjectReferenceProperty;
     
-    PropertyOffset[ord(TProp.bp1)] := ptruint(@obj.Fbp1);
-    PropertyOffset[ord(TProp.bp2)] := ptruint(@obj.Fbp2);
-    PropertyOffset[ord(TProp.filter)] := ptruint(@obj.Ffilter);
+    PropertyOffset[ord(TProp.bp1)] := PtrInt(@obj.Fbp1);
+    PropertyOffset[ord(TProp.bp2)] := PtrInt(@obj.Fbp2);
+    PropertyOffset[ord(TProp.filter)] := PtrInt(@obj.Ffilter);
 
-    PropertyOffset2[ord(TProp.bp1)] := ptruint(DSS.XYCurveClass);
-    PropertyOffset2[ord(TProp.bp2)] := ptruint(DSS.XYCurveClass);
-    PropertyOffset2[ord(TProp.filter)] := ptruint(DSS.XYCurveClass);
+    PropertyOffset2[ord(TProp.bp1)] := PtrInt(DSS.XYCurveClass);
+    PropertyOffset2[ord(TProp.bp2)] := PtrInt(DSS.XYCurveClass);
+    PropertyOffset2[ord(TProp.filter)] := PtrInt(DSS.XYCurveClass);
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.prated)] := ptruint(@obj.Prated);
+    PropertyOffset[ord(TProp.prated)] := PtrInt(@obj.Prated);
     PropertyFlags[ord(TProp.prated)] := [TPropertyFlag.Units_kW];
     
-    PropertyOffset[ord(TProp.vrated)] := ptruint(@obj.Vrated);
+    PropertyOffset[ord(TProp.vrated)] := PtrInt(@obj.Vrated);
     PropertyFlags[ord(TProp.vrated)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_V];
 
-    PropertyOffset[ord(TProp.ppct)] := ptruint(@obj.Ppct);
+    PropertyOffset[ord(TProp.ppct)] := PtrInt(@obj.Ppct);
 
-    PropertyOffset[ord(TProp.fsample)] := ptruint(@obj.FsampleFreq);
+    PropertyOffset[ord(TProp.fsample)] := PtrInt(@obj.FsampleFreq);
     PropertyFlags[ord(TProp.fsample)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
 
-    PropertyOffset[ord(TProp.imaxpu)] := ptruint(@obj.FmaxIpu);
-    PropertyOffset[ord(TProp.vrmstau)] := ptruint(@obj.FvrmsTau);
-    PropertyOffset[ord(TProp.irmstau)] := ptruint(@obj.FirmsTau);
+    PropertyOffset[ord(TProp.imaxpu)] := PtrInt(@obj.FmaxIpu);
+    PropertyOffset[ord(TProp.vrmstau)] := PtrInt(@obj.FvrmsTau);
+    PropertyOffset[ord(TProp.irmstau)] := PtrInt(@obj.FirmsTau);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

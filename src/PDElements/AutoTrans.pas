@@ -368,69 +368,69 @@ begin
         TSpecSet.Create(ord(TProp.XscArray))
     );
 
-    PropertyStructArrayOffset := ptruint(@obj.Winding);
+    PropertyStructArrayOffset := PtrInt(@obj.Winding);
     PropertyStructArrayStep := SizeOf(TAutoWinding);
-    PropertyStructArrayIndexOffset := ptruint(@obj.ActiveWinding);
-    PropertyStructArrayCountOffset := ptruint(@obj.NumWindings);
+    PropertyStructArrayIndexOffset := PtrInt(@obj.ActiveWinding);
+    PropertyStructArrayCountOffset := PtrInt(@obj.NumWindings);
 
     // RO string
     PropertyType[ord(TProp.WdgCurrents)] := TPropertyType.StringSilentROFunctionProperty;
-    PropertyOffset[ord(TProp.WdgCurrents)] := ptruint(@GetWindingCurrentsResult);
+    PropertyOffset[ord(TProp.WdgCurrents)] := PtrInt(@GetWindingCurrentsResult);
 
     // double array
     PropertyType[ord(TProp.Xscarray)] := TPropertyType.DoubleVArrayProperty;
-    PropertyOffset[ord(TProp.Xscarray)] := ptruint(@obj.puXSC);
-    PropertyOffset3[ord(TProp.Xscarray)] := ptruint(@XscSize);
+    PropertyOffset[ord(TProp.Xscarray)] := PtrInt(@obj.puXSC);
+    PropertyOffset3[ord(TProp.Xscarray)] := PtrInt(@XscSize);
     PropertyFlags[ord(TProp.Xscarray)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NonZero];
     PropertyScale[ord(TProp.Xscarray)] := 0.01;
 
     PropertyType[ord(TProp.BHCurrent)] := TPropertyType.DoubleVArrayProperty;
-    PropertyOffset[ord(TProp.BHCurrent)] := ptruint(@obj.BHCurrent);
-    PropertyOffset3[ord(TProp.BHCurrent)] := ptruint(@obj.BHPoints);
+    PropertyOffset[ord(TProp.BHCurrent)] := PtrInt(@obj.BHCurrent);
+    PropertyOffset3[ord(TProp.BHCurrent)] := PtrInt(@obj.BHPoints);
     PropertyFlags[ord(TProp.BHCurrent)] := [TPropertyFlag.Unused];
 
     PropertyType[ord(TProp.BHFlux)] := TPropertyType.DoubleVArrayProperty;
-    PropertyOffset[ord(TProp.BHFlux)] := ptruint(@obj.BHFlux);
-    PropertyOffset3[ord(TProp.BHFlux)] := ptruint(@obj.BHPoints);
+    PropertyOffset[ord(TProp.BHFlux)] := PtrInt(@obj.BHFlux);
+    PropertyOffset3[ord(TProp.BHFlux)] := PtrInt(@obj.BHPoints);
     PropertyFlags[ord(TProp.BHFlux)] := [TPropertyFlag.Unused];
 
     // enums
     PropertyType[ord(TProp.Core)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.Core)] := ptruint(@obj.CoreType);
+    PropertyOffset[ord(TProp.Core)] := PtrInt(@obj.CoreType);
     PropertyOffset2[ord(TProp.Core)] := PtrInt(DSS.CoreTypeEnum);
 
     PropertyType[ord(TProp.LeadLag)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.LeadLag)] := ptruint(@obj.HVLeadsLV); // LongBool as Integer
+    PropertyOffset[ord(TProp.LeadLag)] := PtrInt(@obj.HVLeadsLV); // LongBool as Integer
     PropertyOffset2[ord(TProp.LeadLag)] := PtrInt(DSS.LeadLagEnum);
 
     // boolean properties
     PropertyType[ord(TProp.sub)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.XRConst)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.sub)] := ptruint(@obj.IsSubstation);
-    PropertyOffset[ord(TProp.XRConst)] := ptruint(@obj.XRConst);
+    PropertyOffset[ord(TProp.sub)] := PtrInt(@obj.IsSubstation);
+    PropertyOffset[ord(TProp.XRConst)] := PtrInt(@obj.XRConst);
 
     // double-on-struct array properties
     PropertyType[ord(TProp.kV)] := TPropertyType.DoubleOnStructArrayProperty;
-    PropertyOffset[ord(TProp.kV)] := ptruint(@TAutoWinding(nil^).kVLL);
+    PropertyOffset[ord(TProp.kV)] := PtrInt(@TAutoWinding(nil^).kVLL);
     PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
     PropertyType[ord(TProp.kVA)] := TPropertyType.DoubleOnStructArrayProperty;
-    PropertyOffset[ord(TProp.kVA)] := ptruint(@TAutoWinding(nil^).kVA);
+    PropertyOffset[ord(TProp.kVA)] := PtrInt(@TAutoWinding(nil^).kVA);
 
     PropertyType[ord(TProp.tap)] := TPropertyType.DoubleOnStructArrayProperty;
-    PropertyOffset[ord(TProp.tap)] := ptruint(@TAutoWinding(nil^).puTap);
+    PropertyOffset[ord(TProp.tap)] := PtrInt(@TAutoWinding(nil^).puTap);
 
     PropertyType[ord(TProp.MaxTap)] := TPropertyType.DoubleOnStructArrayProperty;
-    PropertyOffset[ord(TProp.MaxTap)] := ptruint(@TAutoWinding(nil^).MaxTap);
+    PropertyOffset[ord(TProp.MaxTap)] := PtrInt(@TAutoWinding(nil^).MaxTap);
 
     PropertyType[ord(TProp.MinTap)] := TPropertyType.DoubleOnStructArrayProperty;
-    PropertyOffset[ord(TProp.MinTap)] := ptruint(@TAutoWinding(nil^).MinTap);
+    PropertyOffset[ord(TProp.MinTap)] := PtrInt(@TAutoWinding(nil^).MinTap);
 
     PropertyType[ord(TProp.RdcOhms)] := TPropertyType.DoubleOnStructArrayProperty;
-    PropertyOffset[ord(TProp.RdcOhms)] := ptruint(@TAutoWinding(nil^).RdcOhms);
+    PropertyOffset[ord(TProp.RdcOhms)] := PtrInt(@TAutoWinding(nil^).RdcOhms);
 
     PropertyType[ord(TProp.pctR)] := TPropertyType.DoubleOnStructArrayProperty;
-    PropertyOffset[ord(TProp.pctR)] := ptruint(@TAutoWinding(nil^).Rpu);
+    PropertyOffset[ord(TProp.pctR)] := PtrInt(@TAutoWinding(nil^).Rpu);
     PropertyScale[ord(TProp.pctR)] := 0.01;
 
     // bus, indirect
@@ -439,19 +439,19 @@ begin
     PropertyFlags[ord(TProp.bus)] := [TPropertyFlag.Required];
 
     PropertyType[ord(TProp.buses)] := TPropertyType.BusesOnStructArrayProperty;
-    PropertyOffset[ord(TProp.buses)] := ptruint(@obj.NumWindings);
+    PropertyOffset[ord(TProp.buses)] := PtrInt(@obj.NumWindings);
     PropertyFlags[ord(TProp.buses)] := [TPropertyFlag.Redundant, TPropertyFlag.Required, TPropertyFlag.DynamicDefault];
     PropertyRedundantWith[ord(TProp.buses)] := ord(TProp.bus);
     PropertyArrayAlternative[ord(TProp.bus)] := ord(TProp.buses);
 
     // enum on array of structs
     PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumOnStructArrayProperty;
-    PropertyOffset[ord(TProp.conn)] := ptruint(@TAutoWinding(nil^).Connection);
+    PropertyOffset[ord(TProp.conn)] := PtrInt(@TAutoWinding(nil^).Connection);
     PropertyOffset2[ord(TProp.conn)] := PtrInt(AutoTransConnectionEnum);
 
     // array of enums on array of structs
     PropertyType[ord(TProp.conns)] := TPropertyType.MappedStringEnumArrayOnStructArrayProperty;
-    PropertyOffset[ord(TProp.conns)] := ptruint(@TAutoWinding(nil^).Connection);
+    PropertyOffset[ord(TProp.conns)] := PtrInt(@TAutoWinding(nil^).Connection);
     PropertyOffset2[ord(TProp.conns)] := PtrInt(AutoTransConnectionEnum);
     PropertyFlags[ord(TProp.conns)] := [TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.conns)] := ord(TProp.conn);
@@ -459,65 +459,65 @@ begin
 
     // integer on struct array
     PropertyType[ord(TProp.NumTaps)] := TPropertyType.IntegerOnStructArrayProperty;
-    PropertyOffset[ord(TProp.NumTaps)] := ptruint(@TAutoWinding(nil^).NumTaps);
+    PropertyOffset[ord(TProp.NumTaps)] := PtrInt(@TAutoWinding(nil^).NumTaps);
 
     // integer properties
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.phases)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     PropertyType[ord(TProp.windings)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.windings)] := ptruint(@obj.NumWindings);
+    PropertyOffset[ord(TProp.windings)] := PtrInt(@obj.NumWindings);
     PropertyFlags[ord(TProp.windings)] := [TPropertyFlag.NonZero, TPropertyFlag.NonNegative, TPropertyFlag.SuppressJSON];
 
     PropertyType[ord(TProp.wdg)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.wdg)] := ptruint(@obj.ActiveWinding);
+    PropertyOffset[ord(TProp.wdg)] := PtrInt(@obj.ActiveWinding);
     PropertyFlags[ord(TProp.wdg)] := [TPropertyFlag.IntegerStructIndex];
 
     PropertyType[ord(TProp.BHPoints)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.BHPoints)] := ptruint(@obj.BHPoints);
+    PropertyOffset[ord(TProp.BHPoints)] := PtrInt(@obj.BHPoints);
     PropertyFlags[ord(TProp.BHPoints)] := [TPropertyFlag.Unused, TPropertyFlag.NonNegative];
 
     // string properties
     PropertyType[ord(TProp.subname)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.subname)] := ptruint(@obj.SubstationName);
+    PropertyOffset[ord(TProp.subname)] := PtrInt(@obj.SubstationName);
     
     PropertyType[ord(TProp.Bank)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.Bank)] := ptruint(@obj.XfmrBank);
+    PropertyOffset[ord(TProp.Bank)] := PtrInt(@obj.XfmrBank);
     PropertyFlags[ord(TProp.Bank)] := [TPropertyFlag.Unused];
 
     // double properties
-    PropertyOffset[ord(TProp.thermal)] := ptruint(@obj.ThermalTimeConst);
+    PropertyOffset[ord(TProp.thermal)] := PtrInt(@obj.ThermalTimeConst);
     PropertyFlags[ord(TProp.thermal)] := [TPropertyFlag.Units_hour, TPropertyFlag.Unused];
 
-    PropertyOffset[ord(TProp.n)] := ptruint(@obj.n_thermal);
-    PropertyOffset[ord(TProp.m)] := ptruint(@obj.m_thermal);
-    PropertyOffset[ord(TProp.flrise)] := ptruint(@obj.FLrise);
-    PropertyOffset[ord(TProp.hsrise)] := ptruint(@obj.HSRise);
+    PropertyOffset[ord(TProp.n)] := PtrInt(@obj.n_thermal);
+    PropertyOffset[ord(TProp.m)] := PtrInt(@obj.m_thermal);
+    PropertyOffset[ord(TProp.flrise)] := PtrInt(@obj.FLrise);
+    PropertyOffset[ord(TProp.hsrise)] := PtrInt(@obj.HSRise);
     PropertyFlags[ord(TProp.n)] := [TPropertyFlag.Unused];
     PropertyFlags[ord(TProp.m)] := [TPropertyFlag.Unused];
     PropertyFlags[ord(TProp.flrise)] := [TPropertyFlag.Unused, TPropertyFlag.Units_degC];
     PropertyFlags[ord(TProp.hsrise)] := [TPropertyFlag.Unused, TPropertyFlag.Units_degC];
 
-    PropertyOffset[ord(TProp.pctloadloss)] := ptruint(@obj.pctLoadLoss);
-    PropertyOffset[ord(TProp.pctnoloadloss)] := ptruint(@obj.pctNoLoadLoss);
+    PropertyOffset[ord(TProp.pctloadloss)] := PtrInt(@obj.pctLoadLoss);
+    PropertyOffset[ord(TProp.pctnoloadloss)] := PtrInt(@obj.pctNoLoadLoss);
 
-    PropertyOffset[ord(TProp.normhkVA)] := ptruint(@obj.NormMaxHkVA);
+    PropertyOffset[ord(TProp.normhkVA)] := PtrInt(@obj.NormMaxHkVA);
     PropertyFlags[ord(TProp.normhkVA)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_kVA];
 
-    PropertyOffset[ord(TProp.emerghkVA)] := ptruint(@obj.EmergMaxHkVA);
+    PropertyOffset[ord(TProp.emerghkVA)] := PtrInt(@obj.EmergMaxHkVA);
     PropertyFlags[ord(TProp.emerghkVA)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_kVA];
 
-    PropertyOffset[ord(TProp.pctimag)] := ptruint(@obj.pctImag);
+    PropertyOffset[ord(TProp.pctimag)] := PtrInt(@obj.pctImag);
 
     // scaled double
-    PropertyOffset[ord(TProp.ppm_antifloat)] := ptruint(@obj.ppm_FloatFactor);
+    PropertyOffset[ord(TProp.ppm_antifloat)] := PtrInt(@obj.ppm_FloatFactor);
     PropertyScale[ord(TProp.ppm_antifloat)] := 1.0e-6;
 
     // adv double percent properties
-    PropertyOffset[ord(TProp.XHX)] := ptruint(@obj.puXHX);
-    PropertyOffset[ord(TProp.XHT)] := ptruint(@obj.puXHT);
-    PropertyOffset[ord(TProp.XXT)] := ptruint(@obj.puXXT);
+    PropertyOffset[ord(TProp.XHX)] := PtrInt(@obj.puXHX);
+    PropertyOffset[ord(TProp.XHT)] := PtrInt(@obj.puXHT);
+    PropertyOffset[ord(TProp.XXT)] := PtrInt(@obj.puXXT);
     
     PropertyScale[ord(TProp.XHX)] := 0.01;
     PropertyScale[ord(TProp.XHT)] := 0.01;
@@ -532,30 +532,30 @@ begin
 
     // double arrays via struct array
     PropertyType[ord(TProp.pctRs)] := TPropertyType.DoubleArrayOnStructArrayProperty;
-    PropertyOffset[ord(TProp.pctRs)] := ptruint(@TAutoWinding(nil^).Rpu); 
-    PropertyOffset2[ord(TProp.pctRs)] := ptruint(@obj.NumWindings);
+    PropertyOffset[ord(TProp.pctRs)] := PtrInt(@TAutoWinding(nil^).Rpu); 
+    PropertyOffset2[ord(TProp.pctRs)] := PtrInt(@obj.NumWindings);
     PropertyScale[ord(TProp.pctRs)] := 0.01;
     PropertyFlags[ord(TProp.pctRs)] := [TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.pctRs)] := ord(TProp.pctR);
     PropertyArrayAlternative[ord(TProp.pctR)] := ord(TProp.pctRs);
 
     PropertyType[ord(TProp.kVs)] := TPropertyType.DoubleArrayOnStructArrayProperty;
-    PropertyOffset[ord(TProp.kVs)] := ptruint(@TAutoWinding(nil^).kVLL); 
-    PropertyOffset2[ord(TProp.kVs)] := ptruint(@obj.NumWindings);
+    PropertyOffset[ord(TProp.kVs)] := PtrInt(@TAutoWinding(nil^).kVLL); 
+    PropertyOffset2[ord(TProp.kVs)] := PtrInt(@obj.NumWindings);
     PropertyFlags[ord(TProp.kVs)] := [TPropertyFlag.Redundant, TPropertyFlag.Required];
     PropertyRedundantWith[ord(TProp.kVs)] := ord(TProp.kV);
     PropertyArrayAlternative[ord(TProp.kV)] := ord(TProp.kVs);
 
     PropertyType[ord(TProp.kVAs)] := TPropertyType.DoubleArrayOnStructArrayProperty;
-    PropertyOffset[ord(TProp.kVAs)] := ptruint(@TAutoWinding(nil^).kVA); 
-    PropertyOffset2[ord(TProp.kVAs)] := ptruint(@obj.NumWindings);
+    PropertyOffset[ord(TProp.kVAs)] := PtrInt(@TAutoWinding(nil^).kVA); 
+    PropertyOffset2[ord(TProp.kVAs)] := PtrInt(@obj.NumWindings);
     PropertyFlags[ord(TProp.kVAs)] := [TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.kVAs)] := ord(TProp.kVA);
     PropertyArrayAlternative[ord(TProp.kVA)] := ord(TProp.kVAs);
 
     PropertyType[ord(TProp.taps)] := TPropertyType.DoubleArrayOnStructArrayProperty;
-    PropertyOffset[ord(TProp.taps)] := ptruint(@TAutoWinding(nil^).puTap); 
-    PropertyOffset2[ord(TProp.taps)] := ptruint(@obj.NumWindings);
+    PropertyOffset[ord(TProp.taps)] := PtrInt(@TAutoWinding(nil^).puTap); 
+    PropertyOffset2[ord(TProp.taps)] := PtrInt(@obj.NumWindings);
     PropertyFlags[ord(TProp.taps)] := [TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.taps)] := ord(TProp.tap);
     PropertyArrayAlternative[ord(TProp.tap)] := ord(TProp.taps);

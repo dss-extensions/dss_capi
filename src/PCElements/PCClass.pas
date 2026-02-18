@@ -94,8 +94,8 @@ begin
     PropertyOffset_PCClass := ActiveProperty;
 
     PropertyType[ActiveProperty + ord(TProp.Spectrum)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ActiveProperty + ord(TProp.Spectrum)] := ptruint(@obj.SpectrumObj);
-    PropertyOffset2[ActiveProperty + ord(TProp.Spectrum)] := ptruint(DSS.SpectrumClass);
+    PropertyOffset[ActiveProperty + ord(TProp.Spectrum)] := PtrInt(@obj.SpectrumObj);
+    PropertyOffset2[ActiveProperty + ord(TProp.Spectrum)] := PtrInt(DSS.SpectrumClass);
     ActiveProperty := ActiveProperty + NumPropsThisClass;
     inherited DefineProperties();
 end;

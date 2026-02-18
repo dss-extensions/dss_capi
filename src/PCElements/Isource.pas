@@ -157,7 +157,7 @@ begin
 
     // integer properties
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.phases)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     // bus properties
@@ -171,36 +171,36 @@ begin
 
     // enum properties
     PropertyType[ord(TProp.ScanType)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.ScanType)] := ptruint(@obj.ScanType);
+    PropertyOffset[ord(TProp.ScanType)] := PtrInt(@obj.ScanType);
     PropertyOffset2[ord(TProp.ScanType)] := PtrInt(DSS.ScanTypeEnum);
 
     PropertyType[ord(TProp.Sequence)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.Sequence)] := ptruint(@obj.Sequencetype);
+    PropertyOffset[ord(TProp.Sequence)] := PtrInt(@obj.Sequencetype);
     PropertyOffset2[ord(TProp.Sequence)] := PtrInt(DSS.SequenceEnum);
 
     // object properties
     PropertyType[ord(TProp.yearly)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset2[ord(TProp.yearly)] := ptruint(DSS.LoadShapeClass);
-    PropertyOffset[ord(TProp.yearly)] := ptruint(@obj.YearlyShapeObj);
+    PropertyOffset2[ord(TProp.yearly)] := PtrInt(DSS.LoadShapeClass);
+    PropertyOffset[ord(TProp.yearly)] := PtrInt(@obj.YearlyShapeObj);
     PropertyFlags[ord(TProp.yearly)] := [TPropertyFlag.DynamicDefault];
 
     PropertyType[ord(TProp.daily)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.daily)] := ptruint(@obj.DailyShapeObj);
-    PropertyOffset2[ord(TProp.daily)] := ptruint(DSS.LoadShapeClass);
+    PropertyOffset[ord(TProp.daily)] := PtrInt(@obj.DailyShapeObj);
+    PropertyOffset2[ord(TProp.daily)] := PtrInt(DSS.LoadShapeClass);
 
     PropertyType[ord(TProp.duty)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.duty)] := ptruint(@obj.DutyShapeObj);
-    PropertyOffset2[ord(TProp.duty)] := ptruint(DSS.LoadShapeClass);
+    PropertyOffset[ord(TProp.duty)] := PtrInt(@obj.DutyShapeObj);
+    PropertyOffset2[ord(TProp.duty)] := PtrInt(DSS.LoadShapeClass);
     PropertyFlags[ord(TProp.duty)] := [TPropertyFlag.DynamicDefault];
 
     // double properties
-    PropertyOffset[ord(TProp.amps)] := ptruint(@obj.Amps);
+    PropertyOffset[ord(TProp.amps)] := PtrInt(@obj.Amps);
     PropertyFlags[ord(TProp.amps)] := [TPropertyFlag.NoDefault, TPropertyFlag.Units_A];
 
-    PropertyOffset[ord(TProp.angle)] := ptruint(@obj.Angle);
+    PropertyOffset[ord(TProp.angle)] := PtrInt(@obj.Angle);
     PropertyFlags[ord(TProp.angle)] := [TPropertyFlag.Units_deg];
     
-    PropertyOffset[ord(TProp.frequency)] := ptruint(@obj.SrcFrequency);
+    PropertyOffset[ord(TProp.frequency)] := PtrInt(@obj.SrcFrequency);
     PropertyFlags[ord(TProp.frequency)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
 
     ActiveProperty := NumPropsThisClass;

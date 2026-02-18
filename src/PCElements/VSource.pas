@@ -253,95 +253,95 @@ begin
 
     // enum properties
     PropertyType[ord(TProp.ScanType)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.ScanType)] := ptruint(@obj.ScanType);
+    PropertyOffset[ord(TProp.ScanType)] := PtrInt(@obj.ScanType);
     PropertyOffset2[ord(TProp.ScanType)] := PtrInt(DSS.ScanTypeEnum);
 
     PropertyType[ord(TProp.Sequence)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.Sequence)] := ptruint(@obj.Sequencetype);
+    PropertyOffset[ord(TProp.Sequence)] := PtrInt(@obj.Sequencetype);
     PropertyOffset2[ord(TProp.Sequence)] := PtrInt(DSS.SequenceEnum);
 
     PropertyType[ord(TProp.Model)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.Model)] := ptruint(@obj.IsQuasiIdeal); // LongBool as Integer
+    PropertyOffset[ord(TProp.Model)] := PtrInt(@obj.IsQuasiIdeal); // LongBool as Integer
     PropertyOffset2[ord(TProp.Model)] := PtrInt(ModelEnum);
 
     // object properties
     PropertyType[ord(TProp.yearly)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset2[ord(TProp.yearly)] := ptruint(DSS.LoadShapeClass);
-    PropertyOffset[ord(TProp.yearly)] := ptruint(@obj.YearlyShapeObj);
+    PropertyOffset2[ord(TProp.yearly)] := PtrInt(DSS.LoadShapeClass);
+    PropertyOffset[ord(TProp.yearly)] := PtrInt(@obj.YearlyShapeObj);
     PropertyFlags[ord(TProp.yearly)] := [TPropertyFlag.DynamicDefault];
 
     PropertyType[ord(TProp.daily)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.daily)] := ptruint(@obj.DailyShapeObj);
-    PropertyOffset2[ord(TProp.daily)] := ptruint(DSS.LoadShapeClass);
+    PropertyOffset[ord(TProp.daily)] := PtrInt(@obj.DailyShapeObj);
+    PropertyOffset2[ord(TProp.daily)] := PtrInt(DSS.LoadShapeClass);
 
     PropertyType[ord(TProp.duty)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.duty)] := ptruint(@obj.DutyShapeObj);
-    PropertyOffset2[ord(TProp.duty)] := ptruint(DSS.LoadShapeClass);
+    PropertyOffset[ord(TProp.duty)] := PtrInt(@obj.DutyShapeObj);
+    PropertyOffset2[ord(TProp.duty)] := PtrInt(DSS.LoadShapeClass);
     PropertyFlags[ord(TProp.duty)] := [TPropertyFlag.DynamicDefault];
 
     // integer
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNphases);
+    PropertyOffset[ord(TProp.phases)] := PtrInt(@obj.FNphases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     // complex properties
     PropertyType[ord(TProp.puZ0)] := TPropertyType.ComplexProperty;
-    PropertyOffset[ord(TProp.puZ0)] := ptruint(@obj.puZ0);
+    PropertyOffset[ord(TProp.puZ0)] := PtrInt(@obj.puZ0);
     PropertyFlags[ord(TProp.puZ0)] := [TPropertyFlag.DynamicDefault];
 
     PropertyType[ord(TProp.puZ1)] := TPropertyType.ComplexProperty;
-    PropertyOffset[ord(TProp.puZ1)] := ptruint(@obj.puZ1);
+    PropertyOffset[ord(TProp.puZ1)] := PtrInt(@obj.puZ1);
     PropertyFlags[ord(TProp.puZ1)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault];
 
     PropertyType[ord(TProp.puZ2)] := TPropertyType.ComplexProperty;
-    PropertyOffset[ord(TProp.puZ2)] := ptruint(@obj.puZ2);
+    PropertyOffset[ord(TProp.puZ2)] := PtrInt(@obj.puZ2);
     PropertyFlags[ord(TProp.puZ2)] := [TPropertyFlag.DynamicDefault];
 
     PropertyType[ord(TProp.puZideal)] := TPropertyType.ComplexProperty;
-    PropertyOffset[ord(TProp.puZideal)] := ptruint(@obj.puZideal);
+    PropertyOffset[ord(TProp.puZideal)] := PtrInt(@obj.puZideal);
 
     // "complex parts" properties
     PropertyType[ord(TProp.Z0)] := TPropertyType.ComplexPartsProperty;
-    PropertyOffset[ord(TProp.Z0)] := ptruint(@obj.R0); PropertyOffset2[ord(TProp.Z0)] := ptruint(@obj.X0);
+    PropertyOffset[ord(TProp.Z0)] := ptruint(@obj.R0); PropertyOffset2[ord(TProp.Z0)] := PtrInt(@obj.X0);
     PropertyFlags[ord(TProp.Z0)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_ohm];
 
     PropertyType[ord(TProp.Z1)] := TPropertyType.ComplexPartsProperty;
-    PropertyOffset[ord(TProp.Z1)] := ptruint(@obj.R1); PropertyOffset2[ord(TProp.Z1)] := ptruint(@obj.X1);
+    PropertyOffset[ord(TProp.Z1)] := ptruint(@obj.R1); PropertyOffset2[ord(TProp.Z1)] := PtrInt(@obj.X1);
     PropertyFlags[ord(TProp.Z1)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm];//TODO: check the "nodefault"
     
     PropertyType[ord(TProp.Z2)] := TPropertyType.ComplexPartsProperty;
-    PropertyOffset[ord(TProp.Z2)] := ptruint(@obj.R2); PropertyOffset2[ord(TProp.Z2)] := ptruint(@obj.X2);
+    PropertyOffset[ord(TProp.Z2)] := ptruint(@obj.R2); PropertyOffset2[ord(TProp.Z2)] := PtrInt(@obj.X2);
     PropertyFlags[ord(TProp.Z2)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_ohm];
     
     // double properties
-    PropertyOffset[ord(TProp.basekv)] := ptruint(@obj.kVBase);
+    PropertyOffset[ord(TProp.basekv)] := PtrInt(@obj.kVBase);
     PropertyFlags[ord(TProp.basekV)] := [TPropertyFlag.Required];
 
-    PropertyOffset[ord(TProp.pu)] := ptruint(@obj.PerUnit);
-    PropertyOffset[ord(TProp.angle)] := ptruint(@obj.Angle);
+    PropertyOffset[ord(TProp.pu)] := PtrInt(@obj.PerUnit);
+    PropertyOffset[ord(TProp.angle)] := PtrInt(@obj.Angle);
 
-    PropertyOffset[ord(TProp.frequency)] := ptruint(@obj.SrcFrequency);
+    PropertyOffset[ord(TProp.frequency)] := PtrInt(@obj.SrcFrequency);
     PropertyFlags[ord(TProp.frequency)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
 
-    PropertyOffset[ord(TProp.MVAsc3)] := ptruint(@obj.MVAsc3);
+    PropertyOffset[ord(TProp.MVAsc3)] := PtrInt(@obj.MVAsc3);
     PropertyFlags[ord(TProp.MVAsc3)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_MVA];
 
-    PropertyOffset[ord(TProp.MVAsc1)] := ptruint(@obj.MVAsc1);
+    PropertyOffset[ord(TProp.MVAsc1)] := PtrInt(@obj.MVAsc1);
     PropertyFlags[ord(TProp.MVAsc1)] := [TPropertyFlag.Units_MVA];
 
-    PropertyOffset[ord(TProp.x1r1)] := ptruint(@obj.X1R1);
-    PropertyOffset[ord(TProp.x0r0)] := ptruint(@obj.X0R0);
+    PropertyOffset[ord(TProp.x1r1)] := PtrInt(@obj.X1R1);
+    PropertyOffset[ord(TProp.x0r0)] := PtrInt(@obj.X0R0);
 
-    PropertyOffset[ord(TProp.Isc3)] := ptruint(@obj.Isc3);
+    PropertyOffset[ord(TProp.Isc3)] := PtrInt(@obj.Isc3);
     PropertyFlags[ord(TProp.Isc3)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_A, TPropertyFlag.NoDefault];
 
-    PropertyOffset[ord(TProp.Isc1)] := ptruint(@obj.Isc1);
+    PropertyOffset[ord(TProp.Isc1)] := PtrInt(@obj.Isc1);
     PropertyFlags[ord(TProp.Isc1)] := [TPropertyFlag.Units_A, TPropertyFlag.NoDefault];
 
-    PropertyOffset[ord(TProp.R1)] := ptruint(@obj.R1);
-    PropertyOffset[ord(TProp.X1)] := ptruint(@obj.X1);
-    PropertyOffset[ord(TProp.R0)] := ptruint(@obj.R0);
-    PropertyOffset[ord(TProp.X0)] := ptruint(@obj.X0);
+    PropertyOffset[ord(TProp.R1)] := PtrInt(@obj.R1);
+    PropertyOffset[ord(TProp.X1)] := PtrInt(@obj.X1);
+    PropertyOffset[ord(TProp.R0)] := PtrInt(@obj.R0);
+    PropertyOffset[ord(TProp.X0)] := PtrInt(@obj.X0);
     PropertyFlags[ord(TProp.R1)] := [TPropertyFlag.Redundant, TPropertyFlag.Units_ohm];
     PropertyFlags[ord(TProp.X1)] := [TPropertyFlag.Redundant, TPropertyFlag.Units_ohm, TPropertyFlag.RequiredInSpecSet];
     PropertyFlags[ord(TProp.R0)] := [TPropertyFlag.Redundant, TPropertyFlag.Units_ohm];
@@ -351,7 +351,7 @@ begin
     PropertyRedundantWith[ord(TProp.R0)] := ord(TProp.Z0);
     PropertyRedundantWith[ord(TProp.X0)] := ord(TProp.Z0);
 
-    PropertyOffset[ord(TProp.baseMVA)] := ptruint(@obj.BaseMVA);
+    PropertyOffset[ord(TProp.baseMVA)] := PtrInt(@obj.BaseMVA);
     PropertyFlags[ord(TProp.baseMVA)] := [TPropertyFlag.RequiredInSpecSet];
 
     ActiveProperty := NumPropsThisClass;

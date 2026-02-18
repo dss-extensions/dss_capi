@@ -194,44 +194,44 @@ begin
 
     // string lists
     PropertyType[ord(TProp.PVSystemList)] := TPropertyType.StringListProperty;
-    PropertyOffset[ord(TProp.PVSystemList)] := ptruint(@obj.FPVSystemNameList);
+    PropertyOffset[ord(TProp.PVSystemList)] := PtrInt(@obj.FPVSystemNameList);
 
     PropertyType[ord(TProp.DERList)] := TPropertyType.StringListProperty;
-    PropertyOffset[ord(TProp.DERList)] := ptruint(@obj.DERNameList);
+    PropertyOffset[ord(TProp.DERList)] := PtrInt(@obj.DERNameList);
 
     // boolean properties
     PropertyType[ord(TProp.EventLog)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.PreferQ)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.EventLog)] := ptruint(@obj.ShowEventLog);
-    PropertyOffset[ord(TProp.PreferQ)] := ptruint(@obj.FPreferQ);
+    PropertyOffset[ord(TProp.EventLog)] := PtrInt(@obj.ShowEventLog);
+    PropertyOffset[ord(TProp.PreferQ)] := PtrInt(@obj.FPreferQ);
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.Qbias)] := ptruint(@obj.FQbias);
-    PropertyOffset[ord(TProp.DeltaQ_factor)] := ptruint(@obj.FdeltaQ_factor);
+    PropertyOffset[ord(TProp.Qbias)] := PtrInt(@obj.FQbias);
+    PropertyOffset[ord(TProp.DeltaQ_factor)] := PtrInt(@obj.FdeltaQ_factor);
 
     // advanced doubles
-    PropertyOffset[ord(TProp.Vreg)] := ptruint(@obj.FVregInit);
+    PropertyOffset[ord(TProp.Vreg)] := PtrInt(@obj.FVregInit);
     PropertyFlags[ord(TProp.Vreg)] := [TPropertyFlag.IgnoreInvalid, TPropertyFlag.NonNegative];
 
-    PropertyOffset[ord(TProp.Slope)] := ptruint(@obj.QVSlope);
+    PropertyOffset[ord(TProp.Slope)] := PtrInt(@obj.QVSlope);
     PropertyFlags[ord(TProp.Slope)] := [TPropertyFlag.IgnoreInvalid, TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
-    PropertyOffset[ord(TProp.VregTau)] := ptruint(@obj.VregTau);
+    PropertyOffset[ord(TProp.VregTau)] := PtrInt(@obj.VregTau);
     PropertyFlags[ord(TProp.VregTau)] := [TPropertyFlag.IgnoreInvalid, TPropertyFlag.NonNegative, TPropertyFlag.Units_s];
 
-    PropertyOffset[ord(TProp.VregMin)] := ptruint(@obj.VregMin);
+    PropertyOffset[ord(TProp.VregMin)] := PtrInt(@obj.VregMin);
     PropertyFlags[ord(TProp.VregMin)] := [TPropertyFlag.IgnoreInvalid, TPropertyFlag.NonNegative];
 
-    PropertyOffset[ord(TProp.VregMax)] := ptruint(@obj.VregMax);
+    PropertyOffset[ord(TProp.VregMax)] := PtrInt(@obj.VregMax);
     PropertyFlags[ord(TProp.VregMax)] := [TPropertyFlag.IgnoreInvalid, TPropertyFlag.NonNegative];
 
-    PropertyOffset[ord(TProp.QmaxLead)] := ptruint(@obj.QmaxLead);
+    PropertyOffset[ord(TProp.QmaxLead)] := PtrInt(@obj.QmaxLead);
     PropertyFlags[ord(TProp.QmaxLead)] := [TPropertyFlag.IgnoreInvalid, TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
-    PropertyOffset[ord(TProp.QmaxLag)] := ptruint(@obj.QmaxLag);
+    PropertyOffset[ord(TProp.QmaxLag)] := PtrInt(@obj.QmaxLag);
     PropertyFlags[ord(TProp.QmaxLag)] := [TPropertyFlag.IgnoreInvalid, TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
-    PropertyOffset[ord(TProp.Tresponse)] := ptruint(@obj.Tresponse);
+    PropertyOffset[ord(TProp.Tresponse)] := PtrInt(@obj.Tresponse);
     PropertyFlags[ord(TProp.Tresponse)] := [TPropertyFlag.IgnoreInvalid, TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     ActiveProperty := NumPropsThisClass;

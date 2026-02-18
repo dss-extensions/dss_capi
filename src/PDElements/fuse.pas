@@ -173,34 +173,34 @@ begin
 
     // object properties
     PropertyType[ord(TProp.FuseCurve)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.FuseCurve)] := ptruint(@obj.FuseCurve);
-    PropertyOffset2[ord(TProp.FuseCurve)] := ptruint(TCC_CurveClass);
+    PropertyOffset[ord(TProp.FuseCurve)] := PtrInt(@obj.FuseCurve);
+    PropertyOffset2[ord(TProp.FuseCurve)] := PtrInt(TCC_CurveClass);
     PropertyFlags[ord(TProp.FuseCurve)] := [TPropertyFlag.AllowNone];
 
     PropertyType[ord(TProp.MonitoredObj)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.MonitoredObj)] := ptruint(@obj.FMonitoredElement);
+    PropertyOffset[ord(TProp.MonitoredObj)] := PtrInt(@obj.FMonitoredElement);
     //PropertyWriteFunction[ord(TProp.MonitoredObj)] := @SetMonitoredElement;
     PropertyFlags[ord(TProp.MonitoredObj)] := [TPropertyFlag.Required];//TPropertyFlag.WriteByFunction];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     PropertyType[ord(TProp.SwitchedObj)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.SwitchedObj)] := ptruint(@obj.controlledElement);
+    PropertyOffset[ord(TProp.SwitchedObj)] := PtrInt(@obj.controlledElement);
     PropertyWriteFunction[ord(TProp.SwitchedObj)] := @SetControlledElement;
     PropertyFlags[ord(TProp.SwitchedObj)] := [TPropertyFlag.WriteByFunction];// [TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     // integer properties
     PropertyType[ord(TProp.MonitoredTerm)] := TPropertyType.IntegerProperty;
     PropertyType[ord(TProp.SwitchedTerm)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.MonitoredTerm)] := ptruint(@obj.MonitoredElementTerminal);
-    PropertyOffset[ord(TProp.SwitchedTerm)] := ptruint(@obj.ElementTerminal);
+    PropertyOffset[ord(TProp.MonitoredTerm)] := PtrInt(@obj.MonitoredElementTerminal);
+    PropertyOffset[ord(TProp.SwitchedTerm)] := PtrInt(@obj.ElementTerminal);
 
     // double properties
-    PropertyOffset[ord(TProp.RatedCurrent)] := ptruint(@obj.RatedCurrent);
-    PropertyOffset[ord(TProp.Delay)] := ptruint(@obj.DelayTime);
+    PropertyOffset[ord(TProp.RatedCurrent)] := PtrInt(@obj.RatedCurrent);
+    PropertyOffset[ord(TProp.Delay)] := PtrInt(@obj.DelayTime);
     PropertyFlags[ord(TProp.Delay)] := [TPropertyFlag.Units_s];
 
     // enum action
     PropertyType[ord(TProp.Action)] := TPropertyType.StringEnumActionProperty;
-    PropertyOffset[ord(TProp.Action)] := ptruint(@DoAction); 
+    PropertyOffset[ord(TProp.Action)] := PtrInt(@DoAction); 
     PropertyOffset2[ord(TProp.Action)] := PtrInt(ActionEnum);
     PropertyFlags[ord(TProp.Action)] := [TPropertyFlag.Deprecated];
     PropertyDeprecatedMessage[ord(TProp.Action)] := 'Use "State" property instead.';

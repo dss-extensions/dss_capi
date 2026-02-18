@@ -114,16 +114,16 @@ begin
 
     // double arrays
     PropertyType[ord(TProp.C_array)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.C_array)] := ptruint(@obj.C_Values);
-    PropertyOffset2[ord(TProp.C_array)] := ptruint(@obj.Npts);
+    PropertyOffset[ord(TProp.C_array)] := PtrInt(@obj.C_Values);
+    PropertyOffset2[ord(TProp.C_array)] := PtrInt(@obj.Npts);
 
     PropertyType[ord(TProp.T_array)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.T_array)] := ptruint(@obj.T_values);
-    PropertyOffset2[ord(TProp.T_array)] := ptruint(@obj.Npts);
+    PropertyOffset[ord(TProp.T_array)] := PtrInt(@obj.T_values);
+    PropertyOffset2[ord(TProp.T_array)] := PtrInt(@obj.Npts);
 
     // integer
     PropertyType[ord(TProp.npts)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.npts)] := ptruint(@obj.Npts);
+    PropertyOffset[ord(TProp.npts)] := PtrInt(@obj.Npts);
     PropertyFlags[ord(TProp.Npts)] := [TPropertyFlag.SuppressJSON];
 
     ActiveProperty := NumPropsThisClass;

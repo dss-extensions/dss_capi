@@ -406,7 +406,7 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
-    PropertyStructArrayCountOffset := ptruint(@obj.NumPoints);
+    PropertyStructArrayCountOffset := PtrInt(@obj.NumPoints);
 
     SpecSetNames := ArrayOfString.Create(
         'PMult, QMult, Hour',
@@ -428,112 +428,112 @@ begin
 
     // boolean properties
     PropertyType[ord(TProp.MemoryMapping)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.MemoryMapping)] := ptruint(@obj.UseMMF);
+    PropertyOffset[ord(TProp.MemoryMapping)] := PtrInt(@obj.UseMMF);
     PropertyFlags[ord(TProp.MemoryMapping)] := [TPropertyFlag.Ordering_First];
 
     PropertyType[ord(TProp.UseActual)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.UseActual)] := ptruint(@obj.UseActual);
+    PropertyOffset[ord(TProp.UseActual)] := PtrInt(@obj.UseActual);
 
     // advanced doubles
-    PropertyOffset[ord(TProp.sinterval)] := ptruint(@obj.Interval);
+    PropertyOffset[ord(TProp.sinterval)] := PtrInt(@obj.Interval);
     PropertyScale[ord(TProp.sinterval)] := 1 / 3600.0;
     PropertyFlags[ord(TProp.sinterval)] := [TPropertyFlag.Redundant, TPropertyFlag.NonNegative, TPropertyFlag.Units_s];
     PropertyRedundantWith[ord(TProp.sinterval)] := ord(TProp.interval);
 
-    PropertyOffset[ord(TProp.minterval)] := ptruint(@obj.Interval);
+    PropertyOffset[ord(TProp.minterval)] := PtrInt(@obj.Interval);
     PropertyScale[ord(TProp.minterval)] := 1 / 60.0;
     PropertyFlags[ord(TProp.minterval)] := [TPropertyFlag.Redundant, TPropertyFlag.NonNegative, TPropertyFlag.Units_minute];
     PropertyRedundantWith[ord(TProp.minterval)] := ord(TProp.interval);
 
     // double properties
-    PropertyOffset[ord(TProp.interval)] := ptruint(@obj.Interval);
+    PropertyOffset[ord(TProp.interval)] := PtrInt(@obj.Interval);
     PropertyFlags[ord(TProp.interval)] := [TPropertyFlag.NonNegative, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_hour];
 
-    PropertyOffset[ord(TProp.Pmax)] := ptruint(@obj.MaxP);
+    PropertyOffset[ord(TProp.Pmax)] := PtrInt(@obj.MaxP);
     PropertyFlags[ord(TProp.Pmax)] := [TPropertyFlag.Units_kW];
 
-    PropertyOffset[ord(TProp.Qmax)] := ptruint(@obj.MaxQ);
+    PropertyOffset[ord(TProp.Qmax)] := PtrInt(@obj.MaxQ);
     PropertyFlags[ord(TProp.Qmax)] := [TPropertyFlag.Units_kvar];
 
-    PropertyOffset[ord(TProp.Pbase)] := ptruint(@obj.BaseP);
+    PropertyOffset[ord(TProp.Pbase)] := PtrInt(@obj.BaseP);
     PropertyFlags[ord(TProp.Pbase)] := [TPropertyFlag.Units_kW];
 
-    PropertyOffset[ord(TProp.Qbase)] := ptruint(@obj.BaseQ);
+    PropertyOffset[ord(TProp.Qbase)] := PtrInt(@obj.BaseQ);
     PropertyFlags[ord(TProp.Qbase)] := [TPropertyFlag.Units_kvar];
 
 
-    PropertyOffset[ord(TProp.mean)] := ptruint(@obj.FMean);
+    PropertyOffset[ord(TProp.mean)] := PtrInt(@obj.FMean);
     PropertyReadFunction[ord(TProp.mean)] := @GetMean;
     PropertyWriteFunction[ord(TProp.mean)] := @SetMean;
     PropertyFlags[ord(TProp.mean)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.WriteByFunction, TPropertyFlag.DynamicDefault];
     
-    PropertyOffset[ord(TProp.stddev)] := ptruint(@obj.FStdDev);
+    PropertyOffset[ord(TProp.stddev)] := PtrInt(@obj.FStdDev);
     PropertyReadFunction[ord(TProp.stddev)] := @GetStdDev;
     PropertyWriteFunction[ord(TProp.stddev)] := @SetStdDev;
     PropertyFlags[ord(TProp.stddev)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.WriteByFunction, TPropertyFlag.DynamicDefault];
 
     // double arrays, special
     PropertyType[ord(TProp.hour)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.hour)] := ptruint(@obj.dH);
-    PropertyOffset2[ord(TProp.hour)] := ptruint(@obj.NumPoints);
-    PropertyOffset3[ord(TProp.hour)] := ptruint(@obj.ExternalMemory);
+    PropertyOffset[ord(TProp.hour)] := PtrInt(@obj.dH);
+    PropertyOffset2[ord(TProp.hour)] := PtrInt(@obj.NumPoints);
+    PropertyOffset3[ord(TProp.hour)] := PtrInt(@obj.ExternalMemory);
     PropertyFlags[ord(TProp.hour)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.ReadByFunction, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly, TPropertyFlag.RequiredInSpecSet];
     PropertyReadFunction[ord(TProp.hour)] := @getHour;
 
     PropertyType[ord(TProp.mult)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.mult)] := ptruint(@obj.dP);
-    PropertyOffset2[ord(TProp.mult)] := ptruint(@obj.NumPoints);
-    PropertyOffset3[ord(TProp.mult)] := ptruint(@obj.ExternalMemory);
+    PropertyOffset[ord(TProp.mult)] := PtrInt(@obj.dP);
+    PropertyOffset2[ord(TProp.mult)] := PtrInt(@obj.NumPoints);
+    PropertyOffset3[ord(TProp.mult)] := PtrInt(@obj.ExternalMemory);
     PropertyFlags[ord(TProp.mult)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.ReadByFunction, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly, TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.mult)] := ord(TProp.pmult);
     PropertyReadFunction[ord(TProp.mult)] := @getPMult;
 
     PropertyType[ord(TProp.Pmult)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.Pmult)] := ptruint(@obj.dP);
-    PropertyOffset2[ord(TProp.Pmult)] := ptruint(@obj.NumPoints);
-    PropertyOffset3[ord(TProp.Pmult)] := ptruint(@obj.ExternalMemory);
+    PropertyOffset[ord(TProp.Pmult)] := PtrInt(@obj.dP);
+    PropertyOffset2[ord(TProp.Pmult)] := PtrInt(@obj.NumPoints);
+    PropertyOffset3[ord(TProp.Pmult)] := PtrInt(@obj.ExternalMemory);
     PropertyFlags[ord(TProp.Pmult)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.ReadByFunction, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly, TPropertyFlag.RequiredInSpecSet];
     PropertyReadFunction[ord(TProp.Pmult)] := @getPMult;
 
     PropertyType[ord(TProp.Qmult)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.Qmult)] := ptruint(@obj.dQ);
-    PropertyOffset2[ord(TProp.Qmult)] := ptruint(@obj.NumPoints);
-    PropertyOffset3[ord(TProp.Qmult)] := ptruint(@obj.ExternalMemory);
+    PropertyOffset[ord(TProp.Qmult)] := PtrInt(@obj.dQ);
+    PropertyOffset2[ord(TProp.Qmult)] := PtrInt(@obj.NumPoints);
+    PropertyOffset3[ord(TProp.Qmult)] := PtrInt(@obj.ExternalMemory);
     PropertyFlags[ord(TProp.Qmult)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.ReadByFunction, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly];
     PropertyReadFunction[ord(TProp.Qmult)] := @getQMult;
 
     // integer
     Propertytype[ord(TProp.npts)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.npts)] := ptruint(@obj.NumPoints);
+    PropertyOffset[ord(TProp.npts)] := PtrInt(@obj.NumPoints);
     PropertyWriteFunction[ord(TProp.npts)] := @SetNumPoints;
     PropertyFlags[ord(TProp.npts)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.SuppressJSON];
 
     // enums
     // enum action
     PropertyType[ord(TProp.Action)] := TPropertyType.StringEnumActionProperty;
-    PropertyOffset[ord(TProp.Action)] := ptruint(@DoAction); 
+    PropertyOffset[ord(TProp.Action)] := PtrInt(@DoAction); 
     PropertyOffset2[ord(TProp.Action)] := PtrInt(ActionEnum); 
 
     // plain enum
     PropertyType[ord(TProp.Interpolation)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.Interpolation)] := ptruint(@obj.interpolation); 
+    PropertyOffset[ord(TProp.Interpolation)] := PtrInt(@obj.interpolation); 
     PropertyOffset2[ord(TProp.Interpolation)] := PtrInt(InterpEnum); 
 
     // strings
     PropertyType[ord(TProp.csvfile)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.csvfile)] := ptruint(@obj.csvfile);
+    PropertyOffset[ord(TProp.csvfile)] := PtrInt(@obj.csvfile);
     PropertyFlags[ord(TProp.csvfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     PropertyType[ord(TProp.dblfile)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.dblfile)] := ptruint(@obj.dblfile);
+    PropertyOffset[ord(TProp.dblfile)] := PtrInt(@obj.dblfile);
     PropertyFlags[ord(TProp.dblfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     PropertyType[ord(TProp.sngfile)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.sngfile)] := ptruint(@obj.sngfile);
+    PropertyOffset[ord(TProp.sngfile)] := PtrInt(@obj.sngfile);
     PropertyFlags[ord(TProp.sngfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     PropertyType[ord(TProp.PQCSVFile)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.PQCSVFile)] := ptruint(@obj.pqcsvfile);
+    PropertyOffset[ord(TProp.PQCSVFile)] := PtrInt(@obj.pqcsvfile);
     PropertyFlags[ord(TProp.PQCSVFile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     ActiveProperty := NumPropsThisClass;

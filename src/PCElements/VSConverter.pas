@@ -172,7 +172,7 @@ begin
 
     // enum properties
     PropertyType[ord(TProp.VscMode)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.VscMode)] := ptruint(@obj.Fmode);
+    PropertyOffset[ord(TProp.VscMode)] := PtrInt(@obj.Fmode);
     PropertyOffset2[ord(TProp.VscMode)] := PtrInt(ModeEnum);
 
     // bus properties
@@ -182,33 +182,33 @@ begin
 
     // integer properties
     PropertyType[ord(TProp.Ndc)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Ndc)] := ptruint(@obj.Ndc);
+    PropertyOffset[ord(TProp.Ndc)] := PtrInt(@obj.Ndc);
     
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.phases)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.kVac)] := ptruint(@obj.FkVac);
-    PropertyOffset[ord(TProp.kVdc)] := ptruint(@obj.FkVdc);
-    PropertyOffset[ord(TProp.kW)] := ptruint(@obj.FkW);
+    PropertyOffset[ord(TProp.kVac)] := PtrInt(@obj.FkVac);
+    PropertyOffset[ord(TProp.kVdc)] := PtrInt(@obj.FkVdc);
+    PropertyOffset[ord(TProp.kW)] := PtrInt(@obj.FkW);
 
-    PropertyOffset[ord(TProp.Rac)] := ptruint(@obj.FRac);
+    PropertyOffset[ord(TProp.Rac)] := PtrInt(@obj.FRac);
     PropertyFlags[ord(TProp.Rac)] := [TPropertyFlag.Units_ohm];
 
-    PropertyOffset[ord(TProp.Xac)] := ptruint(@obj.FXac);
+    PropertyOffset[ord(TProp.Xac)] := PtrInt(@obj.FXac);
     PropertyFlags[ord(TProp.Xac)] := [TPropertyFlag.Units_ohm];
 
-    PropertyOffset[ord(TProp.m0)] := ptruint(@obj.Fm);
-    PropertyOffset[ord(TProp.d0)] := ptruint(@obj.Fd);
-    PropertyOffset[ord(TProp.Mmin)] := ptruint(@obj.FMinM);
-    PropertyOffset[ord(TProp.Mmax)] := ptruint(@obj.FMaxM);
-    PropertyOffset[ord(TProp.Iacmax)] := ptruint(@obj.FMaxIac);
-    PropertyOffset[ord(TProp.Idcmax)] := ptruint(@obj.FMaxIdc);
-    PropertyOffset[ord(TProp.Vacref)] := ptruint(@obj.FRefVac);
-    PropertyOffset[ord(TProp.Pacref)] := ptruint(@obj.FRefPac);
-    PropertyOffset[ord(TProp.Qacref)] := ptruint(@obj.FRefQac);
-    PropertyOffset[ord(TProp.Vdcref)] := ptruint(@obj.FRefVdc);
+    PropertyOffset[ord(TProp.m0)] := PtrInt(@obj.Fm);
+    PropertyOffset[ord(TProp.d0)] := PtrInt(@obj.Fd);
+    PropertyOffset[ord(TProp.Mmin)] := PtrInt(@obj.FMinM);
+    PropertyOffset[ord(TProp.Mmax)] := PtrInt(@obj.FMaxM);
+    PropertyOffset[ord(TProp.Iacmax)] := PtrInt(@obj.FMaxIac);
+    PropertyOffset[ord(TProp.Idcmax)] := PtrInt(@obj.FMaxIdc);
+    PropertyOffset[ord(TProp.Vacref)] := PtrInt(@obj.FRefVac);
+    PropertyOffset[ord(TProp.Pacref)] := PtrInt(@obj.FRefPac);
+    PropertyOffset[ord(TProp.Qacref)] := PtrInt(@obj.FRefQac);
+    PropertyOffset[ord(TProp.Vdcref)] := PtrInt(@obj.FRefVdc);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

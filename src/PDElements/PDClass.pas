@@ -98,11 +98,11 @@ begin
 
     PropertyOffset_PDClass := ActiveProperty;
 
-    PropertyOffset[ActiveProperty + ord(TProp.normamps)] := ptruint(@obj.NormAmps);
-    PropertyOffset[ActiveProperty + ord(TProp.emergamps)] := ptruint(@obj.EmergAmps);
-    PropertyOffset[ActiveProperty + ord(TProp.faultrate)] := ptruint(@obj.FaultRate);
-    PropertyOffset[ActiveProperty + ord(TProp.pctperm)] := ptruint(@obj.PctPerm);
-    PropertyOffset[ActiveProperty + ord(TProp.repair)] := ptruint(@obj.HrsToRepair);
+    PropertyOffset[ActiveProperty + ord(TProp.normamps)] := PtrInt(@obj.NormAmps);
+    PropertyOffset[ActiveProperty + ord(TProp.emergamps)] := PtrInt(@obj.EmergAmps);
+    PropertyOffset[ActiveProperty + ord(TProp.faultrate)] := PtrInt(@obj.FaultRate);
+    PropertyOffset[ActiveProperty + ord(TProp.pctperm)] := PtrInt(@obj.PctPerm);
+    PropertyOffset[ActiveProperty + ord(TProp.repair)] := PtrInt(@obj.HrsToRepair);
 
     ActiveProperty := ActiveProperty + NumPropsThisClass;
     inherited DefineProperties();

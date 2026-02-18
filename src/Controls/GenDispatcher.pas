@@ -134,30 +134,30 @@ begin
 
     // string list
     PropertyType[ord(TProp.GenList)] := TPropertyType.StringListProperty;
-    PropertyOffset[ord(TProp.GenList)] := ptruint(@obj.FGeneratorNameList);
+    PropertyOffset[ord(TProp.GenList)] := PtrInt(@obj.FGeneratorNameList);
 
     // double arrays
     PropertyType[ord(TProp.Weights)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.Weights)] := ptruint(@obj.FWeights);
-    PropertyOffset2[ord(TProp.Weights)] := ptruint(@obj.FListSize);
+    PropertyOffset[ord(TProp.Weights)] := PtrInt(@obj.FWeights);
+    PropertyOffset2[ord(TProp.Weights)] := PtrInt(@obj.FListSize);
     PropertyFlags[ord(TProp.Weights)] := [TPropertyFlag.IndirectCount];
-    PropertyOffset3[ord(TProp.Weights)] := ptruint(@obj.FGeneratorNameList);
+    PropertyOffset3[ord(TProp.Weights)] := PtrInt(@obj.FGeneratorNameList);
 
     // object reference
     PropertyType[ord(TProp.Element)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.Element)] := ptruint(@obj.FMonitoredElement);
+    PropertyOffset[ord(TProp.Element)] := PtrInt(@obj.FMonitoredElement);
     PropertyOffset2[ord(TProp.Element)] := 0;
     PropertyWriteFunction[ord(TProp.Element)] := @SetMonitoredElement;
     PropertyFlags[ord(TProp.Element)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Required];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     // integer properties
     PropertyType[ord(TProp.Terminal)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Terminal)] := ptruint(@obj.ElementTerminal);
+    PropertyOffset[ord(TProp.Terminal)] := PtrInt(@obj.ElementTerminal);
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.kWLimit)] := ptruint(@obj.FkWLimit);
-    PropertyOffset[ord(TProp.kWBand)] := ptruint(@obj.FkWBand);
-    PropertyOffset[ord(TProp.kvarlimit)] := ptruint(@obj.FkvarLimit);
+    PropertyOffset[ord(TProp.kWLimit)] := PtrInt(@obj.FkWLimit);
+    PropertyOffset[ord(TProp.kWBand)] := PtrInt(@obj.FkWBand);
+    PropertyOffset[ord(TProp.kvarlimit)] := PtrInt(@obj.FkvarLimit);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

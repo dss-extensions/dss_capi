@@ -106,16 +106,16 @@ begin
     PropertyOffset_CableData := ActiveProperty;
 
     // double properties (default type)
-    PropertyOffset[ActiveProperty + ord(TProp.EpsR)] := ptruint(@obj.epsR);
+    PropertyOffset[ActiveProperty + ord(TProp.EpsR)] := PtrInt(@obj.epsR);
     // PropertyMinimum[ActiveProperty + ord(TProp.EpsR)] := 1.0; //TODO: add support for minimum value
     
-    PropertyOffset[ActiveProperty + ord(TProp.insLayer)] := ptruint(@obj.insLayer);
+    PropertyOffset[ActiveProperty + ord(TProp.insLayer)] := PtrInt(@obj.insLayer);
     PropertyFlags[ActiveProperty + ord(TProp.insLayer)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
 
-    PropertyOffset[ActiveProperty + ord(TProp.DiaIns)] := ptruint(@obj.diaIns);
+    PropertyOffset[ActiveProperty + ord(TProp.DiaIns)] := PtrInt(@obj.diaIns);
     PropertyFlags[ActiveProperty + ord(TProp.DiaIns)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
 
-    PropertyOffset[ActiveProperty + ord(TProp.DiaCable)] := ptruint(@obj.diaCable);
+    PropertyOffset[ActiveProperty + ord(TProp.DiaCable)] := PtrInt(@obj.diaCable);
     PropertyFlags[ActiveProperty + ord(TProp.DiaCable)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
 
     ActiveProperty := ActiveProperty + NumPropsThisClass;

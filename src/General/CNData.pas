@@ -108,21 +108,21 @@ begin
 
     // integer properties
     PropertyType[ActiveProperty + ord(TProp.k)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ActiveProperty + ord(TProp.k)] := ptruint(@obj.kStrand);
+    PropertyOffset[ActiveProperty + ord(TProp.k)] := PtrInt(@obj.kStrand);
     // PropertyMinimum[ActiveProperty + ord(TProp.k)] := 2; //TODO: add support for minimum value
 
     // boolean properties
     PropertyType[ActiveProperty + ord(TProp.SemiconLayer)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ActiveProperty + ord(TProp.SemiconLayer)] := ptruint(@obj.semiconLayer);
+    PropertyOffset[ActiveProperty + ord(TProp.SemiconLayer)] := PtrInt(@obj.semiconLayer);
 
     // double properties (default type)
-    PropertyOffset[ActiveProperty + ord(TProp.DiaStrand)] := ptruint(@obj.diaStrand);
+    PropertyOffset[ActiveProperty + ord(TProp.DiaStrand)] := PtrInt(@obj.diaStrand);
     PropertyFlags[ActiveProperty + ord(TProp.DiaStrand)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
 
-    PropertyOffset[ActiveProperty + ord(TProp.GmrStrand)] := ptruint(@obj.gmrStrand);
+    PropertyOffset[ActiveProperty + ord(TProp.GmrStrand)] := PtrInt(@obj.gmrStrand);
     PropertyFlags[ActiveProperty + ord(TProp.GmrStrand)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.DynamicDefault];
 
-    PropertyOffset[ActiveProperty + ord(TProp.Rstrand)] := ptruint(@obj.rStrand);
+    PropertyOffset[ActiveProperty + ord(TProp.Rstrand)] := PtrInt(@obj.rStrand);
     PropertyFlags[ActiveProperty + ord(TProp.Rstrand)] := [TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm_per_length];//, TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     ActiveProperty := NumPropsThisClass;

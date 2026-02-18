@@ -209,7 +209,7 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
-    PropertyStructArrayCountOffset := ptruint(@obj.numPoints);
+    PropertyStructArrayCountOffset := PtrInt(@obj.numPoints);
 
     SpecSetNames := ArrayOfString.Create(
         'Temp, Hour',
@@ -227,62 +227,62 @@ begin
     );
 
     // doubles
-    PropertyOffset[ord(TProp.interval)] := ptruint(@obj.Interval);
+    PropertyOffset[ord(TProp.interval)] := PtrInt(@obj.Interval);
     PropertyFlags[ord(TProp.interval)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NonNegative];
 
-    PropertyOffset[ord(TProp.mean)] := ptruint(@obj.FMean);
+    PropertyOffset[ord(TProp.mean)] := PtrInt(@obj.FMean);
     PropertyReadFunction[ord(TProp.mean)] := @GetMean;
     PropertyWriteFunction[ord(TProp.mean)] := @SetMean;
     PropertyFlags[ord(TProp.mean)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.DynamicDefault, TPropertyFlag.WriteByFunction];
     
-    PropertyOffset[ord(TProp.stddev)] := ptruint(@obj.FStdDev);
+    PropertyOffset[ord(TProp.stddev)] := PtrInt(@obj.FStdDev);
     PropertyReadFunction[ord(TProp.stddev)] := @GetStdDev;
     PropertyWriteFunction[ord(TProp.stddev)] := @SetStdDev;
     PropertyFlags[ord(TProp.stddev)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.DynamicDefault, TPropertyFlag.WriteByFunction];
 
     // advanced doubles
-    PropertyOffset[ord(TProp.sinterval)] := ptruint(@obj.Interval);
+    PropertyOffset[ord(TProp.sinterval)] := PtrInt(@obj.Interval);
     PropertyScale[ord(TProp.sinterval)] := 1 / 3600.0;
     PropertyFlags[ord(TProp.sinterval)] := [TPropertyFlag.Redundant, TPropertyFlag.NonNegative];
     PropertyRedundantWith[ord(TProp.sinterval)] := ord(TProp.interval);
 
-    PropertyOffset[ord(TProp.minterval)] := ptruint(@obj.Interval);
+    PropertyOffset[ord(TProp.minterval)] := PtrInt(@obj.Interval);
     PropertyScale[ord(TProp.minterval)] := 1 / 60.0;
     PropertyFlags[ord(TProp.minterval)] := [TPropertyFlag.Redundant, TPropertyFlag.NonNegative];
     PropertyRedundantWith[ord(TProp.minterval)] := ord(TProp.interval);
 
     // strings
     PropertyType[ord(TProp.csvfile)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.csvfile)] := ptruint(@obj.csvfile);
+    PropertyOffset[ord(TProp.csvfile)] := PtrInt(@obj.csvfile);
     PropertyFlags[ord(TProp.csvfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     PropertyType[ord(TProp.dblfile)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.dblfile)] := ptruint(@obj.dblfile);
+    PropertyOffset[ord(TProp.dblfile)] := PtrInt(@obj.dblfile);
     PropertyFlags[ord(TProp.dblfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     PropertyType[ord(TProp.sngfile)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.sngfile)] := ptruint(@obj.sngfile);
+    PropertyOffset[ord(TProp.sngfile)] := PtrInt(@obj.sngfile);
     PropertyFlags[ord(TProp.sngfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     // integer
     PropertyType[ord(TProp.Npts)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Npts)] := ptruint(@obj.numPoints);
+    PropertyOffset[ord(TProp.Npts)] := PtrInt(@obj.numPoints);
     PropertyFlags[ord(TProp.Npts)] := [TPropertyFlag.SuppressJSON];
 
     // double arrays
     PropertyType[ord(TProp.hour)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.hour)] := ptruint(@obj.Hours);
-    PropertyOffset2[ord(TProp.hour)] := ptruint(@obj.numPoints);
+    PropertyOffset[ord(TProp.hour)] := PtrInt(@obj.Hours);
+    PropertyOffset2[ord(TProp.hour)] := PtrInt(@obj.numPoints);
     PropertyFlags[ord(TProp.hour)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.temp)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.temp)] := ptruint(@obj.TValues);
-    PropertyOffset2[ord(TProp.temp)] := ptruint(@obj.numPoints);
+    PropertyOffset[ord(TProp.temp)] := PtrInt(@obj.TValues);
+    PropertyOffset2[ord(TProp.temp)] := PtrInt(@obj.numPoints);
     PropertyFlags[ord(TProp.temp)] := [TPropertyFlag.RequiredInSpecSet];
 
     // enum action
     PropertyType[ord(TProp.Action)] := TPropertyType.StringEnumActionProperty;
-    PropertyOffset[ord(TProp.Action)] := ptruint(@DoAction); 
+    PropertyOffset[ord(TProp.Action)] := PtrInt(@DoAction); 
     PropertyOffset2[ord(TProp.Action)] := PtrInt(ActionEnum); 
 
     ActiveProperty := NumPropsThisClass;

@@ -180,52 +180,52 @@ begin
 
     // object references
     PropertyType[ord(TProp.element)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.element)] := ptruint(@obj.FMonitoredElement);
+    PropertyOffset[ord(TProp.element)] := PtrInt(@obj.FMonitoredElement);
     PropertyOffset2[ord(TProp.element)] := 0;
     PropertyWriteFunction[ord(TProp.element)] := @SetMonitoredElement;
     PropertyFlags[ord(TProp.element)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Required];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     // enum properties
     PropertyType[ord(TProp.typ)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.typ)] := ptruint(@obj.Ftype);
+    PropertyOffset[ord(TProp.typ)] := PtrInt(@obj.Ftype);
     PropertyOffset2[ord(TProp.typ)] := PtrInt(TypeEnum);
 
     // string lists
     PropertyType[ord(TProp.PVSystemList)] := TPropertyType.StringListProperty;
-    PropertyOffset[ord(TProp.PVSystemList)] := ptruint(@obj.FPVSystemNameList);
+    PropertyOffset[ord(TProp.PVSystemList)] := PtrInt(@obj.FPVSystemNameList);
 
     PropertyType[ord(TProp.LocalControlList)] := TPropertyType.StringListProperty;
-    PropertyOffset[ord(TProp.LocalControlList)] := ptruint(@obj.FLocalControlNameList);
+    PropertyOffset[ord(TProp.LocalControlList)] := PtrInt(@obj.FLocalControlNameList);
 
     PropertyType[ord(TProp.StorageList)] := TPropertyType.StringListProperty;
-    PropertyOffset[ord(TProp.StorageList)] := ptruint(@obj.FStorageNameList);
+    PropertyOffset[ord(TProp.StorageList)] := PtrInt(@obj.FStorageNameList);
 
     // double arrays
     PropertyType[ord(TProp.LocalControlWeights)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.LocalControlWeights)] := ptruint(@obj.FLocalControlWeights);
-    PropertyOffset2[ord(TProp.LocalControlWeights)] := ptruint(@obj.FLocalControlListSize); // FLocalControlNameList.count
+    PropertyOffset[ord(TProp.LocalControlWeights)] := PtrInt(@obj.FLocalControlWeights);
+    PropertyOffset2[ord(TProp.LocalControlWeights)] := PtrInt(@obj.FLocalControlListSize); // FLocalControlNameList.count
     PropertyFlags[ord(TProp.LocalControlWeights)] := [TPropertyFlag.IndirectCount];
-    PropertyOffset3[ord(TProp.LocalControlWeights)] := ptruint(@obj.FLocalControlNameList);
+    PropertyOffset3[ord(TProp.LocalControlWeights)] := PtrInt(@obj.FLocalControlNameList);
 
     PropertyType[ord(TProp.PVSystemWeights)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.PVSystemWeights)] := ptruint(@obj.FPVSystemWeights);
-    PropertyOffset2[ord(TProp.PVSystemWeights)] := ptruint(@obj.FPVSystemListSize);
+    PropertyOffset[ord(TProp.PVSystemWeights)] := PtrInt(@obj.FPVSystemWeights);
+    PropertyOffset2[ord(TProp.PVSystemWeights)] := PtrInt(@obj.FPVSystemListSize);
     PropertyFlags[ord(TProp.PVSystemWeights)] := [TPropertyFlag.IndirectCount];
-    PropertyOffset3[ord(TProp.PVSystemWeights)] := ptruint(@obj.FPVSystemNameList);
+    PropertyOffset3[ord(TProp.PVSystemWeights)] := PtrInt(@obj.FPVSystemNameList);
 
     PropertyType[ord(TProp.StorageWeights)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.StorageWeights)] := ptruint(@obj.FStorageWeights);
-    PropertyOffset2[ord(TProp.StorageWeights)] := ptruint(@obj.FStorageListSize);
+    PropertyOffset[ord(TProp.StorageWeights)] := PtrInt(@obj.FStorageWeights);
+    PropertyOffset2[ord(TProp.StorageWeights)] := PtrInt(@obj.FStorageListSize);
     PropertyFlags[ord(TProp.StorageWeights)] := [TPropertyFlag.IndirectCount];
-    PropertyOffset3[ord(TProp.StorageWeights)] := ptruint(@obj.FStorageNameList);
+    PropertyOffset3[ord(TProp.StorageWeights)] := PtrInt(@obj.FStorageNameList);
 
     // integer properties
     PropertyType[ord(TProp.Terminal)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Terminal)] := ptruint(@obj.ElementTerminal);
+    PropertyOffset[ord(TProp.Terminal)] := PtrInt(@obj.ElementTerminal);
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.kWBand)] := ptruint(@obj.FkWBand);
-    PropertyOffset[ord(TProp.kvarlimit)] := ptruint(@obj.FkvarLimit);
+    PropertyOffset[ord(TProp.kWBand)] := PtrInt(@obj.FkWBand);
+    PropertyOffset[ord(TProp.kvarlimit)] := PtrInt(@obj.FkvarLimit);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

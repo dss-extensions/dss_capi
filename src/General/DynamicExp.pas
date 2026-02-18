@@ -139,30 +139,30 @@ begin
 
     // integer properties
     PropertyType[ord(TProp.NVariables)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.NVariables)] := ptruint(@obj.NVariables);
+    PropertyOffset[ord(TProp.NVariables)] := PtrInt(@obj.NVariables);
     // PropertyFlags[ord(TProp.NVariables)] := [TPropertyFlag.Unused, TPropertyFlag.SuppressJSON];
 
     PropertyType[ord(TProp.VarIdx)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.VarIdx)] := ptruint(@obj.VarIdx);
+    PropertyOffset[ord(TProp.VarIdx)] := PtrInt(@obj.VarIdx);
     PropertyFlags[ord(TProp.VarIdx)] := [TPropertyFlag.SilentReadOnly, TPropertyFlag.SuppressJSON];
 
     // enums
     PropertyType[ord(TProp.Domain)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.Domain)] := ptruint(@obj.Domain);
+    PropertyOffset[ord(TProp.Domain)] := PtrInt(@obj.Domain);
     PropertyOffset2[ord(TProp.Domain)] := PtrInt(DomainEnum);
 
     // strings
     PropertyType[ord(TProp.Expression)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.Expression)] := ptruint(@obj.Expression);
+    PropertyOffset[ord(TProp.Expression)] := PtrInt(@obj.Expression);
     PropertyFlags[ord(TProp.Expression)] := [TPropertyFlag.Required];
 
     PropertyType[ord(TProp.vr)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.vr)] := ptruint(@obj.ActiveVar);
+    PropertyOffset[ord(TProp.vr)] := PtrInt(@obj.ActiveVar);
     PropertyFlags[ord(TProp.vr)] := [TPropertyFlag.Transform_LowerCase, TPropertyFlag.SuppressJSON];
 
     // string lists
     PropertyType[ord(TProp.VarNames)] := TPropertyType.StringListProperty;
-    PropertyOffset[ord(TProp.VarNames)] := ptruint(@obj.VarNames);
+    PropertyOffset[ord(TProp.VarNames)] := PtrInt(@obj.VarNames);
     PropertyFlags[ord(TProp.VarNames)] := [TPropertyFlag.Transform_LowerCase];
 
     ActiveProperty := NumPropsThisClass;

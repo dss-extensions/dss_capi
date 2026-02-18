@@ -218,40 +218,40 @@ begin
 
     // object properties
     PropertyType[ord(TProp.LossCurve)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.LossCurve)] := ptruint(@obj.UPFCLossCurveObj);
-    PropertyOffset2[ord(TProp.LossCurve)] := ptruint(DSS.XYCurveClass);
+    PropertyOffset[ord(TProp.LossCurve)] := PtrInt(@obj.UPFCLossCurveObj);
+    PropertyOffset2[ord(TProp.LossCurve)] := PtrInt(DSS.XYCurveClass);
 
     PropertyType[ord(TProp.Element)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.Element)] := ptruint(@obj.MonElm);
+    PropertyOffset[ord(TProp.Element)] := PtrInt(@obj.MonElm);
     PropertyOffset2[ord(TProp.Element)] := 0; // CktElement
     PropertyFlags[ord(TProp.Element)] := [TPropertyFlag.PDElement];
 
     // integer properties
     PropertyType[ord(TProp.Mode)] := TPropertyType.MappedIntEnumProperty;
-    PropertyOffset[ord(TProp.Mode)] := ptruint(@obj.ModeUPFC);
+    PropertyOffset[ord(TProp.Mode)] := PtrInt(@obj.ModeUPFC);
     PropertyOffset2[ord(TProp.Mode)] := PtrInt(UPFCModeEnum);
 
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.phases)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.refkv)] := ptruint(@obj.VRef);
-    PropertyOffset[ord(TProp.pf)] := ptruint(@obj.pf);
+    PropertyOffset[ord(TProp.refkv)] := PtrInt(@obj.VRef);
+    PropertyOffset[ord(TProp.pf)] := PtrInt(@obj.pf);
     PropertyFlags[ord(TProp.pf)] := [TPropertyFlag.PowerFactorLimits];
 
-    PropertyOffset[ord(TProp.frequency)] := ptruint(@obj.Freq);
+    PropertyOffset[ord(TProp.frequency)] := PtrInt(@obj.Freq);
     PropertyFlags[ord(TProp.frequency)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
 
-    PropertyOffset[ord(TProp.Xs)] := ptruint(@obj.Xs);
-    PropertyOffset[ord(TProp.Tol1)] := ptruint(@obj.Tol1);
-    PropertyOffset[ord(TProp.VpqMax)] := ptruint(@obj.VpqMax);
-    PropertyOffset[ord(TProp.VHLimit)] := ptruint(@obj.VHLimit);
-    PropertyOffset[ord(TProp.VLLimit)] := ptruint(@obj.VLLimit);
-    PropertyOffset[ord(TProp.CLimit)] := ptruint(@obj.CLimit);
-    PropertyOffset[ord(TProp.refkv2)] := ptruint(@obj.VRef2);
+    PropertyOffset[ord(TProp.Xs)] := PtrInt(@obj.Xs);
+    PropertyOffset[ord(TProp.Tol1)] := PtrInt(@obj.Tol1);
+    PropertyOffset[ord(TProp.VpqMax)] := PtrInt(@obj.VpqMax);
+    PropertyOffset[ord(TProp.VHLimit)] := PtrInt(@obj.VHLimit);
+    PropertyOffset[ord(TProp.VLLimit)] := PtrInt(@obj.VLLimit);
+    PropertyOffset[ord(TProp.CLimit)] := PtrInt(@obj.CLimit);
+    PropertyOffset[ord(TProp.refkv2)] := PtrInt(@obj.VRef2);
 
-    PropertyOffset[ord(TProp.kvarLimit)] := ptruint(@obj.kvarLim);
+    PropertyOffset[ord(TProp.kvarLimit)] := PtrInt(@obj.kvarLim);
     PropertyFlags[ord(TProp.kvarLimit)] := [TPropertyFlag.Units_kvar];
 
     ActiveProperty := NumPropsThisClass;

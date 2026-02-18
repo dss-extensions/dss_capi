@@ -496,7 +496,7 @@ type
         PropertyStructArrayIndexOffset, PropertyStructArrayIndexOffset2,
         PropertyStructArrayOffset, 
         PropertyStructArrayStep, 
-        PropertyStructArrayCountOffset: PtrUint;
+        PropertyStructArrayCountOffset: PtrInt;
 
         PropertyFlags: Array of TPropertyFlags; //TODO: 0 is unused until things are migrated later
 

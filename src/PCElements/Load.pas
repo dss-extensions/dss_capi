@@ -385,20 +385,20 @@ begin
 
     // enum properties
     PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.conn)] := ptruint(@obj.Connection);
+    PropertyOffset[ord(TProp.conn)] := PtrInt(@obj.Connection);
     PropertyOffset2[ord(TProp.conn)] := PtrInt(DSS.ConnectionEnum);
 
     PropertyType[ord(TProp.model)] := TPropertyType.MappedIntEnumProperty;
-    PropertyOffset[ord(TProp.model)] := ptruint(@obj.FLoadModel);
+    PropertyOffset[ord(TProp.model)] := PtrInt(@obj.FLoadModel);
     PropertyOffset2[ord(TProp.model)] := PtrInt(LoadModelEnum);
 
     PropertyType[ord(TProp.status)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.status)] := ptruint(@obj.status);
+    PropertyOffset[ord(TProp.status)] := PtrInt(@obj.status);
     PropertyOffset2[ord(TProp.status)] := PtrInt(LoadStatusEnum);
 
     // array property    
     PropertyType[ord(TProp.ZIPV)] := TPropertyType.DoubleFArrayProperty;
-    PropertyOffset[ord(TProp.ZIPV)] := ptruint(@obj.ZIPV[1]);
+    PropertyOffset[ord(TProp.ZIPV)] := PtrInt(@obj.ZIPV[1]);
     PropertyOffset2[ord(TProp.ZIPV)] := 7;
     PropertyFlags[ord(TProp.ZIPV)] := [TPropertyFlag.NoDefault];
 
@@ -411,18 +411,18 @@ begin
     PropertyScale[ord(TProp.pctmean)] := 0.01;
     PropertyScale[ord(TProp.pctstddev)] := 0.01;
     PropertyScale[ord(TProp.pctSeriesRL)] := 0.01;
-    PropertyOffset[ord(TProp.pctmean)] := ptruint(@obj.puMean);
-    PropertyOffset[ord(TProp.pctstddev)] := ptruint(@obj.puStdDev);
-    PropertyOffset[ord(TProp.pctSeriesRL)] := ptruint(@obj.puSeriesRL);
+    PropertyOffset[ord(TProp.pctmean)] := PtrInt(@obj.puMean);
+    PropertyOffset[ord(TProp.pctstddev)] := PtrInt(@obj.puStdDev);
+    PropertyOffset[ord(TProp.pctSeriesRL)] := PtrInt(@obj.puSeriesRL);
 
     // integer properties
-    PropertyOffset[ord(TProp.cls)] := ptruint(@obj.LoadClass);
-    PropertyOffset[ord(TProp.NumCust)] := ptruint(@obj.NumCustomers);
+    PropertyOffset[ord(TProp.cls)] := PtrInt(@obj.LoadClass);
+    PropertyOffset[ord(TProp.NumCust)] := PtrInt(@obj.NumCustomers);
     PropertyType[ord(TProp.cls)] := TPropertyType.IntegerProperty;
     PropertyType[ord(TProp.NumCust)] := TPropertyType.IntegerProperty;
 
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.phases)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     // object properties

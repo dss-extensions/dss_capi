@@ -177,57 +177,57 @@ begin
 
     // enums
     PropertyType[ord(TProp.Action)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.Action)] := ptruint(@obj.FPresentState);
+    PropertyOffset[ord(TProp.Action)] := PtrInt(@obj.FPresentState);
     PropertyOffset2[ord(TProp.Action)] := PtrInt(ActionEnum);
     PropertyFlags[ord(TProp.Action)] := [TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.Action)] := ord(TProp.State);
 
     PropertyType[ord(TProp.State)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.State)] := ptruint(@obj.FPresentState);
+    PropertyOffset[ord(TProp.State)] := PtrInt(@obj.FPresentState);
     PropertyOffset2[ord(TProp.State)] := PtrInt(StateEnum);
 
     PropertyType[ord(TProp.Normal)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.Normal)] := ptruint(@obj.NormalState);
+    PropertyOffset[ord(TProp.Normal)] := PtrInt(@obj.NormalState);
     PropertyOffset2[ord(TProp.Normal)] := PtrInt(StateEnum);
     PropertyFlags[ord(TProp.Normal)] := [TPropertyFlag.DynamicDefault];
 
     // double arrays/vectors
     PropertyType[ord(TProp.RecloseIntervals)] := TPropertyType.DoubleVArrayProperty;
-    PropertyOffset[ord(TProp.RecloseIntervals)] := ptruint(@obj.RecloseIntervals);
-    PropertyOffset2[ord(TProp.RecloseIntervals)] := ptruint(@obj.NumReclose);
+    PropertyOffset[ord(TProp.RecloseIntervals)] := PtrInt(@obj.RecloseIntervals);
+    PropertyOffset2[ord(TProp.RecloseIntervals)] := PtrInt(@obj.NumReclose);
     PropertyOffset3[ord(TProp.RecloseIntervals)] := 4;
     PropertyFlags[ord(TProp.RecloseIntervals)] := [TPropertyFlag.ArrayMaxSize, TPropertyFlag.NonNegative];
 
     // object properties
     PropertyType[ord(TProp.PhaseFast)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.PhaseFast)] := ptruint(@obj.PhaseFast);
-    PropertyOffset2[ord(TProp.PhaseFast)] := ptruint(TCC_CurveClass);
+    PropertyOffset[ord(TProp.PhaseFast)] := PtrInt(@obj.PhaseFast);
+    PropertyOffset2[ord(TProp.PhaseFast)] := PtrInt(TCC_CurveClass);
     PropertyFlags[ord(TProp.PhaseFast)] := [TPropertyFlag.AllowNone];
 
     PropertyType[ord(TProp.PhaseDelayed)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.PhaseDelayed)] := ptruint(@obj.PhaseDelayed);
-    PropertyOffset2[ord(TProp.PhaseDelayed)] := ptruint(TCC_CurveClass);
+    PropertyOffset[ord(TProp.PhaseDelayed)] := PtrInt(@obj.PhaseDelayed);
+    PropertyOffset2[ord(TProp.PhaseDelayed)] := PtrInt(TCC_CurveClass);
     PropertyFlags[ord(TProp.PhaseDelayed)] := [TPropertyFlag.AllowNone];
 
     PropertyType[ord(TProp.GroundFast)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.GroundFast)] := ptruint(@obj.GroundFast);
-    PropertyOffset2[ord(TProp.GroundFast)] := ptruint(TCC_CurveClass);
+    PropertyOffset[ord(TProp.GroundFast)] := PtrInt(@obj.GroundFast);
+    PropertyOffset2[ord(TProp.GroundFast)] := PtrInt(TCC_CurveClass);
     PropertyFlags[ord(TProp.GroundFast)] := [TPropertyFlag.AllowNone];
 
     PropertyType[ord(TProp.GroundDelayed)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.GroundDelayed)] := ptruint(@obj.GroundDelayed);
-    PropertyOffset2[ord(TProp.GroundDelayed)] := ptruint(TCC_CurveClass);
+    PropertyOffset[ord(TProp.GroundDelayed)] := PtrInt(@obj.GroundDelayed);
+    PropertyOffset2[ord(TProp.GroundDelayed)] := PtrInt(TCC_CurveClass);
     PropertyFlags[ord(TProp.GroundDelayed)] := [TPropertyFlag.AllowNone];
 
     PropertyType[ord(TProp.MonitoredObj)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.MonitoredObj)] := ptruint(@obj.FMonitoredElement);
+    PropertyOffset[ord(TProp.MonitoredObj)] := PtrInt(@obj.FMonitoredElement);
     PropertyOffset2[ord(TProp.MonitoredObj)] := 0;
     PropertyWriteFunction[ord(TProp.MonitoredObj)] := @SetMonitoredElement;
     PropertyFlags[ord(TProp.MonitoredObj)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Required];
     //[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     PropertyType[ord(TProp.SwitchedObj)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.SwitchedObj)] := ptruint(@obj.controlledElement);
+    PropertyOffset[ord(TProp.SwitchedObj)] := PtrInt(@obj.controlledElement);
     PropertyOffset2[ord(TProp.SwitchedObj)] := 0;
     PropertyWriteFunction[ord(TProp.SwitchedObj)] := @SetControlledElement;
     PropertyFlags[ord(TProp.SwitchedObj)] := [TPropertyFlag.WriteByFunction]; 
@@ -237,31 +237,31 @@ begin
     PropertyType[ord(TProp.SwitchedTerm)] := TPropertyType.IntegerProperty;
     PropertyType[ord(TProp.MonitoredTerm)] := TPropertyType.IntegerProperty;
     PropertyType[ord(TProp.NumFast)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.SwitchedTerm)] := ptruint(@obj.ElementTerminal);
-    PropertyOffset[ord(TProp.MonitoredTerm)] := ptruint(@obj.MonitoredElementTerminal);
-    PropertyOffset[ord(TProp.NumFast)] := ptruint(@obj.NumFast);
+    PropertyOffset[ord(TProp.SwitchedTerm)] := PtrInt(@obj.ElementTerminal);
+    PropertyOffset[ord(TProp.MonitoredTerm)] := PtrInt(@obj.MonitoredElementTerminal);
+    PropertyOffset[ord(TProp.NumFast)] := PtrInt(@obj.NumFast);
 
     PropertyType[ord(TProp.Shots)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Shots)] := ptruint(@obj.NumReclose);
+    PropertyOffset[ord(TProp.Shots)] := PtrInt(@obj.NumReclose);
     PropertyFlags[ord(TProp.Shots)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.ValueOffset];
     PropertyValueOffset[ord(TProp.Shots)] := -1;
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.PhaseTrip)] := ptruint(@obj.PhaseTrip);
-    PropertyOffset[ord(TProp.GroundTrip)] := ptruint(@obj.GroundTrip);
-    PropertyOffset[ord(TProp.PhaseInst)] := ptruint(@obj.PhaseInst);
-    PropertyOffset[ord(TProp.GroundInst)] := ptruint(@obj.GroundInst);
+    PropertyOffset[ord(TProp.PhaseTrip)] := PtrInt(@obj.PhaseTrip);
+    PropertyOffset[ord(TProp.GroundTrip)] := PtrInt(@obj.GroundTrip);
+    PropertyOffset[ord(TProp.PhaseInst)] := PtrInt(@obj.PhaseInst);
+    PropertyOffset[ord(TProp.GroundInst)] := PtrInt(@obj.GroundInst);
 
-    PropertyOffset[ord(TProp.Reset)] := ptruint(@obj.Resettime);
+    PropertyOffset[ord(TProp.Reset)] := PtrInt(@obj.Resettime);
     PropertyFlags[ord(TProp.Reset)] := [TPropertyFlag.Units_s];
 
-    PropertyOffset[ord(TProp.Delay)] := ptruint(@obj.DelayTime);
+    PropertyOffset[ord(TProp.Delay)] := PtrInt(@obj.DelayTime);
     PropertyFlags[ord(TProp.Delay)] := [TPropertyFlag.Units_s];
 
-    PropertyOffset[ord(TProp.TDPhFast)] := ptruint(@obj.TDPhFast);
-    PropertyOffset[ord(TProp.TDGrFast)] := ptruint(@obj.TDGrFast);
-    PropertyOffset[ord(TProp.TDPhDelayed)] := ptruint(@obj.TDPhDelayed);
-    PropertyOffset[ord(TProp.TDGrDelayed)] := ptruint(@obj.TDGrDelayed);
+    PropertyOffset[ord(TProp.TDPhFast)] := PtrInt(@obj.TDPhFast);
+    PropertyOffset[ord(TProp.TDGrFast)] := PtrInt(@obj.TDGrFast);
+    PropertyOffset[ord(TProp.TDPhDelayed)] := PtrInt(@obj.TDPhDelayed);
+    PropertyOffset[ord(TProp.TDGrDelayed)] := PtrInt(@obj.TDGrDelayed);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

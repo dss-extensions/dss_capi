@@ -253,29 +253,29 @@ begin
         TSpecSet.Create(ord(TProp.x), ord(TProp.h))
     );
 
-    PropertyStructArrayCountOffset := ptruint(@obj.FNConds);
-    PropertyStructArrayIndexOffset := ptruint(@obj.FActiveCond);
-    PropertyStructArrayIndexOffset2 := ptruint(@obj.FNPhases);
+    PropertyStructArrayCountOffset := PtrInt(@obj.FNConds);
+    PropertyStructArrayIndexOffset := PtrInt(@obj.FActiveCond);
+    PropertyStructArrayIndexOffset2 := PtrInt(@obj.FNPhases);
 
     // list of objects
     PropertyType[ord(TProp.TSCables)] := TPropertyType.DSSObjectReferenceArrayProperty;
-    PropertyOffset[ord(TProp.TSCables)] := ptruint(@obj.conductors);
-    PropertyOffset2[ord(TProp.TSCables)] := ptruint(DSS.TSDataClass);
+    PropertyOffset[ord(TProp.TSCables)] := PtrInt(@obj.conductors);
+    PropertyOffset2[ord(TProp.TSCables)] := PtrInt(DSS.TSDataClass);
     PropertyFlags[ord(TProp.TSCables)] := [TPropertyFlag.AltIndex, TPropertyFlag.Redundant, TPropertyFlag.SuppressJSON, TPropertyFlag.AllowNoneItem];
     PropertyRedundantWith[ord(TProp.TSCables)] := ord(TProp.TSCable);
     PropertyArrayAlternative[ord(TProp.TSCable)] := ord(TProp.TSCables);
     
     PropertyType[ord(TProp.CNCables)] := TPropertyType.DSSObjectReferenceArrayProperty;
-    PropertyOffset[ord(TProp.CNCables)] := ptruint(@obj.conductors);
-    PropertyOffset2[ord(TProp.CNCables)] := ptruint(DSS.CNDataClass);
+    PropertyOffset[ord(TProp.CNCables)] := PtrInt(@obj.conductors);
+    PropertyOffset2[ord(TProp.CNCables)] := PtrInt(DSS.CNDataClass);
     PropertyFlags[ord(TProp.CNCables)] := [TPropertyFlag.AltIndex, TPropertyFlag.Redundant, TPropertyFlag.SuppressJSON, TPropertyFlag.AllowNoneItem];
     PropertyRedundantWith[ord(TProp.CNCables)] := ord(TProp.CNCable);
     PropertyArrayAlternative[ord(TProp.CNCable)] := ord(TProp.CNCables);
 
     PropertyType[ord(TProp.Wires)] := TPropertyType.DSSObjectReferenceArrayProperty;
-    PropertyOffset[ord(TProp.Wires)] := ptruint(@obj.conductors);
-    PropertyOffset2[ord(TProp.Wires)] := ptruint(DSS.WireDataClass);
-    PropertyOffset3[ord(TProp.Wires)] := ptruint(@obj.FNConds);
+    PropertyOffset[ord(TProp.Wires)] := PtrInt(@obj.conductors);
+    PropertyOffset2[ord(TProp.Wires)] := PtrInt(DSS.WireDataClass);
+    PropertyOffset3[ord(TProp.Wires)] := PtrInt(@obj.FNConds);
     PropertyWriteFunction[ord(TProp.Wires)] := @SetWires;
     PropertyFlags[ord(TProp.Wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Redundant, TPropertyFlag.SuppressJSON, TPropertyFlag.AllowNoneItem];
     // PropertyFlags[ord(TProp.Wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.FullNameAsArray, TPropertyFlag.FullNameAsJSONArray];
@@ -285,59 +285,59 @@ begin
     PropertyArrayAlternative[ord(TProp.Wire)] := ord(TProp.Wires);
 
     PropertyType[ord(TProp.Conductors)] := TPropertyType.DSSObjectReferenceArrayProperty;
-    PropertyOffset[ord(TProp.Conductors)] := ptruint(@obj.conductors);
-    PropertyOffset2[ord(TProp.Conductors)] := ptruint(ConductorProxyClass);
-    PropertyOffset3[ord(TProp.Conductors)] := ptruint(@obj.FNConds);
+    PropertyOffset[ord(TProp.Conductors)] := PtrInt(@obj.conductors);
+    PropertyOffset2[ord(TProp.Conductors)] := PtrInt(ConductorProxyClass);
+    PropertyOffset3[ord(TProp.Conductors)] := PtrInt(@obj.FNConds);
     PropertyFlags[ord(TProp.Conductors)] := [TPropertyFlag.FullNameAsArray, TPropertyFlag.FullNameAsJSONArray, TPropertyFlag.AllowNoneItem];
 
     // enums
     PropertyType[ord(TProp.units)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.units)] := ptruint(@obj.units);
+    PropertyOffset[ord(TProp.units)] := PtrInt(@obj.units);
     PropertyOffset2[ord(TProp.units)] := PtrInt(DSS.UnitsEnum);
     PropertyFlags[ord(TProp.units)] := [TPropertyFlag.OnArray, TPropertyFlag.AllowBroadcast];
 
     PropertyType[ord(TProp.linetype)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.linetype)] := ptruint(@obj.FLineType);
+    PropertyOffset[ord(TProp.linetype)] := PtrInt(@obj.FLineType);
     PropertyOffset2[ord(TProp.linetype)] := PtrInt(DSS.LineTypeEnum);
 
     // object properties
     PropertyType[ord(TProp.spacing)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.spacing)] := ptruint(@obj.lineSpacingObj);
-    PropertyOffset2[ord(TProp.spacing)] := ptruint(DSS.LineSpacingClass);
+    PropertyOffset[ord(TProp.spacing)] := PtrInt(@obj.lineSpacingObj);
+    PropertyOffset2[ord(TProp.spacing)] := PtrInt(DSS.LineSpacingClass);
     PropertyFlags[ord(TProp.spacing)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.Ratings)] := TPropertyType.DoubleDArrayProperty;
-    PropertyOffset[ord(TProp.Ratings)] := ptruint(@obj.AmpRatings);
-    PropertyOffset2[ord(TProp.Ratings)] := ptruint(@obj.NumAmpRatings);
+    PropertyOffset[ord(TProp.Ratings)] := PtrInt(@obj.AmpRatings);
+    PropertyOffset2[ord(TProp.Ratings)] := PtrInt(@obj.NumAmpRatings);
 
     PropertyType[ord(TProp.reduce)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.reduce)] := ptruint(@obj.Freduce);
+    PropertyOffset[ord(TProp.reduce)] := PtrInt(@obj.Freduce);
 
     PropertyType[ord(TProp.NPhases)] := TPropertyType.IntegerProperty;
     PropertyType[ord(TProp.NConds)] := TPropertyType.IntegerProperty;
     PropertyType[ord(TProp.cond)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.NPhases)] := ptruint(@obj.FNPhases);
-    PropertyOffset[ord(TProp.NConds)] := ptruint(@obj.FNConds);
-    PropertyOffset[ord(TProp.cond)] := ptruint(@obj.FActiveCond);
+    PropertyOffset[ord(TProp.NPhases)] := PtrInt(@obj.FNPhases);
+    PropertyOffset[ord(TProp.NConds)] := PtrInt(@obj.FNConds);
+    PropertyOffset[ord(TProp.cond)] := PtrInt(@obj.FActiveCond);
     PropertyFlags[ord(TProp.NPhases)] := [TPropertyFlag.NonNegative]; // phases can be zero (e.g. only neutral cables)
     PropertyFlags[ord(TProp.NConds)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
     PropertyFlags[ord(TProp.cond)] := [TPropertyFlag.IntegerStructIndex];
 
     PropertyType[ord(TProp.Seasons)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Seasons)] := ptruint(@obj.NumAmpRatings);
+    PropertyOffset[ord(TProp.Seasons)] := PtrInt(@obj.NumAmpRatings);
     PropertyFlags[ord(TProp.Seasons)] := [TPropertyFlag.SuppressJSON]; // can be derived trivially from length(Ratings)
 
     PropertyType[ord(TProp.Wire)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.CNCable)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.TSCable)] := TPropertyType.DSSObjectReferenceProperty;
 
-    PropertyOffset[ord(TProp.Wire)] := ptruint(@obj.conductors);
-    PropertyOffset[ord(TProp.CNCable)] := ptruint(@obj.conductors);
-    PropertyOffset[ord(TProp.TSCable)] := ptruint(@obj.conductors);
+    PropertyOffset[ord(TProp.Wire)] := PtrInt(@obj.conductors);
+    PropertyOffset[ord(TProp.CNCable)] := PtrInt(@obj.conductors);
+    PropertyOffset[ord(TProp.TSCable)] := PtrInt(@obj.conductors);
     
-    PropertyOffset2[ord(TProp.Wire)] := ptruint(DSS.WireDataClass);
-    PropertyOffset2[ord(TProp.CNCable)] := ptruint(DSS.CNDataClass);
-    PropertyOffset2[ord(TProp.TSCable)] := ptruint(DSS.TSDataClass);
+    PropertyOffset2[ord(TProp.Wire)] := PtrInt(DSS.WireDataClass);
+    PropertyOffset2[ord(TProp.CNCable)] := PtrInt(DSS.CNDataClass);
+    PropertyOffset2[ord(TProp.TSCable)] := PtrInt(DSS.TSDataClass);
 
     PropertyFlags[ord(TProp.Wire)] := [TPropertyFlag.Redundant, TPropertyFlag.OnArray, TPropertyFlag.FullNameAsArray];
     PropertyFlags[ord(TProp.CNCable)] := [TPropertyFlag.Redundant, TPropertyFlag.OnArray, TPropertyFlag.SuppressJSON];
@@ -347,17 +347,17 @@ begin
     PropertyRedundantWith[ord(TProp.Wire)] := ord(TProp.Conductors);
 
     PropertyType[ord(TProp.x)] := TPropertyType.DoubleOnArrayProperty; //TODO: use TPropertyFlag.OnArray instead
-    PropertyOffset[ord(TProp.x)] := ptruint(@obj.xCoord); 
-    PropertyOffset2[ord(TProp.x)] := ptruint(@obj.FActiveCond);
+    PropertyOffset[ord(TProp.x)] := PtrInt(@obj.xCoord); 
+    PropertyOffset2[ord(TProp.x)] := PtrInt(@obj.FActiveCond);
     PropertyFlags[ord(TProp.x)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.h)] := TPropertyType.DoubleOnArrayProperty; //TODO: use TPropertyFlag.OnArray instead
-    PropertyOffset[ord(TProp.h)] := ptruint(@obj.yCoord); 
-    PropertyOffset2[ord(TProp.h)] := ptruint(@obj.FActiveCond);
+    PropertyOffset[ord(TProp.h)] := PtrInt(@obj.yCoord); 
+    PropertyOffset2[ord(TProp.h)] := PtrInt(@obj.FActiveCond);
     PropertyFlags[ord(TProp.h)] := [TPropertyFlag.RequiredInSpecSet];
 
-    PropertyOffset[ord(TProp.NormAmps)] := ptruint(@obj.NormAmps);
-    PropertyOffset[ord(TProp.EmergAmps)] := ptruint(@obj.EmergAmps);
+    PropertyOffset[ord(TProp.NormAmps)] := PtrInt(@obj.NormAmps);
+    PropertyOffset[ord(TProp.EmergAmps)] := PtrInt(@obj.EmergAmps);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

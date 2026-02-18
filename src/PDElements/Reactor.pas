@@ -223,22 +223,22 @@ begin
 
     // real matrix
     PropertyType[ord(TProp.Rmatrix)] := TPropertyType.DoubleSymMatrixProperty;
-    PropertyOffset[ord(TProp.Rmatrix)] := ptruint(@obj.Rmatrix);
-    PropertyOffset3[ord(TProp.Rmatrix)] := ptruint(@obj.Fnphases);
+    PropertyOffset[ord(TProp.Rmatrix)] := PtrInt(@obj.Rmatrix);
+    PropertyOffset3[ord(TProp.Rmatrix)] := PtrInt(@obj.Fnphases);
 
     PropertyType[ord(TProp.Xmatrix)] := TPropertyType.DoubleSymMatrixProperty;
-    PropertyOffset[ord(TProp.Xmatrix)] := ptruint(@obj.Xmatrix);
-    PropertyOffset3[ord(TProp.Xmatrix)] := ptruint(@obj.Fnphases);
+    PropertyOffset[ord(TProp.Xmatrix)] := PtrInt(@obj.Xmatrix);
+    PropertyOffset3[ord(TProp.Xmatrix)] := PtrInt(@obj.Fnphases);
     PropertyFlags[ord(TProp.Xmatrix)] := [TPropertyFlag.RequiredInSpecSet];
 
     // integer properties
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.phases)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     // enums
     PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.conn)] := ptruint(@obj.Connection);
+    PropertyOffset[ord(TProp.conn)] := PtrInt(@obj.Connection);
     PropertyOffset2[ord(TProp.conn)] := PtrInt(DSS.ConnectionEnum);
 
     // bus properties
@@ -251,55 +251,55 @@ begin
 
     // boolean properties
     PropertyType[ord(TProp.Parallel)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.Parallel)] := ptruint(@obj.IsParallel);
+    PropertyOffset[ord(TProp.Parallel)] := PtrInt(@obj.IsParallel);
 
     // object properties
     PropertyType[ord(TProp.RCurve)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.LCurve)] := TPropertyType.DSSObjectReferenceProperty;
     
-    PropertyOffset[ord(TProp.RCurve)] := ptruint(@obj.RCurveObj);
-    PropertyOffset[ord(TProp.LCurve)] := ptruint(@obj.LCurveObj);
+    PropertyOffset[ord(TProp.RCurve)] := PtrInt(@obj.RCurveObj);
+    PropertyOffset[ord(TProp.LCurve)] := PtrInt(@obj.LCurveObj);
 
-    PropertyOffset2[ord(TProp.RCurve)] := ptruint(DSS.XYCurveClass);
-    PropertyOffset2[ord(TProp.LCurve)] := ptruint(DSS.XYCurveClass);
+    PropertyOffset2[ord(TProp.RCurve)] := PtrInt(DSS.XYCurveClass);
+    PropertyOffset2[ord(TProp.LCurve)] := PtrInt(DSS.XYCurveClass);
 
     // complex properties
     PropertyType[ord(TProp.Z)] := TPropertyType.ComplexProperty;
-    PropertyOffset[ord(TProp.Z)] := ptruint(@obj.Z);
+    PropertyOffset[ord(TProp.Z)] := PtrInt(@obj.Z);
     PropertyFlags[ord(TProp.Z)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm];
 
     PropertyType[ord(TProp.Z0)] := TPropertyType.ComplexProperty;
-    PropertyOffset[ord(TProp.Z0)] := ptruint(@obj.Z0);
+    PropertyOffset[ord(TProp.Z0)] := PtrInt(@obj.Z0);
     PropertyFlags[ord(TProp.Z0)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm];
 
     PropertyType[ord(TProp.Z1)] := TPropertyType.ComplexProperty;
-    PropertyOffset[ord(TProp.Z1)] := ptruint(@obj.Z1);
+    PropertyOffset[ord(TProp.Z1)] := PtrInt(@obj.Z1);
     PropertyFlags[ord(TProp.Z1)] := [TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm];
 
     PropertyType[ord(TProp.Z2)] := TPropertyType.ComplexProperty;
-    PropertyOffset[ord(TProp.Z2)] := ptruint(@obj.Z2);
+    PropertyOffset[ord(TProp.Z2)] := PtrInt(@obj.Z2);
     PropertyFlags[ord(TProp.Z2)] := [TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm];
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.kvar)] := ptruint(@obj.kvarRating);
+    PropertyOffset[ord(TProp.kvar)] := PtrInt(@obj.kvarRating);
     PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kvar];
 
-    PropertyOffset[ord(TProp.kv)] := ptruint(@obj.kVRating);
+    PropertyOffset[ord(TProp.kv)] := PtrInt(@obj.kVRating);
     PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
-    PropertyOffset[ord(TProp.R)] := ptruint(@obj.Z.re);
+    PropertyOffset[ord(TProp.R)] := PtrInt(@obj.Z.re);
     PropertyFlags[ord(TProp.R)] := [TPropertyFlag.Redundant, TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm];
     PropertyRedundantWith[ord(TProp.R)] := ord(TProp.Z);
 
-    PropertyOffset[ord(TProp.X)] := ptruint(@obj.Z.im);
+    PropertyOffset[ord(TProp.X)] := PtrInt(@obj.Z.im);
     PropertyFlags[ord(TProp.X)] := [TPropertyFlag.Redundant, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm];
     PropertyRedundantWith[ord(TProp.X)] := ord(TProp.Z);
 
-    PropertyOffset[ord(TProp.Rp)] := ptruint(@obj.Rp);
+    PropertyOffset[ord(TProp.Rp)] := PtrInt(@obj.Rp);
     PropertyFlags[ord(TProp.Rp)] := [TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm];
 
     // scaled double
-    PropertyOffset[ord(TProp.LmH)] := ptruint(@obj.L);
+    PropertyOffset[ord(TProp.LmH)] := PtrInt(@obj.L);
     PropertyScale[ord(TProp.LmH)] := 1.0e-3;
     PropertyFlags[ord(TProp.LmH)] := [TPropertyFlag.Redundant, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_mH]; //TODO: remove redundant now that we have SpecSets?
     PropertyRedundantWith[ord(TProp.LmH)] := ord(TProp.X);

@@ -645,11 +645,11 @@ begin
     PropertyNameJSON[ord(TProp.__3PhaseLosses)] := 'ThreePhaseLosses';
 
     PropertyType[ord(TProp.peakcurrent)] := TPropertyType.DoubleVArrayProperty;
-    PropertyOffset[ord(TProp.peakcurrent)] := ptruint(@obj.SensorCurrent);
-    PropertyOffset2[ord(TProp.peakcurrent)] := ptruint(@obj.Fnphases);
+    PropertyOffset[ord(TProp.peakcurrent)] := PtrInt(@obj.SensorCurrent);
+    PropertyOffset2[ord(TProp.peakcurrent)] := PtrInt(@obj.Fnphases);
 
     PropertyType[ord(TProp.Mask)] := TPropertyType.DoubleFArrayProperty;
-    PropertyOffset[ord(TProp.Mask)] := ptruint(@obj.TotalsMask); //TODO: validate the actual values?
+    PropertyOffset[ord(TProp.Mask)] := PtrInt(@obj.TotalsMask); //TODO: validate the actual values?
     PropertyOffset2[ord(TProp.Mask)] := NumEMRegisters;
 
     // boolean properties
@@ -661,24 +661,24 @@ begin
     PropertyType[ord(TProp.__3PhaseLosses)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.VBaseLosses)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.PhaseVoltageReport)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.LocalOnly)] := ptruint(@obj.LocalOnly);
-    PropertyOffset[ord(TProp.Losses)] := ptruint(@obj.FLosses);
-    PropertyOffset[ord(TProp.LineLosses)] := ptruint(@obj.FLineLosses);
-    PropertyOffset[ord(TProp.XfmrLosses)] := ptruint(@obj.FXfmrLosses);
-    PropertyOffset[ord(TProp.SeqLosses)] := ptruint(@obj.FSeqLosses);
-    PropertyOffset[ord(TProp.__3PhaseLosses)] := ptruint(@obj.F3PhaseLosses);
-    PropertyOffset[ord(TProp.VBaseLosses)] := ptruint(@obj.FVBaseLosses);
-    PropertyOffset[ord(TProp.PhaseVoltageReport)] := ptruint(@obj.FPhaseVoltageReport);
+    PropertyOffset[ord(TProp.LocalOnly)] := PtrInt(@obj.LocalOnly);
+    PropertyOffset[ord(TProp.Losses)] := PtrInt(@obj.FLosses);
+    PropertyOffset[ord(TProp.LineLosses)] := PtrInt(@obj.FLineLosses);
+    PropertyOffset[ord(TProp.XfmrLosses)] := PtrInt(@obj.FXfmrLosses);
+    PropertyOffset[ord(TProp.SeqLosses)] := PtrInt(@obj.FSeqLosses);
+    PropertyOffset[ord(TProp.__3PhaseLosses)] := PtrInt(@obj.F3PhaseLosses);
+    PropertyOffset[ord(TProp.VBaseLosses)] := PtrInt(@obj.FVBaseLosses);
+    PropertyOffset[ord(TProp.PhaseVoltageReport)] := PtrInt(@obj.FPhaseVoltageReport);
 
     // object reference
     PropertyType[ord(TProp.element)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.element)] := ptruint(@obj.MeteredElement);
-    PropertyOffset2[ord(TProp.element)] := ptruint(DSS.PDEProxyClass);
+    PropertyOffset[ord(TProp.element)] := PtrInt(@obj.MeteredElement);
+    PropertyOffset2[ord(TProp.element)] := PtrInt(DSS.PDEProxyClass);
     PropertyFlags[ord(TProp.element)] := [TPropertyFlag.DynamicDefault];//, TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     // integer properties
     PropertyType[ord(TProp.terminal)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.terminal)] := ptruint(@obj.MeteredTerminal);
+    PropertyOffset[ord(TProp.terminal)] := PtrInt(@obj.MeteredTerminal);
 
     // read-only doubles
     PropertyFlags[ord(TProp.SAIFI)] := [TPropertyFlag.SilentReadOnly];
@@ -686,21 +686,21 @@ begin
     PropertyFlags[ord(TProp.SAIDI)] := [TPropertyFlag.SilentReadOnly];
     PropertyFlags[ord(TProp.CAIDI)] := [TPropertyFlag.SilentReadOnly];
     PropertyFlags[ord(TProp.CustInterrupts)] := [TPropertyFlag.SilentReadOnly];
-    PropertyOffset[ord(TProp.SAIFI)] := ptruint(@obj.SAIFI);
-    PropertyOffset[ord(TProp.SAIFIkW)] := ptruint(@obj.SAIFIkW);
-    PropertyOffset[ord(TProp.SAIDI)] := ptruint(@obj.SAIDI);
-    PropertyOffset[ord(TProp.CAIDI)] := ptruint(@obj.CAIDI);
-    PropertyOffset[ord(TProp.CustInterrupts)] := ptruint(@obj.CustInterrupts);
+    PropertyOffset[ord(TProp.SAIFI)] := PtrInt(@obj.SAIFI);
+    PropertyOffset[ord(TProp.SAIFIkW)] := PtrInt(@obj.SAIFIkW);
+    PropertyOffset[ord(TProp.SAIDI)] := PtrInt(@obj.SAIDI);
+    PropertyOffset[ord(TProp.CAIDI)] := PtrInt(@obj.CAIDI);
+    PropertyOffset[ord(TProp.CustInterrupts)] := PtrInt(@obj.CustInterrupts);
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.kVAnormal)] := ptruint(@obj.MaxZonekVA_Norm);
-    PropertyOffset[ord(TProp.kVAemerg)] := ptruint(@obj.MaxZonekVA_Emerg);
-    PropertyOffset[ord(TProp.Int_Rate)] := ptruint(@obj.Source_NumInterruptions);
-    PropertyOffset[ord(TProp.Int_Duration)] := ptruint(@obj.Source_IntDuration);
+    PropertyOffset[ord(TProp.kVAnormal)] := PtrInt(@obj.MaxZonekVA_Norm);
+    PropertyOffset[ord(TProp.kVAemerg)] := PtrInt(@obj.MaxZonekVA_Emerg);
+    PropertyOffset[ord(TProp.Int_Rate)] := PtrInt(@obj.Source_NumInterruptions);
+    PropertyOffset[ord(TProp.Int_Duration)] := PtrInt(@obj.Source_IntDuration);
 
     // string list
     PropertyType[ord(TProp.Zonelist)] := TPropertyType.StringListProperty;
-    PropertyOffset[ord(TProp.Zonelist)] := ptruint(@obj.DefinedZoneList);
+    PropertyOffset[ord(TProp.Zonelist)] := PtrInt(@obj.DefinedZoneList);
 
     // custom list
     //TODO: could it be represented an array of stringEnum values?
@@ -712,7 +712,7 @@ begin
 
     // enum action
     PropertyType[ord(TProp.Action)] := TPropertyType.StringEnumActionProperty;
-    PropertyOffset[ord(TProp.Action)] := ptruint(@DoAction); 
+    PropertyOffset[ord(TProp.Action)] := PtrInt(@DoAction); 
     PropertyOffset2[ord(TProp.Action)] := PtrInt(ActionEnum);
 
     ActiveProperty := NumPropsThisClass;

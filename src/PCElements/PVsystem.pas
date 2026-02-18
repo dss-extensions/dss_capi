@@ -429,11 +429,11 @@ begin
 
     // strings
     PropertyType[ord(TProp.UserModel)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.UserModel)] := ptruint(@obj.UserModelNameStr);
+    PropertyOffset[ord(TProp.UserModel)] := PtrInt(@obj.UserModelNameStr);
     PropertyFlags[ord(TProp.UserModel)] := [TPropertyFlag.IsFilename];
 
     PropertyType[ord(TProp.UserData)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.UserData)] := ptruint(@obj.UserModelEditStr);
+    PropertyOffset[ord(TProp.UserData)] := PtrInt(@obj.UserModelEditStr);
 
     PropertyType[ord(TProp.DynOut)] := TPropertyType.StringListProperty;
     PropertyOffset[ord(TProp.DynOut)] := 1; // dummy
@@ -443,11 +443,11 @@ begin
 
     // enum properties
     PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.conn)] := ptruint(@obj.Connection);
+    PropertyOffset[ord(TProp.conn)] := PtrInt(@obj.Connection);
     PropertyOffset2[ord(TProp.conn)] := PtrInt(DSS.ConnectionEnum);
 
     PropertyType[ord(TProp.ControlMode)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.ControlMode)] := ptruint(@obj.GFM_Mode);
+    PropertyOffset[ord(TProp.ControlMode)] := PtrInt(@obj.GFM_Mode);
     PropertyOffset2[ord(TProp.ControlMode)] := PtrInt(DSS.InvControlModeEnum);
 
     // bus properties
@@ -466,25 +466,25 @@ begin
     PropertyType[ord(TProp.P__TCurve)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.DynamicEq)] := TPropertyType.DSSObjectReferenceProperty;
 
-    PropertyOffset[ord(TProp.yearly)] := ptruint(@obj.YearlyShapeObj);
-    PropertyOffset[ord(TProp.daily)] := ptruint(@obj.DailyShapeObj);
-    PropertyOffset[ord(TProp.duty)] := ptruint(@obj.DutyShapeObj);
-    PropertyOffset[ord(TProp.Tyearly)] := ptruint(@obj.YearlyTShapeObj);
-    PropertyOffset[ord(TProp.Tdaily)] := ptruint(@obj.DailyTShapeObj);
-    PropertyOffset[ord(TProp.Tduty)] := ptruint(@obj.DutyTShapeObj);
-    PropertyOffset[ord(TProp.EffCurve)] := ptruint(@obj.InverterCurveObj);
-    PropertyOffset[ord(TProp.P__TCurve)] := ptruint(@obj.Power_TempCurveObj);
-    PropertyOffset[ord(TProp.DynamicEq)] := ptruint(@obj.DynamicEqObj);
+    PropertyOffset[ord(TProp.yearly)] := PtrInt(@obj.YearlyShapeObj);
+    PropertyOffset[ord(TProp.daily)] := PtrInt(@obj.DailyShapeObj);
+    PropertyOffset[ord(TProp.duty)] := PtrInt(@obj.DutyShapeObj);
+    PropertyOffset[ord(TProp.Tyearly)] := PtrInt(@obj.YearlyTShapeObj);
+    PropertyOffset[ord(TProp.Tdaily)] := PtrInt(@obj.DailyTShapeObj);
+    PropertyOffset[ord(TProp.Tduty)] := PtrInt(@obj.DutyTShapeObj);
+    PropertyOffset[ord(TProp.EffCurve)] := PtrInt(@obj.InverterCurveObj);
+    PropertyOffset[ord(TProp.P__TCurve)] := PtrInt(@obj.Power_TempCurveObj);
+    PropertyOffset[ord(TProp.DynamicEq)] := PtrInt(@obj.DynamicEqObj);
 
-    PropertyOffset2[ord(TProp.yearly)] := ptruint(DSS.LoadShapeClass);
-    PropertyOffset2[ord(TProp.daily)] := ptruint(DSS.LoadShapeClass);
-    PropertyOffset2[ord(TProp.duty)] := ptruint(DSS.LoadShapeClass);
-    PropertyOffset2[ord(TProp.Tyearly)] := ptruint(DSS.TShapeClass);
-    PropertyOffset2[ord(TProp.Tdaily)] := ptruint(DSS.TShapeClass);
-    PropertyOffset2[ord(TProp.Tduty)] := ptruint(DSS.TShapeClass);
-    PropertyOffset2[ord(TProp.EffCurve)] := ptruint(DSS.XYCurveClass);
-    PropertyOffset2[ord(TProp.P__TCurve)] := ptruint(DSS.XYCurveClass);
-    PropertyOffset2[ord(TProp.DynamicEq)] := ptruint(DSS.DynamicExpClass);
+    PropertyOffset2[ord(TProp.yearly)] := PtrInt(DSS.LoadShapeClass);
+    PropertyOffset2[ord(TProp.daily)] := PtrInt(DSS.LoadShapeClass);
+    PropertyOffset2[ord(TProp.duty)] := PtrInt(DSS.LoadShapeClass);
+    PropertyOffset2[ord(TProp.Tyearly)] := PtrInt(DSS.TShapeClass);
+    PropertyOffset2[ord(TProp.Tdaily)] := PtrInt(DSS.TShapeClass);
+    PropertyOffset2[ord(TProp.Tduty)] := PtrInt(DSS.TShapeClass);
+    PropertyOffset2[ord(TProp.EffCurve)] := PtrInt(DSS.XYCurveClass);
+    PropertyOffset2[ord(TProp.P__TCurve)] := PtrInt(DSS.XYCurveClass);
+    PropertyOffset2[ord(TProp.DynamicEq)] := PtrInt(DSS.DynamicExpClass);
 
     // boolean properties
     PropertyType[ord(TProp.debugtrace)] := TPropertyType.BooleanProperty;
@@ -493,89 +493,89 @@ begin
     PropertyType[ord(TProp.VarFollowInverter)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.WattPriority)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.PFPriority)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.debugtrace)] := ptruint(@obj.DebugTrace);
-    PropertyOffset[ord(TProp.Balanced)] := ptruint(@obj.ForceBalanced);
-    PropertyOffset[ord(TProp.LimitCurrent)] := ptruint(@obj.CurrentLimited);
-    PropertyOffset[ord(TProp.VarFollowInverter)] := ptruint(@obj.VarFollowInverter);
-    PropertyOffset[ord(TProp.WattPriority)] := ptruint(@obj.PVSystemVars.P_priority);
-    PropertyOffset[ord(TProp.PFPriority)] := ptruint(@obj.PVSystemVars.PF_priority);
+    PropertyOffset[ord(TProp.debugtrace)] := PtrInt(@obj.DebugTrace);
+    PropertyOffset[ord(TProp.Balanced)] := PtrInt(@obj.ForceBalanced);
+    PropertyOffset[ord(TProp.LimitCurrent)] := PtrInt(@obj.CurrentLimited);
+    PropertyOffset[ord(TProp.VarFollowInverter)] := PtrInt(@obj.VarFollowInverter);
+    PropertyOffset[ord(TProp.WattPriority)] := PtrInt(@obj.PVSystemVars.P_priority);
+    PropertyOffset[ord(TProp.PFPriority)] := PtrInt(@obj.PVSystemVars.PF_priority);
 
     PropertyType[ord(TProp.SafeMode)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.SafeMode)] := ptruint(@obj.dynVars.SafeMode);
+    PropertyOffset[ord(TProp.SafeMode)] := PtrInt(@obj.dynVars.SafeMode);
     PropertyFlags[ord(TProp.SafeMode)] := [TPropertyFlag.SilentReadOnly];
 
     // integer properties
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.phases)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     PropertyType[ord(TProp.cls)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.cls)] := ptruint(@obj.FClass);
+    PropertyOffset[ord(TProp.cls)] := PtrInt(@obj.FClass);
 
     PropertyType[ord(TProp.model)] := TPropertyType.MappedIntEnumProperty;
-    PropertyOffset[ord(TProp.model)] := ptruint(@obj.VoltageModel);
+    PropertyOffset[ord(TProp.model)] := PtrInt(@obj.VoltageModel);
     PropertyOffset2[ord(TProp.model)] := PtrInt(PVSystemModelEnum);
 
     // double properties
-    PropertyOffset[ord(TProp.irradiance)] := ptruint(@obj.PVSystemVars.FIrradiance);
+    PropertyOffset[ord(TProp.irradiance)] := PtrInt(@obj.PVSystemVars.FIrradiance);
 
-    PropertyOffset[ord(TProp.pf)] := ptruint(@obj.PFnominal);
+    PropertyOffset[ord(TProp.pf)] := PtrInt(@obj.PFnominal);
     PropertyFlags[ord(TProp.pf)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.PowerFactorLimits];
 
-    PropertyOffset[ord(TProp.pctR)] := ptruint(@obj.pctR);
-    PropertyOffset[ord(TProp.pctX)] := ptruint(@obj.pctX);
-    PropertyOffset[ord(TProp.Temperature)] := ptruint(@obj.PVSystemVars.FTemperature);
-    PropertyOffset[ord(TProp.Pmpp)] := ptruint(@obj.PVSystemVars.FPmpp);
-    PropertyOffset[ord(TProp.pctCutin)] := ptruint(@obj.FpctCutIn);
-    PropertyOffset[ord(TProp.pctCutout)] := ptruint(@obj.FpctCutOut);
-    PropertyOffset[ord(TProp.Vminpu)] := ptruint(@obj.VMinPu);
-    PropertyOffset[ord(TProp.Vmaxpu)] := ptruint(@obj.VMaxPu);
-    PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.PVSystemVars.FkVArating);
+    PropertyOffset[ord(TProp.pctR)] := PtrInt(@obj.pctR);
+    PropertyOffset[ord(TProp.pctX)] := PtrInt(@obj.pctX);
+    PropertyOffset[ord(TProp.Temperature)] := PtrInt(@obj.PVSystemVars.FTemperature);
+    PropertyOffset[ord(TProp.Pmpp)] := PtrInt(@obj.PVSystemVars.FPmpp);
+    PropertyOffset[ord(TProp.pctCutin)] := PtrInt(@obj.FpctCutIn);
+    PropertyOffset[ord(TProp.pctCutout)] := PtrInt(@obj.FpctCutOut);
+    PropertyOffset[ord(TProp.Vminpu)] := PtrInt(@obj.VMinPu);
+    PropertyOffset[ord(TProp.Vmaxpu)] := PtrInt(@obj.VMaxPu);
+    PropertyOffset[ord(TProp.kVA)] := PtrInt(@obj.PVSystemVars.FkVArating);
 
     PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.Units_kVA, TPropertyFlag.ReplaceZero, TPropertyFlag.NonZero];
 
-    PropertyOffset[ord(TProp.DutyStart)] := ptruint(@obj.DutyStart);
+    PropertyOffset[ord(TProp.DutyStart)] := PtrInt(@obj.DutyStart);
     PropertyFlags[ord(TProp.DutyStart)] := [TPropertyFlag.NonNegative, TPropertyFlag.Units_hour];
 
-    PropertyOffset[ord(TProp.kv)] := ptruint(@obj.PVSystemVars.kVPVSystemBase);
+    PropertyOffset[ord(TProp.kv)] := PtrInt(@obj.PVSystemVars.kVPVSystemBase);
     PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
-    PropertyOffset[ord(TProp.kvar)] := ptruint(@obj.kvarRequested);
+    PropertyOffset[ord(TProp.kvar)] := PtrInt(@obj.kvarRequested);
     PropertyReadFunction[ord(TProp.kvar)] := @Getkvar;
     PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault, TPropertyFlag.Units_kvar];
 
     // double percent
     PropertyScale[ord(TProp.pctPmpp)] := 0.01;
-    PropertyOffset[ord(TProp.pctPmpp)] := ptruint(@obj.PVSystemVars.FpuPmpp);
+    PropertyOffset[ord(TProp.pctPmpp)] := PtrInt(@obj.PVSystemVars.FpuPmpp);
 
     // advanced doubles
-    PropertyOffset[ord(TProp.pctPminNoVars)] := ptruint(@obj.FpctPminNoVars);
+    PropertyOffset[ord(TProp.pctPminNoVars)] := PtrInt(@obj.FpctPminNoVars);
     PropertyFlags[ord(TProp.pctPminNoVars)] := [TPropertyFlag.Transform_Abs];
 
-    PropertyOffset[ord(TProp.pctPminkvarMax)] := ptruint(@obj.FpctPminkvarLimit);
+    PropertyOffset[ord(TProp.pctPminkvarMax)] := PtrInt(@obj.FpctPminkvarLimit);
     PropertyFlags[ord(TProp.pctPminkvarMax)] := [TPropertyFlag.Transform_Abs];
 
-    PropertyOffset[ord(TProp.kvarMax)] := ptruint(@obj.PVSystemVars.Fkvarlimit);
+    PropertyOffset[ord(TProp.kvarMax)] := PtrInt(@obj.PVSystemVars.Fkvarlimit);
     PropertyFlags[ord(TProp.kvarMax)] := [TPropertyFlag.Transform_Abs, TPropertyFlag.DynamicDefault];
 
-    PropertyOffset[ord(TProp.kvarMaxAbs)] := ptruint(@obj.PVSystemVars.Fkvarlimitneg);
+    PropertyOffset[ord(TProp.kvarMaxAbs)] := PtrInt(@obj.PVSystemVars.Fkvarlimitneg);
     PropertyFlags[ord(TProp.kvarMaxAbs)] := [TPropertyFlag.Transform_Abs, TPropertyFlag.DynamicDefault];
 
-    PropertyOffset[ord(TProp.kVDC)] := ptruint(@obj.dynVars.RatedVDC);
+    PropertyOffset[ord(TProp.kVDC)] := PtrInt(@obj.dynVars.RatedVDC);
     PropertyScale[ord(TProp.kVDC)] := 1000;
 
-    PropertyOffset[ord(TProp.kP)] := ptruint(@obj.dynVars.kP);
+    PropertyOffset[ord(TProp.kP)] := PtrInt(@obj.dynVars.kP);
     PropertyScale[ord(TProp.kP)] := 1.0 / 1000.0;
 
-    PropertyOffset[ord(TProp.PITol)] := ptruint(@obj.dynVars.CtrlTol);
+    PropertyOffset[ord(TProp.PITol)] := PtrInt(@obj.dynVars.CtrlTol);
     PropertyScale[ord(TProp.PITol)] := 1.0 / 100.0;
 
-    PropertyOffset[ord(TProp.SafeVoltage)] := ptruint(@obj.dynVars.SMThreshold);
+    PropertyOffset[ord(TProp.SafeVoltage)] := PtrInt(@obj.dynVars.SMThreshold);
 
-    PropertyOffset[ord(TProp.AmpLimit)] := ptruint(@obj.dynVars.ILimit);
+    PropertyOffset[ord(TProp.AmpLimit)] := PtrInt(@obj.dynVars.ILimit);
     PropertyFlags[ord(TProp.AmpLimit)] := [TPropertyFlag.NoDefault];
 
-    PropertyOffset[ord(TProp.AmpLimitGain)] := ptruint(@obj.dynVars.VError);
+    PropertyOffset[ord(TProp.AmpLimitGain)] := PtrInt(@obj.dynVars.VError);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

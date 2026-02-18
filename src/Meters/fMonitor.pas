@@ -445,7 +445,7 @@ begin
 
     // boolean properties
     PropertyType[ord(TProp.b_Curt_Ctrl)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.b_Curt_Ctrl)] := ptruint(@obj.ld_fm_info[0].b_curt_ctrl);
+    PropertyOffset[ord(TProp.b_Curt_Ctrl)] := PtrInt(@obj.ld_fm_info[0].b_curt_ctrl);
 
     // integer properties
     PropertyType[ord(TProp.Terminal)] := TPropertyType.IntegerProperty;
@@ -454,37 +454,41 @@ begin
     PropertyType[ord(TProp.MaxLocalMem)] := TPropertyType.IntegerProperty;
     PropertyType[ord(TProp.Nodes)] := TPropertyType.IntegerProperty;
 
-    PropertyOffset[ord(TProp.Terminal)] := ptruint(@obj.MeteredTerminal);
-    PropertyOffset[ord(TProp.Cluster_Num)] := ptruint(@obj.Cluster_num);
-    PropertyOffset[ord(TProp.P_Mode)] := ptruint(@obj.p_mode);
-    PropertyOffset[ord(TProp.MaxLocalMem)] := ptruint(@obj.MaxLocalMem);
-    PropertyOffset[ord(TProp.Nodes)] := ptruint(@obj.Nodes);
+    PropertyOffset[ord(TProp.Terminal)] := PtrInt(@obj.MeteredTerminal);
+    PropertyOffset[ord(TProp.Cluster_Num)] := PtrInt(@obj.Cluster_num);
+    PropertyOffset[ord(TProp.P_Mode)] := PtrInt(@obj.p_mode);
+    PropertyOffset[ord(TProp.MaxLocalMem)] := PtrInt(@obj.MaxLocalMem);
+    PropertyOffset[ord(TProp.Nodes)] := PtrInt(@obj.Nodes);
 
     PropertyType[ord(TProp.Node_Num)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Node_Num)] := ptruint(@obj.Node_num);
+    PropertyOffset[ord(TProp.Node_Num)] := PtrInt(@obj.Node_num);
     PropertyFlags[ord(TProp.Node_Num)] := [TPropertyFlag.Unused];
 
     PropertyType[ord(TProp.Virtual_LD_Node)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Virtual_LD_Node)] := ptruint(@obj.virtual_Ld_Nd);
+    PropertyOffset[ord(TProp.Virtual_LD_Node)] := PtrInt(@obj.virtual_Ld_Nd);
     PropertyFlags[ord(TProp.Virtual_LD_Node)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.ValueOffset];
     PropertyValueOffset[ord(TProp.Virtual_LD_Node)] := -1; // exposed as 1-based, internally 0-based
 
     // object reference
     PropertyType[ord(TProp.Element)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.Element)] := ptruint(@obj.MeteredElement);
+    PropertyOffset[ord(TProp.Element)] := PtrInt(@obj.MeteredElement);
     PropertyOffset2[ord(TProp.Element)] := 0;
     PropertyFlags[ord(TProp.Element)] := [TPropertyFlag.DynamicDefault]; // TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     // enum action
     PropertyType[ord(TProp.Action)] := TPropertyType.StringEnumActionProperty;
-    PropertyOffset[ord(TProp.Action)] := ptruint(@DoAction);
+    try
+        PropertyOffset[ord(TProp.Action)] := PtrInt(@DoAction);
+    except
+
+    end;
     PropertyOffset2[ord(TProp.Action)] := PtrInt(ActionEnum);
 
     // double
-    PropertyOffset[ord(TProp.P_Trans_Ref)] := PtrUInt(@obj.p_trans_ref);
+    PropertyOffset[ord(TProp.P_Trans_Ref)] := PtrInt(@obj.p_trans_ref);
     PropertyScale[ord(TProp.P_Trans_Ref)] := 1000;
-    PropertyOffset[ord(TProp.T_IntVL_Smpl)] := PtrUInt(@obj.T_intvl_smpl);
-    PropertyOffset[ord(TProp.Up_Dly)] := PtrUInt(@obj.up_dly);
+    PropertyOffset[ord(TProp.T_IntVL_Smpl)] := PtrInt(@obj.T_intvl_smpl);
+    PropertyOffset[ord(TProp.Up_Dly)] := PtrInt(@obj.up_dly);
 
     // **very** custom, weird stuff
 

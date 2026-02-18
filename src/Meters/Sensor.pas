@@ -195,53 +195,53 @@ begin
 
     // double arrays/vectors
     PropertyType[ord(TProp.kVs)] := TPropertyType.DoubleVArrayProperty;
-    PropertyOffset[ord(TProp.kVs)] := ptruint(@obj.SensorVoltage);
-    PropertyOffset2[ord(TProp.kVs)] := ptruint(@obj.Fnphases);
+    PropertyOffset[ord(TProp.kVs)] := PtrInt(@obj.SensorVoltage);
+    PropertyOffset2[ord(TProp.kVs)] := PtrInt(@obj.Fnphases);
 
     PropertyType[ord(TProp.currents)] := TPropertyType.DoubleVArrayProperty;
-    PropertyOffset[ord(TProp.currents)] := ptruint(@obj.SensorCurrent);
-    PropertyOffset2[ord(TProp.currents)] := ptruint(@obj.Fnphases);
+    PropertyOffset[ord(TProp.currents)] := PtrInt(@obj.SensorCurrent);
+    PropertyOffset2[ord(TProp.currents)] := PtrInt(@obj.Fnphases);
     PropertyFlags[ord(TProp.currents)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.kWs)] := TPropertyType.DoubleVArrayProperty;
-    PropertyOffset[ord(TProp.kWs)] := ptruint(@obj.SensorkW);
-    PropertyOffset2[ord(TProp.kWs)] := ptruint(@obj.Fnphases);
+    PropertyOffset[ord(TProp.kWs)] := PtrInt(@obj.SensorkW);
+    PropertyOffset2[ord(TProp.kWs)] := PtrInt(@obj.Fnphases);
     PropertyFlags[ord(TProp.kWs)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.kvars)] := TPropertyType.DoubleVArrayProperty;
-    PropertyOffset[ord(TProp.kvars)] := ptruint(@obj.Sensorkvar);
-    PropertyOffset2[ord(TProp.kvars)] := ptruint(@obj.Fnphases);
+    PropertyOffset[ord(TProp.kvars)] := PtrInt(@obj.Sensorkvar);
+    PropertyOffset2[ord(TProp.kvars)] := PtrInt(@obj.Fnphases);
     // PropertyFlags[ord(TProp.kvars)] := [TPropertyFlag.RequiredInSpecSet];
 
     // enum properties
     PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.conn)] := ptruint(@obj.FConn);
+    PropertyOffset[ord(TProp.conn)] := PtrInt(@obj.FConn);
     PropertyOffset2[ord(TProp.conn)] := PtrInt(DSS.ConnectionEnum);
 
     // object reference
     PropertyType[ord(TProp.element)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.element)] := ptruint(@obj.MeteredElement);
+    PropertyOffset[ord(TProp.element)] := PtrInt(@obj.MeteredElement);
     PropertyOffset2[ord(TProp.element)] := 0;
     PropertyFlags[ord(TProp.element)] := [TPropertyFlag.Required]; // TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     // integer properties
     PropertyType[ord(TProp.terminal)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.terminal)] := ptruint(@obj.MeteredTerminal);
+    PropertyOffset[ord(TProp.terminal)] := PtrInt(@obj.MeteredTerminal);
 
     PropertyType[ord(TProp.DeltaDirection)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.DeltaDirection)] := ptruint(@obj.deltaDirection);
+    PropertyOffset[ord(TProp.DeltaDirection)] := PtrInt(@obj.deltaDirection);
     //TODO: for DeltaDirection, use explicit enum instead of numeric values
 
     // boolean properties
     PropertyType[ord(TProp.clear)] := TPropertyType.BooleanActionProperty;
-    PropertyOffset[ord(TProp.clear)] := ptruint(@DoClearSensor);
+    PropertyOffset[ord(TProp.clear)] := PtrInt(@DoClearSensor);
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.kvbase)] := ptruint(@obj.kVBase);
+    PropertyOffset[ord(TProp.kvbase)] := PtrInt(@obj.kVBase);
     PropertyFlags[ord(TProp.kvbase)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV];
 
-    PropertyOffset[ord(TProp.pctError)] := ptruint(@obj.pctError);
-    PropertyOffset[ord(TProp.Weight)] := ptruint(@obj.Weight);
+    PropertyOffset[ord(TProp.pctError)] := PtrInt(@obj.pctError);
+    PropertyOffset[ord(TProp.Weight)] := PtrInt(@obj.Weight);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

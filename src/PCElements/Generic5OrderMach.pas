@@ -420,98 +420,98 @@ begin
 
     // enum properties
     PropertyType[ord(TProp.Conn)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.Conn)] := ptruint(@obj.Connection);
+    PropertyOffset[ord(TProp.Conn)] := PtrInt(@obj.Connection);
     PropertyOffset2[ord(TProp.Conn)] := PtrInt(DSS.ConnectionEnum);
 
     // Double properties, including adv. scaled ones
-    PropertyOffset[ord(TProp.kcd)] := ptruint(@obj.kcd);
-    PropertyOffset[ord(TProp.kcq)] := ptruint(@obj.kcq);
-    PropertyOffset[ord(TProp.kqi)] := ptruint(@obj.kqi);
-    PropertyOffset[ord(TProp.kV)] := ptruint(@obj.kVGeneratorBase);
-    PropertyOffset[ord(TProp.Pfctr1)] := ptruint(@obj.Pfctr1); //for pmpp
-    PropertyOffset[ord(TProp.Pfctr2)] := ptruint(@obj.Pfctr2); //for pmpp
-    PropertyOffset[ord(TProp.Pfctr3)] := ptruint(@obj.Pfctr3); //for pmpp
-    PropertyOffset[ord(TProp.Pfctr4)] := ptruint(@obj.Pfctr4); //for pmpp
-    PropertyOffset[ord(TProp.Pfctr5)] := ptruint(@obj.Pfctr5); //for pmpp
-    PropertyOffset[ord(TProp.Pfctr6)] := ptruint(@obj.Pfctr6); //for pmpp
-    PropertyOffset[ord(TProp.kcq_drp2)] := ptruint(@obj.kcq_drp2);
-    PropertyOffset[ord(TProp.Volt_Trhd)] := ptruint(@obj.Volt_Trhd);
-    PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.kVArating);
+    PropertyOffset[ord(TProp.kcd)] := PtrInt(@obj.kcd);
+    PropertyOffset[ord(TProp.kcq)] := PtrInt(@obj.kcq);
+    PropertyOffset[ord(TProp.kqi)] := PtrInt(@obj.kqi);
+    PropertyOffset[ord(TProp.kV)] := PtrInt(@obj.kVGeneratorBase);
+    PropertyOffset[ord(TProp.Pfctr1)] := PtrInt(@obj.Pfctr1); //for pmpp
+    PropertyOffset[ord(TProp.Pfctr2)] := PtrInt(@obj.Pfctr2); //for pmpp
+    PropertyOffset[ord(TProp.Pfctr3)] := PtrInt(@obj.Pfctr3); //for pmpp
+    PropertyOffset[ord(TProp.Pfctr4)] := PtrInt(@obj.Pfctr4); //for pmpp
+    PropertyOffset[ord(TProp.Pfctr5)] := PtrInt(@obj.Pfctr5); //for pmpp
+    PropertyOffset[ord(TProp.Pfctr6)] := PtrInt(@obj.Pfctr6); //for pmpp
+    PropertyOffset[ord(TProp.kcq_drp2)] := PtrInt(@obj.kcq_drp2);
+    PropertyOffset[ord(TProp.Volt_Trhd)] := PtrInt(@obj.Volt_Trhd);
+    PropertyOffset[ord(TProp.kVA)] := PtrInt(@obj.kVArating);
 
-    PropertyOffset[ord(TProp.kW)] := ptruint(@obj.WBase);
+    PropertyOffset[ord(TProp.kW)] := PtrInt(@obj.WBase);
     PropertyScale[ord(TProp.kW)] := 1000;
 
-    PropertyOffset[ord(TProp.P_Ref1kW)] := ptruint(@obj.P_ref1);
+    PropertyOffset[ord(TProp.P_Ref1kW)] := PtrInt(@obj.P_ref1);
     PropertyScale[ord(TProp.P_Ref1kW)] := 1000; //for phase ctrl unit kW to W
 
-    PropertyOffset[ord(TProp.P_Ref2kW)] := ptruint(@obj.P_ref2);
+    PropertyOffset[ord(TProp.P_Ref2kW)] := PtrInt(@obj.P_ref2);
     PropertyScale[ord(TProp.P_Ref2kW)] := 1000; //for phase ctrl
 
-    PropertyOffset[ord(TProp.P_Ref3kW)] := ptruint(@obj.P_ref3);
+    PropertyOffset[ord(TProp.P_Ref3kW)] := PtrInt(@obj.P_ref3);
     PropertyScale[ord(TProp.P_Ref3kW)] := 1000; //for phase ctrl
 
-    PropertyOffset[ord(TProp.V_Ref1kVLN)] := ptruint(@obj.V_ref1);
+    PropertyOffset[ord(TProp.V_Ref1kVLN)] := PtrInt(@obj.V_ref1);
     PropertyScale[ord(TProp.V_Ref1kVLN)] := 1000; //for phase ctrl unit kV to V
 
-    PropertyOffset[ord(TProp.V_Ref2kVLN)] := ptruint(@obj.V_ref2);
+    PropertyOffset[ord(TProp.V_Ref2kVLN)] := PtrInt(@obj.V_ref2);
     PropertyScale[ord(TProp.V_Ref2kVLN)] := 1000; //for phase ctrl
 
-    PropertyOffset[ord(TProp.V_Ref3kVLN)] := ptruint(@obj.V_ref3);
+    PropertyOffset[ord(TProp.V_Ref3kVLN)] := PtrInt(@obj.V_ref3);
     PropertyScale[ord(TProp.V_Ref3kVLN)] := 1000; //for phase ctrl
 
-    PropertyOffset[ord(TProp.P_RefkW)] := ptruint(@obj.P_RefTotal);
+    PropertyOffset[ord(TProp.P_RefkW)] := PtrInt(@obj.P_RefTotal);
     PropertyScale[ord(TProp.P_RefkW)] := 1000;//to norm value W from kW(in script)//for avg ctrl    1000*PrefKw/3;
 
-    PropertyOffset[ord(TProp.Q_RefkVAr)] := ptruint(@obj.Q_RefTotal);
+    PropertyOffset[ord(TProp.Q_RefkVAr)] := PtrInt(@obj.Q_RefTotal);
     PropertyScale[ord(TProp.Q_RefkVAr)] := 1000;//to VA from kVA(in script) //for avg ctrl 1000*QrefKVAr/3;
 
-    PropertyOffset[ord(TProp.V_refkVLN)] := ptruint(@obj.V_ref);
+    PropertyOffset[ord(TProp.V_refkVLN)] := PtrInt(@obj.V_ref);
     PropertyScale[ord(TProp.V_refkVLN)] := 1000;//kV  to V //for avg ctrl 1000*VrefkV;
 
-    PropertyOffset[ord(TProp.Q_ref1kvar)] := ptruint(@obj.Q_ref1);
+    PropertyOffset[ord(TProp.Q_ref1kvar)] := PtrInt(@obj.Q_ref1);
     PropertyScale[ord(TProp.Q_ref1kvar)] := 1000; //for phase ctrl unit kVar to Var
 
-    PropertyOffset[ord(TProp.Q_ref2kvar)] := ptruint(@obj.Q_ref2);
+    PropertyOffset[ord(TProp.Q_ref2kvar)] := PtrInt(@obj.Q_ref2);
     PropertyScale[ord(TProp.Q_ref2kvar)] := 1000; //for phase ctrl
 
-    PropertyOffset[ord(TProp.Q_ref3kvar)] := ptruint(@obj.Q_ref3);
+    PropertyOffset[ord(TProp.Q_ref3kvar)] := PtrInt(@obj.Q_ref3);
     PropertyScale[ord(TProp.Q_ref3kvar)] := 1000; //for phase ctrl
 
-    PropertyOffset[ord(TProp.PMaxkW)] := ptruint(@obj.Pmax);
+    PropertyOffset[ord(TProp.PMaxkW)] := PtrInt(@obj.Pmax);
     PropertyScale[ord(TProp.PMaxkW)] := 1000; //Pmax has to be less then kW in script
 
-    PropertyOffset[ord(TProp.PMinkW)] := ptruint(@obj.Pmin);
+    PropertyOffset[ord(TProp.PMinkW)] := PtrInt(@obj.Pmin);
     PropertyScale[ord(TProp.PMinkW)] := 1000; //for phase ctrl
 
-    PropertyOffset[ord(TProp.PmppkW)] := ptruint(@obj.Pmpp);
+    PropertyOffset[ord(TProp.PmppkW)] := PtrInt(@obj.Pmpp);
     PropertyScale[ord(TProp.PmppkW)] := 1000; //for pmpp kW
 
-    PropertyOffset[ord(TProp.PbiaskW)] := ptruint(@obj.Pbias);
+    PropertyOffset[ord(TProp.PbiaskW)] := PtrInt(@obj.Pbias);
     PropertyScale[ord(TProp.PbiaskW)] := 1000; //for pmpp
 
     // boolean properties
     PropertyType[ord(TProp.CC_Switch)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.CC_Switch)] := ptruint(@obj.CC_Switch);
+    PropertyOffset[ord(TProp.CC_Switch)] := PtrInt(@obj.CC_Switch);
 
     // Integer properties
     PropertyType[ord(TProp.Phases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Phases)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.Phases)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.Phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     PropertyType[ord(TProp.Cluster_Num)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Cluster_Num)] := ptruint(@obj.Cluster_Num);
+    PropertyOffset[ord(TProp.Cluster_Num)] := PtrInt(@obj.Cluster_Num);
 
     PropertyType[ord(TProp.Ctrl_Mode)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Ctrl_Mode)] := ptruint(@obj.Ctrl_Mode);
+    PropertyOffset[ord(TProp.Ctrl_Mode)] := PtrInt(@obj.Ctrl_Mode);
 
     PropertyType[ord(TProp.QV_flag)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.QV_flag)] := ptruint(@obj.QV_flag);
+    PropertyOffset[ord(TProp.QV_flag)] := PtrInt(@obj.QV_flag);
 
     PropertyType[ord(TProp.PQPriority)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.PQPriority)] := ptruint(@obj.PQPriority);
+    PropertyOffset[ord(TProp.PQPriority)] := PtrInt(@obj.PQPriority);
 
     PropertyType[ord(TProp.Droop)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Droop)] := ptruint(@obj.Droop);
+    PropertyOffset[ord(TProp.Droop)] := PtrInt(@obj.Droop);
 
     // double
     PropertyType[ord(TProp.PF)] := TPropertyType.DoubleProperty;

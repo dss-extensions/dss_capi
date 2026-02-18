@@ -210,43 +210,43 @@ begin
 
     // real matrix
     PropertyType[ord(TProp.cmatrix)] := TPropertyType.DoubleSymMatrixProperty;
-    PropertyOffset[ord(TProp.cmatrix)] := ptruint(@obj.Cmatrix);
-    PropertyOffset3[ord(TProp.cmatrix)] := ptruint(@obj.Fnphases);
+    PropertyOffset[ord(TProp.cmatrix)] := PtrInt(@obj.Cmatrix);
+    PropertyOffset3[ord(TProp.cmatrix)] := PtrInt(@obj.Fnphases);
     PropertyScale[ord(TProp.cmatrix)] := 1.0e-6;
     PropertyFlags[ord(TProp.cmatrix)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_uF];
 
     // array of doubles
     PropertyType[ord(TProp.kvar)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.kvar)] := ptruint(@obj.FkvarRating);
-    PropertyOffset2[ord(TProp.kvar)] := ptruint(@obj.FNumSteps);
+    PropertyOffset[ord(TProp.kvar)] := PtrInt(@obj.FkvarRating);
+    PropertyOffset2[ord(TProp.kvar)] := PtrInt(@obj.FNumSteps);
     PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kvar];
 
     PropertyType[ord(TProp.R)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.R)] := ptruint(@obj.R);
-    PropertyOffset2[ord(TProp.R)] := ptruint(@obj.FNumSteps);
+    PropertyOffset[ord(TProp.R)] := PtrInt(@obj.R);
+    PropertyOffset2[ord(TProp.R)] := PtrInt(@obj.FNumSteps);
 
     PropertyType[ord(TProp.XL)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.XL)] := ptruint(@obj.XL);
-    PropertyOffset2[ord(TProp.XL)] := ptruint(@obj.FNumSteps);
+    PropertyOffset[ord(TProp.XL)] := PtrInt(@obj.XL);
+    PropertyOffset2[ord(TProp.XL)] := PtrInt(@obj.FNumSteps);
 
     PropertyType[ord(TProp.cuf)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.cuf)] := ptruint(@obj.C);
-    PropertyOffset2[ord(TProp.cuf)] := ptruint(@obj.FNumSteps);
+    PropertyOffset[ord(TProp.cuf)] := PtrInt(@obj.C);
+    PropertyOffset2[ord(TProp.cuf)] := PtrInt(@obj.FNumSteps);
     PropertyScale[ord(TProp.cuf)] := 1.0e-6;
     PropertyFlags[ord(TProp.cuf)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault, TPropertyFlag.Units_uF];
 
     PropertyType[ord(TProp.Harm)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.Harm)] := ptruint(@obj.FHarm);
-    PropertyOffset2[ord(TProp.Harm)] := ptruint(@obj.FNumSteps);
+    PropertyOffset[ord(TProp.Harm)] := PtrInt(@obj.FHarm);
+    PropertyOffset2[ord(TProp.Harm)] := PtrInt(@obj.FNumSteps);
 
     // array of ints
     PropertyType[ord(TProp.states)] := TPropertyType.IntegerArrayProperty;
-    PropertyOffset[ord(TProp.states)] := ptruint(@obj.FStates);
-    PropertyOffset2[ord(TProp.states)] := ptruint(@obj.FNumSteps);
+    PropertyOffset[ord(TProp.states)] := PtrInt(@obj.FStates);
+    PropertyOffset2[ord(TProp.states)] := PtrInt(@obj.FNumSteps);
 
     // enum properties
     PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.conn)] := ptruint(@obj.Connection);
+    PropertyOffset[ord(TProp.conn)] := PtrInt(@obj.Connection);
     PropertyOffset2[ord(TProp.conn)] := PtrInt(DSS.ConnectionEnum);
 
     // bus properties
@@ -258,16 +258,16 @@ begin
     PropertyOffset[ord(TProp.bus2)] := 2;
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.kv)] := ptruint(@obj.kVRating);
+    PropertyOffset[ord(TProp.kv)] := PtrInt(@obj.kVRating);
     PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
     // integer properties
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.phases)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     PropertyType[ord(TProp.NumSteps)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.NumSteps)] := ptruint(@obj.FNumSteps);
+    PropertyOffset[ord(TProp.NumSteps)] := PtrInt(@obj.FNumSteps);
     PropertyFlags[ord(TProp.NumSteps)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.SuppressJSON];
 
     ActiveProperty := NumPropsThisClass;

@@ -130,35 +130,35 @@ begin
     
     // enums
     PropertyType[ord(TProp.units)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.units)] := ptruint(@obj.Units);
+    PropertyOffset[ord(TProp.units)] := PtrInt(@obj.Units);
     PropertyOffset2[ord(TProp.units)] := PtrInt(DSS.UnitsEnum);
 
     // boolean
     PropertyType[ord(TProp.Detailed)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.Detailed)] := ptruint(@obj.detailed);
+    PropertyOffset[ord(TProp.Detailed)] := PtrInt(@obj.detailed);
 
     // integers
     PropertyType[ord(TProp.nphases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.nphases)] := ptruint(@obj.Nphases);
+    PropertyOffset[ord(TProp.nphases)] := PtrInt(@obj.Nphases);
 
     PropertyType[ord(TProp.nconds)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.nconds)] := ptruint(@obj.NConds);
+    PropertyOffset[ord(TProp.nconds)] := PtrInt(@obj.NConds);
     PropertyFlags[ord(TProp.nconds)] := [TPropertyFlag.SuppressJSON];
 
     // arrays
     PropertyType[ord(TProp.X)] := TPropertyType.DoubleVArrayProperty;
-    PropertyOffset[ord(TProp.X)] := ptruint(@obj.FX);
-    PropertyOffset2[ord(TProp.X)] := ptruint(@obj.NConds);
+    PropertyOffset[ord(TProp.X)] := PtrInt(@obj.FX);
+    PropertyOffset2[ord(TProp.X)] := PtrInt(@obj.NConds);
 
     PropertyType[ord(TProp.H)] := TPropertyType.DoubleVArrayProperty;
-    PropertyOffset[ord(TProp.H)] := ptruint(@obj.FY);
-    PropertyOffset2[ord(TProp.H)] := ptruint(@obj.NConds);
+    PropertyOffset[ord(TProp.H)] := PtrInt(@obj.FY);
+    PropertyOffset2[ord(TProp.H)] := PtrInt(@obj.NConds);
 
     // doubles (default type)
-    PropertyOffset[ord(TProp.EqDistPhPh)] := ptruint(@obj.eqDistPhPh);
-    PropertyOffset[ord(TProp.EqDistPhN)] := ptruint(@obj.eqDistPhN);
-    PropertyOffset[ord(TProp.AvgPhaseHeight)] := ptruint(@obj.avgPhaseHeight);
-    PropertyOffset[ord(TProp.AvgNeutralHeight)] := ptruint(@obj.avgNeutralHeight);
+    PropertyOffset[ord(TProp.EqDistPhPh)] := PtrInt(@obj.eqDistPhPh);
+    PropertyOffset[ord(TProp.EqDistPhN)] := PtrInt(@obj.eqDistPhN);
+    PropertyOffset[ord(TProp.AvgPhaseHeight)] := PtrInt(@obj.avgPhaseHeight);
+    PropertyOffset[ord(TProp.AvgNeutralHeight)] := PtrInt(@obj.avgNeutralHeight);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

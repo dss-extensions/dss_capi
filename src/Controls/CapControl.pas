@@ -256,82 +256,82 @@ begin
 
     // object references
     PropertyType[ord(TProp.capacitor)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.capacitor)] := ptruint(@obj.controlledElement);
-    PropertyOffset2[ord(TProp.capacitor)] := ptruint(DSS.CapacitorClass);
+    PropertyOffset[ord(TProp.capacitor)] := PtrInt(@obj.controlledElement);
+    PropertyOffset2[ord(TProp.capacitor)] := PtrInt(DSS.CapacitorClass);
     PropertyWriteFunction[ord(TProp.capacitor)] := @SetControlledElement;
     PropertyFlags[ord(TProp.capacitor)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.CheckForVar, TPropertyFlag.Required]; // will automatically substitute @var value
 
     PropertyType[ord(TProp.element)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.element)] := ptruint(@obj.FMonitoredElement);
+    PropertyOffset[ord(TProp.element)] := PtrInt(@obj.FMonitoredElement);
     PropertyOffset2[ord(TProp.element)] := 0;
     PropertyWriteFunction[ord(TProp.element)] := @SetMonitoredElement; // TODO: move to side-effect instead?
     PropertyFlags[ord(TProp.element)] := [TPropertyFlag.WriteByFunction];// [TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     PropertyType[ord(TProp.ControlSignal)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.ControlSignal)] := ptruint(@obj.ctrlSignalShape);
-    PropertyOffset2[ord(TProp.ControlSignal)] := ptruint(DSS.LoadShapeClass);
+    PropertyOffset[ord(TProp.ControlSignal)] := PtrInt(@obj.ctrlSignalShape);
+    PropertyOffset2[ord(TProp.ControlSignal)] := PtrInt(DSS.LoadShapeClass);
     //PropertyFlags[ord(TProp.ControlSignal)] := [TPropertyFlag.CheckForVar];
 
     // enum properties
     PropertyType[ord(TProp.typ)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.typ)] := ptruint(@obj.ControlType);
+    PropertyOffset[ord(TProp.typ)] := PtrInt(@obj.ControlType);
     PropertyOffset2[ord(TProp.typ)] := PtrInt(TypeEnum);
 
     PropertyType[ord(TProp.PTphase)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.PTphase)] := ptruint(@obj.ControlVars.FPTPhase);
+    PropertyOffset[ord(TProp.PTphase)] := PtrInt(@obj.ControlVars.FPTPhase);
     PropertyOffset2[ord(TProp.PTphase)] := PtrInt(DSS.MonPhaseEnum);
 
     PropertyType[ord(TProp.CTPhase)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.CTPhase)] := ptruint(@obj.ControlVars.FCTPhase);
+    PropertyOffset[ord(TProp.CTPhase)] := PtrInt(@obj.ControlVars.FCTPhase);
     PropertyOffset2[ord(TProp.CTPhase)] := PtrInt(DSS.MonPhaseEnum);
 
     // string properties
     PropertyType[ord(TProp.VBus)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.VBus)] := ptruint(@obj.ControlVars.VOverrideBusName);
+    PropertyOffset[ord(TProp.VBus)] := PtrInt(@obj.ControlVars.VOverrideBusName);
 
     PropertyType[ord(TProp.UserModel)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.UserModel)] := ptruint(@obj.UserModelNameStr);
+    PropertyOffset[ord(TProp.UserModel)] := PtrInt(@obj.UserModelNameStr);
     PropertyFlags[ord(TProp.UserModel)] := [TPropertyFlag.IsFilename];
 
     PropertyType[ord(TProp.UserData)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.UserData)] := ptruint(@obj.UserModelEditStr);
+    PropertyOffset[ord(TProp.UserData)] := PtrInt(@obj.UserModelEditStr);
 
     // boolean properties
     PropertyType[ord(TProp.VoltOverride)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.EventLog)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.VoltOverride)] := ptruint(@obj.ControlVars.Voverride);
-    PropertyOffset[ord(TProp.EventLog)] := ptruint(@obj.ShowEventLog);
+    PropertyOffset[ord(TProp.VoltOverride)] := PtrInt(@obj.ControlVars.Voverride);
+    PropertyOffset[ord(TProp.EventLog)] := PtrInt(@obj.ShowEventLog);
 
     // integer properties
     PropertyType[ord(TProp.terminal)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.terminal)] := ptruint(@obj.ElementTerminal);
+    PropertyOffset[ord(TProp.terminal)] := PtrInt(@obj.ElementTerminal);
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.PTratio)] := ptruint(@obj.ControlVars.PTRatio);
-    PropertyOffset[ord(TProp.CTratio)] := ptruint(@obj.ControlVars.CTRatio);
-    PropertyOffset[ord(TProp.ONsetting)] := ptruint(@obj.ControlVars.ON_Value);
-    PropertyOffset[ord(TProp.OFFsetting)] := ptruint(@obj.ControlVars.OFF_Value);
+    PropertyOffset[ord(TProp.PTratio)] := PtrInt(@obj.ControlVars.PTRatio);
+    PropertyOffset[ord(TProp.CTratio)] := PtrInt(@obj.ControlVars.CTRatio);
+    PropertyOffset[ord(TProp.ONsetting)] := PtrInt(@obj.ControlVars.ON_Value);
+    PropertyOffset[ord(TProp.OFFsetting)] := PtrInt(@obj.ControlVars.OFF_Value);
     
-    PropertyOffset[ord(TProp.Delay)] := ptruint(@obj.ControlVars.ONDelay);
+    PropertyOffset[ord(TProp.Delay)] := PtrInt(@obj.ControlVars.ONDelay);
     PropertyFlags[ord(TProp.Delay)] := [TPropertyFlag.Units_s];
 
-    PropertyOffset[ord(TProp.Vmax)] := ptruint(@obj.ControlVars.Vmax);
+    PropertyOffset[ord(TProp.Vmax)] := PtrInt(@obj.ControlVars.Vmax);
     PropertyFlags[ord(TProp.Vmax)] := [TPropertyFlag.Units_V];
 
-    PropertyOffset[ord(TProp.Vmin)] := ptruint(@obj.ControlVars.Vmin);
+    PropertyOffset[ord(TProp.Vmin)] := PtrInt(@obj.ControlVars.Vmin);
     PropertyFlags[ord(TProp.Vmin)] := [TPropertyFlag.Units_V];
 
-    PropertyOffset[ord(TProp.DelayOFF)] := ptruint(@obj.ControlVars.OFFDelay);
+    PropertyOffset[ord(TProp.DelayOFF)] := PtrInt(@obj.ControlVars.OFFDelay);
     PropertyFlags[ord(TProp.DelayOFF)] := [TPropertyFlag.Units_s];
 
-    PropertyOffset[ord(TProp.DeadTime)] := ptruint(@obj.ControlVars.DeadTime);
+    PropertyOffset[ord(TProp.DeadTime)] := PtrInt(@obj.ControlVars.DeadTime);
     PropertyFlags[ord(TProp.DeadTime)] := [TPropertyFlag.Units_s];
 
-    PropertyOffset[ord(TProp.pctMinkvar)] := ptruint(@obj.FpctMinKvar);
+    PropertyOffset[ord(TProp.pctMinkvar)] := PtrInt(@obj.FpctMinKvar);
 
     // boolean action
     PropertyType[ord(TProp.Reset)] := TPropertyType.BooleanActionProperty;
-    PropertyOffset[ord(TProp.Reset)] := ptruint(@DoReset);
+    PropertyOffset[ord(TProp.Reset)] := PtrInt(@DoReset);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

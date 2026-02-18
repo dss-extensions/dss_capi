@@ -116,7 +116,7 @@ begin
 
     // string lists
     PropertyType[ord(TProp.UPFCList)] := TPropertyType.StringListProperty;
-    PropertyOffset[ord(TProp.UPFCList)] := ptruint(@obj.FUPFCNameList);
+    PropertyOffset[ord(TProp.UPFCList)] := PtrInt(@obj.FUPFCNameList);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

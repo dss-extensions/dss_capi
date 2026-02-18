@@ -146,7 +146,7 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
-    PropertyStructArrayCountOffset := ptruint(@obj.Npts);
+    PropertyStructArrayCountOffset := PtrInt(@obj.Npts);
 
     SpecSetNames := ArrayOfString.Create(
         'Year, Mult',
@@ -162,31 +162,31 @@ begin
     );
 
     PropertyType[ord(TProp.year)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.year)] := ptruint(@obj.Year);
-    PropertyOffset2[ord(TProp.year)] := ptruint(@obj.Npts);
+    PropertyOffset[ord(TProp.year)] := PtrInt(@obj.Year);
+    PropertyOffset2[ord(TProp.year)] := PtrInt(@obj.Npts);
     PropertyFlags[ord(TProp.year)] := [TPropertyFlag.ApplyRound, TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.mult)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.mult)] := ptruint(@obj.Multiplier);
-    PropertyOffset2[ord(TProp.mult)] := ptruint(@obj.Npts);
+    PropertyOffset[ord(TProp.mult)] := PtrInt(@obj.Multiplier);
+    PropertyOffset2[ord(TProp.mult)] := PtrInt(@obj.Npts);
     PropertyFlags[ord(TProp.mult)] := [TPropertyFlag.RequiredInSpecSet];
 
     // strings
     PropertyType[ord(TProp.csvfile)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.csvfile)] := ptruint(@obj.csvfile);
+    PropertyOffset[ord(TProp.csvfile)] := PtrInt(@obj.csvfile);
     PropertyFlags[ord(TProp.csvfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     PropertyType[ord(TProp.dblfile)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.dblfile)] := ptruint(@obj.dblfile);
+    PropertyOffset[ord(TProp.dblfile)] := PtrInt(@obj.dblfile);
     PropertyFlags[ord(TProp.dblfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     PropertyType[ord(TProp.sngfile)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.sngfile)] := ptruint(@obj.sngfile);
+    PropertyOffset[ord(TProp.sngfile)] := PtrInt(@obj.sngfile);
     PropertyFlags[ord(TProp.sngfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     // integer properties
     PropertyType[ord(TProp.Npts)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Npts)] := ptruint(@obj.Npts);
+    PropertyOffset[ord(TProp.Npts)] := PtrInt(@obj.Npts);
     PropertyFlags[ord(TProp.Npts)] := [TPropertyFlag.SuppressJSON];
 
     ActiveProperty := NumPropsThisClass;

@@ -304,13 +304,13 @@ begin
 
     // enum properties
     PropertyType[ord(TProp.PTphase)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.PTphase)] := ptruint(@obj.FPTPhase);
+    PropertyOffset[ord(TProp.PTphase)] := PtrInt(@obj.FPTPhase);
     PropertyOffset2[ord(TProp.PTphase)] := PtrInt(PhaseEnum);
 
     // object reference
     PropertyType[ord(TProp.transformer)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.transformer)] := ptruint(@obj.controlledElement);
-    PropertyOffset2[ord(TProp.transformer)] := ptruint(Transf_Or_AutoTrans_ProxyClass);
+    PropertyOffset[ord(TProp.transformer)] := PtrInt(@obj.controlledElement);
+    PropertyOffset2[ord(TProp.transformer)] := PtrInt(Transf_Or_AutoTrans_ProxyClass);
     PropertyWriteFunction[ord(TProp.transformer)] := @SetControlledElement;
     PropertyFlags[ord(TProp.transformer)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.CheckForVar, TPropertyFlag.Required];
 
@@ -331,78 +331,78 @@ begin
     PropertyType[ord(TProp.Idle)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.IdleForward)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.IdleReverse)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.reversible)] := ptruint(@obj.IsReversible);
-    PropertyOffset[ord(TProp.debugtrace)] := ptruint(@obj.DebugTrace);
-    PropertyOffset[ord(TProp.inversetime)] := ptruint(@obj.Inversetime);
-    PropertyOffset[ord(TProp.revNeutral)] := ptruint(@obj.ReverseNeutral);
-    PropertyOffset[ord(TProp.EventLog)] := ptruint(@obj.ShowEventLog);
-    PropertyOffset[ord(TProp.Cogen)] := ptruint(@obj.CogenEnabled);
-    PropertyOffset[ord(TProp.Idle)] := ptruint(@obj.IdleEnabled);
-    PropertyOffset[ord(TProp.IdleForward)] := ptruint(@obj.IdleForwardEnabled);
-    PropertyOffset[ord(TProp.IdleReverse)] := ptruint(@obj.IdleReverseEnabled);
+    PropertyOffset[ord(TProp.reversible)] := PtrInt(@obj.IsReversible);
+    PropertyOffset[ord(TProp.debugtrace)] := PtrInt(@obj.DebugTrace);
+    PropertyOffset[ord(TProp.inversetime)] := PtrInt(@obj.Inversetime);
+    PropertyOffset[ord(TProp.revNeutral)] := PtrInt(@obj.ReverseNeutral);
+    PropertyOffset[ord(TProp.EventLog)] := PtrInt(@obj.ShowEventLog);
+    PropertyOffset[ord(TProp.Cogen)] := PtrInt(@obj.CogenEnabled);
+    PropertyOffset[ord(TProp.Idle)] := PtrInt(@obj.IdleEnabled);
+    PropertyOffset[ord(TProp.IdleForward)] := PtrInt(@obj.IdleForwardEnabled);
+    PropertyOffset[ord(TProp.IdleReverse)] := PtrInt(@obj.IdleReverseEnabled);
 
     // integer properties
     PropertyType[ord(TProp.winding)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.winding)] := ptruint(@obj.ElementTerminal);
+    PropertyOffset[ord(TProp.winding)] := PtrInt(@obj.ElementTerminal);
 
     PropertyType[ord(TProp.maxtapchange)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.maxtapchange)] := ptruint(@obj.TapLimitPerChange);
+    PropertyOffset[ord(TProp.maxtapchange)] := PtrInt(@obj.TapLimitPerChange);
 
     PropertyType[ord(TProp.tapwinding)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.tapwinding)] := ptruint(@obj.TapWinding);
+    PropertyOffset[ord(TProp.tapwinding)] := PtrInt(@obj.TapWinding);
     PropertyFlags[ord(TProp.tapwinding)] := [TPropertyFlag.DynamicDefault];
 
     // string properties
     PropertyType[ord(TProp.bus)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.bus)] := ptruint(@obj.RegulatedBus);
+    PropertyOffset[ord(TProp.bus)] := PtrInt(@obj.RegulatedBus);
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.vreg)] := ptruint(@obj.Vreg);
+    PropertyOffset[ord(TProp.vreg)] := PtrInt(@obj.Vreg);
     PropertyFlags[ord(TProp.vreg)] := [TPropertyFlag.Units_V];
 
-    PropertyOffset[ord(TProp.band)] := ptruint(@obj.Bandwidth);
-    PropertyOffset[ord(TProp.ptratio)] := ptruint(@obj.PTRatio);
+    PropertyOffset[ord(TProp.band)] := PtrInt(@obj.Bandwidth);
+    PropertyOffset[ord(TProp.ptratio)] := PtrInt(@obj.PTRatio);
 
-    PropertyOffset[ord(TProp.ctprim)] := ptruint(@obj.CTRating);
+    PropertyOffset[ord(TProp.ctprim)] := PtrInt(@obj.CTRating);
     PropertyFlags[ord(TProp.ctprim)] := [TPropertyFlag.Units_A];
 
-    PropertyOffset[ord(TProp.R)] := ptruint(@obj.R);
-    PropertyOffset[ord(TProp.X)] := ptruint(@obj.X);
+    PropertyOffset[ord(TProp.R)] := PtrInt(@obj.R);
+    PropertyOffset[ord(TProp.X)] := PtrInt(@obj.X);
 
-    PropertyOffset[ord(TProp.delay)] := ptruint(@obj.TimeDelay);
+    PropertyOffset[ord(TProp.delay)] := PtrInt(@obj.TimeDelay);
     PropertyFlags[ord(TProp.delay)] := [TPropertyFlag.Units_s];
 
-    PropertyOffset[ord(TProp.revvreg)] := ptruint(@obj.revVreg);
-    PropertyOffset[ord(TProp.revband)] := ptruint(@obj.revBandwidth);
-    PropertyOffset[ord(TProp.revR)] := ptruint(@obj.revR);
-    PropertyOffset[ord(TProp.revX)] := ptruint(@obj.revX);
+    PropertyOffset[ord(TProp.revvreg)] := PtrInt(@obj.revVreg);
+    PropertyOffset[ord(TProp.revband)] := PtrInt(@obj.revBandwidth);
+    PropertyOffset[ord(TProp.revR)] := PtrInt(@obj.revR);
+    PropertyOffset[ord(TProp.revX)] := PtrInt(@obj.revX);
 
-    PropertyOffset[ord(TProp.tapdelay)] := ptruint(@obj.TapDelay);
+    PropertyOffset[ord(TProp.tapdelay)] := PtrInt(@obj.TapDelay);
     PropertyFlags[ord(TProp.tapdelay)] := [TPropertyFlag.Units_s];
 
-    PropertyOffset[ord(TProp.RemotePTRatio)] := ptruint(@obj.RemotePTRatio);
+    PropertyOffset[ord(TProp.RemotePTRatio)] := PtrInt(@obj.RemotePTRatio);
     PropertyFlags[ord(TProp.RemotePTRatio)] := [TPropertyFlag.DynamicDefault];
 
-    PropertyOffset[ord(TProp.LDC_Z)] := ptruint(@obj.LDC_Z);
-    PropertyOffset[ord(TProp.rev_Z)] := ptruint(@obj.revLDC_Z);
+    PropertyOffset[ord(TProp.LDC_Z)] := PtrInt(@obj.LDC_Z);
+    PropertyOffset[ord(TProp.rev_Z)] := PtrInt(@obj.revLDC_Z);
 
-    PropertyOffset[ord(TProp.RevThreshold)] := ptruint(@obj.RevPowerThreshold);
+    PropertyOffset[ord(TProp.RevThreshold)] := PtrInt(@obj.RevPowerThreshold);
     PropertyFlags[ord(TProp.RevThreshold)] := [TPropertyFlag.Units_kW];
     PropertyScale[ord(TProp.RevThreshold)] := 1000;
 
-    PropertyOffset[ord(TProp.FwdThreshold)] := ptruint(@obj.FwdPowerThreshold);
+    PropertyOffset[ord(TProp.FwdThreshold)] := PtrInt(@obj.FwdPowerThreshold);
     PropertyFlags[ord(TProp.FwdThreshold)] := [TPropertyFlag.Units_kW];
     PropertyScale[ord(TProp.FwdThreshold)] := 1000;
 
-    PropertyOffset[ord(TProp.revDelay)] := ptruint(@obj.RevDelay);
+    PropertyOffset[ord(TProp.revDelay)] := PtrInt(@obj.RevDelay);
     PropertyFlags[ord(TProp.revdelay)] := [TPropertyFlag.Units_s];
 
-    PropertyOffset[ord(TProp.Vlimit)] := ptruint(@obj.Vlimit);
+    PropertyOffset[ord(TProp.Vlimit)] := PtrInt(@obj.Vlimit);
     PropertyFlags[ord(TProp.Vlimit)] := [TPropertyFlag.Units_V];
 
     // boolean action
     PropertyType[ord(TProp.Reset)] := TPropertyType.BooleanActionProperty;
-    PropertyOffset[ord(TProp.Reset)] := ptruint(@DoReset);
+    PropertyOffset[ord(TProp.Reset)] := PtrInt(@DoReset);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

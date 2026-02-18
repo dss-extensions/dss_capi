@@ -885,7 +885,7 @@ begin
 
             // Type validation
             //TODO: add validation -- e.g. PD element for EnergyMeter
-            if not ValidateObjectClass(TDSSObject(obj), PropertyName[Index], TDSSClass(PtrUInt(PropertyOffset2[Index])), TDSSObject(Value), (TPropertyFlag.AllowNone in PropertyFlags[Index])) then
+            if not ValidateObjectClass(TDSSObject(obj), PropertyName[Index], TDSSClass(PtrInt(PropertyOffset2[Index])), TDSSObject(Value), (TPropertyFlag.AllowNone in PropertyFlags[Index])) then
                 Exit;
 
             if (TPropertyFlag.WriteByFunction in flags) then
@@ -2789,7 +2789,7 @@ begin
     for i := 1 to ValueCount do
     begin
         ovalue := TDSSObject(tmpValue^);
-        if not ValidateObjectClass(TDSSObject(obj), PropertyName[Index], TDSSClass(PtrUInt(PropertyOffset2[Index])), ovalue, (TPropertyFlag.AllowNoneItem in PropertyFlags[Index])) then
+        if not ValidateObjectClass(TDSSObject(obj), PropertyName[Index], TDSSClass(PtrInt(PropertyOffset2[Index])), ovalue, (TPropertyFlag.AllowNoneItem in PropertyFlags[Index])) then
             Exit;
         
         Inc(tmpValue);
@@ -3047,7 +3047,7 @@ begin
         begin
             doublePtr := PDouble(
                 PPByte(PByte(obj) + PropertyStructArrayOffset)^ + // Pointer to the pointer array
-                PropertyOffset[Index] + ptruint(// base field
+                PropertyOffset[Index] + PtrInt(// base field
                     PropertyStructArrayStep * // step size
                     (PInteger(PByte(obj) + PropertyStructArrayIndexOffset)^ - 1) // index
                 ) 
@@ -3177,7 +3177,7 @@ begin
         begin
             integerPtr := PInteger(
                 PPByte(PByte(obj) + PropertyStructArrayOffset)^ + // Pointer to the pointer array
-                PropertyOffset[Index] + ptruint(// base field
+                PropertyOffset[Index] + PtrInt(// base field
                     PropertyStructArrayStep * // step size
                     (PInteger(PByte(obj) + PropertyStructArrayIndexOffset)^ - 1) // index
                 ) 
@@ -3187,7 +3187,7 @@ begin
         begin
             integerPtr := PInteger(
                 PPByte(PByte(obj) + PropertyStructArrayOffset)^ + // Pointer to the pointer array
-                PropertyOffset[Index] + ptruint(// base field
+                PropertyOffset[Index] + PtrInt(// base field
                     PropertyStructArrayStep * // step size
                     (PInteger(PByte(obj) + PropertyStructArrayIndexOffset)^ - 1) // index
                 ) 
@@ -4634,7 +4634,7 @@ begin
             if PropertyScale[Index] <> 1 then
                 Result := (PDouble(
                     PPByte(PByte(obj) + PropertyStructArrayOffset)^ + // Pointer to the pointer array
-                    PropertyOffset[Index] + ptruint(// base field
+                    PropertyOffset[Index] + PtrInt(// base field
                         PropertyStructArrayStep * // step size
                         (PInteger(PByte(obj) + PropertyStructArrayIndexOffset)^ - 1) // index
                     ) 
@@ -4642,7 +4642,7 @@ begin
             else
                 Result := PDouble(
                     PPByte(PByte(obj) + PropertyStructArrayOffset)^ + // Pointer to the pointer array
-                    PropertyOffset[Index] + ptruint(// base field
+                    PropertyOffset[Index] + PtrInt(// base field
                         PropertyStructArrayStep * // step size
                         (PInteger(PByte(obj) + PropertyStructArrayIndexOffset)^ - 1) // index
                     ) 
@@ -4669,7 +4669,7 @@ begin
         TPropertyType.MappedStringEnumOnStructArrayProperty:
             Result := TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalToString(PInteger(
                 PPByte(PByte(obj) + PropertyStructArrayOffset)^ + // Pointer to the pointer array
-                PropertyOffset[Index] + ptruint(// base field
+                PropertyOffset[Index] + PtrInt(// base field
                     PropertyStructArrayStep * // step size
                     (PInteger(PByte(obj) + PropertyStructArrayIndexOffset)^ - 1) // index
                 )
@@ -4717,7 +4717,7 @@ begin
         TPropertyType.IntegerOnStructArrayProperty:
             Result := PInteger(
                 PPByte(PByte(obj) + PropertyStructArrayOffset)^ + // Pointer to the pointer array
-                PropertyOffset[Index] + ptruint(// base field
+                PropertyOffset[Index] + PtrInt(// base field
                     PropertyStructArrayStep * // step size
                     (PInteger(PByte(obj) + PropertyStructArrayIndexOffset)^ - 1) // index
                 ) 
@@ -4726,7 +4726,7 @@ begin
         TPropertyType.MappedStringEnumOnStructArrayProperty:
             Result := PInteger(
                 PPByte(PByte(obj) + PropertyStructArrayOffset)^ + // Pointer to the pointer array
-                PropertyOffset[Index] + ptruint(// base field
+                PropertyOffset[Index] + PtrInt(// base field
                     PropertyStructArrayStep * // step size
                     (PInteger(PByte(obj) + PropertyStructArrayIndexOffset)^ - 1) // index
                 )
@@ -6398,7 +6398,7 @@ begin
     inc(otherObjPtr, ElementIndex);
 
     // Type validation
-    if not ValidateObjectClass(obj, PropertyName[Index], TDSSClass(PtrUInt(PropertyOffset2[Index])), TDSSObject(Value), (TPropertyFlag.AllowNone in PropertyFlags[Index])) then
+    if not ValidateObjectClass(obj, PropertyName[Index], TDSSClass(PtrInt(PropertyOffset2[Index])), TDSSObject(Value), (TPropertyFlag.AllowNone in PropertyFlags[Index])) then
         Exit;
 
     otherObjPtr^ := Value;

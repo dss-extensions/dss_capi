@@ -139,7 +139,7 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
-    PropertyStructArrayCountOffset := ptruint(@obj.NumHarm);
+    PropertyStructArrayCountOffset := PtrInt(@obj.NumHarm);
 
     SpecSetNames := ArrayOfString.Create(
         'Harmonic, Angle, pctMag',
@@ -152,28 +152,28 @@ begin
 
     // strings
     PropertyType[ord(TProp.csvfile)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.csvfile)] := ptruint(@obj.csvfile);
+    PropertyOffset[ord(TProp.csvfile)] := PtrInt(@obj.csvfile);
     PropertyFlags[ord(TProp.csvfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     // integer properties
     PropertyType[ord(TProp.NumHarm)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.NumHarm)] := ptruint(@obj.NumHarm);
+    PropertyOffset[ord(TProp.NumHarm)] := PtrInt(@obj.NumHarm);
     PropertyFlags[ord(TProp.NumHarm)] := [TPropertyFlag.SuppressJSON];
 
     // double arrays
     PropertyType[ord(TProp.harmonic)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.harmonic)] := ptruint(@obj.HarmArray);
-    PropertyOffset2[ord(TProp.harmonic)] := ptruint(@obj.NumHarm);
+    PropertyOffset[ord(TProp.harmonic)] := PtrInt(@obj.HarmArray);
+    PropertyOffset2[ord(TProp.harmonic)] := PtrInt(@obj.NumHarm);
     PropertyFlags[ord(TProp.harmonic)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.angle)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.angle)] := ptruint(@obj.AngleArray);
-    PropertyOffset2[ord(TProp.angle)] := ptruint(@obj.NumHarm);
+    PropertyOffset[ord(TProp.angle)] := PtrInt(@obj.AngleArray);
+    PropertyOffset2[ord(TProp.angle)] := PtrInt(@obj.NumHarm);
     PropertyFlags[ord(TProp.angle)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.pctmag)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.pctmag)] := ptruint(@obj.puMagArray);
-    PropertyOffset2[ord(TProp.pctmag)] := ptruint(@obj.NumHarm);
+    PropertyOffset[ord(TProp.pctmag)] := PtrInt(@obj.puMagArray);
+    PropertyOffset2[ord(TProp.pctmag)] := PtrInt(@obj.NumHarm);
     PropertyScale[ord(TProp.pctmag)] := 0.01;
     PropertyFlags[ord(TProp.pctmag)] := [TPropertyFlag.RequiredInSpecSet];
 

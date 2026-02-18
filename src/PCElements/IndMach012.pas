@@ -278,7 +278,7 @@ begin
 
     // integer
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.phases)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     // special function properties
@@ -287,11 +287,11 @@ begin
 
     // enum properties
     PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.conn)] := ptruint(@obj.Connection);
+    PropertyOffset[ord(TProp.conn)] := PtrInt(@obj.Connection);
     PropertyOffset2[ord(TProp.conn)] := PtrInt(DSS.ConnectionEnum);
 
     PropertyType[ord(TProp.SlipOption)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.SlipOption)] := ptruint(@obj.Fixedslip); // LongBool as Integer
+    PropertyOffset[ord(TProp.SlipOption)] := PtrInt(@obj.Fixedslip); // LongBool as Integer
     PropertyOffset2[ord(TProp.SlipOption)] := PtrInt(SlipOptionEnum);
 
     // bus properties
@@ -301,42 +301,42 @@ begin
 
     // boolean properties
     PropertyType[ord(TProp.Debugtrace)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.Debugtrace)] := ptruint(@obj.DebugTrace);
+    PropertyOffset[ord(TProp.Debugtrace)] := PtrInt(@obj.DebugTrace);
 
     // object properties
     PropertyType[ord(TProp.yearly)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.daily)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.duty)] := TPropertyType.DSSObjectReferenceProperty;
     
-    PropertyOffset[ord(TProp.yearly)] := ptruint(@obj.YearlyShapeObj);
-    PropertyOffset[ord(TProp.daily)] := ptruint(@obj.DailyDispShapeObj);
-    PropertyOffset[ord(TProp.duty)] := ptruint(@obj.DutyShapeObj);
+    PropertyOffset[ord(TProp.yearly)] := PtrInt(@obj.YearlyShapeObj);
+    PropertyOffset[ord(TProp.daily)] := PtrInt(@obj.DailyDispShapeObj);
+    PropertyOffset[ord(TProp.duty)] := PtrInt(@obj.DutyShapeObj);
 
-    PropertyOffset2[ord(TProp.yearly)] := ptruint(DSS.LoadShapeClass);
-    PropertyOffset2[ord(TProp.daily)] := ptruint(DSS.LoadShapeClass);
-    PropertyOffset2[ord(TProp.duty)] := ptruint(DSS.LoadShapeClass);
+    PropertyOffset2[ord(TProp.yearly)] := PtrInt(DSS.LoadShapeClass);
+    PropertyOffset2[ord(TProp.daily)] := PtrInt(DSS.LoadShapeClass);
+    PropertyOffset2[ord(TProp.duty)] := PtrInt(DSS.LoadShapeClass);
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.kW)] := ptruint(@obj.kWBase);
+    PropertyOffset[ord(TProp.kW)] := PtrInt(@obj.kWBase);
     PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.required];
 
-    PropertyOffset[ord(TProp.puRs)] := ptruint(@obj.puRs);
-    PropertyOffset[ord(TProp.puXs)] := ptruint(@obj.puXs);
-    PropertyOffset[ord(TProp.puRr)] := ptruint(@obj.puRr);
-    PropertyOffset[ord(TProp.puXr)] := ptruint(@obj.puXr);
-    PropertyOffset[ord(TProp.puXm)] := ptruint(@obj.puXm);
-    PropertyOffset[ord(TProp.MaxSlip)] := ptruint(@obj.MaxSlip);
-    PropertyOffset[ord(TProp.H)] := ptruint(@obj.MachineData.Hmass);
-    PropertyOffset[ord(TProp.D)] := ptruint(@obj.MachineData.D);
+    PropertyOffset[ord(TProp.puRs)] := PtrInt(@obj.puRs);
+    PropertyOffset[ord(TProp.puXs)] := PtrInt(@obj.puXs);
+    PropertyOffset[ord(TProp.puRr)] := PtrInt(@obj.puRr);
+    PropertyOffset[ord(TProp.puXr)] := PtrInt(@obj.puXr);
+    PropertyOffset[ord(TProp.puXm)] := PtrInt(@obj.puXm);
+    PropertyOffset[ord(TProp.MaxSlip)] := PtrInt(@obj.MaxSlip);
+    PropertyOffset[ord(TProp.H)] := PtrInt(@obj.MachineData.Hmass);
+    PropertyOffset[ord(TProp.D)] := PtrInt(@obj.MachineData.D);
 
-    PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.MachineData.kVArating);
+    PropertyOffset[ord(TProp.kVA)] := PtrInt(@obj.MachineData.kVArating);
     PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.required];
 
-    PropertyOffset[ord(TProp.kV)] := ptruint(@obj.MachineData.kVGeneratorBase);
+    PropertyOffset[ord(TProp.kV)] := PtrInt(@obj.MachineData.kVGeneratorBase);
     PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
     // advanced double
-    PropertyOffset[ord(TProp.slip)] := ptruint(@obj.S1);
+    PropertyOffset[ord(TProp.slip)] := PtrInt(@obj.S1);
     PropertyWriteFunction[ord(TProp.slip)] := @SetLocalSlip;
     PropertyFlags[ord(TProp.slip)] := [TPropertyFlag.WriteByFunction];
 

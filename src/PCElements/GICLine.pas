@@ -193,7 +193,7 @@ begin
     );
 
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.phases)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     // bus properties
@@ -206,39 +206,39 @@ begin
     // PropertyFlags[ord(TProp.bus2)] := [TPropertyFlag.Required]; -- not really, since it can be filled based on Bus1 too...
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.Volts)] := ptruint(@obj.Volts);
+    PropertyOffset[ord(TProp.Volts)] := PtrInt(@obj.Volts);
     PropertyFlags[ord(TProp.Volts)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_V];
 
-    PropertyOffset[ord(TProp.Angle)] := ptruint(@obj.Angle);
+    PropertyOffset[ord(TProp.Angle)] := PtrInt(@obj.Angle);
 
-    PropertyOffset[ord(TProp.R)] := ptruint(@obj.R);
+    PropertyOffset[ord(TProp.R)] := PtrInt(@obj.R);
     PropertyFlags[ord(TProp.R)] := [TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm];
 
-    PropertyOffset[ord(TProp.X)] := ptruint(@obj.X);
+    PropertyOffset[ord(TProp.X)] := PtrInt(@obj.X);
     PropertyFlags[ord(TProp.X)] := [TPropertyFlag.Units_ohm];
 
-    PropertyOffset[ord(TProp.C)] := ptruint(@obj.C);
+    PropertyOffset[ord(TProp.C)] := PtrInt(@obj.C);
     PropertyFlags[ord(TProp.C)] := [TPropertyFlag.Units_uF];
 
-    PropertyOffset[ord(TProp.Lat1)] := ptruint(@obj.Lat1);
+    PropertyOffset[ord(TProp.Lat1)] := PtrInt(@obj.Lat1);
     PropertyFlags[ord(TProp.Lat1)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_deg];
 
-    PropertyOffset[ord(TProp.Lon1)] := ptruint(@obj.Lon1);
+    PropertyOffset[ord(TProp.Lon1)] := PtrInt(@obj.Lon1);
     PropertyFlags[ord(TProp.Lon1)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_deg];
 
-    PropertyOffset[ord(TProp.Lat2)] := ptruint(@obj.Lat2);
+    PropertyOffset[ord(TProp.Lat2)] := PtrInt(@obj.Lat2);
     PropertyFlags[ord(TProp.Lat2)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_deg];
 
-    PropertyOffset[ord(TProp.Lon2)] := ptruint(@obj.Lon2);
+    PropertyOffset[ord(TProp.Lon2)] := PtrInt(@obj.Lon2);
     PropertyFlags[ord(TProp.Lon2)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_deg];
 
-    PropertyOffset[ord(TProp.frequency)] := ptruint(@obj.SrcFrequency);
+    PropertyOffset[ord(TProp.frequency)] := PtrInt(@obj.SrcFrequency);
     PropertyFlags[ord(TProp.frequency)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
 
-    PropertyOffset[ord(TProp.EN)] := ptruint(@obj.ENorth);
+    PropertyOffset[ord(TProp.EN)] := PtrInt(@obj.ENorth);
     PropertyFlags[ord(TProp.EN)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_V_per_km];
 
-    PropertyOffset[ord(TProp.EE)] := ptruint(@obj.EEast);
+    PropertyOffset[ord(TProp.EE)] := PtrInt(@obj.EEast);
     PropertyFlags[ord(TProp.EE)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_V_per_km];
 
     ActiveProperty := NumPropsThisClass;

@@ -312,25 +312,25 @@ begin
     PropertyType[ord(TProp.residual)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.VIpolar)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.Ppolar)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.residual)] := ptruint(@obj.IncludeResidual);
-    PropertyOffset[ord(TProp.VIpolar)] := ptruint(@obj.VIpolar);
-    PropertyOffset[ord(TProp.Ppolar)] := ptruint(@obj.Ppolar);
+    PropertyOffset[ord(TProp.residual)] := PtrInt(@obj.IncludeResidual);
+    PropertyOffset[ord(TProp.VIpolar)] := PtrInt(@obj.VIpolar);
+    PropertyOffset[ord(TProp.Ppolar)] := PtrInt(@obj.Ppolar);
 
     // integer properties
     PropertyType[ord(TProp.terminal)] := TPropertyType.IntegerProperty;
     PropertyType[ord(TProp.mode)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.terminal)] := ptruint(@obj.MeteredTerminal);
-    PropertyOffset[ord(TProp.mode)] := ptruint(@obj.Mode);
+    PropertyOffset[ord(TProp.terminal)] := PtrInt(@obj.MeteredTerminal);
+    PropertyOffset[ord(TProp.mode)] := PtrInt(@obj.Mode);
 
     // object reference
     PropertyType[ord(TProp.element)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.element)] := ptruint(@obj.MeteredElement);
+    PropertyOffset[ord(TProp.element)] := PtrInt(@obj.MeteredElement);
     PropertyOffset2[ord(TProp.element)] := 0;
     PropertyFlags[ord(TProp.element)] := [TPropertyFlag.DynamicDefault]; // TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     // enum action
     PropertyType[ord(TProp.Action)] := TPropertyType.StringEnumActionProperty;
-    PropertyOffset[ord(TProp.Action)] := ptruint(@DoAction); 
+    PropertyOffset[ord(TProp.Action)] := PtrInt(@DoAction); 
     PropertyOffset2[ord(TProp.Action)] := PtrInt(ActionEnum); 
 
     ActiveProperty := NumPropsThisClass;

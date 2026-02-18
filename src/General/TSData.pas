@@ -95,13 +95,13 @@ begin
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
     // double properties (default type)
-    PropertyOffset[ActiveProperty + ord(TProp.DiaShield)] := ptruint(@obj.DiaShield);
+    PropertyOffset[ActiveProperty + ord(TProp.DiaShield)] := PtrInt(@obj.DiaShield);
     PropertyFlags[ActiveProperty + ord(TProp.DiaShield)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
     
-    PropertyOffset[ActiveProperty + ord(TProp.TapeLayer)] := ptruint(@obj.TapeLayer);
+    PropertyOffset[ActiveProperty + ord(TProp.TapeLayer)] := PtrInt(@obj.TapeLayer);
     PropertyFlags[ActiveProperty + ord(TProp.TapeLayer)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
     
-    PropertyOffset[ActiveProperty + ord(TProp.TapeLap)] := ptruint(@obj.TapeLap);
+    PropertyOffset[ActiveProperty + ord(TProp.TapeLap)] := PtrInt(@obj.TapeLap);
     PropertyFlags[ActiveProperty + ord(TProp.TapeLap)] := [TPropertyFlag.NonNegative, TPropertyFlag.NoDefault];
 
     ActiveProperty := NumPropsThisClass;

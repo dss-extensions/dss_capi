@@ -244,7 +244,7 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo, PropInfoLegacy);
 
-    PropertyStructArrayCountOffset := ptruint(@obj.numPoints);
+    PropertyStructArrayCountOffset := PtrInt(@obj.numPoints);
 
     SpecSetNames := ArrayOfString.Create(
         'Xarray, Yarray',
@@ -263,38 +263,38 @@ begin
 
     // integer properties
     PropertyType[ord(TProp.Npts)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Npts)] := ptruint(@obj.numPoints);
+    PropertyOffset[ord(TProp.Npts)] := PtrInt(@obj.numPoints);
     PropertyFlags[ord(TProp.Npts)] := [TPropertyFlag.SuppressJSON];
           
     // double arrays
     PropertyType[ord(TProp.Xarray)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.Xarray)] := ptruint(@obj.XValues);
-    PropertyOffset2[ord(TProp.Xarray)] := ptruint(@obj.numPoints);
+    PropertyOffset[ord(TProp.Xarray)] := PtrInt(@obj.XValues);
+    PropertyOffset2[ord(TProp.Xarray)] := PtrInt(@obj.numPoints);
     PropertyFlags[ord(TProp.Xarray)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.Yarray)] := TPropertyType.DoubleArrayProperty;
-    PropertyOffset[ord(TProp.Yarray)] := ptruint(@obj.YValues);
-    PropertyOffset2[ord(TProp.Yarray)] := ptruint(@obj.numPoints);
+    PropertyOffset[ord(TProp.Yarray)] := PtrInt(@obj.YValues);
+    PropertyOffset2[ord(TProp.Yarray)] := PtrInt(@obj.numPoints);
     PropertyFlags[ord(TProp.Yarray)] := [TPropertyFlag.RequiredInSpecSet];
 
     // strings
     PropertyType[ord(TProp.csvfile)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.csvfile)] := ptruint(@obj.csvfile);
+    PropertyOffset[ord(TProp.csvfile)] := PtrInt(@obj.csvfile);
     PropertyFlags[ord(TProp.csvfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     PropertyType[ord(TProp.dblfile)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.dblfile)] := ptruint(@obj.dblfile);
+    PropertyOffset[ord(TProp.dblfile)] := PtrInt(@obj.dblfile);
     PropertyFlags[ord(TProp.dblfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     PropertyType[ord(TProp.sngfile)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.sngfile)] := ptruint(@obj.sngfile);
+    PropertyOffset[ord(TProp.sngfile)] := PtrInt(@obj.sngfile);
     PropertyFlags[ord(TProp.sngfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     // doubles
-    PropertyOffset[ord(TProp.Xshift)] := ptruint(@obj.FXshift);
-    PropertyOffset[ord(TProp.Yshift)] := ptruint(@obj.FYshift);
-    PropertyOffset[ord(TProp.Xscale)] := ptruint(@obj.FXscale);
-    PropertyOffset[ord(TProp.Yscale)] := ptruint(@obj.FYscale);
+    PropertyOffset[ord(TProp.Xshift)] := PtrInt(@obj.FXshift);
+    PropertyOffset[ord(TProp.Yshift)] := PtrInt(@obj.FYshift);
+    PropertyOffset[ord(TProp.Xscale)] := PtrInt(@obj.FXscale);
+    PropertyOffset[ord(TProp.Yscale)] := PtrInt(@obj.FYscale);
 
     // doubles with setter and getters
     PropertyType[ord(TProp.X)] := TPropertyType.DoubleProperty;
@@ -314,7 +314,7 @@ begin
     PropertyOffset[ord(TProp.Points)] := 1; // dummy
     PropertyWriteFunction[ord(TProp.Points)] := @SetPoints;
     PropertyReadFunction[ord(TProp.Points)] := @GetPoints;
-    PropertyOffset3[ord(TProp.Points)] := ptruint(@Get2xNumPoints);
+    PropertyOffset3[ord(TProp.Points)] := PtrInt(@Get2xNumPoints);
     PropertyFlags[ord(TProp.Points)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.ReadByFunction, TPropertyFlag.SizeIsFunction, TPropertyFlag.Redundant, TPropertyFlag.RequiredInSpecSet];
     PropertyRedundantWith[ord(TProp.Points)] := ord(TProp.Xarray);
 

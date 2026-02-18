@@ -147,47 +147,47 @@ begin
 
     // enum properties
     PropertyType[ord(TProp.Action)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.Action)] := ptruint(@obj.CurrentAction);
+    PropertyOffset[ord(TProp.Action)] := PtrInt(@obj.CurrentAction);
     PropertyOffset2[ord(TProp.Action)] := PtrInt(ActionEnum);
-    PropertyOffset3[ord(TProp.Action)] := ptruint(@obj.Locked);
+    PropertyOffset3[ord(TProp.Action)] := PtrInt(@obj.Locked);
     PropertyFlags[ord(TProp.Action)] := [TPropertyFlag.ConditionalReadOnly, TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.Action)] := ord(TProp.State);
 
     PropertyType[ord(TProp.Normal)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.Normal)] := ptruint(@obj.NormalState);
+    PropertyOffset[ord(TProp.Normal)] := PtrInt(@obj.NormalState);
     PropertyOffset2[ord(TProp.Normal)] := PtrInt(StateEnum);
-    PropertyOffset3[ord(TProp.Normal)] := ptruint(@obj.Locked);
+    PropertyOffset3[ord(TProp.Normal)] := PtrInt(@obj.Locked);
     PropertyFlags[ord(TProp.Normal)] := [TPropertyFlag.ConditionalReadOnly, TPropertyFlag.DynamicDefault];
 
     PropertyType[ord(TProp.State)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.State)] := ptruint(@obj.PresentState);
+    PropertyOffset[ord(TProp.State)] := PtrInt(@obj.PresentState);
     PropertyOffset2[ord(TProp.State)] := PtrInt(StateEnum);
-    PropertyOffset3[ord(TProp.State)] := ptruint(@obj.Locked);
+    PropertyOffset3[ord(TProp.State)] := PtrInt(@obj.Locked);
     PropertyReadFunction[ord(TProp.State)] := @GetState;
     PropertyFlags[ord(TProp.State)] := [TPropertyFlag.ConditionalReadOnly, TPropertyFlag.ReadByFunction, TPropertyFlag.NoDefault];
 
     // boolean
     PropertyType[ord(TProp.Lock)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.Lock)] := ptruint(@obj.Locked);
+    PropertyOffset[ord(TProp.Lock)] := PtrInt(@obj.Locked);
 
     // object references
     PropertyType[ord(TProp.SwitchedObj)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.SwitchedObj)] := ptruint(@obj.controlledElement);
+    PropertyOffset[ord(TProp.SwitchedObj)] := PtrInt(@obj.controlledElement);
     PropertyOffset2[ord(TProp.SwitchedObj)] := 0;
     PropertyWriteFunction[ord(TProp.SwitchedObj)] := @SetControlledElement;
     PropertyFlags[ord(TProp.SwitchedObj)] := [TPropertyFlag.WriteByFunction]; //[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     // integer properties
     PropertyType[ord(TProp.SwitchedTerm)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.SwitchedTerm)] := ptruint(@obj.ElementTerminal);
+    PropertyOffset[ord(TProp.SwitchedTerm)] := PtrInt(@obj.ElementTerminal);
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.Delay)] := ptruint(@obj.TimeDelay);
+    PropertyOffset[ord(TProp.Delay)] := PtrInt(@obj.TimeDelay);
     PropertyFlags[ord(TProp.Delay)] := [TPropertyFlag.Units_s];
 
     // boolean action
     PropertyType[ord(TProp.Reset)] := TPropertyType.BooleanActionProperty;
-    PropertyOffset[ord(TProp.Reset)] := ptruint(@DoReset);
+    PropertyOffset[ord(TProp.Reset)] := PtrInt(@DoReset);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

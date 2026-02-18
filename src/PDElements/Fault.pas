@@ -171,13 +171,13 @@ begin
 
     // real matrix
     PropertyType[ord(TProp.Gmatrix)] := TPropertyType.DoubleSymMatrixProperty;
-    PropertyOffset[ord(TProp.Gmatrix)] := ptruint(@obj.Gmatrix);
-    PropertyOffset3[ord(TProp.Gmatrix)] := ptruint(@obj.Fnphases);
+    PropertyOffset[ord(TProp.Gmatrix)] := PtrInt(@obj.Gmatrix);
+    PropertyOffset3[ord(TProp.Gmatrix)] := PtrInt(@obj.Fnphases);
     PropertyFlags[ord(TProp.Gmatrix)] := [TPropertyFlag.RequiredInSpecSet];
 
     // integer properties
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.phases)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     // bus properties
@@ -190,20 +190,20 @@ begin
 
     // boolean properties
     PropertyType[ord(TProp.temporary)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.temporary)] := ptruint(@obj.IsTemporary);
+    PropertyOffset[ord(TProp.temporary)] := PtrInt(@obj.IsTemporary);
 
     // percent properties
     PropertyScale[ord(TProp.pctstddev)] := 0.01;
-    PropertyOffset[ord(TProp.pctstddev)] := ptruint(@obj.StdDev);
+    PropertyOffset[ord(TProp.pctstddev)] := PtrInt(@obj.StdDev);
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.ONtime)] := ptruint(@obj.ON_Time);
+    PropertyOffset[ord(TProp.ONtime)] := PtrInt(@obj.ON_Time);
     PropertyFlags[ord(TProp.ONtime)] := [TPropertyFlag.Units_s];
     
-    PropertyOffset[ord(TProp.MinAmps)] := ptruint(@obj.MinAmps);
+    PropertyOffset[ord(TProp.MinAmps)] := PtrInt(@obj.MinAmps);
     PropertyFlags[ord(TProp.MinAmps)] := [TPropertyFlag.Units_A];
 
-    PropertyOffset[ord(TProp.r)] := ptruint(@obj.G);
+    PropertyOffset[ord(TProp.r)] := PtrInt(@obj.G);
     PropertyFlags[ord(TProp.r)] := [TPropertyFlag.InverseValue, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_ohm];
 
     ActiveProperty := NumPropsThisClass;

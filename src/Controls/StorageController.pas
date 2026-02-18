@@ -346,69 +346,69 @@ begin
 
     // enum properties
     PropertyType[ord(TProp.ModeDischarge)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.ModeDischarge)] := ptruint(@obj.DischargeMode);
+    PropertyOffset[ord(TProp.ModeDischarge)] := PtrInt(@obj.DischargeMode);
     PropertyOffset2[ord(TProp.ModeDischarge)] := PtrInt(DischargeModeEnum);
 
     PropertyType[ord(TProp.ModeCharge)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.ModeCharge)] := ptruint(@obj.ChargeMode);
+    PropertyOffset[ord(TProp.ModeCharge)] := PtrInt(@obj.ChargeMode);
     PropertyOffset2[ord(TProp.ModeCharge)] := PtrInt(ChargeModeEnum);
 
     PropertyType[ord(TProp.MonPhase)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.MonPhase)] := ptruint(@obj.FMonPhase);
+    PropertyOffset[ord(TProp.MonPhase)] := PtrInt(@obj.FMonPhase);
     PropertyOffset2[ord(TProp.MonPhase)] := PtrInt(DSS.MonPhaseEnum);
 
     // boolean properties
     PropertyType[ord(TProp.EventLog)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.EventLog)] := ptruint(@obj.ShowEventLog);
+    PropertyOffset[ord(TProp.EventLog)] := PtrInt(@obj.ShowEventLog);
 
     // string lists
     PropertyType[ord(TProp.ElementList)] := TPropertyType.StringListProperty;
-    PropertyOffset[ord(TProp.ElementList)] := ptruint(@obj.FStorageNameList);
+    PropertyOffset[ord(TProp.ElementList)] := PtrInt(@obj.FStorageNameList);
 
     // objects
     PropertyType[ord(TProp.yearly)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.daily)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.duty)] := TPropertyType.DSSObjectReferenceProperty;
     
-    PropertyOffset[ord(TProp.yearly)] := ptruint(@obj.YearlyShapeObj);
-    PropertyOffset[ord(TProp.daily)] := ptruint(@obj.DailyShapeObj);
-    PropertyOffset[ord(TProp.duty)] := ptruint(@obj.DutyShapeObj);
+    PropertyOffset[ord(TProp.yearly)] := PtrInt(@obj.YearlyShapeObj);
+    PropertyOffset[ord(TProp.daily)] := PtrInt(@obj.DailyShapeObj);
+    PropertyOffset[ord(TProp.duty)] := PtrInt(@obj.DutyShapeObj);
 
-    PropertyOffset2[ord(TProp.yearly)] := ptruint(DSS.LoadShapeClass);
-    PropertyOffset2[ord(TProp.daily)] := ptruint(DSS.LoadShapeClass);
-    PropertyOffset2[ord(TProp.duty)] := ptruint(DSS.LoadShapeClass);
+    PropertyOffset2[ord(TProp.yearly)] := PtrInt(DSS.LoadShapeClass);
+    PropertyOffset2[ord(TProp.daily)] := PtrInt(DSS.LoadShapeClass);
+    PropertyOffset2[ord(TProp.duty)] := PtrInt(DSS.LoadShapeClass);
 
     PropertyType[ord(TProp.Element)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.Element)] := ptruint(@obj.FMonitoredElement);
+    PropertyOffset[ord(TProp.Element)] := PtrInt(@obj.FMonitoredElement);
     PropertyWriteFunction[ord(TProp.Element)] := @SetMonitoredElement;
     PropertyFlags[ord(TProp.Element)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Required];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     // integer properties
     PropertyType[ord(TProp.Terminal)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Terminal)] := ptruint(@obj.ElementTerminal);
+    PropertyOffset[ord(TProp.Terminal)] := PtrInt(@obj.ElementTerminal);
 
     PropertyType[ord(TProp.Seasons)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Seasons)] := ptruint(@obj.Seasons);
+    PropertyOffset[ord(TProp.Seasons)] := PtrInt(@obj.Seasons);
     PropertyFlags[ord(TProp.Seasons)] := [TPropertyFlag.SuppressJSON]; // can be derived trivially from length(SeasonTargets)
 
     PropertyType[ord(TProp.InhibitTime)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.InhibitTime)] := ptruint(@obj.Inhibithrs); // >=1, silent, handled as side effect
+    PropertyOffset[ord(TProp.InhibitTime)] := PtrInt(@obj.Inhibithrs); // >=1, silent, handled as side effect
     PropertyFlags[ord(TProp.InhibitTime)] := [TPropertyFlag.Units_hour, TPropertyFlag.NonNegative];
 
     // double arrays
     PropertyType[ord(TProp.SeasonTargets)] := TPropertyType.DoubleDArrayProperty;
-    PropertyOffset[ord(TProp.SeasonTargets)] := ptruint(@obj.SeasonTargets);
-    PropertyOffset2[ord(TProp.SeasonTargets)] := ptruint(@obj.Seasons);
+    PropertyOffset[ord(TProp.SeasonTargets)] := PtrInt(@obj.SeasonTargets);
+    PropertyOffset2[ord(TProp.SeasonTargets)] := PtrInt(@obj.Seasons);
 
     PropertyType[ord(TProp.SeasonTargetsLow)] := TPropertyType.DoubleDArrayProperty;
-    PropertyOffset[ord(TProp.SeasonTargetsLow)] := ptruint(@obj.SeasonTargetsLow);
-    PropertyOffset2[ord(TProp.SeasonTargetsLow)] := ptruint(@obj.Seasons);
+    PropertyOffset[ord(TProp.SeasonTargetsLow)] := PtrInt(@obj.SeasonTargetsLow);
+    PropertyOffset2[ord(TProp.SeasonTargetsLow)] := PtrInt(@obj.Seasons);
 
     PropertyType[ord(TProp.Weights)] := TPropertyType.DoubleDArrayProperty;
-    PropertyOffset[ord(TProp.Weights)] := ptruint(@obj.FWeights);
-    PropertyOffset2[ord(TProp.Weights)] := ptruint(@obj.FleetSize);
+    PropertyOffset[ord(TProp.Weights)] := PtrInt(@obj.FWeights);
+    PropertyOffset2[ord(TProp.Weights)] := PtrInt(@obj.FleetSize);
     PropertyFlags[ord(TProp.Weights)] := [TPropertyFlag.IndirectCount];
-    PropertyOffset3[ord(TProp.Weights)] := ptruint(@obj.FStorageNameList);
+    PropertyOffset3[ord(TProp.Weights)] := PtrInt(@obj.FStorageNameList);
 
     // double functions
     PropertyFlags[ord(TProp.kWhTotal)] := [TPropertyFlag.SilentReadOnly, TPropertyFlag.ReadByFunction];
@@ -422,50 +422,50 @@ begin
 
     // double read-only
     PropertyFlags[ord(TProp.kWneed)] := [TPropertyFlag.SilentReadOnly, TPropertyFlag.Units_kW];
-    PropertyOffset[ord(TProp.kWneed)] := ptruint(@obj.kWNeeded);
+    PropertyOffset[ord(TProp.kWneed)] := PtrInt(@obj.kWNeeded);
 
     // double properties
-    PropertyOffset[ord(TProp.DispFactor)] := ptruint(@obj.DispFactor);
+    PropertyOffset[ord(TProp.DispFactor)] := PtrInt(@obj.DispFactor);
     //PropertyFlags[ord(TProp.DispFactor)] := [TPropertyFlag.NonNegative, TPropertyFlag.NotZero];
     // >0,<=1
 
     PropertyFlags[ord(TProp.kWTarget)] := [TPropertyFlag.Units_kW];
-    PropertyOffset[ord(TProp.kWTarget)] := ptruint(@obj.FkWTarget);
+    PropertyOffset[ord(TProp.kWTarget)] := PtrInt(@obj.FkWTarget);
     PropertyFlags[ord(TProp.kWTargetLow)] := [TPropertyFlag.Units_kW];
-    PropertyOffset[ord(TProp.kWTargetLow)] := ptruint(@obj.FkWTargetLow);
-    PropertyOffset[ord(TProp.pctkWBand)] := ptruint(@obj.FpctkWBand);
-    PropertyOffset[ord(TProp.pctkWBandLow)] := ptruint(@obj.FpctkWBandLow);
+    PropertyOffset[ord(TProp.kWTargetLow)] := PtrInt(@obj.FkWTargetLow);
+    PropertyOffset[ord(TProp.pctkWBand)] := PtrInt(@obj.FpctkWBand);
+    PropertyOffset[ord(TProp.pctkWBandLow)] := PtrInt(@obj.FpctkWBandLow);
 
-    PropertyOffset[ord(TProp.kWBandLow)] := ptruint(@obj.FkWBandLow);
+    PropertyOffset[ord(TProp.kWBandLow)] := PtrInt(@obj.FkWBandLow);
     PropertyFlags[ord(TProp.kWBandLow)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Redundant, TPropertyFlag.Units_kW];
     PropertyRedundantWith[ord(TProp.kWBandLow)] := ord(TProp.pctkWBandLow);
 
-    PropertyOffset[ord(TProp.kWBand)] := ptruint(@obj.FkWBand);
+    PropertyOffset[ord(TProp.kWBand)] := PtrInt(@obj.FkWBand);
     PropertyFlags[ord(TProp.kWBand)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Redundant, TPropertyFlag.Units_kW];
     PropertyRedundantWith[ord(TProp.kWBand)] := ord(TProp.pctkWBand);
 
-    PropertyOffset[ord(TProp.TimeDischargeTrigger)] := ptruint(@obj.DischargeTriggerTime);
+    PropertyOffset[ord(TProp.TimeDischargeTrigger)] := PtrInt(@obj.DischargeTriggerTime);
     PropertyFlags[ord(TProp.TimeDischargeTrigger)] := [TPropertyFlag.Units_ToD_hour];
-    PropertyOffset[ord(TProp.TimeChargeTrigger)] := ptruint(@obj.ChargeTriggerTime);
+    PropertyOffset[ord(TProp.TimeChargeTrigger)] := PtrInt(@obj.ChargeTriggerTime);
     PropertyFlags[ord(TProp.TimeChargeTrigger)] := [TPropertyFlag.Units_ToD_hour];
 
-    PropertyOffset[ord(TProp.pctRatekW)] := ptruint(@obj.pctkWRate);
-    PropertyOffset[ord(TProp.pctRateCharge)] := ptruint(@obj.pctChargeRate);
-    PropertyOffset[ord(TProp.pctReserve)] := ptruint(@obj.pctFleetReserve);
+    PropertyOffset[ord(TProp.pctRatekW)] := PtrInt(@obj.pctkWRate);
+    PropertyOffset[ord(TProp.pctRateCharge)] := PtrInt(@obj.pctChargeRate);
+    PropertyOffset[ord(TProp.pctReserve)] := PtrInt(@obj.pctFleetReserve);
 
-    PropertyOffset[ord(TProp.Tup)] := ptruint(@obj.UpRamptime);
+    PropertyOffset[ord(TProp.Tup)] := PtrInt(@obj.UpRamptime);
     PropertyFlags[ord(TProp.Tup)] := [TPropertyFlag.Units_hour, TPropertyFlag.NonNegative];
 
-    PropertyOffset[ord(TProp.TFlat)] := ptruint(@obj.FlatTime);
+    PropertyOffset[ord(TProp.TFlat)] := PtrInt(@obj.FlatTime);
     PropertyFlags[ord(TProp.TFlat)] := [TPropertyFlag.Units_hour, TPropertyFlag.NonNegative];
 
-    PropertyOffset[ord(TProp.Tdn)] := ptruint(@obj.DnrampTime);
+    PropertyOffset[ord(TProp.Tdn)] := PtrInt(@obj.DnrampTime);
     PropertyFlags[ord(TProp.Tdn)] := [TPropertyFlag.Units_hour, TPropertyFlag.NonNegative];
 
-    PropertyOffset[ord(TProp.kWThreshold)] := ptruint(@obj.FkWThreshold);
+    PropertyOffset[ord(TProp.kWThreshold)] := PtrInt(@obj.FkWThreshold);
     PropertyFlags[ord(TProp.kWThreshold)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_kW];
 
-    PropertyOffset[ord(TProp.ResetLevel)] := ptruint(@obj.ResetLevel);
+    PropertyOffset[ord(TProp.ResetLevel)] := PtrInt(@obj.ResetLevel);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();

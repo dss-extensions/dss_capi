@@ -471,109 +471,109 @@ begin
 
     // object references
     PropertyType[ord(TProp.vvc_curve1)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.vvc_curve1)] := ptruint(@obj.Fvvc_curve);
-    PropertyOffset2[ord(TProp.vvc_curve1)] := ptruint(DSS.XYCurveClass);
+    PropertyOffset[ord(TProp.vvc_curve1)] := PtrInt(@obj.Fvvc_curve);
+    PropertyOffset2[ord(TProp.vvc_curve1)] := PtrInt(DSS.XYCurveClass);
 
     PropertyType[ord(TProp.voltwatt_curve)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.voltwatt_curve)] := ptruint(@obj.Fvoltwatt_curve);
-    PropertyOffset2[ord(TProp.voltwatt_curve)] := ptruint(DSS.XYCurveClass);
+    PropertyOffset[ord(TProp.voltwatt_curve)] := PtrInt(@obj.Fvoltwatt_curve);
+    PropertyOffset2[ord(TProp.voltwatt_curve)] := PtrInt(DSS.XYCurveClass);
 
     PropertyType[ord(TProp.voltwattCH_curve)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.voltwattCH_curve)] := ptruint(@obj.FvoltwattCH_curve);
-    PropertyOffset2[ord(TProp.voltwattCH_curve)] := ptruint(DSS.XYCurveClass);
+    PropertyOffset[ord(TProp.voltwattCH_curve)] := PtrInt(@obj.FvoltwattCH_curve);
+    PropertyOffset2[ord(TProp.voltwattCH_curve)] := PtrInt(DSS.XYCurveClass);
 
     PropertyType[ord(TProp.wattpf_curve)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.wattpf_curve)] := ptruint(@obj.Fwattpf_curve);
-    PropertyOffset2[ord(TProp.wattpf_curve)] := ptruint(DSS.XYCurveClass);
+    PropertyOffset[ord(TProp.wattpf_curve)] := PtrInt(@obj.Fwattpf_curve);
+    PropertyOffset2[ord(TProp.wattpf_curve)] := PtrInt(DSS.XYCurveClass);
 
     PropertyType[ord(TProp.wattvar_curve)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.wattvar_curve)] := ptruint(@obj.Fwattvar_curve);
-    PropertyOffset2[ord(TProp.wattvar_curve)] := ptruint(DSS.XYCurveClass);
+    PropertyOffset[ord(TProp.wattvar_curve)] := PtrInt(@obj.Fwattvar_curve);
+    PropertyOffset2[ord(TProp.wattvar_curve)] := PtrInt(DSS.XYCurveClass);
 
     // enum properties
     PropertyType[ord(TProp.Mode)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.Mode)] := ptruint(@obj.ControlMode);
+    PropertyOffset[ord(TProp.Mode)] := PtrInt(@obj.ControlMode);
     PropertyOffset2[ord(TProp.Mode)] := PtrInt(ModeEnum);
     PropertyFlags[ord(TProp.Mode)] := [TPropertyFlag.NoDefault];
 
     PropertyType[ord(TProp.CombiMode)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.CombiMode)] := ptruint(@obj.CombiMode);
+    PropertyOffset[ord(TProp.CombiMode)] := PtrInt(@obj.CombiMode);
     PropertyOffset2[ord(TProp.CombiMode)] := PtrInt(CombiModeEnum);
     PropertyFlags[ord(TProp.CombiMode)] := [TPropertyFlag.NoDefault];
 
     PropertyType[ord(TProp.voltage_curvex_ref)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.voltage_curvex_ref)] := ptruint(@obj.FVoltage_CurveX_ref);
+    PropertyOffset[ord(TProp.voltage_curvex_ref)] := PtrInt(@obj.FVoltage_CurveX_ref);
     PropertyOffset2[ord(TProp.voltage_curvex_ref)] := PtrInt(VoltageCurveXRefEnum);
 
     PropertyType[ord(TProp.VoltwattYAxis)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.VoltwattYAxis)] := ptruint(@obj.FVoltwattYAxis);
+    PropertyOffset[ord(TProp.VoltwattYAxis)] := PtrInt(@obj.FVoltwattYAxis);
     PropertyOffset2[ord(TProp.VoltwattYAxis)] := PtrInt(VoltWattYAxisEnum);
 
     PropertyType[ord(TProp.RateofChangeMode)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.RateofChangeMode)] := ptruint(@obj.RateofChangeMode);
+    PropertyOffset[ord(TProp.RateofChangeMode)] := PtrInt(@obj.RateofChangeMode);
     PropertyOffset2[ord(TProp.RateofChangeMode)] := PtrInt(RoCEnum);
 
     PropertyType[ord(TProp.RefReactivePower)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.RefReactivePower)] := ptruint(@obj.FReacPower_ref);
+    PropertyOffset[ord(TProp.RefReactivePower)] := PtrInt(@obj.FReacPower_ref);
     PropertyOffset2[ord(TProp.RefReactivePower)] := PtrInt(RefQEnum);
 
     PropertyType[ord(TProp.monVoltageCalc)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.monVoltageCalc)] := ptruint(@obj.FMonBusesPhase);
+    PropertyOffset[ord(TProp.monVoltageCalc)] := PtrInt(@obj.FMonBusesPhase);
     PropertyOffset2[ord(TProp.monVoltageCalc)] := PtrInt(DSS.MonPhaseEnum);
 
     PropertyType[ord(TProp.ControlModel)] := TPropertyType.MappedIntEnumProperty;
-    PropertyOffset[ord(TProp.ControlModel)] := ptruint(@obj.CtrlModel);
+    PropertyOffset[ord(TProp.ControlModel)] := PtrInt(@obj.CtrlModel);
     PropertyOffset2[ord(TProp.ControlModel)] := PtrInt(ControlModelEnum);
 
     // boolean properties
     PropertyType[ord(TProp.EventLog)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.EventLog)] := ptruint(@obj.ShowEventLog);
+    PropertyOffset[ord(TProp.EventLog)] := PtrInt(@obj.ShowEventLog);
 
     // string lists
     PropertyType[ord(TProp.DERList)] := TPropertyType.StringListProperty;
     PropertyType[ord(TProp.monBus)] := TPropertyType.StringListProperty;
     PropertyType[ord(TProp.PVSystemList)] := TPropertyType.StringListProperty;
-    PropertyOffset[ord(TProp.DERList)] := ptruint(@obj.DERNameList);
-    PropertyOffset[ord(TProp.monBus)] := ptruint(@obj.MonBusesNameList);
-    PropertyOffset[ord(TProp.PVSystemList)] := ptruint(@obj.DERNameList);
+    PropertyOffset[ord(TProp.DERList)] := PtrInt(@obj.DERNameList);
+    PropertyOffset[ord(TProp.monBus)] := PtrInt(@obj.MonBusesNameList);
+    PropertyOffset[ord(TProp.PVSystemList)] := PtrInt(@obj.DERNameList);
     PropertyFlags[ord(TProp.PVSystemList)] := [TPropertyFlag.Redundant, TPropertyFlag.Deprecated]; // TODO: mark as removed
     PropertyRedundantWith[ord(TProp.PVSystemList)] := ord(TProp.DERList);
     PropertyDeprecatedMessage[ord(TProp.PVSystemList)] := '"PVSystemList" was deprecated in 2020. Use "DERList" instead.';
 
     // array of doubles
     PropertyType[ord(TProp.MonBusesVbase)] := TPropertyType.DoubleVArrayProperty;
-    PropertyOffset[ord(TProp.MonBusesVbase)] := ptruint(@obj.FMonBusesVbase);
-    PropertyOffset3[ord(TProp.MonBusesVbase)] := ptruint(@GetMonBusesCount);
+    PropertyOffset[ord(TProp.MonBusesVbase)] := PtrInt(@obj.FMonBusesVbase);
+    PropertyOffset3[ord(TProp.MonBusesVbase)] := PtrInt(@GetMonBusesCount);
     PropertyFlags[ord(TProp.MonBusesVbase)] := [TPropertyFlag.SizeIsFunction]; // MonBusesNameList.Count
 
     // double properties (default type)
-    PropertyOffset[ord(TProp.DbVMin)] := ptruint(@obj.FDbVMin);
-    PropertyOffset[ord(TProp.DbVMax)] := ptruint(@obj.FDbVMax);
-    PropertyOffset[ord(TProp.ArGraLowV)] := ptruint(@obj.FArGraLowV);
-    PropertyOffset[ord(TProp.ArGraHiV)] := ptruint(@obj.FArGraHiV);
-    PropertyOffset[ord(TProp.deltaQ_Factor)] := ptruint(@obj.FdeltaQ_factor);
-    PropertyOffset[ord(TProp.VoltageChangeTolerance)] := ptruint(@obj.FVoltageChangeTolerance);
-    PropertyOffset[ord(TProp.VarChangeTolerance)] := ptruint(@obj.FVarChangeTolerance);
-    PropertyOffset[ord(TProp.deltaP_Factor)] := ptruint(@obj.FdeltaP_factor);
-    PropertyOffset[ord(TProp.ActivePChangeTolerance)] := ptruint(@obj.FActivePChangeTolerance);
-    PropertyOffset[ord(TProp.Vsetpoint)] := ptruint(@obj.Fv_setpoint);
+    PropertyOffset[ord(TProp.DbVMin)] := PtrInt(@obj.FDbVMin);
+    PropertyOffset[ord(TProp.DbVMax)] := PtrInt(@obj.FDbVMax);
+    PropertyOffset[ord(TProp.ArGraLowV)] := PtrInt(@obj.FArGraLowV);
+    PropertyOffset[ord(TProp.ArGraHiV)] := PtrInt(@obj.FArGraHiV);
+    PropertyOffset[ord(TProp.deltaQ_Factor)] := PtrInt(@obj.FdeltaQ_factor);
+    PropertyOffset[ord(TProp.VoltageChangeTolerance)] := PtrInt(@obj.FVoltageChangeTolerance);
+    PropertyOffset[ord(TProp.VarChangeTolerance)] := PtrInt(@obj.FVarChangeTolerance);
+    PropertyOffset[ord(TProp.deltaP_Factor)] := PtrInt(@obj.FdeltaP_factor);
+    PropertyOffset[ord(TProp.ActivePChangeTolerance)] := PtrInt(@obj.FActivePChangeTolerance);
+    PropertyOffset[ord(TProp.Vsetpoint)] := PtrInt(@obj.Fv_setpoint);
 
-    PropertyOffset[ord(TProp.LPFTau)] := ptruint(@obj.LPFTau);
+    PropertyOffset[ord(TProp.LPFTau)] := PtrInt(@obj.LPFTau);
     PropertyFlags[ord(TProp.LPFTau)] := [TPropertyFlag.Units_s];
 
-    PropertyOffset[ord(TProp.RiseFallLimit)] := ptruint(@obj.FRiseFallLimit);
+    PropertyOffset[ord(TProp.RiseFallLimit)] := PtrInt(@obj.FRiseFallLimit);
 
     // advanced doubles
-    PropertyOffset[ord(TProp.hysteresis_offset)] := ptruint(@obj.Fvvc_curveOffset);
+    PropertyOffset[ord(TProp.hysteresis_offset)] := PtrInt(@obj.Fvvc_curveOffset);
     PropertyFlags[ord(TProp.hysteresis_offset)] := [TPropertyFlag.NonPositive];
 
     // integer
     PropertyType[ord(TProp.DynReacavgwindowlen)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.DynReacavgwindowlen)] := ptruint(@obj.FDRCRollAvgWindowLength);
+    PropertyOffset[ord(TProp.DynReacavgwindowlen)] := PtrInt(@obj.FDRCRollAvgWindowLength);
     PropertyFlags[ord(TProp.DynReacavgwindowlen)] := [TPropertyFlag.IntervalUnits];
 
     PropertyType[ord(TProp.avgwindowlen)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.avgwindowlen)] := ptruint(@obj.FRollAvgWindowLength);
+    PropertyOffset[ord(TProp.avgwindowlen)] := PtrInt(@obj.FRollAvgWindowLength);
     PropertyFlags[ord(TProp.avgwindowlen)] := [TPropertyFlag.IntervalUnits];
 
 

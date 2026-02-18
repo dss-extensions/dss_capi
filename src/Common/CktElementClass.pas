@@ -95,12 +95,12 @@ begin
 
     // Special boolean property
     PropertyType[ActiveProperty + ord(TProp.enabled)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ActiveProperty + ord(TProp.enabled)] := ptruint(@obj.FEnabled);
+    PropertyOffset[ActiveProperty + ord(TProp.enabled)] := PtrInt(@obj.FEnabled);
     PropertyFlags[ActiveProperty + ord(TProp.enabled)] := [TPropertyFlag.WriteByFunction];
     PropertyWriteFunction[ActiveProperty + ord(TProp.enabled)] := @CE_Set_Enabled;
 
     // double properties (default type)
-    PropertyOffset[ActiveProperty + ord(TProp.basefreq)] := ptruint(@obj.BaseFrequency);
+    PropertyOffset[ActiveProperty + ord(TProp.basefreq)] := PtrInt(@obj.BaseFrequency);
     PropertyFlags[ActiveProperty + ord(TProp.basefreq)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
 
     ActiveProperty := ActiveProperty + NumPropsThisClass;

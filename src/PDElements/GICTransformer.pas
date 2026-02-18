@@ -178,16 +178,16 @@ begin
 
     // enum properties
     // PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumProperty;
-    // PropertyOffset[ord(TProp.conn)] := ptruint(@obj.Connection);
+    // PropertyOffset[ord(TProp.conn)] := PtrInt(@obj.Connection);
     // PropertyOffset2[ord(TProp.conn)] := PtrInt(DSS.ConnectionEnum);
 
     PropertyType[ord(TProp.typ)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.typ)] := ptruint(@obj.SpecType);
+    PropertyOffset[ord(TProp.typ)] := PtrInt(@obj.SpecType);
     PropertyOffset2[ord(TProp.typ)] := PtrInt(TypeEnum);
 
     // integer properties
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.phases)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     // bus properties
@@ -205,32 +205,32 @@ begin
 
     // object properties
     PropertyType[ord(TProp.VarCurve)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.VarCurve)] := ptruint(@obj.FVarCurveObj);
-    PropertyOffset2[ord(TProp.VarCurve)] := ptruint(DSS.XYCurveClass);
+    PropertyOffset[ord(TProp.VarCurve)] := PtrInt(@obj.FVarCurveObj);
+    PropertyOffset2[ord(TProp.VarCurve)] := PtrInt(DSS.XYCurveClass);
 
     // double properties
-    PropertyOffset[ord(TProp.KVLL1)] := ptruint(@obj.FkV1);
+    PropertyOffset[ord(TProp.KVLL1)] := PtrInt(@obj.FkV1);
     PropertyFlags[ord(TProp.KVLL1)] := [TPropertyFlag.Units_kV];
 
-    PropertyOffset[ord(TProp.KVLL2)] := ptruint(@obj.FkV2);
+    PropertyOffset[ord(TProp.KVLL2)] := PtrInt(@obj.FkV2);
     PropertyFlags[ord(TProp.KVLL2)] := [TPropertyFlag.Units_kV];
 
-    PropertyOffset[ord(TProp.MVA)] := ptruint(@obj.FMVArating);
+    PropertyOffset[ord(TProp.MVA)] := PtrInt(@obj.FMVArating);
     PropertyFlags[ord(TProp.MVA)] := [TPropertyFlag.Units_MVA];
 
-    PropertyOffset[ord(TProp.pctR1)] := ptruint(@obj.FpctR1);
+    PropertyOffset[ord(TProp.pctR1)] := PtrInt(@obj.FpctR1);
     PropertyFlags[ord(TProp.pctR1)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault];
     
-    PropertyOffset[ord(TProp.pctR2)] := ptruint(@obj.FpctR2);
+    PropertyOffset[ord(TProp.pctR2)] := PtrInt(@obj.FpctR2);
     PropertyFlags[ord(TProp.pctR2)] := [TPropertyFlag.NoDefault];
 
-    PropertyOffset[ord(TProp.k)] := ptruint(@obj.FKFactor);
+    PropertyOffset[ord(TProp.k)] := PtrInt(@obj.FKFactor);
 
     // adv doubles
-    PropertyOffset[ord(TProp.R1)] := ptruint(@obj.G1);
+    PropertyOffset[ord(TProp.R1)] := PtrInt(@obj.G1);
     PropertyFlags[ord(TProp.R1)] := [TPropertyFlag.InverseValue, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_ohm];
 
-    PropertyOffset[ord(TProp.R2)] := ptruint(@obj.G2);
+    PropertyOffset[ord(TProp.R2)] := PtrInt(@obj.G2);
     PropertyFlags[ord(TProp.R2)] := [TPropertyFlag.InverseValue, TPropertyFlag.Units_ohm];
 
     ActiveProperty := NumPropsThisClass;

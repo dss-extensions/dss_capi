@@ -227,59 +227,59 @@ begin
 
     // matrix parts
     PropertyType[ord(TProp.rmatrix)] := TPropertyType.ComplexPartSymMatrixProperty;
-    PropertyOffset[ord(TProp.rmatrix)] := ptruint(@obj.Z);
-    PropertyOffset3[ord(TProp.rmatrix)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.rmatrix)] := PtrInt(@obj.Z);
+    PropertyOffset3[ord(TProp.rmatrix)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.rmatrix)] := [TPropertyFlag.RealPart, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_ohm_per_length];
     
     PropertyType[ord(TProp.xmatrix)] := TPropertyType.ComplexPartSymMatrixProperty;
-    PropertyOffset[ord(TProp.xmatrix)] := ptruint(@obj.Z);
-    PropertyOffset3[ord(TProp.xmatrix)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.xmatrix)] := PtrInt(@obj.Z);
+    PropertyOffset3[ord(TProp.xmatrix)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.xmatrix)] := [TPropertyFlag.ImagPart, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_ohm_per_length];
 
     PropertyType[ord(TProp.cmatrix)] := TPropertyType.ComplexPartSymMatrixProperty;
-    PropertyOffset[ord(TProp.cmatrix)] := ptruint(@obj.YC);
-    PropertyOffset2[ord(TProp.cmatrix)] := ptruint(@GetYCScale);
-    PropertyOffset3[ord(TProp.cmatrix)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.cmatrix)] := PtrInt(@obj.YC);
+    PropertyOffset2[ord(TProp.cmatrix)] := PtrInt(@GetYCScale);
+    PropertyOffset3[ord(TProp.cmatrix)] := PtrInt(@obj.FNPhases);
     PropertyFlags[ord(TProp.cmatrix)] := [TPropertyFlag.ScaledByFunction, TPropertyFlag.ImagPart, TPropertyFlag.Units_nF_per_length];
 
     // boolean properties
     PropertyType[ord(TProp.Kron)] := TPropertyType.BooleanActionProperty;
-    PropertyOffset[ord(TProp.Kron)] := ptruint(@Action_KronReduction);
+    PropertyOffset[ord(TProp.Kron)] := PtrInt(@Action_KronReduction);
 
     // enums
     PropertyType[ord(TProp.units)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.units)] := ptruint(@obj.Units);
+    PropertyOffset[ord(TProp.units)] := PtrInt(@obj.Units);
     PropertyOffset2[ord(TProp.units)] := PtrInt(DSS.UnitsEnum);
 
     PropertyType[ord(TProp.linetype)] := TPropertyType.MappedStringEnumProperty;
-    PropertyOffset[ord(TProp.linetype)] := ptruint(@obj.FLineType);
+    PropertyOffset[ord(TProp.linetype)] := PtrInt(@obj.FLineType);
     PropertyOffset2[ord(TProp.linetype)] := PtrInt(DSS.LineTypeEnum);
 
     // double arrays
     PropertyType[ord(TProp.Ratings)] := TPropertyType.DoubleDArrayProperty;
-    PropertyOffset[ord(TProp.Ratings)] := ptruint(@obj.AmpRatings);
-    PropertyOffset2[ord(TProp.Ratings)] := ptruint(@obj.NumAmpRatings);
+    PropertyOffset[ord(TProp.Ratings)] := PtrInt(@obj.AmpRatings);
+    PropertyOffset2[ord(TProp.Ratings)] := PtrInt(@obj.NumAmpRatings);
 
     // integers
     PropertyType[ord(TProp.neutral)] := TPropertyType.IntegerProperty;
     PropertyType[ord(TProp.nphases)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.neutral)] := ptruint(@obj.FNeutralConductor);
-    PropertyOffset[ord(TProp.nphases)] := ptruint(@obj.FNPhases);
+    PropertyOffset[ord(TProp.neutral)] := PtrInt(@obj.FNeutralConductor);
+    PropertyOffset[ord(TProp.nphases)] := PtrInt(@obj.FNPhases);
 
     PropertyType[ord(TProp.Seasons)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.Seasons)] := ptruint(@obj.NumAmpRatings);
+    PropertyOffset[ord(TProp.Seasons)] := PtrInt(@obj.NumAmpRatings);
     PropertyFlags[ord(TProp.Seasons)] := [TPropertyFlag.SuppressJSON]; // can be derived trivially from length(Ratings)
 
     // doubles
-    PropertyOffset[ord(TProp.baseFreq)] := ptruint(@obj.BaseFrequency);
+    PropertyOffset[ord(TProp.baseFreq)] := PtrInt(@obj.BaseFrequency);
     PropertyFlags[ord(TProp.basefreq)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
 
-    PropertyOffset[ord(TProp.normamps)] := ptruint(@obj.NormAmps);
-    PropertyOffset[ord(TProp.emergamps)] := ptruint(@obj.EmergAmps);
+    PropertyOffset[ord(TProp.normamps)] := PtrInt(@obj.NormAmps);
+    PropertyOffset[ord(TProp.emergamps)] := PtrInt(@obj.EmergAmps);
 
-    PropertyOffset[ord(TProp.faultrate)] := ptruint(@obj.FaultRate);
-    PropertyOffset[ord(TProp.pctperm)] := ptruint(@obj.PctPerm);
-    PropertyOffset[ord(TProp.repair)] := ptruint(@obj.HrsToRepair);
+    PropertyOffset[ord(TProp.faultrate)] := PtrInt(@obj.FaultRate);
+    PropertyOffset[ord(TProp.pctperm)] := PtrInt(@obj.PctPerm);
+    PropertyOffset[ord(TProp.repair)] := PtrInt(@obj.HrsToRepair);
     PropertyFlags[ord(TProp.faultrate)] := [TPropertyFlag.Unused, TPropertyFlag.Deprecated];
     PropertyFlags[ord(TProp.pctperm)] := [TPropertyFlag.Unused, TPropertyFlag.Deprecated];
     PropertyFlags[ord(TProp.repair)] := [TPropertyFlag.Unused, TPropertyFlag.Deprecated];
@@ -287,49 +287,49 @@ begin
     PropertyDeprecatedMessage[ord(TProp.PctPerm)] := 'In LineCode objects, "PctPerm" is not used in the DSS engine since 2014. Be sure to fill the values in each Line individually since they are not propagated from the LineCode!';
     PropertyDeprecatedMessage[ord(TProp.Repair)] := 'In LineCode objects, "Repair" is not used in the DSS engine since 2014. Be sure to fill the values in each Line individually since they are not propagated from the LineCode!';
 
-    PropertyOffset[ord(TProp.Rg)] := ptruint(@obj.Rg);
+    PropertyOffset[ord(TProp.Rg)] := PtrInt(@obj.Rg);
     PropertyFlags[ord(TProp.Rg)] := [TPropertyFlag.Units_ohm_per_length];
-    PropertyOffset[ord(TProp.Xg)] := ptruint(@obj.Xg);
+    PropertyOffset[ord(TProp.Xg)] := PtrInt(@obj.Xg);
     PropertyFlags[ord(TProp.Xg)] := [TPropertyFlag.Units_ohm_per_length];
 
-    PropertyOffset[ord(TProp.rho)] := ptruint(@obj.rho);
+    PropertyOffset[ord(TProp.rho)] := PtrInt(@obj.rho);
     PropertyFlags[ord(TProp.rho)] := [TPropertyFlag.Units_ohmMeter];
 
-    PropertyOffset[ord(TProp.R1)] := ptruint(@obj.R1);
-    PropertyOffset[ord(TProp.X1)] := ptruint(@obj.X1);
-    PropertyOffset[ord(TProp.R0)] := ptruint(@obj.R0);
-    PropertyOffset[ord(TProp.X0)] := ptruint(@obj.X0);
+    PropertyOffset[ord(TProp.R1)] := PtrInt(@obj.R1);
+    PropertyOffset[ord(TProp.X1)] := PtrInt(@obj.X1);
+    PropertyOffset[ord(TProp.R0)] := PtrInt(@obj.R0);
+    PropertyOffset[ord(TProp.X0)] := PtrInt(@obj.X0);
     PropertyFlags[ord(TProp.R1)] := [TPropertyFlag.ConditionalValue, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_ohm_per_length];
     PropertyFlags[ord(TProp.X1)] := [TPropertyFlag.ConditionalValue, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_ohm_per_length];
     PropertyFlags[ord(TProp.R0)] := [TPropertyFlag.ConditionalValue, TPropertyFlag.Units_ohm_per_length];
     PropertyFlags[ord(TProp.X0)] := [TPropertyFlag.ConditionalValue, TPropertyFlag.Units_ohm_per_length];
     
     // adv doubles
-    PropertyOffset[ord(TProp.C1)] := ptruint(@obj.C1);
-    PropertyOffset[ord(TProp.C0)] := ptruint(@obj.C0);
+    PropertyOffset[ord(TProp.C1)] := PtrInt(@obj.C1);
+    PropertyOffset[ord(TProp.C0)] := PtrInt(@obj.C0);
     PropertyScale[ord(TProp.C1)] := 1.0e-9;
     PropertyScale[ord(TProp.C0)] := 1.0e-9;
     PropertyFlags[ord(TProp.C1)] := [TPropertyFlag.ConditionalValue, TPropertyFlag.Units_nF_per_length, TPropertyFlag.RequiredInSpecSet];
     PropertyFlags[ord(TProp.C0)] := [TPropertyFlag.ConditionalValue, TPropertyFlag.Units_nF_per_length];
     
-    PropertyOffset[ord(TProp.B1)] := ptruint(@obj.C1);
-    PropertyOffset2[ord(TProp.B1)] := ptruint(@GetC1C0Scale);
+    PropertyOffset[ord(TProp.B1)] := PtrInt(@obj.C1);
+    PropertyOffset2[ord(TProp.B1)] := PtrInt(@GetC1C0Scale);
     PropertyFlags[ord(TProp.B1)] := [TPropertyFlag.ScaledByFunction, TPropertyFlag.Redundant, TPropertyFlag.ConditionalValue, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_uS_per_length];
     PropertyRedundantWith[ord(TProp.B1)] := ord(TProp.C1);
 
-    PropertyOffset[ord(TProp.B0)] := ptruint(@obj.C0);
-    PropertyOffset2[ord(TProp.B0)] := ptruint(@GetC1C0Scale);
+    PropertyOffset[ord(TProp.B0)] := PtrInt(@obj.C0);
+    PropertyOffset2[ord(TProp.B0)] := PtrInt(@GetC1C0Scale);
     PropertyFlags[ord(TProp.B0)] := [TPropertyFlag.ScaledByFunction, TPropertyFlag.Redundant, TPropertyFlag.ConditionalValue, TPropertyFlag.Units_uS_per_length];
     PropertyRedundantWith[ord(TProp.B0)] := ord(TProp.C0);
 
-    PropertyOffset3[ord(TProp.r1)] := ptruint(@obj.SymComponentsModel);
-    PropertyOffset3[ord(TProp.x1)] := ptruint(@obj.SymComponentsModel);
-    PropertyOffset3[ord(TProp.C1)] := ptruint(@obj.SymComponentsModel);
-    PropertyOffset3[ord(TProp.B1)] := ptruint(@obj.SymComponentsModel);
-    PropertyOffset3[ord(TProp.r0)] := ptruint(@obj.SymComponentsModel);
-    PropertyOffset3[ord(TProp.x0)] := ptruint(@obj.SymComponentsModel);
-    PropertyOffset3[ord(TProp.C0)] := ptruint(@obj.SymComponentsModel);
-    PropertyOffset3[ord(TProp.B0)] := ptruint(@obj.SymComponentsModel);
+    PropertyOffset3[ord(TProp.r1)] := PtrInt(@obj.SymComponentsModel);
+    PropertyOffset3[ord(TProp.x1)] := PtrInt(@obj.SymComponentsModel);
+    PropertyOffset3[ord(TProp.C1)] := PtrInt(@obj.SymComponentsModel);
+    PropertyOffset3[ord(TProp.B1)] := PtrInt(@obj.SymComponentsModel);
+    PropertyOffset3[ord(TProp.r0)] := PtrInt(@obj.SymComponentsModel);
+    PropertyOffset3[ord(TProp.x0)] := PtrInt(@obj.SymComponentsModel);
+    PropertyOffset3[ord(TProp.C0)] := PtrInt(@obj.SymComponentsModel);
+    PropertyOffset3[ord(TProp.B0)] := PtrInt(@obj.SymComponentsModel);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties();
