@@ -39,8 +39,8 @@ library altdss_capi;
 // Copyright (c) 2016 Battelle Memorial Institute
 
 
-// Copyright (c) 2017-2025, Paulo Meira
-// Copyright (c) 2017-2025, DSS C-API contributors
+// Copyright (c) 2017-2026, Paulo Meira
+// Copyright (c) 2017-2026, DSS C-API contributors
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -2458,8 +2458,6 @@ exports
 
 begin
 {$IFDEF DARWIN}{$IFDEF CPUAARCH64}
-    // FPU is not correctly initialized on macOS aarch64
-    // See https://gitlab.com/freepascal.org/fpc/source/-/issues/38230 (Exception in system functions on Apple M1)
-    SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide,exOverflow, exUnderflow, exPrecision]);
+    DSSResetFPU();
 {$ENDIF}{$ENDIF}
 end.

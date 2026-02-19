@@ -307,6 +307,9 @@ procedure Solution_Solve(); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
+{$IFDEF DARWIN}{$IFDEF CPUAARCH64}
+    DSSResetFPU();
+{$ENDIF}{$ENDIF}
     DSSPrime.ActiveCircuit.Solution.Solve();
     // If the parallel mode is not active, the solver will run in the current thread,
     // no need to wait (contrary to the EPRI's impl.)
@@ -666,6 +669,9 @@ procedure Solution_InitSnap(); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
+{$IFDEF DARWIN}{$IFDEF CPUAARCH64}
+    DSSResetFPU();
+{$ENDIF}{$ENDIF}
     DSSPrime.ActiveCircuit.Solution.SnapShotInit;
 end;
 //------------------------------------------------------------------------------

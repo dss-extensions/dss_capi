@@ -135,6 +135,10 @@ function FullNameIfNotNil(obj: TDSSObject): String;
 function LowerBound(data: PSingleArray0; npts: Integer; Stride: Integer; value: Single): Integer; overload;
 function LowerBound(data: PDoubleArray0; npts: Integer; Stride: Integer; value: Double): Integer; overload;
 
+{$IFDEF DARWIN}{$IFDEF CPUAARCH64}
+procedure DSSResetFPU();
+{$ENDIF}{$ENDIF}
+
 implementation
 
 uses
@@ -2604,4 +2608,12 @@ begin
     Result += ']';
 end;
 
+{$IFDEF DARWIN}{$IFDEF CPUAARCH64}
+procedure DSSResetFPU();
+begin
+    // FPU is not correctly initialized on macOS aarch64
+    // See https://gitlab.com/freepascal.org/fpc/source/-/issues/38230 (Exception in system functions on Apple M1)
+    SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide,exOverflow, exUnderflow, exPrecision]);
+end;
+{$ENDIF}{$ENDIF}
 end.

@@ -854,12 +854,18 @@ end;
 
 function TExecHelper.DoClearCmd(): Integer;
 begin
+{$IFDEF DARWIN}{$IFDEF CPUAARCH64}
+    DSSResetFPU();
+{$ENDIF}{$ENDIF}
     DSS.DSSExecutive.Clear;
     Result := 0;
 end;
 
 function TExecHelper.DoClearAllCmd(): Integer;
 begin
+{$IFDEF DARWIN}{$IFDEF CPUAARCH64}
+    DSSResetFPU();
+{$ENDIF}{$ENDIF}
     DSS.DSSExecutive.ClearAll;
     Result := 0;
 end;
@@ -1049,6 +1055,9 @@ end;
 
 function TExecHelper.DoSolveCmd(): Integer;
 begin
+{$IFDEF DARWIN}{$IFDEF CPUAARCH64}
+    DSSResetFPU();
+{$ENDIF}{$ENDIF}
     Result := 0;
     DSS.ActiveCircuit.Solution.Solve();
 end;

@@ -1,7 +1,7 @@
 unit Solution;
 
 // ----------------------------------------------------------
-// Copyright (c) 2018-2024, DSS-Extensions contributors
+// Copyright (c) 2018-2026, DSS-Extensions contributors
 // Copyright (c) 2008-2024, Electric Power Research Institute, Inc.
 // All rights reserved.
 // ----------------------------------------------------------
@@ -1103,6 +1103,9 @@ var
     i: Integer;
     bZoneCalc, bZoneLock: Boolean;
 begin
+{$IFDEF DARWIN}{$IFDEF CPUAARCH64}
+    DSSResetFPU();
+{$ENDIF}{$ENDIF}
     try
         // don't allow the meter zones to auto-build in this load flow solution, because the
         // voltage bases are not available yet
@@ -1139,6 +1142,9 @@ end;
 
 procedure TSolutionObj.SnapShotInit();
 begin
+{$IFDEF DARWIN}{$IFDEF CPUAARCH64}
+    DSSResetFPU();
+{$ENDIF}{$ENDIF}
     SetGeneratorDispRef();
     ControlIteration := 0;
     ControlActionsDone := FALSE;
@@ -1254,6 +1260,10 @@ end;
 
 procedure TSolutionObj.SolveDirect();  // solve for now once, direct solution
 begin
+{$IFDEF DARWIN}{$IFDEF CPUAARCH64}
+    DSSResetFPU();
+{$ENDIF}{$ENDIF}
+
     LoadsNeedUpdating := TRUE;  // Force possible update of loads and generators
     {$IFDEF MSWINDOWS}
     QueryPerformanceCounter(SolveStartTime);
@@ -2487,6 +2497,10 @@ end;
 procedure TSolutionObj.SolveYDirect();
 // Solves present Y matrix with no injection sources except voltage and current sources 
 begin
+{$IFDEF DARWIN}{$IFDEF CPUAARCH64}
+    DSSResetFPU();
+{$ENDIF}{$ENDIF}
+
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
     if not ADiakoptics or (DSS.Parent <> NIL) then
     begin
