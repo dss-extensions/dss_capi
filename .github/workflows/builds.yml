@@ -32,7 +32,7 @@ jobs:
 
     runs-on: ${{ matrix.gh_image }}
     env:
-      KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.2.1/klusolvex_1.2.1_linux_${{ matrix.arch }}.tar.gz'
+      KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.2.2/klusolvex_1.2.2_linux_${{ matrix.arch }}.tar.gz'
       DSS_CAPI_BUILD_CMAKE: '1'
       DOCKER_IMAGE: ${{ matrix.docker_image }}
       DSS_EXTENSIONS_LINUX32: ${{ matrix.dss_extensions_linux32 }}
@@ -73,14 +73,16 @@ jobs:
         include:
           - os: macos-15-intel
             arch: x64
-            extra_cmake_flags: '-DCMAKE_POLICY_VERSION_MINIMUM=3.5'
-          - os: macos-latest
+            extra_cmake_flags: '-DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0'
+          - os: macos-15
             arch: arm64
-            extra_cmake_flags: '-DCMAKE_POLICY_VERSION_MINIMUM=3.5'
+            extra_cmake_flags: '-DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0'
 
     runs-on: ${{ matrix.os }}
     env:
       DSS_CAPI_BUILD_CMAKE: '1'
+      MACOSX_DEPLOYMENT_TARGET: '11.0'
+      DSS_EXTENSIONS_EXTRA_CMAKE_FLAGS: ${{ matrix.extra_cmake_flags }}
     steps:
       - uses: "actions/checkout@v4"
         with: 
@@ -93,7 +95,7 @@ jobs:
           sudo installer -package /Volumes/fpc-3.2.2.intelarm64-macosx/fpc-3.2.2-intelarm64-macosx.mpkg -target /
       - name: 'Download/extract KLUSolve(X)'
         run: |
-          wget "https://github.com/dss-extensions/klusolve/releases/download/1.2.1/klusolvex_1.2.1_darwin_${{ matrix.arch }}.tar.gz" -Oklusolve.tar.gz -q
+          wget "https://github.com/dss-extensions/klusolve/releases/download/1.2.2/klusolvex_1.2.2_darwin_${{ matrix.arch }}.tar.gz" -Oklusolve.tar.gz -q
           tar zxf klusolve.tar.gz
           mkdir -p dss_capi/lib/darwin_${{ matrix.arch }}
           cp -r klusolvex/lib/* dss_capi/lib/
@@ -131,7 +133,7 @@ jobs:
       - name: 'Download/extract KLUSolve(X)'
         shell: cmd
         run: |
-          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.2.1/klusolvex_1.2.1_windows_x64_gcc_windows-2022.zip -o klusolve_x64.zip
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.2.2/klusolvex_1.2.2_windows_x64_gcc_windows-2022.zip -o klusolve_x64.zip
           7z x -y -o. klusolve_x64.zip
           mkdir dss_capi\lib
           mkdir dss_capi\lib\win_x64
@@ -176,7 +178,7 @@ jobs:
       - name: 'Download KLUSolve(X)'
         shell: cmd
         run: |
-          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.2.1/klusolvex_1.2.1_windows_x86_msvc_windows-2022.zip -o klusolve_x86.zip
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.2.2/klusolvex_1.2.2_windows_x86_msvc_windows-2022.zip -o klusolve_x86.zip
       - name: 'Extract KLUSolve(X)'
         shell: cmd
         run: |
