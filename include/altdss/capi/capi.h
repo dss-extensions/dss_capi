@@ -228,6 +228,7 @@ typedef void (*altdss_func_v_vp_i32pp_i32p_vpp_i32_dss_ctx_bus_i32_func_t)(void 
 typedef const char *(*altdss_func_cstr_vp_vpp_i32_i32)(void *, void **, int32_t, int32_t);
 typedef void (*altdss_func_v_cstr_u32p)(const char *, uint32_t *);
 
+#pragma pack(push, 1)
 typedef struct AltDSSCAPI {
 #ifdef WIN32
     HMODULE libHandle;
@@ -2358,6 +2359,7 @@ typedef struct AltDSSCAPI {
     altdss_func_v_vp_vp ctx_ShareGeneral;
 
 } AltDSSCAPI;
+#pragma pack(pop, 1)
 
 typedef int32_t (*altdss_func_Init)(AltDSSCAPI *funcs, uint64_t size, uint64_t version, uint64_t reserved1, void* reserved2);
 
