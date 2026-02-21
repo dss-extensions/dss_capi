@@ -609,6 +609,7 @@ var
     newNumRat, i: Integer;
     ratingsArrayChanged, ratingsChanged: Boolean;    
     condObj: TConductorDataObj;
+    conductorsReset: Boolean = false;
 begin
     case Idx of
         ord(TProp.C1),
@@ -764,8 +765,9 @@ begin
 
                 conductors := Allocmem(Sizeof(Pointer) * lineSpacingObj.NConds); // allocmem zero-inits
                 conductorDataSize := lineSpacingObj.NConds;
+                conductorsReset := true;
             end;
-
+            
             if (Idx = ord(TProp.Conductors)) and (conductors <> NIL) then
             begin
                 if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
@@ -799,7 +801,7 @@ begin
                 end;
             end;
 
-            if (lineSpacingObj <> NIL) and (conductors <> NIL) then
+            if (lineSpacingObj <> NIL) and (conductors <> NIL) and (not conductorsReset) then
             begin
                 SymComponentsModel := FALSE;
                 SymComponentsChanged := FALSE;
