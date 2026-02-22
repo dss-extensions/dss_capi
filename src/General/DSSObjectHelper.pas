@@ -476,9 +476,9 @@ begin
             if not (enumInfo.IsOrdinalValid(intVal)) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: "%s" is not a valid value.',
+                    '%s.%s: "%s" is not a valid value.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], Value]
-                    ), 401);
+                    , 401);
                 // DoSimpleMsg('Invalid value (%d).', [intVal], 5004);
                 Exit;
             end;
@@ -851,9 +851,9 @@ begin
                 if otherObj = NIL then
                 begin
                     DoSimpleMsg(
-                        Format('%s.%s: %s object "%s" not found.',
-                            [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name, Value]
-                        ), 401);
+                        '%s.%s: %s object "%s" not found.',
+                        [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name, Value]
+                        , 401);
                     //TODO: stop?
                 end;
             end
@@ -868,17 +868,17 @@ begin
                 if otherObj = NIL then
                 begin
                     DoSimpleMsg(
-                        Format('%s.%s: CktElement "%s" not found.',
+                        '%s.%s: CktElement "%s" not found.',
                             [TDSSObject(obj).FullName(), PropertyName[Index], Value]
-                        ), 402);
+                        , 402);
                     //TODO: stop?
                 end
                 else if (TPropertyFlag.PDElement in flags) and not (otherObj is TPDElement) then
                 begin
                     DoSimpleMsg(
-                        Format('%s.%s: "%s" is not a PDElement.',
+                        '%s.%s: "%s" is not a PDElement.',
                             [TDSSObject(obj).FullName(), PropertyName[Index], otherObj.FullName()]
-                        ), 405);
+                        , 405);
                     //TODO: stop?
                 end;
             end;
@@ -2603,7 +2603,10 @@ begin
                 otherObj := GetObjObject(obj, Index);
                 if otherObj <> NIL then
                 begin
-                    if PropertyOffset2[Index] = 0 then
+                    if (PropertyOffset2[Index] = 0) or 
+                        (TDSSClass(PropertyOffset2[Index]) is TProxyClass) and 
+                        TProxyClass(PropertyOffset2[Index]).FullNamesOnly
+                    then
                         PropStr := otherObj.FullName()
                     else
                         PropStr := otherObj.Name()
@@ -2753,9 +2756,9 @@ begin
     if maxCount < 1 then
     begin
         DoSimpleMsg(
-            Format('%s.%s: No objects are expected! Check if the order of property assignments is correct.',
+            '%s.%s: No objects are expected! Check if the order of property assignments is correct.',
                 [TDSSObject(obj).FullName(), PropertyName[Index]]
-            ), 402);
+            , 402);
         Exit;
     end;
 
@@ -2776,9 +2779,9 @@ begin
     if ValueCount <> maxCount then
     begin
         DoSimpleMsg(
-            Format('%s.%s: The number of objects provided (%d) needs to match the expected count (%d).',
+            '%s.%s: The number of objects provided (%d) needs to match the expected count (%d).',
                 [TDSSObject(obj).FullName(), PropertyName[Index], ValueCount, maxCount]
-            ), 25052310);
+            , 25052310);
         Exit;
     end;
 
@@ -4378,9 +4381,9 @@ begin
                         if otherObj = NIL then
                         begin
                             DoSimpleMsg(
-                                Format('%s.%s: %s object "%s" not found.',
+                                '%s.%s: %s object "%s" not found.',
                                     [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name, ElemName]
-                                ), 40306);
+                                , 40306);
                             Exit;
                         end;
                         objs[i - 1] := otherObj;
@@ -4400,9 +4403,9 @@ begin
                         if otherObj = NIL then
                         begin
                             DoSimpleMsg(
-                                Format('%s.%s: object "%s" not found.',
+                                '%s.%s: object "%s" not found.',
                                     [TDSSObject(obj).FullName(), PropertyName[Index], ElemName]
-                                ), 40301);
+                                , 40301);
                             Exit;
                         end;
                         objs[i - 1] := otherObj;
@@ -4420,17 +4423,17 @@ begin
             if intVal < 1 then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: No objects are expected! Check if the order of property assignments is correct.',
+                    '%s.%s: No objects are expected! Check if the order of property assignments is correct.',
                         [TDSSObject(obj).FullName(), PropertyName[Index]]
-                    ), 402);
+                    , 402);
                 Exit;
             end;
             if intVal <> ValueCount then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Number of elements expected (%d) does not match the number of provided elements (%d).',
+                    '%s.%s: Number of elements expected (%d) does not match the number of provided elements (%d).',
                         [TDSSObject(obj).FullName(), PropertyName[Index], intVal, ValueCount]
-                    ), 406);
+                    , 406);
                 Exit;
             end;
 
@@ -4460,9 +4463,9 @@ begin
                 if (otherObj = NIL) and (not allowNone) then
                 begin
                     DoSimpleMsg(
-                        Format('%s.%s: %s object "%s" not found or invalid object type.',
+                        '%s.%s: %s object "%s" not found or invalid object type.',
                             [TDSSObject(obj).FullName(), PropertyName[Index], cls.Name, Value^]
-                        ), 40302);
+                        , 40302);
                     Exit;
                 end;
 
@@ -5336,9 +5339,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= 2) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, 1]
-                    ), 25052307);
+                    , 25052307);
                 Exit;
             end;
             c := PComplex(PByte(obj) + PropertyOffset[Index]);
@@ -5352,9 +5355,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= 2) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, 1]
-                    ), 25052307);
+                    , 25052307);
                 Exit;
             end;
             if ElementIndex = 0 then
@@ -5385,9 +5388,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= count) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
-                    ), 25052307);
+                    , 25052307);
                 Exit;
             end;
 
@@ -5436,9 +5439,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= count) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
-                    ), 25052307);
+                    , 25052307);
                 Exit;
             end;
 
@@ -5464,9 +5467,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= count) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
-                    ), 25052307);
+                    , 25052307);
                 Exit;
             end;
 
@@ -5506,9 +5509,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= count) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
-                    ), 25052307);
+                    , 25052307);
                 Exit;
             end;
 
@@ -5546,9 +5549,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= count) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
-                    ), 25052305);
+                    , 25052305);
                 Exit;
             end;
             integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
@@ -5568,9 +5571,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= count) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
-                    ), 25052305);
+                    , 25052305);
                 Exit;
             end;
 
@@ -5594,9 +5597,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= count) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
-                    ), 25052305);
+                    , 25052305);
                 Exit;
             end;
             integerPtr := PInteger(ptruint(integerPtr) + ElementIndex * PropertyStructArrayStep);
@@ -5630,9 +5633,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= count) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
-                    ), 25052305);
+                    , 25052305);
                 Exit;
             end;
             integerPtr := PInteger(ptruint(integerPtr) + ElementIndex * step);
@@ -5672,9 +5675,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= count) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
-                    ), 25052306);
+                    , 25052306);
                 Exit;
             end;
             Result := TDSSCktElement(obj).GetBus(ElementIndex + 1);
@@ -5693,9 +5696,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= count) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
-                    ), 25052306);
+                    , 25052306);
                 Exit;
             end;
             Result := stringList.Strings[ElementIndex];
@@ -5715,9 +5718,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= count) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
-                    ), 25052306);
+                    , 25052306);
                 Exit;
             end;
 
@@ -5752,9 +5755,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= count) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
-                    ), 25052306);
+                    , 25052306);
                 Exit;
             end;
             inc(otherObjPtr, ElementIndex);
@@ -5798,9 +5801,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= count) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
-                    ), 25052306);
+                    , 25052306);
                 Exit;
             end;
             inc(otherObjPtr, ElementIndex);
@@ -5830,9 +5833,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= count) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
-                    ), 25052306);
+                    , 25052306);
                 Exit;
             end;
 
@@ -5856,9 +5859,9 @@ begin
             if (ElementIndex < 0) or (ElementIndex >= count) then
             begin
                 DoSimpleMsg(
-                    Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                    '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                         [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, count - 1]
-                    ), 25052306);
+                    , 25052306);
                 Exit;
             end;
 
@@ -5902,9 +5905,9 @@ begin
     if TPropertyFlag.ReadByFunction in flags then
     begin
         DoSimpleMsg(
-            Format('%s.%s: Cannot get individual elements of this property.',
+            '%s.%s: Cannot get individual elements of this property.',
                 [TDSSObject(obj).FullName(), PropertyName[Index]]
-            ), 25052304);
+            , 25052304);
         Exit;
     end;
 
@@ -5914,17 +5917,17 @@ begin
     if maxCount < 1 then
     begin
         DoSimpleMsg(
-            Format('%s.%s: No objects are expected! Check if the order of property assignments is correct.',
+            '%s.%s: No objects are expected! Check if the order of property assignments is correct.',
                 [TDSSObject(obj).FullName(), PropertyName[Index]]
-            ), 402);
+            , 402);
         Exit;
     end;
     if (ElementIndex < 0) or (ElementIndex >= maxCount) then
     begin
         DoSimpleMsg(
-            Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+            '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                 [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, maxCount - 1]
-            ), 25052303);
+            , 25052303);
         Exit;
     end;
 
@@ -5955,9 +5958,9 @@ var
         if (ElementIndex < 0) or (ElementIndex >= maxSize) then
         begin
             DoSimpleMsg(
-                Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                     [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, maxSize - 1]
-                ), 25052309);
+                , 25052309);
             Exit;
         end;
         Result := true;
@@ -6191,9 +6194,9 @@ var
         begin
             Result := false;
             DoSimpleMsg(
-                Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+                '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                     [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, maxSize - 1]
-                ), 25052308);
+                , 25052308);
             Exit;
         end;
         Result := true;
@@ -6326,9 +6329,9 @@ begin
     // Fuse.Normal/Fuse.State: whole array, can change single element without issues
     // Line/LineGeometry.Conductors as str
     DoSimpleMsg(
-        Format('%s.%s: NOT IMPLEMENTED! Cannot set individual elements of this property (yet).',
+        '%s.%s: NOT IMPLEMENTED! Cannot set individual elements of this property (yet).',
             [TDSSObject(ptr).FullName(), PropertyName[Index]]
-        ), 99999999);
+        , 99999999);
 end;
 
 procedure TDSSClassHelper.SetObjObjectArrayElement(ptr: Pointer; Index: Integer; ElementIndex: Integer; Value: TDSSObject; setterFlags: TDSSPropertySetterFlags);
@@ -6369,17 +6372,17 @@ begin
     if maxCount < 1 then
     begin
         DoSimpleMsg(
-            Format('%s.%s: No objects are expected! Check if the order of property assignments is correct.',
+            '%s.%s: No objects are expected! Check if the order of property assignments is correct.',
                 [TDSSObject(obj).FullName(), PropertyName[Index]]
-            ), 402);
+            , 402);
         Exit;
     end;
     if (ElementIndex < 0) or (ElementIndex >= maxCount) then
     begin
         DoSimpleMsg(
-            Format('%s.%s: Invalid index (%d). Expected range: 0-%d.',
+            '%s.%s: Invalid index (%d). Expected range: 0-%d.',
                 [TDSSObject(obj).FullName(), PropertyName[Index], ElementIndex, maxCount - 1]
-            ), 25052301);
+            , 25052301);
         Exit;
     end;
 
