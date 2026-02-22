@@ -305,11 +305,11 @@ procedure TPriceShapeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integ
 begin
     case Idx of 
         ord(TProp.csvfile):
-            DoCSVFile(DSS, Hours, PriceValues, numPoints, (Interval <> 0.0), csvfile, ParentClass.Name);
+            DoCSVFile(DSS, Hours, PriceValues, numPoints, (Interval <> 0.0), csvfile, ParentClass.Name, false, setterFlags);
         ord(TProp.sngfile):
-            DoSngFile(DSS, Hours, PriceValues, numPoints, (Interval <> 0.0), sngfile, ParentClass.Name);
+            DoSngFile(DSS, Hours, PriceValues, numPoints, (Interval <> 0.0), sngfile, ParentClass.Name, false, setterFlags);
         ord(TProp.dblfile):
-            DoDblFile(DSS, Hours, PriceValues, numPoints, (Interval <> 0.0), dblfile, ParentClass.Name);
+            DoDblFile(DSS, Hours, PriceValues, numPoints, (Interval <> 0.0), dblfile, ParentClass.Name, false, setterFlags);
     end;
     case Idx of
         ord(TProp.npts):

@@ -220,11 +220,12 @@ type
         procedure SetDataPointersSingle(HoursPtr: PSingle; PMultPtr: PSingle; QMultPtr: PSingle; SStride: Integer);
         procedure UseFloat32();
         procedure UseFloat64();
-        procedure ReadDblFile(const FileName: String);
-        procedure ReadSngFile(const FileName: String);
-        procedure ReadCSVFile(const FileName: String);
-        procedure Read2ColCSVFile(const FileName: String);
+        procedure ReadDblFile(const FileName: String; setterFlags: TDSSPropertySetterFlags);
+        procedure ReadSngFile(const FileName: String; setterFlags: TDSSPropertySetterFlags);
+        procedure ReadMulticolCSVFile(const FileName: String; readQ: Boolean; setterFlags: TDSSPropertySetterFlags);
         function CreateMMF(const S: String; Destination: TMMShapeType): Boolean;        
+
+        procedure ReadMulticolCSVFile_UnknownSize(FileName: String; var F: TStream; readQ: Boolean; setterFlags: TDSSPropertySetterFlags);
     end;
 
 implementation
@@ -269,10 +270,9 @@ var
     PropInfoLegacy: Pointer = NIL;    
     ActionEnum, InterpEnum: TDSSEnum;
 
-procedure Do2ColCSVFile(obj: TObj; const FileName: String);forward;
-procedure DoDblFile(obj: TObj; const FileName: String);forward;
-procedure DoSngFile(obj: TObj; const FileName: String);forward;
-procedure DoCSVFile(obj: TObj; const FileName: String);forward;
+procedure DoMulticolCSVFile(obj: TObj; const FileName: String; readQ: Boolean; setterFlags: TDSSPropertySetterFlags);forward;
+procedure DoDblFile(obj: TObj; const FileName: String; setterFlags: TDSSPropertySetterFlags);forward;
+procedure DoSngFile(obj: TObj; const FileName: String; setterFlags: TDSSPropertySetterFlags);forward;
 
 constructor TLoadShape.Create(dssContext: TDSSContext);
 begin
@@ -710,13 +710,13 @@ procedure TLoadShapeObj.PropertySideEffects(Idx: Integer; previousIntVal: Intege
 begin
     case Idx of 
         ord(TProp.csvfile):
-            DoCSVFile(self, csvfile);
+            DoMulticolCSVFile(self, csvfile, false, setterFlags);
         ord(TProp.sngfile):
-            DoSngFile(self, sngfile);
+            DoSngFile(self, sngfile, setterFlags);
         ord(TProp.dblfile):
-            DoDblFile(self, dblfile);
+            DoDblFile(self, dblfile, setterFlags);
         ord(TProp.PQCSVFile):
-            Do2ColCSVFile(self, pqcsvfile);
+            DoMulticolCSVFile(self, pqcsvfile, true, setterFlags);
         ord(TProp.Interval):
             if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
@@ -730,11 +730,34 @@ begin
     end;
     case Idx of
         ord(TProp.npts):
+        begin
             // Force as the always first property when saving in a later point
             // Doing this here we don't need to force the order everywhere later,
             // especially since in DSS C-API's implementation we don't keep a string
             // copy of every field.
             PrpSequence[Idx] := -10;
+
+            if (previousIntVal < NumPoints) and (not ExternalMemory) then
+            begin
+                // Grow any existing arrays to avoid access violations
+                if dH <> NIL then
+                    ReallocMem(dH, SizeOf(Double) * NumPoints);
+                if sH <> NIL then
+                    ReallocMem(sH, SizeOf(Single) * NumPoints);
+
+                if not UseMMF then
+                begin
+                    if dP <> NIL then
+                        ReallocMem(dP, SizeOf(Double) * NumPoints);
+                    if dQ <> NIL then
+                        ReallocMem(dQ, SizeOf(Double) * NumPoints);
+                    if sP <> NIL then
+                        ReallocMem(sP, SizeOf(Single) * NumPoints);
+                    if sQ <> NIL then
+                        ReallocMem(sQ, SizeOf(Single) * NumPoints);
+                end;
+            end;
+        end;
         ord(TProp.mult), ord(TProp.Pmult), ord(TProp.csvfile), ord(TProp.sngfile), ord(TProp.dblfile), ord(TProp.qmult):
             FStdDevCalculated := FALSE;   // now calculated on demand
         ord(TProp.Qmax):
@@ -923,13 +946,94 @@ begin
     SetMaxPandQ();
 end;
 
-procedure Do2ColCSVFile(obj: TObj; const FileName: String);
+procedure DoMulticolCSVFile(obj: TObj; const FileName: String; readQ: Boolean; setterFlags: TDSSPropertySetterFlags);
 begin
-    obj.Read2ColCSVFile(FileName);
+    obj.ReadMulticolCSVFile(FileName, readQ, setterFlags);
 end;
 
-procedure TLoadShapeObj.Read2ColCSVFile(const FileName: String);
-//   Process 2-column CSV file (3-col if time expected)
+procedure TLoadShapeObj.ReadMulticolCSVFile_UnknownSize(FileName: String; var F: TStream; readQ: Boolean; setterFlags: TDSSPropertySetterFlags);
+var
+    numRead: Integer;
+    inputLine: String;
+    maxNum: Integer;
+    prevNumPoints: Integer;
+begin
+    try
+        UseFloat64();
+        prevNumPoints := NumPoints;
+        NumPoints := 0;
+        maxNum := prevNumPoints;
+        if maxNum <= 0 then
+            maxNum := 100;
+
+        ReAllocmem(dP, sizeof(Double) * maxNum);
+        if readQ then
+            ReAllocmem(dQ, Sizeof(Double) * maxNum);
+        if Interval = 0.0 then
+            ReAllocmem(dH, Sizeof(Double) * maxNum);
+
+        numRead := -1;
+        while true do
+        begin
+            if (F.Position + 1) >= F.Size then
+                break;
+
+            if (numRead + 1) >= maxNum then
+            begin
+                maxNum := maxNum * 3 div 2; // 100, 150, 225, 337, 505, 757, 1135, 1702...
+                ReAllocmem(dP, sizeof(Double) * maxNum);
+                if readQ then
+                    ReAllocmem(dQ, Sizeof(Double) * maxNum);
+                if Interval = 0.0 then
+                    ReAllocmem(dH, Sizeof(Double) * maxNum);
+            end;
+            inc(numRead);
+            FSReadln(F, inputLine);
+            DSS.AuxParser.SetCmdString(inputLine);
+            if Interval = 0.0 then
+            begin
+                DSS.AuxParser.NextParam();
+                dH[numRead] := DSS.AuxParser.MakeDouble();
+            end;
+            DSS.AuxParser.NextParam();
+            dP[numRead] := DSS.AuxParser.MakeDouble();
+            if readQ then
+            begin
+                DSS.AuxParser.NextParam();
+                dQ[numRead] := DSS.AuxParser.MakeDouble();
+            end;
+        end;
+        FreeAndNil(F);
+        NumPoints := numRead;
+        if prevNumPoints > NumPoints then
+        begin
+            // Ensure we don't accidentally read invalid memory if NumPoints grew
+            if (dQ <> NIL) and (not readQ) then
+                ReAllocmem(dQ, Sizeof(Double) * NumPoints);
+            if (dH <> NIL) and (Interval <> 0.0) then
+                ReAllocmem(dH, Sizeof(Double) * NumPoints);
+        end;
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg(_('Error Processing CSV File: "%s". %s'), [FileName, E.Message], 614);
+            FreeAndNil(F);
+            NumPoints := numRead;
+            if prevNumPoints > NumPoints then
+            begin
+                // Ensure we don't accidentally read invalid memory if NumPoints grew
+                if (dQ <> NIL) and (not readQ) then
+                    ReAllocmem(dQ, Sizeof(Double) * NumPoints);
+                if (dH <> NIL) and (Interval <> 0.0) then
+                    ReAllocmem(dH, Sizeof(Double) * NumPoints);
+            end;
+            Exit;
+        end;
+    end;
+end;
+
+procedure TLoadShapeObj.ReadMulticolCSVFile(const FileName: String; readQ: Boolean; setterFlags: TDSSPropertySetterFlags);
+//   Process 1 or 2-column CSV file (2 or 3 cols if time expected)
 var
     F: TStream;
     i: Integer;
@@ -937,13 +1041,12 @@ var
     maxValues, remainingBytes: Integer;
 begin
     F := nil;
-    maxValues := NumPoints;
+
     if ExternalMemory then
     begin
         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
     end;
-
     try
         F := DSS.GetInputStreamEx(FileName);
     except
@@ -952,8 +1055,22 @@ begin
         Exit;
     end;
 
+    if (TDSSPropertySetterFlag.ImplicitSizes in setterFlags) and (not UseMMF) then
+    begin
+        ReadMulticolCSVFile_UnknownSize(FileName, F, readQ, setterFlags);
+        Exit;
+    end;
+
+    if (NumPoints = 0) then
+    begin
+        DoSimpleMsg(_('Please specify `NPts` first.'), 61108);
+        Exit;
+    end;
+
+    maxValues := NumPoints;
+
     try
-        if UseMMF then
+        if UseMMF and readQ then
         begin
             FreeAndNil(F);
             mmDataSize := NumPoints;
@@ -971,11 +1088,24 @@ begin
             ReAllocmem(dQ, sizeof(Double) * 2);
             Exit;
         end;
+        if UseMMF and (not readQ) then
+        begin
+            FreeAndNil(F);
+            s := 'file=' + FileName;
+            if not CreateMMF(s, TMMShapeType.P) then
+                Exit; // CreateMMF throws an error message already
+
+            LoadFileFeatures(TMMShapeType.P);
+            mmDataSize := NumPoints;
+            ReAllocmem(dP, sizeof(Double) * 2);
+            Exit;
+        end;
 
         // Allocate both P and Q multipliers
         UseFloat64();
         ReAllocmem(dP, sizeof(Double) * NumPoints);
-        ReAllocmem(dQ, Sizeof(Double) * NumPoints);
+        if readQ then
+            ReAllocmem(dQ, Sizeof(Double) * NumPoints);
         if Interval = 0.0 then
             ReAllocmem(dH, Sizeof(Double) * NumPoints);
         i := -1;
@@ -992,100 +1122,11 @@ begin
             end;
             DSS.AuxParser.NextParam();
             dP[i] := DSS.AuxParser.MakeDouble();  // first parm
-            DSS.AuxParser.NextParam();
-            dQ[i] := DSS.AuxParser.MakeDouble();  // second parm
-        end;
-        remainingBytes := F.Size - (F.Position + 1);
-        FreeAndNil(F);
-        inc(i);
-        if i <> NumPoints then
-            NumPoints := i;
-
-        if ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 1) then
-        begin
-            Exit;
-        end;
-
-        if (remainingBytes > 5) then // 5 = enough for line ending plus some chars, indicating extra data
-        begin
-            DoSimpleMsg('%s: 2-column CSV file "%s" contains more items than expected (%d). Extra data: %d bytes.', [FullName(), FileName, maxValues, remainingBytes], 20241024);
-            Exit;
-        end;
-
-        if (NumPoints < maxValues) then
-        begin
-            DoSimpleMsg('%s: 2-column CSV file "%s" contains fewer items (%d) than expected (%d).', [FullName(), FileName, NumPoints, maxValues], 20241025);
-            Exit;
-        end;
-    except
-        On E: Exception do
-        begin
-            FreeAndNil(F);
-            DoSimpleMsg(_('Error Processing CSV File: "%s". %s'), [FileName, E.Message], 614);
-            Exit;
-        end;
-    end;
-end;
-
-procedure DoCSVFile(obj: TObj; const FileName: String);
-begin
-    obj.ReadCSVFile(FileName);
-end;
-
-procedure TLoadShapeObj.ReadCSVFile(const FileName: String);
-var
-    F: TStream;
-    i: Integer;
-    s: String;
-    maxValues, remainingBytes: Integer;
-begin
-    F := NIL;
-    maxValues := NumPoints;
-    if ExternalMemory then
-    begin
-        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
-        Exit;
-    end;
-    try
-        F := DSS.GetInputStreamEx(FileName);
-    except
-        DoSimpleMsg('Error opening file: "%s"', [FileName], 613);
-        FreeAndNil(F);
-        Exit;
-    end;
-
-    try
-        if UseMMF then
-        begin
-            FreeAndNil(F);
-            s := 'file=' + FileName;
-            if not CreateMMF(s, TMMShapeType.P) then
-                Exit; // CreateMMF throws an error message already
-
-            LoadFileFeatures(TMMShapeType.P);
-            mmDataSize := NumPoints;
-            ReAllocmem(dP, sizeof(Double) * 2);
-            Exit;
-        end;
-
-        UseFloat64();
-        ReAllocmem(dP, sizeof(Double) * NumPoints);
-        if Interval = 0.0 then
-            ReAllocmem(dH, Sizeof(Double) * NumPoints);
-        i := -1;
-        while ((F.Position + 1) < F.Size) and (i < (NumPoints - 1)) do
-        begin
-            Inc(i);
-            FSReadln(F, s); // read entire line  and parse with AuxParser
-            // AuxParser allows commas or white space
-            DSS.AuxParser.SetCmdString(s);
-            if Interval = 0.0 then
+            if readQ then
             begin
                 DSS.AuxParser.NextParam();
-                dH[i] := DSS.AuxParser.MakeDouble();
+                dQ[i] := DSS.AuxParser.MakeDouble();  // second parm
             end;
-            DSS.AuxParser.NextParam();
-            dP[i] := DSS.AuxParser.MakeDouble();
         end;
         remainingBytes := F.Size - (F.Position + 1);
         FreeAndNil(F);
@@ -1100,13 +1141,13 @@ begin
 
         if (remainingBytes > 5) then // 5 = enough for line ending plus some chars, indicating extra data
         begin
-            DoSimpleMsg('%s: CSV file "%s" contains more items than expected (%d). Extra data: %d bytes.', [FullName(), FileName, maxValues, remainingBytes], 20241022);
+            DoSimpleMsg('%s: CSV file "%s" contains more items than expected (%d). Extra data: %d bytes.', [FullName(), FileName, maxValues, remainingBytes], 20241024);
             Exit;
         end;
 
         if (NumPoints < maxValues) then
         begin
-            DoSimpleMsg('%s: CSV file "%s" contains fewer items (%d) than expected (%d).', [FullName(), FileName, NumPoints, maxValues], 20241023);
+            DoSimpleMsg('%s: CSV file "%s" contains fewer items (%d) than expected (%d).', [FullName(), FileName, NumPoints, maxValues], 20241025);
             Exit;
         end;
     except
@@ -1119,12 +1160,12 @@ begin
     end;
 end;
 
-procedure DoSngFile(obj: TObj; const FileName: String);
+procedure DoSngFile(obj: TObj; const FileName: String; setterFlags: TDSSPropertySetterFlags);
 begin
-    obj.ReadSngFile(FileName);
+    obj.ReadSngFile(FileName, setterFlags);
 end;
 
-procedure TLoadShapeObj.ReadSngFile(const FileName: String);
+procedure TLoadShapeObj.ReadSngFile(const FileName: String; setterFlags: TDSSPropertySetterFlags);
 var
     s: String;
     F: TStream;
@@ -1132,9 +1173,10 @@ var
     i: Integer;
     bytesRead: Int64;
     maxValues, remainingBytes: Integer;
+    implicitSize: Boolean;
 begin
     F := NIL;
-    maxValues := NumPoints;
+
     if ExternalMemory then
     begin
         DoSimpleMsg(_('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61102);
@@ -1144,9 +1186,26 @@ begin
         F := DSS.GetInputStreamEx(FileName);
     except
         DoSimpleMsg('Error opening file: "%s"', [FileName], 615);
+        FreeAndNil(F);
         Exit;
     end;
 
+    implicitSize := (TDSSPropertySetterFlag.ImplicitSizes in setterFlags) and (not UseMMF);
+    if (not implicitSize) and (NumPoints = 0) then
+    begin
+        DoSimpleMsg(_('Please specify `NPts` first.'), 61108);
+        Exit;
+    end;
+
+    if (implicitSize) then
+    begin
+        NumPoints := F.Size div sizeof(Single);
+        if (not UseMMF) and (Interval = 0.0) then
+            NumPoints := NumPoints div 2;
+    end;
+
+    maxValues := NumPoints;
+    
     try
         if UseMMF then
         begin
@@ -1164,7 +1223,7 @@ begin
         if (dQ = NIL) then
         begin
             // Take the opportunity to use float32 data
-            UseFloat32;
+            UseFloat32();
             if sP = nil then
                 ReallocMem(sP, NumPoints * SizeOf(Single));
             i := -1;
@@ -1244,21 +1303,22 @@ begin
     end;
 end;
 
-procedure DoDblFile(obj: TObj; const FileName: String);
+procedure DoDblFile(obj: TObj; const FileName: String; setterFlags: TDSSPropertySetterFlags);
 begin
-    obj.ReadDblFile(FileName);
+    obj.ReadDblFile(FileName, setterFlags);
 end;
 
-procedure TLoadShapeObj.ReadDblFile(const FileName: String);
+procedure TLoadShapeObj.ReadDblFile(const FileName: String; setterFlags: TDSSPropertySetterFlags);
 var
     s: String;
     F: TStream;
     i: Integer;
     bytesRead: Int64;
     maxValues, remainingBytes: Integer;
+    implicitSize: Boolean;
 begin
     F := NIL;
-    maxValues := NumPoints;
+
     if ExternalMemory then
     begin
         DoSimpleMsg(_('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61102);
@@ -1268,8 +1328,25 @@ begin
         F := DSS.GetInputStreamEx(FileName);
     except
         DoSimpleMsg('Error opening file: "%s"', [FileName], 617);
+        FreeAndNil(F);
         Exit;
     end;
+
+    implicitSize := (TDSSPropertySetterFlag.ImplicitSizes in setterFlags);
+    if (not implicitSize) and (NumPoints = 0) then
+    begin
+        DoSimpleMsg(_('Please specify `NPts` first.'), 61108);
+        Exit;
+    end;
+
+    if (implicitSize) then
+    begin
+        NumPoints := F.Size div sizeof(Double);
+        if (not UseMMF) and (Interval = 0.0) then
+            NumPoints := NumPoints div 2;
+    end;
+
+    maxValues := NumPoints;
 
     try
         if UseMMF then

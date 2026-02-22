@@ -215,11 +215,11 @@ begin
             ReAllocmem(Multiplier, Sizeof(Double) * Npts);
         end;
         ord(TProp.csvfile):
-            DoCSVFile(DSS, Year, Multiplier, Npts, False, csvfile, ParentClass.Name, True);
+            DoCSVFile(DSS, Year, Multiplier, Npts, False, csvfile, ParentClass.Name, True, setterFlags);
         ord(TProp.sngfile):
-            DoSngFile(DSS, Year, Multiplier, Npts, False, sngfile, ParentClass.Name, True);
+            DoSngFile(DSS, Year, Multiplier, Npts, False, sngfile, ParentClass.Name, True, setterFlags);
         ord(TProp.dblfile):
-            DoDblFile(DSS, Year, Multiplier, Npts, False, dblfile, ParentClass.Name, True);
+            DoDblFile(DSS, Year, Multiplier, Npts, False, dblfile, ParentClass.Name, True, setterFlags);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;

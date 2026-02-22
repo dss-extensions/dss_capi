@@ -123,9 +123,9 @@ procedure FSFlush(F: TFileStream);
 
 function SliceProps(props: pStringArray; count: Integer): ArrayOfString; // The built-in Slice was causing issues on ARM64
 
-procedure DoSngFile(DSS: TDSSContext; var pA, pB: PDoubleArray; var NumPoints: Integer; OnlyLoadB: Boolean; const FileName: String; const ClassName: String; RoundA: Boolean = False);
-procedure DoDblFile(DSS: TDSSContext; var pA, pB: PDoubleArray; var NumPoints: Integer; OnlyLoadB: Boolean; const FileName: String; const ClassName: String; RoundA: Boolean = False);
-procedure DoCSVFile(DSS: TDSSContext; var pA, pB: PDoubleArray; var NumPoints: Integer; OnlyLoadB: Boolean; const FileName: String; const ClassName: String; RoundA: Boolean = False);
+procedure DoSngFile(DSS: TDSSContext; var pA, pB: PDoubleArray; var NumPoints: Integer; OnlyLoadB: Boolean; const FileName: String; const ClassName: String; RoundA: Boolean; setterFlags: TDSSPropertySetterFlags);
+procedure DoDblFile(DSS: TDSSContext; var pA, pB: PDoubleArray; var NumPoints: Integer; OnlyLoadB: Boolean; const FileName: String; const ClassName: String; RoundA: Boolean; setterFlags: TDSSPropertySetterFlags);
+procedure DoCSVFile(DSS: TDSSContext; var pA, pB: PDoubleArray; var NumPoints: Integer; OnlyLoadB: Boolean; const FileName: String; const ClassName: String; RoundA: Boolean; setterFlags: TDSSPropertySetterFlags);
 
 procedure DelFilesFromDir(DSS: TDSSContext; Directory: String; FileMask: String = '*'; DelSubDirs: Boolean = True);
 
@@ -2222,12 +2222,11 @@ begin
         Result[i - 1] := props[i];
 end;
 
-procedure DoSngFile(DSS: TDSSContext; var pA, pB: PDoubleArray; var NumPoints: Integer; OnlyLoadB: Boolean; const FileName: String; const ClassName: String; RoundA: Boolean);
+procedure DoSngFile(DSS: TDSSContext; var pA, pB: PDoubleArray; var NumPoints: Integer; OnlyLoadB: Boolean; const FileName: String; const ClassName: String; RoundA: Boolean; setterFlags: TDSSPropertySetterFlags);
 var
     F: TStream = nil;
     sA, 
     sB: Single;
-    i: Integer;
     actualCount, maxValues: Integer;
 begin
     try
@@ -2239,60 +2238,72 @@ begin
             Exit;
         end;
 
-        maxValues := NumPoints;
         actualCount := F.Size div sizeof(Single);
-        if not OnlyLoadB then
-        begin
-            maxValues *= 2;
-        end;
 
-        if (actualCount <> maxValues) and ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0) then
+        if (TDSSPropertySetterFlag.ImplicitSizes in setterFlags) then
         begin
-            FreeAndNil(F);
-            DoSimpleMsg(DSS, 'File of singles "%s" contains %d items, expected %d.', [FileName, actualCount, maxValues], 20241015);
-            Exit;
+            maxValues := actualCount;
+            if not OnlyLoadB then
+            begin
+                maxValues := maxValues div 2;
+            end;
+            NumPoints := maxValues;
+        end
+        else
+        begin
+            maxValues := NumPoints;
+            if not OnlyLoadB then
+            begin
+                maxValues *= 2;
+            end;
+            if (actualCount <> maxValues) and ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0) then
+            begin
+                FreeAndNil(F);
+                DoSimpleMsg(DSS, 'File of singles "%s" contains %d items, expected %d.', [FileName, actualCount, maxValues], 20241015);
+                Exit;
+            end;
         end;
 
         ReAllocmem(pB, Sizeof(Double) * NumPoints);
-        i := 0;
+        actualCount := 0;
         if not OnlyLoadB then
         begin
             ReAllocmem(pA, Sizeof(Double) * NumPoints);
-            while ((F.Position + 1) < F.Size) and (i < NumPoints) do
+            while ((F.Position + 1) < F.Size) and (actualCount < NumPoints) do
             begin
-                Inc(i);
+                Inc(actualCount);
 
                 if F.Read(sA, SizeOf(sA)) <> SizeOf(sA) then 
                     Break;
 
-                pA[i] := sA;
+                pA[actualCount] := sA;
 
                 if F.Read(sB, SizeOf(sB)) <> SizeOf(sB) then 
                     Break;
 
-                pB[i] := sB;
+                pB[actualCount] := sB;
             end;
         end
         else
         begin
-            while ((F.Position + 1) < F.Size) and (i < NumPoints) do
+            while ((F.Position + 1) < F.Size) and (actualCount < NumPoints) do
             begin
-                Inc(i);
+                Inc(actualCount);
 
                 if F.Read(sB, SizeOf(sB)) <> SizeOf(sB) then 
                     Break;
 
-                pB[i] := sB;
+                pB[actualCount] := sB;
             end;
         end;
 
         FreeAndNil(F);
-        if i <> NumPoints then
-            NumPoints := i;
+        if (actualCount <> NumPoints) and not (TDSSPropertySetterFlag.ImplicitSizes in setterFlags) then
+            NumPoints := actualCount;
 
         if RoundA then
-            for i := 1 to NumPoints do
-                pA[i] := Round(pA[i]);
+            for actualCount := 1 to NumPoints do
+                pA[actualCount] := Round(pA[actualCount]);
 
     except
         DoSimpleMsg(DSS, 'Error Processing binary (single) %s File: "%s"', [ClassName, FileName], 616);
@@ -2301,7 +2312,7 @@ begin
     end;
 end;
 
-procedure DoDblFile(DSS: TDSSContext; var pA, pB: PDoubleArray; var NumPoints: Integer; OnlyLoadB: Boolean; const FileName: String; const ClassName: String; RoundA: Boolean);
+procedure DoDblFile(DSS: TDSSContext; var pA, pB: PDoubleArray; var NumPoints: Integer; OnlyLoadB: Boolean; const FileName: String; const ClassName: String; RoundA: Boolean; setterFlags: TDSSPropertySetterFlags);
 var
     F: TStream = nil;
     i: Integer;
@@ -2316,18 +2327,30 @@ begin
             Exit;
         end;
 
-        maxValues := NumPoints;
         actualCount := F.Size div sizeof(Double);
-        if not OnlyLoadB then
-        begin
-            maxValues *= 2;
-        end;
 
-        if (actualCount <> maxValues) and ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0) then
+        if (TDSSPropertySetterFlag.ImplicitSizes in setterFlags) then
         begin
-            FreeAndNil(F);
-            DoSimpleMsg(DSS, 'File of doubles "%s" contains %d items, expected %d.', [FileName, actualCount, maxValues], 20241014);
-            Exit;
+            maxValues := actualCount;
+            if not OnlyLoadB then
+            begin
+                maxValues := maxValues div 2;
+            end;
+            NumPoints := maxValues;
+        end
+        else
+        begin
+            maxValues := NumPoints;
+            if not OnlyLoadB then
+            begin
+                maxValues *= 2;
+            end;
+            if (actualCount <> maxValues) and ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0) then
+            begin
+                FreeAndNil(F);
+                DoSimpleMsg(DSS, 'File of doubles "%s" contains %d items, expected %d.', [FileName, actualCount, maxValues], 20241014);
+                Exit;
+            end;
         end;
 
         i := 0;
@@ -2358,7 +2381,7 @@ begin
         end;
 
         FreeAndNil(F);
-        if i <> NumPoints then
+        if (i <> NumPoints) and not (TDSSPropertySetterFlag.ImplicitSizes in setterFlags) then
             NumPoints := i;
 
         if RoundA then
@@ -2372,12 +2395,12 @@ begin
     end;
 end;
 
-procedure DoCSVFile(DSS: TDSSContext; var pA, pB: PDoubleArray; var NumPoints: Integer; OnlyLoadB: Boolean; const FileName: String; const ClassName: String; RoundA: Boolean);
+procedure DoCSVFile(DSS: TDSSContext; var pA, pB: PDoubleArray; var NumPoints: Integer; OnlyLoadB: Boolean; const FileName: String; const ClassName: String; RoundA: Boolean; setterFlags: TDSSPropertySetterFlags);
 var
     F: TStream = nil;
-    i: Integer;
-    s: String;
+    inputLine: String;
     remainingBytes: Integer;
+    numRead, maxNum: Integer;
 begin
     try
         F := DSS.GetInputStreamEx(FileName);
@@ -2386,34 +2409,103 @@ begin
         FreeAndNil(F);
         Exit;
     end;
+
+    if (TDSSPropertySetterFlag.ImplicitSizes in setterFlags) then
+    begin
+        try
+            maxNum := NumPoints;
+            NumPoints := 0;
+            if maxNum <= 0 then
+                maxNum := 100;
+
+            numRead := 0;
+
+            if not OnlyLoadB then
+            begin
+                ReAllocmem(pB, Sizeof(Double) * maxNum);
+                ReAllocmem(pA, Sizeof(Double) * maxNum);
+                while ((F.Position + 3) <= F.Size) do
+                begin
+                    if (numRead + 1) >= maxNum then
+                    begin
+                        maxNum := maxNum * 3 div 2; // 100, 150, 225, 337, 505, 757, 1135, 1702...
+                        ReAllocmem(pB, Sizeof(Double) * maxNum);
+                        ReAllocmem(pA, Sizeof(Double) * maxNum);
+                    end;
+                    inc(numRead);
+
+                    FSReadln(F, inputLine); // read entire line and parse with AuxParser
+                    // AuxParser allows commas or white space
+                    DSS.AuxParser.SetCmdString(inputLine);
+                    DSS.AuxParser.NextParam();
+                    pA[numRead] := DSS.AuxParser.MakeDouble();
+                    DSS.AuxParser.NextParam();
+                    pB[numRead] := DSS.AuxParser.MakeDouble();
+                end;
+            end
+            else
+            begin
+                ReAllocmem(pB, Sizeof(Double) * maxNum);
+
+                while ((F.Position + 1) <= F.Size) do
+                begin
+                    if (numRead + 1) >= maxNum then
+                    begin
+                        maxNum := maxNum * 3 div 2; // 100, 150, 225, 337, 505, 757, 1135, 1702...
+                        ReAllocmem(pB, Sizeof(Double) * maxNum);
+                    end;
+                    inc(numRead);
+
+                    FSReadln(F, inputLine); // read entire line and parse with AuxParser
+                    // AuxParser allows commas or white space
+                    DSS.AuxParser.SetCmdString(inputLine);
+                    DSS.AuxParser.NextParam();
+                    pB[numRead] := DSS.AuxParser.MakeDouble();
+                end;
+            end;
+            FreeAndNil(F);
+            NumPoints := numRead;
+        except
+            On E: Exception do
+            begin
+                DoSimpleMsg(DSS, 'Error Processing CSV File: "%s". %s', [FileName, E.Message], 58614);
+                FreeAndNil(F);
+                NumPoints := numRead;
+                Exit;
+            end;
+        end;
+        Exit;
+    end;
+
+    // >> (TDSSPropertySetterFlag.ImplicitSizes NOT in setterFlags) <<
     try
         ReAllocmem(pB, Sizeof(Double) * NumPoints);
-        i := 0;
+        numRead := 0;
         if not OnlyLoadB then
         begin
             ReAllocmem(pA, Sizeof(Double) * NumPoints);
-            while ((F.Position + 1) < F.Size) and (i < NumPoints) do
+            while ((F.Position + 1) < F.Size) and (numRead < NumPoints) do
             begin
-                Inc(i);
-                FSReadln(F, s); // read entire line and parse with AuxParser
+                Inc(numRead);
+                FSReadln(F, inputLine); // read entire line and parse with AuxParser
                 // AuxParser allows commas or white space
-                DSS.AuxParser.SetCmdString(s);
+                DSS.AuxParser.SetCmdString(inputLine);
                 DSS.AuxParser.NextParam();
-                pA[i] := DSS.AuxParser.MakeDouble();
+                pA[numRead] := DSS.AuxParser.MakeDouble();
                 DSS.AuxParser.NextParam();
-                pB[i] := DSS.AuxParser.MakeDouble();
+                pB[numRead] := DSS.AuxParser.MakeDouble();
             end;
         end
         else
         begin
-            while ((F.Position + 1) < F.Size) and (i < NumPoints) do
+            while ((F.Position + 1) < F.Size) and (numRead < NumPoints) do
             begin
-                Inc(i);
-                FSReadln(F, s); // read entire line and parse with AuxParser
+                Inc(numRead);
+                FSReadln(F, inputLine); // read entire line and parse with AuxParser
                 // AuxParser allows commas or white space
-                DSS.AuxParser.SetCmdString(s);
+                DSS.AuxParser.SetCmdString(inputLine);
                 DSS.AuxParser.NextParam();
-                pB[i] := DSS.AuxParser.MakeDouble();
+                pB[numRead] := DSS.AuxParser.MakeDouble();
             end;
         end;
 
@@ -2421,13 +2513,13 @@ begin
 
         if ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 1) then
         begin
-            NumPoints := i;
+            NumPoints := numRead;
             Exit;
         end;
 
-        if (i < NumPoints) then
+        if (numRead < NumPoints) then
         begin
-            DoSimpleMsg(DSS, 'CSV file "%s" contains %d items, fewer than expected (%d).', [FileName, i, NumPoints], 20241016);
+            DoSimpleMsg(DSS, 'CSV file "%s" contains %d items, fewer than expected (%d).', [FileName, numRead, NumPoints], 20241016);
             Exit;
         end;
 
@@ -2437,6 +2529,7 @@ begin
             DoSimpleMsg(DSS, 'CSV file "%s" contains more items than expected (%d). Extra data: %d bytes.', [FileName, NumPoints, remainingBytes], 20241017);
             Exit;
         end;
+
     except
         On E: Exception do
         begin

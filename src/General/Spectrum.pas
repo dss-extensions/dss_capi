@@ -81,7 +81,7 @@ type
         function GetMult(const h: Double): Complex;
 
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
-        procedure ReadCSVFile(const FileName: String);
+        procedure ReadCSVFile(const FileName: String; setterFlags: TDSSPropertySetterFlags);
     end;
 
 implementation
@@ -105,7 +105,7 @@ var
     PropInfo: Pointer = NIL;
     PropInfoLegacy: Pointer = NIL;    
 
-procedure DoCSVFile(obj: TObj; const FileName: String);forward;
+procedure DoCSVFile(obj: TObj; const FileName: String; setterFlags: TDSSPropertySetterFlags);forward;
 
 constructor TSpectrum.Create(dssContext: TDSSContext);
 begin
@@ -207,7 +207,7 @@ begin
                 AngleArray[i] := 0.0; //TODO: remove -- left for backwards compatiblity, but this is kinda buggy
         end;
         ord(TProp.csvfile):
-            DoCSVFile(self, csvfile);
+            DoCSVFile(self, csvfile, setterFlags);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -274,11 +274,12 @@ begin
     inherited destroy;
 end;
 
-procedure TSpectrumObj.ReadCSVFile(const FileName: String);
+procedure TSpectrumObj.ReadCSVFile(const FileName: String; setterFlags: TDSSPropertySetterFlags);
 var
     F: TStream = nil;
-    i: Integer;
-    s: String;
+    numRead: Integer;
+    inputLine: String;
+    maxNum: Integer;
 begin
     try
         F := DSS.GetInputStreamEx(FileName);
@@ -288,38 +289,96 @@ begin
         Exit;
     end;
 
+    if (TDSSPropertySetterFlag.ImplicitSizes in setterFlags) then
+    begin
+        try
+            maxNum := NumHarm;
+            NumHarm := 0; //TODO: raise exception if already allocated?
+            if maxNum <= 0 then
+                maxNum := 100;
+
+            ReAllocmem(HarmArray, Sizeof(Double) * maxNum);
+            ReAllocmem(puMagArray, Sizeof(Double) * maxNum);
+            ReAllocmem(AngleArray, Sizeof(Double) * maxNum);
+
+            numRead := 0;
+            while true do
+            begin
+                if (F.Position + 1) >= F.Size then
+                    break;
+
+                if (numRead + 1) >= maxNum then
+                begin
+                    maxNum := maxNum * 3 div 2; // 100, 150, 225, 337, 505, 757, 1135, 1702...
+                    ReAllocmem(HarmArray, Sizeof(Double) * maxNum);
+                    ReAllocmem(puMagArray, Sizeof(Double) * maxNum);
+                    ReAllocmem(AngleArray, Sizeof(Double) * maxNum);
+                end;
+                inc(numRead);
+                FSReadln(F, inputLine);
+                DSS.AuxParser.SetCmdString(inputLine);
+
+                DSS.AuxParser.NextParam();
+                HarmArray[numRead] := DSS.AuxParser.MakeDouble();
+                DSS.AuxParser.NextParam();
+                puMagArray[numRead] := DSS.AuxParser.MakeDouble() * 0.01;
+                DSS.AuxParser.NextParam();
+                AngleArray[numRead] := DSS.AuxParser.MakeDouble();
+            end;
+            FreeAndNil(F);
+            NumHarm := numRead;
+        except
+            On E: Exception do
+            begin
+                DoSimpleMsg('Error reading %d-th numeric row from file: "%s" Error is:', [numRead, FileName, E.message], 705);
+                FreeAndNil(F);
+                NumHarm := numRead;
+                Exit;
+            end;
+        end;
+        Exit;
+    end;
+
+    // >> (TDSSPropertySetterFlag.ImplicitSizes NOT in setterFlags) <<
     try
-        ReAllocmem(HarmArray, Sizeof(HarmArray[1]) * NumHarm);
-        ReAllocmem(puMagArray, Sizeof(puMagArray[1]) * NumHarm);
-        ReAllocmem(AngleArray, Sizeof(AngleArray[1]) * NumHarm);
-        i := 0;
-        while ((F.Position + 1) < F.Size) and (i < NumHarm) do
+        ReAllocmem(HarmArray, Sizeof(Double) * NumHarm);
+        ReAllocmem(puMagArray, Sizeof(Double) * NumHarm);
+        ReAllocmem(AngleArray, Sizeof(Double) * NumHarm);
+        numRead := 0;
+        while ((F.Position + 1) < F.Size) and (numRead < NumHarm) do
         begin
-            Inc(i);
-            FSReadln(F, S);  // Use Auxparser, which allows for formats
-            DSS.AuxParser.SetCmdString(S);
+            Inc(numRead);
+            FSReadln(F, inputLine);  // Use Auxparser, which allows for formats
+            DSS.AuxParser.SetCmdString(inputLine);
             DSS.AuxParser.NextParam();
-            HarmArray[i] := DSS.AuxParser.MakeDouble();
+            HarmArray[numRead] := DSS.AuxParser.MakeDouble();
             DSS.AuxParser.NextParam();
-            puMagArray[i] := DSS.AuxParser.MakeDouble() * 0.01;
+            puMagArray[numRead] := DSS.AuxParser.MakeDouble() * 0.01;
             DSS.AuxParser.NextParam();
-            AngleArray[i] := DSS.AuxParser.MakeDouble();
+            AngleArray[numRead] := DSS.AuxParser.MakeDouble();
         end;
         F.Free();
-        NumHarm := i;   // reset number of points
+        if (NumHarm <> numRead) and ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0) Then
+        begin
+            DoSimpleMsg('%s.Spectrum: CSV file "%s" contains %d items, expected %d.', [self.FullName(), FileName, numRead, NumHarm], 2024108);
+        end
+        else
+        begin
+            NumHarm := numRead;   // reset number of points
+        end;
     except
         On E: Exception do
         begin
             DoSimpleMsg('Error Processing CSV File: "%s". %s', [FileName, E.Message], 654);
-            F.Free();
+            FreeAndNil(F);
             Exit;
         end;
     end;
 end;
 
-procedure DoCSVFile(obj: TObj; const FileName: String);
+procedure DoCSVFile(obj: TObj; const FileName: String; setterFlags: TDSSPropertySetterFlags);
 begin
-    obj.ReadCSVFile(FileName);
+    obj.ReadCSVFile(FileName, setterFlags);
 end;
 
 procedure TSpectrumObj.DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean);

@@ -337,11 +337,11 @@ procedure TXYcurveObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer;
 begin
     case Idx of
         ord(TProp.csvfile):
-            DoCSVFile(DSS, Xvalues, Yvalues, numPoints, False, csvfile, ParentClass.Name); // file of x,y points, one to a line
+            DoCSVFile(DSS, Xvalues, Yvalues, numPoints, False, csvfile, ParentClass.Name, false, setterFlags); // file of x,y points, one to a line
         ord(TProp.sngfile):
-            DoSngFile(DSS, Xvalues, Yvalues, numPoints, False, sngfile, ParentClass.Name);
+            DoSngFile(DSS, Xvalues, Yvalues, numPoints, False, sngfile, ParentClass.Name, false, setterFlags);
         ord(TProp.dblfile):
-            DoDblFile(DSS, Xvalues, Yvalues, numPoints, False, dblfile, ParentClass.Name);
+            DoDblFile(DSS, Xvalues, Yvalues, numPoints, False, dblfile, ParentClass.Name, false, setterFlags);
     end;
 
     case Idx of
