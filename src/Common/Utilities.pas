@@ -560,7 +560,7 @@ begin
         end;
         actualCount := F.Size div sizeof(Double);
         Result := Min(maxValues, actualCount);  // no. of doubles
-        F.ReadBuffer(ResultArray[1], SizeOf(Double * Result));
+        F.ReadBuffer(ResultArray[1], SizeOf(Double) * Result);
         F.Free;
         if (actualCount <> maxValues) and ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0) then
         begin
