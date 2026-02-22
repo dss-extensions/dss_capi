@@ -50,7 +50,7 @@ type
         function Kron(EliminationRow: Integer): TcMatrix;  // Perform Kron reduction on last row/col and return new matrix
 
         property GetSetElement[i, j: Integer]: Complex Read GetElement Write SetElement; Default; 
-        function ToString(): String;
+        function ToString(): String; override;
         function ToJSON(joptions: Integer): TJSONData;
     end;
 
