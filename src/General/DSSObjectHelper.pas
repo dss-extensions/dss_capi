@@ -1308,7 +1308,11 @@ begin
             otherObj := GetObjObject(obj, Index);
             if otherObj = NIL then
                 val := TJSONNull.Create()
-            else if ((joptions and Integer(DSSJSONOptions.FullNames)) <> 0) or (Pointer(PropertyOffset2[Index]) = NIL) then
+            else if ((joptions and Integer(DSSJSONOptions.FullNames)) <> 0) or (
+                    (PropertyOffset2[Index] = 0) or 
+                    ((TDSSClass(PropertyOffset2[Index]) is TProxyClass) and 
+                    TProxyClass(PropertyOffset2[Index]).FullNamesOnly)
+            ) then
             begin
                 val := TJSONString.Create(otherObj.FullName())
             end
@@ -2604,8 +2608,8 @@ begin
                 if otherObj <> NIL then
                 begin
                     if (PropertyOffset2[Index] = 0) or 
-                        (TDSSClass(PropertyOffset2[Index]) is TProxyClass) and 
-                        TProxyClass(PropertyOffset2[Index]).FullNamesOnly
+                        ((TDSSClass(PropertyOffset2[Index]) is TProxyClass) and 
+                        TProxyClass(PropertyOffset2[Index]).FullNamesOnly)
                     then
                         PropStr := otherObj.FullName()
                     else
@@ -3229,14 +3233,19 @@ begin
             Exit;
         end;
         TPropertyType.IntegerProperty:
-            if not (TPropertyFlag.WriteByFunction in flags) then
+        begin
+            if not (TPropertyFlag.ReadByFunction in flags) then
             begin
                 integerPtr := PInteger(PByte(obj) + PropertyOffset[Index]);
+            end;
+            if not (TPropertyFlag.WriteByFunction in flags) then
+            begin
                 if prevInt <> NIL then
                     prevInt^ := integerPtr^;
                 integerPtr^ := Value;
                 Exit;
             end;
+        end;
     else
         //TODO: error?
         Exit;
@@ -3869,17 +3878,20 @@ begin
                 );
             end;
 
-            // Validate items before copying
-            for i := 1 to ValueCount do
+            // Validate enum items before copying
+            if TPropertyType.IntegerOnStructArrayProperty <> PropertyType[Index] then
             begin
-                ivalue := Value[i - 1];
-                if not TDSSEnum(Pointer(PropertyOffset2[Index])).IsOrdinalValid(ivalue) then
+                for i := 1 to ValueCount do
                 begin
-                    DoSimpleMsg(
-                        '%s.%s: Invalid ordinal (%d) for enumeration (%s).', 
-                        [TDSSObject(obj).FullName(), PropertyName[Index], ivalue, TDSSEnum(Pointer(PropertyOffset2[Index])).Name],
-                    25052313);
-                    Exit;
+                    ivalue := Value[i - 1];
+                    if not TDSSEnum(Pointer(PropertyOffset2[Index])).IsOrdinalValid(ivalue) then
+                    begin
+                        DoSimpleMsg(
+                            '%s.%s: Invalid ordinal (%d) for enumeration (%s).', 
+                            [TDSSObject(obj).FullName(), PropertyName[Index], ivalue, TDSSEnum(Pointer(PropertyOffset2[Index])).Name],
+                        25052313);
+                        Exit;
+                    end;
                 end;
             end;
 
@@ -6306,16 +6318,18 @@ begin
                 );
             end;
 
-            // Validate item before copying
-            if not TDSSEnum(Pointer(PropertyOffset2[Index])).IsOrdinalValid(Value) then
+            // Validate enum item before copying
+            if TPropertyType.IntegerOnStructArrayProperty <> PropertyType[Index] then
             begin
-                DoSimpleMsg(
-                    '%s.%s: Invalid ordinal (%d) for enumeration (%s).', 
-                    [TDSSObject(obj).FullName(), PropertyName[Index], Value, TDSSEnum(Pointer(PropertyOffset2[Index])).Name],
-                25052316);
-                Exit;
+                if not TDSSEnum(Pointer(PropertyOffset2[Index])).IsOrdinalValid(Value) then
+                begin
+                    DoSimpleMsg(
+                        '%s.%s: Invalid ordinal (%d) for enumeration (%s).', 
+                        [TDSSObject(obj).FullName(), PropertyName[Index], Value, TDSSEnum(Pointer(PropertyOffset2[Index])).Name],
+                    25052316);
+                    Exit;
+                end;
             end;
-
             integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
             integerPtr := PInteger(ptruint(integerPtr) + ElementIndex * step);
             integerPtr^ := Value;
