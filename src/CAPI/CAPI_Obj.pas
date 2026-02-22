@@ -706,7 +706,7 @@ begin
     else
         Result := TJSONObject.Create(['Name', obj.Name]);
 
-    SetLength(done, cls.NumProperties);
+    SetLength(done, cls.NumProperties + 1);
 
     resObj := Result as TJSONObject;
 
@@ -714,7 +714,7 @@ begin
     begin
         // Clear done status
         SetLength(done, 0);
-        SetLength(done, cls.NumProperties);
+        SetLength(done, cls.NumProperties + 1);
 
         // Return only filled properties, but adjust some odd ones
         iPropNext := obj.GetNextPropertySet(-9999999);
