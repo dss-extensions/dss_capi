@@ -2651,8 +2651,8 @@ begin
         cmds.Add('Set capkvar=' + Format('%-g', [ckt.AutoAddObj.Capkvar]));
         cmds.Add('Set addtype=' + DSS.AddTypeEnum.OrdinalToString(DSS.ActiveCircuit.AutoAddObj.AddType));
         cmds.Add('Set zonelock=' + StrYorN(ckt.ZonesLocked));
-        cmds.Add(Format('Set ueweight=%8.2f', [ckt.UEWeight]));
-        cmds.Add(Format('Set lossweight=%8.2f', [ckt.LossWeight]));
+        cmds.Add(Format('Set ueweight=%g', [ckt.UEWeight]));
+        cmds.Add(Format('Set lossweight=%g', [ckt.LossWeight]));
         cmds.Add('Set ueregs=' + IntArraytoString(ckt.UEregs));
         cmds.Add('Set lossregs=' + IntArraytoString(ckt.Lossregs));
         cmds.Add('Set algorithm=' + DSS.SolveAlgEnum.OrdinalToString(ckt.Solution.Algorithm));
