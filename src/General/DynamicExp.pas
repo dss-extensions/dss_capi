@@ -12,7 +12,8 @@ uses
     DSSObject,
     UcMatrix,
     Arraydef,
-    Classes;
+    Classes,
+    RPN;
 
 const
     DYN_SLOT_LENGTH = 2;
@@ -61,6 +62,7 @@ type
         Expression: String; // Differential equation in RPN format
         NVariables: Integer; // Number of state variables
         Domain: TDynDomain;
+        RPN: TRPNCalc;
 
         constructor Create(ParClass: TDSSClass; const ObjName: String);
         destructor Destroy; OVERRIDE;
@@ -89,7 +91,6 @@ uses
     Utilities,
     LineUnits,
     math,
-    RPN,
     DSSHelper;
 
 type
@@ -219,6 +220,7 @@ begin
     VarIdx := -1;
     VarNames := TStringList.Create();
     Domain := TDynDomain.Time;
+    RPN := TRPNCalc.Create();
 end;
 
 function TDynamicExpObj.Check_If_CalcValue(valueStr: String; var opNum: Integer): Boolean;
@@ -249,6 +251,7 @@ end;
 destructor TDynamicExpObj.Destroy;
 begin
     FreeAndNil(VarNames);
+    FreeAndNil(RPN);
     inherited destroy;
 end;
 
@@ -324,9 +327,9 @@ begin
             continue;
 
         // now, check if the index corresponds to an output
-        for CmdIdx := 0 to High(Cmds) do
+        for CmdIdx := 0 to High(Cmds) - 1 do
         begin
-            if (idx = Cmds[CmdIdx]) and (CmdIdx < High(Cmds)) and (Cmds[CmdIdx + 1] = -50) then
+            if (idx = Cmds[CmdIdx]) and (Cmds[CmdIdx + 1] = -50) then
             begin
                 // Means that the variable found is an output, we can leave
                 Result := idx;
@@ -377,11 +380,9 @@ procedure TDynamicExpObj.SolveEq(var MemSpace: TDynSlotArray);
 var
     OutIdx,
     idx: Integer;
-    RPN: TRPNCalc;
 begin
-    RPN := TRPNCalc.Create();
     OutIdx := -1;
-    for idx := 0 to High(Cmds) do
+    for idx := 0 to High(Cmds) - 1 do
     begin
         if (Cmds[idx + 1] = -50) or (Cmds[idx] = -50) then // it's the begining of an equation
         begin
@@ -390,6 +391,7 @@ begin
                 if OutIdx >= 0 then // It's not the first equation
                     MemSpace[OutIdx][1] := RPN.GetX(); // Uploads value into memory space
                 OutIdx := Cmds[idx];
+                Exit;
             end;
         end
         else
@@ -448,7 +450,6 @@ begin
         end;
     end;
     MemSpace[OutIdx][1] := RPN.GetX(); // Uploads value into memory space
-    RPN.Free(); // Destroy RPN calculator
 end;
 
 procedure TDynamicExpObj.InterpretDiffEq();
