@@ -188,6 +188,7 @@ type
         // Voltage and Current Arrays
         NodeV: pNodeVArray;    // Main System Voltage Array   allows NodeV[0]=0
         Currents: pNodeVArray;      // Main System Currents Array
+        NodeVNumNodes: Integer; // Track allocated nodes
 
 // ******************************************************************************
         IncMat: Tsparse_matrix; // Incidence sparse matrix
@@ -498,6 +499,7 @@ begin
     hY := 0;
 
     NodeV := NIL;
+    NodeVNumNodes := 0;
     dV := NIL;
     Currents := NIL;
     AuxCurrents := NIL;

@@ -297,6 +297,7 @@ var
     YMatrixsize: Integer;
     CmatArray: pComplexArray;
     pElem: TDSSCktElement;
+    i, prevAllocNumNodes: Integer;
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
     Incremental: Boolean;
 {$ENDIF}
@@ -308,6 +309,8 @@ begin
     CmatArray := NIL;
     with DSS.ActiveCircuit, Solution do
     begin
+        prevAllocNumNodes := NodeVNumNodes;
+
         if PreserveNodeVoltages then
             UpdateVBus(); // Update voltage values stored with Bus object
 
@@ -436,10 +439,23 @@ begin
         begin
             if LogEvents then
                 DSS.LogThisEvent(_('Reallocating Solution Arrays'));
-            ReAllocMem(NodeV, SizeOf(NodeV[1]) * (NumNodes + 1)); // Allocate System Voltage array - allow for zero element
+            ReAllocMem(NodeV, SizeOf(Complex) * (NumNodes + 1)); // Allocate System Voltage array - allow for zero element
             NodeV[0] := 0;
             ReAllocMem(Currents, SizeOf(Complex) * (NumNodes + 1)); // Allocate System current array
             ReAllocMem(AuxCurrents, SizeOf(Complex) * (NumNodes + 1)); // Allocate System current array
+
+            if prevAllocNumNodes < NumNodes then
+            begin
+                // Initialize the new memory positions
+                for i := prevAllocNumNodes + 1 to NumNodes do
+                begin
+                    NodeV[i] := 0;
+                    Currents[i] := 0;
+                    AuxCurrents[i] := 0;
+                end;
+            end;
+            NodeVNumNodes := NumNodes;
+
             if (VMagSaved <> NIL) then
                 ReallocMem(VMagSaved, 0);
             if (ErrorSaved <> NIL) then
@@ -452,8 +468,8 @@ begin
             InitializeNodeVbase(DSS.ActiveCircuit);
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
             // A-Diakoptics vectors memory allocation
-            ReAllocMem(Node_dV, SizeOf(Node_dV[1]) * (NumNodes + 1)); // Allocate the partial solution voltage
-            ReAllocMem(Ic_Local, SizeOf(Ic_Local[1]) * (NumNodes + 1)); // Allocate the Complementary currents
+            ReAllocMem(Node_dV, SizeOf(Complex) * (NumNodes + 1)); // Allocate the partial solution voltage
+            ReAllocMem(Ic_Local, SizeOf(Complex) * (NumNodes + 1)); // Allocate the Complementary currents
 {$ENDIF}
         end;
 
