@@ -1377,7 +1377,7 @@ begin
         begin
             scale := PropertyScale[Index];
             Norder := PInteger(PByte(obj) + PropertyOffset3[Index])^;
-            darray := PDoubleArray(PByte(obj) + PropertyOffset[Index]);
+            darray := PDoubleArray(PPDouble(PByte(obj) + PropertyOffset[Index])^);
             if darray = NIL then
             begin
                 val := TJSONNull.Create();
@@ -2448,7 +2448,7 @@ begin
             begin
                 scale := PropertyScale[Index];
                 Norder := PInteger(PByte(obj) + PropertyOffset3[Index])^;
-                darray := PDoubleArray(PByte(obj) + PropertyOffset[Index]);
+                darray := PDoubleArray(PPDouble(PByte(obj) + PropertyOffset[Index])^);
                 PropStr := '(';
                 if (darray <> NIL) and (Norder > 0) then
                     for i := 1 to Norder do
