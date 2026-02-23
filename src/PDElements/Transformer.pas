@@ -1066,6 +1066,7 @@ var
     iprop: Integer;
     i: Integer;
     done: Set of TProp = [];
+    s: String;
 begin
     // Write only properties that were explicitly set in the
     // final order they were actually set
@@ -1130,12 +1131,24 @@ begin
                     Include(done, TProp.Wdg);
                 end;
         else
-            if not (TProp(iProp) in done) then
+        begin
+            if iProp <= Ord(High(TProp)) then
             begin
-                Include(done, TProp(iProp));
-                if (Length(PropertyValue(iProp)) > 0) then
-                    FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(PropertyValue(iProp))]));
+                if not (TProp(iProp) in done) then
+                begin
+                    Include(done, TProp(iProp));
+                    s := PropertyValue(iProp);
+                    if Length(s) > 0 then
+                        FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(s)]));
+                end;
+            end
+            else
+            begin
+                s := PropertyValue(iProp);
+                if Length(s) > 0 then
+                    FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[iProp], CheckForBlanks(s)]));
             end;
+        end;
         end;
         iProp := GetNextPropertySet(iProp);
     end;
