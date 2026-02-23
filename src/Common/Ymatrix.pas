@@ -291,13 +291,58 @@ begin
 end;
 {$ENDIF} //DSS_CAPI_INCREMENTAL_Y
 
+procedure DoAllocateVI(DSS: TDSSContext);
+var
+    i, prevAllocNumNodes: Integer;
+begin
+    with DSS.ActiveCircuit, Solution do
+    begin
+        prevAllocNumNodes := NodeVNumNodes;
+
+        if LogEvents then
+            DSS.LogThisEvent(_('Reallocating Solution Arrays'));
+
+        ReAllocMem(NodeV, SizeOf(Complex) * (NumNodes + 1)); // Allocate System Voltage array - allow for zero element
+        NodeV[0] := 0;
+        ReAllocMem(Currents, SizeOf(Complex) * (NumNodes + 1)); // Allocate System current array
+        ReAllocMem(AuxCurrents, SizeOf(Complex) * (NumNodes + 1)); // Allocate System current array
+
+        if prevAllocNumNodes < NumNodes then
+        begin
+            // Initialize the new memory positions
+            for i := prevAllocNumNodes + 1 to NumNodes do
+            begin
+                NodeV[i] := 0;
+                Currents[i] := 0;
+                AuxCurrents[i] := 0;
+            end;
+        end;
+        NodeVNumNodes := NumNodes;
+
+        if (VMagSaved <> NIL) then
+            ReallocMem(VMagSaved, 0);
+        if (ErrorSaved <> NIL) then
+            ReallocMem(ErrorSaved, 0);
+        if (NodeVBase <> NIL) then
+            ReallocMem(NodeVBase, 0);
+        VMagSaved := AllocMem(Sizeof(Double) * NumNodes);  // zero fill
+        ErrorSaved := AllocMem(Sizeof(Double) * NumNodes);  // zero fill
+        NodeVBase := AllocMem(Sizeof(Double) * NumNodes);  // zero fill
+        InitializeNodeVbase(DSS.ActiveCircuit);
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+        // A-Diakoptics vectors memory allocation
+        ReAllocMem(Node_dV, SizeOf(Complex) * (NumNodes + 1)); // Allocate the partial solution voltage
+        ReAllocMem(Ic_Local, SizeOf(Complex) * (NumNodes + 1)); // Allocate the Complementary currents
+{$ENDIF}
+    end;
+end;
+
 procedure BuildYMatrix(DSS: TDSSContext; BuildOption: Integer; AllocateVI: Boolean);
 // Builds designated Y matrix for system and allocates solution arrays
 var
     YMatrixsize: Integer;
     CmatArray: pComplexArray;
     pElem: TDSSCktElement;
-    i, prevAllocNumNodes: Integer;
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
     Incremental: Boolean;
 {$ENDIF}
@@ -309,15 +354,16 @@ begin
     CmatArray := NIL;
     with DSS.ActiveCircuit, Solution do
     begin
-        prevAllocNumNodes := NodeVNumNodes;
-
         if PreserveNodeVoltages then
             UpdateVBus(); // Update voltage values stored with Bus object
 
-     // the following re counts the number of buses and resets meter zones and feeders
-     // If radial but systemNodeMap not set then init for radial got skipped due to script sequence
+        // the following re counts the number of buses and resets meter zones and feeders
+        // If radial but systemNodeMap not set then init for radial got skipped due to script sequence
         if BusNameRedefined() then
             ReprocessBusDefs();      // This changes the node references into the system Y matrix!!
+
+        if AllocateVI then
+            DoAllocateVI(DSS);
 
         YMatrixSize := NumNodes;
 
@@ -393,8 +439,7 @@ begin
                     DSS.LogThisEvent(_('Building PDE only Y Matrix'));
             end;
           // Add in Yprims for all devices
-          
-        // Full method, handles all elements
+ 
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
         if not Incremental then
         begin
@@ -433,45 +478,6 @@ begin
                 Exit;
         end;
 {$ENDIF}
-
-     // Allocate voltage and current vectors if requested
-        if AllocateVI then
-        begin
-            if LogEvents then
-                DSS.LogThisEvent(_('Reallocating Solution Arrays'));
-            ReAllocMem(NodeV, SizeOf(Complex) * (NumNodes + 1)); // Allocate System Voltage array - allow for zero element
-            NodeV[0] := 0;
-            ReAllocMem(Currents, SizeOf(Complex) * (NumNodes + 1)); // Allocate System current array
-            ReAllocMem(AuxCurrents, SizeOf(Complex) * (NumNodes + 1)); // Allocate System current array
-
-            if prevAllocNumNodes < NumNodes then
-            begin
-                // Initialize the new memory positions
-                for i := prevAllocNumNodes + 1 to NumNodes do
-                begin
-                    NodeV[i] := 0;
-                    Currents[i] := 0;
-                    AuxCurrents[i] := 0;
-                end;
-            end;
-            NodeVNumNodes := NumNodes;
-
-            if (VMagSaved <> NIL) then
-                ReallocMem(VMagSaved, 0);
-            if (ErrorSaved <> NIL) then
-                ReallocMem(ErrorSaved, 0);
-            if (NodeVBase <> NIL) then
-                ReallocMem(NodeVBase, 0);
-            VMagSaved := AllocMem(Sizeof(Double) * NumNodes);  // zero fill
-            ErrorSaved := AllocMem(Sizeof(Double) * NumNodes);  // zero fill
-            NodeVBase := AllocMem(Sizeof(Double) * NumNodes);  // zero fill
-            InitializeNodeVbase(DSS.ActiveCircuit);
-{$IFDEF DSS_CAPI_ADIAKOPTICS}
-            // A-Diakoptics vectors memory allocation
-            ReAllocMem(Node_dV, SizeOf(Complex) * (NumNodes + 1)); // Allocate the partial solution voltage
-            ReAllocMem(Ic_Local, SizeOf(Complex) * (NumNodes + 1)); // Allocate the Complementary currents
-{$ENDIF}
-        end;
 
         case BuildOption of
             WHOLEMATRIX:
