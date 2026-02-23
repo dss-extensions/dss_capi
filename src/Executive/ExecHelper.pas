@@ -1835,9 +1835,9 @@ begin
         VersionString + CRLF +
         'An alternative implementation of OpenDSS' + CRLF + 
         'OpenDSS is EPRI''s Electric Power Distribution System Simulator' + CRLF +
-        'Copyright (c) 2008-2023, Electric Power Research Institute, Inc.' + CRLF +
+        'Copyright (c) 2008-2026, Electric Power Research Institute, Inc.' + CRLF +
         'Copyright (c) 2016-2021, Battelle Memorial Institute' + CRLF +
-        'Copyright (c) 2017-2023, Paulo Meira, DSS-Extensions contributors' + CRLF +
+        'Copyright (c) 2017-2026, Paulo Meira, DSS-Extensions contributors' + CRLF +
         'All rights reserved.' + CRLF +
         'Please check the repository commit history and specific files for detailed credits.', 
         DSSMessageType.Info
@@ -1847,7 +1847,7 @@ end;
 function TExecHelper.DoSetVoltageBases(): Integer;
 begin
     Result := 0;
-    DSS.ActiveCircuit.Solution.SetVoltageBases;
+    DSS.ActiveCircuit.Solution.SetVoltageBases();
 end;
 
 function TExecHelper.AddObject(ObjType: String; const Name: String): Integer;
