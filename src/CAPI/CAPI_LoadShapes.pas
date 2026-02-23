@@ -150,7 +150,9 @@ procedure LoadShapes_Get_Pmult(var ResultPtr: PDouble; ResultCount: PAPISize); C
 var
     elem: TLoadshapeObj;
     Result: PDoubleArray0;
-    ActualNumPoints: Integer;
+    i, ActualNumPoints: Integer;
+    outp: PDouble;
+    interval: Double;
 begin
     if not _activeObj(DSSPrime, elem) then
     begin
@@ -163,6 +165,37 @@ begin
         Exit;
     end;
     ActualNumPoints := elem.NumPoints;
+    if (elem.UseMMF) then
+    begin
+        if ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0) then
+        begin
+            DoSimpleMsg(DSSPrime, _('Reading `PMult` of a memory-mapped LoadShape is not recommended. If you are certain this is required, please enable the PermissiveProperties compatibility flag and retry.'), 61109);
+            Exit;
+        end;
+        // Manually copy the data
+        DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
+
+        interval := elem.Interval;
+        outp := ResultPtr;
+        if (interval = 0) and (elem.dH <> NIL) then // use the time array
+        begin
+            for i := 1 to ActualNumPoints do
+            begin
+                outp^ := elem.MultAtHour(elem.dH[i - 1]).re;
+                inc(outp);
+            end;
+        end
+        else
+        begin
+            for i := 1 to ActualNumPoints do
+            begin
+                outp^ := elem.MultAtHour(i * interval).re; //TODO: why not (i-1)?
+                inc(outp);
+            end;
+        end;
+        Exit;
+    end;
+
     elem.UseFloat64();
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
     Move(elem.dP[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
@@ -179,7 +212,9 @@ procedure LoadShapes_Get_Qmult(var ResultPtr: PDouble; ResultCount: PAPISize); C
 var
     elem: TLoadshapeObj;
     Result: PDoubleArray0;
-    ActualNumPoints: Integer;
+    i, ActualNumPoints: Integer;
+    outp: PDouble;
+    interval: Double;
 begin
     if not _activeObj(DSSPrime, elem) then
     begin
@@ -191,8 +226,39 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    elem.UseFloat64();
     ActualNumPoints := elem.NumPoints;
+    if (elem.UseMMF) then
+    begin
+        if ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0) then
+        begin
+            DoSimpleMsg(DSSPrime, _('Reading `QMult` of a memory-mapped LoadShape is not recommended. If you are certain this is required, please enable the PermissiveProperties compatibility flag and retry.'), 61109);
+            Exit;
+        end;
+        // Manually copy the data
+        DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
+
+        interval := elem.Interval;
+        outp := ResultPtr;
+        if (interval = 0) and (elem.dH <> NIL) then // use the time array
+        begin
+            for i := 1 to ActualNumPoints do
+            begin
+                outp^ := elem.MultAtHour(elem.dH[i - 1]).im;
+                inc(outp);
+            end;
+        end
+        else
+        begin
+            for i := 1 to ActualNumPoints do
+            begin
+                outp^ := elem.MultAtHour(i * interval).im; //TODO: why not (i-1)?
+                inc(outp);
+            end;
+        end;
+        Exit;
+    end;
+
+    elem.UseFloat64();
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
     Move(elem.dQ[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
@@ -225,6 +291,13 @@ begin
         DoSimpleMsg(DSSPrime, _('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61101);
         Exit;
     end;
+
+    if elem.UseMMF then
+    begin
+        DoSimpleMsg(DSSPrime, 'LoadShape "%s" is currently using memory-mapping. Please disable memory-mapping if you want to set multipliers directly.', [elem.Name], 61110);
+        Exit;
+    end;
+
     // Only accept the new data when the number of points match
     if ValueCount <> elem.NumPoints then
     begin
@@ -249,7 +322,13 @@ begin
         DoSimpleMsg(DSSPrime, _('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61101);
         Exit;
     end;
-    
+
+    if elem.UseMMF then
+    begin
+        DoSimpleMsg(DSSPrime, 'LoadShape "%s" is currently using memory-mapping. Please disable memory-mapping if you want to set multipliers directly.', [elem.Name], 61110);
+        Exit;
+    end;
+
     // Only accept the new data when the number of points match
     if ValueCount <> elem.NumPoints then
     begin
