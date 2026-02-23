@@ -294,7 +294,7 @@ end;
 //------------------------------------------------------------------------------
 function DSS_CopyStringAsPChar(s: Ansistring): PAnsiChar;
 begin
-    result := GetMem(Length(s) * (sizeof(AnsiChar) + 1));
+    result := GetMem((Length(s) + 1) * sizeof(AnsiChar));
     StrPCopy(result, s);
 end;
 //------------------------------------------------------------------------------
