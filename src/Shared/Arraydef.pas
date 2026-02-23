@@ -60,6 +60,8 @@ type
     PArrayOfDouble = ^ArrayOfDouble;
     PArrayOfInteger = ^ArrayOfInteger;
     PArrayOfString = ^ArrayOfString;
+    PArrayOfPointer = ^ArrayOfPointer;
+
 
     BooleanArray = Array[1..100] of Boolean;
     pBooleanArray = ^BooleanArray;

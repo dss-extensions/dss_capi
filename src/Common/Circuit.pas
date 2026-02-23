@@ -319,10 +319,10 @@ type
         procedure FreeTopology();
         function GetBusAdjacentPDLists(): TAdjArray;
         function GetBusAdjacentPCLists(): TAdjArray;
-        function getPCEatBus(BusIdx: Integer; useNone: Boolean = TRUE): ArrayOfString; overload;
-        function getPDEatBus(BusIdx: Integer; useNone: Boolean = TRUE): ArrayOfString; overload;
-        function getPCEatBus(BusName: String; useNone: Boolean = TRUE; busIdx: Integer = 0): ArrayOfString; overload;
-        function getPDEatBus(BusName: String; useNone: Boolean = TRUE; busIdx: Integer = 0): ArrayOfString; overload;
+        function getPCEatBus(BusIdx: Integer; useNone: Boolean = TRUE; outPointers: PArrayOfPointer = NIL): ArrayOfString; overload;
+        function getPDEatBus(BusIdx: Integer; useNone: Boolean = TRUE; outPointers: PArrayOfPointer = NIL): ArrayOfString; overload;
+        function getPCEatBus(BusName: String; useNone: Boolean = TRUE; busIdx: Integer = 0; outPointers: PArrayOfPointer = NIL): ArrayOfString; overload;
+        function getPDEatBus(BusName: String; useNone: Boolean = TRUE; busIdx: Integer = 0; outPointers: PArrayOfPointer = NIL): ArrayOfString; overload;
         function ReportPCEatBus(BusName: String): String;
         function ReportPDEatBus(BusName: String): String;
 
@@ -1702,18 +1702,18 @@ end;
 
 {$ENDIF}
 
-function TDSSCircuit.getPDEatBus(BusIdx: Integer; useNone: Boolean): ArrayOfString;
+function TDSSCircuit.getPDEatBus(BusIdx: Integer; useNone: Boolean; outPointers: PArrayOfPointer): ArrayOfString;
 begin
-    Result := getPDEatBus(BusList.NameOfIndex(BusIdx), useNone, BusIdx);
+    Result := getPDEatBus(BusList.NameOfIndex(BusIdx), useNone, BusIdx, outPointers);
 end;
 
-function TDSSCircuit.getPCEatBus(BusIdx: Integer; useNone: Boolean): ArrayOfString;
+function TDSSCircuit.getPCEatBus(BusIdx: Integer; useNone: Boolean; outPointers: PArrayOfPointer): ArrayOfString;
 begin
-    Result := getPCEatBus(BusList.NameOfIndex(BusIdx), useNone, BusIdx);
+    Result := getPCEatBus(BusList.NameOfIndex(BusIdx), useNone, BusIdx, outPointers);
 end;
 
 // Returns the list of all PDE connected to the bus name given at BusName
-function TDSSCircuit.getPDEatBus(BusName: String; useNone: Boolean; busIdx: Integer): ArrayOfString;
+function TDSSCircuit.getPDEatBus(BusName: String; useNone: Boolean; busIdx: Integer; outPointers: PArrayOfPointer): ArrayOfString;
 var
     Dss_Class: TDSSClass;
     i, n, nbus, t: Integer;
@@ -1770,8 +1770,16 @@ begin
 
                             if (busRef <> busRef2) then
                             begin
-                                SetLength(Result, length(Result) + 1);
-                                Result[High(Result)] := elem.FullName();
+                                if outPointers = NIL then
+                                begin
+                                    SetLength(Result, length(Result) + 1);
+                                    Result[High(Result)] := elem.FullName();
+                                end
+                                else
+                                begin
+                                    SetLength(outPointers^, length(outPointers^) + 1);
+                                    outPointers^[High(outPointers^)] := elem;
+                                end;                                
                             end;
                             break;
                         end;
@@ -1789,12 +1797,24 @@ begin
                 myBus[1] := AnsiLowerCase(StripExtension(elem.GetBus(2)));
                 if ((myBus[0] = BusName) or (myBus[1] = BusName)) and (myBus[0] <> myBus[1]) then
                 begin
-                    SetLength(Result, length(Result) + 1);
-                    Result[High(Result)] := elem.FullName();
+                    if outPointers = NIL then
+                    begin
+                        SetLength(Result, length(Result) + 1);
+                        Result[High(Result)] := elem.FullName();
+                    end
+                    else
+                    begin
+                        SetLength(outPointers^, length(outPointers^) + 1);
+                        outPointers^[High(outPointers^)] := elem;
+                    end;                    
                 end;
             end;
         end;
     end;
+
+    if outPointers <> NIL then
+        Exit;
+
     if (length(Result) = 0) and useNone then
     begin
         SetLength(Result, 1);
@@ -1803,7 +1823,7 @@ begin
 end;
 
 // Returns the list of all PCE connected to the bus nam given at BusName
-function TDSSCircuit.getPCEatBus(BusName: String; useNone: Boolean; busIdx: Integer): ArrayOfString;
+function TDSSCircuit.getPCEatBus(BusName: String; useNone: Boolean; busIdx: Integer; outPointers: PArrayOfPointer): ArrayOfString;
 var
     Dss_Class: TDSSClass;
     i, n, nbus: Integer;
@@ -1851,8 +1871,16 @@ begin
                         if not found then
                             continue;
 
-                        SetLength(Result, length(Result) + 1);
-                        Result[High(Result)] := elem.FullName();
+                        if outPointers = NIL then
+                        begin
+                            SetLength(Result, length(Result) + 1);
+                            Result[High(Result)] := elem.FullName();
+                        end
+                        else
+                        begin
+                            SetLength(outPointers^, length(outPointers^) + 1);
+                            outPointers^[High(outPointers^)] := elem;
+                        end;
                         break;
                     end;
                     if found then
@@ -1865,12 +1893,24 @@ begin
                 myBus := AnsiLowerCase(StripExtension(elem.GetBus(1)));
                 if myBus = BusName then
                 begin
-                    SetLength(Result, length(Result) + 1);
-                    Result[High(Result)] := elem.FullName();
+                    if outPointers = NIL then
+                    begin
+                        SetLength(Result, length(Result) + 1);
+                        Result[High(Result)] := elem.FullName();
+                    end
+                    else
+                    begin
+                        SetLength(outPointers^, length(outPointers^) + 1);
+                        outPointers^[High(outPointers^)] := elem;
+                    end;
                 end;
             end;
         end;
     end;
+
+    if outPointers <> NIL then
+        Exit;
+
     if (length(Result) = 0) and useNone then
     begin
         SetLength(Result, 1);

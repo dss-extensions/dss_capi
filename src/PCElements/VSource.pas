@@ -1225,76 +1225,64 @@ end;
 procedure TVsourceObj.NCIM_CalcInjCurrAtBus(Curr: pComplexArray);
 var
     ElmCurrents: array of Complex; // For storing the currents of the PDE
-    myName,
     BusName: String; // Gets the name of the bus we are connected to
-    ActivePDE,
-    ActivePCE,
-    ActiveElem: TDSSCktElement;
-    idx,
+    ce, ActiveElem: TDSSCktElement; // saves whatever the active ckt element is
     j,
-    myTerm: Integer; // saves whatever the active ckt element is
-    myList: ArrayOfString;
+    myTerm: Integer; 
+    ceList: ArrayOfPointer;
 begin
     // Initialization
     BusName := StripExtension(GetBus(1));
-    myName := FullName();
     with ActiveCircuit do
     begin
         ActiveElem := ActiveCktElement; // saves whatever the active ckt element is
-        myList := getPDEatBus(BusName); // Obtains the list of PDE connected to the Bus
-        myTerm := 0; // The terminal of the PDE connected to the Bus
 
-        for idx := 1 to (Yorder) do
-            Curr[idx] := 0;
+        for j := 1 to Yorder do
+            Curr[j] := 0;
 
-        for idx := 0 to High(myList) do
+        ceList := NIL;
+        getPDEatBus(BusName, false, 0, @ceList); // Obtains the list of PDE connected to the Bus
+        for ce in ceList do // PD Elements
         begin
-            if myList[idx] = '' then
-                continue;
+            myTerm := 0; // The terminal of the PDE connected to the Bus
+            SetLength(ElmCurrents, ce.Yorder + 1);
+            ce.GetCurrents(ElmCurrents);
 
-            myTerm := 0;
-            SetElementActive(myList[idx]);
-            ActivePDE := ActiveCktElement;
-            SetLength(ElmCurrents, ActivePDE.Yorder + 1);
-            ActivePDE.GetCurrents(ElmCurrents);
-
-            for j := 1 to ActivePDE.NPhases do
+            for j := 1 to ce.NPhases do
             begin
-                if BusName = StripExtension(ActivePDE.GetBus(j)) then
+                if BusName = StripExtension(ce.GetBus(j)) then
                     break;
                 inc(myTerm);
             end;
 
             for j := 1 to NPhases do
-                Curr[j] := Curr[j] - ElmCurrents[(myTerm * Round(ActivePDE.Yorder / 2)) + j];
+                Curr[j] := Curr[j] - ElmCurrents[(myTerm * Round(ce.Yorder / 2)) + j];
         end;
 
         SetLength(ElmCurrents, 0);
-        SetLength(myList, 0);
+        SetLength(ceList, 0);
 
         // Now check the PCE at the same Bus
-        myList := getPCEatBus(BusName); // Obtains the list of PCE connected to the Bus
+        SetLength(ceList, 0);
+        getPCEatBus(BusName, false, 0, @ceList); // Obtains the list of PCE connected to the Bus
         myTerm := 0; // The terminal of the PCE connected to the Bus
 
-        for idx := 0 to High(myList) do // We go through all the devices
+        for ce in ceList do // PC Elements
         begin
-            if ((LowerCase(myList[idx]) = myName) or (myList[idx] = '')) then
+            if (ce = self) then
                 continue;
 
-            SetElementActive(myList[idx]);
-            ActivePCE := ActiveCktElement; // To prevent super long statements
+            SetLength(ElmCurrents, ce.Yorder + 1);
+            ce.GetCurrents(ElmCurrents);
 
-            SetLength(ElmCurrents, ActivePCE.Yorder + 1);
-            ActivePCE.GetCurrents(ElmCurrents);
-
-            for j := 1 to ActivePCE.NPhases do
+            for j := 1 to ce.NPhases do
             begin
-                if BusName = StripExtension(ActivePCE.GetBus(j)) then
+                if BusName = StripExtension(ce.GetBus(j)) then
                     break;
                 inc(myTerm);
             end;
             for j := 1 to NPhases do
-                Curr[j] := Curr[j] + ElmCurrents[(myTerm * ActivePCE.NPhases) + j];
+                Curr[j] := Curr[j] + ElmCurrents[(myTerm * ce.NPhases) + j];
         end;
         SetActiveCktElement(ActiveElem);
     end;
