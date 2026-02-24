@@ -55,7 +55,7 @@ uses
     PDElement,
     UComplex, DSSUcomplex,
     UcMatrix,
-    ArrayDef,
+    CAPI_Types,
     XYCurve;
 
 type

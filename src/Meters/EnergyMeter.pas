@@ -47,7 +47,7 @@ uses
     CktElement,
     PCElement,
     PDElement,
-    arrayDef,
+    CAPI_Types,
     DSSPointerList,
     CktTree,
     UComplex, DSSUcomplex,

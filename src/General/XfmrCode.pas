@@ -13,7 +13,7 @@ uses
     DSSClass,
     DSSObject,
     UcMatrix,
-    arraydef,
+    CAPI_Types,
     Transformer;
 
 type

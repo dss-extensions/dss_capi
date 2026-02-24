@@ -199,7 +199,7 @@ type
 implementation
 
 uses
-    ArrayDef,
+    CAPI_Types,
     BufStream,
     SysUtils,
     Utilities,

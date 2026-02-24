@@ -15,8 +15,7 @@ USES
       Contnrs,
       DSSClass,
       CAPI_Utils,
-      CAPI_Types,
-      ArrayDef;
+      CAPI_Types;
 
 TYPE
      TExecutive = class(TObject)
@@ -613,7 +612,7 @@ begin
     try
         Fstream := GetZipStream(FileInZip);
         DSS_RecreateArray_PByte(ResultPtr, ResultCount, Fstream.Size);
-        Fstream.ReadBuffer(ResultPtr^, ResultCount[0]);
+        Fstream.ReadBuffer(ResultPtr^, ResultCount^);
         FreeAndNil(Fstream);
     except
         on E: Exception do

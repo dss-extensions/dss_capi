@@ -7,7 +7,7 @@ uses
     UComplex,
     DSSUcomplex,
     ucmatrix,
-    ArrayDef;
+    CAPI_Types;
 
 type
 

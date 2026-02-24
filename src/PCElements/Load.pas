@@ -32,7 +32,7 @@ uses
     LoadShape,
     GrowthShape,
     Spectrum,
-    ArrayDef;
+    CAPI_Types;
 
 type
 {$SCOPEDENUMS ON}

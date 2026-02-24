@@ -9,7 +9,7 @@ uses
     Classes,
     Solution,
     SysUtils,
-    ArrayDef,
+    CAPI_Types,
     HashList,
     DSSPointerList,
     CktElement,

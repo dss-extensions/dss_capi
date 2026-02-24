@@ -8,7 +8,7 @@ unit Bus;
 interface
 
 uses
-    ArrayDef,
+    CAPI_Types,
     UComplex, DSSUcomplex,
     uCMatrix,
     NamedObject,

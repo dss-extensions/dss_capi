@@ -18,7 +18,7 @@ uses
     CktElement,
     DSSClass,
     PVSystem,
-    Arraydef,
+    CAPI_Types,
     UComplex,
     DSSUcomplex,
     utilities,

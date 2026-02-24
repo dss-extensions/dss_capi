@@ -2,7 +2,7 @@ unit Generator;
 
 // ----------------------------------------------------------
 // Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
-// Copyright (c) 2018-2024, DSS-Extensions contributors
+// Copyright (c) 2018-2026, DSS-Extensions contributors
 // All rights reserved.
 // ----------------------------------------------------------
 
@@ -66,7 +66,7 @@ uses
     LoadShape,
     // GrowthShape,
     Spectrum,
-    ArrayDef,
+    CAPI_Types,
     DynEqPCE,
     Dynamics,
     DynamicExp,

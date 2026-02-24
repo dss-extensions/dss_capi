@@ -11,7 +11,7 @@ uses
     DSSClass,
     DSSObject,
     UcMatrix,
-    Arraydef,
+    CAPI_Types,
     Classes,
     RPN;
 

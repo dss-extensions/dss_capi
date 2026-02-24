@@ -8,7 +8,7 @@ unit DSSPointerList;
 interface
 
 uses
-    Arraydef,
+    CAPI_Types,
     SysUtils;
 
 type

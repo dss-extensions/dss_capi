@@ -17,7 +17,7 @@ uses
     UComplex, DSSUcomplex,
     EnergyMeter,
     HashList,
-    Arraydef,
+    CAPI_Types,
     Generator,
     Capacitor,
     Classes,

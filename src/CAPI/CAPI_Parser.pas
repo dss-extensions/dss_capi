@@ -36,7 +36,6 @@ uses
     CAPI_Constants,
     DSSGlobals,
     ParserDel,
-    ArrayDef,
     DSSClass;
 
 //------------------------------------------------------------------------------
@@ -130,7 +129,7 @@ var
     ActualSize: Integer;
 begin
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ExpectedSize);
-    ActualSize := DSSPrime.ComParser.ParseAsVector(ResultCount^, ArrayDef.PDoubleArray(ResultPtr));
+    ActualSize := DSSPrime.ComParser.ParseAsVector(ResultCount^, CAPI_Types.PDoubleArray(ResultPtr));
     ResultCount^ := ActualSize;
 end;
 
@@ -146,7 +145,7 @@ var
     ActualOrder: Integer;
 begin
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ExpectedOrder * ExpectedOrder);
-    ActualOrder := DSSPrime.ComParser.ParseAsMatrix(ResultCount^, ArrayDef.PDoubleArray(ResultPtr));
+    ActualOrder := DSSPrime.ComParser.ParseAsMatrix(ResultCount^, CAPI_Types.PDoubleArray(ResultPtr));
     if (ActualOrder > 0) and (DSS_EXTENSIONS_ARRAY_DIMS) then
     begin
         ResultCount[2] := ActualOrder;
@@ -166,7 +165,7 @@ var
     ActualOrder: Integer;
 begin
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ExpectedOrder * ExpectedOrder);
-    ActualOrder := DSSPrime.ComParser.ParseAsSymMatrix(ResultCount^, ArrayDef.PDoubleArray(ResultPtr));
+    ActualOrder := DSSPrime.ComParser.ParseAsSymMatrix(ResultCount^, CAPI_Types.PDoubleArray(ResultPtr));
     if (ActualOrder > 0) and (DSS_EXTENSIONS_ARRAY_DIMS) then
     begin
         ResultCount[2] := ActualOrder;

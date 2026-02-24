@@ -231,7 +231,6 @@ uses
     PDClass,
     DSSPointerList,
     XYCurve,
-    ArrayDef,
     Math,
     Classes,
     CktElementClass,

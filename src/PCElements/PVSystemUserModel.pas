@@ -7,7 +7,7 @@ unit PVSystemUserModel;
 
 interface
 
-USES  Dynamics, DSSCallBackRoutines, UComplex, DSSUcomplex, Arraydef, DSSClass;
+USES  Dynamics, DSSCallBackRoutines, UComplex, DSSUcomplex, CAPI_Types, DSSClass;
 
 TYPE
     TPVsystemUserModel  = class(TObject)

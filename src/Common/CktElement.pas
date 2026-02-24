@@ -11,7 +11,7 @@ uses
     Classes,
     UComplex, DSSUcomplex,
     Ucmatrix,
-    ArrayDef,
+    CAPI_Types,
     Terminal,
     DSSObject,
     DSSClass,

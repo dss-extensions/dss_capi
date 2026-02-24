@@ -70,7 +70,6 @@ uses
     Solution,
     XYCurve,
     UComplex, DSSUcomplex,
-    ArrayDef,
     Utilities,
     Math,
     MathUtil,

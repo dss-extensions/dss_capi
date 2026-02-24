@@ -30,7 +30,7 @@ uses
     Command,
     DSSClass,
     DSSObject,
-    Arraydef;
+    CAPI_Types;
 
 type
 {$SCOPEDENUMS ON}
@@ -131,7 +131,6 @@ uses
     DSSHelper,
     DSSObjectHelper,
     TypInfo,
-    CAPI_Types,
     CAPI_Utils;
 
 type

@@ -78,7 +78,7 @@ uses
     BufStream,
     Classes,
     UComplex, DSSUcomplex,
-    Arraydef,
+    CAPI_Types,
     Sysutils,
     Circuit,
     DSSClassDefs,

@@ -10,7 +10,7 @@ unit Mathutil;
 interface
 
 uses
-    Arraydef,
+    CAPI_Types,
     UComplex, DSSUcomplex,
     uCmatrix;
 

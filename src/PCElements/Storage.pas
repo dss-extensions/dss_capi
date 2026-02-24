@@ -18,7 +18,7 @@ uses
     UComplex, DSSUcomplex,
     LoadShape,
     Spectrum,
-    ArrayDef,
+    CAPI_Types,
     Dynamics,
     XYCurve,
     InvDynamics,

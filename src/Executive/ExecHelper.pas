@@ -143,7 +143,7 @@ implementation
 
 uses
     Command,
-    ArrayDef,
+    CAPI_Types,
     ParserDel,
     SysUtils,
     DSSClassDefs,

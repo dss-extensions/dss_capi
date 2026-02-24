@@ -8,7 +8,7 @@ unit ControlQueue;
 interface
 
 uses
-    Arraydef,
+    CAPI_Types,
     ControlElem,
     Classes,
     DSSClass;

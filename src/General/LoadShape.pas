@@ -2,7 +2,7 @@ unit LoadShape;
 
 // ----------------------------------------------------------
 // Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
-// Copyright (c) 2019-2022, Paulo Meira, DSS-Extensions contributors
+// Copyright (c) 2019-2026, Paulo Meira, DSS-Extensions contributors
 // All rights reserved.
 // ----------------------------------------------------------
 
@@ -47,7 +47,7 @@ uses
     DSSObject,
     UcMatrix,
     UComplex, DSSUcomplex,
-    Arraydef,
+    CAPI_Types,
     Utilities,
 {$IFDEF WINDOWS}
     Windows;
@@ -241,8 +241,7 @@ uses
     DSSHelper,
     DSSObjectHelper,
     TypInfo,
-    CAPI_Utils,
-    CAPI_Types;
+    CAPI_Utils;
 
 type
     ELoadShapeError = class(Exception);  // Raised to abort solution
@@ -2243,9 +2242,9 @@ begin
     sH := nil;
     sP := nil;
     sQ := nil;
-    dH := ArrayDef.PDoubleArray0(HoursPtr);
-    dP := ArrayDef.PDoubleArray0(PMultPtr);
-    dQ := ArrayDef.PDoubleArray0(QMultPtr);
+    dH := CAPI_Types.PDoubleArray0(HoursPtr);
+    dP := CAPI_Types.PDoubleArray0(PMultPtr);
+    dQ := CAPI_Types.PDoubleArray0(QMultPtr);
     
     if ExternalMemory then
     begin
@@ -2277,9 +2276,9 @@ begin
     dH := nil;
     dP := nil;
     dQ := nil;
-    sH := ArrayDef.PSingleArray0(HoursPtr);
-    sP := ArrayDef.PSingleArray0(PMultPtr);
-    sQ := ArrayDef.PSingleArray0(QMultPtr);
+    sH := CAPI_Types.PSingleArray0(HoursPtr);
+    sP := CAPI_Types.PSingleArray0(PMultPtr);
+    sQ := CAPI_Types.PSingleArray0(QMultPtr);
     
     if ExternalMemory then
     begin

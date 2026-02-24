@@ -74,7 +74,6 @@ uses
     SysUtils,
     DSSPointerList,
     Utilities,
-    ArrayDef,
     UComplex, DSSUcomplex;
 
 //------------------------------------------------------------------------------

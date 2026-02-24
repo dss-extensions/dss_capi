@@ -15,7 +15,7 @@ uses
     LoadShape,
     GrowthShape,
     Spectrum,
-    ArrayDef,
+    CAPI_Types,
     DynEqPCE,
     Dynamics,
     WTG3_Model,

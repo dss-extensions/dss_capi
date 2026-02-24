@@ -10,7 +10,7 @@ unit Terminal;
 interface
 
 uses
-    Arraydef;
+    CAPI_Types;
 
 type
     TPowerTerminal = object

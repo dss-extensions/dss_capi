@@ -10,7 +10,7 @@ interface
 
 USES
     Command, 
-    Arraydef, 
+    CAPI_Types, 
     Hashlist, 
     Classes, 
     DSSPointerList, 
@@ -19,7 +19,6 @@ USES
     SyncObjs, 
     UComplex, DSSUcomplex, 
     contnrs,
-    CAPI_Types,
     gettext,
     fpjson,
     RegExpr;
@@ -91,63 +90,6 @@ type
         // JSONSchema = 3
     );
     
-    TDSSPropertySetterFlag = (
-        // Most array properties depend on sizes defined by other properties.
-        // Using this flag, many properties allow users to skip setting the other property
-        // directly, allowing the engine to use the size of the provided array to
-        // initialize the other property.
-        ImplicitSizes = 0,
-
-        // Some components like Loads don't need to update YPrim for every change, e.g. setting
-        // "`load.a_load.kW=1`" if was "kW" previously 2 should not force a YPrim update, but it does
-        // force an update by default.
-        // Using this flag will reproduce what the classic OpenDSS API for Loads (DSS.ActiveCircuit.Loads)
-        // does, but removes a lot of duplicated code. Besides that, we can extend the feature 
-        // for other components if we think it fits.
-        AvoidFullRecalc = 1,
-
-        // For batch operations, skip NA values -- values of NaN for float64, INT32_MAX (0x7fffffff) for int32, null pointers for strings.
-        SkipNA = 2,
-
-        // Use internally to handle setting single elements in arrays
-        SingleElement = 3,
-
-        // Broadcast a scalar value to all elements in an array
-        Broadcast = 4,
-
-        Reserved5 = 5,
-        Reserved6 = 6,
-        Reserved7 = 7,
-        Reserved8 = 8,
-        Reserved9 = 9,
-        Reserved10 = 10,
-        Reserved11 = 11,
-        Reserved12 = 12,
-        Reserved13 = 13,
-        Reserved14 = 14,
-        Reserved15 = 15,
-        Reserved16 = 16,
-        Reserved17 = 17,
-        Reserved18 = 18,
-        Reserved19 = 19,
-        Reserved20 = 20,
-        Reserved21 = 21,
-        Reserved22 = 22,
-        Reserved23 = 23,
-        Reserved24 = 24,
-        Reserved25 = 25,
-        Reserved27 = 27,
-        Reserved28 = 28,
-        Reserved29 = 29
-        
-        // REMOVED: Used internally for the "Wires" property ("Conductors").
-        // AllowAllConductors = 30 -- removed since there is now a dedicated Conductors property
-
-        // Leave the last bit alone; it creates some issues elsewhere.
-    );
-    TSetterFlag = TDSSPropertySetterFlag;
-    TDSSPropertySetterFlags = set of TDSSPropertySetterFlag;
-
     TDSSObjectFlag = (
         EditingActive, 
         HasBeenSaved, // originally from TDSSObject

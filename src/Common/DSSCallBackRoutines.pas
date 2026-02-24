@@ -8,7 +8,7 @@ unit DSSCallBackRoutines;
 interface
 
 uses
-    ArrayDef,
+    CAPI_Types,
     UComplex, DSSUcomplex;
 
 TYPE

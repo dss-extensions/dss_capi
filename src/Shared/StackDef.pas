@@ -8,7 +8,7 @@ unit StackDef;
 interface
 
 uses
-    ArrayDef;
+    CAPI_Types;
 
 type
     TStackBase = class(TObject)

@@ -13,7 +13,7 @@ uses
     ucmatrix,
     UComplex, DSSUcomplex,
     Spectrum,
-    Arraydef,
+    CAPI_Types,
     Loadshape,
     XYCurve,
     CktElement;

@@ -35,6 +35,7 @@ uses
     PCElement,
     ucmatrix,
     UComplex, DSSUcomplex,
+    CAPI_Types,
     Spectrum;
 
 type
@@ -146,7 +147,6 @@ uses
     DSSHelper,
     DSSObjectHelper,
     TypInfo,
-    ArrayDef,
     CktElementClass;
 
 type

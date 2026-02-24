@@ -9,7 +9,7 @@ unit SolutionAlgs;
 
 interface
 
-uses DSSClass, ArrayDef, PCElement, Solution, Circuit, Bus, NCIMSolutionHelper;
+uses DSSClass, CAPI_Types, PCElement, Solution, Circuit, Bus, NCIMSolutionHelper;
 
 type
     TSolutionAlgs = class helper(TNCIMSolutionHelper) for TSolutionObj

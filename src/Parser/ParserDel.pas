@@ -1,14 +1,14 @@
 unit ParserDel;
 // ----------------------------------------------------------
-// Copyright (c) 2018-2024, Paulo Meira
-// Copyright (c) 2018-2024, DSS-Extensions contributors
+// Copyright (c) 2018-2026, Paulo Meira
+// Copyright (c) 2018-2026, DSS-Extensions contributors
 // Copyright (c) 2008-2024, Electric Power Research Institute, Inc.
 // All rights reserved.
 // ----------------------------------------------------------
 interface
 
 uses
-    Arraydef,
+    CAPI_Types,
     classes,
     Sysutils,
     RPN,

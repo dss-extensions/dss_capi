@@ -41,7 +41,7 @@ uses
     Command,
     DSSClass,
     DSSObject,
-    Arraydef;
+    CAPI_Types;
 
 type
 {$SCOPEDENUMS ON}

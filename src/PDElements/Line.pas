@@ -14,7 +14,7 @@ uses
     PDElement,
     UcMatrix,
     LineCode,
-    ArrayDef,
+    CAPI_Types,
     LineGeometry,
     LineSpacing,
     ConductorData,

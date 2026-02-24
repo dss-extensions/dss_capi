@@ -12,7 +12,7 @@ uses
     Bus,
     UComplex, DSSUcomplex,
     DSSClass,
-    Arraydef;
+    CAPI_Types;
 
 type
     TMeterElement = class(TDSSCktElement)

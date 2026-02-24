@@ -10,10 +10,9 @@ interface
 uses
     Classes,
     ParserDel,
-    Arraydef,
+    CAPI_Types,
     DSSClass,
-    NamedObject,
-    CAPI_Types;
+    NamedObject;
 
 type
     TDSSObjectPtr = ^TDSSObject;

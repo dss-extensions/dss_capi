@@ -6,7 +6,7 @@ uses
     PDElement,
     DSSClass,
     DSSUcomplex,
-    Arraydef;
+    CAPI_Types;
 
 type
     TControlledTransformerObj = class (TPDElement)

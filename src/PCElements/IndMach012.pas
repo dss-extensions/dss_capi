@@ -27,7 +27,7 @@ uses
     PCElement,
     ucmatrix,
     UComplex, DSSUcomplex,
-    ArrayDef,
+    CAPI_Types,
     LoadShape,
     GrowthShape,
     Spectrum,

@@ -15,7 +15,7 @@ uses
     PCElement,
     UcMatrix,
     UComplex, DSSUcomplex,
-    ArrayDef,
+    CAPI_Types,
     XYCurve;
 
 type

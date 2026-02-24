@@ -12,7 +12,7 @@ interface
 uses
     Command,
     DSSClass,
-    ArrayDef;
+    CAPI_Types;
 
 type
 {$SCOPEDENUMS ON}

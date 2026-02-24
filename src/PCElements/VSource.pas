@@ -15,6 +15,7 @@ uses
     PCElement,
     ucmatrix,
     UComplex, DSSUcomplex,
+    CAPI_Types,
     Spectrum,
     Loadshape;
 
@@ -187,7 +188,6 @@ uses
     Command,
     DSSHelper,
     DSSObjectHelper,
-    ArrayDef,
     TypInfo,
     Math;
 

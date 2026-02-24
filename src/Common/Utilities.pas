@@ -9,7 +9,7 @@ unit Utilities;
 interface
 
 uses
-    ArrayDef,
+    CAPI_Types,
     CktElement,
     PDElement,
     UComplex, DSSUcomplex,
@@ -471,7 +471,7 @@ var
     CSVHeader: Boolean;
     inputLine: String;
     iskip: Integer;
-    sngArray: ArrayDef.PSingleArray;
+    sngArray: CAPI_Types.PSingleArray;
     actualCount: Integer;
 begin
     DSS.AuxParser.SetCmdString(S);
@@ -580,7 +580,7 @@ begin
         MStream := TMemoryStream.Create;
         MStream.LoadFromStream(F);
         F.Free;
-        sngArray := ArrayDef.PSingleArray(MStream.Memory);
+        sngArray := CAPI_Types.PSingleArray(MStream.Memory);
         actualCount := MStream.Size div sizeof(Single);
         // Now move the singles from the file into the destination array
         Result := Min(maxValues, actualCount);  // no. of singles

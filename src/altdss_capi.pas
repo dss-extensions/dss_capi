@@ -85,7 +85,7 @@ uses
     Classes,
     CustApp,
     {$IFDEF UNIX}cwstring,{$ENDIF}
-    Arraydef in 'src/Shared/Arraydef.pas',
+    CAPI_Types in 'src/Shared/CAPI_Types.pas',
     AutoAdd in 'src/Common/AutoAdd.pas',
     Bus in 'src/Common/Bus.pas',
     CableConstants in 'src/General/CableConstants.pas',

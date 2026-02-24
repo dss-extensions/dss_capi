@@ -26,7 +26,7 @@ uses
     CktElement,
     Bus,
     DSSClass,
-    Arraydef,
+    CAPI_Types,
     UComplex, DSSUcomplex,
     Capacitor,
     utilities,

@@ -11,6 +11,7 @@ uses
     Command,
     DSSClass,
     DSSObject,
+    CAPI_Types,
     ConductorData;
 
 type
@@ -57,7 +58,6 @@ uses
     DSSClassDefs,
     Sysutils,
     UComplex, DSSUcomplex,
-    Arraydef,
     LineUnits,
     Utilities,
     DSSHelper,

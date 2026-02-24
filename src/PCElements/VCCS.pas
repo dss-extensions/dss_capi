@@ -16,7 +16,7 @@ uses
     ucmatrix,
     UComplex, DSSUcomplex,
     XYCurve,
-    ArrayDef;
+    CAPI_Types;
 
 type
 {$SCOPEDENUMS ON}

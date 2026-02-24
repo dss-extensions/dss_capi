@@ -21,7 +21,7 @@ uses
     ControlElem,
     CktElement,
     DSSClass,
-    Arraydef,
+    CAPI_Types,
     UComplex, DSSUcomplex,
     utilities,
     TCC_Curve,

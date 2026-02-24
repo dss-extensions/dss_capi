@@ -16,7 +16,8 @@ uses
     PCElement,
     ucmatrix,
     UComplex, DSSUcomplex,
-    Line;
+    Line,
+    CAPI_Types;
 
 type
 {$SCOPEDENUMS ON}
@@ -112,8 +113,7 @@ uses
     dynamics,
     DSSHelper,
     DSSObjectHelper,
-    TypInfo,
-    ArrayDef;
+    TypInfo;
 
 type
     TObj = TGICSourceObj;

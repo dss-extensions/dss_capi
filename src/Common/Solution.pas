@@ -11,7 +11,7 @@ interface
 uses
     Classes,
     UComplex, DSSUcomplex,
-    Arraydef,
+    CAPI_Types,
     Command,
     Monitor,
     DSSClass,

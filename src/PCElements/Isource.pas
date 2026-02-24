@@ -22,6 +22,7 @@ uses
     ucmatrix,
     UComplex, DSSUcomplex,
     Spectrum,
+    CAPI_Types,
     Loadshape;
 
 type

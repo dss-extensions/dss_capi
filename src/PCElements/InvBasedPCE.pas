@@ -18,7 +18,7 @@ uses
     Classes,
     Ucmatrix,
     DSSUcomplex,
-    ArrayDef;
+    CAPI_Types;
 
 type
     TInvBasedPCEClass = class(TDynEqPCEClass)

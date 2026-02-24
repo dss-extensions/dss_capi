@@ -7,7 +7,6 @@ uses
     DSSObject,
     DSSClass,
     Circuit,
-    ArrayDef,
     CAPI_Types,
     fpjson,
     UComplex, DSSUcomplex;
@@ -1712,7 +1711,7 @@ var
     F: TStream = NIL; // input
     i: Integer;
     // Temp: Single;
-    sngArray: ArrayDef.PSingleArray;
+    sngArray: CAPI_Types.PSingleArray;
     ValueCount: Integer;
 begin
     Result := NIL;
@@ -1727,7 +1726,7 @@ begin
         MStream := TMemoryStream.Create;
         MStream.LoadFromStream(F);
         FreeAndNil(F);
-        sngArray := ArrayDef.PSingleArray(MStream.Memory);
+        sngArray := CAPI_Types.PSingleArray(MStream.Memory);
         // Now move the singles from the file into the destination array
         ValueCount := MStream.Size div sizeof(Single);  // no. of singles
         SetLength(Result, ValueCount);

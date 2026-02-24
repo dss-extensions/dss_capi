@@ -215,7 +215,6 @@ uses
     DSSHelper,
     DSSObjectHelper,
     TypInfo,
-    ArrayDef,
     Math,
     UComplex,
     Classes,

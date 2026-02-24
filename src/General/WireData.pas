@@ -40,7 +40,7 @@ uses
     DSSClassDefs,
     Sysutils,
     UComplex, DSSUcomplex,
-    Arraydef,
+    CAPI_Types,
     LineUNits,
     Utilities,
     DSSHelper,

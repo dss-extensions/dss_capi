@@ -11,7 +11,7 @@ interface
 
 uses
     Command,
-    ArrayDef,
+    CAPI_Types,
     DSSClass;
 
 type

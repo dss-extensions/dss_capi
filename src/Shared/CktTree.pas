@@ -9,7 +9,7 @@ interface
 
 uses
     Classes,
-    ArrayDef,
+    CAPI_Types,
     StackDef,
     DSSPointerList,
     CktElement;

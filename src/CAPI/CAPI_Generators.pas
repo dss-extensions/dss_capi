@@ -68,8 +68,8 @@ uses
     SysUtils,
     DSSClass,
     DSSHelper,
-    DSSObjectHelper,
-    ArrayDef;
+    DSSObjectHelper;
+
 type
     TObj = TGeneratorObj;
 //------------------------------------------------------------------------------

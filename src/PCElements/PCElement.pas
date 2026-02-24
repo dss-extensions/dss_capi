@@ -13,7 +13,7 @@ uses
     UComplex, DSSUcomplex,
     DSSClass,
     Spectrum,
-    Arraydef,
+    CAPI_Types,
     Meterelement,
     fpjson;
 

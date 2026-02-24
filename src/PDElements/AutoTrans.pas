@@ -23,7 +23,7 @@ uses
     PDElement,
     UComplex, DSSUcomplex,
     UcMatrix,
-    Arraydef,
+    CAPI_Types,
     math,
     ControlledTransformer;
 

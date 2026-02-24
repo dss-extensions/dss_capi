@@ -12,6 +12,7 @@ uses
     DSSClass,
     DSSObject,
     ConductorData,
+    CAPI_Types,
     CableData;
 
 type
@@ -65,7 +66,6 @@ uses
     DSSClassDefs,
     Sysutils,
     UComplex, DSSUcomplex,
-    Arraydef,
     LineUnits,
     Utilities,
     DSSHelper,

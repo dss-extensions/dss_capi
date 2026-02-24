@@ -20,7 +20,7 @@ interface
 uses
     Classes,
     Sysutils,
-    Arraydef,
+    CAPI_Types,
     Command,
     DSSClass,
     DSSObject,

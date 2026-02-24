@@ -9,7 +9,7 @@ unit CableConstants;
 interface
 
 uses
-    Arraydef,
+    CAPI_Types,
     Ucmatrix,
     UComplex, DSSUcomplex,
     LineUnits,

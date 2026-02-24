@@ -8,7 +8,7 @@ unit Pstcalc;
 interface
 
 uses
-    ArrayDef;
+    CAPI_Types;
 
 // IEC868 FlickerMeter
 // Adapted from Jeff Smith's original C++ code

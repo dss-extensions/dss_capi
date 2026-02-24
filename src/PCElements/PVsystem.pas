@@ -20,7 +20,7 @@ uses
     TempShape,
     XYCurve,
     Spectrum,
-    ArrayDef,
+    CAPI_Types,
     Dynamics,
     InvDynamics,
     MathUtil,

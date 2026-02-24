@@ -24,7 +24,7 @@ uses
     PCElement,
     ucmatrix,
     ucomplex, DSSUComplex,
-    ArrayDef,
+    CAPI_Types,
     // LoadShape,
     Dynamics,
     DSSObject;

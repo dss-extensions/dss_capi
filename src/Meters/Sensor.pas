@@ -15,7 +15,7 @@ uses
     MeterClass,
     Meterelement,
     DSSClass,
-    Arraydef,
+    CAPI_Types,
     UComplex, DSSUcomplex,
     utilities,
     Classes;

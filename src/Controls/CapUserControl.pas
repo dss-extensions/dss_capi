@@ -19,7 +19,7 @@ USES
      DSSCallBackRoutines, 
      UComplex, 
      DSSUcomplex, 
-     Arraydef, 
+     CAPI_Types, 
      DSSClass;
 
 TYPE

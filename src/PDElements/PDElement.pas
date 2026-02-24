@@ -13,7 +13,7 @@ uses
     ucmatrix,
     DSSClass,
     MeterElement,
-    Arraydef,
+    CAPI_Types,
     fpjson;
 
 type

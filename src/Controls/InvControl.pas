@@ -19,7 +19,7 @@ uses
     PCElement,
     PVSystem,
     Storage,
-    Arraydef,
+    CAPI_Types,
     UComplex, DSSUcomplex,
     utilities,
     XYcurve,

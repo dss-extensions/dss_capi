@@ -24,7 +24,7 @@ uses
     ControlClass,
     ControlElem,
     DSSClass,
-    Arraydef,
+    CAPI_Types,
     UComplex, DSSUcomplex,
     ControlledTransformer,
     utilities;

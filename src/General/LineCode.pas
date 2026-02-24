@@ -23,7 +23,7 @@ uses
     DSSClass,
     DSSObject,
     UcMatrix,
-    Arraydef;
+    CAPI_Types;
 
 type
 {$SCOPEDENUMS ON}

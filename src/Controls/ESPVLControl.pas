@@ -25,7 +25,7 @@ uses
     ControlElem,
     CktElement,
     DSSClass,
-    Arraydef,
+    CAPI_Types,
     UComplex, DSSUcomplex,
     utilities,
     DSSPointerList,

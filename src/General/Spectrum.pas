@@ -17,7 +17,7 @@ uses
     Command,
     DSSClass,
     DSSObject,
-    Arraydef,
+    CAPI_Types,
     UComplex, DSSUcomplex;
 
 type

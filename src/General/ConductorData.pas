@@ -22,7 +22,7 @@ uses
     Command,
     DSSClass,
     DSSObject,
-    ArrayDef;
+    CAPI_Types;
 
 type
 {$SCOPEDENUMS ON}

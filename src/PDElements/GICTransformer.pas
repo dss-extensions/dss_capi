@@ -17,7 +17,7 @@ uses
     Circuit,
     PDElement,
     UcMatrix,
-    ArrayDef,
+    CAPI_Types,
     XYCurve;
 
 type

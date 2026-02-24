@@ -16,7 +16,7 @@ uses
     PDElement,
     UComplex, DSSUcomplex,
     UcMatrix,
-    Arraydef,
+    CAPI_Types,
     DSSObject,
     math,
     ControlledTransformer;

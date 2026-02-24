@@ -45,7 +45,7 @@ uses
     PDClass,
     PDElement,
     UcMatrix,
-    ArrayDef;
+    CAPI_Types;
 
 type
 {$SCOPEDENUMS ON}

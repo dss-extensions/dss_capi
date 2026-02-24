@@ -21,7 +21,7 @@ interface
 
 uses
     Contnrs,
-    ArrayDef,
+    CAPI_Types,
     Classes;
 
 type
