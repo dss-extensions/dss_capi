@@ -534,6 +534,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
+    EnsureNodeVI(DSSPrime);
+
     NodeV := DSSPrime.ActiveCircuit.Solution.NodeV;
     pList := DSSPrime.ActiveCircuit.PDElements;
     idx_before := pList.ActiveIndex;

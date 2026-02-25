@@ -171,6 +171,9 @@ procedure YMatrix_getIpointer(var IvectorPtr: pNodeVarray); CDECL;
 begin
     if MissingSolution(DSSPrime) then
         Exit;
+
+    EnsureNodeVI(DSSPrime);
+
     IVectorPtr := DSSPrime.ActiveCircuit.Solution.Currents;
 end;
 
@@ -178,6 +181,9 @@ procedure YMatrix_getVpointer(var VvectorPtr: pNodeVarray); CDECL;
 begin
     if MissingSolution(DSSPrime) then
         Exit;
+
+    EnsureNodeVI(DSSPrime);
+    
     VVectorPtr := DSSPrime.ActiveCircuit.Solution.NodeV;
 end;
 
@@ -293,6 +299,8 @@ begin
     solution := DSSPrime.ActiveCircuit.Solution;
     baseFn := baseFileName;
     B := nil;
+
+    EnsureNodeVI(DSSPrime);
 
     if solution.Algorithm = NCIMSOLVE then
     begin

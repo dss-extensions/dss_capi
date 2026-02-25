@@ -650,7 +650,8 @@ extern "C" {
         AltDSSEvent_Clear = 3,
         AltDSSEvent_ReprocessBuses = 4,
         AltDSSEvent_BuildSystemY = 5,
-        AltDSSEvent_SampleControlDevices = 6
+        AltDSSEvent_SampleControlDevices = 6,
+        AltDSSEvent_AllocateVI = 7
     };
 
     /*!

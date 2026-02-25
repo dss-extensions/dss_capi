@@ -200,6 +200,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
+    EnsureNodeVI(DSSPrime);
+
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.NumNodes);
     buses := DSSPrime.ActiveCircuit.Buses;
     k := 0;
@@ -233,6 +235,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
+    EnsureNodeVI(DSSPrime);
+
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * DSSPrime.ActiveCircuit.NumNodes);
     buses := DSSPrime.ActiveCircuit.Buses;
     k := 0;
@@ -512,6 +516,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
+    EnsureNodeVI(DSSPrime);
+
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.NumNodes);
     buses := DSSPrime.ActiveCircuit.Buses;
     k := 0;
@@ -758,6 +764,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
+    EnsureNodeVI(DSSPrime);
+
     // First allocate as many elements as nodes
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.NumNodes);
     buses := DSSPrime.ActiveCircuit.Buses;
@@ -796,7 +804,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    
+    EnsureNodeVI(DSSPrime);
+
     // First allocate as many elements as nodes
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.NumNodes);
     buses := DSSPrime.ActiveCircuit.Buses;
@@ -963,6 +972,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
+    EnsureNodeVI(DSSPrime);
+
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * DSSPrime.ActiveCircuit.NumNodes);
     CResultPtr := pComplex(ResultPtr);
     for i := 1 to DSSPrime.ActiveCircuit.NumNodes do
@@ -980,22 +991,16 @@ end;
 
 //------------------------------------------------------------------------------
 procedure Circuit_Get_YNodeVarray(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-var
-    CResultPtr: pComplex;
-    i: Integer;
 begin
     if InvalidCircuit(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * DSSPrime.ActiveCircuit.NumNodes);
-        CResultPtr := pComplex(ResultPtr);
-        for i := 1 to DSSPrime.ActiveCircuit.NumNodes do
-        begin
-            CResultPtr^ := DSSPrime.ActiveCircuit.Solution.NodeV[i];
-            Inc(CResultPtr);
-        end;
+    EnsureNodeVI(DSSPrime);    
+
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * DSSPrime.ActiveCircuit.NumNodes);
+    Move(DSSPrime.ActiveCircuit.Solution.NodeV[1], ResultPtr^, SizeOf(Complex) * DSSPrime.ActiveCircuit.NumNodes);
 end;
 
 procedure Circuit_Get_YNodeVarray_GR(); CDECL;

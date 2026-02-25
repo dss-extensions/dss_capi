@@ -2,7 +2,7 @@ unit Ymatrix;
 
 // ----------------------------------------------------------
 // Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
-// Copyright (c) 2018-2024, DSS-Extensions contributors
+// Copyright (c) 2018-2026, DSS-Extensions contributors
 // All rights reserved.
 // ----------------------------------------------------------
 
@@ -31,6 +31,7 @@ procedure BuildYMatrix(DSS: TDSSContext; BuildOption: Integer; AllocateVI: Boole
 procedure ResetSparseMatrix(var hY: NativeUint; size: Integer);
 procedure InitializeNodeVbase(ckt: TDSSCircuit);
 function CheckYMatrixforZeroes(ckt: TDSSCircuit): String;
+procedure DoAllocateVI(DSS: TDSSContext);
 
 implementation
 
@@ -295,9 +296,11 @@ procedure DoAllocateVI(DSS: TDSSContext);
 var
     i, prevAllocNumNodes: Integer;
 begin
+    DSS.SignalEvent(TAltDSSEvent.AllocateVI, 0);
     with DSS.ActiveCircuit, Solution do
     begin
         prevAllocNumNodes := NodeVNumNodes;
+
 
         if LogEvents then
             DSS.LogThisEvent(_('Reallocating Solution Arrays'));
@@ -335,6 +338,7 @@ begin
         ReAllocMem(Ic_Local, SizeOf(Complex) * (NumNodes + 1)); // Allocate the Complementary currents
 {$ENDIF}
     end;
+    DSS.SignalEvent(TAltDSSEvent.AllocateVI, 1);
 end;
 
 procedure BuildYMatrix(DSS: TDSSContext; BuildOption: Integer; AllocateVI: Boolean);

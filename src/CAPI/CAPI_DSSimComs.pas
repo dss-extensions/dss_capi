@@ -37,7 +37,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    
+    EnsureNodeVI(DSSPrime);
+
     if (not ((Index > 0) and (Index <= DSSPrime.ActiveCircuit.NumBuses))) or (DSSPrime.ActiveCircuit.Buses = NIL) then
     begin
         if DSS_CAPI_EXT_ERRORS then
@@ -80,7 +81,8 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    
+    EnsureNodeVI(DSSPrime);
+
     if (not ((Index > 0) and (Index <= DSSPrime.ActiveCircuit.NumBuses))) or (DSSPrime.ActiveCircuit.Buses = NIL) then
     begin
         if DSS_CAPI_EXT_ERRORS then

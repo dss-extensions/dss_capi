@@ -2032,6 +2032,7 @@ begin
         end;
         bus := TDSSBus.Create(DSS);
         bus.SetName(BusName);
+        bus.idx := NumBuses;
         Buses[NumBuses] := bus;
     end;
 
@@ -3151,6 +3152,8 @@ begin
     while bus.FindIdx(Result) <> 0 do
         Inc(Result);
     bus.Add(self, result);  // add it to the list so next call will be unique
+    MapNodeToBus[NumNodes].BusRef := bus.Idx;
+    MapNodeToBus[NumNodes].NodeNum := Result;
 end;
 
 procedure TDSSCircuit.InvalidateTopology();

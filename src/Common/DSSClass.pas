@@ -299,7 +299,8 @@ type
         Clear,
         ReprocessBuses,
         BuildSystemY,
-        SampleControlDevices
+        SampleControlDevices,
+        AllocateVI
         //InvalidateSystemY
     );
 {$POP}

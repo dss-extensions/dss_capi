@@ -306,6 +306,7 @@ var
     DSS: TDSSContext;
 begin
     DSS := elem.DSS;
+    EnsureNodeVI(elem.DSS);
     NodeV := elem.DSS.ActiveCircuit.Solution.NodeV;
 
     if elem.NPhases() <> 3 then
@@ -429,6 +430,7 @@ begin
     if MissingSolution(elem) or (elem.NodeRef = NIL) then
         Exit;
 
+    EnsureNodeVI(elem.DSS);
     NodeV := elem.ActiveCircuit.Solution.NodeV;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * (elem.NConds() * elem.NTerms()), elem.NConds(), elem.NTerms());
     // k := (Terminal-1)*numcond;    // RCD 8-30-00 Changed
@@ -617,6 +619,7 @@ begin
     DefaultResult(ResultPtr, ResultCount);
     if MissingSolution(elem) or (elem.NodeRef = NIL) then // or (not elem.Enabled())
         Exit;
+    EnsureNodeVI(elem.DSS);
 
     SetLength(cBuffer, 4 * 3);
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * elem.NTerms(), 3, elem.NTerms()); // allocate for kW and kvar
@@ -1102,6 +1105,7 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
+    EnsureNodeVI(elem.DSS);    
     NodeV := elem.DSS.ActiveCircuit.Solution.NodeV;
 
     numcond := elem.NConds() * elem.NTerms();
@@ -2250,6 +2254,7 @@ var
     Volts: Complex;
 begin
     if DSS = NIL then DSS := DSSPrime;
+    EnsureNodeVI(DSS);
     Nvalues := pBus.numNodesThisBus;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
     iV := 0;
@@ -2315,6 +2320,8 @@ begin
             Result[i - 1] := -1.0;  // Signify seq voltages n/A for less then 3 phases
         Exit;
     end;
+
+    EnsureNodeVI(DSS);
 
     iV := 0;
     for i := 1 to 3 do
@@ -2396,6 +2403,8 @@ begin
         BaseFactor := 1000.0 * pBus.kVBase
     else
         BaseFactor := 1.0;
+
+    EnsureNodeVI(DSS);
 
     for i := 1 to NValues do
     begin
@@ -2513,23 +2522,27 @@ begin
     // Assume nodes labelled 1, 2, and 3 are the 3 phases
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 6);
     if Nvalues <> 3 then
-        for i := 1 to 6 do
-            Result[i - 1] := -1.0  // Signify seq voltages n/A for less then 3 phases
-    else
     begin
-        iV := 0;
-        for i := 1 to 3 do
+        for i := 1 to 6 do
+            Result[i - 1] := -1.0;  // Signify seq voltages n/A for less then 3 phases
+
+        Exit;
+    end;
+
+    EnsureNodeVI(DSS);
+
+    iV := 0;
+    for i := 1 to 3 do
         Vph[i] := DSS.ActiveCircuit.Solution.NodeV[pBus.Find(i)];
 
-        Phase2SymComp(@Vph, @V012);   // Compute Symmetrical components
+    Phase2SymComp(@Vph, @V012);   // Compute Symmetrical components
 
-        for i := 1 to 3 do  // Stuff it in the result
-        begin
-            Result[iV] := V012[i].re;
-            Inc(iV);
-            Result[iV] := V012[i].im;
-            Inc(iV);
-        end;
+    for i := 1 to 3 do  // Stuff it in the result
+    begin
+        Result[iV] := V012[i].re;
+        Inc(iV);
+        Result[iV] := V012[i].im;
+        Inc(iV);
     end;
 end;
 
@@ -2542,6 +2555,7 @@ var
     NodeV: pNodeVArray;
 begin
     if DSS = NIL then DSS := DSSPrime;
+    EnsureNodeVI(DSS);
     NodeV := DSS.ActiveCircuit.Solution.NodeV;
     Nvalues := pBus.numNodesThisBus;
     if Nvalues > 3 then
@@ -2615,6 +2629,7 @@ var
     NodeV: pNodeVArray;
 begin
     if DSS = NIL then DSS := DSSPrime;
+    EnsureNodeVI(DSS);
     NodeV := DSS.ActiveCircuit.Solution.NodeV;
     Nvalues := pBus.numNodesThisBus;
     if Nvalues > 3 then
@@ -2693,6 +2708,8 @@ begin
     else
         BaseFactor := 1.0;
 
+    EnsureNodeVI(DSS);
+
     for i := 1 to NValues do
     begin
         // this code so nodes come out in order from smallest to larges
@@ -2720,6 +2737,9 @@ begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
     iV := 0;
     jj := 1;
+
+    EnsureNodeVI(DSS);
+
     for i := 1 to NValues do
     begin
         // this code so nodes come out in order from smallest to larges
@@ -2995,6 +3015,7 @@ begin
     begin
         Result.Add('Nodes', GetDSSArray_JSON(bus.numNodesThisBus, bus.nodes)); // TODO: mention that this is unordered to match SystemNodes
         Result.Add('SystemNodes', GetDSSArray_JSON(bus.numNodesThisBus, bus.refNo));
+        EnsureNodeVI(DSS);
         NodeV := DSS.ActiveCircuit.Solution.NodeV;
         if NodeV <> NIL then
         begin
@@ -3239,6 +3260,9 @@ begin
     CResultPtr := PComplex(ResultPtr);
     // Get the actual values
     pElem := TDSSCktElementPtr(batch);
+
+    EnsureNodeVI(pElem^.DSS);
+
     NodeV := pElem^.DSS.ActiveCircuit.Solution.NodeV;
     for i := 1 to batchSize do
     begin
@@ -3468,6 +3492,8 @@ begin
 
     // Get the actual values
     pElem := TDSSCktElementPtr(batch);
+    EnsureNodeVI(pElem^.DSS);
+
     if what < 2 then
     begin
         // Currents

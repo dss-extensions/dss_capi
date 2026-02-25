@@ -124,6 +124,8 @@ procedure ctx_DSS_FreeMem(ctx: Pointer; Ptr: Pointer); CDECL;
 // internal function
 procedure DSS_InitThreads();
 
+procedure EnsureNodeVI(DSS: TDSSContext);
+
 implementation
 
 Uses 
@@ -131,6 +133,7 @@ Uses
     CktElement,
     Classes,
     DSSHelper,
+    YMatrix,
     gettext;
 
 type
@@ -289,6 +292,7 @@ begin
         Result := True;
         Exit;
     end;
+   
     Result := False;
 end;
 //------------------------------------------------------------------------------
@@ -825,5 +829,13 @@ begin
     FreeMem(Ptr);
 end;
 
+procedure EnsureNodeVI(DSS: TDSSContext);
+begin
+    if (DSS.ActiveCircuit.Solution.NodeVNumNodes >= DSS.ActiveCircuit.NumNodes) then
+        Exit;
+
+    // DSS.ActiveCircuit.ReprocessBusDefs();
+    DoAllocateVI(DSS);
+end;
 
 end.

@@ -40,6 +40,8 @@ type
 
         allocation: SmallInt;
 
+        idx: Integer;
+
         // ***** Reliability Variables
         BusFltRate: Double;  // Accumulated failure rate  downstream from this bus faults per year
         Bus_Num_Interrupt: Double;  // Number of interruptions this bus per year
