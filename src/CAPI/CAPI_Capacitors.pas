@@ -289,7 +289,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Set_States(ValuePtr: PInteger; ValueCount: TAPISize); CDECL;
 var
-    Value: PIntegerArray;
+    Value: PIntegerArray0;
     elem: TCapacitorObj;
     i, LoopLimit: Integer;
 begin
@@ -305,7 +305,7 @@ begin
         Exit;
     end;
 
-    Value := PIntegerArray(ValuePtr);
+    Value := PIntegerArray0(ValuePtr);
     LoopLimit := ValueCount;
     if LoopLimit > elem.NumSteps() then
     begin
