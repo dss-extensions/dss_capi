@@ -755,7 +755,7 @@ begin
                         TPropertyType.IntegerArrayProperty,
                         TPropertyType.DoubleFArrayProperty,
                         TPropertyType.DoubleVArrayProperty,
-                        TPropertyType.DoubleDArrayProperty,
+                        // TPropertyType.DoubleDArrayProperty,
                         TPropertyType.DoubleArrayProperty,
                         TPropertyType.DoubleProperty
                         //TODO: any other?

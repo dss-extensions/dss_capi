@@ -165,7 +165,7 @@ type
         FStorageNameList: TStringList;
         FleetPointerList: TDSSPointerList;
         SeasonTargets,
-        SeasonTargetsLow: Array of Double;
+        SeasonTargetsLow: PDoubleArray0;
         FWeights: pDoubleArray;
         cBuffer: pComplexArray;    // Complex Array buffer
 
@@ -396,15 +396,15 @@ begin
     PropertyFlags[ord(TProp.InhibitTime)] := [TPropertyFlag.Units_hour, TPropertyFlag.NonNegative];
 
     // double arrays
-    PropertyType[ord(TProp.SeasonTargets)] := TPropertyType.DoubleDArrayProperty;
+    PropertyType[ord(TProp.SeasonTargets)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.SeasonTargets)] := PtrInt(@obj.SeasonTargets);
     PropertyOffset2[ord(TProp.SeasonTargets)] := PtrInt(@obj.Seasons);
 
-    PropertyType[ord(TProp.SeasonTargetsLow)] := TPropertyType.DoubleDArrayProperty;
+    PropertyType[ord(TProp.SeasonTargetsLow)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.SeasonTargetsLow)] := PtrInt(@obj.SeasonTargetsLow);
     PropertyOffset2[ord(TProp.SeasonTargetsLow)] := PtrInt(@obj.Seasons);
 
-    PropertyType[ord(TProp.Weights)] := TPropertyType.DoubleDArrayProperty;
+    PropertyType[ord(TProp.Weights)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.Weights)] := PtrInt(@obj.FWeights);
     PropertyOffset2[ord(TProp.Weights)] := PtrInt(@obj.FleetSize);
     PropertyFlags[ord(TProp.Weights)] := [TPropertyFlag.IndirectCount];
@@ -564,14 +564,14 @@ begin
             FElementListSpecified := TRUE;
             FleetSize := FStorageNameList.count;
             // Realloc weights to be same size as possible number of storage elements
-            Reallocmem(FWeights, Sizeof(FWeights[1]) * FleetSize);
+            ReAllocMem(FWeights, Sizeof(Double) * FleetSize);
             for i := 1 to FleetSize do
                 FWeights[i] := 1.0;
         end;
         ord(TProp.Seasons):
         begin
-            setlength(SeasonTargets, Seasons);
-            setlength(SeasonTargetsLow, Seasons);
+            ReAllocMem(SeasonTargets, SizeOf(Double) * Seasons);
+            ReAllocMem(SeasonTargetsLow, SizeOf(Double) * Seasons);
         end;
         ord(TProp.DispFactor):
             if (DispFactor <= 0) or (DispFactor > 1) then
@@ -643,8 +643,8 @@ begin
     Seasons := Other.Seasons;
     if Seasons > 1 then
     begin
-        setlength(SeasonTargets, Seasons);
-        setlength(SeasonTargetsLow, Seasons);
+        ReAllocMem(SeasonTargets, SizeOf(Double) * Seasons);
+        ReAllocMem(SeasonTargetsLow, SizeOf(Double) * Seasons);
         for i := 0 to (Seasons - 1) do
         begin
             SeasonTargets[i] := Other.SeasonTargets[i];
@@ -717,9 +717,9 @@ begin
     Wait4Step := FALSE;     // for sync discharge with charge when there is a transition
     ResetLevel := 0.8;
     Seasons := 1;         // For dynamic targets
-    setlength(SeasonTargets, 1);
+    SeasonTargets := AllocMem(SizeOf(Double) * Seasons);
+    SeasonTargetsLow := AllocMem(SizeOf(Double) * Seasons);
     SeasonTargets[0] := FkWTarget;
-    setlength(SeasonTargetsLow, 1);
     SeasonTargetsLow[0] := FkWTargetLow;
 end;
 
@@ -728,6 +728,8 @@ begin
     if Assigned(cBuffer) then
         ReallocMem(cBuffer, 0);
 
+    ReAllocMem(SeasonTargets, 0);
+    ReAllocMem(SeasonTargetsLow, 0);
     FleetPointerList.Free;
     FStorageNameList.Free;
 

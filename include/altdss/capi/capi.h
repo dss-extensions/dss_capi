@@ -2359,7 +2359,7 @@ typedef struct AltDSSCAPI {
     altdss_func_v_vp_vp ctx_ShareGeneral;
 
 } AltDSSCAPI;
-#pragma pack(pop, 1)
+#pragma pack(pop)
 
 typedef int32_t (*altdss_func_Init)(AltDSSCAPI *funcs, uint64_t size, uint64_t version, uint64_t reserved1, void* reserved2);
 

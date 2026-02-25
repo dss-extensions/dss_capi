@@ -76,8 +76,7 @@ type
         function NextParam(): String;
         function PrevParam(): Integer; 
         function ParseAsBusName(Param: String; var NumNodes: Integer; NodeArray: pIntegerArray): String;//TODO: make it a separate function
-        function ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray; DoRound: Boolean=False): Integer;
-        function ParseAsVector(var VectorBuffer: ArrayOfDouble; DoRound: Boolean=False): Integer;
+        function ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray; setterFlags: TDSSPropertySetterFlags): Integer;
         
         function MakeComplex(): Complex;
         function ParseAsComplexVector(ExpectedSize: Integer; VectorBuffer: pComplexArray): Integer;
@@ -516,16 +515,34 @@ begin
     end;
 end;
 
-function TDSSParser.ParseAsVector(var VectorBuffer: ArrayOfDouble; DoRound: Boolean): Integer;
-begin
-    Result := ParseAsVector(Length(VectorBuffer), pDoubleArray(@VectorBuffer[0]), DoRound);
-end;
-
-function TDSSParser.ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray; DoRound: Boolean): Integer;
+function TDSSParser.ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray; setterFlags: TDSSPropertySetterFlags): Integer;
 var
-    ParseBufferPos, NumElements, i: Integer;
+    ParseBufferPos, NumElements, i, maxSize: Integer;
     ParseBuffer, DelimSave: String;
+    implicitSize, strictSize: Boolean;
+    tSize: Boolean;
 begin
+    // FixedMaxSize in setterFlags is implied by default if nothing else
+    
+    strictSize := TSetterFlag.StrictSize in setterFlags;
+    implicitSize := TSetterFlag.ImplicitSizes in setterFlags;
+    maxSize := ExpectedSize;
+    if implicitSize and (maxSize <= 0) then
+    begin
+        maxSize := 6;
+    end;
+
+    if (ExpectedSize = 0) and not (not implicitSize) then
+    begin
+        DoSimpleMsg(
+            TDSSContext(DSSCtx), 
+            _('Error in "ParseAsVector": no elements requested. Please check if any sizing properties are missing (property order is important).'), 
+            70398
+        );
+        Result := 0;
+        Exit;
+    end;
+
     if autoIncrement then
         NextParam();
 
@@ -544,20 +561,42 @@ begin
 
         SkipWhiteSpace(ParseBuffer, ParseBufferPos);
         tokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
+        
         CheckForVar(tokenBuffer);
+
         while Length(tokenBuffer) > 0 do
         begin
             inc(NumElements);
-            if NumElements <= ExpectedSize then
-                VectorBuffer[NumElements] := MakeDouble;
-            //TODO: warn about extra elements
+            if implicitSize then
+            begin
+                if NumElements > maxSize then
+                begin
+                    maxSize := maxSize * 3 div 2;
+                    ReAllocMem(VectorBuffer, SizeOf(Double) * maxSize);
+                end;
+                VectorBuffer[NumElements] := MakeDouble();
+            end
+            else if NumElements <= ExpectedSize then
+            begin
+                VectorBuffer[NumElements] := MakeDouble();
+            end;
+
             if LastDelimiter = MatrixRowTerminator then
-                BREAK;
+                break;
+
             tokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
             CheckForVar(tokenBuffer);
         end;
 
-        Result := NumElements;
+        if strictSize and (NumElements <> ExpectedSize) then
+        begin
+            DoSimpleMsg(TDSSContext(DSSCtx), 'Expected exactly %d items, got %d.', [NumElements, ExpectedSize], 70397);
+            Result := 0;
+        end
+        else
+        begin
+            Result := NumElements;
+        end;
 
     except
         On E: Exception do
@@ -566,9 +605,6 @@ begin
 
     delimiters := DelimSave;   //restore to original delimiters
     tokenBuffer := copy(ParseBuffer, ParseBufferPos, Length(ParseBuffer));  // prepare for next trip
-    if DoRound then
-        for i := 1 to Math.Min(NumElements, ExpectedSize) do
-            VectorBuffer[i] := Round(VectorBuffer[i]);
 end;
 
 function TDSSParser.ParseAsComplexVector(ExpectedSize: Integer; VectorBuffer: pComplexArray): Integer;
@@ -669,7 +705,7 @@ begin
     try
         for i := 1 to ExpectedOrder do
         begin
-            ElementsFound := ParseAsVector(ExpectedOrder, RowBuf);
+            ElementsFound := ParseAsVector(ExpectedOrder, RowBuf, []);
 
             if ElementsFound > (ExpectedOrder * ExpectedOrder) then
             begin
@@ -715,7 +751,7 @@ begin
     try
         for i := 0 to (ExpectedOrder - 1) do
         begin
-            ElementsFound := ParseAsVector(ExpectedOrder, RowBuf);
+            ElementsFound := ParseAsVector(ExpectedOrder, RowBuf, []);
 
             for j := 0 to (ElementsFound - 1) do
             begin

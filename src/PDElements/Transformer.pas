@@ -237,7 +237,7 @@ type
         HVLeadsLV: LongBool;
 
         XHLChanged: Boolean;
-        kVARatings: Array Of Double;
+        kVARatings: PDoubleArray0;
 
         procedure SetTermRef();
     PUBLIC
@@ -391,7 +391,7 @@ begin
     PropertyFlags[ord(TProp.XfmrCode)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Ordering_First];
 
     // double arrays
-    PropertyType[ord(TProp.Ratings)] := TPropertyType.DoubleDArrayProperty;
+    PropertyType[ord(TProp.Ratings)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.Ratings)] := PtrInt(@obj.kVARatings);
     PropertyOffset2[ord(TProp.Ratings)] := PtrInt(@obj.NumAmpRatings);
 
@@ -726,7 +726,7 @@ begin
         ord(TProp.RdcOhms):
             Winding[ActiveWinding].RdcSpecified := TRUE;
         ord(TProp.Seasons):
-            SetLength(kVARatings, NumAmpRatings);
+            ReallocMem(kVARatings, SizeOf(Double) * NumAmpRatings);
         ord(TProp.Xscarray):
             if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.NoPropertyTracking)) = 0 then
             begin
@@ -834,8 +834,8 @@ begin
     XfmrCodeObj := Other.XfmrCodeObj;
 
     NumAmpratings := Other.NumAmpRatings;
-    Setlength(kVARatings, NumAmpRatings);
-    for i := 0 to High(kVARatings) do
+    ReallocMem(kVARatings, SizeOf(Double) * NumAmpRatings);
+    for i := 0 to NumAmpRatings - 1 do
         kVARatings[i] := Other.kVARatings[i];
 end;
 
@@ -905,7 +905,7 @@ begin
     Yorder := fNTerms * FNConds;
     
     NumAmpRatings := 1;
-    SetLength(kVARatings, NumAmpRatings);
+    kVARatings := AllocMem(SizeOf(Double) * NumAmpRatings);
     kVARatings[0] := NormMaxHkVA;
     
     RecalcElementData();
@@ -927,6 +927,7 @@ begin
     Reallocmem(Winding, 0);
     Reallocmem(XSC, 0);
     Reallocmem(TermRef, 0);
+    ReAllocMem(kVARatings, 0);
     ZB.Free;
     Y_1Volt.Free;
     Y_1Volt_NL.Free;
@@ -1052,8 +1053,8 @@ begin
     NormAmps := NormMaxHkVA / Fnphases / Vfactor;
     EmergAmps := EmergMaxHkVA / Fnphases / Vfactor;
 
-    SetLength(AmpRatings, NumAmpRatings);
-    for i := 0 to High(AmpRatings) do
+    ReAllocMem(AmpRatings, SizeOf(Double) * NumAmpRatings);
+    for i := 0 to NumAmpRatings - 1 do
         AmpRatings[i] := kVARatings[i] / Fnphases / Vfactor;
 
     CalcY_Terminal(1.0);   // Calc Y_Terminal at base frequency
@@ -2084,8 +2085,8 @@ begin
     Y_Terminal_FreqMult := 0.0;
 
     NumAmpRatings := obj.NumkVARatings;
-    SetLength(kVARatings, NumAmpRatings);
-    for i := 0 to High(kVARatings) do
+    ReAllocMem(kVARatings, SizeOf(Double) * NumAmpRatings);
+    for i := 0 to NumAmpRatings - 1 do
         kVARatings[i] := obj.kVARatings[i];
 
     RecalcElementData();

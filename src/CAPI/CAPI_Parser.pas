@@ -129,7 +129,7 @@ var
     ActualSize: Integer;
 begin
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ExpectedSize);
-    ActualSize := DSSPrime.ComParser.ParseAsVector(ResultCount^, CAPI_Types.PDoubleArray(ResultPtr));
+    ActualSize := DSSPrime.ComParser.ParseAsVector(ResultCount^, CAPI_Types.PDoubleArray(ResultPtr), [TSetterFlag.FixedMaxSize]);
     ResultCount^ := ActualSize;
 end;
 

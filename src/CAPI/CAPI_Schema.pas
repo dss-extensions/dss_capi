@@ -337,7 +337,7 @@ const
         'string', // StringSilentROFunctionProperty
 
         '#/$defs/ArrayOrFilePath', // DoubleArrayProperty
-        '#/$defs/ArrayOrFilePath', // DoubleDArrayProperty, // -> For dynamic arrays
+        // '#/$defs/ArrayOrFilePath', // DoubleDArrayProperty, // -> For dynamic arrays -- REMOVED
         'numberArray', // DoubleVArrayProperty, // -> Use ParseAsVector
         'numberArray', // DoubleFArrayProperty, // -> For fixed-size arrays, with size in offset2
         

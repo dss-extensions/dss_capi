@@ -51,7 +51,7 @@ type
         function PropertyValue(Index: Integer): String; VIRTUAL;  // Use dssclass.propertyindex to get index by name
         procedure DumpProperties(F: TStream; Complete: Boolean; Leaf: Boolean = False); VIRTUAL;
         procedure SaveWrite(F: TStream); VIRTUAL;
-        procedure CustomSetRaw(Idx: Integer; Value: String); virtual;
+        procedure CustomSetRaw(Idx: Integer; Value: String; setterFlags: TDSSPropertySetterFlags); virtual;
         function ParseDynVar(Parser: TDSSParser; variable: String): Boolean; VIRTUAL;
 
         function Name(): String;
@@ -72,7 +72,7 @@ uses
     DSSObjectHelper;
 
 
-procedure TDSSObject.CustomSetRaw(Idx: Integer; Value: String);
+procedure TDSSObject.CustomSetRaw(Idx: Integer; Value: String; setterFlags: TDSSPropertySetterFlags);
 begin
     DoSimpleMsg('Error: base CustomSetRaw reached', 8754);
 end;

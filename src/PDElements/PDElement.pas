@@ -52,7 +52,7 @@ type
         OverLoad_EEN: Double;  // Indicate amount of branch overload
 
         NumAmpRatings: Integer;
-        AmpRatings: array of Double;
+        AmpRatings: PDoubleArray0;
 
         constructor Create(ParClass: TDSSClass; objName: String);
         destructor Destroy; OVERRIDE;
@@ -195,7 +195,7 @@ begin
     ParentPDElement := NIL;
     DSSObjType := PD_ELEMENT;
     NumAmpRatings := 1;
-    setlength(AmpRatings, 1);  // Initialized here
+    AmpRatings := AllocMem(SizeOf(Double) * NumAmpRatings);
     AmpRatings[0] := 1000;
 end;
 

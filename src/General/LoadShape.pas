@@ -196,7 +196,7 @@ type
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
-        procedure CustomSetRaw(Idx: Integer; Value: String); override;
+        procedure CustomSetRaw(Idx: Integer; Value: String; setterFlags: TDSSPropertySetterFlags); override;
         procedure SaveWrite(F: TStream); override;
 
         function MultAtHour(Hr: Double): Complex;  // Get multiplier at specified time
@@ -768,7 +768,7 @@ begin
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
 
-procedure TLoadShapeObj.CustomSetRaw(Idx: Integer; Value: String);
+procedure TLoadShapeObj.CustomSetRaw(Idx: Integer; Value: String; setterFlags: TDSSPropertySetterFlags);
 begin
     case Idx of
         ord(TProp.mult), ord(TProp.Pmult):
@@ -792,7 +792,7 @@ begin
             UseFloat64();
             ReAllocmem(dP, Sizeof(Double) * NumPoints);
             // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
-            NumPoints := InterpretDblArray(DSS, Value, NumPoints, PDoubleArray(dP)); // TODO: different from the rest and conditional
+            NumPoints := InterpretDblArray(DSS, Value, NumPoints, PDoubleArray(dP), []); // TODO: different from the rest and conditional
         end;
         ord(TProp.hour):
         begin
@@ -803,7 +803,7 @@ begin
             end;
             UseFloat64();
             ReAllocmem(dH, Sizeof(Double) * NumPoints);
-            InterpretDblArray(DSS, Value, NumPoints, PDoubleArray(dH)); // TODO: different from the rest and conditional
+            InterpretDblArray(DSS, Value, NumPoints, PDoubleArray(dH), []); // TODO: different from the rest and conditional
             Interval := 0.0;
         end;
         ord(TProp.qmult):
@@ -828,10 +828,10 @@ begin
             // Otherwise, follow the traditional technique for loading up load shapes                    
             UseFloat64();
             ReAllocmem(dQ, Sizeof(Double) * NumPoints);
-            InterpretDblArray(DSS, Value, NumPoints, PDoubleArray(dQ));   // Parser.ParseAsVector(Npts, Multipliers);
+            InterpretDblArray(DSS, Value, NumPoints, PDoubleArray(dQ), []);
         end;
     else
-        inherited CustomSetRaw(Idx, Value);
+        inherited CustomSetRaw(Idx, Value, setterFlags);
     end;
 end;
 

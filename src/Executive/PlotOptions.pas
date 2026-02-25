@@ -363,7 +363,7 @@ begin
                 13:
                 begin 
                     // Channel definitions for Plot Monitor
-                    NumChannels := Parser.ParseAsVector(51, PDoubleArray(@DblBuffer));  // allow up to 50 channels
+                    NumChannels := Parser.ParseAsVector(51, PDoubleArray(@DblBuffer), [TSetterFlag.FixedMaxSize]);  // allow up to 50 channels
                     if NumChannels > 0 then
                     begin   // Else take the defaults
                         SetLength(Channels, NumChannels);
@@ -376,7 +376,7 @@ begin
                 end;
                 14:
                 begin
-                    NumChannels := Parser.ParseAsVector(51, PDoubleArray(@DblBuffer));  // allow up to 50 channels
+                    NumChannels := Parser.ParseAsVector(51, PDoubleArray(@DblBuffer), [TSetterFlag.FixedMaxSize]);  // allow up to 50 channels
                     if NumChannels > 0 then
                     begin
                         SetLength(Bases, NumChannels);

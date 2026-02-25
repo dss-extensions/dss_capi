@@ -309,7 +309,7 @@ begin
     PropertyFlags[ord(TProp.Y)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.ReadByFunction, TPropertyFlag.Util, TPropertyFlag.SuppressJSON];
 
     // ...and just mark Points as custom
-    PropertyType[ord(TProp.Points)] := TPropertyType.DoubleDArrayProperty;
+    PropertyType[ord(TProp.Points)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.Points)] := 1; // dummy
     PropertyWriteFunction[ord(TProp.Points)] := @SetPoints;
     PropertyReadFunction[ord(TProp.Points)] := @GetPoints;

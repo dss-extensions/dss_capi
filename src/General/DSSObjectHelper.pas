@@ -300,7 +300,7 @@ begin
 
     if TPropertyFlag.CustomSetRaw in flags then
     begin
-        TDSSObject(obj).CustomSetRaw(Index, Value);
+        TDSSObject(obj).CustomSetRaw(Index, Value, setterFlags);
         Result := True;
         Exit;
     end;
@@ -562,7 +562,8 @@ begin
             integerPtr^ := InterpretIntArray(DSS, 
                 Value, 
                 integerPtr^, 
-                pIntegerArray(PPInteger(dataPtr)^)
+                pIntegerArray(PPInteger(dataPtr)^),
+                setterFlags
             );
             Result := True;
         end;
@@ -670,7 +671,7 @@ begin
         end;
 
         TPropertyType.DoubleArrayProperty,
-        TPropertyType.DoubleDArrayProperty,
+        // TPropertyType.DoubleDArrayProperty,
         TPropertyType.DoubleFArrayProperty,
         TPropertyType.DoubleVArrayProperty:
         begin
@@ -709,18 +710,23 @@ begin
             end;
 
             case ptype of
-                TPropertyType.DoubleArrayProperty,
-                TPropertyType.DoubleDArrayProperty:
+                TPropertyType.DoubleArrayProperty:
+                // TPropertyType.DoubleDArrayProperty:
                 begin
                     if TPropertyFlag.ArrayMaxSize in flags then
-                        maxSize := PropertyOffset3[Index]
+                    begin
+                        maxSize := PropertyOffset3[Index];
+                        Include(setterFlags, TDSSPropertySetterFlag.ImplicitSizes);
+                        Include(setterFlags, TDSSPropertySetterFlag.FixedMaxSize);
+                    end
                     else
                         maxSize := integerPtr^;
 
                     integerPtr^ := InterpretDblArray(DSS,
                         Value, 
                         maxSize, 
-                        pDoubleArray(PPDouble(dataPtr)^)
+                        pDoubleArray(PPDouble(dataPtr)^),
+                        setterFlags
                     );
                     if (TPropertyFlag.ApplyRound in flags) then
                     begin
@@ -733,24 +739,35 @@ begin
                 begin
                     if TPropertyFlag.ArrayMaxSize in flags then
                     begin
+                        Include(setterFlags, TDSSPropertySetterFlag.ImplicitSizes);
+                        Include(setterFlags, TDSSPropertySetterFlag.FixedMaxSize);
                         maxSize := PropertyOffset3[Index];
                         PropParser.tokenBuffer := Value;
-                        integerPtr^ := PropParser.ParseAsVector(maxSize, pDoubleArray(PPDouble(dataPtr)^));
+                        integerPtr^ := PropParser.ParseAsVector(maxSize, pDoubleArray(PPDouble(dataPtr)^), setterFlags);
                     end
                     else
                     begin
                         PropParser.tokenBuffer := Value;
-                        PropParser.ParseAsVector(integerPtr^, pDoubleArray(PPDouble(dataPtr)^));                        
+                        if integerPtr^ <> 0 then
+                        begin
+                            Include(setterFlags, TDSSPropertySetterFlag.StrictSize);
+                        end;
+                        PropParser.ParseAsVector(integerPtr^, pDoubleArray(PPDouble(dataPtr)^), setterFlags);
                     end;
                 end;
                 TPropertyType.DoubleFArrayProperty:
                 begin
-                    PropParser.tokenBuffer := Value;
-                    prevInt := PropParser.ParseAsVector(PropertyOffset2[Index], pDoubleArray(PDouble(dataPtr)));
-                    if prevInt <> PropertyOffset2[Index] then
+                    if (TPropertyFlag.ArrayMaxSize in flags) then
                     begin
-                        //TODO: error/warn if wrong number of values specified? (Only for some properties)
+                        Include(setterFlags, TDSSPropertySetterFlag.FixedMaxSize);
+                    end
+                    else
+                    begin
+                        Include(setterFlags, TDSSPropertySetterFlag.StrictSize);
                     end;
+
+                    PropParser.tokenBuffer := Value;
+                    prevInt := PropParser.ParseAsVector(PropertyOffset2[Index], pDoubleArray(PDouble(dataPtr)), setterFlags);
                 end;
             end;
 
@@ -1320,7 +1337,7 @@ begin
             Exit;
         end;
         TPropertyType.DoubleArrayProperty,
-        TPropertyType.DoubleDArrayProperty,
+        // TPropertyType.DoubleDArrayProperty,
         TPropertyType.DoubleVArrayProperty:
         begin
             if TPropertyFlag.SizeIsFunction in PropertyFlags[Index] then
@@ -2248,7 +2265,7 @@ begin
         TPropertyType.DoubleOnArrayProperty,
         TPropertyType.DoubleOnStructArrayProperty,
         TPropertyType.DoubleArrayProperty,
-        TPropertyType.DoubleDArrayProperty,
+        // TPropertyType.DoubleDArrayProperty,
         TPropertyType.DoubleVArrayProperty,
         TPropertyType.DoubleArrayOnStructArrayProperty,
         TPropertyType.DoubleFArrayProperty:
@@ -2277,7 +2294,8 @@ begin
             ValueCount := 0;
             if (val is TJSONObject) then
             begin
-                if (ptype in [TPropertyType.DoubleArrayProperty, TPropertyType.DoubleDArrayProperty]) then
+                // if (ptype in [TPropertyType.DoubleArrayProperty, TPropertyType.DoubleDArrayProperty]) then
+                if ptype = TPropertyType.DoubleArrayProperty then
                 begin
                     doubles := JSON_NumberArrayFilePath(DSS, (val as TJSONObject), Norder);
                     ValueCount := Length(doubles);
@@ -2393,7 +2411,7 @@ begin
                 ]);
             
             TPropertyType.DoubleArrayProperty,
-            TPropertyType.DoubleDArrayProperty,
+            // TPropertyType.DoubleDArrayProperty,
             TPropertyType.DoubleVArrayProperty:
             begin
                 if TPropertyFlag.SizeIsFunction in PropertyFlags[Index] then
@@ -4095,7 +4113,7 @@ begin
             end;
         end;
         TPropertyType.DoubleArrayProperty,
-        TPropertyType.DoubleDArrayProperty,
+        // TPropertyType.DoubleDArrayProperty,
         TPropertyType.DoubleFArrayProperty,
         TPropertyType.DoubleVArrayProperty:
         begin
@@ -4156,7 +4174,7 @@ begin
 
             case ptype of
                 TPropertyType.DoubleArrayProperty,
-                TPropertyType.DoubleDArrayProperty,
+                // TPropertyType.DoubleDArrayProperty,
                 TPropertyType.DoubleVArrayProperty:
                 begin
                     if TPropertyFlag.ArrayMaxSize in flags then
@@ -4823,7 +4841,7 @@ begin
             Result[1] := PDouble(PByte(obj) + PropertyOffset2[Index])^;
         end;
         TPropertyType.DoubleArrayProperty,
-        TPropertyType.DoubleDArrayProperty,
+        // TPropertyType.DoubleDArrayProperty,
         TPropertyType.DoubleVArrayProperty,
         TPropertyType.DoubleFArrayProperty,
         TPropertyType.DoubleSymMatrixProperty:
@@ -5377,7 +5395,7 @@ begin
                 Result := PDouble(PByte(obj) + PropertyOffset2[Index])^;;
         end;
         TPropertyType.DoubleArrayProperty,
-        TPropertyType.DoubleDArrayProperty,
+        // TPropertyType.DoubleDArrayProperty,
         TPropertyType.DoubleVArrayProperty,
         TPropertyType.DoubleFArrayProperty,
         TPropertyType.DoubleSymMatrixProperty:
@@ -6071,7 +6089,7 @@ begin
             doublePtr^ := Value * scale;
         end;
         TPropertyType.DoubleArrayProperty,
-        TPropertyType.DoubleDArrayProperty,
+        // TPropertyType.DoubleDArrayProperty,
         TPropertyType.DoubleFArrayProperty,
         TPropertyType.DoubleVArrayProperty:
         begin
@@ -6112,7 +6130,7 @@ begin
 
             case ptype of
                 TPropertyType.DoubleArrayProperty,
-                TPropertyType.DoubleDArrayProperty,
+                // TPropertyType.DoubleDArrayProperty,
                 TPropertyType.DoubleVArrayProperty:
                 begin
                     maxSize := sizePtr^;

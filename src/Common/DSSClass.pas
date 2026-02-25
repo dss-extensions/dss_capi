@@ -243,7 +243,7 @@ type
         StringSilentROFunctionProperty, //TODO: SilentRO=ignore writes. We might want to change this in the future to error out instead of ignoring
 
         DoubleArrayProperty,
-        DoubleDArrayProperty, // -> For dynamic arrays
+        // DoubleDArrayProperty, // -> For dynamic arrays -- REMOVED
         DoubleVArrayProperty, // -> Use ParseAsVector
         DoubleFArrayProperty, // -> For fixed-size arrays, with size in offset2
         ComplexPartSymMatrixProperty,

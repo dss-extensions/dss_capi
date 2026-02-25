@@ -146,8 +146,8 @@ type
         pctImag: Double;
         Winding: pWindingArray;
 
-        NumkVARatings: Integer; //TODO: remove, redundant as kVARatings already contains it
-        kVARatings: Array Of Double;
+        NumkVARatings: Integer;
+        kVARatings: PDoubleArray0;
 
         procedure SetNumWindings(N: Integer);
         procedure PullFromTransformer(obj: TTransfObj);
@@ -226,7 +226,7 @@ begin
     PropertyStructArrayCountOffset := PtrInt(@obj.NumWindings);
 
     // double arrays
-    PropertyType[ord(TProp.Ratings)] := TPropertyType.DoubleDArrayProperty;
+    PropertyType[ord(TProp.Ratings)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.Ratings)] := PtrInt(@obj.kVARatings);
     PropertyOffset2[ord(TProp.Ratings)] := PtrInt(@obj.NumkVARatings);
 
@@ -467,7 +467,7 @@ begin
         ord(TProp.RDCOhms):
             Winding[ActiveWinding].RdcSpecified := TRUE;
         ord(TProp.Seasons):
-            SetLength(kVARatings, NumkVARatings);
+            ReAllocMem(kVARatings, SizeOf(Double) * NumkVARatings);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -526,8 +526,8 @@ begin
     EmergMaxHkVA := Other.EmergMaxHkVA;
 
     NumkVARatings := Other.NumkVARatings;
-    SetLength(kVARatings, NumkVARatings);
-    for i := 0 to High(kVARatings) do
+    ReAllocMem(kVARatings, SizeOf(Double) * NumkVARatings);
+    for i := 0 to NumkVARatings do
         kVARatings[i] := Other.kVARatings[i];
 end;
 
@@ -567,7 +567,7 @@ begin
     pctImag := 0.0;
 
     NumkVARatings := 1;
-    SetLength(kVARatings, NumkVARatings);
+    kVARatings := AllocMem(SizeOf(Double) * NumkVARatings);
     kVARatings[0] := 600;
 end;
 
@@ -575,6 +575,8 @@ destructor TXfmrCodeObj.Destroy;
 begin
     Reallocmem(Winding, 0);
     Reallocmem(XSC, 0);
+    Reallocmem(kVARatings, 0);
+
     inherited destroy;
 end;
 

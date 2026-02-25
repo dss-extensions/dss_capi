@@ -116,7 +116,7 @@ type
         NormAmps: Double;
         EmergAmps: Double;
         NumAmpRatings: Integer;
-        AmpRatings: array of Double;
+        AmpRatings: PDoubleArray0;
         FLineType: Integer; // Pointer to code for type of line
         lineSpacingObj: TLineSpacingObj;
 
@@ -306,7 +306,7 @@ begin
     PropertyOffset2[ord(TProp.spacing)] := PtrInt(DSS.LineSpacingClass);
     PropertyFlags[ord(TProp.spacing)] := [TPropertyFlag.RequiredInSpecSet];
 
-    PropertyType[ord(TProp.Ratings)] := TPropertyType.DoubleDArrayProperty;
+    PropertyType[ord(TProp.Ratings)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.Ratings)] := PtrInt(@obj.AmpRatings);
     PropertyOffset2[ord(TProp.Ratings)] := PtrInt(@obj.NumAmpRatings);
 
@@ -376,7 +376,7 @@ end;
 
 procedure TLineGeometryObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
-    i: Integer;
+    i, j: Integer;
     conductorObj: TConductorDataObj = NIL;
     anyConductor: Boolean;
 begin
@@ -569,11 +569,13 @@ begin
                     Emergamps := conductorObj.EmergAmps;
                 
                 if (conductorObj.NumAmpRatings > 1) and (NumAmpRatings = 1) then 
-                    NumAmpRatings := conductorObj.NumAmpRatings;
-
-                if (Length(conductorObj.AmpRatings) > 1) and (length(AmpRatings) = 1) then
                 begin
-                    AmpRatings := Copy(conductorObj.AmpRatings, 0, Length(conductorObj.AmpRatings));
+                    NumAmpRatings := conductorObj.NumAmpRatings;
+                    ReAllocMem(AmpRatings, SizeOf(Double) * NumAmpRatings);
+                    for j := 0 to conductorObj.NumAmpRatings - 1 do
+                    begin
+                        AmpRatings[j] := conductorObj.AmpRatings[j];
+                    end;
                 end;
             end;
         end;
@@ -596,17 +598,19 @@ begin
                     if (conductorObj.Emergamps > 0.0) and (Emergamps = 0.0) then
                         Emergamps := conductorObj.EmergAmps;
                     if (conductorObj.NumAmpRatings > 1) and (NumAmpRatings = 1) then
-                        NumAmpRatings := conductorObj.NumAmpRatings;
-                    if (length(conductorObj.AmpRatings) > 1) and (length(AmpRatings) = 1) then
                     begin
-                        SetLength(AmpRatings, NumAmpRatings);
-                        AmpRatings := Copy(conductorObj.AmpRatings, 0, Min(Length(conductorObj.AmpRatings), NumAmpRatings));
+                        NumAmpRatings := conductorObj.NumAmpRatings;
+                        ReAllocMem(AmpRatings, SizeOf(Double) * NumAmpRatings);
+                        for j := 0 to Min(conductorObj.NumAmpRatings, NumAmpRatings) - 1 do
+                        begin
+                            AmpRatings[j] := conductorObj.AmpRatings[j];
+                        end;
                     end;
                 end;
             end;
         end;
         ord(TProp.Seasons):
-            setlength(AmpRatings, NumAmpRatings);
+            ReAllocMem(AmpRatings, SizeOf(Double) * NumAmpRatings);
     end;
 
     case Idx of
@@ -701,7 +705,7 @@ begin
 
     FReduce := FALSE;
     NumAmpRatings := 1;
-    setlength(AmpRatings, NumAmpRatings);
+    AmpRatings := AllocMem(SizeOf(Double) * NumAmpRatings);
     AmpRatings[0] := NormAmps;
 end;
 
@@ -714,6 +718,7 @@ begin
     Reallocmem(xCoord, 0);
     Reallocmem(units, 0);
     Reallocmem(phaseChoice, 0);
+    ReAllocMem(AmpRatings, 0);
 
     inherited destroy;
 end;

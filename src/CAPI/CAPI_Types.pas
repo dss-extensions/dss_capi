@@ -143,7 +143,7 @@ type
         Reserved24 = 24,
         Reserved25 = 25,
         Reserved27 = 27,
-        Reserved28 = 28,
+        StrictSize = 28,
         FixedMaxSize = 29
         
         // REMOVED: Used internally for the "Wires" property ("Conductors").

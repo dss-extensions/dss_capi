@@ -132,7 +132,7 @@ type
         Rg,
         Xg,
         rho: Double;
-        AmpRatings: array of Double;
+        AmpRatings: PDoubleArray0;
         FLineType: Integer; // Pointer to code for type of line
 
         Units: Integer; // See LineUnits
@@ -256,7 +256,7 @@ begin
     PropertyOffset2[ord(TProp.linetype)] := PtrInt(DSS.LineTypeEnum);
 
     // double arrays
-    PropertyType[ord(TProp.Ratings)] := TPropertyType.DoubleDArrayProperty;
+    PropertyType[ord(TProp.Ratings)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.Ratings)] := PtrInt(@obj.AmpRatings);
     PropertyOffset2[ord(TProp.Ratings)] := PtrInt(@obj.NumAmpRatings);
 
@@ -395,7 +395,7 @@ begin
             end;
         end;
         ord(TProp.Seasons):
-            setlength(AmpRatings, NumAmpRatings);
+            ReAllocMem(AmpRatings, SizeOf(Double) * NumAmpRatings);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -506,7 +506,7 @@ begin
     CalcMatricesFromZ1Z0;  // put some reasonable values in
 
     NumAmpRatings := 1;
-    setlength(AmpRatings, NumAmpRatings);
+    AmpRatings := AllocMem(SizeOf(Double) * NumAmpRatings);
     AmpRatings[0] := NormAmps;
 end;
 
@@ -515,6 +515,8 @@ begin
     Z.Free;
     Zinv.Free;
     Yc.Free;
+
+    ReAllocMem(AmpRatings, 0);
 
     inherited destroy;
 end;

@@ -390,12 +390,12 @@ begin
             end;
 
             // Reallocate arrays  (Must be initialized to nil for first call)
-            Reallocmem(C, Sizeof(C[1]) * FNumSteps);
-            Reallocmem(XL, Sizeof(XL[1]) * FNumSteps);
-            Reallocmem(Fkvarrating, Sizeof(Fkvarrating[1]) * FNumSteps);
-            Reallocmem(R, Sizeof(R[1]) * FNumSteps);
-            Reallocmem(FHarm, Sizeof(FHarm[1]) * FNumSteps);
-            Reallocmem(FStates, Sizeof(FStates[1]) * FNumSteps);
+            Reallocmem(C, Sizeof(Double) * FNumSteps);
+            Reallocmem(XL, Sizeof(Double) * FNumSteps);
+            Reallocmem(Fkvarrating, Sizeof(Double) * FNumSteps);
+            Reallocmem(R, Sizeof(Double) * FNumSteps);
+            Reallocmem(FHarm, Sizeof(Double) * FNumSteps);
+            Reallocmem(FStates, Sizeof(Integer) * FNumSteps);
 
             // Special case for FNumSteps=1
             if previousIntVal = 1 then

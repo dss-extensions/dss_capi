@@ -138,7 +138,7 @@ for fn in glob('src/CAPI/*.pas'):
                             rf'{re.escape(fstart)}(.*?){n}begin{n}(.*?)', 
                             rf'{fstart}\1{n}begin{n}    if DSSPrime = NIL then DSSPrime := DSSPRIME;{n}    DSSPrime := DSSPrime.ActiveChild;{n}\2',
                             impl, 
-                            1,
+                            count=1,
                             flags=re.DOTALL|re.IGNORECASE
                         )
                         assert sub_count == 1
@@ -162,7 +162,7 @@ for fn in glob('src/CAPI/*.pas'):
                             rf'{re.escape(fstart)}(.*?){n}begin{n}(.*?)', 
                             rf'{fstart}\1{n}begin{n}    if DSSPrime = NIL then DSSPrime := DSSPRIME;{n}\2',
                             impl, 
-                            1,
+                            count=1,
                             flags=re.DOTALL|re.IGNORECASE
                         )
                         assert sub_count == 1

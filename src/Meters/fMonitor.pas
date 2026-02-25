@@ -332,7 +332,7 @@ type
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags); override;
         procedure MakeLike(OtherPtr: Pointer); override;
-        procedure CustomSetRaw(Idx: Integer; Value: String); override;
+        procedure CustomSetRaw(Idx: Integer; Value: String; setterFlags: TDSSPropertySetterFlags); override;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model, reset nphases
         procedure RecalcElementData(); OVERRIDE;
@@ -576,12 +576,13 @@ begin
     ]);
 end;
 
-procedure TFMonitorObj.CustomSetRaw(Idx: Integer; Value: String);
+procedure TFMonitorObj.CustomSetRaw(Idx: Integer; Value: String; setterFlags: TDSSPropertySetterFlags);
 var
     i: Integer;
     iNodeNum: Integer; //TODO: validate iNodeNum
     iPhasenum: Integer;
 begin
+    //TODO: handle setterFlags?
     DSS.AuxParser.SetCmdString(Value);
     DSS.AuxParser.NextParam();
 

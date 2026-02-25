@@ -651,6 +651,7 @@ begin
     PropertyType[ord(TProp.Mask)] := TPropertyType.DoubleFArrayProperty;
     PropertyOffset[ord(TProp.Mask)] := PtrInt(@obj.TotalsMask); //TODO: validate the actual values?
     PropertyOffset2[ord(TProp.Mask)] := NumEMRegisters;
+    PropertyFlags[ord(TProp.Mask)] := [TPropertyFlag.ArrayMaxSize];
 
     // boolean properties
     PropertyType[ord(TProp.LocalOnly)] := TPropertyType.BooleanProperty;

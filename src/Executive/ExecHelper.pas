@@ -1418,7 +1418,7 @@ procedure TExecHelper.Set_Time();
 var
     TimeArray: array[1..2] of Double;
 begin
-    DSS.Parser.ParseAsVector(2, pDoubleArray(@TimeArray));
+    DSS.Parser.ParseAsVector(2, pDoubleArray(@TimeArray), [TSetterFlag.StrictSize]);
     with DSS.ActiveCircuit.Solution do
     begin
         DynaVars.intHour := Round(TimeArray[1]);
@@ -1454,7 +1454,7 @@ var
     Num: Integer;
 begin
     Dummy := AllocMem(Sizeof(Double) * 1000); // Big Buffer
-    Num := DSS.Parser.ParseAsVector(1000, Dummy);
+    Num := DSS.Parser.ParseAsVector(1000, Dummy, [TSetterFlag.FixedMaxSize]);
      // Parsing zero-fills the array
 
     with DSS.ActiveCircuit do
@@ -2723,8 +2723,8 @@ begin
             DoAllHarmonics := FALSE;
 
             Dummy := AllocMem(Sizeof(Double) * 100); // Big Buffer
-            Num := DSS.Parser.ParseAsVector(100, Dummy);
-       {Parsing zero-fills the array}
+            Num := DSS.Parser.ParseAsVector(100, Dummy, [TSetterFlag.FixedMaxSize]);
+            // Parsing zero-fills the array
 
             SetLength(HarmonicList, Num);
             for i := 1 to Num do
@@ -3884,7 +3884,7 @@ begin
                 CaseYear := DSS.Parser.MakeInteger();
             3:
             begin
-                NumRegs := DSS.Parser.ParseAsVector(NumEMREgisters, pDoubleArray(@dRegisters));
+                NumRegs := DSS.Parser.ParseAsVector(NumEMREgisters, pDoubleArray(@dRegisters), [TSetterFlag.FixedMaxSize]);
                 SetLength(iRegisters, NumRegs);
                 for i := 1 to NumRegs do
                     iRegisters[i - 1] := Round(dRegisters[i]);
@@ -4074,7 +4074,7 @@ begin
                 end;
                 2:
                 begin
-                    NRegs := DSS.Parser.ParseAsVector(NumEMRegisters, pDoubleArray(@dRegisters));
+                    NRegs := DSS.Parser.ParseAsVector(NumEMRegisters, pDoubleArray(@dRegisters), [TSetterFlag.FixedMaxSize]);
                     SetLength(iRegisters, Nregs);
                     for i := 1 to NRegs do
                         iRegisters[i - 1] := Round(dRegisters[i]);
@@ -4836,7 +4836,7 @@ begin
                 SetLength(Varray, Npts);
             end;
             2:
-                Npts := InterpretDblArray(DSS, Param, Npts, PDoubleArray(@Varray[0]));
+                Npts := InterpretDblArray(DSS, Param, Npts, Varray, [TSetterFlag.FixedMaxSize]);
             3:
                 CyclesPerSample := Round(DSS.ActiveCircuit.Solution.Frequency() * DSS.Parser.MakeDouble());
             4:

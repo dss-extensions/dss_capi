@@ -58,8 +58,9 @@ function EncloseQuotes(const s: String): String;
 procedure ParseObjectClassAndName(DSS: TDSSContext; const FullObjName: String; var ClassName, ObjName: String);
 function InterpretYesNo(const s: String): Boolean;
 procedure InitDblArray(NumValues: Integer; Xarray: pDoubleArray; Value: Double);
-function InterpretDblArray(DSS: TDSSContext; const s: String; maxValues: Integer; ResultArray: pDoubleArray): Integer;
-function InterpretIntArray(DSS: TDSSContext; const s: String; maxValues: Integer; ResultArray: pIntegerArray): Integer;
+function InterpretDblArray(DSS: TDSSContext; const s: String; maxValues: Integer; var ResultArray: ArrayOfDouble; setterFlags: TDSSPropertySetterFlags): Integer; overload;
+function InterpretDblArray(DSS: TDSSContext; const s: String; maxValues: Integer; var ResultArray: pDoubleArray; setterFlags: TDSSPropertySetterFlags): Integer; overload;
+function InterpretIntArray(DSS: TDSSContext; const s: String; maxValues: Integer; var ResultArray: pIntegerArray; setterFlags: TDSSPropertySetterFlags): Integer;
 procedure InterpretTStringListArray(DSS: TDSSContext; const s: String; var ResultList: TStringList; ApplyLower: Boolean = False);
 function InterpretColorName(DSS: TDSSContext; const s: String): Integer;
 
@@ -442,7 +443,22 @@ begin
         Xarray[i] := Value;
 end;
 
-function InterpretDblArray(DSS: TDSSContext; const s: String; maxValues: Integer; ResultArray: pDoubleArray): Integer;
+function InterpretDblArray(DSS: TDSSContext; const s: String; maxValues: Integer; var ResultArray: ArrayOfDouble; setterFlags: TDSSPropertySetterFlags): Integer;
+var
+    resArray: pDoubleArray;
+begin
+    // We should NOT resize dynamic arrays like normal pointers.
+    if (TSetterFlag.ImplicitSizes in setterFlags) or (maxValues = 0) then
+    begin
+        Result := 0;
+        DoSimpleMsg(DSS, _('Internal logic error: trying to read 0 items into numeric array. Please report to the AltDSS developers.'), 70399);
+        Exit;
+    end;
+    resArray := pDoubleArray(@ResultArray);
+    Result := InterpretDblArray(DSS, s, maxValues, resArray, setterFlags);
+end;
+
+function InterpretDblArray(DSS: TDSSContext; const s: String; maxValues: Integer; var ResultArray: pDoubleArray; setterFlags: TDSSPropertySetterFlags): Integer;
 //  Get numeric values from an array specified either as a list on numbers or a text file spec.
 //  ResultArray must be allocated to maxValues by calling routine.
 //
@@ -464,23 +480,47 @@ var
     Param: String;
     MStream: TMemoryStream;
     F: TStream = NIL; // input
-    i: Integer;
-    // Temp: Single;
     CSVFileName: String;
     CSVColumn: Integer;
     CSVHeader: Boolean;
     inputLine: String;
     iskip: Integer;
     sngArray: CAPI_Types.PSingleArray;
-    actualCount: Integer;
+    j, actualCount, orgMaxValues: Integer;
+    permissive, implicitSize: Boolean;
 begin
+    implicitSize := (TSetterFlag.ImplicitSizes in setterFlags);
+    permissive := ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 1) and not implicitSize;
+    orgMaxValues := maxValues;
+    if TSetterFlag.FixedMaxSize in setterFlags then
+    begin
+        implicitSize := false;
+        permissive := true;
+    end;
+    if TSetterFlag.StrictSize in setterFlags then
+    begin
+        if (maxValues = 0) then
+        begin
+            DoSimpleMsg(DSS, 'Strict size required but no size was provided for validation for "%s".', [Ellipsize(s, 20)], 70401);
+            Result := 0;
+            Exit;
+        end;
+        
+        implicitSize := false;
+        permissive := false;
+    end;
+    if implicitSize then
+        Result := 0
+    else
+        Result := maxValues;
+
     DSS.AuxParser.SetCmdString(S);
     ParmName := DSS.AuxParser.NextParam();
     Param := DSS.AuxParser.MakeString();
-    Result := maxValues; // Default Return Value;
 
-    // Syntax can be either a list of numeric values or a file specification:  File= ...
-
+    ////
+    // File= ... (CSV text file)
+    ////
     if CompareText(Parmname, 'file') = 0 then
     begin
         // Default values
@@ -519,37 +559,66 @@ begin
             if CSVHeader then
                 FSReadln(F, inputLine);  // skip the header row
 
-            for i := 1 to maxValues do
+            actualCount := 0;
+            if implicitSize then
             begin
+                // Estimate number of items
+                maxValues := 10 + F.Size div ((CSVColumn + 2) * 6);
+                ReAllocMem(ResultArray, maxValues * sizeOf(Double));
+            end;
+
+            while true do
+            begin
+                if (not implicitSize) and (actualCount >= maxValues) then
+                    break;
+
                 try
-                    if (F.Position + 1) < F.Size then
-                    begin
-                        FSReadln(F, inputLine);
-                        DSS.AuxParser.SetCmdString(inputLine);
-                        for iskip := 1 to CSVColumn do
-                            ParmName := DSS.AuxParser.NextParam();
-                        ResultArray[i] := DSS.AuxParser.MakeDouble();
-                    end
-                    else
-                    begin
-                        Result := i - 1;  // This will be different if less found;
+                    if (F.Position + 1) >= F.Size then
                         Break;
+
+                    FSReadln(F, inputLine);
+                    DSS.AuxParser.SetCmdString(inputLine);
+                    for iskip := 1 to CSVColumn do
+                        ParmName := DSS.AuxParser.NextParam();
+                    inc(actualCount);
+                    if implicitSize and (actualCount > maxValues) then
+                    begin
+                        maxValues := maxValues * 3 div 2;
+                        ReAllocMem(ResultArray, maxValues * sizeOf(Double));
                     end;
+                    ResultArray[actualCount] := DSS.AuxParser.MakeDouble();
                 except
                     On E: Exception do
                     begin
-                        DoSimpleMsg(DSS, 'Error reading %d-th numeric array value from file: "%s" Error is:', [i, Param, E.message], 705);
-                        Result := i - 1;
-                        Break;
+                        DoSimpleMsg(DSS, 'Error reading %d-th numeric array value from file: "%s" Error is:', [actualCount + 1, Param, E.message], 705);
+                        Result := actualCount;
+                        FreeAndNil(F);
+                        Exit;
                     end;
                 end;
             end;
+            Result := actualCount;  // This will be different if less found;
 
+            if (not implicitSize) and (Result <> maxValues) and (not permissive) then
+            begin
+                DoSimpleMsg(DSS, 'CSV file "%s" contains %d items, expected %d.', [Param, actualCount, maxValues], 2024110);
+                Exit;
+            end;
+            if implicitSize and (orgMaxValues <> 0) and (orgMaxValues <> actualCount) then
+            begin
+                DoSimpleMsg(DSS, 'CSV file "%s" contains %d items, expected %d. If the size was not specified explicitly, please check if the size matches the previous arrays and lists.', [Param, actualCount, orgMaxValues], 2024114);
+                Exit;
+            end;
         finally
             FreeAndNil(F);
         end;
-    end
-    else if (Length(Parmname) > 0) and (CompareTextShortest(Parmname, 'dblfile') = 0) then
+        Exit;
+    end;
+
+    ////
+    // Binary file of float64 items
+    ////
+    if (Length(Parmname) > 0) and (CompareTextShortest(Parmname, 'dblfile') = 0) then
     begin
          // load the list from a file of doubles (no checking done on type of data)
         try
@@ -559,15 +628,34 @@ begin
             Exit;
         end;
         actualCount := F.Size div sizeof(Double);
-        Result := Min(maxValues, actualCount);  // no. of doubles
+        if implicitSize then
+        begin
+            Result := actualCount;
+            ReAllocMem(ResultArray, actualCount * sizeOf(Double));
+        end
+        else
+        begin
+            Result := Min(maxValues, actualCount);
+        end;
         F.ReadBuffer(ResultArray[1], SizeOf(Double) * Result);
         F.Free;
-        if (actualCount <> maxValues) and ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0) then
+        if (not implicitSize) and (actualCount <> maxValues) and (not permissive) then
         begin
             DoSimpleMsg(DSS, 'File of doubles "%s" contains %d items, expected %d.', [Param, actualCount, maxValues], 2024108);
+            Exit;
         end;
-    end
-    else if (Length(Parmname) > 0) and (CompareTextShortest(Parmname, 'sngfile') = 0) then
+        if implicitSize and (orgMaxValues <> 0) and (orgMaxValues <> actualCount) then
+        begin
+            DoSimpleMsg(DSS, 'File of doubles "%s" contains %d items, expected %d. If the size was not specified explicitly, please check if the size matches the previous arrays and lists.', [Param, actualCount, orgMaxValues], 2024114);
+            Exit;
+        end;
+        Exit;
+    end;
+
+    ////
+    // Binary file of float32 items
+    ////
+    if (Length(Parmname) > 0) and (CompareTextShortest(Parmname, 'sngfile') = 0) then
     begin
         // load the list from a file of singles (no checking done on type of data)
         try
@@ -581,62 +669,108 @@ begin
         MStream.LoadFromStream(F);
         F.Free;
         sngArray := CAPI_Types.PSingleArray(MStream.Memory);
+
         actualCount := MStream.Size div sizeof(Single);
-        // Now move the singles from the file into the destination array
-        Result := Min(maxValues, actualCount);  // no. of singles
-        for i := 1 to Result do
+        if implicitSize then
         begin
-            ResultArray[i] := sngArray[i];  // Single to Double
+            Result := actualCount;
+            ReAllocMem(ResultArray, actualCount * sizeOf(Double));
+        end
+        else
+        begin
+            Result := Min(maxValues, actualCount);
+        end;
+        for j := 1 to Result do
+        begin
+            ResultArray[j] := sngArray[j];  // Single to Double
         end;
         MStream.Free;
-        if (actualCount <> maxValues) and ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 0) then
+        if (not implicitSize) and (actualCount <> maxValues) and (not permissive) then
         begin
             DoSimpleMsg(DSS, 'File of singles "%s" contains %d items, expected %d.', [Param, actualCount, maxValues], 2024109);
-        end;
-    end
-    else
-    begin  // Parse list of values off input string
-         // Parse Values of array list
-
-        if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 1 then
-        begin
-            // Backwards compatible mode
-            for i := 1 to maxValues do
-            begin
-                ResultArray[i] := DSS.AuxParser.MakeDouble();    // Fills array with zeros if we run out of numbers
-                DSS.AuxParser.NextParam();
-            end;
             Exit;
         end;
-        // New default, strict mode
-        Result := 0;
-        i := 0;
+        if implicitSize and (orgMaxValues <> 0) and (orgMaxValues <> actualCount) then
+        begin
+            DoSimpleMsg(DSS, 'File of singles "%s" contains %d items, expected %d. If the size was not specified explicitly, please check if the size matches the previous arrays and lists.', [Param, actualCount, orgMaxValues], 2024114);
+            Exit;
+        end;
+        Exit;
+    end;
+
+    ////
+    // Parse list of values off input string
+    ////
+    if implicitSize then
+    begin
+        // Estimate an initial count
+        maxValues := Length(s) div 6;
+        ReAllocMem(ResultArray, maxValues * SizeOf(Double));
+        actualCount := 0;
         while true do
         begin
             if Length(DSS.AuxParser.tokenBuffer) = 0 then
                 break;
 
-            inc(i);
-            if i > maxValues then
-                break;
-
-            ResultArray[i] := DSS.AuxParser.MakeDouble();
+            inc(actualCount);
+            if (actualCount > maxValues) then
+            begin
+                maxValues := maxValues * 3 div 2;
+                ReAllocMem(ResultArray, maxValues * SizeOf(Double));
+            end;
+            ResultArray[actualCount] := DSS.AuxParser.MakeDouble(); // Fills array with zeros if we run out of numbers
             DSS.AuxParser.NextParam();
         end;
-
-        Result := i;
-        if Result < maxValues then
+        Result := actualCount;
+        if (orgMaxValues <> 0) and (orgMaxValues <> actualCount) then
         begin
-            DoSimpleMsg(DSS, 'Array "%s" contains %d items, fewer than expected (%d).', [Ellipsize(s, 20), Result, maxValues], 20241010);
-        end
-        else if Result > maxValues then
-        begin
-            DoSimpleMsg(DSS, 'Array "%s" contains more items than expected (%d).', [Ellipsize(s, 20), maxValues], 20241011);
+            DoSimpleMsg(DSS, 'Array "%s" contains %d items, expected %d. If the size was not specified explicitly, please check if the size matches the previous arrays and lists.', [Ellipsize(s, 20), actualCount, orgMaxValues], 2024114);
+            Exit;
         end;
+        Exit;
+    end;
+
+    if permissive then
+    begin
+        // Backwards compatible mode
+        for j := 1 to maxValues do
+        begin
+            ResultArray[j] := DSS.AuxParser.MakeDouble(); // Fills array with zeros if we run out of numbers
+            DSS.AuxParser.NextParam();
+        end;
+        Exit;
+    end;
+
+    // New default, strict mode
+    Result := 0;
+    actualCount := 0;
+    while true do
+    begin
+        if Length(DSS.AuxParser.tokenBuffer) = 0 then
+            break;
+
+        inc(actualCount);
+        if actualCount > maxValues then
+            break;
+
+        ResultArray[actualCount] := DSS.AuxParser.MakeDouble();
+        DSS.AuxParser.NextParam();
+    end;
+
+    Result := actualCount;
+    if Result < maxValues then
+    begin
+        DoSimpleMsg(DSS, 'Array "%s" contains %d items, fewer than expected (%d).', [Ellipsize(s, 20), Result, maxValues], 20241010);
+        Exit;
+    end
+    else if Result > maxValues then
+    begin
+        DoSimpleMsg(DSS, 'Array "%s" contains more items than expected (%d).', [Ellipsize(s, 20), maxValues], 20241011);
+        Exit;
     end;
 end;
 
-function InterpretIntArray(DSS: TDSSContext; const s: String; maxValues: Integer; ResultArray: pIntegerArray): Integer;
+function InterpretIntArray(DSS: TDSSContext; const s: String; maxValues: Integer; var ResultArray: pIntegerArray; setterFlags: TDSSPropertySetterFlags): Integer;
 //  Get numeric values from an array specified either as a list on numbers or a text file spec.
 //  ResultArray must be allocated to maxValues by calling routine.
 //  File is assumed to have one value per line.
@@ -644,81 +778,178 @@ var
     ParmName,
     Param: String;
     F: TStream = nil;
-    i: Integer;
-    line: String;
+    inputLine: String;
+    j, actualCount, orgMaxValues, item: Integer;
+    permissive, implicitSize: Boolean;
 begin
+    implicitSize := (TSetterFlag.ImplicitSizes in setterFlags);
+    permissive := ((DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 1) and not implicitSize;
+    orgMaxValues := maxValues;
+    if TSetterFlag.FixedMaxSize in setterFlags then
+    begin
+        implicitSize := false;
+        permissive := true;
+    end;
+    if TSetterFlag.StrictSize in setterFlags then
+    begin
+        if (maxValues = 0) then
+        begin
+            DoSimpleMsg(DSS, 'Strict size required but no size was provided for validation for "%s".', [Ellipsize(s, 20)], 70401);
+            Result := 0;
+            Exit;
+        end;
+        
+        implicitSize := false;
+        permissive := false;
+    end;
+    if implicitSize then
+        Result := 0
+    else
+        Result := maxValues;
+
     DSS.AuxParser.SetCmdString(S);
     ParmName := DSS.AuxParser.NextParam();
     Param := DSS.AuxParser.MakeString();
-    Result := maxValues;  // Default return value
 
-    // Syntax can be either a list of numeric values or a file specification:  File= ...
-
+    ////
+    // File= ... (text file, one integer per line)
+    ////
     if CompareText(Parmname, 'file') = 0 then
     begin
          // load the list from a file
         try
             F := DSS.GetInputStreamEx(Param);
-            for i := 1 to maxValues do
+
+            actualCount := 0;
+            if implicitSize then
             begin
-                if (F.Position + 1) < F.Size then
-                begin
-                    FSReadln(F, line);
-                    ResultArray[i] := StrToInt(line);
-                end
-                else
-                begin
-                    Result := i - 1;
-                    Break;
+                // Estimate number of items
+                maxValues := 10 + F.Size div 6;
+                ReAllocMem(ResultArray, maxValues * sizeOf(Integer));
+            end;
+
+            while true do
+            begin
+                if (not implicitSize) and (actualCount > maxValues) then
+                    break;
+
+                try
+                    if (F.Position + 1) >= F.Size then
+                        Break;
+
+                    FSReadln(F, inputLine);
+                    item := StrToInt(inputLine);
+                    inc(actualCount);
+                    if implicitSize and (actualCount > maxValues) then
+                    begin
+                        maxValues := maxValues * 3 div 2;
+                        ReAllocMem(ResultArray, maxValues * sizeOf(Integer));
+                    end;
+                    ResultArray[actualCount] := item;
+                except
+                    On E: Exception do
+                    begin
+                        DoSimpleMsg(DSS, 'Error reading %d-th numeric array value from file: "%s" Error is:', [actualCount + 1, Param, E.message], 705);
+                        Result := actualCount;
+                        FreeAndNil(F);
+                        Exit;
+                    end;
                 end;
             end;
+            Result := actualCount;  // This will be different if less found;
+
             FreeAndNil(F);
 
+            if (not implicitSize) and (Result <> maxValues) and (not permissive) then
+            begin
+                DoSimpleMsg(DSS, 'File "%s" contains %d items, expected %d.', [Param, actualCount, maxValues], 2024110);
+                Exit;
+            end;
+            if implicitSize and (orgMaxValues <> 0) and (orgMaxValues <> actualCount) then
+            begin
+                DoSimpleMsg(DSS, 'File "%s" contains %d items, expected %d. If the size was not specified explicitly, please check if the size matches the previous arrays and lists.', [Param, actualCount, orgMaxValues], 2024114);
+                Exit;
+            end;
         except
             On E: Exception do
             begin
                 FreeAndNil(F);
                 DoSimpleMsg(DSS, 'Error trying to read numeric array values from file "%s". Error is: %s', [Param, E.Message], 706);
+                Exit;
             end;
         end;
         Exit;
     end;
 
+    ////
     // Parse list of values off input string
-    if (DSS_EXTENSIONS_COMPAT and ord(DSSCompatFlag.PermissiveProperties)) = 1 then
+    ////
+    if implicitSize then
+    begin
+        // Estimate an initial count
+        maxValues := Length(s) div 6;
+        ReAllocMem(ResultArray, maxValues * SizeOf(Integer));
+        actualCount := 0;
+        while true do
+        begin
+            if Length(DSS.AuxParser.tokenBuffer) = 0 then
+                break;
+
+            inc(actualCount);
+            if (actualCount > maxValues) then
+            begin
+                maxValues := maxValues * 3 div 2;
+                ReAllocMem(ResultArray, maxValues * SizeOf(Integer));
+            end;
+            ResultArray[actualCount] := DSS.AuxParser.MakeInteger(); // Fills array with zeros if we run out of numbers
+            DSS.AuxParser.NextParam();
+        end;
+        Result := actualCount;
+        if (orgMaxValues <> 0) and (orgMaxValues <> actualCount) then
+        begin
+            DoSimpleMsg(DSS, 'Array "%s" contains %d items, expected %d. If the size was not specified explicitly, please check if the size matches the previous arrays and lists.', [Ellipsize(s, 20), actualCount, orgMaxValues], 2024114);
+            Exit;
+        end;
+        Exit;
+    end;
+
+    if permissive then
     begin
         // Backwards compatible mode
-        for i := 1 to maxValues do
+        for j := 1 to maxValues do
         begin
-            ResultArray[i] := DSS.AuxParser.MakeInteger();    // Fills array with zeros if we run out of numbers
+            ResultArray[j] := DSS.AuxParser.MakeInteger();    // Fills array with zeros if we run out of numbers
             DSS.AuxParser.NextParam();
         end;
         Exit;
     end;
+    
     // New default, strict mode
     Result := 0;
-    i := 0;
+    actualCount := 0;
     while true do
     begin
         if Length(DSS.AuxParser.tokenBuffer) = 0 then
             break;
 
-        inc(i);
-        if i > maxValues then
+        inc(actualCount);
+        if actualCount > maxValues then
             break;
 
-        ResultArray[i] := DSS.AuxParser.MakeInteger();
+        ResultArray[actualCount] := DSS.AuxParser.MakeInteger();
         DSS.AuxParser.NextParam();
     end;
 
-    Result := i;
+    Result := actualCount;
     if Result < maxValues then
     begin
         DoSimpleMsg(DSS, 'Array "%s" contains %d items, fewer than expected (%d).', [Ellipsize(s, 20), Result, maxValues], 20241012);
-    end
-    else if Result > maxValues then
+        Exit;
+    end;
+    if Result > maxValues then
     begin
         DoSimpleMsg(DSS, 'Array "%s" contains more items than expected (%d).', [Ellipsize(s, 20), maxValues], 20241013);
+        Exit;
     end;
 end;
 
@@ -2240,7 +2471,7 @@ begin
 
         actualCount := F.Size div sizeof(Single);
 
-        if (TDSSPropertySetterFlag.ImplicitSizes in setterFlags) then
+        if (TSetterFlag.ImplicitSizes in setterFlags) then
         begin
             maxValues := actualCount;
             if not OnlyLoadB then
@@ -2298,7 +2529,7 @@ begin
         end;
 
         FreeAndNil(F);
-        if (actualCount <> NumPoints) and not (TDSSPropertySetterFlag.ImplicitSizes in setterFlags) then
+        if (actualCount <> NumPoints) and not (TSetterFlag.ImplicitSizes in setterFlags) then
             NumPoints := actualCount;
 
         if RoundA then
@@ -2329,7 +2560,7 @@ begin
 
         actualCount := F.Size div sizeof(Double);
 
-        if (TDSSPropertySetterFlag.ImplicitSizes in setterFlags) then
+        if (TSetterFlag.ImplicitSizes in setterFlags) then
         begin
             maxValues := actualCount;
             if not OnlyLoadB then
@@ -2381,7 +2612,7 @@ begin
         end;
 
         FreeAndNil(F);
-        if (i <> NumPoints) and not (TDSSPropertySetterFlag.ImplicitSizes in setterFlags) then
+        if (i <> NumPoints) and not (TSetterFlag.ImplicitSizes in setterFlags) then
             NumPoints := i;
 
         if RoundA then
@@ -2410,7 +2641,7 @@ begin
         Exit;
     end;
 
-    if (TDSSPropertySetterFlag.ImplicitSizes in setterFlags) then
+    if (TSetterFlag.ImplicitSizes in setterFlags) then
     begin
         try
             maxNum := NumPoints;
@@ -2477,7 +2708,7 @@ begin
         Exit;
     end;
 
-    // >> (TDSSPropertySetterFlag.ImplicitSizes NOT in setterFlags) <<
+    // >> (TSetterFlag.ImplicitSizes NOT in setterFlags) <<
     try
         ReAllocmem(pB, Sizeof(Double) * NumPoints);
         numRead := 0;

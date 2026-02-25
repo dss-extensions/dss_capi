@@ -89,7 +89,7 @@ type
         NormAmps: Double;
         EmergAmps: Double;
         NumAmpRatings: Integer;
-        AmpRatings: array of Double;
+        AmpRatings: PDoubleArray0;
 
         constructor Create(ParClass: TDSSClass; const ConductorDataName: String);
         destructor Destroy; OVERRIDE;
@@ -167,7 +167,7 @@ begin
     PropertyOffset2[ActiveProperty + ord(TProp.radunits)] := PtrInt(DSS.UnitsEnum);
 
     // double arrays
-    PropertyType[ActiveProperty + ord(TProp.Ratings)] := TPropertyType.DoubleDArrayProperty;
+    PropertyType[ActiveProperty + ord(TProp.Ratings)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ActiveProperty + ord(TProp.Ratings)] := PtrInt(@obj.AmpRatings);
     PropertyOffset2[ActiveProperty + ord(TProp.Ratings)] := PtrInt(@obj.NumAmpRatings);
 
@@ -247,7 +247,7 @@ begin
             if NormAmps < 0.0 then
                 NormAmps := EmergAmps / 1.5;
         ord(TProp.Seasons):
-            setlength(AmpRatings, NumAmpRatings);
+            ReAllocMem(AmpRatings, SizeOf(Double) * NumAmpRatings);
     end;
     inherited PropertySideEffects(Idx, previousIntVal, setterFlags);
 end;
@@ -286,12 +286,14 @@ begin
     Normamps := -1.0;
     EmergAmps := -1.0;
     NumAmpRatings := 1;
-    setlength(AmpRatings, NumAmpRatings);
+    AmpRatings := AllocMem(SizeOf(Double) * NumAmpRatings);
     AmpRatings[0] := NormAmps;
 end;
 
 destructor TConductorDataObj.Destroy;
 begin
+    ReAllocMem(AmpRatings, 0);
+
     inherited destroy;
 end;
 

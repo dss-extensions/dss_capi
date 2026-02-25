@@ -402,7 +402,7 @@ begin
     PropertyFlags[ord(TProp.spacing)] := [TPropertyFlag.RequiredInSpecSet];
 
     // double arrays
-    PropertyType[ord(TProp.Ratings)] := TPropertyType.DoubleDArrayProperty;
+    PropertyType[ord(TProp.Ratings)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.Ratings)] := PtrInt(@obj.AmpRatings);
     PropertyOffset2[ord(TProp.Ratings)] := PtrInt(@obj.NumAmpRatings);
 
@@ -538,8 +538,8 @@ begin
     EmergAmps := LineCodeObj.EmergAmps;
 
     NumAmpRatings := LineCodeObj.NumAmpRatings;
-    setlength(AmpRatings, NumAmpRatings);
-    for i := 0 to High(AmpRatings) do
+    ReAllocMem(AmpRatings, SizeOf(Double) * NumAmpRatings);
+    for i := 0 to NumAmpRatings - 1 do
         AmpRatings[i] := LineCodeObj.AmpRatings[i];
 
     // These three properties should not come from the Linecode
@@ -606,7 +606,7 @@ end;
 
 procedure TLineObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer; setterFlags: TDSSPropertySetterFlags);
 var
-    newNumRat, i: Integer;
+    newNumRat, i, j: Integer;
     ratingsArrayChanged, ratingsChanged: Boolean;    
     condObj: TConductorDataObj;
     conductorsReset: Boolean = false;
@@ -826,8 +826,12 @@ begin
                     // Assign ratings to line from phase conductors only
                     if conductors[i].NumAmpRatings > newNumRat then
                     begin
-                        AmpRatings := Copy(conductors[i].AmpRatings);
-                        NumAmpRatings := Length(AmpRatings);
+                        NumAmpRatings := conductors[i].NumAmpRatings;
+                        ReAllocMem(AmpRatings, SizeOf(Double) * NumAmpRatings);
+                        for j := 0 to NumAmpRatings - 1 do
+                        begin
+                            AmpRatings[j] := conductors[i].AmpRatings[j];
+                        end;
                         newNumRat := NumAmpRatings;
                         ratingsArrayChanged := TRUE;
                     end;
@@ -873,7 +877,7 @@ begin
             end;
         end;
         ord(TProp.Seasons):
-            setlength(AmpRatings, NumAmpRatings);
+            ReAllocMem(AmpRatings, SizeOf(Double) * NumAmpRatings);
     end;
 
     case Idx of
@@ -1116,7 +1120,7 @@ begin
     RecalcElementData();
 
     NumAmpRatings := 1;
-    setlength(AmpRatings, NumAmpRatings);
+    AmpRatings := AllocMem(SizeOf(Double) * NumAmpRatings);
     AmpRatings[0] := NormAmps;
 end;
 
@@ -1129,6 +1133,7 @@ begin
     if Assigned(Yc) then
         Yc.Free;
     Reallocmem(conductors, 0);
+    Reallocmem(AmpRatings, 0);
     inherited destroy;
 end;
 
@@ -2012,8 +2017,8 @@ begin
     SetYprimInvalid(true);       // Force Rebuild of Y matrix
 
     NumAmpRatings := lineGeometryObj.NumAmpRatings;
-    setlength(AmpRatings, NumAmpRatings);
-    for i := 0 to High(AmpRatings) do
+    ReAllocMem(AmpRatings, SizeOf(Double) * NumAmpRatings);
+    for i := 0 to NumAmpRatings - 1 do
         AmpRatings[i] := lineGeometryObj.AmpRatings[i];
 
     FLineType := lineGeometryObj.FLineType;
