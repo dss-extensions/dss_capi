@@ -581,18 +581,17 @@ ALTDSS_ODDIE_DLL void ctx_Dispose(const void *ctx)
 #endif
 
     ctx_DSS_ResetStringBuffer(ctx);
-    free(oddie_ctx);
 
-    if (!oddie_ctx->dll_handle)
+    if (oddie_ctx->dll_handle)
     {
-        return;
+#ifdef WIN32
+        FreeLibrary(dll_handle);
+#else
+        dlclose(dll_handle);
+#endif
     }
 
-#ifdef WIN32
-    FreeLibrary(dll_handle);
-#else
-    dlclose(dll_handle);
-#endif
+    free(oddie_ctx);
 }
 
 const char* oddie_int32_to_pchar(OddieContext* ctx, int32_t value)

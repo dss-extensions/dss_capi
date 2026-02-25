@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (C) 2023-2025 Paulo Meira & contributors to DSS-Extensions
+// SPDX-FileCopyrightText: (C) 2023-2026 Paulo Meira & contributors to DSS-Extensions
 // SPDX-License-Identifier: BSD-3
 
 #include <altdss/capi/oddie.h>
@@ -41,6 +41,9 @@ ALTDSS_ODDIE_DLL int32_t AltDSSOddieCAPIInit(AltDSSCAPI *funcs, uint64_t size, u
     funcs->DSS_GR_CountPtr_PByte = ctx_DSS_GR_CountPtr_PByte;
     funcs->DSS_GR_CountPtr_PDouble = ctx_DSS_GR_CountPtr_PDouble;
     funcs->DSS_GR_CountPtr_PInteger = ctx_DSS_GR_CountPtr_PInteger;
+    funcs->DSS_Get_CompatFlags = ctx_DSS_Get_CompatFlags;
+    funcs->DSS_Set_CompatFlags = ctx_DSS_Set_CompatFlags;
+    funcs->DSS_DisposeGRData = ctx_DSS_DisposeGRData;
     funcs->Error_Get_Description = ctx_Error_Get_Description;
     funcs->Error_Set_Description = ctx_Error_Set_Description;
     funcs->Error_Get_Number = ctx_Error_Get_Number;
@@ -49,7 +52,6 @@ ALTDSS_ODDIE_DLL int32_t AltDSSOddieCAPIInit(AltDSSCAPI *funcs, uint64_t size, u
     funcs->Text_Set_Command = ctx_Text_Set_Command;
     funcs->Text_CommandArray = ctx_Text_CommandArray;
     funcs->Text_CommandBlock = ctx_Text_CommandBlock;
-    funcs->DSS_DisposeGRData = ctx_DSS_DisposeGRData;
     funcs->YMatrix_AddInAuxCurrents = ctx_YMatrix_AddInAuxCurrents;
     funcs->YMatrix_BuildYMatrixD = ctx_YMatrix_BuildYMatrixD;
     funcs->YMatrix_Get_Handle = ctx_YMatrix_Get_Handle;
@@ -567,6 +569,8 @@ ALTDSS_ODDIE_DLL int32_t AltDSSOddieCAPIInit(AltDSSCAPI *funcs, uint64_t size, u
     funcs->Generators_Set_kVArated = ctx_Generators_Set_kVArated;
     funcs->Generators_Set_kW = ctx_Generators_Set_kW;
     funcs->Generators_Set_kvar = ctx_Generators_Set_kvar;
+    funcs->Generators_Get_Bus1 = ctx_Generators_Get_Bus1;
+    funcs->Generators_Get_IsDelta = ctx_Generators_Get_IsDelta;
     funcs->ISources_Get_AllNames = ctx_ISources_Get_AllNames;
     funcs->ISources_Get_Amps = ctx_ISources_Get_Amps;
     funcs->ISources_Get_AngleDeg = ctx_ISources_Get_AngleDeg;
@@ -1441,6 +1445,7 @@ ALTDSS_ODDIE_DLL int32_t AltDSSOddieCAPIInit(AltDSSCAPI *funcs, uint64_t size, u
     funcs->WindGens_Get_WindSpeed = ctx_WindGens_Get_WindSpeed;
     funcs->WindGens_Get_XThev = ctx_WindGens_Get_XThev;
     funcs->WindGens_Get_idx = ctx_WindGens_Get_idx;
+    funcs->WindGens_Get_IsDelta = ctx_WindGens_Get_IsDelta;
     funcs->WindGens_Get_kV = ctx_WindGens_Get_kV;
     funcs->WindGens_Get_kVA = ctx_WindGens_Get_kVA;
     funcs->WindGens_Get_kW = ctx_WindGens_Get_kW;
@@ -1590,6 +1595,8 @@ ALTDSS_ODDIE_DLL int32_t AltDSSOddieCAPIInit(AltDSSCAPI *funcs, uint64_t size, u
     funcs->Settings_Set_SkipCommands = ctx_Settings_Set_SkipCommands;
     funcs->Settings_Set_SkipFileRegExp = ctx_Settings_Set_SkipFileRegExp;
     funcs->Settings_SetPropertyNameStyle = ctx_Settings_SetPropertyNameStyle;
+    funcs->Settings_Get_ControlTrace = ctx_Settings_Get_ControlTrace;
+    funcs->Settings_Set_ControlTrace = ctx_Settings_Set_ControlTrace;
     funcs->Solution_Get_IntervalHrs = ctx_Solution_Get_IntervalHrs;
     funcs->Solution_Get_Time_of_Step = ctx_Solution_Get_Time_of_Step;
     funcs->Solution_Set_IntervalHrs = ctx_Solution_Set_IntervalHrs;
